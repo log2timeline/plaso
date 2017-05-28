@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Error related attribute container object definitions."""
+"""Error attribute containers."""
 
 from plaso.containers import interface
 from plaso.containers import manager

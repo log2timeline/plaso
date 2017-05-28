@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Event source related attribute container object definitions."""
+"""Event source attribute containers."""
 
 from plaso.containers import interface
 from plaso.containers import manager
 
 
 class EventSource(interface.AttributeContainer):
-  """Class to represent an event source attribute container.
+  """Event source attribute container.
 
   The event source object contains information about where a specific
   event originates e.g. a file, the $STANDARD_INFORMATION MFT attribute,
@@ -33,7 +33,7 @@ class EventSource(interface.AttributeContainer):
 
 
 class FileEntryEventSource(EventSource):
-  """Class to represent a file entry event source.
+  """File entry event source.
 
   The file entry event source is an event source that represents a file
   within a file system.

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Report related attribute container object definitions."""
+"""Report related attribute container definitions."""
 
 from plaso.containers import interface
 from plaso.containers import manager
@@ -7,7 +7,7 @@ from plaso.lib import timelib
 
 
 class AnalysisReport(interface.AttributeContainer):
-  """Class to represent an analysis report attribute container.
+  """Analysis report attribute container.
 
   Attributes:
     filter_string (str): event filter expression.

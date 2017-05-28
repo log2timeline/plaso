@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""This file contains the tests for the artifacts attribute containers."""
+"""Tests for the artifacts attribute containers."""
 
 import unittest
 
@@ -12,77 +12,75 @@ from tests import test_lib as shared_test_lib
 class EnvironmentVariableArtifactTest(shared_test_lib.BaseTestCase):
   """Tests for the environment variable aritifact."""
 
+  # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
-    evironment_variable = artifacts.EnvironmentVariableArtifact(
+    attribute_container = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name=u'SystemRoot', value=u'C:\\Windows')
 
-    self.assertEqual(evironment_variable.name, u'SystemRoot')
+    self.assertEqual(attribute_container.name, u'SystemRoot')
 
     expected_dict = {
         u'case_sensitive': False,
         u'name': u'SystemRoot',
         u'value': u'C:\\Windows'}
 
-    evironment_variable_dict = evironment_variable.CopyToDict()
+    test_dict = attribute_container.CopyToDict()
 
-    self.assertEqual(evironment_variable_dict, expected_dict)
-
-  # TODO: add more tests.
+    self.assertEqual(test_dict, expected_dict)
 
 
 class HostnameArtifactTest(shared_test_lib.BaseTestCase):
   """Tests for the hostname aritifact."""
 
+  # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
-    hostname = artifacts.HostnameArtifact(name=u'mydomain.com')
+    attribute_container = artifacts.HostnameArtifact(name=u'mydomain.com')
 
-    self.assertEqual(hostname.name, u'mydomain.com')
+    self.assertEqual(attribute_container.name, u'mydomain.com')
 
     expected_dict = {
         u'name': u'mydomain.com',
         u'schema': u'DNS'}
 
-    hostname_dict = hostname.CopyToDict()
+    test_dict = attribute_container.CopyToDict()
 
-    self.assertEqual(hostname_dict, expected_dict)
-
-  # TODO: add more tests.
+    self.assertEqual(test_dict, expected_dict)
 
 
 class SystemConfigurationArtifactTest(shared_test_lib.BaseTestCase):
   """Tests for the system configuration aritifact."""
 
+  # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
-    system_configuration = artifacts.SystemConfigurationArtifact(
+    attribute_container = artifacts.SystemConfigurationArtifact(
         code_page=u'cp1252', time_zone=u'UTC')
 
-    self.assertEqual(system_configuration.time_zone, u'UTC')
+    self.assertEqual(attribute_container.time_zone, u'UTC')
 
     expected_dict = {
         u'code_page': u'cp1252',
         u'time_zone': u'UTC',
         u'user_accounts': []}
 
-    system_configuration_dict = system_configuration.CopyToDict()
+    test_dict = attribute_container.CopyToDict()
 
-    self.assertEqual(system_configuration_dict, expected_dict)
-
-  # TODO: add more tests.
+    self.assertEqual(test_dict, expected_dict)
 
 
 class UserAccountArtifactTest(shared_test_lib.BaseTestCase):
   """Tests for the user account artifact."""
 
+  # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
-    user_account = artifacts.UserAccountArtifact(
+    attribute_container = artifacts.UserAccountArtifact(
         full_name=u'Full Name', group_identifier=1001, identifier=1000,
         user_directory=u'/home/username', username=u'username')
 
-    self.assertEqual(user_account.username, u'username')
+    self.assertEqual(attribute_container.username, u'username')
 
     expected_dict = {
         u'full_name': u'Full Name',
@@ -91,11 +89,9 @@ class UserAccountArtifactTest(shared_test_lib.BaseTestCase):
         u'user_directory': u'/home/username',
         u'username': u'username'}
 
-    user_account_dict = user_account.CopyToDict()
+    test_dict = attribute_container.CopyToDict()
 
-    self.assertEqual(user_account_dict, expected_dict)
-
-  # TODO: add more tests.
+    self.assertEqual(test_dict, expected_dict)
 
 
 if __name__ == '__main__':

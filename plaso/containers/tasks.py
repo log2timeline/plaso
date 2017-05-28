@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Task related attribute container object definitions."""
+"""Task related attribute container definitions."""
 
 import time
 import uuid
@@ -9,7 +9,7 @@ from plaso.containers import manager
 
 
 class Task(interface.AttributeContainer):
-  """Class to represent a task attribute container.
+  """Task attribute container.
 
   A task describes a piece of work for a multi processing worker process
   e.g. to process a path specification or to analyze an event.
@@ -86,7 +86,7 @@ class Task(interface.AttributeContainer):
 
 
 class TaskCompletion(interface.AttributeContainer):
-  """Class to represent a task completion attribute container.
+  """Task completion attribute container.
 
   Attributes:
     aborted (bool): True if the session was aborted.
@@ -116,7 +116,7 @@ class TaskCompletion(interface.AttributeContainer):
 
 
 class TaskStart(interface.AttributeContainer):
-  """Class to represent a task start attribute container.
+  """Task start attribute container.
 
   Attributes:
     identifier (str): unique identifier of the task.
