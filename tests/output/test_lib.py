@@ -69,7 +69,7 @@ class TestOutputModule(interface.LinearOutputModule):
     output_text = (
         u'\t<Date>{0:s}</Date>\n\t<Time>{1:d}</Time>\n'
         u'\t<Entry>{2:s}</Entry>\n').format(
-            event.date, event.timestamp, event.entry))
+            event.date, event.timestamp, event.entry)
     self._output_writer.Write(output_text)
 
   def WriteEventEnd(self):
