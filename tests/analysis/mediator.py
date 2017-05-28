@@ -23,7 +23,8 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
     storage_writer = fake_storage.FakeStorageWriter(session)
     knowledge_base = self._SetUpKnowledgeBase()
 
-    analysis_mediator = mediator.AnalysisMediator(storage_writer, knowledge_base)
+    analysis_mediator = mediator.AnalysisMediator(
+        storage_writer, knowledge_base)
 
     test_path = self._GetTestFilePath([u'syslog.gz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -43,7 +44,8 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
     storage_writer = fake_storage.FakeStorageWriter(session)
     knowledge_base = self._SetUpKnowledgeBase()
 
-    analysis_mediator = mediator.AnalysisMediator(storage_writer, knowledge_base)
+    analysis_mediator = mediator.AnalysisMediator(
+        storage_writer, knowledge_base)
 
     analysis_mediator.SignalAbort()
 

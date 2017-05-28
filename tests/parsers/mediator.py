@@ -20,6 +20,8 @@ from tests.parsers import test_lib
 class ParsersMediatorTest(test_lib.ParserTestCase):
   """Tests for the parsers mediator."""
 
+  # pylint: disable=protected-access
+
   def testGetEarliestYearFromFileEntry(self):
     """Tests the _GetEarliestYearFromFileEntry function."""
     session = sessions.Session()
