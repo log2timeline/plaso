@@ -356,12 +356,6 @@ class Log2TimelineTool(
             u'is therefore primarily intended for debugging purposes'))
 
     argument_parser.add_argument(
-        u'output', action=u'store', metavar=u'STORAGE_FILE', nargs=u'?',
-        type=str, help=(
-            u'The path to the output file, if the file exists it will get '
-            u'appended to.'))
-
-    argument_parser.add_argument(
         self._SOURCE_OPTION, action=u'store', metavar=u'SOURCE', nargs=u'?',
         default=None, type=str, help=(
             u'The path to the source device, file or directory. If the source '
