@@ -66,26 +66,27 @@ class TestOutputModule(interface.LinearOutputModule):
     Args:
       event (EventObject): event.
     """
-    self._WriteLine((
+    output_text = (
         u'\t<Date>{0:s}</Date>\n\t<Time>{1:d}</Time>\n'
         u'\t<Entry>{2:s}</Entry>\n').format(
             event.date, event.timestamp, event.entry))
+    self._output_writer.Write(output_text)
 
   def WriteEventEnd(self):
     """Writes the end of an event object to the output."""
-    self._WriteLine(u'</Event>\n')
+    self._output_writer.Write(u'</Event>\n')
 
   def WriteEventStart(self):
     """Writes the start of an event object to the output."""
-    self._WriteLine(u'<Event>\n')
+    self._output_writer.Write(u'<Event>\n')
 
   def WriteFooter(self):
     """Writes the footer to the output."""
-    self._WriteLine(u'</EventFile>\n')
+    self._output_writer.Write(u'</EventFile>\n')
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    self._WriteLine(u'<EventFile>\n')
+    self._output_writer.Write(u'<EventFile>\n')
 
 
 class OutputModuleTestCase(shared_test_lib.BaseTestCase):
