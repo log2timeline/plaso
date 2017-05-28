@@ -38,10 +38,10 @@ class XLSXOutputModule(interface.OutputModule):
       ur'\ufffe-\uffff]'))
 
   def __init__(self, output_mediator):
-    """Initializes the output module object.
+    """Initializes an Excel Spreadsheet (XLSX) output module.
 
     Args:
-      output_mediator: The output mediator object (instance of OutputMediator).
+      output_mediator (OutputMediator): output mediator.
     """
     super(XLSXOutputModule, self).__init__(output_mediator)
     self._column_widths = {}
@@ -53,42 +53,42 @@ class XLSXOutputModule(interface.OutputModule):
     self._timestamp_format = self._DEFAULT_TIMESTAMP_FORMAT
     self._workbook = None
 
-  def _FormatDateTime(self, event_object):
+  def _FormatDateTime(self, event):
     """Formats the date to a datetime object without timezone information.
 
     Note: timezone information must be removed due to lack of support
     by xlsxwriter and Excel.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A datetime object (instance of datetime.datetime)
-      or a string containing 'ERROR' on OverflowError.
+      datetime.datetime:str: date and time value or a string containing
+          "ERROR" on OverflowError.
     """
     try:
       timestamp = timelib.Timestamp.CopyToDatetime(
-          event_object.timestamp, self._output_mediator.timezone,
-          raise_error=True)
+          event.timestamp, self._output_mediator.timezone, raise_error=True)
 
       return timestamp.replace(tzinfo=None)
 
     except OverflowError as exception:
-      self._ReportEventError(event_object, (
+      self._ReportEventError(event, (
           u'unable to copy timestamp: {0:d} to a human readable date and time '
           u'with error: {1:s}. Defaulting to: "ERROR"').format(
-              event_object.timestamp, exception))
+              event.timestamp, exception))
       return u'ERROR'
 
   def _RemoveIllegalXMLCharacters(self, xml_string):
     """Removes illegal characters for XML.
 
+    If the input is not a string it will be returned unchanged.
+
     Args:
-      xml_string: a string containing XML with possible illegal characters.
+      xml_string (str): XML with possible illegal characters.
 
     Returns:
-      A string containing XML where all illegal characters have been removed.
-      If the input is not a string it will be returned unchanged.
+      str: XML where all illegal characters have been removed.
     """
     if not isinstance(xml_string, py2to3.STRING_TYPES):
       return xml_string
@@ -127,7 +127,7 @@ class XLSXOutputModule(interface.OutputModule):
     """Sets the fields to output.
 
     Args:
-      fields: a list of strings containing the names of the fields to output.
+      fields (list[str]): names of the fields to output.
     """
     self._fields = fields
 
@@ -135,7 +135,7 @@ class XLSXOutputModule(interface.OutputModule):
     """Sets the filename.
 
     Args:
-      filename: the filename.
+      filename (str): filename.
     """
     self._filename = filename
 
@@ -143,22 +143,22 @@ class XLSXOutputModule(interface.OutputModule):
     """Set the timestamp format to use for the datetime column.
 
     Args:
-      timestamp_format: A string that describes the way to format the datetime.
+      timestamp_format (str): format string of date and time values.
     """
     self._timestamp_format = timestamp_format
 
-  def WriteEventBody(self, event_object):
+  def WriteEventBody(self, event):
     """Writes the body of an event object to the spreadsheet.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
     """
     for field_name in self._fields:
       if field_name == u'datetime':
-        output_value = self._FormatDateTime(event_object)
+        output_value = self._FormatDateTime(event)
       else:
         output_value = self._dynamic_fields_helper.GetFormattedField(
-            event_object, field_name)
+            event, field_name)
 
       output_value = self._RemoveIllegalXMLCharacters(output_value)
 

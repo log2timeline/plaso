@@ -49,11 +49,11 @@ class JSONOutputModule(interface.LinearOutputModule):
 
   def WriteFooter(self):
     """Writes the footer to the output."""
-    self._WriteLine(u'}')
+    self._output_writer.Write(u'}')
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    self._WriteLine(u'{')
+    self._output_writer.Write(u'{')
     self._event_counter = 0
 
 

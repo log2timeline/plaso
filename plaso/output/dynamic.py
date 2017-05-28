@@ -406,11 +406,11 @@ class DynamicOutputModule(interface.LinearOutputModule):
       output_values.append(output_value)
 
     output_line = u'{0:s}\n'.format(self._field_delimiter.join(output_values))
-    self._WriteLine(output_line)
+    self._output_writer.Write(output_line)
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    self._WriteLine(u'{0:s}\n'.format(self._field_delimiter.join(self._fields)))
+    self._output_writer.Write(u'{0:s}\n'.format(self._field_delimiter.join(self._fields)))
 
 
 manager.OutputManager.RegisterOutput(DynamicOutputModule)

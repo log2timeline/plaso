@@ -68,7 +68,7 @@ class NativePythonOutputModule(interface.LinearOutputModule):
     """
     output_string = NativePythonFormatterHelper.GetFormattedEventObject(
         event_object)
-    self._WriteLine(output_string)
+    self._output_writer.Write(output_string)
 
 
 manager.OutputManager.RegisterOutput(NativePythonOutputModule)

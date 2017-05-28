@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains the output manager class."""
+"""Output plugin manager."""
 
 from plaso.lib import py2to3
 
@@ -7,7 +7,7 @@ from plaso.output import interface
 
 
 class OutputManager(object):
-  """Class that implements the output manager."""
+  """Output module manager."""
 
   _disabled_output_classes = {}
   _output_classes = {}

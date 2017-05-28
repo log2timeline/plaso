@@ -103,7 +103,7 @@ class TLNBaseOutputModule(interface.LinearOutputModule):
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    self._WriteLine(self._HEADER)
+    self._output_writer.Write(self._HEADER)
 
 
 class TLNOutputModule(TLNBaseOutputModule):
@@ -138,7 +138,7 @@ class TLNOutputModule(TLNBaseOutputModule):
 
     out_write = u'{0:d}|{1:s}|{2:s}|{3:s}|{4!s}\n'.format(
         posix_timestamp, source, hostname, username, description)
-    self._WriteLine(out_write)
+    self._output_writer.Write(out_write)
 
 
 class L2TTLNOutputModule(TLNBaseOutputModule):
@@ -199,7 +199,7 @@ class L2TTLNOutputModule(TLNBaseOutputModule):
         posix_timestamp, source, hostname, username, description,
         self._output_mediator.timezone, notes)
 
-    self._WriteLine(out_write)
+    self._output_writer.Write(out_write)
 
 
 manager.OutputManager.RegisterOutputs([L2TTLNOutputModule, TLNOutputModule])

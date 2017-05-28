@@ -220,7 +220,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    self._WriteLine(self._HEADER)
+    self._output_writer.Write(self._HEADER)
 
 
 manager.OutputManager.RegisterOutput(L2TCSVOutputModule)

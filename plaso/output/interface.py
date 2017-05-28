@@ -8,7 +8,7 @@ from plaso.lib import errors
 
 
 class OutputModule(object):
-  """Class that implements the output module object interface."""
+  """Output module interface."""
 
   NAME = u''
   DESCRIPTION = u''
@@ -141,7 +141,7 @@ class OutputModule(object):
 
 
 class LinearOutputModule(OutputModule):
-  """Class that implements a linear output module object."""
+  """Linear output module."""
 
   # Need to suppress this since these classes do not implement the
   # abstract method WriteEventBody, classes that inherit from one of these
@@ -149,7 +149,7 @@ class LinearOutputModule(OutputModule):
   # pylint: disable=abstract-method
 
   def __init__(self, output_mediator):
-    """Initializes the output module object.
+    """Initializes a linear output module.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
@@ -160,14 +160,6 @@ class LinearOutputModule(OutputModule):
     """
     super(LinearOutputModule, self).__init__(output_mediator)
     self._output_writer = None
-
-  def _WriteLine(self, line):
-    """Write a single line to the supplied file-like object.
-
-    Args:
-      line (str): line of text to write.
-    """
-    self._output_writer.Write(line)
 
   def SetOutputWriter(self, output_writer):
     """Set the output writer.
