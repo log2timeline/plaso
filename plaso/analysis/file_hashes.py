@@ -55,7 +55,7 @@ class FileHashesPlugin(interface.AnalysisPlugin):
       str: string of the form "display_name: hash_type=hash_value". For example,
           "OS:/path/spec: test_hash=4 other_hash=5".
     """
-    display_name = mediator.GetDisplayName(pathspec)
+    display_name = mediator.GetDisplayNameForPathSpec(pathspec)
     path_string = u'{0:s}:'.format(display_name)
     for hash_name, hash_value in sorted(hashes.items()):
       path_string = u'{0:s} {1:s}={2:s}'.format(

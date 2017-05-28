@@ -215,7 +215,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     lookup_hash = u'{0:s}_hash'.format(self._analyzer.lookup_hash)
     lookup_hash = getattr(event, lookup_hash, None)
     if not lookup_hash:
-      display_name = mediator.GetDisplayName(path_spec)
+      display_name = mediator.GetDisplayNameForPathSpec(path_spec)
       logging.warning((
           u'Lookup hash attribute: {0:s}_hash missing from event that '
           u'originated from: {1:s}.').format(
