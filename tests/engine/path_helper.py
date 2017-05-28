@@ -114,6 +114,11 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     expected_relative_path = u'{0:s}syslog.gz'.format(os.path.sep)
     self.assertEqual(relative_path, expected_relative_path)
 
+    # Test path specification with incorrect mount point.
+    relative_path = path_helper.PathHelper.GetRelativePathForPathSpec(
+        os_path_spec, mount_path=u'/bogus')
+    self.assertEqual(relative_path, test_path)
+
     # Test path specification with data stream.
     os_path_spec.data_stream = u'MYDATA'
 
