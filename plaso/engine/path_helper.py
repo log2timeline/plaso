@@ -127,7 +127,7 @@ class PathHelper(object):
     # If we are parsing a mount point we don't want to include the full
     # path to file's location here, we are only interested in the path
     # relative to the mount point.
-    if mount_path:
-      _, _, location = location.partition(mount_path)
+    if mount_path and location.startswith(mount_path):
+      location = location[len(mount_path):]
 
     return location

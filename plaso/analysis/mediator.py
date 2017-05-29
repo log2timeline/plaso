@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The analysis plugin mediator object."""
 
+from plaso.engine import path_helper
 from plaso.lib import timelib
 
 
@@ -28,7 +29,9 @@ class AnalysisMediator(object):
     self._data_location = data_location
     self._event_filter_expression = None
     self._knowledge_base = knowledge_base
+    self._mount_path = None
     self._storage_writer = storage_writer
+    self._text_prepend = None
 
     self.number_of_produced_analysis_reports = 0
     self.number_of_produced_event_tags = 0
@@ -48,34 +51,17 @@ class AnalysisMediator(object):
     """str: platform."""
     return self._knowledge_base.platform
 
-  def GetDisplayName(self, path_spec):
-    """Retrieves the display name for the path spec.
+  def GetDisplayNameForPathSpec(self, path_spec):
+    """Retrieves the display name for a path specification.
 
     Args:
-      path_spec (dfvfs.PathSpec): paths specification.
+      path_spec (dfvfs.PathSpec): path specification.
 
     Returns:
-      str: human readable path.
+      str: human readable version of the path specification.
     """
-    relative_path = self.GetRelativePath(path_spec)
-
-    return u'{0:s}:{1:s}'.format(path_spec.type_indicator, relative_path)
-
-  def GetRelativePath(self, path_spec):
-    """Retrieves the relative path of a path specification.
-
-    Args:
-      path_spec (dfvfs.PathSpec): paths specification.
-
-    Returns:
-      str: relative path or None.
-    """
-    # TODO: Solve this differently, quite possibly inside dfVFS using mount
-    # path spec.
-    file_path = getattr(path_spec, u'location', None)
-    # TODO: Determine if we need to access the mount_path, as for the parser
-    # mediator.
-    return file_path
+    return path_helper.PathHelper.GetDisplayNameForPathSpec(
+        path_spec, mount_path=self._mount_path, text_prepend=self._text_prepend)
 
   def GetUsernameForPath(self, path):
     """Retrieves a username for a specific path.
