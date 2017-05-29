@@ -68,6 +68,16 @@ class HashersManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(
         number_of_parsers, len(manager.HashersManager._hasher_classes))
 
+  def testGetHashersInformation(self):
+    """Tests the GetHashersInformation function."""
+    hashers_information = manager.HashersManager.GetHashersInformation()
+
+    self.assertGreaterEqual(len(hashers_information), 3)
+
+    available_hasher_names = [name for name, _ in hashers_information]
+    self.assertIn(u'sha1', available_hasher_names)
+    self.assertIn(u'sha256', available_hasher_names)
+
   def testGetHasherNamesFromString(self):
     """Tests the GetHasherNamesFromString method."""
     test_strings = u'md5,sha256,testhash'

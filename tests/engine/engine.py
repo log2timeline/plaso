@@ -66,6 +66,9 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
+  # TODO: add tests for _GuessOS
+  # TODO: add tests for CreateSession
+
   @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testGetSourceFileSystem(self):
     """Tests the GetSourceFileSystem function."""

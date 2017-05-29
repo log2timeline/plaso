@@ -182,18 +182,13 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
         len(manager.ParsersManager._parser_classes),
         number_of_parsers)
 
-  def testPluginRegistration(self):
-    """Tests the RegisterPlugin and DeregisterPlugin functions."""
-    TestParserWithPlugins.RegisterPlugin(TestPlugin)
-    self.assertEqual(
-        len(TestParserWithPlugins._plugin_classes), 1)
+  def testGetNamesOfParsersWithPlugins(self):
+    """Tests the GetNamesOfParsersWithPlugins function."""
+    parsers_names = manager.ParsersManager.GetNamesOfParsersWithPlugins()
 
-    with self.assertRaises(KeyError):
-      TestParserWithPlugins.RegisterPlugin(TestPlugin)
+    self.assertGreaterEqual(len(parsers_names), 1)
 
-    TestParserWithPlugins.DeregisterPlugin(TestPlugin)
-    self.assertEqual(
-        len(TestParserWithPlugins._plugin_classes), 0)
+    self.assertIn(u'winreg', parsers_names)
 
   def testGetParserAndPluginNames(self):
     """Tests the GetParserAndPluginNames function."""
@@ -232,6 +227,15 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     parser_names = manager.ParsersManager.GetParserAndPluginNames(
         parser_filter_expression=u'win_gen')
     self.assertIn(u'lnk', parser_names)
+
+  def testGetParserPluginsInformation(self):
+    """Tests the GetParserPluginsInformation function."""
+    plugins_information = manager.ParsersManager.GetParserPluginsInformation()
+
+    self.assertGreaterEqual(len(plugins_information), 1)
+
+    available_parser_names = [name for name, _ in plugins_information]
+    self.assertIn(u'olecf_default', available_parser_names)
 
   def testGetParserObjectByName(self):
     """Tests the GetParserObjectByName function."""
@@ -339,17 +343,18 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(sorted(parser_names), expected_parser_names)
 
-  def testGetPluginObjectByName(self):
-    """Tests the GetPluginObjectByName function."""
-    TestParserWithPlugins.RegisterPlugin(TestPlugin)
+  def testGetParsersInformation(self):
+    """Tests the GetParsersInformation function."""
+    manager.ParsersManager.RegisterParser(TestParser)
 
-    plugin_object = TestParserWithPlugins.GetPluginObjectByName(u'test_plugin')
-    self.assertIsNotNone(plugin_object)
+    parsers_information = manager.ParsersManager.GetParsersInformation()
 
-    plugin_object = TestParserWithPlugins.GetPluginObjectByName(u'bogus')
-    self.assertIsNone(plugin_object)
+    self.assertGreaterEqual(len(parsers_information), 1)
 
-    TestParserWithPlugins.DeregisterPlugin(TestPlugin)
+    available_parser_names = [name for name, _ in parsers_information]
+    self.assertIn(u'test_parser', available_parser_names)
+
+    manager.ParsersManager.DeregisterParser(TestParser)
 
   def testGetPlugins(self):
     """Tests the GetPlugins function."""
@@ -362,10 +367,34 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
 
     TestParserWithPlugins.DeregisterPlugin(TestPlugin)
 
-  # TODO: add GetParsersInformation test.
-  # TODO: add GetNamesOfParsersWithPlugins test.
-  # TODO: add GetScanner test.
-  # TODO: add GetSpecificationStore test.
+  # TODO: add tests for GetPresetForOperatingSystem.
+  # TODO: add tests for GetScanner.
+  # TODO: add tests for GetSpecificationStore.
+
+  def testPluginRegistration(self):
+    """Tests the RegisterPlugin and DeregisterPlugin functions."""
+    TestParserWithPlugins.RegisterPlugin(TestPlugin)
+    self.assertEqual(
+        len(TestParserWithPlugins._plugin_classes), 1)
+
+    with self.assertRaises(KeyError):
+      TestParserWithPlugins.RegisterPlugin(TestPlugin)
+
+    TestParserWithPlugins.DeregisterPlugin(TestPlugin)
+    self.assertEqual(
+        len(TestParserWithPlugins._plugin_classes), 0)
+
+  def testGetPluginObjectByName(self):
+    """Tests the GetPluginObjectByName function."""
+    TestParserWithPlugins.RegisterPlugin(TestPlugin)
+
+    plugin_object = TestParserWithPlugins.GetPluginObjectByName(u'test_plugin')
+    self.assertIsNotNone(plugin_object)
+
+    plugin_object = TestParserWithPlugins.GetPluginObjectByName(u'bogus')
+    self.assertIsNone(plugin_object)
+
+    TestParserWithPlugins.DeregisterPlugin(TestPlugin)
 
 
 if __name__ == '__main__':

@@ -40,60 +40,9 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
     return scan_node
 
   # TODO: add test for _CheckStorageFile
-  # TODO: add test for _GetParserFilterPreset
   # TODO: add test for _PreprocessSource
   # TODO: add test for _PreprocessSetCollectionInformation
   # TODO: add test for _SetTimezone
-
-  def testGetHashersInformation(self):
-    """Tests the GetHashersInformation function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    hashers_information = test_front_end.GetHashersInformation()
-
-    self.assertGreaterEqual(len(hashers_information), 3)
-
-    available_hasher_names = [name for name, _ in hashers_information]
-    self.assertIn(u'sha1', available_hasher_names)
-    self.assertIn(u'sha256', available_hasher_names)
-
-  def testGetParserPluginsInformation(self):
-    """Tests the GetParserPluginsInformation function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    parser_plugins_information = test_front_end.GetParserPluginsInformation()
-
-    self.assertGreaterEqual(len(parser_plugins_information), 1)
-
-    available_parser_names = [name for name, _ in parser_plugins_information]
-    self.assertIn(u'olecf_default', available_parser_names)
-
-  def testGetParserPresetsInformation(self):
-    """Tests the GetParserPresetsInformation function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    parser_presets_information = test_front_end.GetParserPresetsInformation()
-
-    self.assertGreaterEqual(len(parser_presets_information), 1)
-
-    available_parser_names = [name for name, _ in parser_presets_information]
-    self.assertIn(u'linux', available_parser_names)
-
-  def testGetParsersInformation(self):
-    """Tests the GetParsersInformation function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    parsers_information = test_front_end.GetParsersInformation()
-
-    self.assertGreaterEqual(len(parsers_information), 1)
-
-    available_parser_names = [name for name, _ in parsers_information]
-    self.assertIn(u'filestat', available_parser_names)
-
-  def testGetNamesOfParsersWithPlugins(self):
-    """Tests the GetNamesOfParsersWithPlugins function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    parsers_names = test_front_end.GetNamesOfParsersWithPlugins()
-
-    self.assertGreaterEqual(len(parsers_names), 1)
-
-    self.assertIn(u'winreg', parsers_names)
 
   # Note: this test takes multiple seconds to complete due to
   # the behavior of the multi processing queue.
@@ -136,11 +85,6 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
 
       self.assertEqual(event_object.data_type, u'fs:stat')
       self.assertEqual(event_object.filename, u'/lost+found')
-
-  def testSetUseZeroMQ(self):
-    """Tests the SetUseZeroMQ function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    test_front_end.SetUseZeroMQ(use_zeromq=True)
 
 
 if __name__ == '__main__':

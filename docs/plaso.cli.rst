@@ -43,6 +43,54 @@ plaso.cli.hexdump module
     :undoc-members:
     :show-inheritance:
 
+plaso.cli.image_export_tool module
+----------------------------------
+
+.. automodule:: plaso.cli.image_export_tool
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.cli.log2timeline_tool module
+----------------------------------
+
+.. automodule:: plaso.cli.log2timeline_tool
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.cli.logging_filter module
+-------------------------------
+
+.. automodule:: plaso.cli.logging_filter
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.cli.pinfo_tool module
+---------------------------
+
+.. automodule:: plaso.cli.pinfo_tool
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.cli.psort_tool module
+---------------------------
+
+.. automodule:: plaso.cli.psort_tool
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.cli.psteal_tool module
+----------------------------
+
+.. automodule:: plaso.cli.psteal_tool
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.cli.status_view_tool module
 ---------------------------------
 
