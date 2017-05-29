@@ -6,17 +6,19 @@ import argparse
 import os
 import unittest
 
+from plaso.cli import log2timeline_tool
 from plaso.lib import errors
+from plaso.output import manager as output_manager
 from plaso.storage import zip_file as storage_zip_file
 
 from tests import test_lib as shared_test_lib
-from tests.cli import test_lib as cli_test_lib
-
-from tools import log2timeline
+from tests.cli import test_lib
 
 
-class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
+class Log2TimelineToolTest(test_lib.CLIToolTestCase):
   """Tests for the log2timeline CLI tool."""
+
+  # pylint: disable=protected-access
 
   _BDE_PASSWORD = u'bde-TEST'
 
@@ -49,54 +51,100 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       u'                        system CPUs minus one].',
       u''])
 
-  # TODO: add test for _GetMatcher.
-  # TODO: add test for _ParseOutputOptions.
-  # TODO: add test for _ParseProcessingOptions.
+  # TODO: add tests for _CheckStorageFile
+  # TODO: add tests for _CreateProcessingConfiguration
+  # TODO: add tests for _DetermineSourceType
+
+  def testGetFiltersInformation(self):
+    """Tests the _GetFiltersInformation function."""
+    test_tool = log2timeline_tool.Log2TimelineTool()
+    filters_info = test_tool._GetFiltersInformation()
+
+    self.assertIsNotNone(filters_info)
+
+    available_filter_names = [name for name, _ in filters_info]
+    self.assertIn(u'DynamicFilter', available_filter_names)
+    self.assertIn(u'EventObjectFilter', available_filter_names)
+
+  def testGetOutputModulesInformation(self):
+    """Tests the _GetOutputModulesInformation function."""
+    test_tool = log2timeline_tool.Log2TimelineTool()
+    modules_info = test_tool._GetOutputModulesInformation()
+
+    self.assertIsNotNone(modules_info)
+
+    available_module_names = [name for name, _ in modules_info]
+    self.assertIn(u'dynamic', available_module_names)
+    self.assertIn(u'json', available_module_names)
+
+  def testGetPluginData(self):
+    """Tests the _GetPluginData function."""
+    test_tool = log2timeline_tool.Log2TimelineTool()
+    plugin_info = test_tool._GetPluginData()
+
+    self.assertIn(u'Hashers', plugin_info)
+
+    available_hasher_names = [name for name, _ in plugin_info[u'Hashers']]
+    self.assertIn(u'sha256', available_hasher_names)
+    self.assertIn(u'sha1', available_hasher_names)
+
+    self.assertIn(u'Parsers', plugin_info)
+    self.assertIsNotNone(plugin_info[u'Parsers'])
+
+    self.assertIn(u'Parser Plugins', plugin_info)
+    self.assertIsNotNone(plugin_info[u'Parser Plugins'])
+
+  # TODO: add tests for _GetStatusUpdateCallback
+
+  def testParseFilterOption(self):
+    """Tests the _ParseFilterOption function."""
+    test_tool = log2timeline_tool.Log2TimelineTool()
+
+    options = test_lib.TestOptions()
+
+    options.filter = u'parser is "syslog" and message contains "root"'
+
+    test_tool._ParseFilterOption(options)
+    self.assertEqual(test_tool._filter_expression, options.filter)
+    self.assertIsNotNone(test_tool._filter_object)
+
+  def testParseOutputOptions(self):
+    """Tests the _ParseOutputOptions function."""
+    test_tool = log2timeline_tool.Log2TimelineTool()
+
+    options = test_lib.TestOptions()
+
+    test_tool._ParseOutputOptions(options)
+
+  def testParseProcessingOptions(self):
+    """Tests the _ParseProcessingOptions function."""
+    test_tool = log2timeline_tool.Log2TimelineTool()
+
+    options = test_lib.TestOptions()
+
+    test_tool._ParseProcessingOptions(options)
+
+  # TODO: add tests for _PrintProcessingSummary
+
+  # TODO: add tests for AddOutputOptions
 
   def testAddProcessingOptions(self):
     """Tests the AddProcessingOptions function."""
     argument_parser = argparse.ArgumentParser(
         prog=u'log2timeline_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
+        formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
-    test_tool = log2timeline.Log2TimelineTool()
+    test_tool = log2timeline_tool.Log2TimelineTool()
     test_tool.AddProcessingOptions(argument_parser)
 
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_PROCESSING_OPTIONS)
 
-  def testListHashers(self):
-    """Tests the ListHashers function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
-
-    test_tool.ListHashers()
-
-    output = output_writer.ReadOutput()
-
-    number_of_tables = 0
-    lines = []
-    for line in output.split(b'\n'):
-      line = line.strip()
-      lines.append(line)
-
-      if line.startswith(b'*****') and line.endswith(b'*****'):
-        number_of_tables += 1
-
-    self.assertIn(u'Hashers', lines[1])
-
-    lines = frozenset(lines)
-
-    self.assertEqual(number_of_tables, 1)
-
-    expected_line = b'md5 : Calculates an MD5 digest hash over input data.'
-    self.assertIn(expected_line, lines)
-
   def testListOutputModules(self):
     """Tests the ListOutputModules function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     test_tool.ListOutputModules()
 
@@ -112,10 +160,10 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
     self.assertIn(u'Output Modules', lines[1])
 
-    # pylint: disable=protected-access
     lines = frozenset(lines)
-    disabled_outputs = list(test_tool._front_end.GetDisabledOutputClasses())
-    enabled_outputs = list(test_tool._front_end.GetOutputClasses())
+    disabled_outputs = list(
+        output_manager.OutputManager.GetDisabledOutputClasses())
+    enabled_outputs = list(output_manager.OutputManager.GetOutputClasses())
 
     expected_number_of_tables = 0
     if disabled_outputs:
@@ -128,60 +176,10 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     expected_line = b'rawpy : "raw" (or native) Python output.'
     self.assertIn(expected_line, lines)
 
-  def testListParsersAndPlugins(self):
-    """Tests the ListParsersAndPlugins function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
-
-    test_tool.ListParsersAndPlugins()
-
-    output = output_writer.ReadOutput()
-
-    number_of_tables = 0
-    lines = []
-    for line in output.split(b'\n'):
-      line = line.strip()
-      lines.append(line)
-
-      if line.startswith(b'*****') and line.endswith(b'*****'):
-        number_of_tables += 1
-
-    self.assertIn(u'Parsers', lines[1])
-
-    lines = frozenset(lines)
-
-    self.assertEqual(number_of_tables, 9)
-
-    expected_line = b'filestat : Parser for file system stat information.'
-    self.assertIn(expected_line, lines)
-
-    expected_line = b'bencode_utorrent : Parser for uTorrent bencoded files.'
-    self.assertIn(expected_line, lines)
-
-    expected_line = (
-        b'msie_webcache : Parser for MSIE WebCache ESE database files.')
-    self.assertIn(expected_line, lines)
-
-    expected_line = b'olecf_default : Parser for a generic OLECF item.'
-    self.assertIn(expected_line, lines)
-
-    expected_line = b'plist_default : Parser for plist files.'
-    self.assertIn(expected_line, lines)
-
-    expected_line = (
-        b'chrome_history : Parser for Chrome history SQLite database files.')
-    self.assertIn(expected_line, lines)
-
-    expected_line = b'ssh : Parser for SSH syslog entries.'
-    self.assertIn(expected_line, lines)
-
-    expected_line = b'winreg_default : Parser for Registry data.'
-    self.assertIn(expected_line, lines)
-
   def testParseArguments(self):
     """Tests the ParseArguments function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     result = test_tool.ParseArguments()
     self.assertFalse(result)
@@ -191,21 +189,21 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.source = self._GetTestFilePath([u'testdir'])
     options.output = u'storage.plaso'
 
     test_tool.ParseOptions(options)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
 
     with self.assertRaises(errors.BadConfigOption):
       test_tool.ParseOptions(options)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.source = self._GetTestFilePath([u'testdir'])
 
     with self.assertRaises(errors.BadConfigOption):
@@ -213,12 +211,12 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
     # TODO: improve test coverage.
 
-  def testProcessSourcesDirectory(self):
-    """Tests the ProcessSources function on a directory."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
+  def testExtractEventsFromSourcesOnDirectory(self):
+    """Tests the ExtractEventsFromSources function on a directory."""
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.quiet = True
     options.single_process = True
     options.status_view_mode = u'none'
@@ -229,7 +227,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ExtractEventsFromSources()
 
       expected_output = [
           b'',
@@ -244,12 +242,12 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
-  def testProcessSourcesBDEImage(self):
-    """Tests the ProcessSources function on an image containing BDE."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
+  def testExtractEventsFromSourcesOnBDEImage(self):
+    """Tests the ExtractEventsFromSources function on BDE image."""
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.credentials = [u'password:{0:s}'.format(self._BDE_PASSWORD)]
     options.quiet = True
     options.single_process = True
@@ -261,7 +259,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ExtractEventsFromSources()
 
       expected_output = [
           b'',
@@ -276,12 +274,12 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
-  def testProcessSourcesImage(self):
-    """Tests the ProcessSources function on a single partition image."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
+  def testExtractEventsFromSourcesImage(self):
+    """Tests the ExtractEventsFromSources function on single partition image."""
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.quiet = True
     options.single_process = True
     options.status_view_mode = u'none'
@@ -292,7 +290,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ExtractEventsFromSources()
 
       expected_output = [
           b'',
@@ -307,12 +305,12 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
-  def testProcessSourcesPartitionedImage(self):
-    """Tests the ProcessSources function on a multi partition image."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
+  def testExtractEventsFromSourcesPartitionedImage(self):
+    """Tests the ExtractEventsFromSources function on multi partition image."""
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.partitions = u'all'
     options.quiet = True
     options.single_process = True
@@ -325,7 +323,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ExtractEventsFromSources()
 
       expected_output = [
           b'',
@@ -340,12 +338,12 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
-  def testProcessSourcesVSSImage(self):
-    """Tests the ProcessSources function on an image containing VSS."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
+  def testExtractEventsFromSourcesOnVSSImage(self):
+    """Tests the ExtractEventsFromSources function on VSS image."""
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.quiet = True
     options.single_process = True
     options.status_view_mode = u'none'
@@ -357,7 +355,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ExtractEventsFromSources()
 
       expected_output = [
           b'',
@@ -376,12 +374,12 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
-  def testProcessSourcesSingleFile(self):
-    """Tests the ProcessSources function on a single file."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
+  def testExtractEventsFromSourcesOnFile(self):
+    """Tests the ExtractEventsFromSources function on a file."""
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.quiet = True
     options.single_process = True
     options.status_view_mode = u'none'
@@ -392,7 +390,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ExtractEventsFromSources()
 
       expected_output = [
           b'',
@@ -407,12 +405,12 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
-  def testProcessSourcesFilestat(self):
-    """Test if the filestat and other parsers ran."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
+  def testExtractEventsFromSourcesWithFilestat(self):
+    """Tests the ExtractEventsFromSources function with filestat parser."""
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.quiet = True
     options.parsers = u'filestat,pe'
     options.single_process = True
@@ -424,7 +422,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ExtractEventsFromSources()
 
       storage_file = storage_zip_file.ZIPStorageFile()
       try:
@@ -440,10 +438,10 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   def testShowInfo(self):
     """Tests the output of the tool in info mode."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.show_info = True
     test_tool.ParseOptions(options)
     test_tool.ShowInfo()

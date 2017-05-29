@@ -721,7 +721,7 @@ class EventExtractionWorker(object):
     """Sets the Yara rules.
 
     Args:
-      yara_rules_string(str): unparsed Yara rule definitions.
+      yara_rules_string (str): unparsed Yara rule definitions.
     """
     if not yara_rules_string:
       return
@@ -735,7 +735,7 @@ class EventExtractionWorker(object):
     """Gets the names of the active analyzers.
 
     Returns:
-      list(str): names of active analyzers.
+      list[str]: names of active analyzers.
     """
     return [analyzer_instance.NAME for analyzer_instance in self._analyzers]
 

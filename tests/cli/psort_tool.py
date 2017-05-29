@@ -6,16 +6,15 @@ import argparse
 import os
 import unittest
 
+from plaso.cli import psort_tool
 from plaso.cli.helpers import interface as helpers_interface
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.lib import errors
 from plaso.output import manager as output_manager
 
 from tests import test_lib as shared_test_lib
-from tests.cli import test_lib as cli_test_lib
+from tests.cli import test_lib
 from tests.multi_processing import psort as psort_test
-
-from tools import psort
 
 
 class TestInputReader(object):
@@ -85,7 +84,7 @@ class TestOutputModuleMissingParameters(psort_test.TestOutputModule):
     setattr(cls, attribute, value)
 
 
-class PsortToolTest(cli_test_lib.CLIToolTestCase):
+class PsortToolTest(test_lib.CLIToolTestCase):
   """Tests for the psort tool."""
 
   _EXPECTED_ANALYSIS_PLUGIN_OPTIONS = u'\n'.join([
@@ -278,9 +277,9 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'psort_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
+        formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
-    test_tool = psort.PsortTool()
+    test_tool = psort_tool.PsortTool()
     test_tool.AddAnalysisPluginOptions(argument_parser, [])
 
     output = self._RunArgparseFormatHelp(argument_parser)
@@ -291,9 +290,9 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'psort_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
+        formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
-    test_tool = psort.PsortTool()
+    test_tool = psort_tool.PsortTool()
     test_tool.AddFilterOptions(argument_parser)
 
     output = self._RunArgparseFormatHelp(argument_parser)
@@ -304,9 +303,9 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'psort_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
+        formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
-    test_tool = psort.PsortTool()
+    test_tool = psort_tool.PsortTool()
     test_tool.AddLanguageOptions(argument_parser)
 
     output = self._RunArgparseFormatHelp(argument_parser)
@@ -317,9 +316,9 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'psort_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
+        formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
-    test_tool = psort.PsortTool()
+    test_tool = psort_tool.PsortTool()
     test_tool.AddOutputModuleOptions(argument_parser, [u'dynamic'])
 
     output = self._RunArgparseFormatHelp(argument_parser)
@@ -330,9 +329,9 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'psort_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
+        formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
-    test_tool = psort.PsortTool()
+    test_tool = psort_tool.PsortTool()
     test_tool.AddProcessingOptions(argument_parser)
 
     output = self._RunArgparseFormatHelp(argument_parser)
@@ -340,8 +339,8 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
 
   def testListAnalysisPlugins(self):
     """Tests the ListAnalysisPlugins function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = psort.PsortTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psort_tool.PsortTool(output_writer=output_writer)
 
     test_tool.ListAnalysisPlugins()
 
@@ -368,8 +367,8 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
 
   def testListLanguageIdentifiers(self):
     """Tests the ListLanguageIdentifiers function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = psort.PsortTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psort_tool.PsortTool(output_writer=output_writer)
 
     test_tool.ListLanguageIdentifiers()
 
@@ -395,8 +394,8 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
 
   def testListOutputModules(self):
     """Tests the ListOutputModules function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = psort.PsortTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psort_tool.PsortTool(output_writer=output_writer)
 
     test_tool.ListOutputModules()
 
@@ -430,8 +429,8 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
 
   def testParseArguments(self):
     """Tests the ParseArguments function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = psort.PsortTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psort_tool.PsortTool(output_writer=output_writer)
 
     result = test_tool.ParseArguments()
     self.assertFalse(result)
@@ -441,21 +440,21 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
 
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = psort.PsortTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psort_tool.PsortTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.output_format = u'null'
     options.storage_file = self._GetTestFilePath([u'psort_test.json.plaso'])
 
     test_tool.ParseOptions(options)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
 
     with self.assertRaises(errors.BadConfigOption):
       test_tool.ParseOptions(options)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.storage_file = self._GetTestFilePath([u'psort_test.json.plaso'])
 
     with self.assertRaises(errors.BadConfigOption):
@@ -466,11 +465,11 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
   def testProcessStorageWithMissingParameters(self):
     """Test the ProcessStorage function with half-configured output module."""
     input_reader = TestInputReader()
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = psort.PsortTool(
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psort_tool.PsortTool(
         input_reader=input_reader, output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.storage_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     options.output_format = u'test_missing'
 

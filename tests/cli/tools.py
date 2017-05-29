@@ -191,6 +191,39 @@ class CLIToolTest(test_lib.CLIToolTestCase):
         b'----------------------------------------\n')
     self.assertTrue(string.startswith(expected_string))
 
+  def testParseNumericOption(self):
+    """Tests the ParseNumericOption function."""
+    output_writer = test_lib.TestOutputWriter()
+    cli_tool = tools.CLITool(output_writer=output_writer)
+
+    options = test_lib.TestOptions()
+
+    numeric_value = cli_tool.ParseNumericOption(options, u'buffer_size')
+    self.assertIsNone(numeric_value)
+
+    numeric_value = cli_tool.ParseNumericOption(
+        options, u'buffer_size', default_value=0)
+    self.assertEqual(numeric_value, 0)
+
+    options.buffer_size = u'10'
+
+    numeric_value = cli_tool.ParseNumericOption(options, u'buffer_size')
+    self.assertEqual(numeric_value, 10)
+
+    numeric_value = cli_tool.ParseNumericOption(
+        options, u'buffer_size', base=16)
+    self.assertEqual(numeric_value, 16)
+
+    options.buffer_size = u'bogus'
+
+    with self.assertRaises(errors.BadConfigOption):
+      cli_tool.ParseNumericOption(options, u'buffer_size')
+
+    options.buffer_size = (1, u'bogus')
+
+    with self.assertRaises(errors.BadConfigOption):
+      cli_tool.ParseNumericOption(options, u'buffer_size')
+
   def testParseStringOption(self):
     """Tests the ParseStringOption function."""
     encoding = sys.stdin.encoding

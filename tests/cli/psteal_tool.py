@@ -7,15 +7,14 @@ import unittest
 
 from dfvfs.resolver import resolver as dfvfs_resolver
 
+from plaso.cli import psteal_tool
 from plaso.lib import errors
 
 from tests import test_lib as shared_test_lib
-from tests.cli import test_lib as cli_test_lib
-
-from tools import psteal
+from tests.cli import test_lib
 
 
-class PstealToolTest(cli_test_lib.CLIToolTestCase):
+class PstealToolTest(test_lib.CLIToolTestCase):
   """Tests for the psteal CLI tool."""
 
   _BDE_PASSWORD = u'bde-TEST'
@@ -28,11 +27,11 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
 
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = psteal.PstealTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     # Test when no source nor output file specified.
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     expected_error = u'Missing source path.'
     with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
       test_tool.ParseOptions(options)
@@ -44,7 +43,7 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
       test_tool.ParseOptions(options)
 
     # Test when the source is missing.
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     expected_error = u'Missing source path.'
     with shared_test_lib.TempDirectory() as temp_directory:
       options.analysis_output_file = os.path.join(
@@ -53,7 +52,7 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
         test_tool.ParseOptions(options)
 
     # Test when both source and output are specified.
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.source = self._GetTestFilePath([u'testdir'])
     with shared_test_lib.TempDirectory() as temp_directory:
       options.analysis_output_file = os.path.join(
@@ -62,8 +61,8 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
 
   def testParseArguments(self):
     """Tests the ParseArguments function"""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = psteal.PstealTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     # Test ParseArguments with no output file nor source.
     result = test_tool.ParseArguments()
@@ -74,10 +73,10 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
 
   def testExtractEventsFromSourceDirectory(self):
     """Tests the ExtractEventsFromSources function on a directory."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = psteal.PstealTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.quiet = True
     options.status_view_mode = u'none'
     options.source = self._GetTestFilePath([u'testdir'])
@@ -109,10 +108,10 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
     # TODO: added for testing.
     dfvfs_resolver.Resolver.key_chain.Empty()
 
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = psteal.PstealTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.credentials = [u'password:{0:s}'.format(self._BDE_PASSWORD)]
     options.quiet = True
     options.source = self._GetTestFilePath([u'bdetogo.raw'])
@@ -142,10 +141,10 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
 
   def testExtractEventsFromSourcesImage(self):
     """Tests the ExtractEventsFromSources function on a single partition."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = psteal.PstealTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.quiet = True
     options.status_view_mode = u'none'
     options.source = self._GetTestFilePath([u'ímynd.dd'])
@@ -175,10 +174,10 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
   def testExtractEventsFromSourcePartitionedImage(self):
     """Tests the ExtractEventsFromSources function on a multi partition
     image."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = psteal.PstealTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.partitions = u'all'
     options.quiet = True
     options.status_view_mode = u'none'
@@ -209,10 +208,10 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
 
   def testExtractEventsFromSourceVSSImage(self):
     """Tests the ExtractEventsFromSources function on an image with VSS."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = psteal.PstealTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.quiet = True
     options.single_process = True
     options.status_view_mode = u'none'
@@ -247,10 +246,10 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
 
   def testExtractEventsFromSourceSingleFile(self):
     """Tests the ExtractEventsFromSources function on a single file."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = psteal.PstealTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.quiet = True
     options.status_view_mode = u'none'
     options.source = self._GetTestFilePath([u'System.evtx'])
@@ -279,10 +278,10 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
 
   def testProcessStorage(self):
     """Test the AnalyzeEvents function"""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = psteal.PstealTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.storage_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     options.source = u'unused_source'
 
