@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file is the template for Plist events."""
+"""Plist event attribute containers."""
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -8,7 +8,7 @@ from plaso.lib import timelib
 
 
 class PlistEvent(time_events.TimestampEvent):
-  """Convenience class for a plist events."""
+  """Plist event attribute container."""
 
   DATA_TYPE = u'plist:key'
 
@@ -32,20 +32,16 @@ class PlistEvent(time_events.TimestampEvent):
     timestamp = timelib.Timestamp.FromPythonDatetime(datetime_time)
     super(PlistEvent, self).__init__(
         timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
-
-    self.root = root
+    self.desc = desc
+    self.hostname = host
     self.key = key
-    if desc:
-      self.desc = desc
-    if host:
-      self.hostname = host
-    if user:
-      self.username = user
+    self.root = root
+    self.username = user
 
 
 # TODO: remove the need for this class.
 class PlistTimeEventData(events.EventData):
-  """Plist event data.
+  """Plist event data attribute container.
 
   Attributes:
     desc (str): description.

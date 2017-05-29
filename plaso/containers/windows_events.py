@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""This file contains the Windows specific event data attribute containers."""
+"""Windows event data attribute containers."""
 
 from plaso.containers import events
 
 
 class WindowsDistributedLinkTrackingEventData(events.EventData):
-  """Windows distributed link event data.
+  """Windows distributed link event data attribute container.
 
   Attributes:
     mac_address (str): MAC address stored in the UUID.
@@ -45,7 +45,7 @@ class WindowsDistributedLinkTrackingEventData(events.EventData):
 
 
 class WindowsRegistryInstallationEventData(events.EventData):
-  """Windows installation event data.
+  """Windows installation event data attribute container.
 
   Attributes:
     key_path (str): Windows Registry key path.
@@ -69,7 +69,7 @@ class WindowsRegistryInstallationEventData(events.EventData):
 
 
 class WindowsRegistryEventData(events.EventData):
-  """Windows Registry event data.
+  """Windows Registry event data attribute container.
 
   Attributes:
     key_path (str): Windows Registry key path.
@@ -93,7 +93,9 @@ class WindowsRegistryEventData(events.EventData):
 
 
 class WindowsRegistryListEventData(events.EventData):
-  """Windows Registry list event data e.g. MRU.
+  """Windows Registry list event data attribute container.
+
+  Windows Registry list event data is used to store a MRU.
 
   Attributes:
     key_path (str): Windows Registry key path.
@@ -113,7 +115,7 @@ class WindowsRegistryListEventData(events.EventData):
 
 
 class WindowsRegistryServiceEventData(events.EventData):
-  """Windows Registry service event data.
+  """Windows Registry service event data attribute container.
 
   Attributes:
     key_path (str): Windows Registry key path.
@@ -138,7 +140,7 @@ class WindowsRegistryServiceEventData(events.EventData):
 
 
 class WindowsVolumeEventData(events.EventData):
-  """Windows volume event data.
+  """Windows volume event data attribute container.
 
   Attributes:
     device_path (str): volume device path.

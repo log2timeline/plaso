@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains the time-based event classes."""
+"""Time-based event attribute containers."""
 
 from plaso.containers import events
 from plaso.lib import timelib
 
 
 class TimestampEvent(events.EventObject):
-  """Convenience class for a timestamp-based event.
+  """Plaso timestamp-based event attribute container.
 
   Attributes:
     data_type (str): event data type.
@@ -35,7 +35,7 @@ class TimestampEvent(events.EventObject):
 
 
 class DateTimeValuesEvent(TimestampEvent):
-  """Convenience class for a dfdatetime-based event."""
+  """dfDateTime date time values-based event attribute container."""
 
   def __init__(
       self, date_time, date_time_description, data_type=None, time_zone=None):
