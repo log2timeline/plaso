@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Event related attribute container object definitions."""
+"""Event attribute containers."""
 
 import re
 
@@ -9,7 +9,7 @@ from plaso.lib import py2to3
 
 
 class EventData(interface.AttributeContainer):
-  """Class to represent an event data attribute container.
+  """Event data attribute container.
 
   Attributes:
     data_type (str): event data type indicator.
@@ -35,7 +35,7 @@ class EventData(interface.AttributeContainer):
 # https://github.com/log2timeline/plaso/wiki/Scribbles-about-events
 
 class EventObject(interface.AttributeContainer):
-  """Class to represent an event attribute container.
+  """Event attribute container.
 
   The framework is designed to parse files and create events
   from individual records, log lines or keys extracted from files.
@@ -75,7 +75,7 @@ class EventObject(interface.AttributeContainer):
 
 
 class EventTag(interface.AttributeContainer):
-  """Class to represent an event tag attribute container.
+  """Event tag attribute container.
 
   Attributes:
     comment (str): comments.

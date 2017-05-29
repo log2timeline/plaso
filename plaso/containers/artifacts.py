@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Artifact related attribute container definitions."""
+"""Artifact attribute containers."""
 
 from plaso.containers import interface
 from plaso.containers import manager
@@ -10,7 +10,7 @@ class ArtifactAttributeContainer(interface.AttributeContainer):
 
 
 class EnvironmentVariableArtifact(ArtifactAttributeContainer):
-  """Class to represent an environment variable artifact attribute container.
+  """Environment variable artifact attribute container.
 
   Also see:
     https://en.wikipedia.org/wiki/Environment_variable
@@ -39,7 +39,7 @@ class EnvironmentVariableArtifact(ArtifactAttributeContainer):
 
 
 class HostnameArtifact(ArtifactAttributeContainer):
-  """Class to represent a hostname artifact attribute container.
+  """Hostname artifact attribute container.
 
   Also see:
     https://en.wikipedia.org/wiki/Hostname
@@ -65,7 +65,7 @@ class HostnameArtifact(ArtifactAttributeContainer):
 
 
 class SystemConfigurationArtifact(ArtifactAttributeContainer):
-  """Class to represent a system configuration artifact attribute container.
+  """System configuration artifact attribute container.
 
   The system configuration contains the configuration data of a specific
   system installation e.g. Windows or Linux.
@@ -104,7 +104,7 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
 
 
 class UserAccountArtifact(ArtifactAttributeContainer):
-  """Class to represent an user account artifact attribute container.
+  """User account artifact attribute container.
 
   Also see:
     http://cybox.mitre.org/language/version2.1/xsddocs/objects/
