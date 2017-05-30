@@ -17,6 +17,10 @@ CUPS IPP version 1.1:
 
 CUPS IPP version 2.0:
 * N/A
+
+Also see:
+* https://github.com/libyal/assorted/blob/master/documentation/
+  CUPS%20Internet%20Printing%20Protocol%20format.asciidoc
 """
 
 import logging
@@ -24,12 +28,12 @@ import logging
 import construct
 
 from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import rfc2579_date_time as dfdatetime_rfc2579_date_time
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -146,7 +150,7 @@ class CupsIppParser(interface.FileObjectParser):
       construct.Padding(1),
       INTEGER_32)
 
-  # This is an RFC 2579 datetime.
+  # This is an RFC2579 datetime.
   DATETIME = construct.Struct(
       u'datetime',
       construct.Padding(1),
@@ -180,7 +184,7 @@ class CupsIppParser(interface.FileObjectParser):
       u'job-uuid': u'job_id',
       u'printer-uri': u'uri'}
 
-  _POSIX_TIME_IN_MICROSECOND_VALUES = {
+  _DATE_TIME_VALUES = {
       u'date-time-at-creation': definitions.TIME_DESCRIPTION_CREATION,
       u'date-time-at-processing': definitions.TIME_DESCRIPTION_START,
       u'date-time-at-completed': definitions.TIME_DESCRIPTION_END}
@@ -190,8 +194,8 @@ class CupsIppParser(interface.FileObjectParser):
       u'time-at-processing': definitions.TIME_DESCRIPTION_START,
       u'time-at-completed': definitions.TIME_DESCRIPTION_END}
 
-  _POSIX_TIME_VALUE_NAMES = _POSIX_TIME_IN_MICROSECOND_VALUES.keys()
-  _POSIX_TIME_VALUE_NAMES.extend(_POSIX_TIME_VALUES.keys())
+  _DATE_TIME_VALUE_NAMES = _DATE_TIME_VALUES.keys()
+  _DATE_TIME_VALUE_NAMES.extend(_POSIX_TIME_VALUES.keys())
 
   def _GetStringValue(self, data_dict, name, default_value=None):
     """Retrieves a specific string value from the data dict.
@@ -269,11 +273,13 @@ class CupsIppParser(interface.FileObjectParser):
 
       elif type_id == self.TYPE_DATETIME:
         datetime = self.DATETIME.parse_stream(file_object)
-        value = timelib.Timestamp.FromRFC2579Datetime(
+        rfc2579_date_time_tuple = (
             datetime.year, datetime.month, datetime.day, datetime.hour,
             datetime.minutes, datetime.seconds, datetime.deciseconds,
             datetime.direction_from_utc, datetime.hours_from_utc,
             datetime.minutes_from_utc)
+        value = dfdatetime_rfc2579_date_time.RFC2579DateTime(
+            rfc2579_date_time_tuple=rfc2579_date_time_tuple)
 
       else:
         value = self.TEXT.parse_stream(file_object)
@@ -341,7 +347,7 @@ class CupsIppParser(interface.FileObjectParser):
 
     time_dict = {}
 
-    for name in self._POSIX_TIME_VALUE_NAMES:
+    for name in self._DATE_TIME_VALUE_NAMES:
       value = data_dict.get(name, None)
       if value is not None:
         time_dict[name] = value
@@ -360,11 +366,9 @@ class CupsIppParser(interface.FileObjectParser):
     event_data.printer_id = self._GetStringValue(data_dict, u'printer_id')
     event_data.uri = self._GetStringValue(data_dict, u'uri')
 
-    for name, usage in iter(self._POSIX_TIME_IN_MICROSECOND_VALUES.items()):
+    for name, usage in iter(self._DATE_TIME_VALUES.items()):
       time_values = time_dict.get(name, [])
-      for time_value in time_values:
-        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-            timestamp=time_value)
+      for date_time in time_values:
         event = time_events.DateTimeValuesEvent(date_time, usage)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
