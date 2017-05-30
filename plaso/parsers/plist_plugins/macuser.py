@@ -64,8 +64,8 @@ class MacUserPlugin(interface.PlistPlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      plist_name: name of the plist file.
-      top_level: dictionary with the plist file parsed.
+      plist_name (str): name of the plist.
+      top_level (dict[str, object]): plist top-level key.
     """
     super(MacUserPlugin, self).Process(
         parser_mediator, plist_name=self.PLIST_PATH, top_level=top_level)

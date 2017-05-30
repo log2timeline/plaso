@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains a default plist plugin in Plaso."""
+"""Software update plist plugin."""
+
+from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import plist_event
+from plaso.containers import time_events
+from plaso.lib import definitions
+from plaso.lib import timelib
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
@@ -36,32 +41,46 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
           and other components, such as storage and dfvfs.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
-    root = u'/'
-    key = u''
     version = match.get(u'LastAttemptSystemVersion', u'N/A')
     pending = match.get(u'LastUpdatesAvailable', None)
 
-    description = u'Last Mac OS X {0:s} full update.'.format(version)
-    if u'LastFullSuccessfulDate' in match and match[u'LastFullSuccessfulDate']:
-      event_object = plist_event.PlistEvent(
-          root, key, match[u'LastFullSuccessfulDate'], description)
-      parser_mediator.ProduceEvent(event_object)
+    event_data = plist_event.PlistTimeEventData()
+    event_data.desc = u'Last Mac OS X {0:s} full update.'.format(version)
+    event_data.key = u''
+    event_data.root = u'/'
 
-    if pending and u'LastSuccessfulDate' in match:
+    datetime_value = match.get(u'LastFullSuccessfulDate', None)
+    if datetime_value:
+      timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    datetime_value = match.get(u'LastSuccessfulDate', None)
+    if datetime_value and pending:
       software = []
       for update in match.get(u'RecommendedUpdates', []):
-        software.append(u'{0:s}({1:s})'.format(
-            update.get(u'Identifier', u'<IDENTIFIER>'),
-            update.get(u'Product Key', u'<PRODUCT_KEY>')))
+        identifier = update.get(u'Identifier', u'<IDENTIFIER>')
+        product_key = update.get(u'Product Key', u'<PRODUCT_KEY>')
+
+        software.append(u'{0:s}({1:s})'.format(identifier, product_key))
+
       if not software:
         return
 
-      description = (
-          u'Last Mac OS {0!s} partially update, pending {1!s}: {2:s}.').format(
-              version, pending, u','.join(software))
-      event_object = plist_event.PlistEvent(
-          root, key, match[u'LastSuccessfulDate'], description)
-      parser_mediator.ProduceEvent(event_object)
+      software = u','.join(software)
+      event_data.desc = (
+          u'Last Mac OS {0!s} partially update, pending {1!s}: '
+          u'{2:s}.').format(version, pending, software)
+
+      timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 plist.PlistParser.RegisterPlugin(SoftwareUpdatePlugin)
