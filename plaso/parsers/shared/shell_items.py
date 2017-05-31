@@ -6,6 +6,7 @@ import pyfwsi
 from dfdatetime import fat_date_time as dfdatetime_fat_date_time
 
 from plaso.containers import shell_item_events
+from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.winnt import shell_folder_ids
 
@@ -36,12 +37,13 @@ class ShellItemsParser(object):
     path_segment = self._ParseShellItemPathSegment(shell_item)
     self._path_segments.append(path_segment)
 
-    shell_item_path = self.CopyToPath()
+    event_data = shell_item_events.ShellItemFileEntryEventData()
+    event_data.origin = self._origin
+    event_data.shell_item_path = self.CopyToPath()
 
     if isinstance(shell_item, pyfwsi.file_entry):
-      long_name = u''
-      localized_name = u''
-      file_reference = u''
+      event_data.name = shell_item.name
+
       for extension_block in shell_item.extension_blocks:
         if isinstance(extension_block, pyfwsi.file_entry_extension):
           long_name = extension_block.long_name
@@ -51,35 +53,33 @@ class ShellItemsParser(object):
             file_reference = u'{0:d}-{1:d}'.format(
                 file_reference & 0xffffffffffff, file_reference >> 48)
 
+          event_data.file_reference = file_reference
+          event_data.localized_name = localized_name
+          event_data.long_name = long_name
+
           fat_date_time = extension_block.get_creation_time_as_integer()
           if fat_date_time != 0:
             date_time = dfdatetime_fat_date_time.FATDateTime(
                 fat_date_time=fat_date_time)
-            event = shell_item_events.ShellItemFileEntryEvent(
-                date_time, definitions.TIME_DESCRIPTION_CREATION,
-                shell_item.name, long_name, localized_name, file_reference,
-                shell_item_path, self._origin)
-            parser_mediator.ProduceEvent(event)
+            event = time_events.DateTimeValuesEvent(
+                date_time, definitions.TIME_DESCRIPTION_CREATION)
+            parser_mediator.ProduceEventWithEventData(event, event_data)
 
           fat_date_time = extension_block.get_access_time_as_integer()
           if fat_date_time != 0:
             date_time = dfdatetime_fat_date_time.FATDateTime(
                 fat_date_time=fat_date_time)
-            event = shell_item_events.ShellItemFileEntryEvent(
-                date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS,
-                shell_item.name, long_name, localized_name, file_reference,
-                shell_item_path, self._origin)
-            parser_mediator.ProduceEvent(event)
+            event = time_events.DateTimeValuesEvent(
+                date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+            parser_mediator.ProduceEventWithEventData(event, event_data)
 
       fat_date_time = shell_item.get_modification_time_as_integer()
       if fat_date_time != 0:
         date_time = dfdatetime_fat_date_time.FATDateTime(
             fat_date_time=fat_date_time)
-        event = shell_item_events.ShellItemFileEntryEvent(
-            date_time, definitions.TIME_DESCRIPTION_MODIFICATION,
-            shell_item.name, long_name, localized_name, file_reference,
-            shell_item_path, self._origin)
-        parser_mediator.ProduceEvent(event)
+        event = time_events.DateTimeValuesEvent(
+            date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseShellItemPathSegment(self, shell_item):
     """Parses a shell item path segment.
