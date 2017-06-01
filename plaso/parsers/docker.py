@@ -9,7 +9,7 @@ from dfvfs.helpers import text_file
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import interface
@@ -132,7 +132,7 @@ class DockerJSONParser(interface.FileObjectParser):
       event_attributes[u'command'] = layer_creation_command
 
       event = DockerJSONLayerEvent(
-          timestamp, eventdata.EventTimestamp.ADDED_TIME, event_attributes)
+          timestamp, definitions.TIME_DESCRIPTION_ADDED, event_attributes)
       parser_mediator.ProduceEvent(event)
 
   def _ParseContainerConfigJSON(self, parser_mediator, file_object):
@@ -183,7 +183,7 @@ class DockerJSONParser(interface.FileObjectParser):
             json_dict[u'State'][u'StartedAt'])
         event_attributes[u'action'] = u'Container Started'
         parser_mediator.ProduceEvent(DockerJSONContainerEvent(
-            timestamp, eventdata.EventTimestamp.START_TIME, event_attributes))
+            timestamp, definitions.TIME_DESCRIPTION_START, event_attributes))
       if u'FinishedAt' in json_dict['State']:
         if json_dict['State']['FinishedAt'] != u'0001-01-01T00:00:00Z':
           # If the timestamp is 0001-01-01T00:00:00Z, the container
@@ -192,7 +192,7 @@ class DockerJSONParser(interface.FileObjectParser):
           timestamp = timelib.Timestamp.FromTimeString(
               json_dict['State']['FinishedAt'])
           parser_mediator.ProduceEvent(DockerJSONContainerEvent(
-              timestamp, eventdata.EventTimestamp.END_TIME, event_attributes))
+              timestamp, definitions.TIME_DESCRIPTION_END, event_attributes))
 
     created_time = json_dict.get(u'Created', None)
     if created_time:
@@ -200,7 +200,7 @@ class DockerJSONParser(interface.FileObjectParser):
       event_attributes[u'action'] = u'Container Created'
       parser_mediator.ProduceEvent(
           DockerJSONContainerEvent(
-              timestamp, eventdata.EventTimestamp.ADDED_TIME, event_attributes)
+              timestamp, definitions.TIME_DESCRIPTION_ADDED, event_attributes)
       )
 
   def _ParseContainerLogJSON(self, parser_mediator, file_object):
@@ -237,7 +237,7 @@ class DockerJSONParser(interface.FileObjectParser):
       timestamp = timelib.Timestamp.FromTimeString(time)
 
       event = time_events.TimestampEvent(
-          timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
+          timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseFileObject(self, parser_mediator, file_object):

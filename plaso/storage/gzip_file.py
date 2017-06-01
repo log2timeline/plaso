@@ -16,7 +16,7 @@ from plaso.storage import interface
 
 
 class GZIPStorageFile(interface.BaseFileStorage):
-  """Class that defines the gzip-based storage file."""
+  """gzip-based storage file."""
 
   # pylint: disable=abstract-method
 

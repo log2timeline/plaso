@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""This file contains the tests for the report attribute containers."""
+"""Tests for the report attribute containers."""
 
 import unittest
 
@@ -10,22 +10,22 @@ from tests import test_lib as shared_test_lib
 
 
 class AnalysisReportTest(shared_test_lib.BaseTestCase):
-  """Tests for the analysis report attributes container."""
+  """Tests for the analysis report attribute container."""
 
-  def testCopyToDict(self):
-    """Tests the CopyToDict function."""
-    analysis_report = reports.AnalysisReport(
-        plugin_name=u'test', text=u'This is a test analysis report')
+  def testGetAttributeNames(self):
+    """Tests the GetAttributeNames function."""
+    attribute_container = reports.AnalysisReport()
 
-    expected_dict = {
-        u'plugin_name': u'test',
-        u'text': u'This is a test analysis report'}
+    expected_attribute_names = [
+        u'filter_string', u'plugin_name', u'report_array', u'report_dict',
+        u'text', u'time_compiled']
 
-    test_dict = analysis_report.CopyToDict()
+    attribute_names = sorted(attribute_container.GetAttributeNames())
 
-    self.assertEqual(test_dict, expected_dict)
+    self.assertEqual(attribute_names, expected_attribute_names)
 
-  # TODO: add more tests.
+  # TODO: add tests for CopyToDict
+  # TODO: add tests for GetString
 
 
 if __name__ == '__main__':

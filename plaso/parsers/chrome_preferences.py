@@ -10,7 +10,7 @@ from dfdatetime import webkit_time as dfdatetime_webkit_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -145,7 +145,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
       date_time = dfdatetime_webkit_time.WebKitTime(timestamp=install_time)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.ADDED_TIME)
+          date_time, definitions.TIME_DESCRIPTION_ADDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ExtractContentSettingsExceptions(self, exceptions_dict, parser_mediator):
@@ -180,7 +180,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
         date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
             timestamp=timestamp)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.LAST_VISITED_TIME)
+            date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
@@ -248,7 +248,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
         date_time = dfdatetime_webkit_time.WebKitTime(
             timestamp=autoupdate_lastcheck)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.ADDED_TIME)
+            date_time, definitions.TIME_DESCRIPTION_ADDED)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       autoupdate_nextcheck_timestamp = extensions_autoupdate_dict.get(
@@ -262,7 +262,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
         date_time = dfdatetime_webkit_time.WebKitTime(
             timestamp=autoupdate_nextcheck)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.ADDED_TIME)
+            date_time, definitions.TIME_DESCRIPTION_ADDED)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
     browser_dict = json_dict.get(u'browser', None)
@@ -279,7 +279,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
         date_time = dfdatetime_webkit_time.WebKitTime(
             timestamp=last_clear_history)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.DELETED_TIME)
+            date_time, definitions.TIME_DESCRIPTION_DELETED)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
     self._ExtractExtensionInstallEvents(extensions_dict, parser_mediator)

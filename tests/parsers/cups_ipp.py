@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import cups_ipp  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import cups_ipp
 
@@ -21,8 +21,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     """Tests the Parse function."""
     # TODO: only tested against Mac OS X Cups IPP (Version 2.0)
     parser_object = cups_ipp.CupsIppParser()
-    storage_writer = self._ParseFile(
-        [u'mac_cups_ipp'], parser_object)
+    storage_writer = self._ParseFile([u'mac_cups_ipp'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 3)
 
@@ -35,8 +34,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(
-        event.timestamp_desc,
-        eventdata.EventTimestamp.CREATION_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
     self.assertEqual(event.application, u'LibreOffice')
     self.assertEqual(event.job_name, u'Assignament 1')
@@ -50,15 +48,14 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.printer_id, u'RHULBW')
     expected_uri = u'ipp://localhost:631/printers/RHULBW'
     self.assertEqual(event.uri, expected_uri)
-    expected_msg = (
+    expected_message = (
         u'User: moxilo '
         u'Owner: Joaquin Moreno Garijo '
         u'Job Name: Assignament 1 '
         u'Application: LibreOffice '
         u'Printer: RHULBW')
-    expected_msg_short = (
-        u'Job Name: Assignament 1')
-    self._TestGetMessageStrings(event, expected_msg, expected_msg_short)
+    expected_message_short = u'Job Name: Assignament 1'
+    self._TestGetMessageStrings(event, expected_message, expected_message_short)
 
     event = events[1]
 
@@ -66,9 +63,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         u'2013-11-03 18:07:21')
     self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(
-        event.timestamp_desc,
-        eventdata.EventTimestamp.START_TIME)
+    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_START)
 
     event = events[2]
 
@@ -76,9 +71,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         u'2013-11-03 18:07:32')
     self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(
-        event.timestamp_desc,
-        eventdata.EventTimestamp.END_TIME)
+    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_END)
 
 
 if __name__ == '__main__':

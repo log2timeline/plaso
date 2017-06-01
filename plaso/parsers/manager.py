@@ -5,6 +5,7 @@ import logging
 
 import pysigscan
 
+from plaso.lib import definitions
 from plaso.lib import specification
 from plaso.parsers import presets
 
@@ -165,6 +166,21 @@ class ParsersManager(object):
     del cls._parser_classes[parser_name]
 
   @classmethod
+  def GetNamesOfParsersWithPlugins(cls):
+    """Retrieves the names of all parsers with plugins.
+
+    Returns:
+      A list of parser names.
+    """
+    parser_names = []
+
+    for parser_name, parser_class in cls.GetParsers():
+      if parser_class.SupportsPlugins():
+        parser_names.append(parser_name)
+
+    return sorted(parser_names)
+
+  @classmethod
   def GetParserAndPluginNames(cls, parser_filter_expression=None):
     """Retrieves the parser and parser plugin names.
 
@@ -311,19 +327,65 @@ class ParsersManager(object):
     return parsers_information
 
   @classmethod
-  def GetNamesOfParsersWithPlugins(cls):
-    """Retrieves the names of all parsers with plugins.
+  def GetPresetForOperatingSystem(
+      cls, operating_system, operating_system_product,
+      operating_system_version):
+    """Determines the preset for a specific operating system.
+
+    Args:
+      operating_system (str): operating system for example "Windows". This
+          should be one of the values in definitions.OPERATING_SYSTEMS.
+      operating_system_product (str): operating system product for
+          example "Windows XP" as determined by preprocessing.
+      operating_system_version (str): operating system version for
+          example "5.1" as determined by preprocessing.
 
     Returns:
-      A list of parser names.
+      str: parser filter preset, where None represents all parsers and plugins.
     """
-    parser_names = []
+    # TODO: Make this more sane. Currently we are only checking against
+    # one possible version of Windows, and then making the assumption if
+    # that is not correct we default to Windows 7. Same thing with other
+    # OS's, no assumption or checks are really made there.
+    # Also this is done by default, and no way for the user to turn off
+    # this behavior, need to add a parameter to the frontend that takes
+    # care of overwriting this behavior.
 
-    for parser_name, parser_class in cls.GetParsers():
-      if parser_class.SupportsPlugins():
-        parser_names.append(parser_name)
+    if operating_system == definitions.OPERATING_SYSTEM_LINUX:
+      return u'linux'
 
-    return sorted(parser_names)
+    if operating_system == definitions.OPERATING_SYSTEM_MACOSX:
+      return u'macosx'
+
+    if operating_system_product:
+      operating_system_product = operating_system_product.lower()
+    else:
+      operating_system_product = u''
+
+    if operating_system_version:
+      operating_system_version = operating_system_version.split(u'.')
+    else:
+      operating_system_version = [u'0', u'0']
+
+    # Windows NT 5 (2000, XP and 2003).
+    if (u'windows' in operating_system_product and
+        operating_system_version[0] == u'5'):
+      return u'winxp'
+
+    # TODO: Improve this detection, this should be more 'intelligent', since
+    # there are quite a lot of versions out there that would benefit from
+    # loading up the set of 'winxp' parsers.
+    if (u'windows xp' in operating_system_product or
+        u'windows server 2000' in operating_system_product or
+        u'windows server 2003' in operating_system_product):
+      return u'winxp'
+
+    # Fallback for other Windows versions.
+    if u'windows' in operating_system_product:
+      return u'win7'
+
+    if operating_system == definitions.OPERATING_SYSTEM_WINDOWS:
+      return u'win7'
 
   @classmethod
   def GetScanner(cls, specification_store):

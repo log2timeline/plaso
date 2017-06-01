@@ -6,7 +6,7 @@ import unittest
 
 from plaso.formatters import officemru  # pylint: disable=unused-import
 from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import officemru
 
@@ -49,7 +49,7 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         u'2012-03-13 18:27:15.089802')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
     regvalue_identifier = u'Item 1'
     expected_value_string = (
@@ -83,7 +83,7 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         u'2012-03-13 18:27:15.083')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
     self.assertEqual(event_object.value_string, expected_value_string)
 

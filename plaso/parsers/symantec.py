@@ -4,7 +4,7 @@
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -290,7 +290,7 @@ class SymantecParser(text_parser.TextCSVParser):
     event_data.virustype = row.get(u'virustype', None)
 
     event = time_events.TimestampEvent(
-        timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
+        timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyRow(self, parser_mediator, row):

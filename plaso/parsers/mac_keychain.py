@@ -24,7 +24,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import specification
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -219,12 +219,12 @@ class KeychainParser(interface.FileObjectParser):
 
     if creation_time:
       event = time_events.DateTimeValuesEvent(
-          creation_time, eventdata.EventTimestamp.CREATION_TIME)
+          creation_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if last_modification_time:
       event = time_events.DateTimeValuesEvent(
-          last_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+          last_modification_time, definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ReadEntryHeader(
@@ -423,12 +423,12 @@ class KeychainParser(interface.FileObjectParser):
 
     if creation_time:
       event = time_events.DateTimeValuesEvent(
-          creation_time, eventdata.EventTimestamp.CREATION_TIME)
+          creation_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if last_modification_time:
       event = time_events.DateTimeValuesEvent(
-          last_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+          last_modification_time, definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ReadTableOffsets(self, parser_mediator, file_object):

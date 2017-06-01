@@ -7,7 +7,7 @@ import unittest
 from plaso.containers import events
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.output import l2t_csv
 
@@ -23,7 +23,7 @@ class L2TTestEvent(events.EventObject):
     """Initializes an event object."""
     super(L2TTestEvent, self).__init__()
     self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
-    self.timestamp_desc = eventdata.EventTimestamp.WRITTEN_TIME
+    self.timestamp_desc = definitions.TIME_DESCRIPTION_WRITTEN
     self.hostname = u'ubuntu'
     self.filename = u'log/syslog.1'
     self.display_name = u'log/syslog.1'

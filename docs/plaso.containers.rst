@@ -92,6 +92,14 @@ plaso.containers.shell_item_events module
     :undoc-members:
     :show-inheritance:
 
+plaso.containers.storage_media module
+-------------------------------------
+
+.. automodule:: plaso.containers.storage_media
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.containers.tasks module
 -----------------------------
 

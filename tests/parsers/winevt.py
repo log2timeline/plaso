@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import winevt  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import winevt
 
@@ -65,7 +65,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
         u'2011-07-27 06:41:47')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
     event_object = storage_writer.events[1]
 
@@ -74,7 +74,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
     expected_msg = (
         u'[40961 / 0xa001] '

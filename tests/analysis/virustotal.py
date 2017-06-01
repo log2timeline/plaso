@@ -11,7 +11,7 @@ from dfvfs.path import fake_path_spec
 
 from plaso.analysis import virustotal
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 
 from tests.analysis import test_lib
@@ -76,7 +76,7 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
     date_time = dfdatetime_posix_time.PosixTime(
         timestamp=event_dictionary[u'timestamp'])
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.CREATION_TIME)
+        date_time, definitions.TIME_DESCRIPTION_CREATION)
 
     event.data_type = u'pe:compilation:compilation_time'
     event.pe_type = u'Executable (EXE)'

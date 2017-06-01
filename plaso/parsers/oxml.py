@@ -13,7 +13,7 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -209,7 +209,7 @@ class OpenXMLParser(interface.FileObjectParser):
         date_time.CopyFromStringISO8601(time_string)
 
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.CREATION_TIME)
+            date_time, definitions.TIME_DESCRIPTION_CREATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
       except ValueError as exception:
         parser_mediator.ProduceExtractionError(
@@ -222,7 +222,7 @@ class OpenXMLParser(interface.FileObjectParser):
         date_time.CopyFromStringISO8601(time_string)
 
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+            date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
       except ValueError as exception:
         parser_mediator.ProduceExtractionError(
@@ -235,7 +235,7 @@ class OpenXMLParser(interface.FileObjectParser):
         date_time.CopyFromStringISO8601(time_string)
 
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.LAST_PRINTED)
+            date_time, definitions.TIME_DESCRIPTION_LAST_PRINTED)
         parser_mediator.ProduceEventWithEventData(event, event_data)
       except ValueError as exception:
         parser_mediator.ProduceExtractionError(

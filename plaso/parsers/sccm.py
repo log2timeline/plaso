@@ -7,7 +7,7 @@ import pyparsing
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -191,7 +191,7 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     event_data.text = structure.text
 
     event = time_events.TimestampEvent(
-        timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
+        timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, parser_mediator, lines):

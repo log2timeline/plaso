@@ -9,7 +9,7 @@ from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import networks
 
@@ -208,7 +208,7 @@ class NetworksPluginTest(test_lib.RegistryPluginTestCase):
         u'2014-05-06 17:02:19.795')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
     expected_message = (
         u'SSID: Network '
@@ -226,7 +226,7 @@ class NetworksPluginTest(test_lib.RegistryPluginTestCase):
         u'2015-01-27 15:15:27.965')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.LAST_CONNECTED)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
 
     expected_message = (
         u'SSID: My Awesome Wifi Hotspot '

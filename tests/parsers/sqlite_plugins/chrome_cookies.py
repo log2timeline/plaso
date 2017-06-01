@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import chrome_cookies  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import chrome_cookies
 
@@ -49,7 +49,7 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
     # Check one linkedin cookie.
     event_object = event_objects[124]
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     self.assertEqual(event_object.host, u'www.linkedin.com')
     self.assertEqual(event_object.cookie_name, u'leo_auth_token')
     self.assertFalse(event_object.httponly)
@@ -68,7 +68,7 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
     # Check one of the visits to rubiconproject.com.
     event_object = event_objects[379]
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-04-01 13:54:34.949210')
@@ -106,7 +106,7 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event_object.host, u'marvel.com')
     self.assertEqual(event_object.cookie_name, u'autologin[timeout]')
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     # This particular cookie value represents a timeout value that corresponds
     # to the expiration date of the cookie.
     self.assertEqual(event_object.data, u'1364824322')

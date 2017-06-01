@@ -9,17 +9,13 @@ from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import uuid_time as dfdatetime_uuid_time
 
-from plaso import dependencies
 from plaso.containers import time_events
 from plaso.containers import windows_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 from plaso.parsers.shared import shell_items
-
-
-dependencies.CheckModuleVersion(u'pylnk')
 
 
 class WinLnkLinkEvent(time_events.DateTimeValuesEvent):
@@ -126,7 +122,7 @@ class WinLnkParser(interface.FileObjectParser):
           uuid_object, origin)
       date_time = dfdatetime_uuid_time.UUIDTime(timestamp=uuid_object.time)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.CREATION_TIME)
+          date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseFileObject(
@@ -168,7 +164,7 @@ class WinLnkParser(interface.FileObjectParser):
     if access_time != 0:
       date_time = dfdatetime_filetime.Filetime(timestamp=access_time)
       event = WinLnkLinkEvent(
-          date_time, eventdata.EventTimestamp.ACCESS_TIME, lnk_file,
+          date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS, lnk_file,
           link_target)
       parser_mediator.ProduceEvent(event)
 
@@ -176,7 +172,7 @@ class WinLnkParser(interface.FileObjectParser):
     if creation_time != 0:
       date_time = dfdatetime_filetime.Filetime(timestamp=creation_time)
       event = WinLnkLinkEvent(
-          date_time, eventdata.EventTimestamp.CREATION_TIME, lnk_file,
+          date_time, definitions.TIME_DESCRIPTION_CREATION, lnk_file,
           link_target)
       parser_mediator.ProduceEvent(event)
 
@@ -184,14 +180,15 @@ class WinLnkParser(interface.FileObjectParser):
     if modification_time != 0:
       date_time = dfdatetime_filetime.Filetime(timestamp=modification_time)
       event = WinLnkLinkEvent(
-          date_time, eventdata.EventTimestamp.MODIFICATION_TIME,
+          date_time, definitions.TIME_DESCRIPTION_MODIFICATION,
           lnk_file, link_target)
       parser_mediator.ProduceEvent(event)
 
     if access_time == 0 and creation_time == 0 and modification_time == 0:
       date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
       event = WinLnkLinkEvent(
-          date_time, eventdata.EventTimestamp.NOT_A_TIME, lnk_file, link_target)
+          date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME, lnk_file,
+          link_target)
       parser_mediator.ProduceEvent(event)
 
     if lnk_file.droid_file_identifier:

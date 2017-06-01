@@ -4,23 +4,22 @@
 
 import unittest
 
+from plaso.cli import image_export_tool
 from plaso.lib import errors
 
 from tests import test_lib as shared_test_lib
-from tests.cli import test_lib as cli_test_lib
-
-from tools import image_export
+from tests.cli import test_lib as test_lib
 
 
-class ImageExportToolTest(cli_test_lib.CLIToolTestCase):
+class ImageExportToolTest(test_lib.CLIToolTestCase):
   """Tests for the image export CLI tool."""
 
   # pylint: disable=protected-access
 
   def testListSignatureIdentifiers(self):
     """Tests the ListSignatureIdentifiers function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = image_export.ImageExportTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     test_tool._data_location = self._TEST_DATA_PATH
 
@@ -48,8 +47,8 @@ class ImageExportToolTest(cli_test_lib.CLIToolTestCase):
 
   def testParseArguments(self):
     """Tests the ParseArguments function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = image_export.ImageExportTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     result = test_tool.ParseArguments()
     self.assertFalse(result)
@@ -59,15 +58,15 @@ class ImageExportToolTest(cli_test_lib.CLIToolTestCase):
 
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = image_export.ImageExportTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.image = self._GetTestFilePath([u'image.qcow2'])
 
     test_tool.ParseOptions(options)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
 
     with self.assertRaises(errors.BadConfigOption):
       test_tool.ParseOptions(options)
@@ -78,10 +77,10 @@ class ImageExportToolTest(cli_test_lib.CLIToolTestCase):
 
   def testProcessSourcesImage(self):
     """Tests the ProcessSources function on a single partition image."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = image_export.ImageExportTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.image = self._GetTestFilePath([u'ímynd.dd'])
     options.quiet = True
 

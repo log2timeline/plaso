@@ -7,6 +7,7 @@ import argparse
 import json
 import logging
 import os
+import random
 import re
 import shlex
 import subprocess
@@ -33,7 +34,7 @@ import utils.upload  # pylint: disable=wrong-import-position
 
 
 class CLIHelper(object):
-  """Class that defines CLI helper functions."""
+  """Command line interface (CLI) helper."""
 
   def RunCommand(self, command):
     """Runs a command.
@@ -42,38 +43,67 @@ class CLIHelper(object):
       command (str): command to run.
 
     Returns:
-      tuple[int,file,file]: exit code, stdout and stderr file-like objects.
+      tuple[int, bytes, bytes]: exit code, stdout and stderr data.
     """
     arguments = shlex.split(command)
-    process = subprocess.Popen(
-        arguments, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    if not process:
-      logging.error(u'Running: "{0:s}" failed.'.format(command))
+
+    try:
+      process = subprocess.Popen(
+          arguments, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    except OSError as exception:
+      logging.error(u'Running: "{0:s}" failed with error: {1:s}'.format(
+          command, exception))
       return 1, None, None
 
     output, error = process.communicate()
     if process.returncode != 0:
-      logging.error(u'Running: "{0:s}" failed with error: {1:s}.'.format(
+      logging.error(u'Running: "{0:s}" failed with error: {1!s}.'.format(
           command, error))
 
     return process.returncode, output, error
 
 
 class CodeReviewHelper(CLIHelper):
-  """Class that defines codereview helper functions."""
+  """Codereview upload.py command helper."""
 
-  _REVIEWERS = frozenset([
+  _REVIEWERS_PER_PROJECT = {
+      u'dfdatetime': frozenset([
+          u'joachim.metz@gmail.com',
+          u'onager@deerpie.com']),
+      u'dfkinds': frozenset([
+          u'joachim.metz@gmail.com',
+          u'onager@deerpie.com']),
+      u'dfvfs': frozenset([
+          u'joachim.metz@gmail.com',
+          u'onager@deerpie.com']),
+      u'dfwinreg': frozenset([
+          u'joachim.metz@gmail.com',
+          u'onager@deerpie.com']),
+      u'dftimewolf': frozenset([
+          u'jberggren@gmail.com',
+          u'someguyiknow@google.com',
+          u'tomchop@gmail.com']),
+      u'l2tpreg': frozenset([
+          u'joachim.metz@gmail.com',
+          u'onager@deerpie.com']),
+      u'plaso': frozenset([
+          u'aaronp@gmail.com',
+          u'jberggren@gmail.com',
+          u'joachim.metz@gmail.com',
+          u'onager@deerpie.com',
+          u'romaing@google.com'])}
+
+  _REVIEWERS_DEFAULT = frozenset([
       u'jberggren@gmail.com',
       u'joachim.metz@gmail.com',
-      u'onager@deerpie.com',
-      u'romaing@google.com'])
+      u'onager@deerpie.com'])
 
   _REVIEWERS_CC = frozenset([
       u'kiddi@kiddaland.net',
       u'log2timeline-dev@googlegroups.com'])
 
   def __init__(self, email_address, no_browser=False):
-    """Initializes a codereview helper object.
+    """Initializes a codereview helper.
 
     Args:
       email_address (str): email address.
@@ -86,6 +116,50 @@ class CodeReviewHelper(CLIHelper):
     self._no_browser = no_browser
     self._upload_py_path = os.path.join(u'utils', u'upload.py')
     self._xsrf_token = None
+
+  def _GetReviewer(self, project_name):
+    """Determines the reviewer.
+
+    Args:
+      project_name (str): name of the project.
+
+    Returns:
+      str: email address of the reviewer that is used on codereview.
+    """
+    reviewers = list(self._REVIEWERS_PER_PROJECT.get(
+        project_name, self._REVIEWERS_DEFAULT))
+
+    try:
+      reviewers.remove(self._email_address)
+    except ValueError:
+      pass
+
+    random.shuffle(reviewers)
+
+    return reviewers[0]
+
+  def _GetReviewersOnCC(self, project_name, reviewer):
+    """Determines the reviewers on CC.
+
+    Args:
+      project_name (str): name of the project.
+      reviewer (str): email address of the reviewer that is used on codereview.
+
+    Returns:
+      str: comma seperated email addresses.
+    """
+    reviewers_cc = set(self._REVIEWERS_PER_PROJECT.get(
+        project_name, self._REVIEWERS_DEFAULT))
+    reviewers_cc.update(self._REVIEWERS_CC)
+
+    reviewers_cc.remove(reviewer)
+
+    try:
+      reviewers_cc.remove(self._email_address)
+    except KeyError:
+      pass
+
+    return u','.join(reviewers_cc)
 
   def AddMergeMessage(self, issue_number, message):
     """Adds a merge message to the code review issue.
@@ -128,7 +202,7 @@ class CodeReviewHelper(CLIHelper):
       url_object = urllib_request.urlopen(request)
     except urllib_error.HTTPError as exception:
       logging.error(
-          u'Failed publish to codereview issue: {0!s} with error: {1:s}'.format(
+          u'Failed publish to codereview issue: {0!s} with error: {1!s}'.format(
               issue_number, exception))
       return False
 
@@ -173,7 +247,7 @@ class CodeReviewHelper(CLIHelper):
       url_object = urllib_request.urlopen(request)
     except urllib_error.HTTPError as exception:
       logging.error(
-          u'Failed closing codereview issue: {0!s} with error: {1:s}'.format(
+          u'Failed closing codereview issue: {0!s} with error: {1!s}'.format(
               issue_number, exception))
       return False
 
@@ -185,33 +259,19 @@ class CodeReviewHelper(CLIHelper):
 
     return True
 
-  def CreateIssue(self, diffbase, description):
+  def CreateIssue(self, project_name, diffbase, description):
     """Creates a new codereview issue.
 
     Args:
+      project_name (str): name of the project.
       diffbase (str): diffbase.
       description (str): description.
 
     Returns:
       int: codereview issue number or None.
     """
-    reviewers = list(self._REVIEWERS)
-    reviewers_cc = list(self._REVIEWERS_CC)
-
-    try:
-      # Remove self from reviewers list.
-      reviewers.remove(self._email_address)
-    except ValueError:
-      pass
-
-    try:
-      # Remove self from reviewers CC list.
-      reviewers_cc.remove(self._email_address)
-    except ValueError:
-      pass
-
-    reviewers = u','.join(reviewers)
-    reviewers_cc = u','.join(reviewers_cc)
+    reviewer = self._GetReviewer(project_name)
+    reviewers_cc = self._GetReviewersOnCC(project_name, reviewer)
 
     command = u'{0:s} {1:s} --oauth2'.format(
         sys.executable, self._upload_py_path)
@@ -222,7 +282,7 @@ class CodeReviewHelper(CLIHelper):
     command = (
         u'{0:s} --send_mail -r {1:s} --cc {2:s} -t "{3:s}" -y -- '
         u'{4:s}').format(
-            command, reviewers, reviewers_cc, description, diffbase)
+            command, reviewer, reviewers_cc, description, diffbase)
 
     if self._no_browser:
       print(
@@ -291,7 +351,7 @@ class CodeReviewHelper(CLIHelper):
         url_object = urllib_request.urlopen(request)
       except urllib_error.HTTPError as exception:
         logging.error(
-            u'Failed retrieving codereview XSRF token with error: {0:s}'.format(
+            u'Failed retrieving codereview XSRF token with error: {0!s}'.format(
                 exception))
         return
 
@@ -344,7 +404,7 @@ class CodeReviewHelper(CLIHelper):
       url_object = urllib_request.urlopen(request)
     except urllib_error.HTTPError as exception:
       logging.error(
-          u'Failed querying codereview issue: {0!s} with error: {1:s}'.format(
+          u'Failed querying codereview issue: {0!s} with error: {1!s}'.format(
               issue_number, exception))
       return
 
@@ -398,10 +458,10 @@ class CodeReviewHelper(CLIHelper):
 
 
 class GitHelper(CLIHelper):
-  """Class that defines git helper functions."""
+  """Git command helper."""
 
   def __init__(self, git_repo_url):
-    """Initializes a git helper object.
+    """Initializes a git helper.
 
     Args:
       git_repo_url (str): git repo URL.
@@ -419,7 +479,7 @@ class GitHelper(CLIHelper):
     if not self._remotes:
       exit_code, output, _ = self.RunCommand(u'git remote -v')
       if exit_code == 0:
-        self._remotes = output.split(b'\n')
+        self._remotes = list(filter(None, output.split(b'\n')))
 
     return self._remotes
 
@@ -463,7 +523,12 @@ class GitHelper(CLIHelper):
       bool: True if the git repo has the project origin defined.
     """
     origin_git_repo_url = self.GetRemoteOrigin()
-    return origin_git_repo_url == self._git_repo_url
+
+    is_match = origin_git_repo_url == self._git_repo_url
+    if not is_match:
+      is_match = origin_git_repo_url == self._git_repo_url[:-4]
+
+    return is_match
 
   def CheckHasProjectUpstream(self):
     """Checks if the git repo has the project remote upstream defined.
@@ -744,14 +809,14 @@ class GitHelper(CLIHelper):
       bool: True if the git repository has switched to the master branch.
     """
     exit_code, _, _ = self.RunCommand(u'git checkout master')
-    return exit_code != 0
+    return exit_code == 0
 
 
 class GitHubHelper(object):
-  """Class that defines github helper functions."""
+  """Github helper."""
 
   def __init__(self, organization, project):
-    """Initializes a github helper object.
+    """Initializes a github helper.
 
     Args:
       organization (str): github organization name.
@@ -803,7 +868,7 @@ class GitHubHelper(object):
       url_object = urllib_request.urlopen(request)
     except urllib_error.HTTPError as exception:
       logging.error(
-          u'Failed creating pull request: {0!s} with error: {1:s}'.format(
+          u'Failed creating pull request: {0!s} with error: {1!s}'.format(
               codereview_issue_number, exception))
       return False
 
@@ -843,7 +908,7 @@ class GitHubHelper(object):
       url_object = urllib_request.urlopen(request)
     except urllib_error.HTTPError as exception:
       logging.error(
-          u'Failed querying github user: {0:s} with error: {1:s}'.format(
+          u'Failed querying github user: {0:s} with error: {1!s}'.format(
               username, exception))
       return
 
@@ -878,11 +943,20 @@ class ProjectHelper(CLIHelper):
       u'Google Inc. (*@google.com)']
 
   SUPPORTED_PROJECTS = frozenset([
-      u'dfdatetime', u'dfvfs', u'dfwinreg', u'dftimewolf', u'eccemotus',
-      u'l2tdevtools', u'l2tdocs', u'plaso'])
+      u'artifacts',
+      u'dfdatetime',
+      u'dfkinds',
+      u'dfvfs',
+      u'dfwinreg',
+      u'dftimewolf',
+      u'eccemotus',
+      u'l2tdevtools',
+      u'l2tdocs',
+      u'l2tpreg',
+      u'plaso'])
 
   def __init__(self, script_path):
-    """Initializes a project helper object.
+    """Initializes a project helper.
 
     Args:
       script_path (str): path to the script.
@@ -940,14 +1014,14 @@ class ProjectHelper(CLIHelper):
         file_contents = file_object.read()
 
     except IOError as exception:
-      logging.error(u'Unable to read file with error: {0:s}'.format(exception))
+      logging.error(u'Unable to read file with error: {0!s}'.format(exception))
       return
 
     try:
       file_contents = file_contents.decode(u'utf-8')
     except UnicodeDecodeError as exception:
       logging.error(
-          u'Unable to read file with error: {0:s}'.format(exception))
+          u'Unable to read file with error: {0!s}'.format(exception))
       return
 
     return file_contents
@@ -1000,7 +1074,7 @@ class ProjectHelper(CLIHelper):
       dpkg_changelog_content = dpkg_changelog_content.encode(u'utf-8')
     except UnicodeEncodeError as exception:
       logging.error(
-          u'Unable to write dpkg changelog file with error: {0:s}'.format(
+          u'Unable to write dpkg changelog file with error: {0!s}'.format(
               exception))
       return False
 
@@ -1009,7 +1083,7 @@ class ProjectHelper(CLIHelper):
         file_object.write(dpkg_changelog_content)
     except IOError as exception:
       logging.error(
-          u'Unable to write dpkg changelog file with error: {0:s}'.format(
+          u'Unable to write dpkg changelog file with error: {0!s}'.format(
               exception))
       return False
 
@@ -1079,7 +1153,7 @@ class ProjectHelper(CLIHelper):
       version_file_contents = version_file_contents.encode(u'utf-8')
     except UnicodeEncodeError as exception:
       logging.error(
-          u'Unable to write version file with error: {0:s}'.format(exception))
+          u'Unable to write version file with error: {0!s}'.format(exception))
       return False
 
     try:
@@ -1088,7 +1162,7 @@ class ProjectHelper(CLIHelper):
 
     except IOError as exception:
       logging.error(
-          u'Unable to write version file with error: {0:s}'.format(exception))
+          u'Unable to write version file with error: {0!s}'.format(exception))
       return False
 
     return True
@@ -1151,7 +1225,7 @@ class ReadTheDocsHelper(object):
   """Class that defines readthedocs helper functions."""
 
   def __init__(self, project):
-    """Initializes a readthedocs helper object.
+    """Initializes a readthedocs helper.
 
     Args:
       project (str): github project name.
@@ -1177,7 +1251,7 @@ class ReadTheDocsHelper(object):
       url_object = urllib_request.urlopen(request)
     except urllib_error.HTTPError as exception:
       logging.error(
-          u'Failed triggering build with error: {0:s}'.format(
+          u'Failed triggering build with error: {0!s}'.format(
               exception))
       return False
 
@@ -1196,7 +1270,7 @@ class SphinxAPIDocHelper(CLIHelper):
   _MINIMUM_VERSION_TUPLE = (1, 2, 0)
 
   def __init__(self, project):
-    """Initializes a sphinx-apidoc helper object.
+    """Initializes a sphinx-apidoc helper.
 
     Args:
       project (str): github project name.
@@ -1242,7 +1316,7 @@ class NetRCFile(object):
   _NETRC_SEPARATOR_RE = re.compile(r'[^ \t\n]+')
 
   def __init__(self):
-    """Initializes a .netrc file object."""
+    """Initializes a .netrc file."""
     super(NetRCFile, self).__init__()
     self._contents = None
     self._values = None
@@ -1316,7 +1390,7 @@ class ReviewFile(object):
   """
 
   def __init__(self, branch_name):
-    """Initializes a review file object.
+    """Initializes a review file.
 
     Args:
       branch_name (str): name of the feature branch of the review.
@@ -1384,7 +1458,7 @@ class ReviewHelper(object):
   def __init__(
       self, command, github_origin, feature_branch, diffbase, all_files=False,
       no_browser=False, no_confirm=False):
-    """Initializes a review helper object.
+    """Initializes a review helper.
 
     Args:
       command (str): user provided command, for example "create", "lint".
@@ -1419,13 +1493,18 @@ class ReviewHelper(object):
     self._project_name = None
     self._sphinxapidoc_helper = None
 
+    if self._github_origin:
+      self._fork_username, _, self._fork_feature_branch = (
+          self._github_origin.partition(u':'))
+
   def CheckLocalGitState(self):
     """Checks the state of the local git repository.
 
     Returns:
       bool: True if the state of the local git repository is sane.
     """
-    if self._command in (u'close', u'create', u'lint', u'update'):
+    if self._command in (
+        u'close', u'create', u'lint', u'lint-test', u'lint_test', u'update'):
       if not self._git_helper.CheckHasProjectUpstream():
         print(u'{0:s} aborted - missing project upstream.'.format(
             self._command.title()))
@@ -1439,7 +1518,8 @@ class ReviewHelper(object):
         return False
 
     if self._command not in (
-        u'lint', u'test', u'update-version', u'update_version'):
+        u'lint', u'lint-test', u'lint_test', u'test', u'update-version',
+        u'update_version'):
       if self._git_helper.CheckHasUncommittedChanges():
         print(u'{0:s} aborted - detected uncommitted changes.'.format(
             self._command.title()))
@@ -1496,7 +1576,7 @@ class ReviewHelper(object):
             self._command.title(), self._active_branch))
         return False
 
-    elif self._command == u'lint':
+    elif self._command in (u'lint', u'lint-test', u'lint_test'):
       self._git_helper.CheckSynchronizedWithUpstream()
 
     elif self._command == u'merge':
@@ -1592,7 +1672,7 @@ class ReviewHelper(object):
         self._project_name, description)
 
     codereview_issue_number = self._codereview_helper.CreateIssue(
-        self._diffbase, code_review_description)
+        self._project_name, self._diffbase, code_review_description)
     if not codereview_issue_number:
       print(u'{0:s} aborted - unable to create codereview issue.'.format(
           self._command.title()))
@@ -1613,7 +1693,7 @@ class ReviewHelper(object):
     return True
 
   def InitializeHelpers(self):
-    """Initializes the helper objects.
+    """Initializes the helper.
 
     Returns:
       bool: True if the helper initialization was successful.
@@ -1797,9 +1877,6 @@ class ReviewHelper(object):
           u'code review: {1!s}.').format(
               self._command.title(), codereview_issue_number))
       return False
-
-    self._fork_username, _, self._fork_feature_branch = (
-        self._github_origin.partition(u':'))
 
     github_user_information = self._github_helper.QueryUser(
         self._fork_username)
@@ -2084,13 +2161,14 @@ def Main():
       print(u'Codereview issue number value is missing.')
       print_help_on_error = True
 
-  if options.command == u'merge':
+  if options.command in (u'merge', u'merge-edit', u'merge_edit'):
     github_origin = getattr(options, u'github_origin', None)
     if not github_origin:
       print(u'Github origin value is missing.')
       print_help_on_error = True
 
-  if options.offline and options.command not in (u'lint', u'test'):
+  if options.offline and options.command not in (
+      u'lint', u'lint-test', u'lint_test', u'test'):
     print(u'Cannot run: {0:s} in offline mode.'.format(options.command))
     print_help_on_error = True
 

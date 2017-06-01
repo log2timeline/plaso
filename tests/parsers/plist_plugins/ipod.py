@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import ipod  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.plist_plugins import ipod
 
@@ -31,16 +31,16 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
     # hence we sort the events.
     events = self._GetSortedEvents(storage_writer.events)
 
-    event_object = events[0]
+    event = events[0]
 
     timestamp = timelib.Timestamp.CopyFromString(u'1995-11-22 18:25:07')
-    self.assertEqual(event_object.timestamp, timestamp)
-    self.assertEqual(event_object.device_id, u'0000A11300000000')
+    self.assertEqual(event.timestamp, timestamp)
+    self.assertEqual(event.device_id, u'0000A11300000000')
 
-    event_object = events[2]
+    event = events[2]
 
     timestamp = timelib.Timestamp.CopyFromString(u'2013-10-09 19:27:54')
-    self.assertEqual(event_object.timestamp, timestamp)
+    self.assertEqual(event.timestamp, timestamp)
 
     expected_message = (
         u'Device ID: 4C6F6F6E65000000 '
@@ -50,17 +50,16 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
         u'IMEI [012345678901234]')
     expected_message_short = u'{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_message_short)
+    self._TestGetMessageStrings(event, expected_message, expected_message_short)
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.LAST_CONNECTED)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
 
-    self.assertEqual(event_object.device_class, u'iPhone')
-    self.assertEqual(event_object.device_id, u'4C6F6F6E65000000')
-    self.assertEqual(event_object.firmware_version, 256)
-    self.assertEqual(event_object.imei, u'012345678901234')
-    self.assertEqual(event_object.use_count, 1)
+    self.assertEqual(event.device_class, u'iPhone')
+    self.assertEqual(event.device_id, u'4C6F6F6E65000000')
+    self.assertEqual(event.firmware_version, 256)
+    self.assertEqual(event.imei, u'012345678901234')
+    self.assertEqual(event.use_count, 1)
 
 
 if __name__ == '__main__':

@@ -5,23 +5,149 @@
 import os
 import sys
 
-# Change PYTHONPATH to include plaso.
+# Change PYTHONPATH to include dependencies.
 sys.path.insert(0, u'.')
 
-# pylint: disable=wrong-import-position
-import plaso.dependencies
+import utils.dependencies  # pylint: disable=wrong-import-position
 
 
-class DPKGControlWriter(object):
-  """Class to help write a dpkg control file."""
+class DependencyFileWriter(object):
+  """Dependency file writer."""
+
+  def __init__(self, dependency_helper):
+    """Initializes a dependency file writer.
+
+    Args:
+      dependency_helper (DependencyHelper): dependency helper.
+    """
+    super(DependencyFileWriter, self).__init__()
+    self._dependency_helper = dependency_helper
+
+
+class AppveyorYmlWriter(DependencyFileWriter):
+  """Appveyor.yml file writer."""
+
+  _PATH = os.path.join(u'appveyor.yml')
+
+  _VERSION_PYWIN32 = u'220'
+  _VERSION_WMI = u'1.4.9'
+  _VERSION_SQLITE = u'3180000'
+
+  _DOWNLOAD_PIP = (
+      u'  - ps: (new-object net.webclient).DownloadFile('
+      u'\'https://bootstrap.pypa.io/get-pip.py\', '
+      u'\'C:\\Projects\\get-pip.py\')')
+
+  _DOWNLOAD_PYWIN32 = (
+      u'  - ps: (new-object net.webclient).DownloadFile('
+      u'\'https://github.com/log2timeline/l2tbinaries/raw/master/win32/'
+      u'pywin32-{0:s}.win32-py2.7.exe\', '
+      u'\'C:\\Projects\\pywin32-{0:s}.win32-py2.7.exe\')').format(
+          _VERSION_PYWIN32)
+
+  _DOWNLOAD_WMI = (
+      u'  - ps: (new-object net.webclient).DownloadFile('
+      u'\'https://github.com/log2timeline/l2tbinaries/raw/master/win32/'
+      u'WMI-{0:s}.win32.exe\', \'C:\\Projects\\WMI-{0:s}.win32.exe\')').format(
+          _VERSION_WMI)
+
+  _INSTALL_PIP = (
+      u'  - cmd: "%PYTHON%\\\\python.exe C:\\\\Projects\\\\get-pip.py"')
+
+  _INSTALL_PYWIN32 = (
+      u'  - cmd: "%PYTHON%\\\\Scripts\\\\easy_install.exe '
+      u'C:\\\\Projects\\\\pywin32-{0:s}.win32-py2.7.exe"').format(
+          _VERSION_PYWIN32)
+
+  _INSTALL_WMI = (
+      u'  - cmd: "%PYTHON%\\\\Scripts\\\\easy_install.exe '
+      u'C:\\\\Projects\\\\WMI-{0:s}.win32.exe"').format(_VERSION_WMI)
+
+  _DOWNLOAD_SQLITE = (
+      u'  - ps: (new-object net.webclient).DownloadFile('
+      u'\'https://www.sqlite.org/2017/sqlite-dll-win32-x86-{0:s}.zip\', '
+      u'\'C:\\Projects\\sqlite-dll-win32-x86-{0:s}.zip\')').format(
+          _VERSION_SQLITE)
+
+  _EXTRACT_SQLITE = (
+      u'  - ps: $Output = Invoke-Expression -Command '
+      u'"& \'C:\\\\Program Files\\\\7-Zip\\\\7z.exe\' -y '
+      u'-oC:\\\\Projects\\\\ x C:\\\\Projects\\\\'
+      u'sqlite-dll-win32-x86-{0:s}.zip 2>&1"').format(_VERSION_SQLITE)
+
+  _INSTALL_SQLITE = (
+      u'  - cmd: copy C:\\Projects\\sqlite3.dll C:\\Python27\\DLLs\\')
+
+  _DOWNLOAD_L2TDEVTOOLS = (
+      u'  - cmd: git clone https://github.com/log2timeline/l2tdevtools.git && '
+      u'move l2tdevtools ..\\')
+
+  _FILE_HEADER = [
+      u'environment:',
+      u'  matrix:',
+      u'    - PYTHON: "C:\\\\Python27"',
+      u'',
+      u'install:',
+      (u'  - cmd: \'"C:\\Program Files\\Microsoft SDKs\\Windows\\v7.1\\Bin\\'
+       u'SetEnv.cmd" /x86 /release\''),
+      _DOWNLOAD_PIP,
+      _DOWNLOAD_PYWIN32,
+      _DOWNLOAD_WMI,
+      _INSTALL_PIP,
+      _INSTALL_PYWIN32,
+      _INSTALL_WMI,
+      _DOWNLOAD_L2TDEVTOOLS,
+      _DOWNLOAD_SQLITE,
+      _EXTRACT_SQLITE,
+      _INSTALL_SQLITE]
+
+  _L2TDEVTOOLS_UPDATE = (
+      u'  - cmd: mkdir dependencies && set PYTHONPATH=..\\l2tdevtools && '
+      u'"%PYTHON%\\\\python.exe" ..\\l2tdevtools\\tools\\update.py '
+      u'--download-directory dependencies --machine-type x86 '
+      u'--msi-targetdir "%PYTHON%" {0:s}')
+
+  _FILE_FOOTER = [
+      u'',
+      u'build: off',
+      u'',
+      u'test_script:',
+      u'  - "%PYTHON%\\\\python.exe run_tests.py"',
+      u'']
+
+  def Write(self):
+    """Writes an appveyor.yml file."""
+    file_content = []
+    file_content.extend(self._FILE_HEADER)
+
+    dependencies = self._dependency_helper.GetL2TBinaries()
+    dependencies.extend([u'funcsigs', u'mock', u'pbr'])
+    dependencies = u' '.join(dependencies)
+
+    l2tdevtools_update = self._L2TDEVTOOLS_UPDATE.format(dependencies)
+    file_content.append(l2tdevtools_update)
+
+    file_content.extend(self._FILE_FOOTER)
+
+    file_content = u'\n'.join(file_content)
+    file_content = file_content.encode(u'utf-8')
+
+    with open(self._PATH, 'wb') as file_object:
+      file_object.write(file_content)
+
+
+class DPKGControlWriter(DependencyFileWriter):
+  """Dpkg control file writer."""
 
   _PATH = os.path.join(u'config', u'dpkg', u'control')
+
+  _PROJECT_NAME = u'plaso'
 
   _MAINTAINER = (
       u'Log2Timeline maintainers <log2timeline-maintainers@googlegroups.com>')
 
   _FILE_HEADER = [
-      u'Source: plaso',
+      u'Source: {0:s}'.format(_PROJECT_NAME),
       u'Section: python',
       u'Priority: extra',
       u'Maintainer: {0:s}'.format(_MAINTAINER),
@@ -38,8 +164,10 @@ class DPKGControlWriter(object):
       u' Plaso (log2timeline) is a framework to create super timelines. Its',
       u' purpose is to extract timestamps from various files found on typical',
       u' computer systems and aggregate them.',
-      u'',
-      u'Package: python-plaso',
+      u'']
+
+  _PYTHON2_PACKAGE_HEADER = [
+      u'Package: python-{0:s}'.format(_PROJECT_NAME),
       u'Architecture: all']
 
   _FILE_DESCRIPTION = [
@@ -64,8 +192,10 @@ class DPKGControlWriter(object):
     """Writes a dpkg control file."""
     file_content = []
     file_content.extend(self._FILE_HEADER)
+    file_content.extend(self._PYTHON2_PACKAGE_HEADER)
 
-    dependencies = plaso.dependencies.GetDPKGDepends()
+    dependencies = self._dependency_helper.GetDPKGDepends()
+    dependencies.extend([u'${python:Depends}', u'${misc:Depends}'])
     dependencies = u', '.join(dependencies)
     file_content.append((
         u'Depends: plaso-data, {0:s}, ${{python:Depends}}, '
@@ -81,7 +211,7 @@ class DPKGControlWriter(object):
       file_object.write(file_content)
 
 
-class GIFTCOPRInstallScriptWriter(object):
+class GIFTCOPRInstallScriptWriter(DependencyFileWriter):
   """Class to help write the gift_copr_install.sh file."""
 
   _PATH = os.path.join(u'config', u'linux', u'gift_copr_install.sh')
@@ -132,7 +262,7 @@ class GIFTCOPRInstallScriptWriter(object):
     file_content = []
     file_content.extend(self._FILE_HEADER)
 
-    dependencies = plaso.dependencies.GetRPMRequires(exclude_version=True)
+    dependencies = self._dependency_helper.GetRPMRequires(exclude_version=True)
     libyal_dependencies = []
     for index, dependency in enumerate(dependencies):
       if index == 0:
@@ -168,7 +298,7 @@ class GIFTCOPRInstallScriptWriter(object):
       file_object.write(file_content)
 
 
-class GIFTPPAInstallScriptWriter(object):
+class GIFTPPAInstallScriptWriter(DependencyFileWriter):
   """Class to help write the gift_ppa_install.sh file."""
 
   _PATH = os.path.join(u'config', u'linux', u'gift_ppa_install.sh')
@@ -219,7 +349,7 @@ class GIFTPPAInstallScriptWriter(object):
     file_content = []
     file_content.extend(self._FILE_HEADER)
 
-    dependencies = plaso.dependencies.GetDPKGDepends(exclude_version=True)
+    dependencies = self._dependency_helper.GetDPKGDepends(exclude_version=True)
     libyal_dependencies = []
     for index, dependency in enumerate(dependencies):
       if index == 0:
@@ -255,8 +385,8 @@ class GIFTPPAInstallScriptWriter(object):
       file_object.write(file_content)
 
 
-class RequirementsWriter(object):
-  """Class to help write a requirements.txt file."""
+class RequirementsWriter(DependencyFileWriter):
+  """Requirements.txt file writer."""
 
   _PATH = u'requirements.txt'
 
@@ -270,7 +400,8 @@ class RequirementsWriter(object):
     file_content = []
     file_content.extend(self._FILE_HEADER)
 
-    for dependency in plaso.dependencies.GetInstallRequires():
+    dependencies = self._dependency_helper.GetInstallRequires()
+    for dependency in dependencies:
       file_content.append(u'{0:s}'.format(dependency))
 
     file_content = u'\n'.join(file_content)
@@ -280,8 +411,8 @@ class RequirementsWriter(object):
       file_object.write(file_content)
 
 
-class SetupCfgWriter(object):
-  """Class to help write a setup.cfg file."""
+class SetupCfgWriter(DependencyFileWriter):
+  """Setup.cfg file writer."""
 
   _PATH = u'setup.cfg'
 
@@ -311,7 +442,7 @@ class SetupCfgWriter(object):
     file_content = []
     file_content.extend(self._FILE_HEADER)
 
-    dependencies = plaso.dependencies.GetRPMRequires()
+    dependencies = self._dependency_helper.GetRPMRequires()
     for index, dependency in enumerate(dependencies):
       if index == 0:
         file_content.append(u'requires = {0:s}'.format(dependency))
@@ -325,8 +456,8 @@ class SetupCfgWriter(object):
       file_object.write(file_content)
 
 
-class TravisBeforeInstallScript(object):
-  """Class to help write the Travis-CI install.sh file."""
+class TravisBeforeInstallScriptWriter(DependencyFileWriter):
+  """Travis-CI install.sh file writer."""
 
   _PATH = os.path.join(u'config', u'travis', u'install.sh')
 
@@ -339,13 +470,12 @@ class TravisBeforeInstallScript(object):
        u'python-docopt";'),
       u'']
 
-  # TODO: add Python3 dependencies.
   _FILE_FOOTER = [
       u'',
       u'# Exit on error.',
       u'set -e;',
       u'',
-      u'if test `uname -s` = "Darwin";',
+      u'if test ${TRAVIS_OS_NAME} = "osx";',
       u'then',
       u'\tgit clone https://github.com/log2timeline/l2tdevtools.git;',
       u'',
@@ -353,44 +483,45 @@ class TravisBeforeInstallScript(object):
       u'\tmkdir dependencies;',
       u'',
       (u'\tPYTHONPATH=../l2tdevtools ../l2tdevtools/tools/update.py '
-       u'--download-directory=dependencies --preset=plaso;'),
+       u'--download-directory=dependencies ${L2TBINARIES_DEPENDENCIES} '
+       u'${L2TBINARIES_TEST_DEPENDENCIES};'),
       u'',
-      u'elif test `uname -s` = "Linux";',
+      u'elif test ${TRAVIS_OS_NAME} = "linux";',
       u'then',
       u'\tsudo rm -f /etc/apt/sources.list.d/travis_ci_zeromq3-source.list;',
       u'',
       u'\tsudo add-apt-repository ppa:gift/dev -y;',
       u'\tsudo apt-get update -q;',
+      u'\t# Only install the Python 2 dependencies.',
+      (u'\t# Also see: https://docs.travis-ci.com/user/languages/python/'
+       u'#Travis-CI-Uses-Isolated-virtualenvs'),
       (u'\tsudo apt-get install -y ${COVERALL_DEPENDENCIES} '
        u'${PYTHON2_DEPENDENCIES} ${PYTHON2_TEST_DEPENDENCIES};'),
       u'fi',
       u'']
 
   def Write(self):
-    """Writes a setup.cfg file."""
+    """Writes an install.sh file."""
     file_content = []
     file_content.extend(self._FILE_HEADER)
 
-    dependencies = plaso.dependencies.GetDPKGDepends(exclude_version=True)
+    dependencies = self._dependency_helper.GetL2TBinaries()
+    dependencies = u' '.join(dependencies)
+    file_content.append(u'L2TBINARIES_DEPENDENCIES="{0:s}";'.format(
+        dependencies))
+
+    file_content.append(u'')
+    file_content.append(
+        u'L2TBINARIES_TEST_DEPENDENCIES="funcsigs mock pbr";')
+
+    file_content.append(u'')
+
+    dependencies = self._dependency_helper.GetDPKGDepends(exclude_version=True)
     dependencies = u' '.join(dependencies)
     file_content.append(u'PYTHON2_DEPENDENCIES="{0:s}";'.format(dependencies))
 
     file_content.append(u'')
-
-    # TODO: determine test dependencies from plaso.dependencies.
     file_content.append(u'PYTHON2_TEST_DEPENDENCIES="python-mock";')
-
-    file_content.append(u'')
-
-    dependencies = plaso.dependencies.GetDPKGDepends(exclude_version=True)
-    dependencies = u' '.join(dependencies)
-    dependencies = dependencies.replace(u'python', u'python3')
-    file_content.append(u'PYTHON3_DEPENDENCIES="{0:s}";'.format(dependencies))
-
-    file_content.append(u'')
-
-    # TODO: determine test dependencies from plaso.dependencies.
-    file_content.append(u'PYTHON3_TEST_DEPENDENCIES="python3-mock";')
 
     file_content.extend(self._FILE_FOOTER)
 
@@ -402,20 +533,11 @@ class TravisBeforeInstallScript(object):
 
 
 if __name__ == u'__main__':
-  writer = DPKGControlWriter()
-  writer.Write()
+  helper = utils.dependencies.DependencyHelper()
 
-  writer = GIFTCOPRInstallScriptWriter()
-  writer.Write()
-
-  writer = GIFTPPAInstallScriptWriter()
-  writer.Write()
-
-  writer = RequirementsWriter()
-  writer.Write()
-
-  writer = SetupCfgWriter()
-  writer.Write()
-
-  writer = TravisBeforeInstallScript()
-  writer.Write()
+  for writer_class in (
+      AppveyorYmlWriter, DPKGControlWriter, GIFTCOPRInstallScriptWriter,
+      GIFTPPAInstallScriptWriter, RequirementsWriter, SetupCfgWriter,
+      TravisBeforeInstallScriptWriter):
+    writer = writer_class(helper)
+    writer.Write()

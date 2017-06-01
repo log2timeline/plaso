@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import popcontest  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import popcontest
 
@@ -30,7 +30,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event_object = storage_writer.events[0]
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.ADDED_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-06-22 05:41:41')
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -45,7 +45,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event_object = storage_writer.events[1]
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-06-22 07:34:42')
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -58,7 +58,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event_object = storage_writer.events[3]
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-06-22 07:34:43')
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -73,7 +73,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event_object = storage_writer.events[5]
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-05-30 05:26:20')
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -88,7 +88,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
 
     self.assertEqual(
         event_object.timestamp_desc,
-        eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME)
+        definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-05-30 05:27:43')
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -102,7 +102,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event_object = storage_writer.events[11]
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-05-12 07:58:33')
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -115,7 +115,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event_object = storage_writer.events[13]
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.ADDED_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-06-22 05:41:41')
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -128,7 +128,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event_object = storage_writer.events[14]
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.ADDED_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-06-22 05:41:41')
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -143,7 +143,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event_object = storage_writer.events[15]
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-06-22 07:34:42')
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -156,7 +156,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event_object = storage_writer.events[18]
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-04-06 12:25:42')
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -169,7 +169,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event_object = storage_writer.events[19]
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-05-12 07:58:33')
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -182,7 +182,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event_object = storage_writer.events[21]
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.ADDED_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-06-22 05:41:41')
     self.assertEqual(event_object.timestamp, expected_timestamp)

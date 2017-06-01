@@ -4,7 +4,7 @@
 import pyparsing
 
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import syslog
 from plaso.parsers import text_parser
 from plaso.parsers.syslog_plugins import interface
@@ -153,7 +153,7 @@ class SSHPlugin(interface.SyslogPlugin):
     event_data.username = tokens.get(u'username', None)
 
     event = time_events.TimestampEvent(
-        timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
+        timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

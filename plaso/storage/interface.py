@@ -2,6 +2,9 @@
 """The storage interface classes."""
 
 import abc
+import os
+import shutil
+import tempfile
 
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
@@ -65,6 +68,9 @@ class BaseStorage(object):
   @abc.abstractmethod
   def GetEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
+
+    This includes all events written to the storage including those pending
+    being flushed (written) to the storage.
 
     Args:
       time_range (Optional[TimeRange]): time range used to filter events
@@ -316,6 +322,9 @@ class StorageReader(object):
   def GetEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 
+    This includes all events written to the storage including those pending
+    being flushed (written) to the storage.
+
     Args:
       time_range (Optional[TimeRange]): time range used to filter events
           that fall in a specific period.
@@ -399,6 +408,9 @@ class FileStorageReader(StorageReader):
 
   def GetEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
+
+    This includes all events written to the storage including those pending
+    being flushed (written) to the storage.
 
     Args:
       time_range (Optional[TimeRange]): time range used to filter events
@@ -541,6 +553,9 @@ class StorageWriter(object):
   def GetEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 
+    This includes all events written to the storage including those pending
+    being flushed (written) to the storage.
+
     Args:
       time_range (Optional[TimeRange]): time range used to filter events
           that fall in a specific period.
@@ -657,3 +672,537 @@ class StorageWriter(object):
   @abc.abstractmethod
   def WriteTaskStart(self):
     """Writes task start information."""
+
+
+class FileStorageWriter(StorageWriter):
+  """Defines an interface for a file-based storage writer."""
+
+  def __init__(
+      self, session, output_file,
+      storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
+    """Initializes a storage writer.
+
+    Args:
+      session (Session): session the storage changes are part of.
+      output_file (str): path to the output file.
+      storage_type (Optional[str]): storage type.
+      task(Optional[Task]): task.
+    """
+    super(FileStorageWriter, self).__init__(
+        session, storage_type=storage_type, task=task)
+    self._merge_task_storage_path = u''
+    self._output_file = output_file
+    self._storage_file = None
+    self._serializers_profiler = None
+    self._task_storage_path = None
+
+  @abc.abstractmethod
+  def _CreateStorageFile(self):
+    """Creates a storage file.
+
+    Returns:
+      BaseFileStorage: storage file.
+    """
+
+  @abc.abstractmethod
+  def _CreateTaskStorageMergeReader(self, path):
+    """Creates a task storage merge reader.
+
+    Args:
+      path (str): path to the task storage file that should be merged.
+
+    Returns:
+      StorageMergeReader: storage merge reader.
+    """
+
+  @abc.abstractmethod
+  def _CreateTaskStorageWriter(self, path, task):
+    """Creates a task storage writer.
+
+    Args:
+      path (str): path to the storage file.
+      task (Task): task.
+
+    Returns:
+      StorageWriter: storage writer.
+    """
+
+  def _UpdateCounters(self, event):
+    """Updates the counters.
+
+    Args:
+      event: an event (instance of EventObject).
+    """
+    self._session.parsers_counter[u'total'] += 1
+
+    # Here we want the name of the parser or plugin not the parser chain.
+    parser_name = getattr(event, u'parser', u'')
+    _, _, parser_name = parser_name.rpartition(u'/')
+    if not parser_name:
+      parser_name = u'N/A'
+    self._session.parsers_counter[parser_name] += 1
+
+  def AddAnalysisReport(self, analysis_report):
+    """Adds an analysis report.
+
+    Args:
+      analysis_report (AnalysisReport): analysis report.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    self._storage_file.AddAnalysisReport(analysis_report)
+
+    report_identifier = analysis_report.plugin_name
+    self._session.analysis_reports_counter[u'total'] += 1
+    self._session.analysis_reports_counter[report_identifier] += 1
+    self.number_of_analysis_reports += 1
+
+  def AddError(self, error):
+    """Adds an error.
+
+    Args:
+      error (AnalysisError|ExtractionError): an analysis or extraction error.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    self._storage_file.AddError(error)
+    self.number_of_errors += 1
+
+  def AddEvent(self, event):
+    """Adds an event.
+
+    Args:
+      event (EventObject): an event.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    self._storage_file.AddEvent(event)
+    self.number_of_events += 1
+
+    self._UpdateCounters(event)
+
+  def AddEventSource(self, event_source):
+    """Adds an event source.
+
+    Args:
+      event_source (EventSource): an event source.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    self._storage_file.AddEventSource(event_source)
+    self.number_of_event_sources += 1
+
+  def AddEventTag(self, event_tag):
+    """Adds an event tag.
+
+    Args:
+      event_tag (EventTag): an event tag.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    self._storage_file.AddEventTag(event_tag)
+
+    self._session.event_labels_counter[u'total'] += 1
+    for label in event_tag.labels:
+      self._session.event_labels_counter[label] += 1
+    self.number_of_event_tags += 1
+
+  def CheckTaskReadyForMerge(self, task):
+    """Checks if a task is ready for merging with this session storage.
+
+    Args:
+      task (Task): task.
+
+    Returns:
+      bool: True if the task is ready to be merged.
+
+    Raises:
+      IOError: if the storage type is not supported or
+          if the temporary path for the task storage does not exist.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    if not self._merge_task_storage_path:
+      raise IOError(u'Missing merge task storage path.')
+
+    storage_file_path = os.path.join(
+        self._merge_task_storage_path, u'{0:s}.plaso'.format(task.identifier))
+
+    try:
+      stat_info = os.stat(storage_file_path)
+    except (IOError, OSError):
+      return False
+
+    task.storage_file_size = stat_info.st_size
+    return True
+
+  def Close(self):
+    """Closes the storage writer.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    self._storage_file.Close()
+    self._storage_file = None
+
+  def CreateTaskStorage(self, task):
+    """Creates a task storage.
+
+    The task storage is used to store attributes created by the task.
+
+    Args:
+      task(Task): task.
+
+    Returns:
+      StorageWriter: storage writer.
+
+    Raises:
+      IOError: if the storage type is not supported or
+          if the temporary path for the task storage does not exist.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    if not self._task_storage_path:
+      raise IOError(u'Missing task storage path.')
+
+    storage_file_path = os.path.join(
+        self._task_storage_path, u'{0:s}.plaso'.format(task.identifier))
+
+    return self._CreateTaskStorageWriter(storage_file_path, task)
+
+  def GetEvents(self, time_range=None):
+    """Retrieves the events in increasing chronological order.
+
+    This includes all events written to the storage including those pending
+    being flushed (written) to the storage.
+
+    Args:
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
+
+    Returns:
+      generator(EventObject): event generator.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to read from closed storage writer.')
+
+    return self._storage_file.GetEvents(time_range=time_range)
+
+  def GetFirstWrittenEventSource(self):
+    """Retrieves the first event source that was written after open.
+
+    Using GetFirstWrittenEventSource and GetNextWrittenEventSource newly
+    added event sources can be retrieved in order of addition.
+
+    Returns:
+      EventSource: event source or None if there are no newly written ones.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to read from closed storage writer.')
+
+    event_source = self._storage_file.GetEventSourceByIndex(
+        self._first_written_event_source_index)
+
+    if event_source:
+      self._written_event_source_index = (
+          self._first_written_event_source_index + 1)
+    return event_source
+
+  def GetNextWrittenEventSource(self):
+    """Retrieves the next event source that was written after open.
+
+    Returns:
+      EventSource: event source or None if there are no newly written ones.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to read from closed storage writer.')
+
+    event_source = self._storage_file.GetEventSourceByIndex(
+        self._written_event_source_index)
+    if event_source:
+      self._written_event_source_index += 1
+    return event_source
+
+  def Open(self):
+    """Opens the storage writer.
+
+    Raises:
+      IOError: if the storage writer is already opened.
+    """
+    if self._storage_file:
+      raise IOError(u'Storage writer already opened.')
+
+    self._storage_file = self._CreateStorageFile()
+
+    if self._serializers_profiler:
+      self._storage_file.SetSerializersProfiler(self._serializers_profiler)
+
+    self._storage_file.Open(path=self._output_file, read_only=False)
+
+    self._first_written_event_source_index = (
+        self._storage_file.GetNumberOfEventSources())
+    self._written_event_source_index = self._first_written_event_source_index
+
+  def PrepareMergeTaskStorage(self, task):
+    """Prepares a task storage for merging.
+
+    Args:
+      task (Task): task.
+
+    Raises:
+      IOError: if the storage type is not supported or
+          if the temporary path for the task storage does not exist.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    if not self._task_storage_path:
+      raise IOError(u'Missing task storage path.')
+
+    storage_file_path = os.path.join(
+        self._task_storage_path, u'{0:s}.plaso'.format(task.identifier))
+
+    merge_storage_file_path = os.path.join(
+        self._merge_task_storage_path, u'{0:s}.plaso'.format(task.identifier))
+
+    try:
+      os.rename(storage_file_path, merge_storage_file_path)
+    except OSError as exception:
+      raise IOError((
+          u'Unable to rename task storage file: {0:s} with error: '
+          u'{1:s}').format(storage_file_path, exception))
+
+  def ReadPreprocessingInformation(self, knowledge_base):
+    """Reads preprocessing information.
+
+    The preprocessing information contains the system configuration which
+    contains information about various system specific configuration data,
+    for example the user accounts.
+
+    Args:
+      knowledge_base (KnowledgeBase): is used to store the preprocessing
+          information.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to read from closed storage writer.')
+
+    return self._storage_file.ReadPreprocessingInformation(knowledge_base)
+
+  def SetSerializersProfiler(self, serializers_profiler):
+    """Sets the serializers profiler.
+
+    Args:
+      serializers_profiler (SerializersProfiler): serializers profile.
+    """
+    self._serializers_profiler = serializers_profiler
+    if self._storage_file:
+      self._storage_file.SetSerializersProfiler(serializers_profiler)
+
+  def StartMergeTaskStorage(self, task):
+    """Starts a merge of a task storage with the session storage.
+
+    Args:
+      task (Task): task.
+
+    Returns:
+      StorageMergeReader: storage merge reader of the task storage.
+
+    Raises:
+      IOError: if the storage file cannot be opened or
+          if the storage type is not supported or
+          if the temporary path for the task storage does not exist or
+          if the temporary path for the task storage doe not refers to a file.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    if not self._merge_task_storage_path:
+      raise IOError(u'Missing merge task storage path.')
+
+    storage_file_path = os.path.join(
+        self._merge_task_storage_path, u'{0:s}.plaso'.format(task.identifier))
+
+    if not os.path.isfile(storage_file_path):
+      raise IOError(u'Merge task storage path is not a file.')
+
+    return self._CreateTaskStorageMergeReader(storage_file_path)
+
+  def StartTaskStorage(self):
+    """Creates a temporary path for the task storage.
+
+    Raises:
+      IOError: if the storage type is not supported or
+          if the temporary path for the task storage already exists.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    if self._task_storage_path:
+      raise IOError(u'Task storage path already exists.')
+
+    output_directory = os.path.dirname(self._output_file)
+    self._task_storage_path = tempfile.mkdtemp(dir=output_directory)
+
+    self._merge_task_storage_path = os.path.join(
+        self._task_storage_path, u'merge')
+    os.mkdir(self._merge_task_storage_path)
+
+  def StopTaskStorage(self, abort=False):
+    """Removes the temporary path for the task storage.
+
+    The results of tasks will be lost on abort.
+
+    Args:
+      abort (bool): True to indicate the stop is issued on abort.
+
+    Raises:
+      IOError: if the storage type is not supported or
+          if the temporary path for the task storage does not exist.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    if not self._task_storage_path:
+      raise IOError(u'Missing task storage path.')
+
+    if os.path.isdir(self._merge_task_storage_path):
+      if abort:
+        shutil.rmtree(self._merge_task_storage_path)
+      else:
+        os.rmdir(self._merge_task_storage_path)
+
+    if os.path.isdir(self._task_storage_path):
+      if abort:
+        shutil.rmtree(self._task_storage_path)
+      else:
+        os.rmdir(self._task_storage_path)
+
+    self._merge_task_storage_path = None
+    self._task_storage_path = None
+
+  def WritePreprocessingInformation(self, knowledge_base):
+    """Writes preprocessing information.
+
+    Args:
+      knowledge_base (KnowledgeBase): contains the preprocessing information.
+
+    Raises:
+      IOError: if the storage type does not support writing preprocessing
+          information or when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Preprocessing information not supported by storage type.')
+
+    self._storage_file.WritePreprocessingInformation(knowledge_base)
+
+  def WriteSessionCompletion(self, aborted=False):
+    """Writes session completion information.
+
+    Args:
+      aborted (Optional[bool]): True if the session was aborted.
+
+    Raises:
+      IOError: if the storage type is not supported or
+          when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    self._session.aborted = aborted
+    session_completion = self._session.CreateSessionCompletion()
+    self._storage_file.WriteSessionCompletion(session_completion)
+
+  def WriteSessionStart(self):
+    """Writes session start information.
+
+    Raises:
+      IOError: if the storage type is not supported or
+          when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    session_start = self._session.CreateSessionStart()
+    self._storage_file.WriteSessionStart(session_start)
+
+  def WriteTaskCompletion(self, aborted=False):
+    """Writes task completion information.
+
+    Args:
+      aborted (Optional[bool]): True if the session was aborted.
+
+    Raises:
+      IOError: if the storage type is not supported or
+          when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    if self._storage_type != definitions.STORAGE_TYPE_TASK:
+      raise IOError(u'Unsupported storage type.')
+
+    self._task.aborted = aborted
+    task_completion = self._task.CreateTaskCompletion()
+    self._storage_file.WriteTaskCompletion(task_completion)
+
+  def WriteTaskStart(self):
+    """Writes task start information.
+
+    Raises:
+      IOError: if the storage type is not supported or
+          when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    if self._storage_type != definitions.STORAGE_TYPE_TASK:
+      raise IOError(u'Unsupported storage type.')
+
+    task_start = self._task.CreateTaskStart()
+    self._storage_file.WriteTaskStart(task_start)

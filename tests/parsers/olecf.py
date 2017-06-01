@@ -4,7 +4,7 @@
 
 import unittest
 
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import olecf
 from plaso.parsers import olecf_plugins  # pylint: disable=unused-import
@@ -37,7 +37,7 @@ class OLECFParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
         event_object.timestamp_desc,
-        eventdata.EventTimestamp.MODIFICATION_TIME)
+        definitions.TIME_DESCRIPTION_MODIFICATION)
 
     self.assertEqual(event_object.data_type, u'olecf:item')
     self.assertEqual(event_object.offset, 0)

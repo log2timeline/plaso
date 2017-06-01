@@ -458,6 +458,36 @@ class CLITool(object):
 
     table_view.Write(self._output_writer)
 
+  def ParseNumericOption(self, options, name, base=10, default_value=None):
+    """Parses a numeric option.
+
+    If the option is not set the default value is returned.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+      name (str): name of the numeric option.
+      base (Optional[int]): base of the numeric value.
+      default_value (Optional[object]): default value.
+
+    Returns:
+      int: numeric value.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    numeric_value = getattr(options, name, None)
+    if not numeric_value:
+      return default_value
+
+    try:
+      return int(numeric_value, base)
+
+    except (TypeError, ValueError):
+      name = name.replace(u'_', u' ')
+      raise errors.BadConfigOption(
+          u'Unsupported numeric value {0:s}: {1!s}.'.format(
+              name, numeric_value))
+
   def ParseOptions(self, options):
     """Parses tool specific options.
 
@@ -489,7 +519,7 @@ class CLITool(object):
 
     Raises:
       BadConfigOption: if the command line argument value cannot be converted
-                       to a Unicode string.
+          to a Unicode string.
     """
     argument_value = getattr(options, argument_name, None)
     if not argument_value:

@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import msiecf  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import msiecf
 
@@ -55,7 +55,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
         u'2011-06-23 18:02:10.066')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.LAST_VISITED_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
 
     event_object = storage_writer.events[9]
 
@@ -63,7 +63,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
         u'2011-06-23 18:02:10.066')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.LAST_VISITED_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
 
     event_object = storage_writer.events[10]
 
@@ -71,7 +71,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
         u'2011-06-29 17:55:02')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.EXPIRATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_EXPIRATION)
 
     event_object = storage_writer.events[11]
 
@@ -79,7 +79,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
         u'2011-06-23 18:02:12')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.LAST_CHECKED_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_CHECKED)
 
     expected_msg = (
         u'Location: Visited: testing@http://www.trafficfusionx.com/download'
@@ -139,7 +139,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.data_type, u'msiecf:leak')
     self.assertEqual(event_object.timestamp, 0)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.NOT_A_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_NOT_A_TIME)
     self.assertEqual(event_object.cache_directory_index, 1)
     self.assertEqual(event_object.cache_directory_name, u'VUQHQA73')
     self.assertEqual(event_object.cached_file_size, 1966)
@@ -162,7 +162,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.data_type, u'msiecf:redirected')
     self.assertEqual(event_object.timestamp, 0)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.NOT_A_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_NOT_A_TIME)
     self.assertEqual(event_object.url, expected_url)
     self.assertEqual(event_object.recovered, False)
 

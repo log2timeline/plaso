@@ -17,7 +17,7 @@ from plaso.cli import views as cli_views
 
 
 class StatusViewTool(storage_media_tool.StorageMediaTool):
-  """A tool that reports extraction status."""
+  """A tool that reports processing status."""
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the status view tool object.
@@ -197,11 +197,3 @@ class StatusViewTool(storage_media_tool.StorageMediaTool):
       table_view.AddRow([u'String', analysis_report.GetString()])
 
       table_view.Write(self._output_writer)
-
-  def SetSourcePath(self, path):
-    """Set the path of the source to process.
-
-    Args:
-      path (str): the path to the source.
-    """
-    self._source_path = path

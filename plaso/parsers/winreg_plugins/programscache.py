@@ -5,7 +5,7 @@ import construct
 
 from plaso.containers import time_events
 from plaso.containers import windows_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.shared import shell_items
 from plaso.parsers.winreg_plugins import interface
@@ -146,7 +146,7 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
     event_data.value_name = registry_value.name
 
     event = time_events.DateTimeValuesEvent(
-        registry_key.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+        registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
@@ -188,7 +188,7 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
     event_data.regvalue = values_dict
 
     event = time_events.DateTimeValuesEvent(
-        registry_key.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+        registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

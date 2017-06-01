@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""This file contains the tests for the ZIP-based storage."""
+"""Tests for the ZIP-based storage."""
 
 import os
 import unittest

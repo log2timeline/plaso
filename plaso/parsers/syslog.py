@@ -7,7 +7,7 @@ import pyparsing
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -324,7 +324,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
 
     if not plugin_object:
       event = time_events.TimestampEvent(
-          timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
+          timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
       mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, unused_mediator, line):

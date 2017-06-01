@@ -14,7 +14,7 @@ from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import binary
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import olecf
 from plaso.parsers import winlnk
 from plaso.parsers.olecf_plugins import interface
@@ -155,7 +155,7 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
           uuid_object, origin)
       date_time = dfdatetime_uuid_time.UUIDTime(timestamp=uuid_object.time)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.CREATION_TIME)
+          date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     return u'{{{0!s}}}'.format(uuid_object)
@@ -249,7 +249,7 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
             timestamp=entry.last_modification_time)
 
       event = AutomaticDestinationsDestListEntryEvent(
-          date_time, eventdata.EventTimestamp.MODIFICATION_TIME, entry_offset,
+          date_time, definitions.TIME_DESCRIPTION_MODIFICATION, entry_offset,
           entry, droid_volume_identifier, droid_file_identifier,
           birth_droid_volume_identifier, birth_droid_file_identifier)
       parser_mediator.ProduceEvent(event)

@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Analyzer result container object definition."""
+"""Analyzer result attribute container."""
 
 from plaso.containers import interface
 
 
 class AnalyzerResult(interface.AttributeContainer):
-  """Class to contain the results of analyzers.
+  """Attribute container to store results of analyzers.
 
   Analyzers can produce results with different attribute names. For example, the
   'hashing' analyzer could produce an attribute 'md5_hash', with a value of

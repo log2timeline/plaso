@@ -3,7 +3,7 @@
 
 from plaso.containers import time_events
 from plaso.containers import windows_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -62,7 +62,7 @@ class WinlogonPlugin(interface.WindowsRegistryPlugin):
         event_data.source_append = u': Winlogon'
 
         event = time_events.DateTimeValuesEvent(
-            subkey.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+            subkey.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseLogonApplications(self, parser_mediator, registry_key):
@@ -90,7 +90,7 @@ class WinlogonPlugin(interface.WindowsRegistryPlugin):
       event_data.source_append = u': Winlogon'
 
       event = time_events.DateTimeValuesEvent(
-          registry_key.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+          registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):

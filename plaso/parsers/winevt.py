@@ -6,16 +6,12 @@ import pyevt
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
-from plaso import dependencies
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
-
-
-dependencies.CheckModuleVersion(u'pyevt')
 
 
 class WinEvtRecordEventData(events.EventData):
@@ -156,7 +152,7 @@ class WinEvtParser(interface.FileObjectParser):
     if creation_time:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=creation_time)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.CREATION_TIME)
+          date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     try:
@@ -171,13 +167,13 @@ class WinEvtParser(interface.FileObjectParser):
     if written_time:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=written_time)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if not creation_time and not written_time:
       date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.NOT_A_TIME)
+          date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseRecords(self, parser_mediator, evt_file):

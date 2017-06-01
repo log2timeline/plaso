@@ -11,6 +11,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 
 from plaso.containers import event_sources
+from plaso.containers import errors as error_containers
 from plaso.engine import extractors
 from plaso.engine import plaso_queue
 from plaso.engine import profiler
@@ -170,7 +171,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if not self._storage_merge_reader_on_hold:
       task = self._task_manager.GetTaskPendingMerge(self._merge_task)
 
-    # Limit the number of attributes containers from a single task-based
+    # Limit the number of attribute containers from a single task-based
     # storage file that are merged per loop to keep tasks flowing.
     if task or self._storage_merge_reader:
       self._status = definitions.PROCESSING_STATUS_MERGING
@@ -188,10 +189,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._storage_merge_reader = storage_writer.StartMergeTaskStorage(
               task)
         except IOError as exception:
-          logging.error(
-              (u'Unable to merge results of task: {0:s} '
-               u'with error: {1:s}').format(
-                   task.identifier, exception))
+          logging.error((
+              u'Unable to merge results of task: {0:s} '
+              u'with error: {1:s}').format(task.identifier, exception))
           self._storage_merge_reader = None
 
       if self._storage_merge_reader:
@@ -413,6 +413,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._status_update_callback(self._processing_status)
 
     for task in self._task_manager.GetAbandonedTasks():
+      error = error_containers.ExtractionError(
+          message=u'Worker failed to process pathspec',
+          path_spec=task.path_spec)
+      self._storage_writer.AddError(error)
       self._processing_status.error_path_specs.append(task.path_spec)
 
     self._status = definitions.PROCESSING_STATUS_IDLE
@@ -436,9 +440,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     logging.debug(u'Starting worker process {0:s}'.format(process_name))
 
     if self._use_zeromq:
+      queue_name = u'{0:s} task queue'.format(process_name)
       task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
-          delay_open=True, name=u'{0:s} task queue'.format(process_name),
-          linger_seconds=0, port=self._task_queue_port,
+          delay_open=True, linger_seconds=0, name=queue_name,
+          port=self._task_queue_port,
           timeout_seconds=self._TASK_QUEUE_TIMEOUT_SECONDS)
     else:
       task_queue = self._task_queue
@@ -644,11 +649,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     try:
       task = self._task_manager.GetAbandonedTask(task_identifier)
-      logging.debug(
-          (u'Worker {0:s} is processing abandoned task: {1:s}. It was last '
-           u'updated at {2!s}.').format(
-               process.name, task.identifier, task.last_processing_time))
+      logging.debug((
+          u'Worker {0:s} is processing abandoned task: {1:s}. It was last '
+          u'updated at {2!s}.').format(
+              process.name, task.identifier, task.last_processing_time))
       self._task_manager.AdoptTask(task)
+
     except KeyError:
       logging.debug(
           u'Worker {0:s} is processing unknown task: {1:s}.'.format(

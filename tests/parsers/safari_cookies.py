@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import safari_cookies  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import safari_cookies
 
@@ -48,7 +48,7 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     self.assertEqual(event.cookie_name, u'nonsession')
     self.assertEqual(event.path, u'/')
 

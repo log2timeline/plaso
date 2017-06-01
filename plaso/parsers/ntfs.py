@@ -10,17 +10,13 @@ from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import uuid_time as dfdatetime_uuid_time
 
-from plaso import dependencies
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.containers import windows_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
-
-
-dependencies.CheckModuleVersion(u'pyfsntfs')
 
 
 class NTFSFileStatEventData(events.EventData):
@@ -135,7 +131,7 @@ class NTFSMFTParser(interface.FileObjectParser):
           uuid_object, origin)
       date_time = dfdatetime_uuid_time.UUIDTime(timestamp=uuid_object.time)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.CREATION_TIME)
+          date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseMFTAttribute(self, parser_mediator, mft_entry, mft_attribute):
@@ -180,7 +176,7 @@ class NTFSMFTParser(interface.FileObjectParser):
       if creation_time is not None:
         date_time = self._GetDateTime(creation_time)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.CREATION_TIME)
+            date_time, definitions.TIME_DESCRIPTION_CREATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       try:
@@ -195,7 +191,7 @@ class NTFSMFTParser(interface.FileObjectParser):
       if modification_time is not None:
         date_time = self._GetDateTime(modification_time)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+            date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       try:
@@ -210,7 +206,7 @@ class NTFSMFTParser(interface.FileObjectParser):
       if access_time is not None:
         date_time = self._GetDateTime(access_time)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.ACCESS_TIME)
+            date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       try:
@@ -226,7 +222,7 @@ class NTFSMFTParser(interface.FileObjectParser):
       if entry_modification_time is not None:
         date_time = self._GetDateTime(entry_modification_time)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME)
+            date_time, definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
     elif mft_attribute.attribute_type == self._MFT_ATTRIBUTE_OBJECT_ID:
@@ -386,7 +382,7 @@ class NTFSUsnJrnlParser(interface.FileObjectParser):
             timestamp=usn_record_struct.update_date_time)
 
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME)
+          date_time, definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
       usn_record_data = usn_change_journal.read_usn_record()

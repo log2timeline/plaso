@@ -11,7 +11,7 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.engine import path_helper
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 from plaso.winnt import known_folder_ids
@@ -223,7 +223,7 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
 
           # TODO: check if last written is correct.
           event = time_events.DateTimeValuesEvent(
-              date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+              date_time, definitions.TIME_DESCRIPTION_WRITTEN)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
       elif format_version == 5:
@@ -255,7 +255,7 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
 
         # TODO: check if last written is correct.
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+            date_time, definitions.TIME_DESCRIPTION_WRITTEN)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

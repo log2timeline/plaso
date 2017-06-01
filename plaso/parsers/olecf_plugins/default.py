@@ -5,7 +5,7 @@ from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import olecf
 from plaso.parsers.olecf_plugins import interface
 
@@ -61,13 +61,13 @@ class DefaultOLECFPlugin(interface.OLECFPlugin):
     if creation_time:
       date_time = dfdatetime_filetime.Filetime(timestamp=creation_time)
       event = OLECFItemEvent(
-          date_time, eventdata.EventTimestamp.CREATION_TIME, olecf_item)
+          date_time, definitions.TIME_DESCRIPTION_CREATION, olecf_item)
       parser_mediator.ProduceEvent(event)
 
     if modification_time:
       date_time = dfdatetime_filetime.Filetime(timestamp=modification_time)
       event = OLECFItemEvent(
-          date_time, eventdata.EventTimestamp.MODIFICATION_TIME, olecf_item)
+          date_time, definitions.TIME_DESCRIPTION_MODIFICATION, olecf_item)
       parser_mediator.ProduceEvent(event)
 
     if event:
@@ -100,7 +100,7 @@ class DefaultOLECFPlugin(interface.OLECFPlugin):
       # If no event was produced, produce at least one for the root item.
       date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
       event = OLECFItemEvent(
-          date_time, eventdata.EventTimestamp.CREATION_TIME, root_item)
+          date_time, definitions.TIME_DESCRIPTION_CREATION, root_item)
       parser_mediator.ProduceEvent(event)
 
 

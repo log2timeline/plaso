@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains the shell item specific event object classes."""
+"""Shell item event attribute container."""
 
 from plaso.containers import time_events
 

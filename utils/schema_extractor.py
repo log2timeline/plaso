@@ -71,7 +71,7 @@ class SQLiteSchemaExtractor(object):
     lines = []
     table_index = 1
     number_of_tables = len(schema)
-    for table_name, query in schema.items():
+    for table_name, query in sorted(schema.items()):
       line = u'      u\'{0:s}\': ('.format(table_name)
       lines.append(line)
 

@@ -11,7 +11,7 @@ from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import py2to3
 from plaso.parsers import esedb
 from plaso.parsers.esedb_plugins import interface
@@ -224,28 +224,28 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
         if timestamp:
           date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
           event = time_events.DateTimeValuesEvent(
-              date_time, eventdata.EventTimestamp.CREATION_TIME)
+              date_time, definitions.TIME_DESCRIPTION_CREATION)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
         timestamp = record_values.get(u'ExpiryTime', None)
         if timestamp:
           date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
           event = time_events.DateTimeValuesEvent(
-              date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
+              date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
         timestamp = record_values.get(u'ModifiedTime', None)
         if timestamp:
           date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
           event = time_events.DateTimeValuesEvent(
-              date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+              date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
         timestamp = record_values.get(u'AccessedTime', None)
         if timestamp:
           date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
           event = time_events.DateTimeValuesEvent(
-              date_time, eventdata.EventTimestamp.ACCESS_TIME)
+              date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
         timestamp = record_values.get(u'PostCheckTime', None)
@@ -297,7 +297,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
       if timestamp:
         date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.ACCESS_TIME)
+            date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       container_identifier = record_values.get(u'ContainerId', None)
@@ -348,7 +348,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
       if timestamp:
         date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.CREATION_TIME)
+            date_time, definitions.TIME_DESCRIPTION_CREATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParsePartitionsTable(

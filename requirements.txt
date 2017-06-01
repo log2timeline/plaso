@@ -7,7 +7,7 @@ artifacts >= 20150409
 bencode
 binplist >= 0.1.4
 construct >= 2.5.2,<= 2.5.3
-dfdatetime >= 20170103
+dfdatetime >= 20170529
 dfvfs >= 20160803
 dfwinreg >= 20160320
 dpkt >= 1.8

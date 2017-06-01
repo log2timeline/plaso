@@ -36,14 +36,6 @@ plaso.frontend.image_export module
     :undoc-members:
     :show-inheritance:
 
-plaso.frontend.log2timeline module
-----------------------------------
-
-.. automodule:: plaso.frontend.log2timeline
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.frontend.psort module
 ---------------------------
 

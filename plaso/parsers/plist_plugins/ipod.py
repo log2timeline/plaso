@@ -3,7 +3,7 @@
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
@@ -60,7 +60,7 @@ class IPodPlugin(interface.PlistPlugin):
 
       timestamp = timelib.Timestamp.FromPythonDatetime(connected_time)
       event = time_events.TimestampEvent(
-          timestamp, eventdata.EventTimestamp.LAST_CONNECTED)
+          timestamp, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
