@@ -5,23 +5,29 @@
 import os
 import sys
 
-# Change PYTHONPATH to include dependencies.
+# Change PYTHONPATH to include dependencies and projects.
 sys.path.insert(0, u'.')
 
 import utils.dependencies  # pylint: disable=wrong-import-position
+import utils.projects  # pylint: disable=wrong-import-position
+
+
+# pylint: disable=redefined-outer-name
 
 
 class DependencyFileWriter(object):
   """Dependency file writer."""
 
-  def __init__(self, dependency_helper):
+  def __init__(self, project_definition, dependency_helper):
     """Initializes a dependency file writer.
 
     Args:
+      project_definition (ProjectDefinition): project definition.
       dependency_helper (DependencyHelper): dependency helper.
     """
     super(DependencyFileWriter, self).__init__()
     self._dependency_helper = dependency_helper
+    self._project_definition = project_definition
 
 
 class AppveyorYmlWriter(DependencyFileWriter):
@@ -141,70 +147,67 @@ class DPKGControlWriter(DependencyFileWriter):
 
   _PATH = os.path.join(u'config', u'dpkg', u'control')
 
-  _PROJECT_NAME = u'plaso'
-
-  _MAINTAINER = (
-      u'Log2Timeline maintainers <log2timeline-maintainers@googlegroups.com>')
-
-  _FILE_HEADER = [
-      u'Source: {0:s}'.format(_PROJECT_NAME),
+  _FILE_CONTENT = u'\n'.join([
+      u'Source: {project_name:s}',
       u'Section: python',
       u'Priority: extra',
-      u'Maintainer: {0:s}'.format(_MAINTAINER),
+      u'Maintainer: {maintainer:s}',
       (u'Build-Depends: debhelper (>= 7), python-all (>= 2.7~), '
        u'python-setuptools'),
       u'Standards-Version: 3.9.5',
       u'X-Python-Version: >= 2.7',
-      u'Homepage: https://github.com/log2timeline/plaso',
+      u'Homepage: {homepage_url:s}',
       u'',
-      u'Package: plaso-data',
+      u'Package: {project_name:s}-data',
       u'Architecture: all',
-      u'Depends: ${misc:Depends}',
+      u'Depends: ${{misc:Depends}}',
       u'Description: Data files for plaso (log2timeline)',
-      u' Plaso (log2timeline) is a framework to create super timelines. Its',
-      u' purpose is to extract timestamps from various files found on typical',
-      u' computer systems and aggregate them.',
-      u'']
-
-  _PYTHON2_PACKAGE_HEADER = [
-      u'Package: python-{0:s}'.format(_PROJECT_NAME),
-      u'Architecture: all']
-
-  _FILE_DESCRIPTION = [
-      u'Description: Python bindings for plaso (log2timeline)',
-      u' Plaso (log2timeline) is a framework to create super timelines. Its',
-      u' purpose is to extract timestamps from various files found on typical',
-      u' computer systems and aggregate them.',
-      u'']
-
-  _FILE_FOOTER = [
-      u'Package: plaso-tools',
+      u'{description_long:s}',
+      u'',
+      u'Package: python-{project_name:s}',
       u'Architecture: all',
-      (u'Depends: python-plaso, python (>= 2.7~), ${python:Depends}, '
-       u'${misc:Depends}'),
-      u'Description: Tools for plaso (log2timeline)',
+      (u'Depends: {project_name:s}-data, {python2_dependencies:s}'
+       u'${{python:Depends}}, ${{misc:Depends}}'),
+      u'Description: Python 2 module of plaso (log2timeline)',
+      u'{description_long:s}',
+      u'',
+      u'Package: {project_name:s}-tools',
+      u'Architecture: all',
+      (u'Depends: python-{project_name:s}, python (>= 2.7~), '
+       u'${{python:Depends}}, ${{misc:Depends}}'),
+      u'Description: Tools of plaso (log2timeline)',
       u' Plaso (log2timeline) is a framework to create super timelines. Its',
       u' purpose is to extract timestamps from various files found on typical',
       u' computer systems and aggregate them.',
-      u'']
+      u''])
 
   def Write(self):
     """Writes a dpkg control file."""
-    file_content = []
-    file_content.extend(self._FILE_HEADER)
-    file_content.extend(self._PYTHON2_PACKAGE_HEADER)
-
     dependencies = self._dependency_helper.GetDPKGDepends()
-    dependencies.extend([u'${python:Depends}', u'${misc:Depends}'])
-    dependencies = u', '.join(dependencies)
-    file_content.append((
-        u'Depends: plaso-data, {0:s}, ${{python:Depends}}, '
-        u'${{misc:Depends}}').format(dependencies))
 
-    file_content.extend(self._FILE_DESCRIPTION)
-    file_content.extend(self._FILE_FOOTER)
+    description_long = self._project_definition.description_long
+    description_long = u'\n'.join([
+        u' {0:s}'.format(line) for line in description_long.split(u'\n')])
 
-    file_content = u'\n'.join(file_content)
+    python2_dependencies = u', '.join(dependencies)
+    if python2_dependencies:
+      python2_dependencies = u'{0:s}, '.format(python2_dependencies)
+
+    python3_dependencies = u', '.join(dependencies).replace(
+        u'python', u'python3')
+    if python3_dependencies:
+      python3_dependencies = u'{0:s}, '.format(python3_dependencies)
+
+    kwargs = {
+        u'description_long': description_long,
+        u'description_short': self._project_definition.description_short,
+        u'homepage_url': self._project_definition.homepage_url,
+        u'maintainer': self._project_definition.maintainer,
+        u'project_name': self._project_definition.name,
+        u'python2_dependencies': python2_dependencies,
+        u'python3_dependencies': python3_dependencies}
+    file_content = self._FILE_CONTENT.format(**kwargs)
+
     file_content = file_content.encode(u'utf-8')
 
     with open(self._PATH, 'wb') as file_object:
@@ -390,10 +393,7 @@ class RequirementsWriter(DependencyFileWriter):
 
   _PATH = u'requirements.txt'
 
-  _FILE_HEADER = [
-      u'pip >= 7.0.0',
-      u'pytest',
-      u'mock']
+  _FILE_HEADER = [u'pip >= 7.0.0']
 
   def Write(self):
     """Writes a requirements.txt file."""
@@ -416,10 +416,7 @@ class SetupCfgWriter(DependencyFileWriter):
 
   _PATH = u'setup.cfg'
 
-  _MAINTAINER = (
-      u'Log2Timeline maintainers <log2timeline-maintainers@googlegroups.com>')
-
-  _FILE_HEADER = [
+  _FILE_HEADER = u'\n'.join([
       u'[sdist]',
       u'template = MANIFEST.in',
       u'manifest = MANIFEST',
@@ -430,17 +427,19 @@ class SetupCfgWriter(DependencyFileWriter):
       u'',
       u'[bdist_rpm]',
       u'release = 1',
-      u'packager = {0:s}'.format(_MAINTAINER),
+      u'packager = {maintainer:s}',
       u'doc_files = ACKNOWLEDGEMENTS',
       u'            AUTHORS',
       u'            LICENSE',
       u'            README',
-      u'build_requires = python-setuptools']
+      u'build_requires = python-setuptools'])
 
   def Write(self):
     """Writes a setup.cfg file."""
-    file_content = []
-    file_content.extend(self._FILE_HEADER)
+    kwargs = {u'maintainer': self._project_definition.maintainer}
+    file_header = self._FILE_HEADER.format(**kwargs)
+
+    file_content = [file_header]
 
     dependencies = self._dependency_helper.GetRPMRequires()
     for index, dependency in enumerate(dependencies):
@@ -448,6 +447,8 @@ class SetupCfgWriter(DependencyFileWriter):
         file_content.append(u'requires = {0:s}'.format(dependency))
       else:
         file_content.append(u'           {0:s}'.format(dependency))
+
+    file_content.append(u'')
 
     file_content = u'\n'.join(file_content)
     file_content = file_content.encode(u'utf-8')
@@ -521,7 +522,7 @@ class TravisBeforeInstallScriptWriter(DependencyFileWriter):
     file_content.append(u'PYTHON2_DEPENDENCIES="{0:s}";'.format(dependencies))
 
     file_content.append(u'')
-    file_content.append(u'PYTHON2_TEST_DEPENDENCIES="python-mock";')
+    file_content.append(u'PYTHON2_TEST_DEPENDENCIES="python-mock python-tox";')
 
     file_content.extend(self._FILE_FOOTER)
 
@@ -532,12 +533,57 @@ class TravisBeforeInstallScriptWriter(DependencyFileWriter):
       file_object.write(file_content)
 
 
+class ToxIniWriter(DependencyFileWriter):
+  """Tox.ini file writer."""
+
+  _PATH = u'tox.ini'
+
+  _FILE_CONTENT = u'\n'.join([
+      u'[tox]',
+      u'envlist = py2, py3',
+      u'',
+      u'[testenv]',
+      u'pip_pre = True',
+      u'setenv =',
+      u'    PYTHONPATH = {{toxinidir}}',
+      u'deps =',
+      u'    coverage',
+      u'    mock',
+      u'    pytest',
+      u'    -rrequirements.txt',
+      u'commands =',
+      u'    coverage erase',
+      (u'    coverage run --source={project_name:s} '
+       u'--omit="*_test*,*__init__*,*test_lib*" run_tests.py'),
+      u''])
+
+  def Write(self):
+    """Writes a setup.cfg file."""
+    kwargs = {u'project_name': self._project_definition.name}
+    file_content = self._FILE_CONTENT.format(**kwargs)
+
+    file_content = file_content.encode(u'utf-8')
+
+    with open(self._PATH, 'wb') as file_object:
+      file_object.write(file_content)
+
+
 if __name__ == u'__main__':
+  project_file = os.path.abspath(__file__)
+  project_file = os.path.dirname(project_file)
+  project_file = os.path.dirname(project_file)
+  project_file = os.path.basename(project_file)
+  project_file = u'{0:s}.ini'.format(project_file)
+
+  project_reader = utils.projects.ProjectDefinitionReader()
+  with open(project_file, 'rb') as file_object:
+    project_definition = project_reader.Read(file_object)
+
   helper = utils.dependencies.DependencyHelper()
 
   for writer_class in (
       AppveyorYmlWriter, DPKGControlWriter, GIFTCOPRInstallScriptWriter,
       GIFTPPAInstallScriptWriter, RequirementsWriter, SetupCfgWriter,
-      TravisBeforeInstallScriptWriter):
-    writer = writer_class(helper)
+      TravisBeforeInstallScriptWriter, ToxIniWriter):
+    writer = writer_class(project_definition, helper)
     writer.Write()

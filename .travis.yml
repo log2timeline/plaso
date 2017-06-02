@@ -6,19 +6,22 @@ matrix:
     sudo: required
     group: edge
     python: 2.7
+    env: TOXENV=py27
   - os: osx
     osx_image: xcode8.1
     language: generic
+    env: PYTHONPATH=/Library/Python/2.7/site-packages/
   exclude:
   - os: linux
     dist: trusty
     sudo: required
     group: edge
     python: 3.4
+    env: TOXENV=py34
 install:
   - ./config/travis/install.sh
 script:
-  - if test ${TRAVIS_OS_NAME} = "osx"; then PYTHONPATH=/Library/Python/2.7/site-packages/ /usr/bin/python run_tests.py; elif test ${TRAVIS_OS_NAME} = "linux"; then if test ${TRAVIS_PYTHON_VERSION} = "2.7"; then coverage run --source=plaso --omit="*_test*,*__init__*,*test_lib*" ./run_tests.py; else ./run_tests.py; fi; fi
+  - if test ${TRAVIS_OS_NAME} = "osx"; then PYTHONPATH=/Library/Python/2.7/site-packages/ /usr/bin/python ./run_tests.py; elif test ${TRAVIS_OS_NAME} = "linux"; then tox --sitepackages ${TOXENV}; fi
   - if test ${TRAVIS_OS_NAME} = "linux"; then python setup.py build; fi
   - if test ${TRAVIS_OS_NAME} = "linux"; then python setup.py sdist; fi
   - if test ${TRAVIS_OS_NAME} = "linux"; then python setup.py bdist; fi
