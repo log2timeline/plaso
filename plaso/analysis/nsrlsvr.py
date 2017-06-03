@@ -65,6 +65,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
       bool: True if the hash was found, False if not or None on error.
     """
     query = u'QUERY {0:s}\n'.format(digest)
+    response = None
 
     try:
       nsrl_socket.sendall(query)
@@ -166,6 +167,7 @@ class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
   def __init__(self):
     """Initializes an nsrlsvr analysis plugin."""
     super(NsrlsvrAnalysisPlugin, self).__init__(NsrlsvrAnalyzer)
+    self._label = None
 
   def GenerateLabels(self, hash_information):
     """Generates a list of strings that will be used in the event tag.
@@ -179,10 +181,19 @@ class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
       list[str]: strings describing the results from nsrlsvr.
     """
     if hash_information:
-      return [u'nsrl_present']
+      return [self._label]
     # TODO: Renable when tagging is removed from the analysis report.
     # return [u'nsrl_not_present']
     return []
+
+  def SetLabel(self, label):
+    """
+
+    Args:
+      label (str): label to apply to events extracted from files that are
+          present in nsrlsvr.
+    """
+    self._label = label
 
   def SetHost(self, host):
     """Sets the address or hostname of the server running nsrlsvr.
