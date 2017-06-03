@@ -95,7 +95,7 @@ class PsortToolTest(test_lib.CLIToolTestCase):
       u'                     [--viper-protocol PROTOCOL]',
       u'                     [--virustotal-api-key API_KEY]',
       (u'                     [--virustotal-free-rate-limit] '
-      u'[--virustotal-hash HASH]'),
+       u'[--virustotal-hash HASH]'),
       u'                     [--windows-services-output {text,yaml}]',
       u'',
       u'Test argument parser.',
