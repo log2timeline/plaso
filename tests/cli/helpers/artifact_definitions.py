@@ -27,6 +27,11 @@ class ArtifactDefinitionsArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
       u'  --artifact_definitions PATH, --artifact-definitions PATH',
       (u'                        Path to a directory containing artifact '
        u'definitions.'),
+      (u'                         Artifact definitions can be used to '
+       u'describe and'),
+      (u'                         quickly collect data data of interest, '
+       u'such as'),
+      u'                         specific files or Windows Registry keys.',
       u''])
 
   def testAddArguments(self):
