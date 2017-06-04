@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the 4n6time SQLite output class."""
+"""Tests for the 4n6time SQLite output module."""
 
 import os
 import unittest
@@ -10,6 +10,7 @@ try:
 except ImportError:
   import sqlite3
 
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import timelib
@@ -19,20 +20,14 @@ from tests import test_lib as shared_test_lib
 from tests.output import test_lib
 
 
-class SQLiteTestEvent(time_events.TimestampEvent):
-  """Event object used for testing."""
+class TestEventData(events.EventData):
+  """Event data for testing 4n6time SQLite output module."""
 
   DATA_TYPE = u'syslog:line'
 
-  def __init__(self, timestamp):
-    """Initializes an event object.
-
-    Args:
-      timestamp: the timestamp which is an integer containing the number
-                 of micro seconds since January 1, 1970, 00:00:00 UTC.
-    """
-    super(SQLiteTestEvent, self).__init__(
-        timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
+  def __init__(self):
+    """Initializes event data."""
+    super(TestEventData, self).__init__(data_type=self.DATA_TYPE)
     self.hostname = u'ubuntu'
     self.filename = u'log/syslog.1'
     self.display_name = u'log/syslog.1'
@@ -44,17 +39,29 @@ class SQLiteTestEvent(time_events.TimestampEvent):
 
 
 class SqliteOutputModuleTest(test_lib.OutputModuleTestCase):
-  """Tests for the sqlite output class."""
+  """Tests for the 4n6time SQLite output module."""
+
+  # TODO: remove after event data refactor.
+  def _MergeEventAndEventData(self, event, event_data):
+    """Merges the event data with the event.
+
+    args:
+      event (EventObject): event.
+      event_data (EventData): event_data.
+    """
+    for attribute_name, attribute_value in event_data.GetAttributes():
+      setattr(event, attribute_name, attribute_value)
 
   def testOutput(self):
-    """Tests for the sqlite output."""
+    """Tests the 4n6time SQLite output module."""
+    event_data = TestEventData()
+
     timestamp = timelib.Timestamp.CopyFromString(
         u'2012-06-27 18:17:01+00:00')
-    event_object = SQLiteTestEvent(timestamp)
+    event = time_events.TimestampEvent(
+        timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
 
-    # pylint: disable=missing-docstring
-    def dict_from_row(row):
-      return dict(zip(row.keys(), row))
+    self._MergeEventAndEventData(event, event_data)
 
     expected_dict = {
         u'type': u'Content Modification Time',
@@ -96,14 +103,15 @@ class SqliteOutputModuleTest(test_lib.OutputModuleTestCase):
       sqlite_output.SetFilename(sqlite_file)
 
       sqlite_output.Open()
-      sqlite_output.WriteEventBody(event_object)
+      sqlite_output.WriteEventBody(event)
       sqlite_output.Close()
 
       sqlite_connection = sqlite3.connect(sqlite_file)
       sqlite_connection.row_factory = sqlite3.Row
 
-      res = sqlite_connection.execute(u'SELECT * from log2timeline')
-      row_dict = dict_from_row(res.fetchone())
+      cursor = sqlite_connection.execute(u'SELECT * from log2timeline')
+      row = cursor.fetchone()
+      row_dict = dict(zip(row.keys(), row))
       self.assertDictContainsSubset(expected_dict, row_dict)
 
 
