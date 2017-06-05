@@ -89,10 +89,10 @@ class PsortToolTest(test_lib.CLIToolTestCase):
 
   _EXPECTED_ANALYSIS_PLUGIN_OPTIONS = u'\n'.join([
       u'usage: psort_test.py [--nsrlsvr-hash HASH] [--nsrlsvr-host HOST]',
-      (u'                     [--nsrlsvr-port PORT] '
-       u'[--tagging-file TAGGING_FILE]'),
-      u'                     [--viper-hash HASH] [--viper-host HOST]',
-      u'                     [--viper-port PORT] [--viper-protocol PROTOCOL]',
+      u'                     [--nsrlsvr-label LABEL] [--nsrlsvr-port PORT]',
+      u'                     [--tagging-file TAGGING_FILE] [--viper-hash HASH]',
+      u'                     [--viper-host HOST] [--viper-port PORT]',
+      u'                     [--viper-protocol PROTOCOL]',
       u'                     [--virustotal-api-key API_KEY]',
       (u'                     [--virustotal-free-rate-limit] '
        u'[--virustotal-hash HASH]'),
@@ -110,6 +110,9 @@ class PsortToolTest(test_lib.CLIToolTestCase):
       (u'                        Hostname or IP address of the nsrlsvr '
        u'instance to'),
       u'                        query, the default is: localhost',
+      u'  --nsrlsvr-label LABEL, --nsrlsvr_label LABEL',
+      u'                        Label to apply to events, the default is:',
+      u'                        nsrl_present.',
       u'  --nsrlsvr-port PORT, --nsrlsvr_port PORT',
       (u'                        Port number of the nsrlsvr instance to '
        u'query, the'),

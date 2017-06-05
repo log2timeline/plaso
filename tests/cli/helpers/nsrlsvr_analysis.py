@@ -19,7 +19,7 @@ class NsrlsvrAnalysisArgumentsHelperTest(
 
   _EXPECTED_OUTPUT = u'\n'.join([
       u'usage: cli_helper.py [--nsrlsvr-hash HASH] [--nsrlsvr-host HOST]',
-      u'                     [--nsrlsvr-port PORT]',
+      u'                     [--nsrlsvr-label LABEL] [--nsrlsvr-port PORT]',
       u'',
       u'Test argument parser.',
       u'',
@@ -33,6 +33,9 @@ class NsrlsvrAnalysisArgumentsHelperTest(
       (u'                        Hostname or IP address of the nsrlsvr '
        u'instance to'),
       u'                        query, the default is: localhost',
+      u'  --nsrlsvr-label LABEL, --nsrlsvr_label LABEL',
+      u'                        Label to apply to events, the default is:',
+      u'                        nsrl_present.',
       u'  --nsrlsvr-port PORT, --nsrlsvr_port PORT',
       (u'                        Port number of the nsrlsvr instance to '
        u'query, the'),
