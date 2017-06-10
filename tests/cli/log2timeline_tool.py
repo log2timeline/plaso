@@ -53,7 +53,6 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
   # TODO: add tests for _CheckStorageFile
   # TODO: add tests for _CreateProcessingConfiguration
-  # TODO: add tests for _DetermineSourceType
 
   def testGetFiltersInformation(self):
     """Tests the _GetFiltersInformation function."""
@@ -93,8 +92,6 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
     self.assertIn(u'Parser Plugins', plugin_info)
     self.assertIsNotNone(plugin_info[u'Parser Plugins'])
-
-  # TODO: add tests for _GetStatusUpdateCallback
 
   def testParseFilterOption(self):
     """Tests the _ParseFilterOption function."""

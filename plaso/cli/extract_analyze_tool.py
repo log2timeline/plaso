@@ -4,11 +4,11 @@
 import datetime
 import os
 
-from plaso.cli import status_view_tool
+from plaso.cli import storage_media_tool
 from plaso.lib import errors
 
 
-class ExtractionAndAnalysisTool(status_view_tool.StatusViewTool):
+class ExtractionAndAnalysisTool(storage_media_tool.StorageMediaTool):
   """Class that implements a combined extraction and analysis CLI tool."""
 
   def __init__(self, input_reader=None, output_writer=None):

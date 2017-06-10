@@ -20,6 +20,7 @@ from plaso import filters  # pylint: disable=unused-import
 from plaso import output  # pylint: disable=unused-import
 
 from plaso.cli import extraction_tool
+from plaso.cli import status_view
 from plaso.cli import tools as cli_tools
 from plaso.cli import views as cli_views
 from plaso.cli import views as logging_filter
@@ -97,8 +98,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._number_of_extraction_workers = 0
     self._resolver_context = dfvfs_context.Context()
     self._source_type = None
-    self._source_type_string = u'UNKNOWN'
-    self._status_view_mode = u'linear'
+    self._status_view = status_view.StatusView(self._output_writer, self.NAME)
+    self._status_view_mode = status_view.StatusView.MODE_WINDOW
     self._stdout_output_writer = isinstance(
         self._output_writer, cli_tools.StdoutOutputWriter)
     self._storage_file_path = None
@@ -167,28 +168,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     return configuration
 
-  def _DetermineSourceType(self):
-    """Determines the source type."""
-    scan_context = self.ScanSource()
-    self._source_type = scan_context.source_type
-
-    if self._source_type == dfvfs_definitions.SOURCE_TYPE_DIRECTORY:
-      self._source_type_string = u'directory'
-
-    elif self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
-      self._source_type_string = u'single file'
-
-    elif self._source_type == (
-        dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE):
-      self._source_type_string = u'storage media device'
-
-    elif self._source_type == (
-        dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE):
-      self._source_type_string = u'storage media image'
-
-    else:
-      self._source_type_string = u'UNKNOWN'
-
   def _GetFiltersInformation(self):
     """Retrieves the filters information.
 
@@ -242,17 +221,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     return_dict[u'Filters'] = self._GetFiltersInformation()
 
     return return_dict
-
-  def _GetStatusUpdateCallback(self):
-    """Retrieves the status update callback function.
-
-    Returns:
-      function: status update callback function or None.
-    """
-    if self._status_view_mode == u'linear':
-      return self._PrintStatusUpdateStream
-    elif self._status_view_mode == u'window':
-      return self._PrintStatusUpdate
 
   def _ParseFilterOption(self, options):
     """Parses the filter option.
@@ -489,9 +457,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     # The window status-view mode has an annoying flicker on Windows,
     # hence we default to linear status-view mode instead.
     if sys.platform.startswith(u'win'):
-      default_status_view = u'linear'
+      default_status_view = status_view.StatusView.MODE_LINEAR
     else:
-      default_status_view = u'window'
+      default_status_view = status_view.StatusView.MODE_WINDOW
 
     info_group.add_argument(
         u'--status_view', u'--status-view', dest=u'status_view_mode',
@@ -643,7 +611,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._ParseFilterOption(options)
 
-    self._status_view_mode = getattr(options, u'status_view_mode', u'linear')
+    self._status_view_mode = getattr(
+        options, u'status_view_mode', status_view.StatusView.MODE_WINDOW)
     self._enable_sigsegv_handler = getattr(options, u'sigsegv_handler', False)
 
   def _PreprocessSources(self, engine):
@@ -674,10 +643,15 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """
     self._CheckStorageFile(self._storage_file_path)
 
-    self._DetermineSourceType()
+    scan_context = self.ScanSource()
+    self._source_type = scan_context.source_type
+
+    self._status_view.SetMode(self._status_view_mode)
+    self._status_view.SetSourceInformation(
+        self._source_path, self._source_type, filter_file=self._filter_file)
 
     self._output_writer.Write(u'\n')
-    self._PrintStatusHeader()
+    self._status_view.PrintExtractionStatusHeader()
     self._output_writer.Write(u'Processing started.\n')
 
     single_process_mode = self._single_process_mode
@@ -749,7 +723,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           configuration.filter_file,
           environment_variables=environment_variables)
 
-    status_update_callback = self._GetStatusUpdateCallback()
+    status_update_callback = (
+        self._status_view.GetExtractionStatusUpdateCallback())
 
     processing_status = None
     if single_process_mode:

@@ -14,7 +14,7 @@ from plaso import analyzers  # pylint: disable=unused-import
 from plaso import parsers  # pylint: disable=unused-import
 
 from plaso.analyzers.hashers import manager as hashers_manager
-from plaso.cli import status_view_tool
+from plaso.cli import storage_media_tool
 from plaso.cli import views
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -23,7 +23,7 @@ from plaso.parsers import manager as parsers_manager
 from plaso.parsers import presets as parsers_presets
 
 
-class ExtractionTool(status_view_tool.StatusViewTool):
+class ExtractionTool(storage_media_tool.StorageMediaTool):
   """Class that implements an extraction CLI tool.
 
   Attributes:
