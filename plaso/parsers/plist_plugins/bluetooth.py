@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains a default plist plugin in Plaso."""
+"""Bluetooth plist plugin."""
+
+from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import plist_event
+from plaso.containers import time_events
+from plaso.lib import definitions
+from plaso.lib import timelib
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
@@ -39,44 +44,61 @@ class BluetoothPlugin(interface.PlistPlugin):
           and other components, such as storage and dfvfs.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
-    root = u'/DeviceCache'
-
-    if u'DeviceCache' not in match:
-      return
-
-    for device, value in iter(match[u'DeviceCache'].items()):
+    device_cache = match.get(u'DeviceCache', {})
+    for device, value in iter(device_cache.items()):
       name = value.get(u'Name', u'')
       if name:
         name = u''.join((u'Name:', name))
 
-      if device in match.get(u'PairedDevices', []):
-        desc = u'Paired:True {0:s}'.format(name)
-        key = device
-        if u'LastInquiryUpdate' in value:
-          event_object = plist_event.PlistEvent(
-              root, key, value[u'LastInquiryUpdate'], desc)
-          parser_mediator.ProduceEvent(event_object)
+      event_data = plist_event.PlistTimeEventData()
+      event_data.root = u'/DeviceCache'
 
-      if value.get(u'LastInquiryUpdate', None):
-        desc = u' '.join(filter(None, (u'Bluetooth Discovery', name)))
-        key = u''.join((device, u'/LastInquiryUpdate'))
-        event_object = plist_event.PlistEvent(
-            root, key, value[u'LastInquiryUpdate'], desc)
-        parser_mediator.ProduceEvent(event_object)
+      datetime_value = value.get(u'LastInquiryUpdate', None)
+      if datetime_value:
+        event_data.desc = u' '.join(
+            filter(None, (u'Bluetooth Discovery', name)))
+        event_data.key = u'{0:s}/LastInquiryUpdate'.format(device)
 
-      if value.get(u'LastNameUpdate', None):
-        desc = u' '.join(filter(None, (u'Device Name Set', name)))
-        key = u''.join((device, u'/LastNameUpdate'))
-        event_object = plist_event.PlistEvent(
-            root, key, value[u'LastNameUpdate'], desc)
-        parser_mediator.ProduceEvent(event_object)
+        timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
+        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+            timestamp=timestamp)
+        event = time_events.DateTimeValuesEvent(
+            date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
-      if value.get(u'LastServicesUpdate', None):
-        desc = desc = u' '.join(filter(None, (u'Services Updated', name)))
-        key = u''.join((device, u'/LastServicesUpdate'))
-        event_object = plist_event.PlistEvent(
-            root, key, value[u'LastServicesUpdate'], desc)
-        parser_mediator.ProduceEvent(event_object)
+        if device in match.get(u'PairedDevices', []):
+          event_data.desc = u'Paired:True {0:s}'.format(name)
+          event_data.key = device
 
+          timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
+          date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+              timestamp=timestamp)
+          event = time_events.DateTimeValuesEvent(
+              date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
+
+      datetime_value = value.get(u'LastNameUpdate', None)
+      if datetime_value:
+        event_data.desc = u' '.join(filter(None, (u'Device Name Set', name)))
+        event_data.key = u'{0:s}/LastNameUpdate'.format(device)
+
+        timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
+        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+            timestamp=timestamp)
+        event = time_events.DateTimeValuesEvent(
+            date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
+
+      datetime_value = value.get(u'LastServicesUpdate', None)
+      if datetime_value:
+        event_data.desc = u' '.join(filter(None, (u'Services Updated', name)))
+        event_data.key = u'{0:s}/LastServicesUpdate'.format(device)
+
+        timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
+        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+            timestamp=timestamp)
+        event = time_events.DateTimeValuesEvent(
+            date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
 plist.PlistParser.RegisterPlugin(BluetoothPlugin)

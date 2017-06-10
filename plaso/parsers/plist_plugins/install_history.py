@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This file contains the install history plist plugin in Plaso."""
+"""Install history plist plugin."""
+
+from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import plist_event
+from plaso.containers import time_events
+from plaso.lib import definitions
+from plaso.lib import timelib
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
@@ -26,26 +31,34 @@ class InstallHistoryPlugin(interface.PlistPlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      top_level: Optional plist in dictionary form.
+      top_level (dict[str, object]): plist top-level key.
     """
     for entry in top_level:
-      packages = []
-      for package in entry.get(u'packageIdentifiers', []):
-        packages.append(package)
+      datetime_value = entry.get(u'date', None)
+      package_identifiers = entry.get(u'packageIdentifiers', [])
 
-      if not packages or not u'date' in entry:
+      if not datetime_value or not package_identifiers:
         continue
 
-      description = (
-          u'Installation of [{0:s} {1:s}] using [{2:s}]. '
-          u'Packages: {3:s}.').format(
-              entry.get(u'displayName', u'<UNKNOWN>'),
-              entry.get(u'displayVersion', u'<DISPLAY_VERSION>'),
-              entry.get(u'processName', u'<PROCESS_NAME>'),
-              u', '.join(packages))
-      event_object = plist_event.PlistEvent(
-          u'/item', u'', entry.get(u'date'), description)
-      parser_mediator.ProduceEvent(event_object)
+      display_name = entry.get(u'displayName', u'<UNKNOWN>')
+      display_version = entry.get(u'displayVersion', u'<DISPLAY_VERSION>')
+      process_name = entry.get(u'processName', u'<PROCESS_NAME>')
+      package_identifiers = u', '.join(package_identifiers)
+
+      event_data = plist_event.PlistTimeEventData()
+      event_data.desc = (
+          u'Installation of [{0:s} {1:s}] using [{2:s}]. Packages: '
+          u'{3:s}.').format(
+              display_name, display_version, process_name, package_identifiers)
+      event_data.key = u''
+      event_data.root = u'/item'
+
+      timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 plist.PlistParser.RegisterPlugin(InstallHistoryPlugin)

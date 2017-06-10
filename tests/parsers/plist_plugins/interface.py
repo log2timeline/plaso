@@ -4,7 +4,11 @@
 
 import unittest
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from plaso.containers import plist_event
+from plaso.containers import time_events
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers.plist_plugins import interface
 
@@ -21,10 +25,21 @@ class MockPlugin(interface.PlistPlugin):
   PLIST_KEYS = frozenset([u'DeviceCache', u'PairedDevices'])
 
   def GetEntries(self, parser_mediator, **unused_kwargs):
-    event_object = plist_event.PlistEvent(
-        u'/DeviceCache/44-00-00-00-00-00', u'LastInquiryUpdate',
-        1351827808261762)
-    parser_mediator.ProduceEvent(event_object)
+    """Extracts entries for testing.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+    """
+    event_data = plist_event.PlistTimeEventData()
+    event_data.key = u'LastInquiryUpdate'
+    event_data.root = u'/DeviceCache/44-00-00-00-00-00'
+
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=1351827808261762)
+    event = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 class TestPlistPlugin(test_lib.PlistPluginTestCase):
