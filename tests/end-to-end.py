@@ -758,8 +758,9 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
           self._test_sources_path, tagging_file_path)
 
     # TODO: determine why --analysis=tagging fails.
-    tagging_options = [u'--analysis', u'tagging', u'--output-format=null',
-        u'--tagging-file', tagging_file_path]
+    tagging_options = [
+        u'--analysis', u'tagging', u'--output-format=null', u'--tagging-file',
+        tagging_file_path]
 
     stdout_file = os.path.join(
         temp_directory, u'{0:s}-psort-tagging.out'.format(test_definition.name))
@@ -1032,7 +1033,8 @@ class OutputTestCase(TestCase):
           output_list = [
               line.decode(u'utf-8').replace(u'/tmp/test/test_data/', u'')
               for line in output_file.readlines()]
-          output_list = [line.replace(u'C:\\tmp\\test\\test_data\\', u'')
+          output_list = [
+              line.replace(u'C:\\tmp\\test\\test_data\\', u'')
               for line in output_list]
           output_list = [
               line.replace(u'C:\\\\tmp\\\\test\\\\test_data\\\\', u'')
