@@ -109,7 +109,7 @@ class TestCase(object):
     """Runs a command.
 
     Args:
-      command (list[str]): full command to run, as expected by to the Popen()
+      command (list[str]): full command to run, as expected by the Popen()
         constructor (see the documentation:
         https://docs.python.org/2/library/subprocess.html#popen-constructor)
       stdout (Optional[str]): path to file to send stdout to.
