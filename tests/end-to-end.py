@@ -662,7 +662,7 @@ class ExtractAndOutputTestCase(TestCase):
       tmp_extract_options = []
       for option_and_value in test_definition.extract_options.split(
           u' '):
-        if option_and_value.find(u'=')>0:
+        if option_and_value.find(u'=') > 0:
           tmp_extract_options.extend(option_and_value.split(u'='))
         else:
           tmp_extract_options.append(option_and_value)
