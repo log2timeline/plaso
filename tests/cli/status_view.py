@@ -20,8 +20,12 @@ class StatusViewTest(test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  # TODO: add tests for _FormatExtractionStatusTableRow.
-  # TODO: add tests for _FormatSizeInUnitsOf1024.
+  # TODO: add tests for _FormatAnalysisStatusTableRow
+  # TODO: add tests for _FormatExtractionStatusTableRow
+  # TODO: add tests for _FormatSizeInUnitsOf1024
+  # TODO: add tests for _PrintAnalysisStatusHeader
+  # TODO: add tests for _PrintAnalysisStatusUpdateLinear
+  # TODO: add tests for _PrintAnalysisStatusUpdateWindow
 
   def testPrintExtractionStatusUpdateLinear(self):
     """Tests the PrintExtractionStatusUpdateLinear function."""
@@ -111,8 +115,9 @@ class StatusViewTest(test_lib.CLIToolTestCase):
         b'']
     self.assertEqual(string.split(b'\n'), expected_lines)
 
-  # TODO: add tests for GetExtractionStatusUpdateCallback.
-  # TODO: add tests for PrintAnalysisReportsDetails.
+  # TODO: add tests for GetAnalysisStatusUpdateCallback
+  # TODO: add tests for GetExtractionStatusUpdateCallback
+  # TODO: add tests for PrintAnalysisReportsDetails
 
   def testPrintExtractionStatusHeader(self):
     """Tests the PrintExtractionStatusHeader function."""
@@ -124,8 +129,10 @@ class StatusViewTest(test_lib.CLIToolTestCase):
 
     test_view.PrintExtractionStatusHeader()
 
-  # TODO: add tests for SetMode.
-  # TODO: add tests for SetSourceInformation.
+  # TODO: add tests for PrintExtractionSummary
+  # TODO: add tests for SetMode
+  # TODO: add tests for SetSourceInformation
+  # TODO: add tests for SetStorageFileInformation
 
 
 if __name__ == '__main__':

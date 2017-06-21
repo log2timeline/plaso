@@ -6,6 +6,7 @@ import os
 
 from plaso.cli import storage_media_tool
 from plaso.lib import errors
+from plaso.parsers import manager as parsers_manager
 
 
 class ExtractionAndAnalysisTool(storage_media_tool.StorageMediaTool):
@@ -21,6 +22,7 @@ class ExtractionAndAnalysisTool(storage_media_tool.StorageMediaTool):
     """
     super(ExtractionAndAnalysisTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
+    self._parsers_manager = parsers_manager.ParsersManager
     self._storage_file_path = None
 
   def _GenerateStorageFileName(self):

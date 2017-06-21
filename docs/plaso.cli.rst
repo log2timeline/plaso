@@ -91,6 +91,14 @@ plaso.cli.psteal_tool module
     :undoc-members:
     :show-inheritance:
 
+plaso.cli.status_view module
+----------------------------
+
+.. automodule:: plaso.cli.status_view
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.cli.status_view_tool module
 ---------------------------------
 
