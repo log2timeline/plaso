@@ -80,7 +80,6 @@ class CLIToolTest(test_lib.CLIToolTestCase):
       u'                        list" to see a list of available timezones.',
       u''])
 
-  # TODO: add test for _ClearScreen
   # TODO: add test for _ConfigureLogging
   # TODO: add test for _EncodeString
   # TODO: add test for _ParseInformationalOptions

@@ -89,31 +89,6 @@ class CLITool(object):
     self.list_timezones = False
     self.preferred_encoding = preferred_encoding
 
-  def _ClearScreen(self):
-    """Clears the terminal/console screen."""
-    if not win32console:
-      # ANSI escape sequence to clear screen.
-      self._output_writer.Write(b'\033[2J')
-      # ANSI escape sequence to move cursor to top left.
-      self._output_writer.Write(b'\033[H')
-
-    else:
-      # Windows cmd.exe does not support ANSI escape codes, thus instead we
-      # fill the console screen buffer with spaces.
-      top_left_coordinate = win32console.PyCOORDType(0, 0)
-      screen_buffer = win32console.GetStdHandle(win32api.STD_OUTPUT_HANDLE)
-      screen_buffer_information = screen_buffer.GetConsoleScreenBufferInfo()
-
-      screen_buffer_attributes = screen_buffer_information[u'Attributes']
-      screen_buffer_size = screen_buffer_information[u'Size']
-      console_size = screen_buffer_size.X * screen_buffer_size.Y
-
-      screen_buffer.FillConsoleOutputCharacter(
-          u' ', console_size, top_left_coordinate)
-      screen_buffer.FillConsoleOutputAttribute(
-          screen_buffer_attributes, console_size, top_left_coordinate)
-      screen_buffer.SetConsoleCursorPosition(top_left_coordinate)
-
   def _ConfigureLogging(
       self, filename=None, format_string=None, log_level=None):
     """Configure the logger.
