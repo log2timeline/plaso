@@ -54,7 +54,7 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
     if not data_location:
       # Determine if we are running from the source directory.
       # This should get us the path to the "plaso/cli" directory.
-      data_location = os.path.dirname(self._FILE)
+      data_location = os.path.dirname(cls._FILE)
 
       # In order to get to the main path of the egg file we need to traverse
       # two directories up.
