@@ -54,6 +54,9 @@ class StatusView(object):
 
     Args:
       process_status (ProcessStatus): processing status.
+
+    Returns:
+      str: processing status formatted as a row.
     """
     # This check makes sure the columns are tab aligned.
     identifier = process_status.identifier
@@ -108,6 +111,9 @@ class StatusView(object):
 
     Args:
       process_status (ProcessStatus): processing status.
+
+    Returns:
+      str: processing status formatted as a row.
     """
     # This check makes sure the columns are tab aligned.
     identifier = process_status.identifier
