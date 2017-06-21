@@ -5,6 +5,7 @@
 import argparse
 import unittest
 
+from plaso.cli import status_view as cli_status_view
 from plaso.cli import tools
 from plaso.cli.helpers import status_view
 from plaso.lib import errors
@@ -44,7 +45,7 @@ class StatusViewArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
-    options.status_view = u'window'
+    options.status_view_mode = cli_status_view.StatusView.MODE_WINDOW
 
     test_tool = tools.CLITool()
     status_view.StatusViewArgumentsHelper.ParseOptions(options, test_tool)

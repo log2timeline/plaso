@@ -16,6 +16,9 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
   NAME = u'data_location'
   DESCRIPTION = u'Data location command line arguments.'
 
+  # Preserve the value of __file__ in case it is changed at run-time.
+  _FILE = __file__
+
   @classmethod
   def AddArguments(cls, argument_group):
     """Adds command line arguments to an argument group.
@@ -51,7 +54,7 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
     if not data_location:
       # Determine if we are running from the source directory.
       # This should get us the path to the "plaso/cli" directory.
-      data_location = os.path.dirname(__file__)
+      data_location = os.path.dirname(self._FILE)
 
       # In order to get to the main path of the egg file we need to traverse
       # two directories up.
