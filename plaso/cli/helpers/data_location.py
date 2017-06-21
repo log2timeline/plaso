@@ -53,12 +53,10 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
 
     data_location = cls._ParseStringOption(options, u'data_location')
     if not data_location:
-      # Determine if we are running from the source directory.
-      # This should get us the path to the "plaso/cli" directory.
+      # Determine the source root path, which is 3 directories up from
+      # the location of the script.
       data_location = os.path.dirname(cls._PATH)
-
-      # In order to get to the main path of the egg file we need to traverse
-      # two directories up.
+      data_location = os.path.dirname(data_location)
       data_location = os.path.dirname(data_location)
       data_location = os.path.dirname(data_location)
 
@@ -69,8 +67,6 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
       data_location_system = os.path.join(sys.prefix, u'share', u'plaso')
       data_location_system_local = os.path.join(
           sys.prefix, u'local', u'share', u'plaso')
-
-      print("D", data_location, data_location_source)
 
       if os.path.exists(data_location_egg):
         data_location = data_location_egg
