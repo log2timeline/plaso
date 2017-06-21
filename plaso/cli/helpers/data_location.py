@@ -61,6 +61,9 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
       data_location = os.path.dirname(data_location)
       data_location = os.path.dirname(data_location)
 
+      print("F", cls._FILE)
+      print("D", data_location)
+
       # There are multiple options to run a tool e.g. running from source or
       # from an egg file.
       data_location_egg = os.path.join(data_location, u'share', u'plaso')
