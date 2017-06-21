@@ -8,12 +8,6 @@ import logging
 import os
 import sys
 
-try:
-  import win32api
-  import win32console
-except ImportError:
-  win32console = None
-
 import plaso
 
 from plaso.cli import views
