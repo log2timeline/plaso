@@ -25,6 +25,7 @@ from plaso.cli import tools as cli_tools
 from plaso.cli import views as cli_views
 from plaso.cli import views as logging_filter
 from plaso.engine import configurations
+from plaso.engine import engine
 from plaso.engine import single_process as single_process_engine
 from plaso.filters import manager as filters_manager
 from plaso.frontend import utils as frontend_utils
@@ -74,6 +75,13 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       u'And that is how you build a timeline using log2timeline...',
       u'']))
 
+  # The window status-view mode has an annoying flicker on Windows,
+  # hence we default to linear status-view mode instead.
+  if sys.platform.startswith(u'win'):
+    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_LINEAR
+  else:
+    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_WINDOW
+
   _FILTERS_URL = u'https://github.com/log2timeline/plaso/wiki/Filters'
 
   _SOURCE_TYPES_TO_PREPROCESS = frozenset([
@@ -99,7 +107,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._resolver_context = dfvfs_context.Context()
     self._source_type = None
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
-    self._status_view_mode = status_view.StatusView.MODE_WINDOW
+    self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
     self._stdout_output_writer = isinstance(
         self._output_writer, cli_tools.StdoutOutputWriter)
     self._storage_file_path = None
@@ -287,46 +295,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     # TODO: add code to parse the worker options.
 
-  def _PrintProcessingSummary(self, processing_status):
-    """Prints a summary of the processing.
-
-    Args:
-      processing_status (ProcessingStatus): processing status.
-    """
-    if not processing_status:
-      self._output_writer.Write(
-          u'WARNING: missing processing status information.\n')
-
-    elif not processing_status.aborted:
-      if processing_status.error_path_specs:
-        self._output_writer.Write(u'Processing completed with errors.\n')
-      else:
-        self._output_writer.Write(u'Processing completed.\n')
-
-      number_of_errors = (
-          processing_status.foreman_status.number_of_produced_errors)
-      if number_of_errors:
-        output_text = u'\n'.join([
-            u'',
-            (u'Number of errors encountered while extracting events: '
-             u'{0:d}.').format(number_of_errors),
-            u'',
-            u'Use pinfo to inspect errors in more detail.',
-            u''])
-        self._output_writer.Write(output_text)
-
-      if processing_status.error_path_specs:
-        output_text = u'\n'.join([
-            u'',
-            u'Path specifications that could not be processed:',
-            u''])
-        self._output_writer.Write(output_text)
-        for path_spec in processing_status.error_path_specs:
-          self._output_writer.Write(path_spec.comparable)
-          self._output_writer.Write(u'\n')
-
-    self._output_writer.Write(u'\n')
-
   def AddOutputOptions(self, argument_group):
     """Adds the output options to the argument group.
 
@@ -392,8 +360,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         self._views_format_type, column_names=[u'Name', u'Description'],
         title=u'Output Modules')
 
-    output_classes = list(output_manager.OutputManager.GetOutputClasses())
-    for name, output_class in output_classes:
+    for name, output_class in output_manager.OutputManager.GetOutputClasses():
       table_view.AddRow([name, output_class.DESCRIPTION])
     table_view.Write(self._output_writer)
 
@@ -454,17 +421,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self.AddLogFileOptions(info_group)
 
-    # The window status-view mode has an annoying flicker on Windows,
-    # hence we default to linear status-view mode instead.
-    if sys.platform.startswith(u'win'):
-      default_status_view = status_view.StatusView.MODE_LINEAR
-    else:
-      default_status_view = status_view.StatusView.MODE_WINDOW
-
     info_group.add_argument(
         u'--status_view', u'--status-view', dest=u'status_view_mode',
         choices=[u'linear', u'none', u'window'], action=u'store',
-        metavar=u'TYPE', default=default_status_view, help=(
+        metavar=u'TYPE', default=self._DEFAULT_STATUS_VIEW_MODE, help=(
             u'The processing status view mode: "linear", "none" or "window".'))
 
     output_group = argument_parser.add_argument_group(u'Output Arguments')
@@ -612,19 +572,20 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._ParseFilterOption(options)
 
     self._status_view_mode = getattr(
-        options, u'status_view_mode', status_view.StatusView.MODE_WINDOW)
+        options, u'status_view_mode', self._DEFAULT_STATUS_VIEW_MODE)
     self._enable_sigsegv_handler = getattr(options, u'sigsegv_handler', False)
 
-  def _PreprocessSources(self, engine):
+  def _PreprocessSources(self, extraction_engine):
     """Preprocesses the sources.
 
     Args:
-      engine (BaseEngine): engine to preprocess the sources.
+      extraction_engine (BaseEngine): extraction engine to preprocess
+          the sources.
     """
     logging.debug(u'Starting preprocessing.')
 
     try:
-      engine.PreprocessSources(
+      extraction_engine.PreprocessSources(
           self._source_path_specs, resolver_context=self._resolver_context)
 
     except IOError as exception:
@@ -650,22 +611,14 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._status_view.SetSourceInformation(
         self._source_path, self._source_type, filter_file=self._filter_file)
 
+    status_update_callback = (
+        self._status_view.GetExtractionStatusUpdateCallback())
+
     self._output_writer.Write(u'\n')
     self._status_view.PrintExtractionStatusHeader()
     self._output_writer.Write(u'Processing started.\n')
 
-    single_process_mode = self._single_process_mode
-    if self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
-      # No need to multi process a single file source.
-      single_process_mode = True
-
-    if single_process_mode:
-      engine = single_process_engine.SingleProcessEngine()
-    else:
-      engine = multi_process_engine.TaskMultiProcessEngine(
-          use_zeromq=self._use_zeromq)
-
-    session = engine.CreateSession(
+    session = engine.BaseEngine.CreateSession(
         command_line_arguments=self._command_line_arguments,
         debug_mode=self._debug_mode,
         filter_expression=self._filter_expression,
@@ -677,18 +630,31 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     storage_writer = storage_zip_file.ZIPStorageFileWriter(
         session, self._storage_file_path)
 
+    single_process_mode = self._single_process_mode
+    if self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
+      # No need to multi process a single file source.
+      single_process_mode = True
+
+    if single_process_mode:
+      extraction_engine = single_process_engine.SingleProcessEngine()
+    else:
+      extraction_engine = multi_process_engine.TaskMultiProcessEngine(
+          use_zeromq=self._use_zeromq)
+
+    # If the source is a directory or a storage media image
+    # run pre-processing.
     if (self._force_preprocessing or
         self._source_type in self._SOURCE_TYPES_TO_PREPROCESS):
-      self._PreprocessSources(engine)
+      self._PreprocessSources(extraction_engine)
 
     configuration = self._CreateProcessingConfiguration()
 
     if not configuration.parser_filter_expression:
-      operating_system = engine.knowledge_base.GetValue(
+      operating_system = extraction_engine.knowledge_base.GetValue(
           u'operating_system')
-      operating_system_product = engine.knowledge_base.GetValue(
+      operating_system_product = extraction_engine.knowledge_base.GetValue(
           u'operating_system_product')
-      operating_system_version = engine.knowledge_base.GetValue(
+      operating_system_version = extraction_engine.knowledge_base.GetValue(
           u'operating_system_version')
       parser_filter_expression = (
           self._parsers_manager.GetPresetForOperatingSystem(
@@ -709,28 +675,27 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     if session.preferred_time_zone:
       try:
-        engine.knowledge_base.SetTimeZone(session.preferred_time_zone)
+        extraction_engine.knowledge_base.SetTimeZone(
+            session.preferred_time_zone)
       except ValueError:
         logging.warning(
             u'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
                 session.preferred_time_zone,
-                engine.knowledge_base.time_zone.zone))
+                extraction_engine.knowledge_base.time_zone.zone))
 
     filter_find_specs = None
     if configuration.filter_file:
-      environment_variables = engine.knowledge_base.GetEnvironmentVariables()
+      environment_variables = (
+          extraction_engine.knowledge_base.GetEnvironmentVariables())
       filter_find_specs = frontend_utils.BuildFindSpecsFromFile(
           configuration.filter_file,
           environment_variables=environment_variables)
-
-    status_update_callback = (
-        self._status_view.GetExtractionStatusUpdateCallback())
 
     processing_status = None
     if single_process_mode:
       logging.debug(u'Starting extraction in single process mode.')
 
-      processing_status = engine.ProcessSources(
+      processing_status = extraction_engine.ProcessSources(
           self._source_path_specs, storage_writer, self._resolver_context,
           configuration, filter_find_specs=filter_find_specs,
           status_update_callback=status_update_callback)
@@ -738,7 +703,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     else:
       logging.debug(u'Starting extraction in multi process mode.')
 
-      processing_status = engine.ProcessSources(
+      processing_status = extraction_engine.ProcessSources(
           session.identifier, self._source_path_specs, storage_writer,
           configuration, enable_sigsegv_handler=self._enable_sigsegv_handler,
           filter_find_specs=filter_find_specs,
@@ -746,7 +711,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           status_update_callback=status_update_callback,
           worker_memory_limit=self._worker_memory_limit)
 
-    self._PrintProcessingSummary(processing_status)
+    self._status_view.PrintExtractionSummary(processing_status)
 
   def ShowInfo(self):
     """Shows information about available hashers, parsers, plugins, etc."""

@@ -10,7 +10,6 @@ import uuid
 from plaso.cli import analysis_tool
 from plaso.cli import views as cli_views
 from plaso.engine import knowledge_base
-from plaso.frontend import analysis_frontend
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
@@ -40,7 +39,6 @@ class PinfoTool(analysis_tool.AnalysisTool):
     super(PinfoTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._compare_storage_file_path = None
-    self._front_end = analysis_frontend.AnalysisFrontend()
     self._output_format = None
 
     self._verbose = False

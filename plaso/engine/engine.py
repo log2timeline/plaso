@@ -83,8 +83,9 @@ class BaseEngine(object):
 
     return definitions.OPERATING_SYSTEM_UNKNOWN
 
+  @classmethod
   def CreateSession(
-      self, command_line_arguments=None, debug_mode=False,
+      cls, command_line_arguments=None, debug_mode=False,
       filter_expression=None, filter_file=None, preferred_encoding=u'utf-8',
       preferred_time_zone=None, preferred_year=None):
     """Creates a session attribute containiner.

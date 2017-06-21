@@ -38,7 +38,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
     # Test when the output file is missing.
     options.source = self._GetTestFilePath([u'testdir'])
-    expected_error = (u'Output format: dynamic requires an output file.')
+    expected_error = (u'Output format: dynamic requires an output file')
     with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
       test_tool.ParseOptions(options)
 
