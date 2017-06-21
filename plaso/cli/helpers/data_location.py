@@ -16,8 +16,9 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
   NAME = u'data_location'
   DESCRIPTION = u'Data location command line arguments.'
 
-  # Preserve the value of __file__ in case it is changed at run-time.
-  _FILE = __file__
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _PATH = os.path.abspath(__file__)
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -54,15 +55,12 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
     if not data_location:
       # Determine if we are running from the source directory.
       # This should get us the path to the "plaso/cli" directory.
-      data_location = os.path.dirname(cls._FILE)
+      data_location = os.path.dirname(cls._PATH)
 
       # In order to get to the main path of the egg file we need to traverse
       # two directories up.
       data_location = os.path.dirname(data_location)
       data_location = os.path.dirname(data_location)
-
-      print("F", cls._FILE)
-      print("D", data_location)
 
       # There are multiple options to run a tool e.g. running from source or
       # from an egg file.
@@ -71,6 +69,8 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
       data_location_system = os.path.join(sys.prefix, u'share', u'plaso')
       data_location_system_local = os.path.join(
           sys.prefix, u'local', u'share', u'plaso')
+
+      print("D", data_location, data_location_source)
 
       if os.path.exists(data_location_egg):
         data_location = data_location_egg
