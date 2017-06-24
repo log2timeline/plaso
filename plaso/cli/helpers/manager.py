@@ -66,7 +66,7 @@ class ArgumentHelperManager(object):
       names (Optional[list[str]]): names of argument helpers to apply,
           where None will apply the arguments to all helpers.
     """
-    for helper_name, helper_class in sorted(cls._helper_classes.items()):
+    for helper_name, helper_class in cls._helper_classes.items():
       if ((category and helper_class.CATEGORY != category) or
           (names and helper_name not in names)):
         continue
