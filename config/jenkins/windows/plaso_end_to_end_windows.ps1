@@ -1,4 +1,4 @@
-# Helper script to run automated end-to-end tests on Windows platforms
+# Script to run automated end-to-end tests on Windows platforms
 #
 # This script requires four arguments to run:
 #   $config_file : the path to the test configuration INI file to use
@@ -54,108 +54,39 @@ function Exists-Command {
 
 Function Get-IniContent {
     <#
-    .Synopsis
-        Gets the content of an INI file
+    .SYNOPSIS
+        Returns the content of a well formed INI file as a hashmap.
 
-    .Description
-        Gets the content of an INI file and returns it as a hashtable
+    .PARAMETER IniFile
+        The path to the INI file.
 
-    .Notes
-        Author        : Oliver Lipkau <oliver@lipkau.net>
-        Blog        : http://oliver.lipkau.net/blog/
-        Source        : https://github.com/lipkau/PsIni
-                      http://gallery.technet.microsoft.com/scriptcenter/ea40c1ef-c856-434b-b8fb-ebd7a76e8d91
-        Version        : 1.0 - 2010/03/12 - Initial release
-                      1.1 - 2014/12/11 - Typo (Thx SLDR)
-                                         Typo (Thx Dave Stiff)
-
-        #Requires -Version 2.0
-
-    .Inputs
-        System.String
-
-    .Outputs
-        System.Collections.Hashtable
-
-    .Parameter FilePath
-        Specifies the path to the input file.
-
-    .Example
-        $FileContent = Get-IniContent "C:\myinifile.ini"
-        -----------
-        Description
-        Saves the content of the c:\myinifile.ini in a hashtable called $FileContent
-
-    .Example
-        $inifilepath | $FileContent = Get-IniContent
-        -----------
-        Description
-        Gets the content of the ini file passed through the pipe into a hashtable called $FileContent
-
-    .Example
-        C:\PS>$FileContent = Get-IniContent "c:\settings.ini"
-        C:\PS>$FileContent["Section"]["Key"]
-        -----------
-        Description
-        Returns the key "Key" of the section "Section" from the C:\settings.ini file
-
-    .Link
-        Out-IniFile
+    .OUTPUTS
+      A hashmap reflecting the content of the INI file.
     #>
 
-    [CmdletBinding()]
     Param(
-        [ValidateNotNullOrEmpty()]
-        [ValidateScript({(Test-Path $_) -and ((Get-Item $_).Extension -eq ".ini")})]
-        [Parameter(ValueFromPipeline=$True,Mandatory=$True)]
-        [string]$FilePath
+        [string]$IniFile
     )
-
-    Begin
-        {Write-Verbose "$($MyInvocation.MyCommand.Name):: Function started"}
-
-    Process
-    {
-        Write-Verbose "$($MyInvocation.MyCommand.Name):: Processing file: $Filepath"
-
-        $ini = @{}
-        switch -regex -file $FilePath
+        $hashmap = @{}
+        switch -regex -file $IniFile
         {
-            "^\[(.+)\]$" # Section
+            "^(;.*)$"
             {
-                $section = $matches[1]
-                $ini[$section] = @{}
-                $CommentCount = 0
+                # This is a comment, do nothing.
             }
-            "^(;.*)$" # Comment
+            "^\[(.+)\]$"
             {
-                if (!($section))
-                {
-                    $section = "No-Section"
-                    $ini[$section] = @{}
-                }
-                $value = $matches[1]
-                $CommentCount = $CommentCount + 1
-                $name = "Comment" + $CommentCount
-                $ini[$section][$name] = $value
+                $current_section = $matches[1]
+                $hashmap[$current_section] = @{}
             }
-            "(.+?)\s*=\s*(.*)" # Key
+            "(.+?)\s*=\s*(.*)" # key=value
             {
-                if (!($section))
-                {
-                    $section = "No-Section"
-                    $ini[$section] = @{}
-                }
-                $name,$value = $matches[1..2]
-                $ini[$section][$name] = $value
+                $key = $matches[1]
+                $value = $matches[2]
+                $hashmap[$current_section][$key] = $value
             }
         }
-        Write-Verbose "$($MyInvocation.MyCommand.Name):: Finished Processing file: $FilePath"
-        Return $ini
-    }
-
-    End
-        {Write-Verbose "$($MyInvocation.MyCommand.Name):: Function ended"}
+        Return $hashmap
 }
 
 # Checking variables are set properly
