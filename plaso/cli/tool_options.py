@@ -110,6 +110,8 @@ class OutputModuleOptions(object):
       output_writer = tools.FileObjectOutputWriter(output_file_object)
       output_module.SetOutputWriter(output_writer)
 
+    helpers_manager.ArgumentHelperManager.ParseOptions(options, output_module)
+
     # Check if there are parameters that have not been defined and need to
     # in order for the output module to continue. Prompt user to supply
     # those that may be missing.
