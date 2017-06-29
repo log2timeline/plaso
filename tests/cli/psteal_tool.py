@@ -93,8 +93,10 @@ class PstealToolTest(test_lib.CLIToolTestCase):
         file_object.write(u'bogus')
 
       # Test when output file already exists.
+      # Escape \ otherwise assertRaisesRegexp can error with:
+      # error: bogus escape: u'\\1'
       expected_error = u'Output file already exists: {0:s}.'.format(
-          options.write)
+          options.write.replace(u'\\', u'\\\\'))
       with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
         test_tool.ParseOptions(options)
 
