@@ -134,8 +134,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     Args:
       storage_writer (StorageWriter): storage writer.
-      analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
-          be run.
+      analysis_plugins (dict[str, AnalysisPlugin]): analysis plugins that
+          should be run and their names.
       event_filter (Optional[FilterObject]): event filter.
 
     Raises:
@@ -186,7 +186,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     logging.debug(u'Processing analysis plugin results.')
 
     # TODO: use a task based approach.
-    plugin_names = [plugin.plugin_name for plugin in analysis_plugins]
+    plugin_names = [plugin_name for plugin_name in analysis_plugins.keys()]
     while plugin_names:
       for plugin_name in list(plugin_names):
         if self._abort:
@@ -581,12 +581,12 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     Args:
       storage_writer (StorageWriter): storage writer.
-      analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
-          be run.
+      analysis_plugins (dict[str, AnalysisPlugin]): analysis plugins that
+          should be run and their names.
     """
     logging.info(u'Starting analysis plugins.')
 
-    for analysis_plugin in analysis_plugins:
+    for analysis_plugin in analysis_plugins.values():
       self._analysis_plugins[analysis_plugin.NAME] = analysis_plugin
 
       process = self._StartWorkerProcess(analysis_plugin.NAME, storage_writer)
@@ -811,8 +811,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       storage_writer (StorageWriter): storage writer.
       data_location (str): path to the location that data files should
           be loaded from.
-      analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
-          be run.
+      analysis_plugins (dict[str, AnalysisPlugin]): analysis plugins that
+          should be run and their names.
       event_filter (Optional[FilterObject]): event filter.
       event_filter_expression (Optional[str]): event filter expression.
       status_update_callback (Optional[function]): callback function for status
