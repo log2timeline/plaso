@@ -299,6 +299,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     data_location = u''
     analysis_plugin = tagging.TaggingAnalysisPlugin()
+    analysis_plugins = {u'tagging': analysis_plugin}
     # TODO: set tag file.
 
     test_engine = psort.PsortMultiProcessEngine()
@@ -312,7 +313,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
       counter = test_engine.AnalyzeEvents(
           knowledge_base_object, storage_writer, output_module, data_location,
-          [analysis_plugin])
+          analysis_plugins)
 
     # TODO: assert if tests were successful.
     _ = counter
@@ -328,7 +329,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
       counter = test_engine.AnalyzeEvents(
           knowledge_base_object, storage_writer, data_location,
-          [analysis_plugin], event_filter=test_filter)
+          analysis_plugins, event_filter=test_filter)
 
     # TODO: assert if tests were successful.
     _ = counter
