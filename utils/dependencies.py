@@ -66,7 +66,7 @@ class DependencyDefinitionReader(object):
       value_name (str): name of the value.
 
     Returns:
-      object: value or None if the value does not exists.
+      object: configuration value or None if the value does not exists.
     """
     try:
       return config_parser.get(section_name, value_name)
@@ -388,7 +388,7 @@ class DependencyHelper(object):
       module_name = dependency.pypi_name or dependency.name
 
       if module_name == u'efilter':
-        requires_string = u'{0:s} >= 1-{1!s}'.format(
+        requires_string = u'{0:s} == 1-{1!s}'.format(
             module_name, dependency.minimum_version)
         install_requires.append(requires_string)
         continue

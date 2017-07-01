@@ -10,7 +10,7 @@ L2TBINARIES_TEST_DEPENDENCIES="funcsigs mock pbr";
 
 PYTHON2_DEPENDENCIES="libbde-python libesedb-python libevt-python libevtx-python libewf-python libfsntfs-python libfvde-python libfwnt-python libfwsi-python liblnk-python libmsiecf-python libolecf-python libqcow-python libregf-python libscca-python libsigscan-python libsmdev-python libsmraw-python libvhdi-python libvmdk-python libvshadow-python libvslvm-python python-artifacts python-bencode python-binplist python-construct python-crypto python-dateutil python-dfdatetime python-dfvfs python-dfwinreg python-dpkt python-efilter python-hachoir-core python-hachoir-metadata python-hachoir-parser python-lzma python-pefile python-psutil python-pyparsing python-pysqlite python-pytsk3 python-requests python-six python-tz python-xlsxwriter python-yaml python-yara python-zmq";
 
-PYTHON2_TEST_DEPENDENCIES="python-mock";
+PYTHON2_TEST_DEPENDENCIES="python-mock python-tox";
 
 # Exit on error.
 set -e;
