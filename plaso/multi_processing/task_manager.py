@@ -214,8 +214,9 @@ class TaskManager(object):
       list[Task]: tasks that are being processed by workers or that have been
           abandoned.
     """
-    tasks_list = list(self._tasks_processing.values())
-    tasks_list.extend(self._abandoned_tasks.values())
+    with self._lock:
+      tasks_list = list(self._tasks_processing.values())
+      tasks_list.extend(self._abandoned_tasks.values())
     return tasks_list
 
   def HasActiveTasks(self):
@@ -269,21 +270,29 @@ class TaskManager(object):
     Raises:
       KeyError: if the task was not processing.
     """
+    is_abandoned = False
     with self._lock:
-      if (task.identifier not in self._tasks_processing and
-          task.identifier not in self._abandoned_tasks):
+      is_processing = task.identifier in self._tasks_processing
+      is_abandoned = task.identifier in self._abandoned_tasks
+
+      if not is_processing and not is_abandoned:
         raise KeyError(u'Task {0:s} is not processing or abandoned'.format(
             task.identifier))
 
       self._tasks_pending_merge.PushTask(task)
 
-      if task.identifier in self._tasks_processing:
+      if is_processing:
         del self._tasks_processing[task.identifier]
 
-      if task.identifier in self._abandoned_tasks:
+      if is_abandoned:
         del self._abandoned_tasks[task.identifier]
 
-    logging.debug(u'Task {0:s} is pending merge'.format(task.identifier))
+    if is_abandoned:
+      logging.warning(
+          u'Previously abandoned task {0:s} is now pending merge'.format(
+              task.identifier))
+    else:
+      logging.debug(u'Task {0:s} is pending merge'.format(task.identifier))
 
   def UpdateTaskAsProcessing(self, task):
     """Updates the task manager to reflect the task is processing.
