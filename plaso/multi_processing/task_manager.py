@@ -265,7 +265,7 @@ class TaskManager(object):
       task (Task): task.
 
     Raises:
-      KeyError: if the task was not processing.
+      KeyError: if the task was not processing or abandoned.
     """
     is_abandoned = False
     with self._lock:
