@@ -13,7 +13,7 @@ from plaso.containers import tasks
 
 
 class _PendingMergeTaskHeap(object):
-  """Heap to manager pending merge tasks."""
+  """Heap to manage pending merge tasks."""
 
   def __init__(self):
     """Initializes a pending merge task heap."""
@@ -102,8 +102,6 @@ class TaskManager(object):
     # This dictionary maps task identifiers to tasks.
     self._tasks_processing = collections.OrderedDict()
     # TODO: implement a limit on the number of tasks.
-    # Dictionary mapping all task identifiers to tasks.
-    self._tasks = {}
 
   def AdoptTask(self, task):
     """Updates a task that was formerly abandoned.
@@ -137,7 +135,6 @@ class TaskManager(object):
     task = tasks.Task(session_identifier)
     with self._lock:
       self._active_tasks[task.identifier] = task
-      self._tasks[task.identifier] = task
     return task
 
   def CompleteTask(self, task):
