@@ -384,9 +384,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           task = self._task_manager.CreateTask(self._session_identifier)
           task.file_entry_type = event_source.file_entry_type
           task.path_spec = event_source.path_spec
-          logging.debug(
-              u'Scheduled task {0:s} for path specification {1:s}'.format(
-                  task.identifier, task.path_spec.comparable))
           event_source = None
 
           self._number_of_consumed_sources += 1
@@ -396,6 +393,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
         if task:
           if self._ScheduleTask(task):
+            logging.debug(
+                u'Scheduled task {0:s} for path specification {1:s}'.format(
+                    task.identifier, task.path_spec.comparable))
             task = None
 
         self._MergeTaskStorage(storage_writer)
