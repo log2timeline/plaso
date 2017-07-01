@@ -397,7 +397,8 @@ class StatusView(object):
 
       self._output_writer.Write(u'\n')
 
-      status_header = u'Tasks:\t\tActive\tProcessing\tTo merge\tAbandoned\tTotal'
+      status_header = (
+          u'Tasks:\t\tActive\tProcessing\tTo merge\tAbandoned\tTotal')
       if not win32console:
         status_header = u'\x1b[1m{0:s}\x1b[0m\n'.format(status_header)
       else:
