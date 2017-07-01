@@ -331,7 +331,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
         self._status_view.GetExtractionStatusUpdateCallback())
 
     self._output_writer.Write(u'\n')
-    self._status_view.PrintExtractionStatusHeader()
+    self._status_view.PrintExtractionStatusHeader(None)
     self._output_writer.Write(u'Processing started.\n')
 
     session = engine.BaseEngine.CreateSession(

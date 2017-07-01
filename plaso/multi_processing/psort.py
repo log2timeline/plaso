@@ -555,7 +555,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           u'Unable to monitor analysis plugin: {0:s} (PID: {1:d}) '
           u'with error: {2!s}').format(process_name, process.pid, exception))
 
-      self._TerminateProcess(process.pid)
+      process.terminate()
       return
 
     self._RegisterProcess(process)

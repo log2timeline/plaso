@@ -456,7 +456,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         enable_sigsegv_handler=self._enable_sigsegv_handler, name=process_name)
 
     process.start()
-    self._last_worker_number += 1
 
     try:
       self._StartMonitoringProcess(process)
@@ -467,10 +466,13 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           u'(PID: {1:d}) with error: {2:s}').format(
               process_name, process.pid, exception))
 
-      self._TerminateProcess(process.pid)
+      process.terminate()
       return
 
     self._RegisterProcess(process)
+
+    self._last_worker_number += 1
+
     return process
 
   def _StartProfiling(self):
@@ -516,6 +518,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._number_of_produced_event_tags,
           self._number_of_consumed_errors, self._number_of_produced_errors,
           self._number_of_consumed_reports, self._number_of_produced_reports)
+
+      tasks_status = self._task_manager.GetStatusInformation()
+      self._processing_status.UpdateTasksStatus(tasks_status)
 
       if self._status_update_callback:
         self._status_update_callback(self._processing_status)

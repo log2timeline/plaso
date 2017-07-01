@@ -286,8 +286,8 @@ class MultiProcessEngine(engine.BaseEngine):
 
     rpc_client = plaso_xmlrpc.XMLProcessStatusRPCClient()
 
-    # Make sure that a process has started its RPC server. RPC port will
-    # be 0 if no server is available.
+    # Make sure that a worker process has started its RPC server.
+    # The RPC port will be 0 if no server is available.
     rpc_port = process.rpc_port.value
     time_waited_for_process = 0.0
     while not rpc_port:
