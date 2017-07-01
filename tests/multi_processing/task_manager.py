@@ -26,16 +26,16 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
     self.assertIsNotNone(task.identifier)
 
   def testTaskProcessing(self):
-    """Tests the UpdateTaskAsProcessing and GetProcessingTasks methods."""
+    """Tests the UpdateTaskAsProcessing and GetTasksCheckMerge methods."""
     manager = task_manager.TaskManager()
-    tasks_processing = manager.GetProcessingTasks()
+    tasks_processing = manager.GetTasksCheckMerge()
     self.assertEqual(0, len(tasks_processing))
 
     task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
     self.assertIsNone(task.last_processing_time)
 
     manager.UpdateTaskAsProcessing(task)
-    tasks_processing = manager.GetProcessingTasks()
+    tasks_processing = manager.GetTasksCheckMerge()
     self.assertEqual(1, len(tasks_processing))
     task = tasks_processing[0]
     self.assertIsNotNone(task.last_processing_time)
