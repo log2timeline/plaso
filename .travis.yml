@@ -21,7 +21,7 @@ matrix:
 install:
   - ./config/travis/install.sh
 script:
-  - if test ${TRAVIS_OS_NAME} = "osx"; then PYTHONPATH=/Library/Python/2.7/site-packages/ /usr/bin/python ./run_tests.py; elif test ${TRAVIS_OS_NAME} = "linux"; then travis_wait 30 tox --sitepackages ${TOXENV}; fi
+  - if test ${TRAVIS_OS_NAME} = "osx"; then PYTHONPATH=/Library/Python/2.7/site-packages/ /usr/bin/python ./run_tests.py; elif test ${TRAVIS_OS_NAME} = "linux"; then tox --sitepackages ${TOXENV}; fi
   - if test ${TRAVIS_OS_NAME} = "linux"; then python setup.py build; fi
   - if test ${TRAVIS_OS_NAME} = "linux"; then python setup.py sdist; fi
   - if test ${TRAVIS_OS_NAME} = "linux"; then python setup.py bdist; fi
