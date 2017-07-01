@@ -22,6 +22,7 @@ class DependencyDefinition(object):
     minimum_version (str): minimum supported version.
     name (str): name of (the Python module that provides) the dependency.
     pypi_name (str): name of the PyPI package that provides the dependency.
+    python2_only (bool): True if the dependency is only supported by Python 2.
     rpm_name (str): name of the rpm package that provides the dependency.
     version_property (str): name of the version attribute or function.
   """
@@ -40,6 +41,7 @@ class DependencyDefinition(object):
     self.minimum_version = None
     self.name = name
     self.pypi_name = None
+    self.python2_only = False
     self.rpm_name = None
     self.version_property = None
 
@@ -54,6 +56,7 @@ class DependencyDefinitionReader(object):
       u'maximum_version',
       u'minimum_version',
       u'pypi_name',
+      u'python2_only',
       u'rpm_name',
       u'version_property'])
 
@@ -405,6 +408,10 @@ class DependencyHelper(object):
       else:
         requires_string = u'{0:s} >= {1!s},<= {2!s}'.format(
             module_name, dependency.minimum_version, dependency.maximum_version)
+
+      if dependency.python2_only:
+        requires_string = u'{0:s} ; python_version < \'3.0\''.format(
+            requires_string)
 
       install_requires.append(requires_string)
 
