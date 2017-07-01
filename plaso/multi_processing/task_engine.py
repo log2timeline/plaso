@@ -426,15 +426,17 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     else:
       logging.debug(u'Task scheduler stopped')
 
-  def _StartWorkerProcess(self, storage_writer):
-    """Creates, starts and registers a worker process.
+  def _StartWorkerProcess(self, process_name, storage_writer):
+    """Creates, starts, monitors and registers a worker process.
 
     Args:
+      process_name (str): process name.
       storage_writer (StorageWriter): storage writer for a session storage used
           to create task storage.
 
     Returns:
-      MultiProcessWorkerProcess: extraction worker process.
+      MultiProcessWorkerProcess: extraction worker process or None if the
+          process could not be started.
     """
     process_name = u'Worker_{0:02d}'.format(self._last_worker_number)
     logging.debug(u'Starting worker process {0:s}'.format(process_name))
@@ -456,8 +458,19 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     process.start()
     self._last_worker_number += 1
 
-    self._RegisterProcess(process)
+    try:
+      self._StartMonitoringProcess(process)
 
+    except (IOError, KeyError) as exception:
+      logging.error((
+          u'Unable to monitor replacement worker process: {0:s} '
+          u'(PID: {1:d}) with error: {2:s}').format(
+              process_name, process.pid, exception))
+
+      self._TerminateProcess(process.pid)
+      return
+
+    self._RegisterProcess(process)
     return process
 
   def _StartProfiling(self):
@@ -751,17 +764,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     # Set up the storage writer before the worker processes.
     storage_writer.StartTaskStorage()
 
-    for _ in range(number_of_worker_processes):
-      extraction_process = self._StartWorkerProcess(storage_writer)
-
-      try:
-        self._StartMonitoringProcess(extraction_process.pid)
-      except (IOError, KeyError) as exception:
-        logging.error((
-            u'Unable to monitor extraction worker process: {0:s} '
-            u'(PID: {1:d}) with error: {2:s}').format(
-                extraction_process.name, extraction_process.pid,
-                exception))
+    for worker_number in range(number_of_worker_processes):
+      extraction_process = self._StartWorkerProcess(
+          worker_number, storage_writer)
+      if not extraction_process:
+        logging.error(u'Unable to create worker process: {0:d}'.format(
+            worker_number))
 
     self._StartStatusUpdateThread()
 

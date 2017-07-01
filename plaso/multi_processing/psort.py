@@ -36,8 +36,12 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           instead of Python's multiprocessing queue.
     """
     super(PsortMultiProcessEngine, self).__init__()
+    self._analysis_plugins = {}
     self._completed_analysis_processes = set()
+    self._data_location = None
+    self._event_filter_expression = None
     self._event_queues = {}
+    self._knowledge_base = None
     self._merge_task = None
     self._number_of_consumed_errors = 0
     self._number_of_consumed_event_tags = 0
@@ -334,66 +338,23 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     return events_counter
 
-  def _StartAnalysisProcesses(
-      self, knowledge_base_object, storage_writer, analysis_plugins,
-      data_location, event_filter_expression=None):
+  def _StartAnalysisProcesses(self, storage_writer, analysis_plugins):
     """Starts the analysis processes.
 
     Args:
-      knowledge_base_object (KnowledgeBase): contains information from
-          the source data needed for processing.
       storage_writer (StorageWriter): storage writer.
       analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
           be run.
-      data_location (str): path to the location that data files should
-          be loaded from.
-      event_filter_expression (Optional[str]): event filter expression.
     """
     logging.info(u'Starting analysis plugins.')
 
     for analysis_plugin in analysis_plugins:
-      if self._use_zeromq:
-        queue_name = u'{0:s} output event queue'.format(analysis_plugin.NAME)
-        output_event_queue = zeromq_queue.ZeroMQPushBindQueue(
-            name=queue_name, timeout_seconds=self._QUEUE_TIMEOUT)
-        # Open the queue so it can bind to a random port, and we can get the
-        # port number to use in the input queue.
-        output_event_queue.Open()
+      self._analysis_plugins[analysis_plugin.NAME] = analysis_plugin
 
-      else:
-        output_event_queue = multi_process_queue.MultiProcessingQueue(
-            timeout=self._QUEUE_TIMEOUT)
-
-      self._event_queues[analysis_plugin.NAME] = output_event_queue
-
-      if self._use_zeromq:
-        queue_name = u'{0:s} input event queue'.format(analysis_plugin.NAME)
-        input_event_queue = zeromq_queue.ZeroMQPullConnectQueue(
-            name=queue_name, delay_open=True, port=output_event_queue.port,
-            timeout_seconds=self._QUEUE_TIMEOUT)
-
-      else:
-        input_event_queue = output_event_queue
-
-      process = analysis_process.AnalysisProcess(
-          input_event_queue, storage_writer, knowledge_base_object,
-          analysis_plugin, data_location=data_location,
-          event_filter_expression=event_filter_expression,
-          name=analysis_plugin.plugin_name)
-
-      process.start()
-
-      logging.info(u'Started analysis plugin: {0:s} (PID: {1:d}).'.format(
-          analysis_plugin.plugin_name, process.pid))
-
-      self._RegisterProcess(process)
-
-      try:
-        self._StartMonitoringProcess(process.pid)
-      except (IOError, KeyError) as exception:
-        logging.error((
-            u'Unable to monitor analysis plugin: {0:s} (PID: {1:d}) '
-            u'with error: {2:s}').format(process.name, process.pid, exception))
+      process = self._StartWorkerProcess(analysis_plugin.NAME, storage_writer)
+      if not process:
+        logging.error(u'Unable to create analysis process: {0:s}'.format(
+            analysis_plugin.NAME))
 
     logging.info(u'Analysis plugins running')
 
@@ -537,18 +498,68 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         number_of_consumed_errors, number_of_produced_errors,
         number_of_consumed_reports, number_of_produced_reports)
 
-  def _StartWorkerProcess(self, storage_writer):
-    """Creates, starts and registers a worker process.
+  def _StartWorkerProcess(self, process_name, storage_writer):
+    """Creates, starts, monitors and registers a worker process.
 
     Args:
+      process_name (str): process name.
       storage_writer (StorageWriter): storage writer for a session storage used
           to create task storage.
 
     Returns:
       MultiProcessWorkerProcess: extraction worker process.
     """
-    # TODO: implement.
-    return
+    analysis_plugin = self._analysis_plugins.get(process_name, None)
+    if not analysis_plugin:
+      logging.error(u'Missing analysis plugin: {0:s}'.format(process_name))
+      return
+
+    if self._use_zeromq:
+      queue_name = u'{0:s} output event queue'.format(process_name)
+      output_event_queue = zeromq_queue.ZeroMQPushBindQueue(
+          name=queue_name, timeout_seconds=self._QUEUE_TIMEOUT)
+      # Open the queue so it can bind to a random port, and we can get the
+      # port number to use in the input queue.
+      output_event_queue.Open()
+
+    else:
+      output_event_queue = multi_process_queue.MultiProcessingQueue(
+          timeout=self._QUEUE_TIMEOUT)
+
+    self._event_queues[process_name] = output_event_queue
+
+    if self._use_zeromq:
+      queue_name = u'{0:s} input event queue'.format(process_name)
+      input_event_queue = zeromq_queue.ZeroMQPullConnectQueue(
+          name=queue_name, delay_open=True, port=output_event_queue.port,
+          timeout_seconds=self._QUEUE_TIMEOUT)
+
+    else:
+      input_event_queue = output_event_queue
+
+    process = analysis_process.AnalysisProcess(
+        input_event_queue, storage_writer, self._knowledge_base,
+        analysis_plugin, data_location=self._data_location,
+        event_filter_expression=self._event_filter_expression,
+        name=process_name)
+
+    process.start()
+
+    logging.info(u'Started analysis plugin: {0:s} (PID: {1:d}).'.format(
+        process_name, process.pid))
+
+    try:
+      self._StartMonitoringProcess(process)
+    except (IOError, KeyError) as exception:
+      logging.error((
+          u'Unable to monitor analysis plugin: {0:s} (PID: {1:d}) '
+          u'with error: {2!s}').format(process_name, process.pid, exception))
+
+      self._TerminateProcess(process.pid)
+      return
+
+    self._RegisterProcess(process)
+    return process
 
   def AnalyzeEvents(
       self, knowledge_base_object, storage_writer, data_location,
@@ -574,6 +585,10 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     if not analysis_plugins:
       return
 
+    self._analysis_plugins = {}
+    self._data_location = data_location
+    self._event_filter_expression = event_filter_expression
+    self._knowledge_base = knowledge_base_object
     self._status_update_callback = status_update_callback
     self._worker_memory_limit = (
         worker_memory_limit or self._DEFAULT_WORKER_MEMORY_LIMIT)
@@ -581,9 +596,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     # Set up the storage writer before the analysis processes.
     storage_writer.StartTaskStorage()
 
-    self._StartAnalysisProcesses(
-        knowledge_base_object, storage_writer, analysis_plugins,
-        data_location, event_filter_expression=event_filter_expression)
+    self._StartAnalysisProcesses(storage_writer, analysis_plugins)
 
     # Start the status update thread after open of the storage writer
     # so we don't have to clean up the thread if the open fails.
@@ -631,6 +644,10 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       self._KillProcess(os.getpid())
 
     # Reset values.
+    self._analysis_plugins = {}
+    self._data_location = None
+    self._event_filter_expression = None
+    self._knowledge_base = None
     self._status_update_callback = None
     self._worker_memory_limit = self._DEFAULT_WORKER_MEMORY_LIMIT
 

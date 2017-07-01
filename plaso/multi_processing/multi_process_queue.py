@@ -3,6 +3,7 @@
 
 import logging
 import multiprocessing
+
 # The 'Queue' module was renamed to 'queue' in Python 3
 try:
   import Queue
@@ -14,10 +15,10 @@ from plaso.lib import errors
 
 
 class MultiProcessingQueue(plaso_queue.Queue):
-  """Class that defines the multi-processing queue."""
+  """Multi-processing queue."""
 
   def __init__(self, maximum_number_of_queued_items=0, timeout=None):
-    """Initializes the multi-processing queue object.
+    """Initializes a multi-processing queue.
 
     Args:
       maximum_number_of_queued_items (Optional[int]): maximum number of queued
@@ -58,7 +59,7 @@ class MultiProcessingQueue(plaso_queue.Queue):
     the queue.
 
     Args:
-      abort: optional boolean to indicate the close is issued on abort.
+      abort (Optional[bool]): True if the close was issued on abort.
     """
     if abort:
       # Prevent join_thread() from blocking.
@@ -84,7 +85,7 @@ class MultiProcessingQueue(plaso_queue.Queue):
 
     Args:
       item (object): item to add.
-      block (bool): whether to block if the queue is full.
+      block (Optional[bool]): True to block the process when the queue is full.
 
     Raises:
       QueueFull: if the item could not be pushed the queue because it's full.
@@ -100,7 +101,7 @@ class MultiProcessingQueue(plaso_queue.Queue):
     Raises:
       QueueClose: if the queue has already been closed.
       QueueEmpty: if no item could be retrieved from the queue within the
-                  specified timeout.
+          specified timeout.
     """
     try:
       # If no timeout is specified the queue will block if empty otherwise

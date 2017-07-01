@@ -17,7 +17,7 @@ from plaso.multi_processing import plaso_xmlrpc
 
 
 class MultiProcessEngine(engine.BaseEngine):
-  """Class that defines the base multi-process engine.
+  """Multi-process engine base.
 
   This class contains functionality to:
   * monitor and manage worker processes;
@@ -34,7 +34,7 @@ class MultiProcessEngine(engine.BaseEngine):
   _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 300
 
   def __init__(self):
-    """Initializes a multi-process engine object."""
+    """Initializes a multi-process engine."""
     super(MultiProcessEngine, self).__init__()
     self._name = u'Main'
     self._pid = os.getpid()
@@ -156,16 +156,12 @@ class MultiProcessEngine(engine.BaseEngine):
 
       logging.info(u'Starting replacement worker process for {0:s}'.format(
           process.name))
-      replacement_process = self._StartWorkerProcess(self._storage_writer)
-
-      try:
-        self._StartMonitoringProcess(replacement_process.pid)
-      except (IOError, KeyError) as exception:
-        logging.error((
-            u'Unable to monitor replacement worker process: {0:s} '
-            u'(PID: {1:d}) with error: {2:s}').format(
-                replacement_process.name, replacement_process.pid,
-                exception))
+      replacement_process = self._StartWorkerProcess(
+          process.name, self._storage_writer)
+      if not replacement_process:
+        logging.error(
+            u'Unable to create replacement worker process for: {0:s}'.format(
+                process.name))
 
   def _GetProcessStatus(self, process):
     """Queries a process to determine its status.
@@ -238,10 +234,10 @@ class MultiProcessEngine(engine.BaseEngine):
 
     Raises:
       KeyError: if the process is already registered with the engine.
-      ValueError: if the process object is missing.
+      ValueError: if the process is missing.
     """
     if process is None:
-      raise ValueError(u'Missing process object.')
+      raise ValueError(u'Missing process.')
 
     if process.pid in self._processes_per_pid:
       raise KeyError(
@@ -251,10 +247,11 @@ class MultiProcessEngine(engine.BaseEngine):
     self._processes_per_pid[process.pid] = process
 
   @abc.abstractmethod
-  def _StartWorkerProcess(self, storage_writer):
-    """Creates, starts and registers a worker process.
+  def _StartWorkerProcess(self, process_name, storage_writer):
+    """Creates, starts, monitors and registers a worker process.
 
     Args:
+      process_name (str): process name.
       storage_writer (StorageWriter): storage writer for a session storage used
           to create task storage.
 
@@ -262,28 +259,31 @@ class MultiProcessEngine(engine.BaseEngine):
       MultiProcessWorkerProcess: extraction worker process.
     """
 
-  def _StartMonitoringProcess(self, pid):
+  def _StartMonitoringProcess(self, process):
     """Starts monitoring a process.
 
     Args:
-      pid (int): process identifier (PID).
+      process (MultiProcessBaseProcess): process.
 
     Raises:
       KeyError: if the process is not registered with the engine or
           if the process is already being monitored.
       IOError: if the RPC client cannot connect to the server.
+      ValueError: if the process is missing.
     """
-    self._RaiseIfNotRegistered(pid)
+    if process is None:
+      raise ValueError(u'Missing process.')
+
+    pid = process.pid
 
     if pid in self._process_information_per_pid:
       raise KeyError(
-          u'Process (PID: {0:d}) already in monitoring list.'.format(pid))
+          u'Already monitoring process (PID: {0:d}).'.format(pid))
 
     if pid in self._rpc_clients_per_pid:
       raise KeyError(
           u'RPC client (PID: {0:d}) already exists'.format(pid))
 
-    process = self._processes_per_pid[pid]
     rpc_client = plaso_xmlrpc.XMLProcessStatusRPCClient()
 
     # Make sure that a process has started its RPC server. RPC port will
@@ -321,20 +321,23 @@ class MultiProcessEngine(engine.BaseEngine):
   def _StatusUpdateThreadMain(self):
     """Main function of the status update thread."""
 
-  def _StopMonitoringProcess(self, pid):
+  def _StopMonitoringProcess(self, process):
     """Stops monitoring a process.
 
     Args:
-      pid (int): process identifier (PID).
+      process (MultiProcessBaseProcess): process.
 
     Raises:
-      KeyError: if the process is not registered with the engine or
-          if the process is registered, but not monitored.
+      KeyError: if the process is not monitored.
+      ValueError: if the process is missing.
     """
-    self._RaiseIfNotRegistered(pid)
+    if process is None:
+      raise ValueError(u'Missing process.')
+
+    pid = process.pid
+
     self._RaiseIfNotMonitored(pid)
 
-    process = self._processes_per_pid[pid]
     del self._process_information_per_pid[pid]
 
     rpc_client = self._rpc_clients_per_pid.get(pid, None)
@@ -345,14 +348,16 @@ class MultiProcessEngine(engine.BaseEngine):
     if pid in self._rpc_errors_per_pid:
       del self._rpc_errors_per_pid[pid]
 
-    logging.debug((
-        u'Process: {0:s} (PID: {1:d}) has been removed from the monitoring '
-        u'list.').format(process.name, pid))
+    logging.debug(u'Stopped monitoring process: {0:s} (PID: {1:d})'.format(
+        process.name, pid))
 
   def _StopMonitoringProcesses(self):
     """Stops monitoring all processes."""
     for pid in iter(self._process_information_per_pid.keys()):
-      self._StopMonitoringProcess(pid)
+      self._RaiseIfNotRegistered(pid)
+      process = self._processes_per_pid[pid]
+
+      self._StopMonitoringProcess(process)
 
   def _StopStatusUpdateThread(self):
     """Stops the status update thread."""
@@ -381,7 +386,7 @@ class MultiProcessEngine(engine.BaseEngine):
       logging.warning(u'Killing process: (PID: {0:d}).'.format(pid))
       self._KillProcess(pid)
 
-    self._StopMonitoringProcess(pid)
+    self._StopMonitoringProcess(process)
 
   @abc.abstractmethod
   def _UpdateProcessingStatus(self, pid, process_status, used_memory):

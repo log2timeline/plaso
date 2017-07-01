@@ -4,6 +4,7 @@
 import sys
 
 try:
+  import win32api
   import win32console
 except ImportError:
   win32console = None
@@ -31,6 +32,8 @@ class StatusView(object):
       dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE: (
           u'storage media image')}
 
+  _UNITS_1024 = [u'B', u'KiB', u'MiB', u'GiB', u'TiB', u'EiB', u'ZiB', u'YiB']
+
   def __init__(self, output_writer, tool_name):
     """Initializes a status view.
 
@@ -48,6 +51,31 @@ class StatusView(object):
         output_writer, cli_tools.StdoutOutputWriter)
     self._storage_file_path = None
     self._tool_name = tool_name
+
+  def _ClearScreen(self):
+    """Clears the terminal/console screen."""
+    if not win32console:
+      # ANSI escape sequence to clear screen.
+      self._output_writer.Write(b'\033[2J')
+      # ANSI escape sequence to move cursor to top left.
+      self._output_writer.Write(b'\033[H')
+
+    else:
+      # Windows cmd.exe does not support ANSI escape codes, thus instead we
+      # fill the console screen buffer with spaces.
+      top_left_coordinate = win32console.PyCOORDType(0, 0)
+      screen_buffer = win32console.GetStdHandle(win32api.STD_OUTPUT_HANDLE)
+      screen_buffer_information = screen_buffer.GetConsoleScreenBufferInfo()
+
+      screen_buffer_attributes = screen_buffer_information[u'Attributes']
+      screen_buffer_size = screen_buffer_information[u'Size']
+      console_size = screen_buffer_size.X * screen_buffer_size.Y
+
+      screen_buffer.FillConsoleOutputCharacter(
+          u' ', console_size, top_left_coordinate)
+      screen_buffer.FillConsoleOutputAttribute(
+          screen_buffer_attributes, console_size, top_left_coordinate)
+      screen_buffer.SetConsoleCursorPosition(top_left_coordinate)
 
   def _FormatAnalysisStatusTableRow(self, process_status):
     """Formats an analysis status table row.
