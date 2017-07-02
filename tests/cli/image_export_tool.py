@@ -128,25 +128,13 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
   # TODO: add tests for _ExtractWithFilter.
   # TODO: add tests for _GetSourceFileSystem.
 
-  def testParseDateFilters(self):
-    """Tests the _ParseDateFilters function."""
-    test_tool = image_export_tool.ImageExportTool()
-
-    test_tool._ParseDateFilters([
-        u'ctime, 2012-05-25 15:59:00, 2012-05-25 15:59:20'])
-
-    with self.assertRaises(ValueError):
-      test_tool._ParseDateFilters([u'ctime, 2012-05-25 15:59:00'])
-
-    with self.assertRaises(ValueError):
-      test_tool._ParseDateFilters([
-          u'ctime, 2012-05-25 15:59:00, 2012-05-A5 15:59:20'])
-
   def testParseExtensionsString(self):
     """Tests the _ParseExtensionsString function."""
     test_tool = image_export_tool.ImageExportTool()
 
     test_tool._ParseExtensionsString(u'txt')
+
+  # TODO: add tests for _ParseFilterOptions.
 
   def testParseNamesString(self):
     """Tests the _ParseNamesString function."""
@@ -186,6 +174,8 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     with shared_test_lib.TempDirectory() as temp_directory:
       destination_path = os.path.join(temp_directory, u'another_file')
       test_tool._WriteFileEntry(file_entry, u'', destination_path)
+
+  # TODO: add tests for AddFilterOptions.
 
   def testListSignatureIdentifiers(self):
     """Tests the ListSignatureIdentifiers function."""
@@ -251,8 +241,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.date_filters = [
-        u'ctime,2012-05-25 15:59:00,2012-05-25 15:59:20']
+    options.date_filters = [u'ctime,2012-05-25 15:59:00,2012-05-25 15:59:20']
     options.image = self._GetTestFilePath([u'image.qcow2'])
     options.quiet = True
 
@@ -301,8 +290,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.date_filters = [
-        u'ctime,2012-05-25 15:59:00,2012-05-25 15:59:20']
+    options.date_filters = [u'ctime,2012-05-25 15:59:00,2012-05-25 15:59:20']
     options.image = self._GetTestFilePath([u'image.qcow2'])
     options.quiet = True
 

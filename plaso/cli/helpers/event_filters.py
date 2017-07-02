@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """The event filters CLI arguments helper."""
 
+from plaso.cli import time_slices
 from plaso.cli import tools
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
 from plaso.filters import manager as filters_manager
-from plaso.frontend import frontend
 from plaso.lib import errors
 from plaso.lib import timelib
 
@@ -123,7 +123,7 @@ class EventFiltersArgumentsHelper(interface.ArgumentsHelper):
     if time_slice_event_timestamp is not None or use_time_slicer:
       # Note that time slicer uses the time slice to determine the duration.
       # TODO: refactor TimeSlice to filters.
-      time_slice = frontend.TimeSlice(
+      time_slice = time_slices.TimeSlice(
           time_slice_event_timestamp, duration=time_slice_duration)
       setattr(configuration_object, u'_time_slice', time_slice)
 
