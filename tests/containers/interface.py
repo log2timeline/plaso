@@ -57,10 +57,10 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
     attribute_container.attribute_value = u'attribute_value'
 
     expected_attributes = [
-        (u'attribute_name', u'attribute_name',),
+        (u'attribute_name', u'attribute_name'),
         (u'attribute_value', u'attribute_value')]
 
-    attributes = list(attribute_container.GetAttributes())
+    attributes = sorted(attribute_container.GetAttributes())
 
     self.assertEqual(attributes, expected_attributes)
 
