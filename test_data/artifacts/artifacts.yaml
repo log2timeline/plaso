@@ -1,0 +1,21 @@
+# Windows path artifact definitions.
+
+name: SystemRootPath
+doc: The %SystemRoot% path.
+sources:
+- type: PATH
+  attributes:
+    paths:
+      - '\Windows'
+      - '\WinNT'
+      - '\WINNT35'
+      - '\WTSRV'
+    separator: '\'
+- type: REGISTRY_VALUE
+  attributes:
+    key_value_pairs: [{key: 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion', value: 'SystemRoot'}]
+provides:
+- type: ENVIRONMENT
+  attributes:
+    name: '%SystemRoot%'
+supported_os: [Windows]

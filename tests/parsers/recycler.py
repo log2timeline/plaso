@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import recycler  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import recycler
 
@@ -80,7 +80,7 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
         u'2004-08-25 16:18:25.237')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.DELETED_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_DELETED)
 
     self.assertEqual(event.record_index, 1)
 

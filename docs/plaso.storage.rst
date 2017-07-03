@@ -44,6 +44,14 @@ plaso.storage.interface module
     :undoc-members:
     :show-inheritance:
 
+plaso.storage.sqlite_file module
+--------------------------------
+
+.. automodule:: plaso.storage.sqlite_file
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.storage.time_range module
 -------------------------------
 

@@ -17,7 +17,7 @@ from dfvfs.resolver import context
 
 from plaso.containers import plist_event
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
@@ -64,8 +64,8 @@ class MacUserPlugin(interface.PlistPlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      plist_name: name of the plist file.
-      top_level: dictionary with the plist file parsed.
+      plist_name (str): name of the plist.
+      top_level (dict[str, object]): plist top-level key.
     """
     super(MacUserPlugin, self).Process(
         parser_mediator, plist_name=self.PLIST_PATH, top_level=top_level)
@@ -153,7 +153,7 @@ class MacUserPlugin(interface.PlistPlugin):
           event_data.root = self._ROOT
 
           event = time_events.DateTimeValuesEvent(
-              date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+              date_time, definitions.TIME_DESCRIPTION_WRITTEN)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
       time_string = policy_dict.get(u'lastLoginTimestamp', None)
@@ -175,7 +175,7 @@ class MacUserPlugin(interface.PlistPlugin):
           event_data.root = self._ROOT
 
           event = time_events.DateTimeValuesEvent(
-              date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+              date_time, definitions.TIME_DESCRIPTION_WRITTEN)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
       time_string = policy_dict.get(u'failedLoginTimestamp', None)
@@ -198,7 +198,7 @@ class MacUserPlugin(interface.PlistPlugin):
           event_data.root = self._ROOT
 
           event = time_events.DateTimeValuesEvent(
-              date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+              date_time, definitions.TIME_DESCRIPTION_WRITTEN)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

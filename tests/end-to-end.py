@@ -91,19 +91,12 @@ class TestCase(object):
       if os.path.exists(self._log2timeline_path):
         break
 
-    if self._log2timeline_path.endswith(u'.py'):
-      self._log2timeline_path = u' '.join([
-          sys.executable, self._log2timeline_path])
-
   def _InitializePinfoPath(self):
     """Initializes the location of pinfo."""
     for filename in (u'pinfo.exe', u'pinfo.sh', u'pinfo.py'):
       self._pinfo_path = os.path.join(self._tools_path, filename)
       if os.path.exists(self._pinfo_path):
         break
-
-    if self._pinfo_path.endswith(u'.py'):
-      self._pinfo_path = u' '.join([sys.executable, self._pinfo_path])
 
   def _InitializePsortPath(self):
     """Initializes the location of psort."""
@@ -112,21 +105,29 @@ class TestCase(object):
       if os.path.exists(self._psort_path):
         break
 
-    if self._psort_path.endswith(u'.py'):
-      self._psort_path = u' '.join([sys.executable, self._psort_path])
-
-  def _RunCommand(self, command):
+  def _RunCommand(self, command, stdout=None, stderr=None):
     """Runs a command.
 
     Args:
-      command (str): command to run.
+      command (list[str]): full command to run, as expected by the Popen()
+        constructor (see the documentation:
+        https://docs.python.org/2/library/subprocess.html#popen-constructor)
+      stdout (Optional[str]): path to file to send stdout to.
+      stderr (Optional[str]): path to file to send stderr to.
 
     Returns:
       bool: True if the command ran successfully.
     """
-    exit_code = subprocess.call(command, shell=True)
+    if command[0].endswith(u'py'):
+      command.insert(0, sys.executable)
+    logging.info(u'Running: {0:s}'.format(u' '.join(command)))
+    child = subprocess.Popen(command, stdout=stdout, stderr=stderr)
+    child.communicate()
+    exit_code = child.returncode
+
     if exit_code != 0:
-      logging.error(u'Running: "{0:s}" failed.'.format(command))
+      logging.error(u'Running: "{0:s}" failed (exit code {1:d}).'.format(
+          command, exit_code))
       return False
 
     return True
@@ -487,22 +488,23 @@ class ExtractAndOutputTestCase(TestCase):
     Returns:
       bool: True if log2timeline ran successfully.
     """
-    extract_options = u'--status-view=none {0:s}'.format(
-        u' '.join(test_definition.extract_options))
+    extract_options = [u'--status-view=none']
+    extract_options.extend(test_definition.extract_options)
 
     stdout_file = os.path.join(
         temp_directory, u'{0:s}-log2timeline.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, u'{0:s}-log2timeline.err'.format(test_definition.name))
-    command = u'{0:s} {1:s} {2:s} {3:s} > {4:s} 2> {5:s}'.format(
-        self._log2timeline_path, extract_options, storage_file, source_path,
-        stdout_file, stderr_file)
+    command = [self._log2timeline_path]
+    command.extend(extract_options)
+    command.extend([storage_file, source_path])
 
-    logging.info(u'Running: {0:s}'.format(command))
-    result = self._RunCommand(command)
+    with open(stdout_file, u'w') as stdout:
+      with open(stderr_file, u'w') as stderr:
+        result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
-      with open(stderr_file, 'rb') as file_object:
+      with open(stderr_file, u'rb') as file_object:
         output_data = file_object.read()
         print(output_data)
 
@@ -531,14 +533,14 @@ class ExtractAndOutputTestCase(TestCase):
         temp_directory, u'{0:s}-pinfo.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, u'{0:s}-pinfo.err'.format(test_definition.name))
-    command = u'{0:s} {1:s} > {2:s} 2> {3:s}'.format(
-        self._pinfo_path, storage_file, stdout_file, stderr_file)
+    command = [self._pinfo_path, storage_file]
 
-    logging.info(u'Running: {0:s}'.format(command))
-    result = self._RunCommand(command)
+    with open(stdout_file, u'w') as stdout:
+      with open(stderr_file, u'w') as stderr:
+        result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
-      with open(stderr_file, 'rb') as file_object:
+      with open(stderr_file, u'rb') as file_object:
         output_data = file_object.read()
         print(output_data)
 
@@ -574,15 +576,15 @@ class ExtractAndOutputTestCase(TestCase):
         temp_directory, u'{0:s}-compare-pinfo.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, u'{0:s}-compare-pinfo.err'.format(test_definition.name))
-    command = u'{0:s} --compare {1:s} {2:s} > {3:s} 2> {4:s}'.format(
-        self._pinfo_path, reference_storage_file, storage_file, stdout_file,
-        stderr_file)
+    command = [
+        self._pinfo_path, u'--compare', reference_storage_file, storage_file]
 
-    logging.info(u'Running: {0:s}'.format(command))
-    result = self._RunCommand(command)
+    with open(stdout_file, u'w') as stdout:
+      with open(stderr_file, u'w') as stderr:
+        result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
-      with open(stderr_file, 'rb') as file_object:
+      with open(stderr_file, u'rb') as file_object:
         output_data = file_object.read()
         print(output_data)
 
@@ -607,29 +609,29 @@ class ExtractAndOutputTestCase(TestCase):
     output_options = test_definition.output_options
 
     if test_definition.output_format:
-      output_options.append(u'-o {0:s}'.format(test_definition.output_format))
+      output_options.extend([u'-o', test_definition.output_format])
 
     output_file_path = None
     if test_definition.output_file:
       output_file_path = os.path.join(
           temp_directory, test_definition.output_file)
-      output_options.append(u'-w {0:s}'.format(output_file_path))
-
-    output_options = u' '.join(output_options)
+    output_options.extend([u'-w', output_file_path])
 
     stdout_file = os.path.join(
         temp_directory, u'{0:s}-psort.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, u'{0:s}-psort.err'.format(test_definition.name))
-    command = u'{0:s} {1:s} {2:s} > {3:s} 2> {4:s}'.format(
-        self._psort_path, output_options, storage_file, stdout_file,
-        stderr_file)
 
-    logging.info(u'Running: {0:s}'.format(command))
-    result = self._RunCommand(command)
+    command = [self._psort_path]
+    command.extend(output_options)
+    command.append(storage_file)
+
+    with open(stdout_file, u'w') as stdout:
+      with open(stderr_file, u'w') as stderr:
+        result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
-      with open(stderr_file, 'rb') as file_object:
+      with open(stderr_file, u'rb') as file_object:
         output_data = file_object.read()
         print(output_data)
 
@@ -659,8 +661,14 @@ class ExtractAndOutputTestCase(TestCase):
     if test_definition.extract_options is None:
       test_definition.extract_options = []
     elif isinstance(test_definition.extract_options, STRING_TYPES):
-      test_definition.extract_options = test_definition.extract_options.split(
-          u',')
+      tmp_extract_options = []
+      for option_and_value in test_definition.extract_options.split(
+          u' '):
+        if option_and_value.find(u'=') > 0:
+          tmp_extract_options.extend(option_and_value.split(u'='))
+        else:
+          tmp_extract_options.append(option_and_value)
+      test_definition.extract_options = tmp_extract_options
 
     test_definition.output_file = test_definition_reader.GetConfigValue(
         test_definition.name, u'output_file')
@@ -758,23 +766,24 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
           self._test_sources_path, tagging_file_path)
 
     # TODO: determine why --analysis=tagging fails.
-    tagging_options = (
-        u'--analysis tagging --output-format=null '
-        u'--tagging-file {0:s}').format(tagging_file_path)
+    tagging_options = [
+        u'--analysis', u'tagging', u'--output-format=null', u'--tagging-file',
+        tagging_file_path]
 
     stdout_file = os.path.join(
         temp_directory, u'{0:s}-psort-tagging.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, u'{0:s}-psort-tagging.err'.format(test_definition.name))
-    command = u'{0:s} {1:s} {2:s} > {3:s} 2> {4:s}'.format(
-        self._psort_path, tagging_options, storage_file, stdout_file,
-        stderr_file)
+    command = [self._psort_path]
+    command.extend(tagging_options)
+    command.append(storage_file)
 
-    logging.info(u'Running: {0:s}'.format(command))
-    result = self._RunCommand(command)
+    with open(stdout_file, u'w') as stdout:
+      with open(stderr_file, u'w') as stderr:
+        result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
-      with open(stderr_file, 'rb') as file_object:
+      with open(stderr_file, u'rb') as file_object:
         output_data = file_object.read()
         print(output_data)
 
@@ -877,10 +886,6 @@ class ImageExportTestCase(TestCase):
       if os.path.exists(self._image_export_path):
         break
 
-    if self._image_export_path.endswith(u'.py'):
-      self._image_export_path = u' '.join([
-          sys.executable, self._image_export_path])
-
   def _RunImageExport(self, test_definition, temp_directory, source_path):
     """Runs image_export on a storage media image.
 
@@ -893,23 +898,22 @@ class ImageExportTestCase(TestCase):
       bool: True if image_export ran successfully.
     """
     output_file_path = os.path.join(temp_directory, u'export')
-    output_options = [u'-w {0:s}'.format(output_file_path)]
-
-    output_options = u' '.join(output_options)
+    output_options = [u'-w', output_file_path]
 
     stdout_file = os.path.join(
         temp_directory, u'{0:s}-image_export.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, u'{0:s}-image_export.err'.format(test_definition.name))
-    command = u'{0:s} {1:s} {2:s} > {3:s} 2> {4:s}'.format(
-        self._image_export_path, output_options, source_path, stdout_file,
-        stderr_file)
+    command = [self._image_export_path]
+    command.extend(output_options)
+    command.append(source_path)
 
-    logging.info(u'Running: {0:s}'.format(command))
-    result = self._RunCommand(command)
+    with open(stdout_file, u'w') as stdout:
+      with open(stderr_file, u'w') as stderr:
+        result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
-      with open(stderr_file, 'rb') as file_object:
+      with open(stderr_file, u'rb') as file_object:
         output_data = file_object.read()
         print(output_data)
 
@@ -1027,17 +1031,30 @@ class OutputTestCase(TestCase):
             reference_output_file_path))
         return False
 
-      with open(reference_output_file_path, 'r') as reference_output_file:
-        with open(output_file_path, 'r') as output_file:
+      with open(reference_output_file_path, u'r') as reference_output_file:
+        with open(output_file_path, u'r') as output_file:
+          # Hack to remove paths in the output that are different when running
+          # the tests under UNIX and Windows.
+          reference_output_list = [
+              line.decode(u'utf-8').replace(u'/tmp/test/test_data/', u'')
+              for line in reference_output_file.readlines()]
+          output_list = [
+              line.decode(u'utf-8').replace(u'/tmp/test/test_data/', u'')
+              for line in output_file.readlines()]
+          output_list = [
+              line.replace(u'C:\\tmp\\test\\test_data\\', u'')
+              for line in output_list]
+          output_list = [
+              line.replace(u'C:\\\\tmp\\\\test\\\\test_data\\\\', u'')
+              for line in output_list]
           differences = list(difflib.unified_diff(
-              reference_output_file.readlines(), output_file.readlines(),
+              reference_output_list, output_list,
               fromfile=reference_output_file_path, tofile=output_file_path))
 
       if differences:
         differences_output = []
         for difference in differences:
-          difference_output = difference.decode(u'ascii', errors=u'replace')
-          differences_output.append(difference_output)
+          differences_output.append(difference)
         differences_output = u'\n'.join(differences_output)
         logging.error(u'Differences: {0:s}'.format(differences_output))
 
@@ -1060,29 +1077,28 @@ class OutputTestCase(TestCase):
     output_options = test_definition.output_options
 
     if test_definition.output_format:
-      output_options.append(u'-o {0:s}'.format(test_definition.output_format))
+      output_options.extend([u'-o', test_definition.output_format])
 
     output_file_path = None
     if test_definition.output_file:
       output_file_path = os.path.join(
           temp_directory, test_definition.output_file)
-      output_options.append(u'-w {0:s}'.format(output_file_path))
-
-    output_options = u' '.join(output_options)
+      output_options.extend([u'-w', output_file_path])
 
     stdout_file = os.path.join(
         temp_directory, u'{0:s}-psort.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, u'{0:s}-psort.err'.format(test_definition.name))
-    command = u'{0:s} {1:s} {2:s} > {3:s} 2> {4:s}'.format(
-        self._psort_path, output_options, storage_file, stdout_file,
-        stderr_file)
+    command = [self._psort_path]
+    command.extend(output_options)
+    command.append(storage_file)
 
-    logging.info(u'Running: {0:s}'.format(command))
-    result = self._RunCommand(command)
+    with open(stdout_file, u'w') as stdout:
+      with open(stderr_file, u'w') as stderr:
+        result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
-      with open(stderr_file, 'rb') as file_object:
+      with open(stderr_file, u'rb') as file_object:
         output_data = file_object.read()
         print(output_data)
 
@@ -1274,7 +1290,7 @@ def Main():
   return True
 
 
-if __name__ == '__main__':
+if __name__ == u'__main__':
   if not Main():
     sys.exit(1)
   else:

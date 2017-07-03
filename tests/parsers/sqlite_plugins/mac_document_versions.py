@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import mac_document_versions  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import mac_document_versions
 
@@ -29,7 +29,7 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
     event_object = storage_writer.events[0]
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-01-21 02:03:00')
     self.assertEqual(event_object.timestamp, expected_timestamp)

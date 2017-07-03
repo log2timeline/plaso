@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import android_sms  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import android_sms
 
@@ -30,7 +30,7 @@ class AndroidSMSTest(test_lib.SQLitePluginTestCase):
     event = storage_writer.events[0]
 
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-29 16:56:28.038')

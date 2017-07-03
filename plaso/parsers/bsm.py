@@ -12,12 +12,12 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
+from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.lib import eventdata
 from plaso.lib import timelib
-from plaso.unix import bsmtoken
 from plaso.parsers import interface
 from plaso.parsers import manager
+from plaso.unix import bsmtoken
 
 import pytz  # pylint: disable=wrong-import-order
 
@@ -789,7 +789,7 @@ class BSMParser(interface.FileObjectParser):
     #   trailer = extra_tokens.get(u'BSM_TOKEN_TRAILER', u'unknown')
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.CREATION_TIME)
+        date_time, definitions.TIME_DESCRIPTION_CREATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     return True

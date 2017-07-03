@@ -13,7 +13,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -250,21 +250,21 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
     date_time = dfdatetime_posix_time.PosixTime(
         timestamp=cache_record_header.last_fetched)
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.LAST_VISITED_TIME)
+        date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if cache_record_header.last_modified:
       date_time = dfdatetime_posix_time.PosixTime(
           timestamp=cache_record_header.last_modified)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if cache_record_header.expire_time:
       date_time = dfdatetime_posix_time.PosixTime(
           timestamp=cache_record_header.expire_time)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
+          date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ReadCacheEntry(self, file_object, display_name, block_size):
@@ -479,21 +479,21 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
     date_time = dfdatetime_posix_time.PosixTime(
         timestamp=cache_record_header.last_fetched)
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.LAST_VISITED_TIME)
+        date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if cache_record_header.last_modified:
       date_time = dfdatetime_posix_time.PosixTime(
           timestamp=cache_record_header.last_modified)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if cache_record_header.expire_time:
       date_time = dfdatetime_posix_time.PosixTime(
           timestamp=cache_record_header.expire_time)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
+          date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

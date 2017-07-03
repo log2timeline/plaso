@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import winprefetch  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import winprefetch
 
@@ -34,7 +34,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         u'2013-03-10 10:11:49.281250')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.LAST_RUNTIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
     self.assertEqual(event.executable, u'CMD.EXE')
     self.assertEqual(event.prefetch_hash, 0x087b4001)
     self.assertEqual(event.volume_serial_numbers[0], 0x24cb074b)
@@ -90,7 +90,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         u'2013-03-10 10:19:46.234375')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
     expected_message = (
         u'\\DEVICE\\HARDDISKVOLUME1 '
@@ -121,7 +121,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         u'2012-04-06 19:00:55.932955')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.LAST_RUNTIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
 
     self.assertEqual(event.executable, u'PING.EXE')
     self.assertEqual(event.prefetch_hash, 0xb29f6629)
@@ -150,7 +150,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         u'2010-11-10 17:37:26.484375')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
   @shared_test_lib.skipUnlessHasTestFile([u'WUAUCLT.EXE-830BCC14.pf'])
   def testParse23MultiVolume(self):
@@ -171,7 +171,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         u'2012-03-15 21:17:39.807996')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.LAST_RUNTIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
 
     self.assertEqual(event.executable, u'WUAUCLT.EXE')
     self.assertEqual(event.prefetch_hash, 0x830bcc14)
@@ -208,7 +208,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         u'2010-11-10 17:37:26.484375')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
     expected_message = (
         u'\\DEVICE\\HARDDISKVOLUME1 '
@@ -240,7 +240,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         u'2013-10-04 15:40:09.037833')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.LAST_RUNTIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
     self.assertEqual(event.executable, u'TASKHOST.EXE')
     self.assertEqual(event.prefetch_hash, 0x3ae259fc)
 
@@ -252,7 +252,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
         event.timestamp_desc,
-        u'Previous {0:s}'.format(eventdata.EventTimestamp.LAST_RUNTIME))
+        u'Previous {0:s}'.format(definitions.TIME_DESCRIPTION_LAST_RUN))
 
     expected_mapped_files = [
         (u'\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NTDLL.DLL '
@@ -367,7 +367,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         u'2013-10-04 15:57:26.146547')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
   @shared_test_lib.skipUnlessHasTestFile([u'BYTECODEGENERATOR.EXE-C1E9BCE6.pf'])
   def testParse30Compressed(self):
@@ -390,7 +390,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         u'2015-05-14 22:11:58.091134')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.LAST_RUNTIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
     self.assertEqual(event.executable, u'BYTECODEGENERATOR.EXE')
     self.assertEqual(event.prefetch_hash, 0xc1e9bce6)
 
@@ -402,7 +402,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
         event.timestamp_desc,
-        u'Previous {0:s}'.format(eventdata.EventTimestamp.LAST_RUNTIME))
+        u'Previous {0:s}'.format(definitions.TIME_DESCRIPTION_LAST_RUN))
 
     self.assertEqual(len(event.mapped_files), 1085)
 
@@ -415,7 +415,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         u'2015-05-15 06:54:55.139294')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
 
 if __name__ == u'__main__':

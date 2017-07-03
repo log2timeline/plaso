@@ -3,8 +3,7 @@ set -e
 
 # Dependencies for running Plaso, alphabetized, one per line.
 # This should not include packages only required for testing or development.
-PLASO_DEPENDENCIES="ipython
-                    libbde-python
+PLASO_DEPENDENCIES="libbde-python
                     libesedb-python
                     libevt-python
                     libevtx-python
@@ -44,6 +43,7 @@ PLASO_DEPENDENCIES="ipython
                     python-pefile
                     python-psutil
                     python-pyparsing
+                    python-pysqlite
                     python-pytsk3
                     python-requests
                     python-six

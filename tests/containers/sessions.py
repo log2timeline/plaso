@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""This file contains the tests for the sessions attribute containers."""
+"""Tests for the sessions attribute containers."""
 
 import time
 import unittest
@@ -13,8 +13,9 @@ from tests import test_lib as shared_test_lib
 
 
 class SessionTest(shared_test_lib.BaseTestCase):
-  """Tests for the session attributes container."""
+  """Tests for the session attribute container."""
 
+  # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
     session = sessions.Session()
@@ -33,19 +34,23 @@ class SessionTest(shared_test_lib.BaseTestCase):
         u'preferred_encoding': u'utf-8',
         u'preferred_time_zone': u'UTC',
         u'product_name': u'plaso',
-        u'product_version': plaso.GetVersion(),
+        u'product_version': plaso.__version__,
         u'start_time': session.start_time}
 
     test_dict = session.CopyToDict()
 
     self.assertEqual(test_dict, expected_dict)
 
-  # TODO: add more tests.
+  # TODO: add tests for CopyAttributesFromSessionCompletion
+  # TODO: add tests for CopyAttributesFromSessionStart
+  # TODO: add tests for CreateSessionCompletion
+  # TODO: add tests for CreateSessionStart
 
 
 class SessionCompletionTest(shared_test_lib.BaseTestCase):
-  """Tests for the session completion attributes container."""
+  """Tests for the session completion attribute container."""
 
+  # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
     timestamp = int(time.time() * 1000000)
@@ -65,12 +70,11 @@ class SessionCompletionTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(test_dict, expected_dict)
 
-  # TODO: add more tests.
-
 
 class SessionStartTest(shared_test_lib.BaseTestCase):
-  """Tests for the session start attributes container."""
+  """Tests for the session start attribute container."""
 
+  # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
     timestamp = int(time.time() * 1000000)
@@ -78,7 +82,7 @@ class SessionStartTest(shared_test_lib.BaseTestCase):
     session_start = sessions.SessionStart(identifier=session_identifier)
     session_start.timestamp = timestamp
     session_start.product_name = u'plaso'
-    session_start.product_version = plaso.GetVersion()
+    session_start.product_version = plaso.__version__
 
     self.assertEqual(session_start.identifier, session_identifier)
 
@@ -86,14 +90,12 @@ class SessionStartTest(shared_test_lib.BaseTestCase):
         u'debug_mode': False,
         u'identifier': session_start.identifier,
         u'product_name': u'plaso',
-        u'product_version': plaso.GetVersion(),
+        u'product_version': plaso.__version__,
         u'timestamp': timestamp}
 
     test_dict = session_start.CopyToDict()
 
     self.assertEqual(test_dict, expected_dict)
-
-  # TODO: add more tests.
 
 
 if __name__ == '__main__':

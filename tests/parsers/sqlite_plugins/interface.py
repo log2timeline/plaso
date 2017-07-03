@@ -6,7 +6,7 @@ import sys
 import unittest
 
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -56,8 +56,8 @@ class TestSQLitePlugin(interface.SQLitePlugin):
     self.results.append(((row['Field1'], row['Field2'], field3), from_wal))
 
     event = time_events.TimestampEvent(
-        timelib.Timestamp.NONE_TIMESTAMP, eventdata.EventTimestamp.NOT_A_TIME,
-        data_type=u'fake')
+        timelib.Timestamp.NONE_TIMESTAMP,
+        definitions.TIME_DESCRIPTION_NOT_A_TIME, data_type=u'fake')
     event.field1 = row['Field1']
     event.field2 = row['Field2']
     event.field3 = field3

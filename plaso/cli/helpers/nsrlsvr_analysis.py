@@ -16,6 +16,7 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
 
   _DEFAULT_HASH = u'md5'
   _DEFAULT_HOST = u'localhost'
+  _DEFAULT_LABEL = u'nsrl_present'
   _DEFAULT_PORT = 9120
 
   @classmethod
@@ -46,6 +47,12 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
             u'default is: {0:s}').format(cls._DEFAULT_HOST))
 
     argument_group.add_argument(
+        u'--nsrlsvr-label', u'--nsrlsvr_label', dest=u'nsrlvr_label', type=str,
+        action='store', default=cls._DEFAULT_LABEL, metavar=u'LABEL', help=(
+            u'Label to apply to events, the default is: '
+            u'{0:s}.').format(cls._DEFAULT_LABEL))
+
+    argument_group.add_argument(
         u'--nsrlsvr-port', u'--nsrlsvr_port', dest=u'nsrlvr_port', type=int,
         action='store', default=cls._DEFAULT_PORT, metavar=u'PORT', help=(
             u'Port number of the nsrlsvr instance to query, the default is: '
@@ -67,6 +74,10 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           u'Analysis plugin is not an instance of NsrlsvrAnalysisPlugin')
 
+    label = cls._ParseStringOption(
+        options, u'nsrlsvr_label', default_value=cls._DEFAULT_LABEL)
+    analysis_plugin.SetLabel(label)
+
     lookup_hash = cls._ParseStringOption(
         options, u'nsrlsvr_hash', default_value=cls._DEFAULT_HASH)
     analysis_plugin.SetLookupHash(lookup_hash)
@@ -75,7 +86,7 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
         options, u'nsrlsvr_host', default_value=cls._DEFAULT_HOST)
     analysis_plugin.SetHost(host)
 
-    port = cls._ParseStringOption(
+    port = cls._ParseIntegerOption(
         options, u'nsrlsvr_port', default_value=cls._DEFAULT_PORT)
     analysis_plugin.SetPort(port)
 

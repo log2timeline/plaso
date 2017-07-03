@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import file_history  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.esedb_plugins import file_history
 
@@ -35,7 +35,7 @@ class FileHistoryESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
     filename = u'?UP\\Favorites\\Links\\Lenovo'
     self.assertEqual(event.original_filename, filename)

@@ -8,7 +8,7 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import esedb
 from plaso.parsers.esedb_plugins import interface
 
@@ -123,20 +123,20 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
       if created_timestamp:
         date_time = dfdatetime_filetime.Filetime(timestamp=created_timestamp)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.CREATION_TIME)
+            date_time, definitions.TIME_DESCRIPTION_CREATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       modified_timestamp = record_values.get(u'fileModified')
       if modified_timestamp:
         date_time = dfdatetime_filetime.Filetime(timestamp=modified_timestamp)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+            date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       if not created_timestamp and not modified_timestamp:
         date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.NOT_A_TIME)
+            date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

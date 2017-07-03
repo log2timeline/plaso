@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""This file contains the tests for the tasks attribute containers."""
+"""Tests for the tasks attribute containers."""
 
 import time
 import unittest
@@ -12,8 +12,9 @@ from tests import test_lib as shared_test_lib
 
 
 class TaskTest(shared_test_lib.BaseTestCase):
-  """Tests for the task attributes container."""
+  """Tests for the task attribute container."""
 
+  # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
     session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
@@ -33,12 +34,15 @@ class TaskTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(test_dict, expected_dict)
 
-  # TODO: add more tests.
+  # TODO: add tests for CreateTaskCompletion
+  # TODO: add tests for CreateTaskStart
+  # TODO: add tests for UpdateProcessingTime
 
 
 class TaskCompletionTest(shared_test_lib.BaseTestCase):
-  """Tests for the task completion attributes container."""
+  """Tests for the task completion attribute container."""
 
+  # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
     session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
@@ -60,12 +64,11 @@ class TaskCompletionTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(test_dict, expected_dict)
 
-  # TODO: add more tests.
-
 
 class TaskStartTest(shared_test_lib.BaseTestCase):
-  """Tests for the task start attributes container."""
+  """Tests for the task start attribute container."""
 
+  # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
     session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
@@ -85,8 +88,6 @@ class TaskStartTest(shared_test_lib.BaseTestCase):
     test_dict = task_start.CopyToDict()
 
     self.assertEqual(test_dict, expected_dict)
-
-  # TODO: add more tests.
 
 
 if __name__ == '__main__':

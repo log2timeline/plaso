@@ -9,7 +9,7 @@ from dfvfs.path import fake_path_spec
 
 from plaso.analysis import windows_services
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import winreg
 
 from tests import test_lib as shared_test_lib
@@ -45,7 +45,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     date_time = dfdatetime_filetime.Filetime(
         timestamp=event_dictionary[u'timestamp'])
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
     event.data_type = u'windows:registry:service'
 
     for attribute_name, attribute_value in event_dictionary.items():

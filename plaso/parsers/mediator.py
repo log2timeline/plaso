@@ -114,6 +114,9 @@ class ParserMediator(object):
       int: year of the file entry or None.
     """
     file_entry = self.GetFileEntry()
+    if not file_entry:
+      return
+
     stat_object = file_entry.GetStat()
 
     posix_time = getattr(stat_object, u'crtime', None)
@@ -171,6 +174,9 @@ class ParserMediator(object):
       int: year of the file entry or None.
     """
     file_entry = self.GetFileEntry()
+    if not file_entry:
+      return
+
     stat_object = file_entry.GetStat()
 
     posix_time = getattr(stat_object, u'mtime', None)
@@ -329,7 +335,6 @@ class ParserMediator(object):
       int: year of the file entry or the current year.
     """
     year = self._GetLatestYearFromFileEntry()
-
     if not year:
       year = timelib.GetCurrentYear()
 

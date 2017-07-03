@@ -2,21 +2,18 @@
 """Parser for Windows XML EventLog (EVTX) files."""
 
 from collections import namedtuple
+
 import pyevtx
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
-from plaso import dependencies
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
-
-
-dependencies.CheckModuleVersion(u'pyevtx')
 
 
 class WinEvtxRecordEventData(events.EventData):
@@ -203,7 +200,7 @@ class WinEvtxParser(interface.FileObjectParser):
       date_time = dfdatetime_filetime.Filetime(timestamp=written_time)
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseRecords(self, parser_mediator, evtx_file):

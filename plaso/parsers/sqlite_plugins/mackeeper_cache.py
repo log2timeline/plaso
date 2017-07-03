@@ -9,7 +9,7 @@ from dfdatetime import java_time as dfdatetime_java_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.parsers import sqlite
@@ -248,7 +248,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
     if isinstance(time_value, py2to3.INTEGER_TYPES):
       date_time = dfdatetime_java_time.JavaTime(timestamp=time_value)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.ADDED_TIME)
+          date_time, definitions.TIME_DESCRIPTION_ADDED)
 
     else:
       try:
@@ -259,7 +259,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
         return
 
       event = time_events.TimestampEvent(
-          timestamp, eventdata.EventTimestamp.ADDED_TIME)
+          timestamp, definitions.TIME_DESCRIPTION_ADDED)
 
     parser_mediator.ProduceEventWithEventData(event, event_data)
 

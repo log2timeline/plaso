@@ -76,7 +76,7 @@ class PlistPlugin(plugins.BasePlugin):
     ---- Interesting_SubKey_with_value_to_Process: [Values, ...]  # depth = 2
 
     Args:
-      top_level: Plist in dictionary form.
+      top_level (dict[str, object]): plist top-level key.
       keys: A list of keys that should be returned.
       depth: Defines how many levels deep to check for a match.
 
@@ -142,7 +142,7 @@ class PlistPlugin(plugins.BasePlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      top_level: Optional plist in dictionary form.
+      top_level (Optional[dict[str, object]]): plist top-level key.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
 
@@ -162,8 +162,8 @@ class PlistPlugin(plugins.BasePlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      plist_name: Name of the plist file.
-      top_level: Plist in dictionary form.
+      plist_name (str): name of the plist.
+      top_level (dict[str, object]): plist top-level key.
 
     Raises:
       WrongPlistPlugin: If this plugin is not able to process the given file.

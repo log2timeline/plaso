@@ -5,7 +5,7 @@ import logging
 
 from plaso.containers import time_events
 from plaso.containers import windows_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -69,7 +69,7 @@ class USBPlugin(interface.WindowsRegistryPlugin):
         # Last USB connection per USB device recorded in the Registry.
         event = time_events.DateTimeValuesEvent(
             devicekey.last_written_time,
-            eventdata.EventTimestamp.LAST_CONNECTED)
+            definitions.TIME_DESCRIPTION_LAST_CONNECTED)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

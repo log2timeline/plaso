@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import mactime  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import mactime
 
@@ -41,7 +41,8 @@ class MactimeTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-05-25 15:59:43')
     self.assertEqual(event.timestamp, expected_timestamp)
-    self.assertEqual(event.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     self.assertEqual(event.inode, 16)
 
     event = events[22]
@@ -50,14 +51,14 @@ class MactimeTest(test_lib.ParserTestCase):
         u'2012-05-25 15:59:44')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
     event = events[23]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-05-25 15:59:45')
     self.assertEqual(event.timestamp, expected_timestamp)
-    self.assertEqual(event.timestamp_desc, eventdata.EventTimestamp.CHANGE_TIME)
+    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_CHANGE)
 
     expected_filename = u'/a_directory/another_file'
     self.assertEqual(event.filename, expected_filename)

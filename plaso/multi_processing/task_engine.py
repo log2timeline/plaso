@@ -11,6 +11,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 
 from plaso.containers import event_sources
+from plaso.containers import errors as error_containers
 from plaso.engine import extractors
 from plaso.engine import plaso_queue
 from plaso.engine import profiler
@@ -111,9 +112,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     super(TaskMultiProcessEngine, self).__init__()
     self._enable_sigsegv_handler = False
     self._filter_find_specs = None
+    self._guppy_memory_profiler = None
     self._last_worker_number = 0
     self._maximum_number_of_tasks = maximum_number_of_tasks
-    self._memory_profiler = None
     self._merge_task = None
     self._merge_task_on_hold = None
     self._number_of_consumed_errors = 0
@@ -141,6 +142,47 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._task_manager = task_manager.TaskManager()
     self._use_zeromq = use_zeromq
 
+  def _FillEventSourceHeap(
+      self, storage_writer, event_source_heap, start_with_first=False):
+    """Fills the event source heap with the available written event sources.
+
+    Args:
+      storage_writer (StorageWriter): storage writer for a session storage.
+      event_source_heap (_EventSourceHeap): event source heap.
+      start_with_first (Optional[bool]): True if the function should start
+          with the first written event source.
+    """
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'fill_event_source_heap')
+
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'get_event_source')
+
+    if start_with_first:
+      event_source = storage_writer.GetFirstWrittenEventSource()
+    else:
+      event_source = storage_writer.GetNextWrittenEventSource()
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'get_event_source')
+
+    while event_source:
+      try:
+        event_source_heap.PushEventSource(event_source)
+      except errors.HeapFull:
+        break
+
+      if self._processing_profiler:
+        self._processing_profiler.StartTiming(u'get_event_source')
+
+      event_source = storage_writer.GetNextWrittenEventSource()
+
+      if self._processing_profiler:
+        self._processing_profiler.StopTiming(u'get_event_source')
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'fill_event_source_heap')
+
   def _MergeTaskStorage(self, storage_writer):
     """Merges a task storage with the session storage.
 
@@ -155,7 +197,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if self._processing_profiler:
       self._processing_profiler.StartTiming(u'merge_check')
 
-    for task in self._task_manager.GetProcessingTasks():
+    for task in self._task_manager.GetTasksCheckMerge():
       if self._abort:
         break
 
@@ -170,7 +212,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if not self._storage_merge_reader_on_hold:
       task = self._task_manager.GetTaskPendingMerge(self._merge_task)
 
-    # Limit the number of attributes containers from a single task-based
+    # Limit the number of attribute containers from a single task-based
     # storage file that are merged per loop to keep tasks flowing.
     if task or self._storage_merge_reader:
       self._status = definitions.PROCESSING_STATUS_MERGING
@@ -188,10 +230,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._storage_merge_reader = storage_writer.StartMergeTaskStorage(
               task)
         except IOError as exception:
-          logging.error(
-              (u'Unable to merge results of task: {0:s} '
-               u'with error: {1:s}').format(
-                   task.identifier, exception))
+          logging.error((
+              u'Unable to merge results of task: {0:s} '
+              u'with error: {1:s}').format(task.identifier, exception))
           self._storage_merge_reader = None
 
       if self._storage_merge_reader:
@@ -282,8 +323,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
   def _ProfilingSampleMemory(self):
     """Creates a memory profiling sample."""
-    if self._memory_profiler:
-      self._memory_profiler.Sample()
+    if self._guppy_memory_profiler:
+      self._guppy_memory_profiler.Sample()
 
   def _ScheduleTask(self, task):
     """Schedules a task.
@@ -309,47 +350,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._processing_profiler.StopTiming(u'schedule_task')
 
     return is_scheduled
-
-  def _FillEventSourceHeap(
-      self, storage_writer, event_source_heap, start_with_first=False):
-    """Fills the event source heap with the available written event sources.
-
-    Args:
-      storage_writer (StorageWriter): storage writer for a session storage.
-      event_source_heap (_EventSourceHeap): event source heap.
-      start_with_first (Optional[bool]): True if the function should start
-          with the first written event source.
-    """
-    if self._processing_profiler:
-      self._processing_profiler.StartTiming(u'fill_event_source_heap')
-
-    if self._processing_profiler:
-      self._processing_profiler.StartTiming(u'get_event_source')
-
-    if start_with_first:
-      event_source = storage_writer.GetFirstWrittenEventSource()
-    else:
-      event_source = storage_writer.GetNextWrittenEventSource()
-
-    if self._processing_profiler:
-      self._processing_profiler.StopTiming(u'get_event_source')
-
-    while event_source:
-      try:
-        event_source_heap.PushEventSource(event_source)
-      except errors.HeapFull:
-        break
-
-      if self._processing_profiler:
-        self._processing_profiler.StartTiming(u'get_event_source')
-
-      event_source = storage_writer.GetNextWrittenEventSource()
-
-      if self._processing_profiler:
-        self._processing_profiler.StopTiming(u'get_event_source')
-
-    if self._processing_profiler:
-      self._processing_profiler.StopTiming(u'fill_event_source_heap')
 
   def _ScheduleTasks(self, storage_writer):
     """Schedules tasks.
@@ -384,18 +384,18 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           task = self._task_manager.CreateTask(self._session_identifier)
           task.file_entry_type = event_source.file_entry_type
           task.path_spec = event_source.path_spec
-          logging.debug(
-              u'Scheduled task {0:s} for path specification {1:s}'.format(
-                  task.identifier, task.path_spec.comparable))
           event_source = None
 
           self._number_of_consumed_sources += 1
 
-          if self._memory_profiler:
-            self._memory_profiler.Sample()
+          if self._guppy_memory_profiler:
+            self._guppy_memory_profiler.Sample()
 
         if task:
           if self._ScheduleTask(task):
+            logging.debug(
+                u'Scheduled task {0:s} for path specification {1:s}'.format(
+                    task.identifier, task.path_spec.comparable))
             task = None
 
         self._MergeTaskStorage(storage_writer)
@@ -413,6 +413,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._status_update_callback(self._processing_status)
 
     for task in self._task_manager.GetAbandonedTasks():
+      error = error_containers.ExtractionError(
+          message=u'Worker failed to process pathspec',
+          path_spec=task.path_spec)
+      self._storage_writer.AddError(error)
       self._processing_status.error_path_specs.append(task.path_spec)
 
     self._status = definitions.PROCESSING_STATUS_IDLE
@@ -436,9 +440,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     logging.debug(u'Starting worker process {0:s}'.format(process_name))
 
     if self._use_zeromq:
+      queue_name = u'{0:s} task queue'.format(process_name)
       task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
-          delay_open=True, name=u'{0:s} task queue'.format(process_name),
-          linger_seconds=0, port=self._task_queue_port,
+          delay_open=True, linger_seconds=0, name=queue_name,
+          port=self._task_queue_port,
           timeout_seconds=self._TASK_QUEUE_TIMEOUT_SECONDS)
     else:
       task_queue = self._task_queue
@@ -460,13 +465,13 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if not self._processing_configuration:
       return
 
-    if self._processing_configuration.profiling.HaveProfileMemory():
+    if self._processing_configuration.profiling.HaveProfileMemoryGuppy():
       identifier = u'{0:s}-memory'.format(self._name)
-      self._memory_profiler = profiler.GuppyMemoryProfiler(
+      self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
           identifier, path=self._processing_configuration.profiling.directory,
           profiling_sample_rate=(
               self._processing_configuration.profiling.sample_rate))
-      self._memory_profiler.Start()
+      self._guppy_memory_profiler.Start()
 
     if self._processing_configuration.profiling.HaveProfileProcessing():
       identifier = u'{0:s}-processing'.format(self._name)
@@ -548,9 +553,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
   def _StopProfiling(self):
     """Stops profiling."""
-    if self._memory_profiler:
-      self._memory_profiler.Sample()
-      self._memory_profiler = None
+    if self._guppy_memory_profiler:
+      self._guppy_memory_profiler.Sample()
+      self._guppy_memory_profiler = None
 
     if self._processing_profiler:
       self._processing_profiler.Write()
@@ -644,11 +649,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     try:
       task = self._task_manager.GetAbandonedTask(task_identifier)
-      logging.debug(
-          (u'Worker {0:s} is processing abandoned task: {1:s}. It was last '
-           u'updated at {2!s}.').format(
-               process.name, task.identifier, task.last_processing_time))
+      logging.debug((
+          u'Worker {0:s} is processing abandoned task: {1:s}. It was last '
+          u'updated at {2!s}.').format(
+              process.name, task.identifier, task.last_processing_time))
       self._task_manager.AdoptTask(task)
+
     except KeyError:
       logging.debug(
           u'Worker {0:s} is processing unknown task: {1:s}.'.format(
@@ -747,7 +753,15 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     for _ in range(number_of_worker_processes):
       extraction_process = self._StartWorkerProcess(storage_writer)
-      self._StartMonitoringProcess(extraction_process.pid)
+
+      try:
+        self._StartMonitoringProcess(extraction_process.pid)
+      except (IOError, KeyError) as exception:
+        logging.error((
+            u'Unable to monitor extraction worker process: {0:s} '
+            u'(PID: {1:d}) with error: {2:s}').format(
+                extraction_process.name, extraction_process.pid,
+                exception))
 
     self._StartStatusUpdateThread()
 

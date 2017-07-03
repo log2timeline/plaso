@@ -1,18 +1,29 @@
 # -*- coding: utf-8 -*-
 """The extraction CLI tool."""
 
-import os
-
 import yara
 
-from plaso.cli import status_view_tool
-from plaso.engine import engine
+from artifacts import errors as artifacts_errors
+from artifacts import reader as artifacts_reader
+from artifacts import registry as artifacts_registry
+
+# The following import makes sure the analyzers are registered.
+from plaso import analyzers  # pylint: disable=unused-import
+
+# The following import makes sure the parsers are registered.
+from plaso import parsers  # pylint: disable=unused-import
+
+from plaso.analyzers.hashers import manager as hashers_manager
+from plaso.cli import storage_media_tool
+from plaso.cli import views
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import py2to3
+from plaso.parsers import manager as parsers_manager
+from plaso.parsers import presets as parsers_presets
 
 
-class ExtractionTool(status_view_tool.StatusViewTool):
+class ExtractionTool(storage_media_tool.StorageMediaTool):
   """Class that implements an extraction CLI tool.
 
   Attributes:
@@ -20,8 +31,6 @@ class ExtractionTool(status_view_tool.StatusViewTool):
     list_parsers_and_plugins (bool): True if the parsers and plugins should
         be listed.
   """
-
-  _DEFAULT_PROFILING_SAMPLE_RATE = 1000
 
   # Approximately 250 MB of queued items per worker.
   _DEFAULT_QUEUE_SIZE = 125000
@@ -42,21 +51,20 @@ class ExtractionTool(status_view_tool.StatusViewTool):
     """
     super(ExtractionTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
+    self._artifacts_registry = None
     self._buffer_size = 0
-    self._enable_profiling = False
     self._filter_object = None
     self._force_preprocessing = False
+    self._hashers_manager = hashers_manager.HashersManager
     self._hasher_names_string = None
     self._mount_path = None
     self._operating_system = None
     self._output_module = None
     self._parser_filter_expression = None
+    self._parsers_manager = parsers_manager.ParsersManager
     self._preferred_year = None
     self._process_archives = False
     self._process_compressed_streams = True
-    self._profiling_directory = None
-    self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
-    self._profiling_type = u'all'
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._single_process_mode = False
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
@@ -65,6 +73,45 @@ class ExtractionTool(status_view_tool.StatusViewTool):
 
     self.list_hashers = False
     self.list_parsers_and_plugins = False
+
+  def _GetParserPresetsInformation(self):
+    """Retrieves the parser presets information.
+
+    Returns:
+      list[tuple]: contains:
+
+        str: parser preset name
+        str: parsers names corresponding to the preset
+    """
+    parser_presets_information = []
+    for preset_name, parser_names in sorted(parsers_presets.CATEGORIES.items()):
+      parser_presets_information.append((preset_name, u', '.join(parser_names)))
+
+    return parser_presets_information
+
+  def _ParseArtifactDefinitionsOption(self, options):
+    """Parses the artifact definitions option.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    path = getattr(options, u'artifact_definitions_path', None)
+    if not path:
+      return
+
+    self._artifacts_registry = artifacts_registry.ArtifactDefinitionsRegistry()
+    reader = artifacts_reader.YamlArtifactsReader()
+
+    try:
+      self._artifacts_registry.ReadFromDirectory(reader, path)
+
+    except (KeyError, artifacts_errors.FormatError) as exception:
+      raise errors.BadConfigObject((
+          u'Unable to read artifact definitions from: {0:s} with error: '
+          u'{1!s}').format(path, exception))
 
   def _ParseExtractionOptions(self, options):
     """Parses the extraction options.
@@ -75,30 +122,13 @@ class ExtractionTool(status_view_tool.StatusViewTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
+    self._ParseArtifactDefinitionsOption(options)
+
     self._hasher_names_string = getattr(
         options, u'hashers', self._DEFAULT_HASHER_STRING)
     if isinstance(self._hasher_names_string, py2to3.STRING_TYPES):
       if self._hasher_names_string.lower() == u'list':
         self.list_hashers = True
-
-    yara_rules_path = getattr(options, u'yara_rules_path', None)
-    if yara_rules_path:
-      try:
-        with open(yara_rules_path, 'rb') as rules_file:
-          yara_rules_string = rules_file.read()
-        # We try to parse the rules here, to check that the definitions are
-        # valid. We then pass the string definitions along to the workers, so
-        # that they don't need read access to the rules file.
-        yara.compile(source=yara_rules_string)
-        self._yara_rules_string = yara_rules_string
-      except IOError as exception:
-        raise errors.BadConfigObject(
-            u'Unable to read Yara rules file: {0:s}, error was: {1!s}'.format(
-                yara_rules_path, exception))
-      except yara.Error as exception:
-        raise errors.BadConfigObject(
-            u'Unable to parse Yara rules in: {0:s}, error was: {1!s}'.format(
-                yara_rules_path, exception))
 
     parser_filter_expression = self.ParseStringOption(
         options, u'parsers', default_value=u'')
@@ -111,17 +141,13 @@ class ExtractionTool(status_view_tool.StatusViewTool):
 
     self._force_preprocessing = getattr(options, u'preprocess', False)
 
-    self._preferred_year = getattr(options, u'preferred_year', None)
-    if self._preferred_year:
-      try:
-        self._preferred_year = int(self._preferred_year, 10)
-      except ValueError:
-        raise errors.BadConfigOption(
-            u'Invalid preferred year: {0:s}.'.format(self._preferred_year))
+    self._preferred_year = self.ParseNumericOption(options, u'preferred_year')
 
     self._process_archives = getattr(options, u'process_archives', False)
     self._process_compressed_streams = getattr(
         options, u'process_compressed_streams', True)
+
+    self._ParseYaraRulesOption(options)
 
   def _ParsePerformanceOptions(self, options):
     """Parses the performance options.
@@ -147,42 +173,7 @@ class ExtractionTool(status_view_tool.StatusViewTool):
         raise errors.BadConfigOption(
             u'Invalid buffer size: {0:s}.'.format(self._buffer_size))
 
-    queue_size = getattr(options, u'queue_size', None)
-    if queue_size:
-      try:
-        self._queue_size = int(queue_size, 10)
-      except ValueError:
-        raise errors.BadConfigOption(
-            u'Invalid queue size: {0:s}.'.format(queue_size))
-
-  def _ParseProfilingOptions(self, options):
-    """Parses the profiling options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    self._enable_profiling = getattr(options, u'enable_profiling', False)
-
-    self._profiling_directory = getattr(options, u'profiling_directory', None)
-    if (self._profiling_directory and
-        not os.path.isdir(self._profiling_directory)):
-      raise errors.BadConfigOption(
-          u'No such profiling directory: {0:s}'.format(
-              self._profiling_directory))
-
-    profiling_sample_rate = getattr(options, u'profiling_sample_rate', None)
-    if profiling_sample_rate:
-      try:
-        self._profiling_sample_rate = int(profiling_sample_rate, 10)
-      except ValueError:
-        raise errors.BadConfigOption(
-            u'Invalid profile sample rate: {0:s}.'.format(
-                profiling_sample_rate))
-
-    self._profiling_type = getattr(options, u'profiling_type', u'all')
+    self._queue_size = self.ParseNumericOption(options, u'queue_size')
 
   def _ParseStorageOptions(self, options):
     """Parses the storage options.
@@ -201,12 +192,54 @@ class ExtractionTool(status_view_tool.StatusViewTool):
               serializer_format))
     self._storage_serializer_format = serializer_format
 
+  def _ParseYaraRulesOption(self, options):
+    """Parses the yara rules option.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    path = getattr(options, u'yara_rules_path', None)
+    if not path:
+      return
+
+    try:
+      with open(path, 'rb') as rules_file:
+        self._yara_rules_string = rules_file.read()
+
+    except IOError as exception:
+      raise errors.BadConfigObject(
+          u'Unable to read Yara rules file: {0:s} with error: {1!s}'.format(
+              path, exception))
+
+    try:
+      # We try to parse the rules here, to check that the definitions are
+      # valid. We then pass the string definitions along to the workers, so
+      # that they don't need read access to the rules file.
+      yara.compile(source=self._yara_rules_string)
+
+    except yara.Error as exception:
+      raise errors.BadConfigObject(
+          u'Unable to parse Yara rules in: {0:s} with error: {1!s}'.format(
+              path, exception))
+
   def AddExtractionOptions(self, argument_group):
     """Adds the extraction options to the argument group.
 
     Args:
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
+    argument_group.add_argument(
+        u'--artifact_definitions', u'--artifact-definitions',
+        dest=u'artifact_definitions_path', type=str, metavar=u'PATH',
+        action=u'store', help=(
+            u'Path to a directory containing artifact definitions. Artifact '
+            u'definitions can be used to describe and quickly collect data '
+            u'data of interest, such as specific files or Windows Registry '
+            u'keys.'))
+
     argument_group.add_argument(
         u'--hashers', dest=u'hashers', type=str, action=u'store',
         default=self._DEFAULT_HASHER_STRING, metavar=u'HASHER_LIST', help=(
@@ -215,11 +248,6 @@ class ExtractionTool(status_view_tool.StatusViewTool):
             u'"md5,sha256". "all" indicates that all hashers should be '
             u'enabled. "none" disables all hashers. Use "--hashers list" or '
             u'"--info" to list the available hashers.'))
-
-    argument_group.add_argument(
-        u'--yara_rules', u'--yara-rules', dest=u'yara_rules_path',
-        type=str, metavar=u'PATH', action=u'store', help=(
-            u'Path to a file containing Yara rules definitions.'))
 
     # TODO: rename option name to parser_filter_expression.
     argument_group.add_argument(
@@ -265,6 +293,11 @@ class ExtractionTool(status_view_tool.StatusViewTool):
             u'Skip processing file content within compressed streams, such as '
             u'syslog.gz and syslog.bz2.'))
 
+    argument_group.add_argument(
+        u'--yara_rules', u'--yara-rules', dest=u'yara_rules_path',
+        type=str, metavar=u'PATH', action=u'store', help=(
+            u'Path to a file containing Yara rules definitions.'))
+
   def AddPerformanceOptions(self, argument_group):
     """Adds the performance options to the argument group.
 
@@ -282,43 +315,51 @@ class ExtractionTool(status_view_tool.StatusViewTool):
             u'The maximum number of queued items per worker '
             u'(defaults to {0:d})').format(self._DEFAULT_QUEUE_SIZE))
 
-  def AddProfilingOptions(self, argument_group):
-    """Adds the profiling options to the argument group.
+  def ListHashers(self):
+    """Lists information about the available hashers."""
+    hashers_information = self._hashers_manager.GetHashersInformation()
 
-    Args:
-      argument_group (argparse._ArgumentGroup): argparse argument group.
-    """
-    argument_group.add_argument(
-        u'--profile', dest=u'enable_profiling', action=u'store_true',
-        default=False, help=(
-            u'Enable profiling. Intended usage is to troubleshoot memory '
-            u'and performance issues.'))
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Hashers')
 
-    argument_group.add_argument(
-        u'--profiling_directory', u'--profiling-directory',
-        dest=u'profiling_directory', type=str, action=u'store',
-        metavar=u'DIRECTORY', help=(
-            u'Path to the directory that should be used to store the profiling '
-            u'sample files. By default the sample files are stored in the '
-            u'current working directory.'))
+    for name, description in sorted(hashers_information):
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
 
-    argument_group.add_argument(
-        u'--profiling_sample_rate', u'--profiling-sample-rate',
-        dest=u'profiling_sample_rate', action=u'store', metavar=u'SAMPLE_RATE',
-        default=0, help=(
-            u'The profiling sample rate (defaults to a sample every {0:d} '
-            u'files).').format(self._DEFAULT_PROFILING_SAMPLE_RATE))
+  def ListParsersAndPlugins(self):
+    """Lists information about the available parsers and plugins."""
+    parsers_information = self._parsers_manager.GetParsersInformation()
 
-    profiling_types = [u'all', u'parsers', u'processing', u'serializers']
-    if engine.BaseEngine.SupportsMemoryProfiling():
-      profiling_types.append(u'memory')
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Parsers')
 
-    argument_group.add_argument(
-        u'--profiling_type', u'--profiling-type', dest=u'profiling_type',
-        choices=sorted(profiling_types), action=u'store',
-        metavar=u'TYPE', default=None, help=(
-            u'The profiling type: "all", "memory", "parsers", "processing" '
-            u'or "serializers".'))
+    for name, description in sorted(parsers_information):
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
+
+    parser_names = self._parsers_manager.GetNamesOfParsersWithPlugins()
+    for parser_name in parser_names:
+      plugins_information = self._parsers_manager.GetParserPluginsInformation(
+          parser_filter_expression=parser_name)
+
+      table_title = u'Parser plugins: {0:s}'.format(parser_name)
+      table_view = views.ViewsFactory.GetTableView(
+          self._views_format_type, column_names=[u'Name', u'Description'],
+          title=table_title)
+      for name, description in sorted(plugins_information):
+        table_view.AddRow([name, description])
+      table_view.Write(self._output_writer)
+
+    presets_information = self._GetParserPresetsInformation()
+
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Parsers and plugins'],
+        title=u'Parser presets')
+    for name, description in sorted(presets_information):
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
 
   def ParseOptions(self, options):
     """Parses tool specific options.
@@ -333,5 +374,4 @@ class ExtractionTool(status_view_tool.StatusViewTool):
     self._ParseDataLocationOption(options)
     self._ParseFilterOptions(options)
     self._ParsePerformanceOptions(options)
-    self._ParseProfilingOptions(options)
     self._ParseStorageOptions(options)

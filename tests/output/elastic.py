@@ -7,7 +7,7 @@ import unittest
 from mock import MagicMock
 
 from plaso.containers import events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.output import elastic
 
@@ -33,7 +33,7 @@ class ElasticTestEvent(events.EventObject):
     self.text = (
         u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
         u'closed for user root)')
-    self.timestamp_desc = eventdata.EventTimestamp.WRITTEN_TIME
+    self.timestamp_desc = definitions.TIME_DESCRIPTION_WRITTEN
     self.timestamp = event_timestamp
 
 

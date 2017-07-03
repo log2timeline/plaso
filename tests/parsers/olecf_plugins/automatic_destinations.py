@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import olecf  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.olecf_plugins import automatic_destinations
 
@@ -33,7 +33,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     self.assertEqual(event_object.data_type, u'olecf:dest_list:entry')
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-04-01 13:52:38.997538')
@@ -125,7 +125,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     self.assertEqual(event_object.data_type, u'olecf:dest_list:entry')
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-01-17 13:08:08.247504')
@@ -154,7 +154,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
 
     self.assertEqual(event_object.data_type, u'windows:lnk:link')
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.NOT_A_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_NOT_A_TIME)
 
 
 if __name__ == '__main__':

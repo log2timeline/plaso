@@ -9,7 +9,7 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.containers import windows_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -127,7 +127,7 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
 
       # TODO: determine if this should be last written time.
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     event_data = windows_events.WindowsRegistryEventData()
@@ -137,7 +137,7 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
     event_data.source_append = self._SOURCE_APPEND
 
     event = time_events.DateTimeValuesEvent(
-        registry_key.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+        registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

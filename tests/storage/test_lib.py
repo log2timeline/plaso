@@ -6,7 +6,7 @@ from dfdatetime import filetime as dfdatetime_filetime
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.containers import windows_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 
 from tests import test_lib as shared_test_lib
@@ -33,7 +33,7 @@ class StorageTestCase(shared_test_lib.BaseTestCase):
 
     filetime.CopyFromString(u'2012-04-20 22:38:46.929596')
     event = time_events.DateTimeValuesEvent(
-        filetime, eventdata.EventTimestamp.WRITTEN_TIME)
+        filetime, definitions.TIME_DESCRIPTION_WRITTEN)
 
     self._MergeEventAndEventData(event, event_data)
     test_events.append(event)
@@ -46,7 +46,7 @@ class StorageTestCase(shared_test_lib.BaseTestCase):
 
     filetime.CopyFromString(u'2012-04-20 23:56:46.929596')
     event = time_events.DateTimeValuesEvent(
-        filetime, eventdata.EventTimestamp.WRITTEN_TIME)
+        filetime, definitions.TIME_DESCRIPTION_WRITTEN)
 
     self._MergeEventAndEventData(event, event_data)
     test_events.append(event)
@@ -58,7 +58,7 @@ class StorageTestCase(shared_test_lib.BaseTestCase):
 
     filetime.CopyFromString(u'2012-04-20 16:44:46')
     event = time_events.DateTimeValuesEvent(
-        filetime, eventdata.EventTimestamp.WRITTEN_TIME)
+        filetime, definitions.TIME_DESCRIPTION_WRITTEN)
 
     self._MergeEventAndEventData(event, event_data)
     test_events.append(event)
@@ -67,7 +67,7 @@ class StorageTestCase(shared_test_lib.BaseTestCase):
 
     # TODO: refactor to use event data.
     event = time_events.TimestampEvent(
-        timestamp, eventdata.EventTimestamp.WRITTEN_TIME,
+        timestamp, definitions.TIME_DESCRIPTION_WRITTEN,
         data_type=u'text:entry')
     event.hostname = u'nomachine'
     event.offset = 12

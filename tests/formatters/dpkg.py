@@ -8,7 +8,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import time_events
 from plaso.formatters import dpkg
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from tests.formatters import test_lib
 
 
@@ -33,7 +33,7 @@ class DpkgFormatterTest(test_lib.EventFormatterTestCase):
     date_time.CopyFromString(u'2016-08-09 04:57:14')
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+        date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
     event.data_type = u'dpkg:line'
     event.body = u'status half-installed base-passwd:amd64 3.5.33'
 

@@ -7,7 +7,7 @@ import mock
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import nsrlsvr
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 
 from tests.analysis import test_lib
@@ -51,14 +51,14 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
 
   _TEST_EVENTS = [
       {u'timestamp': timelib.Timestamp.CopyFromString(u'2015-01-01 17:00:00'),
-       u'timestamp_desc': eventdata.EventTimestamp.CREATION_TIME,
+       u'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
        u'sha256_hash': EVENT_1_HASH,
        u'data_type': u'fs:stat',
        u'pathspec': fake_path_spec.FakePathSpec(
            location=u'C:\\WINDOWS\\system32\\good.exe')
       },
       {u'timestamp': timelib.Timestamp.CopyFromString(u'2016-01-01 17:00:00'),
-       u'timestamp_desc': eventdata.EventTimestamp.CREATION_TIME,
+       u'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
        u'sha256_hash': _EVENT_2_HASH,
        u'data_type': u'fs:stat:ntfs',
        u'pathspec': fake_path_spec.FakePathSpec(
@@ -94,6 +94,7 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
     plugin = nsrlsvr.NsrlsvrAnalysisPlugin()
     plugin.SetHost(u'localhost')
     plugin.SetPort(9120)
+    plugin.SetLabel(u'nsrl_present')
 
     storage_writer = self._AnalyzeEvents(events, plugin)
 

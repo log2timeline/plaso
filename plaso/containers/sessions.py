@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Session related attribute container object definitions."""
+"""Session related attribute container definitions."""
 
 import collections
 import time
@@ -11,7 +11,7 @@ from plaso.containers import manager
 
 
 class Session(interface.AttributeContainer):
-  """Class to represent a session attribute container.
+  """Session attribute container.
 
   Attributes:
     aborted (bool): True if the session was aborted.
@@ -60,7 +60,7 @@ class Session(interface.AttributeContainer):
     self.preferred_time_zone = u'UTC'
     self.preferred_year = None
     self.product_name = u'plaso'
-    self.product_version = plaso.GetVersion()
+    self.product_version = plaso.__version__
     self.start_time = int(time.time() * 1000000)
 
   def CopyAttributesFromSessionCompletion(self, session_completion):
@@ -150,7 +150,7 @@ class Session(interface.AttributeContainer):
 
 
 class SessionCompletion(interface.AttributeContainer):
-  """Class to represent a session completion attribute container.
+  """Session completion attribute container.
 
   Attributes:
     aborted (bool): True if the session was aborted.
@@ -183,7 +183,7 @@ class SessionCompletion(interface.AttributeContainer):
 
 
 class SessionStart(interface.AttributeContainer):
-  """Class to represent a session start attribute container.
+  """Session start attribute container.
 
   Attributes:
     command_line_arguments (str): command line arguments.

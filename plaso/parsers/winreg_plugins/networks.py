@@ -9,7 +9,7 @@ from dfdatetime import systemtime as dfdatetime_systemtime
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -176,7 +176,7 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
 
         if date_time:
           event = time_events.DateTimeValuesEvent(
-              date_time, eventdata.EventTimestamp.CREATION_TIME)
+              date_time, definitions.TIME_DESCRIPTION_CREATION)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
       date_last_connected_value = subkey.GetValueByName(u'DateLastConnected')
@@ -209,7 +209,7 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
 
         if date_time:
           event = time_events.DateTimeValuesEvent(
-              date_time, eventdata.EventTimestamp.LAST_CONNECTED)
+              date_time, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

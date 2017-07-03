@@ -4,11 +4,12 @@
 import datetime
 import os
 
-from plaso.cli import status_view_tool
+from plaso.cli import storage_media_tool
 from plaso.lib import errors
+from plaso.parsers import manager as parsers_manager
 
 
-class ExtractionAndAnalysisTool(status_view_tool.StatusViewTool):
+class ExtractionAndAnalysisTool(storage_media_tool.StorageMediaTool):
   """Class that implements a combined extraction and analysis CLI tool."""
 
   def __init__(self, input_reader=None, output_writer=None):
@@ -21,6 +22,7 @@ class ExtractionAndAnalysisTool(status_view_tool.StatusViewTool):
     """
     super(ExtractionAndAnalysisTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
+    self._parsers_manager = parsers_manager.ParsersManager
     self._storage_file_path = None
 
   def _GenerateStorageFileName(self):

@@ -4,7 +4,12 @@
 import datetime
 import logging
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from plaso.containers import plist_event
+from plaso.containers import time_events
+from plaso.lib import definitions
+from plaso.lib import timelib
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
@@ -21,12 +26,22 @@ class DefaultPlugin(interface.PlistPlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      top_level: Plist in dictionary form.
+      top_level (dict[str, object]): plist top-level key.
     """
     for root, key, value in interface.RecurseKey(top_level):
-      if isinstance(value, datetime.datetime):
-        event_object = plist_event.PlistEvent(root, key, value)
-        parser_mediator.ProduceEvent(event_object)
+      if not isinstance(value, datetime.datetime):
+        continue
+
+      event_data = plist_event.PlistTimeEventData()
+      event_data.key = key
+      event_data.root = root
+
+      timestamp = timelib.Timestamp.FromPythonDatetime(value)
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
       # TODO: Binplist keeps a list of offsets but not mapped to a key.
       # adjust code when there is a way to map keys to offsets.
@@ -46,8 +61,8 @@ class DefaultPlugin(interface.PlistPlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      plist_name: Name of the plist file.
-      top_level: Plist in dictionary form.
+      plist_name (str): name of the plist.
+      top_level (dict[str, object]): plist top-level key.
     """
     logging.debug(u'Plist {0:s} plugin used for: {1:s}'.format(
         self.NAME, plist_name))

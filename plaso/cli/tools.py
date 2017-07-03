@@ -15,7 +15,9 @@ except ImportError:
   win32console = None
 
 import plaso
+
 from plaso.cli import views
+from plaso.engine import engine
 from plaso.lib import errors
 from plaso.lib import py2to3
 
@@ -26,6 +28,7 @@ class CLITool(object):
   """Class that implements a CLI tool.
 
   Attributes:
+    list_profilers (bool): True if the profilers should be listed.
     list_timezones (bool): True if the time zones should be listed.
     preferred_encoding (str): preferred encoding of single-byte or multi-byte
         character strings, sometimes referred to as extended ASCII.
@@ -35,6 +38,17 @@ class CLITool(object):
 
   # The fall back preferred encoding.
   _PREFERRED_ENCODING = u'utf-8'
+
+  _PROFILERS_INFORMATION = {
+      u'parsers': u'Profile CPU time per parser',
+      u'processing': u'Profile CPU time of processing phases',
+      u'serializers': u'Profile CPU time of serialization'}
+
+  if engine.BaseEngine.SupportsGuppyMemoryProfiling():
+    _PROFILERS_INFORMATION[u'guppy'] = (
+        u'Profile memory usage per process using guppy')
+
+  _DEFAULT_PROFILING_SAMPLE_RATE = 1000
 
   NAME = u''
 
@@ -65,9 +79,13 @@ class CLITool(object):
     self._log_file = None
     self._output_writer = output_writer
     self._preferred_time_zone = None
+    self._profilers = set()
+    self._profiling_directory = None
+    self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._quiet_mode = False
     self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
 
+    self.list_profilers = False
     self.list_timezones = False
     self.preferred_encoding = preferred_encoding
 
@@ -209,6 +227,48 @@ class CLITool(object):
           u'Cannot use debug and quiet mode at the same time, defaulting to '
           u'debug output.')
 
+  def _ParseProfilingOptions(self, options):
+    """Parses the profiling options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    profilers_string = self.ParseStringOption(options, u'profilers')
+    if isinstance(profilers_string, py2to3.STRING_TYPES):
+      if profilers_string.lower() == u'list':
+        self.list_profilers = True
+
+      elif profilers_string:
+        profilers = set(profilers_string.split(u','))
+
+        supported_profilers = set(self._PROFILERS_INFORMATION.keys())
+        unsupported_profilers = profilers.difference(supported_profilers)
+        if unsupported_profilers:
+          unsupported_profilers = u', '.join(unsupported_profilers)
+          raise errors.BadConfigOption(
+              u'Unsupported profilers: {0:s}'.format(unsupported_profilers))
+
+        self._profilers = profilers
+
+    self._profiling_directory = getattr(options, u'profiling_directory', None)
+    if (self._profiling_directory and
+        not os.path.isdir(self._profiling_directory)):
+      raise errors.BadConfigOption(
+          u'No such profiling directory: {0:s}'.format(
+              self._profiling_directory))
+
+    profiling_sample_rate = getattr(options, u'profiling_sample_rate', None)
+    if profiling_sample_rate:
+      try:
+        self._profiling_sample_rate = int(profiling_sample_rate, 10)
+      except ValueError:
+        raise errors.BadConfigOption(
+            u'Invalid profile sample rate: {0:s}.'.format(
+                profiling_sample_rate))
+
   def _ParseTimezoneOption(self, options):
     """Parses the timezone options.
 
@@ -239,7 +299,7 @@ class CLITool(object):
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     version_string = u'plaso - {0:s} version {1:s}'.format(
-        self.NAME, plaso.GetVersion())
+        self.NAME, plaso.__version__)
 
     # We want a custom help message and not the default argparse one.
     argument_group.add_argument(
@@ -286,8 +346,36 @@ class CLITool(object):
             u'If defined all log messages will be redirected to this file '
             u'instead the default STDERR.'))
 
-  def AddTimezoneOption(self, argument_group):
-    """Adds the timezone option to the argument group.
+  def AddProfilingOptions(self, argument_group):
+    """Adds the profiling options to the argument group.
+
+    Args:
+      argument_group (argparse._ArgumentGroup): argparse argument group.
+    """
+    argument_group.add_argument(
+        u'--profilers', dest=u'profilers', type=str, action=u'store',
+        default=u'', metavar=u'PROFILERS_LIST', help=(
+            u'Define a list of profilers to use by the tool. This is a comma '
+            u'separated list where each entry is the name of a profiler. '
+            u'Use "--profilers list" to list the available profilers.'))
+
+    argument_group.add_argument(
+        u'--profiling_directory', u'--profiling-directory',
+        dest=u'profiling_directory', type=str, action=u'store',
+        metavar=u'DIRECTORY', help=(
+            u'Path to the directory that should be used to store the profiling '
+            u'sample files. By default the sample files are stored in the '
+            u'current working directory.'))
+
+    argument_group.add_argument(
+        u'--profiling_sample_rate', u'--profiling-sample-rate',
+        dest=u'profiling_sample_rate', action=u'store', metavar=u'SAMPLE_RATE',
+        default=0, help=(
+            u'The profiling sample rate (defaults to a sample every {0:d} '
+            u'files).').format(self._DEFAULT_PROFILING_SAMPLE_RATE))
+
+  def AddTimeZoneOption(self, argument_group):
+    """Adds the time zone option to the argument group.
 
     Args:
       argument_group (argparse._ArgumentGroup): argparse argument group.
@@ -332,6 +420,16 @@ class CLITool(object):
 
     return u' '.join(command_line_arguments)
 
+  def ListProfilers(self):
+    """Lists information about the available profilers."""
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Profilers')
+
+    for name, description in sorted(self._PROFILERS_INFORMATION.items()):
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
+
   def ListTimeZones(self):
     """Lists the timezones."""
     max_length = 0
@@ -359,6 +457,36 @@ class CLITool(object):
       table_view.AddRow([timezone_name, diff_string])
 
     table_view.Write(self._output_writer)
+
+  def ParseNumericOption(self, options, name, base=10, default_value=None):
+    """Parses a numeric option.
+
+    If the option is not set the default value is returned.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+      name (str): name of the numeric option.
+      base (Optional[int]): base of the numeric value.
+      default_value (Optional[object]): default value.
+
+    Returns:
+      int: numeric value.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    numeric_value = getattr(options, name, None)
+    if not numeric_value:
+      return default_value
+
+    try:
+      return int(numeric_value, base)
+
+    except (TypeError, ValueError):
+      name = name.replace(u'_', u' ')
+      raise errors.BadConfigOption(
+          u'Unsupported numeric value {0:s}: {1!s}.'.format(
+              name, numeric_value))
 
   def ParseOptions(self, options):
     """Parses tool specific options.
@@ -391,7 +519,7 @@ class CLITool(object):
 
     Raises:
       BadConfigOption: if the command line argument value cannot be converted
-                       to a Unicode string.
+          to a Unicode string.
     """
     argument_value = getattr(options, argument_name, None)
     if not argument_value:

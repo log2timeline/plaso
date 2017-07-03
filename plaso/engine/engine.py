@@ -8,6 +8,7 @@ from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.engine import processing_status
 from plaso.engine import profiler
@@ -16,7 +17,7 @@ from plaso.preprocessors import manager as preprocess_manager
 
 
 class BaseEngine(object):
-  """Class that defines the processing engine base.
+  """Processing engine interface.
 
   Attributes:
     knowledge_base: the knowledge base object (instance of KnowledgeBase).
@@ -34,7 +35,7 @@ class BaseEngine(object):
     self.knowledge_base = knowledge_base.KnowledgeBase()
 
   def _GuessOS(self, searcher):
-    """Returns a string representing what we think the underlying OS is.
+    """Tries to determine the underlying operating system.
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
@@ -82,6 +83,37 @@ class BaseEngine(object):
 
     return definitions.OPERATING_SYSTEM_UNKNOWN
 
+  @classmethod
+  def CreateSession(
+      cls, command_line_arguments=None, debug_mode=False,
+      filter_expression=None, filter_file=None, preferred_encoding=u'utf-8',
+      preferred_time_zone=None, preferred_year=None):
+    """Creates a session attribute containiner.
+
+    Args:
+      command_line_arguments (Optional[str]): the command line arguments.
+      debug_mode (bool): True if debug mode was enabled.
+      filter_expression (str): expression to filter events.
+      filter_file (Optional[str]): path to a file with find specifications.
+      preferred_encoding (Optional[str]): preferred encoding.
+      preferred_time_zone (Optional[str]): preferred time zone.
+      preferred_year (Optional[int]): preferred year.
+
+    Returns:
+      Session: session attribute container.
+    """
+    session = sessions.Session()
+
+    session.command_line_arguments = command_line_arguments
+    session.debug_mode = debug_mode
+    session.filter_expression = filter_expression
+    session.filter_file = filter_file
+    session.preferred_encoding = preferred_encoding
+    session.preferred_time_zone = preferred_time_zone
+    session.preferred_year = preferred_year
+
+    return session
+
   def GetSourceFileSystem(self, source_path_spec, resolver_context=None):
     """Retrieves the file system of the source.
 
@@ -123,7 +155,7 @@ class BaseEngine(object):
     Args:
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
-      resolver_context (dfvfs.Context): resolver context.
+      resolver_context (Optional[dfvfs.Context]): resolver context.
     """
     platforms = []
     for source_path_spec in source_path_specs:
@@ -154,10 +186,10 @@ class BaseEngine(object):
       self.knowledge_base.platform = platforms[0]
 
   @classmethod
-  def SupportsMemoryProfiling(cls):
-    """Determines if memory profiling is supported.
+  def SupportsGuppyMemoryProfiling(cls):
+    """Determines if memory profiling with guppy is supported.
 
     Returns:
-      bool: True if memory profiling is supported.
+      bool: True if memory profiling with guppy is supported.
     """
     return profiler.GuppyMemoryProfiler.IsSupported()

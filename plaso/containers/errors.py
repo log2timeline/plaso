@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Error related attribute container object definitions."""
+"""Error attribute containers."""
 
 from plaso.containers import interface
 from plaso.containers import manager
@@ -9,7 +9,7 @@ from plaso.containers import manager
 
 
 class ExtractionError(interface.AttributeContainer):
-  """Class to represent an extraction error attribute container.
+  """Extraction error attribute container.
 
   Attributes:
     message (str): error message.

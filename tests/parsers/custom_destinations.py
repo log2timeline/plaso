@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import winlnk  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import custom_destinations
 
@@ -33,7 +33,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-13 23:55:56.248103')
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The creation timestamp.
@@ -42,7 +42,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-13 23:55:56.248103')
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The last modification timestamp.
@@ -51,7 +51,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-14 01:39:11.388000')
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (

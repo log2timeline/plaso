@@ -11,7 +11,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import binary
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -211,7 +211,7 @@ class WinJobParser(interface.FileObjectParser):
 
     if date_time:
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.LAST_RUNTIME)
+          date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     for index in range(job_variable_struct.number_of_triggers):

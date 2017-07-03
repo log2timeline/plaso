@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import bencode_parser  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import bencode_parser
 
@@ -38,7 +38,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     self.assertEqual(event_object.path, expected_path)
     self.assertEqual(event_object.seedtime, 511)
 
-    expected_description = eventdata.EventTimestamp.ADDED_TIME
+    expected_description = definitions.TIME_DESCRIPTION_ADDED
     self.assertEqual(event_object.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
@@ -52,7 +52,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     self.assertEqual(event_object.path, expected_path)
     self.assertEqual(event_object.seedtime, 511)
 
-    expected_description = eventdata.EventTimestamp.FILE_DOWNLOADED
+    expected_description = definitions.TIME_DESCRIPTION_FILE_DOWNLOADED
     self.assertEqual(event_object.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
@@ -66,7 +66,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     self.assertEqual(event_object.path, expected_path)
     self.assertEqual(event_object.seedtime, 511)
 
-    expected_description = eventdata.EventTimestamp.MODIFICATION_TIME
+    expected_description = definitions.TIME_DESCRIPTION_MODIFICATION
     self.assertEqual(event_object.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
@@ -80,7 +80,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     self.assertEqual(event_object.path, expected_path)
     self.assertEqual(event_object.seedtime, 511)
 
-    expected_description = eventdata.EventTimestamp.MODIFICATION_TIME
+    expected_description = definitions.TIME_DESCRIPTION_MODIFICATION
     self.assertEqual(event_object.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(

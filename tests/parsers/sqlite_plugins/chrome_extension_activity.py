@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import chrome_extension_activity  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import chrome_extension_activity
@@ -30,7 +30,7 @@ class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
     event_object = storage_writer.events[0]
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.UNKNOWN)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_UNKNOWN)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-11-25 21:08:23.698737')
