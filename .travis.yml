@@ -7,17 +7,16 @@ matrix:
     group: edge
     python: 2.7
     env: TOXENV=py27
-  - os: osx
-    osx_image: xcode8.1
-    language: generic
-    env: PYTHONPATH=/Library/Python/2.7/site-packages/
-  exclude:
   - os: linux
     dist: trusty
     sudo: required
     group: edge
     python: 3.4
     env: TOXENV=py34
+  - os: osx
+    osx_image: xcode8.1
+    language: generic
+    env: PYTHONPATH=/Library/Python/2.7/site-packages/
 install:
   - ./config/travis/install.sh
 script:
