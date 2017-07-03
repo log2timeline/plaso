@@ -2,7 +2,7 @@ pip >= 7.0.0
 PyYAML >= 3.10
 XlsxWriter >= 0.9.3
 artifacts >= 20150409
-bencode
+bencode.py
 binplist >= 0.1.4
 construct >= 2.5.2,<= 2.5.3
 dfdatetime >= 20170529
