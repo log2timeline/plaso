@@ -127,7 +127,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     test_view.SetSourceInformation(
         u'/test/source/path', dfvfs_definitions.SOURCE_TYPE_DIRECTORY)
 
-    test_view.PrintExtractionStatusHeader()
+    test_view.PrintExtractionStatusHeader(None)
 
   # TODO: add tests for PrintExtractionSummary
   # TODO: add tests for SetMode

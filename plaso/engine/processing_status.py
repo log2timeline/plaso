@@ -59,7 +59,7 @@ class ProcessStatus(object):
   """
 
   def __init__(self):
-    """Initializes a process status object."""
+    """Initializes a process status."""
     super(ProcessStatus, self).__init__()
     self.display_name = None
     self.identifier = None
@@ -304,6 +304,27 @@ class ProcessStatus(object):
     return consumed_sources_delta > 0 or produced_sources_delta > 0
 
 
+class TasksStatus(object):
+  """The status of the tasks.
+
+  Attributes:
+    number_of_abandoned_tasks (int): number of abandoned tasks.
+    number_of_active_tasks (int): number of active tasks.
+    number_of_tasks_pending_merge (int): number of tasks pending merge.
+    number_of_tasks_processing (int): number of tasks processing.
+    total_number_of_tasks (int): total number of tasks.
+  """
+
+  def __init__(self):
+    """Initializes a tasks status."""
+    super(TasksStatus, self).__init__()
+    self.number_of_abandoned_tasks = 0
+    self.number_of_active_tasks = 0
+    self.number_of_tasks_pending_merge = 0
+    self.number_of_tasks_processing = 0
+    self.total_number_of_tasks = 0
+
+
 class ProcessingStatus(object):
   """The status of the overall extraction process (processing).
 
@@ -312,16 +333,18 @@ class ProcessingStatus(object):
     error_path_specs (list[dfvfs.PathSpec]): path specifications that
         caused critical errors during processing.
     foreman_status (ProcessingStatus): foreman processing status.
+    tasks_status (TasksStatus): status information about tasks.
   """
 
   def __init__(self):
-    """Initializes a processing status object."""
+    """Initializes a processing status."""
     super(ProcessingStatus, self).__init__()
     self._workers_status = {}
 
     self.aborted = False
     self.error_path_specs = []
     self.foreman_status = None
+    self.tasks_status = None
 
   @property
   def workers_status(self):
@@ -439,6 +462,14 @@ class ProcessingStatus(object):
         number_of_consumed_event_tags, number_of_produced_event_tags,
         number_of_consumed_errors, number_of_produced_errors,
         number_of_consumed_reports, number_of_produced_reports)
+
+  def UpdateTasksStatus(self, tasks_status):
+    """Updates the tasks status.
+
+    Args:
+      tasks_status (TasksStatus): status information about tasks.
+    """
+    self.tasks_status = tasks_status
 
   def UpdateWorkerStatus(
       self, identifier, status, pid, used_memory, display_name,

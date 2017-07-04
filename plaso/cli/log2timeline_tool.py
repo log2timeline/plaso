@@ -498,7 +498,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     try:
       self.ParseOptions(options)
     except errors.BadConfigOption as exception:
-      self._output_writer.Write(u'ERROR: {0:s}'.format(exception))
+      self._output_writer.Write(u'ERROR: {0!s}'.format(exception))
       self._output_writer.Write(u'\n')
       self._output_writer.Write(argument_parser.format_usage())
       return False
@@ -615,7 +615,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         self._status_view.GetExtractionStatusUpdateCallback())
 
     self._output_writer.Write(u'\n')
-    self._status_view.PrintExtractionStatusHeader()
+    self._status_view.PrintExtractionStatusHeader(None)
     self._output_writer.Write(u'Processing started.\n')
 
     session = engine.BaseEngine.CreateSession(
