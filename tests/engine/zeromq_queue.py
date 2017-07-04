@@ -124,7 +124,7 @@ class testZeroMQQueues(shared_test_lib.BaseTestCase):
     """Tests the Empty method for buffered queues."""
     queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
         name=u'requestbufferedreply_replybind', delay_open=False,
-        linger_seconds=1, buffer_max_size=3, timeout_seconds=1,
+        linger_seconds=1, buffer_max_size=3, timeout_seconds=2,
         buffer_timeout_seconds=1)
     try:
       while True:
