@@ -4,6 +4,7 @@
 import sys
 
 try:
+  import win32api
   import win32console
 except ImportError:
   win32console = None
@@ -31,6 +32,8 @@ class StatusView(object):
       dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE: (
           u'storage media image')}
 
+  _UNITS_1024 = [u'B', u'KiB', u'MiB', u'GiB', u'TiB', u'EiB', u'ZiB', u'YiB']
+
   def __init__(self, output_writer, tool_name):
     """Initializes a status view.
 
@@ -48,6 +51,31 @@ class StatusView(object):
         output_writer, cli_tools.StdoutOutputWriter)
     self._storage_file_path = None
     self._tool_name = tool_name
+
+  def _ClearScreen(self):
+    """Clears the terminal/console screen."""
+    if not win32console:
+      # ANSI escape sequence to clear screen.
+      self._output_writer.Write(b'\033[2J')
+      # ANSI escape sequence to move cursor to top left.
+      self._output_writer.Write(b'\033[H')
+
+    else:
+      # Windows cmd.exe does not support ANSI escape codes, thus instead we
+      # fill the console screen buffer with spaces.
+      top_left_coordinate = win32console.PyCOORDType(0, 0)
+      screen_buffer = win32console.GetStdHandle(win32api.STD_OUTPUT_HANDLE)
+      screen_buffer_information = screen_buffer.GetConsoleScreenBufferInfo()
+
+      screen_buffer_attributes = screen_buffer_information[u'Attributes']
+      screen_buffer_size = screen_buffer_information[u'Size']
+      console_size = screen_buffer_size.X * screen_buffer_size.Y
+
+      screen_buffer.FillConsoleOutputCharacter(
+          u' ', console_size, top_left_coordinate)
+      screen_buffer.FillConsoleOutputAttribute(
+          screen_buffer_attributes, console_size, top_left_coordinate)
+      screen_buffer.SetConsoleCursorPosition(top_left_coordinate)
 
   def _FormatAnalysisStatusTableRow(self, process_status):
     """Formats an analysis status table row.
@@ -273,7 +301,7 @@ class StatusView(object):
         self._tool_name, plaso.__version__)
     self._output_writer.Write(output_text)
 
-    self.PrintExtractionStatusHeader()
+    self.PrintExtractionStatusHeader(processing_status)
 
     # TODO: for win32console get current color and set intensity,
     # write the header separately then reset intensity.
@@ -349,8 +377,12 @@ class StatusView(object):
       table_view.Write(self._output_writer)
 
   # TODO: refactor to protected method.
-  def PrintExtractionStatusHeader(self):
-    """Prints the extraction status header."""
+  def PrintExtractionStatusHeader(self, processing_status):
+    """Prints the extraction status header.
+
+    Args:
+      processing_status (ProcessingStatus): processing status.
+    """
     self._output_writer.Write(
         u'Source path\t: {0:s}\n'.format(self._source_path))
     self._output_writer.Write(
@@ -359,6 +391,29 @@ class StatusView(object):
     if self._filter_file:
       self._output_writer.Write(u'Filter file\t: {0:s}\n'.format(
           self._filter_file))
+
+    if processing_status and processing_status.tasks_status:
+      tasks_status = processing_status.tasks_status
+
+      self._output_writer.Write(u'\n')
+
+      status_header = (
+          u'Tasks:\t\tActive\tProcessing\tTo merge\tAbandoned\tTotal')
+      if not win32console:
+        status_header = u'\x1b[1m{0:s}\x1b[0m\n'.format(status_header)
+      else:
+        status_header = u'{0:s}\n'.format(status_header)
+
+      self._output_writer.Write(status_header)
+
+      status_line = u'\t\t{0:d}\t{1:d}\t\t{2:d}\t\t{3:d}\t\t{4:d}\n'.format(
+          tasks_status.number_of_active_tasks,
+          tasks_status.number_of_tasks_processing,
+          tasks_status.number_of_tasks_pending_merge,
+          tasks_status.number_of_abandoned_tasks,
+          tasks_status.total_number_of_tasks)
+
+      self._output_writer.Write(status_line)
 
     self._output_writer.Write(u'\n')
 

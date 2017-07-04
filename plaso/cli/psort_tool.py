@@ -674,8 +674,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     try:
       self.ParseOptions(options)
     except errors.BadConfigOption as exception:
-      logging.error(u'{0:s}'.format(exception))
-
+      self._output_writer.Write(u'ERROR: {0!s}'.format(exception))
       self._output_writer.Write(u'\n')
       self._output_writer.Write(argument_parser.format_usage())
 
