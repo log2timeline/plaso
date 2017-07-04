@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Tests for the Windows Services analysis plugin CLI arguments helper."""
 

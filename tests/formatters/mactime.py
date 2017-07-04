@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Tests for the Sleuthkit (TSK) bodyfile (or mactime) event formatter."""
 

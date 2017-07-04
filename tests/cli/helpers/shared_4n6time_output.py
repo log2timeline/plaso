@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Tests for the 4n6time output modules shared CLI arguments helper."""
 
