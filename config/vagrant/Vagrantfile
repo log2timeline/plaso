@@ -1,0 +1,30 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Set VirtualBox as default provider
+ENV["VAGRANT_DEFAULT_PROVIDER"] = "virtualbox"
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "ubuntu/xenial64"
+  config.vm.box_check_update = true
+
+  # Share an additional folder to the guest VM. The first argument is
+  # the path on the host to the actual folder. The second argument is
+  # the path on the guest to mount the folder. And the optional third
+  # argument is a set of non-required options.
+  config.vm.synced_folder "../../", "/opt/plaso"
+
+
+   config.vm.provider "virtualbox" do |vb|
+     vb.name = "plaso-vagrant-dev"
+     vb.cpus = 4
+     vb.memory = 2048
+ end
+
+ # Set up the system using the standard shell script.
+ config.vm.provision :shell, args:  "--include-development --include-test --include-debug",
+                             path: "../linux/gift_ppa_install.sh"
+ config.vm.hostname = "plaso-vagrant-dev"
+
+end
