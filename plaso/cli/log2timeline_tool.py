@@ -23,7 +23,7 @@ from plaso.cli import extraction_tool
 from plaso.cli import status_view
 from plaso.cli import tools as cli_tools
 from plaso.cli import views as cli_views
-from plaso.cli import views as logging_filter
+from plaso.cli import logging_filter as logging_filter
 from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.engine import single_process as single_process_engine
