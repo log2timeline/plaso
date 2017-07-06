@@ -294,7 +294,8 @@ class TaskManager(object):
       for abandoned_task in self._abandoned_tasks.values():
         # Only retry abandoned tasks that are yet to be retried, and
         # aren't themselves retries of another task.
-        if not abandoned_task.retried and not abandoned_task.retry_identifier:
+        if not (abandoned_task.retried or
+                abandoned_task.original_task_identifier):
           retry_task = abandoned_task.CreateRetry()
           logging.debug(
               u'Retrying task {0:s} as {1:s}'.format(
