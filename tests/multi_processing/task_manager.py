@@ -105,7 +105,7 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
 
     retry_task = manager.GetRetryTask()
     self.assertIsNotNone(retry_task)
-    self.assertEqual(task.identifier, retry_task.original_task_identifier)
+    self.assertEqual(task.identifier, retry_task.retry_identifier)
     self.assertTrue(task.retried)
     manager.CompleteTask(retry_task)
 
