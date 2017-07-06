@@ -45,8 +45,7 @@ class TaskTest(shared_test_lib.BaseTestCase):
     self.assertEqual(task.path_spec, retry_task.path_spec)
     self.assertNotEqual(task.identifier, retry_task.identifier)
     self.assertTrue(task.retried)
-    self.assertEqual(task.identifier, retry_task.retry_identifier)
-
+    self.assertEqual(task.identifier, retry_task.original_task_identifier)
 
   # TODO: add tests for CreateTaskCompletion
   # TODO: add tests for CreateTaskStart
