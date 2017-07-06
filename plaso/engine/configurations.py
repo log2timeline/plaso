@@ -180,6 +180,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
   def __init__(self):
     """Initializes a process configuration object."""
     super(ProcessingConfiguration, self).__init__()
+    self.cause_errors = False
     self.credentials = []
     self.data_location = None
     self.debug_output = False
