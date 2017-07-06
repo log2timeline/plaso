@@ -375,11 +375,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     event_source = event_source_heap.PopEventSource()
 
-    while event_source or self._task_manager.HasActiveTasks():
+    while event_source or self._task_manager.HasPendingTasks():
       if self._abort:
         break
 
       try:
+        task = self._task_manager.GetRetryTask()
         if event_source and not task:
           task = self._task_manager.CreateTask(self._session_identifier)
           task.file_entry_type = event_source.file_entry_type
@@ -413,11 +414,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._status_update_callback(self._processing_status)
 
     for task in self._task_manager.GetAbandonedTasks():
-      error = error_containers.ExtractionError(
-          message=u'Worker failed to process pathspec',
-          path_spec=task.path_spec)
-      self._storage_writer.AddError(error)
-      self._processing_status.error_path_specs.append(task.path_spec)
+      if not task.retried:
+        error = error_containers.ExtractionError(
+            message=u'Worker failed to process pathspec',
+            path_spec=task.path_spec)
+        self._storage_writer.AddError(error)
+        self._processing_status.error_path_specs.append(task.path_spec)
 
     self._status = definitions.PROCESSING_STATUS_IDLE
 
