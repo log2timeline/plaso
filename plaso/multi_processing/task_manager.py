@@ -83,12 +83,12 @@ class TaskManager(object):
   * abandoned: since no status information has been recently received from
       the worker about the task, we assume it was abandoned.
   * active: a task managed by the task manager that has not been abandoned or
-      completed.
+      completed. Active tasks are either:
+      * processing: a worker is processing the task.
+      * pending_merge: a worker has completed processing the task and the
+          results are ready to be merged with the session storage.
   * completed: a worker has completed processing the task and the results
-      have been merged with the session storage.
-  * pending_merge: a worker has completed processing the task and the results
-      are ready to be merged with the session storage.
-  * processing: a worker is processing the task.
+        have been merged with the session storage.
   """
 
   # Consider a task inactive after 5 minutes of no activity.
@@ -266,6 +266,44 @@ class TaskManager(object):
 
     return has_active_tasks
 
+  def HasPendingTasks(self):
+    """Determines if there are tasks running, or in need to retrying."""
+    active_tasks = self.HasActiveTasks()
+    if active_tasks:
+      return True
+    return self.HasTasksPendingRetry()
+
+  def HasTasksPendingRetry(self):
+    """Determines if there are abandoned tasks that still need to be retried.
+
+    Returns:
+      bool: True if there are abandoned tasks that need to be retried
+    """
+    with self._lock:
+      for abandoned_task in self._abandoned_tasks.values():
+        if not abandoned_task.retried:
+          return True
+
+  def GetRetryTask(self):
+    """Creates a task that is an attempt to retry an abandoned task.
+
+    Returns:
+      Task: a task that is a retry of an existing task, or None if there are
+        no tasks that need to be retried.
+    """
+    with self._lock:
+      for abandoned_task in self._abandoned_tasks.values():
+        # Only retry abandoned tasks that are yet to be retried, and
+        # aren't themselves retries of another task.
+        if not abandoned_task.retried and not abandoned_task.retry_identifier:
+          retry_task = abandoned_task.CreateRetry()
+          logging.debug(
+              u'Retrying task {0:s} as {1:s}'.format(
+                  abandoned_task.identifier, retry_task.identifier))
+          self._active_tasks[retry_task.identifier] = tasks
+          self._total_number_of_tasks += 1
+          return retry_task
+
   def UpdateTaskByIdentifier(self, task_identifier):
     """Updates a task.
 
@@ -292,7 +330,6 @@ class TaskManager(object):
     Raises:
       KeyError: if the task was not processing or abandoned.
     """
-    is_abandoned = False
     with self._lock:
       is_processing = task.identifier in self._tasks_processing
       is_abandoned = task.identifier in self._abandoned_tasks
