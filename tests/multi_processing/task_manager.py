@@ -15,6 +15,9 @@ from tests import test_lib as shared_test_lib
 
 class TaskManagerTestCase(shared_test_lib.BaseTestCase):
   """Tests for the TaskManager."""
+
+  # pylint: disable=protected-access
+
   _TEST_SESSION_IDENTIFIER = u'4'
 
   def testCreateTask(self):
@@ -91,7 +94,6 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
 
     manager.UpdateTaskAsProcessing(task)
     timestamp = int(time.time() * 1000000)
-    # pylint: disable=protected-access
     inactive_time = timestamp - task_manager.TaskManager._TASK_INACTIVE_TIME
     task.last_processing_time = inactive_time - 1
     # HasActiveTasks is responsible for marking tasks as abandoned.

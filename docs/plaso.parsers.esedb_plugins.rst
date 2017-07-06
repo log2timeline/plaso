@@ -1,27 +1,27 @@
-plaso.parsers.esedb_plugins package
-===================================
+plaso\.parsers\.esedb\_plugins package
+======================================
 
 Submodules
 ----------
 
-plaso.parsers.esedb_plugins.file_history module
------------------------------------------------
+plaso\.parsers\.esedb\_plugins\.file\_history module
+----------------------------------------------------
 
 .. automodule:: plaso.parsers.esedb_plugins.file_history
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.esedb_plugins.interface module
---------------------------------------------
+plaso\.parsers\.esedb\_plugins\.interface module
+------------------------------------------------
 
 .. automodule:: plaso.parsers.esedb_plugins.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.parsers.esedb_plugins.msie_webcache module
-------------------------------------------------
+plaso\.parsers\.esedb\_plugins\.msie\_webcache module
+-----------------------------------------------------
 
 .. automodule:: plaso.parsers.esedb_plugins.msie_webcache
     :members:

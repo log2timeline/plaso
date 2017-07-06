@@ -281,6 +281,8 @@ class DocumentSummaryInformationOLECFPlugin(interface.OLECFPlugin):
 
     for item_name in self.REQUIRED_ITEMS:
       item = root_item.get_sub_item_by_name(item_name)
+      if not item:
+        continue
 
       summary_information = OLECFDocumentSummaryInformation(item)
       event_data = summary_information.GetEventData(
@@ -339,6 +341,8 @@ class SummaryInformationOLECFPlugin(interface.OLECFPlugin):
 
     for item_name in self.REQUIRED_ITEMS:
       item = root_item.get_sub_item_by_name(item_name)
+      if not item:
+        continue
 
       summary_information = OLECFSummaryInformation(item)
       event_data = summary_information.GetEventData(

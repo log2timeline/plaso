@@ -10,6 +10,7 @@ import time
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.containers import tasks
+from plaso.engine import processing_status
 
 
 class _PendingMergeTaskHeap(object):
@@ -19,6 +20,10 @@ class _PendingMergeTaskHeap(object):
     """Initializes a pending merge task heap."""
     super(_PendingMergeTaskHeap, self).__init__()
     self._heap = []
+
+  def __len__(self):
+    """int: number of tasks on the heap."""
+    return len(self._heap)
 
   def PeekTask(self):
     """Retrieves the first task from the heap without removing it.
@@ -102,6 +107,7 @@ class TaskManager(object):
     # This dictionary maps task identifiers to tasks.
     self._tasks_processing = collections.OrderedDict()
     # TODO: implement a limit on the number of tasks.
+    self._total_number_of_tasks = 0
 
   def AdoptTask(self, task):
     """Updates a task that was formerly abandoned.
@@ -135,6 +141,8 @@ class TaskManager(object):
     task = tasks.Task(session_identifier)
     with self._lock:
       self._active_tasks[task.identifier] = task
+
+    self._total_number_of_tasks += 1
     return task
 
   def CompleteTask(self, task):
@@ -203,6 +211,23 @@ class TaskManager(object):
     with self._lock:
       next_task = self._tasks_pending_merge.PopTask()
     return next_task
+
+  def GetStatusInformation(self):
+    """Retrieves status information about the tasks.
+
+    Returns:
+      TasksStatus: tasks status information.
+    """
+    status = processing_status.TasksStatus()
+
+    with self._lock:
+      status.number_of_abandoned_tasks = len(self._abandoned_tasks)
+      status.number_of_active_tasks = len(self._active_tasks)
+      status.number_of_tasks_pending_merge = len(self._tasks_pending_merge)
+      status.number_of_tasks_processing = len(self._tasks_processing)
+      status.total_number_of_tasks = self._total_number_of_tasks
+
+    return status
 
   def GetTasksCheckMerge(self):
     """Retrieves the tasks that need to be checked if they are ready for merge.
