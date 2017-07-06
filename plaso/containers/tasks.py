@@ -25,10 +25,10 @@ class Task(interface.AttributeContainer):
       processed as number of milliseconds since January 1, 1970, 00:00:00 UTC.
     merge_priority (int): priority used for the task storage file merge, where
         a lower value indicates a higher priority to merge.
+    original_task_identifier (str): the identifier of the task that this task
+        is an attempt to retry, or None if this task isn't a retry.
     path_spec (dfvfs.PathSpec): path specification.
     retried (bool): True if this task been retried.
-    retry_identifier (str): the identifier of the task that this task is a retry
-        of, or None if this task isn't a retry.
     session_identifier (str): the identifier of the session the task
         is part of.
     start_time (int): time that the task was started. Contains the number
@@ -51,15 +51,15 @@ class Task(interface.AttributeContainer):
     self.identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
     self.last_processing_time = None
     self.merge_priority = None
+    self.original_task_identifier = None
     self.path_spec = None
     self.retried = False
-    self.retry_identifier = None
     self.session_identifier = session_identifier
     self.start_time = int(time.time() * 1000000)
     self.storage_file_size = None
 
   def CreateRetry(self):
-    """Creates a task to try processing the task again.
+    """Creates a task that's an attempt to retry this task.
 
     Returns:
       Task: a task that's a retry of the existing task.
@@ -68,7 +68,7 @@ class Task(interface.AttributeContainer):
     retry_task = Task(self.session_identifier)
     retry_task.path_spec = self.path_spec
     retry_task.merge_priority = self.merge_priority
-    retry_task.retry_identifier = self.identifier
+    retry_task.original_task_identifier = self.identifier
     return retry_task
 
   def CreateTaskCompletion(self):

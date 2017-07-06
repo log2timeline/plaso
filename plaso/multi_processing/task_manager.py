@@ -268,8 +268,7 @@ class TaskManager(object):
 
   def HasPendingTasks(self):
     """Determines if there are tasks running, or in need to retrying."""
-    active_tasks = self.HasActiveTasks()
-    if active_tasks:
+    if self.HasActiveTasks():
       return True
     return self.HasTasksPendingRetry()
 
@@ -277,7 +276,7 @@ class TaskManager(object):
     """Determines if there are abandoned tasks that still need to be retried.
 
     Returns:
-      bool: True if there are abandoned tasks that need to be retried
+      bool: True if there are abandoned tasks that need to be retried.
     """
     with self._lock:
       for abandoned_task in self._abandoned_tasks.values():
@@ -289,7 +288,7 @@ class TaskManager(object):
 
     Returns:
       Task: a task that is a retry of an existing task, or None if there are
-        no tasks that need to be retried.
+          no tasks that need to be retried.
     """
     with self._lock:
       for abandoned_task in self._abandoned_tasks.values():

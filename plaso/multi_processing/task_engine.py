@@ -380,7 +380,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         break
 
       try:
-        task = self._task_manager.GetRetryTask()
+        if not task:
+          task = self._task_manager.GetRetryTask()
         if event_source and not task:
           task = self._task_manager.CreateTask(self._session_identifier)
           task.file_entry_type = event_source.file_entry_type
