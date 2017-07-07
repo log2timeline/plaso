@@ -344,7 +344,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     try:
       self._task_queue.PushItem(task, block=False)
-      self._task_manager.UpdateTaskAsProcessing(task)
+      # TODO: Remove
+      # self._task_manager.UpdateTaskAsProcessing(task)
       is_scheduled = True
 
     except errors.QueueFull:
@@ -666,21 +667,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       return
 
     try:
-      self._task_manager.UpdateTaskByIdentifier(task_identifier)
+      self._task_manager.UpdateTaskAsProcessingByIdentifier(task_identifier)
       return
-    except KeyError:
-      # The task manager did not consider the task to be processing.
-      # Avoid nesting exception blocks.
-      pass
-
-    try:
-      task = self._task_manager.GetAbandonedTask(task_identifier)
-      logging.debug((
-          u'Worker {0:s} is processing abandoned task: {1:s}. It was last '
-          u'updated at {2!s}.').format(
-              process.name, task.identifier, task.last_processing_time))
-      self._task_manager.AdoptTask(task)
-
     except KeyError:
       logging.debug(
           u'Worker {0:s} is processing unknown task: {1:s}.'.format(
