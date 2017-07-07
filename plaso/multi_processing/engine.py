@@ -102,7 +102,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     process = self._processes_per_pid[pid]
 
-    process_status = self._GetProcessStatus(process)
+    process_status = self._QueryProcessStatus(process)
     if process_status is None:
       process_is_alive = False
     else:
@@ -147,6 +147,12 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._UpdateProcessingStatus(pid, process_status, used_memory)
 
+    # Something is wrong here with the status indicator
+    for worker_status in self._processing_status.workers_status:
+      if worker_status.pid == pid:
+        status_indicator = worker_status.status
+        break
+
     if status_indicator in definitions.PROCESSING_ERROR_STATUS:
       logging.error((
           u'Process {0:s} (PID: {1:d}) is not functioning correctly. '
@@ -163,7 +169,7 @@ class MultiProcessEngine(engine.BaseEngine):
             u'Unable to create replacement worker process for: {0:s}'.format(
                 process.name))
 
-  def _GetProcessStatus(self, process):
+  def _QueryProcessStatus(self, process):
     """Queries a process to determine its status.
 
     Args:
