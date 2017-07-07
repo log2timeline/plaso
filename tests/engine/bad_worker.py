@@ -12,9 +12,9 @@ class BadWorker(worker.EventExtractionWorker):
   
   def _ProcessFileEntryDataStream(
       self, mediator, file_entry, data_stream_name):
-    option = random.randint(1, 20)
-    #  if option == 1:
-      # self._ExhaustMemory()
+    option = random.randint(1, 50)
+    if option == 1:
+       self._ExhaustMemory()
     if option == 2:
       self._NeverReturn()
     if option == 3:
