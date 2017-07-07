@@ -348,6 +348,7 @@ class TaskManager(object):
 
       if is_abandoned:
         del self._abandoned_tasks[task.identifier]
+        self._active_tasks[task.identifier] = task
 
     if is_abandoned:
       logging.warning(

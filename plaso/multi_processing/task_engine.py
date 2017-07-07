@@ -248,7 +248,11 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         self._processing_profiler.StopTiming(u'merge')
 
       if fully_merged:
-        self._task_manager.CompleteTask(self._merge_task)
+        try:
+          self._task_manager.CompleteTask(self._merge_task)
+        except KeyError as exception:
+          logging.error(u'Unable to complete task {0:s} due to {1:s}'.format(
+              self._merge_task.identifier, exception))
 
         if self._storage_merge_reader_on_hold:
           self._merge_task = self._merge_task_on_hold
@@ -665,6 +669,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._task_manager.UpdateTaskByIdentifier(task_identifier)
       return
     except KeyError:
+      # The task manager did not consider the task to be processing.
       # Avoid nesting exception blocks.
       pass
 

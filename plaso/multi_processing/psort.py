@@ -185,7 +185,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     else:
       process = self._processes_per_pid[pid]
 
-      process_status = self._GetProcessStatus(process)
+      process_status = self._QueryProcessStatus(process)
       if process_status is None:
         process_is_alive = False
       else:
