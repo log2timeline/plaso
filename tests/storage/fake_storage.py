@@ -130,9 +130,9 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     with self.assertRaises(IOError):
       storage_writer.Close()
 
-  # TODO: add test for GetEvents.
-  # TODO: add test for GetFirstWrittenEventSource and
+  # TODO: add tests for GetFirstWrittenEventSource and
   # GetNextWrittenEventSource.
+  # TODO: add tests for GetSortedEvents.
 
   @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
   @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])
@@ -151,8 +151,6 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     storage_writer.MergeFromStorage(storage_reader)
 
     storage_writer.Close()
-
-  # TODO: add test for GetNextEventSource.
 
   def testWriteSessionStartAndCompletion(self):
     """Tests the WriteSessionStart and WriteSessionCompletion functions."""
