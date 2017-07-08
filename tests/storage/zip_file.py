@@ -36,52 +36,53 @@ class SerializedDataStreamTest(test_lib.StorageTestCase):
     zip_file_object = zipfile.ZipFile(
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
-    stream_name = u'event_data.000002'
-    data_stream = zip_file._SerializedDataStream(
-        zip_file_object, test_file, stream_name)
+    with shared_test_lib.TempDirectory() as temp_directory:
+      stream_name = u'event_data.000002'
+      data_stream = zip_file._SerializedDataStream(
+          zip_file_object, temp_directory, stream_name)
 
-    self.assertEqual(data_stream.entry_index, 0)
+      self.assertEqual(data_stream.entry_index, 0)
 
-    entry_data1 = data_stream.ReadEntry()
-    self.assertEqual(data_stream.entry_index, 1)
-    self.assertEqual(data_stream._stream_offset, 659)
-    self.assertIsNotNone(entry_data1)
+      entry_data1 = data_stream.ReadEntry()
+      self.assertEqual(data_stream.entry_index, 1)
+      self.assertEqual(data_stream._stream_offset, 659)
+      self.assertIsNotNone(entry_data1)
 
-    entry_data2 = data_stream.ReadEntry()
-    self.assertEqual(data_stream.entry_index, 2)
-    self.assertEqual(data_stream._stream_offset, 1316)
-    self.assertIsNotNone(entry_data2)
+      entry_data2 = data_stream.ReadEntry()
+      self.assertEqual(data_stream.entry_index, 2)
+      self.assertEqual(data_stream._stream_offset, 1316)
+      self.assertIsNotNone(entry_data2)
 
-    # Read more entries than in the stream.
-    for _ in range(3, 99):
+      # Read more entries than in the stream.
+      for _ in range(3, 99):
+        entry_data = data_stream.ReadEntry()
+
+      self.assertEqual(data_stream.entry_index, 19)
+      self.assertEqual(data_stream._stream_offset, 12588)
+      self.assertIsNone(entry_data)
+
+      data_stream.SeekEntryAtOffset(1, 659)
       entry_data = data_stream.ReadEntry()
+      self.assertEqual(data_stream.entry_index, 2)
+      self.assertEqual(data_stream._stream_offset, 1316)
+      self.assertEqual(entry_data, entry_data2)
 
-    self.assertEqual(data_stream.entry_index, 19)
-    self.assertEqual(data_stream._stream_offset, 12588)
-    self.assertIsNone(entry_data)
+      data_stream.SeekEntryAtOffset(0, 0)
+      entry_data = data_stream.ReadEntry()
+      self.assertEqual(data_stream.entry_index, 1)
+      self.assertEqual(data_stream._stream_offset, 659)
+      self.assertEqual(entry_data, entry_data1)
 
-    data_stream.SeekEntryAtOffset(1, 659)
-    entry_data = data_stream.ReadEntry()
-    self.assertEqual(data_stream.entry_index, 2)
-    self.assertEqual(data_stream._stream_offset, 1316)
-    self.assertEqual(entry_data, entry_data2)
+      with self.assertRaises(IOError):
+        data_stream.SeekEntryAtOffset(0, 10)
+        data_stream.ReadEntry()
 
-    data_stream.SeekEntryAtOffset(0, 0)
-    entry_data = data_stream.ReadEntry()
-    self.assertEqual(data_stream.entry_index, 1)
-    self.assertEqual(data_stream._stream_offset, 659)
-    self.assertEqual(entry_data, entry_data1)
+      stream_name = u'event_data.000009'
+      data_stream = zip_file._SerializedDataStream(
+          zip_file_object, temp_directory, stream_name)
 
-    with self.assertRaises(IOError):
-      data_stream.SeekEntryAtOffset(0, 10)
-      data_stream.ReadEntry()
-
-    stream_name = u'event_data.000009'
-    data_stream = zip_file._SerializedDataStream(
-        zip_file_object, test_file, stream_name)
-
-    with self.assertRaises(IOError):
-      data_stream.ReadEntry()
+      with self.assertRaises(IOError):
+        data_stream.ReadEntry()
 
     zip_file_object.close()
 
@@ -95,7 +96,7 @@ class SerializedDataStreamTest(test_lib.StorageTestCase):
           allowZip64=True)
 
       data_stream = zip_file._SerializedDataStream(
-          zip_file_object, test_file, u'test_stream', maximum_data_size=32)
+          zip_file_object, temp_directory, u'test_stream', maximum_data_size=32)
 
       data_stream.WriteInitialize()
 
@@ -105,8 +106,8 @@ class SerializedDataStreamTest(test_lib.StorageTestCase):
       data_stream.WriteEntry(b'test_entry_data')
 
       # TODO: Fix maximum size limit handling to create new stream.
-      #with self.assertRaises(IOError):
-      #  data_stream.WriteEntry(b'test_entry_data')
+      # with self.assertRaises(IOError):
+      #   data_stream.WriteEntry(b'test_entry_data')
 
       data_stream.WriteFinalize()
 
@@ -128,7 +129,7 @@ class SerializedDataStreamTest(test_lib.StorageTestCase):
           allowZip64=True)
 
       data_stream = zip_file._SerializedDataStream(
-          zip_file_object, test_file, u'test_stream', maximum_data_size=32)
+          zip_file_object, temp_directory, u'test_stream', maximum_data_size=32)
 
       data_stream.WriteInitialize()
 
@@ -321,6 +322,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file.Close()
 
   # TODO: add test for _AddAttributeContainer.
+  # TODO: add test for _AddSerializedEvent.
 
   def testBuildEventTagIndex(self):
     """Tests the _BuildEventTagIndex function."""
@@ -343,10 +345,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    data_stream = zip_file._SerializedDataStream(
-        storage_file._zipfile, storage_file._zipfile_path,
-        u'event_data.000001')
-    entry_data = data_stream.ReadEntry()
+    with shared_test_lib.TempDirectory() as temp_directory:
+      data_stream = zip_file._SerializedDataStream(
+          storage_file._zipfile, temp_directory, u'event_data.000001')
+      entry_data = data_stream.ReadEntry()
 
     attribute_container = storage_file._DeserializeAttributeContainer(
         u'event', entry_data)
@@ -470,47 +472,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  def testGetEventSourceSerializedData(self):
-    """Tests the _GetEventSourceSerializedData function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = zip_file.ZIPStorageFile()
-    storage_file.Open(path=test_file)
-
-    # There is 1 event source in the first event data stream.
-    for entry_index in range(0, 1):
-      data_tuple = storage_file._GetEventSourceSerializedData(1)
-      self.assertIsNotNone(data_tuple)
-      self.assertIsNotNone(data_tuple[0])
-      self.assertEqual(data_tuple[1], entry_index)
-
-    data_tuple = storage_file._GetEventSourceSerializedData(1)
-    self.assertIsNotNone(data_tuple)
-    self.assertIsNone(data_tuple[0])
-    self.assertEqual(data_tuple[1], 1)
-
-    data_tuple = storage_file._GetEventSourceSerializedData(1, entry_index=0)
-    self.assertIsNotNone(data_tuple)
-    self.assertIsNotNone(data_tuple[0])
-    self.assertEqual(data_tuple[1], 0)
-
-    data_tuple = storage_file._GetEventSourceSerializedData(1, entry_index=2)
-    self.assertIsNotNone(data_tuple)
-    self.assertIsNone(data_tuple[0])
-    # TODO: make the behavior of this method more consistent.
-    self.assertIsNone(data_tuple[1])
-
-    with self.assertRaises(ValueError):
-      storage_file._GetEventSourceSerializedData(0)
-
-    with self.assertRaises(ValueError):
-      storage_file._GetEventSourceSerializedData(1, entry_index=-2)
-
-    with self.assertRaises(ValueError):
-      storage_file._GetEventSourceSerializedData(3)
-
-    storage_file.Close()
-
   def testGetEventTagByIdentifier(self):
     """Tests the _GetEventTagByIdentifier function."""
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -553,23 +514,85 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
   # TODO: add test for _InitializeMergeBuffer.
 
   @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  def testGetEventSourceSerializedData(self):
+    """Tests the _GetSerializedAttributeContainerData function."""
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(path=test_file)
+
+    # There is 1 event source in the first event data stream.
+    for entry_index in range(0, 1):
+      data_tuple = storage_file._GetSerializedAttributeContainerData(
+          u'event_source', 1)
+      self.assertIsNotNone(data_tuple)
+      self.assertIsNotNone(data_tuple[0])
+      self.assertEqual(data_tuple[1], entry_index)
+
+    data_tuple = storage_file._GetSerializedAttributeContainerData(
+        u'event_source', 1)
+    self.assertIsNotNone(data_tuple)
+    self.assertIsNone(data_tuple[0])
+    self.assertEqual(data_tuple[1], 1)
+
+    data_tuple = storage_file._GetSerializedAttributeContainerData(
+        u'event_source', 1, entry_index=0)
+    self.assertIsNotNone(data_tuple)
+    self.assertIsNotNone(data_tuple[0])
+    self.assertEqual(data_tuple[1], 0)
+
+    data_tuple = storage_file._GetSerializedAttributeContainerData(
+        u'event_source', 1, entry_index=2)
+    self.assertIsNotNone(data_tuple)
+    self.assertIsNone(data_tuple[0])
+    # TODO: make the behavior of this method more consistent.
+    self.assertIsNone(data_tuple[1])
+
+    with self.assertRaises(ValueError):
+      storage_file._GetSerializedAttributeContainerData(
+          u'event_source', 0)
+
+    with self.assertRaises(ValueError):
+      storage_file._GetSerializedAttributeContainerData(
+          u'event_source', 1, entry_index=-2)
+
+    with self.assertRaises(ValueError):
+      storage_file._GetSerializedAttributeContainerData(
+          u'event_source', 3)
+
+    storage_file.Close()
+
+  def testGetEventTagByIdentifier(self):
+    """Tests the _GetEventTagByIdentifier function."""
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      self._CreateTestStorageFileWithTags(temp_file)
+
+      storage_file = zip_file.ZIPStorageFile()
+      storage_file.Open(path=temp_file)
+
+      event_identifier = identifiers.SerializedStreamIdentifier(1, 0)
+      event_tag = storage_file._GetEventTagByIdentifier(event_identifier)
+      self.assertIsNotNone(event_tag)
+      self.assertEqual(event_tag.comment, u'My comment')
+
+      event_identifier = identifiers.SerializedStreamIdentifier(99, 0)
+      event_tag = storage_file._GetEventTagByIdentifier(event_identifier)
+      self.assertIsNone(event_tag)
+
+      storage_file.Close()
+
+  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
   def testGetSerializedDataStream(self):
     """Tests the _GetSerializedDataStream function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    data_stream = storage_file._GetSerializedDataStream(
-        storage_file._event_streams, u'event_data', 2)
+    data_stream = storage_file._GetSerializedDataStream(u'event', 2)
     self.assertIsNotNone(data_stream)
 
     with self.assertRaises(IOError):
-      storage_file._GetSerializedDataStream(
-          storage_file._event_streams, u'event_data', 99)
-
-    with self.assertRaises(IOError):
-      storage_file._GetSerializedDataStream(
-          storage_file._event_streams, u'bogus', 1)
+      storage_file._GetSerializedDataStream(u'event', 99)
 
     storage_file.Close()
 
@@ -580,17 +603,11 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    offset_table = storage_file._GetSerializedDataOffsetTable(
-        storage_file._event_offset_tables,
-        storage_file._event_offset_tables_lfu,
-        u'event_index', 2)
+    offset_table = storage_file._GetSerializedDataOffsetTable(u'event', 2)
     self.assertIsNotNone(offset_table)
 
     with self.assertRaises(IOError):
-      storage_file._GetSerializedDataOffsetTable(
-          storage_file._event_offset_tables,
-          storage_file._event_offset_tables_lfu,
-          u'event_index', 99)
+      storage_file._GetSerializedDataOffsetTable(u'event', 99)
 
     storage_file.Close()
 
@@ -604,88 +621,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     data_stream_numbers = storage_file._GetSerializedDataStreamNumbers(
         u'event_data')
     self.assertEqual(data_stream_numbers, [1, 2])
-
-    storage_file.Close()
-
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  def testGetSerializedEventOffsetTable(self):
-    """Tests the _GetSerializedEventOffsetTable function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = zip_file.ZIPStorageFile()
-    storage_file.Open(path=test_file)
-
-    offset_table = storage_file._GetSerializedEventOffsetTable(2)
-    self.assertIsNotNone(offset_table)
-
-    with self.assertRaises(IOError):
-      storage_file._GetSerializedEventOffsetTable(99)
-
-    storage_file.Close()
-
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  def testGetSerializedEventSourceOffsetTable(self):
-    """Tests the _GetSerializedEventSourceOffsetTable function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = zip_file.ZIPStorageFile()
-    storage_file.Open(path=test_file)
-
-    # TODO: add positive test.
-
-    with self.assertRaises(IOError):
-      storage_file._GetSerializedEventSourceOffsetTable(99)
-
-    storage_file.Close()
-
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  def testGetSerializedEventSourceStream(self):
-    """Tests the _GetSerializedEventSourceStream function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = zip_file.ZIPStorageFile()
-    storage_file.Open(path=test_file)
-
-    # TODO: add positive test.
-
-    with self.assertRaises(IOError):
-      storage_file._GetSerializedEventSourceStream(99)
-
-    storage_file.Close()
-
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  def testGetSerializedEventStream(self):
-    """Tests the _GetSerializedEventStream function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = zip_file.ZIPStorageFile()
-    storage_file.Open(path=test_file)
-
-    data_stream = storage_file._GetSerializedEventStream(2)
-    self.assertIsNotNone(data_stream)
-
-    with self.assertRaises(IOError):
-      storage_file._GetSerializedEventStream(99)
-
-    storage_file.Close()
-
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  def testGetSerializedEventSourceStreamNumbers(self):
-    """Tests the _GetSerializedEventSourceStreamNumbers function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = zip_file.ZIPStorageFile()
-    storage_file.Open(path=test_file)
-
-    stream_numbers = storage_file._GetSerializedEventSourceStreamNumbers()
-    self.assertEqual(len(stream_numbers), 2)
-
-    storage_file.Close()
-
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  def testGetSerializedEventStreamNumbers(self):
-    """Tests the _GetSerializedEventStreamNumbers function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = zip_file.ZIPStorageFile()
-    storage_file.Open(path=test_file)
-
-    stream_numbers = storage_file._GetSerializedEventStreamNumbers()
-    self.assertEqual(len(stream_numbers), 2)
 
     storage_file.Close()
 
@@ -858,13 +793,13 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    data_stream = zip_file._SerializedDataStream(
-        storage_file._zipfile, storage_file._zipfile_path,
-        u'event_data.000001')
+    with shared_test_lib.TempDirectory() as temp_directory:
+      data_stream = zip_file._SerializedDataStream(
+          storage_file._zipfile, temp_directory, u'event_data.000001')
 
-    attribute_container = storage_file._ReadAttributeContainerFromStreamEntry(
-        data_stream, u'event')
-    self.assertIsNotNone(attribute_container)
+      attribute_container = storage_file._ReadAttributeContainerFromStreamEntry(
+          data_stream, u'event')
+      self.assertIsNotNone(attribute_container)
 
     storage_file.Close()
 
@@ -875,13 +810,14 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    data_stream = zip_file._SerializedDataStream(
-        storage_file._zipfile, storage_file._zipfile_path,
-        u'event_data.000001')
+    with shared_test_lib.TempDirectory() as temp_directory:
+      data_stream = zip_file._SerializedDataStream(
+          storage_file._zipfile, temp_directory, u'event_data.000001')
 
-    attribute_containers = list(
-        storage_file._ReadAttributeContainersFromStream(data_stream, u'event'))
-    self.assertEqual(len(attribute_containers), 19)
+      attribute_containers = list(
+          storage_file._ReadAttributeContainersFromStream(
+              data_stream, u'event'))
+      self.assertEqual(len(attribute_containers), 19)
 
     storage_file.Close()
 
@@ -927,6 +863,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file.Close()
 
   # TODO: add test for _SerializeAttributeContainer.
+  # TODO: add test for _UpdateEventTagIndex.
   # TODO: add test for _WriteAttributeContainersHeap.
 
   def testWriteSerializedAttributeContainerList(self):
@@ -1163,6 +1100,8 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     self.assertEqual(len(test_events), 3)
 
     storage_file.Close()
+
+  # TODO: add tests for GetEventData
 
   @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
   def testGetEventSourceByIndex(self):
@@ -1650,26 +1589,6 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
 
   # TODO: add test for GetFirstWrittenEventSource and GetNextWrittenEventSource.
   # TODO: add test for GetSortedEvents.
-
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])
-  def testMergeFromStorage(self):
-    """Tests the MergeFromStorage function."""
-    session = sessions.Session()
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_writer = zip_file.ZIPStorageFileWriter(session, temp_file)
-      storage_writer.Open()
-
-      test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
-      storage_reader = zip_file.ZIPStorageFileReader(test_file)
-      storage_writer.MergeFromStorage(storage_reader)
-
-      test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
-      storage_reader = zip_file.ZIPStorageFileReader(test_file)
-      storage_writer.MergeFromStorage(storage_reader)
-
-      storage_writer.Close()
 
   def testWriteSessionStartAndCompletion(self):
     """Tests the WriteSessionStart and WriteSessionCompletion functions."""

@@ -151,6 +151,14 @@ class BaseStorage(object):
     """
 
   @abc.abstractmethod
+  def GetEventData(self):
+    """Retrieves the event data.
+
+    Yields:
+      EventData: event data.
+    """
+
+  @abc.abstractmethod
   def GetEventSources(self):
     """Retrieves the event sources.
 
@@ -540,6 +548,25 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
+  def GetEventData(self):
+    """Retrieves the event data.
+
+    Yields:
+      EventData: event data.
+    """
+
+  @abc.abstractmethod
+  def GetEventDataByIdentifier(self, identifier):
+    """Retrieves specific event data.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event data identifier.
+
+    Returns:
+      EventData: event data or None if not available.
+    """
+
+  @abc.abstractmethod
   def GetEventSources(self):
     """Retrieves event sources.
 
@@ -630,10 +657,29 @@ class FileStorageReader(StorageReader):
   def GetEvents(self):
     """Retrieves the events.
 
-    Returns:
+    Yields:
       generator(EventObject): event generator.
     """
     return self._storage_file.GetEvents()
+
+  def GetEventData(self):
+    """Retrieves the event data.
+
+    Returns:
+      generator(EventData): event data generator.
+    """
+    return self._storage_file.GetEventData()
+
+  def GetEventDataByIdentifier(self, identifier):
+    """Retrieves specific event data.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event data identifier.
+
+    Returns:
+      EventData: event data or None if not available.
+    """
+    return self._storage_file.GetEventDataByIdentifier(identifier)
 
   def GetEventSources(self):
     """Retrieves the event sources.
@@ -819,27 +865,6 @@ class StorageWriter(object):
     Yields:
       EventObject: event.
     """
-
-  def MergeFromStorage(self, storage_reader):
-    """Merges data from a storage reader into the writer.
-
-    Args:
-      storage_reader (StorageReader): storage reader.
-    """
-    for event_source in storage_reader.GetEventSources():
-      self.AddEventSource(event_source)
-
-    for event in storage_reader.GetEvents():
-      self.AddEvent(event)
-
-    for event_tag in storage_reader.GetEventTags():
-      self.AddEventTag(event_tag)
-
-    for error in storage_reader.GetErrors():
-      self.AddError(error)
-
-    for analysis_report in storage_reader.GetAnalysisReports():
-      self.AddAnalysisReport(analysis_report)
 
   @abc.abstractmethod
   def Open(self):
@@ -1034,6 +1059,19 @@ class FileStorageWriter(StorageWriter):
     self.number_of_events += 1
 
     self._UpdateCounters(event)
+
+  def AddEventData(self, event_data):
+    """Adds event data.
+
+    Args:
+      event_data (EventData): event data.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    self._storage_file.AddEventData(event_data)
 
   def AddEventSource(self, event_source):
     """Adds an event source.
