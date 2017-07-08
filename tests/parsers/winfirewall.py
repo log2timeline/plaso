@@ -21,7 +21,7 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
     parser_object = winfirewall.WinFirewallParser()
     storage_writer = self._ParseFile([u'firewall.log'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 15)
+    self.assertEqual(storage_writer.number_of_events, 15)
 
     event_object = storage_writer.events[4]
 

@@ -1303,6 +1303,8 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
+    # TODO: add test with time range.
+
   @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
   @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])
   def testHasAnalysisReports(self):

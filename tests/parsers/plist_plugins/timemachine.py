@@ -23,11 +23,11 @@ class TimeMachinePluginTest(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin_object, [plist_name], plist_name)
 
-    self.assertEqual(len(storage_writer.events), 13)
+    self.assertEqual(storage_writer.number_of_events, 13)
 
     # The order in which PlistParser generates events is nondeterministic
     # hence we sort the events.
-    events = self._GetSortedEvents(storage_writer.events)
+    events = list(storage_writer.GetSortedEvents())
 
     expected_timestamps = [
         1379165051000000, 1380098455000000, 1380810276000000, 1381883538000000,

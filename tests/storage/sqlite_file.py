@@ -235,6 +235,8 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
+    # TODO: add test with time range.
+
   # TODO: add tests for HasAnalysisReports
   # TODO: add tests for HasErrors
   # TODO: add tests for HasEventTags

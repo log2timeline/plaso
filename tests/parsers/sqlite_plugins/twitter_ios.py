@@ -27,7 +27,7 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     #  - 25 Contacts update events.
     #  - 67 Status creation events.
     #  - 67 Status update events.
-    self.assertEqual(184, len(storage_writer.events))
+    self.assertEqual(184, storage_writer.number_of_events)
 
     # Test the first contact creation event.
     test_event = storage_writer.events[0]

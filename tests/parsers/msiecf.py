@@ -29,7 +29,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     #   Number of recovered items       : 11
 
     # 7 + 11 records, each with 4 records.
-    self.assertEqual(len(storage_writer.events), (7 + 11) * 4)
+    self.assertEqual(storage_writer.number_of_events, (7 + 11) * 4)
 
     # Record type             : URL
     # Offset range            : 21376 - 21632 (256)
@@ -104,7 +104,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     #   Number of items                 : 1027
     #   Number of recovered items       : 8
 
-    self.assertEqual(len(storage_writer.events), 2898)
+    self.assertEqual(storage_writer.number_of_events, 2898)
 
     event_object = storage_writer.events[3]
 

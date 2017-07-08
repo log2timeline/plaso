@@ -27,7 +27,7 @@ class OLECFParserTest(test_lib.ParserTestCase):
     #     Sector size         : 512
     #     Short sector size   : 64
 
-    self.assertEqual(len(storage_writer.events), 9)
+    self.assertEqual(storage_writer.number_of_events, 9)
     self.assertEqual(len(storage_writer.errors), 0)
 
     event_object = storage_writer.events[8]
@@ -47,7 +47,7 @@ class OLECFParserTest(test_lib.ParserTestCase):
     parser_object = olecf.OLECFParser()
     parser_object.ParseFileObject(parser_mediator, None)
 
-    self.assertEqual(len(storage_writer.events), 0)
+    self.assertEqual(storage_writer.number_of_events, 0)
     self.assertEqual(len(storage_writer.errors), 1)
 
     error = storage_writer.errors[0]

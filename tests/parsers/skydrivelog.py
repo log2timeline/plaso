@@ -24,7 +24,7 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     parser_object = skydrivelog.SkyDriveLogParser()
     storage_writer = self._ParseFile([u'skydriveerr.log'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 19)
+    self.assertEqual(storage_writer.number_of_events, 19)
 
     event_object = storage_writer.events[0]
 
@@ -78,7 +78,7 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'skydriveerr-unicode.log'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 19)
+    self.assertEqual(storage_writer.number_of_events, 19)
 
     # TODO: check if this test passes because the encoding on my system
     # is UTF-8.
@@ -94,7 +94,7 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     parser_object = skydrivelog.SkyDriveLogParser()
     storage_writer = self._ParseFile([u'skydrive.log'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 17)
+    self.assertEqual(storage_writer.number_of_events, 17)
 
     event_object = storage_writer.events[0]
 
@@ -171,7 +171,7 @@ class SkyDriveOldLogUnitTest(test_lib.ParserTestCase):
     parser_object = skydrivelog.SkyDriveOldLogParser()
     storage_writer = self._ParseFile([u'skydrive_old.log'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 18)
+    self.assertEqual(storage_writer.number_of_events, 18)
 
     event_object = storage_writer.events[0]
 

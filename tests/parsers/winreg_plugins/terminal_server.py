@@ -58,7 +58,7 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     plugin_object = terminal_server.TerminalServerClientPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
 
-    self.assertEqual(len(storage_writer.events), 2)
+    self.assertEqual(storage_writer.number_of_events, 2)
 
     event_object = storage_writer.events[0]
 
@@ -132,7 +132,7 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
     plugin_object = terminal_server.TerminalServerClientMRUPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
 
-    self.assertEqual(len(storage_writer.events), 1)
+    self.assertEqual(storage_writer.number_of_events, 1)
 
     event_object = storage_writer.events[0]
 

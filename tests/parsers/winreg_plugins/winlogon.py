@@ -276,9 +276,9 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
     plugin_object = winlogon.WinlogonPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
 
-    self.assertEqual(len(storage_writer.events), 14)
+    self.assertEqual(storage_writer.number_of_events, 14)
 
-    events = self._GetSortedEvents(storage_writer.events)
+    events = list(storage_writer.GetSortedEvents())
 
     event = events[3]
 

@@ -24,7 +24,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'5afe4de1b92fc382.customDestinations-ms'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 126)
+    self.assertEqual(storage_writer.number_of_events, 126)
 
     # A shortcut event object.
     # The last accessed timestamp.

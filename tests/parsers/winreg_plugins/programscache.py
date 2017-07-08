@@ -31,7 +31,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin_object, file_entry=test_file_entry)
 
-    self.assertEqual(len(storage_writer.events), 77)
+    self.assertEqual(storage_writer.number_of_events, 77)
 
     # The ProgramsCache entry shell item event.
     event_object = storage_writer.events[0]
@@ -136,7 +136,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin_object, file_entry=test_file_entry)
 
-    self.assertEqual(len(storage_writer.events), 118)
+    self.assertEqual(storage_writer.number_of_events, 118)
 
     event_object = storage_writer.events[0]
 

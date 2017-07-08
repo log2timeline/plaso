@@ -24,7 +24,7 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
         [u'appfirewall.log'], parser_object,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(storage_writer.events), 47)
+    self.assertEqual(storage_writer.number_of_events, 47)
 
     event_object = storage_writer.events[0]
 

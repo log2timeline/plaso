@@ -31,7 +31,7 @@ class AndroidWebView(test_lib.SQLitePluginTestCase):
         u'CC=:CCY=:LC=en-us:LIM=:TM=1362495731:TS=1362495680:TZ=:VAT=:VER=')
     self.assertEqual(test_event.data, expected_data)
 
-    self.assertEqual(len(storage_writer.events), 8)
+    self.assertEqual(storage_writer.number_of_events, 8)
 
 
 if __name__ == '__main__':

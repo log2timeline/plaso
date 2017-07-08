@@ -24,7 +24,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
         [u'syslog_rsyslog'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(storage_writer.events), 8)
+    self.assertEqual(storage_writer.number_of_events, 8)
 
   @shared_test_lib.skipUnlessHasTestFile([u'syslog_osx'])
   def testParseDarwin(self):
@@ -35,7 +35,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
         [u'syslog_osx'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(storage_writer.events), 2)
+    self.assertEqual(storage_writer.number_of_events, 2)
 
   @shared_test_lib.skipUnlessHasTestFile([u'syslog_chromeos'])
   def testParseChromeOS(self):
@@ -46,7 +46,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
         [u'syslog_chromeos'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(storage_writer.events), 8)
+    self.assertEqual(storage_writer.number_of_events, 8)
 
     event = storage_writer.events[0]
     event_timestamp = timelib.Timestamp.CopyToIsoFormat(
@@ -92,7 +92,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
         [u'syslog'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(storage_writer.events), 16)
+    self.assertEqual(storage_writer.number_of_events, 16)
 
     event = storage_writer.events[0]
     event_timestamp = timelib.Timestamp.CopyToIsoFormat(
@@ -147,7 +147,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
         [u'syslog'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(storage_writer.events), 15)
+    self.assertEqual(storage_writer.number_of_events, 15)
 
 
 if __name__ == '__main__':

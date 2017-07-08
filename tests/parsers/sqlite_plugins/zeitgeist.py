@@ -23,7 +23,7 @@ class ZeitgeistActivityDatabasePluginTest(test_lib.SQLitePluginTestCase):
         [u'activity.sqlite'], plugin_object)
 
     # The sqlite database contains 44 events.
-    self.assertEqual(len(storage_writer.events), 44)
+    self.assertEqual(storage_writer.number_of_events, 44)
 
     # Check the first event.
     event = storage_writer.events[0]

@@ -21,7 +21,7 @@ class UtmpxParserTest(test_lib.ParserTestCase):
     parser_object = utmpx.UtmpxParser()
     storage_writer = self._ParseFile([u'utmpx_mac'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 6)
+    self.assertEqual(storage_writer.number_of_events, 6)
 
     event_object = storage_writer.events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(

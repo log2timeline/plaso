@@ -33,7 +33,7 @@ class FileStatTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFileByPathSpec(tsk_path_spec, parser_object)
 
     # The TSK file entry has 3 event objects.
-    self.assertEqual(len(storage_writer.events), 3)
+    self.assertEqual(storage_writer.number_of_events, 3)
 
     event_object = storage_writer.events[0]
 
@@ -59,7 +59,7 @@ class FileStatTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFileByPathSpec(zip_path_spec, parser_object)
 
     # The ZIP file has 1 event object.
-    self.assertEqual(len(storage_writer.events), 1)
+    self.assertEqual(storage_writer.number_of_events, 1)
 
     event_object = storage_writer.events[0]
 
@@ -84,7 +84,7 @@ class FileStatTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser_object)
 
     # The gzip file has 1 event object.
-    self.assertEqual(len(storage_writer.events), 1)
+    self.assertEqual(storage_writer.number_of_events, 1)
 
     event_object = storage_writer.events[0]
 
@@ -111,7 +111,7 @@ class FileStatTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFileByPathSpec(tar_path_spec, parser_object)
 
     # The tar file has 1 event object.
-    self.assertEqual(len(storage_writer.events), 1)
+    self.assertEqual(storage_writer.number_of_events, 1)
 
     event_object = storage_writer.events[0]
 
@@ -139,7 +139,7 @@ class FileStatTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFileByPathSpec(tar_path_spec, parser_object)
 
     # The tar file has 1 event object.
-    self.assertEqual(len(storage_writer.events), 1)
+    self.assertEqual(storage_writer.number_of_events, 1)
 
     event_object = storage_writer.events[0]
 
@@ -159,7 +159,7 @@ class FileStatTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser_object)
 
     # The gzip file has 1 event object.
-    self.assertEqual(len(storage_writer.events), 1)
+    self.assertEqual(storage_writer.number_of_events, 1)
 
     event_object = storage_writer.events[0]
 
@@ -189,7 +189,7 @@ class FileStatTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFileByPathSpec(zip_path_spec, parser_object)
 
     # The ZIP file has 1 event objects.
-    self.assertEqual(len(storage_writer.events), 1)
+    self.assertEqual(storage_writer.number_of_events, 1)
 
     event_object = storage_writer.events[0]
 

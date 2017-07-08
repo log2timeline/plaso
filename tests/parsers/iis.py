@@ -24,7 +24,7 @@ class WinIISUnitTest(test_lib.ParserTestCase):
     parser_object = iis.WinIISParser()
     storage_writer = self._ParseFile([u'iis.log'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 11)
+    self.assertEqual(storage_writer.number_of_events, 11)
 
     event_object = storage_writer.events[0]
 
@@ -80,7 +80,7 @@ class WinIISUnitTest(test_lib.ParserTestCase):
     parser_object = iis.WinIISParser()
     storage_writer = self._ParseFile([u'iis_without_date.log'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 11)
+    self.assertEqual(storage_writer.number_of_events, 11)
 
     event_object = storage_writer.events[1]
 

@@ -32,7 +32,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     # 	Icon location			: %windir%\system32\migwiz\migwiz.exe
     # 	Environment variables location	: %windir%\system32\migwiz\migwiz.exe
 
-    self.assertEqual(len(storage_writer.events), 5)
+    self.assertEqual(storage_writer.number_of_events, 5)
 
     # A shortcut event object.
     event = storage_writer.events[0]
@@ -108,7 +108,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     parser_object = winlnk.WinLnkParser()
     storage_writer = self._ParseFile([u'NeroInfoTool.lnk'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 20)
+    self.assertEqual(storage_writer.number_of_events, 20)
 
     # A shortcut event object.
     event = storage_writer.events[16]

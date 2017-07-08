@@ -23,11 +23,11 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     storage_writer = self._ParseESEDBFileWithPlugin(
         [u'WebCacheV01.dat'], plugin_object)
 
-    self.assertEqual(len(storage_writer.events), 1354)
+    self.assertEqual(storage_writer.number_of_events, 1354)
 
     # The order in which ESEDBPlugin._GetRecordValues() generates events is
     # nondeterministic hence we sort the events.
-    events = self._GetSortedEvents(storage_writer.events)
+    events = list(storage_writer.GetSortedEvents())
 
     event_object = events[567]
 

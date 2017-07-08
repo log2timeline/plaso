@@ -31,7 +31,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(len(storage_writer.events), 14)
+    self.assertEqual(storage_writer.number_of_events, 14)
 
     event = storage_writer.events[0]
 
@@ -73,7 +73,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(len(storage_writer.events), 61)
+    self.assertEqual(storage_writer.number_of_events, 61)
 
     event = storage_writer.events[0]
 

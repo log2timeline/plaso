@@ -23,7 +23,7 @@ class TestDefaultPluginOLECF(test_lib.OLECFPluginTestCase):
     storage_writer = self._ParseOLECFFileWithPlugin(
         [u'Document.doc'], plugin_object)
 
-    self.assertEqual(len(storage_writer.events), 5)
+    self.assertEqual(storage_writer.number_of_events, 5)
 
     # Check the Root Entry event.
     event_object = storage_writer.events[0]
