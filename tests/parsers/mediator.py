@@ -165,7 +165,6 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     self.assertEqual(latest_year, expected_latest_year)
 
   # TODO: add tests for GetParserChain.
-  # TODO: add tests for MatchesFilter.
   # TODO: add tests for PopFromParserChain.
   # TODO: add tests for ProcessEvent.
   # TODO: add tests for ProduceEvent.
