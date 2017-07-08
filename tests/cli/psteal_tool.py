@@ -331,7 +331,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       with open(expected_output_file_name, 'rb') as file_object:
         expected_output = file_object.read()
 
-      with open(result_file_name, 'rb') as file_object:
+      with open(options.write, 'rb') as file_object:
         result_output = file_object.read()
 
       expected_output = sorted(expected_output.split(b'\n'))
