@@ -11,13 +11,8 @@ from plaso.containers import sessions
 from plaso.containers import tasks
 from plaso.lib import definitions
 from plaso.storage import fake_storage
-from plaso.storage import zip_file
 
-from tests import test_lib as shared_test_lib
 from tests.storage import test_lib
-
-
-# TODO: add tests for _EventsHeap
 
 
 class FakeStorageWriterTest(test_lib.StorageTestCase):
@@ -173,24 +168,6 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     storage_writer.Close()
 
     # TODO: add test with time range.
-
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])
-  def testMergeFromStorage(self):
-    """Tests the MergeFromStorage function."""
-    session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
-    storage_writer.Open()
-
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_reader = zip_file.ZIPStorageFileReader(test_file)
-    storage_writer.MergeFromStorage(storage_reader)
-
-    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
-    storage_reader = zip_file.ZIPStorageFileReader(test_file)
-    storage_writer.MergeFromStorage(storage_reader)
-
-    storage_writer.Close()
 
   def testWriteSessionStartAndCompletion(self):
     """Tests the WriteSessionStart and WriteSessionCompletion functions."""

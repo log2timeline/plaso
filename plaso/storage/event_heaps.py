@@ -5,7 +5,6 @@ import abc
 import heapq
 
 
-
 class BaseEventHeap(object):
   """Event heap interface."""
 
@@ -81,12 +80,6 @@ class EventHeap(BaseEventHeap):
     event_string = event.GetAttributeValuesString()
     heap_values = (event.timestamp, event.timestamp_desc, event_string, event)
     heapq.heappush(self._heap, heap_values)
-
-    # event_identifier = event.GetIdentifier()
-    # event_identifier_string = event_identifier.CopyToString()
-    # heap_values = (
-    #     event.timestamp, event.timestamp_desc, event_identifier_string, event)
-    # heapq.heappush(self._heap, heap_values)
 
 
 class SerializedStreamEventHeap(BaseEventHeap):

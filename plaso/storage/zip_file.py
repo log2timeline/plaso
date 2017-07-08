@@ -2287,6 +2287,30 @@ class ZIPStorageFile(interface.BaseFileStorage):
     """
     return self._GetAttributeContainers(u'extraction_error')
 
+  def GetEventData(self):
+    """Retrieves the event data.
+
+    Returns:
+      generator(EventData): event data generator.
+
+    Raises:
+      IOError: if a stream is missing.
+    """
+    return self._GetAttributeContainers(u'event_data')
+
+  def GetEventDataByIdentifier(self, identifier):
+    """Retrieves specific event data.
+
+    Args:
+      identifier (SerializedStreamIdentifier): event data identifier.
+
+    Returns:
+      EventData: event data or None if not available.
+    """
+    return self._GetAttributeContainer(
+        u'event_data', identifier.stream_number,
+        entry_index=identifier.entry_index)
+
   def GetEvents(self):
     """Retrieves the events.
 
@@ -2318,30 +2342,6 @@ class ZIPStorageFile(interface.BaseFileStorage):
           del event.event_data_entry_index
 
         yield event
-
-  def GetEventData(self):
-    """Retrieves the event data.
-
-    Returns:
-      generator(EventData): event data generator.
-
-    Raises:
-      IOError: if a stream is missing.
-    """
-    return self._GetAttributeContainers(u'event_data')
-
-  def GetEventDataByIdentifier(self, identifier):
-    """Retrieves specific event data.
-
-    Args:
-      identifier (SerializedStreamIdentifier): event data identifier.
-
-    Returns:
-      EventData: event data or None if not available.
-    """
-    return self._GetAttributeContainer(
-        u'event_data', identifier.stream_number,
-        entry_index=identifier.entry_index)
 
   def GetEventSourceByIndex(self, index):
     """Retrieves a specific event source.

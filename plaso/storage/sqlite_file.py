@@ -390,6 +390,25 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     """
     return self._GetAttributeContainer(u'extraction_error')
 
+  def GetEventData(self):
+    """Retrieves the event data.
+
+    Yields:
+      EventData: event data.
+    """
+    raise NotImplementedError()
+
+  def GetEventDataByIdentifier(self, identifier):
+    """Retrieves specific event data.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event data identifier.
+
+    Returns:
+      EventData: event data or None if not available.
+    """
+    raise NotImplementedError()
+
   def GetEvents(self):
     """Retrieves the events.
 

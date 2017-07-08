@@ -561,26 +561,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  def testGetEventTagByIdentifier(self):
-    """Tests the _GetEventTagByIdentifier function."""
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      self._CreateTestStorageFileWithTags(temp_file)
-
-      storage_file = zip_file.ZIPStorageFile()
-      storage_file.Open(path=temp_file)
-
-      event_identifier = identifiers.SerializedStreamIdentifier(1, 0)
-      event_tag = storage_file._GetEventTagByIdentifier(event_identifier)
-      self.assertIsNotNone(event_tag)
-      self.assertEqual(event_tag.comment, u'My comment')
-
-      event_identifier = identifiers.SerializedStreamIdentifier(99, 0)
-      event_tag = storage_file._GetEventTagByIdentifier(event_identifier)
-      self.assertIsNone(event_tag)
-
-      storage_file.Close()
-
   @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
   def testGetSerializedDataStream(self):
     """Tests the _GetSerializedDataStream function."""

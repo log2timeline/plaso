@@ -143,11 +143,11 @@ class BaseStorage(object):
     """
 
   @abc.abstractmethod
-  def GetEvents(self):
-    """Retrieves the events.
+  def GetErrors(self):
+    """Retrieves the errors.
 
     Yields:
-      EventObject: event.
+      ExtractionError: error.
     """
 
   @abc.abstractmethod
@@ -156,6 +156,25 @@ class BaseStorage(object):
 
     Yields:
       EventData: event data.
+    """
+
+  @abc.abstractmethod
+  def GetEventDataByIdentifier(self, identifier):
+    """Retrieves specific event data.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event data identifier.
+
+    Returns:
+      EventData: event data or None if not available.
+    """
+
+  @abc.abstractmethod
+  def GetEvents(self):
+    """Retrieves the events.
+
+    Yields:
+      EventObject: event.
     """
 
   @abc.abstractmethod
@@ -540,14 +559,6 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
-  def GetEvents(self):
-    """Retrieves the events.
-
-    Yields:
-      EventObject: event.
-    """
-
-  @abc.abstractmethod
   def GetEventData(self):
     """Retrieves the event data.
 
@@ -564,6 +575,14 @@ class StorageReader(object):
 
     Returns:
       EventData: event data or None if not available.
+    """
+
+  @abc.abstractmethod
+  def GetEvents(self):
+    """Retrieves the events.
+
+    Yields:
+      EventObject: event.
     """
 
   @abc.abstractmethod
@@ -654,14 +673,6 @@ class FileStorageReader(StorageReader):
     """
     return self._storage_file.GetErrors()
 
-  def GetEvents(self):
-    """Retrieves the events.
-
-    Yields:
-      generator(EventObject): event generator.
-    """
-    return self._storage_file.GetEvents()
-
   def GetEventData(self):
     """Retrieves the event data.
 
@@ -680,6 +691,14 @@ class FileStorageReader(StorageReader):
       EventData: event data or None if not available.
     """
     return self._storage_file.GetEventDataByIdentifier(identifier)
+
+  def GetEvents(self):
+    """Retrieves the events.
+
+    Yields:
+      generator(EventObject): event generator.
+    """
+    return self._storage_file.GetEvents()
 
   def GetEventSources(self):
     """Retrieves the event sources.

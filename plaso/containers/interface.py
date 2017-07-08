@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The attribute container interface."""
 
+from plaso.lib import py2to3
+
 from efilter.protocols import structured
 
 
@@ -83,6 +85,27 @@ class AttributeContainer(object):
         continue
 
       yield attribute_name, attribute_value
+
+  def GetAttributeValuesString(self):
+    """Retrieves a comparable string of the attribute values.
+
+    Returns:
+      int: comparable string of the attribute values.
+    """
+    attribute_values = self.CopyToDict()
+
+    attributes = []
+    for attribute_name, attribute_value in sorted(attribute_values.items()):
+      if isinstance(attribute_value, dict):
+        attribute_value = sorted(attribute_value.items())
+
+      elif isinstance(attribute_value, py2to3.BYTES_TYPE):
+        attribute_value = repr(attribute_value)
+
+      attribute_string = u'{0:s}: {1!s}'.format(attribute_name, attribute_value)
+      attributes.append(attribute_string)
+
+    return u', '.join(attributes)
 
   def GetIdentifier(self):
     """Retrieves the identifier.

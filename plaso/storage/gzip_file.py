@@ -232,14 +232,6 @@ class GZIPStorageFile(interface.BaseFileStorage):
     """
     return iter(self._GetAttributeContainerList(u'extraction_error'))
 
-  def GetEvents(self):
-    """Retrieves the events.
-
-    Returns:
-      generator(EventObject): event generator.
-    """
-    return iter(self._GetAttributeContainerList(u'event'))
-
   def GetEventData(self):
     """Retrieves event data.
 
@@ -247,6 +239,25 @@ class GZIPStorageFile(interface.BaseFileStorage):
       generator(EventData): event data generator.
     """
     return iter(self._GetAttributeContainerList(u'event_data'))
+
+  def GetEventDataByIdentifier(self, identifier):
+    """Retrieves specific event data.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event data identifier.
+
+    Returns:
+      EventData: event data or None if not available.
+    """
+    raise NotImplementedError()
+
+  def GetEvents(self):
+    """Retrieves the events.
+
+    Returns:
+      generator(EventObject): event generator.
+    """
+    return iter(self._GetAttributeContainerList(u'event'))
 
   def GetEventSources(self):
     """Retrieves the event sources.
