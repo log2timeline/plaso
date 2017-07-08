@@ -49,7 +49,7 @@ class TaskMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     # TODO: implement a way to obtain the results without relying
     # on multi-process primitives e.g. by writing to a file.
-    # self.assertEqual(len(storage_writer.events), 15)
+    # self.assertEqual(storage_writer.number_of_events, 15)
 
 
 if __name__ == '__main__':

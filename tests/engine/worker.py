@@ -249,10 +249,14 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         storage_writer, path_spec, extraction_worker=extraction_worker,
         knowledge_base_values=knowledge_base_values)
 
+    storage_writer.Open()
+
     empty_file_md5 = u'd41d8cd98f00b204e9800998ecf8427e'
-    for event in storage_writer.events:
+    for event in storage_writer.GetSortedEvents():
       md5_hash = getattr(event, u'md5_hash', None)
       self.assertEqual(md5_hash, empty_file_md5)
+
+    storage_writer.Close()
 
   @shared_test_lib.skipUnlessHasTestFile([u'yara.rules'])
   @shared_test_lib.skipUnlessHasTestFile([u'test_pe.exe'])
@@ -276,10 +280,14 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         storage_writer, path_spec, extraction_worker=extraction_worker,
         knowledge_base_values=knowledge_base_values)
 
+    storage_writer.Open()
+
     expected_yara_match = u'PEfileBasic,PEfile'
-    for event in storage_writer.events:
+    for event in storage_writer.GetSortedEvents():
       yara_match = getattr(event, u'yara_match', None)
       self.assertEqual(yara_match, expected_yara_match)
+
+    storage_writer.Close()
 
 
 if __name__ == '__main__':
