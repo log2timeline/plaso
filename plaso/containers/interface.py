@@ -95,7 +95,10 @@ class AttributeContainer(object):
     attribute_values = self.CopyToDict()
 
     attributes = []
-    for attribute_name, attribute_value in sorted(attribute_values.items()):
+    for attribute_name, attribute_value in sorted(self.__dict__.items()):
+      if attribute_name.startswith(u'_') or attribute_value is None:
+        continue
+
       if isinstance(attribute_value, dict):
         attribute_value = sorted(attribute_value.items())
 
