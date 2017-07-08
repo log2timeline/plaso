@@ -513,8 +513,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     if self._operating_system:
       self._mount_path = getattr(options, u'filename', None)
 
-    self._ParseFilterOption(options)
-
     self._status_view_mode = getattr(
         options, u'status_view_mode', self._DEFAULT_STATUS_VIEW_MODE)
 
