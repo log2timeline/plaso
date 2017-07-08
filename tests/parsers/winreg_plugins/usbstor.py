@@ -29,7 +29,7 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin_object, file_entry=test_file_entry)
 
-    self.assertEqual(len(storage_writer.events), 5)
+    self.assertEqual(storage_writer.number_of_events, 5)
 
     event_object = storage_writer.events[0]
 

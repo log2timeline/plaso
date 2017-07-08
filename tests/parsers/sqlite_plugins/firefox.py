@@ -32,7 +32,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     # 2 x 8 bookmark folders).
     # However there are three events that do not have a timestamp
     # so the test file will show 202 extracted events.
-    self.assertEqual(len(storage_writer.events), 202)
+    self.assertEqual(storage_writer.number_of_events, 202)
 
     # Check the first page visited event.
     event_object = storage_writer.events[0]
@@ -189,7 +189,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     #     28 bookmarks
     #     14 bookmark folders
     #     8 annotations
-    self.assertEqual(len(storage_writer.events), 84)
+    self.assertEqual(storage_writer.number_of_events, 84)
     counter = collections.Counter()
     for event_object in storage_writer.events:
       counter[event_object.data_type] += 1
@@ -225,7 +225,7 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
         [u'downloads.sqlite'], plugin_object, cache=cache)
 
     # The downloads.sqlite file contains 2 events (1 download).
-    self.assertEqual(len(storage_writer.events), 2)
+    self.assertEqual(storage_writer.number_of_events, 2)
 
     # Check the first page visited event.
     event_object = storage_writer.events[0]

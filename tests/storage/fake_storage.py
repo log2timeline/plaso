@@ -17,6 +17,9 @@ from tests import test_lib as shared_test_lib
 from tests.storage import test_lib
 
 
+# TODO: add tests for _EventsHeap
+
+
 class FakeStorageWriterTest(test_lib.StorageTestCase):
   """Tests for the fake storage writer object."""
 
@@ -130,9 +133,46 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     with self.assertRaises(IOError):
       storage_writer.Close()
 
+  def testGetEvents(self):
+    """Tests the GetEvents function."""
+    session = sessions.Session()
+    test_events = self._CreateTestEvents()
+
+    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer.Open()
+
+    event = None
+    for event in test_events:
+      storage_writer.AddEvent(event)
+
+    events = list(storage_writer.GetEvents())
+    self.assertEqual(len(events), len(test_events))
+
+    storage_writer.Close()
+
+  # TODO: add tests for GetEventSources.
+  # TODO: add tests for GetEventTags.
   # TODO: add tests for GetFirstWrittenEventSource and
   # GetNextWrittenEventSource.
-  # TODO: add tests for GetSortedEvents.
+
+  def testGetSortedEvents(self):
+    """Tests the GetSortedEvents function."""
+    session = sessions.Session()
+    test_events = self._CreateTestEvents()
+
+    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer.Open()
+
+    event = None
+    for event in test_events:
+      storage_writer.AddEvent(event)
+
+    events = list(storage_writer.GetSortedEvents())
+    self.assertEqual(len(events), len(test_events))
+
+    storage_writer.Close()
+
+    # TODO: add test with time range.
 
   @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
   @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])

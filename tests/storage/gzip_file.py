@@ -230,6 +230,8 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
+    # TODO: add test with time range.
+
   def testWriteTaskStartAndCompletion(self):
     """Tests the WriteTaskStart and WriteTaskCompletion functions."""
     session = sessions.Session()

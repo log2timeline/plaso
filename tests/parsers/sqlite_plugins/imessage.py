@@ -24,7 +24,7 @@ class IMessageTest(test_lib.SQLitePluginTestCase):
         [u'imessage_chat.db'], plugin_object)
 
     # The iMessage database file contains 10 events.
-    self.assertEqual(len(storage_writer.events), 10)
+    self.assertEqual(storage_writer.number_of_events, 10)
 
     # Check the eighth message sent.
     event = storage_writer.events[7]

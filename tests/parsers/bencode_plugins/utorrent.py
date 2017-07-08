@@ -22,11 +22,11 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     parser_object = bencode_parser.BencodeParser()
     storage_writer = self._ParseFile([u'bencode_utorrent'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 4)
+    self.assertEqual(storage_writer.number_of_events, 4)
 
     # The order in which BencodeParser generates events is nondeterministic
     # hence we sort the events.
-    events = self._GetSortedEvents(storage_writer.events)
+    events = list(storage_writer.GetSortedEvents())
 
     expected_caption = u'plaso test'
     expected_path = u'e:\\torrent\\files\\plaso test'

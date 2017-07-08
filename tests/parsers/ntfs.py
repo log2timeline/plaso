@@ -30,7 +30,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(os_path_spec, parser_object)
 
-    self.assertEqual(len(storage_writer.events), 126352)
+    self.assertEqual(storage_writer.number_of_events, 126352)
 
     # A distributed link tracking event.
     event_object = storage_writer.events[3684]
@@ -70,7 +70,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(tsk_path_spec, parser_object)
 
-    self.assertEqual(len(storage_writer.events), 284)
+    self.assertEqual(storage_writer.number_of_events, 284)
 
     # The creation timestamp.
     event_object = storage_writer.events[0]
@@ -175,7 +175,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(tsk_path_spec, parser_object)
 
-    self.assertEqual(len(storage_writer.events), 184)
+    self.assertEqual(storage_writer.number_of_events, 184)
 
 
 class NTFSUsnJrnlParser(test_lib.ParserTestCase):
@@ -199,7 +199,7 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
     # requires to read directly from the volume.
     storage_writer = self._ParseFileByPathSpec(volume_path_spec, parser_object)
 
-    self.assertEqual(len(storage_writer.events), 19)
+    self.assertEqual(storage_writer.number_of_events, 19)
 
     event_object = storage_writer.events[0]
 

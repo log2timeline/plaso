@@ -23,7 +23,7 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         [u'document_versions.sql'], plugin_object)
 
-    self.assertEqual(len(storage_writer.events), 4)
+    self.assertEqual(storage_writer.number_of_events, 4)
 
     # Check the first page visited entry.
     event_object = storage_writer.events[0]

@@ -23,7 +23,7 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
         [u'quarantine.db'], plugin_object)
 
     # The quarantine database contains 14 events.
-    self.assertEqual(len(storage_writer.events), 14)
+    self.assertEqual(storage_writer.number_of_events, 14)
 
     # Examine a VLC event.
     event_object = storage_writer.events[3]

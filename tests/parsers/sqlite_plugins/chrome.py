@@ -26,7 +26,7 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
         [u'History'], plugin_object, cache=cache)
 
     # The History file contains 71 events (69 page visits, 1 file downloads).
-    self.assertEqual(len(storage_writer.events), 71)
+    self.assertEqual(storage_writer.number_of_events, 71)
 
     # Check the first page visited entry.
     event = storage_writer.events[0]

@@ -19,7 +19,7 @@ class DpkgParserTest(test_lib.ParserTestCase):
     parser_object = dpkg.DpkgParser()
     storage_writer = self._ParseFile([u'dpkg.log'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 4)
+    self.assertEqual(storage_writer.number_of_events, 4)
 
     event = storage_writer.events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(

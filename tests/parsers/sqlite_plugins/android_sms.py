@@ -24,7 +24,7 @@ class AndroidSMSTest(test_lib.SQLitePluginTestCase):
         [u'mmssms.db'], plugin_object)
 
     # The SMS database file contains 9 events (5 SENT, 4 RECEIVED messages).
-    self.assertEqual(len(storage_writer.events), 9)
+    self.assertEqual(storage_writer.number_of_events, 9)
 
     # Check the first SMS sent.
     event = storage_writer.events[0]

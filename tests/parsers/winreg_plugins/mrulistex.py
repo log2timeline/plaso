@@ -73,7 +73,7 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
     plugin_object = mrulistex.MRUListExStringPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
 
-    self.assertEqual(len(storage_writer.events), 1)
+    self.assertEqual(storage_writer.number_of_events, 1)
 
     # A MRUListEx event object.
     event_object = storage_writer.events[0]
@@ -114,7 +114,7 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin_object, file_entry=test_file_entry)
 
-    self.assertEqual(len(storage_writer.events), 65)
+    self.assertEqual(storage_writer.number_of_events, 65)
 
     # A MRUListEx event object.
     event_object = storage_writer.events[40]
@@ -181,7 +181,7 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin_object, file_entry=test_file_entry)
 
-    self.assertEqual(len(storage_writer.events), 6)
+    self.assertEqual(storage_writer.number_of_events, 6)
 
     # A MRUListEx event object.
     event_object = storage_writer.events[0]
@@ -262,7 +262,7 @@ class TestMRUListExStringAndShellItemListPlugin(
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin_object, file_entry=test_file_entry)
 
-    self.assertEqual(len(storage_writer.events), 31)
+    self.assertEqual(storage_writer.number_of_events, 31)
 
     # A MRUListEx event object.
     event_object = storage_writer.events[30]
