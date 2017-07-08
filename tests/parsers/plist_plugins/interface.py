@@ -61,17 +61,17 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
   def testGetKeys(self):
     """Tests the _GetKeys function."""
     # Ensure the plugin only processes if both filename and keys exist.
-    plugin_object = MockPlugin()
+    plugin = MockPlugin()
 
     # Match DeviceCache from the root level.
     key = [u'DeviceCache']
-    result = plugin_object._GetKeys(self._top_level_dict, key)
+    result = plugin._GetKeys(self._top_level_dict, key)
     self.assertEqual(len(result), 1)
 
     # Look for a key nested a layer beneath DeviceCache from root level.
     # Note: overriding the default depth to look deeper.
     key = [u'44-00-00-00-00-02']
-    result = plugin_object._GetKeys(self._top_level_dict, key, depth=2)
+    result = plugin._GetKeys(self._top_level_dict, key, depth=2)
     self.assertEqual(len(result), 1)
 
     # Check the value of the result was extracted as expected.
@@ -80,19 +80,19 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     # Ensure the plugin only processes if both filename and keys exist.
-    plugin_object = MockPlugin()
+    plugin = MockPlugin()
 
     # Test correct filename and keys.
     top_level = {u'DeviceCache': 1, u'PairedDevices': 1}
     storage_writer = self._ParsePlistWithPlugin(
-        plugin_object, u'plist_binary', top_level)
+        plugin, u'plist_binary', top_level)
 
     self.assertEqual(storage_writer.number_of_events, 1)
 
     # Correct filename with odd filename cAsinG. Adding an extra useless key.
     top_level = {u'DeviceCache': 1, u'PairedDevices': 1, u'R@ndomExtraKey': 1}
     storage_writer = self._ParsePlistWithPlugin(
-        plugin_object, u'pLiSt_BinAry', top_level)
+        plugin, u'pLiSt_BinAry', top_level)
 
     self.assertEqual(storage_writer.number_of_events, 1)
 
@@ -100,13 +100,13 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
     top_level = {u'DeviceCache': 1, u'PairedDevices': 1}
     with self.assertRaises(errors.WrongPlistPlugin):
       _ = self._ParsePlistWithPlugin(
-          plugin_object, u'wrong_file.plist', top_level)
+          plugin, u'wrong_file.plist', top_level)
 
     # Test not enough required keys.
     top_level = {u'Useless_Key': 0, u'PairedDevices': 1}
     with self.assertRaises(errors.WrongPlistPlugin):
       _ = self._ParsePlistWithPlugin(
-          plugin_object, u'plist_binary.plist', top_level)
+          plugin, u'plist_binary.plist', top_level)
 
   def testRecurseKey(self):
     """Tests the RecurseKey function."""

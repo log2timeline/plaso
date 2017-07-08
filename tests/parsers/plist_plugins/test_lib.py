@@ -12,12 +12,12 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
   """The unit test case for a plist plugin."""
 
   def _ParsePlistFileWithPlugin(
-      self, plugin_object, path_segments, plist_name,
+      self, plugin, path_segments, plist_name,
       knowledge_base_values=None):
     """Parses a file using the parser and plugin object.
 
     Args:
-      plugin_object: a plist plugin object (instance of PlistPlugin).
+      plugin: a plist plugin object (instance of PlistPlugin).
       path_segments: the path segments inside the test data directory to the
                      test file.
       plist_name: the name of the plist to parse.
@@ -30,21 +30,21 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     file_entry = self._GetTestFileEntry(path_segments)
     file_object = file_entry.GetFileObject()
 
-    parser_object = plist.PlistParser()
-    top_level_object = parser_object.GetTopLevel(file_object)
+    parser = plist.PlistParser()
+    top_level_object = parser.GetTopLevel(file_object)
     self.assertIsNotNone(top_level_object)
 
     return self._ParsePlistWithPlugin(
-        plugin_object, plist_name, top_level_object,
+        plugin, plist_name, top_level_object,
         knowledge_base_values=knowledge_base_values)
 
   def _ParsePlistWithPlugin(
-      self, plugin_object, plist_name, top_level_object,
+      self, plugin, plist_name, top_level_object,
       knowledge_base_values=None):
     """Parses a plist using the plugin object.
 
     Args:
-      plugin_object: a plist plugin object (instance of PlistPlugin).
+      plugin: a plist plugin object (instance of PlistPlugin).
       plist_name: a string containg the name of the plist to parse.
       top_level_object: the top-level plist object.
       knowledge_base_values: optional dict containing the knowledge base
@@ -60,7 +60,7 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     parser_mediator = self._CreateParserMediator(
         storage_writer, knowledge_base_values=knowledge_base_values)
 
-    plugin_object.Process(
+    plugin.Process(
         parser_mediator, plist_name=plist_name, top_level=top_level_object)
 
     return storage_writer

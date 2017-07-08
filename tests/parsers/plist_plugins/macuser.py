@@ -20,9 +20,9 @@ class MacUserPluginTest(test_lib.PlistPluginTestCase):
     """Tests the Process function."""
     plist_name = u'user.plist'
 
-    plugin_object = macuser.MacUserPlugin()
+    plugin = macuser.MacUserPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
-        plugin_object, [plist_name], plist_name)
+        plugin, [plist_name], plist_name)
 
     self.assertEqual(storage_writer.number_of_events, 1)
 
@@ -30,15 +30,15 @@ class MacUserPluginTest(test_lib.PlistPluginTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event_object = events[0]
+    event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-28 04:35:47')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event_object.key, u'passwordLastSetTime')
-    self.assertEqual(event_object.root, u'/')
-    expected_desc = (
+    self.assertEqual(event.key, u'passwordLastSetTime')
+    self.assertEqual(event.root, u'/')
+    expected_description = (
         u'Last time user (501) changed the password: '
         u'$ml$37313$fa6cac1869263baa85cffc5e77a3d4ee164b7'
         u'5536cae26ce8547108f60e3f554$a731dbb0e386b169af8'
@@ -47,11 +47,11 @@ class MacUserPluginTest(test_lib.PlistPluginTestCase):
         u'e0d819a1b0aba20646fd61345d98c0c9a411bfd1144dd4b'
         u'3c40ec0f148b66d5b9ab014449f9b2e103928ef21db6e25'
         u'b536a60ff17a84e985be3aa7ba3a4c16b34e0d1d2066ae178')
-    self.assertEqual(event_object.desc, expected_desc)
-    expected_string = u'//passwordLastSetTime {}'.format(expected_desc)
+    self.assertEqual(event.desc, expected_description)
+
+    expected_string = u'//passwordLastSetTime {}'.format(expected_description)
     expected_short = u'{0:s}...'.format(expected_string[:77])
-    self._TestGetMessageStrings(
-        event_object, expected_string, expected_short)
+    self._TestGetMessageStrings(event, expected_string, expected_short)
 
 
 if __name__ == '__main__':

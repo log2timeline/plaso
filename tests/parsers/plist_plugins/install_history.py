@@ -19,9 +19,9 @@ class InstallHistoryPluginTest(test_lib.PlistPluginTestCase):
     """Tests the Process function."""
     plist_name = u'InstallHistory.plist'
 
-    plugin_object = install_history.InstallHistoryPlugin()
+    plugin = install_history.InstallHistoryPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
-        plugin_object, [plist_name], plist_name)
+        plugin, [plist_name], plist_name)
 
     self.assertEqual(storage_writer.number_of_events, 7)
 
@@ -32,13 +32,13 @@ class InstallHistoryPluginTest(test_lib.PlistPluginTestCase):
     expected_timestamps = [
         1384225175000000, 1388205491000000, 1388232883000000, 1388232883000000,
         1388232883000000, 1388232883000000, 1390941528000000]
-    timestamps = sorted([event_object.timestamp for event_object in events])
+    timestamps = sorted([event.timestamp for event in events])
 
     self.assertEqual(timestamps, expected_timestamps)
 
-    event_object = events[0]
-    self.assertEqual(event_object.key, u'')
-    self.assertEqual(event_object.root, u'/item')
+    event = events[0]
+    self.assertEqual(event.key, u'')
+    self.assertEqual(event.root, u'/item')
 
     expected_description = (
         u'Installation of [OS X 10.9 (13A603)] using [OS X Installer]. '
@@ -51,12 +51,11 @@ class InstallHistoryPluginTest(test_lib.PlistPluginTestCase):
         u'com.apple.pkg.JavaEssentials, com.apple.pkg.OxfordDictionaries, '
         u'com.apple.pkg.X11redirect, com.apple.pkg.OSInstall, '
         u'com.apple.pkg.update.compatibility.2013.001.')
-    self.assertEqual(event_object.desc, expected_description)
+    self.assertEqual(event.desc, expected_description)
 
     expected_message = u'/item/ {0:s}'.format(expected_description)
-    expected_message_short = u'{0:s}...'.format(expected_message[:77])
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_message_short)
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

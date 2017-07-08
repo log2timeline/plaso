@@ -19,9 +19,9 @@ class SoftwareUpdatePluginTest(test_lib.PlistPluginTestCase):
     """Tests the Process function."""
     plist_name = u'com.apple.SoftwareUpdate.plist'
 
-    plugin_object = softwareupdate.SoftwareUpdatePlugin()
+    plugin = softwareupdate.SoftwareUpdatePlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
-        plugin_object, [plist_name], plist_name)
+        plugin, [plist_name], plist_name)
 
     self.assertEqual(storage_writer.number_of_events, 2)
 
@@ -29,24 +29,23 @@ class SoftwareUpdatePluginTest(test_lib.PlistPluginTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event_object = events[0]
+    event = events[0]
 
-    self.assertEqual(event_object.key, u'')
-    self.assertEqual(event_object.root, u'/')
+    self.assertEqual(event.key, u'')
+    self.assertEqual(event.root, u'/')
     expected_desc = (
         u'Last Mac OS 10.9.1 (13B42) partially '
         u'update, pending 1: RAWCameraUpdate5.03(031-2664).')
-    self.assertEqual(event_object.desc, expected_desc)
+    self.assertEqual(event.desc, expected_desc)
 
-    event_object = events[1]
+    event = events[1]
 
-    self.assertEqual(event_object.key, u'')
-    self.assertEqual(event_object.root, u'/')
+    self.assertEqual(event.key, u'')
+    self.assertEqual(event.root, u'/')
     expected_desc = u'Last Mac OS X 10.9.1 (13B42) full update.'
-    self.assertEqual(event_object.desc, expected_desc)
+    self.assertEqual(event.desc, expected_desc)
     expected_string = u'// {0:s}'.format(expected_desc)
-    self._TestGetMessageStrings(
-        event_object, expected_string, expected_string)
+    self._TestGetMessageStrings(event, expected_string, expected_string)
 
 
 if __name__ == '__main__':
