@@ -29,26 +29,28 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin_object = typedurls.TypedURLsPlugin()
+    plugin = typedurls.TypedURLsPlugin()
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin_object, file_entry=test_file_entry)
+        registry_key, plugin, file_entry=test_file_entry)
 
     self.assertEqual(storage_writer.number_of_events, 1)
 
-    event_object = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
 
-    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
+    event = events[0]
+
+    self.assertEqual(event.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, plugin_object.plugin_name)
+    self.assertEqual(event.parser, plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-03-12 21:23:53.307749')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     regvalue_identifier = u'url1'
     expected_value = u'http://cnn.com/'
-    self._TestRegvalue(event_object, regvalue_identifier, expected_value)
+    self._TestRegvalue(event, regvalue_identifier, expected_value)
 
     expected_message = (
         u'[{0:s}] '
@@ -67,8 +69,7 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
         u'url9: http://www.stark-research-labs.com/').format(key_path)
     expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
@@ -85,32 +86,33 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin_object = typedurls.TypedURLsPlugin()
+    plugin = typedurls.TypedURLsPlugin()
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin_object, file_entry=test_file_entry)
+        registry_key, plugin, file_entry=test_file_entry)
 
     self.assertEqual(storage_writer.number_of_events, 1)
 
-    event_object = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
 
-    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
+    event = events[0]
+
+    self.assertEqual(event.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, plugin_object.plugin_name)
+    self.assertEqual(event.parser, plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-11-10 07:58:15.811625')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     regvalue_identifier = u'url1'
     expected_value = u'\\\\controller'
-    self._TestRegvalue(event_object, regvalue_identifier, expected_value)
+    self._TestRegvalue(event, regvalue_identifier, expected_value)
 
     expected_message = u'[{0:s}] {1:s}: {2:s}'.format(
         key_path, regvalue_identifier, expected_value)
     expected_short_message = u'{0:s}...'.format(expected_message[:77])
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

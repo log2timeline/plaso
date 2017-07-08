@@ -28,23 +28,25 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin_object = sam_users.SAMUsersWindowsRegistryPlugin()
+    plugin = sam_users.SAMUsersWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin_object, file_entry=test_file_entry)
+        registry_key, plugin, file_entry=test_file_entry)
 
     self.assertEqual(storage_writer.number_of_events, 7)
 
-    event_object = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
 
-    self._TestRegvalue(event_object, u'account_rid', 500)
-    self._TestRegvalue(event_object, u'login_count', 6)
-    self._TestRegvalue(event_object, u'username', u'Administrator')
+    event = events[0]
+
+    self._TestRegvalue(event, u'account_rid', 500)
+    self._TestRegvalue(event, u'login_count', 6)
+    self._TestRegvalue(event, u'username', u'Administrator')
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-09-24 03:36:06.358837')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
     expected_message = (
         u'[{0:s}] '
@@ -54,21 +56,20 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         u'username: Administrator').format(key_path)
     expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     # Test SAMUsersWindowsRegistryEvent.
-    event_object = storage_writer.events[1]
+    event = events[1]
 
-    self.assertEqual(event_object.account_rid, 500)
-    self.assertEqual(event_object.login_count, 6)
-    self.assertEqual(event_object.username, u'Administrator')
+    self.assertEqual(event.account_rid, 500)
+    self.assertEqual(event.login_count, 6)
+    self.assertEqual(event.username, u'Administrator')
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-11-20 21:48:12.569244')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_LOGIN)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_LOGIN)
 
     expected_message = (
         u'[{0:s}] '
@@ -81,8 +82,7 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         u'RID: 500 '
         u'Login count: 6')
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
