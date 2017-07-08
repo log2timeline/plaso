@@ -33,7 +33,6 @@ from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import task_engine as multi_process_engine
-from plaso.output import manager as output_manager
 from plaso.parsers import manager as parsers_manager
 from plaso.storage import zip_file as storage_zip_file
 
@@ -157,18 +156,6 @@ class Log2TimelineTool(
 
     return configuration
 
-  def _GetOutputModulesInformation(self):
-    """Retrieves the output modules information.
-
-    Returns:
-      list[tuple[str, str]]: pairs of output module names and descriptions.
-    """
-    output_modules_information = []
-    for name, output_class in output_manager.OutputManager.GetOutputClasses():
-      output_modules_information.append((name, output_class.DESCRIPTION))
-
-    return output_modules_information
-
   def _GetPluginData(self):
     """Retrieves the version and various plugin information.
 
@@ -191,24 +178,8 @@ class Log2TimelineTool(
     return_dict[u'Parsers'] = parsers_information
     return_dict[u'Parser Plugins'] = plugins_information
     return_dict[u'Parser Presets'] = presets_information
-    return_dict[u'Output Modules'] = output_modules_information
 
     return return_dict
-
-  def _ParseOutputOptions(self, options):
-    """Parses the output options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    self._output_module = self.ParseStringOption(options, u'output_module')
-    if self._output_module == u'list':
-      self.list_output_modules = True
-
-    self._text_prepend = self.ParseStringOption(options, u'text_prepend')
 
   def _ParseProcessingOptions(self, options):
     """Parses the processing options.

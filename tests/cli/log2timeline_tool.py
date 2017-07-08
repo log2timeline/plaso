@@ -53,17 +53,6 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
   # TODO: add tests for _CheckStorageFile
   # TODO: add tests for _CreateProcessingConfiguration
 
-  def testGetOutputModulesInformation(self):
-    """Tests the _GetOutputModulesInformation function."""
-    test_tool = log2timeline_tool.Log2TimelineTool()
-    modules_info = test_tool._GetOutputModulesInformation()
-
-    self.assertIsNotNone(modules_info)
-
-    available_module_names = [name for name, _ in modules_info]
-    self.assertIn(u'dynamic', available_module_names)
-    self.assertIn(u'json', available_module_names)
-
   def testGetPluginData(self):
     """Tests the _GetPluginData function."""
     test_tool = log2timeline_tool.Log2TimelineTool()
@@ -81,14 +70,6 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     self.assertIn(u'Parser Plugins', plugin_info)
     self.assertIsNotNone(plugin_info[u'Parser Plugins'])
 
-  def testParseOutputOptions(self):
-    """Tests the _ParseOutputOptions function."""
-    test_tool = log2timeline_tool.Log2TimelineTool()
-
-    options = test_lib.TestOptions()
-
-    test_tool._ParseOutputOptions(options)
-
   def testParseProcessingOptions(self):
     """Tests the _ParseProcessingOptions function."""
     test_tool = log2timeline_tool.Log2TimelineTool()
@@ -98,8 +79,6 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     test_tool._ParseProcessingOptions(options)
 
   # TODO: add tests for _PrintProcessingSummary
-
-  # TODO: add tests for AddOutputOptions
 
   def testAddProcessingOptions(self):
     """Tests the AddProcessingOptions function."""
@@ -388,8 +367,8 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     output = output_writer.ReadOutput()
 
     section_headings = [
-        u'Hashers', u'Output Modules', u'Parsers', u'Parser Plugins',
-        u'Parser Presets', u'Versions']
+        u'Hashers', u'Parsers', u'Parser Plugins', u'Parser Presets',
+        u'Versions']
     for heading in section_headings:
       self.assertIn(heading, output)
 
