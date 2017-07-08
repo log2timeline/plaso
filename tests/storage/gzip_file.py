@@ -139,6 +139,28 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
+  def testGetEvents(self):
+    """Tests the GetEvents function."""
+    test_events = self._CreateTestEvents()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      storage_file = gzip_file.GZIPStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
+
+      for event in test_events:
+        storage_file.AddEvent(event)
+
+      storage_file.Close()
+
+      storage_file = gzip_file.GZIPStorageFile()
+      storage_file.Open(path=temp_file)
+
+      test_events = list(storage_file.GetEvents())
+      self.assertEqual(len(test_events), 4)
+
+      storage_file.Close()
+
   def testGetEventSources(self):
     """Tests the GetEventSources function."""
     event_source = event_sources.EventSource()
