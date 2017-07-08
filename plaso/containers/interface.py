@@ -92,8 +92,6 @@ class AttributeContainer(object):
     Returns:
       int: comparable string of the attribute values.
     """
-    attribute_values = self.CopyToDict()
-
     attributes = []
     for attribute_name, attribute_value in sorted(self.__dict__.items()):
       if attribute_name.startswith(u'_') or attribute_value is None:
