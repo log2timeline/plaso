@@ -8,6 +8,83 @@ import tempfile
 
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
+from plaso.storage import identifiers
+
+
+class SerializedAttributeContainerList(object):
+  """Serialized attribute container list.
+
+  The list is unsorted and pops attribute containers in the same order as
+  pushed to preserve order.
+
+  The GetAttributeContainerByIndex method should be used to read attribute
+  containers from the list while it being filled.
+
+  Attributes:
+    data_size (int): total data size of the serialized attribute containers
+        on the list.
+    next_sequence_number (int): next attribute container sequence number.
+  """
+
+  def __init__(self):
+    """Initializes a serialized attribute container list."""
+    super(SerializedAttributeContainerList, self).__init__()
+    self._list = []
+    self.data_size = 0
+    self.next_sequence_number = 0
+
+  @property
+  def number_of_attribute_containers(self):
+    """int: number of serialized attribute containers on the list."""
+    return len(self._list)
+
+  def Empty(self):
+    """Empties the list."""
+    self._list = []
+    self.data_size = 0
+
+  def GetAttributeContainerByIndex(self, index):
+    """Retrieves a specific serialized attribute container from the list.
+
+    Args:
+      index (int): attribute container index.
+
+    Returns:
+      bytes: serialized attribute container data or None if not available.
+
+    Raises:
+      IndexError: if the index is less than zero.
+    """
+    if index < 0:
+      raise IndexError(
+          u'Unsupported negative index value: {0:d}.'.format(index))
+
+    if index < len(self._list):
+      return self._list[index]
+
+  def PopAttributeContainer(self):
+    """Pops a serialized attribute container from the list.
+
+    Returns:
+      bytes: serialized attribute container data.
+    """
+    try:
+      serialized_data = self._list.pop(0)
+      self.data_size -= len(serialized_data)
+      return serialized_data
+
+    except IndexError:
+      return
+
+  def PushAttributeContainer(self, serialized_data):
+    """Pushes a serialized attribute container onto the list.
+
+    Args:
+      serialized_data (bytes): serialized attribute container data.
+    """
+    self._list.append(serialized_data)
+    self.data_size += len(serialized_data)
+    self.next_sequence_number += 1
 
 
 class BaseStorage(object):
@@ -63,6 +140,14 @@ class BaseStorage(object):
 
     Yields:
       AnalysisReport: analysis report.
+    """
+
+  @abc.abstractmethod
+  def GetEvents(self):
+    """Retrieves the events.
+
+    Yields:
+      EventObject: event.
     """
 
   @abc.abstractmethod
@@ -222,6 +307,48 @@ class BaseFileStorage(BaseStorage):
 
     return attribute_container
 
+  def _GetNumberOfSerializedAttributeContainers(self, container_type):
+    """Retrieves the number of serialized attribute containers.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      int: number of serialized attribute containers.
+    """
+    container_list = self._GetSerializedAttributeContainerList(container_type)
+    return container_list.number_of_attribute_containers
+
+  def _GetSerializedAttributeContainerByIndex(self, container_type, index):
+    """Retrieves a specific serialized attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+      index (int): attribute container index.
+
+    Returns:
+      bytes: serialized attribute container data or None if not available.
+    """
+    container_list = self._GetSerializedAttributeContainerList(container_type)
+    return container_list.GetAttributeContainerByIndex(index)
+
+  def _GetSerializedAttributeContainerList(self, container_type):
+    """Retrieves a serialized attribute container list.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      SerializedAttributeContainerList: serialized attribute container list.
+    """
+    container_list = self._serialized_attribute_containers.get(
+        container_type, None)
+    if not container_list:
+      container_list = SerializedAttributeContainerList()
+      self._serialized_attribute_containers[container_type] = container_list
+
+    return container_list
+
   def _SerializeAttributeContainer(self, attribute_container):
     """Serializes an attribute container.
 
@@ -252,6 +379,18 @@ class BaseFileStorage(BaseStorage):
             attribute_container.CONTAINER_TYPE)
 
     return attribute_container_data
+
+  def _RaiseIfNotWritable(self):
+    """Raises if the storage file is not writable.
+
+    Raises:
+      IOError: when the storage file is closed or read-only.
+    """
+    if not self._is_open:
+      raise IOError(u'Unable to write to closed storage file.')
+
+    if self._read_only:
+      raise IOError(u'Unable to write to read-only storage file.')
 
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.
@@ -287,6 +426,79 @@ class StorageMergeReader(object):
     """
 
 
+class FileStorageMergeReader(StorageMergeReader):
+  """File-based storage reader interface for merging."""
+
+  # pylint: disable=abstract-method
+
+  def __init__(self, storage_writer):
+    """Initializes a storage merge reader.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+    """
+    super(FileStorageMergeReader, self).__init__(storage_writer)
+    self._serializer = json_serializer.JSONAttributeContainerSerializer
+    self._serializers_profiler = None
+
+  def _AddAttributeContainer(self, attribute_container):
+    """Adds a single attribute container to the storage writer.
+
+    Args:
+      attribute_container (AttributeContainer): container
+
+    Raises:
+      RuntimeError: if the attribute container type is not supported.
+    """
+    container_type = attribute_container.CONTAINER_TYPE
+    if container_type == u'event_source':
+      self._storage_writer.AddEventSource(attribute_container)
+
+    elif container_type == u'event':
+      self._storage_writer.AddEvent(attribute_container)
+
+    elif container_type == u'event_tag':
+      event_identifier = identifiers.SerializedStreamIdentifier(
+          attribute_container.event_stream_number,
+          attribute_container.event_entry_index)
+      attribute_container.SetEventIdentifier(event_identifier)
+
+      self._storage_writer.AddEventTag(attribute_container)
+
+    elif container_type == u'extraction_error':
+      self._storage_writer.AddError(attribute_container)
+
+    elif container_type == u'analysis_report':
+      self._storage_writer.AddAnalysisReport(attribute_container)
+
+    elif container_type not in (u'task_completion', u'task_start'):
+      raise RuntimeError(u'Unsupported container type: {0:s}'.format(
+          container_type))
+
+  def _DeserializeAttributeContainer(self, container_type, serialized_data):
+    """Deserializes an attribute container.
+
+    Args:
+      container_type (str): attribute container type.
+      serialized_data (bytes): serialized attribute container data.
+
+    Returns:
+      AttributeContainer: attribute container or None.
+    """
+    if not serialized_data:
+      return
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(container_type)
+
+    attribute_container = self._serializer.ReadSerialized(serialized_data)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(container_type)
+
+    return attribute_container
+
+
 class StorageReader(object):
   """Class that defines the storage reader interface."""
 
@@ -316,6 +528,14 @@ class StorageReader(object):
 
     Yields:
       ExtractionError: error.
+    """
+
+  @abc.abstractmethod
+  def GetEvents(self):
+    """Retrieves the events.
+
+    Yields:
+      EventObject: event.
     """
 
   @abc.abstractmethod
@@ -405,6 +625,14 @@ class FileStorageReader(StorageReader):
       generator(ExtractionError): error generator.
     """
     return self._storage_file.GetErrors()
+
+  def GetEvents(self):
+    """Retrieves the events.
+
+    Returns:
+      generator(EventObject): event generator.
+    """
+    return self._storage_file.GetEvents()
 
   def GetEventSources(self):
     """Retrieves the event sources.
@@ -550,6 +778,14 @@ class StorageWriter(object):
     raise NotImplementedError()
 
   @abc.abstractmethod
+  def GetEvents(self):
+    """Retrieves the events.
+
+    Yields:
+      EventObject: event.
+    """
+
+  @abc.abstractmethod
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.
 
@@ -592,7 +828,7 @@ class StorageWriter(object):
     for event_source in storage_reader.GetEventSources():
       self.AddEventSource(event_source)
 
-    for event in storage_reader.GetSortedEvents():
+    for event in storage_reader.GetEvents():
       self.AddEvent(event)
 
     for event_tag in storage_reader.GetEventTags():
@@ -616,7 +852,7 @@ class StorageWriter(object):
 
     Raises:
       IOError: if the storage type is not supported or
-               if the temporary path for the task storage does no exist.
+          if the temporary path for the task storage does no exist.
     """
     raise NotImplementedError()
 
@@ -742,6 +978,15 @@ class FileStorageWriter(StorageWriter):
       parser_name = u'N/A'
     self._session.parsers_counter[parser_name] += 1
 
+  def _RaiseIfNotWritable(self):
+    """Raises if the storage writer is not writable.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
 
@@ -751,8 +996,7 @@ class FileStorageWriter(StorageWriter):
     Raises:
       IOError: when the storage writer is closed.
     """
-    if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
+    self._RaiseIfNotWritable()
 
     self._storage_file.AddAnalysisReport(analysis_report)
 
@@ -770,8 +1014,7 @@ class FileStorageWriter(StorageWriter):
     Raises:
       IOError: when the storage writer is closed.
     """
-    if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
+    self._RaiseIfNotWritable()
 
     self._storage_file.AddError(error)
     self.number_of_errors += 1
@@ -785,8 +1028,7 @@ class FileStorageWriter(StorageWriter):
     Raises:
       IOError: when the storage writer is closed.
     """
-    if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
+    self._RaiseIfNotWritable()
 
     self._storage_file.AddEvent(event)
     self.number_of_events += 1
@@ -802,8 +1044,7 @@ class FileStorageWriter(StorageWriter):
     Raises:
       IOError: when the storage writer is closed.
     """
-    if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
+    self._RaiseIfNotWritable()
 
     self._storage_file.AddEventSource(event_source)
     self.number_of_event_sources += 1
@@ -817,8 +1058,7 @@ class FileStorageWriter(StorageWriter):
     Raises:
       IOError: when the storage writer is closed.
     """
-    if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
+    self._RaiseIfNotWritable()
 
     self._storage_file.AddEventTag(event_tag)
 
@@ -863,8 +1103,7 @@ class FileStorageWriter(StorageWriter):
     Raises:
       IOError: when the storage writer is closed.
     """
-    if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
+    self._RaiseIfNotWritable()
 
     self._storage_file.Close()
     self._storage_file = None
@@ -894,6 +1133,17 @@ class FileStorageWriter(StorageWriter):
         self._task_storage_path, u'{0:s}.plaso'.format(task.identifier))
 
     return self._CreateTaskStorageWriter(storage_file_path, task)
+
+  def GetEvents(self):
+    """Retrieves the events.
+
+    Returns:
+      generator(EventObject): event generator.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    return self._storage_file.GetEvents()
 
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.
@@ -1127,8 +1377,7 @@ class FileStorageWriter(StorageWriter):
       IOError: if the storage type does not support writing preprocessing
           information or when the storage writer is closed.
     """
-    if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
+    self._RaiseIfNotWritable()
 
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError(u'Preprocessing information not supported by storage type.')
@@ -1145,8 +1394,7 @@ class FileStorageWriter(StorageWriter):
       IOError: if the storage type is not supported or
           when the storage writer is closed.
     """
-    if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
+    self._RaiseIfNotWritable()
 
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError(u'Unsupported storage type.')
@@ -1162,8 +1410,7 @@ class FileStorageWriter(StorageWriter):
       IOError: if the storage type is not supported or
           when the storage writer is closed.
     """
-    if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
+    self._RaiseIfNotWritable()
 
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError(u'Unsupported storage type.')
@@ -1181,8 +1428,7 @@ class FileStorageWriter(StorageWriter):
       IOError: if the storage type is not supported or
           when the storage writer is closed.
     """
-    if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
+    self._RaiseIfNotWritable()
 
     if self._storage_type != definitions.STORAGE_TYPE_TASK:
       raise IOError(u'Unsupported storage type.')
@@ -1198,8 +1444,7 @@ class FileStorageWriter(StorageWriter):
       IOError: if the storage type is not supported or
           when the storage writer is closed.
     """
-    if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
+    self._RaiseIfNotWritable()
 
     if self._storage_type != definitions.STORAGE_TYPE_TASK:
       raise IOError(u'Unsupported storage type.')
