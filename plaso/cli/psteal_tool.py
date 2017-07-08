@@ -241,6 +241,25 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self._output_module)
 
+  def _PrintAnalysisReportsDetails(self, storage, number_of_analysis_reports):
+    """Prints the details of the analysis reports.
+
+    Args:
+      storage (BaseStorage): storage writer.
+      number_of_analysis_reports (int): number of analysis reports.
+    """
+    for index, analysis_report in enumerate(storage.GetAnalysisReports()):
+      if index + 1 <= number_of_analysis_reports:
+        continue
+
+      title = u'Analysis report: {0:d}'.format(index)
+      table_view = views.ViewsFactory.GetTableView(
+          self._views_format_type, title=title)
+
+      table_view.AddRow([u'String', analysis_report.GetString()])
+
+      table_view.Write(self._output_writer)
+
   def AnalyzeEvents(self):
     """Analyzes events from a plaso storage file and generate a report.
 
@@ -300,7 +319,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
 
     storage_reader = storage_zip_file.ZIPStorageFileReader(
         self._storage_file_path)
-    self._status_view.PrintAnalysisReportsDetails(
+    self._PrintAnalysisReportsDetails(
         storage_reader, self._number_of_analysis_reports)
 
     self._output_writer.Write(u'Storage file is {0:s}\n'.format(
