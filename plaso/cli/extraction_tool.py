@@ -53,7 +53,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         input_reader=input_reader, output_writer=output_writer)
     self._artifacts_registry = None
     self._buffer_size = 0
-    self._filter_object = None
     self._force_preprocessing = False
     self._hashers_manager = hashers_manager.HashersManager
     self._hasher_names_string = None

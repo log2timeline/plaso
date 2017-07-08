@@ -86,14 +86,13 @@ class BaseEngine(object):
   @classmethod
   def CreateSession(
       cls, command_line_arguments=None, debug_mode=False,
-      filter_expression=None, filter_file=None, preferred_encoding=u'utf-8',
+      filter_file=None, preferred_encoding=u'utf-8',
       preferred_time_zone=None, preferred_year=None):
     """Creates a session attribute containiner.
 
     Args:
       command_line_arguments (Optional[str]): the command line arguments.
       debug_mode (bool): True if debug mode was enabled.
-      filter_expression (str): expression to filter events.
       filter_file (Optional[str]): path to a file with find specifications.
       preferred_encoding (Optional[str]): preferred encoding.
       preferred_time_zone (Optional[str]): preferred time zone.
@@ -106,7 +105,6 @@ class BaseEngine(object):
 
     session.command_line_arguments = command_line_arguments
     session.debug_mode = debug_mode
-    session.filter_expression = filter_expression
     session.filter_file = filter_file
     session.preferred_encoding = preferred_encoding
     session.preferred_time_zone = preferred_time_zone

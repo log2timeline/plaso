@@ -343,7 +343,6 @@ class PinfoTool(analysis_tool.AnalysisTool):
       parser_filter_expression = session.parser_filter_expression or u'N/A'
       preferred_encoding = session.preferred_encoding or u'N/A'
       filter_file = session.filter_file or u'N/A'
-      filter_expression = session.filter_expression or u'N/A'
 
       title = u'Session: {0!s}'.format(session_identifier)
       table_view = cli_views.ViewsFactory.GetTableView(
@@ -359,7 +358,6 @@ class PinfoTool(analysis_tool.AnalysisTool):
       table_view.AddRow([u'Preferred encoding', preferred_encoding])
       table_view.AddRow([u'Debug mode', session.debug_mode])
       table_view.AddRow([u'Filter file', filter_file])
-      table_view.AddRow([u'Filter expression', filter_expression])
 
       table_view.Write(self._output_writer)
 
