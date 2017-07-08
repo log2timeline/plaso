@@ -243,7 +243,7 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError(u'Unable to read from closed storage writer.')
 
-    event_heap = event_heaps.EventsHeap()
+    event_heap = event_heaps.EventHeap()
 
     for event in self._events:
       if (time_range and (
