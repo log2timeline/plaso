@@ -27,10 +27,8 @@ from plaso.cli import logging_filter as logging_filter
 from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.engine import single_process as single_process_engine
-from plaso.filters import manager as filters_manager
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
-from plaso.lib import pfilter
 from plaso.multi_processing import task_engine as multi_process_engine
 from plaso.output import manager as output_manager
 from plaso.storage import zip_file as storage_zip_file
@@ -82,8 +80,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
   else:
     _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_WINDOW
 
-  _FILTERS_URL = u'https://github.com/log2timeline/plaso/wiki/Filters'
-
   _SOURCE_TYPES_TO_PREPROCESS = frozenset([
       dfvfs_definitions.SOURCE_TYPE_DIRECTORY,
       dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
@@ -102,7 +98,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         input_reader=input_reader, output_writer=output_writer)
     self._command_line_arguments = None
     self._enable_sigsegv_handler = False
-    self._filter_expression = None
     self._number_of_extraction_workers = 0
     self._resolver_context = dfvfs_context.Context()
     self._source_type = None
@@ -157,7 +152,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     configuration = configurations.ProcessingConfiguration()
     configuration.credentials = self._credential_configurations
     configuration.debug_output = self._debug_mode
-    configuration.event_extraction.filter_object = self._filter_object
     configuration.event_extraction.text_prepend = self._text_prepend
     configuration.extraction.hasher_names_string = self._hasher_names_string
     configuration.extraction.process_archives = self._process_archives
@@ -165,7 +159,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         self._process_compressed_streams)
     configuration.extraction.yara_rules_string = self._yara_rules_string
     configuration.filter_file = self._filter_file
-    configuration.filter_object = self._filter_object
     configuration.input_source.mount_path = self._mount_path
     configuration.parser_filter_expression = self._parser_filter_expression
     configuration.preferred_year = self._preferred_year
@@ -175,21 +168,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     configuration.temporary_directory = self._temporary_directory
 
     return configuration
-
-  def _GetFiltersInformation(self):
-    """Retrieves the filters information.
-
-    Returns:
-      list[tuple[str, str]]: pairs of filter names and docstrings.
-    """
-    filters_information = []
-    filter_objects = filters_manager.FiltersManager.GetFilterObjects()
-    for filter_object in sorted(filter_objects):
-      # TODO: refactor to use DESCRIPTION instead of docstring.
-      doc_string, _, _ = filter_object.__doc__.partition(u'\n')
-      filters_information.append((filter_object.filter_name, doc_string))
-
-    return filters_information
 
   def _GetOutputModulesInformation(self):
     """Retrieves the output modules information.
@@ -226,34 +204,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     return_dict[u'Parser Plugins'] = plugins_information
     return_dict[u'Parser Presets'] = presets_information
     return_dict[u'Output Modules'] = output_modules_information
-    return_dict[u'Filters'] = self._GetFiltersInformation()
 
     return return_dict
-
-  def _ParseFilterOption(self, options):
-    """Parses the filter option.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    filter_expression = self.ParseStringOption(options, u'filter')
-    if not filter_expression:
-      return
-
-    try:
-      parser = pfilter.BaseParser(filter_expression).Parse()
-      filter_object = parser.Compile(pfilter.PlasoAttributeFilterImplementation)
-
-    except errors.ParseError as exception:
-      raise errors.BadConfigOption(
-          u'Unable to create filter: {0:s} with error: {1:s}'.format(
-              filter_expression, exception))
-
-    self._filter_expression = filter_expression
-    self._filter_object = filter_object
 
   def _ParseOutputOptions(self, options):
     """Parses the output options.
@@ -460,14 +412,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             u'is a supported storage media device or image file, archive file '
             u'or a directory, the files within are processed recursively.'))
 
-    argument_parser.add_argument(
-        u'filter', action=u'store', metavar=u'FILTER', nargs=u'?', default=None,
-        type=str, help=(
-            u'A filter that can be used to filter the dataset before it '
-            u'is written into storage. More information about the filters '
-            u'and its usage can be found here: {0:s}').format(
-                self._FILTERS_URL))
-
     try:
       options = argument_parser.parse_args()
     except UnicodeEncodeError:
@@ -569,10 +513,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     if self._operating_system:
       self._mount_path = getattr(options, u'filename', None)
 
-    self._ParseFilterOption(options)
-
     self._status_view_mode = getattr(
         options, u'status_view_mode', self._DEFAULT_STATUS_VIEW_MODE)
+
     self._enable_sigsegv_handler = getattr(options, u'sigsegv_handler', False)
 
   def _PreprocessSources(self, extraction_engine):
@@ -621,7 +564,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     session = engine.BaseEngine.CreateSession(
         command_line_arguments=self._command_line_arguments,
         debug_mode=self._debug_mode,
-        filter_expression=self._filter_expression,
         filter_file=self._filter_file,
         preferred_encoding=self.preferred_encoding,
         preferred_time_zone=self._preferred_time_zone,

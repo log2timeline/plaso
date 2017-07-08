@@ -54,17 +54,6 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
   # TODO: add tests for _CheckStorageFile
   # TODO: add tests for _CreateProcessingConfiguration
 
-  def testGetFiltersInformation(self):
-    """Tests the _GetFiltersInformation function."""
-    test_tool = log2timeline_tool.Log2TimelineTool()
-    filters_info = test_tool._GetFiltersInformation()
-
-    self.assertIsNotNone(filters_info)
-
-    available_filter_names = [name for name, _ in filters_info]
-    self.assertIn(u'DynamicFilter', available_filter_names)
-    self.assertIn(u'EventObjectFilter', available_filter_names)
-
   def testGetOutputModulesInformation(self):
     """Tests the _GetOutputModulesInformation function."""
     test_tool = log2timeline_tool.Log2TimelineTool()
@@ -92,18 +81,6 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
     self.assertIn(u'Parser Plugins', plugin_info)
     self.assertIsNotNone(plugin_info[u'Parser Plugins'])
-
-  def testParseFilterOption(self):
-    """Tests the _ParseFilterOption function."""
-    test_tool = log2timeline_tool.Log2TimelineTool()
-
-    options = test_lib.TestOptions()
-
-    options.filter = u'parser is "syslog" and message contains "root"'
-
-    test_tool._ParseFilterOption(options)
-    self.assertEqual(test_tool._filter_expression, options.filter)
-    self.assertIsNotNone(test_tool._filter_object)
 
   def testParseOutputOptions(self):
     """Tests the _ParseOutputOptions function."""
@@ -446,7 +423,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
     section_headings = [
         u'Parser Presets', u'Hashers', u'Parser Plugins', u'Versions',
-        u'Filters', u'Parsers', u'Output Modules']
+        u'Parsers', u'Output Modules']
     for heading in section_headings:
       self.assertIn(heading, output)
 
