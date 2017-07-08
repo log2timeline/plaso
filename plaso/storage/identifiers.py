@@ -68,4 +68,4 @@ class SQLTableIdentifier(containers_interface.AttributeContainerIdentifier):
       str: unique identifier or None.
     """
     if self.name is not None and self.row_identifier is not None:
-      return u'{0:a}.{1:d}'.format(self.name, self.row_identifier)
+      return u'{0:s}.{1:d}'.format(self.name, self.row_identifier)

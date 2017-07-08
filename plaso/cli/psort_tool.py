@@ -28,6 +28,7 @@ from plaso.engine import engine
 from plaso.engine import knowledge_base
 from plaso.lib import errors
 from plaso.multi_processing import psort
+from plaso.storage import sqlite_file as storage_sqlite_file
 from plaso.storage import zip_file as storage_zip_file
 from plaso.winnt import language_ids
 
@@ -95,6 +96,159 @@ class PsortTool(
     self.list_analysis_plugins = False
     self.list_language_identifiers = False
     self.list_output_modules = False
+
+  def _CheckStorageFile(self, storage_file_path):
+    """Checks if the storage file path is valid.
+
+    Args:
+      storage_file_path (str): path of the storage file.
+
+    Raises:
+      BadConfigOption: if the storage file path is invalid.
+    """
+    if os.path.exists(storage_file_path):
+      if not os.path.isfile(storage_file_path):
+        raise errors.BadConfigOption(
+            u'Storage file: {0:s} already exists and is not a file.'.format(
+                storage_file_path))
+      logging.warning(u'Appending to an already existing storage file.')
+
+    dirname = os.path.dirname(storage_file_path)
+    if not dirname:
+      dirname = u'.'
+
+    # TODO: add a more thorough check to see if the storage file really is
+    # a plaso storage file.
+
+    if not os.access(dirname, os.W_OK):
+      raise errors.BadConfigOption(
+          u'Unable to write to storage file: {0:s}'.format(storage_file_path))
+
+  def _GetAnalysisPlugins(self, analysis_plugins_string):
+    """Retrieves analysis plugins.
+
+    Args:
+      analysis_plugins_string (str): comma separated names of analysis plugins
+          to enable.
+
+    Returns:
+      list[AnalysisPlugin]: analysis plugins.
+    """
+    if not analysis_plugins_string:
+      return []
+
+    analysis_plugins_list = [
+        name.strip() for name in analysis_plugins_string.split(u',')]
+
+    analysis_plugins = self._analysis_manager.GetPluginObjects(
+        analysis_plugins_list)
+    return analysis_plugins.values()
+
+  def _ParseAnalysisPluginOptions(self, options):
+    """Parses the analysis plugin options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+    """
+    # Get a list of all available plugins.
+    analysis_plugin_info = self._analysis_manager.GetAllPluginInformation()
+    analysis_plugin_names = set([
+        name.lower() for name, _, _ in analysis_plugin_info])
+
+    analysis_plugins = self.ParseStringOption(options, u'analysis_plugins')
+    if not analysis_plugins:
+      return
+
+    requested_plugin_names = set([
+        name.strip().lower() for name in analysis_plugins.split(u',')])
+
+    # Check to see if we are trying to load plugins that do not exist.
+    difference = requested_plugin_names.difference(analysis_plugin_names)
+    if difference:
+      raise errors.BadConfigOption(
+          u'Non-existent analysis plugins specified: {0:s}'.format(
+              u' '.join(difference)))
+
+    self._analysis_plugins = self._GetAnalysisPlugins(analysis_plugins)
+
+    for analysis_plugin in self._analysis_plugins:
+      helpers_manager.ArgumentHelperManager.ParseOptions(
+          options, analysis_plugin)
+
+  def _ParseFilterOptions(self, options):
+    """Parses the filter options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    self._event_filter_expression = self.ParseStringOption(options, u'filter')
+    if self._event_filter_expression:
+      self._event_filter = filters_manager.FiltersManager.GetFilterObject(
+          self._event_filter_expression)
+      if not self._event_filter:
+        raise errors.BadConfigOption(u'Invalid filter expression: {0:s}'.format(
+            self._event_filter_expression))
+
+    time_slice_event_time_string = getattr(options, u'slice', None)
+    time_slice_duration = getattr(options, u'slice_size', 5)
+    self._use_time_slicer = getattr(options, u'slicer', False)
+
+    # The slice and slicer cannot be set at the same time.
+    if time_slice_event_time_string and self._use_time_slicer:
+      raise errors.BadConfigOption(
+          u'Time slice and slicer cannot be used at the same time.')
+
+    time_slice_event_timestamp = None
+    if time_slice_event_time_string:
+      preferred_time_zone = self._preferred_time_zone or u'UTC'
+      timezone = pytz.timezone(preferred_time_zone)
+      time_slice_event_timestamp = timelib.Timestamp.FromTimeString(
+          time_slice_event_time_string, timezone=timezone)
+      if time_slice_event_timestamp is None:
+        raise errors.BadConfigOption(
+            u'Unsupported time slice event date and time: {0:s}'.format(
+                time_slice_event_time_string))
+
+    if time_slice_event_timestamp is not None or self._use_time_slicer:
+      # Note that time slicer uses the time slice to determine the duration.
+      self._time_slice = frontend.TimeSlice(
+          time_slice_event_timestamp, duration=time_slice_duration)
+
+  def _GetStorageReader(self, path):
+    """Retrieves a storage reader.
+
+    Args:
+      path (str): path to the storage file.
+
+    Returns:
+      StorageReader: a storage reader or None if the storage file cannot be
+          opened or the storage format is not supported.
+    """
+    if storage_sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
+      return storage_sqlite_file.SQLiteStorageFileReader(path)
+
+    elif storage_zip_file.ZIPStorageFile.CheckSupportedFormat(path):
+      return storage_zip_file.ZIPStorageFileReader(path)
+
+  def _GetStorageWriter(self, session, path):
+    """Retrieves a storage writer.
+
+    Args:
+      session (Session): session the storage changes are part of.
+      path (str): path to the storage file.
+
+    Returns:
+      StorageWriter: a storage writer or None if the storage file cannot be
+          opened or the storage format is not supported.
+    """
+    if storage_sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
+      return storage_sqlite_file.SQLiteStorageFileWriter(session, path)
+
+    elif storage_zip_file.ZIPStorageFile.CheckSupportedFormat(path):
+      return storage_zip_file.ZIPStorageFileWriter(session, path)
 
   def _ParseInformationalOptions(self, options):
     """Parses the informational options.
@@ -370,8 +524,13 @@ class PsortTool(
         command_line_arguments=self._command_line_arguments,
         preferred_encoding=self.preferred_encoding)
 
-    storage_reader = storage_zip_file.ZIPStorageFileReader(
-        self._storage_file_path)
+    storage_reader = self._GetStorageReader(self._storage_file_path)
+    if not storage_reader:
+      logging.error(
+          u'Format of storage file: {0:s} not supported'.format(
+              self._storage_file_path))
+      return
+
     self._number_of_analysis_reports = (
         storage_reader.GetNumberOfAnalysisReports())
     storage_reader.Close()
@@ -381,8 +540,7 @@ class PsortTool(
 
     analysis_counter = None
     if self._analysis_plugins:
-      storage_writer = storage_zip_file.ZIPStorageFileWriter(
-          session, self._storage_file_path)
+      storage_writer = self._GetStorageWriter(session, self._storage_file_path)
 
       # TODO: add single processing support.
       analysis_engine = psort.PsortMultiProcessEngine(
@@ -401,8 +559,7 @@ class PsortTool(
 
     events_counter = None
     if self._output_format != u'null':
-      storage_reader = storage_zip_file.ZIPStorageFileReader(
-          self._storage_file_path)
+      storage_reader = self._GetStorageReader(self._storage_file_path)
 
       # TODO: add single processing support.
       analysis_engine = psort.PsortMultiProcessEngine(
@@ -438,6 +595,5 @@ class PsortTool(
         table_view.AddRow([element, count])
       table_view.Write(self._output_writer)
 
-    storage_reader = storage_zip_file.ZIPStorageFileReader(
-        self._storage_file_path)
+    storage_reader = self._GetStorageReader(self._storage_file_path)
     self._PrintAnalysisReportsDetails(storage_reader)

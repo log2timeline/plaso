@@ -87,8 +87,77 @@ class SerializedAttributeContainerList(object):
     self.next_sequence_number += 1
 
 
+class SerializedAttributeContainerList(object):
+  """Serialized attribute container list.
+
+  The list is unsorted and pops attribute containers in the same order as
+  pushed to preserve order.
+
+  The GetAttributeContainerByIndex method should be used to read attribute
+  containers from the list while it being filled.
+
+  Attributes:
+    data_size (int): total data size of the serialized attribute containers
+        on the list.
+    next_sequence_number (int): next attribute container sequence number.
+  """
+
+  def __init__(self):
+    """Initializes a serialized attribute container list."""
+    super(SerializedAttributeContainerList, self).__init__()
+    self._list = []
+    self.data_size = 0
+    self.next_sequence_number = 0
+
+  @property
+  def number_of_attribute_containers(self):
+    """int: number of serialized attribute containers on the list."""
+    return len(self._list)
+
+  def Empty(self):
+    """Empties the list."""
+    self._list = []
+    self.data_size = 0
+
+  def GetAttributeContainerByIndex(self, index):
+    """Retrieves a specific serialized attribute container from the list.
+
+    Args:
+      index (int): attribute container index.
+
+    Returns:
+      bytes: serialized attribute container data.
+    """
+    if index < len(self._list):
+      return self._list[index]
+
+  def PopAttributeContainer(self):
+    """Pops a serialized attribute container from the list.
+
+    Returns:
+      bytes: serialized attribute container data.
+    """
+    try:
+      serialized_data = self._list.pop(0)
+      self.data_size -= len(serialized_data)
+      return serialized_data
+
+    except IndexError:
+      return
+
+  def PushAttributeContainer(self, serialized_data):
+    """Pushes a serialized attribute container onto the list.
+
+    Args:
+      serialized_data (bytes): serialized attribute container data.
+    """
+    self._list.append(serialized_data)
+    self.data_size += len(serialized_data)
+    self.next_sequence_number += 1
+
+
 class BaseStorage(object):
-  """Class that defines the storage interface."""
+  """Storage interface."""
 
   @abc.abstractmethod
   def AddAnalysisReport(self, analysis_report):
@@ -272,35 +341,36 @@ class BaseStorage(object):
 
 
 class BaseFileStorage(BaseStorage):
-  """Class that defines a file-based storage."""
+  """File-based storage interface."""
 
   # pylint: disable=abstract-method
 
   def __init__(self):
-    """Initializes a storage."""
+    """Initializes a file-based storage."""
     super(BaseFileStorage, self).__init__()
     self._is_open = False
     self._read_only = True
+    self._serialized_attribute_containers = {}
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
 
-  def _DeserializeAttributeContainer(self, container_data, container_type):
+  def _DeserializeAttributeContainer(self, container_type, serialized_data):
     """Deserializes an attribute container.
 
     Args:
-      container_data (bytes): serialized attribute container data.
       container_type (str): attribute container type.
+      serialized_data (bytes): serialized attribute container data.
 
     Returns:
       AttributeContainer: attribute container or None.
     """
-    if not container_data:
+    if not serialized_data:
       return
 
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(container_type)
 
-    attribute_container = self._serializer.ReadSerialized(container_data)
+    attribute_container = self._serializer.ReadSerialized(serialized_data)
 
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(container_type)
@@ -402,7 +472,7 @@ class BaseFileStorage(BaseStorage):
 
 
 class StorageMergeReader(object):
-  """Class that defines the storage reader interface for merging."""
+  """Storage reader interface for merging."""
 
   def __init__(self, storage_writer):
     """Initializes a storage merge reader.
@@ -500,7 +570,7 @@ class FileStorageMergeReader(StorageMergeReader):
 
 
 class StorageReader(object):
-  """Class that defines the storage reader interface."""
+  """Storage reader interface."""
 
   def __enter__(self):
     """Make usable with "with" statement."""
@@ -592,7 +662,7 @@ class StorageReader(object):
 
 
 class FileStorageReader(StorageReader):
-  """Class that implements file-based storage reader."""
+  """File-based storage reader interface."""
 
   def __init__(self, path):
     """Initializes a storage reader.
@@ -688,7 +758,7 @@ class FileStorageReader(StorageReader):
 
 
 class StorageWriter(object):
-  """Class that defines the storage writer interface.
+  """Storage writer interface.
 
   Attributes:
     number_of_analysis_reports (int): number of analysis reports written.
