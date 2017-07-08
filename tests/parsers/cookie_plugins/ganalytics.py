@@ -25,7 +25,7 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
       list[EventObject]: analytics cookie events.
     """
     cookies = []
-    for event in storage_writer.events:
+    for event in storage_writer.GetEvents():
       if event.data_type.startswith(u'cookie:google:analytics'):
         cookies.append(event)
     return cookies

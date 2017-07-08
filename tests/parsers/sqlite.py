@@ -34,7 +34,7 @@ class SQLiteParserTest(test_lib.ParserTestCase):
     parser = sqlite.SQLiteParser()
     storage_writer = self._ParseFile([u'contacts2.db'], parser)
 
-    for event in storage_writer.events:
+    for event in storage_writer.GetEvents():
       chain = event.parser
       self.assertEqual(1, chain.count(u'/'))
 

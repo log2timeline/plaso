@@ -28,7 +28,7 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
     events = []
     extra_objects = []
 
-    for event in storage_writer.events:
+    for event in storage_writer.GetEvents():
       if event.data_type == u'chrome:cookie:entry':
         events.append(event)
       else:

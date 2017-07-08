@@ -34,7 +34,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
     #     10 Local Entries (one timestamp per entry).
     local_entries = []
     cloud_entries = []
-    for event in storage_writer.events:
+    for event in storage_writer.GetEvents():
       if event.data_type == u'gdrive:snapshot:local_entry':
         local_entries.append(event)
       else:
