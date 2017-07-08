@@ -2228,10 +2228,6 @@ class ZIPStorageFile(interface.BaseFileStorage):
             raise
           time.sleep(self._LOCKED_FILE_SLEEP_TIME)
 
-      if file_renamed:
-        directory_name = os.path.dirname(self._zipfile_path)
-        os.rmdir(directory_name)
-
     self._path = None
     self._zipfile_path = None
 
