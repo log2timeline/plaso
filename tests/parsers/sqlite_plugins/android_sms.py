@@ -19,15 +19,17 @@ class AndroidSMSTest(test_lib.SQLitePluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'mmssms.db'])
   def testProcess(self):
     """Test the Process function on an Android SMS mmssms.db file."""
-    plugin_object = android_sms.AndroidSMSPlugin()
+    plugin = android_sms.AndroidSMSPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        [u'mmssms.db'], plugin_object)
+        [u'mmssms.db'], plugin)
 
     # The SMS database file contains 9 events (5 SENT, 4 RECEIVED messages).
     self.assertEqual(storage_writer.number_of_events, 9)
 
+    events = list(storage_writer.GetEvents())
+
     # Check the first SMS sent.
-    event = storage_writer.events[0]
+    event = events[0]
 
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)

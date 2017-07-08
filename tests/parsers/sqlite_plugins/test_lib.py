@@ -16,14 +16,14 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
   """The unit test case for SQLite database plugins."""
 
   def _ParseDatabaseFileWithPlugin(
-      self, path_segments, plugin_object, cache=None,
+      self, path_segments, plugin, cache=None,
       knowledge_base_values=None, wal_path=None):
     """Parses a file as a SQLite database with a specific plugin.
 
     Args:
       path_segments: a list of strings containinge the path segments inside
                      the test data directory.
-      plugin_object: The plugin object that is used to extract an event
+      plugin: The plugin object that is used to extract an event
                      generator.
       cache: optional cache object (instance of SQLiteCache).
       knowledge_base_values: optional dict containing the knowledge base
@@ -51,7 +51,7 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
       wal_file_entry = path_spec_resolver.Resolver.OpenFileEntry(wal_path_spec)
 
     # AppendToParserChain needs to be run after SetFileEntry.
-    parser_mediator.AppendToParserChain(plugin_object)
+    parser_mediator.AppendToParserChain(plugin)
 
     database = sqlite.SQLiteDatabase(file_entry.name)
     database_wal = None
@@ -72,7 +72,7 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
       file_object.close()
 
     try:
-      plugin_object.Process(
+      plugin.Process(
           parser_mediator, cache=cache, database=database,
           database_wal=database_wal, wal_file_entry=wal_file_entry)
     finally:

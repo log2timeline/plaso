@@ -19,15 +19,17 @@ class IMessageTest(test_lib.SQLitePluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'imessage_chat.db'])
   def testProcess(self):
     """Test the Process function on a iMessage chat.db file."""
-    plugin_object = imessage.IMessagePlugin()
+    plugin = imessage.IMessagePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        [u'imessage_chat.db'], plugin_object)
+        [u'imessage_chat.db'], plugin)
 
     # The iMessage database file contains 10 events.
     self.assertEqual(storage_writer.number_of_events, 10)
 
+    events = list(storage_writer.GetEvents())
+
     # Check the eighth message sent.
-    event = storage_writer.events[7]
+    event = events[7]
 
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
