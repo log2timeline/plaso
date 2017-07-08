@@ -15,7 +15,6 @@ import plaso
 
 from plaso.lib import definitions
 from plaso.cli import tools
-from plaso.cli import views
 
 
 class StatusView(object):
