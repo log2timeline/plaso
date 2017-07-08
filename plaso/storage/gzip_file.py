@@ -188,20 +188,6 @@ class GZIPStorageFile(interface.BaseFileStorage):
     """
     return iter(self._GetAttributeContainerList(u'extraction_error'))
 
-  # TODO: time_range is currently not operational, nor that events are
-  # returned in chronological order. Fix this.
-  def GetEvents(self, time_range=None):
-    """Retrieves the events in increasing chronological order.
-
-    Args:
-      time_range (Optional[TimeRange]): time range used to filter events
-          that fall in a specific period.
-
-    Returns:
-      generator(EventObject): event generator.
-    """
-    return iter(self._GetAttributeContainerList(u'event'))
-
   def GetEventSources(self):
     """Retrieves the event sources.
 
@@ -222,6 +208,20 @@ class GZIPStorageFile(interface.BaseFileStorage):
       event_tag.SetEventIdentifier(event_identifier)
 
       yield event_tag
+
+  # TODO: time_range is currently not operational, nor that events are
+  # returned in chronological order. Fix this.
+  def GetSortedEvents(self, time_range=None):
+    """Retrieves the events in increasing chronological order.
+
+    Args:
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
+
+    Returns:
+      generator(EventObject): event generator.
+    """
+    return iter(self._GetAttributeContainerList(u'event'))
 
   def HasAnalysisReports(self):
     """Determines if a storage contains analysis reports.
