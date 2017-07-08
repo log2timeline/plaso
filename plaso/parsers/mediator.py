@@ -31,7 +31,6 @@ class ParserMediator(object):
     self._abort = False
     self._extra_event_attributes = {}
     self._file_entry = None
-    self._filter_object = None
     self._knowledge_base = knowledge_base
     self._mount_path = None
     self._number_of_errors = 0
@@ -348,17 +347,6 @@ class ParserMediator(object):
     """
     return u'/'.join(self._parser_chain_components)
 
-  def MatchesFilter(self, event):
-    """Checks if an event matches the filter.
-
-    Args:
-      event (EventObject): event.
-
-    Returns:
-      bool: True if the event matches the filter.
-    """
-    return self._filter_object and self._filter_object.Matches(event)
-
   def PopFromParserChain(self):
     """Removes the last added parser or parser plugin from the parser chain."""
     self._parser_chain_components.pop()
@@ -441,9 +429,6 @@ class ParserMediator(object):
     self.ProcessEvent(
         event, parser_chain=self.GetParserChain(),
         file_entry=self._file_entry, query=query)
-
-    if self.MatchesFilter(event):
-      return
 
     self._storage_writer.AddEvent(event)
     self._number_of_events += 1
@@ -535,7 +520,6 @@ class ParserMediator(object):
       configuration (EventExtractionConfiguration): event extraction
           configuration.
     """
-    self._filter_object = configuration.filter_object
     self._text_prepend = configuration.text_prepend
 
   def SetInputSourceConfiguration(self, configuration):

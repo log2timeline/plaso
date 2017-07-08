@@ -24,7 +24,6 @@ class Session(interface.AttributeContainer):
     enabled_parser_names (list[str]): parser and parser plugin names that
          were enabled.
     event_labels_counter (collections.Counter): number of event tags per label.
-    filter_expression (str): expression to filter events.
     filter_file (str): path to a file with find specifications.
     identifier (str): unique identifier of the session.
     parser_filter_expression (str): parser filter expression.
@@ -51,7 +50,6 @@ class Session(interface.AttributeContainer):
     self.debug_mode = False
     self.enabled_parser_names = None
     self.event_labels_counter = collections.Counter()
-    self.filter_expression = None
     self.filter_file = None
     self.identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
     self.parser_filter_expression = None
@@ -100,7 +98,6 @@ class Session(interface.AttributeContainer):
     self.command_line_arguments = session_start.command_line_arguments
     self.debug_mode = session_start.debug_mode
     self.enabled_parser_names = session_start.enabled_parser_names
-    self.filter_expression = session_start.filter_expression
     self.filter_file = session_start.filter_file
     self.identifier = session_start.identifier
     self.parser_filter_expression = session_start.parser_filter_expression
@@ -137,7 +134,6 @@ class Session(interface.AttributeContainer):
     session_start.command_line_arguments = self.command_line_arguments
     session_start.debug_mode = self.debug_mode
     session_start.enabled_parser_names = self.enabled_parser_names
-    session_start.filter_expression = self.filter_expression
     session_start.filter_file = self.filter_file
     session_start.identifier = self.identifier
     session_start.parser_filter_expression = self.parser_filter_expression
@@ -190,7 +186,6 @@ class SessionStart(interface.AttributeContainer):
     debug_mode (bool): True if debug mode was enabled.
     enabled_parser_names (list[str]): parser and parser plugin names that
          were enabled.
-    filter_expression (str): expression to filter events.
     filter_file (str): path to a file with find specifications.
     identifier (str): unique identifier of the session.
     parser_filter_expression (str): parser filter expression.
@@ -217,7 +212,6 @@ class SessionStart(interface.AttributeContainer):
     self.command_line_arguments = None
     self.debug_mode = False
     self.enabled_parser_names = None
-    self.filter_expression = None
     self.filter_file = None
     self.identifier = identifier
     self.parser_filter_expression = None

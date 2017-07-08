@@ -177,7 +177,6 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     table_view.AddRow([u'Preferred encoding', u'UTF-8'])
     table_view.AddRow([u'Debug mode', u'False'])
     table_view.AddRow([u'Filter file', u'N/A'])
-    table_view.AddRow([u'Filter expression', u'N/A'])
     table_view.Write(output_writer)
 
     table_view = cli_views.ViewsFactory.GetTableView(
