@@ -16,41 +16,43 @@ class ZshExtendedHistoryTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'zsh_extended_history.txt'])
   def testParse(self):
     """Tests for the Parse method."""
-    parser_object = zsh_extended_history.ZshExtendedHistoryParser()
+    parser = zsh_extended_history.ZshExtendedHistoryParser()
     storage_writer = self._ParseFile(
-        [u'zsh_extended_history.txt'], parser_object)
+        [u'zsh_extended_history.txt'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 4)
 
-    event = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-03-12 08:26:50')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(event.elapsed_seconds, 0)
     self.assertEqual(event.command, u'cd plaso')
 
-    event = storage_writer.events[2]
+    event = events[2]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-03-26 11:54:53')
     expected_command = u'echo dfgdfg \\\\\n& touch /tmp/afile'
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(event.command, expected_command)
 
-    event = storage_writer.events[3]
+    event = events[3]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-03-26 11:54:57')
     self.assertEqual(event.timestamp, expected_timestamp)
 
   def testVerification(self):
     """Tests for the VerifyStructure method"""
-    parser_object = zsh_extended_history.ZshExtendedHistoryParser()
+    parser = zsh_extended_history.ZshExtendedHistoryParser()
 
     mediator = None
     valid_lines = u': 1457771210:0;cd plaso'
-    self.assertTrue(parser_object.VerifyStructure(mediator, valid_lines))
+    self.assertTrue(parser.VerifyStructure(mediator, valid_lines))
 
     invalid_lines = u': 2016-03-26 11:54:53;0;cd plaso'
-    self.assertFalse(parser_object.VerifyStructure(mediator, invalid_lines))
+    self.assertFalse(parser.VerifyStructure(mediator, invalid_lines))
 
 
 if __name__ == '__main__':

@@ -18,15 +18,17 @@ class MacOSXBSMParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'apple.bsm'])
   def testParse(self):
     """Tests the Parse function on a Mac OS X BSM file."""
-    parser_object = bsm.BSMParser()
+    parser = bsm.BSMParser()
     knowledge_base_values = {u'guessed_os': u'MacOSX'}
     storage_writer = self._ParseFile(
-        [u'apple.bsm'], parser_object,
+        [u'apple.bsm'], parser,
         knowledge_base_values=knowledge_base_values)
 
     self.assertEqual(storage_writer.number_of_events, 54)
 
-    event = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
 
     self.assertEqual(event.data_type, u'mac:bsm:event')
 
@@ -54,7 +56,7 @@ class MacOSXBSMParserTest(test_lib.ParserTestCase):
     }
     self.assertEqual(event.return_value, expected_return_value)
 
-    event = storage_writer.events[15]
+    event = events[15]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-04 18:36:26.000171')
@@ -93,7 +95,7 @@ class MacOSXBSMParserTest(test_lib.ParserTestCase):
     }
     self.assertEqual(event.return_value, expected_return_value)
 
-    event = storage_writer.events[31]
+    event = events[31]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-04 18:36:26.000530')
@@ -127,7 +129,7 @@ class MacOSXBSMParserTest(test_lib.ParserTestCase):
     }
     self.assertEqual(event.return_value, expected_return_value)
 
-    event = storage_writer.events[50]
+    event = events[50]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-04 18:37:36.000399')
@@ -176,14 +178,16 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'openbsm.bsm'])
   def testParse(self):
     """Tests the Parse function on a "generic" BSM file."""
-    parser_object = bsm.BSMParser()
+    parser = bsm.BSMParser()
     knowledge_base_values = {u'guessed_os': u'openbsm'}
     storage_writer = self._ParseFile(
         [u'openbsm.bsm'],
-        parser_object,
+        parser,
         knowledge_base_values=knowledge_base_values)
 
     self.assertEqual(storage_writer.number_of_events, 50)
+
+    events = list(storage_writer.GetEvents())
 
     expected_extra_tokens = [
         {u'BSM_TOKEN_ARGUMENT32': {
@@ -283,7 +287,7 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
     ]
 
     for event_index in range(0, 19):
-      event = storage_writer.events[event_index]
+      event = events[event_index]
       expected_extra_tokens_dict = expected_extra_tokens[event_index]
       extra_tokens_dict = getattr(event, u'extra_tokens', {})
       self.assertDictContains(extra_tokens_dict, expected_extra_tokens_dict)

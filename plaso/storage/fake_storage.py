@@ -91,10 +91,10 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     super(FakeStorageWriter, self).__init__(
         session, storage_type=storage_type, task=task)
+    self._errors = []
     self._events = []
     self._is_open = False
     self.analysis_reports = []
-    self.errors = []
     self.event_sources = []
     self.event_tags = []
     self.session_completion = None
@@ -110,6 +110,12 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     if not self._is_open:
       raise IOError(u'Unable to write to closed storage writer.')
+
+  # TODO: this property is for backwards compatibility during refactoring.
+  @property
+  def errors(self):
+    """list[ExtractionError]: errors."""
+    return self._errors
 
   # TODO: this property is for backwards compatibility during refactoring.
   @property
@@ -141,7 +147,7 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self.errors.append(error)
+    self._errors.append(error)
     self.number_of_errors += 1
 
   def AddEvent(self, event):
@@ -209,6 +215,14 @@ class FakeStorageWriter(interface.StorageWriter):
     self._RaiseIfNotWritable()
 
     self._is_open = False
+
+  def GetErrors(self):
+    """Retrieves the errors.
+
+    Returns:
+      generator(ExtractionError): error generator.
+    """
+    return iter(self._errors)
 
   def GetEvents(self):
     """Retrieves the events.

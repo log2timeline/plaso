@@ -19,7 +19,7 @@ class TestParser(interface.BaseParser):
 
   # pylint: disable=unused-argument
   def Parse(self, parser_mediator, **kwargs):
-    """Parses the file entry and extracts event objects.
+    """Parses the file entry and extracts events.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
@@ -37,7 +37,7 @@ class TestParserWithPlugins(interface.BaseParser):
 
   # pylint: disable=unused-argument
   def Parse(self, parser_mediator, **kwargs):
-    """Parses the file entry and extracts event objects.
+    """Parses the file entry and extracts events.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
@@ -241,13 +241,13 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     """Tests the GetParserObjectByName function."""
     manager.ParsersManager.RegisterParser(TestParser)
 
-    parser_object = manager.ParsersManager.GetParserObjectByName(
+    parser = manager.ParsersManager.GetParserObjectByName(
         u'test_parser')
-    self.assertIsNotNone(parser_object)
-    self.assertEqual(parser_object.NAME, u'test_parser')
+    self.assertIsNotNone(parser)
+    self.assertEqual(parser.NAME, u'test_parser')
 
-    parser_object = manager.ParsersManager.GetParserObjectByName(u'bogus')
-    self.assertIsNone(parser_object)
+    parser = manager.ParsersManager.GetParserObjectByName(u'bogus')
+    self.assertIsNone(parser)
 
     manager.ParsersManager.DeregisterParser(TestParser)
 
@@ -258,33 +258,33 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     manager.ParsersManager.RegisterParser(TestParser)
 
     parser_names = []
-    parser_objects = manager.ParsersManager.GetParserObjects(
+    parsers = manager.ParsersManager.GetParserObjects(
         parser_filter_expression=u'test_parser')
-    for _, parser_object in iter(parser_objects.items()):
-      parser_names.append(parser_object.NAME)
+    for _, parser in iter(parsers.items()):
+      parser_names.append(parser.NAME)
     self.assertEqual(parser_names, [u'test_parser'])
 
     parser_names = []
-    parser_objects = manager.ParsersManager.GetParserObjects(
+    parsers = manager.ParsersManager.GetParserObjects(
         parser_filter_expression=u'!test_parser')
-    for _, parser_object in iter(parser_objects.items()):
-      parser_names.append(parser_object.NAME)
+    for _, parser in iter(parsers.items()):
+      parser_names.append(parser.NAME)
     self.assertNotEqual(len(parser_names), 0)
     self.assertNotIn(u'test_parser', parser_names)
 
     parser_names = []
-    parser_objects = manager.ParsersManager.GetParserObjects(
+    parsers = manager.ParsersManager.GetParserObjects(
         parser_filter_expression=u'test_parser_with_plugins/test_plugin')
-    for _, parser_object in iter(parser_objects.items()):
-      parser_names.append(parser_object.NAME)
+    for _, parser in iter(parsers.items()):
+      parser_names.append(parser.NAME)
     self.assertEqual(parser_names, [u'test_parser_with_plugins'])
 
     # Test with a parser name, not using plugin names.
     parser_names = []
-    parser_objects = manager.ParsersManager.GetParserObjects(
+    parsers = manager.ParsersManager.GetParserObjects(
         parser_filter_expression=u'test_parser_with_plugins')
-    for _, parser_object in iter(parser_objects.items()):
-      parser_names.append(parser_object.NAME)
+    for _, parser in iter(parsers.items()):
+      parser_names.append(parser.NAME)
     self.assertEqual(parser_names, [u'test_parser_with_plugins'])
 
     TestParserWithPlugins.DeregisterPlugin(TestPlugin)
@@ -388,11 +388,11 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     """Tests the GetPluginObjectByName function."""
     TestParserWithPlugins.RegisterPlugin(TestPlugin)
 
-    plugin_object = TestParserWithPlugins.GetPluginObjectByName(u'test_plugin')
-    self.assertIsNotNone(plugin_object)
+    plugin = TestParserWithPlugins.GetPluginObjectByName(u'test_plugin')
+    self.assertIsNotNone(plugin)
 
-    plugin_object = TestParserWithPlugins.GetPluginObjectByName(u'bogus')
-    self.assertIsNone(plugin_object)
+    plugin = TestParserWithPlugins.GetPluginObjectByName(u'bogus')
+    self.assertIsNone(plugin)
 
     TestParserWithPlugins.DeregisterPlugin(TestPlugin)
 

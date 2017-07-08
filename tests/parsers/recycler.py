@@ -19,12 +19,14 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'$II3DF3L.zip'])
   def testParseVista(self):
     """Tests the Parse function on a Windows Vista RecycleBin file."""
-    parser_object = recycler.WinRecycleBinParser()
-    storage_writer = self._ParseFile([u'$II3DF3L.zip'], parser_object)
+    parser = recycler.WinRecycleBinParser()
+    storage_writer = self._ParseFile([u'$II3DF3L.zip'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 1)
 
-    event = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
 
     expected_filename = (
         u'C:\\Users\\nfury\\Documents\\Alloy Research\\StarFury.zip')
@@ -36,18 +38,20 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.file_size, 724919)
 
     expected_message = u'{0:s} (from drive: UNKNOWN)'.format(expected_filename)
-    expected_message_short = u'Deleted file: {0:s}'.format(expected_filename)
-    self._TestGetMessageStrings(event, expected_message, expected_message_short)
+    expected_short_message = u'Deleted file: {0:s}'.format(expected_filename)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
   @shared_test_lib.skipUnlessHasTestFile([u'$I103S5F.jpg'])
   def testParseWindows10(self):
     """Tests the Parse function on a Windows 10 RecycleBin file."""
-    parser_object = recycler.WinRecycleBinParser()
-    storage_writer = self._ParseFile([u'$I103S5F.jpg'], parser_object)
+    parser = recycler.WinRecycleBinParser()
+    storage_writer = self._ParseFile([u'$I103S5F.jpg'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 1)
 
-    event = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
 
     expected_filename = (
         u'C:\\Users\\random\\Downloads\\bunnies.jpg')
@@ -59,8 +63,8 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.file_size, 222255)
 
     expected_message = u'{0:s} (from drive: UNKNOWN)'.format(expected_filename)
-    expected_message_short = u'Deleted file: {0:s}'.format(expected_filename)
-    self._TestGetMessageStrings(event, expected_message, expected_message_short)
+    expected_short_message = u'Deleted file: {0:s}'.format(expected_filename)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
@@ -69,12 +73,14 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'INFO2'])
   def testParse(self):
     """Reads an INFO2 file and run a few tests."""
-    parser_object = recycler.WinRecyclerInfo2Parser()
-    storage_writer = self._ParseFile([u'INFO2'], parser_object)
+    parser = recycler.WinRecyclerInfo2Parser()
+    storage_writer = self._ParseFile([u'INFO2'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 4)
 
-    event = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2004-08-25 16:18:25.237')
@@ -88,18 +94,18 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
         u'C:\\Documents and Settings\\Mr. Evil\\Desktop\\lalsetup250.exe')
     self.assertEqual(event.original_filename, expected_filename)
 
-    event = storage_writer.events[1]
+    event = events[1]
 
     expected_message = (
         u'DC2 -> C:\\Documents and Settings\\Mr. Evil\\Desktop'
         u'\\netstumblerinstaller_0_4_0.exe (from drive: C)')
-    expected_message_short = (
+    expected_short_message = (
         u'Deleted file: C:\\Documents and Settings\\Mr. Evil\\Desktop'
         u'\\netstumblerinstaller...')
 
-    self._TestGetMessageStrings(event, expected_message, expected_message_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    event = storage_writer.events[2]
+    event = events[2]
 
     self._TestGetSourceStrings(event, u'Recycle Bin', u'RECBIN')
 

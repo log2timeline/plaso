@@ -19,9 +19,9 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'Cookies.binarycookies'])
   def testParseFile(self):
     """Tests the Parse function on a Safari binary cookies file."""
-    parser_object = safari_cookies.BinaryCookieParser()
+    parser = safari_cookies.BinaryCookieParser()
     storage_writer = self._ParseFile(
-        [u'Cookies.binarycookies'], parser_object)
+        [u'Cookies.binarycookies'], parser)
 
     cookie_events = []
     for event in storage_writer.events:
@@ -53,10 +53,10 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.path, u'/')
 
     expected_message = u'.ebay.com </> (nonsession)'
-    expected_message_short = u'.ebay.com (nonsession)'
+    expected_short_message = u'.ebay.com (nonsession)'
 
     self._TestGetMessageStrings(
-        event, expected_message, expected_message_short)
+        event, expected_message, expected_short_message)
 
     event = cookie_events[52]
     self.assertEqual(event.cookie_name, u'fpc')

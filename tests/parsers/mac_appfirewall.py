@@ -18,83 +18,85 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'appfirewall.log'])
   def testParseFile(self):
     """Test parsing of a Mac Wifi log file."""
-    parser_object = mac_appfirewall.MacAppFirewallParser()
+    parser = mac_appfirewall.MacAppFirewallParser()
     knowledge_base_values = {u'year': 2013}
     storage_writer = self._ParseFile(
-        [u'appfirewall.log'], parser_object,
+        [u'appfirewall.log'], parser,
         knowledge_base_values=knowledge_base_values)
 
     self.assertEqual(storage_writer.number_of_events, 47)
 
-    event_object = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-02 04:07:35')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event_object.agent, u'socketfilterfw[112]')
-    self.assertEqual(event_object.computer_name, u'DarkTemplar-2.local')
-    self.assertEqual(event_object.status, u'Error')
-    self.assertEqual(event_object.process_name, u'Logging')
-    self.assertEqual(event_object.action, u'creating /var/log/appfirewall.log')
+    self.assertEqual(event.agent, u'socketfilterfw[112]')
+    self.assertEqual(event.computer_name, u'DarkTemplar-2.local')
+    self.assertEqual(event.status, u'Error')
+    self.assertEqual(event.process_name, u'Logging')
+    self.assertEqual(event.action, u'creating /var/log/appfirewall.log')
 
-    expected_msg = (
+    expected_message = (
         u'Computer: DarkTemplar-2.local '
         u'Agent: socketfilterfw[112] '
         u'Status: Error '
         u'Process name: Logging '
         u'Log: creating /var/log/appfirewall.log')
-    expected_msg_short = (
+    expected_short_message = (
         u'Process name: Logging '
         u'Status: Error')
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    event_object = storage_writer.events[9]
+    event = events[9]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-03 13:25:15')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event_object.agent, u'socketfilterfw[87]')
-    self.assertEqual(event_object.computer_name, u'DarkTemplar-2.local')
-    self.assertEqual(event_object.status, u'Info')
-    self.assertEqual(event_object.process_name, u'Dropbox')
-    self.assertEqual(event_object.action, u'Allow TCP LISTEN  (in:0 out:1)')
+    self.assertEqual(event.agent, u'socketfilterfw[87]')
+    self.assertEqual(event.computer_name, u'DarkTemplar-2.local')
+    self.assertEqual(event.status, u'Info')
+    self.assertEqual(event.process_name, u'Dropbox')
+    self.assertEqual(event.action, u'Allow TCP LISTEN  (in:0 out:1)')
 
-    expected_msg = (
+    expected_message = (
         u'Computer: DarkTemplar-2.local '
         u'Agent: socketfilterfw[87] '
         u'Status: Info '
         u'Process name: Dropbox '
         u'Log: Allow TCP LISTEN  (in:0 out:1)')
-    expected_msg_short = (
+    expected_short_message = (
         u'Process name: Dropbox '
         u'Status: Info')
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     # Check repeated lines.
-    event_object = storage_writer.events[38]
-    repeated_event_object = storage_writer.events[39]
-    self.assertEqual(event_object.agent, repeated_event_object.agent)
+    event = events[38]
+    repeated_event = events[39]
+    self.assertEqual(event.agent, repeated_event.agent)
     self.assertEqual(
-        event_object.computer_name, repeated_event_object.computer_name)
-    self.assertEqual(event_object.status, repeated_event_object.status)
+        event.computer_name, repeated_event.computer_name)
+    self.assertEqual(event.status, repeated_event.status)
     self.assertEqual(
-        event_object.process_name, repeated_event_object.process_name)
-    self.assertEqual(event_object.action, repeated_event_object.action)
+        event.process_name, repeated_event.process_name)
+    self.assertEqual(event.action, repeated_event.action)
 
     # Year changes.
-    event_object = storage_writer.events[45]
+    event = events[45]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-31 23:59:23')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    event_object = storage_writer.events[46]
+    event = events[46]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-01-01 01:13:23')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

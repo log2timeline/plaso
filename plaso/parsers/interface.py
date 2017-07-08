@@ -8,28 +8,28 @@ from plaso.lib import errors
 
 
 class BaseFileEntryFilter(object):
-  """The file entry filter interface."""
+  """File entry filter interface."""
 
   @abc.abstractmethod
   def Match(self, file_entry):
     """Determines if a file entry matches the filter.
 
     Args:
-      file_entry: a file entry object (instance of dfvfs.FileEntry).
+      file_entry (dfvfs.FileEntry): a file entry.
 
     Returns:
-      A boolean value that indicates a match.
+      bool: True if the file entry matches the filter.
     """
 
 
 class FileNameFileEntryFilter(BaseFileEntryFilter):
-  """A file name file entry filter."""
+  """File name file entry filter."""
 
   def __init__(self, filename):
-    """Initializes a file entry filter object.
+    """Initializes a file entry filter.
 
     Args:
-      filename: string containing the name of the file.
+      filename (str): name of the file.
     """
     super(FileNameFileEntryFilter, self).__init__()
     self._filename = filename.lower()
@@ -38,10 +38,10 @@ class FileNameFileEntryFilter(BaseFileEntryFilter):
     """Determines if a file entry matches the filter.
 
     Args:
-      file_entry: a file entry object (instance of dfvfs.FileEntry).
+      file_entry (dfvfs.FileEntry): a file entry.
 
     Returns:
-      A boolean value that indicates a match.
+      bool: True if the file entry matches the filter.
     """
     if not file_entry:
       return False
@@ -68,7 +68,7 @@ class BaseParser(object):
   _plugin_classes = None
 
   def __init__(self):
-    """Initializes a parser object.
+    """Initializes a parser.
 
     By default all plugins will be enabled. To only enable specific plugins
     use the EnablePlugins method and pass it a list of strings containing
@@ -79,7 +79,7 @@ class BaseParser(object):
     """
     super(BaseParser, self).__init__()
     self._default_plugin = None
-    self._plugin_objects = None
+    self._plugins = None
     self.EnablePlugins([])
 
   @classmethod
@@ -89,7 +89,7 @@ class BaseParser(object):
     The plugin classes are identified based on their lower case name.
 
     Args:
-      plugin_class: the class object of the plugin.
+      plugin_class (type): class of the plugin.
 
     Raises:
       KeyError: if plugin class is not set for the corresponding name.
@@ -106,12 +106,11 @@ class BaseParser(object):
     """Enables parser plugins.
 
     Args:
-      plugin_includes: a list of strings containing the names of the plugins
-                       to enable, where None or an empty list represents all
-                       plugins. Note the default plugin, if it exists, is
-                       always enabled and cannot be disabled.
+      plugin_includes (list[str]): names of the plugins to enable, where None
+          or an empty list represents all plugins. Note the default plugin, if
+          it exists, is always enabled and cannot be disabled.
     """
-    self._plugin_objects = []
+    self._plugins = []
     if not self._plugin_classes:
       return
 
@@ -125,7 +124,7 @@ class BaseParser(object):
         continue
 
       plugin_object = plugin_class()
-      self._plugin_objects.append(plugin_object)
+      self._plugins.append(plugin_object)
 
   # TODO: move this to a filter.
   @classmethod
@@ -133,8 +132,8 @@ class BaseParser(object):
     """Retrieves the format specification.
 
     Returns:
-      The format specification (instance of FormatSpecification) or
-      None if not available."""
+      FormatSpecification: a format specification or None if not available.
+    """
     return
 
   @classmethod
@@ -142,23 +141,21 @@ class BaseParser(object):
     """Retrieves a specific plugin object by its name.
 
     Args:
-      plugin_name: the name of the plugin.
+      plugin_name (str): name of the plugin.
 
     Returns:
-      A plugin object (instance of BasePlugin) or None.
+      BasePlugin: a plugin object or None if not available.
     """
     plugin_class = cls._plugin_classes.get(plugin_name, None)
-    if not plugin_class:
-      return
-    return plugin_class()
+    if plugin_class:
+      return plugin_class()
 
   @classmethod
   def GetPlugins(cls):
     """Retrieves the registered plugins.
 
     Yields:
-      A tuple that contains the uniquely identifying name of the plugin
-      and the plugin class (subclass of BasePlugin).
+      tuple[str, type]: name and class of the plugin.
     """
     for plugin_name, plugin_class in iter(cls._plugin_classes.items()):
       yield plugin_name, plugin_class
@@ -170,7 +167,7 @@ class BaseParser(object):
     The plugin classes are identified based on their lower case name.
 
     Args:
-      plugin_class: the class object of the plugin.
+      plugin_class (type): class of the plugin.
 
     Raises:
       KeyError: if plugin class is already set for the corresponding name.
@@ -188,7 +185,7 @@ class BaseParser(object):
     """Registers plugin classes.
 
     Args:
-      plugin_classes: a list of class objects of the plugins.
+      plugin_classes (list[type]): classes of plugins.
 
     Raises:
       KeyError: if plugin class is already set for the corresponding name.
@@ -201,7 +198,7 @@ class BaseParser(object):
     """Determines if a parser supports plugins.
 
     Returns:
-      A boolean value indicating whether the parser supports plugins.
+      bool: True if the parser supports plugins.
     """
     return cls._plugin_classes is not None
 
@@ -213,7 +210,7 @@ class FileEntryParser(BaseParser):
     """Parsers the file entry and extracts event objects.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
+      parser_mediator (ParserMediator): a parser mediator.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -233,8 +230,8 @@ class FileEntryParser(BaseParser):
     """Parses a file entry.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      file_entry: a file entry object (instance of dfvfs.FileEntry).
+      parser_mediator (ParserMediator): a parser mediator.
+      file_entry (dfvfs.FileEntry): a file entry to parse.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -252,8 +249,8 @@ class FileObjectParser(BaseParser):
     """Parses a single file-like object.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      file_object: a file-like object to parse.
+      parser_mediator (ParserMediator): a parser mediator.
+      file_object (dvfvs.FileIO): a file-like object to parse.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -275,8 +272,8 @@ class FileObjectParser(BaseParser):
     """Parses a file-like object.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      file_object: a file-like object.
+      parser_mediator (ParserMediator): a parser mediator.
+      file_object (dvfvs.FileIO): a file-like object to parse.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.

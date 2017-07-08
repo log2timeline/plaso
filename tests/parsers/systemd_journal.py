@@ -23,12 +23,14 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser = systemd_journal.SystemdJournalParser()
-    journal = self._ParseFile([
+    storage_writer = self._ParseFile([
         u'systemd', u'journal', u'system.journal'], parser)
 
-    self.assertEqual(len(journal.events), 2101)
+    self.assertEqual(storage_writer.number_of_events, 2101)
 
-    event = journal.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2017-01-27 09:40:55.913258')
@@ -41,7 +43,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_message)
 
     # This event uses XZ compressed data
-    event = journal.events[2098]
+    event = events[2098]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2017-02-06 16:24:32.564585')
@@ -72,7 +74,9 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(storage_writer.number_of_events, 2211)
 
-    event = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-10-24 13:20:01.063423')

@@ -22,175 +22,165 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'popcontest1.log'])
   def testParse(self):
     """Tests the Parse function."""
-    parser_object = popcontest.PopularityContestParser()
-    storage_writer = self._ParseFile([u'popcontest1.log'], parser_object)
+    parser = popcontest.PopularityContestParser()
+    storage_writer = self._ParseFile([u'popcontest1.log'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 22)
 
-    event_object = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
 
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-06-22 05:41:41')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_string = (
+    expected_message = (
         u'Session 0 start '
         u'ID 12345678901234567890123456789012 [ARCH:i386 POPCONVER:1.38]')
-    expected_short_string = u'Session 0 start'
-    self._TestGetMessageStrings(
-        event_object, expected_string, expected_short_string)
+    expected_short_message = u'Session 0 start'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    event_object = storage_writer.events[1]
+    event = events[1]
 
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-06-22 07:34:42')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_string = u'mru [/usr/sbin/atd] package [at]'
-    expected_short_string = u'/usr/sbin/atd'
-    self._TestGetMessageStrings(
-        event_object, expected_string, expected_short_string)
+    expected_message = u'mru [/usr/sbin/atd] package [at]'
+    expected_short_message = u'/usr/sbin/atd'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    event_object = storage_writer.events[3]
+    event = events[3]
 
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-06-22 07:34:43')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_string = (
+    expected_message = (
         u'mru [/usr/lib/python2.5/lib-dynload/_struct.so] '
         u'package [python2.5-minimal]')
-    expected_short_string = u'/usr/lib/python2.5/lib-dynload/_struct.so'
-    self._TestGetMessageStrings(
-        event_object, expected_string, expected_short_string)
+    expected_short_message = u'/usr/lib/python2.5/lib-dynload/_struct.so'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    event_object = storage_writer.events[5]
+    event = events[5]
 
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-05-30 05:26:20')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_string = (
+    expected_message = (
         u'mru [/usr/bin/empathy] package [empathy] tag [RECENT-CTIME]')
-    expected_short_string = u'/usr/bin/empathy'
-    self._TestGetMessageStrings(
-        event_object, expected_string, expected_short_string)
+    expected_short_message = u'/usr/bin/empathy'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    event_object = storage_writer.events[6]
+    event = events[6]
 
     self.assertEqual(
-        event_object.timestamp_desc,
+        event.timestamp_desc,
         definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-05-30 05:27:43')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_string = (
+    expected_message = (
         u'mru [/usr/bin/empathy] package [empathy] tag [RECENT-CTIME]')
-    expected_short_string = u'/usr/bin/empathy'
-    self._TestGetMessageStrings(
-        event_object, expected_string, expected_short_string)
+    expected_short_message = u'/usr/bin/empathy'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    event_object = storage_writer.events[11]
+    event = events[11]
 
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-05-12 07:58:33')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_string = u'mru [/usr/bin/orca] package [gnome-orca] tag [OLD]'
-    expected_short_string = u'/usr/bin/orca'
-    self._TestGetMessageStrings(
-        event_object, expected_string, expected_short_string)
+    expected_message = u'mru [/usr/bin/orca] package [gnome-orca] tag [OLD]'
+    expected_short_message = u'/usr/bin/orca'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    event_object = storage_writer.events[13]
-
-    self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2010-06-22 05:41:41')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-
-    expected_string = u'Session 0 end'
-    expected_short_string = expected_string
-    self._TestGetMessageStrings(
-        event_object, expected_string, expected_short_string)
-
-    event_object = storage_writer.events[14]
+    event = events[13]
 
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-06-22 05:41:41')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_string = (
+    expected_message = u'Session 0 end'
+    expected_short_message = expected_message
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+
+    event = events[14]
+
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2010-06-22 05:41:41')
+    self.assertEqual(event.timestamp, expected_timestamp)
+
+    expected_message = (
         u'Session 1 start '
         u'ID 12345678901234567890123456789012 [ARCH:i386 POPCONVER:1.38]')
-    expected_short_string = u'Session 1 start'
-    self._TestGetMessageStrings(
-        event_object, expected_string, expected_short_string)
+    expected_short_message = u'Session 1 start'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    event_object = storage_writer.events[15]
+    event = events[15]
 
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-06-22 07:34:42')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_string = u'mru [/super/cool/plasuz] package [plaso]'
-    expected_short_string = u'/super/cool/plasuz'
-    self._TestGetMessageStrings(
-        event_object, expected_string, expected_short_string)
+    expected_message = u'mru [/super/cool/plasuz] package [plaso]'
+    expected_short_message = u'/super/cool/plasuz'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    event_object = storage_writer.events[18]
+    event = events[18]
 
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-04-06 12:25:42')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_string = u'mru [/super/cool/plasuz] package [miss_ctime]'
-    expected_short_string = u'/super/cool/plasuz'
-    self._TestGetMessageStrings(
-        event_object, expected_string, expected_short_string)
+    expected_message = u'mru [/super/cool/plasuz] package [miss_ctime]'
+    expected_short_message = u'/super/cool/plasuz'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    event_object = storage_writer.events[19]
+    event = events[19]
 
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-05-12 07:58:33')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_string = u'mru [/super/cóól] package [plaso] tag [WRONG_TAG]'
-    expected_short_string = u'/super/cóól'
-    self._TestGetMessageStrings(
-        event_object, expected_string, expected_short_string)
+    expected_message = u'mru [/super/cóól] package [plaso] tag [WRONG_TAG]'
+    expected_short_message = u'/super/cóól'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    event_object = storage_writer.events[21]
+    event = events[21]
 
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-06-22 05:41:41')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_string = u'Session 1 end'
-    expected_short_string = expected_string
-    self._TestGetMessageStrings(
-        event_object, expected_string, expected_short_string)
+    expected_message = u'Session 1 end'
+    expected_short_message = expected_message
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

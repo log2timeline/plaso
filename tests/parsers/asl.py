@@ -18,29 +18,31 @@ class ASLParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'applesystemlog.asl'])
   def testParse(self):
     """Tests the Parse function."""
-    parser_object = asl.ASLParser()
+    parser = asl.ASLParser()
     storage_writer = self._ParseFile(
-        [u'applesystemlog.asl'], parser_object)
+        [u'applesystemlog.asl'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 2)
 
-    event_object = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-25 09:45:35.705481')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event_object.record_position, 442)
-    self.assertEqual(event_object.message_id, 101406)
-    self.assertEqual(event_object.computer_name, u'DarkTemplar-2.local')
-    self.assertEqual(event_object.sender, u'locationd')
-    self.assertEqual(event_object.facility, u'com.apple.locationd')
-    self.assertEqual(event_object.pid, 69)
-    self.assertEqual(event_object.user_sid, u'205')
-    self.assertEqual(event_object.group_id, 205)
-    self.assertEqual(event_object.read_uid, 205)
-    self.assertEqual(event_object.read_gid, 0xffffffff)
-    self.assertEqual(event_object.level, 4)
+    self.assertEqual(event.record_position, 442)
+    self.assertEqual(event.message_id, 101406)
+    self.assertEqual(event.computer_name, u'DarkTemplar-2.local')
+    self.assertEqual(event.sender, u'locationd')
+    self.assertEqual(event.facility, u'com.apple.locationd')
+    self.assertEqual(event.pid, 69)
+    self.assertEqual(event.user_sid, u'205')
+    self.assertEqual(event.group_id, 205)
+    self.assertEqual(event.read_uid, 205)
+    self.assertEqual(event.read_gid, 0xffffffff)
+    self.assertEqual(event.level, 4)
 
     # Note that "compatiblity" is spelt incorrectly in the actual message being
     # tested here.
@@ -49,16 +51,16 @@ class ASLParserTest(test_lib.ParserTestCase):
         u'Assuming NSASCIIStringEncoding. Will stop this compatiblity '
         u'mapping behavior in the near future.')
 
-    self.assertEqual(event_object.message, expected_message)
+    self.assertEqual(event.message, expected_message)
 
     expected_extra = (
         u'CFLog Local Time: 2013-11-25 09:45:35.701, '
         u'CFLog Thread: 1007, '
         u'Sender_Mach_UUID: 50E1F76A-60FF-368C-B74E-EB48F6D98C51')
 
-    self.assertEqual(event_object.extra_information, expected_extra)
+    self.assertEqual(event.extra_information, expected_extra)
 
-    expected_msg = (
+    expected_message = (
         u'MessageID: 101406 '
         u'Level: WARNING (4) '
         u'User ID: 205 '
@@ -70,11 +72,11 @@ class ASLParserTest(test_lib.ParserTestCase):
         u'Facility: com.apple.locationd '
         u'Message: {0:s} {1:s}').format(expected_message, expected_extra)
 
-    expected_msg_short = (
+    expected_short_message = (
         u'Sender: locationd '
         u'Facility: com.apple.locationd')
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
