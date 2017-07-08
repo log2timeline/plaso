@@ -41,7 +41,7 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile([u'Symantec.Log'], parser_object)
 
     # The file contains 8 lines which should result in 8 event objects.
-    self.assertEqual(len(storage_writer.events), 8)
+    self.assertEqual(storage_writer.number_of_events, 8)
 
     # Test the second entry:
     event_object = storage_writer.events[1]

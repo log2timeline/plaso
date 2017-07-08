@@ -23,7 +23,7 @@ class ApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
         [u'application_usage.sqlite'], plugin_object)
 
     # The sqlite database contains 5 events.
-    self.assertEqual(len(storage_writer.events), 5)
+    self.assertEqual(storage_writer.number_of_events, 5)
 
     # Check the first event.
     event_object = storage_writer.events[0]

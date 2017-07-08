@@ -27,7 +27,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
         [u'selinux.log'], parser_object,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(storage_writer.events), 7)
+    self.assertEqual(storage_writer.number_of_events, 7)
 
     # Test case: normal entry.
     event_object = storage_writer.events[0]

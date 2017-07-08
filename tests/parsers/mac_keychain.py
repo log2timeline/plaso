@@ -22,7 +22,7 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
     parser_object = mac_keychain.KeychainParser()
     storage_writer = self._ParseFile([u'login.keychain'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 8)
+    self.assertEqual(storage_writer.number_of_events, 8)
 
     event_object = storage_writer.events[0]
 

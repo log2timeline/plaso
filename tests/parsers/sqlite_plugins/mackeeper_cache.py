@@ -23,7 +23,7 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
         [u'mackeeper_cache.db'], plugin_object)
 
     # The cache file contains 198 entries.
-    self.assertEqual(len(storage_writer.events), 198)
+    self.assertEqual(storage_writer.number_of_events, 198)
 
     event_object = storage_writer.events[41]
 

@@ -21,7 +21,7 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
     parser_object = opera.OperaTypedHistoryParser()
     storage_writer = self._ParseFile([u'typed_history.xml'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 4)
+    self.assertEqual(storage_writer.number_of_events, 4)
 
     event_object = storage_writer.events[0]
 
@@ -55,7 +55,7 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
     parser_object = opera.OperaGlobalHistoryParser()
     storage_writer = self._ParseFile([u'global_history.dat'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 37)
+    self.assertEqual(storage_writer.number_of_events, 37)
 
     event_object = storage_writer.events[4]
 

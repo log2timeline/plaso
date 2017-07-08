@@ -21,7 +21,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
     parser_object = utmp.UtmpParser()
     storage_writer = self._ParseFile([u'utmp'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 14)
+    self.assertEqual(storage_writer.number_of_events, 14)
 
     event_object = storage_writer.events[0]
     self.assertEqual(event_object.terminal, u'system boot')
@@ -88,7 +88,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
     parser_object = utmp.UtmpParser()
     storage_writer = self._ParseFile([u'wtmp.1'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 4)
+    self.assertEqual(storage_writer.number_of_events, 4)
 
     event_object = storage_writer.events[0]
 

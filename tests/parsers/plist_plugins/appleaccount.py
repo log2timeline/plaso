@@ -28,11 +28,11 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin_object, [plist_name], plist_name)
 
-    self.assertEqual(len(storage_writer.events), 3)
+    self.assertEqual(storage_writer.number_of_events, 3)
 
     # The order in which PlistParser generates events is nondeterministic
     # hence we sort the events.
-    events = self._GetSortedEvents(storage_writer.events)
+    events = list(storage_writer.GetSortedEvents())
 
     expected_timestamps = [1372106802000000, 1387980032000000, 1387980032000000]
     timestamps = sorted([event_object.timestamp for event_object in events])

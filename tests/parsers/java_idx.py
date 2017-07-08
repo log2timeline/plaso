@@ -22,7 +22,7 @@ class IDXTest(test_lib.ParserTestCase):
     parser_object = java_idx.JavaIDXParser()
     storage_writer = self._ParseFile([u'java_602.idx'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 2)
+    self.assertEqual(storage_writer.number_of_events, 2)
 
     event_object = storage_writer.events[0]
 
@@ -62,7 +62,7 @@ class IDXTest(test_lib.ParserTestCase):
     parser_object = java_idx.JavaIDXParser()
     storage_writer = self._ParseFile([u'java.idx'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 2)
+    self.assertEqual(storage_writer.number_of_events, 2)
 
     event_object = storage_writer.events[0]
 

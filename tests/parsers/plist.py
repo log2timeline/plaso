@@ -33,7 +33,7 @@ class PlistParserTest(test_lib.ParserTestCase):
     parser_object = plist.PlistParser()
     storage_writer = self._ParseFile([u'plist_binary'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 12)
+    self.assertEqual(storage_writer.number_of_events, 12)
 
     timestamps, roots, keys = zip(
         *[(evt.timestamp, evt.root, evt.key) for evt in storage_writer.events])

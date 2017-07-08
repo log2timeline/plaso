@@ -21,7 +21,7 @@ class SCCMLogsUnitTest(test_lib.ParserTestCase):
     parser_object = sccm.SCCMParser()
     storage_writer = self._ParseFile([u'sccm_various.log'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 10)
+    self.assertEqual(storage_writer.number_of_events, 10)
 
     event_object = storage_writer.events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(

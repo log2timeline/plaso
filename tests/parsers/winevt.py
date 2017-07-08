@@ -28,7 +28,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     #	Number of recovered records : 437
     #	Log type                    : System
 
-    self.assertEqual(len(storage_writer.events), (6063 + 437) * 2)
+    self.assertEqual(storage_writer.number_of_events, (6063 + 437) * 2)
 
     # Event number      : 1392
     # Creation time     : Jul 27, 2011 06:41:47 UTC

@@ -25,7 +25,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     parser_object = popcontest.PopularityContestParser()
     storage_writer = self._ParseFile([u'popcontest1.log'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 22)
+    self.assertEqual(storage_writer.number_of_events, 22)
 
     event_object = storage_writer.events[0]
 

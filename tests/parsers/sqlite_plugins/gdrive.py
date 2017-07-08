@@ -25,7 +25,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         [u'snapshot.db'], plugin_object, cache=cache)
 
-    self.assertEqual(len(storage_writer.events), 30)
+    self.assertEqual(storage_writer.number_of_events, 30)
 
     # Let's verify that we've got the correct balance of cloud and local
     # entry events.

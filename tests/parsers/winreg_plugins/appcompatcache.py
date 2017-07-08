@@ -160,7 +160,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
         registry_key, plugin_object, file_entry=test_file_entry,
         parser_chain=plugin_object.plugin_name)
 
-    self.assertEqual(len(storage_writer.events), 2)
+    self.assertEqual(storage_writer.number_of_events, 2)
 
     event_object_index = 0
     event_object = storage_writer.events[event_object_index]
@@ -199,7 +199,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
         registry_key, plugin_object, file_entry=test_file_entry,
         parser_chain=plugin_object.plugin_name)
 
-    self.assertEqual(len(storage_writer.events), 1)
+    self.assertEqual(storage_writer.number_of_events, 1)
 
     event_object_index = 0
     event_object = storage_writer.events[event_object_index]
@@ -237,7 +237,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
         registry_key, plugin_object, file_entry=test_file_entry,
         parser_chain=plugin_object.plugin_name)
 
-    self.assertEqual(len(storage_writer.events), 1)
+    self.assertEqual(storage_writer.number_of_events, 1)
 
     event_object_index = 0
     event_object = storage_writer.events[event_object_index]
@@ -267,7 +267,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
         registry_key, plugin_object, file_entry=test_file_entry,
         parser_chain=plugin_object.plugin_name)
 
-    self.assertEqual(len(storage_writer.events), 330)
+    self.assertEqual(storage_writer.number_of_events, 330)
 
     event_object_index = 9
     event_object = storage_writer.events[event_object_index]
@@ -325,7 +325,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
         registry_key, plugin_object, file_entry=test_file_entry,
         parser_chain=plugin_object.plugin_name)
 
-    self.assertEqual(len(storage_writer.events), 1)
+    self.assertEqual(storage_writer.number_of_events, 1)
 
     event_object_index = 0
     event_object = storage_writer.events[event_object_index]
@@ -371,7 +371,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
         registry_key, plugin_object, file_entry=test_file_entry,
         parser_chain=plugin_object.plugin_name)
 
-    self.assertEqual(len(storage_writer.events), 1)
+    self.assertEqual(storage_writer.number_of_events, 1)
 
     event_object_index = 0
     event_object = storage_writer.events[event_object_index]
@@ -419,7 +419,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
         registry_key, plugin_object, file_entry=test_file_entry,
         parser_chain=plugin_object.plugin_name)
 
-    self.assertEqual(len(storage_writer.events), 1)
+    self.assertEqual(storage_writer.number_of_events, 1)
 
     event_object_index = 0
     event_object = storage_writer.events[event_object_index]
@@ -468,7 +468,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
         registry_key, plugin_object, file_entry=test_file_entry,
         parser_chain=plugin_object.plugin_name)
 
-    self.assertEqual(len(storage_writer.events), 1)
+    self.assertEqual(storage_writer.number_of_events, 1)
 
     event_object_index = 0
     event_object = storage_writer.events[event_object_index]

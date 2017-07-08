@@ -21,7 +21,7 @@ class PECOFFTest(test_lib.ParserTestCase):
     parser_object = pe.PEParser()
     storage_writer = self._ParseFile([u'test_pe.exe'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 3)
+    self.assertEqual(storage_writer.number_of_events, 3)
 
     event_object = storage_writer.events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(
@@ -48,7 +48,7 @@ class PECOFFTest(test_lib.ParserTestCase):
     parser_object = pe.PEParser()
     storage_writer = self._ParseFile([u'test_driver.sys'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 1)
+    self.assertEqual(storage_writer.number_of_events, 1)
 
     event_object = storage_writer.events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(

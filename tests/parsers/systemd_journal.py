@@ -70,7 +70,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         ur'object offset should be after hash tables \([0-9]+ < [0-9]+\)'):
       parser.ParseFileObject(parser_mediator, file_object)
 
-    self.assertEqual(len(storage_writer.events), 2211)
+    self.assertEqual(storage_writer.number_of_events, 2211)
 
     event = storage_writer.events[0]
 

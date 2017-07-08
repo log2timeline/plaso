@@ -26,7 +26,7 @@ class PcapParserTest(test_lib.ParserTestCase):
     # For each stream 2 event objects are generated one for the start
     # and one for the end time.
 
-    self.assertEqual(len(storage_writer.events), 192)
+    self.assertEqual(storage_writer.number_of_events, 192)
 
     # Test stream 3 (event object 6).
     #    Protocol:        TCP

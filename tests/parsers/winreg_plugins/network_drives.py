@@ -140,9 +140,9 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
     plugin_object = network_drives.NetworkDrivesPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
 
-    self.assertEqual(len(storage_writer.events), 2)
+    self.assertEqual(storage_writer.number_of_events, 2)
 
-    events = self._GetSortedEvents(storage_writer.events)
+    events = list(storage_writer.GetSortedEvents())
 
     event_object = events[0]
 

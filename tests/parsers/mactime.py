@@ -26,11 +26,11 @@ class MactimeTest(test_lib.ParserTestCase):
     # 52 events in total. However several of these events have an empty
     # timestamp value and are omitted.
     # Total entries: 11 * 3 + 2 * 4 = 41
-    self.assertEqual(len(storage_writer.events), 41)
+    self.assertEqual(storage_writer.number_of_events, 41)
 
     # The order in which TextCSVParser generates events is nondeterministic
     # hence we sort the events.
-    events = self._GetSortedEvents(storage_writer.events)
+    events = list(storage_writer.GetSortedEvents())
 
     # Test this entry:
     # 0|/a_directory/another_file|16|r/rrw-------|151107|5000|22|1337961583|
