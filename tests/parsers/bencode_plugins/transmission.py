@@ -19,8 +19,8 @@ class BencodeTest(test_lib.BencodePluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'bencode_transmission'])
   def testProcess(self):
     """Tests the Process function."""
-    parser_object = bencode_parser.BencodeParser()
-    storage_writer = self._ParseFile([u'bencode_transmission'], parser_object)
+    parser = bencode_parser.BencodeParser()
+    storage_writer = self._ParseFile([u'bencode_transmission'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 3)
 
@@ -28,31 +28,31 @@ class BencodeTest(test_lib.BencodePluginTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event_object = events[0]
+    event = events[0]
 
     expected_destination = u'/Users/brian/Downloads'
-    self.assertEqual(event_object.destination, expected_destination)
+    self.assertEqual(event.destination, expected_destination)
 
-    self.assertEqual(event_object.seedtime, 4)
+    self.assertEqual(event.seedtime, 4)
 
     expected_description = definitions.TIME_DESCRIPTION_ADDED
-    self.assertEqual(event_object.timestamp_desc, expected_description)
+    self.assertEqual(event.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-08 15:31:20')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     # Test on second event of first torrent.
-    event_object = events[1]
-    self.assertEqual(event_object.destination, expected_destination)
-    self.assertEqual(event_object.seedtime, 4)
+    event = events[1]
+    self.assertEqual(event.destination, expected_destination)
+    self.assertEqual(event.seedtime, 4)
 
     expected_description = definitions.TIME_DESCRIPTION_FILE_DOWNLOADED
-    self.assertEqual(event_object.timestamp_desc, expected_description)
+    self.assertEqual(event.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-08 18:24:24')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

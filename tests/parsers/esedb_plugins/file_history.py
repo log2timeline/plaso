@@ -19,13 +19,15 @@ class FileHistoryESEDBPluginTest(test_lib.ESEDBPluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'Catalog1.edb'])
   def testProcess(self):
     """Tests the Process function."""
-    plugin_object = file_history.FileHistoryESEDBPlugin()
+    plugin = file_history.FileHistoryESEDBPlugin()
     storage_writer = self._ParseESEDBFileWithPlugin(
-        [u'Catalog1.edb'], plugin_object)
+        [u'Catalog1.edb'], plugin)
 
     self.assertEqual(storage_writer.number_of_events, 2713)
 
-    event = storage_writer.events[702]
+    events = list(storage_writer.GetEvents())
+
+    event = events[702]
 
     self.assertEqual(event.usn_number, 9251162904)
     self.assertEqual(event.identifier, 356)
@@ -47,9 +49,9 @@ class FileHistoryESEDBPluginTest(test_lib.ESEDBPluginTestCase):
         u'Attributes: 16 '
         u'USN number: 9251162904').format(filename)
 
-    expected_message_short = u'Filename: {0:s}'.format(filename)
+    expected_short_message = u'Filename: {0:s}'.format(filename)
 
-    self._TestGetMessageStrings(event, expected_message, expected_message_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

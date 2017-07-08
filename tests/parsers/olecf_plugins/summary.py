@@ -18,33 +18,33 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'Document.doc'])
   def testProcess(self):
     """Tests the Process function on a Summary Information stream."""
-    plugin_object = summary.SummaryInformationOLECFPlugin()
+    plugin = summary.SummaryInformationOLECFPlugin()
     storage_writer = self._ParseOLECFFileWithPlugin(
-        [u'Document.doc'], plugin_object)
+        [u'Document.doc'], plugin)
 
     # There is one summary info stream with three event objects.
     self.assertEqual(storage_writer.number_of_events, 3)
 
     events = list(storage_writer.GetSortedEvents())
 
-    event_object = events[0]
-    self.assertEqual(event_object.name, u'Summary Information')
+    event = events[0]
+    self.assertEqual(event.name, u'Summary Information')
 
-    self.assertEqual(event_object.title, u'Table of Context')
-    self.assertEqual(event_object.author, u'DAVID NIDES')
-    self.assertEqual(event_object.template, u'Normal.dotm')
-    self.assertEqual(event_object.last_saved_by, u'Nides')
-    self.assertEqual(event_object.revision_number, u'4')
-    self.assertEqual(event_object.number_of_characters, 18)
-    self.assertEqual(event_object.application, u'Microsoft Office Word')
-    self.assertEqual(event_object.security, 0)
+    self.assertEqual(event.title, u'Table of Context')
+    self.assertEqual(event.author, u'DAVID NIDES')
+    self.assertEqual(event.template, u'Normal.dotm')
+    self.assertEqual(event.last_saved_by, u'Nides')
+    self.assertEqual(event.revision_number, u'4')
+    self.assertEqual(event.number_of_characters, 18)
+    self.assertEqual(event.application, u'Microsoft Office Word')
+    self.assertEqual(event.security, 0)
 
-    self.assertEqual(event_object.timestamp_desc, u'Document Creation Time')
+    self.assertEqual(event.timestamp_desc, u'Document Creation Time')
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-12-10 18:38:00')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'Title: Table of Context '
         u'Author: DAVID NIDES '
         u'Template: Normal.dotm '
@@ -56,7 +56,7 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
         u'Application: Microsoft Office Word '
         u'Security: 0')
 
-    expected_msg_short = (
+    expected_short_message = (
         u'Title: Table of Context '
         u'Author: DAVID NIDES '
         u'Revision number: 4')
@@ -64,7 +64,7 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
     # TODO: add support for:
     #    u'Total edit time (secs): 0 '
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 class TestDocumentSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
@@ -73,38 +73,38 @@ class TestDocumentSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'Document.doc'])
   def testProcess(self):
     """Tests the Process function on a Document Summary Information stream."""
-    plugin_object = summary.DocumentSummaryInformationOLECFPlugin()
+    plugin = summary.DocumentSummaryInformationOLECFPlugin()
     storage_writer = self._ParseOLECFFileWithPlugin(
-        [u'Document.doc'], plugin_object)
+        [u'Document.doc'], plugin)
 
     # There should only be one summary info stream with one event.
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetSortedEvents())
 
-    event_object = events[0]
-    self.assertEqual(event_object.name, u'Document Summary Information')
+    event = events[0]
+    self.assertEqual(event.name, u'Document Summary Information')
 
-    self.assertEqual(event_object.number_of_lines, 1)
-    self.assertEqual(event_object.number_of_paragraphs, 1)
-    self.assertEqual(event_object.company, u'KPMG')
-    self.assertFalse(event_object.shared_document)
-    self.assertEqual(event_object.application_version, u'14.0')
+    self.assertEqual(event.number_of_lines, 1)
+    self.assertEqual(event.number_of_paragraphs, 1)
+    self.assertEqual(event.company, u'KPMG')
+    self.assertFalse(event.shared_document)
+    self.assertEqual(event.application_version, u'14.0')
 
     # TODO: add support for:
-    # self.assertEqual(event_object.is_shared, False)
+    # self.assertEqual(event.is_shared, False)
 
-    expected_msg = (
+    expected_message = (
         u'Number of lines: 1 '
         u'Number of paragraphs: 1 '
         u'Company: KPMG '
         u'Shared document: False '
         u'Application version: 14.0')
 
-    expected_msg_short = (
+    expected_short_message = (
         u'Company: KPMG')
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

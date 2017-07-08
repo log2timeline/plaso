@@ -19,8 +19,8 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'bencode_utorrent'])
   def testProcess(self):
     """Tests the Process function."""
-    parser_object = bencode_parser.BencodeParser()
-    storage_writer = self._ParseFile([u'bencode_utorrent'], parser_object)
+    parser = bencode_parser.BencodeParser()
+    storage_writer = self._ParseFile([u'bencode_utorrent'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 4)
 
@@ -32,60 +32,60 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     expected_path = u'e:\\torrent\\files\\plaso test'
 
     # First test on when the torrent was added to the client.
-    event_object = events[0]
+    event = events[0]
 
-    self.assertEqual(event_object.caption, expected_caption)
-    self.assertEqual(event_object.path, expected_path)
-    self.assertEqual(event_object.seedtime, 511)
+    self.assertEqual(event.caption, expected_caption)
+    self.assertEqual(event.path, expected_path)
+    self.assertEqual(event.seedtime, 511)
 
     expected_description = definitions.TIME_DESCRIPTION_ADDED
-    self.assertEqual(event_object.timestamp_desc, expected_description)
+    self.assertEqual(event.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-08-03 14:52:12')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     # Second test on when the torrent file was completely downloaded.
-    event_object = events[3]
+    event = events[3]
 
-    self.assertEqual(event_object.caption, expected_caption)
-    self.assertEqual(event_object.path, expected_path)
-    self.assertEqual(event_object.seedtime, 511)
+    self.assertEqual(event.caption, expected_caption)
+    self.assertEqual(event.path, expected_path)
+    self.assertEqual(event.seedtime, 511)
 
     expected_description = definitions.TIME_DESCRIPTION_FILE_DOWNLOADED
-    self.assertEqual(event_object.timestamp_desc, expected_description)
+    self.assertEqual(event.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-08-03 18:11:35')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     # Third test on when the torrent was first modified.
-    event_object = events[2]
+    event = events[2]
 
-    self.assertEqual(event_object.caption, expected_caption)
-    self.assertEqual(event_object.path, expected_path)
-    self.assertEqual(event_object.seedtime, 511)
+    self.assertEqual(event.caption, expected_caption)
+    self.assertEqual(event.path, expected_path)
+    self.assertEqual(event.seedtime, 511)
 
     expected_description = definitions.TIME_DESCRIPTION_MODIFICATION
-    self.assertEqual(event_object.timestamp_desc, expected_description)
+    self.assertEqual(event.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-08-03 18:11:34')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     # Fourth test on when the torrent was again modified.
-    event_object = events[1]
+    event = events[1]
 
-    self.assertEqual(event_object.caption, expected_caption)
-    self.assertEqual(event_object.path, expected_path)
-    self.assertEqual(event_object.seedtime, 511)
+    self.assertEqual(event.caption, expected_caption)
+    self.assertEqual(event.path, expected_path)
+    self.assertEqual(event.seedtime, 511)
 
     expected_description = definitions.TIME_DESCRIPTION_MODIFICATION
-    self.assertEqual(event_object.timestamp_desc, expected_description)
+    self.assertEqual(event.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-08-03 16:27:59')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':
