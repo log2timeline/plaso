@@ -320,7 +320,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  # TODO: add test for _AddSerializedAttributeContainer.
+  # TODO: add test for _AddAttributeContainer.
 
   def testBuildEventTagIndex(self):
     """Tests the _BuildEventTagIndex function."""

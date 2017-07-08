@@ -21,7 +21,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     storage_type (str): storage type.
   """
 
-  _FORMAT_VERSION = 20170121
+  _FORMAT_VERSION = 20170703
 
   _CONTAINER_TYPES = (
       u'analysis_report', u'extraction_error', u'event', u'event_source',
@@ -82,9 +82,8 @@ class SQLiteStorageFile(interface.BaseFileStorage):
 
     # TODO: initialize next_sequence_number on read
 
-  def _AddSerializedAttributeContainer(
-      self, container_type, attribute_container):
-    """Adds a serialize atttibute container.
+  def _AddAttributeContainer(self, container_type, attribute_container):
+    """Adds an atttibute container.
 
     Args:
       container_type (str): attribute container type.
@@ -282,7 +281,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     Args:
       error (ExtractionError): error.
     """
-    self._AddSerializedAttributeContainer(u'extraction_error', error)
+    self._AddAttributeContainer(u'extraction_error', error)
 
   def AddEvent(self, event):
     """Adds an event.
@@ -290,7 +289,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     Args:
       event (EventObject): event.
     """
-    self._AddSerializedAttributeContainer(u'event', event)
+    self._AddAttributeContainer(u'event', event)
 
   def AddEventSource(self, event_source):
     """Adds an event source.
@@ -298,7 +297,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     Args:
       event_source (EventSource): event source.
     """
-    self._AddSerializedAttributeContainer(u'event_source', event_source)
+    self._AddAttributeContainer(u'event_source', event_source)
 
   def AddEventTag(self, event_tag):
     """Adds an event tag.
@@ -316,7 +315,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
 
     event_tag.event_entry_index = event_identifier.row_identifier
 
-    self._AddSerializedAttributeContainer(u'event_tag', event_tag)
+    self._AddAttributeContainer(u'event_tag', event_tag)
 
   @classmethod
   def CheckSupportedFormat(cls, path):

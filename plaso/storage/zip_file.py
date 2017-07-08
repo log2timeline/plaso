@@ -795,9 +795,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
     self.storage_type = storage_type
 
-  def _AddSerializedAttributeContainer(
-      self, container_type, attribute_container):
-    """Adds a serialize atttibute container.
+  def _AddAttributeContainer(self, container_type, attribute_container):
+    """Adds an atttibute container.
 
     Args:
       container_type (str): attribute container type.
@@ -805,7 +804,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     Raises:
       IOError: when the storage file is closed or read-only or
-          if the error cannot be serialized.
+          if the attribute container cannot be serialized.
     """
     if not self._is_open:
       raise IOError(u'Unable to write to closed storage file.')
@@ -2104,7 +2103,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       IOError: when the storage file is closed or read-only or
           if the error cannot be serialized.
     """
-    self._AddSerializedAttributeContainer(u'extraction_error', error)
+    self._AddAttributeContainer(u'extraction_error', error)
 
   def AddEvent(self, event):
     """Adds an event.
@@ -2146,7 +2145,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       IOError: when the storage file is closed or read-only or
           if the event source cannot be serialized.
     """
-    self._AddSerializedAttributeContainer(u'event_source', event_source)
+    self._AddAttributeContainer(u'event_source', event_source)
 
   def AddEventTag(self, event_tag):
     """Adds an event tag.

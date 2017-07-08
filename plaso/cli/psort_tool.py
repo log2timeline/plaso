@@ -28,8 +28,7 @@ from plaso.engine import engine
 from plaso.engine import knowledge_base
 from plaso.lib import errors
 from plaso.multi_processing import psort
-from plaso.storage import sqlite_file as storage_sqlite_file
-from plaso.storage import zip_file as storage_zip_file
+from plaso.storage import factory as storage_factory
 from plaso.winnt import language_ids
 
 
@@ -216,39 +215,6 @@ class PsortTool(
       # Note that time slicer uses the time slice to determine the duration.
       self._time_slice = frontend.TimeSlice(
           time_slice_event_timestamp, duration=time_slice_duration)
-
-  def _GetStorageReader(self, path):
-    """Retrieves a storage reader.
-
-    Args:
-      path (str): path to the storage file.
-
-    Returns:
-      StorageReader: a storage reader or None if the storage file cannot be
-          opened or the storage format is not supported.
-    """
-    if storage_sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
-      return storage_sqlite_file.SQLiteStorageFileReader(path)
-
-    elif storage_zip_file.ZIPStorageFile.CheckSupportedFormat(path):
-      return storage_zip_file.ZIPStorageFileReader(path)
-
-  def _GetStorageWriter(self, session, path):
-    """Retrieves a storage writer.
-
-    Args:
-      session (Session): session the storage changes are part of.
-      path (str): path to the storage file.
-
-    Returns:
-      StorageWriter: a storage writer or None if the storage file cannot be
-          opened or the storage format is not supported.
-    """
-    if storage_sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
-      return storage_sqlite_file.SQLiteStorageFileWriter(session, path)
-
-    elif storage_zip_file.ZIPStorageFile.CheckSupportedFormat(path):
-      return storage_zip_file.ZIPStorageFileWriter(session, path)
 
   def _ParseInformationalOptions(self, options):
     """Parses the informational options.
@@ -524,7 +490,8 @@ class PsortTool(
         command_line_arguments=self._command_line_arguments,
         preferred_encoding=self.preferred_encoding)
 
-    storage_reader = self._GetStorageReader(self._storage_file_path)
+    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
+        self._storage_file_path)
     if not storage_reader:
       logging.error(
           u'Format of storage file: {0:s} not supported'.format(
@@ -540,7 +507,9 @@ class PsortTool(
 
     analysis_counter = None
     if self._analysis_plugins:
-      storage_writer = self._GetStorageWriter(session, self._storage_file_path)
+      storage_writer = (
+          storage_factory.StorageFactory.CreateStorageWriterForFile(
+              session, self._storage_file_path))
 
       # TODO: add single processing support.
       analysis_engine = psort.PsortMultiProcessEngine(
@@ -559,7 +528,9 @@ class PsortTool(
 
     events_counter = None
     if self._output_format != u'null':
-      storage_reader = self._GetStorageReader(self._storage_file_path)
+      storage_reader = (
+          storage_factory.StorageFactory.CreateStorageReaderForFile(
+              self._storage_file_path))
 
       # TODO: add single processing support.
       analysis_engine = psort.PsortMultiProcessEngine(
@@ -595,5 +566,6 @@ class PsortTool(
         table_view.AddRow([element, count])
       table_view.Write(self._output_writer)
 
-    storage_reader = self._GetStorageReader(self._storage_file_path)
+    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
+        self._storage_file_path)
     self._PrintAnalysisReportsDetails(storage_reader)

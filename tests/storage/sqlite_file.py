@@ -22,7 +22,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
   # pylint: disable=protected-access
 
-  # TODO: add tests for _AddSerializedAttributeContainer
+  # TODO: add tests for _AddAttributeContainer
   # TODO: add tests for _GetAttributeContainer
   # TODO: add tests for _HasTable
   # TODO: add tests for _WriteAttributeContainer

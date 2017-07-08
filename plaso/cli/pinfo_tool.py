@@ -16,8 +16,7 @@ from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.serializer import json_serializer
-from plaso.storage import sqlite_file as storage_sqlite_file
-from plaso.storage import zip_file as storage_zip_file
+from plaso.storage import factory as storage_factory
 
 
 class PinfoTool(
@@ -122,22 +121,6 @@ class PinfoTool(
     # TODO: improve comparision, currently only total numbers are compared.
 
     return storage_counters == compare_storage_counters
-
-  def _GetStorageFile(self, path):
-    """Retrieves a storage file.
-
-    Args:
-      path (str): path to the storage file.
-
-    Returns:
-      StorageFile: a storage file or None if the storage file cannot be
-          opened or the storage format is not supported.
-    """
-    if storage_sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
-      return storage_sqlite_file.SQLiteStorageFile()
-
-    elif storage_zip_file.ZIPStorageFile.CheckSupportedFormat(path):
-      return storage_zip_file.ZIPStorageFile()
 
   def _PrintAnalysisReportCounter(
       self, analysis_reports_counter, session_identifier=None):
@@ -498,7 +481,8 @@ class PinfoTool(
     Returns:
       bool: True if the content of the storages is identical.
     """
-    storage_file = self._GetStorageFile(self._storage_file_path)
+    storage_file = storage_factory.StorageFactory.CreateStorageFileForFile(
+        self._storage_file_path)
     if not storage_file:
       logging.error(
           u'Format of storage file: {0:s} not supported'.format(
@@ -513,7 +497,9 @@ class PinfoTool(
               self._storage_file_path, exception))
       return
 
-    compare_storage_file = self._GetStorageFile(self._compare_storage_file_path)
+    compare_storage_file = (
+        storage_factory.StorageFactory.CreateStorageFileForFile(
+            self._compare_storage_file_path))
     if not compare_storage_file:
       logging.error(
           u'Format of storage file: {0:s} not supported'.format(
@@ -641,7 +627,8 @@ class PinfoTool(
 
   def PrintStorageInformation(self):
     """Prints the storage information."""
-    storage_file = self._GetStorageFile(self._storage_file_path)
+    storage_file = storage_factory.StorageFactory.CreateStorageFileForFile(
+        self._storage_file_path)
     if not storage_file:
       logging.error(
           u'Format of storage file: {0:s} not supported'.format(
