@@ -1129,6 +1129,28 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file.Close()
 
   @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])
+  def testGetEvents(self):
+    """Tests the GetEvents function."""
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(path=test_file)
+
+    test_events = list(storage_file.GetEvents())
+    self.assertEqual(len(test_events), 38)
+
+    storage_file.Close()
+
+    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(path=test_file)
+
+    test_events = list(storage_file.GetEvents())
+    self.assertEqual(len(test_events), 3)
+
+    storage_file.Close()
+
+  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
   def testGetEventSourceByIndex(self):
     """Tests the GetEventSourceByIndex function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
