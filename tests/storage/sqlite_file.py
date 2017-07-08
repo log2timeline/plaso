@@ -139,28 +139,6 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
-  def testGetEvents(self):
-    """Tests the GetEvents function."""
-    test_events = self._CreateTestEvents()
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
-      storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
-
-      for event in test_events:
-        storage_file.AddEvent(event)
-
-      storage_file.Close()
-
-      storage_file = sqlite_file.SQLiteStorageFile()
-      storage_file.Open(path=temp_file)
-
-      test_events = list(storage_file.GetEvents())
-      self.assertEqual(len(test_events), 4)
-
-      storage_file.Close()
-
   def testGetEventSources(self):
     """Tests the GetEventSources function."""
     event_source = event_sources.EventSource()
@@ -207,6 +185,42 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       self.assertEqual(len(test_event_tags), 4)
 
       storage_file.Close()
+
+  # TODO: add tests for GetNumberOfAnalysisReports
+  # TODO: add tests for GetNumberOfEventSources
+
+  # TODO: add tests for GetSessions
+
+  def testGetSortedEvents(self):
+    """Tests the GetSortedEvents function."""
+    test_events = self._CreateTestEvents()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
+
+      for event in test_events:
+        storage_file.AddEvent(event)
+
+      storage_file.Close()
+
+      storage_file = sqlite_file.SQLiteStorageFile()
+      storage_file.Open(path=temp_file)
+
+      test_events = list(storage_file.GetSortedEvents())
+      self.assertEqual(len(test_events), 4)
+
+      storage_file.Close()
+
+  # TODO: add tests for HasAnalysisReports
+  # TODO: add tests for HasErrors
+  # TODO: add tests for HasEventTags
+
+  # TODO: add tests for Open and Close
+
+  # TODO: add tests for ReadPreprocessingInformation
+  # TODO: add tests for WritePreprocessingInformation
 
   def testWriteSessionStartAndCompletion(self):
     """Tests the WriteSessionStart and WriteSessionCompletion functions."""

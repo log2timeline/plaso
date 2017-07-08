@@ -86,7 +86,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     filter_limit = getattr(event_filter, u'limit', None)
 
-    for event in storage_writer.GetEvents():
+    for event in storage_writer.GetSortedEvents():
       if event_filter:
         filter_match = event_filter.Match(event)
       else:
@@ -277,7 +277,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     number_of_filtered_events = 0
     number_of_events_from_time_slice = 0
 
-    for event in storage_reader.GetEvents(time_range=time_slice):
+    for event in storage_reader.GetSortedEvents(time_range=time_slice):
       if event_filter:
         filter_match = event_filter.Match(event)
       else:

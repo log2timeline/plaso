@@ -1129,28 +1129,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file.Close()
 
   @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])
-  def testGetEvents(self):
-    """Tests the GetEvents function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = zip_file.ZIPStorageFile()
-    storage_file.Open(path=test_file)
-
-    test_events = list(storage_file.GetEvents())
-    self.assertEqual(len(test_events), 38)
-
-    storage_file.Close()
-
-    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
-    storage_file = zip_file.ZIPStorageFile()
-    storage_file.Open(path=test_file)
-
-    test_events = list(storage_file.GetEvents())
-    self.assertEqual(len(test_events), 3)
-
-    storage_file.Close()
-
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
   def testGetEventSourceByIndex(self):
     """Tests the GetEventSourceByIndex function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
@@ -1278,6 +1256,28 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     sessions_list = list(storage_file.GetSessions())
     self.assertEqual(len(sessions_list), 4)
+
+    storage_file.Close()
+
+  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])
+  def testGetSortedEvents(self):
+    """Tests the GetSortedEvents function."""
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(path=test_file)
+
+    test_events = list(storage_file.GetSortedEvents())
+    self.assertEqual(len(test_events), 38)
+
+    storage_file.Close()
+
+    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(path=test_file)
+
+    test_events = list(storage_file.GetSortedEvents())
+    self.assertEqual(len(test_events), 3)
 
     storage_file.Close()
 
@@ -1459,14 +1459,16 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
       1416299480000000, 1416299480000000, 1491238787000000, 1491238787000000,
       1491238787000000, 1491238787000000, 1491238787000000, 1491238788000000]
 
+  # TODO: add test for GetEventSources.
+
   @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  def testGetEvents(self):
-    """Tests the GetEvents function."""
+  def testGetSortedEvents(self):
+    """Tests the GetSortedEvents function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
 
     timestamps = []
     with zip_file.ZIPStorageFileReader(test_file) as storage_reader:
-      for event in storage_reader.GetEvents():
+      for event in storage_reader.GetSortedEvents():
         timestamps.append(event.timestamp)
 
     expected_timestamps = []
@@ -1483,7 +1485,7 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
 
     timestamps = []
     with zip_file.ZIPStorageFileReader(test_file) as storage_reader:
-      for event in storage_reader.GetEvents(time_range=test_time_range):
+      for event in storage_reader.GetSortedEvents(time_range=test_time_range):
         timestamps.append(event.timestamp)
 
     expected_timestamps = self._EXPECTED_TIMESTAMPS_AFTER_20120430
@@ -1497,14 +1499,12 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
 
     timestamps = []
     with zip_file.ZIPStorageFileReader(test_file) as storage_reader:
-      for event in storage_reader.GetEvents(time_range=test_time_range):
+      for event in storage_reader.GetSortedEvents(time_range=test_time_range):
         timestamps.append(event.timestamp)
 
     expected_timestamps = self._EXPECTED_TIMESTAMPS_BEFORE_20120430
 
     self.assertEqual(sorted(timestamps), expected_timestamps)
-
-  # TODO: add test for GetEventSources.
 
 
 class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
@@ -1610,8 +1610,8 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
       storage_writer.Open()
       storage_writer.Close()
 
-  # TODO: add test for GetEvents.
   # TODO: add test for GetFirstWrittenEventSource and GetNextWrittenEventSource.
+  # TODO: add test for GetSortedEvents.
 
   @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
   @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])

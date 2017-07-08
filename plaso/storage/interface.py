@@ -66,21 +66,6 @@ class BaseStorage(object):
     """
 
   @abc.abstractmethod
-  def GetEvents(self, time_range=None):
-    """Retrieves the events in increasing chronological order.
-
-    This includes all events written to the storage including those pending
-    being flushed (written) to the storage.
-
-    Args:
-      time_range (Optional[TimeRange]): time range used to filter events
-          that fall in a specific period.
-
-    Yields:
-      EventObject: event.
-    """
-
-  @abc.abstractmethod
   def GetEventSources(self):
     """Retrieves the event sources.
 
@@ -102,6 +87,21 @@ class BaseStorage(object):
 
     Returns:
       int: number of event sources.
+    """
+
+  @abc.abstractmethod
+  def GetSortedEvents(self, time_range=None):
+    """Retrieves the events in increasing chronological order.
+
+    This includes all events written to the storage including those pending
+    being flushed (written) to the storage.
+
+    Args:
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
+
+    Yields:
+      EventObject: event.
     """
 
   @abc.abstractmethod
@@ -319,21 +319,6 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
-  def GetEvents(self, time_range=None):
-    """Retrieves the events in increasing chronological order.
-
-    This includes all events written to the storage including those pending
-    being flushed (written) to the storage.
-
-    Args:
-      time_range (Optional[TimeRange]): time range used to filter events
-          that fall in a specific period.
-
-    Yields:
-      EventObject: event.
-    """
-
-  @abc.abstractmethod
   def GetEventSources(self):
     """Retrieves event sources.
 
@@ -355,6 +340,21 @@ class StorageReader(object):
 
     Returns:
       int: number of analysis reports.
+    """
+
+  @abc.abstractmethod
+  def GetSortedEvents(self, time_range=None):
+    """Retrieves the events in increasing chronological order.
+
+    This includes all events written to the storage including those pending
+    being flushed (written) to the storage.
+
+    Args:
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
+
+    Yields:
+      EventObject: event.
     """
 
   @abc.abstractmethod
@@ -406,21 +406,6 @@ class FileStorageReader(StorageReader):
     """
     return self._storage_file.GetErrors()
 
-  def GetEvents(self, time_range=None):
-    """Retrieves the events in increasing chronological order.
-
-    This includes all events written to the storage including those pending
-    being flushed (written) to the storage.
-
-    Args:
-      time_range (Optional[TimeRange]): time range used to filter events
-          that fall in a specific period.
-
-    Returns:
-      generator(EventObject): event generator.
-    """
-    return self._storage_file.GetEvents(time_range=time_range)
-
   def GetEventSources(self):
     """Retrieves the event sources.
 
@@ -444,6 +429,21 @@ class FileStorageReader(StorageReader):
       int: number of analysis reports.
     """
     return self._storage_file.GetNumberOfAnalysisReports()
+
+  def GetSortedEvents(self, time_range=None):
+    """Retrieves the events in increasing chronological order.
+
+    This includes all events written to the storage including those pending
+    being flushed (written) to the storage.
+
+    Args:
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
+
+    Returns:
+      generator(EventObject): event generator.
+    """
+    return self._storage_file.GetSortedEvents(time_range=time_range)
 
   def ReadPreprocessingInformation(self, knowledge_base):
     """Reads preprocessing information.
@@ -550,21 +550,6 @@ class StorageWriter(object):
     raise NotImplementedError()
 
   @abc.abstractmethod
-  def GetEvents(self, time_range=None):
-    """Retrieves the events in increasing chronological order.
-
-    This includes all events written to the storage including those pending
-    being flushed (written) to the storage.
-
-    Args:
-      time_range (Optional[TimeRange]): time range used to filter events
-          that fall in a specific period.
-
-    Yields:
-      EventObject: event.
-    """
-
-  @abc.abstractmethod
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.
 
@@ -583,6 +568,21 @@ class StorageWriter(object):
       EventSource: event source or None if there are no newly written ones.
     """
 
+  @abc.abstractmethod
+  def GetSortedEvents(self, time_range=None):
+    """Retrieves the events in increasing chronological order.
+
+    This includes all events written to the storage including those pending
+    being flushed (written) to the storage.
+
+    Args:
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
+
+    Yields:
+      EventObject: event.
+    """
+
   def MergeFromStorage(self, storage_reader):
     """Merges data from a storage reader into the writer.
 
@@ -592,7 +592,7 @@ class StorageWriter(object):
     for event_source in storage_reader.GetEventSources():
       self.AddEventSource(event_source)
 
-    for event in storage_reader.GetEvents():
+    for event in storage_reader.GetSortedEvents():
       self.AddEvent(event)
 
     for event_tag in storage_reader.GetEventTags():
@@ -895,27 +895,6 @@ class FileStorageWriter(StorageWriter):
 
     return self._CreateTaskStorageWriter(storage_file_path, task)
 
-  def GetEvents(self, time_range=None):
-    """Retrieves the events in increasing chronological order.
-
-    This includes all events written to the storage including those pending
-    being flushed (written) to the storage.
-
-    Args:
-      time_range (Optional[TimeRange]): time range used to filter events
-          that fall in a specific period.
-
-    Returns:
-      generator(EventObject): event generator.
-
-    Raises:
-      IOError: when the storage writer is closed.
-    """
-    if not self._storage_file:
-      raise IOError(u'Unable to read from closed storage writer.')
-
-    return self._storage_file.GetEvents(time_range=time_range)
-
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.
 
@@ -956,6 +935,27 @@ class FileStorageWriter(StorageWriter):
     if event_source:
       self._written_event_source_index += 1
     return event_source
+
+  def GetSortedEvents(self, time_range=None):
+    """Retrieves the events in increasing chronological order.
+
+    This includes all events written to the storage including those pending
+    being flushed (written) to the storage.
+
+    Args:
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
+
+    Returns:
+      generator(EventObject): event generator.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to read from closed storage writer.')
+
+    return self._storage_file.GetSortedEvents(time_range=time_range)
 
   def Open(self):
     """Opens the storage writer.
