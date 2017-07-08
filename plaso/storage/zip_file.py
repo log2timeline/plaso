@@ -2442,21 +2442,6 @@ class ZIPStorageFile(interface.BaseFileStorage):
         error.SetIdentifier(error_identifier)
         yield error
 
-  def GetEvents(self, time_range=None):
-    """Retrieves the events in increasing chronological order.
-
-    Args:
-      time_range (Optional[TimeRange]): time range used to filter events
-          that fall in a specific period.
-
-    Yields:
-      EventObject: event.
-    """
-    event = self._GetSortedEvent(time_range=time_range)
-    while event:
-      yield event
-      event = self._GetSortedEvent(time_range=time_range)
-
   def GetEventSourceByIndex(self, index):
     """Retrieves a specific event source.
 
@@ -2635,6 +2620,21 @@ class ZIPStorageFile(interface.BaseFileStorage):
                   stream_name))
 
       yield session
+
+  def GetSortedEvents(self, time_range=None):
+    """Retrieves the events in increasing chronological order.
+
+    Args:
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
+
+    Yields:
+      EventObject: event.
+    """
+    event = self._GetSortedEvent(time_range=time_range)
+    while event:
+      yield event
+      event = self._GetSortedEvent(time_range=time_range)
 
   def HasAnalysisReports(self):
     """Determines if a storage contains analysis reports.

@@ -201,20 +201,6 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     """
     return self._GetAttributeContainer(u'extraction_error')
 
-  # TODO: time_range is currently not operational, nor that events are
-  # returned in chronological order. Fix this.
-  def GetEvents(self, time_range=None):
-    """Retrieves the events in increasing chronological order.
-
-    Args:
-      time_range (Optional[TimeRange]): time range used to filter events
-          that fall in a specific period.
-
-    Yields:
-      generator(EventObject): event generator.
-    """
-    return self._GetAttributeContainer(u'event')
-
   def GetEventSourceByIndex(self, index):
     """Retrieves a specific event source.
 
@@ -267,6 +253,20 @@ class SQLiteStorageFile(interface.BaseFileStorage):
 
     row = self._cursor.fetchone()
     return row[0]
+
+  # TODO: time_range is currently not operational, nor that events are
+  # returned in chronological order. Fix this.
+  def GetSortedEvents(self, time_range=None):
+    """Retrieves the events in increasing chronological order.
+
+    Args:
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
+
+    Yields:
+      generator(EventObject): event generator.
+    """
+    return self._GetAttributeContainer(u'event')
 
   def HasAnalysisReports(self):
     """Determines if a storage contains analysis reports.
