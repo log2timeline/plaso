@@ -9,6 +9,8 @@ try:
 except ImportError:
   hpy = None
 
+from artifacts import reader as artifacts_reader
+from artifacts import registry as artifacts_registry
 from dfvfs.helpers import fake_file_system_builder
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
@@ -96,20 +98,26 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     with self.assertRaises(RuntimeError):
       test_engine.GetSourceFileSystem(None)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'artifacts'])
   @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
   @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testPreprocessSources(self):
     """Tests the PreprocessSources function."""
+    registry = artifacts_registry.ArtifactDefinitionsRegistry()
+    reader = artifacts_reader.YamlArtifactsReader()
+    path = shared_test_lib.GetTestFilePath([u'artifacts'])
+    registry.ReadFromDirectory(reader, path)
+
     test_engine = TestEngine()
 
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
 
-    test_engine.PreprocessSources([source_path_spec])
+    test_engine.PreprocessSources(registry, [source_path_spec])
 
     self.assertEqual(test_engine.knowledge_base.platform, u'Windows')
 
-    test_engine.PreprocessSources([None])
+    test_engine.PreprocessSources(registry, [None])
 
   def testSupportsGuppyMemoryProfiling(self):
     """Tests the SupportsGuppyMemoryProfiling function."""

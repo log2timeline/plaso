@@ -8,6 +8,10 @@ from dfvfs.helpers import windows_path_resolver
 from dfwinreg import interface as dfwinreg_interface
 from dfwinreg import regf as dfwinreg_regf
 from dfwinreg import registry as dfwinreg_registry
+from dfwinreg import registry_searcher
+
+from plaso.lib import errors
+from plaso.preprocessors import interface
 
 
 class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
@@ -109,75 +113,142 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
 
 
 class PreprocessPluginsManager(object):
-  """Class that implements the preprocess plugins manager."""
+  """Preprocess plugins manager."""
 
-  _file_system_plugin_classes = {}
-  _registry_plugin_classes = {}
+  _plugins = {}
+  _file_system_plugins = {}
+  _registry_value_plugins = {}
 
   @classmethod
-  def _GetPluginObjects(cls, plugin_classes):
-    """Returns all plugins.
+  def CollectFromFileSystem(
+      cls, artifacts_registry, knowledge_base, searcher, file_system):
+    """Collects values from Windows Registry values.
 
     Args:
-      plugin_classes (dict[str, type]): plugin classes with their class
-          name as the key.
-
-    Yields:
-      PreprocessPlugin: preprocess plugin.
+      artifacts_registry (artifacts.ArtifactDefinitionsRegistry): artifacts
+          definitions registry.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      searcher (dfvfs.FileSystemSearcher): file system searcher to preprocess
+          the file system.
+      file_system (dfvfs.FileSystem): file system to be preprocessed.
     """
-    for plugin_class in iter(plugin_classes.values()):
-      yield plugin_class()
+    for preprocess_plugin in cls._file_system_plugins.values():
+      artifact_definition = artifacts_registry.GetDefinitionByName(
+          preprocess_plugin.ARTIFACT_DEFINITION_NAME)
+      if not artifact_definition:
+        logging.warning(u'Missing artifact definition: {0:s}'.format(
+            preprocess_plugin.ARTIFACT_DEFINITION_NAME))
+        continue
+
+      try:
+        preprocess_plugin.Collect(
+            knowledge_base, artifact_definition, searcher, file_system)
+      except (IOError, errors.PreProcessFail) as exception:
+        logging.warning((
+            u'Unable to collect value from artifact definition: {0:s} '
+            u'with error: {1:s}').format(
+                preprocess_plugin.ARTIFACT_DEFINITION_NAME, exception))
+        continue
+
+  @classmethod
+  def CollectFromWindowsRegistry(
+      cls, artifacts_registry, knowledge_base, searcher):
+    """Collects values from Windows Registry values.
+
+    Args:
+      artifacts_registry (artifacts.ArtifactDefinitionsRegistry): artifacts
+          definitions registry.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      searcher (dfwinreg.WinRegistrySearcher): Windows Registry searcher to
+          preprocess the Windows Registry.
+    """
+    for preprocess_plugin in cls._registry_value_plugins.values():
+      artifact_definition = artifacts_registry.GetDefinitionByName(
+          preprocess_plugin.ARTIFACT_DEFINITION_NAME)
+      if not artifact_definition:
+        logging.warning(u'Missing artifact definition: {0:s}'.format(
+            preprocess_plugin.ARTIFACT_DEFINITION_NAME))
+        continue
+
+      try:
+        preprocess_plugin.Collect(knowledge_base, artifact_definition, searcher)
+      except (IOError, errors.PreProcessFail) as exception:
+        logging.warning((
+            u'Unable to collect value from artifact definition: {0:s} '
+            u'with error: {1:s}').format(
+                preprocess_plugin.ARTIFACT_DEFINITION_NAME, exception))
+        continue
 
   @classmethod
   def DeregisterPlugin(cls, plugin_class):
-    """Deregisters a plugin class.
+    """Deregisters an preprocess plugin class.
 
     Args:
-      plugin_class (type): plugin class.
+      preprocess_plugin (type): preprocess plugin class.
 
     Raises:
       KeyError: if plugin class is not set for the corresponding name.
+      TypeError: if the source type of the plugin class is not supported.
     """
-    if (plugin_class.__name__ not in cls._file_system_plugin_classes and
-        plugin_class.__name__ not in cls._registry_plugin_classes):
+    name = plugin_class.ARTIFACT_DEFINITION_NAME.lower()
+    if name not in cls._plugins:
       raise KeyError(
-          u'Plugin class not set for name: {0:s}.'.format(
-              plugin_class.__name__))
+          u'Artifact plugin class not set for name: {0:s}.'.format(name))
 
-    if plugin_class.__name__ in cls._file_system_plugin_classes:
-      del cls._file_system_plugin_classes[plugin_class.__name__]
+    del cls._plugins[name]
 
-    if plugin_class.__name__ in cls._registry_plugin_classes:
-      del cls._registry_plugin_classes[plugin_class.__name__]
+    if name in cls._file_system_plugins:
+      del cls._file_system_plugins[name]
+
+    if name in cls._registry_value_plugins:
+      del cls._registry_value_plugins[name]
+
+  @classmethod
+  def GetNames(cls):
+    """Retrieves the names of the registered artifact definitions.
+
+    Returns:
+      list[str]: registered artifact definitions names.
+    """
+    return [
+        plugin_class.ARTIFACT_DEFINITION_NAME
+        for plugin_class in cls._plugins.values()]
 
   @classmethod
   def RegisterPlugin(cls, plugin_class):
-    """Registers a plugin class.
+    """Registers an preprocess plugin class.
 
     Args:
-      plugin_class (type): plugin class.
+      plugin_class (type): preprocess plugin class.
 
     Raises:
       KeyError: if plugin class is already set for the corresponding name.
+      TypeError: if the source type of the plugin class is not supported.
     """
-    if (plugin_class.__name__ in cls._file_system_plugin_classes or
-        plugin_class.__name__ in cls._registry_plugin_classes):
+    name = plugin_class.ARTIFACT_DEFINITION_NAME.lower()
+    if name in cls._plugins:
       raise KeyError(
-          u'Plugin class already set for name: {0:s}.'.format(
-              plugin_class.__name__))
+          u'Artifact plugin class already set for name: {0:s}.'.format(name))
 
-    if hasattr(plugin_class, u'_REGISTRY_KEY_PATH'):
-      cls._registry_plugin_classes[plugin_class.__name__] = plugin_class
+    preprocess_plugin = plugin_class()
 
-    else:
-      cls._file_system_plugin_classes[plugin_class.__name__] = plugin_class
+    cls._plugins[name] = preprocess_plugin
+
+    if isinstance(
+        preprocess_plugin, interface.FileSystemArtifactPreprocessorPlugin):
+      cls._file_system_plugins[name] = preprocess_plugin
+
+    elif isinstance(
+        preprocess_plugin,
+        interface.WindowsRegistryValueArtifactPreprocessorPlugin):
+      cls._registry_value_plugins[name] = preprocess_plugin
 
   @classmethod
   def RegisterPlugins(cls, plugin_classes):
-    """Registers a plugin classes.
+    """Registers preprocess plugin classes.
 
     Args:
-      plugin_classes (list[type]): plugin classses.
+      plugin_classes (list[type]): preprocess plugin classses.
 
     Raises:
       KeyError: if plugin class is already set for the corresponding name.
@@ -186,32 +257,25 @@ class PreprocessPluginsManager(object):
       cls.RegisterPlugin(plugin_class)
 
   @classmethod
-  def RunPlugins(cls, file_system, mount_point, knowledge_base):
+  def RunPlugins(
+      cls, artifacts_registry, file_system, mount_point, knowledge_base):
     """Runs the preprocessing plugins.
 
     Args:
+      artifacts_registry (artifacts.ArtifactDefinitionsRegistry): artifacts
+          definitions registry.
       file_system (dfvfs.FileSystem): file system to be preprocessed.
       mount_point (dfvfs.PathSpec): mount point path specification that refers
           to the base location of the file system.
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
     """
-    # TODO: bootstrap the artifact preprocessor.
-
     searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
 
-    for plugin_object in cls._GetPluginObjects(cls._file_system_plugin_classes):
-      try:
-        plugin_object.Run(searcher, knowledge_base)
-
-      # All exceptions need to be caught here to prevent the manager
-      # from being killed by an uncaught exception.
-      except Exception as exception:  # pylint: disable=broad-except
-        logging.warning(
-            u'Preprocess plugin: {0:s} run failed with error: {1:s}'.format(
-                plugin_object.plugin_name, exception))
+    cls.CollectFromFileSystem(
+        artifacts_registry, knowledge_base, searcher, file_system)
 
     # Run the Registry plugins separately so we do not have to open
-    # Registry files in every plugin.
+    # Registry files for every preprocess plugin.
 
     environment_variables = None
     if knowledge_base:
@@ -222,17 +286,10 @@ class PreprocessPluginsManager(object):
     win_registry = dfwinreg_registry.WinRegistry(
         registry_file_reader=registry_file_reader)
 
-    for plugin_object in cls._GetPluginObjects(cls._registry_plugin_classes):
-      try:
-        plugin_object.Run(win_registry, knowledge_base)
+    searcher = registry_searcher.WinRegistrySearcher(win_registry)
 
-      # All exceptions need to be caught here to prevent the manager
-      # from being killed by an uncaught exception.
-      except Exception as exception:  # pylint: disable=broad-except
-        logging.warning(
-            u'Preprocess plugin: {0:s} run failed with error: {1:s}'.format(
-                plugin_object.plugin_name, exception))
+    cls.CollectFromWindowsRegistry(
+        artifacts_registry, knowledge_base, searcher)
 
     if not knowledge_base.HasUserAccounts():
       logging.warning(u'Unable to find any user accounts on the system.')
-

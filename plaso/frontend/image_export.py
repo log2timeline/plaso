@@ -8,6 +8,8 @@ import os
 
 import pysigscan
 
+from artifacts import reader as artifacts_reader
+from artifacts import registry as artifacts_registry
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
@@ -729,12 +731,19 @@ class ImageExportFrontend(frontend.Frontend):
     if self._knowledge_base is not None:
       return
 
+    registry = artifacts_registry.ArtifactDefinitionsRegistry()
+    reader = artifacts_reader.YamlArtifactsReader()
+    # TODO: remove hard coded path.
+    artifacts_definitions_directory = u'{0:s}{1:s}'.format(
+        os.path.sep, os.path.join(u'usr', u'share', u'artifacts'))
+    registry.ReadFromDirectory(reader, artifacts_definitions_directory)
+
     self._knowledge_base = knowledge_base.KnowledgeBase()
 
     logging.debug(u'Preprocessing.')
 
     preprocess_manager.PreprocessPluginsManager.RunPlugins(
-        file_system, mount_point, self._knowledge_base)
+        registry, file_system, mount_point, self._knowledge_base)
 
   def _WriteFileEntry(self, file_entry, data_stream_name, destination_file):
     """Writes the contents of the source file entry to a destination file.

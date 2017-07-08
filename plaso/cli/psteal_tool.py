@@ -118,6 +118,7 @@ class PstealTool(
     super(PstealTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._analysis_plugins = None
+    self._artifacts_registry = None
     self._command_line_arguments = None
     self._deduplicate_events = True
     self._enable_sigsegv_handler = False
@@ -202,7 +203,8 @@ class PstealTool(
 
     try:
       extraction_engine.PreprocessSources(
-          self._source_path_specs, resolver_context=self._resolver_context)
+          self._artifacts_registry, self._source_path_specs,
+          resolver_context=self._resolver_context)
 
     except IOError as exception:
       logging.error(u'Unable to preprocess with error: {0:s}'.format(exception))

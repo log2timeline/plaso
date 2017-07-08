@@ -31,7 +31,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       u'                        (defaults to 125000)',
       u''])
 
-
   def testParsePerformanceOptions(self):
     """Tests the _ParsePerformanceOptions function."""
     test_tool = extraction_tool.ExtractionTool()

@@ -17,6 +17,7 @@ from plaso import formatters  # pylint: disable=unused-import
 # The following import makes sure the output modules are registered.
 from plaso import output   # pylint: disable=unused-import
 
+from plaso.analysis import manager as analysis_manager
 from plaso.cli import status_view
 from plaso.cli import tool_options
 from plaso.cli import tools
@@ -70,6 +71,7 @@ class PsortTool(
     """
     super(PsortTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
+    self._analysis_manager = analysis_manager.AnalysisPluginManager
     self._analysis_plugins = None
     self._analysis_plugins_output_format = None
     self._command_line_arguments = None

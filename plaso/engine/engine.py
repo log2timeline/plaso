@@ -147,10 +147,13 @@ class BaseEngine(object):
 
     return file_system, mount_point
 
-  def PreprocessSources(self, source_path_specs, resolver_context=None):
+  def PreprocessSources(
+      self, artifacts_registry, source_path_specs, resolver_context=None):
     """Preprocesses the sources.
 
     Args:
+      artifacts_registry (artifacts.ArtifactDefinitionsRegistry]): artifact
+          definitions registry.
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
       resolver_context (Optional[dfvfs.Context]): resolver context.
@@ -171,7 +174,7 @@ class BaseEngine(object):
         platform = self._GuessOS(searcher)
         if platform != definitions.OPERATING_SYSTEM_UNKNOWN:
           preprocess_manager.PreprocessPluginsManager.RunPlugins(
-              file_system, mount_point, self.knowledge_base)
+              artifacts_registry, file_system, mount_point, self.knowledge_base)
 
           platforms.append(platform)
 

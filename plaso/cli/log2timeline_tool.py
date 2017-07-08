@@ -106,6 +106,7 @@ class Log2TimelineTool(
     """
     super(Log2TimelineTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
+    self._artifacts_registry = None
     self._command_line_arguments = None
     self._enable_sigsegv_handler = False
     self._number_of_extraction_workers = 0
@@ -367,6 +368,10 @@ class Log2TimelineTool(
     Raises:
       BadConfigOption: if the options are invalid.
     """
+    # The extraction options are dependent on the data location.
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'data_location'])
+
     # Check the list options first otherwise required options will raise.
     argument_helper_names = [u'hashers', u'parsers']
     helpers_manager.ArgumentHelperManager.ParseOptions(
@@ -392,8 +397,8 @@ class Log2TimelineTool(
     self._ParseInformationalOptions(options)
 
     argument_helper_names = [
-        u'artifact_definitions', u'data_location', u'extraction',
-        u'filter_file', u'status_view', u'storage_file', u'text_prepend']
+        u'artifact_definitions', u'extraction', u'filter_file', u'status_view',
+        u'storage_file', u'text_prepend']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
@@ -457,7 +462,8 @@ class Log2TimelineTool(
 
     try:
       extraction_engine.PreprocessSources(
-          self._source_path_specs, resolver_context=self._resolver_context)
+          self._artifacts_registry, self._source_path_specs,
+          resolver_context=self._resolver_context)
 
     except IOError as exception:
       logging.error(u'Unable to preprocess with error: {0:s}'.format(exception))
