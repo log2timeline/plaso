@@ -2442,6 +2442,28 @@ class ZIPStorageFile(interface.BaseFileStorage):
         error.SetIdentifier(error_identifier)
         yield error
 
+  def GetEvents(self):
+    """Retrieves the events.
+
+    Yields:
+      EventObject: event.
+    """
+    for stream_number in range(1, self._event_stream_number):
+      stream_name = u'event_data.{0:06}'.format(stream_number)
+      if not self._HasStream(stream_name):
+        raise IOError(u'No such stream: {0:s}'.format(stream_name))
+
+      data_stream = _SerializedDataStream(
+          self._zipfile, self._zipfile_path, stream_name)
+
+      generator = self._ReadAttributeContainersFromStream(
+          data_stream, u'event')
+      for entry_index, event in enumerate(generator):
+        event_identifier = identifiers.SerializedStreamIdentifier(
+            stream_number, entry_index)
+        event.SetIdentifier(event_identifier)
+        yield event
+
   def GetEventSourceByIndex(self, index):
     """Retrieves a specific event source.
 

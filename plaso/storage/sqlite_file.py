@@ -201,6 +201,14 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     """
     return self._GetAttributeContainer(u'extraction_error')
 
+  def GetEvents(self):
+    """Retrieves the events.
+
+    Returns:
+      generator(EventObject): event generator.
+    """
+    return self._GetAttributeContainer(u'event')
+
   def GetEventSourceByIndex(self, index):
     """Retrieves a specific event source.
 
