@@ -8,7 +8,6 @@ import unittest
 
 from plaso.cli import log2timeline_tool
 from plaso.lib import errors
-from plaso.output import manager as output_manager
 from plaso.storage import zip_file as storage_zip_file
 
 from tests import test_lib as shared_test_lib
@@ -114,41 +113,6 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_PROCESSING_OPTIONS)
-
-  def testListOutputModules(self):
-    """Tests the ListOutputModules function."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
-
-    test_tool.ListOutputModules()
-
-    output = output_writer.ReadOutput()
-    number_of_tables = 0
-    lines = []
-    for line in output.split(b'\n'):
-      line = line.strip()
-      lines.append(line)
-
-      if line.startswith(b'*****') and line.endswith(b'*****'):
-        number_of_tables += 1
-
-    self.assertIn(u'Output Modules', lines[1])
-
-    lines = frozenset(lines)
-    disabled_outputs = list(
-        output_manager.OutputManager.GetDisabledOutputClasses())
-    enabled_outputs = list(output_manager.OutputManager.GetOutputClasses())
-
-    expected_number_of_tables = 0
-    if disabled_outputs:
-      expected_number_of_tables += 1
-    if enabled_outputs:
-      expected_number_of_tables += 1
-
-    self.assertEqual(number_of_tables, expected_number_of_tables)
-
-    expected_line = b'rawpy : "raw" (or native) Python output.'
-    self.assertIn(expected_line, lines)
 
   def testParseArguments(self):
     """Tests the ParseArguments function."""
@@ -424,8 +388,8 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     output = output_writer.ReadOutput()
 
     section_headings = [
-        u'Parser Presets', u'Hashers', u'Parser Plugins', u'Versions',
-        u'Parsers', u'Output Modules']
+        u'Hashers', u'Output Modules', u'Parsers', u'Parser Plugins',
+        u'Parser Presets', u'Versions']
     for heading in section_headings:
       self.assertIn(heading, output)
 

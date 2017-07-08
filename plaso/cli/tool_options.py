@@ -9,9 +9,12 @@ from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.formatters import mediator as formatters_mediator
+from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.lib import errors
 from plaso.output import manager as output_manager
 from plaso.output import mediator as output_mediator
+from plaso.parsers import manager as parsers_manager
+from plaso.parsers import presets as parsers_presets
 
 
 # TODO: pass argument_parser instead of argument_group and add groups
@@ -59,6 +62,27 @@ class AnalysisPluginOptions(object):
     # TODO: add support for a 3 column table.
     for name, description, type_string in analysis_plugin_info:
       description = u'{0:s} [{1:s}]'.format(description, type_string)
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
+
+
+class HashersOptions(object):
+  """Hashers options mix-in."""
+
+  def __init__(self):
+    """Initializes hasher options."""
+    super(HashersOptions, self).__init__()
+    self._hasher_names_string = None
+
+  def ListHashers(self):
+    """Lists information about the available hashers."""
+    hashers_information = hashers_manager.HashersManager.GetHashersInformation()
+
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Hashers')
+
+    for name, description in sorted(hashers_information):
       table_view.AddRow([name, description])
     table_view.Write(self._output_writer)
 
@@ -166,6 +190,65 @@ class OutputModuleOptions(object):
         title=u'Disabled Output Modules')
     for name, output_class in disabled_classes:
       table_view.AddRow([name, output_class.DESCRIPTION])
+    table_view.Write(self._output_writer)
+
+
+class ParsersOptions(object):
+  """Parsers options mix-in."""
+
+  def __init__(self):
+    """Initializes parser options."""
+    super(ParsersOptions, self).__init__()
+    self._parser_filter_expression = None
+
+  def _GetParserPresetsInformation(self):
+    """Retrieves the parser presets information.
+
+    Returns:
+      list[tuple]: contains:
+
+        str: parser preset name
+        str: parsers names corresponding to the preset
+    """
+    parser_presets_information = []
+    for preset_name, parser_names in sorted(parsers_presets.CATEGORIES.items()):
+      parser_presets_information.append((preset_name, u', '.join(parser_names)))
+
+    return parser_presets_information
+
+  def ListParsersAndPlugins(self):
+    """Lists information about the available parsers and plugins."""
+    parsers_information = parsers_manager.ParsersManager.GetParsersInformation()
+
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Parsers')
+
+    for name, description in sorted(parsers_information):
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
+
+    parser_names = parsers_manager.ParsersManager.GetNamesOfParsersWithPlugins()
+    for parser_name in parser_names:
+      plugins_information = (
+          parsers_manager.ParsersManager.GetParserPluginsInformation(
+              parser_filter_expression=parser_name))
+
+      table_title = u'Parser plugins: {0:s}'.format(parser_name)
+      table_view = views.ViewsFactory.GetTableView(
+          self._views_format_type, column_names=[u'Name', u'Description'],
+          title=table_title)
+      for name, description in sorted(plugins_information):
+        table_view.AddRow([name, description])
+      table_view.Write(self._output_writer)
+
+    presets_information = self._GetParserPresetsInformation()
+
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Parsers and plugins'],
+        title=u'Parser presets')
+    for name, description in sorted(presets_information):
+      table_view.AddRow([name, description])
     table_view.Write(self._output_writer)
 
 

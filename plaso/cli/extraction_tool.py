@@ -7,30 +7,15 @@ from plaso import analyzers  # pylint: disable=unused-import
 # The following import makes sure the parsers are registered.
 from plaso import parsers  # pylint: disable=unused-import
 
-from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.cli import storage_media_tool
-from plaso.cli import views
-from plaso.cli.helpers import manager as helpers_manager
 from plaso.lib import errors
-from plaso.lib import py2to3
-from plaso.parsers import manager as parsers_manager
-from plaso.parsers import presets as parsers_presets
 
 
 class ExtractionTool(storage_media_tool.StorageMediaTool):
-  """Extraction CLI tool.
-
-  Attributes:
-    list_hashers (bool): True if the hashers should be listed.
-    list_parsers_and_plugins (bool): True if the parsers and plugins should
-        be listed.
-  """
+  """Extraction CLI tool."""
 
   # Approximately 250 MB of queued items per worker.
   _DEFAULT_QUEUE_SIZE = 125000
-
-  # Enable the SHA256 hasher by default.
-  _DEFAULT_HASHER_STRING = u'sha256'
 
   _BYTES_IN_A_MIB = 1024 * 1024
 
@@ -48,73 +33,13 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._artifacts_registry = None
     self._buffer_size = 0
     self._force_preprocessing = False
-    self._hashers_manager = hashers_manager.HashersManager
-    self._hasher_names_string = None
     self._mount_path = None
     self._operating_system = None
-    self._output_module = None
-    self._parser_filter_expression = None
-    self._parsers_manager = parsers_manager.ParsersManager
     self._preferred_year = None
     self._process_archives = False
     self._process_compressed_streams = True
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._single_process_mode = False
-    self._text_prepend = None
-    self._yara_rules_string = None
-
-    self.list_hashers = False
-    self.list_parsers_and_plugins = False
-
-  def _GetParserPresetsInformation(self):
-    """Retrieves the parser presets information.
-
-    Returns:
-      list[tuple]: contains:
-
-        str: parser preset name
-        str: parsers names corresponding to the preset
-    """
-    parser_presets_information = []
-    for preset_name, parser_names in sorted(parsers_presets.CATEGORIES.items()):
-      parser_presets_information.append((preset_name, u', '.join(parser_names)))
-
-    return parser_presets_information
-
-  def _ParseExtractionOptions(self, options):
-    """Parses the extraction options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    self._hasher_names_string = getattr(
-        options, u'hashers', self._DEFAULT_HASHER_STRING)
-    if isinstance(self._hasher_names_string, py2to3.STRING_TYPES):
-      if self._hasher_names_string.lower() == u'list':
-        self.list_hashers = True
-
-    parser_filter_expression = self.ParseStringOption(
-        options, u'parsers', default_value=u'')
-    self._parser_filter_expression = parser_filter_expression.replace(
-        u'\\', u'/')
-
-    if (isinstance(self._parser_filter_expression, py2to3.STRING_TYPES) and
-        self._parser_filter_expression.lower() == u'list'):
-      self.list_parsers_and_plugins = True
-
-    self._force_preprocessing = getattr(options, u'preprocess', False)
-
-    self._preferred_year = self.ParseNumericOption(options, u'preferred_year')
-
-    self._process_archives = getattr(options, u'process_archives', False)
-    self._process_compressed_streams = getattr(
-        options, u'process_compressed_streams', True)
-
-    helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=[u'artifact_definitions', u'yara_rules'])
 
   def _ParsePerformanceOptions(self, options):
     """Parses the performance options.
@@ -142,71 +67,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
 
     self._queue_size = self.ParseNumericOption(options, u'queue_size')
 
-  def AddExtractionOptions(self, argument_group):
-    """Adds the extraction options to the argument group.
-
-    Args:
-      argument_group (argparse._ArgumentGroup): argparse argument group.
-    """
-    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_group, names=[u'artifact_definitions'])
-
-    argument_group.add_argument(
-        u'--hashers', dest=u'hashers', type=str, action=u'store',
-        default=self._DEFAULT_HASHER_STRING, metavar=u'HASHER_LIST', help=(
-            u'Define a list of hashers to use by the tool. This is a comma '
-            u'separated list where each entry is the name of a hasher, such as '
-            u'"md5,sha256". "all" indicates that all hashers should be '
-            u'enabled. "none" disables all hashers. Use "--hashers list" or '
-            u'"--info" to list the available hashers.'))
-
-    # TODO: rename option name to parser_filter_expression.
-    argument_group.add_argument(
-        u'--parsers', dest=u'parsers', type=str, action=u'store',
-        default=u'', metavar=u'PARSER_LIST', help=(
-            u'Define a list of parsers to use by the tool. This is a comma '
-            u'separated list where each entry can be either a name of a parser '
-            u'or a parser list. Each entry can be prepended with an '
-            u'exclamation mark to negate the selection (exclude it). The list '
-            u'match is an exact match while an individual parser matching is '
-            u'a case insensitive substring match, with support for glob '
-            u'patterns. Examples would be: "reg" that matches the substring '
-            u'"reg" in all parser names or the glob pattern "sky[pd]" that '
-            u'would match all parsers that have the string "skyp" or "skyd" '
-            u'in its name. All matching is case insensitive. Use "--parsers '
-            u'list" or "--info" to list the available parsers.'))
-
-    argument_group.add_argument(
-        u'--preferred_year', u'--preferred-year', dest=u'preferred_year',
-        action=u'store', default=None, metavar=u'YEAR', help=(
-            u'When a format\'s timestamp does not include a year, e.g. '
-            u'syslog, use this as the initial year instead of attempting '
-            u'auto-detection.'))
-
-    argument_group.add_argument(
-        u'-p', u'--preprocess', dest=u'preprocess', action=u'store_true',
-        default=False, help=(
-            u'Turn on preprocessing. Preprocessing is turned on by default '
-            u'when parsing image files, however if a mount point is being '
-            u'parsed then this parameter needs to be set manually.'))
-
-    argument_group.add_argument(
-        u'--process_archives', u'--process-archives', dest=u'process_archives',
-        action=u'store_true', default=False, help=(
-            u'Process file entries embedded within archive files, such as '
-            u'archive.tar and archive.zip. This can make processing '
-            u'significantly slower.'))
-
-    argument_group.add_argument(
-        u'--skip_compressed_streams', u'--skip-compressed-streams',
-        dest=u'process_compressed_streams', action=u'store_false', default=True,
-        help=(
-            u'Skip processing file content within compressed streams, such as '
-            u'syslog.gz and syslog.bz2.'))
-
-    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_group, names=[u'yara_rules'])
-
   def AddPerformanceOptions(self, argument_group):
     """Adds the performance options to the argument group.
 
@@ -223,49 +83,3 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         default=0, help=(
             u'The maximum number of queued items per worker '
             u'(defaults to {0:d})').format(self._DEFAULT_QUEUE_SIZE))
-
-  def ListHashers(self):
-    """Lists information about the available hashers."""
-    hashers_information = self._hashers_manager.GetHashersInformation()
-
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=[u'Name', u'Description'],
-        title=u'Hashers')
-
-    for name, description in sorted(hashers_information):
-      table_view.AddRow([name, description])
-    table_view.Write(self._output_writer)
-
-  def ListParsersAndPlugins(self):
-    """Lists information about the available parsers and plugins."""
-    parsers_information = self._parsers_manager.GetParsersInformation()
-
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=[u'Name', u'Description'],
-        title=u'Parsers')
-
-    for name, description in sorted(parsers_information):
-      table_view.AddRow([name, description])
-    table_view.Write(self._output_writer)
-
-    parser_names = self._parsers_manager.GetNamesOfParsersWithPlugins()
-    for parser_name in parser_names:
-      plugins_information = self._parsers_manager.GetParserPluginsInformation(
-          parser_filter_expression=parser_name)
-
-      table_title = u'Parser plugins: {0:s}'.format(parser_name)
-      table_view = views.ViewsFactory.GetTableView(
-          self._views_format_type, column_names=[u'Name', u'Description'],
-          title=table_title)
-      for name, description in sorted(plugins_information):
-        table_view.AddRow([name, description])
-      table_view.Write(self._output_writer)
-
-    presets_information = self._GetParserPresetsInformation()
-
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=[u'Name', u'Parsers and plugins'],
-        title=u'Parser presets')
-    for name, description in sorted(presets_information):
-      table_view.AddRow([name, description])
-    table_view.Write(self._output_writer)

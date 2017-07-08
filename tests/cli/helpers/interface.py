@@ -17,23 +17,23 @@ class HelperManagerTest(unittest.TestCase):
 
   # pylint: disable=protected-access
 
-  def testParseIntegerOption(self):
-    """Tests the _ParseIntegerOption function."""
+  def testParseNumericOption(self):
+    """Tests the _ParseNumericOption function."""
     test_helper = test_lib.TestHelper()
 
     expected_integer = 123
     options = cli_test_lib.TestOptions()
     options.test = expected_integer
 
-    integer = test_helper._ParseIntegerOption(options, u'test')
+    integer = test_helper._ParseNumericOption(options, u'test')
     self.assertEqual(integer, expected_integer)
 
     options = cli_test_lib.TestOptions()
 
-    integer = test_helper._ParseIntegerOption(options, u'test')
+    integer = test_helper._ParseNumericOption(options, u'test')
     self.assertIsNone(integer)
 
-    integer = test_helper._ParseIntegerOption(
+    integer = test_helper._ParseNumericOption(
         options, u'test', default_value=expected_integer)
     self.assertEqual(integer, expected_integer)
 
@@ -41,7 +41,7 @@ class HelperManagerTest(unittest.TestCase):
     options.test = b'abc'
 
     with self.assertRaises(errors.BadConfigOption):
-      test_helper._ParseIntegerOption(options, u'test')
+      test_helper._ParseNumericOption(options, u'test')
 
   def testParseStringOption(self):
     """Tests the _ParseStringOption function."""
