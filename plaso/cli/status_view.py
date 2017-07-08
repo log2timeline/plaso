@@ -86,16 +86,9 @@ class StatusView(object):
     Returns:
       str: processing status formatted as a row.
     """
-    # This check makes sure the columns are tab aligned.
-    identifier = process_status.identifier
-    if len(identifier) < 8:
-      identifier = u'{0:s}\t\t'.format(identifier)
-    elif len(identifier) < 16:
-      identifier = u'{0:s}\t'.format(identifier)
+    pid = u'{0:d}'.format(process_status.pid)
 
-    status = process_status.status
-    if len(status) < 8:
-      status = u'{0:s}\t'.format(status)
+    used_memory = self._FormatSizeInUnitsOf1024(process_status.used_memory)
 
     events = u''
     if (process_status.number_of_consumed_events is not None and
@@ -104,20 +97,12 @@ class StatusView(object):
           process_status.number_of_consumed_events,
           process_status.number_of_consumed_events_delta)
 
-    # This check makes sure the columns are tab aligned.
-    if len(events) < 8:
-      events = u'{0:s}\t'.format(events)
-
     event_tags = u''
     if (process_status.number_of_produced_event_tags is not None and
         process_status.number_of_produced_event_tags_delta is not None):
       event_tags = u'{0:d} ({1:d})'.format(
           process_status.number_of_produced_event_tags,
           process_status.number_of_produced_event_tags_delta)
-
-    # This check makes sure the columns are tab aligned.
-    if len(event_tags) < 8:
-      event_tags = u'{0:s}\t'.format(event_tags)
 
     reports = u''
     if (process_status.number_of_produced_reports is not None and
@@ -126,18 +111,21 @@ class StatusView(object):
           process_status.number_of_produced_reports,
           process_status.number_of_produced_reports_delta)
 
-    # This check makes sure the columns are tab aligned.
-    if len(reports) < 8:
-      reports = u'{0:s}\t'.format(reports)
-
-    used_memory = self._FormatSizeInUnitsOf1024(process_status.used_memory)
-    if len(used_memory) < 8:
-      used_memory = u'{0:s}\t'.format(used_memory)
-
-    # TODO: shorten display name to fit in 80 chars and show the filename.
-    return u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}\t{5:s}\t{6:s}'.format(
-        identifier, process_status.pid, status, used_memory, events,
-        event_tags, reports)
+    # The columns are 8-spaces aligned.
+    return u''.join([
+        process_status.identifier,
+        u' ' * (24 - len(process_status.identifier)),
+        pid,
+        u' ' * (8 - len(pid)),
+        process_status.status,
+        u' ' * (16 - len(process_status.status)),
+        used_memory,
+        u' ' * (16 - len(used_memory)),
+        events,
+        u' ' * (16 - len(events)),
+        event_tags,
+        u' ' * (16 - len(event_tags)),
+        reports])
 
   def _FormatExtractionStatusTableRow(self, process_status):
     """Formats an extraction status table row.
@@ -148,14 +136,9 @@ class StatusView(object):
     Returns:
       str: processing status formatted as a row.
     """
-    # This check makes sure the columns are tab aligned.
-    identifier = process_status.identifier
-    if len(identifier) < 8:
-      identifier = u'{0:s}\t'.format(identifier)
+    pid = u'{0:d}'.format(process_status.pid)
 
-    status = process_status.status
-    if len(status) < 8:
-      status = u'{0:s}\t'.format(status)
+    used_memory = self._FormatSizeInUnitsOf1024(process_status.used_memory)
 
     sources = u''
     if (process_status.number_of_produced_sources is not None and
@@ -164,10 +147,6 @@ class StatusView(object):
           process_status.number_of_produced_sources,
           process_status.number_of_produced_sources_delta)
 
-    # This check makes sure the columns are tab aligned.
-    if len(sources) < 8:
-      sources = u'{0:s}\t'.format(sources)
-
     events = u''
     if (process_status.number_of_produced_events is not None and
         process_status.number_of_produced_events_delta is not None):
@@ -175,18 +154,23 @@ class StatusView(object):
           process_status.number_of_produced_events,
           process_status.number_of_produced_events_delta)
 
-    # This check makes sure the columns are tab aligned.
-    if len(events) < 8:
-      events = u'{0:s}\t'.format(events)
-
-    used_memory = self._FormatSizeInUnitsOf1024(process_status.used_memory)
-    if len(used_memory) < 8:
-      used_memory = u'{0:s}\t'.format(used_memory)
-
     # TODO: shorten display name to fit in 80 chars and show the filename.
-    return u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}\t{5:s}\t{6:s}'.format(
-        identifier, process_status.pid, status, used_memory, sources, events,
-        process_status.display_name)
+
+    # The columns are 8-spaces aligned.
+    return u''.join([
+        process_status.identifier,
+        u' ' * (16 - len(process_status.identifier)),
+        pid,
+        u' ' * (8 - len(pid)),
+        process_status.status,
+        u' ' * (16 - len(process_status.status)),
+        used_memory,
+        u' ' * (16 - len(used_memory)),
+        sources,
+        u' ' * (16 - len(sources)),
+        events,
+        u' ' * (16 - len(events)),
+        process_status.display_name])
 
   def _FormatSizeInUnitsOf1024(self, size):
     """Represents a number of bytes in units of 1024.
@@ -246,11 +230,17 @@ class StatusView(object):
 
     self._PrintAnalysisStatusHeader()
 
-    # TODO: for win32console get current color and set intensity,
-    # write the header separately then reset intensity.
     status_header = (
-        u'Identifier\t\tPID\tStatus\t\tMemory\t\tEvents\t\tTags\t\tReports')
+        u'Identifier              '
+        u'PID     '
+        u'Status          '
+        u'Memory          '
+        u'Events          '
+        u'Tags            '
+        u'Reports')
     if not win32console:
+      # TODO: for win32console get current color and set intensity,
+      # write the header separately then reset intensity.
       status_header = u'\x1b[1m{0:s}\x1b[0m'.format(status_header)
 
     status_table = [status_header]
@@ -312,7 +302,13 @@ class StatusView(object):
     # TODO: for win32console get current color and set intensity,
     # write the header separately then reset intensity.
     status_header = (
-        u'Identifier\tPID\tStatus\t\tMemory\t\tSources\t\tEvents\t\tFile')
+        u'Identifier      '
+        u'PID     '
+        u'Status          '
+        u'Memory          '
+        u'Sources         '
+        u'Events          '
+        u'File')
     if not win32console:
       status_header = u'\x1b[1m{0:s}\x1b[0m'.format(status_header)
 
@@ -404,7 +400,13 @@ class StatusView(object):
       self._output_writer.Write(u'\n')
 
       status_header = (
-          u'Tasks:\t\tActive\tProcessing\tTo merge\tAbandoned\tTotal')
+          u'Tasks:          '
+          u'Active  '
+          u'Processing      '
+          u'To merge        '
+          u'Abandoned       '
+          u'Total')
+
       if not win32console:
         status_header = u'\x1b[1m{0:s}\x1b[0m\n'.format(status_header)
       else:
@@ -412,14 +414,32 @@ class StatusView(object):
 
       self._output_writer.Write(status_header)
 
-      status_line = u'\t\t{0:d}\t{1:d}\t\t{2:d}\t\t{3:d}\t\t{4:d}\n'.format(
-          tasks_status.number_of_active_tasks,
-          tasks_status.number_of_tasks_processing,
-          tasks_status.number_of_tasks_pending_merge,
-          tasks_status.number_of_abandoned_tasks,
+      number_of_active_tasks = u'{0:d}'.format(
+          tasks_status.number_of_active_tasks)
+      number_of_tasks_processing = u'{0:d}'.format(
+          tasks_status.number_of_tasks_processing)
+      number_of_tasks_pending_merge = u'{0:d}'.format(
+          tasks_status.number_of_tasks_pending_merge)
+      number_of_abandoned_tasks = u'{0:d}'.format(
+          tasks_status.number_of_abandoned_tasks)
+      total_number_of_tasks = u'{0:d}'.format(
           tasks_status.total_number_of_tasks)
 
+      # The columns are 8-spaces aligned.
+      status_line = u''.join([
+          u' ' * 16,
+          number_of_active_tasks,
+          u' ' * (8 - len(number_of_active_tasks)),
+          number_of_tasks_processing,
+          u' ' * (16 - len(number_of_tasks_processing)),
+          number_of_tasks_pending_merge,
+          u' ' * (16 - len(number_of_tasks_pending_merge)),
+          number_of_abandoned_tasks,
+          u' ' * (16 - len(number_of_abandoned_tasks)),
+          total_number_of_tasks])
+
       self._output_writer.Write(status_line)
+      self._output_writer.Write(u'\n')
 
     self._output_writer.Write(u'\n')
 
