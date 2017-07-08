@@ -52,7 +52,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
       if event_object.data_type == u'skype:event:chat':
         chats += 1
 
-    self.assertEqual(len(storage_writer.events), 24)
+    self.assertEqual(storage_writer.number_of_events, 24)
     self.assertEqual(files, 4)
     self.assertEqual(sms, 1)
     self.assertEqual(chats, 15)

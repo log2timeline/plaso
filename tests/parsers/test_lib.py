@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Parser related functions and classes for testing."""
 
-import heapq
-
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -11,78 +9,11 @@ from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
-from plaso.lib import py2to3
 from plaso.parsers import interface
 from plaso.parsers import mediator
 from plaso.storage import fake_storage
 
 from tests import test_lib as shared_test_lib
-
-
-class _EventsHeap(object):
-  """Events heap."""
-
-  def __init__(self):
-    """Initializes an events heap."""
-    super(_EventsHeap, self).__init__()
-    self._heap = []
-
-  def PopEvent(self):
-    """Pops an event from the heap.
-
-    Returns:
-      EventObject: event.
-    """
-    try:
-      _, _, _, event = heapq.heappop(self._heap)
-      return event
-
-    except IndexError:
-      return None
-
-  def PopEvents(self):
-    """Pops events from the heap.
-
-    Yields:
-      EventObject: event.
-    """
-    event = self.PopEvent()
-    while event:
-      yield event
-      event = self.PopEvent()
-
-  def PushEvent(self, event):
-    """Pushes an event onto the heap.
-
-    Args:
-      event (EventObject): event.
-    """
-    # TODO: replace this work-around for an event "comparable".
-    event_values = event.CopyToDict()
-    attributes = []
-    for attribute_name, attribute_value in sorted(event_values.items()):
-      if isinstance(attribute_value, dict):
-        attribute_value = sorted(attribute_value.items())
-
-      elif isinstance(attribute_value, py2to3.BYTES_TYPE):
-        attribute_value = repr(attribute_value)
-
-      comparable = u'{0:s}: {1!s}'.format(attribute_name, attribute_value)
-      attributes.append(comparable)
-
-    comparable = u', '.join(attributes)
-    event_values = sorted(event.CopyToDict().items())
-    heap_values = (event.timestamp, event.timestamp_desc, comparable, event)
-    heapq.heappush(self._heap, heap_values)
-
-  def PushEvents(self, events):
-    """Pushes events onto the heap.
-
-    Args:
-      events list[EventObject]: events.
-    """
-    for event in events:
-      self.PushEvent(event)
 
 
 class ParserTestCase(shared_test_lib.BaseTestCase):
@@ -131,19 +62,6 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
     return storage_writer
-
-  def _GetSortedEvents(self, events):
-    """Retrieves events sorted in a deterministic order.
-
-    Args:
-      events (list[EventObject]): events.
-
-    Returns:
-      list[EventObject]: sorted events.
-    """
-    events_heap = _EventsHeap()
-    events_heap.PushEvents(events)
-    return list(events_heap.PopEvents())
 
   def _GetShortMessage(self, message_string):
     """Shortens a message string to a maximum of 80 character width.

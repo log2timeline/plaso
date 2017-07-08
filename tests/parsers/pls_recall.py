@@ -22,7 +22,7 @@ class PlsRecallTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile([u'PLSRecall_Test.dat'], parser_object)
 
     # There are two events in test file.
-    self.assertEqual(len(storage_writer.events), 2)
+    self.assertEqual(storage_writer.number_of_events, 2)
 
     event = storage_writer.events[0]
 

@@ -22,7 +22,7 @@ class ChromeCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'chrome_cache', u'index'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 217)
+    self.assertEqual(storage_writer.number_of_events, 217)
 
     event_object = storage_writer.events[0]
 

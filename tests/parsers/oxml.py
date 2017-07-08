@@ -22,7 +22,7 @@ class OXMLTest(test_lib.ParserTestCase):
     parser_object = oxml.OpenXMLParser()
     storage_writer = self._ParseFile([u'Document.docx'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 2)
+    self.assertEqual(storage_writer.number_of_events, 2)
 
     event_object = storage_writer.events[0]
 

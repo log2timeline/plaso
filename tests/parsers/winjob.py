@@ -22,7 +22,7 @@ class WinJobTest(test_lib.ParserTestCase):
     parser_object = winjob.WinJobParser()
     storage_writer = self._ParseFile([u'wintask.job'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 2)
+    self.assertEqual(storage_writer.number_of_events, 2)
 
     event_object = storage_writer.events[0]
 

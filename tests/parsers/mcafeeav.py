@@ -23,7 +23,7 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
         [u'AccessProtectionLog.txt'], parser_object)
 
     # The file contains 14 lines which results in 14 events.
-    self.assertEqual(len(storage_writer.events), 14)
+    self.assertEqual(storage_writer.number_of_events, 14)
 
     event = storage_writer.events[0]
 

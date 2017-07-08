@@ -23,7 +23,7 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
         [u'contacts2.db'], plugin_object)
 
     # The contacts2 database file contains 5 events (MISSED/OUTGOING/INCOMING).
-    self.assertEqual(len(storage_writer.events), 5)
+    self.assertEqual(storage_writer.number_of_events, 5)
 
     # Check the first event.
     event = storage_writer.events[0]

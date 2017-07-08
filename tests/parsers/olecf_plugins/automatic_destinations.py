@@ -24,7 +24,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     storage_writer = self._ParseOLECFFileWithPlugin(
         [u'1b4dd67f29cb1962.automaticDestinations-ms'], plugin_object)
 
-    self.assertEqual(len(storage_writer.events), 88)
+    self.assertEqual(storage_writer.number_of_events, 88)
 
     # Check a AutomaticDestinationsDestListEntryEvent.
     event_object = storage_writer.events[7]
@@ -114,7 +114,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     storage_writer = self._ParseOLECFFileWithPlugin(
         [u'9d1f905ce5044aee.automaticDestinations-ms'], plugin_object)
 
-    self.assertEqual(len(storage_writer.events), 4)
+    self.assertEqual(storage_writer.number_of_events, 4)
 
     # Check a AutomaticDestinationsDestListEntryEvent.
 

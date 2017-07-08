@@ -78,7 +78,7 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
     plugin_object = windows_version.WindowsVersionPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
 
-    self.assertEqual(len(storage_writer.events), 2)
+    self.assertEqual(storage_writer.number_of_events, 2)
 
     event_object = storage_writer.events[0]
 
@@ -139,7 +139,7 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin_object, file_entry=test_file_entry)
 
-    self.assertEqual(len(storage_writer.events), 2)
+    self.assertEqual(storage_writer.number_of_events, 2)
 
     event_object = storage_writer.events[0]
 

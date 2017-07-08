@@ -21,9 +21,9 @@ class SSHSyslogParserTest(test_lib.SyslogPluginTestCase):
         [u'syslog_ssh.log'], u'ssh',
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(storage_writer.events), 9)
+    self.assertEqual(storage_writer.number_of_events, 9)
 
-    events = self._GetSortedEvents(storage_writer.events)
+    events = list(storage_writer.GetSortedEvents())
 
     event = events[0]
     self.assertEqual(event.data_type, u'syslog:line')

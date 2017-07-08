@@ -28,7 +28,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     #   Number of recovered records : 0
     #   Log type                    : System
 
-    self.assertEqual(len(storage_writer.events), 1601)
+    self.assertEqual(storage_writer.number_of_events, 1601)
 
     # Event number        : 12049
     # Written time        : Mar 14, 2012 04:17:43.354562700 UTC
@@ -125,7 +125,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     # contains invalid log at the end.
     storage_writer = self._ParseFile([u'System2.evtx'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 194)
+    self.assertEqual(storage_writer.number_of_events, 194)
 
     expected_strings_parsed = [
         (u'source_user_id', u'S-1-5-18'),

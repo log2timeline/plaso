@@ -198,9 +198,9 @@ class NetworksPluginTest(test_lib.RegistryPluginTestCase):
     plugin_object = networks.NetworksPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
 
-    self.assertEqual(len(storage_writer.events), 4)
+    self.assertEqual(storage_writer.number_of_events, 4)
 
-    events = self._GetSortedEvents(storage_writer.events)
+    events = list(storage_writer.GetSortedEvents())
 
     event = events[0]
 

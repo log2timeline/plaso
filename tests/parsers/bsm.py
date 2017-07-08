@@ -24,7 +24,7 @@ class MacOSXBSMParserTest(test_lib.ParserTestCase):
         [u'apple.bsm'], parser_object,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(storage_writer.events), 54)
+    self.assertEqual(storage_writer.number_of_events, 54)
 
     event = storage_writer.events[0]
 
@@ -183,7 +183,7 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
         parser_object,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(storage_writer.events), 50)
+    self.assertEqual(storage_writer.number_of_events, 50)
 
     expected_extra_tokens = [
         {u'BSM_TOKEN_ARGUMENT32': {

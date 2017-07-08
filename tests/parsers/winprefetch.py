@@ -22,7 +22,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     parser_object = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile([u'CMD.EXE-087B4001.pf'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 2)
+    self.assertEqual(storage_writer.number_of_events, 2)
 
     # The prefetch last run event.
     event = storage_writer.events[1]
@@ -109,7 +109,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     parser_object = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile([u'PING.EXE-B29F6629.pf'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 2)
+    self.assertEqual(storage_writer.number_of_events, 2)
 
     # The prefetch last run event.
     event = storage_writer.events[1]
@@ -159,7 +159,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'WUAUCLT.EXE-830BCC14.pf'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 6)
+    self.assertEqual(storage_writer.number_of_events, 6)
 
     # The prefetch last run event.
     event = storage_writer.events[5]
@@ -228,7 +228,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'TASKHOST.EXE-3AE259FC.pf'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 5)
+    self.assertEqual(storage_writer.number_of_events, 5)
 
     # The prefetch last run event.
     event = storage_writer.events[1]
@@ -376,7 +376,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'BYTECODEGENERATOR.EXE-C1E9BCE6.pf'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 8)
+    self.assertEqual(storage_writer.number_of_events, 8)
 
     # The prefetch last run event.
     event = storage_writer.events[1]

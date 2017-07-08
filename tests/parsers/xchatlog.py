@@ -25,7 +25,7 @@ class XChatLogUnitTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'xchat.log'], parser_object, timezone=u'Europe/Rome')
 
-    self.assertEqual(len(storage_writer.events), 9)
+    self.assertEqual(storage_writer.number_of_events, 9)
 
     event = storage_writer.events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(

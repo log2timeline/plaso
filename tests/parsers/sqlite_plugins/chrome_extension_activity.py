@@ -25,7 +25,7 @@ class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         [u'Extension Activity'], plugin_object, cache=cache)
 
-    self.assertEqual(len(storage_writer.events), 56)
+    self.assertEqual(storage_writer.number_of_events, 56)
 
     event_object = storage_writer.events[0]
 

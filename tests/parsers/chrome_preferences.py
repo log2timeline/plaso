@@ -22,9 +22,9 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'Preferences'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 30)
+    self.assertEqual(storage_writer.number_of_events, 30)
 
-    events = self._GetSortedEvents(storage_writer.events)
+    events = list(storage_writer.GetSortedEvents())
 
     event = events[17]
     expected_timestamp = timelib.Timestamp.CopyFromString(

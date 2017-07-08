@@ -24,11 +24,11 @@ class AirportPluginTest(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin_object, [plist_name], plist_name)
 
-    self.assertEqual(len(storage_writer.events), 4)
+    self.assertEqual(storage_writer.number_of_events, 4)
 
     # The order in which PlistParser generates events is nondeterministic
     # hence we sort the events.
-    events = self._GetSortedEvents(storage_writer.events)
+    events = list(storage_writer.GetSortedEvents())
 
     expected_timestamps = [
         1375144166000000, 1386874984000000, 1386949546000000, 1386950747000000]

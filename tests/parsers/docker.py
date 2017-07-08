@@ -28,7 +28,7 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
         u'docker', u'containers', container_identifier, u'container-json.log']
     storage_writer = self._ParseFile(path_segments, parser_object)
 
-    self.assertEqual(len(storage_writer.events), 10)
+    self.assertEqual(storage_writer.number_of_events, 10)
 
     expected_times = [
         u'2016-01-07 16:49:10.000000',
@@ -81,7 +81,7 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
         u'docker', u'containers', container_identifier, u'config.json']
     storage_writer = self._ParseFile(path_segments, parser_object)
 
-    self.assertEqual(len(storage_writer.events), 2)
+    self.assertEqual(storage_writer.number_of_events, 2)
 
     event = storage_writer.events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(
@@ -112,7 +112,7 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
     path_segments = [u'docker', u'graph', layer_identifier, u'json']
     storage_writer = self._ParseFile(path_segments, parser_object)
 
-    self.assertEqual(len(storage_writer.events), 1)
+    self.assertEqual(storage_writer.number_of_events, 1)
 
     event = storage_writer.events[0]
 

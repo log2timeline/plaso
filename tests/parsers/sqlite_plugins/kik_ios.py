@@ -24,7 +24,7 @@ class KikMessageTest(test_lib.SQLitePluginTestCase):
         [u'kik_ios.sqlite'], plugin_object)
 
     # The Kik database file contains 60 events.
-    self.assertEqual(len(storage_writer.events), 60)
+    self.assertEqual(storage_writer.number_of_events, 60)
 
     # Check the second message sent.
     event = storage_writer.events[1]
