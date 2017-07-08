@@ -19,8 +19,8 @@ from plaso import output  # pylint: disable=unused-import
 
 from plaso.cli import extract_analyze_tool
 from plaso.cli import status_view
-from plaso.cli import tools as cli_tools
-from plaso.cli import views as cli_views
+from plaso.cli import tools
+from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import configurations
 from plaso.engine import engine
@@ -234,7 +234,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
             u'Output file already exists: {0:s}.'.format(self._output_filename))
 
       output_file_object = open(self._output_filename, u'wb')
-      output_writer = cli_tools.FileObjectOutputWriter(output_file_object)
+      output_writer = tools.FileObjectOutputWriter(output_file_object)
 
       self._output_module.SetOutputWriter(output_writer)
 
@@ -309,7 +309,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
 
     self._output_writer.Write(u'Processing completed.\n')
 
-    table_view = cli_views.ViewsFactory.GetTableView(
+    table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title=u'Counter')
     for element, count in counter.most_common():
       if not element:
