@@ -208,8 +208,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     event_identifiers = self._event_identifiers_by_pathspec[path_spec]
 
     event_identifier = event.GetIdentifier()
-    lookup_key = event_identifier.CopyToString()
-    event_identifiers.append(lookup_key)
+    event_identifiers.append(event_identifier)
 
     if event.data_type not in self.DATA_TYPES or not self._analyzer.lookup_hash:
       return

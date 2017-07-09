@@ -48,6 +48,17 @@ class AttributeContainer(object):
     self._identifier = AttributeContainerIdentifier()
     self._session_identifier = None
 
+  def CopyFromDict(self, attributes):
+    """Copies the attribute container from a dictionary.
+
+    Args:
+      attributes (dict[str, object]): attribute values per name.
+    """
+    for attribute_name, attribute_value in attributes.items():
+      if attribute_name.startswith(u'_'):
+        continue
+      setattr(self, attribute_name, attribute_value)
+
   def CopyToDict(self):
     """Copies the attribute container to a dictionary.
 

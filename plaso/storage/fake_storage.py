@@ -46,12 +46,6 @@ class FakeStorageWriter(interface.StorageWriter):
     self.task_completion = None
     self.task_start = None
 
-  # TODO: remove after migrating to GetEventTags.
-  @property
-  def event_tags(self):
-    """list[EventTag]: event tags."""
-    return self._event_tags
-
   def _PrepareAttributeContainer(self, attribute_container):
     """Prepares an attribute container for storage.
 
@@ -179,14 +173,14 @@ class FakeStorageWriter(interface.StorageWriter):
     self._RaiseIfNotWritable()
 
     event_identifier = event_tag.GetEventIdentifier()
-    if event_identifier:
-      if not isinstance(event_identifier, identifiers.FakeIdentifier):
-        raise IOError(u'Unsupported event identifier type: {0:s}'.format(
-            type(event_identifier)))
+    if not isinstance(event_identifier, identifiers.FakeIdentifier):
+      raise IOError(u'Unsupported event identifier type: {0:s}'.format(
+          type(event_identifier)))
 
     event_tag = self._PrepareAttributeContainer(event_tag)
 
     self._event_tags.append(event_tag)
+    self.number_of_event_tags += 1
 
   def CreateTaskStorage(self, task):
     """Creates a task storage.

@@ -43,6 +43,7 @@ class _MockNsrlsvrSocket(object):
 
 class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
   """Tests for the nsrlsvr analysis plugin."""
+
   EVENT_1_HASH = (
       u'2d79fcc6b02a2e183a0cb30e0e25d103f42badda9fbf86bbee06f93aa3855aff')
 
@@ -99,7 +100,7 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
     storage_writer = self._AnalyzeEvents(events, plugin)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
-    self.assertEqual(len(storage_writer.event_tags), 1)
+    self.assertEqual(storage_writer.number_of_event_tags, 1)
 
     report = storage_writer.analysis_reports[0]
     self.assertIsNotNone(report)
@@ -110,7 +111,7 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(report.text, expected_text)
 
     labels = []
-    for event_tag in storage_writer.event_tags:
+    for event_tag in storage_writer.GetEventTags():
       labels.extend(event_tag.labels)
     self.assertEqual(len(labels), 1)
 
