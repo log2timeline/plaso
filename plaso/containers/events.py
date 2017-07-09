@@ -63,9 +63,6 @@ class EventObject(interface.AttributeContainer):
     self._event_data_identifier = None
     self.data_type = self.DATA_TYPE
     self.display_name = None
-    self.event_data_entry_index = None
-    self.event_data_row_identifier = None
-    self.event_data_stream_number = None
     self.filename = None
     self.hostname = None
     self.inode = None
@@ -73,6 +70,9 @@ class EventObject(interface.AttributeContainer):
     self.pathspec = None
     self.tag = None
     self.timestamp = None
+
+    # TODO: add a solution for event_data_entry_index,
+    # event_data_stream_number and event_data_row_identifier
 
   def GetEventDataIdentifier(self):
     """Retrieves the identifier of the event data associated with the event.

@@ -33,9 +33,6 @@ class EventObjectTest(shared_test_lib.BaseTestCase):
     expected_attribute_names = [
         u'data_type',
         u'display_name',
-        u'event_data_entry_index',
-        u'event_data_row_identifier',
-        u'event_data_stream_number',
         u'filename',
         u'hostname',
         u'inode',
