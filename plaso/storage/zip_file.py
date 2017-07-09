@@ -839,7 +839,6 @@ class ZIPStorageFile(interface.BaseFileStorage):
     Returns:
       AttributeContainer: attribute container or None if not available.
     """
-    print("CP1", container_type, stream_number, entry_index)
     serialized_data, entry_index = self._GetSerializedAttributeContainerData(
         container_type, stream_number, entry_index=entry_index)
     if not serialized_data:
