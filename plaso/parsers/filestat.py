@@ -80,7 +80,7 @@ class FileStatParser(interface.FileEntryParser):
       type_string = u'{0:s}'.format(fs_info.info.ftype)
       if type_string.startswith(u'TSK_FS_TYPE'):
         type_string = type_string[12:]
-      if type_string.endsswith(u'_DETECT'):
+      if type_string.endswith(u'_DETECT'):
         type_string = type_string[:-7]
 
   def ParseFileEntry(self, parser_mediator, file_entry, **kwargs):
