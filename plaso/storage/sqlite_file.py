@@ -957,7 +957,7 @@ class SQLiteStorageMergeReader(interface.FileStorageMergeReader):
 
     elif container_type == u'event_tag':
       event_identifier = identifiers.SQLTableIdentifier(
-          container_type, attribute_container.event_row_identifier)
+          u'event', attribute_container.event_row_identifier)
       attribute_container.SetEventIdentifier(event_identifier)
 
       self._storage_writer.AddEventTag(attribute_container)

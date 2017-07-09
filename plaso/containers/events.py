@@ -63,6 +63,9 @@ class EventObject(interface.AttributeContainer):
     self._event_data_identifier = None
     self.data_type = self.DATA_TYPE
     self.display_name = None
+    self.event_data_entry_index = None
+    self.event_data_row_identifier = None
+    self.event_data_stream_number = None
     self.filename = None
     self.hostname = None
     self.inode = None
@@ -123,6 +126,7 @@ class EventTag(interface.AttributeContainer):
     self._event_identifier = None
     self.comment = comment
     self.event_entry_index = None
+    self.event_row_identifier = None
     self.event_stream_number = None
     self.labels = []
 
