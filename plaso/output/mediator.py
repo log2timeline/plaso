@@ -141,7 +141,6 @@ class OutputMediator(object):
         session_identifier=session_identifier)
     return hostname or default_hostname
 
-  # TODO: Fix this function when the MFT parser has been implemented.
   def GetMACBRepresentation(self, event):
     """Retrieves the MACB representation.
 
@@ -208,6 +207,43 @@ class OutputMediator(object):
       return u'..C.'
 
     return u'....'
+
+  def GetMACBRepresentationFromDescriptions(self, timestamp_descriptions):
+    """Determines the MACB representation from the timestamp descriptions.
+
+    Args:
+      timestamp_descriptions (list[str]): timestamp descriptions.
+
+    Returns:
+      str: MACB representation.
+    """
+    macb_representation = []
+
+    if (u'mtime' in timestamp_descriptions or 
+        definitions.TIME_DESCRIPTION_MODIFICATION in timestamp_descriptions):
+      macb_representation.append(u'M')
+    else:
+      macb_representation.append(u'.')
+
+    if (u'atime' in timestamp_descriptions or 
+        definitions.TIME_DESCRIPTION_LAST_ACCESS in timestamp_descriptions):
+      macb_representation.append(u'A')
+    else:
+      macb_representation.append(u'.')
+
+    if (u'ctime' in timestamp_descriptions or 
+        definitions.TIME_DESCRIPTION_CHANGE in timestamp_descriptions):
+      macb_representation.append(u'C')
+    else:
+      macb_representation.append(u'.')
+
+    if (u'crtime' in timestamp_descriptions or 
+        definitions.TIME_DESCRIPTION_CREATION in timestamp_descriptions):
+      macb_representation.append(u'B')
+    else:
+      macb_representation.append(u'.')
+
+    return u''.join(macb_representation)
 
   # TODO: remove this function it is incorrect.
   def GetStoredHostname(self):

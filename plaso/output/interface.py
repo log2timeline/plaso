@@ -60,7 +60,7 @@ class OutputModule(object):
     pass
 
   def WriteEvent(self, event):
-    """Writes the event object to the output.
+    """Writes the event to the output.
 
     Args:
       event (EventObject): event.
@@ -83,24 +83,33 @@ class OutputModule(object):
 
   @abc.abstractmethod
   def WriteEventBody(self, event):
-    """Writes the body of an event object to the output.
+    """Writes the body of an event to the output.
 
     Args:
       event (EventObject): event.
     """
 
   def WriteEventEnd(self):
-    """Writes the end of an event object to the output.
+    """Writes the end of an event to the output.
 
-    Can be used for post-processing or output after an individual event object
+    Can be used for post-processing or output after an individual event
     has been written, such as writing closing XML tags, etc.
     """
     pass
 
-  def WriteEventStart(self):
-    """Writes the start of an event object to the output.
+  def WriteEventMACBGroup(self, event_macb_group):
+    """Writes an event MACB group to the output.
 
-    Can be used for pre-processing or output before an individual event object
+    Args:
+      event_macb_group (list[EventObject]): event MACB group.
+    """
+    for event in event_macb_group:
+      self.WriteEvent(event)
+
+  def WriteEventStart(self):
+    """Writes the start of an event to the output.
+
+    Can be used for pre-processing or output before an individual event
     has been written, such as writing opening XML tags, etc.
     """
     pass
@@ -108,7 +117,7 @@ class OutputModule(object):
   def WriteFooter(self):
     """Writes the footer to the output.
 
-    Can be used for post-processing or output after the last event object
+    Can be used for post-processing or output after the last event
     is written, such as writing a file footer.
     """
     pass
@@ -116,7 +125,7 @@ class OutputModule(object):
   def WriteHeader(self):
     """Writes the header to the output.
 
-    Can be used for pre-processing or output before the first event object
+    Can be used for pre-processing or output before the first event
     is written, such as writing a file header.
     """
     pass

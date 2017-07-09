@@ -61,30 +61,51 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     username = self._output_mediator.GetUsername(event)
     return self._FormatField(username)
 
-  def WriteEventBody(self, event):
-    """Writes the body of an event object to the output.
+  def _WriteOutputValues(self, output_values):
+    """Writes values to the output.
+
+    Args:
+      output_values (list[str]): output values.
+    """
+    for index, value in enumerate(output_values):
+      if not isinstance(value, py2to3.STRING_TYPES):
+        value = u''
+      output_values[index] = value.replace(u',', u' ')
+
+    output_line = u','.join(output_values)
+    output_line = u'{0:s}\n'.format(output_line)
+    self._WriteLine(output_line)
+
+  def _GetOutputValues(self, event):
+    """Retrieves output values.
 
     Args:
       event (EventObject): event.
 
+    Returns:
+      list[str]: output values.
+
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data
-                        type in the event object.
+          type in the event.
     """
     if not hasattr(event, u'timestamp'):
+      logging.error(u'Unable to output event without timestamp.')
       return
 
+    # TODO: add function to pass event_values to GetFormattedMessages.
     message, message_short = self._output_mediator.GetFormattedMessages(event)
     if message is None or message_short is None:
+      data_type = getattr(event, u'data_type', u'UNKNOWN')
       raise errors.NoFormatterFound(
-          u'Unable to find event formatter for: {0:s}.'.format(
-              getattr(event, u'data_type', u'UNKNOWN')))
+          u'Unable to find event formatter for: {0:s}.'.format(data_type))
 
+    # TODO: add function to pass event_values to GetFormattedSources.
     source_short, source = self._output_mediator.GetFormattedSources(event)
     if source is None or source_short is None:
+      data_type = getattr(event, u'data_type', u'UNKNOWN')
       raise errors.NoFormatterFound(
-          u'Unable to find event formatter for: {0:s}.'.format(
-              getattr(event, u'data_type', u'UNKNOWN')))
+          u'Unable to find event formatter for: {0:s}.'.format(data_type))
 
     date_use = timelib.Timestamp.CopyToDatetime(
         event.timestamp, self._output_mediator.timezone)
@@ -106,9 +127,9 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
       # the extra attributes values can be integer, float point or
       # boolean values.
       extra_attributes.append(
-          u'{0:s}: {1!s} '.format(attribute_name, attribute_value))
+          u'{0:s}: {1!s}'.format(attribute_name, attribute_value))
 
-    extra_attributes = u' '.join(extra_attributes)
+    extra_attributes = u'; '.join(extra_attributes)
     extra_attributes = extra_attributes.replace(u'\n', u'-').replace(u'\r', u'')
 
     inode = getattr(event, u'inode', None)
@@ -143,10 +164,10 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
         date_string,
         time_string,
         u'{0!s}'.format(self._output_mediator.timezone),
-        self._output_mediator.GetMACBRepresentation(event),
+        u'....',
         source_short,
         source,
-        getattr(event, u'timestamp_desc', u'-'),
+        u'-',
         username,
         hostname,
         message_short,
@@ -158,14 +179,42 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
         getattr(event, u'parser', u'-'),
         extra_attributes]
 
-    for index, value in enumerate(output_values):
-      if not isinstance(value, py2to3.STRING_TYPES):
-        value = u''
-      output_values[index] = value.replace(u',', u' ')
+    return output_values
 
-    output_line = u','.join(output_values)
-    output_line = u'{0:s}\n'.format(output_line)
-    self._WriteLine(output_line)
+  def WriteEventBody(self, event):
+    """Writes the body of an event object to the output.
+
+    Args:
+      event (EventObject): event.
+
+    Raises:
+      NoFormatterFound: If no event formatter can be found to match the data
+          type in the event object.
+    """
+    output_values = self._GetOutputValues(event)
+
+    output_values[3] = self._output_mediator.GetMACBRepresentation(event)
+    output_values[6] = getattr(event, u'timestamp_desc', u'-')
+
+    self._WriteOutputValues(output_values)
+
+  def WriteEventMACBGroup(self, event_macb_group):
+    """Writes an event MACB group to the output.
+
+    Args:
+      event_macb_group (list[EventObject]): event MACB group.
+    """
+    output_values = self._GetOutputValues(event_macb_group[0])
+
+    timestamp_descriptions = [
+        event.timestamp_desc for event in event_macb_group]
+    output_values[3] = (
+        self._output_mediator.GetMACBRepresentationFromDescriptions(
+            timestamp_descriptions))
+    # TODO: fix timestamp description in source.
+    output_values[6] = u'; '.join(timestamp_descriptions)
+
+    self._WriteOutputValues(output_values)
 
   def WriteHeader(self):
     """Writes the header to the output."""

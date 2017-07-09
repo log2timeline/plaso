@@ -4,6 +4,7 @@
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.containers import time_events
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -50,11 +51,17 @@ class FileStatParser(interface.FileEntryParser):
   NAME = u'filestat'
   DESCRIPTION = u'Parser for file system stat information.'
 
-  _TIME_ATTRIBUTES = frozenset([
-      u'atime', u'bkup_time', u'ctime', u'crtime', u'dtime', u'mtime'])
+  _TIMESTAMP_DESCRIPTIONS = {
+      u'atime': definitions.TIME_DESCRIPTION_LAST_ACCESS,
+      u'bkup_time': definitions.TIME_DESCRIPTION_BACKUP,
+      u'ctime': definitions.TIME_DESCRIPTION_CHANGE,
+      u'crtime': definitions.TIME_DESCRIPTION_CREATION,
+      u'dtime': definitions.TIME_DESCRIPTION_DELETED,
+      u'mtime': definitions.TIME_DESCRIPTION_MODIFICATION,
+   }
 
   def _GetFileSystemTypeFromFileEntry(self, file_entry):
-    """Return a filesystem type string from a file entry object.
+    """Retrieves the file system type indicator of a file entry.
 
     Args:
       file_entry (dfvfs.FileEntry): a file entry.
@@ -72,7 +79,9 @@ class FileStatParser(interface.FileEntryParser):
     if fs_info.info:
       type_string = u'{0:s}'.format(fs_info.info.ftype)
       if type_string.startswith(u'TSK_FS_TYPE'):
-        return type_string[12:]
+        type_string = type_string[12:]
+      if type_string.endsswith(u'_DETECT'):
+        type_string = type_string[:-7]
 
   def ParseFileEntry(self, parser_mediator, file_entry, **kwargs):
     """Parses a file entry.
@@ -91,7 +100,7 @@ class FileStatParser(interface.FileEntryParser):
     is_allocated = getattr(stat_object, u'allocated', True)
     file_size = getattr(stat_object, u'size', None),
 
-    for time_attribute in self._TIME_ATTRIBUTES:
+    for time_attribute, usage in self._TIMESTAMP_DESCRIPTIONS.items():
       posix_time = getattr(stat_object, time_attribute, None)
       if posix_time is None:
         continue
@@ -110,10 +119,10 @@ class FileStatParser(interface.FileEntryParser):
           not timestamp):
         continue
 
-      event_object = FileStatEvent(
-          timestamp, time_attribute, is_allocated, file_size, stat_object.type,
+      event = FileStatEvent(
+          timestamp, usage, is_allocated, file_size, stat_object.type,
           file_system_type)
-      parser_mediator.ProduceEvent(event_object)
+      parser_mediator.ProduceEvent(event)
 
 
 manager.ParsersManager.RegisterParser(FileStatParser)
