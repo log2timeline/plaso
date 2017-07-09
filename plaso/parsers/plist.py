@@ -38,11 +38,11 @@ class PlistParser(interface.FileObjectParser):
     """Returns the deserialized content of a plist as a dictionary object.
 
     Args:
-      file_object: A file-like object to parse.
-      file_name: The name of the file-like object.
+      file_object (dfvfs.FileIO): a file-like object to parse.
+      file_name (str): name of the file-like object.
 
     Returns:
-      A dictionary object representing the contents of the plist.
+      dict[str, object]: contents of the plist.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -88,8 +88,9 @@ class PlistParser(interface.FileObjectParser):
     """Parses a plist file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
