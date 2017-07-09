@@ -248,8 +248,6 @@ class _SerializedDataStream(object):
     Raises:
       IOError: if the file-like object cannot be opened.
     """
-    # TODO: limit number of open streams.
-
     try:
       self._zip_file.extract(self._stream_name, self._temporary_path)
     except KeyError as exception:
@@ -792,11 +790,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       self._WriteSerializedEvents()
 
   def _BuildEventTagIndex(self):
-    """Builds the event tag index.
-
-    Raises:
-      IOError: if a stream is missing.
-    """
+    """Builds the event tag index."""
     self._event_tag_index = {}
     for event_tag in self.GetEventTags():
       event_identifier = event_tag.GetEventIdentifier()
@@ -1756,9 +1750,6 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     Args:
       event_tag (EventTag): event tag.
-
-    Raises:
-      IOError: if a stream is missing.
     """
     event_identifier = event_tag.GetEventIdentifier()
 
@@ -2277,9 +2268,6 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     Returns:
       generator(ExtractionError): error generator.
-
-    Raises:
-      IOError: if a stream is missing.
     """
     return self._GetAttributeContainers(u'extraction_error')
 
@@ -2288,9 +2276,6 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     Returns:
       generator(EventData): event data generator.
-
-    Raises:
-      IOError: if a stream is missing.
     """
     return self._GetAttributeContainers(u'event_data')
 
@@ -2347,9 +2332,6 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     Returns:
       EventSource: event source.
-
-    Raises:
-      IOError: if a stream is missing.
     """
     return self._GetAttributeContainerByIndex(u'event_source', index)
 
@@ -2358,9 +2340,6 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     Returns:
       generator(EventSource): event source generator.
-
-    Raises:
-      IOError: if a stream is missing.
     """
     return self._GetAttributeContainers(u'event_source')
 
@@ -2369,9 +2348,6 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     Returns:
       generator(EventTag): event tag generator.
-
-    Raises:
-      IOError: if a stream is missing.
     """
     for event_tag in self._GetAttributeContainers(u'event_tag'):
       event_identifier = identifiers.SerializedStreamIdentifier(

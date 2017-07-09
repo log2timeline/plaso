@@ -695,7 +695,7 @@ class FileStorageReader(StorageReader):
   def GetEvents(self):
     """Retrieves the events.
 
-    Yields:
+    Returns:
       generator(EventObject): event generator.
     """
     return self._storage_file.GetEvents()
