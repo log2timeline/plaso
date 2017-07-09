@@ -797,6 +797,38 @@ class ZIPStorageFile(interface.BaseFileStorage):
       lookup_key = event_identifier.CopyToString()
       self._event_tag_index[lookup_key] = event_tag.GetIdentifier()
 
+  @classmethod
+  def _CheckStorageMetadata(cls, storage_metadata):
+    """Checks the storage metadata.
+
+    Args:
+      storage_metadata (_StorageMetadata): storage metadata.
+
+    Raises:
+      IOError: if the format version or the serializer format is not supported.
+    """
+    if not storage_metadata.format_version:
+      raise IOError(u'Missing format version.')
+
+    if storage_metadata.format_version < cls._COMPATIBLE_FORMAT_VERSION:
+      raise IOError(
+          u'Format version: {0:d} is too old and no longer supported.'.format(
+              storage_metadata.format_version))
+
+    if storage_metadata.format_version > cls._FORMAT_VERSION:
+      raise IOError(
+          u'Format version: {0:d} is too new and not yet supported.'.format(
+              storage_metadata.format_version))
+
+    serialization_format = storage_metadata.serialization_format
+    if serialization_format != definitions.SERIALIZER_FORMAT_JSON:
+      raise IOError(u'Unsupported serialization format: {0:s}'.format(
+          serialization_format))
+
+    if storage_metadata.storage_type not in definitions.STORAGE_TYPES:
+      raise IOError(u'Unsupported storage type: {0:s}'.format(
+          storage_metadata.storage_type))
+
   def _FillEventHeapFromStream(self, stream_number):
     """Fills the event heap with the next events from the stream.
 
@@ -1693,34 +1725,15 @@ class ZIPStorageFile(interface.BaseFileStorage):
     if not self._HasStream(stream_name):
       return False
 
-    storage_metadata_reader = _StorageMetadataReader()
     stream_data = self._ReadStream(stream_name)
+
+    storage_metadata_reader = _StorageMetadataReader()
     storage_metadata = storage_metadata_reader.Read(stream_data)
 
-    if not storage_metadata.format_version:
-      raise IOError(u'Missing format version.')
-
-    if storage_metadata.format_version < self._COMPATIBLE_FORMAT_VERSION:
-      raise IOError(
-          u'Format version: {0:d} is too old and no longer supported.'.format(
-              storage_metadata.format_version))
-
-    if storage_metadata.format_version > self._FORMAT_VERSION:
-      raise IOError(
-          u'Format version: {0:d} is too new and not yet supported.'.format(
-              storage_metadata.format_version))
-
-    serialization_format = storage_metadata.serialization_format
-    if serialization_format != definitions.SERIALIZER_FORMAT_JSON:
-      raise IOError(u'Unsupported serialization format: {0:s}'.format(
-          serialization_format))
-
-    if storage_metadata.storage_type not in definitions.STORAGE_TYPES:
-      raise IOError(u'Unsupported storage type: {0:s}'.format(
-          storage_metadata.storage_type))
+    ZIPStorageFile._CheckStorageMetadata(storage_metadata)
 
     self.format_version = storage_metadata.format_version
-    self.serialization_format = serialization_format
+    self.serialization_format = storage_metadata.serialization_format
     self.storage_type = storage_metadata.storage_type
 
     return True
@@ -2161,12 +2174,18 @@ class ZIPStorageFile(interface.BaseFileStorage):
       zip_file = zipfile.ZipFile(
           path, mode=u'r', compression=zipfile.ZIP_DEFLATED, allowZip64=True)
 
-      # TODO: check metadata.
+      with zip_file.open(u'metadata.txt', mode=u'r') as file_object:
+        stream_data = file_object.read()
+
+      storage_metadata_reader = _StorageMetadataReader()
+      storage_metadata = storage_metadata_reader.Read(stream_data)
+
+      cls._CheckStorageMetadata(storage_metadata)
 
       zip_file.close()
       result = True
 
-    except zipfile.BadZipfile:
+    except (IOError, KeyError, zipfile.BadZipfile):
       result = False
 
     return result
