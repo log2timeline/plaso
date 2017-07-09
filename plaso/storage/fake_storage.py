@@ -66,7 +66,7 @@ class FakeStorageWriter(interface.StorageWriter):
     identifier = identifiers.FakeIdentifier(attribute_values_hash)
     attribute_container.SetIdentifier(identifier)
 
-    # Make sure the fake storage preserves the state of the analysis report.
+    # Make sure the fake storage preserves the state of the attribute container.
     return copy.deepcopy(attribute_container)
 
   def _RaiseIfNotWritable(self):
@@ -177,6 +177,12 @@ class FakeStorageWriter(interface.StorageWriter):
       IOError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
+
+    event_identifier = event.GetEventIdentifier()
+    if event_identifier:
+      if not isinstance(event_identifier, identifiers.FakeIdentifier):
+        raise IOError(u'Unsupported event identifier type: {0:s}'.format(
+            type(event_identifier)))
 
     event_tag = self._PrepareAttributeContainer(event_tag)
 
