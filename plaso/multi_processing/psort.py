@@ -2,6 +2,7 @@
 """The psort multi-processing engine."""
 
 import collections
+import heapq
 import logging
 import os
 import time
@@ -11,11 +12,61 @@ from plaso.engine import zeromq_queue
 from plaso.containers import tasks
 from plaso.lib import bufferlib
 from plaso.lib import definitions
+from plaso.lib import py2to3
 from plaso.multi_processing import analysis_process
 from plaso.multi_processing import engine as multi_process_engine
 from plaso.multi_processing import multi_process_queue
-from plaso.output import event_buffer as output_event_buffer
 from plaso.storage import time_range as storage_time_range
+
+
+class _EventsHeap(object):
+  """Class that defines the events heap."""
+
+  def __init__(self):
+    """Initializes an events heap."""
+    super(_EventsHeap, self).__init__()
+    self._heap = []
+
+  @property
+  def number_of_events(self):
+    """int: number of serialized events on the heap."""
+    return len(self._heap)
+
+  def PopEvent(self):
+    """Pops an event from the heap.
+
+    Returns:
+      EventObject: event.
+    """
+    try:
+      _, _, _, event = heapq.heappop(self._heap)
+      return event
+
+    except IndexError:
+      return None
+
+  def PopEvents(self):
+    """Pops events from the heap.
+
+    Yields:
+      EventObject: event.
+    """
+    event = self.PopEvent()
+    while event:
+      yield event
+      event = self.PopEvent()
+
+  def PushEvent(self, event):
+    """Pushes an event onto the heap.
+
+    Args:
+      event (EventObject): event.
+    """
+    event_identifier = event.GetIdentifier()
+    event_identifier_string = event_identifier.CopyToString()
+    heap_values = (
+        event.timestamp, event.timestamp_desc, event_identifier_string, event)
+    heapq.heappush(self._heap, heap_values)
 
 
 class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
@@ -27,6 +78,20 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
   _PROCESS_WORKER_TIMEOUT = 15.0 * 60.0
 
   _QUEUE_TIMEOUT = 10 * 60
+
+  # Event attributes that should not be used in calculating the event export
+  # buffer identifier.
+  _EXCLUDED_EVENT_ATTRIBUTES = frozenset([
+      u'data_type',
+      u'display_name',
+      u'filename',
+      u'inode',
+      u'parser',
+      u'pathspec',
+      u'tag',
+      u'timestamp'])
+
+  _JOIN_ATTRIBUTES = frozenset([u'display_name', u'filename', u'inode'])
 
   def __init__(self, use_zeromq=True):
     """Initializes an engine object.
@@ -41,6 +106,11 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._data_location = None
     self._event_filter_expression = None
     self._event_queues = {}
+    # The event heap is used to make sure the events are sorted in
+    # a deterministic way.
+    self._export_event_heap = _EventsHeap()
+    self._export_event_lookup_table = {}
+    self._export_event_timestamp = 0
     self._knowledge_base = None
     self._merge_task = None
     self._number_of_consumed_errors = 0
@@ -48,6 +118,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._number_of_consumed_events = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
+    self._number_of_duplicate_events = 0
     self._number_of_produced_errors = 0
     self._number_of_produced_event_tags = 0
     self._number_of_produced_events = 0
@@ -241,14 +312,42 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
       self._TerminateProcess(pid)
 
+  def _ExportEvent(self, output_module, event, deduplicate_events=True):
+    """Exports an event using an output module.
+
+    Args:
+      output_module (OutputModule): output module.
+      event (EventObject): event.
+      deduplicate_events (Optional[bool]): True if events should be
+          deduplicated.
+    """
+    if event.timestamp != self._export_event_timestamp:
+      self._FlushExportBuffer(output_module)
+      self._export_event_timestamp = event.timestamp
+
+    if deduplicate_events:
+      lookup_key = self._GetEventExportBufferIdentifier(event)
+      previous_event = self._export_event_lookup_table.get(lookup_key, None)
+      if previous_event:
+        self._number_of_duplicate_events += 1
+
+        self._MergeEvents(previous_event, event)
+        return
+
+      self._export_event_lookup_table[lookup_key] = event
+
+    self._export_event_heap.PushEvent(event)
+
   def _ExportEvents(
-      self, storage_reader, event_buffer, event_filter=None, time_slice=None,
-      use_time_slicer=False):
+      self, storage_reader, output_module, deduplicate_events=True,
+      event_filter=None, time_slice=None, use_time_slicer=False):
     """Exports events using an output module.
 
     Args:
       storage_reader (StorageReader): storage reader.
-      event_buffer (EventBuffer): event buffer.
+      output_module (OutputModule): output module.
+      deduplicate_events (Optional[bool]): True if events should be
+          deduplicated.
       event_filter (Optional[FilterObject]): event filter.
       time_slice (Optional[TimeRange]): time range that defines a time slice
           to filter events.
@@ -293,7 +392,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           number_of_filtered_events += 1
 
         elif forward_entries <= time_slice_buffer.size:
-          event_buffer.Append(event)
+          self._ExportEvent(
+              output_module, event, deduplicate_events=deduplicate_events)
           self._number_of_consumed_events += 1
           number_of_events_from_time_slice += 1
           forward_entries += 1
@@ -309,14 +409,17 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         if filter_match == True and time_slice_buffer:
           # Empty the time slice buffer.
           for event_in_buffer in time_slice_buffer.Flush():
-            event_buffer.Append(event_in_buffer)
+            self._ExportEvent(
+                output_module, event_in_buffer,
+                deduplicate_events=deduplicate_events)
             self._number_of_consumed_events += 1
             number_of_filtered_events += 1
             number_of_events_from_time_slice += 1
 
           forward_entries = 1
 
-        event_buffer.Append(event)
+        self._ExportEvent(
+            output_module, event, deduplicate_events=deduplicate_events)
         self._number_of_consumed_events += 1
 
         # pylint: disable=singleton-comparison
@@ -324,19 +427,154 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
             filter_limit == self._number_of_consumed_events):
           break
 
+    self._FlushExportBuffer(output_module)
+
     events_counter = collections.Counter()
     events_counter[u'Events filtered'] = number_of_filtered_events
     events_counter[u'Events from time slice'] = number_of_events_from_time_slice
     events_counter[u'Events processed'] = self._number_of_consumed_events
 
-    if event_buffer.duplicate_counter:
+    if self._number_of_duplicate_events:
       events_counter[u'Duplicate events removed'] = (
-          event_buffer.duplicate_counter)
+          self._number_of_duplicate_events)
 
     if filter_limit:
       events_counter[u'Limited By'] = filter_limit
 
     return events_counter
+
+  def _FlushExportBuffer(self, output_module):
+    """Flushes buffered events and writes them to the output module.
+
+    Args:
+      output_module (OutputModule): output module.
+    """
+    for event in self._export_event_heap.PopEvents():
+      output_module.WriteEvent(event)
+
+    self._export_event_lookup_table = {}
+
+  def _GetEventExportBufferIdentifier(self, event):
+    """Retrieves an identifier of the event for the export buffer.
+
+    The identifier is determined based on the event attributes.
+
+    Args:
+      event (EventObject): event.
+
+    Returns:
+      str: unique identifier representation of the event that can be used for
+          equality comparison.
+    """
+    attributes = {}
+    for attribute_name, attribute_value in event.GetAttributes():
+      if attribute_name in self._EXCLUDED_EVENT_ATTRIBUTES:
+        continue
+
+      if isinstance(attribute_value, dict):
+        attribute_value = sorted(attribute_value.items())
+
+      elif isinstance(attribute_value, set):
+        attribute_value = sorted(list(attribute_value))
+
+      attributes[attribute_name] = attribute_value
+
+    if event.pathspec:
+      attributes[u'pathspec'] = event.pathspec.comparable
+
+    try:
+      event_identifier_string = u'|'.join([
+          u'{0:s}={1!s}'.format(attribute_name, attribute_value)
+          for attribute_name, attribute_value in sorted(attributes.items())])
+
+    except UnicodeDecodeError:
+      event_identifier = event.GetIdentifier()
+      event_identifier_string = u'identifier={0:s}'.format(
+          event_identifier.CopyToString())
+
+    event_identifier_string = u'{0:d}|{1:s}|{2:s}'.format(
+        event.timestamp, event.data_type, event_identifier_string)
+    return event_identifier_string
+
+  def _MergeEvents(self, first_event, second_event):
+    """Merges the attributes of the second event into the first.
+
+    Args:
+      first_event (EventObject): first event.
+      second_event (EventObject): second event.
+    """
+    # TODO: Currently we are using the first event pathspec, perhaps that
+    # is not the best approach. There is no need to have all the pathspecs
+    # inside the combined event, however which one should be chosen is
+    # perhaps something that can be evaluated here (regular TSK in favor of
+    # an event stored deep inside a VSS for instance).
+
+    for attribute_name in self._JOIN_ATTRIBUTES:
+      first_value = getattr(first_event, attribute_name, None)
+      if first_value is None:
+        first_value_set = set()
+
+      else:
+        if isinstance(first_value, py2to3.STRING_TYPES):
+          first_value = first_value.split(u';')
+        else:
+          first_value = [first_value]
+
+        first_value_set = set(first_value)
+
+      second_value = getattr(second_event, attribute_name, None)
+      if second_value is None:
+        second_value_set = set()
+
+      else:
+        if isinstance(second_value, py2to3.STRING_TYPES):
+          second_value = second_value.split(u';')
+        else:
+          second_value = [second_value]
+
+        second_value_set = set(second_value)
+
+      values_list = list(first_value_set.union(second_value_set))
+      values_list.sort()
+
+      if not values_list:
+        join_value = None
+      elif len(values_list) == 1:
+        join_value = values_list[0]
+      else:
+        join_value = u';'.join(values_list)
+
+      setattr(first_event, attribute_name, join_value)
+
+    # If two events are merged then we'll just pick the first inode value.
+    inode = first_event.inode
+    if isinstance(inode, py2to3.STRING_TYPES):
+      inode_list = inode.split(u';')
+      try:
+        new_inode = int(inode_list[0], 10)
+      except (IndexError, ValueError):
+        new_inode = 0
+
+      first_event.inode = new_inode
+
+    # Special instance if this is a filestat entry we need to combine the
+    # timestamp description field.
+    parser_name = getattr(first_event, u'parser', None)
+
+    if parser_name == u'filestat':
+      first_description = getattr(first_event, u'timestamp_desc', u'')
+      first_description_set = set(first_description.split(u';'))
+
+      second_description = getattr(second_event, u'timestamp_desc', u'')
+      second_description_set = set(second_description.split(u';'))
+
+      if first_description_set.difference(second_description_set):
+        descriptions_list = list(first_description_set.union(
+            second_description_set))
+        descriptions_list.sort()
+        description_value = u';'.join(descriptions_list)
+
+        setattr(first_event, u'timestamp_desc', description_value)
 
   def _StartAnalysisProcesses(self, storage_writer, analysis_plugins):
     """Starts the analysis processes.
@@ -680,21 +918,24 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     storage_reader.ReadPreprocessingInformation(knowledge_base_object)
 
-    event_buffer = output_event_buffer.EventBuffer(
-        output_module, deduplicate_events)
+    output_module.Open()
+    output_module.WriteHeader()
 
     self._StartStatusUpdateThread()
 
     try:
-      with event_buffer:
-        events_counter = self._ExportEvents(
-            storage_reader, event_buffer, event_filter=event_filter,
-            time_slice=time_slice, use_time_slicer=use_time_slicer)
+      events_counter = self._ExportEvents(
+          storage_reader, output_module, deduplicate_events=deduplicate_events,
+          event_filter=event_filter, time_slice=time_slice,
+          use_time_slicer=use_time_slicer)
 
     finally:
       # Stop the status update thread after close of the storage writer
       # so we include the storage sync to disk in the status updates.
       self._StopStatusUpdateThread()
+
+    output_module.WriteFooter()
+    output_module.Close()
 
     # Reset values.
     self._status_update_callback = None
