@@ -171,7 +171,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
 
     Args:
       container_type (str): attribute container type.
-      filter_expression (Optional[str]): expression to filter results by. 
+      filter_expression (Optional[str]): expression to filter results by.
       order_by (Optional[str]): name of a column to order the results by.
 
     Yields:
