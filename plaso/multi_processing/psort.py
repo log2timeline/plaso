@@ -85,7 +85,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       u'filename',
       u'inode',
       u'parser',
-      u'pathspec',
       u'tag',
       u'timestamp'])
 
@@ -327,6 +326,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       lookup_key = self._GetEventExportBufferIdentifier(event)
       previous_event = self._export_event_lookup_table.get(lookup_key, None)
       if previous_event:
+        logging.warning("K: %s\nP: %s\nN: %s", lookup_key, previous_event.CopyToDict(), event.CopyToDict())
         self._number_of_duplicate_events += 1
 
         self._MergeEvents(previous_event, event)
@@ -464,35 +464,25 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       str: unique identifier representation of the event that can be used for
           equality comparison.
     """
-    attributes = {}
-    for attribute_name, attribute_value in event.GetAttributes():
+    attributes = []
+    for attribute_name, attribute_value in sorted(event.GetAttributes()):
       if attribute_name in self._EXCLUDED_EVENT_ATTRIBUTES:
         continue
 
-      if isinstance(attribute_value, dict):
+      if attribute_name == u'pathspec':
+        attribute_value = attribute_value.comparable
+
+      elif isinstance(attribute_value, dict):
         attribute_value = sorted(attribute_value.items())
 
       elif isinstance(attribute_value, set):
         attribute_value = sorted(list(attribute_value))
 
-      attributes[attribute_name] = attribute_value
+      attribute_string = u'{0:s}: {1!s}'.format(attribute_name, attribute_value)
+      attributes.append(attribute_string)
 
-    if event.pathspec:
-      attributes[u'pathspec'] = event.pathspec.comparable
-
-    try:
-      event_identifier_string = u'|'.join([
-          u'{0:s}={1!s}'.format(attribute_name, attribute_value)
-          for attribute_name, attribute_value in sorted(attributes.items())])
-
-    except UnicodeDecodeError:
-      event_identifier = event.GetIdentifier()
-      event_identifier_string = u'identifier={0:s}'.format(
-          event_identifier.CopyToString())
-
-    event_identifier_string = u'{0:d}|{1:s}|{2:s}'.format(
-        event.timestamp, event.data_type, event_identifier_string)
-    return event_identifier_string
+    return hash(u'{0:d}|{1:s}|{2:s}'.format(
+        event.timestamp, event.data_type, u', '.join(attributes)))
 
   def _MergeEvents(self, first_event, second_event):
     """Merges the attributes of the second event into the first.
