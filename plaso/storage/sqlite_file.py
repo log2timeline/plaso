@@ -30,7 +30,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
   _CONTAINER_TYPES = (
       u'analysis_report', u'extraction_error', u'event', u'event_data',
       u'event_source', u'event_tag', u'session_completion', u'session_start',
-      u'task_completion', u'task_start')
+      u'system_configuration', u'task_completion', u'task_start')
 
   _CREATE_METADATA_TABLE_QUERY = (
       u'CREATE TABLE metadata (key TEXT, value TEXT);')
@@ -115,6 +115,53 @@ class SQLiteStorageFile(interface.BaseFileStorage):
 
     if container_list.data_size > self._maximum_buffer_size:
       self._WriteSerializedAttributeContainerList(container_type)
+
+  @classmethod
+  def _CheckStorageMetadata(cls, metadata_values):
+    """Checks the storage metadata.
+
+    Args:
+      metadata_values (dict[str, str]): metadata values per key.
+
+    Raises:
+      IOError: if the format version or the serializer format is not supported.
+    """
+    format_version = metadata_values.get(u'format_version', None)
+
+    if not format_version:
+      raise IOError(u'Missing format version.')
+
+    try:
+      format_version = int(format_version, 10)
+    except (TypeError, ValueError):
+      raise IOError(u'Invalid format version: {0!s}.'.format(format_version))
+
+    if format_version < cls._COMPATIBLE_FORMAT_VERSION:
+      raise IOError(
+          u'Format version: {0:d} is too old and no longer supported.'.format(
+              format_version))
+
+    if format_version > cls._FORMAT_VERSION:
+      raise IOError(
+          u'Format version: {0:d} is too new and not yet supported.'.format(
+              format_version))
+
+    metadata_values[u'format_version'] = format_version
+
+    compression_format = metadata_values.get(u'compression_format', None)
+    if compression_format not in definitions.COMPRESSION_FORMATS:
+      raise IOError(u'Unsupported compression format: {0:s}'.format(
+          compression_format))
+
+    serialization_format = metadata_values.get(u'serialization_format', None)
+    if serialization_format != definitions.SERIALIZER_FORMAT_JSON:
+      raise IOError(u'Unsupported serialization format: {0:s}'.format(
+          serialization_format))
+
+    storage_type = metadata_values.get(u'storage_type', None)
+    if storage_type not in definitions.STORAGE_TYPES:
+      raise IOError(u'Unsupported storage type: {0:s}'.format(
+          storage_type))
 
   def _GetAttributeContainerByIndex(self, container_type, index):
     """Retrieves a specific attribute container.
@@ -221,56 +268,18 @@ class SQLiteStorageFile(interface.BaseFileStorage):
 
     Returns:
       bool: True if the storage metadata was read.
-
-    Raises:
-      IOError: if the format version or the serializer format is not supported.
     """
     query = u'SELECT key, value FROM metadata'
     self._cursor.execute(query)
 
-    metadata_values = {}
-    for row in self._cursor.fetchall():
-      metadata_values[row[0]] = row[1]
+    metadata_values = {row[0]: row[1] for row in cursor.fetchall()}
 
-    format_version = metadata_values.get(u'format_version', None)
+    SQLiteStorageFile._CheckStorageMetadata(metadata_values)
 
-    if not format_version:
-      raise IOError(u'Missing format version.')
-
-    try:
-      format_version = int(format_version, 10)
-    except (TypeError, ValueError):
-      raise IOError(u'Invalid format version: {0!s}.'.format(format_version))
-
-    if format_version < self._COMPATIBLE_FORMAT_VERSION:
-      raise IOError(
-          u'Format version: {0:d} is too old and no longer supported.'.format(
-              format_version))
-
-    if format_version > self._FORMAT_VERSION:
-      raise IOError(
-          u'Format version: {0:d} is too new and not yet supported.'.format(
-              format_version))
-
-    compression_format = metadata_values.get(u'compression_format', None)
-    if compression_format not in definitions.COMPRESSION_FORMATS:
-      raise IOError(u'Unsupported compression format: {0:s}'.format(
-          compression_format))
-
-    serialization_format = metadata_values.get(u'serialization_format', None)
-    if serialization_format != definitions.SERIALIZER_FORMAT_JSON:
-      raise IOError(u'Unsupported serialization format: {0:s}'.format(
-          serialization_format))
-
-    storage_type = metadata_values.get(u'storage_type', None)
-    if storage_type not in definitions.STORAGE_TYPES:
-      raise IOError(u'Unsupported storage type: {0:s}'.format(
-          storage_type))
-
-    self.format_version = format_version
-    self.compression_format = compression_format
-    self.serialization_format = serialization_format
-    self.storage_type = storage_type
+    self.format_version = metadata_values[u'format_version']
+    self.compression_format = metadata_values[u'compression_format']
+    self.serialization_format = metadata_values[u'serialization_format']
+    self.storage_type = metadata_values[u'storage_type']
 
   def _WriteAttributeContainer(self, attribute_container):
     """Writes an attribute container.
@@ -309,7 +318,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
 
     query = u'INSERT INTO {0:s} (_data) VALUES (?)'.format(container_type)
 
-    # TODO: directly use container_list.
+    # TODO: directly use container_list instead of values_tuple_list.
     values_tuple_list = []
     for _ in range(container_list.number_of_attribute_containers):
       serialized_data = container_list.PopAttributeContainer()
@@ -465,12 +474,14 @@ class SQLiteStorageFile(interface.BaseFileStorage):
       query = u'SELECT * FROM metadata'
       cursor.execute(query)
 
-      # TODO: check metadata.
+      metadata_values = {row[0]: row[1] for row in cursor.fetchall()}
+
+      cls._CheckStorageMetadata(metadata_values)
 
       connection.close()
       result = True
 
-    except sqlite3.DatabaseError:
+    except (IOError, sqlite3.DatabaseError):
       result = False
 
     return result
@@ -819,8 +830,11 @@ class SQLiteStorageFile(interface.BaseFileStorage):
       knowledge_base (KnowledgeBase): is used to store the preprocessing
           information.
     """
-    # TODO: implement.
-    pass
+    generator = self._GetAttributeContainers(u'system_configuration')
+    for stream_number, system_configuration in enumerate(generator):
+      # TODO: replace stream_number by session_identifier.
+      knowledge_base.ReadSystemConfigurationArtifact(
+          system_configuration, session_identifier=stream_number)
 
   def WritePreprocessingInformation(self, knowledge_base):
     """Writes preprocessing information.
@@ -830,11 +844,16 @@ class SQLiteStorageFile(interface.BaseFileStorage):
 
     Raises:
       IOError: if the storage type does not support writing preprocess
-          information or the storage file is closed or read-only or
-          if the preprocess information stream already exists.
+          information or the storage file is closed or read-only.
     """
-    # TODO: implement.
-    pass
+    self._RaiseIfNotWritable()
+
+    if self.storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Preprocess information not supported by storage type.')
+
+    system_configuration = knowledge_base.GetSystemConfigurationArtifact()
+
+    self._WriteAttributeContainer(system_configuration)
 
   def WriteSessionCompletion(self, session_completion):
     """Writes session completion information.
