@@ -272,7 +272,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     query = u'SELECT key, value FROM metadata'
     self._cursor.execute(query)
 
-    metadata_values = {row[0]: row[1] for row in cursor.fetchall()}
+    metadata_values = {row[0]: row[1] for row in self._cursor.fetchall()}
 
     SQLiteStorageFile._CheckStorageMetadata(metadata_values)
 
