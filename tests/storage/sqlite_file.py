@@ -22,7 +22,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
   # pylint: disable=protected-access
 
-  # TODO: add tests for _AddAttributeContainer
+  # TODO: add tests for _AddSerializedAttributeContainer
   # TODO: add tests for _GetAttributeContainer
   # TODO: add tests for _HasTable
   # TODO: add tests for _WriteAttributeContainer
@@ -168,6 +168,9 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       self.assertEqual(len(test_events), 4)
 
       storage_file.Close()
+
+  # TODO: add tests for GetEventData
+  # TODO: add tests for GetEventSourceByIndex
 
   def testGetEventSources(self):
     """Tests the GetEventSources function."""
