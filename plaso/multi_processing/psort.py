@@ -882,6 +882,9 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     if keyboard_interrupt:
       raise KeyboardInterrupt
 
+    if keyboard_interrupt:
+      raise KeyboardInterrupt
+
   def ExportEvents(
       self, knowledge_base_object, storage_reader, output_module,
       deduplicate_events=True, event_filter=None, status_update_callback=None,
