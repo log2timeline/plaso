@@ -83,8 +83,6 @@ class SQLiteStorageFile(interface.BaseFileStorage):
 
     if storage_type == definitions.STORAGE_TYPE_SESSION:
       self.compression_format = definitions.COMPRESSION_FORMAT_ZLIB
-      # TODO: compression disabled for testing.
-      self.compression_format = definitions.COMPRESSION_FORMAT_NONE
     else:
       self.compression_format = definitions.COMPRESSION_FORMAT_NONE
 
