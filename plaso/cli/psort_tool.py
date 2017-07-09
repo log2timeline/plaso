@@ -771,6 +771,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     configuration = configurations.ProcessingConfiguration()
     configuration.data_location = self._data_location
 
+    analysis_counter = None
     if self._analysis_plugins:
       storage_writer = storage_zip_file.ZIPStorageFileWriter(
           session, self._storage_file_path)
@@ -786,7 +787,11 @@ class PsortTool(analysis_tool.AnalysisTool):
           event_filter_expression=self._event_filter_expression,
           status_update_callback=status_update_callback)
 
-    counter = collections.Counter()
+      analysis_counter = collections.Counter()
+      for item, value in iter(session.analysis_reports_counter.items()):
+        analysis_counter[item] = value
+
+    events_counter = None
     if self._output_format != u'null':
       storage_reader = storage_zip_file.ZIPStorageFileReader(
           self._storage_file_path)
@@ -803,23 +808,27 @@ class PsortTool(analysis_tool.AnalysisTool):
           status_update_callback=status_update_callback,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
 
-      counter += events_counter
-
-    for item, value in iter(session.analysis_reports_counter.items()):
-      counter[item] = value
-
     if self._quiet_mode:
       return
 
     self._output_writer.Write(u'Processing completed.\n')
 
-    table_view = cli_views.ViewsFactory.GetTableView(
-        self._views_format_type, title=u'Counter')
-    for element, count in counter.most_common():
-      if not element:
-        element = u'N/A'
-      table_view.AddRow([element, count])
-    table_view.Write(self._output_writer)
+    if analysis_counter:
+      table_view = cli_views.ViewsFactory.GetTableView(
+          self._views_format_type, title=u'Analysis reports generated')
+      for element, count in analysis_counter.most_common():
+        if element != u'total':
+          table_view.AddRow([element, count])
+
+      table_view.AddRow([u'Total', analysis_counter[u'total']])
+      table_view.Write(self._output_writer)
+
+    if events_counter:
+      table_view = cli_views.ViewsFactory.GetTableView(
+          self._views_format_type, title=u'Export results')
+      for element, count in events_counter.most_common():
+        table_view.AddRow([element, count])
+      table_view.Write(self._output_writer)
 
     storage_reader = storage_zip_file.ZIPStorageFileReader(
         self._storage_file_path)
