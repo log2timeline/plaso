@@ -839,6 +839,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     Returns:
       AttributeContainer: attribute container or None if not available.
     """
+    print("CP1", container_type, stream_number, entry_index)
     serialized_data, entry_index = self._GetSerializedAttributeContainerData(
         container_type, stream_number, entry_index=entry_index)
     if not serialized_data:
@@ -1773,7 +1774,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
         stream_name_prefix, stream_number)
     offset_table = _SerializedDataOffsetTable(self._zipfile, stream_name)
 
-    stream_name = u'{0:s}_data.{1:06d}'.format(container_type, stream_number)
+    stream_name = u'{0:s}_data.{1:06d}'.format(
+        stream_name_prefix, stream_number)
     data_stream = _SerializedDataStream(
         self._zipfile, self._temporary_path, stream_name)
 
