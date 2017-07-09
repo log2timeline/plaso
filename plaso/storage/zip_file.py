@@ -257,7 +257,6 @@ class _SerializedDataStream(object):
     self._stream_file_path = os.path.join(
         self._temporary_path, self._stream_name)
     self._file_object = open(self._stream_file_path, 'rb')
-    self._stream_offset = 0
 
   def ReadEntry(self):
     """Reads an entry from the data stream.
@@ -759,8 +758,6 @@ class ZIPStorageFile(interface.BaseFileStorage):
         stream_number, container_list.number_of_attribute_containers)
     attribute_container.SetIdentifier(identifier)
 
-    # We try to serialize the error first, so we can skip some
-    # processing if it is invalid.
     serialized_data = self._SerializeAttributeContainer(attribute_container)
 
     container_list.PushAttributeContainer(serialized_data)
