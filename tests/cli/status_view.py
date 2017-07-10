@@ -77,7 +77,14 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     string = output_writer.ReadOutput()
 
     table_header = (
-        b'Identifier\tPID\tStatus\t\tMemory\t\tSources\t\tEvents\t\tFile')
+        b'Identifier      '
+        b'PID     '
+        b'Status          '
+        b'Memory          '
+        b'Sources         '
+        b'Events          '
+        b'File')
+
     if not sys.platform.startswith(u'win'):
       table_header = b'\x1b[1m{0:s}\x1b[0m'.format(table_header)
 
@@ -88,7 +95,12 @@ class StatusViewTest(test_lib.CLIToolTestCase):
         b'Source type\t: directory',
         b'',
         table_header,
-        (b'f_identifier\t123\tf_status\t0 B\t\t29 (29)\t\t456 (456)\t'
+        (b'f_identifier    '
+         b'123     '
+         b'f_status        '
+         b'0 B             '
+         b'29 (29)         '
+         b'456 (456)       '
          b'f_test_file'),
         b'',
         b'']
@@ -108,9 +120,20 @@ class StatusViewTest(test_lib.CLIToolTestCase):
         b'Source type\t: directory',
         b'',
         table_header,
-        (b'f_identifier\t123\tf_status\t0 B\t\t29 (29)\t\t456 (456)\t'
+        (b'f_identifier    '
+         b'123     '
+         b'f_status        '
+         b'0 B             '
+         b'29 (29)         '
+         b'456 (456)       '
          b'f_test_file'),
-        b'w_identifier\t123\tw_status\t0 B\t\t2 (2)\t\t4 (4)\t\tw_test_file',
+        (b'w_identifier    '
+         b'123     '
+         b'w_status        '
+         b'0 B             '
+         b'2 (2)           '
+         b'4 (4)           '
+         b'w_test_file'),
         b'',
         b'']
     self.assertEqual(string.split(b'\n'), expected_lines)
