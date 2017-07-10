@@ -3,55 +3,55 @@ set -e
 
 # Dependencies for running Plaso, alphabetized, one per line.
 # This should not include packages only required for testing or development.
-PLASO_DEPENDENCIES="PyYAML
-                    libbde-python
-                    libesedb-python
-                    libevt-python
-                    libevtx-python
-                    libewf-python
-                    libfsntfs-python
-                    libfvde-python
-                    libfwnt-python
-                    libfwsi-python
-                    liblnk-python
-                    libmsiecf-python
-                    libolecf-python
-                    libqcow-python
-                    libregf-python
-                    libscca-python
-                    libsigscan-python
-                    libsmdev-python
-                    libsmraw-python
-                    libvhdi-python
-                    libvmdk-python
-                    libvshadow-python
-                    libvslvm-python
-                    pyliblzma
-                    python-XlsxWriter
-                    python-artifacts
-                    python-bencode
-                    python-binplist
-                    python-construct
-                    python-crypto
-                    python-dateutil
-                    python-dfdatetime
-                    python-dfvfs
-                    python-dfwinreg
-                    python-dpkt
-                    python-efilter
-                    python-hachoir-core
-                    python-hachoir-metadata
-                    python-hachoir-parser
-                    python-pefile
-                    python-psutil
-                    python-pyparsing
-                    python-pysqlite
-                    python-pytsk3
-                    python-requests
-                    python-six
-                    python2-yara
-                    python2-zmq
-                    pytz";
+PYTHON2_DEPENDENCIES="PyYAML
+                      libbde-python
+                      libesedb-python
+                      libevt-python
+                      libevtx-python
+                      libewf-python
+                      libfsntfs-python
+                      libfvde-python
+                      libfwnt-python
+                      libfwsi-python
+                      liblnk-python
+                      libmsiecf-python
+                      libolecf-python
+                      libqcow-python
+                      libregf-python
+                      libscca-python
+                      libsigscan-python
+                      libsmdev-python
+                      libsmraw-python
+                      libvhdi-python
+                      libvmdk-python
+                      libvshadow-python
+                      libvslvm-python
+                      pyliblzma
+                      python-XlsxWriter
+                      python-artifacts
+                      python-bencode
+                      python-binplist
+                      python-construct
+                      python-crypto
+                      python-dateutil
+                      python-dfdatetime
+                      python-dfvfs
+                      python-dfwinreg
+                      python-dpkt
+                      python-efilter
+                      python-hachoir-core
+                      python-hachoir-metadata
+                      python-hachoir-parser
+                      python-pefile
+                      python-psutil
+                      python-pyparsing
+                      python-pysqlite
+                      python-pytsk3
+                      python-requests
+                      python-six
+                      python2-yara
+                      python2-zmq
+                      pytz";
 
 # Additional dependencies for running Plaso tests, alphabetized,
 # one per line.
@@ -89,7 +89,7 @@ DEBUG_DEPENDENCIES="libbde-debuginfo
 
 sudo dnf install dnf-plugins-core
 sudo dnf copr enable @gift/dev
-sudo dnf install -y ${PLASO_DEPENDENCIES}
+sudo dnf install -y ${PYTHON2_DEPENDENCIES}
 
 if [[ "$*" =~ "include-debug" ]]; then
     sudo dnf install -y ${DEBUG_DEPENDENCIES}
