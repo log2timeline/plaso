@@ -21,9 +21,9 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
     """Tests the Process function."""
     plist_name = u'com.apple.iPod.plist'
 
-    plugin_object = ipod.IPodPlugin()
+    plugin = ipod.IPodPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
-        plugin_object, [plist_name], plist_name)
+        plugin, [plist_name], plist_name)
 
     self.assertEqual(storage_writer.number_of_events, 4)
 
@@ -48,9 +48,9 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
         u'Connected 1 times '
         u'Serial nr: 526F676572 '
         u'IMEI [012345678901234]')
-    expected_message_short = u'{0:s}...'.format(expected_message[:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(event, expected_message, expected_message_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_CONNECTED)

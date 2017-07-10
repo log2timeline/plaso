@@ -25,9 +25,9 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
             datetime.datetime(
                 2012, 11, 2, 1, 21, 38, 997672, tzinfo=pytz.UTC)}}
 
-    plugin_object = default.DefaultPlugin()
+    plugin = default.DefaultPlugin()
     storage_writer = self._ParsePlistWithPlugin(
-        plugin_object, u'single', top_level_dict_single)
+        plugin, u'single', top_level_dict_single)
 
     self.assertEqual(storage_writer.number_of_events, 1)
 
@@ -35,18 +35,18 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event_object = events[0]
+    event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-11-02 01:21:38.997672')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(event_object.root, u'/DE-00-AD-00-BE-EF')
-    self.assertEqual(event_object.key, u'LastUsed')
+    self.assertEqual(event.timestamp, expected_timestamp)
+    self.assertEqual(event.root, u'/DE-00-AD-00-BE-EF')
+    self.assertEqual(event.key, u'LastUsed')
 
     expected_string = (
         u'/DE-00-AD-00-BE-EF/LastUsed')
 
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+    self._TestGetMessageStrings(event, expected_string, expected_string)
 
   def testProcessMulti(self):
     """Tests Process on a plist containing five keys with date values."""
@@ -75,9 +75,9 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
                 u'LastInquiryUpdate': datetime.datetime(
                     2012, 7, 10, 22, 5, 0, 20116, tzinfo=pytz.UTC)}}}
 
-    plugin_object = default.DefaultPlugin()
+    plugin = default.DefaultPlugin()
     storage_writer = self._ParsePlistWithPlugin(
-        plugin_object, u'nested', top_level_dict_many_keys)
+        plugin, u'nested', top_level_dict_many_keys)
 
     self.assertEqual(storage_writer.number_of_events, 5)
 
@@ -85,13 +85,13 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event_object = events[0]
+    event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-04-07 17:56:53.524275')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(event_object.root, u'/DeviceCache/44-00-00-00-00-02')
-    self.assertEqual(event_object.key, u'LastNameUpdate')
+    self.assertEqual(event.timestamp, expected_timestamp)
+    self.assertEqual(event.root, u'/DeviceCache/44-00-00-00-00-02')
+    self.assertEqual(event.key, u'LastNameUpdate')
 
 
 if __name__ == '__main__':
