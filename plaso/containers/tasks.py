@@ -59,7 +59,7 @@ class Task(interface.AttributeContainer):
     self.storage_file_size = None
 
   def CreateRetry(self):
-    """Creates a task that's an attempt to retry this task.
+    """Creates a new task that's an attempt to retry the original task.
 
     Returns:
       Task: a task that's a retry of the existing task.
