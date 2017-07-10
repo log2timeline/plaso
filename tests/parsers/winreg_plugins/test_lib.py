@@ -88,8 +88,8 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
 
     Args:
       event (EventObject): event.
-      identifier: the identifier of the 'regvalue' attribute.
-      expected_value: the expected value of the 'regvalue' attribute.
+      identifier (str): identifier of the 'regvalue' attribute.
+      expected_value (object): expected value of the 'regvalue' attribute.
     """
     self.assertTrue(hasattr(event, u'regvalue'))
     self.assertIn(identifier, event.regvalue)

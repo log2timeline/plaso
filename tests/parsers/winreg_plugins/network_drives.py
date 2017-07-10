@@ -137,8 +137,8 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
     time_string = u'2013-01-30 10:47:57'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    plugin_object = network_drives.NetworkDrivesPlugin()
-    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
+    plugin = network_drives.NetworkDrivesPlugin()
+    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
     self.assertEqual(storage_writer.number_of_events, 2)
 

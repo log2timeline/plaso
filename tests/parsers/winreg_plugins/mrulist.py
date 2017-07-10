@@ -22,11 +22,11 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
     """Creates Registry keys and values for testing.
 
     Args:
-      key_path: the Windows Registry key path.
-      time_string: string containing the key last written date and time.
+      key_path (str): Windows Registry key path.
+      time_string (str): key last written date and time.
 
     Returns:
-      A Windows Registry key (instance of dfwinreg.WinRegistryKey).
+      dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromString(time_string)
@@ -68,19 +68,21 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
     time_string = u'2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    plugin_object = mrulist.MRUListStringPlugin()
-    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
+    plugin = mrulist.MRUListStringPlugin()
+    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
     self.assertEqual(storage_writer.number_of_events, 1)
 
-    event_object = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
 
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, plugin_object.plugin_name)
+    self.assertEqual(event.parser, plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         u'[{0:s}] '
@@ -89,8 +91,7 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
         u'Index: 3 [MRU Value b]: c:/evil.exe').format(key_path)
     expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
@@ -100,11 +101,11 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
     """Creates MRUList Registry keys and values for testing.
 
     Args:
-      key_path: the Windows Registry key path.
-      time_string: string containing the key last written date and time.
+      key_path (str): Windows Registry key path.
+      time_string (str): key last written date and time.
 
     Returns:
-      A Windows Registry key (instance of dfwinreg.WinRegistryKey).
+      dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromString(time_string)
@@ -148,20 +149,22 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
     time_string = u'2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    plugin_object = mrulist.MRUListShellItemListPlugin()
-    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
+    plugin = mrulist.MRUListShellItemListPlugin()
+    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
     self.assertEqual(storage_writer.number_of_events, 5)
 
-    # A MRUList event object.
-    event_object = storage_writer.events[4]
+    events = list(storage_writer.GetEvents())
+
+    # A MRUList event.
+    event = events[4]
 
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, plugin_object.plugin_name)
+    self.assertEqual(event.parser, plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         u'[{0:s}] '
@@ -170,15 +173,14 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
             key_path)
     expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    # A shell item event object.
-    event_object = storage_writer.events[0]
+    # A shell item event.
+    event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-01-14 12:03:52')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         u'Name: Winnt '
@@ -189,8 +191,7 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
         u'Origin: HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\'
         u'CurrentVersi...')
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

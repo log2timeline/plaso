@@ -23,11 +23,11 @@ class NetworksPluginTest(test_lib.RegistryPluginTestCase):
     """Creates Registry keys and values for testing.
 
     Args:
-      key_path: the Windows Registry key path.
-      time_string: string containing the key last written date and time.
+      key_path (str): Windows Registry key path.
+      time_string (str): key last written date and time.
 
     Returns:
-      A Windows Registry key (instance of dfwinreg.WinRegistryKey).
+      dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromString(time_string)
@@ -195,8 +195,8 @@ class NetworksPluginTest(test_lib.RegistryPluginTestCase):
     time_string = u'2013-01-30 10:47:57'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    plugin_object = networks.NetworksPlugin()
-    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
+    plugin = networks.NetworksPlugin()
+    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
     self.assertEqual(storage_writer.number_of_events, 4)
 
