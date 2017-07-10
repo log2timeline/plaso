@@ -83,7 +83,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     mediator = analysis_mediator.AnalysisMediator(
         storage_writer, knowledge_base_object)
 
-    for event in storage_writer.events:
+    for event in storage_writer.GetSortedEvents():
       plugin.ExamineEvent(mediator, event)
 
     analysis_report = plugin.CompileReport(mediator)

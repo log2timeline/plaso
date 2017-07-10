@@ -22,7 +22,7 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
 
     storage_writer = self._ParseAndAnalyzeFile([u'History'], parser, plugin)
 
-    self.assertEqual(len(storage_writer.events), 71)
+    self.assertEqual(storage_writer.number_of_events, 71)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
 

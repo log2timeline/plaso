@@ -98,7 +98,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
 
     storage_writer = self._ParseAndAnalyzeFile([u'SYSTEM'], parser, plugin)
 
-    self.assertEqual(len(storage_writer.events), 31436)
+    self.assertEqual(storage_writer.number_of_events, 31436)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
 
@@ -129,7 +129,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
 
     storage_writer = self._ParseAndAnalyzeFile([u'SYSTEM'], parser, plugin)
 
-    self.assertEqual(len(storage_writer.events), 31436)
+    self.assertEqual(storage_writer.number_of_events, 31436)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
 
