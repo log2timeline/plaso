@@ -18,9 +18,9 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'Preferences'])
   def testParseFile(self):
     """Tests parsing a default profile Preferences file."""
-    parser_object = chrome_preferences.ChromePreferencesParser()
+    parser = chrome_preferences.ChromePreferencesParser()
     storage_writer = self._ParseFile(
-        [u'Preferences'], parser_object)
+        [u'Preferences'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 30)
 

@@ -88,13 +88,13 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       u'-',
       u'+']
 
-  _BODY_CONTENT = (r'.*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2})|' \
-                   r'($|\n\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}' \
-                   r'[\+|-]\d{2}:\d{2}\s))')
+  _BODY_CONTENT = (
+      r'.*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2})|' \
+      r'($|\n\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}' \
+      r'[\+|-]\d{2}:\d{2}\s))')
 
-  _VERIFICATION_REGEX = \
-      re.compile(r'^\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2}\s' +
-                 _BODY_CONTENT)
+  _VERIFICATION_REGEX = re.compile(
+      r'^\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2}\s' + _BODY_CONTENT)
 
   # The Chrome OS syslog messages are of a format begininng with an
   # ISO 8601 combined date and time expression with timezone designator:
@@ -104,11 +104,10 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   #   EMERG,ALERT,CRIT,ERR,WARNING,NOTICE,INFO,DEBUG
   #
   # 2016-10-25T12:37:23.297265-07:00 INFO
-  _CHROMEOS_VERIFICATION_REGEX = \
-      re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.'
-                 r'\d{6}[\+|-]\d{2}:\d{2}\s'
-                 r'(EMERG|ALERT|CRIT|ERR|WARNING|NOTICE|INFO|DEBUG)' +
-                 _BODY_CONTENT)
+  _CHROMEOS_VERIFICATION_REGEX = re.compile(
+      r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.'
+      r'\d{6}[\+|-]\d{2}:\d{2}\s'
+      r'(EMERG|ALERT|CRIT|ERR|WARNING|NOTICE|INFO|DEBUG)' + _BODY_CONTENT)
 
   _PYPARSING_COMPONENTS = {
       u'year': text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName(
@@ -212,11 +211,11 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(SyslogParser, self).__init__()
     self._last_month = 0
     self._maximum_year = 0
-    self._plugin_objects_by_reporter = {}
+    self._plugin_by_reporter = {}
     self._year_use = 0
 
   def _UpdateYear(self, mediator, month):
@@ -254,9 +253,9 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     """
     super(SyslogParser, self).EnablePlugins(plugin_includes)
 
-    self._plugin_objects_by_reporter = {}
-    for plugin_object in self._plugin_objects:
-      self._plugin_objects_by_reporter[plugin_object.REPORTER] = plugin_object
+    self._plugin_by_reporter = {}
+    for plugin in self._plugins:
+      self._plugin_by_reporter[plugin.REPORTER] = plugin
 
   def ParseRecord(self, mediator, key, structure):
     """Parses a matching entry.
@@ -288,7 +287,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
           hour=structure.hour, minutes=structure.minute,
           seconds=structure.second, timezone=mediator.timezone)
 
-    plugin_object = None
+    plugin = None
     if key == u'syslog_comment':
       event_data = SyslogCommentEventData()
       event_data.body = structure.body
@@ -305,9 +304,8 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       event_data.reporter = structure.reporter
       event_data.severity = structure.severity
 
-      plugin_object = self._plugin_objects_by_reporter.get(
-          structure.reporter, None)
-      if plugin_object:
+      plugin = self._plugin_by_reporter.get(structure.reporter, None)
+      if plugin:
         attributes = {
             u'hostname': structure.hostname,
             u'severity': structure.severity,
@@ -317,12 +315,12 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
 
         try:
           # TODO: pass event_data instead of attributes.
-          plugin_object.Process(mediator, timestamp, attributes)
+          plugin.Process(mediator, timestamp, attributes)
 
         except errors.WrongPlugin:
-          plugin_object = None
+          plugin = None
 
-    if not plugin_object:
+    if not plugin:
       event = time_events.TimestampEvent(
           timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
       mediator.ProduceEventWithEventData(event, event_data)

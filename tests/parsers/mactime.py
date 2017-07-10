@@ -19,8 +19,8 @@ class MactimeTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'mactime.body'])
   def testParse(self):
     """Tests the Parse function."""
-    parser_object = mactime.MactimeParser()
-    storage_writer = self._ParseFile([u'mactime.body'], parser_object)
+    parser = mactime.MactimeParser()
+    storage_writer = self._ParseFile([u'mactime.body'], parser)
 
     # The file contains 13 lines x 4 timestamps per line, which should be
     # 52 events in total. However several of these events have an empty

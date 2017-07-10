@@ -19,13 +19,15 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'CMD.EXE-087B4001.pf'])
   def testParse17(self):
     """Tests the Parse function on a version 17 Prefetch file."""
-    parser_object = winprefetch.WinPrefetchParser()
-    storage_writer = self._ParseFile([u'CMD.EXE-087B4001.pf'], parser_object)
+    parser = winprefetch.WinPrefetchParser()
+    storage_writer = self._ParseFile([u'CMD.EXE-087B4001.pf'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 2)
 
+    events = list(storage_writer.GetEvents())
+
     # The prefetch last run event.
-    event = storage_writer.events[1]
+    event = events[1]
 
     self.assertEqual(event.data_type, u'windows:prefetch:execution')
     self.assertEqual(event.version, 17)
@@ -82,7 +84,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.mapped_files, expected_mapped_files)
 
     # The volume creation event.
-    event = storage_writer.events[0]
+    event = events[0]
 
     self.assertEqual(event.data_type, u'windows:volume:creation')
 
@@ -97,22 +99,24 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         u'Serial number: 0x24CB074B '
         u'Origin: CMD.EXE-087B4001.pf')
 
-    expected_message_short = (
+    expected_short_message = (
         u'\\DEVICE\\HARDDISKVOLUME1 '
         u'Origin: CMD.EXE-087B4001.pf')
 
-    self._TestGetMessageStrings(event, expected_message, expected_message_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
   @shared_test_lib.skipUnlessHasTestFile([u'PING.EXE-B29F6629.pf'])
   def testParse23(self):
     """Tests the Parse function on a version 23 Prefetch file."""
-    parser_object = winprefetch.WinPrefetchParser()
-    storage_writer = self._ParseFile([u'PING.EXE-B29F6629.pf'], parser_object)
+    parser = winprefetch.WinPrefetchParser()
+    storage_writer = self._ParseFile([u'PING.EXE-B29F6629.pf'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 2)
 
+    events = list(storage_writer.GetEvents())
+
     # The prefetch last run event.
-    event = storage_writer.events[1]
+    event = events[1]
 
     self.assertEqual(event.data_type, u'windows:prefetch:execution')
     self.assertEqual(event.version, 23)
@@ -137,12 +141,12 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         u'volume: 1 [serial number: 0xAC036525, '
         u'device path: \\DEVICE\\HARDDISKVOLUME1]')
 
-    expected_message_short = u'PING.EXE was run 14 time(s)'
+    expected_short_message = u'PING.EXE was run 14 time(s)'
 
-    self._TestGetMessageStrings(event, expected_message, expected_message_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     # The volume creation event.
-    event = storage_writer.events[0]
+    event = events[0]
 
     self.assertEqual(event.data_type, u'windows:volume:creation')
 
@@ -155,14 +159,16 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'WUAUCLT.EXE-830BCC14.pf'])
   def testParse23MultiVolume(self):
     """Tests the Parse function on a multi volume version 23 Prefetch file."""
-    parser_object = winprefetch.WinPrefetchParser()
+    parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(
-        [u'WUAUCLT.EXE-830BCC14.pf'], parser_object)
+        [u'WUAUCLT.EXE-830BCC14.pf'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 6)
 
+    events = list(storage_writer.GetEvents())
+
     # The prefetch last run event.
-    event = storage_writer.events[5]
+    event = events[5]
 
     self.assertEqual(event.data_type, u'windows:prefetch:execution')
     self.assertEqual(event.version, 23)
@@ -195,12 +201,12 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         u'volume: 5 [serial number: 0xAC036525, '
         u'device path: \\DEVICE\\HARDDISKVOLUMESHADOWCOPY8]')
 
-    expected_message_short = u'WUAUCLT.EXE was run 25 time(s)'
+    expected_short_message = u'WUAUCLT.EXE was run 25 time(s)'
 
-    self._TestGetMessageStrings(event, expected_message, expected_message_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     # The volume creation event.
-    event = storage_writer.events[0]
+    event = events[0]
 
     self.assertEqual(event.data_type, u'windows:volume:creation')
 
@@ -215,23 +221,25 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         u'Serial number: 0xAC036525 '
         u'Origin: WUAUCLT.EXE-830BCC14.pf')
 
-    expected_message_short = (
+    expected_short_message = (
         u'\\DEVICE\\HARDDISKVOLUME1 '
         u'Origin: WUAUCLT.EXE-830BCC14.pf')
 
-    self._TestGetMessageStrings(event, expected_message, expected_message_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
   @shared_test_lib.skipUnlessHasTestFile([u'TASKHOST.EXE-3AE259FC.pf'])
   def testParse26(self):
     """Tests the Parse function on a version 26 Prefetch file."""
-    parser_object = winprefetch.WinPrefetchParser()
+    parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(
-        [u'TASKHOST.EXE-3AE259FC.pf'], parser_object)
+        [u'TASKHOST.EXE-3AE259FC.pf'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 5)
 
+    events = list(storage_writer.GetEvents())
+
     # The prefetch last run event.
-    event = storage_writer.events[1]
+    event = events[1]
 
     self.assertEqual(event.data_type, u'windows:prefetch:execution')
     self.assertEqual(event.version, 26)
@@ -245,7 +253,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.prefetch_hash, 0x3ae259fc)
 
     # The prefetch previous last run event.
-    event = storage_writer.events[2]
+    event = events[2]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-04 15:28:09.010356')
@@ -359,7 +367,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.mapped_files, expected_mapped_files)
 
     # The volume creation event.
-    event = storage_writer.events[0]
+    event = events[0]
 
     self.assertEqual(event.data_type, u'windows:volume:creation')
 
@@ -372,14 +380,16 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'BYTECODEGENERATOR.EXE-C1E9BCE6.pf'])
   def testParse30Compressed(self):
     """Tests the Parse function on a compressed version 30 Prefetch file."""
-    parser_object = winprefetch.WinPrefetchParser()
+    parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(
-        [u'BYTECODEGENERATOR.EXE-C1E9BCE6.pf'], parser_object)
+        [u'BYTECODEGENERATOR.EXE-C1E9BCE6.pf'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 8)
 
+    events = list(storage_writer.GetEvents())
+
     # The prefetch last run event.
-    event = storage_writer.events[1]
+    event = events[1]
 
     self.assertEqual(event.data_type, u'windows:prefetch:execution')
     self.assertEqual(event.version, 30)
@@ -395,7 +405,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.prefetch_hash, 0xc1e9bce6)
 
     # The prefetch previous last run event.
-    event = storage_writer.events[2]
+    event = events[2]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-05-14 22:11:55.357652')
@@ -407,7 +417,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(len(event.mapped_files), 1085)
 
     # The volume creation event.
-    event = storage_writer.events[0]
+    event = events[0]
 
     self.assertEqual(event.data_type, u'windows:volume:creation')
 

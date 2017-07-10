@@ -17,8 +17,8 @@ class ESEDBParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'Windows.edb'])
   def testParse(self):
     """Tests the Parse function."""
-    parser_object = esedb.ESEDBParser()
-    storage_writer = self._ParseFile([u'Windows.edb'], parser_object)
+    parser = esedb.ESEDBParser()
+    storage_writer = self._ParseFile([u'Windows.edb'], parser)
 
     # Extensible Storage Engine Database information:
     #     File type:              Database
@@ -27,17 +27,19 @@ class ESEDBParserTest(test_lib.ParserTestCase):
     #     Page size:              32768 bytes
 
     self.assertEqual(storage_writer.number_of_events, 0)
-    self.assertEqual(len(storage_writer.errors), 0)
+    self.assertEqual(storage_writer.number_of_errors, 0)
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
-    parser_object = esedb.ESEDBParser()
-    parser_object.ParseFileObject(parser_mediator, None)
+    parser = esedb.ESEDBParser()
+    parser.ParseFileObject(parser_mediator, None)
 
     self.assertEqual(storage_writer.number_of_events, 0)
-    self.assertEqual(len(storage_writer.errors), 1)
+    self.assertEqual(storage_writer.number_of_errors, 1)
 
-    error = storage_writer.errors[0]
+    errors = list(storage_writer.GetErrors())
+
+    error = errors[0]
     self.assertIsNotNone(error)
 
     self.assertTrue(error.message.startswith(

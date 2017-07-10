@@ -19,19 +19,19 @@ class PlistParserTest(test_lib.ParserTestCase):
 
   def testEnablePlugins(self):
     """Tests the EnablePlugins function."""
-    parser_object = plist.PlistParser()
-    parser_object.EnablePlugins([u'airport'])
+    parser = plist.PlistParser()
+    parser.EnablePlugins([u'airport'])
 
-    self.assertIsNotNone(parser_object)
-    self.assertIsNotNone(parser_object._default_plugin)
-    self.assertNotEqual(parser_object._plugin_objects, [])
-    self.assertEqual(len(parser_object._plugin_objects), 1)
+    self.assertIsNotNone(parser)
+    self.assertIsNotNone(parser._default_plugin)
+    self.assertNotEqual(parser._plugins, [])
+    self.assertEqual(len(parser._plugins), 1)
 
   @shared_test_lib.skipUnlessHasTestFile([u'plist_binary'])
   def testParse(self):
     """Tests the Parse function."""
-    parser_object = plist.PlistParser()
-    storage_writer = self._ParseFile([u'plist_binary'], parser_object)
+    parser = plist.PlistParser()
+    storage_writer = self._ParseFile([u'plist_binary'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 12)
 

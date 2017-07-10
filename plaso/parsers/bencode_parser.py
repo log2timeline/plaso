@@ -70,9 +70,9 @@ class BencodeParser(interface.FileObjectParser):
           u'[{0:s}] missing decoded data for file: {1:s}'.format(
               self.NAME, parser_mediator.GetDisplayName()))
 
-    for plugin_object in self._plugin_objects:
+    for plugin in self._plugins:
       try:
-        plugin_object.UpdateChainAndProcess(parser_mediator, data=data_object)
+        plugin.UpdateChainAndProcess(parser_mediator, data=data_object)
       except errors.WrongBencodePlugin as exception:
         logging.debug(u'[{0:s}] wrong plugin: {1:s}'.format(
             self.NAME, exception))

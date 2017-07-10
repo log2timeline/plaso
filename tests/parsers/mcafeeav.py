@@ -18,14 +18,16 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'AccessProtectionLog.txt'])
   def testParse(self):
     """Tests the Parse function."""
-    parser_object = mcafeeav.McafeeAccessProtectionParser()
+    parser = mcafeeav.McafeeAccessProtectionParser()
     storage_writer = self._ParseFile(
-        [u'AccessProtectionLog.txt'], parser_object)
+        [u'AccessProtectionLog.txt'], parser)
 
     # The file contains 14 lines which results in 14 events.
     self.assertEqual(storage_writer.number_of_events, 14)
 
-    event = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-09-27 14:42:26')
@@ -41,7 +43,7 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     # Protection:Prevent termination of McAfee processes  Action blocked :
     # Terminate
 
-    event = storage_writer.events[1]
+    event = events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-09-27 14:42:39')

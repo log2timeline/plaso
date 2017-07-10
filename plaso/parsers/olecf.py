@@ -70,7 +70,7 @@ class OLECFParser(interface.FileObjectParser):
     item_names = frozenset(item_names)
 
     try:
-      for plugin in self._plugin_objects:
+      for plugin in self._plugins:
         if item_names < plugin.REQUIRED_ITEMS:
           continue
 

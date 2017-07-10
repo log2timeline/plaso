@@ -20,19 +20,19 @@ class SQLiteParserTest(test_lib.ParserTestCase):
 
   def testEnablePlugins(self):
     """Tests the EnablePlugins function."""
-    parser_object = sqlite.SQLiteParser()
-    parser_object.EnablePlugins([u'chrome_history'])
+    parser = sqlite.SQLiteParser()
+    parser.EnablePlugins([u'chrome_history'])
 
-    self.assertIsNotNone(parser_object)
-    self.assertIsNone(parser_object._default_plugin)
-    self.assertNotEqual(parser_object._plugin_objects, [])
-    self.assertEqual(len(parser_object._plugin_objects), 1)
+    self.assertIsNotNone(parser)
+    self.assertIsNone(parser._default_plugin)
+    self.assertNotEqual(parser._plugins, [])
+    self.assertEqual(len(parser._plugins), 1)
 
   @shared_test_lib.skipUnlessHasTestFile([u'contacts2.db'])
   def testFileParserChainMaintenance(self):
     """Tests that the parser chain is correctly maintained by the parser."""
-    parser_object = sqlite.SQLiteParser()
-    storage_writer = self._ParseFile([u'contacts2.db'], parser_object)
+    parser = sqlite.SQLiteParser()
+    storage_writer = self._ParseFile([u'contacts2.db'], parser)
 
     for event in storage_writer.events:
       chain = event.parser

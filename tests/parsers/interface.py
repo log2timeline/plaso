@@ -16,11 +16,11 @@ class BaseParserTest(test_lib.ParserTestCase):
 
   def testInitialize(self):
     """Tests the initialization."""
-    parser_object = interface.BaseParser()
+    parser = interface.BaseParser()
 
-    self.assertIsNotNone(parser_object)
-    self.assertIsNone(parser_object._default_plugin)
-    self.assertEqual(parser_object._plugin_objects, [])
+    self.assertIsNotNone(parser)
+    self.assertIsNone(parser._default_plugin)
+    self.assertEqual(parser._plugins, [])
 
   def testSupportsPlugins(self):
     """Tests the SupportsPlugins function."""

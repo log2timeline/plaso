@@ -18,13 +18,15 @@ class PlsRecallTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'PLSRecall_Test.dat'])
   def testParse(self):
     """Tests the Parse function."""
-    parser_object = pls_recall.PlsRecallParser()
-    storage_writer = self._ParseFile([u'PLSRecall_Test.dat'], parser_object)
+    parser = pls_recall.PlsRecallParser()
+    storage_writer = self._ParseFile([u'PLSRecall_Test.dat'], parser)
 
     # There are two events in test file.
     self.assertEqual(storage_writer.number_of_events, 2)
 
-    event = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
 
     timestamp_expected = timelib.Timestamp.CopyFromString(
         u'2013-06-18 19:50:00.550')

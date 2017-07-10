@@ -17,11 +17,11 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
 
   # pylint: disable=protected-access
 
-  def _GetParserChains(self, event_objects):
-    """Return a dict with a plugin count given a list of event objects."""
+  def _GetParserChains(self, events):
+    """Return a dict with a plugin count given a list of events."""
     parser_chains = {}
-    for event_object in event_objects:
-      parser_chain = getattr(event_object, u'parser', None)
+    for event in events:
+      parser_chain = getattr(event, u'parser', None)
       if not parser_chain:
         continue
 
@@ -38,19 +38,19 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
 
   def testEnablePlugins(self):
     """Tests the EnablePlugins function."""
-    parser_object = winreg.WinRegistryParser()
-    parser_object.EnablePlugins([u'appcompatcache'])
+    parser = winreg.WinRegistryParser()
+    parser.EnablePlugins([u'appcompatcache'])
 
-    self.assertIsNotNone(parser_object)
-    self.assertIsNotNone(parser_object._default_plugin)
-    self.assertNotEqual(parser_object._plugin_objects, [])
-    self.assertEqual(len(parser_object._plugin_objects), 1)
+    self.assertIsNotNone(parser)
+    self.assertIsNotNone(parser._default_plugin)
+    self.assertNotEqual(parser._plugins, [])
+    self.assertEqual(len(parser._plugins), 1)
 
   @shared_test_lib.skipUnlessHasTestFile([u'NTUSER.DAT'])
   def testParseNTUserDat(self):
     """Tests the Parse function on a NTUSER.DAT file."""
-    parser_object = winreg.WinRegistryParser()
-    storage_writer = self._ParseFile([u'NTUSER.DAT'], parser_object)
+    parser = winreg.WinRegistryParser()
+    storage_writer = self._ParseFile([u'NTUSER.DAT'], parser)
 
     parser_chains = self._GetParserChains(storage_writer.events)
 
@@ -62,16 +62,16 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'ntuser.dat.LOG'])
   def testParseNoRootKey(self):
     """Test the parse function on a Registry file with no root key."""
-    parser_object = winreg.WinRegistryParser()
-    storage_writer = self._ParseFile([u'ntuser.dat.LOG'], parser_object)
+    parser = winreg.WinRegistryParser()
+    storage_writer = self._ParseFile([u'ntuser.dat.LOG'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 0)
 
   @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testParseSystem(self):
     """Tests the Parse function on a SYSTEM file."""
-    parser_object = winreg.WinRegistryParser()
-    storage_writer = self._ParseFile([u'SYSTEM'], parser_object)
+    parser = winreg.WinRegistryParser()
+    storage_writer = self._ParseFile([u'SYSTEM'], parser)
 
     parser_chains = self._GetParserChains(storage_writer.events)
 

@@ -80,7 +80,7 @@ class ESEDBParser(interface.FileObjectParser):
     try:
       table_names = frozenset(self._GetTableNames(esedb_file))
 
-      for plugin in self._plugin_objects:
+      for plugin in self._plugins:
         if parser_mediator.abort:
           break
 
