@@ -111,6 +111,52 @@ class TestOutputModule(output_interface.LinearOutputModule):
     self._WriteLine(self._HEADER)
 
 
+class EventsHeapTest(shared_test_lib.BaseTestCase):
+  """Tests for the psort events heap."""
+
+  # pylint: disable=protected-access
+
+  def testNumberOfEvents(self):
+    """Tests the number_of_events property."""
+    event_heap = psort._EventsHeap()
+    self.assertEqual(event_heap.number_of_events, 0)
+
+  def testPopEvent(self):
+    """Tests the PopEvent function."""
+    event_heap = psort._EventsHeap()
+
+    test_event = event_heap.PopEvent()
+    self.assertIsNone(test_event)
+
+    event = TestEvent(5134324321)
+    event_heap.PushEvent(event)
+
+    test_event = event_heap.PopEvent()
+    self.assertIsNotNone(test_event)
+
+  def testPopEvent(self):
+    """Tests the PopEvent function."""
+    event_heap = psort._EventsHeap()
+
+    test_events = list(event_heap.PopEvents())
+    self.assertEqual(len(test_events), 0)
+
+    event = TestEvent(5134324321)
+    event_heap.PushEvent(event)
+
+    test_events = list(event_heap.PopEvents())
+    self.assertEqual(len(test_events), 1)
+
+  def testPushEvent(self):
+    """Tests the PushEvent function."""
+    event_heap = psort._EventsHeap()
+
+    event = TestEvent(5134324321)
+    event_heap.PushEvent(event)
+
+    self.assertEqual(event_heap.number_of_events, 1)
+
+
 class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
   """Tests for the multi-processing engine."""
 
@@ -184,6 +230,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       storage_writer.Close()
 
   # TODO: add test for _CheckStatusAnalysisProcess.
+  # TODO: add test for _ExportEvent.
 
   def testInternalExportEvents(self):
     """Tests the _ExportEvents function."""
@@ -223,6 +270,11 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     self.assertTrue(b'My text goes along: My text dude. lines' in lines[1])
     self.assertTrue(b'LOG/' in lines[1])
     self.assertTrue(b'None in Particular' in lines[1])
+
+  # TODO: add test for _FlushExportBuffer.
+
+  # TODO: add test for _MergeEvents.
+  # Note that function will be removed in the future.
 
   # TODO: add test for _StartAnalysisProcesses.
   # TODO: add test for _StatusUpdateThreadMain.
