@@ -14,13 +14,13 @@ class ESEDBPluginTestCase(test_lib.ParserTestCase):
   """The unit test case for ESE database based plugins."""
 
   def _ParseESEDBFileWithPlugin(
-      self, path_segments, plugin_object, knowledge_base_values=None):
+      self, path_segments, plugin, knowledge_base_values=None):
     """Parses a file as an ESE database file and returns an event generator.
 
     Args:
       path_segments: a list of strings containinge the path segments inside
                      the test data directory.
-      plugin_object: an ESE database plugin object (instance of ESEDBPlugin).
+      plugin: an ESE database plugin object (instance of ESEDBPlugin).
       knowledge_base_values: optional dictionary containing the knowledge base
                              values.
 
@@ -42,7 +42,7 @@ class ESEDBPluginTestCase(test_lib.ParserTestCase):
       esedb_file = pyesedb.file()
       esedb_file.open_file_object(file_object)
       cache = esedb.ESEDBCache()
-      plugin_object.Process(parser_mediator, cache=cache, database=esedb_file)
+      plugin.Process(parser_mediator, cache=cache, database=esedb_file)
       esedb_file.close()
 
     finally:

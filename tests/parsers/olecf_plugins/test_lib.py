@@ -13,13 +13,13 @@ class OLECFPluginTestCase(test_lib.ParserTestCase):
   """The unit test case for OLE CF based plugins."""
 
   def _ParseOLECFFileWithPlugin(
-      self, path_segments, plugin_object, codepage=u'cp1252',
+      self, path_segments, plugin, codepage=u'cp1252',
       knowledge_base_values=None):
     """Parses a file as an OLE compound file and returns an event generator.
 
     Args:
       path_segments: a list of strings containinge the path segments inside
-      plugin_object: an OLE CF plugin object (instance of OLECFPlugin).
+      plugin: an OLE CF plugin object (instance of OLECFPlugin).
       codepage: optional string containing the codepage.
       knowledge_base_values: optional dictionary containing the knowledge base
                              values.
@@ -47,7 +47,7 @@ class OLECFPluginTestCase(test_lib.ParserTestCase):
       root_item = olecf_file.root_item
       item_names = [item.name for item in root_item.sub_items]
 
-      plugin_object.Process(
+      plugin.Process(
           parser_mediator, root_item=root_item, item_names=item_names)
 
       olecf_file.close()
