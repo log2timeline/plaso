@@ -20,8 +20,8 @@ class CupsIppParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     # TODO: only tested against Mac OS X Cups IPP (Version 2.0)
-    parser_object = cups_ipp.CupsIppParser()
-    storage_writer = self._ParseFile([u'mac_cups_ipp'], parser_object)
+    parser = cups_ipp.CupsIppParser()
+    storage_writer = self._ParseFile([u'mac_cups_ipp'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 3)
 
@@ -54,8 +54,8 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         u'Job Name: Assignament 1 '
         u'Application: LibreOffice '
         u'Printer: RHULBW')
-    expected_message_short = u'Job Name: Assignament 1'
-    self._TestGetMessageStrings(event, expected_message, expected_message_short)
+    expected_short_message = u'Job Name: Assignament 1'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[1]
 

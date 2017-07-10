@@ -19,8 +19,8 @@ class WinEvtParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'SysEvent.Evt'])
   def testParse(self):
     """Tests the Parse function."""
-    parser_object = winevt.WinEvtParser()
-    storage_writer = self._ParseFile([u'SysEvent.Evt'], parser_object)
+    parser = winevt.WinEvtParser()
+    storage_writer = self._ParseFile([u'SysEvent.Evt'], parser)
 
     # Windows Event Log (EVT) information:
     #	Version                     : 1.1
@@ -29,6 +29,18 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     #	Log type                    : System
 
     self.assertEqual(storage_writer.number_of_events, (6063 + 437) * 2)
+
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
+
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2011-07-27 06:41:47')
+    self.assertEqual(event.timestamp, expected_timestamp)
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+
+    event = events[1]
 
     # Event number      : 1392
     # Creation time     : Jul 27, 2011 06:41:47 UTC
@@ -43,40 +55,30 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     # String: 2         : "The system detected a possible attempt to compromise
     #                     security. Please ensure that you can contact the
     #                     server that authenticated you.\r\n (0xc0000388)"
-    event_object = storage_writer.events[1]
-    self.assertEqual(event_object.record_number, 1392)
-    self.assertEqual(event_object.event_type, 2)
-    self.assertEqual(event_object.computer_name, u'WKS-WINXP32BIT')
-    self.assertEqual(event_object.source_name, u'LSASRV')
-    self.assertEqual(event_object.event_category, 3)
-    self.assertEqual(event_object.event_identifier, 40961)
-    self.assertEqual(event_object.strings[0], u'cifs/CONTROLLER')
+
+    self.assertEqual(event.record_number, 1392)
+    self.assertEqual(event.event_type, 2)
+    self.assertEqual(event.computer_name, u'WKS-WINXP32BIT')
+    self.assertEqual(event.source_name, u'LSASRV')
+    self.assertEqual(event.event_category, 3)
+    self.assertEqual(event.event_identifier, 40961)
+    self.assertEqual(event.strings[0], u'cifs/CONTROLLER')
 
     expected_string = (
         u'"The system detected a possible attempt to compromise security. '
         u'Please ensure that you can contact the server that authenticated you.'
         u'\r\n (0xc0000388)"')
 
-    self.assertEqual(event_object.strings[1], expected_string)
-
-    event_object = storage_writer.events[0]
+    self.assertEqual(event.strings[1], expected_string)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-07-27 06:41:47')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    event_object = storage_writer.events[1]
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2011-07-27 06:41:47')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
-    expected_msg = (
+    expected_message = (
         u'[40961 / 0xa001] '
         u'Severity: Warning '
         u'Record Number: 1392 '
@@ -89,12 +91,12 @@ class WinEvtParserTest(test_lib.ParserTestCase):
         u'compromise security. Please ensure that you can '
         u'contact the server that authenticated you. (0xc0000388)"\']')
 
-    expected_msg_short = (
+    expected_short_message = (
         u'[40961 / 0xa001] '
         u'Strings: [\'cifs/CONTROLLER\', '
         u'\'"The system detected a possibl...')
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

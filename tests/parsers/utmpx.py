@@ -18,34 +18,35 @@ class UtmpxParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'utmpx_mac'])
   def testParse(self):
     """Tests the Parse function."""
-    parser_object = utmpx.UtmpxParser()
-    storage_writer = self._ParseFile([u'utmpx_mac'], parser_object)
+    parser = utmpx.UtmpxParser()
+    storage_writer = self._ParseFile([u'utmpx_mac'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 6)
 
-    event_object = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-13 17:52:34')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         u'User: N/A Status: BOOT_TIME '
         u'Computer Name: localhost Terminal: N/A')
     expected_short_message = u'User: N/A'
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    event_object = storage_writer.events[1]
+    event = events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-13 17:52:41.736713')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event_object.user, u'moxilo')
-    self.assertEqual(event_object.terminal, u'console', )
-    self.assertEqual(event_object.status_type, 7)
-    self.assertEqual(event_object.computer_name, u'localhost')
+    self.assertEqual(event.user, u'moxilo')
+    self.assertEqual(event.terminal, u'console', )
+    self.assertEqual(event.status_type, 7)
+    self.assertEqual(event.computer_name, u'localhost')
 
     expected_message = (
         u'User: moxilo Status: '
@@ -54,18 +55,17 @@ class UtmpxParserTest(test_lib.ParserTestCase):
         u'Terminal: console')
     expected_short_message = u'User: moxilo'
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    event_object = storage_writer.events[4]
+    event = events[4]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-14 04:32:56.641464')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event_object.user, u'moxilo')
-    self.assertEqual(event_object.terminal, u'ttys002')
-    self.assertEqual(event_object.status_type, 8)
+    self.assertEqual(event.user, u'moxilo')
+    self.assertEqual(event.terminal, u'ttys002')
+    self.assertEqual(event.status_type, 8)
 
     expected_message = (
         u'User: moxilo Status: '
@@ -74,8 +74,7 @@ class UtmpxParserTest(test_lib.ParserTestCase):
         u'Terminal: ttys002')
     expected_short_message = u'User: moxilo'
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

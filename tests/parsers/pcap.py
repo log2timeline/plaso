@@ -17,18 +17,20 @@ class PcapParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'test.pcap'])
   def testParse(self):
     """Tests the Parse function."""
-    parser_object = pcap.PcapParser()
-    storage_writer = self._ParseFile([u'test.pcap'], parser_object)
+    parser = pcap.PcapParser()
+    storage_writer = self._ParseFile([u'test.pcap'], parser)
 
     # PCAP information:
     #    Number of streams: 96 (TCP: 47, UDP: 39, ICMP: 0, Other: 10)
     #
-    # For each stream 2 event objects are generated one for the start
+    # For each stream 2 events are generated one for the start
     # and one for the end time.
 
     self.assertEqual(storage_writer.number_of_events, 192)
 
-    # Test stream 3 (event object 6).
+    events = list(storage_writer.GetEvents())
+
+    # Test stream 3 (event 6).
     #    Protocol:        TCP
     #    Source IP:       192.168.195.130
     #    Dest IP:         63.245.217.43
@@ -38,18 +40,18 @@ class PcapParserTest(test_lib.ParserTestCase):
     #    Starting Packet: 4
     #    Ending Packet:   6
 
-    event_object = storage_writer.events[6]
-    self.assertEqual(event_object.packet_count, 3)
-    self.assertEqual(event_object.protocol, u'TCP')
-    self.assertEqual(event_object.source_ip, u'192.168.195.130')
-    self.assertEqual(event_object.dest_ip, u'63.245.217.43')
-    self.assertEqual(event_object.dest_port, 443)
-    self.assertEqual(event_object.source_port, 1038)
-    self.assertEqual(event_object.stream_type, u'SSL')
-    self.assertEqual(event_object.first_packet_id, 4)
-    self.assertEqual(event_object.last_packet_id, 6)
+    event = events[6]
+    self.assertEqual(event.packet_count, 3)
+    self.assertEqual(event.protocol, u'TCP')
+    self.assertEqual(event.source_ip, u'192.168.195.130')
+    self.assertEqual(event.dest_ip, u'63.245.217.43')
+    self.assertEqual(event.dest_port, 443)
+    self.assertEqual(event.source_port, 1038)
+    self.assertEqual(event.stream_type, u'SSL')
+    self.assertEqual(event.first_packet_id, 4)
+    self.assertEqual(event.last_packet_id, 6)
 
-    # Test stream 6 (event object 12).
+    # Test stream 6 (event 12).
     #    Protocol:        UDP
     #    Source IP:       192.168.195.130
     #    Dest IP:         192.168.195.2
@@ -60,20 +62,20 @@ class PcapParserTest(test_lib.ParserTestCase):
     #    Ending Packet:   6
     #    Protocol Data:   DNS Query for  wpad.localdomain
 
-    event_object = storage_writer.events[12]
-    self.assertEqual(event_object.packet_count, 5)
-    self.assertEqual(event_object.protocol, u'UDP')
-    self.assertEqual(event_object.source_ip, u'192.168.195.130')
-    self.assertEqual(event_object.dest_ip, u'192.168.195.2')
-    self.assertEqual(event_object.dest_port, 53)
-    self.assertEqual(event_object.source_port, 55679)
-    self.assertEqual(event_object.stream_type, u'DNS')
-    self.assertEqual(event_object.first_packet_id, 11)
-    self.assertEqual(event_object.last_packet_id, 1307)
+    event = events[12]
+    self.assertEqual(event.packet_count, 5)
+    self.assertEqual(event.protocol, u'UDP')
+    self.assertEqual(event.source_ip, u'192.168.195.130')
+    self.assertEqual(event.dest_ip, u'192.168.195.2')
+    self.assertEqual(event.dest_port, 53)
+    self.assertEqual(event.source_port, 55679)
+    self.assertEqual(event.stream_type, u'DNS')
+    self.assertEqual(event.first_packet_id, 11)
+    self.assertEqual(event.last_packet_id, 1307)
     self.assertEqual(
-        event_object.protocol_data, u'DNS Query for  wpad.localdomain')
+        event.protocol_data, u'DNS Query for  wpad.localdomain')
 
-    expected_msg = (
+    expected_message = (
         u'Source IP: 192.168.195.130 '
         u'Destination IP: 192.168.195.2 '
         u'Source Port: 55679 '
@@ -88,11 +90,11 @@ class PcapParserTest(test_lib.ParserTestCase):
         u'First Packet ID: 11 '
         u'Last Packet ID: 1307 '
         u'Packet Count: 5')
-    expected_msg_short = (
+    expected_short_message = (
         u'Type: DNS '
         u'First Packet ID: 11')
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

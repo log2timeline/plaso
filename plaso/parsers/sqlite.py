@@ -377,7 +377,7 @@ class SQLiteParser(interface.FileEntryParser):
     try:
       table_names = frozenset(database.tables)
 
-      for plugin in self._plugin_objects:
+      for plugin in self._plugins:
         if table_names < plugin.REQUIRED_TABLES:
           continue
 

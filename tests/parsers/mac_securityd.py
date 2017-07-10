@@ -18,124 +18,126 @@ class MacSecurityUnitTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'security.log'])
   def testParseFile(self):
     """Test parsing of a ASL securityd log file."""
-    parser_object = mac_securityd.MacSecuritydLogParser()
+    parser = mac_securityd.MacSecuritydLogParser()
     knowledge_base_values = {u'year': 2013}
     storage_writer = self._ParseFile(
-        [u'security.log'], parser_object,
+        [u'security.log'], parser,
         knowledge_base_values=knowledge_base_values)
 
     self.assertEqual(storage_writer.number_of_events, 9)
 
-    event_object = storage_writer.events[0]
-    expected_msg = (
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
+    expected_message = (
         u'Sender: secd (1) Level: Error Facility: user '
         u'Text: securityd_xpc_dictionary_handler EscrowSecurityAl'
         u'[3273] DeviceInCircle \xdeetta \xe6tti a\xf0 '
         u'virka l\xedka, setja \xedslensku inn.')
-    expected_msg_short = (
+    expected_short_message = (
         u'Text: securityd_xpc_dictionary_handler '
         u'EscrowSecurityAl[3273] DeviceInCircle ...')
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-02-26 19:11:56')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event_object.sender, u'secd')
-    self.assertEqual(event_object.sender_pid, 1)
-    self.assertEqual(event_object.facility, u'user')
-    self.assertEqual(event_object.security_api, u'unknown')
-    self.assertEqual(event_object.caller, u'unknown')
-    self.assertEqual(event_object.level, u'Error')
-    expected_msg = (
+    self.assertEqual(event.sender, u'secd')
+    self.assertEqual(event.sender_pid, 1)
+    self.assertEqual(event.facility, u'user')
+    self.assertEqual(event.security_api, u'unknown')
+    self.assertEqual(event.caller, u'unknown')
+    self.assertEqual(event.level, u'Error')
+    expected_message = (
         u'securityd_xpc_dictionary_handler EscrowSecurityAl'
         u'[3273] DeviceInCircle \xdeetta \xe6tti a\xf0 virka '
         u'l\xedka, setja \xedslensku inn.')
-    self.assertEqual(event_object.message, expected_msg)
+    self.assertEqual(event.message, expected_message)
 
-    event_object = storage_writer.events[1]
+    event = events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-26 19:11:57')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event_object.sender, u'secd')
-    self.assertEqual(event_object.sender_pid, 11)
-    self.assertEqual(event_object.facility, u'serverxpc')
-    self.assertEqual(event_object.security_api, u'SOSCCThisDeviceIsInCircle')
-    self.assertEqual(event_object.caller, u'unknown')
-    self.assertEqual(event_object.level, u'Notice')
+    self.assertEqual(event.sender, u'secd')
+    self.assertEqual(event.sender_pid, 11)
+    self.assertEqual(event.facility, u'serverxpc')
+    self.assertEqual(event.security_api, u'SOSCCThisDeviceIsInCircle')
+    self.assertEqual(event.caller, u'unknown')
+    self.assertEqual(event.level, u'Notice')
 
-    event_object = storage_writer.events[2]
+    event = events[2]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-26 19:11:58')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event_object.sender, u'secd')
-    self.assertEqual(event_object.sender_pid, 111)
-    self.assertEqual(event_object.facility, u'user')
-    self.assertEqual(event_object.security_api, u'unknown')
-    self.assertEqual(event_object.caller, u'unknown')
-    self.assertEqual(event_object.level, u'Debug')
+    self.assertEqual(event.sender, u'secd')
+    self.assertEqual(event.sender_pid, 111)
+    self.assertEqual(event.facility, u'user')
+    self.assertEqual(event.security_api, u'unknown')
+    self.assertEqual(event.caller, u'unknown')
+    self.assertEqual(event.level, u'Debug')
 
-    event_object = storage_writer.events[3]
+    event = events[3]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-26 19:11:59')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event_object.sender, u'secd')
-    self.assertEqual(event_object.sender_pid, 1111)
-    self.assertEqual(event_object.facility, u'user')
-    self.assertEqual(event_object.security_api, u'SOSCCThisDeviceIsInCircle')
-    self.assertEqual(event_object.caller, u'C0x7fff872fa482')
-    self.assertEqual(event_object.level, u'Error')
+    self.assertEqual(event.sender, u'secd')
+    self.assertEqual(event.sender_pid, 1111)
+    self.assertEqual(event.facility, u'user')
+    self.assertEqual(event.security_api, u'SOSCCThisDeviceIsInCircle')
+    self.assertEqual(event.caller, u'C0x7fff872fa482')
+    self.assertEqual(event.level, u'Error')
 
-    event_object = storage_writer.events[4]
+    event = events[4]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-06 19:11:01')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event_object.sender, u'secd')
-    self.assertEqual(event_object.sender_pid, 1)
-    self.assertEqual(event_object.facility, u'user')
-    self.assertEqual(event_object.security_api, u'unknown')
-    self.assertEqual(event_object.caller, u'unknown')
-    self.assertEqual(event_object.level, u'Error')
-    self.assertEqual(event_object.message, u'')
+    self.assertEqual(event.sender, u'secd')
+    self.assertEqual(event.sender_pid, 1)
+    self.assertEqual(event.facility, u'user')
+    self.assertEqual(event.security_api, u'unknown')
+    self.assertEqual(event.caller, u'unknown')
+    self.assertEqual(event.level, u'Error')
+    self.assertEqual(event.message, u'')
 
-    event_object = storage_writer.events[5]
+    event = events[5]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-06 19:11:02')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event_object.sender, u'secd')
-    self.assertEqual(event_object.sender_pid, 11111)
-    self.assertEqual(event_object.facility, u'user')
-    self.assertEqual(event_object.security_api, u'SOSCCThisDeviceIsInCircle')
-    self.assertEqual(event_object.caller, u'C0x7fff872fa482 F0x106080db0')
-    self.assertEqual(event_object.level, u'Error')
-    self.assertEqual(event_object.message, u'')
+    self.assertEqual(event.sender, u'secd')
+    self.assertEqual(event.sender_pid, 11111)
+    self.assertEqual(event.facility, u'user')
+    self.assertEqual(event.security_api, u'SOSCCThisDeviceIsInCircle')
+    self.assertEqual(event.caller, u'C0x7fff872fa482 F0x106080db0')
+    self.assertEqual(event.level, u'Error')
+    self.assertEqual(event.message, u'')
 
-    event_object = storage_writer.events[6]
+    event = events[6]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-31 23:59:59')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    event_object = storage_writer.events[7]
+    event = events[7]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-03-01 00:00:01')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     # Repeated line.
-    event_object = storage_writer.events[8]
-    expected_msg = u'Repeated 3 times: Happy new year!'
-    self.assertEqual(event_object.message, expected_msg)
+    event = events[8]
+    expected_message = u'Repeated 3 times: Happy new year!'
+    self.assertEqual(event.message, expected_message)
 
 
 if __name__ == '__main__':

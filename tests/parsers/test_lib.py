@@ -136,17 +136,17 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     return storage_writer
 
   def _TestGetMessageStrings(
-      self, event, expected_message, expected_message_short):
+      self, event, expected_message, expected_short_message):
     """Tests the formatting of the message strings.
 
     This function invokes the GetMessageStrings function of the event
-    formatter on the event object and compares the resulting messages
+    formatter on the event and compares the resulting messages
     strings with those expected.
 
     Args:
       event (EventObject): event.
       expected_message (str): expected message string.
-      expected_message_short (str): expected short message string.
+      expected_short_message (str): expected short message string.
     """
     formatter_mediator = formatters_mediator.FormatterMediator(
         data_location=self._DATA_PATH)
@@ -154,14 +154,14 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         formatters_manager.FormattersManager.GetMessageStrings(
             formatter_mediator, event))
     self.assertEqual(message, expected_message)
-    self.assertEqual(message_short, expected_message_short)
+    self.assertEqual(message_short, expected_short_message)
 
   def _TestGetSourceStrings(
       self, event, expected_source, expected_source_short):
     """Tests the formatting of the source strings.
 
     This function invokes the GetSourceStrings function of the event
-    formatter on the event object and compares the resulting source
+    formatter on the event and compares the resulting source
     strings with those expected.
 
     Args:

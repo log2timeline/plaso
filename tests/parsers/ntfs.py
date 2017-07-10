@@ -22,24 +22,26 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'MFT'])
   def testParseFile(self):
     """Tests the Parse function on a stand-alone $MFT file."""
-    parser_object = ntfs.NTFSMFTParser()
+    parser = ntfs.NTFSMFTParser()
 
     test_path = self._GetTestFilePath([u'MFT'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
 
-    storage_writer = self._ParseFileByPathSpec(os_path_spec, parser_object)
+    storage_writer = self._ParseFileByPathSpec(os_path_spec, parser)
 
     self.assertEqual(storage_writer.number_of_events, 126352)
 
+    events = list(storage_writer.GetEvents())
+
     # A distributed link tracking event.
-    event_object = storage_writer.events[3684]
+    event = events[3684]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2007-06-30 12:58:40.500004')
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         u'9fe44b69-2709-11dc-a06b-db3099beae3c '
@@ -50,14 +52,13 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
         u'9fe44b69-2709-11dc-a06b-db3099beae3c '
         u'Origin: $MFT: 462-1')
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
   @shared_test_lib.skipUnlessHasTestFile([u'vsstest.qcow2'])
   @shared_test_lib.skipUnlessHasTestFile([u'multi_partition_image.vmdk'])
   def testParseImage(self):
     """Tests the Parse function on a storage media image."""
-    parser_object = ntfs.NTFSMFTParser()
+    parser = ntfs.NTFSMFTParser()
 
     test_path = self._GetTestFilePath([u'vsstest.qcow2'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -68,62 +69,64 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=0, location=u'/$MFT',
         parent=qcow_path_spec)
 
-    storage_writer = self._ParseFileByPathSpec(tsk_path_spec, parser_object)
+    storage_writer = self._ParseFileByPathSpec(tsk_path_spec, parser)
 
     self.assertEqual(storage_writer.number_of_events, 284)
 
+    events = list(storage_writer.GetEvents())
+
     # The creation timestamp.
-    event_object = storage_writer.events[0]
+    event = events[0]
 
     # Check that the allocation status is set correctly.
-    self.assertIsInstance(event_object.is_allocated, bool)
-    self.assertTrue(event_object.is_allocated)
+    self.assertIsInstance(event.is_allocated, bool)
+    self.assertTrue(event.is_allocated)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-03 06:30:41.807907')
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     # The last modification timestamp.
-    event_object = storage_writer.events[1]
+    event = events[1]
 
     # Check that the allocation status is set correctly.
-    self.assertIsInstance(event_object.is_allocated, bool)
-    self.assertTrue(event_object.is_allocated)
+    self.assertIsInstance(event.is_allocated, bool)
+    self.assertTrue(event.is_allocated)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-03 06:30:41.807907')
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     # The last accessed timestamp.
-    event_object = storage_writer.events[2]
+    event = events[2]
 
     # Check that the allocation status is set correctly.
-    self.assertIsInstance(event_object.is_allocated, bool)
-    self.assertTrue(event_object.is_allocated)
+    self.assertIsInstance(event.is_allocated, bool)
+    self.assertTrue(event.is_allocated)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-03 06:30:41.807907')
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     # The entry modification timestamp.
-    event_object = storage_writer.events[3]
+    event = events[3]
 
     # Check that the allocation status is set correctly.
-    self.assertIsInstance(event_object.is_allocated, bool)
-    self.assertTrue(event_object.is_allocated)
+    self.assertIsInstance(event.is_allocated, bool)
+    self.assertTrue(event.is_allocated)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-03 06:30:41.807907')
     self.assertEqual(
-        event_object.timestamp_desc,
+        event.timestamp_desc,
         definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         u'TSK:/$MFT '
@@ -133,21 +136,20 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_short_message = (
         u'/$MFT 0-1 $STANDARD_INFORMATION')
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     # The creation timestamp.
-    event_object = storage_writer.events[4]
+    event = events[4]
 
     # Check that the allocation status is set correctly.
-    self.assertIsInstance(event_object.is_allocated, bool)
-    self.assertTrue(event_object.is_allocated)
+    self.assertIsInstance(event.is_allocated, bool)
+    self.assertTrue(event.is_allocated)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-03 06:30:41.807907')
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         u'TSK:/$MFT '
@@ -159,8 +161,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_short_message = (
         u'/$MFT 0-1 $FILE_NAME')
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     # Note that the source file is a RAW (VMDK flat) image.
     test_path = self._GetTestFilePath([u'multi_partition_image.vmdk'])
@@ -173,7 +174,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=0, location=u'/$MFT',
         parent=p2_path_spec)
 
-    storage_writer = self._ParseFileByPathSpec(tsk_path_spec, parser_object)
+    storage_writer = self._ParseFileByPathSpec(tsk_path_spec, parser)
 
     self.assertEqual(storage_writer.number_of_events, 184)
 
@@ -184,7 +185,7 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'usnjrnl.qcow2'])
   def testParseImage(self):
     """Tests the Parse function on a storage media image."""
-    parser_object = ntfs.NTFSUsnJrnlParser()
+    parser = ntfs.NTFSUsnJrnlParser()
 
     test_path = self._GetTestFilePath([u'usnjrnl.qcow2'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -197,18 +198,20 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
 
     # To be able to ignore the sparse data ranges the UsnJrnl parser
     # requires to read directly from the volume.
-    storage_writer = self._ParseFileByPathSpec(volume_path_spec, parser_object)
+    storage_writer = self._ParseFileByPathSpec(volume_path_spec, parser)
 
     self.assertEqual(storage_writer.number_of_events, 19)
 
-    event_object = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-11-30 21:15:27.203125')
     self.assertEqual(
-        event_object.timestamp_desc,
+        event.timestamp_desc,
         definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         u'Nieuw - Tekstdocument.txt '
@@ -219,8 +222,7 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
     expected_short_message = (
         u'Nieuw - Tekstdocument.txt 30-1 USN_REASON_FILE_CREATE')
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

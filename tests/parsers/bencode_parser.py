@@ -18,13 +18,13 @@ class BencodeTest(test_lib.ParserTestCase):
 
   def testEnablePlugins(self):
     """Tests the EnablePlugins function."""
-    parser_object = bencode_parser.BencodeParser()
-    parser_object.EnablePlugins([u'bencode_transmission'])
+    parser = bencode_parser.BencodeParser()
+    parser.EnablePlugins([u'bencode_transmission'])
 
-    self.assertIsNotNone(parser_object)
-    self.assertIsNone(parser_object._default_plugin)
-    self.assertNotEqual(parser_object._plugin_objects, [])
-    self.assertEqual(len(parser_object._plugin_objects), 1)
+    self.assertIsNotNone(parser)
+    self.assertIsNone(parser._default_plugin)
+    self.assertNotEqual(parser._plugins, [])
+    self.assertEqual(len(parser._plugins), 1)
 
 
 if __name__ == '__main__':

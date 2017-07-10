@@ -19,8 +19,8 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'System.evtx'])
   def testParse(self):
     """Tests the Parse function."""
-    parser_object = winevtx.WinEvtxParser()
-    storage_writer = self._ParseFile([u'System.evtx'], parser_object)
+    parser = winevtx.WinEvtxParser()
+    storage_writer = self._ParseFile([u'System.evtx'], parser)
 
     # Windows Event Viewer Log (EVTX) information:
     #   Version                     : 3.1
@@ -29,6 +29,8 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     #   Log type                    : System
 
     self.assertEqual(storage_writer.number_of_events, 1601)
+
+    events = list(storage_writer.GetEvents())
 
     # Event number        : 12049
     # Written time        : Mar 14, 2012 04:17:43.354562700 UTC
@@ -42,30 +44,30 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     # String: 2           : C:\Windows\System32\Winevt\Logs\
     #                     : Archive-System-2012-03-14-04-17-39-932.evtx
 
-    event_object = storage_writer.events[0]
+    event = events[0]
 
-    self.assertEqual(event_object.record_number, 12049)
+    self.assertEqual(event.record_number, 12049)
     expected_computer_name = u'WKS-WIN764BITB.shieldbase.local'
-    self.assertEqual(event_object.computer_name, expected_computer_name)
-    self.assertEqual(event_object.source_name, u'Microsoft-Windows-Eventlog')
-    self.assertEqual(event_object.event_level, 4)
-    self.assertEqual(event_object.event_identifier, 105)
+    self.assertEqual(event.computer_name, expected_computer_name)
+    self.assertEqual(event.source_name, u'Microsoft-Windows-Eventlog')
+    self.assertEqual(event.event_level, 4)
+    self.assertEqual(event.event_identifier, 105)
 
-    self.assertEqual(event_object.strings[0], u'System')
+    self.assertEqual(event.strings[0], u'System')
 
     expected_string = (
         u'C:\\Windows\\System32\\Winevt\\Logs\\'
         u'Archive-System-2012-03-14-04-17-39-932.evtx')
 
-    self.assertEqual(event_object.strings[1], expected_string)
+    self.assertEqual(event.strings[1], expected_string)
 
-    event_object = storage_writer.events[1]
+    event = events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-03-14 04:17:38.276340')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
     expected_xml_string = (
         u'<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/'
@@ -96,9 +98,9 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         u'  </EventData>\n'
         u'</Event>\n')
 
-    self.assertEqual(event_object.xml_string, expected_xml_string)
+    self.assertEqual(event.xml_string, expected_xml_string)
 
-    expected_msg = (
+    expected_message = (
         u'[7036 / 0x1b7c] '
         u'Record Number: 12050 '
         u'Event Level: 4 '
@@ -110,22 +112,26 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         u'\'540072007500730074006500640049006E00'
         u'7300740061006C006C00650072002F0031000000\']')
 
-    expected_msg_short = (
+    expected_short_message = (
         u'[7036 / 0x1b7c] '
         u'Strings: [\'Windows Modules Installer\', \'stopped\', '
         u'\'5400720075...')
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
   @shared_test_lib.skipUnlessHasTestFile([u'System2.evtx'])
   def testParseTruncated(self):
     """Tests the Parse function on a truncated file."""
-    parser_object = winevtx.WinEvtxParser()
+    parser = winevtx.WinEvtxParser()
     # Be aware of System2.evtx file, it was manually shortened so it probably
     # contains invalid log at the end.
-    storage_writer = self._ParseFile([u'System2.evtx'], parser_object)
+    storage_writer = self._ParseFile([u'System2.evtx'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 194)
+
+    events = list(storage_writer.GetEvents())
+
+    event = events[178]
 
     expected_strings_parsed = [
         (u'source_user_id', u'S-1-5-18'),
@@ -135,12 +141,12 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         (u'target_user_id', u'S-1-5-18'),
         (u'target_user_name', u'SYSTEM')]
 
-    strings_parsed = sorted(storage_writer.events[178].strings_parsed.items())
+    strings_parsed = sorted(event.strings_parsed.items())
     self.assertEqual(strings_parsed, expected_strings_parsed)
 
-    expected_event_identifier = 4624
-    event_identifier = storage_writer.events[178].event_identifier
-    self.assertEqual(event_identifier, expected_event_identifier)
+    self.assertEqual(event.event_identifier, 4624)
+
+    event = events[180]
 
     expected_strings_parsed = [
         (u'source_user_id', u'S-1-5-21-1539974973-2753941131-3212641383-1000'),
@@ -149,12 +155,10 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         (u'target_machine_name', u'DC1.internal.greendale.edu'),
         (u'target_user_name', u'administrator')]
 
-    strings_parsed = sorted(storage_writer.events[180].strings_parsed.items())
+    strings_parsed = sorted(event.strings_parsed.items())
     self.assertEqual(strings_parsed, expected_strings_parsed)
 
-    expected_event_identifier = 4648
-    event_identifier = storage_writer.events[180].event_identifier
-    self.assertEqual(event_identifier, expected_event_identifier)
+    self.assertEqual(event.event_identifier, 4648)
 
 
 if __name__ == '__main__':

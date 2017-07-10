@@ -118,11 +118,11 @@ class PlistParser(interface.FileObjectParser):
 
     # TODO: add a parser filter.
     matching_plugin = None
-    for plugin_object in self._plugin_objects:
+    for plugin in self._plugins:
       try:
-        plugin_object.UpdateChainAndProcess(
+        plugin.UpdateChainAndProcess(
             parser_mediator, plist_name=filename, top_level=top_level_object)
-        matching_plugin = plugin_object
+        matching_plugin = plugin
 
       except errors.WrongPlistPlugin as exception:
         logging.debug(u'Wrong plugin: {0:s} for: {1:s}'.format(
