@@ -37,7 +37,7 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
     task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
     self.assertIsNone(task.last_processing_time)
 
-    manager.UpdateTaskAsProcessing(task)
+    manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
     tasks_processing = manager.GetTasksCheckMerge()
     self.assertEqual(1, len(tasks_processing))
     task = tasks_processing[0]
@@ -52,7 +52,7 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
     task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
     with self.assertRaises(KeyError):
       manager.UpdateTaskAsPendingMerge(task)
-    manager.UpdateTaskAsProcessing(task)
+    manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
 
     task_pending_merge = manager.GetTaskPendingMerge(None)
     self.assertIsNone(task_pending_merge)
@@ -65,14 +65,14 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
 
     small_task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
     small_task.storage_file_size = 100
-    manager.UpdateTaskAsProcessing(small_task)
+    manager.UpdateTaskAsProcessingByIdentifier(small_task.identifier)
     large_task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
     large_task.storage_file_size = 1000
-    manager.UpdateTaskAsProcessing(large_task)
+    manager.UpdateTaskAsProcessingByIdentifier(large_task.identifier)
     directory_task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
     directory_task.file_entry_type = dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY
     directory_task.storage_file_size = 1000
-    manager.UpdateTaskAsProcessing(directory_task)
+    manager.UpdateTaskAsProcessingByIdentifier(directory_task.identifier)
 
     manager.UpdateTaskAsPendingMerge(small_task)
     manager.UpdateTaskAsPendingMerge(directory_task)
@@ -90,15 +90,15 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
     manager = task_manager.TaskManager()
     task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
     self.assertEqual(manager.GetAbandonedTasks(), [])
-    self.assertTrue(manager.HasActiveTasks())
+    self.assertTrue(manager.HasPendingTasks())
     self.assertIsNone(manager.GetRetryTask())
 
-    manager.UpdateTaskAsProcessing(task)
+    manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
     timestamp = int(time.time() * 1000000)
     inactive_time = timestamp - task_manager.TaskManager._TASK_INACTIVE_TIME
     task.last_processing_time = inactive_time - 1
-    # HasActiveTasks is responsible for marking tasks as abandoned.
-    self.assertFalse(manager.HasActiveTasks())
+    # HasPendingTasks is responsible for marking tasks as abandoned.
+    self.assertFalse(manager.HasPendingTasks())
     self.assertTrue(manager.HasPendingTasks())
     abandoned_tasks = manager.GetAbandonedTasks()
     self.assertIn(task, abandoned_tasks)
@@ -109,9 +109,9 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
     self.assertTrue(task.retried)
     manager.CompleteTask(retry_task)
 
-    manager.AdoptTask(task)
+    manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
     self.assertEqual(manager.GetAbandonedTasks(), [])
-    self.assertTrue(manager.HasActiveTasks())
+    self.assertTrue(manager.HasPendingTasks())
 
   # TODO: Add tests for updating tasks.
 

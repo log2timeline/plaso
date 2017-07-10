@@ -767,8 +767,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     storage_writer.StartTaskStorage()
 
     for worker_number in range(number_of_worker_processes):
-      extraction_process = self._StartWorkerProcess(
-          worker_number, storage_writer)
+      # First argument to _StartWorkerProcess is not used.
+      extraction_process = self._StartWorkerProcess(u'', storage_writer)
       if not extraction_process:
         logging.error(u'Unable to create worker process: {0:d}'.format(
             worker_number))
