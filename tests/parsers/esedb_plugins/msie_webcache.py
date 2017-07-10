@@ -19,9 +19,9 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'WebCacheV01.dat'])
   def testProcess(self):
     """Tests the Process function."""
-    plugin_object = msie_webcache.MsieWebCacheESEDBPlugin()
+    plugin = msie_webcache.MsieWebCacheESEDBPlugin()
     storage_writer = self._ParseESEDBFileWithPlugin(
-        [u'WebCacheV01.dat'], plugin_object)
+        [u'WebCacheV01.dat'], plugin)
 
     self.assertEqual(storage_writer.number_of_events, 1354)
 
@@ -29,28 +29,28 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     # nondeterministic hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event_object = events[567]
+    event = events[567]
 
-    self.assertEqual(event_object.container_identifier, 1)
+    self.assertEqual(event.container_identifier, 1)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-05-12 07:30:25.486198')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
-    expected_msg = (
+    expected_message = (
         u'Container identifier: 1 '
         u'Set identifier: 0 '
         u'Name: Content '
         u'Directory: C:\\Users\\test\\AppData\\Local\\Microsoft\\Windows\\'
         u'INetCache\\IE\\ '
         u'Table: Container_1')
-    expected_msg_short = (
+    expected_short_message = (
         u'Directory: C:\\Users\\test\\AppData\\Local\\Microsoft\\Windows\\'
         u'INetCache\\IE\\')
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
