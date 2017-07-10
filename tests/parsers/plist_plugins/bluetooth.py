@@ -20,9 +20,9 @@ class TestBtPlugin(test_lib.PlistPluginTestCase):
     test_file_name = u'plist_binary'
     plist_name = u'com.apple.bluetooth.plist'
 
-    plugin_object = bluetooth.BluetoothPlugin()
+    plugin = bluetooth.BluetoothPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
-        plugin_object, [test_file_name], plist_name)
+        plugin, [test_file_name], plist_name)
 
     self.assertEqual(storage_writer.number_of_events, 14)
 
@@ -30,12 +30,12 @@ class TestBtPlugin(test_lib.PlistPluginTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    paired_event_objects = []
+    paired_events = []
     timestamps = []
-    for event_object in events:
-      timestamps.append(event_object.timestamp)
-      if event_object.desc.startswith(u'Paired'):
-        paired_event_objects.append(event_object)
+    for event in events:
+      timestamps.append(event.timestamp)
+      if event.desc.startswith(u'Paired'):
+        paired_events.append(event)
 
     # Ensure all 14 events and times from the plist are parsed correctly.
     self.assertEqual(len(timestamps), 14)
@@ -49,12 +49,12 @@ class TestBtPlugin(test_lib.PlistPluginTestCase):
     self.assertTrue(set(timestamps) == expected_timestamps)
 
     # Ensure two paired devices are matched.
-    self.assertEqual(len(paired_event_objects), 2)
+    self.assertEqual(len(paired_events), 2)
 
-    # One of the paired event object descriptions should contain the string:
+    # One of the paired event descriptions should contain the string:
     # Paired:True Name:Apple Magic Trackpad 2.
     paired_descriptions = [
-        event_object.desc for event_object in paired_event_objects]
+        event.desc for event in paired_events]
 
     self.assertTrue(
         u'Paired:True Name:Apple Magic Trackpad 2' in paired_descriptions)
@@ -64,7 +64,7 @@ class TestBtPlugin(test_lib.PlistPluginTestCase):
         u'Paired:True '
         u'Name:Apple Magic Trackpad 2')
 
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+    self._TestGetMessageStrings(event, expected_string, expected_string)
 
 
 if __name__ == '__main__':

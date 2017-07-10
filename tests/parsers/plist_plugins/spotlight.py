@@ -19,9 +19,9 @@ class SpotlightPluginTest(test_lib.PlistPluginTestCase):
     """Tests the Process function."""
     plist_name = u'com.apple.spotlight.plist'
 
-    plugin_object = spotlight.SpotlightPlugin()
+    plugin = spotlight.SpotlightPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
-        plugin_object, [plist_name], plist_name)
+        plugin, [plist_name], plist_name)
 
     self.assertEqual(storage_writer.number_of_events, 9)
 
@@ -33,23 +33,22 @@ class SpotlightPluginTest(test_lib.PlistPluginTestCase):
         1375236414408299, 1376696381196456, 1379937262090906, 1380942616952359,
         1386111811136093, 1386951868185477, 1387822901900937, 1388331212005129,
         1389056477460443]
-    timestamps = sorted([event_object.timestamp for event_object in events])
+    timestamps = sorted([event.timestamp for event in events])
 
     self.assertEqual(timestamps, expected_timestamps)
 
-    event_object = events[6]
-    self.assertEqual(event_object.key, u'gr')
-    self.assertEqual(event_object.root, u'/UserShortcuts')
+    event = events[6]
+    self.assertEqual(event.key, u'gr')
+    self.assertEqual(event.root, u'/UserShortcuts')
 
     expected_description = (
         u'Spotlight term searched "gr" associate to Grab '
         u'(/Applications/Utilities/Grab.app)')
-    self.assertEqual(event_object.desc, expected_description)
+    self.assertEqual(event.desc, expected_description)
 
     expected_message = u'/UserShortcuts/gr {0:s}'.format(expected_description)
-    expected_message_short = u'{0:s}...'.format(expected_message[:77])
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_message_short)
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

@@ -20,9 +20,9 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
     """Tests the Process function."""
     plist_name = u'History.plist'
 
-    plugin_object = safari.SafariHistoryPlugin()
+    plugin = safari.SafariHistoryPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
-        plugin_object, [plist_name], plist_name)
+        plugin, [plist_name], plist_name)
 
     self.assertEqual(storage_writer.number_of_events, 18)
 
@@ -30,23 +30,22 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event_object = events[7]
+    event = events[7]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-08 17:31:00')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    event_object = events[9]
+    event = events[9]
 
     expected_url = u'http://netverslun.sci-mx.is/aminosyrur'
-    self.assertEqual(event_object.url, expected_url)
+    self.assertEqual(event.url, expected_url)
 
     expected_message = (
         u'Visited: {0:s} (Am\xedn\xf3s\xfdrur ) '
         u'Visit Count: 1').format(expected_url)
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_message)
+    self._TestGetMessageStrings(event, expected_message, expected_message)
 
 
 if __name__ == '__main__':
