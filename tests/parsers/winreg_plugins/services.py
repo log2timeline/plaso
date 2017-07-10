@@ -17,17 +17,17 @@ from tests.parsers.winreg_plugins import test_lib
 
 
 class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
-  """The unit test for Services Windows Registry plugin."""
+  """Tests for the Services Windows Registry plugin."""
 
   def _CreateTestKey(self, key_path, time_string):
     """Creates Registry keys and values for testing.
 
     Args:
-      key_path: the Windows Registry key path.
-      time_string: string containing the key last written date and time.
+      key_path (str): Windows Registry key path.
+      time_string (str): key last written date and time.
 
     Returns:
-      A Windows Registry key (instance of dfwinreg.WinRegistryKey).
+      dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromString(time_string)
@@ -87,19 +87,21 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     time_string = u'2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    plugin_object = services.ServicesPlugin()
-    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
+    plugin = services.ServicesPlugin()
+    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
     self.assertEqual(storage_writer.number_of_events, 1)
 
-    event_object = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
 
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, plugin_object.plugin_name)
+    self.assertEqual(event.parser, plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         u'[{0:s}] '
@@ -112,8 +114,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         u'Type: File System Driver (0x2)').format(key_path)
     expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
   @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testProcessFile(self):
@@ -124,71 +125,74 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    event_objects = []
+    events = []
 
     # Select a few service subkeys to perform additional testing.
-    bits_event_objects = None
-    mc_task_manager_event_objects = None
-    rdp_video_miniport_event_objects = None
+    bits_events = None
+    mc_task_manager_events = None
+    rdp_video_miniport_events = None
 
-    plugin_object = services.ServicesPlugin()
+    plugin = services.ServicesPlugin()
     for winreg_subkey in registry_key.GetSubkeys():
       storage_writer = self._ParseKeyWithPlugin(
-          winreg_subkey, plugin_object, file_entry=test_file_entry)
-      event_objects.extend(storage_writer.events)
+          winreg_subkey, plugin, file_entry=test_file_entry)
+
+      events_subkey = list(storage_writer.GetEvents())
+
+      events.extend(list(events_subkey))
 
       if winreg_subkey.name == u'BITS':
-        bits_event_objects = storage_writer.events
+        bits_events = events_subkey
       elif winreg_subkey.name == u'McTaskManager':
-        mc_task_manager_event_objects = storage_writer.events
+        mc_task_manager_events = events_subkey
       elif winreg_subkey.name == u'RdpVideoMiniport':
-        rdp_video_miniport_event_objects = storage_writer.events
+        rdp_video_miniport_events = events_subkey
 
-    self.assertEqual(len(event_objects), 416)
+    self.assertEqual(len(events), 416)
 
-    # Test the BITS subkey event objects.
-    self.assertEqual(len(bits_event_objects), 1)
+    # Test the BITS subkey events.
+    self.assertEqual(len(bits_events), 1)
 
-    event_object = bits_event_objects[0]
+    event = bits_events[0]
 
-    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
+    self.assertEqual(event.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, plugin_object.plugin_name)
+    self.assertEqual(event.parser, plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-04-06 20:43:27.639075')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self._TestRegvalue(event_object, u'Type', 0x20)
-    self._TestRegvalue(event_object, u'Start', 3)
+    self._TestRegvalue(event, u'Type', 0x20)
+    self._TestRegvalue(event, u'Start', 3)
     self._TestRegvalue(
-        event_object, u'ServiceDll', u'%SystemRoot%\\System32\\qmgr.dll')
+        event, u'ServiceDll', u'%SystemRoot%\\System32\\qmgr.dll')
 
-    # Test the McTaskManager subkey event objects.
-    self.assertEqual(len(mc_task_manager_event_objects), 1)
+    # Test the McTaskManager subkey events.
+    self.assertEqual(len(mc_task_manager_events), 1)
 
-    event_object = mc_task_manager_event_objects[0]
+    event = mc_task_manager_events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-09-16 20:49:16.877415')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self._TestRegvalue(event_object, u'DisplayName', u'McAfee Task Manager')
-    self._TestRegvalue(event_object, u'Type', 0x10)
+    self._TestRegvalue(event, u'DisplayName', u'McAfee Task Manager')
+    self._TestRegvalue(event, u'Type', 0x10)
 
-    # Test the RdpVideoMiniport subkey event objects.
-    self.assertEqual(len(rdp_video_miniport_event_objects), 1)
+    # Test the RdpVideoMiniport subkey events.
+    self.assertEqual(len(rdp_video_miniport_events), 1)
 
-    event_object = rdp_video_miniport_event_objects[0]
+    event = rdp_video_miniport_events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-09-17 13:37:59.347157')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self._TestRegvalue(event_object, u'Start', 3)
+    self._TestRegvalue(event, u'Start', 3)
     expected_value = u'System32\\drivers\\rdpvideominiport.sys'
-    self._TestRegvalue(event_object, u'ImagePath', expected_value)
+    self._TestRegvalue(event, u'ImagePath', expected_value)
 
 
 if __name__ == '__main__':

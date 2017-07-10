@@ -26,29 +26,30 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin_object = run.AutoRunsPlugin()
+    plugin = run.AutoRunsPlugin()
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin_object, file_entry=test_file_entry)
+        registry_key, plugin, file_entry=test_file_entry)
 
     self.assertEqual(storage_writer.number_of_events, 1)
 
-    event_object = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
 
-    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
+    event = events[0]
+
+    self.assertEqual(event.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, plugin_object.plugin_name)
+    self.assertEqual(event.parser, plugin.plugin_name)
 
     # Timestamp is: 2012-04-05T17:03:53.992061+00:00
-    self.assertEqual(event_object.timestamp, 1333645433992061)
+    self.assertEqual(event.timestamp, 1333645433992061)
 
     expected_message = (
         u'[{0:s}] Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe '
         u'/autoRun').format(key_path)
     expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
   @shared_test_lib.skipUnlessHasTestFile([u'NTUSER-RunTests.DAT'])
   def testProcessNtuserRunOnce(self):
@@ -61,30 +62,31 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin_object = run.AutoRunsPlugin()
+    plugin = run.AutoRunsPlugin()
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin_object, file_entry=test_file_entry)
+        registry_key, plugin, file_entry=test_file_entry)
 
     self.assertEqual(storage_writer.number_of_events, 1)
 
-    event_object = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
 
-    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
+    event = events[0]
+
+    self.assertEqual(event.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, plugin_object.plugin_name)
+    self.assertEqual(event.parser, plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-04-05 17:03:53.992061')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         u'[{0:s}] mctadmin: C:\\Windows\\System32\\mctadmin.exe').format(
             key_path)
     expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
   @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE-RunTests'])
   def testProcessSoftwareRun(self):
@@ -97,22 +99,24 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin_object = run.AutoRunsPlugin()
+    plugin = run.AutoRunsPlugin()
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin_object, file_entry=test_file_entry)
+        registry_key, plugin, file_entry=test_file_entry)
 
     self.assertEqual(storage_writer.number_of_events, 1)
 
-    event_object = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
 
-    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
+    event = events[0]
+
+    self.assertEqual(event.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, plugin_object.plugin_name)
+    self.assertEqual(event.parser, plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-09-16 20:57:09.067575')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         u'[{0:s}] '
@@ -124,9 +128,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
         u'VMwareUser.exe"').format(key_path)
     expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
-
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
   @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE-RunTests'])
   def testProcessSoftwareRunOnce(self):
@@ -139,30 +141,31 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin_object = run.AutoRunsPlugin()
+    plugin = run.AutoRunsPlugin()
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin_object, file_entry=test_file_entry)
+        registry_key, plugin, file_entry=test_file_entry)
 
     self.assertEqual(storage_writer.number_of_events, 1)
 
-    event_object = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
 
-    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
+    event = events[0]
+
+    self.assertEqual(event.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, plugin_object.plugin_name)
+    self.assertEqual(event.parser, plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-04-06 14:07:27.750000')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         u'[{0:s}] *WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe '
         u'-k -rq').format(key_path)
     expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

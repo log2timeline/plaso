@@ -27,28 +27,30 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin_object = usb.USBPlugin()
+    plugin = usb.USBPlugin()
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin_object, file_entry=test_file_entry)
+        registry_key, plugin, file_entry=test_file_entry)
 
     self.assertEqual(storage_writer.number_of_events, 7)
 
-    event_object = storage_writer.events[3]
+    events = list(storage_writer.GetEvents())
 
-    self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
+    event = events[3]
+
+    self.assertEqual(event.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, plugin_object.plugin_name)
+    self.assertEqual(event.parser, plugin.plugin_name)
 
     expected_value = u'VID_0E0F&PID_0002'
-    self._TestRegvalue(event_object, u'subkey_name', expected_value)
-    self._TestRegvalue(event_object, u'vendor', u'VID_0E0F')
-    self._TestRegvalue(event_object, u'product', u'PID_0002')
+    self._TestRegvalue(event, u'subkey_name', expected_value)
+    self._TestRegvalue(event, u'vendor', u'VID_0E0F')
+    self._TestRegvalue(event, u'product', u'PID_0002')
 
     # Match UTC timestamp.
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-04-07 10:31:37.625246')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         u'[{0:s}] '
@@ -58,8 +60,7 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
         u'vendor: VID_0E0F').format(key_path)
     expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

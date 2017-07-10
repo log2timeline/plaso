@@ -33,7 +33,9 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
     self.assertEqual(storage_writer.number_of_events, 14)
 
-    event = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
 
     self.assertEqual(event.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
@@ -75,7 +77,9 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
     self.assertEqual(storage_writer.number_of_events, 61)
 
-    event = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
 
     self.assertEqual(event.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
