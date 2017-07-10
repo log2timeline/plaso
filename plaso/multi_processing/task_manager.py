@@ -300,7 +300,7 @@ class TaskManager(object):
           logging.debug(
               u'Retrying task {0:s} as {1:s}'.format(
                   abandoned_task.identifier, retry_task.identifier))
-          self._active_tasks[retry_task.identifier] = tasks
+          self._active_tasks[retry_task.identifier] = retry_task
           self._total_number_of_tasks += 1
           return retry_task
 
