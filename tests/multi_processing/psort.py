@@ -134,8 +134,8 @@ class EventsHeapTest(shared_test_lib.BaseTestCase):
     test_event = event_heap.PopEvent()
     self.assertIsNotNone(test_event)
 
-  def testPopEvent(self):
-    """Tests the PopEvent function."""
+  def testPopEvents(self):
+    """Tests the PopEvents function."""
     event_heap = psort._EventsHeap()
 
     test_events = list(event_heap.PopEvents())
