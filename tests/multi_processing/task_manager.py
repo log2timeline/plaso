@@ -91,6 +91,7 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
     task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
     self.assertEqual(manager.GetAbandonedTasks(), [])
     self.assertTrue(manager.HasActiveTasks())
+    self.assertIsNone(manager.GetRetryTask())
 
     manager.UpdateTaskAsProcessing(task)
     timestamp = int(time.time() * 1000000)
@@ -98,8 +99,15 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
     task.last_processing_time = inactive_time - 1
     # HasActiveTasks is responsible for marking tasks as abandoned.
     self.assertFalse(manager.HasActiveTasks())
+    self.assertTrue(manager.HasPendingTasks())
     abandoned_tasks = manager.GetAbandonedTasks()
     self.assertIn(task, abandoned_tasks)
+
+    retry_task = manager.GetRetryTask()
+    self.assertIsNotNone(retry_task)
+    self.assertEqual(task.identifier, retry_task.original_task_identifier)
+    self.assertTrue(task.retried)
+    manager.CompleteTask(retry_task)
 
     manager.AdoptTask(task)
     self.assertEqual(manager.GetAbandonedTasks(), [])
