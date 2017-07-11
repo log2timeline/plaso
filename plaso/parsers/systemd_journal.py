@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 """Parser for Systemd journal files."""
 
+import os
 try:
   import lzma
 except ImportError:
   lzma = None
-
-import os
 
 import construct
 
@@ -324,6 +323,11 @@ class SystemdJournalParser(interface.FileObjectParser):
     for entry_offset in entries_offsets:
       try:
         self._ParseJournalEntry(parser_mediator, file_object, entry_offset)
+      except errors.ParseError as exception:
+        parser_mediator.ProduceExtractionError((
+            u'Unable to complete parsing journal file: {0:s} at offset '
+            u'0x{1:08x}').format(exception, entry_offset))
+        return
       except construct.ConstructError as exception:
         raise errors.UnableToParseFile((
             u'Unable to parse journal header at offset: 0x{0:08x} with '
