@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 """Tests for the Systemd Journal parser."""
 
+import unittest
+
 try:
   import lzma
 except ImportError:
   lzma = None
-
-import unittest
 
 from plaso.lib import timelib
 from plaso.parsers import systemd_journal
