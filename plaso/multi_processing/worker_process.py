@@ -15,9 +15,6 @@ from plaso.lib import errors
 from plaso.multi_processing import base_process
 from plaso.parsers import mediator as parsers_mediator
 
-# Test code
-from tests.engine import bad_worker
-
 
 class WorkerProcess(base_process.MultiProcessBaseProcess):
   """Class that defines a multi-processing worker process."""
@@ -131,14 +128,9 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     # We need to initialize the parser and hasher objects after the process
     # has forked otherwise on Windows the "fork" will fail with
     # a PickleError for Python modules that cannot be pickled.
-    if self._processing_configuration.cause_errors:
-      self._extraction_worker = bad_worker.BadWorker(
-          parser_filter_expression=(
-              self._processing_configuration.parser_filter_expression))
-    else:
-      self._extraction_worker = worker.EventExtractionWorker(
-          parser_filter_expression=(
-              self._processing_configuration.parser_filter_expression))
+    self._extraction_worker = worker.EventExtractionWorker(
+        parser_filter_expression=(
+            self._processing_configuration.parser_filter_expression))
 
     self._extraction_worker.SetExtractionConfiguration(
         self._processing_configuration.extraction)
