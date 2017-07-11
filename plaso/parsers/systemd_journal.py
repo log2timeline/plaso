@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 """Parser for Systemd journal files."""
 
+import os
 try:
   import lzma
 except ImportError:
   lzma = None
-
-import os
 
 import construct
 
