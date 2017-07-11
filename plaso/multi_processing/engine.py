@@ -149,7 +149,6 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._UpdateProcessingStatus(pid, process_status, used_memory)
 
-    # Something is wrong here with the status indicator
     for worker_status in self._processing_status.workers_status:
       if worker_status.pid == pid:
         status_indicator = worker_status.status
