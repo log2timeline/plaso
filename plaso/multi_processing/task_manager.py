@@ -25,10 +25,14 @@ class _PendingMergeTaskHeap(object):
     """int: number of tasks on the heap."""
     return len(self._heap)
 
-  def __contains__(self, item):
-    """Checks for an task identifier being present in the heap. """
+  def __contains__(self, task_identifier):
+    """Checks for an task identifier being present in the heap.
+
+    Args:
+      task_identifier (str): task identifier to check for.
+    """
     for _, task in self._heap:
-      if task.identifier == item:
+      if task.identifier == task_identifier:
         return True
     return False
 
@@ -102,8 +106,9 @@ class TaskManager(object):
   Once the engine reports that a task is completely merged, it is removed
   from the task manager.
 
-  Tasks that are not abandoned or completed are considered "pending", as there
-  is more work that needs to be done to complete them.
+  Tasks that are not abandoned, or abandoned, but need to be retried are
+  considered "pending", as there is more work that needs to be done to complete
+  them.
   """
 
   # Consider a task inactive after 5 minutes of no activity.
@@ -113,17 +118,19 @@ class TaskManager(object):
     """Initializes a task manager."""
     super(TaskManager, self).__init__()
     self._lock = threading.Lock()
-    # Dictionary mapping task identifiers to tasks which have been abandoned.
+    # This dictionary maps task identifiers to tasks that have been abandoned,
+    # as no worker has reported processing the task in the expected interval.
     self._tasks_abandoned = {}
     self._tasks_pending_merge = _PendingMergeTaskHeap()
-    # This dictionary mapping task identifiers to tasks for tasks that are
-    # currently processing.
+    # This dictionary maps task identifiers to tasks that are currently
+    # being processed by a worker.
     self._tasks_processing = {}
     # Use ordered dictionary to preserve the order in which tasks were added.
-    # Dictionary mapping task identifiers to tasks that are waiting to be
+    # This dictionary maps task identifiers to tasks that are waiting to be
     # processed.
     self._tasks_queued = collections.OrderedDict()
-    # Tasks that are waiting to be merged
+    # This dictionary maps task identifiers to tasks that are being merged
+    # by the foreman.
     self._tasks_merging = {}
 
 
