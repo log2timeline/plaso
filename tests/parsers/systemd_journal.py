@@ -67,10 +67,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     file_entry = self._GetTestFileEntry(path_segments)
     file_object = file_entry.GetFileObject()
 
-    with self.assertRaisesRegexp(
-        errors.ParseError,
-        ur'object offset should be after hash tables \([0-9]+ < [0-9]+\)'):
-      parser.ParseFileObject(parser_mediator, file_object)
+    parser.ParseFileObject(parser_mediator, file_object)
 
     self.assertEqual(storage_writer.number_of_events, 2211)
 
@@ -89,6 +86,15 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     expected_short_message = u'{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
+    self.assertEqual(storage_writer.number_of_errors, 1)
+
+    errors = list(storage_writer.GetErrors())
+    error = errors[0]
+    expected_error_message = (
+        u'Unable to complete parsing journal file: '
+        u'object offset should be after hash tables (4308912 < 2527472) at '
+        u'offset 0x0041bfb0')
+    self.assertEqual(error.message, expected_error_message)
 
 if __name__ == '__main__':
   unittest.main()
