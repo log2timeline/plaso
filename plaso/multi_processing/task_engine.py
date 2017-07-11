@@ -344,8 +344,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     try:
       self._task_queue.PushItem(task, block=False)
-      # TODO: Remove
-      # self._task_manager.UpdateTaskAsProcessing(task)
       is_scheduled = True
 
     except errors.QueueFull:
@@ -733,7 +731,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     # Keep track of certain values so we can spawn new extraction workers.
     self._processing_configuration = processing_configuration
-    self._processing_configuration.cause_errors = True
 
     self._filter_find_specs = filter_find_specs
     self._session_identifier = session_identifier

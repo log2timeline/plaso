@@ -30,8 +30,11 @@ class MultiProcessEngine(engine.BaseEngine):
   # Note that on average Windows seems to require a longer wait.
   _RPC_SERVER_TIMEOUT = 8.0
   _MAXIMUM_RPC_ERRORS = 10
-  # Maximum number of attempts to try to start a replacement process.
+  # Maximum number of attempts to try to start a replacement worker process.
   _MAXIMUM_REPLACEMENT_RETRIES = 3
+  # Number of seconds to wait between attempts to start a replacement worker
+  # process
+  _WORKER_REPLACEMENT_RETRY_DELAY = 1
 
   _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 300
 
@@ -169,8 +172,8 @@ class MultiProcessEngine(engine.BaseEngine):
         replacement_process_attempts += 1
         replacement_process = self._StartWorkerProcess(
             process.name, self._storage_writer)
-        if replacement_process:
-          time.sleep(1)
+        if not replacement_process:
+          time.sleep(self._WORKER_REPLACEMENT_RETRY_DELAY)
           break
       if not replacement_process:
         logging.error(
