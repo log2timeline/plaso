@@ -43,6 +43,10 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
     task = tasks_processing[0]
     self.assertIsNotNone(task.last_processing_time)
 
+    # Simulate the foreman marking a task as complete while the manager
+    # believed it to still be processing.
+    manager.CompleteTask(task)
+
   def testPendingMerge(self):
     """Tests the UpdateTaskPendingMerge and GetTaskPending merge methods."""
     manager = task_manager.TaskManager()
@@ -50,7 +54,7 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
     self.assertIsNone(task_pending_merge)
 
     task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
-    with self.assertRaises(KeyError):
+    with self.assertRaises(ValueError):
       manager.UpdateTaskAsPendingMerge(task)
     manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
 
@@ -75,15 +79,20 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
     manager.UpdateTaskAsProcessingByIdentifier(directory_task.identifier)
 
     manager.UpdateTaskAsPendingMerge(small_task)
+    # Simulate a delayed update from a worker that the task is still processing
+    manager.UpdateTaskAsProcessingByIdentifier(small_task.identifier)
     manager.UpdateTaskAsPendingMerge(directory_task)
     # Test that a directory task preempts a small task.
     merging_task = manager.GetTaskPendingMerge(small_task)
     self.assertEqual(merging_task, directory_task)
+    self.assertEqual(manager._tasks_merging.keys(), [directory_task.identifier])
+    manager.CompleteTask(directory_task)
 
     # Test that a small task is not preempted by a large task.
     manager.UpdateTaskAsPendingMerge(large_task)
     merging_task = manager.GetTaskPendingMerge(small_task)
     self.assertEqual(merging_task, small_task)
+    self.assertEqual(manager._tasks_merging.keys(), [small_task.identifier])
 
   def testTaskAbandonment(self):
     """Tests the abandoning and adoption of tasks"""
@@ -97,8 +106,9 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
     timestamp = int(time.time() * 1000000)
     inactive_time = timestamp - task_manager.TaskManager._TASK_INACTIVE_TIME
     task.last_processing_time = inactive_time - 1
-    # HasPendingTasks is responsible for marking tasks as abandoned.
-    self.assertFalse(manager.HasPendingTasks())
+    # HasPendingTasks is responsible for marking tasks as abandoned, and it
+    # should still return True if the task is abandoned, as it needs to be
+    # retried.
     self.assertTrue(manager.HasPendingTasks())
     abandoned_tasks = manager.GetAbandonedTasks()
     self.assertIn(task, abandoned_tasks)

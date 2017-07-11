@@ -27,9 +27,10 @@ class _PendingMergeTaskHeap(object):
 
   def __contains__(self, item):
     """Checks for an task identifier being present in the heap. """
-    for task_identifier, _ in self._heap:
-      if task_identifier == item:
+    for _, task in self._heap:
+      if task.identifier == item:
         return True
+    return False
 
   def PeekTask(self):
     """Retrieves the first task from the heap without removing it.
@@ -161,7 +162,7 @@ class TaskManager(object):
         logging.debug(u'Task {0:s} is complete.'.format(task.identifier))
 
       if task.identifier in self._tasks_pending_merge:
-        logging.debug(u'Task {0:s} while pending merge.'.format(
+        logging.debug(u'Task {0:s} completed while pending merge.'.format(
             task.identifier))
         return
 
@@ -405,7 +406,7 @@ class TaskManager(object):
       task_abandoned = self._tasks_abandoned.get(task_identifier, None)
       if task_abandoned:
         del self._tasks_abandoned[task_identifier]
-        self._tasks_processing[task_identifier] = task_identifier
+        self._tasks_processing[task_identifier] = task_abandoned
         logging.debug(u'Task {0:s} was abandoned, but now processing'.format(
             task_identifier))
         task_abandoned.UpdateProcessingTime()
