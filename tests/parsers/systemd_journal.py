@@ -9,7 +9,6 @@ except ImportError:
 
 import unittest
 
-from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.parsers import systemd_journal
 
