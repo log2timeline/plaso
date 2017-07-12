@@ -69,8 +69,15 @@ class OutputModule(object):
 
     try:
       self.WriteEventBody(event)
-    except errors.NoFormatterFound:
-      self._ReportEventError(event, u'unable to retrieve formatter')
+
+    except errors.NoFormatterFound as exception:
+      error_message = u'unable to retrieve formatter with error: {0!s}'.format(
+          exception)
+      self._ReportEventError(event, error_message)
+
+    except errors.WrongFormatter as exception:
+      error_message = u'wrong formatter with error: {0!s}'.format(exception)
+      self._ReportEventError(event, error_message)
 
     self.WriteEventEnd()
 

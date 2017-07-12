@@ -16,7 +16,6 @@ from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.multi_processing import psort
 from plaso.output import dynamic
-from plaso.output import event_buffer as output_event_buffer
 from plaso.output import interface as output_interface
 from plaso.output import mediator as output_mediator
 from plaso.output import null
@@ -112,56 +111,50 @@ class TestOutputModule(output_interface.LinearOutputModule):
     self._WriteLine(self._HEADER)
 
 
-class TestEventBuffer(output_event_buffer.EventBuffer):
-  """Class that defines an event buffer for testing.
+class EventsHeapTest(shared_test_lib.BaseTestCase):
+  """Tests for the psort events heap."""
 
-  This class is used for buffering up events for duplicate removals
-  and for other post-processing/analysis of events before being presented
-  by the appropriate output module.
+  # pylint: disable=protected-access
 
-  Attributes:
-    record_count (int): number of records.
-  """
+  def testNumberOfEvents(self):
+    """Tests the number_of_events property."""
+    event_heap = psort._EventsHeap()
+    self.assertEqual(event_heap.number_of_events, 0)
 
-  def __init__(self, output_module, check_dedups=True):
-    """Initialize an event buffer.
+  def testPopEvent(self):
+    """Tests the PopEvent function."""
+    event_heap = psort._EventsHeap()
 
-    Args:
-      output_module (OutputModule): output module.
-      check_dedups (Optional[bool]): True if the event buffer should check for
-          and merge duplicate entries.
-    """
-    super(TestEventBuffer, self).__init__(
-        output_module, check_dedups=check_dedups)
-    self.record_count = 0
+    test_event = event_heap.PopEvent()
+    self.assertIsNone(test_event)
 
-  def Append(self, event):
-    """Appends an event.
+    event = TestEvent(5134324321)
+    event_heap.PushEvent(event)
 
-    Args:
-      event (EventObject): event.
-    """
-    event_identifier = event.GetIdentifier()
-    lookup_key = event_identifier.CopyToString()
-    self._events_per_key[lookup_key] = event
-    self.record_count += 1
+    test_event = event_heap.PopEvent()
+    self.assertIsNotNone(test_event)
 
-  def End(self):
-    """Closes the buffer.
+  def testPopEvents(self):
+    """Tests the PopEvents function."""
+    event_heap = psort._EventsHeap()
 
-    Buffered event objects are written using the output module, an optional
-    footer is written and the output is closed.
-    """
-    pass
+    test_events = list(event_heap.PopEvents())
+    self.assertEqual(len(test_events), 0)
 
-  def Flush(self):
-    """Flushes the buffer.
+    event = TestEvent(5134324321)
+    event_heap.PushEvent(event)
 
-    Buffered event objects are written using the output module.
-    """
-    for key in iter(self._events_per_key.keys()):
-      self._output_module.WriteEventBody(self._events_per_key[key])
-    self._events_per_key = {}
+    test_events = list(event_heap.PopEvents())
+    self.assertEqual(len(test_events), 1)
+
+  def testPushEvent(self):
+    """Tests the PushEvent function."""
+    event_heap = psort._EventsHeap()
+
+    event = TestEvent(5134324321)
+    event_heap.PushEvent(event)
+
+    self.assertEqual(event_heap.number_of_events, 1)
 
 
 class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
@@ -237,6 +230,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       storage_writer.Close()
 
   # TODO: add test for _CheckStatusAnalysisProcess.
+  # TODO: add test for _ExportEvent.
 
   def testInternalExportEvents(self):
     """Tests the _ExportEvents function."""
@@ -262,11 +256,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       storage_reader = storage_zip_file.ZIPStorageFileReader(temp_file)
       storage_reader.ReadPreprocessingInformation(knowledge_base_object)
 
-      event_buffer = TestEventBuffer(output_module, check_dedups=False)
-
-      test_engine._ExportEvents(storage_reader, event_buffer)
-
-    event_buffer.Flush()
+      test_engine._ExportEvents(storage_reader, output_module)
 
     formatters_manager.FormattersManager.DeregisterFormatter(TestEventFormatter)
 
@@ -275,14 +265,16 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     for line in output.split(b'\n'):
       lines.append(line)
 
-    self.assertEqual(len(lines), 8)
+    self.assertEqual(len(lines), 7)
 
-    self.assertTrue(b'My text goes along: My text dude. lines' in lines[2])
-    self.assertTrue(b'LOG/' in lines[2])
-    self.assertTrue(b'None in Particular' in lines[2])
-    self.assertEqual(lines[0], (
-        b'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
-        b'version,filename,inode,notes,format,extra'))
+    self.assertTrue(b'My text goes along: My text dude. lines' in lines[1])
+    self.assertTrue(b'LOG/' in lines[1])
+    self.assertTrue(b'None in Particular' in lines[1])
+
+  # TODO: add test for _FlushExportBuffer.
+
+  # TODO: add test for _MergeEvents.
+  # Note that function will be removed in the future.
 
   # TODO: add test for _StartAnalysisProcesses.
   # TODO: add test for _StatusUpdateThreadMain.
