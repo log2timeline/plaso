@@ -99,14 +99,6 @@ plaso.cli.status_view module
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.status_view_tool module
----------------------------------
-
-.. automodule:: plaso.cli.status_view_tool
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.cli.storage_media_tool module
 -----------------------------------
 
