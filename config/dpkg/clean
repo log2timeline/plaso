@@ -1,2 +1,4 @@
 plaso/*.pyc
+plaso/*/*.pyc
+plaso/*/*/*.pyc
 *.pyc
