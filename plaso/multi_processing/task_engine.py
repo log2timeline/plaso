@@ -251,7 +251,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         try:
           self._task_manager.CompleteTask(self._merge_task)
         except KeyError as exception:
-          logging.error(u'Unable to complete task {0:s} due to {1:s}'.format(
+          logging.error(u'Unable to complete task {0:s}. Error {1:s}'.format(
               self._merge_task.identifier, exception))
 
         if self._storage_merge_reader_on_hold:

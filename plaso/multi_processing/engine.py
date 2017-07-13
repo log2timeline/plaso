@@ -34,7 +34,7 @@ class MultiProcessEngine(engine.BaseEngine):
   _MAXIMUM_REPLACEMENT_RETRIES = 3
   # Number of seconds to wait between attempts to start a replacement worker
   # process
-  _WORKER_REPLACEMENT_RETRY_DELAY = 1
+  _REPLACEMENT_WORKER_RETRY_DELAY = 1
 
   _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 300
 
@@ -152,6 +152,8 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._UpdateProcessingStatus(pid, process_status, used_memory)
 
+    # _UpdateProcessingStatus can also change the status of the worker,
+    # So refresh the status if applicable.
     for worker_status in self._processing_status.workers_status:
       if worker_status.pid == pid:
         status_indicator = worker_status.status
@@ -173,7 +175,7 @@ class MultiProcessEngine(engine.BaseEngine):
         replacement_process = self._StartWorkerProcess(
             process.name, self._storage_writer)
         if not replacement_process:
-          time.sleep(self._WORKER_REPLACEMENT_RETRY_DELAY)
+          time.sleep(self._REPLACEMENT_WORKER_RETRY_DELAY)
           break
       if not replacement_process:
         logging.error(

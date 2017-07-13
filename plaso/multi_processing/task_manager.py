@@ -20,6 +20,7 @@ class _PendingMergeTaskHeap(object):
     """Initializes a pending merge task heap."""
     super(_PendingMergeTaskHeap, self).__init__()
     self._heap = []
+    self._task_identifiers = set()
 
   def __len__(self):
     """int: number of tasks on the heap."""
@@ -30,11 +31,11 @@ class _PendingMergeTaskHeap(object):
 
     Args:
       task_identifier (str): task identifier to check for.
+
+    Returns:
+      bool: True if the task with the given identifier is present in the heap.
     """
-    for _, task in self._heap:
-      if task.identifier == task_identifier:
-        return True
-    return False
+    return task_identifier in self._task_identifiers
 
   def PeekTask(self):
     """Retrieves the first task from the heap without removing it.
@@ -61,6 +62,7 @@ class _PendingMergeTaskHeap(object):
 
     except IndexError:
       return
+    self._task_identifiers.remove(task.identifier)
     return task
 
   def PushTask(self, task):
@@ -85,6 +87,7 @@ class _PendingMergeTaskHeap(object):
 
     heap_values = (weight, task)
     heapq.heappush(self._heap, heap_values)
+    self._task_identifiers.add(task.identifier)
 
 
 class TaskManager(object):
@@ -132,7 +135,6 @@ class TaskManager(object):
     # This dictionary maps task identifiers to tasks that are being merged
     # by the foreman.
     self._tasks_merging = {}
-
 
     # TODO: implement a limit on the number of tasks.
     self._total_number_of_tasks = 0
@@ -252,13 +254,15 @@ class TaskManager(object):
     return tasks_list
 
   def _TimeoutTasks(self, tasks_for_timeout):
-    """Marks tasks as inactive.
+    """Checks for inactive tasks, and marks such tasks as abandoned.
 
     Note that this method does not lock the manager, and should be called
     by a method holding the manager lock.
 
     Args:
-      tasks_for_timeout (dict[str, Task]): mapping of task identifiers to Tasks.
+      tasks_for_timeout (dict[str, Task]): mapping of task identifiers to Tasks
+        that will be checked for inactivty, and marked as abandoned if
+        required.
     """
     if not tasks_for_timeout:
       return
@@ -365,7 +369,8 @@ class TaskManager(object):
       is_queued = task.identifier in self._tasks_queued
 
       if not (is_queued or is_abandoned or is_processing):
-        raise KeyError(u'Task {0:s} is unknown'.format(task.identifier))
+        raise KeyError(u'Status of task {0:s} is unknown'.format(
+            task.identifier))
 
       self._tasks_pending_merge.PushTask(task)
       task.UpdateProcessingTime()
@@ -425,4 +430,4 @@ class TaskManager(object):
         return
 
     # If we get here, we don't know what state the tasks is in, so raise.
-    raise KeyError(u'Unknown task {0:s}'.format(task_identifier))
+    raise KeyError(u'Status of task {0:s} is unknown'.format(task_identifier))
