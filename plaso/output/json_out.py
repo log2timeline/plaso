@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""An output module that saves data into a JSON format."""
+"""Output module that saves data into a JSON format."""
+
+import json
 
 from plaso.output import interface
 from plaso.output import manager
@@ -11,6 +13,8 @@ class JSONOutputModule(interface.LinearOutputModule):
 
   NAME = u'json'
   DESCRIPTION = u'Saves the events into a JSON format.'
+
+  _JSON_SERIALIZER = json_serializer.JSONAttributeContainerSerializer
 
   def __init__(self, output_mediator):
     """Initializes the output module object.
@@ -32,15 +36,14 @@ class JSONOutputModule(interface.LinearOutputModule):
     if inode is None:
       event.inode = 0
 
-    json_string = (
-        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(event))
+    json_dict = self._JSON_SERIALIZER.WriteSerializedDict(event)
+    json_string = json.dumps(json_dict, sort_keys=True)
 
-    if self._event_counter == 0:
-      self._WriteLine(u'"event_{0:d}": {1:s}\n'.format(
-          self._event_counter, json_string))
-    else:
-      self._WriteLine(u', "event_{0:d}": {1:s}\n'.format(
-          self._event_counter, json_string))
+    line = u'"event_{0:d}": {1:s}\n'.format(self._event_counter, json_string)
+    if self._event_counter != 0:
+      line = u', '.join([u'', line])
+
+    self._WriteLine(line)
 
     self._event_counter += 1
 
