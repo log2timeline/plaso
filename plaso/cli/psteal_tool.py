@@ -19,8 +19,8 @@ from plaso import output  # pylint: disable=unused-import
 
 from plaso.cli import extract_analyze_tool
 from plaso.cli import status_view
-from plaso.cli import tools as cli_tools
-from plaso.cli import views as cli_views
+from plaso.cli import tools
+from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import configurations
 from plaso.engine import engine
@@ -234,12 +234,31 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
             u'Output file already exists: {0:s}.'.format(self._output_filename))
 
       output_file_object = open(self._output_filename, u'wb')
-      output_writer = cli_tools.FileObjectOutputWriter(output_file_object)
+      output_writer = tools.FileObjectOutputWriter(output_file_object)
 
       self._output_module.SetOutputWriter(output_writer)
 
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self._output_module)
+
+  def _PrintAnalysisReportsDetails(self, storage, number_of_analysis_reports):
+    """Prints the details of the analysis reports.
+
+    Args:
+      storage (BaseStorage): storage writer.
+      number_of_analysis_reports (int): number of analysis reports.
+    """
+    for index, analysis_report in enumerate(storage.GetAnalysisReports()):
+      if index + 1 <= number_of_analysis_reports:
+        continue
+
+      title = u'Analysis report: {0:d}'.format(index)
+      table_view = views.ViewsFactory.GetTableView(
+          self._views_format_type, title=title)
+
+      table_view.AddRow([u'String', analysis_report.GetString()])
+
+      table_view.Write(self._output_writer)
 
   def AnalyzeEvents(self):
     """Analyzes events from a plaso storage file and generate a report.
@@ -290,7 +309,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
 
     self._output_writer.Write(u'Processing completed.\n')
 
-    table_view = cli_views.ViewsFactory.GetTableView(
+    table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title=u'Counter')
     for element, count in counter.most_common():
       if not element:
@@ -300,7 +319,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
 
     storage_reader = storage_zip_file.ZIPStorageFileReader(
         self._storage_file_path)
-    self._status_view.PrintAnalysisReportsDetails(
+    self._PrintAnalysisReportsDetails(
         storage_reader, self._number_of_analysis_reports)
 
     self._output_writer.Write(u'Storage file is {0:s}\n'.format(
