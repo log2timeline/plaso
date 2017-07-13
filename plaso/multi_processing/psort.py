@@ -819,9 +819,14 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           updates.
       worker_memory_limit (Optional[int]): maximum amount of memory a worker is
           allowed to consume, where None represents the default memory limit.
+
+    Raises:
+      KeyboardInterrupt: if a keyboard interrupt was raised.
     """
     if not analysis_plugins:
       return
+
+    keyboard_interrupt = False
 
     self._analysis_plugins = {}
     self._data_location = data_location
@@ -855,6 +860,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         self._status = definitions.PROCESSING_STATUS_FINALIZING
 
       except KeyboardInterrupt:
+        keyboard_interrupt = True
         self._abort = True
 
         self._processing_status.aborted = True
@@ -875,6 +881,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       self._StopAnalysisProcesses(abort=self._abort)
 
     except KeyboardInterrupt:
+      keyboard_interrupt = True
+
       self._AbortKill()
 
       # The abort can leave the main process unresponsive
@@ -888,6 +896,9 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._knowledge_base = None
     self._status_update_callback = None
     self._worker_memory_limit = self._DEFAULT_WORKER_MEMORY_LIMIT
+
+    if keyboard_interrupt:
+      raise KeyboardInterrupt
 
   def ExportEvents(
       self, knowledge_base_object, storage_reader, output_module,
