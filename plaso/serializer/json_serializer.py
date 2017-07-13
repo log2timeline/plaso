@@ -383,11 +383,9 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     Returns:
       AttributeContainer: attribute container or None.
     """
-    if not json_string:
-      return
-
-    json_dict = json.loads(json_string)
-    return cls.ReadSerializedDict(json_dict)
+    if json_string:
+      json_dict = json.loads(json_string)
+      return cls.ReadSerializedDict(json_dict)
 
   @classmethod
   def ReadSerializedDict(cls, json_dict):
@@ -399,10 +397,8 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     Returns:
       AttributeContainer: attribute container or None.
     """
-    if not json_dict:
-      return
-
-    return cls._ConvertDictToObject(json_dict)
+    if json_dict:
+      return cls._ConvertDictToObject(json_dict)
 
   @classmethod
   def WriteSerialized(cls, attribute_container):

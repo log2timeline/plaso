@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-"""An output module that saves data into a JSON line format.
+"""Output module that saves data into a JSON line format.
 
 JSON line format is a single JSON entry or event per line instead
 of grouping all the output into a single JSON entity.
 """
+
+import json
 
 from plaso.lib import errors
 from plaso.output import interface
@@ -16,6 +18,8 @@ class JSONLineOutputModule(interface.LinearOutputModule):
 
   NAME = u'json_line'
   DESCRIPTION = u'Saves the events into a JSON line format.'
+
+  _JSON_SERIALIZER = json_serializer.JSONAttributeContainerSerializer
 
   def WriteEventBody(self, event):
     """Writes the body of an event object to the output.
@@ -35,8 +39,8 @@ class JSONLineOutputModule(interface.LinearOutputModule):
     if message:
       event.message = message
 
-    json_string = (
-        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(event))
+    json_dict = self._JSON_SERIALIZER.WriteSerializedDict(event)
+    json_string = json.dumps(json_dict, sort_keys=True)
     self._WriteLine(json_string)
     self._WriteLine(u'\n')
 
