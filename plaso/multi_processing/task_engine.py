@@ -248,7 +248,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         self._processing_profiler.StopTiming(u'merge')
 
       if fully_merged:
-        self._task_manager.CompleteTask(self._merge_task)
+        try:
+          self._task_manager.CompleteTask(self._merge_task)
+        except KeyError as exception:
+          logging.error(
+              u'Unable to complete task {0:s}, with Error {1:s}'.format(
+                  self._merge_task.identifier, exception))
 
         if self._storage_merge_reader_on_hold:
           self._merge_task = self._merge_task_on_hold
@@ -340,7 +345,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     try:
       self._task_queue.PushItem(task, block=False)
-      self._task_manager.UpdateTaskAsProcessing(task)
       is_scheduled = True
 
     except errors.QueueFull:
@@ -662,20 +666,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       return
 
     try:
-      self._task_manager.UpdateTaskByIdentifier(task_identifier)
+      self._task_manager.UpdateTaskAsProcessingByIdentifier(task_identifier)
       return
-    except KeyError:
-      # Avoid nesting exception blocks.
-      pass
-
-    try:
-      task = self._task_manager.GetAbandonedTask(task_identifier)
-      logging.debug((
-          u'Worker {0:s} is processing abandoned task: {1:s}. It was last '
-          u'updated at {2!s}.').format(
-              process.name, task.identifier, task.last_processing_time))
-      self._task_manager.AdoptTask(task)
-
     except KeyError:
       logging.debug(
           u'Worker {0:s} is processing unknown task: {1:s}.'.format(
@@ -773,8 +765,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     storage_writer.StartTaskStorage()
 
     for worker_number in range(number_of_worker_processes):
-      extraction_process = self._StartWorkerProcess(
-          worker_number, storage_writer)
+      # First argument to _StartWorkerProcess is not used.
+      extraction_process = self._StartWorkerProcess(u'', storage_writer)
       if not extraction_process:
         logging.error(u'Unable to create worker process: {0:d}'.format(
             worker_number))

@@ -30,6 +30,11 @@ class MultiProcessEngine(engine.BaseEngine):
   # Note that on average Windows seems to require a longer wait.
   _RPC_SERVER_TIMEOUT = 8.0
   _MAXIMUM_RPC_ERRORS = 10
+  # Maximum number of attempts to try to start a replacement worker process.
+  _MAXIMUM_REPLACEMENT_RETRIES = 3
+  # Number of seconds to wait between attempts to start a replacement worker
+  # process
+  _REPLACEMENT_WORKER_RETRY_DELAY = 1
 
   _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 300
 
@@ -102,7 +107,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     process = self._processes_per_pid[pid]
 
-    process_status = self._GetProcessStatus(process)
+    process_status = self._QueryProcessStatus(process)
     if process_status is None:
       process_is_alive = False
     else:
@@ -147,6 +152,13 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._UpdateProcessingStatus(pid, process_status, used_memory)
 
+    # _UpdateProcessingStatus can also change the status of the worker,
+    # So refresh the status if applicable.
+    for worker_status in self._processing_status.workers_status:
+      if worker_status.pid == pid:
+        status_indicator = worker_status.status
+        break
+
     if status_indicator in definitions.PROCESSING_ERROR_STATUS:
       logging.error((
           u'Process {0:s} (PID: {1:d}) is not functioning correctly. '
@@ -156,14 +168,21 @@ class MultiProcessEngine(engine.BaseEngine):
 
       logging.info(u'Starting replacement worker process for {0:s}'.format(
           process.name))
-      replacement_process = self._StartWorkerProcess(
-          process.name, self._storage_writer)
+      replacement_process_attempts = 0
+      replacement_process = None
+      while replacement_process_attempts < self._MAXIMUM_REPLACEMENT_RETRIES:
+        replacement_process_attempts += 1
+        replacement_process = self._StartWorkerProcess(
+            process.name, self._storage_writer)
+        if not replacement_process:
+          time.sleep(self._REPLACEMENT_WORKER_RETRY_DELAY)
+          break
       if not replacement_process:
         logging.error(
             u'Unable to create replacement worker process for: {0:s}'.format(
                 process.name))
 
-  def _GetProcessStatus(self, process):
+  def _QueryProcessStatus(self, process):
     """Queries a process to determine its status.
 
     Args:

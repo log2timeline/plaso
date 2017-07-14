@@ -14,10 +14,10 @@ class MultiProcessEngineTest(shared_test_lib.BaseTestCase):
   # TODO: add test for _AbortKill
   # TODO: add test for _AbortTerminate
   # TODO: add test for _CheckStatusWorkerProcess
-  # TODO: add test for _GetProcessStatus
   # TODO: add test for _KillProcess
   # TODO: add test for _LogMemoryUsage
   # TODO: add test for _ProfilingSampleMemory
+  # TODO: add test for _QueryProcessStatus
   # TODO: add test for _RaiseIfNotMonitored
   # TODO: add test for _RaiseIfNotRegistered
   # TODO: add test for _RegisterProcess
