@@ -261,7 +261,7 @@ class TaskManager(object):
 
     Args:
       tasks_for_timeout (dict[str, Task]): mapping of task identifiers to Tasks
-        that will be checked for inactivty, and marked as abandoned if
+        that will be checked for inactivity, and marked as abandoned if
         required.
     """
     if not tasks_for_timeout:
