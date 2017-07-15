@@ -98,7 +98,7 @@ class FileStatParser(interface.FileEntryParser):
     file_system_type = self._GetFileSystemTypeFromFileEntry(file_entry)
 
     is_allocated = getattr(stat_object, u'allocated', True)
-    file_size = getattr(stat_object, u'size', None),
+    file_size = getattr(stat_object, u'size', None)
 
     for time_attribute, usage in self._TIMESTAMP_DESCRIPTIONS.items():
       posix_time = getattr(stat_object, time_attribute, None)
