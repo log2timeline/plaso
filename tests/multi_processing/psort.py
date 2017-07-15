@@ -111,19 +111,21 @@ class TestOutputModule(output_interface.LinearOutputModule):
     self._WriteLine(self._HEADER)
 
 
-class EventsHeapTest(shared_test_lib.BaseTestCase):
+class PsortEvensHeapTest(shared_test_lib.BaseTestCase):
   """Tests for the psort events heap."""
 
   # pylint: disable=protected-access
 
+  # TODO: add tests for _GetEventIdentifiers
+
   def testNumberOfEvents(self):
     """Tests the number_of_events property."""
-    event_heap = psort._EventsHeap()
+    event_heap = psort.PsortEventHeap()
     self.assertEqual(event_heap.number_of_events, 0)
 
   def testPopEvent(self):
     """Tests the PopEvent function."""
-    event_heap = psort._EventsHeap()
+    event_heap = psort.PsortEventHeap()
 
     test_event = event_heap.PopEvent()
     self.assertIsNone(test_event)
@@ -136,7 +138,7 @@ class EventsHeapTest(shared_test_lib.BaseTestCase):
 
   def testPopEvents(self):
     """Tests the PopEvents function."""
-    event_heap = psort._EventsHeap()
+    event_heap = psort.PsortEventHeap()
 
     test_events = list(event_heap.PopEvents())
     self.assertEqual(len(test_events), 0)
@@ -149,7 +151,7 @@ class EventsHeapTest(shared_test_lib.BaseTestCase):
 
   def testPushEvent(self):
     """Tests the PushEvent function."""
-    event_heap = psort._EventsHeap()
+    event_heap = psort.PsortEventHeap()
 
     event = TestEvent(5134324321)
     event_heap.PushEvent(event)

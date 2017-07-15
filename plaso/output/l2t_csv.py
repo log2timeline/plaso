@@ -5,6 +5,8 @@ For documentation on the L2T CSV format see:
 http://forensicswiki.org/wiki/L2T_CSV
 """
 
+import logging
+
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import py2to3

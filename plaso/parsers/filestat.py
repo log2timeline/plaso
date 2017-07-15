@@ -58,7 +58,7 @@ class FileStatParser(interface.FileEntryParser):
       u'crtime': definitions.TIME_DESCRIPTION_CREATION,
       u'dtime': definitions.TIME_DESCRIPTION_DELETED,
       u'mtime': definitions.TIME_DESCRIPTION_MODIFICATION,
-   }
+  }
 
   def _GetFileSystemTypeFromFileEntry(self, file_entry):
     """Retrieves the file system type indicator of a file entry.

@@ -19,7 +19,7 @@ from plaso.multi_processing import multi_process_queue
 from plaso.storage import time_range as storage_time_range
 
 
-class PsortEventHeap(event_heaps.BaseEventHeap):
+class PsortEventHeap(object):
   """Psort event heap."""
 
   _IDENTIFIER_EXCLUDED_ATTRIBUTES = frozenset([
@@ -31,6 +31,16 @@ class PsortEventHeap(event_heaps.BaseEventHeap):
       u'tag',
       u'timestamp',
       u'timestamp_desc'])
+
+  def __init__(self):
+    """Initializes a psort events heap."""
+    super(PsortEventHeap, self).__init__()
+    self._heap = []
+
+  @property
+  def number_of_events(self):
+    """int: number of events on the heap."""
+    return len(self._heap)
 
   def _GetEventIdentifiers(self, event):
     """Retrieves different identifiers of the event.
@@ -47,34 +57,28 @@ class PsortEventHeap(event_heaps.BaseEventHeap):
     """
     attributes = []
 
-    event_data_identifier = event.GetEventDataIdentifier()
-    if event_data_identifier:
-      attribute_string = u'event_data_identifier: {0:s}'.format(
-          event_data_identifier.CopyToString())
+    attribute_string = u'data_type: {0:s}'.format(event.data_type)
+    attributes.append(attribute_string)
+
+    for attribute_name, attribute_value in sorted(event.GetAttributes()):
+      if attribute_name in self._IDENTIFIER_EXCLUDED_ATTRIBUTES:
+        continue
+
+      if not attribute_value:
+        continue
+
+      if attribute_name == u'pathspec':
+        attribute_value = attribute_value.comparable
+
+      elif isinstance(attribute_value, dict):
+        attribute_value = sorted(attribute_value.items())
+
+      elif isinstance(attribute_value, set):
+        attribute_value = sorted(list(attribute_value))
+
+      attribute_string = u'{0:s}: {1!s}'.format(
+          attribute_name, attribute_value)
       attributes.append(attribute_string)
-
-    else:
-      attribute_string = u'data_type: {0:s}'.format(event.data_type)
-      attributes.append(attribute_string)
-
-      for attribute_name, attribute_value in sorted(event.GetAttributes()):
-        if attribute_name in self._IDENTIFIER_EXCLUDED_ATTRIBUTES:
-          continue
-
-        if not attribute_value:
-          continue
-
-        if attribute_name == u'pathspec':
-          attribute_value = attribute_value.comparable
-
-        elif isinstance(attribute_value, dict):
-          attribute_value = sorted(attribute_value.items())
-
-        elif isinstance(attribute_value, set):
-          attribute_value = sorted(list(attribute_value))
-
-        attribute_string = u'{0:s}: {1!s}'.format(attribute_name, attribute_value)
-        attributes.append(attribute_string)
 
     # The u'atime', u'ctime', u'crtime', u'mtime' are included for backwards
     # compatibility of the filestate parser.
@@ -109,6 +113,17 @@ class PsortEventHeap(event_heaps.BaseEventHeap):
 
     except IndexError:
       return None
+
+  def PopEvents(self):
+    """Pops events from the heap.
+
+    Yields:
+      EventObject: event.
+    """
+    event = self.PopEvent()
+    while event:
+      yield event
+      event = self.PopEvent()
 
   def PushEvent(self, event):
     """Pushes an event onto the heap.

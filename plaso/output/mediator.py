@@ -219,25 +219,25 @@ class OutputMediator(object):
     """
     macb_representation = []
 
-    if (u'mtime' in timestamp_descriptions or 
+    if (u'mtime' in timestamp_descriptions or
         definitions.TIME_DESCRIPTION_MODIFICATION in timestamp_descriptions):
       macb_representation.append(u'M')
     else:
       macb_representation.append(u'.')
 
-    if (u'atime' in timestamp_descriptions or 
+    if (u'atime' in timestamp_descriptions or
         definitions.TIME_DESCRIPTION_LAST_ACCESS in timestamp_descriptions):
       macb_representation.append(u'A')
     else:
       macb_representation.append(u'.')
 
-    if (u'ctime' in timestamp_descriptions or 
+    if (u'ctime' in timestamp_descriptions or
         definitions.TIME_DESCRIPTION_CHANGE in timestamp_descriptions):
       macb_representation.append(u'C')
     else:
       macb_representation.append(u'.')
 
-    if (u'crtime' in timestamp_descriptions or 
+    if (u'crtime' in timestamp_descriptions or
         definitions.TIME_DESCRIPTION_CREATION in timestamp_descriptions):
       macb_representation.append(u'B')
     else:
