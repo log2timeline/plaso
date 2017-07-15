@@ -326,7 +326,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       lookup_key = self._GetEventExportBufferIdentifier(event)
       previous_event = self._export_event_lookup_table.get(lookup_key, None)
       if previous_event:
-        logging.warning("K: %s\nP: %s\nN: %s", lookup_key, previous_event.CopyToDict(), event.CopyToDict())
         self._number_of_duplicate_events += 1
 
         self._MergeEvents(previous_event, event)
