@@ -381,7 +381,7 @@ class StatusView(object):
 
       status_header = (
           u'Tasks:          '
-          u'Active  '
+          u'Queued  '
           u'Processing      '
           u'To merge        '
           u'Abandoned       '
@@ -394,8 +394,8 @@ class StatusView(object):
 
       self._output_writer.Write(status_header)
 
-      number_of_active_tasks = u'{0:d}'.format(
-          tasks_status.number_of_active_tasks)
+      number_of_queued_tasks = u'{0:d}'.format(
+          tasks_status.number_of_queued_tasks)
       number_of_tasks_processing = u'{0:d}'.format(
           tasks_status.number_of_tasks_processing)
       number_of_tasks_pending_merge = u'{0:d}'.format(
@@ -408,8 +408,8 @@ class StatusView(object):
       # The columns are 8-spaces aligned.
       status_line = u''.join([
           u' ' * 16,
-          number_of_active_tasks,
-          u' ' * (8 - len(number_of_active_tasks)),
+          number_of_queued_tasks,
+          u' ' * (8 - len(number_of_queued_tasks)),
           number_of_tasks_processing,
           u' ' * (16 - len(number_of_tasks_processing)),
           number_of_tasks_pending_merge,
