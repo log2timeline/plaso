@@ -12,7 +12,6 @@ from plaso.engine import zeromq_queue
 from plaso.containers import tasks
 from plaso.lib import bufferlib
 from plaso.lib import definitions
-from plaso.lib import py2to3
 from plaso.multi_processing import analysis_process
 from plaso.multi_processing import engine as multi_process_engine
 from plaso.multi_processing import multi_process_queue
