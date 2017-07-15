@@ -23,6 +23,7 @@ from plaso import output   # pylint: disable=unused-import
 
 from plaso.cli import status_view
 from plaso.cli import storage_media_tool
+from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
