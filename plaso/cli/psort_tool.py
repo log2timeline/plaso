@@ -420,7 +420,7 @@ class PsortTool(
     self._output_writer.Write(u'Processing completed.\n')
 
     if analysis_counter:
-      table_view = cli_views.ViewsFactory.GetTableView(
+      table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=u'Analysis reports generated')
       for element, count in analysis_counter.most_common():
         if element != u'total':
@@ -430,7 +430,7 @@ class PsortTool(
       table_view.Write(self._output_writer)
 
     if events_counter:
-      table_view = cli_views.ViewsFactory.GetTableView(
+      table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=u'Export results')
       for element, count in events_counter.most_common():
         table_view.AddRow([element, count])
