@@ -501,6 +501,10 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     generator = self._export_event_heap.PopEvents()
 
     for macb_group_identifier, content_identifier, event in generator:
+      if deduplicate_events and last_content_identifier == content_identifier:
+        self._number_of_duplicate_events += 1
+        continue
+
       if (macb_group_identifier is not None and
           last_macb_group_identifier == macb_group_identifier):
         macb_group.append(event)
@@ -508,10 +512,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       elif macb_group:
         output_module.WriteEventMACBGroup(macb_group)
         macb_group = []
-
-      if deduplicate_events and last_content_identifier == content_identifier:
-        self._number_of_duplicate_events += 1
-        continue
 
       output_module.WriteEvent(event)
 
