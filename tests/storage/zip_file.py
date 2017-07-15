@@ -57,7 +57,7 @@ class SerializedDataStreamTest(test_lib.StorageTestCase):
       entry_data = data_stream.ReadEntry()
 
     self.assertEqual(data_stream.entry_index, 19)
-    self.assertEqual(data_stream._stream_offset, 12641)
+    self.assertEqual(data_stream._stream_offset, 12588)
     self.assertIsNone(entry_data)
 
     data_stream.SeekEntryAtOffset(1, 659)
@@ -161,8 +161,8 @@ class SerializedDataOffsetTableTest(test_lib.StorageTestCase):
     with self.assertRaises(IndexError):
       offset_table.GetOffset(99)
 
-    self.assertEqual(offset_table.GetOffset(-1), 12053)
-    self.assertEqual(offset_table.GetOffset(-2), 11465)
+    self.assertEqual(offset_table.GetOffset(-1), 12024)
+    self.assertEqual(offset_table.GetOffset(-2), 11450)
 
     with self.assertRaises(IndexError):
       offset_table.GetOffset(-99)
@@ -227,8 +227,8 @@ class SerializedDataTimestampTableTest(test_lib.StorageTestCase):
     with self.assertRaises(IndexError):
       timestamp_table.GetTimestamp(99)
 
-    self.assertEqual(timestamp_table.GetTimestamp(-1), 1491238788000000)
-    self.assertEqual(timestamp_table.GetTimestamp(-2), 1491238787000000)
+    self.assertEqual(timestamp_table.GetTimestamp(-1), 1500105308000000)
+    self.assertEqual(timestamp_table.GetTimestamp(-2), 1500105306000000)
 
     with self.assertRaises(IndexError):
       timestamp_table.GetTimestamp(-99)
@@ -1480,8 +1480,8 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
       1364079678000000, 1364079678000000, 1384737320000000, 1384737320000000,
       1388512472000000, 1388512472000000, 1391699790000000, 1391699790000000,
       1416273343000000, 1416273343000000, 1416299420000000, 1416299420000000,
-      1416299480000000, 1416299480000000, 1491238787000000, 1491238787000000,
-      1491238787000000, 1491238787000000, 1491238787000000, 1491238788000000]
+      1416299480000000, 1416299480000000, 1500105306000000, 1500105306000000,
+      1500105306000000, 1500105306000000, 1500105307000000, 1500105308000000]
 
   # TODO: add test for GetEventSources.
 
