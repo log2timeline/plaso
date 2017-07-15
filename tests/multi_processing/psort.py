@@ -274,10 +274,6 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     self.assertTrue(b'None in Particular' in lines[1])
 
   # TODO: add test for _FlushExportBuffer.
-
-  # TODO: add test for _MergeEvents.
-  # Note that function will be removed in the future.
-
   # TODO: add test for _StartAnalysisProcesses.
   # TODO: add test for _StatusUpdateThreadMain.
   # TODO: add test for _StopAnalysisProcesses.
