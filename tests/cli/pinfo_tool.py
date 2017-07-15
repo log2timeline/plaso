@@ -94,10 +94,10 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 
     test_filename = u'pinfo_test.json.plaso'
     format_version = u'20170121'
-    plaso_version = u'1.5.2_20170403'
-    session_identifier = u'61d9fdf4-b68f-4ff3-9bd3-f937a616d588'
-    session_start_time = u'2017-04-03T17:00:12.148946+00:00'
-    session_completion_time = u'2017-04-03T17:00:12.943051+00:00'
+    plaso_version = u'20170714'
+    session_identifier = u'81ca8bf6-285d-4bac-bb7c-d339f07d7728'
+    session_start_time = u'2017-07-15T07:55:31.382324+00:00'
+    session_completion_time = u'2017-07-15T07:55:32.171567+00:00'
 
     command_line_arguments = (
         u'./tools/log2timeline.py --partition=all --quiet '
@@ -123,10 +123,12 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
         u'popularity_contest', u'prefetch', u'recycle_bin',
         u'recycle_bin_info2', u'rplog', u'sccm', u'selinux', u'skydrive_log',
         u'skydrive_log_old', u'sqlite', u'sqlite/android_calls',
-        u'sqlite/android_sms', u'sqlite/appusage', u'sqlite/chrome_cookies',
-        u'sqlite/chrome_extension_activity', u'sqlite/chrome_history',
-        u'sqlite/firefox_cookies', u'sqlite/firefox_downloads',
-        u'sqlite/firefox_history', u'sqlite/google_drive', u'sqlite/imessage',
+        u'sqlite/android_sms', u'sqlite/android_webview',
+        u'sqlite/android_webviewcache', u'sqlite/appusage',
+        u'sqlite/chrome_cookies', u'sqlite/chrome_extension_activity',
+        u'sqlite/chrome_history', u'sqlite/firefox_cookies',
+        u'sqlite/firefox_downloads', u'sqlite/firefox_history',
+        u'sqlite/google_drive', u'sqlite/imessage',
         u'sqlite/kik_messenger', u'sqlite/ls_quarantine',
         u'sqlite/mac_document_versions', u'sqlite/mackeeper_cache',
         u'sqlite/skype', u'sqlite/twitter_ios', u'sqlite/zeitgeist',
@@ -215,9 +217,9 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
   def testPrintStorageInformationAsJSON(self):
     """Tests the _PrintStorageInformationAsJSON function."""
     test_filename = u'pinfo_test.json.plaso'
-    session_identifier = u'61d9fdf4b68f4ff39bd3f937a616d588'
+    session_identifier = u'81ca8bf6285d4bacbb7cd339f07d7728'
     session_start_time = timelib.Timestamp.CopyFromString(
-        u'2017-04-03 17:00:12.148946+00:00')
+        u'2017-07-15 07:55:31.382324')
     output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
     test_file = self._GetTestFilePath([test_filename])

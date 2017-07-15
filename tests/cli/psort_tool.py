@@ -227,7 +227,9 @@ class PsortToolTest(test_lib.CLIToolTestCase):
     self.assertEqual(TestOutputModuleMissingParameters.missing, u'foobar')
     self.assertEqual(TestOutputModuleMissingParameters.parameters, u'foobar')
 
-    expected_line = u'FILE/OS ctime OS:/tmp/test/test_data/syslog Type: file'
+    expected_line = (
+        u'FILE/OS Metadata Modification Time OS:/tmp/test/test_data/syslog '
+        u'Type: file')
     self.assertIn(expected_line, lines)
 
     output_manager.OutputManager.DeregisterOutput(
