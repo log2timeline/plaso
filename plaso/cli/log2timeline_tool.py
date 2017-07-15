@@ -33,6 +33,7 @@ from plaso.frontend import utils as frontend_utils
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import task_engine as multi_process_engine
+from plaso.output import manager as output_manager
 from plaso.storage import zip_file as storage_zip_file
 
 
