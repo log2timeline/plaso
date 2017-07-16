@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests the worker."""
+"""Tests the event extraction worker."""
 
 import unittest
 
@@ -20,7 +20,7 @@ from tests import test_lib as shared_test_lib
 
 
 class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
-  """Tests for the worker object."""
+  """Tests for the event extraction worker."""
 
   # pylint: disable=protected-access
 
