@@ -9,7 +9,6 @@ from plaso.containers import sessions
 from plaso.multi_processing import analysis_process
 from plaso.multi_processing import multi_process_queue
 
-from tests import test_lib as shared_test_lib
 from tests.multi_processing import test_lib
 
 
