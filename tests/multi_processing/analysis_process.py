@@ -80,8 +80,9 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
         name=u'TestAnalysis')
     test_process._abort = True
     test_process._FOREMAN_STATUS_WAIT = 1
+    test_process._pid = 0
 
-    test_process.start()
+    test_process._Main()
 
   # TODO: add test for _ProcessEvent.
 

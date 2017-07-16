@@ -94,8 +94,9 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
     test_process = worker_process.WorkerProcess(
         task_queue, None, None, None, configuration, name='TestWorker')
     test_process._abort = True
+    test_process._pid = 0
 
-    test_process.start()
+    test_process._Main()
 
   def testProcessPathSpec(self):
     """Tests the _ProcessPathSpec function."""
