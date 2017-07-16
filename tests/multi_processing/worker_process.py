@@ -9,6 +9,8 @@ import unittest
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import fake_path_spec
 
+from plaso.containers import sessions
+from plaso.containers import tasks
 from plaso.engine import configurations
 from plaso.engine import worker
 from plaso.multi_processing import multi_process_queue
@@ -71,7 +73,8 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
     self.assertEqual(status_attributes['last_activity_timestamp'], 0.0)
     self.assertIsNone(status_attributes['number_of_produced_errors'])
 
-    storage_writer = self._CreateStorageWriter()
+    session = sessions.Session()
+    storage_writer = self._CreateStorageWriter(session)
     knowledge_base = self._CreateKnowledgeBase()
     test_process._parser_mediator = self._CreateParserMediator(
         storage_writer, knowledge_base)
@@ -84,7 +87,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
 
   def testMain(self):
     """Tests the _Main function."""
-    task_queue = multi_process_queue.MultiProcessingQueue()
+    task_queue = multi_process_queue.MultiProcessingQueue(timeout=1)
 
     configuration = configurations.ProcessingConfiguration()
 
@@ -101,7 +104,8 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
     test_process = worker_process.WorkerProcess(
         None, None, None, None, configuration, name='TestWorker')
 
-    storage_writer = self._CreateStorageWriter()
+    session = sessions.Session()
+    storage_writer = self._CreateStorageWriter(session)
     knowledge_base = self._CreateKnowledgeBase()
     parser_mediator = self._CreateParserMediator(storage_writer, knowledge_base)
 
@@ -121,15 +125,19 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
 
   def testProcessTask(self):
     """Tests the _ProcessTask function."""
-    storage_writer = self._CreateStorageWriter()
+    session = sessions.Session()
+    storage_writer = self._CreateStorageWriter(session)
+    knowledge_base = self._CreateKnowledgeBase()
     configuration = configurations.ProcessingConfiguration()
 
     test_process = worker_process.WorkerProcess(
-        None, storage_writer, None, None, configuration, name='TestWorker')
+        None, storage_writer, knowledge_base, session.identifier, configuration,
+        name='TestWorker')
+    test_process._parser_mediator = self._CreateParserMediator(
+        storage_writer, knowledge_base)
 
-    # TODO: add CreateTaskStorage support to FakeStorage.
-    with self.assertRaises(NotImplementedError):
-      test_process._ProcessTask(None)
+    task = tasks.Task(session_identifier=session.identifier)
+    test_process._ProcessTask(task)
 
   def testStartAndStopProfiling(self):
     """Tests the _StartProfiling and _StopProfiling functions."""

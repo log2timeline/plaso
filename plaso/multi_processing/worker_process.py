@@ -60,7 +60,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._task_queue = task_queue
 
   def _GetStatus(self):
-    """Returns status information.
+    """Retrieves status information.
 
     Returns:
       dict[str, object]: status attributes, indexed by name.

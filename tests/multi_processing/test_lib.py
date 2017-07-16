@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Multi-processing related functions and classes for testing."""
 
-from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.parsers import mediator as parsers_mediator
 from plaso.storage import fake_storage
@@ -56,13 +55,15 @@ class MultiProcessingTestCase(shared_test_lib.BaseTestCase):
 
     return parser_mediator
 
-  def _CreateStorageWriter(self):
+  def _CreateStorageWriter(self, session):
     """Creates a storage writer object.
+
+    Args:
+      session (Session): session.
 
     Returns:
       FakeStorageWriter: storage writer.
     """
-    session = sessions.Session()
     storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
     return storage_writer

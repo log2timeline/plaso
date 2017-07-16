@@ -94,6 +94,7 @@ class FakeStorageWriter(interface.StorageWriter):
     self._errors = []
     self._events = []
     self._is_open = False
+    self._task_storage_writers = {}
     self.analysis_reports = []
     self.event_sources = []
     self.event_tags = []
@@ -192,19 +193,26 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self.event_tags.append(event_tag)
 
-  def CreateTaskStorage(self, unused_task):
+  def CreateTaskStorage(self, task):
     """Creates a task storage.
 
     Args:
       task (Task): task.
 
     Returns:
-      StorageWriter: storage writer.
+      FakeStorageWriter: storage writer.
 
     Raises:
-      NotImplementedError: since there is no implementation.
+      IOError: if the task storage already exist.
     """
-    raise NotImplementedError()
+    if task.identifier in self._task_storage_writers:
+      raise IOError(u'Storage writer for task: {0:s} already exists.'.format(
+          task.identifier))
+
+    storage_writer = FakeStorageWriter(
+        self._session, storage_type=definitions.STORAGE_TYPE_TASK, task=task)
+    self._task_storage_writers[task.identifier] = storage_writer
+    return storage_writer
 
   def Close(self):
     """Closes the storage writer.
@@ -332,17 +340,18 @@ class FakeStorageWriter(interface.StorageWriter):
     self._first_written_event_source_index = len(self.event_sources)
     self._written_event_source_index = self._first_written_event_source_index
 
-  def PrepareMergeTaskStorage(self, unused_task):
+  def PrepareMergeTaskStorage(self, task):
     """Prepares a task storage for merging.
 
     Args:
       task (Task): task.
 
     Raises:
-      IOError: if the storage type is not supported or
-          if the temporary path for the task storage does no exist.
+      IOError: if the task storage does not exist.
     """
-    raise NotImplementedError()
+    if task.identifier not in self._task_storage_writers:
+      raise IOError(u'Storage writer for task: {0:s} does not exist.'.format(
+          task.identifier))
 
   def ReadPreprocessingInformation(self, unused_knowledge_base):
     """Reads preprocessing information.

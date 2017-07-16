@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The multi-process analysis process."""
 
+from __future__ import unicode_literals
+
 import logging
 import threading
 
@@ -13,7 +15,7 @@ from plaso.multi_processing import base_process
 
 
 class AnalysisProcess(base_process.MultiProcessBaseProcess):
-  """Class that defines a multi-processing analysis process."""
+  """Multi-processing analysis process."""
 
   # Number of seconds to wait for the completion status to be queried
   # by the foreman process.
@@ -55,7 +57,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     self._task = None
 
   def _GetStatus(self):
-    """Returns status information.
+    """Retrieves status information.
 
     Returns:
       dict[str, object]: status attributes, indexed by name.
@@ -70,20 +72,20 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
       number_of_produced_reports = None
 
     status = {
-        u'display_name': u'',
-        u'identifier': self._name,
-        u'number_of_consumed_errors': None,
-        u'number_of_consumed_event_tags': None,
-        u'number_of_consumed_events': self._number_of_consumed_events,
-        u'number_of_consumed_reports': None,
-        u'number_of_consumed_sources': None,
-        u'number_of_produced_errors': None,
-        u'number_of_produced_event_tags': number_of_produced_event_tags,
-        u'number_of_produced_events': None,
-        u'number_of_produced_reports': number_of_produced_reports,
-        u'number_of_produced_sources': None,
-        u'processing_status': self._status,
-        u'task_identifier': None}
+        'display_name': '',
+        'identifier': self._name,
+        'number_of_consumed_errors': None,
+        'number_of_consumed_event_tags': None,
+        'number_of_consumed_events': self._number_of_consumed_events,
+        'number_of_consumed_reports': None,
+        'number_of_consumed_sources': None,
+        'number_of_produced_errors': None,
+        'number_of_produced_event_tags': number_of_produced_event_tags,
+        'number_of_produced_events': None,
+        'number_of_produced_reports': number_of_produced_reports,
+        'number_of_produced_sources': None,
+        'processing_status': self._status,
+        'task_identifier': None}
 
     if self._status in (
         definitions.PROCESSING_STATUS_ABORTED,
@@ -94,7 +96,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
   def _Main(self):
     """The main loop."""
-    logging.debug(u'Analysis plugin: {0!s} (PID: {1:d}) started'.format(
+    logging.debug('Analysis plugin: {0!s} (PID: {1:d}) started'.format(
         self._name, self._pid))
 
     # Creating the threading event in the constructor will cause a pickle
@@ -124,7 +126,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
     try:
       logging.debug(
-          u'{0!s} (PID: {1:d}) started monitoring event queue.'.format(
+          '{0!s} (PID: {1:d}) started monitoring event queue.'.format(
               self._name, self._pid))
 
       while not self._abort:
@@ -132,12 +134,12 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
           event = self._event_queue.PopItem()
 
         except (errors.QueueClose, errors.QueueEmpty) as exception:
-          logging.debug(u'ConsumeItems exiting with exception {0:s}.'.format(
+          logging.debug('ConsumeItems exiting with exception {0:s}.'.format(
               type(exception)))
           break
 
         if isinstance(event, plaso_queue.QueueAbort):
-          logging.debug(u'ConsumeItems exiting, dequeued QueueAbort object.')
+          logging.debug('ConsumeItems exiting, dequeued QueueAbort object.')
           break
 
         self._ProcessEvent(self._analysis_mediator, event)
@@ -148,7 +150,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
           self._memory_profiler.Sample()
 
       logging.debug(
-          u'{0!s} (PID: {1:d}) stopped monitoring event queue.'.format(
+          '{0!s} (PID: {1:d}) stopped monitoring event queue.'.format(
               self._name, self._pid))
 
       if not self._abort:
@@ -160,7 +162,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
       logging.warning(
-          u'Unhandled exception in process: {0!s} (PID: {1:d}).'.format(
+          'Unhandled exception in process: {0!s} (PID: {1:d}).'.format(
               self._name, self._pid))
       logging.exception(exception)
 
@@ -183,7 +185,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
     self._foreman_status_wait_event.wait(self._FOREMAN_STATUS_WAIT)
 
-    logging.debug(u'Analysis plugin: {0!s} (PID: {1:d}) stopped'.format(
+    logging.debug('Analysis plugin: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
 
     self._analysis_mediator = None
@@ -194,7 +196,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     try:
       self._event_queue.Close(abort=self._abort)
     except errors.QueueAlreadyClosed:
-      logging.error(u'Queue for {0:s} was already closed.'.format(self.name))
+      logging.error('Queue for {0:s} was already closed.'.format(self.name))
 
   def _ProcessEvent(self, mediator, event):
     """Processes an event.
@@ -213,7 +215,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
       # TODO: write analysis error.
 
       if self._debug_output:
-        logging.warning(u'Unhandled exception while processing event object.')
+        logging.warning('Unhandled exception while processing event object.')
         logging.exception(exception)
 
   def SignalAbort(self):
