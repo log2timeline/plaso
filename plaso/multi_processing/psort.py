@@ -171,6 +171,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
     self._number_of_duplicate_events = 0
+    self._number_of_macb_grouped_events = 0
     self._number_of_produced_errors = 0
     self._number_of_produced_event_tags = 0
     self._number_of_produced_events = 0
@@ -480,6 +481,10 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       events_counter[u'Duplicate events removed'] = (
           self._number_of_duplicate_events)
 
+    if self._number_of_macb_grouped_events:
+      events_counter[u'Events MACB grouped'] = (
+          self._number_of_macb_grouped_events)
+
     if filter_limit:
       events_counter[u'Limited By'] = filter_limit
 
@@ -507,6 +512,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       if (macb_group_identifier is not None and
           last_macb_group_identifier == macb_group_identifier):
         macb_group.append(event)
+
+        self._number_of_macb_grouped_events += 1
 
       elif macb_group:
         output_module.WriteEventMACBGroup(macb_group)
