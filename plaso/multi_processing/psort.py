@@ -44,6 +44,20 @@ class PsortEventHeap(object):
   def _GetEventIdentifiers(self, event):
     """Retrieves different identifiers of the event.
 
+    Every event contains event data, which consists of attributes and values.
+    These attributes and values can be represented as a string and used for
+    sorting and uniquely identifying events. This function determines multiple
+    identifiers:
+    * an identifier of the attributes and values without the timestamp
+      description (or usage).
+    * an identifier of the attributes and values including the timestamp
+      description (or usage).
+
+    The identifier without the timestamp description can be used to group
+    events that have the same MACB (modification, access, change, birth)
+    timestamps. The PsortEventHeap will store these events individually and
+    relies on PsortMultiProcessEngine to do the actual grouping of events.
+
     Args:
       event (EventObject): event.
 
@@ -80,7 +94,7 @@ class PsortEventHeap(object):
       attributes.append(attribute_string)
 
     # The u'atime', u'ctime', u'crtime', u'mtime' are included for backwards
-    # compatibility of the filestate parser.
+    # compatibility of the filestat parser.
     if event.timestamp_desc in (
         u'atime', u'ctime', u'crtime', u'mtime',
         definitions.TIME_DESCRIPTION_LAST_ACCESS,

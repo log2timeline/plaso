@@ -100,6 +100,14 @@ class OutputModule(object):
   def WriteEventMACBGroup(self, event_macb_group):
     """Writes an event MACB group to the output.
 
+    An event MACB group is a group of events that have the same timestamp and
+    event data (attributes and values), where the timestamp description (or
+    usage) is one or more of MACB (modification, access, change, birth).
+
+    This function is called if the psort engine detected an event MACB group
+    so that the output module, if supported, can represent the group as
+    such. If not overwritten this function will output every event individually.
+
     Args:
       event_macb_group (list[EventObject]): event MACB group.
     """

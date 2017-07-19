@@ -8,17 +8,17 @@ import pytz  # pylint: disable=wrong-import-order
 
 
 class OutputMediator(object):
-  """Class that implements the output mediator.
+  """Output mediator.
 
   Attributes:
     fields_filter (FilterObject): filter object that indicates
-                                  which fields to output.
+        which fields to output.
   """
 
   def __init__(
       self, knowledge_base, formatter_mediator, fields_filter=None,
       preferred_encoding=u'utf-8'):
-    """Initializes a output mediator object.
+    """Initializes an output mediator.
 
     Args:
       knowledge_base (KnowledgeBase): knowledge base.
@@ -37,12 +37,12 @@ class OutputMediator(object):
 
   @property
   def encoding(self):
-    """The preferred encoding."""
+    """str: preferred encoding."""
     return self._preferred_encoding
 
   @property
   def filter_expression(self):
-    """The filter expression if a filter is set, None otherwise."""
+    """str: filter expression if a filter is set, None otherwise."""
     if not self.fields_filter:
       return
 
@@ -60,7 +60,7 @@ class OutputMediator(object):
       event (EventObject): event.
 
     Returns:
-      The event formatter object (instance of EventFormatter) or None.
+      EventFormatter: event formatter or None.
     """
     data_type = getattr(event, u'data_type', None)
     if not data_type:
@@ -211,8 +211,16 @@ class OutputMediator(object):
   def GetMACBRepresentationFromDescriptions(self, timestamp_descriptions):
     """Determines the MACB representation from the timestamp descriptions.
 
+    MACB representation is a shorthand for grouping one or more of 
+    modification, access, change, birth timestamps as the letters "MACB" or
+    a "." if the corresponding timestamp is not set.
+
+    Note that this is an output format shorthand and should by no means imply
+    that the grouped timestamps represent the same event.
+
     Args:
-      timestamp_descriptions (list[str]): timestamp descriptions.
+      timestamp_descriptions (list[str]): timestamp descriptions, which are
+          defined in definitions.TIME_DESCRIPTIONS.
 
     Returns:
       str: MACB representation.
