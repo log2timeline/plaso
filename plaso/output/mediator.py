@@ -211,7 +211,7 @@ class OutputMediator(object):
   def GetMACBRepresentationFromDescriptions(self, timestamp_descriptions):
     """Determines the MACB representation from the timestamp descriptions.
 
-    MACB representation is a shorthand for grouping one or more of 
+    MACB representation is a shorthand for grouping one or more of
     modification, access, change, birth timestamps as the letters "MACB" or
     a "." if the corresponding timestamp is not set.
 
