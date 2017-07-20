@@ -160,13 +160,17 @@ class OutputMediator(object):
 
       return_characters = [u'.', u'.', u'.', u'.']
       for description in descriptions:
-        if description == u'mtime':
+        if description in (
+            u'mtime', definitions.TIME_DESCRIPTION_MODIFICATION):
           return_characters[0] = u'M'
-        elif description == u'atime':
+        elif description in (
+            u'atime', definitions.TIME_DESCRIPTION_LAST_ACCESS):
           return_characters[1] = u'A'
-        elif description == u'ctime':
+        elif description in (
+            u'ctime', definitions.TIME_DESCRIPTION_CHANGE):
           return_characters[2] = u'C'
-        elif description == u'crtime':
+        elif description in (
+            u'crtime', definitions.TIME_DESCRIPTION_CREATION):
           return_characters[3] = u'B'
 
       return u''.join(return_characters)
