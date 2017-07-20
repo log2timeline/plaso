@@ -106,10 +106,11 @@ class OutputModule(object):
 
     This function is called if the psort engine detected an event MACB group
     so that the output module, if supported, can represent the group as
-    such. If not overwritten this function will output every event individually.
+    such. If not overridden this function will output every event individually.
 
     Args:
-      event_macb_group (list[EventObject]): event MACB group.
+      event_macb_group (list[EventObject]): group of events with identical
+          timestamps, attributes and values.
     """
     for event in event_macb_group:
       self.WriteEvent(event)

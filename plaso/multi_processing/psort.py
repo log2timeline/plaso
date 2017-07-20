@@ -49,9 +49,11 @@ class PsortEventHeap(object):
     sorting and uniquely identifying events. This function determines multiple
     identifiers:
     * an identifier of the attributes and values without the timestamp
-      description (or usage).
+      description (or usage). This is referred to as the MACB group
+      identifier.
     * an identifier of the attributes and values including the timestamp
-      description (or usage).
+      description (or usage). This is referred to as the event content
+      identifier.
 
     The identifier without the timestamp description can be used to group
     events that have the same MACB (modification, access, change, birth)
@@ -64,9 +66,9 @@ class PsortEventHeap(object):
     Returns:
       tuple: contains:
 
-        int: identifier of the event MACB group or None if the event cannot
+        str: identifier of the event MACB group or None if the event cannot
             be grouped.
-        int: identifier of the event content.
+        str: identifier of the event content.
     """
     attributes = []
 
@@ -94,7 +96,7 @@ class PsortEventHeap(object):
       attributes.append(attribute_string)
 
     # The u'atime', u'ctime', u'crtime', u'mtime' are included for backwards
-    # compatibility of the filestat parser.
+    # compatibility with the filestat parser.
     if event.timestamp_desc in (
         u'atime', u'ctime', u'crtime', u'mtime',
         definitions.TIME_DESCRIPTION_LAST_ACCESS,
@@ -116,9 +118,9 @@ class PsortEventHeap(object):
     Returns:
       tuple: contains:
 
-        int: identifier of the event MACB group or None if the event cannot
+        str: identifier of the event MACB group or None if the event cannot
             be grouped.
-        int: identifier of the event content.
+        str: identifier of the event content.
         EventObject: event.
     """
     try:
@@ -146,8 +148,8 @@ class PsortEventHeap(object):
     """
     macb_group_identifier, content_identifier = self._GetEventIdentifiers(event)
 
-    # We can ignore the timestamp here because we only store events
-    # with the same timestamp in the event heap.
+    # We can ignore the timestamp here because the psort engine only stores
+    # events with the same timestamp in the event heap.
     heap_values = (macb_group_identifier, content_identifier, event)
     heapq.heappush(self._heap, heap_values)
 
@@ -528,8 +530,9 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         macb_group.append(event)
 
         self._number_of_macb_grouped_events += 1
+        continue
 
-      elif macb_group:
+      if macb_group:
         output_module.WriteEventMACBGroup(macb_group)
         macb_group = []
 
@@ -537,6 +540,9 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
       last_macb_group_identifier = macb_group_identifier
       last_content_identifier = content_identifier
+
+    if macb_group:
+      output_module.WriteEventMACBGroup(macb_group)
 
   def _StartAnalysisProcesses(self, storage_writer, analysis_plugins):
     """Starts the analysis processes.
