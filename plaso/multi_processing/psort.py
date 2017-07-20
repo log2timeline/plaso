@@ -530,13 +530,13 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         macb_group.append(event)
 
         self._number_of_macb_grouped_events += 1
-        continue
 
-      if macb_group:
-        output_module.WriteEventMACBGroup(macb_group)
-        macb_group = []
+      else:
+        if macb_group:
+          output_module.WriteEventMACBGroup(macb_group)
+          macb_group = []
 
-      output_module.WriteEvent(event)
+        output_module.WriteEvent(event)
 
       last_macb_group_identifier = macb_group_identifier
       last_content_identifier = content_identifier
