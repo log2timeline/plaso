@@ -30,8 +30,7 @@ class OXMLTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-11-07 23:29:00')
+    expected_timestamp = timelib.Timestamp.CopyFromString('2012-11-07 23:29:00')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
@@ -54,8 +53,7 @@ class OXMLTest(test_lib.ParserTestCase):
     self.assertEqual(event.revision_number, '3')
     self.assertEqual(event.last_saved_by, 'Nides')
     self.assertEqual(event.author, 'Nides')
-    self.assertEqual(
-        event.creating_app, 'Microsoft Office Word')
+    self.assertEqual(event.creating_app, 'Microsoft Office Word')
     self.assertEqual(event.template, 'Normal.dotm')
 
     expected_message = (

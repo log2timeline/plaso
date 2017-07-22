@@ -82,7 +82,7 @@ class OpenXMLParser(interface.FileObjectParser):
   NAME = 'openxml'
   DESCRIPTION = 'Parser for OpenXML (OXML) files.'
 
-  _METAKEY_TRANSLATE = {
+  _PROPERTY_NAMES = {
       'creator': 'author',
       'lastModifiedBy': 'last_saved_by',
       'Total_Time': 'total_edit_time',
@@ -100,13 +100,84 @@ class OpenXMLParser(interface.FileObjectParser):
   _FILES_REQUIRED = frozenset([
       '[Content_Types].xml', '_rels/.rels', 'docProps/core.xml'])
 
-  def _FixString(self, key):
-    """Convert CamelCase to lower_with_underscore."""
+  def _FormatAsSnakeCase(self, property_name):
+    """Formats a camel case property name as snake case.
+
+    Args:
+      property_name (str): property name in camel case.
+
+    Returns:
+      str: property name in snake case.
+    """
     # TODO: Add Unicode support.
-    fix_key = re.sub(r'(.)([A-Z][a-z]+)', r'\1_\2', key)
+    fix_key = re.sub(r'(.)([A-Z][a-z]+)', r'\1_\2', property_name)
     return re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', fix_key).lower()
 
-  # pylint: disable=arguments-differ
+  def _ParsePropertiesXMLFile(self, zip_file, path):
+    """Parses a properties XML file.
+
+    Args:
+      zip_file (zipfile.ZipFile): a ZIP file.
+      path (str): path of the properties XML file, relative to the root of
+          the ZIP file.
+
+    Returns:
+      dict[str, object]: properties.
+
+    Raises:
+      zipfile.BadZipfile: if the properties XML file cannot be read.
+    """
+    xml_data = zip_file.read(path)
+
+    xml_root = ElementTree.fromstring(xml_data)
+
+    properties = {}
+    for xml_element in xml_root.iter():
+      if not xml_element.text:
+        continue
+
+      # The property name is formatted as: {URL}name
+      # For example: {http://purl.org/dc/terms/}modified
+      _, _, name = xml_element.tag.partition('}')
+
+      # Do not including the 'lpstr' attribute because it is very verbose.
+      if name == 'lpstr':
+        continue
+
+      property_name = self._PROPERTY_NAMES.get(name, None)
+      if not property_name:
+        property_name = self._FormatAsSnakeCase(name)
+
+      properties[property_name] = xml_element.text
+
+    return properties
+
+  def _ParseRelationshipsXMLFile(self, zip_file):
+    """Parses the relationships XML file (_rels/.rels).
+
+    Args:
+      zip_file (zipfile.ZipFile): a ZIP file.
+
+    Returns:
+      list[str]: property file paths. The path is relative to the root of
+          the ZIP file.
+
+    Raises:
+      zipfile.BadZipfile: if the relationship XML file cannot be read.
+    """
+    xml_data = zip_file.read('_rels/.rels')
+
+    xml_root = ElementTree.fromstring(xml_data)
+
+    property_files = []
+    for xml_element in xml_root.iter():
+      type_attribute = xml_element.get('Type')
+      if 'properties' in repr(type_attribute):
+        target_attribute = xml_element.get('Target')
+        property_files.append(target_attribute)
+
+    return property_files
+
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses an OXML file-like object.
 
@@ -118,67 +189,53 @@ class OpenXMLParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_name = parser_mediator.GetDisplayName()
+    display_name = parser_mediator.GetDisplayName()
 
     if not zipfile.is_zipfile(file_object):
       raise errors.UnableToParseFile(
           '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, file_name, 'Not a Zip file.'))
+              self.NAME, display_name, 'Not a Zip file.'))
 
     # Some non-ZIP files pass the first test but will fail with a negative
     # seek (IOError) or another error.
     try:
-      zip_container = zipfile.ZipFile(file_object, 'r')
-    except (IOError, struct.error, zipfile.BadZipfile, zipfile.LargeZipFile):
+      zip_file = zipfile.ZipFile(file_object, 'r')
+    except (zipfile.BadZipfile, struct.error, zipfile.LargeZipFile):
       raise errors.UnableToParseFile(
           '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, file_name, 'Bad Zip file.'))
+              self.NAME, display_name, 'Bad Zip file.'))
 
-    zip_name_list = set(zip_container.namelist())
+    zip_name_list = set(zip_file.namelist())
 
     if not self._FILES_REQUIRED.issubset(zip_name_list):
       raise errors.UnableToParseFile(
           '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, file_name, 'OXML element(s) missing.'))
-
-    metadata = {}
-    timestamps = {}
+              self.NAME, display_name, 'OXML element(s) missing.'))
 
     try:
-      rels_xml = zip_container.read('_rels/.rels')
-    except zipfile.BadZipfile as exception:
-      parser_mediator.ProduceExtractionError(
-          'Unable to parse file with error: {0!s}'.format(exception))
+      property_files = self._ParseRelationshipsXMLFile(zip_file)
+    except (
+        IndexError, KeyError, OverflowError, ValueError,
+        zipfile.BadZipfile) as exception:
+      parser_mediator.ProduceExtractionError((
+          'Unable to parse relationships XML file: _rels/.rels with error: '
+          '{0!s}').format(exception))
       return
 
-    rels_root = ElementTree.fromstring(rels_xml)
+    metadata = {}
 
-    for properties in rels_root.iter():
-      if 'properties' in repr(properties.get('Type')):
-        try:
-          xml = zip_container.read(properties.get('Target'))
-          root = ElementTree.fromstring(xml)
-        except (
-            OverflowError, IndexError, KeyError, ValueError,
-            zipfile.BadZipfile) as exception:
-          logging.warning(
-              '[{0:s}] unable to read property with error: {1!s}.'.format(
-                  self.NAME, exception))
-          continue
+    for path in property_files:
+      try:
+        properties = self._ParsePropertiesXMLFile(zip_file, path)
+      except (
+          IndexError, KeyError, OverflowError, ValueError,
+          zipfile.BadZipfile) as exception:
+        parser_mediator.ProduceExtractionError((
+            'Unable to parse properties XML file: {0:s} with error: '
+            '{1!s}').format(path, exception))
+        continue
 
-        for element in root.iter():
-          if element.text:
-            _, _, tag = element.tag.partition('}')
-            # Not including the 'lpstr' attribute because it is
-            # very verbose.
-            if tag == 'lpstr':
-              continue
-
-            if tag in ('created', 'modified', 'lastPrinted'):
-              timestamps[tag] = element.text
-            else:
-              tag_name = self._METAKEY_TRANSLATE.get(tag, self._FixString(tag))
-              metadata[tag_name] = element.text
+      metadata.update(properties)
 
     event_data = OpenXMLEventData()
     event_data.app_version = metadata.get('app_version', None)
@@ -204,11 +261,13 @@ class OpenXMLParser(interface.FileObjectParser):
     event_data.template = metadata.get('template', None)
     event_data.total_time = metadata.get('total_time', None)
 
-    # Date and time strings are in ISO 8601 format with 1 second precision.
-    # For example: 2012-11-07T23:29:00Z
+    # Date and time strings are in ISO 8601 format either with 1 second
+    # or 100th nano second precision. For example:
+    # 2012-11-07T23:29:00Z
+    # 2012-03-05T20:40:00.0000000Z
     date_time = dfdatetime_time_elements.TimeElements()
 
-    time_string = timestamps.get('created', None)
+    time_string = metadata.get('created', None)
     if time_string:
       try:
         date_time.CopyFromStringISO8601(time_string)
@@ -221,7 +280,7 @@ class OpenXMLParser(interface.FileObjectParser):
             'unsupported created time: {0:s} with error: {1!s}'.format(
                 time_string, exception))
 
-    time_string = timestamps.get('modified', None)
+    time_string = metadata.get('modified', None)
     if time_string:
       try:
         date_time.CopyFromStringISO8601(time_string)
@@ -234,7 +293,7 @@ class OpenXMLParser(interface.FileObjectParser):
             'unsupported modified time: {0:s} with error: {1!s}'.format(
                 time_string, exception))
 
-    time_string = timestamps.get('lastPrinted', None)
+    time_string = metadata.get('last_printed', None)
     if time_string:
       try:
         date_time.CopyFromStringISO8601(time_string)
