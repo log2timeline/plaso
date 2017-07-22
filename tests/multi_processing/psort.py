@@ -107,17 +107,17 @@ class TestOutputModule(output_interface.LinearOutputModule):
 
   NAME = 'psort_test'
 
-  def __init__(self, output_mediator):
+  def __init__(self, output_mediator_object):
     """Initializes an output module.
 
     Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfvfs.
+      output_mediator_object (OutputMediator): mediates interactions between
+          output modules and other components, such as storage and dfvfs.
 
     Raises:
       ValueError: when there are unused keyword arguments.
     """
-    super(TestOutputModule, self).__init__(output_mediator)
+    super(TestOutputModule, self).__init__(output_mediator_object)
     self.events = []
     self.macb_groups = []
 
