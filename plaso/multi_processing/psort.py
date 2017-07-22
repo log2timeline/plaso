@@ -526,6 +526,10 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         continue
 
       if macb_group_identifier is None:
+        if macb_group:
+          output_module.WriteEventMACBGroup(macb_group)
+          macb_group = []
+
         output_module.WriteEvent(event)
 
       else:

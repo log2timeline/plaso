@@ -10,11 +10,11 @@ from plaso.cli import psort_tool
 from plaso.cli.helpers import interface as helpers_interface
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.lib import errors
+from plaso.output import interface as output_interface
 from plaso.output import manager as output_manager
 
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
-from tests.multi_processing import psort as psort_test
 
 
 class TestInputReader(object):
@@ -59,10 +59,14 @@ class TestOutputModuleArgumentHelper(helpers_interface.ArgumentsHelper):
       output_module.SetMissingValue(u'parameters', parameters)
 
 
-class TestOutputModuleMissingParameters(psort_test.TestOutputModule):
+class TestOutputModuleMissingParameters(output_interface.LinearOutputModule):
   """Test output module that is missing some parameters."""
 
   NAME = u'test_missing'
+
+  _HEADER = (
+      u'date,time,timezone,MACB,source,sourcetype,type,user,host,'
+      u'short,desc,version,filename,inode,notes,format,extra\n')
 
   # For test purpose assign these as class attributes.
   missing = None
@@ -83,6 +87,21 @@ class TestOutputModuleMissingParameters(psort_test.TestOutputModule):
   def SetMissingValue(cls, attribute, value):
     """Set missing value."""
     setattr(cls, attribute, value)
+
+  def WriteEventBody(self, event):
+    """Writes the body of an event object to the output.
+
+    Args:
+      event (EventObject): event.
+    """
+    message, _ = self._output_mediator.GetFormattedMessages(event)
+    source_short, source_long = self._output_mediator.GetFormattedSources(event)
+    self._WriteLine(u'{0:s}/{1:s} {2:s}\n'.format(
+        source_short, source_long, message))
+
+  def WriteHeader(self):
+    """Writes the header to the output."""
+    self._WriteLine(self._HEADER)
 
 
 class PsortToolTest(test_lib.CLIToolTestCase):
@@ -196,7 +215,7 @@ class PsortToolTest(test_lib.CLIToolTestCase):
     # TODO: improve test coverage.
 
   def testProcessStorageWithMissingParameters(self):
-    """Test the ProcessStorage function with half-configured output module."""
+    """Tests the ProcessStorage function with parameters missing."""
     input_reader = TestInputReader()
     output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = psort_tool.PsortTool(
