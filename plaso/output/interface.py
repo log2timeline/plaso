@@ -14,7 +14,7 @@ class OutputModule(object):
   DESCRIPTION = u''
 
   def __init__(self, output_mediator):
-    """Initializes the output module object.
+    """Initializes an output module.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output

@@ -525,18 +525,19 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         self._number_of_duplicate_events += 1
         continue
 
-      if (macb_group_identifier is not None and
-          last_macb_group_identifier == macb_group_identifier):
-        macb_group.append(event)
-
-        self._number_of_macb_grouped_events += 1
+      if macb_group_identifier is None:
+        output_module.WriteEvent(event)
 
       else:
-        if macb_group:
-          output_module.WriteEventMACBGroup(macb_group)
-          macb_group = []
+        if (last_macb_group_identifier == macb_group_identifier or
+            not macb_group):
+          macb_group.append(event)
 
-        output_module.WriteEvent(event)
+        else:
+          output_module.WriteEventMACBGroup(macb_group)
+          macb_group = [event]
+
+        self._number_of_macb_grouped_events += 1
 
       last_macb_group_identifier = macb_group_identifier
       last_content_identifier = content_identifier
