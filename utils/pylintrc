@@ -106,9 +106,13 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 # Tells whether we should check for unused import in __init__ files.
 init-import=no
 
-# A regular expression matching the beginning of the name of unused variables.
-# By default this is _ and dummy but we prefer _ and unused.
-dummy-variables-rgx=_|unused
+# A regular expression matching the name of dummy variables (i.e. expectedly
+# not used).
+dummy-variables-rgx=_+$|(_[a-zA-Z0-9_]*[a-zA-Z0-9]+?$)|dummy|^ignored_|^unused_
+
+# Argument names that match this expression will be ignored. Default to name
+# with leading underscore
+ignored-argument-names=_.*|^ignored_|^unused_
 
 # List of additional names supposed to be defined in builtins. Remember that
 # you should avoid to define new builtins when possible.
