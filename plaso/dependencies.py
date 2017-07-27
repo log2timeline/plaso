@@ -13,7 +13,7 @@ import re
 # Where version_attribute_name is either a name of an attribute,
 # property or method.
 PYTHON_DEPENDENCIES = {
-    u'artifacts': (u'__version__', u'20150409', None, True),
+    u'artifacts': (u'__version__', u'20161022', None, True),
     # The bencode module does not appear to have version information.
     u'bencode': (u'', u'', None, True),
     u'binplist': (u'__version__', u'0.1.4', None, True),

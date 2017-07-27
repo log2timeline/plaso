@@ -4,83 +4,76 @@
 
 import unittest
 
+from artifacts import reader as artifacts_reader
+from artifacts import registry as artifacts_registry
+
+from plaso.engine import knowledge_base
 from plaso.preprocessors import interface
 from plaso.preprocessors import manager
 
+from tests import test_lib as shared_test_lib
 
-class TestFileSystemPreprocessPlugin(interface.FileSystemPreprocessPlugin):
-  """Test file system preprocess plugin."""
 
-  def Run(self, unused_searcher, unused_knowledge_base):
-    """Runs the plugin to determine the value of the preprocessing attribute.
+class TestArtifactPreprocessorPlugin(interface.ArtifactPreprocessorPlugin):
+  """Test artifact preprocessor plugin."""
+
+  ARTIFACT_DEFINITION_NAME = u'TestArtifactDefinition'
+
+  def ParseValueData(self, unused_knowledge_base, unused_value_data):
+    """Parses artifact value data for a preprocessing attribute.
 
     Args:
-      searcher (dfvfs.FileSystemSearcher): file system searcher.
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      value_data (object): artifact value data.
     """
     return
 
 
-class TestWindowsRegistryKeyPreprocessPlugin(
-    interface.WindowsRegistryKeyPreprocessPlugin):
-  """Test Windows Registry key preprocess plugin."""
-
-  def _ParseKey(self, unused_knowledge_base, unused_registry_key):
-    """Parses a Windows Registry key for a preprocessing attribute.
-
-    Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
-      registry_key (WinRegistryKey): Windows Registry key.
-    """
-    return
-
-
-class PreprocessPluginsManagerTest(unittest.TestCase):
+class PreprocessPluginsManagerTest(shared_test_lib.BaseTestCase):
   """Tests for the preprocess plugins manager."""
 
   # pylint: disable=protected-access
 
-  def testRegistrationFileSystemPreprocessPlugin(self):
-    """Tests the RegisterPlugin and DeregisterPlugin functions."""
-    number_of_plugins = len(
-        manager.PreprocessPluginsManager._file_system_plugin_classes)
+  @shared_test_lib.skipUnlessHasTestFile([u'artifacts'])
+  def testCollectFromFileSystem(self):
+    """Tests the CollectFromFileSystem function."""
+    path = self._GetTestFilePath([u'artifacts'])
+    registry = artifacts_registry.ArtifactDefinitionsRegistry()
+    reader = artifacts_reader.YamlArtifactsReader()
+    registry.ReadFromDirectory(reader, path)
+
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+
+    _ = knowledge_base_object
+
+    # TODO: implement.
+    # manager.PreprocessPluginsManager.CollectFromFileSystem(
+    #     registry, knowledge_base_object, None, None)
+
+  # TODO: add tests for CollectFromWindowsRegistry
+  # TODO: add tests for GetNames
+
+  def testRegistrationPlugin(self):
+    """Tests RegisterPlugin and DeregisterPlugin functions."""
+    number_of_plugins = len(manager.PreprocessPluginsManager._plugins)
 
     manager.PreprocessPluginsManager.RegisterPlugin(
-        TestFileSystemPreprocessPlugin)
+        TestArtifactPreprocessorPlugin)
     self.assertEqual(
-        len(manager.PreprocessPluginsManager._file_system_plugin_classes),
-        number_of_plugins + 1)
+        len(manager.PreprocessPluginsManager._plugins), number_of_plugins + 1)
 
     with self.assertRaises(KeyError):
       manager.PreprocessPluginsManager.RegisterPlugin(
-          TestFileSystemPreprocessPlugin)
+          TestArtifactPreprocessorPlugin)
 
     manager.PreprocessPluginsManager.DeregisterPlugin(
-        TestFileSystemPreprocessPlugin)
+        TestArtifactPreprocessorPlugin)
     self.assertEqual(
-        len(manager.PreprocessPluginsManager._file_system_plugin_classes),
-        number_of_plugins)
+        len(manager.PreprocessPluginsManager._plugins), number_of_plugins)
 
-  def testRegistrationWindowsRegistryKeyPreprocessPlugin(self):
-    """Tests the RegisterPlugin and DeregisterPlugin functions."""
-    number_of_plugins = len(
-        manager.PreprocessPluginsManager._registry_plugin_classes)
+  # TODO: add tests for RegisterPlugins
 
-    manager.PreprocessPluginsManager.RegisterPlugin(
-        TestWindowsRegistryKeyPreprocessPlugin)
-    self.assertEqual(
-        len(manager.PreprocessPluginsManager._registry_plugin_classes),
-        number_of_plugins + 1)
-
-    with self.assertRaises(KeyError):
-      manager.PreprocessPluginsManager.RegisterPlugin(
-          TestWindowsRegistryKeyPreprocessPlugin)
-
-    manager.PreprocessPluginsManager.DeregisterPlugin(
-        TestWindowsRegistryKeyPreprocessPlugin)
-    self.assertEqual(
-        len(manager.PreprocessPluginsManager._registry_plugin_classes),
-        number_of_plugins)
+  # TODO: add tests for RunPlugins
 
 
 if __name__ == '__main__':
