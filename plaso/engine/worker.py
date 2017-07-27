@@ -25,9 +25,10 @@ from plaso.lib import errors
 class EventExtractionWorker(object):
   """Event extraction worker.
 
-  The event extraction worker determines which parser are suitable for parsing
-  a particular file entry or data stream. All extracted data is passed to
-  the parser mediator for further processing.
+  The event extraction worker determines which parsers are suitable for parsing
+  a particular file entry or data stream. The parsers extract relevant data from
+  file system and or file content data. All extracted data is passed to the
+  parser mediator for further processing.
 
   Attributes:
     last_activity_timestamp (int): timestamp received that indicates the last

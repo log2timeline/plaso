@@ -203,7 +203,7 @@ class FakeStorageWriter(interface.StorageWriter):
       FakeStorageWriter: storage writer.
 
     Raises:
-      IOError: if the task storage already exist.
+      IOError: if the task storage already exists.
     """
     if task.identifier in self._task_storage_writers:
       raise IOError(u'Storage writer for task: {0:s} already exists.'.format(

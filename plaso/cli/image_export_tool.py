@@ -561,21 +561,20 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     argument_group.add_argument(
         u'-x', u'--extensions', dest=u'extensions_string', action=u'store',
         type=str, metavar=u'EXTENSIONS', help=(
-            u'Filter based on file name extensions. This option accepts '
-            u'multiple multiple comma separated values e.g. "csv,docx,pst".'))
+            u'Filter on file name extensions. This option accepts multiple '
+            u'multiple comma separated values e.g. "csv,docx,pst".'))
 
     argument_group.add_argument(
         u'--names', dest=u'names_string', action=u'store',
         type=str, metavar=u'NAMES', help=(
-            u'If the purpose is to find all files given a certain names '
-            u'this options should be used. This option accepts a comma '
-            u'separated string denoting all file names, e.g. -x '
+            u'Filter on file names.  This option accepts a comma separated '
+            u'string denoting all file names, e.g. -x '
             u'"NTUSER.DAT,UsrClass.dat".'))
 
     argument_group.add_argument(
         u'--signatures', dest=u'signature_identifiers', action=u'store',
         type=str, metavar=u'IDENTIFIERS', help=(
-            u'Filter based on file format signature identifiers. This option '
+            u'Filter on file format signature identifiers. This option '
             u'accepts multiple comma separated values e.g. "esedb,lnk". '
             u'Use "list" to show an overview of the supported file format '
             u'signatures.'))
