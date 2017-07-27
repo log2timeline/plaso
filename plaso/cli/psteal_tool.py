@@ -550,6 +550,10 @@ class PstealTool(
     Raises:
       BadConfigOption: if the options are invalid.
     """
+    # The extraction options are dependent on the data location.
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'data_location'])
+
     # Check the list options first otherwise required options will raise.
 
     # The output modules options are dependent on the preferred language
@@ -575,8 +579,8 @@ class PstealTool(
     self._ParseInformationalOptions(options)
 
     argument_helper_names = [
-        u'artifact_definitions', u'data_location', u'extraction',
-        u'status_view', u'storage_file', u'yara_rules']
+        u'artifact_definitions', u'extraction', u'status_view', u'storage_file',
+        u'yara_rules']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
