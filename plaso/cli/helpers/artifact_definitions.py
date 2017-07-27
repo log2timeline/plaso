@@ -2,6 +2,7 @@
 """The artifact definitions CLI arguments helper."""
 
 import os
+import sys
 
 from artifacts import errors as artifacts_errors
 from artifacts import reader as artifacts_reader
@@ -57,14 +58,23 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           u'Configuration object is not an instance of CLITool')
 
-    path = getattr(options, u'artifact_definitions_path', None)
+    artifacts_path = getattr(options, u'artifact_definitions_path', None)
 
     data_location = getattr(configuration_object, u'_data_location', None)
-    if (not path or not os.path.exists(path)) and data_location:
-      path = os.path.dirname(data_location)
-      path = os.path.join(path, u'artifacts')
+    if ((not artifacts_path or not os.path.exists(artifacts_path)) and
+        data_location):
+      artifacts_path = os.path.dirname(data_location)
+      artifacts_path = os.path.join(artifacts_path, u'artifacts')
 
-    if not path or not os.path.exists(path):
+      if not os.path.exists(artifacts_path):
+        artifacts_path = os.path.join(sys.prefix, u'share', u'artifacts')
+      if not os.path.exists(artifacts_path):
+        artifacts_path = os.path.join(
+            sys.prefix, u'local', u'share', u'artifacts')
+      if not os.path.exists(artifacts_path):
+        artifacts_path = None
+
+    if not artifacts_path or not os.path.exists(artifacts_path):
       raise errors.BadConfigOption(
           u'Unable to determine path to artifact definitions.')
 
@@ -72,12 +82,12 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
     reader = artifacts_reader.YamlArtifactsReader()
 
     try:
-      registry.ReadFromDirectory(reader, path)
+      registry.ReadFromDirectory(reader, artifacts_path)
 
     except (KeyError, artifacts_errors.FormatError) as exception:
       raise errors.BadConfigOption((
           u'Unable to read artifact definitions from: {0:s} with error: '
-          u'{1!s}').format(path, exception))
+          u'{1!s}').format(artifacts_path, exception))
 
     for name in preprocessors_manager.PreprocessPluginsManager.GetNames():
       if not registry.GetDefinitionByName(name):

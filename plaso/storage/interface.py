@@ -851,8 +851,7 @@ class StorageWriter(object):
       task (Task): task.
 
     Raises:
-      IOError: if the storage type is not supported or
-          if the temporary path for the task storage does no exist.
+      NotImplementedError: since there is no implementation.
     """
     raise NotImplementedError()
 

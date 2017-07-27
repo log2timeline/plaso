@@ -728,7 +728,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._enable_sigsegv_handler = enable_sigsegv_handler
     self._number_of_worker_processes = number_of_worker_processes
     self._worker_memory_limit = (
-        worker_memory_limit or self._DEFAULT_WORKER_MEMORY_LIMIT)
+        worker_memory_limit or definitions.DEFAULT_WORKER_MEMORY_LIMIT)
 
     # Keep track of certain values so we can spawn new extraction workers.
     self._processing_configuration = processing_configuration
@@ -837,7 +837,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     # Reset values.
     self._enable_sigsegv_handler = None
     self._number_of_worker_processes = None
-    self._worker_memory_limit = self._DEFAULT_WORKER_MEMORY_LIMIT
+    self._worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
 
     self._processing_configuration = None
 
