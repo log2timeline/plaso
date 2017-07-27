@@ -27,7 +27,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       u'Test argument parser.',
       u''])
 
-  _STORAGE_FILENAME_TEMPLATE = ur'\d{{8}}T\d{{6}}-{filename}.plaso'
+  _STORAGE_FILENAME_TEMPLATE = r'\d{{8}}T\d{{6}}-{filename}.plaso'
 
   def testGenerateStorageFileName(self):
     """Tests the _GenerateStorageFileName function."""

@@ -31,6 +31,7 @@ class TestAnalysisPlugin(interface.AnalysisPlugin):
     """
     return
 
+  # pylint: disable=arguments-differ
   def ExamineEvent(self, unused_mediator, unused_event, **unused_kwargs):
     """Analyzes an event object.
 

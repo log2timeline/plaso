@@ -18,9 +18,6 @@ from plaso import filters  # pylint: disable=unused-import
 # The following import makes sure the output modules are registered.
 from plaso import output  # pylint: disable=unused-import
 
-# The following import makes sure the output modules are registered.
-from plaso import output   # pylint: disable=unused-import
-
 from plaso.cli import status_view
 from plaso.cli import storage_media_tool
 from plaso.cli import tool_options
@@ -429,10 +426,11 @@ class PstealTool(
         extraction_engine.knowledge_base.SetTimeZone(
             session.preferred_time_zone)
       except ValueError:
+        # pylint: disable=protected-access
         logging.warning(
             u'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
                 session.preferred_time_zone,
-                extraction_engine.knowledge_base.time_zone.zone))
+                extraction_engine.knowledge_base._time_zone.zone))
 
     filter_find_specs = None
     if configuration.filter_file:

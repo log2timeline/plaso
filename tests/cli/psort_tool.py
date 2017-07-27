@@ -41,6 +41,7 @@ class TestOutputModuleArgumentHelper(helpers_interface.ArgumentsHelper):
     """Mock the add argument section."""
     pass
 
+  # pylint: disable=arguments-differ
   @classmethod
   def ParseOptions(cls, options, output_module):
     """Provide a test parse options section."""

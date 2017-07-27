@@ -43,7 +43,7 @@ class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
             u' the default fields, which are {0:s}.'.format(default_fields)))
 
   @classmethod
-  def ParseOptions(cls, options, output_module):
+  def ParseOptions(cls, options, output_module):  # pylint: disable=arguments-differ
     """Parses and validates options.
 
     Args:

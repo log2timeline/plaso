@@ -21,7 +21,6 @@ from plaso import output  # pylint: disable=unused-import
 from plaso.cli import extraction_tool
 from plaso.cli import logging_filter
 from plaso.cli import status_view
-from plaso.cli import logging_filter as logging_filter
 from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
@@ -590,10 +589,11 @@ class Log2TimelineTool(
         extraction_engine.knowledge_base.SetTimeZone(
             session.preferred_time_zone)
       except ValueError:
+        # pylint: disable=protected-access
         logging.warning(
             u'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
                 session.preferred_time_zone,
-                extraction_engine.knowledge_base.time_zone.zone))
+                extraction_engine.knowledge_base._time_zone.zone))
 
     filter_find_specs = None
     if configuration.filter_file:

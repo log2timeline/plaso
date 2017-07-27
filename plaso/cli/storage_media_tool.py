@@ -829,7 +829,7 @@ class StorageMediaTool(tools.CLITool):
       raise errors.SourceScannerError(u'Invalid or missing volume scan node.')
 
     selected_vss_stores = []
-    if len(volume_scan_node.sub_nodes) == 0:
+    if not volume_scan_node.sub_nodes:
       self._ScanVolumeScanNode(
           scan_context, volume_scan_node, selected_vss_stores)
 
