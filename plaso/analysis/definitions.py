@@ -12,5 +12,5 @@ PLUGIN_TYPE_STATISTICS = 2
 # Plugin that annotates (or tags) event objects.
 PLUGIN_TYPE_ANNOTATION = 3
 
-# Pluging that provides summary information.
+# Plugin that provides summary information.
 PLUGIN_TYPE_REPORT = 4

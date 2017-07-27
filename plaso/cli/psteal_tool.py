@@ -118,6 +118,7 @@ class PstealTool(
     super(PstealTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._analysis_plugins = None
+    self._artifacts_registry = None
     self._command_line_arguments = None
     self._deduplicate_events = True
     self._enable_sigsegv_handler = False
@@ -202,7 +203,8 @@ class PstealTool(
 
     try:
       extraction_engine.PreprocessSources(
-          self._source_path_specs, resolver_context=self._resolver_context)
+          self._artifacts_registry, self._source_path_specs,
+          resolver_context=self._resolver_context)
 
     except IOError as exception:
       logging.error(u'Unable to preprocess with error: {0:s}'.format(exception))
@@ -548,6 +550,10 @@ class PstealTool(
     Raises:
       BadConfigOption: if the options are invalid.
     """
+    # The extraction options are dependent on the data location.
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'data_location'])
+
     # Check the list options first otherwise required options will raise.
 
     # The output modules options are dependent on the preferred language
@@ -573,8 +579,8 @@ class PstealTool(
     self._ParseInformationalOptions(options)
 
     argument_helper_names = [
-        u'artifact_definitions', u'data_location', u'extraction',
-        u'status_view', u'storage_file', u'yara_rules']
+        u'artifact_definitions', u'extraction', u'status_view', u'storage_file',
+        u'yara_rules']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 

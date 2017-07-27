@@ -111,18 +111,21 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.source = self._GetTestFilePath([u'testdir'])
     options.storage_file = u'storage.plaso'
 
     test_tool.ParseOptions(options)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
 
     # ParseOptions will raise if source is not set.
     with self.assertRaises(errors.BadConfigOption):
       test_tool.ParseOptions(options)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.source = self._GetTestFilePath([u'testdir'])
 
     with self.assertRaises(errors.BadConfigOption):
@@ -136,6 +139,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.quiet = True
     options.single_process = True
     options.status_view_mode = u'none'
@@ -167,6 +171,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.credentials = [u'password:{0:s}'.format(self._BDE_PASSWORD)]
     options.quiet = True
     options.single_process = True
@@ -199,6 +204,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.quiet = True
     options.single_process = True
     options.status_view_mode = u'none'
@@ -230,6 +236,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.partitions = u'all'
     options.quiet = True
     options.single_process = True
@@ -263,6 +270,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.quiet = True
     options.single_process = True
     options.status_view_mode = u'none'
@@ -299,6 +307,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.quiet = True
     options.single_process = True
     options.status_view_mode = u'none'
@@ -330,6 +339,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.quiet = True
     options.parsers = u'filestat,pe'
     options.single_process = True
@@ -361,9 +371,12 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.show_info = True
+
     test_tool.ParseOptions(options)
     test_tool.ShowInfo()
+
     output = output_writer.ReadOutput()
 
     section_headings = [

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The artifact definitions CLI arguments helper."""
 
+import os
+
 from artifacts import errors as artifacts_errors
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
@@ -9,6 +11,7 @@ from plaso.cli import tools
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
 from plaso.lib import errors
+from plaso.preprocessors import manager as preprocessors_manager
 
 
 class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
@@ -48,25 +51,38 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the configuration object is of the wrong type.
+      BadConfigOption: if the required artifact definitions are not defined.
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
           u'Configuration object is not an instance of CLITool')
 
-    registry = None
-
     path = getattr(options, u'artifact_definitions_path', None)
-    if path:
-      registry = artifacts_registry.ArtifactDefinitionsRegistry()
-      reader = artifacts_reader.YamlArtifactsReader()
 
-      try:
-        registry.ReadFromDirectory(reader, path)
+    data_location = getattr(configuration_object, u'_data_location', None)
+    if (not path or not os.path.exists(path)) and data_location:
+      path = os.path.dirname(data_location)
+      path = os.path.join(path, u'artifacts')
 
-      except (KeyError, artifacts_errors.FormatError) as exception:
-        raise errors.BadConfigObject((
-            u'Unable to read artifact definitions from: {0:s} with error: '
-            u'{1!s}').format(path, exception))
+    if not path or not os.path.exists(path):
+      raise errors.BadConfigOption(
+          u'Unable to determine path to artifact definitions.')
+
+    registry = artifacts_registry.ArtifactDefinitionsRegistry()
+    reader = artifacts_reader.YamlArtifactsReader()
+
+    try:
+      registry.ReadFromDirectory(reader, path)
+
+    except (KeyError, artifacts_errors.FormatError) as exception:
+      raise errors.BadConfigOption((
+          u'Unable to read artifact definitions from: {0:s} with error: '
+          u'{1!s}').format(path, exception))
+
+    for name in preprocessors_manager.PreprocessPluginsManager.GetNames():
+      if not registry.GetDefinitionByName(name):
+        raise errors.BadConfigOption(
+            u'Missing required artifact definition: {0:s}'.format(name))
 
     setattr(configuration_object, u'_artifacts_registry', registry)
 

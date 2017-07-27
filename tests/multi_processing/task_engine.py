@@ -5,6 +5,8 @@
 import os
 import unittest
 
+from artifacts import reader as artifacts_reader
+from artifacts import registry as artifacts_registry
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
@@ -22,6 +24,11 @@ class TaskMultiProcessEngineTest(shared_test_lib.BaseTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testProcessSources(self):
     """Tests the PreprocessSources and ProcessSources function."""
+    registry = artifacts_registry.ArtifactDefinitionsRegistry()
+    reader = artifacts_reader.YamlArtifactsReader()
+    path = shared_test_lib.GetTestFilePath([u'artifacts'])
+    registry.ReadFromDirectory(reader, path)
+
     test_engine = task_engine.TaskMultiProcessEngine(
         maximum_number_of_tasks=100)
 
@@ -32,7 +39,7 @@ class TaskMultiProcessEngineTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=os_path_spec)
 
-    test_engine.PreprocessSources([source_path_spec])
+    test_engine.PreprocessSources(registry, [source_path_spec])
 
     session = sessions.Session()
 

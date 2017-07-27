@@ -69,6 +69,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
 
     # Test when the output file is missing.
     expected_error = (u'Output format: dynamic requires an output file')
@@ -118,6 +119,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.quiet = True
     options.status_view_mode = u'none'
     options.source = self._GetTestFilePath([u'testdir'])
@@ -152,6 +154,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.credentials = [u'password:{0:s}'.format(self._BDE_PASSWORD)]
     options.quiet = True
     options.source = self._GetTestFilePath([u'bdetogo.raw'])
@@ -184,6 +187,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.quiet = True
     options.status_view_mode = u'none'
     options.source = self._GetTestFilePath([u'ímynd.dd'])
@@ -216,6 +220,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.partitions = u'all'
     options.quiet = True
     options.status_view_mode = u'none'
@@ -249,6 +254,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.quiet = True
     options.single_process = True
     options.status_view_mode = u'none'
@@ -286,6 +292,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.quiet = True
     options.status_view_mode = u'none'
     options.source = self._GetTestFilePath([u'System.evtx'])
@@ -317,6 +324,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.storage_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     options.source = u'unused_source'
 
