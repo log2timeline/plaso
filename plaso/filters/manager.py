@@ -7,7 +7,7 @@ from plaso.lib import errors
 
 
 class FiltersManager(object):
-  """Class that implements the filters manager."""
+  """Filters manager."""
 
   _filter_classes = {}
 

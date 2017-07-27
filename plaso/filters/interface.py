@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The filter interface classes."""
+"""Filter interface."""
 
 import abc
 
@@ -8,7 +8,7 @@ from plaso.lib import pfilter
 
 
 class FilterObject(object):
-  """The filter interface class."""
+  """The filter object interface."""
 
   def __init__(self):
     """Initializes a filter object."""
@@ -18,23 +18,23 @@ class FilterObject(object):
 
   @property
   def fields(self):
-    """Return a list of fields for adaptive output modules."""
+    """list[str]: name of the fields."""
     return []
 
   @property
   def filter_expression(self):
-    """Return the compiled filter expression or None if not compiled."""
+    """object: compiled filter expression or None."""
     if self._filter_expression:
       return self._filter_expression
 
   @property
   def filter_name(self):
-    """Return the name of the filter."""
+    """str: name of the filter."""
     return self.__class__.__name__
 
   @property
   def limit(self):
-    """The row limit."""
+    """int: row limit."""
     return 0
 
   @property
@@ -49,7 +49,7 @@ class FilterObject(object):
       filter_expression: string that contains the filter expression.
 
     Returns:
-      A filter object (instance of objectfilter.TODO) or None.
+      object: filter or None.
     """
     try:
       parser = pfilter.BaseParser(filter_expression).Parse()
@@ -63,19 +63,19 @@ class FilterObject(object):
     """Compiles the filter expression.
 
     Args:
-      filter_expression: string that contains the filter expression.
+      filter_expression (str): filter expression.
 
     Raises:
       WrongPlugin: if the filter could not be compiled.
     """
 
-  def Match(self, unused_event_object):
-    """Determines if an event object matches the filter.
+  def Match(self, unused_event):
+    """Determines if an event matches the filter.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A boolean value that indicates a match.
+      bool: True if the there is a match.
     """
     return False
