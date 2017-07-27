@@ -6,8 +6,6 @@ import logging
 import os
 import textwrap
 
-from artifacts import reader as artifacts_reader
-from artifacts import registry as artifacts_registry
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
@@ -21,7 +19,7 @@ from plaso.engine import extractors
 from plaso.engine import knowledge_base
 from plaso.engine import path_helper
 from plaso.filters import file_entry as file_entry_filters
-from plaso.frontend import utils
+from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
 from plaso.lib import specification
 from plaso.preprocessors import manager as preprocess_manager
@@ -72,11 +70,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     super(ImageExportTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._abort = False
+    self._artifacts_registry = None
     self._destination_path = None
     self._digests = {}
     self._filter_collection = file_entry_filters.FileEntryFilterCollection()
     self._filter_file = None
-    self._knowledge_base = None
+    self._knowledge_base = knowledge_base.KnowledgeBase()
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._resolver_context = context.Context()
     self._skip_duplicates = True
@@ -312,7 +311,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           u'Extracting file entries from: {0:s}\n'.format(display_name))
 
       environment_variables = self._knowledge_base.GetEnvironmentVariables()
-      find_specs = utils.BuildFindSpecsFromFile(
+      find_specs = frontend_utils.BuildFindSpecsFromFile(
           filter_file_path, environment_variables=environment_variables)
 
       searcher = file_system_searcher.FileSystemSearcher(
@@ -357,52 +356,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     return file_system, mount_point
 
-  def _ParseDateFilters(self, date_filters):
-    """Parses the date filters.
-
-    A date filter string is formatted as 3 comma separated values:
-    time value, start date and time (string) and end date and time (string)
-
-    The time value and either a start or end date and time is required.
-
-    The date and time strings are formatted as:
-    YYYY-MM-DD hh:mm:ss.######[+-]##:##
-    Where # are numeric digits ranging from 0 to 9 and the seconds
-    fraction can be either 3 or 6 digits. The time of day, seconds fraction
-    and timezone offset are optional. The default timezone is UTC.
-
-    Args:
-      date_filters (list[str]): date filter definitions.
-
-    Raises:
-      ValueError: if the date filter definitions are invalid.
-    """
-    if not date_filters:
-      return
-
-    file_entry_filter = file_entry_filters.DateTimeFileEntryFilter()
-
-    for date_filter in date_filters:
-      date_filter_pieces = date_filter.split(u',')
-      if len(date_filter_pieces) != 3:
-        raise ValueError(
-            u'Badly formed date filter: {0:s}'.format(date_filter))
-
-      time_value, start_time_string, end_time_string = date_filter_pieces
-      time_value = time_value.strip()
-      start_time_string = start_time_string.strip()
-      end_time_string = end_time_string.strip()
-
-      try:
-        file_entry_filter.AddDateTimeRange(
-            time_value, start_time_string=start_time_string,
-            end_time_string=end_time_string)
-      except ValueError:
-        raise ValueError(
-            u'Badly formed date filter: {0:s}'.format(date_filter))
-
-    self._filter_collection.AddFilter(file_entry_filter)
-
   def _ParseExtensionsString(self, extensions_string):
     """Parses the extensions string.
 
@@ -432,6 +385,37 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     file_entry_filter = file_entry_filters.NamesFileEntryFilter(names)
     self._filter_collection.AddFilter(file_entry_filter)
 
+  def _ParseFilterOptions(self, options):
+    """Parses the filter options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    names = [u'date_filters', u'filter_file']
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=names)
+
+    extensions_string = self.ParseStringOption(options, u'extensions_string')
+    self._ParseExtensionsString(extensions_string)
+
+    names_string = getattr(options, u'names_string', None)
+    self._ParseNamesString(names_string)
+
+    signature_identifiers = getattr(options, u'signature_identifiers', None)
+    try:
+      self._ParseSignatureIdentifiers(
+          self._data_location, signature_identifiers)
+    except (IOError, ValueError) as exception:
+      raise errors.BadConfigOption(exception)
+
+    if self._filter_file:
+      self.has_filters = True
+    else:
+      self.has_filters = self._filter_collection.HasFilters()
+
   def _ParseSignatureIdentifiers(self, data_location, signature_identifiers):
     """Parses the signature identifiers.
 
@@ -442,7 +426,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     Raises:
       IOError: if the format specification file could not be read from
-               the specified data location.
+          the specified data location.
       ValueError: if no data location was specified.
     """
     if not signature_identifiers:
@@ -478,22 +462,17 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       mount_point (dfvfs.PathSpec): mount point path specification that refers
           to the base location of the file system.
     """
-    if self._knowledge_base is not None:
-      return
+    logging.debug(u'Starting preprocessing.')
 
-    registry = artifacts_registry.ArtifactDefinitionsRegistry()
-    reader = artifacts_reader.YamlArtifactsReader()
-    # TODO: remove hard coded path.
-    artifacts_definitions_directory = u'{0:s}{1:s}'.format(
-        os.path.sep, os.path.join(u'usr', u'share', u'artifacts'))
-    registry.ReadFromDirectory(reader, artifacts_definitions_directory)
+    try:
+      preprocess_manager.PreprocessPluginsManager.RunPlugins(
+          self._artifacts_registry, file_system, mount_point,
+          self._knowledge_base)
 
-    self._knowledge_base = knowledge_base.KnowledgeBase()
+    except IOError as exception:
+      logging.error(u'Unable to preprocess with error: {0:s}'.format(exception))
 
-    logging.debug(u'Preprocessing.')
-
-    preprocess_manager.PreprocessPluginsManager.RunPlugins(
-        registry, file_system, mount_point, self._knowledge_base)
+    logging.debug(u'Preprocessing done.')
 
   def _ReadSpecificationFile(self, path):
     """Reads the format specification file.
@@ -569,6 +548,38 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     finally:
       source_file_object.close()
 
+  def AddFilterOptions(self, argument_group):
+    """Adds the filter options to the argument group.
+
+    Args:
+      argument_group (argparse._ArgumentGroup): argparse argument group.
+    """
+    names = [u'date_filters', u'filter_file']
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_group, names=names)
+
+    argument_group.add_argument(
+        u'-x', u'--extensions', dest=u'extensions_string', action=u'store',
+        type=str, metavar=u'EXTENSIONS', help=(
+            u'Filter based on file name extensions. This option accepts '
+            u'multiple multiple comma separated values e.g. "csv,docx,pst".'))
+
+    argument_group.add_argument(
+        u'--names', dest=u'names_string', action=u'store',
+        type=str, metavar=u'NAMES', help=(
+            u'If the purpose is to find all files given a certain names '
+            u'this options should be used. This option accepts a comma '
+            u'separated string denoting all file names, e.g. -x '
+            u'"NTUSER.DAT,UsrClass.dat".'))
+
+    argument_group.add_argument(
+        u'--signatures', dest=u'signature_identifiers', action=u'store',
+        type=str, metavar=u'IDENTIFIERS', help=(
+            u'Filter based on file format signature identifiers. This option '
+            u'accepts multiple comma separated values e.g. "esedb,lnk". '
+            u'Use "list" to show an overview of the supported file format '
+            u'signatures.'))
+
   def ListSignatureIdentifiers(self):
     """Lists the signature identifier.
 
@@ -614,59 +625,21 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self.AddBasicOptions(argument_parser)
     self.AddInformationalOptions(argument_parser)
 
+    names = [u'artifact_definitions', u'data_location']
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_parser, names=[u'data_location'])
+        argument_parser, names=names)
 
     self.AddLogFileOptions(argument_parser)
+
+    self.AddStorageMediaImageOptions(argument_parser)
+    self.AddVSSProcessingOptions(argument_parser)
+
+    self.AddFilterOptions(argument_parser)
 
     argument_parser.add_argument(
         u'-w', u'--write', action=u'store', dest=u'path', type=str,
         metavar=u'PATH', default=u'export', help=(
             u'The directory in which extracted files should be stored.'))
-
-    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_parser, names=[u'filter_file'])
-
-    argument_parser.add_argument(
-        u'--date-filter', u'--date_filter', action=u'append', type=str,
-        dest=u'date_filters', metavar=u'TYPE_START_END', default=[], help=(
-            u'Filter based on file entry date and time ranges. This parameter '
-            u'is formatted as "TIME_VALUE,START_DATE_TIME,END_DATE_TIME" where '
-            u'TIME_VALUE defines which file entry timestamp the filter applies '
-            u'to e.g. atime, ctime, crtime, bkup, etc. START_DATE_TIME and '
-            u'END_DATE_TIME define respectively the start and end of the date '
-            u'time range. A date time range requires at minimum start or end '
-            u'to time of the boundary and END defines the end time. Both '
-            u'timestamps be set. The date time values are formatted as: '
-            u'YYYY-MM-DD hh:mm:ss.######[+-]##:## Where # are numeric digits '
-            u'ranging from 0 to 9 and the seconds fraction can be either 3 '
-            u'or 6 digits. The time of day, seconds fraction and timezone '
-            u'offset are optional. The default timezone is UTC. E.g. "atime, '
-            u'2013-01-01 23:12:14, 2013-02-23". This parameter can be repeated '
-            u'as needed to add additional date date boundaries, e.g. once for '
-            u'atime, once for crtime, etc.'))
-
-    argument_parser.add_argument(
-        u'-x', u'--extensions', dest=u'extensions_string', action=u'store',
-        type=str, metavar=u'EXTENSIONS', help=(
-            u'Filter based on file name extensions. This option accepts '
-            u'multiple multiple comma separated values e.g. "csv,docx,pst".'))
-
-    argument_parser.add_argument(
-        u'--names', dest=u'names_string', action=u'store',
-        type=str, metavar=u'NAMES', help=(
-            u'If the purpose is to find all files given a certain names '
-            u'this options should be used. This option accepts a comma '
-            u'separated string denoting all file names, e.g. -x '
-            u'"NTUSER.DAT,UsrClass.dat".'))
-
-    argument_parser.add_argument(
-        u'--signatures', dest=u'signature_identifiers', action=u'store',
-        type=str, metavar=u'IDENTIFIERS', help=(
-            u'Filter based on file format signature identifiers. This option '
-            u'accepts multiple comma separated values e.g. "esedb,lnk". '
-            u'Use "list" to show an overview of the supported file format '
-            u'signatures.'))
 
     argument_parser.add_argument(
         u'--include_duplicates', dest=u'include_duplicates',
@@ -675,9 +648,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             u'is calculated for each file. These hashes are compared to the '
             u'previously exported files and duplicates are skipped. Use '
             u'this option to include duplicate files in the export.'))
-
-    self.AddStorageMediaImageOptions(argument_parser)
-    self.AddVSSProcessingOptions(argument_parser)
 
     argument_parser.add_argument(
         self._SOURCE_OPTION, nargs='?', action=u'store', metavar=u'IMAGE',
@@ -750,39 +720,17 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._destination_path = self.ParseStringOption(
         options, u'path', default_value=u'export')
 
+    if not self._data_location:
+      logging.warning(u'Unable to automatically determine data location.')
+
     helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=[u'filter_file'])
+        options, self, names=[u'artifact_definitions'])
+
+    self._ParseFilterOptions(options)
 
     if (getattr(options, u'no_vss', False) or
         getattr(options, u'include_duplicates', False)):
       self._skip_duplicates = False
-
-    date_filters = getattr(options, u'date_filters', None)
-    try:
-      self._ParseDateFilters(date_filters)
-    except ValueError as exception:
-      raise errors.BadConfigOption(exception)
-
-    extensions_string = self.ParseStringOption(options, u'extensions_string')
-    self._ParseExtensionsString(extensions_string)
-
-    names_string = getattr(options, u'names_string', None)
-    self._ParseNamesString(names_string)
-
-    if not self._data_location:
-      logging.warning(u'Unable to automatically determine data location.')
-
-    signature_identifiers = getattr(options, u'signature_identifiers', None)
-    try:
-      self._ParseSignatureIdentifiers(
-          self._data_location, signature_identifiers)
-    except (IOError, ValueError) as exception:
-      raise errors.BadConfigOption(exception)
-
-    if self._filter_file:
-      self.has_filters = True
-    else:
-      self.has_filters = self._filter_collection.HasFilters()
 
   def PrintFilterCollection(self):
     """Prints the filter collection."""

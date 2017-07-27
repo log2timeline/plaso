@@ -106,7 +106,6 @@ class Log2TimelineTool(
     """
     super(Log2TimelineTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
-    self._artifacts_registry = None
     self._command_line_arguments = None
     self._enable_sigsegv_handler = False
     self._number_of_extraction_workers = 0
