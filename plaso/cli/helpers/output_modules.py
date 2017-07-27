@@ -38,6 +38,8 @@ class OutputModulesArgumentsHelper(interface.ArgumentsHelper):
         u'-w', u'--write', metavar=u'OUTPUT_FILE', dest=u'write',
         help=u'Output filename.')
 
+    # TODO: determine if this is repeated elsewhere and refactor this into
+    # a helper function.
     arguments = sys.argv[1:]
     argument_index = 0
 

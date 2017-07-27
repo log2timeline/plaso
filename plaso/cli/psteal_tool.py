@@ -69,6 +69,7 @@ class PstealTool(
 
   NAME = u'psteal'
 
+  # TODO: is textwrap.dedent or the join really needed here?
   DESCRIPTION = textwrap.dedent(u'\n'.join([
       u'',
       (u'psteal is a command line tool to extract events from individual '),

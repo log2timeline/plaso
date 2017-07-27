@@ -68,15 +68,18 @@ class OutputModulesArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     self.assertEqual(test_tool._output_format, options.output_format)
     self.assertEqual(test_tool._output_filename, options.write)
 
+    # Test with a configuation object missing.
     with self.assertRaises(errors.BadConfigObject):
       output_modules.OutputModulesArgumentsHelper.ParseOptions(options, None)
 
+    # Test with output format missing.
     options = cli_test_lib.TestOptions()
 
     with self.assertRaises(errors.BadConfigOption):
       output_modules.OutputModulesArgumentsHelper.ParseOptions(
           options, test_tool)
 
+    # Test with output file missing.
     options.output_format = u'dynamic'
 
     with self.assertRaises(errors.BadConfigOption):

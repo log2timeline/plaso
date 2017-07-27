@@ -65,6 +65,7 @@ class AnalysisPluginsArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
       analysis_plugins.AnalysisPluginsArgumentsHelper.ParseOptions(
           options, test_tool)
 
+    # TODO: add test for '--analysis list'
     # TODO: improve test coverage.
 
 
