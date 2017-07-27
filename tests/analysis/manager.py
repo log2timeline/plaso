@@ -31,6 +31,7 @@ class TestAnalysisPlugin(interface.AnalysisPlugin):
     """
     return
 
+  # pylint: disable=arguments-differ
   def ExamineEvent(self, unused_mediator, unused_event, **unused_kwargs):
     """Analyzes an event object.
 
@@ -73,6 +74,8 @@ class AnalysisPluginManagerTest(shared_test_lib.BaseTestCase):
     self.assertTrue(u'test_plugin' in plugin_set)
 
     manager.AnalysisPluginManager.DeregisterPlugin(TestAnalysisPlugin)
+
+  # TODO: add tests for GetPluginNames.
 
 
 if __name__ == '__main__':

@@ -7,6 +7,7 @@ import os
 import textwrap
 
 from plaso.cli import storage_media_tool
+from plaso.cli.helpers import manager as helpers_manager
 from plaso.frontend import image_export
 from plaso.lib import errors
 
@@ -29,6 +30,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
   EPILOG = u'And that is how you export files, plaso style.'
 
+  # TODO: remove this redirect.
   _SOURCE_OPTION = u'image'
 
   def __init__(self, input_reader=None, output_writer=None):
@@ -93,7 +95,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     self.AddBasicOptions(argument_parser)
     self.AddInformationalOptions(argument_parser)
-    self.AddDataLocationOption(argument_parser)
+
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_parser, names=[u'data_location'])
+
     self.AddLogFileOptions(argument_parser)
 
     argument_parser.add_argument(
@@ -101,7 +106,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         metavar=u'PATH', default=u'export', help=(
             u'The directory in which extracted files should be stored.'))
 
-    self.AddFilterOptions(argument_parser)
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_parser, names=[u'filter_file'])
+
     argument_parser.add_argument(
         u'--date-filter', u'--date_filter', action=u'append', type=str,
         dest=u'date_filters', metavar=u'TYPE_START_END', default=[], help=(
@@ -190,7 +197,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       BadConfigOption: if the options are invalid.
     """
     # The data location is required to list signatures.
-    self._ParseDataLocationOption(options)
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'data_location'])
 
     # Check the list options first otherwise required options will raise.
     signature_identifiers = self.ParseStringOption(
@@ -201,7 +209,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     if self.list_signature_identifiers:
       return
 
-    super(ImageExportTool, self).ParseOptions(options)
+    self._ParseInformationalOptions(options)
+    self._ParseLogFileOptions(options)
+
+    self._ParseStorageMediaOptions(options)
 
     format_string = (
         u'%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
@@ -214,7 +225,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     else:
       logging_level = logging.INFO
 
-    self.ParseLogFileOptions(options)
     self._ConfigureLogging(
         filename=self._log_file, format_string=format_string,
         log_level=logging_level)
@@ -222,7 +232,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._destination_path = self.ParseStringOption(
         options, u'path', default_value=u'export')
 
-    self._ParseFilterOptions(options)
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'filter_file'])
 
     if (getattr(options, u'no_vss', False) or
         getattr(options, u'include_duplicates', False)):

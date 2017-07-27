@@ -11,29 +11,27 @@ class ArgumentHelperManager(object):
 
   @classmethod
   def AddCommandLineArguments(
-      cls, argument_group, argument_category=None, module_list=None):
+      cls, argument_group, category=None, names=None):
     """Adds command line arguments to a configuration object.
 
     Args:
       argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
           argparse group.
-      argument_category (Optional[str]): category of helpers to apply to
+      category (Optional[str]): category of helpers to apply to
           the group, such as storage, output, where None will apply the
           arguments to all helpers. The category can be used to add arguments
           to a specific group of registered helpers.
-      module_list (Optional[list[str]]): names of argument helpers to apply,
+      names (Optional[list[str]]): names of argument helpers to apply,
           where None will apply the arguments to all helpers.
     """
     # Process the helper classes in alphabetical order this is needed to
     # keep the argument order consistent.
-    for _, helper in sorted(cls._helper_classes.items()):
-      if argument_category and helper.CATEGORY != argument_category:
+    for helper_name, helper_class in sorted(cls._helper_classes.items()):
+      if ((category and helper_class.CATEGORY != category) or
+          (names and helper_name not in names)):
         continue
 
-      if module_list and helper.NAME not in module_list:
-        continue
-
-      helper.AddArguments(argument_group)
+      helper_class.AddArguments(argument_group)
 
   @classmethod
   def DeregisterHelper(cls, helper_class):
@@ -55,25 +53,26 @@ class ArgumentHelperManager(object):
     del cls._helper_classes[helper_name]
 
   @classmethod
-  def GetHelperNames(cls):
-    """Retrieves the registered argument helper names.
-
-    Returns:
-      list[str]: sorted argument helper names.
-    """
-    return sorted(cls._helper_classes.keys())
-
-  @classmethod
-  def ParseOptions(cls, options, config_object):
+  def ParseOptions(cls, options, config_object, category=None, names=None):
     """Parses and validates arguments using the appropriate helpers.
 
     Args:
       options (argparse.Namespace): parser options.
       config_object (object): object to be configured by an argument helper.
+      category (Optional[str]): category of helpers to apply to
+          the group, such as storage, output, where None will apply the
+          arguments to all helpers. The category can be used to add arguments
+          to a specific group of registered helpers.
+      names (Optional[list[str]]): names of argument helpers to apply,
+          where None will apply the arguments to all helpers.
     """
-    for helper in iter(cls._helper_classes.values()):
+    for helper_name, helper_class in cls._helper_classes.items():
+      if ((category and helper_class.CATEGORY != category) or
+          (names and helper_name not in names)):
+        continue
+
       try:
-        helper.ParseOptions(options, config_object)
+        helper_class.ParseOptions(options, config_object)
       except errors.BadConfigObject:
         pass
 

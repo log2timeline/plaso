@@ -37,6 +37,7 @@ class StorageMediaTool(tools.CLITool):
 
   _DEFAULT_BYTES_PER_SECTOR = 512
 
+  # TODO: remove this redirect.
   _SOURCE_OPTION = u'source'
 
   _BINARY_DATA_CREDENTIAL_TYPES = [u'key_data']
@@ -314,32 +315,6 @@ class StorageMediaTool(tools.CLITool):
 
       self._credentials.append((credential_type, credential_data))
 
-  def _ParseFilterOptions(self, options):
-    """Parses the filter options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    filter_file = self.ParseStringOption(options, u'file_filter')
-    if not filter_file:
-      return
-
-    if self._data_location:
-      filter_file_base = os.path.basename(filter_file)
-      filter_file_check = os.path.join(self._data_location, filter_file_base)
-      if os.path.isfile(filter_file_check):
-        self._filter_file = filter_file_check
-        return
-
-    if not os.path.isfile(filter_file):
-      raise errors.BadConfigOption(
-          u'No such collection filter file: {0:s}.'.format(filter_file))
-
-    self._filter_file = filter_file
-
   def _ParsePartitionsString(self, partitions):
     """Parses the user specified partitions string.
 
@@ -392,6 +367,35 @@ class StorageMediaTool(tools.CLITool):
           partition_numbers.append(partition_number)
 
     return sorted(partition_numbers)
+
+  def _ParseSourcePathOption(self, options):
+    """Parses the source path option.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    self._source_path = self.ParseStringOption(options, self._SOURCE_OPTION)
+    if not self._source_path:
+      raise errors.BadConfigOption(u'Missing source path.')
+
+    self._source_path = os.path.abspath(self._source_path)
+
+  def _ParseStorageMediaOptions(self, options):
+    """Parses the storage media options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    self._ParseStorageMediaImageOptions(options)
+    self._ParseVSSProcessingOptions(options)
+    self._ParseCredentialOptions(options)
+    self._ParseSourcePathOption(options)
 
   def _ParseStorageMediaImageOptions(self, options):
     """Parses the storage media image options.
@@ -825,7 +829,7 @@ class StorageMediaTool(tools.CLITool):
       raise errors.SourceScannerError(u'Invalid or missing volume scan node.')
 
     selected_vss_stores = []
-    if len(volume_scan_node.sub_nodes) == 0:
+    if not volume_scan_node.sub_nodes:
       self._ScanVolumeScanNode(
           scan_context, volume_scan_node, selected_vss_stores)
 
@@ -979,20 +983,6 @@ class StorageMediaTool(tools.CLITool):
             u'line arguments can end up in logs, so use this option with '
             u'care.').format(u', '.join(self._SUPPORTED_CREDENTIAL_TYPES)))
 
-  def AddFilterOptions(self, argument_group):
-    """Adds the filter options to the argument group.
-
-    Args:
-      argument_group (argparse._ArgumentGroup): argparse argument group.
-    """
-    argument_group.add_argument(
-        u'-f', u'--file_filter', u'--file-filter', dest=u'file_filter',
-        action=u'store', type=str, default=None, help=(
-            u'List of files to include for targeted collection of files to '
-            u'parse, one line per file path, setup is /path|file - where each '
-            u'element can contain either a variable set in the preprocessing '
-            u'stage or a regular expression.'))
-
   def AddStorageMediaImageOptions(self, argument_group):
     """Adds the storage media image options to the argument group.
 
@@ -1065,26 +1055,6 @@ class StorageMediaTool(tools.CLITool):
             u'separated values). Ranges and lists can also be combined as: '
             u'"1,3..5". The first store is 1. All stores can be defined as: '
             u'"all".'))
-
-  def ParseOptions(self, options):
-    """Parses tool specific options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    super(StorageMediaTool, self).ParseOptions(options)
-    self._ParseStorageMediaImageOptions(options)
-    self._ParseVSSProcessingOptions(options)
-    self._ParseCredentialOptions(options)
-
-    self._source_path = self.ParseStringOption(options, self._SOURCE_OPTION)
-    if not self._source_path:
-      raise errors.BadConfigOption(u'Missing source path.')
-
-    self._source_path = os.path.abspath(self._source_path)
 
   def ScanSource(self):
     """Scans the source path for volume and file systems.

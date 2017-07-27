@@ -20,6 +20,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
+  # TODO: add test for _ClearScreen
   # TODO: add tests for _FormatAnalysisStatusTableRow
   # TODO: add tests for _FormatExtractionStatusTableRow
   # TODO: add tests for _FormatSizeInUnitsOf1024

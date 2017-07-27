@@ -3,6 +3,8 @@
 
 from plaso.lib import py2to3
 
+from plaso.output import interface
+
 
 class OutputManager(object):
   """Class that implements the output manager."""
@@ -17,7 +19,7 @@ class OutputManager(object):
     The output classes are identified based on their NAME attribute.
 
     Args:
-      output_class: the class object of the output module.
+      output_class (type): output module class.
 
     Raises:
       KeyError: if output class is not set for the corresponding data type.
@@ -41,7 +43,7 @@ class OutputManager(object):
     """Retrieves the disabled output classes and its associated name.
 
     Yields:
-      A tuple of output class name and type object (subclass of OutputModule).
+      tuple[str, type]: output module name and class.
     """
     for _, output_class in iter(cls._disabled_output_classes.items()):
       yield output_class.NAME, output_class
@@ -51,10 +53,10 @@ class OutputManager(object):
     """Retrieves the output class for a specific name.
 
     Args:
-      name: The name of the output module.
+      name (str): name of the output module.
 
     Returns:
-      The corresponding output class (subclass of OutputModule).
+      type: output module class.
 
     Raises:
       KeyError: if there is no output class found with the supplied name.
@@ -85,10 +87,10 @@ class OutputManager(object):
     """Determines if a specific output class is registered with the manager.
 
     Args:
-      name: The name of the output module.
+      name (str): name of the output module.
 
     Returns:
-      A boolean indicating if the output class is registered.
+      bool: True if the output class is registered.
     """
     if not isinstance(name, py2to3.STRING_TYPES):
       return False
@@ -96,15 +98,34 @@ class OutputManager(object):
     return name.lower() in cls._output_classes
 
   @classmethod
+  def IsLinearOutputModule(cls, name):
+    """Determines if a specific output class is a linear output module.
+
+    Args:
+      name (str): name of the output module.
+
+    Returns:
+      True: if the output module is linear.
+    """
+    name = name.lower()
+
+    output_class = cls._output_classes.get(name, None)
+    if not output_class:
+      output_class = cls._disabled_output_classes.get(name, None)
+
+    if output_class:
+      return issubclass(output_class, interface.LinearOutputModule)
+
+  @classmethod
   def NewOutputModule(cls, name, output_mediator):
     """Creates a new output module object for the specified output format.
 
     Args:
-      name: The name of the output module.
-      output_mediator: The output mediator object (instance of OutputMediator).
+      name (str): name of the output module.
+      output_mediator (OutputMediator): output mediator.
 
     Returns:
-      An instance of the corresponding output class (instance of OutputModule).
+      OutputModule: output module.
 
     Raises:
       KeyError: if there is no output class found with the supplied name.
@@ -120,15 +141,12 @@ class OutputManager(object):
     The output classes are identified based on their NAME attribute.
 
     Args:
-      output_class: the class object of the output (instance of
-                    OutputModule).
-      disabled: boolean determining whether the output module is
-                disabled due to the module not loading correctly or
-                not. Defaults to False.
+      output_class (type): output module class.
+      disabled (Optional[bool]): True if the output module is disabled due to
+          the module not loading correctly or not.
 
     Raises:
-      KeyError: if output class is already set for the corresponding
-                name attribute.
+      KeyError: if output class is already set for the corresponding name.
     """
     output_name = output_class.NAME.lower()
 
@@ -151,11 +169,9 @@ class OutputManager(object):
     The output classes are identified based on their NAME attribute.
 
     Args:
-      output_classes: a list of class objects of the outputs (instance of
-                       OutputModule).
-      disabled: boolean determining whether the output module is
-                disabled due to the module not loading correctly or
-                not. Defaults to False.
+      output_classes (list[type]): output module classes.
+      disabled (Optional[bool]): True if the output module is disabled due to
+          the module not loading correctly or not.
 
     Raises:
       KeyError: if output class is already set for the corresponding name.

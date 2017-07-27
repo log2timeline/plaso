@@ -170,7 +170,7 @@ class ParsersManager(object):
     """Retrieves the names of all parsers with plugins.
 
     Returns:
-      A list of parser names.
+      list[str]: names of all parsers with plugins.
     """
     parser_names = []
 

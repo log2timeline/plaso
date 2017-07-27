@@ -48,24 +48,6 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       u'                        with care.',
       u''])
 
-  _EXPECTED_OUTPUT_FILTER_OPTIONS = u'\n'.join([
-      u'usage: storage_media_tool_test.py [-f FILE_FILTER]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  -f FILE_FILTER, --file_filter FILE_FILTER, --file-filter FILE_FILTER',
-      (u'                        List of files to include for targeted '
-       u'collection of'),
-      (u'                        files to parse, one line per file path, '
-       u'setup is'),
-      (u'                        /path|file - where each element can contain '
-       u'either a'),
-      (u'                        variable set in the preprocessing stage or '
-       u'a regular'),
-      u'                        expression.',
-      u''])
-
   _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = u'\n'.join([
       u'usage: storage_media_tool_test.py [--partition PARTITION]',
       (u'                                  [--partitions PARTITIONS] '
@@ -173,7 +155,11 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
 
     options = test_lib.TestOptions()
     options.source = source_path
-    test_tool.ParseOptions(options)
+
+    test_tool._ParseStorageMediaImageOptions(options)
+    test_tool._ParseVSSProcessingOptions(options)
+    test_tool._ParseCredentialOptions(options)
+    test_tool._ParseSourcePathOption(options)
 
     scan_context = test_tool.ScanSource()
     self.assertIsNotNone(scan_context)
@@ -196,7 +182,11 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
 
     options = test_lib.TestOptions()
     options.source = source_path
-    test_tool.ParseOptions(options)
+
+    test_tool._ParseStorageMediaImageOptions(options)
+    test_tool._ParseVSSProcessingOptions(options)
+    test_tool._ParseCredentialOptions(options)
+    test_tool._ParseSourcePathOption(options)
 
     scan_context = test_tool.ScanSource()
     self.assertIsNotNone(scan_context)
@@ -217,7 +207,11 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     options = test_lib.TestOptions()
     options.partitions = u'all'
     options.source = source_path
-    test_tool.ParseOptions(options)
+
+    test_tool._ParseStorageMediaImageOptions(options)
+    test_tool._ParseVSSProcessingOptions(options)
+    test_tool._ParseCredentialOptions(options)
+    test_tool._ParseSourcePathOption(options)
 
     scan_context = test_tool.ScanSource()
     self.assertIsNotNone(scan_context)
@@ -258,7 +252,11 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     options = test_lib.TestOptions()
     options.source = source_path
     options.vss_stores = u'all'
-    test_tool.ParseOptions(options)
+
+    test_tool._ParseStorageMediaImageOptions(options)
+    test_tool._ParseVSSProcessingOptions(options)
+    test_tool._ParseCredentialOptions(options)
+    test_tool._ParseSourcePathOption(options)
 
     scan_context = test_tool.ScanSource()
     self.assertIsNotNone(scan_context)
@@ -375,15 +373,30 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
 
     # TODO: improve test coverage.
 
-  def testParseFilterOptions(self):
-    """Tests the _ParseFilterOptions function."""
+  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
+  def testParseSourcePathOption(self):
+    """Tests the _ParseSourcePathOption function."""
     test_tool = storage_media_tool.StorageMediaTool()
 
     options = test_lib.TestOptions()
 
-    test_tool._ParseFilterOptions(options)
+    with self.assertRaises(errors.BadConfigOption):
+      test_tool._ParseSourcePathOption(options)
 
-    # TODO: improve test coverage.
+    options.source = self._GetTestFilePath([u'ímynd.dd'])
+
+    test_tool._ParseSourcePathOption(options)
+
+  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
+  def testParseStorageMediaOptions(self):
+    """Tests the _ParseStorageMediaOptions function."""
+    test_tool = storage_media_tool.StorageMediaTool()
+
+    options = test_lib.TestOptions()
+    options.partitions = u'all'
+    options.source = self._GetTestFilePath([u'ímynd.dd'])
+
+    test_tool._ParseStorageMediaImageOptions(options)
 
   def testParseStorageMediaImageOptions(self):
     """Tests the _ParseStorageMediaImageOptions function."""
@@ -456,19 +469,6 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT_CREDENTIAL_OPTIONS)
 
-  def testAddFilterOptions(self):
-    """Tests the AddFilterOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog=u'storage_media_tool_test.py',
-        description=u'Test argument parser.', add_help=False,
-        formatter_class=test_lib.SortedArgumentsHelpFormatter)
-
-    test_tool = storage_media_tool.StorageMediaTool()
-    test_tool.AddFilterOptions(argument_parser)
-
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT_FILTER_OPTIONS)
-
   def testAddStorageMediaImageOptions(self):
     """Tests the AddStorageMediaImageOptions function."""
     argument_parser = argparse.ArgumentParser(
@@ -494,22 +494,6 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
 
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS)
-
-  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    test_tool = storage_media_tool.StorageMediaTool()
-
-    options = test_lib.TestOptions()
-
-    with self.assertRaises(errors.BadConfigOption):
-      test_tool.ParseOptions(options)
-
-    options.source = self._GetTestFilePath([u'ímynd.dd'])
-
-    test_tool.ParseOptions(options)
-
-    # TODO: improve test coverage.
 
   @shared_test_lib.skipUnlessHasTestFile([u'tsk_volume_system.raw'])
   def testScanSourcePartitionedImage(self):

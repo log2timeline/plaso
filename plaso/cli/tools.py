@@ -8,12 +8,6 @@ import logging
 import os
 import sys
 
-try:
-  import win32api
-  import win32console
-except ImportError:
-  win32console = None
-
 import plaso
 
 from plaso.cli import views
@@ -25,7 +19,7 @@ import pytz  # pylint: disable=wrong-import-order
 
 
 class CLITool(object):
-  """Class that implements a CLI tool.
+  """CLI tool.
 
   Attributes:
     list_profilers (bool): True if the profilers should be listed.
@@ -89,31 +83,6 @@ class CLITool(object):
     self.list_timezones = False
     self.preferred_encoding = preferred_encoding
 
-  def _ClearScreen(self):
-    """Clears the terminal/console screen."""
-    if not win32console:
-      # ANSI escape sequence to clear screen.
-      self._output_writer.Write(b'\033[2J')
-      # ANSI escape sequence to move cursor to top left.
-      self._output_writer.Write(b'\033[H')
-
-    else:
-      # Windows cmd.exe does not support ANSI escape codes, thus instead we
-      # fill the console screen buffer with spaces.
-      top_left_coordinate = win32console.PyCOORDType(0, 0)
-      screen_buffer = win32console.GetStdHandle(win32api.STD_OUTPUT_HANDLE)
-      screen_buffer_information = screen_buffer.GetConsoleScreenBufferInfo()
-
-      screen_buffer_attributes = screen_buffer_information[u'Attributes']
-      screen_buffer_size = screen_buffer_information[u'Size']
-      console_size = screen_buffer_size.X * screen_buffer_size.Y
-
-      screen_buffer.FillConsoleOutputCharacter(
-          u' ', console_size, top_left_coordinate)
-      screen_buffer.FillConsoleOutputAttribute(
-          screen_buffer_attributes, console_size, top_left_coordinate)
-      screen_buffer.SetConsoleCursorPosition(top_left_coordinate)
-
   def _ConfigureLogging(
       self, filename=None, format_string=None, log_level=None):
     """Configure the logger.
@@ -171,48 +140,6 @@ class CLITool(object):
 
     return encoded_string
 
-  def _ParseDataLocationOption(self, options):
-    """Parses the data location option.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-    """
-    data_location = self.ParseStringOption(options, u'data_location')
-    if not data_location:
-      # Determine if we are running from the source directory.
-      # This should get us the path to the "plaso/cli" directory.
-      data_location = os.path.dirname(__file__)
-
-      # In order to get to the main path of the egg file we need to traverse
-      # two directories up.
-      data_location = os.path.dirname(data_location)
-      data_location = os.path.dirname(data_location)
-
-      # There are multiple options to run a tool e.g. running from source or
-      # from an egg file.
-      data_location_egg = os.path.join(data_location, u'share', u'plaso')
-      data_location_source = os.path.join(data_location, u'data')
-      data_location_system = os.path.join(sys.prefix, u'share', u'plaso')
-      data_location_system_local = os.path.join(
-          sys.prefix, u'local', u'share', u'plaso')
-
-      if os.path.exists(data_location_egg):
-        data_location = data_location_egg
-      elif os.path.exists(data_location_source):
-        data_location = data_location_source
-      elif os.path.exists(data_location_system):
-        data_location = data_location_system
-      elif os.path.exists(data_location_system_local):
-        data_location = data_location_system_local
-      else:
-        data_location = None
-
-    if not data_location:
-      self._output_writer.Write(
-          u'WARNING: unable to determine location of data files.\n')
-
-    self._data_location = data_location
-
   def _ParseInformationalOptions(self, options):
     """Parses the informational options.
 
@@ -226,6 +153,14 @@ class CLITool(object):
       logging.warning(
           u'Cannot use debug and quiet mode at the same time, defaulting to '
           u'debug output.')
+
+  def _ParseLogFileOptions(self, options):
+    """Parses the log file options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+    """
+    self._log_file = self.ParseStringOption(options, u'log_file')
 
   def _ParseProfilingOptions(self, options):
     """Parses the profiling options.
@@ -292,6 +227,18 @@ class CLITool(object):
 
         self._preferred_time_zone = time_zone_string
 
+  def _PromptUserForInput(self, input_text):
+    """Prompts user for an input.
+
+    Args:
+      input_text (str): text used for prompting the user for input.
+
+    Returns:
+      str: input read from the user.
+    """
+    self._output_writer.Write(u'{0:s}: '.format(input_text))
+    return self._input_reader.Read()
+
   def AddBasicOptions(self, argument_group):
     """Adds the basic options to the argument group.
 
@@ -309,16 +256,6 @@ class CLITool(object):
     argument_group.add_argument(
         u'-V', u'--version', dest=u'version', action=u'version',
         version=version_string, help=u'show the version information.')
-
-  def AddDataLocationOption(self, argument_group):
-    """Adds the data location option to the argument group.
-
-    Args:
-      argument_group (argparse._ArgumentGroup): argparse argument group.
-    """
-    argument_group.add_argument(
-        u'--data', action=u'store', dest=u'data_location', type=str,
-        metavar=u'PATH', default=None, help=u'the location of the data files.')
 
   def AddInformationalOptions(self, argument_group):
     """Adds the informational options to the argument group.
@@ -488,22 +425,6 @@ class CLITool(object):
           u'Unsupported numeric value {0:s}: {1!s}.'.format(
               name, numeric_value))
 
-  def ParseOptions(self, options):
-    """Parses tool specific options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-    """
-    self._ParseInformationalOptions(options)
-
-  def ParseLogFileOptions(self, options):
-    """Parses the log file options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-    """
-    self._log_file = self.ParseStringOption(options, u'log_file')
-
   def ParseStringOption(self, options, argument_name, default_value=None):
     """Parses a string command line argument.
 
@@ -553,7 +474,7 @@ class CLITool(object):
 
 
 class CLIInputReader(object):
-  """Class that implements the CLI input reader interface."""
+  """CLI input reader interface."""
 
   def __init__(self, encoding=u'utf-8'):
     """Initializes the input reader object.
@@ -574,7 +495,7 @@ class CLIInputReader(object):
 
 
 class CLIOutputWriter(object):
-  """Class that implements the CLI output writer interface."""
+  """CLI output writer interface."""
 
   def __init__(self, encoding=u'utf-8'):
     """Initializes the output writer object.
@@ -595,7 +516,7 @@ class CLIOutputWriter(object):
 
 
 class FileObjectInputReader(CLIInputReader):
-  """Class that implements a file-like object input reader.
+  """File-like object input reader.
 
   This input reader relies on the file-like object having a readline method.
   """
@@ -636,7 +557,7 @@ class FileObjectInputReader(CLIInputReader):
 
 
 class StdinInputReader(FileObjectInputReader):
-  """Class that implements a stdin input reader."""
+  """Stdin input reader."""
 
   def __init__(self, encoding=u'utf-8'):
     """Initializes the input reader object.
@@ -648,7 +569,7 @@ class StdinInputReader(FileObjectInputReader):
 
 
 class FileObjectOutputWriter(CLIOutputWriter):
-  """Class that implements a file-like object output writer.
+  """File-like object output writer.
 
   This output writer relies on the file-like object having a write method.
   """
@@ -689,7 +610,7 @@ class FileObjectOutputWriter(CLIOutputWriter):
 
 
 class StdoutOutputWriter(FileObjectOutputWriter):
-  """Class that implements a stdout output writer."""
+  """Stdout output writer."""
 
   def __init__(self, encoding=u'utf-8'):
     """Initializes the output writer object.

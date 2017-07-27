@@ -3,7 +3,6 @@
 
 import argparse
 import logging
-import os
 import sys
 import time
 import textwrap
@@ -20,22 +19,28 @@ from plaso import filters  # pylint: disable=unused-import
 from plaso import output  # pylint: disable=unused-import
 
 from plaso.cli import extraction_tool
+from plaso.cli import logging_filter
 from plaso.cli import status_view
-from plaso.cli import tools as cli_tools
-from plaso.cli import views as cli_views
-from plaso.cli import logging_filter as logging_filter
+from plaso.cli import tool_options
+from plaso.cli import tools
+from plaso.cli import views
+from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.engine import single_process as single_process_engine
 from plaso.frontend import utils as frontend_utils
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import task_engine as multi_process_engine
 from plaso.output import manager as output_manager
 from plaso.storage import zip_file as storage_zip_file
 
 
-class Log2TimelineTool(extraction_tool.ExtractionTool):
-  """Class that implements the log2timeline CLI tool.
+class Log2TimelineTool(
+    extraction_tool.ExtractionTool,
+    tool_options.OutputModuleOptions,
+    tool_options.StorageFileOptions):
+  """Log2timeline CLI tool.
 
   Attributes:
     dependencies_check (bool): True if the availability and versions of
@@ -100,11 +105,12 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._enable_sigsegv_handler = False
     self._number_of_extraction_workers = 0
     self._resolver_context = dfvfs_context.Context()
+    self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
     self._source_type = None
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
     self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
     self._stdout_output_writer = isinstance(
-        self._output_writer, cli_tools.StdoutOutputWriter)
+        self._output_writer, tools.StdoutOutputWriter)
     self._storage_file_path = None
     self._temporary_directory = None
     self._text_prepend = None
@@ -114,33 +120,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.dependencies_check = True
     self.list_output_modules = False
     self.show_info = False
-
-  def _CheckStorageFile(self, storage_file_path):
-    """Checks if the storage file path is valid.
-
-    Args:
-      storage_file_path (str): path of the storage file.
-
-    Raises:
-      BadConfigOption: if the storage file path is invalid.
-    """
-    if os.path.exists(storage_file_path):
-      if not os.path.isfile(storage_file_path):
-        raise errors.BadConfigOption(
-            u'Storage file: {0:s} already exists and is not a file.'.format(
-                storage_file_path))
-      logging.warning(u'Appending to an already existing storage file.')
-
-    dirname = os.path.dirname(storage_file_path)
-    if not dirname:
-      dirname = u'.'
-
-    # TODO: add a more thorough check to see if the storage file really is
-    # a plaso storage file.
-
-    if not os.access(dirname, os.W_OK):
-      raise errors.BadConfigOption(
-          u'Unable to write to storage file: {0:s}'.format(storage_file_path))
 
   def _CreateProcessingConfiguration(self):
     """Creates a processing configuration.
@@ -235,12 +214,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._single_process_mode = getattr(options, u'single_process', False)
 
-    self._temporary_directory = getattr(options, u'temporary_directory', None)
-    if (self._temporary_directory and
-        not os.path.isdir(self._temporary_directory)):
-      raise errors.BadConfigOption(
-          u'No such temporary directory: {0:s}'.format(
-              self._temporary_directory))
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'temporary_directory'])
 
     self._worker_memory_limit = getattr(options, u'worker_memory_limit', None)
     self._number_of_extraction_workers = getattr(options, u'workers', 0)
@@ -287,12 +262,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         action=u'store_true', default=False, help=(
             u'Indicate that the tool should run in a single process.'))
 
-    argument_group.add_argument(
-        u'--temporary_directory', u'--temporary-directory',
-        dest=u'temporary_directory', type=str, action=u'store',
-        metavar=u'DIRECTORY', help=(
-            u'Path to the directory that should be used to store temporary '
-            u'files created during extraction.'))
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_group, names=[u'temporary_directory'])
 
     argument_group.add_argument(
         u'--worker-memory-limit', u'--worker_memory_limit',
@@ -305,28 +276,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         u'--workers', dest=u'workers', action=u'store', type=int, default=0,
         help=(u'The number of worker processes [defaults to available system '
               u'CPUs minus one].'))
-
-  def ListOutputModules(self):
-    """Lists the output modules."""
-    table_view = cli_views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=[u'Name', u'Description'],
-        title=u'Output Modules')
-
-    for name, output_class in output_manager.OutputManager.GetOutputClasses():
-      table_view.AddRow([name, output_class.DESCRIPTION])
-    table_view.Write(self._output_writer)
-
-    disabled_classes = list(
-        output_manager.OutputManager.GetDisabledOutputClasses())
-    if not disabled_classes:
-      return
-
-    table_view = cli_views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=[u'Name', u'Description'],
-        title=u'Disabled Output Modules')
-    for name, output_class in disabled_classes:
-      table_view.AddRow([name, output_class.DESCRIPTION])
-    table_view.Write(self._output_writer)
 
   def ParseArguments(self):
     """Parses the command line arguments.
@@ -342,11 +291,17 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self.AddBasicOptions(argument_parser)
 
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_parser, names=[u'storage_file'])
+
     extraction_group = argument_parser.add_argument_group(
         u'Extraction Arguments')
 
     self.AddExtractionOptions(extraction_group)
-    self.AddFilterOptions(extraction_group)
+
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_parser, names=[u'filter_file'])
+
     self.AddStorageMediaImageOptions(extraction_group)
     self.AddTimeZoneOption(extraction_group)
     self.AddVSSProcessingOptions(extraction_group)
@@ -373,11 +328,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self.AddLogFileOptions(info_group)
 
-    info_group.add_argument(
-        u'--status_view', u'--status-view', dest=u'status_view_mode',
-        choices=[u'linear', u'none', u'window'], action=u'store',
-        metavar=u'TYPE', default=self._DEFAULT_STATUS_VIEW_MODE, help=(
-            u'The processing status view mode: "linear", "none" or "window".'))
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        info_group, names=[u'status_view'])
 
     output_group = argument_parser.add_argument_group(u'Output Arguments')
 
@@ -386,7 +338,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     processing_group = argument_parser.add_argument_group(
         u'Processing Arguments')
 
-    self.AddDataLocationOption(processing_group)
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        processing_group, names=[u'data_location'])
+
     self.AddPerformanceOptions(processing_group)
     self.AddProfilingOptions(processing_group)
     self.AddProcessingOptions(processing_group)
@@ -398,12 +352,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             u'experimental and will a deadlock worker process if a real '
             u'segfault is caught, but not signal SIGSEGV. This functionality '
             u'is therefore primarily intended for debugging purposes'))
-
-    argument_parser.add_argument(
-        u'output', action=u'store', metavar=u'STORAGE_FILE', nargs=u'?',
-        type=str, help=(
-            u'The path to the output file, if the file exists it will get '
-            u'appended to.'))
 
     argument_parser.add_argument(
         self._SOURCE_OPTION, action=u'store', metavar=u'SOURCE', nargs=u'?',
@@ -469,7 +417,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.show_info = getattr(options, u'show_info', False)
 
     if getattr(options, u'use_markdown', False):
-      self._views_format_type = cli_views.ViewsFactory.FORMAT_TYPE_MARKDOWN
+      self._views_format_type = views.ViewsFactory.FORMAT_TYPE_MARKDOWN
 
     self.dependencies_check = getattr(options, u'dependencies_check', True)
 
@@ -478,7 +426,19 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         self.list_timezones or self.show_info):
       return
 
-    super(Log2TimelineTool, self).ParseOptions(options)
+    self._ParseInformationalOptions(options)
+
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'data_location'])
+
+    self._ParseLogFileOptions(options)
+
+    self._ParseStorageMediaOptions(options)
+
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'filter_file'])
+
+    self._ParsePerformanceOptions(options)
     self._ParseOutputOptions(options)
     self._ParseProcessingOptions(options)
 
@@ -493,7 +453,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     else:
       logging_level = logging.INFO
 
-    self.ParseLogFileOptions(options)
     self._ConfigureLogging(
         filename=self._log_file, format_string=format_string,
         log_level=logging_level)
@@ -503,9 +462,19 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       root_logger = logging.getLogger()
       root_logger.addFilter(log_filter)
 
-    self._storage_file_path = self.ParseStringOption(options, u'output')
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'storage_file'])
+
     if not self._storage_file_path:
-      raise errors.BadConfigOption(u'No storage file path defined.')
+      raise errors.BadConfigOption(u'Missing storage file option.')
+
+    serializer_format = getattr(
+        options, u'serializer_format', definitions.SERIALIZER_FORMAT_JSON)
+    if serializer_format not in definitions.SERIALIZER_FORMATS:
+      raise errors.BadConfigOption(
+          u'Unsupported storage serializer format: {0:s}.'.format(
+              serializer_format))
+    self._storage_serializer_format = serializer_format
 
     # TODO: where is this defined?
     self._operating_system = getattr(options, u'os', None)
@@ -513,8 +482,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     if self._operating_system:
       self._mount_path = getattr(options, u'filename', None)
 
-    self._status_view_mode = getattr(
-        options, u'status_view_mode', self._DEFAULT_STATUS_VIEW_MODE)
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'status_view'])
 
     self._enable_sigsegv_handler = getattr(options, u'sigsegv_handler', False)
 
@@ -620,10 +589,11 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         extraction_engine.knowledge_base.SetTimeZone(
             session.preferred_time_zone)
       except ValueError:
+        # pylint: disable=protected-access
         logging.warning(
             u'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
                 session.preferred_time_zone,
-                extraction_engine.knowledge_base.time_zone.zone))
+                extraction_engine.knowledge_base._time_zone.zone))
 
     filter_find_specs = None
     if configuration.filter_file:
@@ -662,7 +632,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     plugin_list = self._GetPluginData()
     for header, data in plugin_list.items():
-      table_view = cli_views.ViewsFactory.GetTableView(
+      table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, column_names=[u'Name', u'Description'],
           title=header)
       for entry_header, entry_data in sorted(data):

@@ -69,6 +69,15 @@ class AnalysisPluginManager(object):
     return sorted(results)
 
   @classmethod
+  def GetPluginNames(cls):
+    """Retrieves the analysis  plugin names.
+
+    Returns:
+      list[str]: analysis plugin names.
+    """
+    return sorted(cls._plugin_classes.keys())
+
+  @classmethod
   def GetPluginObjects(cls, plugin_names):
     """Retrieves the plugin objects.
 
@@ -76,7 +85,7 @@ class AnalysisPluginManager(object):
       plugin_names (list[str]): names of plugins that should be retrieved.
 
     Returns:
-      dict[str,AnalysisPlugin]: analysis plugins per name.
+      dict[str, AnalysisPlugin]: analysis plugins per name.
     """
     plugin_objects = {}
     for plugin_name, plugin_class in iter(cls._plugin_classes.items()):

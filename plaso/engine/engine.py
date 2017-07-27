@@ -20,7 +20,7 @@ class BaseEngine(object):
   """Processing engine interface.
 
   Attributes:
-    knowledge_base: the knowledge base object (instance of KnowledgeBase).
+    knowledge_base (KnowledgeBase): knowledge base.
   """
 
   # The interval of status updates in number of seconds.
