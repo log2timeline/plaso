@@ -223,6 +223,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.image = self._GetTestFilePath([u'image.qcow2'])
 
     test_tool.ParseOptions(options)
@@ -241,6 +242,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.date_filters = [u'ctime,2012-05-25 15:59:00,2012-05-25 15:59:20']
     options.image = self._GetTestFilePath([u'image.qcow2'])
     options.quiet = True
@@ -263,6 +265,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.image = self._GetTestFilePath([u'ímynd.dd'])
     options.quiet = True
 
@@ -290,6 +293,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.date_filters = [u'ctime,2012-05-25 15:59:00,2012-05-25 15:59:20']
     options.image = self._GetTestFilePath([u'image.qcow2'])
     options.quiet = True
@@ -315,6 +319,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.extensions_string = u'txt'
     options.image = self._GetTestFilePath([u'image.qcow2'])
     options.quiet = True
@@ -339,6 +344,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.image = self._GetTestFilePath([u'image.qcow2'])
     options.names_string = u'another_file'
     options.quiet = True
@@ -364,6 +370,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.image = self._GetTestFilePath([u'image.qcow2'])
     options.quiet = True
 
@@ -396,6 +403,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
     options.image = self._GetTestFilePath([u'syslog_image.dd'])
     options.quiet = True
     options.signature_identifiers = u'gzip'

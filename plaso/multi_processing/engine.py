@@ -25,8 +25,6 @@ class MultiProcessEngine(engine.BaseEngine):
   * manage the status update thread.
   """
 
-  _DEFAULT_WORKER_MEMORY_LIMIT = 2048 * 1024 * 1024
-
   # Note that on average Windows seems to require a longer wait.
   _RPC_SERVER_TIMEOUT = 8.0
   _MAXIMUM_RPC_ERRORS = 10
@@ -52,7 +50,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._status_update_callback = None
     self._status_update_thread = None
     self._storage_writer = None
-    self._worker_memory_limit = self._DEFAULT_WORKER_MEMORY_LIMIT
+    self._worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
 
   def _AbortJoin(self, timeout=None):
     """Aborts all registered processes by joining with the parent process.

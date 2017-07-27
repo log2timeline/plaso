@@ -72,8 +72,6 @@ class _EventsHeap(object):
 class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
   """Class that defines the psort multi-processing engine."""
 
-  _DEFAULT_WORKER_MEMORY_LIMIT = 2048 * 1024 * 1024
-
   _PROCESS_JOIN_TIMEOUT = 5.0
   _PROCESS_WORKER_TIMEOUT = 15.0 * 60.0
 
@@ -127,7 +125,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._status = definitions.PROCESSING_STATUS_IDLE
     self._status_update_callback = None
     self._use_zeromq = use_zeromq
-    self._worker_memory_limit = self._DEFAULT_WORKER_MEMORY_LIMIT
+    self._worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
 
   def _AnalyzeEvents(self, storage_writer, analysis_plugins, event_filter=None):
     """Analyzes events in a plaso storage.
@@ -834,7 +832,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._knowledge_base = knowledge_base_object
     self._status_update_callback = status_update_callback
     self._worker_memory_limit = (
-        worker_memory_limit or self._DEFAULT_WORKER_MEMORY_LIMIT)
+        worker_memory_limit or definitions.DEFAULT_WORKER_MEMORY_LIMIT)
 
     # Set up the storage writer before the analysis processes.
     storage_writer.StartTaskStorage()
@@ -895,7 +893,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._event_filter_expression = None
     self._knowledge_base = None
     self._status_update_callback = None
-    self._worker_memory_limit = self._DEFAULT_WORKER_MEMORY_LIMIT
+    self._worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
 
     if keyboard_interrupt:
       raise KeyboardInterrupt

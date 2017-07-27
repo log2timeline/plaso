@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The multi-process worker process."""
 
+from __future__ import unicode_literals
+
 import logging
 
 from dfvfs.lib import errors as dfvfs_errors
@@ -40,7 +42,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     super(WorkerProcess, self).__init__(**kwargs)
     self._abort = False
     self._buffer_size = 0
-    self._current_display_name = u''
+    self._current_display_name = ''
     self._extraction_worker = None
     self._guppy_memory_profiler = None
     self._knowledge_base = knowledge_base
@@ -58,7 +60,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._task_queue = task_queue
 
   def _GetStatus(self):
-    """Returns status information.
+    """Retrieves status information.
 
     Returns:
       dict[str, object]: status attributes, indexed by name.
@@ -82,22 +84,22 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       last_activity_timestamp = 0.0
       processing_status = self._status
 
-    task_identifier = getattr(self._task, u'identifier', u'')
+    task_identifier = getattr(self._task, 'identifier', '')
 
     status = {
-        u'display_name': self._current_display_name,
-        u'identifier': self._name,
-        u'number_of_consumed_errors': None,
-        u'number_of_consumed_event_tags': None,
-        u'number_of_consumed_events': self._number_of_consumed_events,
-        u'number_of_consumed_sources': self._number_of_consumed_sources,
-        u'number_of_produced_errors': number_of_produced_errors,
-        u'number_of_produced_event_tags': None,
-        u'number_of_produced_events': number_of_produced_events,
-        u'number_of_produced_sources': number_of_produced_sources,
-        u'last_activity_timestamp': last_activity_timestamp,
-        u'processing_status': processing_status,
-        u'task_identifier': task_identifier}
+        'display_name': self._current_display_name,
+        'identifier': self._name,
+        'number_of_consumed_errors': None,
+        'number_of_consumed_event_tags': None,
+        'number_of_consumed_events': self._number_of_consumed_events,
+        'number_of_consumed_sources': self._number_of_consumed_sources,
+        'number_of_produced_errors': number_of_produced_errors,
+        'number_of_produced_event_tags': None,
+        'number_of_produced_events': number_of_produced_events,
+        'number_of_produced_sources': number_of_produced_sources,
+        'last_activity_timestamp': last_activity_timestamp,
+        'processing_status': processing_status,
+        'task_identifier': task_identifier}
 
     return status
 
@@ -137,39 +139,37 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
     self._StartProfiling()
 
-    logging.debug(u'Worker: {0!s} (PID: {1:d}) started'.format(
+    logging.debug('Worker: {0!s} (PID: {1:d}) started'.format(
         self._name, self._pid))
 
     self._status = definitions.PROCESSING_STATUS_RUNNING
 
     try:
-      logging.debug(
-          u'{0!s} (PID: {1:d}) started monitoring task queue.'.format(
-              self._name, self._pid))
+      logging.debug('{0!s} (PID: {1:d}) started monitoring task queue.'.format(
+          self._name, self._pid))
 
       while not self._abort:
         try:
           task = self._task_queue.PopItem()
         except (errors.QueueClose, errors.QueueEmpty) as exception:
-          logging.debug(u'ConsumeItems exiting with exception {0:s}.'.format(
+          logging.debug('ConsumeItems exiting with exception {0:s}.'.format(
               type(exception)))
           break
 
         if isinstance(task, plaso_queue.QueueAbort):
-          logging.debug(u'ConsumeItems exiting, dequeued QueueAbort object.')
+          logging.debug('ConsumeItems exiting, dequeued QueueAbort object.')
           break
 
         self._ProcessTask(task)
 
-      logging.debug(
-          u'{0!s} (PID: {1:d}) stopped monitoring task queue.'.format(
-              self._name, self._pid))
+      logging.debug('{0!s} (PID: {1:d}) stopped monitoring task queue.'.format(
+          self._name, self._pid))
 
     # All exceptions need to be caught here to prevent the process
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
       logging.warning(
-          u'Unhandled exception in process: {0!s} (PID: {1:d}).'.format(
+          'Unhandled exception in process: {0!s} (PID: {1:d}).'.format(
               self._name, self._pid))
       logging.exception(exception)
 
@@ -185,13 +185,13 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     else:
       self._status = definitions.PROCESSING_STATUS_COMPLETED
 
-    logging.debug(u'Worker: {0!s} (PID: {1:d}) stopped'.format(
+    logging.debug('Worker: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
 
     try:
       self._task_queue.Close(abort=self._abort)
     except errors.QueueAlreadyClosed:
-      logging.error(u'Queue for {0:s} was already closed.'.format(self.name))
+      logging.error('Queue for {0:s} was already closed.'.format(self.name))
 
   def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
     """Processes a path specification.
@@ -211,18 +211,18 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       # TODO: signal engine of failure.
       self._abort = True
       logging.error((
-          u'ABORT: detected cache full error while processing '
-          u'path spec: {0:s}').format(self._current_display_name))
+          'ABORT: detected cache full error while processing path spec: '
+          '{0:s}').format(self._current_display_name))
 
     except Exception as exception:  # pylint: disable=broad-except
       parser_mediator.ProduceExtractionError((
-          u'unable to process path specification with error: '
-          u'{0:s}').format(exception), path_spec=path_spec)
+          'unable to process path specification with error: '
+          '{0!s}').format(exception), path_spec=path_spec)
 
       if self._processing_configuration.debug_output:
         logging.warning((
-            u'Unhandled exception while processing path specification: '
-            u'{0:s}.').format(self._current_display_name))
+            'Unhandled exception while processing path specification: '
+            '{0:s}.').format(self._current_display_name))
         logging.exception(exception)
 
   def _ProcessTask(self, task):
@@ -273,7 +273,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       return
 
     if self._processing_configuration.profiling.HaveProfileMemoryGuppy():
-      identifier = u'{0:s}-memory'.format(self._name)
+      identifier = '{0:s}-memory'.format(self._name)
       self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
           identifier, path=self._processing_configuration.profiling.directory,
           profiling_sample_rate=(
@@ -281,19 +281,19 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       self._guppy_memory_profiler.Start()
 
     if self._processing_configuration.profiling.HaveProfileParsers():
-      identifier = u'{0:s}-parsers'.format(self._name)
+      identifier = '{0:s}-parsers'.format(self._name)
       self._parsers_profiler = profiler.ParsersProfiler(
           identifier, path=self._processing_configuration.profiling.directory)
       self._extraction_worker.SetParsersProfiler(self._parsers_profiler)
 
     if self._processing_configuration.profiling.HaveProfileProcessing():
-      identifier = u'{0:s}-processing'.format(self._name)
+      identifier = '{0:s}-processing'.format(self._name)
       self._processing_profiler = profiler.ProcessingProfiler(
           identifier, path=self._processing_configuration.profiling.directory)
       self._extraction_worker.SetProcessingProfiler(self._processing_profiler)
 
     if self._processing_configuration.profiling.HaveProfileSerializers():
-      identifier = u'{0:s}-serializers'.format(self._name)
+      identifier = '{0:s}-serializers'.format(self._name)
       self._serializers_profiler = profiler.SerializersProfiler(
           identifier, path=self._processing_configuration.profiling.directory)
 

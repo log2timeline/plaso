@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Analysis plugin related functions and classes for testing."""
 
+from __future__ import unicode_literals
+
 from plaso.analysis import mediator as analysis_mediator
 from plaso.containers import artifacts
 from plaso.containers import events
@@ -23,7 +25,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     Args:
       event_objects (list[EventObject]]): events to analyze.
       plugin (AnalysisPlugin): plugin.
-      knowledge_base_values (Optional[dict[str,str]]): knowledge base values.
+      knowledge_base_values (Optional[dict[str, str]]): knowledge base values.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -69,7 +71,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
       path_segments (list[str]): path segments inside the test data directory.
       parser (BaseParser): parser.
       plugin (AnalysisPlugin): plugin.
-      knowledge_base_values (Optional[dict[str,str]]): knowledge base values.
+      knowledge_base_values (Optional[dict[str, str]]): knowledge base values.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -124,7 +126,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
 
     else:
       self.fail(
-          u'Got unexpected parser type: {0:s}'.format(type(parser)))
+          'Got unexpected parser type: {0:s}'.format(type(parser)))
 
     return storage_writer
 
@@ -132,7 +134,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     """Sets up a knowledge base.
 
     Args:
-      knowledge_base_values (Optional[dict[str,str]]): knowledge base values.
+      knowledge_base_values (Optional[dict[str, str]]): knowledge base values.
 
     Returns:
       KnowledgeBase: knowledge base.
@@ -140,7 +142,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
       for identifier, value in iter(knowledge_base_values.items()):
-        if identifier == u'users':
+        if identifier == 'users':
           self._SetUserAccounts(knowledge_base_object, value)
         else:
           knowledge_base_object.SetValue(identifier, value)
@@ -153,16 +155,16 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     Args:
       knowledge_base_object (KnowledgeBase): used to store information about
           users.
-      users (list[dict[str,str])): users, for example [{'name': 'me',
+      users (list[dict[str, str])): users, for example [{'name': 'me',
         'sid': 'S-1', 'uid': '1'}]
     """
     for user in users:
-      identifier = user.get(u'sid', user.get(u'uid', None))
+      identifier = user.get('sid', user.get('uid', None))
       if not identifier:
         continue
 
       user_account_artifact = artifacts.UserAccountArtifact(
-          identifier=identifier, user_directory=user.get(u'path', None),
-          username=user.get(u'name', None))
+          identifier=identifier, user_directory=user.get('path', None),
+          username=user.get('name', None))
 
       knowledge_base_object.AddUserAccount(user_account_artifact)
