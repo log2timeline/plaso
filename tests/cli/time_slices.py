@@ -1,21 +1,21 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the front-end."""
+"""Tests for the time slice."""
 
 import unittest
 
-from plaso.frontend import frontend
+from plaso.cli import time_slices
 
 from tests import test_lib as shared_test_lib
 
 
 class TimeSliceTest(shared_test_lib.BaseTestCase):
-  """Tests for the date time file entry filter."""
+  """Tests for the time slice."""
 
   def testInitialization(self):
-    """Tests the object initialization function."""
+    """Tests the __init__ function."""
     event_timestamp = 1467835655123456
-    time_slice = frontend.TimeSlice(event_timestamp)
+    time_slice = time_slices.TimeSlice(event_timestamp)
 
     self.assertEqual(time_slice.event_timestamp, event_timestamp)
     self.assertEqual(time_slice.duration, 5)
