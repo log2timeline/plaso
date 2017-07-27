@@ -20,8 +20,8 @@ class ArgumentsHelper(object):
   _PREFERRED_ENCODING = u'UTF-8'
 
   @classmethod
-  def _ParseIntegerOption(cls, options, argument_name, default_value=None):
-    """Parses an integer command line argument.
+  def _ParseNumericOption(cls, options, argument_name, default_value=None):
+    """Parses a numeric command line argument.
 
     Args:
       options (argparse.Namespace): parser options.

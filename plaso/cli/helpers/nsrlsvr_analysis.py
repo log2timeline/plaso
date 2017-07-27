@@ -86,7 +86,7 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
         options, u'nsrlsvr_host', default_value=cls._DEFAULT_HOST)
     analysis_plugin.SetHost(host)
 
-    port = cls._ParseIntegerOption(
+    port = cls._ParseNumericOption(
         options, u'nsrlsvr_port', default_value=cls._DEFAULT_PORT)
     analysis_plugin.SetPort(port)
 

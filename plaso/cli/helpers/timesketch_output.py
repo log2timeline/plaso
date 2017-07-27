@@ -84,7 +84,7 @@ class TimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
         options, u'doc_time', default_value=cls._DEFAULT_DOC_TYPE)
     output_module.SetDocType(doc_type)
 
-    flush_interval = cls._ParseIntegerOption(
+    flush_interval = cls._ParseNumericOption(
         options, u'flush_interval', default_value=cls._DEFAULT_FLUSH_INTERVAL)
     output_module.SetFlushInterval(flush_interval)
 

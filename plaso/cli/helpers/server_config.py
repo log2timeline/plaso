@@ -51,7 +51,7 @@ class ServerArgumentsHelper(interface.ArgumentsHelper):
 
     server = cls._ParseStringOption(
         options, u'server', default_value=cls._DEFAULT_SERVER)
-    port = cls._ParseIntegerOption(
+    port = cls._ParseNumericOption(
         options, u'port', default_value=cls._DEFAULT_PORT)
 
     output_module.SetServerInformation(server, port)

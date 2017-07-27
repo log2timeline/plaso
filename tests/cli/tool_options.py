@@ -48,6 +48,42 @@ class AnalysisPluginOptionsTest(test_lib.CLIToolTestCase):
     self.assertIn(expected_line, lines)
 
 
+class TestToolWithHashersOptions(
+    tools.CLITool, tool_options.HashersOptions):
+  """Tool to test the hashers options."""
+
+
+class HashersOptionsTest(test_lib.CLIToolTestCase):
+  """Tests for the hashers options."""
+
+  def testListHashers(self):
+    """Tests the ListHashers function."""
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = TestToolWithHashersOptions(output_writer=output_writer)
+
+    test_tool.ListHashers()
+
+    output = output_writer.ReadOutput()
+
+    number_of_tables = 0
+    lines = []
+    for line in output.split(b'\n'):
+      line = line.strip()
+      lines.append(line)
+
+      if line.startswith(b'*****') and line.endswith(b'*****'):
+        number_of_tables += 1
+
+    self.assertIn(u'Hashers', lines[1])
+
+    lines = frozenset(lines)
+
+    self.assertEqual(number_of_tables, 1)
+
+    expected_line = b'md5 : Calculates an MD5 digest hash over input data.'
+    self.assertIn(expected_line, lines)
+
+
 class TestToolWithOutputModuleOptions(
     tools.CLITool, tool_options.OutputModuleOptions):
   """Tool to test the output module options."""
@@ -102,6 +138,77 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
 
     self.assertEqual(number_of_tables, expected_number_of_tables)
     expected_line = b'rawpy : "raw" (or native) Python output.'
+    self.assertIn(expected_line, lines)
+
+
+class TestToolWithParsersOptions(
+    tools.CLITool, tool_options.ParsersOptions):
+  """Tool to test the parsers options."""
+
+
+class ParsersOptionsTest(test_lib.CLIToolTestCase):
+  """Tests for the parsers options."""
+
+  # pylint: disable=protected-access
+
+  def testGetParserPresetsInformation(self):
+    """Tests the _GetParserPresetsInformation function."""
+    test_tool = TestToolWithParsersOptions()
+
+    parser_presets_information = test_tool._GetParserPresetsInformation()
+    self.assertGreaterEqual(len(parser_presets_information), 1)
+
+    available_parser_names = [name for name, _ in parser_presets_information]
+    self.assertIn(u'linux', available_parser_names)
+
+  def testListParsersAndPlugins(self):
+    """Tests the ListParsersAndPlugins function."""
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = TestToolWithParsersOptions(output_writer=output_writer)
+
+    test_tool.ListParsersAndPlugins()
+
+    output = output_writer.ReadOutput()
+
+    number_of_tables = 0
+    lines = []
+    for line in output.split(b'\n'):
+      line = line.strip()
+      lines.append(line)
+
+      if line.startswith(b'*****') and line.endswith(b'*****'):
+        number_of_tables += 1
+
+    self.assertIn(u'Parsers', lines[1])
+
+    lines = frozenset(lines)
+
+    self.assertEqual(number_of_tables, 9)
+
+    expected_line = b'filestat : Parser for file system stat information.'
+    self.assertIn(expected_line, lines)
+
+    expected_line = b'bencode_utorrent : Parser for uTorrent bencoded files.'
+    self.assertIn(expected_line, lines)
+
+    expected_line = (
+        b'msie_webcache : Parser for MSIE WebCache ESE database files.')
+    self.assertIn(expected_line, lines)
+
+    expected_line = b'olecf_default : Parser for a generic OLECF item.'
+    self.assertIn(expected_line, lines)
+
+    expected_line = b'plist_default : Parser for plist files.'
+    self.assertIn(expected_line, lines)
+
+    expected_line = (
+        b'chrome_history : Parser for Chrome history SQLite database files.')
+    self.assertIn(expected_line, lines)
+
+    expected_line = b'ssh : Parser for SSH syslog entries.'
+    self.assertIn(expected_line, lines)
+
+    expected_line = b'winreg_default : Parser for Registry data.'
     self.assertIn(expected_line, lines)
 
 

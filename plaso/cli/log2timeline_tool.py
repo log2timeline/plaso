@@ -29,24 +29,29 @@ from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.engine import single_process as single_process_engine
 from plaso.frontend import utils as frontend_utils
+from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import task_engine as multi_process_engine
-from plaso.output import manager as output_manager
+from plaso.parsers import manager as parsers_manager
 from plaso.storage import zip_file as storage_zip_file
 
 
 class Log2TimelineTool(
     extraction_tool.ExtractionTool,
-    tool_options.OutputModuleOptions,
+    tool_options.HashersOptions,
+    tool_options.ParsersOptions,
     tool_options.StorageFileOptions):
   """Log2timeline CLI tool.
 
   Attributes:
     dependencies_check (bool): True if the availability and versions of
         dependencies should be checked.
+    list_hashers (bool): True if the hashers should be listed.
     list_output_modules (bool): True if information about the output modules
         should be shown.
+    list_parsers_and_plugins (bool): True if the parsers and plugins should
+        be listed.
     show_info (bool): True if information about hashers, parsers, plugins,
         etc. should be shown.
   """
@@ -116,9 +121,12 @@ class Log2TimelineTool(
     self._text_prepend = None
     self._use_zeromq = True
     self._worker_memory_limit = None
+    self._yara_rules_string = None
 
     self.dependencies_check = True
+    self.list_hashers = False
     self.list_output_modules = False
+    self.list_parsers_and_plugins = False
     self.show_info = False
 
   def _CreateProcessingConfiguration(self):
@@ -148,18 +156,6 @@ class Log2TimelineTool(
 
     return configuration
 
-  def _GetOutputModulesInformation(self):
-    """Retrieves the output modules information.
-
-    Returns:
-      list[tuple[str, str]]: pairs of output module names and descriptions.
-    """
-    output_modules_information = []
-    for name, output_class in output_manager.OutputManager.GetOutputClasses():
-      output_modules_information.append((name, output_class.DESCRIPTION))
-
-    return output_modules_information
-
   def _GetPluginData(self):
     """Retrieves the version and various plugin information.
 
@@ -172,34 +168,18 @@ class Log2TimelineTool(
         (u'plaso engine', plaso.__version__),
         (u'python', sys.version)]
 
-    hashers_information = self._hashers_manager.GetHashersInformation()
-    parsers_information = self._parsers_manager.GetParsersInformation()
-    plugins_information = self._parsers_manager.GetParserPluginsInformation()
+    hashers_information = hashers_manager.HashersManager.GetHashersInformation()
+    parsers_information = parsers_manager.ParsersManager.GetParsersInformation()
+    plugins_information = (
+        parsers_manager.ParsersManager.GetParserPluginsInformation())
     presets_information = self._GetParserPresetsInformation()
-    output_modules_information = self._GetOutputModulesInformation()
 
     return_dict[u'Hashers'] = hashers_information
     return_dict[u'Parsers'] = parsers_information
     return_dict[u'Parser Plugins'] = plugins_information
     return_dict[u'Parser Presets'] = presets_information
-    return_dict[u'Output Modules'] = output_modules_information
 
     return return_dict
-
-  def _ParseOutputOptions(self, options):
-    """Parses the output options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    self._output_module = self.ParseStringOption(options, u'output_module')
-    if self._output_module == u'list':
-      self.list_output_modules = True
-
-    self._text_prepend = self.ParseStringOption(options, u'text_prepend')
 
   def _ParseProcessingOptions(self, options):
     """Parses the processing options.
@@ -221,29 +201,6 @@ class Log2TimelineTool(
     self._number_of_extraction_workers = getattr(options, u'workers', 0)
 
     # TODO: add code to parse the worker options.
-
-  def AddOutputOptions(self, argument_group):
-    """Adds the output options to the argument group.
-
-    Args:
-      argument_group (argparse._ArgumentGroup): argparse argument group.
-    """
-    argument_group.add_argument(
-        u'--output', dest=u'output_module', action=u'store', type=str,
-        default=u'', help=(
-            u'Bypass the storage module directly storing events according to '
-            u'the output module. This means that the output will not be in the '
-            u'pstorage format but in the format chosen by the output module. '
-            u'Use "--output list" or "--info" to list the available output '
-            u'modules. Note this feature is EXPERIMENTAL at this time '
-            u'e.g. sqlite output does not yet work.'))
-
-    argument_group.add_argument(
-        u'-t', u'--text', dest=u'text_prepend', action=u'store', type=str,
-        default=u'', metavar=u'TEXT', help=(
-            u'Define a free form text string that is prepended to each path '
-            u'to make it easier to distinguish one record from another in a '
-            u'timeline (like c:\\, or host_w_c:\\)'))
 
   def AddProcessingOptions(self, argument_group):
     """Adds the processing options to the argument group.
@@ -297,10 +254,11 @@ class Log2TimelineTool(
     extraction_group = argument_parser.add_argument_group(
         u'Extraction Arguments')
 
-    self.AddExtractionOptions(extraction_group)
-
+    argument_helper_names = [
+        u'artifact_definitions', u'extraction', u'filter_file', u'hashers',
+        u'parsers', u'yara_rules']
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_parser, names=[u'filter_file'])
+        extraction_group, names=argument_helper_names)
 
     self.AddStorageMediaImageOptions(extraction_group)
     self.AddTimeZoneOption(extraction_group)
@@ -333,7 +291,8 @@ class Log2TimelineTool(
 
     output_group = argument_parser.add_argument_group(u'Output Arguments')
 
-    self.AddOutputOptions(output_group)
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        output_group, names=[u'text_prepend'])
 
     processing_group = argument_parser.add_argument_group(
         u'Processing Arguments')
@@ -409,10 +368,15 @@ class Log2TimelineTool(
       BadConfigOption: if the options are invalid.
     """
     # Check the list options first otherwise required options will raise.
-    self._ParseExtractionOptions(options)
-    self._ParseOutputOptions(options)
+    argument_helper_names = [u'hashers', u'parsers']
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=argument_helper_names)
+
     self._ParseProfilingOptions(options)
     self._ParseTimezoneOption(options)
+
+    self.list_hashers = self._hasher_names_string == u'list'
+    self.list_parsers_and_plugins = self._parser_filter_expression == u'list'
 
     self.show_info = getattr(options, u'show_info', False)
 
@@ -421,25 +385,23 @@ class Log2TimelineTool(
 
     self.dependencies_check = getattr(options, u'dependencies_check', True)
 
-    if (self.list_hashers or self.list_output_modules or
-        self.list_parsers_and_plugins or self.list_profilers or
-        self.list_timezones or self.show_info):
+    if (self.list_hashers or self.list_parsers_and_plugins or
+        self.list_profilers or self.list_timezones or self.show_info):
       return
 
     self._ParseInformationalOptions(options)
 
+    argument_helper_names = [
+        u'artifact_definitions', u'data_location', u'extraction',
+        u'filter_file', u'status_view', u'storage_file', u'text_prepend']
     helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=[u'data_location'])
+        options, self, names=argument_helper_names)
 
     self._ParseLogFileOptions(options)
 
     self._ParseStorageMediaOptions(options)
 
-    helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=[u'filter_file'])
-
     self._ParsePerformanceOptions(options)
-    self._ParseOutputOptions(options)
     self._ParseProcessingOptions(options)
 
     format_string = (
@@ -461,9 +423,6 @@ class Log2TimelineTool(
       log_filter = logging_filter.LoggingFilter()
       root_logger = logging.getLogger()
       root_logger.addFilter(log_filter)
-
-    helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=[u'storage_file'])
 
     if not self._storage_file_path:
       raise errors.BadConfigOption(u'Missing storage file option.')
@@ -568,7 +527,7 @@ class Log2TimelineTool(
       operating_system_version = extraction_engine.knowledge_base.GetValue(
           u'operating_system_version')
       parser_filter_expression = (
-          self._parsers_manager.GetPresetForOperatingSystem(
+          parsers_manager.ParsersManager.GetPresetForOperatingSystem(
               operating_system, operating_system_product,
               operating_system_version))
 
@@ -578,7 +537,7 @@ class Log2TimelineTool(
 
       configuration.parser_filter_expression = parser_filter_expression
 
-      names_generator = self._parsers_manager.GetParserAndPluginNames(
+      names_generator = parsers_manager.ParsersManager.GetParserAndPluginNames(
           parser_filter_expression=parser_filter_expression)
 
       session.enabled_parser_names = list(names_generator)

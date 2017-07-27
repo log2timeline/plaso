@@ -85,7 +85,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         options, u'index_name', default_value=cls._DEFAULT_INDEX_NAME)
     doc_type = cls._ParseStringOption(
         options, u'doc_type', default_value=cls._DEFAULT_DOC_TYPE)
-    flush_interval = cls._ParseIntegerOption(
+    flush_interval = cls._ParseNumericOption(
         options, u'flush_interval', default_value=cls._DEFAULT_FLUSH_INTERVAL)
     raw_fields = getattr(
         options, u'raw_fields', cls._DEFAULT_RAW_FIELDS)
