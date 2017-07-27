@@ -41,7 +41,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
       u'  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
       (u'                        Path to the directory that should be used to '
        u'store'),
-      u'                        temporary files created during extraction.',
+      u'                        temporary files created during processing.',
       u'  --worker-memory-limit SIZE, --worker_memory_limit SIZE',
       (u'                        Maximum amount of memory a worker process is '
        u'allowed'),
@@ -161,6 +161,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     # TODO: check output.
     # TODO: improve test coverage.
 
+  @shared_test_lib.skipUnlessHasTestFile([u'testdir'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
@@ -168,12 +169,13 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
     options = test_lib.TestOptions()
     options.source = self._GetTestFilePath([u'testdir'])
-    options.output = u'storage.plaso'
+    options.storage_file = u'storage.plaso'
 
     test_tool.ParseOptions(options)
 
     options = test_lib.TestOptions()
 
+    # ParseOptions will raise if source is not set.
     with self.assertRaises(errors.BadConfigOption):
       test_tool.ParseOptions(options)
 
@@ -197,7 +199,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'testdir'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.output = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
 
@@ -229,7 +231,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'bdetogo.raw'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.output = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
 
@@ -260,7 +262,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'ímynd.dd'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.output = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
 
@@ -293,7 +295,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'multi_partition_image.vmdk'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.output = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
 
@@ -325,7 +327,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     options.vss_stores = u'all'
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.output = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
 
@@ -360,7 +362,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'System.evtx'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.output = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
 
@@ -392,7 +394,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'test_pe.exe'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.output = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
 
@@ -400,7 +402,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
       storage_file = storage_zip_file.ZIPStorageFile()
       try:
-        storage_file.Open(path=options.output, read_only=True)
+        storage_file.Open(path=options.storage_file, read_only=True)
       except IOError as exception:
         self.fail((
             u'Unable to open storage file after processing with error: '

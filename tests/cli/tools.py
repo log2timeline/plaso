@@ -27,15 +27,6 @@ class CLIToolTest(test_lib.CLIToolTestCase):
       u'  -h, --help     show this help message and exit.',
       u''])
 
-  _EXPECTED_DATA_OPTION = u'\n'.join([
-      u'usage: tool_test.py [--data PATH]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --data PATH  the location of the data files.',
-      u''])
-
   _EXPECTED_INFORMATIONAL_OPTIONS = u'\n'.join([
       u'usage: tool_test.py [-d] [-q]',
       u'',
@@ -89,6 +80,15 @@ class CLIToolTest(test_lib.CLIToolTestCase):
       u'                        list" to see a list of available timezones.',
       u''])
 
+  # TODO: add test for _ConfigureLogging
+  # TODO: add test for _EncodeString
+  # TODO: add test for _ParseInformationalOptions
+  # TODO: add test for _ParseLogFileOptions
+  # TODO: add test for _ParseProfilingOptions
+  # TODO: add test for _ParseTimezoneOption
+
+  # TODO: add test for _PromptUserForInput
+
   def testAddBasicOptions(self):
     """Tests the AddBasicOptions function."""
     argument_parser = argparse.ArgumentParser(
@@ -101,18 +101,6 @@ class CLIToolTest(test_lib.CLIToolTestCase):
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_BASIC_OPTIONS)
 
-  def testAddDataLocationOption(self):
-    """Tests the AddDataLocationOption function."""
-    argument_parser = argparse.ArgumentParser(
-        prog=u'tool_test.py', description=u'Test argument parser.',
-        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
-
-    test_tool = tools.CLITool()
-    test_tool.AddDataLocationOption(argument_parser)
-
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_DATA_OPTION)
-
   def testAddInformationalOptions(self):
     """Tests the AddInformationalOptions function."""
     argument_parser = argparse.ArgumentParser(
@@ -124,6 +112,8 @@ class CLIToolTest(test_lib.CLIToolTestCase):
 
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_INFORMATIONAL_OPTIONS)
+
+  # TODO: add test for AddLogFileOptions
 
   def testAddProfilingOptions(self):
     """Tests the AddProfilingOptions function."""

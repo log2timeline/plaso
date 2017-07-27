@@ -25,10 +25,10 @@ class DynamicOutputArgumentsHelperTest(
       (u'                        Defines extra fields to be included in the '
        u'output, in'),
       (u'                        addition to the default fields, which are '
-       u'datetime,tim'),
-      (u'                        estamp_desc,source,source_long,message,parser,'
-       u'display_'),
-      u'                        name,tag.',
+       u'datetime,'),
+      (u'                        timestamp_desc, source, source_long, message, '
+       u'parser,'),
+      u'                        display_name, tag.',
       (u'  --fields FIELDS       Defines which fields should be included in the'
        u' output.'),
       u''])

@@ -56,13 +56,6 @@ class HelperManagerTest(unittest.TestCase):
         len(manager.ArgumentHelperManager._helper_classes),
         number_of_helpers)
 
-  def testGetHelperNames(self):
-    """Tests the GetHelperNames function."""
-    manager.ArgumentHelperManager.RegisterHelper(test_lib.TestHelper)
-    helper_names = manager.ArgumentHelperManager.GetHelperNames()
-    self.assertIn(test_lib.TestHelper.NAME, helper_names)
-    manager.ArgumentHelperManager.DeregisterHelper(test_lib.TestHelper)
-
   def testCommandLineArguments(self):
     """Test the AddCommandLineArguments and function."""
     manager.ArgumentHelperManager.RegisterHelpers([

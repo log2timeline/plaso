@@ -7,8 +7,10 @@ import logging
 import os
 import uuid
 
-from plaso.cli import analysis_tool
-from plaso.cli import views as cli_views
+from plaso.cli import tool_options
+from plaso.cli import tools
+from plaso.cli import views
+from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import knowledge_base
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -17,8 +19,10 @@ from plaso.storage import zip_file as storage_zip_file
 from plaso.serializer import json_serializer
 
 
-class PinfoTool(analysis_tool.AnalysisTool):
-  """Class that implements the pinfo CLI tool."""
+class PinfoTool(
+    tools.CLITool,
+    tool_options.StorageFileOptions):
+  """Pinfo CLI tool."""
 
   NAME = u'pinfo'
   DESCRIPTION = (
@@ -40,6 +44,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
         input_reader=input_reader, output_writer=output_writer)
     self._compare_storage_file_path = None
     self._output_format = None
+    self._storage_file_path = None
 
     self._verbose = False
     self.compare_storage_information = False
@@ -133,7 +138,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     if session_identifier:
       title = u'{0:s}: {1:s}'.format(title, session_identifier)
 
-    table_view = cli_views.ViewsFactory.GetTableView(
+    table_view = views.ViewsFactory.GetTableView(
         self._views_format_type,
         column_names=[u'Plugin name', u'Number of reports'], title=title)
 
@@ -163,7 +168,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
     for index, analysis_report in enumerate(storage.GetAnalysisReports()):
       title = u'Analysis report: {0:d}'.format(index)
-      table_view = cli_views.ViewsFactory.GetTableView(
+      table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
 
       table_view.AddRow([u'String', analysis_report.GetString()])
@@ -182,7 +187,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
     for index, error in enumerate(storage.GetErrors()):
       title = u'Error: {0:d}'.format(index)
-      table_view = cli_views.ViewsFactory.GetTableView(
+      table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
 
       table_view.AddRow([u'Message', error.message])
@@ -216,7 +221,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     if session_identifier:
       title = u'{0:s}: {1:s}'.format(title, session_identifier)
 
-    table_view = cli_views.ViewsFactory.GetTableView(
+    table_view = views.ViewsFactory.GetTableView(
         self._views_format_type,
         column_names=[u'Label', u'Number of event tags'], title=title)
 
@@ -249,7 +254,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     if session_identifier:
       title = u'{0:s}: {1:s}'.format(title, session_identifier)
 
-    table_view = cli_views.ViewsFactory.GetTableView(
+    table_view = views.ViewsFactory.GetTableView(
         self._views_format_type,
         column_names=[u'Parser (plugin) name', u'Number of events'],
         title=title)
@@ -281,7 +286,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
       return
 
     title = u'System configuration'
-    table_view = cli_views.ViewsFactory.GetTableView(
+    table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title=title)
 
     hostname = u'N/A'
@@ -308,7 +313,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     table_view.Write(self._output_writer)
 
     title = u'User accounts'
-    table_view = cli_views.ViewsFactory.GetTableView(
+    table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title=title)
 
     for user_account in system_configuration.user_accounts:
@@ -345,7 +350,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
       filter_file = session.filter_file or u'N/A'
 
       title = u'Session: {0!s}'.format(session_identifier)
-      table_view = cli_views.ViewsFactory.GetTableView(
+      table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
 
       table_view.AddRow([u'Start time', start_time])
@@ -383,7 +388,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     Args:
       storage (BaseStorage): storage.
     """
-    table_view = cli_views.ViewsFactory.GetTableView(
+    table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title=u'Sessions')
 
     for session in storage.GetSessions():
@@ -400,7 +405,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     Args:
       storage (BaseStorage): storage.
     """
-    table_view = cli_views.ViewsFactory.GetTableView(
+    table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title=u'Plaso Storage Information')
     table_view.AddRow([u'Filename', os.path.basename(self._storage_file_path)])
     table_view.AddRow([u'Format version', storage.format_version])
@@ -459,7 +464,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     Args:
       storage (BaseStorage): storage.
     """
-    table_view = cli_views.ViewsFactory.GetTableView(
+    table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title=u'Tasks')
 
     for task_start, _ in storage.GetSessions():
@@ -523,7 +528,9 @@ class PinfoTool(analysis_tool.AnalysisTool):
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     self.AddBasicOptions(argument_parser)
-    self.AddStorageFileOptions(argument_parser)
+
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_parser, names=[u'storage_file'])
 
     argument_parser.add_argument(
         u'-v', u'--verbose', dest=u'verbose', action=u'store_true',
@@ -567,7 +574,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    super(PinfoTool, self).ParseOptions(options)
+    self._ParseInformationalOptions(options)
 
     if self._debug_mode:
       logging_level = logging.DEBUG
@@ -579,6 +586,17 @@ class PinfoTool(analysis_tool.AnalysisTool):
     self._ConfigureLogging(log_level=logging_level)
 
     self._verbose = getattr(options, u'verbose', False)
+
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'storage_file'])
+
+    # TODO: move check into _CheckStorageFile.
+    if not self._storage_file_path:
+      raise errors.BadConfigOption(u'Missing storage file option.')
+
+    if not os.path.isfile(self._storage_file_path):
+      raise errors.BadConfigOption(
+          u'No such storage file: {0:s}.'.format(self._storage_file_path))
 
     compare_storage_file_path = self.ParseStringOption(
         options, u'compare_storage_file')

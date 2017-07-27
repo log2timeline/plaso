@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 """The extraction CLI tool."""
 
-import yara
-
-from artifacts import errors as artifacts_errors
-from artifacts import reader as artifacts_reader
-from artifacts import registry as artifacts_registry
-
 # The following import makes sure the analyzers are registered.
 from plaso import analyzers  # pylint: disable=unused-import
 
@@ -16,7 +10,7 @@ from plaso import parsers  # pylint: disable=unused-import
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.cli import storage_media_tool
 from plaso.cli import views
-from plaso.lib import definitions
+from plaso.cli.helpers import manager as helpers_manager
 from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.parsers import manager as parsers_manager
@@ -24,7 +18,7 @@ from plaso.parsers import presets as parsers_presets
 
 
 class ExtractionTool(storage_media_tool.StorageMediaTool):
-  """Class that implements an extraction CLI tool.
+  """Extraction CLI tool.
 
   Attributes:
     list_hashers (bool): True if the hashers should be listed.
@@ -41,7 +35,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
   _BYTES_IN_A_MIB = 1024 * 1024
 
   def __init__(self, input_reader=None, output_writer=None):
-    """Initializes the CLI tool object.
+    """Initializes an CLI tool.
 
     Args:
       input_reader (Optional[InputReader]): input reader, where None indicates
@@ -66,7 +60,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._process_compressed_streams = True
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._single_process_mode = False
-    self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
     self._text_prepend = None
     self._yara_rules_string = None
 
@@ -88,30 +81,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
 
     return parser_presets_information
 
-  def _ParseArtifactDefinitionsOption(self, options):
-    """Parses the artifact definitions option.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    path = getattr(options, u'artifact_definitions_path', None)
-    if not path:
-      return
-
-    self._artifacts_registry = artifacts_registry.ArtifactDefinitionsRegistry()
-    reader = artifacts_reader.YamlArtifactsReader()
-
-    try:
-      self._artifacts_registry.ReadFromDirectory(reader, path)
-
-    except (KeyError, artifacts_errors.FormatError) as exception:
-      raise errors.BadConfigObject((
-          u'Unable to read artifact definitions from: {0:s} with error: '
-          u'{1!s}').format(path, exception))
-
   def _ParseExtractionOptions(self, options):
     """Parses the extraction options.
 
@@ -121,8 +90,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    self._ParseArtifactDefinitionsOption(options)
-
     self._hasher_names_string = getattr(
         options, u'hashers', self._DEFAULT_HASHER_STRING)
     if isinstance(self._hasher_names_string, py2to3.STRING_TYPES):
@@ -146,7 +113,8 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._process_compressed_streams = getattr(
         options, u'process_compressed_streams', True)
 
-    self._ParseYaraRulesOption(options)
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'artifact_definitions', u'yara_rules'])
 
   def _ParsePerformanceOptions(self, options):
     """Parses the performance options.
@@ -174,70 +142,14 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
 
     self._queue_size = self.ParseNumericOption(options, u'queue_size')
 
-  def _ParseStorageOptions(self, options):
-    """Parses the storage options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    serializer_format = getattr(
-        options, u'serializer_format', definitions.SERIALIZER_FORMAT_JSON)
-    if serializer_format not in definitions.SERIALIZER_FORMATS:
-      raise errors.BadConfigOption(
-          u'Unsupported storage serializer format: {0:s}.'.format(
-              serializer_format))
-    self._storage_serializer_format = serializer_format
-
-  def _ParseYaraRulesOption(self, options):
-    """Parses the yara rules option.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    path = getattr(options, u'yara_rules_path', None)
-    if not path:
-      return
-
-    try:
-      with open(path, 'rb') as rules_file:
-        self._yara_rules_string = rules_file.read()
-
-    except IOError as exception:
-      raise errors.BadConfigObject(
-          u'Unable to read Yara rules file: {0:s} with error: {1!s}'.format(
-              path, exception))
-
-    try:
-      # We try to parse the rules here, to check that the definitions are
-      # valid. We then pass the string definitions along to the workers, so
-      # that they don't need read access to the rules file.
-      yara.compile(source=self._yara_rules_string)
-
-    except yara.Error as exception:
-      raise errors.BadConfigObject(
-          u'Unable to parse Yara rules in: {0:s} with error: {1!s}'.format(
-              path, exception))
-
   def AddExtractionOptions(self, argument_group):
     """Adds the extraction options to the argument group.
 
     Args:
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
-    argument_group.add_argument(
-        u'--artifact_definitions', u'--artifact-definitions',
-        dest=u'artifact_definitions_path', type=str, metavar=u'PATH',
-        action=u'store', help=(
-            u'Path to a directory containing artifact definitions. Artifact '
-            u'definitions can be used to describe and quickly collect data '
-            u'data of interest, such as specific files or Windows Registry '
-            u'keys.'))
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_group, names=[u'artifact_definitions'])
 
     argument_group.add_argument(
         u'--hashers', dest=u'hashers', type=str, action=u'store',
@@ -292,10 +204,8 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'Skip processing file content within compressed streams, such as '
             u'syslog.gz and syslog.bz2.'))
 
-    argument_group.add_argument(
-        u'--yara_rules', u'--yara-rules', dest=u'yara_rules_path',
-        type=str, metavar=u'PATH', action=u'store', help=(
-            u'Path to a file containing Yara rules definitions.'))
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_group, names=[u'yara_rules'])
 
   def AddPerformanceOptions(self, argument_group):
     """Adds the performance options to the argument group.
@@ -359,18 +269,3 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     for name, description in sorted(presets_information):
       table_view.AddRow([name, description])
     table_view.Write(self._output_writer)
-
-  def ParseOptions(self, options):
-    """Parses tool specific options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    super(ExtractionTool, self).ParseOptions(options)
-    self._ParseDataLocationOption(options)
-    self._ParseFilterOptions(options)
-    self._ParsePerformanceOptions(options)
-    self._ParseStorageOptions(options)

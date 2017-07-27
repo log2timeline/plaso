@@ -104,14 +104,15 @@ class ArgumentsHelper(object):
     """
 
   @classmethod
-  def ParseOptions(cls, options, config_object):
+  def ParseOptions(cls, options, configuration_object):
     """Parses and validates options.
 
     Args:
       options (argparse.Namespace): parser options.
-      config_object (object): object to be configured by an argument helper.
+      configuration_object (object): object to be configured by the argument
+          helper.
 
     Raises:
-      BadConfigObject: when the output module object is of the wrong type.
+      BadConfigObject: when the configuration object is of the wrong type.
       BadConfigOption: when a configuration parameter fails validation.
     """

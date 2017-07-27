@@ -6,9 +6,7 @@ import argparse
 import unittest
 
 from plaso.cli import extraction_tool
-from plaso.lib import errors
 
-from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
@@ -127,17 +125,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
     available_parser_names = [name for name, _ in parser_presets_information]
     self.assertIn(u'linux', available_parser_names)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'artifacts'])
-  def testParseArtifactDefinitionsOption(self):
-    """Tests the _ParseArtifactDefinitionsOption function."""
-    test_tool = extraction_tool.ExtractionTool()
-
-    options = test_lib.TestOptions()
-
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
-
-    test_tool._ParseArtifactDefinitionsOption(options)
-
   def testParseExtractionOptions(self):
     """Tests the _ParseExtractionOptions function."""
     test_tool = extraction_tool.ExtractionTool()
@@ -153,25 +140,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
     options = test_lib.TestOptions()
 
     test_tool._ParsePerformanceOptions(options)
-
-  def testParseStorageOptions(self):
-    """Tests the _ParseStorageOptions function."""
-    test_tool = extraction_tool.ExtractionTool()
-
-    options = test_lib.TestOptions()
-
-    test_tool._ParseStorageOptions(options)
-
-  @shared_test_lib.skipUnlessHasTestFile([u'yara.rules'])
-  def testParseYaraRulesOption(self):
-    """Tests the _ParseYaraRulesOption function."""
-    test_tool = extraction_tool.ExtractionTool()
-
-    options = test_lib.TestOptions()
-
-    options.yara_rules_path = self._GetTestFilePath([u'yara.rules'])
-
-    test_tool._ParseYaraRulesOption(options)
 
   def testAddExtractionOptions(self):
     """Tests the AddExtractionOptions function."""
@@ -273,21 +241,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
 
     expected_line = b'winreg_default : Parser for Registry data.'
     self.assertIn(expected_line, lines)
-
-  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    test_tool = extraction_tool.ExtractionTool()
-
-    options = test_lib.TestOptions()
-
-    # ParseOptions will raise if source is not set.
-    with self.assertRaises(errors.BadConfigOption):
-      test_tool.ParseOptions(options)
-
-    options.source = self._GetTestFilePath([u'ímynd.dd'])
-
-    test_tool.ParseOptions(options)
 
 
 if __name__ == '__main__':
