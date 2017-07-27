@@ -43,7 +43,9 @@ from plaso.storage import zip_file as storage_zip_file
 class PstealTool(
     storage_media_tool.StorageMediaTool,
     tool_options.AnalysisPluginOptions,
+    tool_options.HashersOptions,
     tool_options.OutputModuleOptions,
+    tool_options.ParsersOptions,
     tool_options.StorageFileOptions):
   """Psteal CLI tool.
 
@@ -58,8 +60,11 @@ class PstealTool(
         dependencies should be checked.
     list_analysis_plugins (bool): True if information about the analysis
         plugins should be shown.
+    list_hashers (bool): True if the hashers should be listed.
     list_language_identifiers (bool): True if information about the language
         identifiers should be shown.
+    list_parsers_and_plugins (bool): True if the parsers and plugins should
+        be listed.
     list_output_modules (bool): True if information about the output modules
         should be shown.
   """
@@ -117,7 +122,6 @@ class PstealTool(
     self._deduplicate_events = True
     self._enable_sigsegv_handler = False
     self._force_preprocessing = False
-    self._hasher_names_string = None
     self._knowledge_base = knowledge_base.KnowledgeBase()
     self._number_of_analysis_reports = 0
     self._number_of_extraction_workers = 0
@@ -136,7 +140,9 @@ class PstealTool(
     self._yara_rules_string = None
 
     self.list_analysis_plugins = False
+    self.list_hashers = False
     self.list_language_identifiers = False
+    self.list_parsers_and_plugins = False
     self.list_output_modules = False
 
   def _CreateProcessingConfiguration(self):
@@ -480,6 +486,12 @@ class PstealTool(
     extraction_group = argument_parser.add_argument_group(
         u'Extraction Arguments')
 
+    argument_helper_names = [
+        u'artifact_definitions', u'extraction', u'filter_file', u'hashers',
+        u'parsers', u'yara_rules']
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        extraction_group, names=argument_helper_names)
+
     self.AddCredentialOptions(extraction_group)
 
     info_group = argument_parser.add_argument_group(u'Informational Arguments')
@@ -542,23 +554,29 @@ class PstealTool(
     # and preferred time zone options.
     self._ParseTimezoneOption(options)
 
-    names = [u'analysis_plugins', u'language', u'output_modules']
+    argument_helper_names = [
+        u'analysis_plugins', u'hashers', u'language', u'output_modules',
+        u'parsers']
     helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=names)
+        options, self, names=argument_helper_names)
 
-    if self._output_format == u'list':
-      self.list_output_modules = True
-    if self._preferred_language == u'list':
-      self.list_language_identifiers = True
+    self.list_hashers = self._hasher_names_string == u'list'
+    self.list_language_identifiers = self._preferred_language == u'list'
+    self.list_output_modules = self._output_format == u'list'
+    self.list_parsers_and_plugins = self._parser_filter_expression == u'list'
 
-    if (self.list_analysis_plugins or self.list_language_identifiers or
-        self.list_output_modules or self.list_timezones):
+    if (self.list_analysis_plugins or self.list_hashers or
+        self.list_language_identifiers or self.list_output_modules or
+        self.list_parsers_and_plugins or self.list_timezones):
       return
 
     self._ParseInformationalOptions(options)
 
+    argument_helper_names = [
+        u'artifact_definitions', u'data_location', u'extraction',
+        u'status_view', u'storage_file', u'yara_rules']
     helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=[u'data_location'])
+        options, self, names=argument_helper_names)
 
     self._ParseLogFileOptions(options)
 
@@ -567,9 +585,6 @@ class PstealTool(
     # These arguments are parsed from argparse.Namespace, so we can make
     # tests consistents with the log2timeline/psort ones.
     self._single_process_mode = getattr(options, u'single_process', False)
-
-    helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=[u'status_view', u'storage_file'])
 
     if not self._storage_file_path:
       self._storage_file_path = self._GenerateStorageFileName()

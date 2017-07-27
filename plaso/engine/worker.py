@@ -76,7 +76,7 @@ class EventExtractionWorker(object):
       dfvfs_definitions.TYPE_INDICATOR_GZIP])
 
   def __init__(self, parser_filter_expression=None):
-    """Initializes the event extraction worker object.
+    """Initializes an event extraction worker.
 
     Args:
       parser_filter_expression (Optional[str]): parser filter expression,
@@ -123,9 +123,6 @@ class EventExtractionWorker(object):
       RuntimeError: if the file-like object cannot be retrieved from
           the file entry.
     """
-    if not self._analyzers:
-      return
-
     display_name = mediator.GetDisplayName()
     logging.debug(u'[AnalyzeDataStream] analyzing file: {0:s}'.format(
         display_name))
@@ -161,9 +158,6 @@ class EventExtractionWorker(object):
           parsers and other components, such as storage and abort signals.
       file_object (dfvfs.FileIO): file-like object to process.
     """
-    if not self._analyzers:
-      return
-
     maximum_read_size = max([
         analyzer_object.SIZE_LIMIT for analyzer_object in self._analyzers])
 
@@ -632,9 +626,10 @@ class EventExtractionWorker(object):
       has_data_stream = False
 
     if has_data_stream:
-      # Since AnalyzeDataStream generates event attributes it needs to be
-      # called before producing events.
-      self._AnalyzeDataStream(mediator, file_entry, data_stream_name)
+      if self._analyzers:
+        # Since AnalyzeDataStream generates event attributes it needs to be
+        # called before producing events.
+        self._AnalyzeDataStream(mediator, file_entry, data_stream_name)
 
     # We always want to extract the file entry metadata but we only want
     # to parse it once per file entry, so we only use it if we are
