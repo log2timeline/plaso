@@ -88,7 +88,7 @@ class SerializedAttributeContainerList(object):
 
 
 class BaseStorage(object):
-  """Class that defines the storage interface."""
+  """Storage interface."""
 
   @abc.abstractmethod
   def AddAnalysisReport(self, analysis_report):
@@ -272,35 +272,36 @@ class BaseStorage(object):
 
 
 class BaseFileStorage(BaseStorage):
-  """Class that defines a file-based storage."""
+  """File-based storage interface."""
 
   # pylint: disable=abstract-method
 
   def __init__(self):
-    """Initializes a storage."""
+    """Initializes a file-based storage."""
     super(BaseFileStorage, self).__init__()
     self._is_open = False
     self._read_only = True
+    self._serialized_attribute_containers = {}
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
 
-  def _DeserializeAttributeContainer(self, container_data, container_type):
+  def _DeserializeAttributeContainer(self, container_type, serialized_data):
     """Deserializes an attribute container.
 
     Args:
-      container_data (bytes): serialized attribute container data.
       container_type (str): attribute container type.
+      serialized_data (bytes): serialized attribute container data.
 
     Returns:
       AttributeContainer: attribute container or None.
     """
-    if not container_data:
+    if not serialized_data:
       return
 
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(container_type)
 
-    attribute_container = self._serializer.ReadSerialized(container_data)
+    attribute_container = self._serializer.ReadSerialized(serialized_data)
 
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(container_type)
@@ -402,7 +403,7 @@ class BaseFileStorage(BaseStorage):
 
 
 class StorageMergeReader(object):
-  """Class that defines the storage reader interface for merging."""
+  """Storage reader interface for merging."""
 
   def __init__(self, storage_writer):
     """Initializes a storage merge reader.
@@ -500,7 +501,7 @@ class FileStorageMergeReader(StorageMergeReader):
 
 
 class StorageReader(object):
-  """Class that defines the storage reader interface."""
+  """Storage reader interface."""
 
   def __enter__(self):
     """Make usable with "with" statement."""
@@ -592,7 +593,7 @@ class StorageReader(object):
 
 
 class FileStorageReader(StorageReader):
-  """Class that implements file-based storage reader."""
+  """File-based storage reader interface."""
 
   def __init__(self, path):
     """Initializes a storage reader.
@@ -688,7 +689,7 @@ class FileStorageReader(StorageReader):
 
 
 class StorageWriter(object):
-  """Class that defines the storage writer interface.
+  """Storage writer interface.
 
   Attributes:
     number_of_analysis_reports (int): number of analysis reports written.

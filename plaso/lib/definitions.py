@@ -4,6 +4,13 @@
 from __future__ import unicode_literals
 
 
+COMPRESSION_FORMAT_NONE = 'none'
+COMPRESSION_FORMAT_ZLIB = 'zlib'
+
+COMPRESSION_FORMATS = frozenset([
+    COMPRESSION_FORMAT_NONE,
+    COMPRESSION_FORMAT_ZLIB])
+
 DEFAULT_WORKER_MEMORY_LIMIT = 2048 * 1024 * 1024
 
 FAILURE_MODE_EXHAUST_MEMORY = 'exhaust_memory'
@@ -73,6 +80,11 @@ RESERVED_VARIABLE_NAMES = frozenset([
 SERIALIZER_FORMAT_JSON = 'json'
 
 SERIALIZER_FORMATS = frozenset([SERIALIZER_FORMAT_JSON])
+
+STORAGE_FORMAT_SQLITE = 'sqlite'
+STORAGE_FORMAT_ZIP = 'zip'
+
+STORAGE_FORMATS = frozenset([STORAGE_FORMAT_SQLITE, STORAGE_FORMAT_ZIP])
 
 # The session storage contains the results of one or more sessions.
 # A typical session is e.g. a single run of a tool (log2timeline.py).

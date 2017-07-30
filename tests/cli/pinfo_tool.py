@@ -46,7 +46,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     self.assertTrue(test_tool.CompareStorages())
 
     output = output_writer.ReadOutput()
-    self.assertEqual(output, b'Storages are identical.\n')
+    self.assertEqual(output, b'Storage files are identical.\n')
 
     options = test_lib.TestOptions()
     options.compare_storage_file = test_file1
@@ -57,7 +57,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     self.assertFalse(test_tool.CompareStorages())
 
     output = output_writer.ReadOutput()
-    self.assertEqual(output, b'Storages are different.\n')
+    self.assertEqual(output, b'Storage files are different.\n')
 
   def testParseArguments(self):
     """Tests the ParseArguments function."""

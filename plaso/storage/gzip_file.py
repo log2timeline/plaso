@@ -10,7 +10,6 @@ import time
 
 from plaso.lib import definitions
 from plaso.lib import platform_specific
-from plaso.serializer import json_serializer
 from plaso.storage import identifiers
 from plaso.storage import interface
 
@@ -75,7 +74,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
       for index, line in enumerate(lines):
         if line.endswith(b'\n'):
           attribute_container = self._DeserializeAttributeContainer(
-              line, u'attribute_container')
+              u'attribute_container', line)
           self._AddAttributeContainer(attribute_container)
         else:
           data_buffer = b''.join(lines[index:])
@@ -322,7 +321,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     self._WriteAttributeContainer(task_start)
 
 
-class GZIPStorageMergeReader(interface.StorageMergeReader):
+class GZIPStorageMergeReader(interface.FileStorageMergeReader):
   """Class that implements a gzip-based storage file reader for merging."""
 
   _DATA_BUFFER_SIZE = 1 * 1024 * 1024
@@ -358,8 +357,6 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
     self._data_buffer = None
     self._gzip_file = gzip_file
     self._path = path
-    self._serializer = json_serializer.JSONAttributeContainerSerializer
-    self._serializers_profiler = None
 
   def _AddAttributeContainer(self, attribute_container):
     """Adds a single attribute container to the storage writer.
@@ -395,29 +392,6 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
       raise RuntimeError(u'Unsupported container type: {0:s}'.format(
           container_type))
 
-  def _DeserializeAttributeContainer(self, container_data, container_type):
-    """Deserializes an attribute container.
-
-    Args:
-      container_data (bytes): serialized attribute container data.
-      container_type (str): attribute container type.
-
-    Returns:
-      AttributeContainer: attribute container or None.
-    """
-    if not container_data:
-      return
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(container_type)
-
-    attribute_container = self._serializer.ReadSerialized(container_data)
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(container_type)
-
-    return attribute_container
-
   def MergeAttributeContainers(self, maximum_number_of_containers=0):
     """Reads attribute containers from a task storage file into the writer.
 
@@ -446,7 +420,7 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
           continue
 
         attribute_container = self._DeserializeAttributeContainer(
-            line, u'attribute_container')
+            u'attribute_container', line)
         self._AddAttributeContainer(attribute_container)
         number_of_containers += 1
 

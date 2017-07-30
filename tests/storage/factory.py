@@ -4,67 +4,43 @@
 
 import unittest
 
+from plaso.containers import sessions
 from plaso.storage import factory
+from plaso.storage import zip_file
+
+from tests import test_lib as shared_test_lib
+from tests.storage import test_lib
 
 
-class TestStorage(object):
-  """This is a test storage that does not work."""
-
-  NAME = u'teststorage'
-  DESCRIPTION = u'This is a test storage object.'
-
-
-class StorageFactoryTest(unittest.TestCase):
+class StorageFactoryTest(test_lib.StorageTestCase):
   """Tests for the storage factory."""
 
-  def testStorageRegistration(self):
-    """Tests the RegisterStorage and DeregisterStorage functions."""
-    # pylint: disable=protected-access
-    number_of_storages = len(factory.StorageFactory._storage_classes)
+  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  def testCreateStorageFileForFile(self):
+    """Test the CreateStorageFileForFile function."""
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
 
-    factory.StorageFactory.RegisterStorage(TestStorage)
+    storage_file = factory.StorageFactory.CreateStorageFileForFile(test_file)
+    self.assertIsInstance(storage_file, zip_file.ZIPStorageFile)
 
-    self.assertEqual(
-        len(factory.StorageFactory._storage_classes),
-        number_of_storages + 1)
+  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  def testCreateStorageReaderForFile(self):
+    """Test the CreateStorageReaderForFile function."""
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
 
-    with self.assertRaises(KeyError):
-      factory.StorageFactory.RegisterStorage(TestStorage)
+    storage_reader = factory.StorageFactory.CreateStorageReaderForFile(
+        test_file)
+    self.assertIsInstance(storage_reader, zip_file.ZIPStorageFileReader)
 
-    factory.StorageFactory.DeregisterStorage(TestStorage)
-    self.assertEqual(
-        len(factory.StorageFactory._storage_classes),
-        number_of_storages)
+  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  def testCreateStorageWriterForFile(self):
+    """Test the CreateStorageWriterForFile function."""
+    session = sessions.Session()
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
 
-  def testGetAllTypeIndicators(self):
-    """Test the GetAllTypeIndicators function."""
-    factory.StorageFactory.RegisterStorage(TestStorage)
-
-    indicators = factory.StorageFactory.GetAllTypeIndicators()
-
-    self.assertIn(u'teststorage', indicators)
-    factory.StorageFactory.DeregisterStorage(TestStorage)
-
-  def testNewStorage(self):
-    """Test the NewStorage function."""
-    factory.StorageFactory.RegisterStorage(TestStorage)
-
-    storage_obj = factory.StorageFactory.NewStorage(
-        TestStorage.NAME)
-
-    # TODO: When the test storage has been implemented, after
-    # the new storage interface has been designed, make this a
-    # more full fledged test.
-    self.assertEqual(storage_obj.NAME, TestStorage.NAME)
-    self.assertTrue(isinstance(storage_obj, TestStorage))
-
-    with self.assertRaises(ValueError):
-      factory.StorageFactory.NewStorage(1234)
-
-    factory.StorageFactory.DeregisterStorage(TestStorage)
-
-    with self.assertRaises(KeyError):
-      factory.StorageFactory.DeregisterStorage(TestStorage)
+    storage_reader = factory.StorageFactory.CreateStorageWriterForFile(
+        session, test_file)
+    self.assertIsInstance(storage_reader, zip_file.ZIPStorageFileWriter)
 
 
 if __name__ == '__main__':
