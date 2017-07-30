@@ -79,7 +79,7 @@ mkdir ${DISTDIR}/packages;
 
 for DEPENDENCY in ${DEPENDENCIES};
 do
-  DEPENDENCY_DMG=`ls -1 ${DEPENDENCIES_PATH}/${DEPENDENCY}*.dmg`;
+  DEPENDENCY_DMG=`ls -1 ${DEPENDENCIES_PATH}/${DEPENDENCY}-*.dmg`;
 
   if test -z ${DEPENDENCY_DMG};
   then
