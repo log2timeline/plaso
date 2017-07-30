@@ -470,12 +470,13 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     if not hostname:
       return u''
 
-    if len(hostname) > 1:
-      if hostname[-1] == '.':
-        return hostname[::-1][1:]
-      else:
-        return hostname[::-1][0:]
-    return hostname
+    if len(hostname) <= 1:
+      return hostname
+
+    if hostname[-1] == '.':
+      return hostname[::-1][1:]
+
+    return hostname[::-1][0:]
 
   def _GetUrl(self, url_id, cache, database):
     """Return an URL from a reference to an entry in the from_visit table."""

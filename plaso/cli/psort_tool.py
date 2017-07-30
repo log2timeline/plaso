@@ -19,6 +19,7 @@ from plaso import output   # pylint: disable=unused-import
 
 from plaso.analysis import manager as analysis_manager
 from plaso.cli import status_view
+from plaso.cli import time_slices
 from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
@@ -26,10 +27,14 @@ from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.engine import knowledge_base
+from plaso.filters import manager as filters_manager
 from plaso.lib import errors
+from plaso.lib import timelib
 from plaso.multi_processing import psort
 from plaso.storage import factory as storage_factory
 from plaso.winnt import language_ids
+
+import pytz
 
 
 class PsortTool(
@@ -213,7 +218,7 @@ class PsortTool(
 
     if time_slice_event_timestamp is not None or self._use_time_slicer:
       # Note that time slicer uses the time slice to determine the duration.
-      self._time_slice = frontend.TimeSlice(
+      self._time_slice = time_slices.TimeSlice(
           time_slice_event_timestamp, duration=time_slice_duration)
 
   def _ParseInformationalOptions(self, options):
