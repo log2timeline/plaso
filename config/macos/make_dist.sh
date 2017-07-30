@@ -80,6 +80,11 @@ mkdir ${DISTDIR}/packages;
 for DEPENDENCY in ${DEPENDENCIES};
 do
   DEPENDENCY_DMG=`ls -1 ${DEPENDENCIES_PATH}/${DEPENDENCY}*.dmg`;
+
+  if test -z ${DEPENDENCY_DMG};
+  then
+    continue;
+  fi
   DEPENDENCY_PKG=`basename ${DEPENDENCY_DMG/.dmg/.pkg}`;
 
   hdiutil attach ${DEPENDENCY_DMG};
