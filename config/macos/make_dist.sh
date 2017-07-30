@@ -64,7 +64,7 @@ fi
 mkdir ${DISTDIR};
 
 cp config/macos/Readme.txt ${DISTDIR}/;
-sed "s/@VERSION@/${PLASO_VERSION}/" config/macosx/install.sh > ${DISTDIR}/install.sh;
+sed "s/@VERSION@/${PLASO_VERSION}/" config/macos/install.sh > ${DISTDIR}/install.sh;
 cp config/macos/uninstall.sh ${DISTDIR}/;
 
 chmod 755 ${DISTDIR}/install.sh ${DISTDIR}/uninstall.sh;
