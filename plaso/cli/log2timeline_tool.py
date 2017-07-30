@@ -34,6 +34,7 @@ from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import task_engine as multi_process_engine
 from plaso.parsers import manager as parsers_manager
+from plaso.storage import sqlite_file as storage_sqlite_file
 from plaso.storage import zip_file as storage_zip_file
 
 
@@ -117,6 +118,7 @@ class Log2TimelineTool(
     self._stdout_output_writer = isinstance(
         self._output_writer, tools.StdoutOutputWriter)
     self._storage_file_path = None
+    self._storage_format = definitions.STORAGE_FORMAT_ZIP
     self._temporary_directory = None
     self._text_prepend = None
     self._use_zeromq = True
@@ -249,7 +251,7 @@ class Log2TimelineTool(
     self.AddBasicOptions(argument_parser)
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_parser, names=[u'storage_file'])
+        argument_parser, names=[u'storage_file', u'storage_format'])
 
     extraction_group = argument_parser.add_argument_group(
         u'Extraction Arguments')
@@ -397,7 +399,7 @@ class Log2TimelineTool(
 
     argument_helper_names = [
         u'artifact_definitions', u'extraction', u'filter_file', u'status_view',
-        u'storage_file', u'text_prepend']
+        u'storage_file', u'storage_format', u'text_prepend']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
@@ -502,8 +504,13 @@ class Log2TimelineTool(
         preferred_time_zone=self._preferred_time_zone,
         preferred_year=self._preferred_year)
 
-    storage_writer = storage_zip_file.ZIPStorageFileWriter(
-        session, self._storage_file_path)
+    if self._storage_format == definitions.STORAGE_FORMAT_SQLITE:
+      storage_writer = storage_sqlite_file.SQLiteStorageFileWriter(
+          session, self._storage_file_path)
+
+    else:
+      storage_writer = storage_zip_file.ZIPStorageFileWriter(
+          session, self._storage_file_path)
 
     single_process_mode = self._single_process_mode
     if self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:

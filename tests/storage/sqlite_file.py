@@ -22,6 +22,12 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
   # pylint: disable=protected-access
 
+  # TODO: add tests for _AddAttributeContainer
+  # TODO: add tests for _GetAttributeContainer
+  # TODO: add tests for _HasTable
+  # TODO: add tests for _WriteAttributeContainer
+  # TODO: add tests for _WriteStorageMetadata
+
   def testAddAnalysisReport(self):
     """Tests the AddAnalysisReport function."""
     analysis_report = reports.AnalysisReport(
@@ -94,6 +100,8 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
         storage_file.AddEventTag(event_tag)
 
       storage_file.Close()
+
+  # TODO: add tests for CheckSupportedFormat
 
   def testGetAnalysisReports(self):
     """Tests the GetAnalysisReports function."""
@@ -282,6 +290,11 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file.WriteTaskCompletion(task_completion)
 
       storage_file.Close()
+
+
+# TODO: add tests for SQLiteStorageMergeReader
+# TODO: add tests for SQLiteStorageFileReader
+# TODO: add tests for SQLiteStorageFileWriter
 
 
 if __name__ == '__main__':

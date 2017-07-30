@@ -19,6 +19,7 @@ from plaso.cli.helpers import parsers
 from plaso.cli.helpers import sqlite_4n6time_output
 from plaso.cli.helpers import status_view
 from plaso.cli.helpers import storage_file
+from plaso.cli.helpers import storage_format
 from plaso.cli.helpers import tagging_analysis
 from plaso.cli.helpers import temporary_directory
 from plaso.cli.helpers import text_prepend

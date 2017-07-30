@@ -86,7 +86,7 @@ class SerializedDataStreamTest(test_lib.StorageTestCase):
     zip_file_object.close()
 
   def testWrite(self):
-    """Tests the Write functions."""
+    """Tests the Write function."""
     with shared_test_lib.TempDirectory() as temp_directory:
       test_file = os.path.join(temp_directory, u'storage.plaso')
 
@@ -119,7 +119,7 @@ class SerializedDataStreamTest(test_lib.StorageTestCase):
       data_stream.WriteAbort()
 
   def testWriteAbort(self):
-    """Tests the Write functions with abort."""
+    """Tests the Write function with abort."""
     with shared_test_lib.TempDirectory() as temp_directory:
       test_file = os.path.join(temp_directory, u'storage.plaso')
 
@@ -320,6 +320,8 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
+  # TODO: add test for _AddAttributeContainer.
+
   def testBuildEventTagIndex(self):
     """Tests the _BuildEventTagIndex function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
@@ -347,7 +349,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     entry_data = data_stream.ReadEntry()
 
     attribute_container = storage_file._DeserializeAttributeContainer(
-        entry_data, u'event')
+        u'event', entry_data)
     self.assertIsNotNone(attribute_container)
 
     storage_file.Close()
@@ -508,6 +510,26 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
       storage_file._GetEventSourceSerializedData(3)
 
     storage_file.Close()
+
+  def testGetEventTagByIdentifier(self):
+    """Tests the _GetEventTagByIdentifier function."""
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      self._CreateTestStorageFileWithTags(temp_file)
+
+      storage_file = zip_file.ZIPStorageFile()
+      storage_file.Open(path=temp_file)
+
+      event_identifier = identifiers.SerializedStreamIdentifier(1, 0)
+      event_tag = storage_file._GetEventTagByIdentifier(event_identifier)
+      self.assertIsNotNone(event_tag)
+      self.assertEqual(event_tag.comment, u'My comment')
+
+      event_identifier = identifiers.SerializedStreamIdentifier(99, 0)
+      event_tag = storage_file._GetEventTagByIdentifier(event_identifier)
+      self.assertIsNone(event_tag)
+
+      storage_file.Close()
 
   @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
   def testGetLastStreamNumber(self):
@@ -817,26 +839,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  def testGetEventTagByIdentifier(self):
-    """Tests the _GetEventTagByIdentifier function."""
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      self._CreateTestStorageFileWithTags(temp_file)
-
-      storage_file = zip_file.ZIPStorageFile()
-      storage_file.Open(path=temp_file)
-
-      event_identifier = identifiers.SerializedStreamIdentifier(1, 0)
-      event_tag = storage_file._GetEventTagByIdentifier(event_identifier)
-      self.assertIsNotNone(event_tag)
-      self.assertEqual(event_tag.comment, u'My comment')
-
-      event_identifier = identifiers.SerializedStreamIdentifier(99, 0)
-      event_tag = storage_file._GetEventTagByIdentifier(event_identifier)
-      self.assertIsNone(event_tag)
-
-      storage_file.Close()
-
   @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
   def testReadSerializerStream(self):
     """Tests the _ReadSerializerStream function."""
@@ -881,19 +883,18 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
   # TODO: add test for _SerializeAttributeContainer.
   # TODO: add test for _WriteAttributeContainersHeap.
 
-  def testWriteSerializedErrors(self):
-    """Tests the _WriteSerializedErrors function."""
-    extraction_error = errors.ExtractionError(
-        message=u'Test extraction error')
+  def testWriteSerializedAttributeContainerList(self):
+    """Tests the _WriteSerializedAttributeContainerList function."""
+    event_source = event_sources.EventSource()
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      storage_file.AddError(extraction_error)
+      storage_file.AddEventSource(event_source)
 
-      storage_file._WriteSerializedErrors()
+      storage_file._WriteSerializedAttributeContainerList(u'event_source')
 
       storage_file.Close()
 
@@ -910,42 +911,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
         storage_file.AddEvent(event)
 
       storage_file._WriteSerializedEvents()
-
-      storage_file.Close()
-
-  def testWriteSerializedEventSources(self):
-    """Tests the _WriteSerializedEventSources function."""
-    event_source = event_sources.EventSource()
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = zip_file.ZIPStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
-
-      storage_file.AddEventSource(event_source)
-
-      storage_file._WriteSerializedEventSources()
-
-      storage_file.Close()
-
-  def testWriteSerializedEventTags(self):
-    """Tests the _WriteSerializedEventTags function."""
-    test_events = self._CreateTestEvents()
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = zip_file.ZIPStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
-
-      for event in test_events:
-        storage_file.AddEvent(event)
-
-      test_event_tags = self._CreateTestEventTags(test_events)
-      for event_tag in test_event_tags:
-        storage_file.AddEventTag(event_tag)
-
-      storage_file._WriteSerializedEvents()
-      storage_file._WriteSerializedEventTags()
 
       storage_file.Close()
 
@@ -1083,6 +1048,9 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
       storage_file.AddEventTags(test_event_tags[-1:])
 
       storage_file.Close()
+
+  # TODO: add tests for CheckSupportedFormat
+  # TODO: add tests for Flush
 
   @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
   @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])
@@ -1715,7 +1683,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
       storage_writer.Close()
 
   def testStartMergeTaskStorage(self):
-    """Tests the StartMergeTaskStorage functions."""
+    """Tests the StartMergeTaskStorage function."""
     session = sessions.Session()
     test_events = self._CreateTestEvents()
 
