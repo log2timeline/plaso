@@ -77,9 +77,6 @@ chmod 755 ${DISTDIR}/install.sh ${DISTDIR}/uninstall.sh;
 mkdir ${DISTDIR}/licenses;
 mkdir ${DISTDIR}/packages;
 
-IFS="
-";
-
 for DEPENDENCY in ${DEPENDENCIES};
 do
   DEPENDENCY_DMG=`ls -1 ${DEPENDENCIES_PATH}/${DEPENDENCY}*.dmg`;
