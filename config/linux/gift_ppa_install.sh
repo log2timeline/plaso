@@ -48,6 +48,7 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-requests
                       python-six
                       python-tz
+                      python-urllib3
                       python-xlsxwriter
                       python-yaml
                       python-yara

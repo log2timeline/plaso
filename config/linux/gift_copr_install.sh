@@ -49,6 +49,7 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python-pytsk3
                       python-requests
                       python-six
+                      python2-urllib3
                       python2-yara
                       python2-zmq
                       pytz";
