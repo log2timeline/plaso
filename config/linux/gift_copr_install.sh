@@ -31,6 +31,7 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python-artifacts
                       python-bencode
                       python-binplist
+                      python-chardet
                       python-construct
                       python-crypto
                       python-dateutil
