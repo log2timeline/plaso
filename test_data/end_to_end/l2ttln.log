@@ -15,7 +15,7 @@ Time|Source|Host|User|Description|TZ|Notes
 1416273343|LOG|:|-|2014-11-18T01:15:43+00:00; Content Modification Time; [---] last message repeated 5 times ---|UTC|File: OS:/tmp/test/test_data/syslog inode: -
 1416299420|LOG|-|-|2014-11-18T08:30:20+00:00; Content Modification Time; [kernel] [997.390602] sda2: rw=0, want=65, limit=2|UTC|File: OS:/tmp/test/test_data/syslog inode: -
 1416299480|LOG|victoria|-|2014-11-18T08:31:20+00:00; Content Modification Time; [kernel] [998.390602] sda2: rw=0, want=66, limit=2|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1491238787|FILE|-|-|2017-04-03T16:59:47+00:00; atime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1491238787|FILE|-|-|2017-04-03T16:59:47+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1491238787|FILE|-|-|2017-04-03T16:59:47+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1491238788|FILE|-|-|2017-04-03T16:59:48+00:00; atime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1500105306|FILE|-|-|2017-07-15T07:55:06+00:00; Content Modification Time; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1500105306|FILE|-|-|2017-07-15T07:55:06+00:00; Metadata Modification Time; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1500105307|FILE|-|-|2017-07-15T07:55:07+00:00; Last Access Time; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1500105308|FILE|-|-|2017-07-15T07:55:08+00:00; Last Access Time; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -

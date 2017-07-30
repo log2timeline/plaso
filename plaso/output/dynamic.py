@@ -39,7 +39,7 @@ class DynamicFieldsHelper(object):
   }
 
   def __init__(self, output_mediator):
-    """Initializes a dynamic fields helper object.
+    """Initializes a dynamic fields helper.
 
     Args:
       output_mediator (OutputMediator): output mediator.
@@ -144,14 +144,14 @@ class DynamicFieldsHelper(object):
       str: message field.
 
     Raises:
-      NoFormatterFound: If no event formatter can be found to match the data
-                        type in the event.
+      NoFormatterFound: if no event formatter can be found to match the data
+          type in the event.
     """
     message, _ = self._output_mediator.GetFormattedMessages(event)
     if message is None:
+      data_type = getattr(event, u'data_type', u'UNKNOWN')
       raise errors.NoFormatterFound(
-          u'Unable to find event formatter for: {0:s}.'.format(
-              getattr(event, u'data_type', u'UNKNOWN')))
+          u'Unable to find event formatter for: {0:s}.'.format(data_type))
 
     return message
 
@@ -165,14 +165,14 @@ class DynamicFieldsHelper(object):
       str: short message field.
 
     Raises:
-      NoFormatterFound: If no event formatter can be found to match the data
-                        type in the event.
+      NoFormatterFound: if no event formatter can be found to match the data
+          type in the event.
     """
     _, message_short = self._output_mediator.GetFormattedMessages(event)
     if message_short is None:
+      data_type = getattr(event, u'data_type', u'UNKNOWN')
       raise errors.NoFormatterFound(
-          u'Unable to find event formatter for: {0:s}.'.format(
-              getattr(event, u'data_type', u'UNKNOWN')))
+          u'Unable to find event formatter for: {0:s}.'.format(data_type))
 
     return message_short
 
@@ -186,14 +186,14 @@ class DynamicFieldsHelper(object):
       str: source field.
 
     Raises:
-      NoFormatterFound: If no event formatter can be found to match the data
-                        type in the event.
+      NoFormatterFound: if no event formatter can be found to match the data
+          type in the event.
     """
     _, source = self._output_mediator.GetFormattedSources(event)
     if source is None:
+      data_type = getattr(event, u'data_type', u'UNKNOWN')
       raise errors.NoFormatterFound(
-          u'Unable to find event formatter for: {0:s}.'.format(
-              getattr(event, u'data_type', u'UNKNOWN')))
+          u'Unable to find event formatter for: {0:s}.'.format(data_type))
 
     return source
 
@@ -208,13 +208,13 @@ class DynamicFieldsHelper(object):
 
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data
-                        type in the event.
+          type in the event.
     """
     source_short, _ = self._output_mediator.GetFormattedSources(event)
     if source_short is None:
+      data_type = getattr(event, u'data_type', u'UNKNOWN')
       raise errors.NoFormatterFound(
-          u'Unable to find event formatter for: {0:s}.'.format(
-              getattr(event, u'data_type', u'UNKNOWN')))
+          u'Unable to find event formatter for: {0:s}.'.format(data_type))
 
     return source_short
 
@@ -296,7 +296,7 @@ class DynamicFieldsHelper(object):
 
     Args:
       event (EventObject): event.
-      error_message: a string containing the error message.
+      error_message (str): error message.
     """
     event_identifier = event.GetIdentifier()
     event_identifier_string = event_identifier.CopyToString()
@@ -312,10 +312,10 @@ class DynamicFieldsHelper(object):
 
     Args:
       event (EventObject): event.
-      field_name: a string containing the name of the field.
+      field_name (str): name of the field.
 
     Returns:
-      A string containing the value for the field.
+      str: value of the field.
     """
     callback_name = self._FIELD_FORMAT_CALLBACKS.get(field_name, None)
     callback_function = None
@@ -353,7 +353,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
     """Initializes an output module object.
 
     Args:
-      output_mediator: The output mediator object (instance of OutputMediator).
+      output_mediator (OutputMediator): an output mediator.
     """
     super(DynamicOutputModule, self).__init__(output_mediator)
     self._dynamic_fields_helper = DynamicFieldsHelper(output_mediator)
@@ -366,10 +366,10 @@ class DynamicOutputModule(interface.LinearOutputModule):
     This method replaces any field delimiters with a space.
 
     Args:
-      field: the string that makes up the field.
+      field (str): name of the field to sanitize.
 
     Returns:
-      A string containing the value for the field.
+      str: value of the field.
     """
     if self._field_delimiter and isinstance(field, py2to3.STRING_TYPES):
       return field.replace(self._field_delimiter, u' ')
@@ -379,7 +379,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
     """Sets the field delimiter.
 
     Args:
-      field_delimiter: a string containing the field delimiter
+      field_delimiter (str): field delimiter.
     """
     self._field_delimiter = field_delimiter
 
@@ -387,7 +387,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
     """Sets the fields to output.
 
     Args:
-      fields: a list of strings containing the names of the fields to output.
+      fields (list[str]): names of the fields to output.
     """
     self._fields = fields
 

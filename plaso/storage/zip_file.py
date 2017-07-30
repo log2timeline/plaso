@@ -1119,6 +1119,9 @@ class ZIPStorageFile(interface.BaseFileStorage):
           event_tag.event_stream_number, event_tag.event_entry_index)
       event_tag.SetEventIdentifier(event_identifier)
 
+      del event_tag.event_stream_number
+      del event_tag.event_entry_index
+
     return event_tag
 
   def _GetEventTagByIdentifier(self, event_identifier):
@@ -2574,6 +2577,9 @@ class ZIPStorageFile(interface.BaseFileStorage):
         event_identifier = identifiers.SerializedStreamIdentifier(
             event_tag.event_stream_number, event_tag.event_entry_index)
         event_tag.SetEventIdentifier(event_identifier)
+
+        del event_tag.event_stream_number
+        del event_tag.event_entry_index
 
         yield event_tag
 

@@ -14,7 +14,7 @@ class OutputModule(object):
   DESCRIPTION = u''
 
   def __init__(self, output_mediator):
-    """Initializes the output module object.
+    """Initializes an output module.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
@@ -60,7 +60,7 @@ class OutputModule(object):
     pass
 
   def WriteEvent(self, event):
-    """Writes the event object to the output.
+    """Writes the event to the output.
 
     Args:
       event (EventObject): event.
@@ -83,24 +83,42 @@ class OutputModule(object):
 
   @abc.abstractmethod
   def WriteEventBody(self, event):
-    """Writes the body of an event object to the output.
+    """Writes the body of an event to the output.
 
     Args:
       event (EventObject): event.
     """
 
   def WriteEventEnd(self):
-    """Writes the end of an event object to the output.
+    """Writes the end of an event to the output.
 
-    Can be used for post-processing or output after an individual event object
+    Can be used for post-processing or output after an individual event
     has been written, such as writing closing XML tags, etc.
     """
     pass
 
-  def WriteEventStart(self):
-    """Writes the start of an event object to the output.
+  def WriteEventMACBGroup(self, event_macb_group):
+    """Writes an event MACB group to the output.
 
-    Can be used for pre-processing or output before an individual event object
+    An event MACB group is a group of events that have the same timestamp and
+    event data (attributes and values), where the timestamp description (or
+    usage) is one or more of MACB (modification, access, change, birth).
+
+    This function is called if the psort engine detected an event MACB group
+    so that the output module, if supported, can represent the group as
+    such. If not overridden this function will output every event individually.
+
+    Args:
+      event_macb_group (list[EventObject]): group of events with identical
+          timestamps, attributes and values.
+    """
+    for event in event_macb_group:
+      self.WriteEvent(event)
+
+  def WriteEventStart(self):
+    """Writes the start of an event to the output.
+
+    Can be used for pre-processing or output before an individual event
     has been written, such as writing opening XML tags, etc.
     """
     pass
@@ -108,7 +126,7 @@ class OutputModule(object):
   def WriteFooter(self):
     """Writes the footer to the output.
 
-    Can be used for post-processing or output after the last event object
+    Can be used for post-processing or output after the last event
     is written, such as writing a file footer.
     """
     pass
@@ -116,7 +134,7 @@ class OutputModule(object):
   def WriteHeader(self):
     """Writes the header to the output.
 
-    Can be used for pre-processing or output before the first event object
+    Can be used for pre-processing or output before the first event
     is written, such as writing a file header.
     """
     pass
