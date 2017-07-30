@@ -8,17 +8,17 @@ import pytz  # pylint: disable=wrong-import-order
 
 
 class OutputMediator(object):
-  """Class that implements the output mediator.
+  """Output mediator.
 
   Attributes:
     fields_filter (FilterObject): filter object that indicates
-                                  which fields to output.
+        which fields to output.
   """
 
   def __init__(
       self, knowledge_base, formatter_mediator, fields_filter=None,
       preferred_encoding=u'utf-8'):
-    """Initializes a output mediator object.
+    """Initializes an output mediator.
 
     Args:
       knowledge_base (KnowledgeBase): knowledge base.
@@ -37,12 +37,12 @@ class OutputMediator(object):
 
   @property
   def encoding(self):
-    """The preferred encoding."""
+    """str: preferred encoding."""
     return self._preferred_encoding
 
   @property
   def filter_expression(self):
-    """The filter expression if a filter is set, None otherwise."""
+    """str: filter expression if a filter is set, None otherwise."""
     if not self.fields_filter:
       return
 
@@ -60,7 +60,7 @@ class OutputMediator(object):
       event (EventObject): event.
 
     Returns:
-      The event formatter object (instance of EventFormatter) or None.
+      EventFormatter: event formatter or None.
     """
     data_type = getattr(event, u'data_type', None)
     if not data_type:
@@ -141,7 +141,6 @@ class OutputMediator(object):
         session_identifier=session_identifier)
     return hostname or default_hostname
 
-  # TODO: Fix this function when the MFT parser has been implemented.
   def GetMACBRepresentation(self, event):
     """Retrieves the MACB representation.
 
@@ -161,13 +160,17 @@ class OutputMediator(object):
 
       return_characters = [u'.', u'.', u'.', u'.']
       for description in descriptions:
-        if description == u'mtime':
+        if description in (
+            u'mtime', definitions.TIME_DESCRIPTION_MODIFICATION):
           return_characters[0] = u'M'
-        elif description == u'atime':
+        elif description in (
+            u'atime', definitions.TIME_DESCRIPTION_LAST_ACCESS):
           return_characters[1] = u'A'
-        elif description == u'ctime':
+        elif description in (
+            u'ctime', definitions.TIME_DESCRIPTION_CHANGE):
           return_characters[2] = u'C'
-        elif description == u'crtime':
+        elif description in (
+            u'crtime', definitions.TIME_DESCRIPTION_CREATION):
           return_characters[3] = u'B'
 
       return u''.join(return_characters)
@@ -208,6 +211,51 @@ class OutputMediator(object):
       return u'..C.'
 
     return u'....'
+
+  def GetMACBRepresentationFromDescriptions(self, timestamp_descriptions):
+    """Determines the MACB representation from the timestamp descriptions.
+
+    MACB representation is a shorthand for representing one or more of
+    modification, access, change, birth timestamp descriptions as the letters
+    "MACB" or a "." if the corresponding timestamp is not set.
+
+    Note that this is an output format shorthand and does not guarantee that
+    the timestamps represent the same occurence.
+
+    Args:
+      timestamp_descriptions (list[str]): timestamp descriptions, which are
+          defined in definitions.TIME_DESCRIPTIONS.
+
+    Returns:
+      str: MACB representation.
+    """
+    macb_representation = []
+
+    if (u'mtime' in timestamp_descriptions or
+        definitions.TIME_DESCRIPTION_MODIFICATION in timestamp_descriptions):
+      macb_representation.append(u'M')
+    else:
+      macb_representation.append(u'.')
+
+    if (u'atime' in timestamp_descriptions or
+        definitions.TIME_DESCRIPTION_LAST_ACCESS in timestamp_descriptions):
+      macb_representation.append(u'A')
+    else:
+      macb_representation.append(u'.')
+
+    if (u'ctime' in timestamp_descriptions or
+        definitions.TIME_DESCRIPTION_CHANGE in timestamp_descriptions):
+      macb_representation.append(u'C')
+    else:
+      macb_representation.append(u'.')
+
+    if (u'crtime' in timestamp_descriptions or
+        definitions.TIME_DESCRIPTION_CREATION in timestamp_descriptions):
+      macb_representation.append(u'B')
+    else:
+      macb_representation.append(u'.')
+
+    return u''.join(macb_representation)
 
   # TODO: remove this function it is incorrect.
   def GetStoredHostname(self):

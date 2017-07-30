@@ -39,6 +39,8 @@ class FileStatTest(test_lib.ParserTestCase):
 
     event = events[0]
 
+    self.assertEqual(event.file_size, 116)
+
     expected_message = (
         u'TSK:/passwords.txt '
         u'Type: file')
@@ -67,6 +69,8 @@ class FileStatTest(test_lib.ParserTestCase):
 
     event = events[0]
 
+    self.assertEqual(event.file_size, 1247)
+
     expected_message = (
         u'ZIP:/syslog '
         u'Type: file')
@@ -93,6 +97,8 @@ class FileStatTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[0]
+
+    self.assertEqual(event.file_size, 1247)
 
     test_path = os.path.join(os.getcwd(), u'test_data', u'syslog.gz')
     expected_message = (
@@ -122,6 +128,8 @@ class FileStatTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[0]
+
+    self.assertEqual(event.file_size, 1247)
 
     expected_message = (
         u'TAR:/syslog '
@@ -153,6 +161,8 @@ class FileStatTest(test_lib.ParserTestCase):
 
     event = events[0]
 
+    self.assertEqual(event.file_size, 1247)
+
     expected_message = (
         u'TAR:/syslog '
         u'Type: file')
@@ -174,6 +184,8 @@ class FileStatTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[0]
+
+    self.assertEqual(event.file_size, 10240)
 
     test_path = os.path.join(os.getcwd(), u'test_data', u'syslog.tgz')
     expected_message = (
@@ -206,6 +218,8 @@ class FileStatTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[0]
+
+    self.assertEqual(event.file_size, 1247)
 
     expected_message = (
         u'ZIP:/syslog '

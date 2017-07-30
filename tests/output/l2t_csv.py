@@ -83,7 +83,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         b'closed for user root),Reporter <CRON> PID: 8442 '
         b'(pam_unix(cron:session): session closed for user root),'
         b'2,log/syslog.1,-,Malware Printed,'
-        b'-,my_number: 123  some_additional_foo: True \n')
+        b'-,my_number: 123; some_additional_foo: True\n')
 
     event_body = self._output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
