@@ -4,6 +4,9 @@
 EXIT_SUCCESS=0;
 EXIT_FAILURE=1;
 
+
+DEPENDENCIES="PyYAML XlsxWriter artifacts bencode binplist construct dateutil dfdatetime dfvfs dfwinreg dpkt efilter hachoir-core hachoir-metadata hachoir-parser libbde libesedb libevt libevtx libewf libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm lzma pefile psutil pycrypto pyparsing pysqlite pytsk3 pytz pyzmq requests six yara-python";
+
 SCRIPT_NAME=`basename $0`;
 DEPENDENCIES_ONLY=0;
 SHOW_HELP=0;
@@ -49,24 +52,67 @@ then
   fi
 fi
 
-VOLUME_NAME="/Volumes/@VOLUMENAME@";
+PACKAGE_IDENTIFIER=`/usr/sbin/pkgutil --packages | grep plaso`;
 
-if ! test -d ${VOLUME_NAME};
+if test $? -eq 0;
 then
-  echo "Unable to find installation volume: ${VOLUME_NAME}";
+  echo "Uninstalling plaso.";
 
-  exit ${EXIT_FAILURE};
+  INSTALLED_FILES=`/usr/sbin/pkgutil --files ${PACKAGE_IDENTIFIER} --only-files`;
+
+  for PATH in ${INSTALLED_FILES};
+  do
+    if test -f ${PATH};
+    then
+      rm -f ${PATH};
+    fi
+  done
+
+  INSTALLED_FILES=`/usr/sbin/pkgutil --files ${PACKAGE_IDENTIFIER} --only-dirs | sort -r`;
+
+  for PATH in ${INSTALLED_FILES};
+  do
+    if test -d ${PATH};
+    then
+      rmdir ${PATH} 2> /dev/null;
+    fi
+  done
+
+  /usr/sbin/pkgutil --forget ${PACKAGE_IDENTIFIER};
 fi
 
-echo "Uninstalling packages.";
+echo "Uninstalling dependencies.";
 
-for PACKAGE in `find ${VOLUME_NAME} -name "*.pkg"`;
+for PACKAGE_NAME in ${DEPENDENCIES};
 do
-  # TODO: implement.
-  # Get package names: /usr/sbin/pkgutil --packages
-  # Get files in package: /usr/sbin/pkgutil --files NAME
-  # Remove files and directories.
-  # Forget package: /usr/sbin/pkgutil --forget NAME
+  PACKAGE_IDENTIFIER=`/usr/sbin/pkgutil --packages | grep ${PACKAGE_NAME}`;
+
+  if test $? -ne 0;
+  then
+    continue
+  fi
+
+  INSTALLED_FILES=`/usr/sbin/pkgutil --files ${PACKAGE_IDENTIFIER} --only-files`;
+
+  for PATH in ${INSTALLED_FILES};
+  do
+    if test -f ${PATH};
+    then
+      rm -f ${PATH};
+    fi
+  done
+
+  INSTALLED_FILES=`/usr/sbin/pkgutil --files ${PACKAGE_IDENTIFIER} --only-dirs | sort -r`;
+
+  for PATH in ${INSTALLED_FILES};
+  do
+    if test -d ${PATH};
+    then
+      rmdir ${PATH} 2> /dev/null;
+    fi
+  done
+
+  /usr/sbin/pkgutil --forget ${PACKAGE_IDENTIFIER};
 done
 
 echo "Done.";

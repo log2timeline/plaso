@@ -9,12 +9,12 @@ MACOS_VERSION=`sw_vers -productVersion | awk -F '.' '{print $1 "." $2}'`;
 PLASO_VERSION=`grep -e '^__version' plaso/__init__.py | sed -e "s/^[^=]*= '\([^']*\)'/\1/g"`;
 PKG_IDENTIFIER="com.github.log2timeline.plaso";
 PKG_FILENAME="../python-plaso-${PLASO_VERSION}.pkg";
-DEPSDIR="../l2tdevtools/build";
+DEPENDENCIES="../l2tdevtools/build";
 DISTDIR="plaso-${PLASO_VERSION}";
 
-if test ! -d ${DEPSDIR};
+if test ! -d ${DEPENDENCIES};
 then
-  echo "Missing dependencies directory: ${DEPSDIR}.";
+  echo "Missing dependencies directory: ${DEPENDENCIES}.";
 
   exit ${EXIT_FAILURE};
 fi
@@ -74,7 +74,7 @@ mkdir ${DISTDIR}/packages;
 IFS="
 ";
 
-for DEPENDENCY_DMG in `ls -1 ${DEPSDIR}/*.dmg`;
+for DEPENDENCY_DMG in `ls -1 ${DEPENDENCIES}/*.dmg`;
 do
   # TODO: skip hachoir packages.
   DEPENDENCY_PKG=`basename ${DEPENDENCY_DMG/.dmg/.pkg}`;
