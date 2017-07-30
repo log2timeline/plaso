@@ -1,11 +1,11 @@
 #!/bin/bash
 #
-# Script to make a plaso Mac OS X distribution package.
+# Script to make a plaso macOS distribution package.
 
 EXIT_SUCCESS=0;
 EXIT_FAILURE=1;
 
-MACOSX_VERSION=`sw_vers -productVersion | awk -F '.' '{print $1 "." $2}'`;
+MACOS_VERSION=`sw_vers -productVersion | awk -F '.' '{print $1 "." $2}'`;
 PLASO_VERSION=`grep -e '^__version' plaso/__init__.py | sed -e "s/^[^=]*= '\([^']*\)'/\1/g"`;
 PKG_IDENTIFIER="com.github.log2timeline.plaso";
 PKG_FILENAME="../python-plaso-${PLASO_VERSION}.pkg";
@@ -33,7 +33,7 @@ else
   DIST_VERSION="${PLASO_VERSION}-$1";
 fi
 
-DISTFILE="../plaso-${DIST_VERSION}-macosx-${MACOSX_VERSION}.dmg";
+DISTFILE="../plaso-${DIST_VERSION}-macos-${MACOS_VERSION}.dmg";
 
 rm -rf build dist tmp ${DISTDIR} ${PKG_FILENAME} ${DISTFILE};
 
@@ -63,10 +63,11 @@ fi
 
 mkdir ${DISTDIR};
 
-cp config/macosx/Readme.txt ${DISTDIR}/;
+cp config/macos/Readme.txt ${DISTDIR}/;
+sed "s/@VERSION@/${PLASO_VERSION}/" config/macosx/install.sh > ${DISTDIR}/install.sh;
+cp config/macos/uninstall.sh ${DISTDIR}/;
 
-sed "s/@VOLUMENAME@/${DISTDIR}/" config/macosx/install.sh.in > ${DISTDIR}/install.sh;
-chmod 755 ${DISTDIR}/install.sh;
+chmod 755 ${DISTDIR}/install.sh ${DISTDIR}/uninstall.sh;
 
 mkdir ${DISTDIR}/packages;
 
