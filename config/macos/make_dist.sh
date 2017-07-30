@@ -5,16 +5,21 @@
 EXIT_SUCCESS=0;
 EXIT_FAILURE=1;
 
+
+DEPENDENCIES="PyYAML XlsxWriter artifacts bencode binplist construct dateutil dfdatetime dfvfs dfwinreg dpkt efilter hachoir-core hachoir-metadata hachoir-parser libbde libesedb libevt libevtx libewf libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm lzma pefile psutil pycrypto pyparsing pysqlite pytsk3 pytz pyzmq requests six yara-python";
+
 MACOS_VERSION=`sw_vers -productVersion | awk -F '.' '{print $1 "." $2}'`;
+
 PLASO_VERSION=`grep -e '^__version' plaso/__init__.py | sed -e "s/^[^=]*= '\([^']*\)'/\1/g"`;
-PKG_IDENTIFIER="com.github.log2timeline.plaso";
+DEPENDENCIES_PATH="../l2tdevtools/build";
+LICENSES_PATH="../l2tdevtools/data/licenses";
+
 PKG_FILENAME="../python-plaso-${PLASO_VERSION}.pkg";
-DEPENDENCIES="../l2tdevtools/build";
 DISTDIR="plaso-${PLASO_VERSION}";
 
-if test ! -d ${DEPENDENCIES};
+if test ! -d ${DEPENDENCIES_PATH};
 then
-  echo "Missing dependencies directory: ${DEPENDENCIES}.";
+  echo "Missing dependencies directory: ${DEPENDENCIES_PATH}.";
 
   exit ${EXIT_FAILURE};
 fi
@@ -52,7 +57,7 @@ EOT
   chmod a+x ${SH_FILE};
 done
 
-pkgbuild --root tmp --identifier ${PKG_IDENTIFIER} --version ${PLASO_VERSION} --ownership recommended ${PKG_FILENAME};
+pkgbuild --root tmp --identifier "com.github.log2timeline.plaso" --version ${PLASO_VERSION} --ownership recommended ${PKG_FILENAME};
 
 if test ! -f ${PKG_FILENAME};
 then
@@ -69,24 +74,28 @@ cp config/macos/uninstall.sh ${DISTDIR}/;
 
 chmod 755 ${DISTDIR}/install.sh ${DISTDIR}/uninstall.sh;
 
+mkdir ${DISTDIR}/licenses;
 mkdir ${DISTDIR}/packages;
 
 IFS="
 ";
 
-for DEPENDENCY_DMG in `ls -1 ${DEPENDENCIES}/*.dmg`;
+for DEPENDENCY in ${DEPENDENCIES};
 do
-  # TODO: skip hachoir packages.
+  DEPENDENCY_DMG=`ls -1 ${DEPENDENCIES_PATH}/${DEPENDENCY}*.dmg`;
   DEPENDENCY_PKG=`basename ${DEPENDENCY_DMG/.dmg/.pkg}`;
+
   hdiutil attach ${DEPENDENCY_DMG};
   cp -rf /Volumes/${DEPENDENCY_PKG}/${DEPENDENCY_PKG} ${DISTDIR}/packages;
   hdiutil detach /Volumes/${DEPENDENCY_PKG};
 
-  # TODO: copy license files on a per-dependency basis.
-done
+  LICENSE_FILE="${LICENSES_PATH}/LICENSE.${DEPENDENCY}";
 
-cp -r config/licenses ${DISTDIR}/;
-rm -f ${DISTDIR}/licenses/LICENSE.pywin32;
+  if test -f ${LICENCE_FILE};
+  then
+    cp ${LICENCE_FILE} ${DISTDIR}/licenses;
+  fi
+done
 
 cp -rf ${PKG_FILENAME} ${DISTDIR}/packages;
 
