@@ -88,9 +88,9 @@ do
 
   LICENSE_FILE="${LICENSES_PATH}/LICENSE.${DEPENDENCY}";
 
-  if test -f ${LICENCE_FILE};
+  if test -f ${LICENSE_FILE};
   then
-    cp ${LICENCE_FILE} ${DISTDIR}/licenses;
+    cp ${LICENSE_FILE} ${DISTDIR}/licenses;
   fi
 done
 
