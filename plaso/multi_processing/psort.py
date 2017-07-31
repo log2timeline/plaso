@@ -321,6 +321,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       status_indicator = definitions.PROCESSING_STATUS_COMPLETED
       process_status = {
           u'processing_status': status_indicator}
+      used_memory = 0
 
     else:
       process = self._processes_per_pid[pid]
