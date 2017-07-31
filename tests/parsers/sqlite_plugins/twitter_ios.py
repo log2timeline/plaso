@@ -18,9 +18,9 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'twitter_ios.db'])
   def testProcess(self):
     """Test the Process function on a Twitter iOS file."""
-    plugin_object = twitter_ios.TwitterIOSPlugin()
+    plugin = twitter_ios.TwitterIOSPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        [u'twitter_ios.db'], plugin_object)
+        [u'twitter_ios.db'], plugin)
 
     # We should have 184 events in total.
     #  - 25 Contacts creation events.
@@ -29,35 +29,37 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     #  - 67 Status update events.
     self.assertEqual(184, storage_writer.number_of_events)
 
+    events = list(storage_writer.GetEvents())
+
     # Test the first contact creation event.
-    test_event = storage_writer.events[0]
+    event = events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2007-04-22 14:42:37')
-    self.assertEqual(test_event.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(
-        test_event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(test_event.screen_name, u'BBCBreaking')
-    self.assertEqual(test_event.name, u'BBC Breaking News')
-    self.assertEqual(test_event.location, u'London, UK')
-    self.assertEqual(test_event.following, 0)
-    self.assertEqual(test_event.followers_count, 19466932)
-    self.assertEqual(test_event.following_count, 3)
-    self.assertEqual(test_event.url, u'http://www.bbc.co.uk/news')
+    self.assertEqual(event.screen_name, u'BBCBreaking')
+    self.assertEqual(event.name, u'BBC Breaking News')
+    self.assertEqual(event.location, u'London, UK')
+    self.assertEqual(event.following, 0)
+    self.assertEqual(event.followers_count, 19466932)
+    self.assertEqual(event.following_count, 3)
+    self.assertEqual(event.url, u'http://www.bbc.co.uk/news')
 
     expected_description = (
         u'Breaking news alerts and updates from the BBC. For news, features, '
         u'analysis follow @BBCWorld (international) or @BBCNews (UK). Latest '
         u'sport news @BBCSport.')
 
-    self.assertEqual(test_event.description, expected_description)
+    self.assertEqual(event.description, expected_description)
 
     expected_profile_url = (
         u'https://pbs.twimg.com/profile_images/'
         u'460740982498013184/wIPwMwru_normal.png')
 
-    self.assertEqual(test_event.profile_url, expected_profile_url)
+    self.assertEqual(event.profile_url, expected_profile_url)
 
     expected_message = (
         u'Screen name: BBCBreaking Profile picture URL: '
@@ -69,42 +71,41 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
         u'http://www.bbc.co.uk/news Following: No Number of followers: '
         u'19466932 Number of following: 3')
 
-    expected_message_short = (
+    expected_short_message = (
         u'Screen name: BBCBreaking Description: Breaking news alerts and '
         u'updates from t...')
 
-    self._TestGetMessageStrings(
-        test_event, expected_message, expected_message_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     # Test first contact modification event.
-    test_event = storage_writer.events[1]
+    event = events[1]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-12-02 15:35:44')
-    self.assertEqual(test_event.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(
-        test_event.timestamp_desc, definitions.TIME_DESCRIPTION_UPDATE)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_UPDATE)
 
-    self.assertEqual(test_event.screen_name, u'BBCBreaking')
-    self.assertEqual(test_event.name, u'BBC Breaking News')
-    self.assertEqual(test_event.location, u'London, UK')
-    self.assertEqual(test_event.following, 0)
-    self.assertEqual(test_event.followers_count, 19466932)
-    self.assertEqual(test_event.following_count, 3)
-    self.assertEqual(test_event.url, u'http://www.bbc.co.uk/news')
+    self.assertEqual(event.screen_name, u'BBCBreaking')
+    self.assertEqual(event.name, u'BBC Breaking News')
+    self.assertEqual(event.location, u'London, UK')
+    self.assertEqual(event.following, 0)
+    self.assertEqual(event.followers_count, 19466932)
+    self.assertEqual(event.following_count, 3)
+    self.assertEqual(event.url, u'http://www.bbc.co.uk/news')
 
     expected_description = (
         u'Breaking news alerts and updates from the BBC. For news, features, '
         u'analysis follow @BBCWorld (international) or @BBCNews (UK). Latest '
         u'sport news @BBCSport.')
 
-    self.assertEqual(test_event.description, expected_description)
+    self.assertEqual(event.description, expected_description)
 
     expected_profile_url = (
         u'https://pbs.twimg.com/profile_images/'
         u'460740982498013184/wIPwMwru_normal.png')
 
-    self.assertEqual(test_event.profile_url, expected_profile_url)
+    self.assertEqual(event.profile_url, expected_profile_url)
 
     expected_message = (
         u'Screen name: BBCBreaking Profile picture URL: '
@@ -116,66 +117,63 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
         u'http://www.bbc.co.uk/news Following: No Number of followers: '
         u'19466932 Number of following: 3')
 
-    expected_message_short = (
+    expected_short_message = (
         u'Screen name: BBCBreaking Description: Breaking news alerts and '
         u'updates from t...')
 
-    self._TestGetMessageStrings(
-        test_event, expected_message, expected_message_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     # Test first status creation event.
-    test_event = storage_writer.events[50]
+    event = events[50]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-09-11 11:46:16')
-    self.assertEqual(test_event.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(
-        test_event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(test_event.text, u'Never forget. http://t.co/L7bjWue1A2')
-    self.assertEqual(test_event.user_id, 475222380)
-    self.assertEqual(test_event.name, u'Heather Mahalik')
-    self.assertEqual(test_event.retweet_count, 2)
-    self.assertEqual(test_event.favorite_count, 3)
-    self.assertEqual(test_event.favorited, 0)
+    self.assertEqual(event.text, u'Never forget. http://t.co/L7bjWue1A2')
+    self.assertEqual(event.user_id, 475222380)
+    self.assertEqual(event.name, u'Heather Mahalik')
+    self.assertEqual(event.retweet_count, 2)
+    self.assertEqual(event.favorite_count, 3)
+    self.assertEqual(event.favorited, 0)
 
     expected_message = (
         u'Name: Heather Mahalik User Id: 475222380 Message: Never forget. '
         u'http://t.co/L7bjWue1A2 Favorite: No Retweet Count: 2 Favorite '
         u'Count: 3')
 
-    expected_message_short = (
+    expected_short_message = (
         u'Name: Heather Mahalik Message: Never forget. http://t.co/L7bjWue1A2')
 
-    self._TestGetMessageStrings(
-        test_event, expected_message, expected_message_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     # Test first status update event.
-    test_event = storage_writer.events[51]
+    event = events[51]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-12-02 15:39:37')
-    self.assertEqual(test_event.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(
-        test_event.timestamp_desc, definitions.TIME_DESCRIPTION_UPDATE)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_UPDATE)
 
-    self.assertEqual(test_event.text, u'Never forget. http://t.co/L7bjWue1A2')
-    self.assertEqual(test_event.user_id, 475222380)
-    self.assertEqual(test_event.name, u'Heather Mahalik')
-    self.assertEqual(test_event.retweet_count, 2)
-    self.assertEqual(test_event.favorite_count, 3)
-    self.assertEqual(test_event.favorited, 0)
+    self.assertEqual(event.text, u'Never forget. http://t.co/L7bjWue1A2')
+    self.assertEqual(event.user_id, 475222380)
+    self.assertEqual(event.name, u'Heather Mahalik')
+    self.assertEqual(event.retweet_count, 2)
+    self.assertEqual(event.favorite_count, 3)
+    self.assertEqual(event.favorited, 0)
 
     expected_message = (
         u'Name: Heather Mahalik User Id: 475222380 Message: Never forget. '
         u'http://t.co/L7bjWue1A2 Favorite: No Retweet Count: 2 Favorite '
         u'Count: 3')
 
-    expected_message_short = (
+    expected_short_message = (
         u'Name: Heather Mahalik Message: Never forget. http://t.co/L7bjWue1A2')
 
-    self._TestGetMessageStrings(
-        test_event, expected_message, expected_message_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

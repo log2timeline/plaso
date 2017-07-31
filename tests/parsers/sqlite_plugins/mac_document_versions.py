@@ -19,37 +19,39 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'document_versions.sql'])
   def testProcess(self):
     """Tests the Process function on a Mac OS X Document Versions file."""
-    plugin_object = mac_document_versions.MacDocumentVersionsPlugin()
+    plugin = mac_document_versions.MacDocumentVersionsPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        [u'document_versions.sql'], plugin_object)
+        [u'document_versions.sql'], plugin)
 
     self.assertEqual(storage_writer.number_of_events, 4)
 
+    events = list(storage_writer.GetEvents())
+
     # Check the first page visited entry.
-    event_object = storage_writer.events[0]
+    event = events[0]
 
     self.assertEqual(
-        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-01-21 02:03:00')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event_object.name, u'Spain is beautiful.rtf')
-    self.assertEqual(event_object.path, u'/Users/moxilo/Documents')
-    self.assertEqual(event_object.user_sid, u'501')
+    self.assertEqual(event.name, u'Spain is beautiful.rtf')
+    self.assertEqual(event.path, u'/Users/moxilo/Documents')
+    self.assertEqual(event.user_sid, u'501')
     expected_version_path = (
         u'/.DocumentRevisions-V100/PerUID/501/1/'
         u'com.apple.documentVersions/'
         u'08CFEB5A-5CDA-486F-AED5-EA35BF3EE4C2.rtf')
-    self.assertEqual(event_object.version_path, expected_version_path)
+    self.assertEqual(event.version_path, expected_version_path)
 
-    expected_msg = (
+    expected_message = (
         u'Version of [{0:s}] ({1:s}) stored in {2:s} by {3:s}'.format(
-            event_object.name, event_object.path,
-            event_object.version_path, event_object.user_sid))
-    expected_short = u'Stored a document version of [{0:s}]'.format(
-        event_object.name)
-    self._TestGetMessageStrings(event_object, expected_msg, expected_short)
+            event.name, event.path,
+            event.version_path, event.user_sid))
+    expected_short_message = u'Stored a document version of [{0:s}]'.format(
+        event.name)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

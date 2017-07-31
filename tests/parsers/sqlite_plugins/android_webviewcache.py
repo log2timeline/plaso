@@ -18,13 +18,15 @@ class AndroidWebViewCache(test_lib.SQLitePluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'webviewCache.db'])
   def testProcess(self):
     """Test the Process function on a WebViewCache file."""
-    plugin_object = android_webviewcache.AndroidWebViewCachePlugin()
+    plugin = android_webviewcache.AndroidWebViewCachePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        [u'webviewCache.db'], plugin_object)
+        [u'webviewCache.db'], plugin)
 
     self.assertEqual(storage_writer.number_of_events, 10)
 
-    event = storage_writer.events[0]
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-03-28 09:48:18')

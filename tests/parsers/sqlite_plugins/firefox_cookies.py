@@ -19,9 +19,9 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'firefox_cookies.sqlite'])
   def testProcess(self):
     """Tests the Process function on a Firefox 29 cookie database file."""
-    plugin_object = firefox_cookies.FirefoxCookiePlugin()
+    plugin = firefox_cookies.FirefoxCookiePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        [u'firefox_cookies.sqlite'], plugin_object)
+        [u'firefox_cookies.sqlite'], plugin)
 
     test_events = []
     extra_objects = []

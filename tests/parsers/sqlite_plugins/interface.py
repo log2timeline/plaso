@@ -72,11 +72,11 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'wal_database.db-wal'])
   def testProcessWithWAL(self):
     """Tests the Process function on a database with WAL file."""
-    plugin_object = TestSQLitePlugin()
+    plugin = TestSQLitePlugin()
     cache = sqlite.SQLiteCache()
     wal_file = self._GetTestFilePath([u'wal_database.db-wal'])
     self._ParseDatabaseFileWithPlugin(
-        [u'wal_database.db'], plugin_object, cache=cache, wal_path=wal_file)
+        [u'wal_database.db'], plugin, cache=cache, wal_path=wal_file)
 
     expected_results = [
         ((u'Committed Text 1', 1, b'None'), False),
@@ -94,15 +94,15 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
         ((u'New Text 1', 12, b'None'), True),
         ((u'New Text 2', 13, b'None'), True)]
 
-    self.assertEqual(expected_results, plugin_object.results)
+    self.assertEqual(expected_results, plugin.results)
 
   @shared_test_lib.skipUnlessHasTestFile([u'wal_database.db'])
   def testProcessWithoutWAL(self):
     """Tests the Process function on a database without WAL file."""
-    plugin_object = TestSQLitePlugin()
+    plugin = TestSQLitePlugin()
     cache = sqlite.SQLiteCache()
     self._ParseDatabaseFileWithPlugin(
-        [u'wal_database.db'], plugin_object, cache=cache)
+        [u'wal_database.db'], plugin, cache=cache)
 
     expected_results = [
         ((u'Committed Text 1', 1, b'None'), False),
@@ -116,18 +116,18 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
         ((u'Committed Text 7', 9, b'None'), False),
         ((u'Unhashable Row 1', 10, b'Binary Text!\x01\x02\x03'), False)]
 
-    self.assertEqual(expected_results, plugin_object.results)
+    self.assertEqual(expected_results, plugin.results)
 
   @shared_test_lib.skipUnlessHasTestFile([u'wal_database.db'])
   @shared_test_lib.skipUnlessHasTestFile([u'wal_database.db-wal'])
   def testSchemaMatching(self):
     """Tests the Schema matching capabilities."""
-    plugin_object = TestSQLitePlugin()
+    plugin = TestSQLitePlugin()
     cache = sqlite.SQLiteCache()
 
     # Test matching schema.
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        [u'wal_database.db'], plugin_object, cache=cache)
+        [u'wal_database.db'], plugin, cache=cache)
     self.assertTrue(storage_writer.events)
     for event in storage_writer.events:
       self.assertTrue(event.schema_match)
@@ -135,7 +135,7 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
     # Test schema change with WAL.
     wal_file = self._GetTestFilePath([u'wal_database.db-wal'])
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        [u'wal_database.db'], plugin_object, cache=cache, wal_path=wal_file)
+        [u'wal_database.db'], plugin, cache=cache, wal_path=wal_file)
     self.assertTrue(storage_writer.events)
     for event in storage_writer.events:
       if event.from_wal:
@@ -144,22 +144,22 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
         self.assertTrue(event.schema_match)
 
     # Add schema change from WAL file and test again.
-    plugin_object.SCHEMAS.append(
+    plugin.SCHEMAS.append(
         {u'MyTable':
          u'CREATE TABLE "MyTable" ( `Field1` TEXT, `Field2` INTEGER, `Field3` '
          u'BLOB , NewField TEXT)',
          u'NewTable':
          u'CREATE TABLE NewTable(NewTableField1 TEXT, NewTableField2 TEXT)'})
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        [u'wal_database.db'], plugin_object, cache=cache, wal_path=wal_file)
+        [u'wal_database.db'], plugin, cache=cache, wal_path=wal_file)
     self.assertTrue(storage_writer.events)
     for event in storage_writer.events:
       self.assertTrue(event.schema_match)
 
     # Test without original schema.
-    del plugin_object.SCHEMAS[0]
+    del plugin.SCHEMAS[0]
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        [u'wal_database.db'], plugin_object, cache=cache, wal_path=wal_file)
+        [u'wal_database.db'], plugin, cache=cache, wal_path=wal_file)
     self.assertTrue(storage_writer.events)
     for event in storage_writer.events:
       if event.from_wal:

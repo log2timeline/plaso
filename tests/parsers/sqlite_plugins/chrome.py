@@ -20,16 +20,18 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'History'])
   def testProcess(self):
     """Tests the Process function on a Chrome History database file."""
-    plugin_object = chrome.ChromeHistoryPlugin()
+    plugin = chrome.ChromeHistoryPlugin()
     cache = sqlite.SQLiteCache()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        [u'History'], plugin_object, cache=cache)
+        [u'History'], plugin, cache=cache)
 
     # The History file contains 71 events (69 page visits, 1 file downloads).
     self.assertEqual(storage_writer.number_of_events, 71)
 
+    events = list(storage_writer.GetEvents())
+
     # Check the first page visited entry.
-    event = storage_writer.events[0]
+    event = events[0]
 
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
@@ -55,7 +57,7 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     # Check the first file downloaded entry.
-    event = storage_writer.events[69]
+    event = events[69]
 
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
