@@ -18,15 +18,17 @@ class ZeitgeistActivityDatabasePluginTest(test_lib.SQLitePluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'activity.sqlite'])
   def testProcess(self):
     """Tests the Process function."""
-    plugin_object = zeitgeist.ZeitgeistActivityDatabasePlugin()
+    plugin = zeitgeist.ZeitgeistActivityDatabasePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        [u'activity.sqlite'], plugin_object)
+        [u'activity.sqlite'], plugin)
 
     # The sqlite database contains 44 events.
     self.assertEqual(storage_writer.number_of_events, 44)
 
+    events = list(storage_writer.GetEvents())
+
     # Check the first event.
-    event = storage_writer.events[0]
+    event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-22 08:53:19.477')

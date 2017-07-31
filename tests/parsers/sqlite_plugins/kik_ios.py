@@ -19,15 +19,17 @@ class KikMessageTest(test_lib.SQLitePluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'kik_ios.sqlite'])
   def testProcess(self):
     """Test the Process function on a Kik messenger kik.sqlite file."""
-    plugin_object = kik_ios.KikIOSPlugin()
+    plugin = kik_ios.KikIOSPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        [u'kik_ios.sqlite'], plugin_object)
+        [u'kik_ios.sqlite'], plugin)
 
     # The Kik database file contains 60 events.
     self.assertEqual(storage_writer.number_of_events, 60)
 
+    events = list(storage_writer.GetEvents())
+
     # Check the second message sent.
-    event = storage_writer.events[1]
+    event = events[1]
 
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
