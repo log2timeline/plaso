@@ -28,6 +28,7 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-artifacts
                       python-bencode
                       python-binplist
+                      python-chardet
                       python-construct
                       python-crypto
                       python-dateutil
@@ -48,6 +49,7 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-requests
                       python-six
                       python-tz
+                      python-urllib3
                       python-xlsxwriter
                       python-yaml
                       python-yara

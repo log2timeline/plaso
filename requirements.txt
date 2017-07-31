@@ -4,6 +4,7 @@ XlsxWriter >= 0.9.3
 artifacts >= 20170521
 bencode.py
 binplist >= 0.1.4
+chardet >= 2.3.0
 construct >= 2.5.2,<= 2.5.3
 dfdatetime >= 20170529
 dfvfs >= 20160803
@@ -46,4 +47,5 @@ pytz
 pyzmq >= 2.1.11
 requests >= 2.2.1
 six >= 1.1.0
+urllib3 >= 1.7.1
 yara-python >= 3.4.0
