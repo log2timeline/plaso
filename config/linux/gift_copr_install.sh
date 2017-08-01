@@ -51,6 +51,7 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python-requests
                       python-six
                       python2-certifi
+                      python2-idna
                       python2-urllib3
                       python2-yara
                       python2-zmq

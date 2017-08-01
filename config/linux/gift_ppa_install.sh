@@ -41,6 +41,7 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-hachoir-core
                       python-hachoir-metadata
                       python-hachoir-parser
+                      python-idna
                       python-lzma
                       python-pefile
                       python-psutil
