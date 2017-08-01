@@ -5,7 +5,7 @@ artifacts >= 20170521
 bencode.py
 binplist >= 0.1.4
 certifi >= 2016.9.26
-chardet >= 2.3.0
+chardet >= 2.0.1
 construct >= 2.5.2,<= 2.5.3
 dfdatetime >= 20170529
 dfvfs >= 20160803
