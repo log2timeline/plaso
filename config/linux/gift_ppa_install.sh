@@ -28,6 +28,7 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-artifacts
                       python-bencode
                       python-binplist
+                      python-certifi
                       python-chardet
                       python-construct
                       python-crypto
