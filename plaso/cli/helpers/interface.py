@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The arguments helper interface."""
 
+from __future__ import unicode_literals
+
 import locale
 import sys
 
@@ -11,13 +13,13 @@ from plaso.lib import py2to3
 class ArgumentsHelper(object):
   """CLI arguments helper."""
 
-  NAME = u'baseline'
+  NAME = 'baseline'
   # Category further divides the registered helpers down after function,
   # this can be something like: analysis, output, storage, etc.
-  CATEGORY = u''
-  DESCRIPTION = u''
+  CATEGORY = ''
+  DESCRIPTION = ''
 
-  _PREFERRED_ENCODING = u'UTF-8'
+  _PREFERRED_ENCODING = 'UTF-8'
 
   @classmethod
   def _ParseNumericOption(cls, options, argument_name, default_value=None):
@@ -34,7 +36,7 @@ class ArgumentsHelper(object):
 
     Raises:
       BadConfigOption: if the command line argument value cannot be converted
-                       to a Unicode string.
+          to a Unicode string.
     """
     argument_value = getattr(options, argument_name, None)
     if not argument_value:
@@ -42,7 +44,7 @@ class ArgumentsHelper(object):
 
     if not isinstance(argument_value, py2to3.INTEGER_TYPES):
       raise errors.BadConfigOption(
-          u'Unsupported option: {0:s} integer type required.'.format(
+          'Unsupported option: {0:s} integer type required.'.format(
               argument_name))
 
     return argument_value
@@ -62,7 +64,7 @@ class ArgumentsHelper(object):
 
     Raises:
       BadConfigOption: if the command line argument value cannot be converted
-                       to a Unicode string.
+          to a Unicode string.
     """
     argument_value = getattr(options, argument_name, None)
     if not argument_value:
@@ -81,12 +83,12 @@ class ArgumentsHelper(object):
         argument_value = argument_value.decode(encoding)
       except UnicodeDecodeError as exception:
         raise errors.BadConfigOption((
-            u'Unable to convert option: {0:s} to Unicode with error: '
-            u'{1:s}.').format(argument_name, exception))
+            'Unable to convert option: {0:s} to Unicode with error: '
+            '{1:s}.').format(argument_name, exception))
 
     elif not isinstance(argument_value, py2to3.UNICODE_TYPE):
       raise errors.BadConfigOption(
-          u'Unsupported option: {0:s} string type required.'.format(
+          'Unsupported option: {0:s} string type required.'.format(
               argument_name))
 
     return argument_value
