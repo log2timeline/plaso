@@ -4,6 +4,9 @@
 EXIT_SUCCESS=0;
 EXIT_FAILURE=1;
 
+
+DEPENDENCIES="PyYAML XlsxWriter artifacts bencode binplist construct dateutil dfdatetime dfvfs dfwinreg dpkt efilter hachoir-core hachoir-metadata hachoir-parser libbde libesedb libevt libevtx libewf libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm lzma pefile psutil pycrypto pyparsing pysqlite pytsk3 pytz pyzmq requests six yara-python";
+
 SCRIPT_NAME=`basename $0`;
 DEPENDENCIES_ONLY=0;
 SHOW_HELP=0;
@@ -55,7 +58,7 @@ then
   fi
 fi
 
-VOLUME_NAME="/Volumes/@VOLUMENAME@";
+VOLUME_NAME="/Volumes/plaso-@VERSION@";
 
 if ! test -d ${VOLUME_NAME};
 then
@@ -64,20 +67,21 @@ then
   exit ${EXIT_FAILURE};
 fi
 
-echo "Installing packages.";
+echo "Installing dependencies.";
 
-for PACKAGE in `find ${VOLUME_NAME} -name "*.pkg"`;
+for PACKAGE_NAME in ${DEPENDENCIES};
 do
-  # If the --only-dependencies option was passed to the installer script
-  # the plaso package is not installed.
-  echo "${PACKAGE}" | grep "plaso" > /dev/null;
-
-  if test $? -eq 0 && test ${DEPENDENCIES_ONLY} -ne 0;
-  then
-    continue;
-  fi
-  sudo installer -target / -pkg "${PACKAGE}";
+  sudo installer -target / -pkg "${VOLUME_NAME}/packages/${PACKAGE_NAME}";
 done
+
+# If the --only-dependencies option was passed to the installer script
+# the plaso package is not installed.
+if && test ${DEPENDENCIES_ONLY} -ne 0;
+then
+  echo "Installing plaso.";
+
+  sudo installer -target / -pkg "${VOLUME_NAME}/packages/plaso-@VERSION@.pkg";
+fi
 
 echo "Done.";
 
