@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The extraction CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 from plaso.cli import tools
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
@@ -10,8 +12,8 @@ from plaso.lib import errors
 class ExtractionArgumentsHelper(interface.ArgumentsHelper):
   """Extraction CLI arguments helper."""
 
-  NAME = u'extraction'
-  DESCRIPTION = u'Extraction command line arguments.'
+  NAME = 'extraction'
+  DESCRIPTION = 'Extraction command line arguments.'
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -25,32 +27,32 @@ class ExtractionArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        u'--preferred_year', u'--preferred-year', dest=u'preferred_year',
-        action=u'store', default=None, metavar=u'YEAR', help=(
-            u'When a format\'s timestamp does not include a year, e.g. '
-            u'syslog, use this as the initial year instead of attempting '
-            u'auto-detection.'))
+        '--preferred_year', '--preferred-year', dest='preferred_year',
+        type=int, action='store', default=None, metavar='YEAR', help=(
+            'When a format\'s timestamp does not include a year, e.g. '
+            'syslog, use this as the initial year instead of attempting '
+            'auto-detection.'))
 
     argument_group.add_argument(
-        u'-p', u'--preprocess', dest=u'preprocess', action=u'store_true',
+        '-p', '--preprocess', dest='preprocess', action='store_true',
         default=False, help=(
-            u'Turn on preprocessing. Preprocessing is turned on by default '
-            u'when parsing image files, however if a mount point is being '
-            u'parsed then this parameter needs to be set manually.'))
+            'Turn on preprocessing. Preprocessing is turned on by default '
+            'when parsing image files, however if a mount point is being '
+            'parsed then this parameter needs to be set manually.'))
 
     argument_group.add_argument(
-        u'--process_archives', u'--process-archives', dest=u'process_archives',
-        action=u'store_true', default=False, help=(
-            u'Process file entries embedded within archive files, such as '
-            u'archive.tar and archive.zip. This can make processing '
-            u'significantly slower.'))
+        '--process_archives', '--process-archives', dest='process_archives',
+        action='store_true', default=False, help=(
+            'Process file entries embedded within archive files, such as '
+            'archive.tar and archive.zip. This can make processing '
+            'significantly slower.'))
 
     argument_group.add_argument(
-        u'--skip_compressed_streams', u'--skip-compressed-streams',
-        dest=u'process_compressed_streams', action=u'store_false', default=True,
+        '--skip_compressed_streams', '--skip-compressed-streams',
+        dest='process_compressed_streams', action='store_false', default=True,
         help=(
-            u'Skip processing file content within compressed streams, such as '
-            u'syslog.gz and syslog.bz2.'))
+            'Skip processing file content within compressed streams, such as '
+            'syslog.gz and syslog.bz2.'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
@@ -66,21 +68,21 @@ class ExtractionArgumentsHelper(interface.ArgumentsHelper):
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
-          u'Configuration object is not an instance of CLITool')
+          'Configuration object is not an instance of CLITool')
 
-    preprocess = getattr(options, u'preprocess', False)
+    preprocess = getattr(options, 'preprocess', False)
 
-    preferred_year = cls._ParseNumericOption(options, u'preferred_year')
+    preferred_year = cls._ParseNumericOption(options, 'preferred_year')
 
-    process_archives = getattr(options, u'process_archives', False)
+    process_archives = getattr(options, 'process_archives', False)
     process_compressed_streams = getattr(
-        options, u'process_compressed_streams', True)
+        options, 'process_compressed_streams', True)
 
-    setattr(configuration_object, u'_force_preprocessing', preprocess)
-    setattr(configuration_object, u'_preferred_year', preferred_year)
-    setattr(configuration_object, u'_process_archives', process_archives)
+    setattr(configuration_object, '_force_preprocessing', preprocess)
+    setattr(configuration_object, '_preferred_year', preferred_year)
+    setattr(configuration_object, '_process_archives', process_archives)
     setattr(
-        configuration_object, u'_process_compressed_streams',
+        configuration_object, '_process_compressed_streams',
         process_compressed_streams)
 
 
