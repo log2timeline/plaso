@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The VirusTotal analysis plugin CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 from plaso.lib import errors
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
@@ -10,11 +12,11 @@ from plaso.analysis import virustotal
 class VirusTotalAnalysisArgumentsHelper(interface.ArgumentsHelper):
   """VirusTotal analysis plugin CLI arguments helper."""
 
-  NAME = u'virustotal_analysis'
-  CATEGORY = u'analysis'
-  DESCRIPTION = u'Argument helper for the VirusTotal analysis plugin.'
+  NAME = 'virustotal_analysis'
+  CATEGORY = 'analysis'
+  DESCRIPTION = 'Argument helper for the VirusTotal analysis plugin.'
 
-  _DEFAULT_HASH = u'sha256'
+  _DEFAULT_HASH = 'sha256'
   _DEFAULT_RATE_LIMIT = True
 
   @classmethod
@@ -29,24 +31,24 @@ class VirusTotalAnalysisArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        u'--virustotal-api-key', u'--virustotal_api_key',
-        dest=u'virustotal_api_key', type=str, action='store', default=None,
-        metavar=u'API_KEY', help=(
-            u'Specify the API key for use with VirusTotal.'))
+        '--virustotal-api-key', '--virustotal_api_key',
+        dest='virustotal_api_key', type=str, action='store', default=None,
+        metavar='API_KEY', help=(
+            'Specify the API key for use with VirusTotal.'))
 
     argument_group.add_argument(
-        u'--virustotal-free-rate-limit', u'--virustotal_free_rate_limit',
-        dest=u'virustotal_free_rate_limit',
+        '--virustotal-free-rate-limit', '--virustotal_free_rate_limit',
+        dest='virustotal_free_rate_limit',
         action='store_false', default=cls._DEFAULT_RATE_LIMIT, help=(
-            u'Limit Virustotal requests to the default free API key rate of '
-            u'4 requests per minute. Set this to false if you have an key '
-            u'for the private API.'))
+            'Limit Virustotal requests to the default free API key rate of '
+            '4 requests per minute. Set this to false if you have an key '
+            'for the private API.'))
 
     argument_group.add_argument(
-        u'--virustotal-hash', u'--virustotal_hash', dest=u'virustotal_hash',
-        type=str, action='store', choices=[u'md5', u'sha1', u'sha256'],
-        default=cls._DEFAULT_HASH, metavar=u'HASH', help=(
-            u'Type of hash to query VirusTotal, the default is: {0:s}'.format(
+        '--virustotal-hash', '--virustotal_hash', dest='virustotal_hash',
+        type=str, action='store', choices=['md5', 'sha1', 'sha256'],
+        default=cls._DEFAULT_HASH, metavar='HASH', help=(
+            'Type of hash to query VirusTotal, the default is: {0:s}'.format(
                 cls._DEFAULT_HASH)))
 
   @classmethod
@@ -59,28 +61,32 @@ class VirusTotalAnalysisArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
-      BadConfigOption: when a configuration parameter fails validation.
+      BadConfigOption: when a configuration parameter fails validation or
+          when unable to connect to VirusTotal.
     """
     if not isinstance(analysis_plugin, virustotal.VirusTotalAnalysisPlugin):
       raise errors.BadConfigObject(
-          u'Analysis plugin is not an instance of VirusTotalAnalysisPlugin')
+          'Analysis plugin is not an instance of VirusTotalAnalysisPlugin')
 
-    api_key = cls._ParseStringOption(options, u'virustotal_api_key')
+    api_key = cls._ParseStringOption(options, 'virustotal_api_key')
     if not api_key:
       raise errors.BadConfigOption(
-          u'VirusTotal API key not specified. Try again with '
-          u'--virustotal-api-key.')
+          'VirusTotal API key not specified. Try again with '
+          '--virustotal-api-key.')
 
     analysis_plugin.SetAPIKey(api_key)
 
     enable_rate_limit = getattr(
-        options, u'virustotal_free_rate_limit', cls._DEFAULT_RATE_LIMIT)
+        options, 'virustotal_free_rate_limit', cls._DEFAULT_RATE_LIMIT)
     if enable_rate_limit:
       analysis_plugin.EnableFreeAPIKeyRateLimit()
 
     lookup_hash = cls._ParseStringOption(
-        options, u'virustotal_hash', default_value=cls._DEFAULT_HASH)
+        options, 'virustotal_hash', default_value=cls._DEFAULT_HASH)
     analysis_plugin.SetLookupHash(lookup_hash)
+
+    if not analysis_plugin.TestConnection():
+      raise errors.BadConfigOption('Unable to connect to VirusTotal')
 
 
 manager.ArgumentHelperManager.RegisterHelper(VirusTotalAnalysisArgumentsHelper)

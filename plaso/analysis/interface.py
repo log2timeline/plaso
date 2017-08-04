@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the interface for analysis plugins."""
 
+from __future__ import unicode_literals
+
 import abc
 import collections
 import logging
@@ -40,7 +42,7 @@ class AnalysisPlugin(object):
   # The name of the plugin. This is the name that is matched against when
   # loading plugins, so it is important that this name is short, concise and
   # explains the nature of the plugin easily. It also needs to be unique.
-  NAME = u'analysis_plugin'
+  NAME = 'analysis_plugin'
 
   # A flag indicating whether or not this plugin should be run during extraction
   # phase or reserved entirely for post processing stage.
@@ -77,7 +79,7 @@ class AnalysisPlugin(object):
     event_tag.AddLabels(labels)
 
     event_identifier_string = event_identifier.CopyToString()
-    logging.debug(u'Created event tag: {0:s} for event: {1:s}'.format(
+    logging.debug('Created event tag: {0:s} for event: {1:s}'.format(
         comment, event_identifier_string))
 
     return event_tag
@@ -139,7 +141,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     super(HashTaggingAnalysisPlugin, self).__init__()
     self._analysis_queue_timeout = self.DEFAULT_QUEUE_TIMEOUT
     self._analyzer_started = False
-    self._comment = u'Tag applied by {0:s} analysis plugin'.format(self.NAME)
+    self._comment = 'Tag applied by {0:s} analysis plugin'.format(self.NAME)
     self._event_identifiers_by_pathspec = collections.defaultdict(list)
     self._hash_pathspecs = collections.defaultdict(list)
     self._requester_class = None
@@ -212,13 +214,13 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     if event.data_type not in self.DATA_TYPES or not self._analyzer.lookup_hash:
       return
 
-    lookup_hash = u'{0:s}_hash'.format(self._analyzer.lookup_hash)
+    lookup_hash = '{0:s}_hash'.format(self._analyzer.lookup_hash)
     lookup_hash = getattr(event, lookup_hash, None)
     if not lookup_hash:
       display_name = mediator.GetDisplayNameForPathSpec(path_spec)
       logging.warning((
-          u'Lookup hash attribute: {0:s}_hash missing from event that '
-          u'originated from: {1:s}.').format(
+          'Lookup hash attribute: {0:s}_hash missing from event that '
+          'originated from: {1:s}.').format(
               self._analyzer.lookup_hash, display_name))
       return
 
@@ -251,8 +253,8 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
       return
     completion_time = time.ctime(current_time + self.EstimateTimeRemaining())
     log_message = (
-        u'{0:s} hash analysis plugin running. {1:d} hashes in queue, '
-        u'estimated completion time {2:s}.'.format(
+        '{0:s} hash analysis plugin running. {1:d} hashes in queue, '
+        'estimated completion time {2:s}.'.format(
             self.NAME, self.hash_queue.qsize(), completion_time))
     logging.info(log_message)
     self._time_of_last_status_log = current_time
@@ -289,14 +291,14 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
 
     self._analyzer.SignalAbort()
 
-    lines_of_text = [u'{0:s} hash tagging results'.format(self.NAME)]
+    lines_of_text = ['{0:s} hash tagging results'.format(self.NAME)]
     for label, count in sorted(path_specs_per_labels_counter.items()):
       line_of_text = (
-          u'{0:d} path specifications tagged with label: {1:s}'.format(
+          '{0:d} path specifications tagged with label: {1:s}'.format(
               count, label))
       lines_of_text.append(line_of_text)
-    lines_of_text.append(u'')
-    report_text = u'\n'.join(lines_of_text)
+    lines_of_text.append('')
+    report_text = '\n'.join(lines_of_text)
 
     for event_tag in tags:
       mediator.ProduceEventTag(event_tag)
@@ -370,7 +372,7 @@ class HashAnalyzer(threading.Thread):
 
   def __init__(
       self, hash_queue, hash_analysis_queue, hashes_per_batch=1,
-      lookup_hash=u'sha256', wait_after_analysis=0):
+      lookup_hash='sha256', wait_after_analysis=0):
     """Initializes a hash analyzer.
 
     Args:
@@ -454,7 +456,7 @@ class HashAnalyzer(threading.Thread):
       ValueError: if the lookup hash is not supported.
     """
     if lookup_hash not in self.SUPPORTED_HASHES:
-      raise ValueError(u'Unsupported lookup hash: {0!s}'.format(lookup_hash))
+      raise ValueError('Unsupported lookup hash: {0!s}'.format(lookup_hash))
 
     self.lookup_hash = lookup_hash
 
@@ -464,7 +466,7 @@ class HashAnalyzer(threading.Thread):
 
 
 class HTTPHashAnalyzer(HashAnalyzer):
-  """A class that provides a useful interface for hash plugins using HTTP(S)"""
+  """Interface for hash analysis plugins that use HTTP(S)"""
 
   def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
     """Initializes a HTTP hash analyzer.
@@ -489,20 +491,20 @@ class HTTPHashAnalyzer(HashAnalyzer):
       return
     if sys.version_info[0:3] < (2, 7, 9):
       logging.warn(
-          u'You are running a version of Python prior to 2.7.9. Your version '
-          u'of Python has multiple weaknesses in its SSL implementation that '
-          u'can allow an attacker to read or modify SSL encrypted data. '
-          u'Please update. Further SSL warnings will be suppressed. See '
-          u'https://www.python.org/dev/peps/pep-0466/ for more information.')
+          'You are running a version of Python prior to 2.7.9. Your version '
+          'of Python has multiple weaknesses in its SSL implementation that '
+          'can allow an attacker to read or modify SSL encrypted data. '
+          'Please update. Further SSL warnings will be suppressed. See '
+          'https://www.python.org/dev/peps/pep-0466/ for more information.')
       # Some distributions de-vendor urllib3 from requests, so we have to
       # check if this has occurred and disable warnings in the correct
       # package.
-      if (hasattr(requests, u'packages') and
-          hasattr(requests.packages, u'urllib3') and
-          hasattr(requests.packages.urllib3, u'disable_warnings')):
+      if (hasattr(requests, 'packages') and
+          hasattr(requests.packages, 'urllib3') and
+          hasattr(requests.packages.urllib3, 'disable_warnings')):
         requests.packages.urllib3.disable_warnings()
       else:
-        if urllib3 and hasattr(urllib3, u'disable_warnings'):
+        if urllib3 and hasattr(urllib3, 'disable_warnings'):
           urllib3.disable_warnings()
     self._checked_for_old_python_version = True
 
@@ -535,25 +537,29 @@ class HTTPHashAnalyzer(HashAnalyzer):
           the request returns a HTTP error.
       ValueError: If an invalid HTTP method is specified.
     """
-    method = method.lower()
-    if method not in [u'get', u'post']:
-      raise ValueError(u'Method {0:s} is not supported')
+    method_upper = method.upper()
+    if method_upper not in ('GET', 'POST'):
+      raise ValueError('Method {0:s} is not supported')
 
-    if url.lower().startswith(u'https'):
+    if url.lower().startswith('https'):
       self._CheckPythonVersionAndDisableWarnings()
 
     try:
-      if method.lower() == u'get':
+      if method_upper == 'GET':
         response = requests.get(url, **kwargs)
-      if method.lower() == u'post':
+
+      elif method_upper == 'POST':
         response = requests.post(url, **kwargs)
+
       response.raise_for_status()
+
     except requests.ConnectionError as exception:
-      error_string = u'Unable to connect to {0:s}: {1:s}'.format(
+      error_string = 'Unable to connect to {0:s}: {1:s}'.format(
           url, exception)
       raise errors.ConnectionError(error_string)
+
     except requests.HTTPError as exception:
-      error_string = u'{0:s} returned a HTTP error: {1:s}'.format(
+      error_string = '{0:s} returned a HTTP error: {1:s}'.format(
           url, exception)
       raise errors.ConnectionError(error_string)
 
@@ -561,7 +567,7 @@ class HTTPHashAnalyzer(HashAnalyzer):
 
 
 class HashAnalysis(object):
-  """A class that holds information about a hash.
+  """Analysis information about a hash.
 
   Attributes:
     hash_information (object): object containing information about the hash.
@@ -569,7 +575,7 @@ class HashAnalysis(object):
   """
 
   def __init__(self, subject_hash, hash_information):
-    """Initializes a HashAnalysis object.
+    """Initializes analysis information about a hash.
 
     Args:
       subject_hash (str): hash that the hash_information relates to.
