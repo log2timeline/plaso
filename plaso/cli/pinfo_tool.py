@@ -43,6 +43,7 @@ class PinfoTool(
     super(PinfoTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._compare_storage_file_path = None
+    self._output_filename = None
     self._output_format = None
     self._storage_file_path = None
 
@@ -557,6 +558,10 @@ class PinfoTool(
             u'The path of the storage file to compare against.'))
 
     argument_parser.add_argument(
+         u'-w', u'--write', metavar=u'OUTPUTFILE', dest=u'write',
+         help=u'Output filename.')
+
+    argument_parser.add_argument(
         u'--output-format', dest=u'output_format', type=str,
         choices=[u'text', u'json'], action=u'store', default=u'text',
         metavar=u'FORMAT', help=u'Type of output to produce')
@@ -602,6 +607,8 @@ class PinfoTool(
 
     self._verbose = getattr(options, u'verbose', False)
 
+    self._output_filename = getattr(options, u'write', None)
+
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=[u'storage_file'])
 
@@ -624,6 +631,13 @@ class PinfoTool(
       self.compare_storage_information = True
 
     self._output_format = self.ParseStringOption(options, u'output_format')
+
+    if self._output_filename:
+      if os.path.exists(self._output_filename):
+        raise errors.BadConfigOption(
+            u'Output file already exists: {0:s}.'.format(self._output_filename))
+      output_file_object = open(self._output_filename, u'wb')
+      self._output_writer = tools.FileObjectOutputWriter(output_file_object)
 
   def PrintStorageInformation(self):
     """Prints the storage information."""
