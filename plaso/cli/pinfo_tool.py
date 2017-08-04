@@ -558,8 +558,8 @@ class PinfoTool(
             u'The path of the storage file to compare against.'))
 
     argument_parser.add_argument(
-         u'-w', u'--write', metavar=u'OUTPUTFILE', dest=u'write',
-         help=u'Output filename.')
+        u'-w', u'--write', metavar=u'OUTPUTFILE', dest=u'write',
+        help=u'Output filename.')
 
     argument_parser.add_argument(
         u'--output-format', dest=u'output_format', type=str,
