@@ -81,7 +81,6 @@ The popularity-contest output looks like this:
 """
 
 import logging
-import sys
 
 import pyparsing
 
@@ -90,6 +89,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -146,14 +146,9 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
   DESCRIPTION = u'Parser for popularity contest log files.'
 
   _ASCII_PRINTABLES = pyparsing.printables
-  if sys.version_info[0] < 3:
-    _UNICODE_PRINTABLES = u''.join(
-        unichr(character) for character in xrange(65536)
-        if not unichr(character).isspace())
-  else:
-    _UNICODE_PRINTABLES = u''.join(
-        chr(character) for character in range(65536)
-        if not chr(character).isspace())
+  _UNICODE_PRINTABLES = u''.join(
+      py2to3.UNICHR(character) for character in range(65536)
+      if not py2to3.UNICHR(character).isspace())
 
   MRU = pyparsing.Word(_UNICODE_PRINTABLES).setResultsName(u'mru')
   PACKAGE = pyparsing.Word(_ASCII_PRINTABLES).setResultsName(u'package')
@@ -283,6 +278,7 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
     if not timelib.Timestamp.FromPosixTime(header_struct.timestamp):
       logging.debug(u'Invalid Popularity Contest log file header timestamp.')
       return False
+
     return True
 
 

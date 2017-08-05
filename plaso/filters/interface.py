@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Filter interface."""
 
+from __future__ import unicode_literals
+
 import abc
 
 from plaso.lib import errors
@@ -8,7 +10,7 @@ from plaso.lib import pfilter
 
 
 class FilterObject(object):
-  """The filter object interface."""
+  """Filter object interface."""
 
   def __init__(self):
     """Initializes a filter object."""
@@ -40,7 +42,7 @@ class FilterObject(object):
   @property
   def separator(self):
     """The output field separator value."""
-    return u','
+    return ','
 
   def _GetMatcher(self, filter_expression):
     """Retrieves a filter object for a specific filter expression.
