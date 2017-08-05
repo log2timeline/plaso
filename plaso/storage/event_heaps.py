@@ -87,7 +87,7 @@ class SerializedStreamEventHeap(object):
 
   def __init__(self):
     """Initializes an event heap."""
-    super(BaseEventHeap, self).__init__()
+    super(SerializedStreamEventHeap, self).__init__()
     self._heap = []
 
   @property
