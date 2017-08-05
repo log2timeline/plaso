@@ -88,6 +88,8 @@ class DependencyDefinitionReader(object):
       DependencyDefinition: dependency definition.
     """
     config_parser = configparser.RawConfigParser()
+    # pylint: disable=deprecated-method
+    # TODO: replace readfp by read_file, check if Python 2 compatible
     config_parser.readfp(file_object)
 
     for section_name in config_parser.sections():
