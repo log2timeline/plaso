@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The hashers CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 from plaso.cli import tools
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
@@ -10,10 +12,10 @@ from plaso.lib import errors
 class HashersArgumentsHelper(interface.ArgumentsHelper):
   """Hashers CLI arguments helper."""
 
-  NAME = u'hashers'
-  DESCRIPTION = u'Hashers command line arguments.'
+  NAME = 'hashers'
+  DESCRIPTION = 'Hashers command line arguments.'
 
-  _DEFAULT_HASHER_STRING = u'sha256'
+  _DEFAULT_HASHER_STRING = 'sha256'
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -27,13 +29,21 @@ class HashersArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        u'--hashers', dest=u'hashers', type=str, action=u'store',
-        default=cls._DEFAULT_HASHER_STRING, metavar=u'HASHER_LIST', help=(
-            u'Define a list of hashers to use by the tool. This is a comma '
-            u'separated list where each entry is the name of a hasher, such as '
-            u'"md5,sha256". "all" indicates that all hashers should be '
-            u'enabled. "none" disables all hashers. Use "--hashers list" or '
-            u'"--info" to list the available hashers.'))
+        '--hasher_file_size_limit', '--hasher-file-size-limit',
+        dest='hasher_file_size_limit', type=int, action='store', default=0,
+        metavar='SIZE', help=(
+            'Define the maximum file size in bytes that hashers should '
+            'process. Any larger file will be skipped. A size of 0 represents '
+            'no limit.'))
+
+    argument_group.add_argument(
+        '--hashers', dest='hashers', type=str, action='store',
+        default=cls._DEFAULT_HASHER_STRING, metavar='HASHER_LIST', help=(
+            'Define a list of hashers to use by the tool. This is a comma '
+            'separated list where each entry is the name of a hasher, such as '
+            '"md5,sha256". "all" indicates that all hashers should be '
+            'enabled. "none" disables all hashers. Use "--hashers list" or '
+            '"--info" to list the available hashers.'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
@@ -46,17 +56,27 @@ class HashersArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the configuration object is of the wrong type.
+      BadConfigOption: when a configuration parameter fails validation.
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
-          u'Configuration object is not an instance of CLITool')
+          'Configuration object is not an instance of CLITool')
 
     hashers = cls._ParseStringOption(
-        options, u'hashers', default_value=cls._DEFAULT_HASHER_STRING)
+        options, 'hashers', default_value=cls._DEFAULT_HASHER_STRING)
+
+    hasher_file_size_limit = cls._ParseNumericOption(
+        options, 'hasher_file_size_limit', default_value=0)
 
     # TODO: validate hasher names.
 
-    setattr(configuration_object, u'_hasher_names_string', hashers)
+    if hasher_file_size_limit < 0:
+      raise errors.BadConfigOption(
+          'Invalid hasher file size limit value cannot be negative.')
+
+    setattr(configuration_object, '_hasher_names_string', hashers)
+    setattr(
+        configuration_object, '_hasher_file_size_limit', hasher_file_size_limit)
 
 
 manager.ArgumentHelperManager.RegisterHelper(HashersArgumentsHelper)
