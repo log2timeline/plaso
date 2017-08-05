@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Analysis plugin to look up files in VirusTotal and tag events."""
 
+from __future__ import unicode_literals
+
 import logging
 
 from plaso.analysis import interface
@@ -12,12 +14,15 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
   """Class that analyzes file hashes by consulting VirusTotal."""
 
   _VIRUSTOTAL_API_REPORT_URL = (
-      u'https://www.virustotal.com/vtapi/v2/file/report')
+      'https://www.virustotal.com/vtapi/v2/file/report')
 
-  SUPPORTED_HASHES = [u'md5', u'sha1', u'sha256']
+  _EICAR_SHA256 = (
+      '275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f')
+
+  SUPPORTED_HASHES = ['md5', 'sha1', 'sha256']
 
   def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
-    """Initializes a VirusTotal Analyzer thread.
+    """Initializes a VirusTotal analyzer.
 
     Args:
       hash_queue (Queue.queue): queue that contains hashes to be analyzed.
@@ -29,13 +34,26 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
     self._api_key = None
     self._checked_for_old_python_version = False
 
-  def SetAPIKey(self, api_key):
-    """Sets the VirusTotal API key to use in queries.
+  def _QueryHashes(self, digests):
+    """Queries VirusTotal for a specfic hashes.
 
     Args:
-      api_key (str): VirusTotal API key
+      digests (list[str]): hashes to look up.
+
+    Returns:
+      dict[str, object]: JSON response or None on error.
     """
-    self._api_key = api_key
+    url_parameters = {'apikey': self._api_key, 'resource': ', '.join(digests)}
+
+    try:
+      json_response = self.MakeRequestAndDecodeJSON(
+          self._VIRUSTOTAL_API_REPORT_URL, 'GET', params=url_parameters)
+    except errors.ConnectionError as exception:
+      json_response = None
+      logging.error(u'Unable to query VirusTotal with error: {0:s}.'.format(
+          exception))
+
+    return json_response
 
   def Analyze(self, hashes):
     """Looks up hashes in VirusTotal using the VirusTotal HTTP API.
@@ -53,45 +71,51 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
       RuntimeError: If the VirusTotal API key has not been set.
     """
     if not self._api_key:
-      raise RuntimeError(u'No API key specified for VirusTotal lookup.')
+      raise RuntimeError('No API key specified for VirusTotal lookup.')
 
     hash_analyses = []
-    resource_string = u', '.join(hashes)
-    params = {u'apikey': self._api_key, u'resource': resource_string}
-    try:
-      json_response = self.MakeRequestAndDecodeJSON(
-          self._VIRUSTOTAL_API_REPORT_URL, u'GET', params=params)
-    except errors.ConnectionError as exception:
-      logging.error(
-          (u'Error communicating with VirusTotal {0:s}. VirusTotal plugin is '
-           u'aborting.').format(exception))
-      self.SignalAbort()
-      return hash_analyses
 
-    # The content of the response from VirusTotal has a different structure if
-    # one or more than one hash is looked up at once.
+    json_response = self._QueryHashes(hashes) or []
+
+    # VirusTotal returns a dictionary when a single hash is queried
+    # and a list when multiple hashes are queried.
     if isinstance(json_response, dict):
-      # Only one result.
-      resource = json_response[u'resource']
-      hash_analysis = interface.HashAnalysis(resource, json_response)
+      json_response = [json_response]
+
+    for result in json_response:
+      resource = result['resource']
+      hash_analysis = interface.HashAnalysis(resource, result)
       hash_analyses.append(hash_analysis)
-    else:
-      for result in json_response:
-        resource = result[u'resource']
-        hash_analysis = interface.HashAnalysis(resource, result)
-        hash_analyses.append(hash_analysis)
+
     return hash_analyses
+
+  def SetAPIKey(self, api_key):
+    """Sets the VirusTotal API key to use in queries.
+
+    Args:
+      api_key (str): VirusTotal API key
+    """
+    self._api_key = api_key
+
+  def TestConnection(self):
+    """Tests the connection to VirusTotal
+
+    Returns:
+      bool: True if VirusTotal is reachable.
+    """
+    json_response = self._QueryHashes([self._EICAR_SHA256])
+    return json_response is not None
 
 
 class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
   """An analysis plugin for looking up hashes in VirusTotal."""
 
   # TODO: Check if there are other file types worth checking VirusTotal for.
-  DATA_TYPES = [u'pe:compilation:compilation_time']
+  DATA_TYPES = ['pe:compilation:compilation_time']
 
-  URLS = [u'https://virustotal.com']
+  URLS = ['https://virustotal.com']
 
-  NAME = u'virustotal'
+  NAME = 'virustotal'
 
   _VIRUSTOTAL_NOT_PRESENT_RESPONSE_CODE = 0
   _VIRUSTOTAL_PRESENT_RESPONSE_CODE = 1
@@ -122,21 +146,21 @@ class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     Returns:
       list[str]: strings describing the results from VirusTotal.
     """
-    response_code = hash_information[u'response_code']
+    response_code = hash_information['response_code']
     if response_code == self._VIRUSTOTAL_NOT_PRESENT_RESPONSE_CODE:
-      return [u'virustotal_not_present']
+      return ['virustotal_not_present']
     elif response_code == self._VIRUSTOTAL_PRESENT_RESPONSE_CODE:
-      positives = hash_information[u'positives']
+      positives = hash_information['positives']
       if positives > 0:
-        return [u'virustotal_detections_{0:d}'.format(positives)]
-      return [u'virsutotal_no_detections']
+        return ['virustotal_detections_{0:d}'.format(positives)]
+      return ['virsutotal_no_detections']
     elif response_code == self._VIRUSTOTAL_ANALYSIS_PENDING_RESPONSE_CODE:
-      return [u'virustotal_analysis_pending']
+      return ['virustotal_analysis_pending']
     else:
       logging.error(
-          u'VirusTotal returned unknown response code {0!s}'.format(
+          'VirusTotal returned unknown response code {0!s}'.format(
               response_code))
-      return [u'virustotal_unknown_response_code_{0:d}'.format(response_code)]
+      return ['virustotal_unknown_response_code_{0:d}'.format(response_code)]
 
   def SetAPIKey(self, api_key):
     """Sets the VirusTotal API key to use in queries.
@@ -145,6 +169,14 @@ class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
       api_key (str): VirusTotal API key
     """
     self._analyzer.SetAPIKey(api_key)
+
+  def TestConnection(self):
+    """Tests the connection to VirusTotal
+
+    Returns:
+      bool: True if VirusTotal is reachable.
+    """
+    return self._analyzer.TestConnection()
 
 
 manager.AnalysisPluginManager.RegisterPlugin(VirusTotalAnalysisPlugin)
