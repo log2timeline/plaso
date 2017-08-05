@@ -560,7 +560,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       try:
         self._task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
       except errors.QueueFull:
-        logging.warn(u'Task queue full, unable to push abort message.')
+        logging.warning(u'Task queue full, unable to push abort message.')
 
     # Try waiting for the processes to exit normally.
     self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
