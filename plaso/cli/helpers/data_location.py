@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The data location CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import os
 import sys
 
@@ -13,8 +15,8 @@ from plaso.lib import errors
 class DataLocationArgumentsHelper(interface.ArgumentsHelper):
   """Data location CLI arguments helper."""
 
-  NAME = u'data_location'
-  DESCRIPTION = u'Data location command line arguments.'
+  NAME = 'data_location'
+  DESCRIPTION = 'Data location command line arguments.'
 
   # Preserve the absolute path value of __file__ in case it is changed
   # at run-time.
@@ -32,8 +34,8 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        u'--data', action=u'store', dest=u'data_location', type=str,
-        metavar=u'PATH', default=None, help=u'the location of the data files.')
+        '--data', action='store', dest='data_location', type=str,
+        metavar='PATH', default=None, help='the location of the data files.')
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
@@ -49,9 +51,9 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
-          u'Configuration object is not an instance of CLITool')
+          'Configuration object is not an instance of CLITool')
 
-    data_location = cls._ParseStringOption(options, u'data_location')
+    data_location = cls._ParseStringOption(options, 'data_location')
     if not data_location:
       # Determine the source root path, which is 3 directories up from
       # the location of the script.
@@ -62,28 +64,33 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
 
       # There are multiple options to run a tool e.g. running from source or
       # from an egg file.
-      data_location_egg = os.path.join(data_location, u'share', u'plaso')
-      data_location_source = os.path.join(data_location, u'data')
-      data_location_system = os.path.join(sys.prefix, u'share', u'plaso')
-      data_location_system_local = os.path.join(
-          sys.prefix, u'local', u'share', u'plaso')
+      data_location_egg = os.path.join(data_location, 'share', 'plaso')
+      data_location_source = os.path.join(data_location, 'data')
 
       if os.path.exists(data_location_egg):
         data_location = data_location_egg
       elif os.path.exists(data_location_source):
         data_location = data_location_source
-      elif os.path.exists(data_location_system):
-        data_location = data_location_system
-      elif os.path.exists(data_location_system_local):
-        data_location = data_location_system_local
-      else:
+
+      if not os.path.exists(data_location):
+        data_location = os.path.join(sys.prefix, 'share', 'plaso')
+      if not os.path.exists(data_location):
+        data_location = os.path.join(sys.prefix, 'local', 'share', 'plaso')
+
+      if sys.prefix != '/usr':
+        if not os.path.exists(data_location):
+          data_location = os.path.join('/usr', 'share', 'plaso')
+        if not os.path.exists(data_location):
+          data_location = os.path.join('/usr', 'local', 'share', 'plaso')
+
+      if not os.path.exists(data_location):
         data_location = None
 
     if not data_location:
       raise errors.BadConfigOption(
-          u'Unable to determine location of data files.')
+          'Unable to determine location of data files.')
 
-    setattr(configuration_object, u'_data_location', data_location)
+    setattr(configuration_object, '_data_location', data_location)
 
 
 manager.ArgumentHelperManager.RegisterHelper(DataLocationArgumentsHelper)

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The artifact definitions CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import os
 import sys
 
@@ -18,8 +20,8 @@ from plaso.preprocessors import manager as preprocessors_manager
 class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
   """Artifact definition CLI arguments helper."""
 
-  NAME = u'artifact_definitions'
-  DESCRIPTION = u'Artifact definition command line arguments.'
+  NAME = 'artifact_definitions'
+  DESCRIPTION = 'Artifact definition command line arguments.'
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -33,13 +35,13 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        u'--artifact_definitions', u'--artifact-definitions',
-        dest=u'artifact_definitions_path', type=str, metavar=u'PATH',
-        action=u'store', help=(
-            u'Path to a directory containing artifact definitions. Artifact '
-            u'definitions can be used to describe and quickly collect data '
-            u'data of interest, such as specific files or Windows Registry '
-            u'keys.'))
+        '--artifact_definitions', '--artifact-definitions',
+        dest='artifact_definitions_path', type=str, metavar='PATH',
+        action='store', help=(
+            'Path to a directory containing artifact definitions. Artifact '
+            'definitions can be used to describe and quickly collect data '
+            'data of interest, such as specific files or Windows Registry '
+            'keys.'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
@@ -56,27 +58,33 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
-          u'Configuration object is not an instance of CLITool')
+          'Configuration object is not an instance of CLITool')
 
-    artifacts_path = getattr(options, u'artifact_definitions_path', None)
+    artifacts_path = getattr(options, 'artifact_definitions_path', None)
 
-    data_location = getattr(configuration_object, u'_data_location', None)
+    data_location = getattr(configuration_object, '_data_location', None)
     if ((not artifacts_path or not os.path.exists(artifacts_path)) and
         data_location):
       artifacts_path = os.path.dirname(data_location)
-      artifacts_path = os.path.join(artifacts_path, u'artifacts')
+      artifacts_path = os.path.join(artifacts_path, 'artifacts')
 
       if not os.path.exists(artifacts_path):
-        artifacts_path = os.path.join(sys.prefix, u'share', u'artifacts')
+        artifacts_path = os.path.join(sys.prefix, 'share', 'artifacts')
       if not os.path.exists(artifacts_path):
-        artifacts_path = os.path.join(
-            sys.prefix, u'local', u'share', u'artifacts')
+        artifacts_path = os.path.join(sys.prefix, 'local', 'share', 'artifacts')
+
+      if sys.prefix != '/usr':
+        if not os.path.exists(artifacts_path):
+          artifacts_path = os.path.join('/usr', 'share', 'artifacts')
+        if not os.path.exists(artifacts_path):
+          artifacts_path = os.path.join('/usr', 'local', 'share', 'artifacts')
+
       if not os.path.exists(artifacts_path):
         artifacts_path = None
 
     if not artifacts_path or not os.path.exists(artifacts_path):
       raise errors.BadConfigOption(
-          u'Unable to determine path to artifact definitions.')
+          'Unable to determine path to artifact definitions.')
 
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
@@ -86,15 +94,15 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
 
     except (KeyError, artifacts_errors.FormatError) as exception:
       raise errors.BadConfigOption((
-          u'Unable to read artifact definitions from: {0:s} with error: '
-          u'{1!s}').format(artifacts_path, exception))
+          'Unable to read artifact definitions from: {0:s} with error: '
+          '{1!s}').format(artifacts_path, exception))
 
     for name in preprocessors_manager.PreprocessPluginsManager.GetNames():
       if not registry.GetDefinitionByName(name):
         raise errors.BadConfigOption(
-            u'Missing required artifact definition: {0:s}'.format(name))
+            'Missing required artifact definition: {0:s}'.format(name))
 
-    setattr(configuration_object, u'_artifacts_registry', registry)
+    setattr(configuration_object, '_artifacts_registry', registry)
 
 
 manager.ArgumentHelperManager.RegisterHelper(ArtifactDefinitionsArgumentsHelper)
