@@ -142,6 +142,8 @@ class Log2TimelineTool(
     configuration.credentials = self._credential_configurations
     configuration.debug_output = self._debug_mode
     configuration.event_extraction.text_prepend = self._text_prepend
+    configuration.extraction.hasher_file_size_limit = (
+        self._hasher_file_size_limit)
     configuration.extraction.hasher_names_string = self._hasher_names_string
     configuration.extraction.process_archives = self._process_archives
     configuration.extraction.process_compressed_streams = (

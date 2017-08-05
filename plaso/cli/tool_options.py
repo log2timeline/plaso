@@ -24,6 +24,8 @@ from plaso.parsers import presets as parsers_presets
 class AnalysisPluginOptions(object):
   """Analysis plugin options mix-in."""
 
+  # pylint: disable=no-member
+
   def _CreateAnalysisPlugins(self, options):
     """Creates the analysis plugins.
 
@@ -69,9 +71,12 @@ class AnalysisPluginOptions(object):
 class HashersOptions(object):
   """Hashers options mix-in."""
 
+  # pylint: disable=no-member
+
   def __init__(self):
     """Initializes hasher options."""
     super(HashersOptions, self).__init__()
+    self._hasher_file_size_limit = None
     self._hasher_names_string = None
 
   def ListHashers(self):
@@ -89,6 +94,8 @@ class HashersOptions(object):
 
 class OutputModuleOptions(object):
   """Output module options mix-in."""
+
+  # pylint: disable=no-member
 
   def __init__(self):
     """Initializes output module options."""
@@ -195,6 +202,8 @@ class OutputModuleOptions(object):
 
 class ParsersOptions(object):
   """Parsers options mix-in."""
+
+  # pylint: disable=no-member
 
   def __init__(self):
     """Initializes parser options."""

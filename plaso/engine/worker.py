@@ -15,6 +15,7 @@ from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.analyzers import hashing_analyzer
 from plaso.analyzers import manager as analyzers_manager
 from plaso.containers import event_sources
 from plaso.engine import extractors
@@ -95,7 +96,7 @@ class EventExtractionWorker(object):
     self._analyzers = []
     self._event_extractor = extractors.EventExtractor(
         parser_filter_expression=parser_filter_expression)
-    self._hasher_names = None
+    self._hasher_file_size_limit = None
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._process_archives = None
     self._process_compressed_streams = None
@@ -160,7 +161,17 @@ class EventExtractionWorker(object):
     maximum_read_size = max([
         analyzer_object.SIZE_LIMIT for analyzer_object in self._analyzers])
 
+    hashers_only = True
+    for analyzer_object in self._analyzers:
+      if not isinstance(analyzer_object, hashing_analyzer.HashingAnalyzer):
+        hashers_only = False
+        break
+
     file_size = file_object.get_size()
+
+    if (hashers_only and self._hasher_file_size_limit and
+        file_size > self._hasher_file_size_limit):
+      return
 
     file_object.seek(0, os.SEEK_SET)
 
@@ -175,6 +186,11 @@ class EventExtractionWorker(object):
 
         if (not analyzer_object.INCREMENTAL_ANALYZER and
             file_size > analyzer_object.SIZE_LIMIT):
+          continue
+
+        if (isinstance(analyzer_object, hashing_analyzer.HashingAnalyzer) and
+            self._hasher_file_size_limit and
+            file_size > self._hasher_file_size_limit):
           continue
 
         self.processing_status = analyzer_object.PROCESSING_STATUS_HINT
@@ -434,12 +450,12 @@ class EventExtractionWorker(object):
           path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
               [archive_path_spec], resolver_context=mediator.resolver_context)
 
-          for path_spec in path_spec_generator:
+          for generated_path_spec in path_spec_generator:
             if self._abort:
               break
 
             event_source = event_sources.FileEntryEventSource(
-                path_spec=path_spec)
+                path_spec=generated_path_spec)
             event_source.file_entry_type = (
                 dfvfs_definitions.FILE_ENTRY_TYPE_FILE)
             mediator.ProduceEventSource(event_source)
@@ -451,7 +467,7 @@ class EventExtractionWorker(object):
               'unable to process archive file with error: {0:s}').format(
                   exception)
           mediator.ProduceExtractionError(
-              error_message, path_spec=path_spec)
+              error_message, path_spec=generated_path_spec)
 
   def _ProcessCompressedStreamTypes(self, mediator, path_spec, type_indicators):
     """Processes a data stream containing compressed stream types such as: bz2.
@@ -774,6 +790,7 @@ class EventExtractionWorker(object):
     Args:
       configuration (ExtractionConfiguration): extraction configuration.
     """
+    self._hasher_file_size_limit = configuration.hasher_file_size_limit
     self._SetHashers(configuration.hasher_names_string)
     self._process_archives = configuration.process_archives
     self._process_compressed_streams = configuration.process_compressed_streams

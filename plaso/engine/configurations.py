@@ -54,6 +54,8 @@ class ExtractionConfiguration(interface.AttributeContainer):
   These settings are primarily used by the extraction worker.
 
   Attributes:
+    hasher_file_size_limit (int): maximum file size that hashers
+        should process, where 0 or None represents unlimited.
     hasher_names_string (str): comma separated string of names
         of hashers to use during processing.
     process_archives (bool): True if archive files should be
@@ -67,6 +69,7 @@ class ExtractionConfiguration(interface.AttributeContainer):
   def __init__(self):
     """Initializes an extraction configuration object."""
     super(ExtractionConfiguration, self).__init__()
+    self.hasher_file_size_limit = None
     self.hasher_names_string = None
     self.process_archives = False
     self.process_compressed_streams = True
