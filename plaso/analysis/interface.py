@@ -11,7 +11,7 @@ import threading
 import time
 
 if sys.version_info[0] < 3:
-  import Queue
+  import Queue  # pylint: disable=import-error
 else:
   import queue as Queue  # pylint: disable=import-error
 
@@ -240,6 +240,8 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     analyzer_alive = self._analyzer.is_alive()
     hash_queue_has_tasks = self.hash_queue.unfinished_tasks > 0
     analysis_queue = not self.hash_analysis_queue.empty()
+
+    # pylint: disable=consider-using-ternary
     return (analyzer_alive and hash_queue_has_tasks) or analysis_queue
 
   # TODO: Refactor to do this more elegantly, perhaps via callback.
@@ -490,7 +492,7 @@ class HTTPHashAnalyzer(HashAnalyzer):
     if self._checked_for_old_python_version:
       return
     if sys.version_info[0:3] < (2, 7, 9):
-      logging.warn(
+      logging.warning(
           'You are running a version of Python prior to 2.7.9. Your version '
           'of Python has multiple weaknesses in its SSL implementation that '
           'can allow an attacker to read or modify SSL encrypted data. '

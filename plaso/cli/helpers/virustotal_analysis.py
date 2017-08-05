@@ -12,6 +12,8 @@ from plaso.analysis import virustotal
 class VirusTotalAnalysisArgumentsHelper(interface.ArgumentsHelper):
   """VirusTotal analysis plugin CLI arguments helper."""
 
+  # pylint: disable=arguments-differ
+
   NAME = 'virustotal_analysis'
   CATEGORY = 'analysis'
   DESCRIPTION = 'Argument helper for the VirusTotal analysis plugin.'

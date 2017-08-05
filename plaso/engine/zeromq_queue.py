@@ -9,7 +9,7 @@ import time
 
 # The 'Queue' module was renamed to 'queue' in Python 3
 try:
-  import Queue
+  import Queue  # pylint: disable=import-error
 except ImportError:
   import queue as Queue  # pylint: disable=import-error
 
@@ -19,8 +19,10 @@ from plaso.engine import plaso_queue
 from plaso.lib import errors
 
 
+# pylint: disable=no-member
+
 class ZeroMQQueue(plaso_queue.Queue):
-  """Class that defines an interfaces for ZeroMQ backed Plaso queues.
+  """Interface for a ZeroMQ backed queue.
 
   Attributes:
     name (str): name to identify the queue.
@@ -508,7 +510,7 @@ class ZeroMQRequestQueue(ZeroMQQueue):
         # The existing socket is now out of sync, so we need to open a new one.
         self._CreateZMQSocket()
         if time.time() > last_retry_time:
-          logging.warn(u'{0:s} timeout requesting item'.format(self.name))
+          logging.warning(u'{0:s} timeout requesting item'.format(self.name))
           raise errors.QueueEmpty
 
         continue
