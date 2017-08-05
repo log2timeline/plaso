@@ -82,8 +82,18 @@ class EventHeap(BaseEventHeap):
     heapq.heappush(self._heap, heap_values)
 
 
-class SerializedStreamEventHeap(BaseEventHeap):
+class SerializedStreamEventHeap(object):
   """Event heap for serialized stream storage."""
+
+  def __init__(self):
+    """Initializes an event heap."""
+    super(BaseEventHeap, self).__init__()
+    self._heap = []
+
+  @property
+  def number_of_events(self):
+    """int: number of serialized events on the heap."""
+    return len(self._heap)
 
   def PeekEvent(self):
     """Retrieves the first event from the heap without removing it.
@@ -117,6 +127,17 @@ class SerializedStreamEventHeap(BaseEventHeap):
     except IndexError:
       return None, None
 
+  def PopEvents(self):
+    """Pops events from the heap.
+
+    Yields:
+      EventObject: event.
+    """
+    event = self.PopEvent()
+    while event:
+      yield event
+      event = self.PopEvent()
+
   def PushEvent(self, event):
     """Pushes an event onto the heap.
 
@@ -128,3 +149,12 @@ class SerializedStreamEventHeap(BaseEventHeap):
         event.timestamp, event_identifier.stream_number,
         event_identifier.entry_index, event)
     heapq.heappush(self._heap, heap_values)
+
+  def PushEvents(self, events):
+    """Pushes events onto the heap.
+
+    Args:
+      events list[EventObject]: events.
+    """
+    for event in events:
+      self.PushEvent(event)
