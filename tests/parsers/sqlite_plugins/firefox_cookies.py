@@ -41,7 +41,7 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     #   5 Analytics Creation Time
     #
     # In total: 93 * 3 + 15 + 5 + 5 = 304 events.
-    for event in storage_writer.events:
+    for event in storage_writer.GetEvents():
       if event.data_type == u'firefox:cookie:entry':
         test_events.append(event)
       else:

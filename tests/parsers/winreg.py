@@ -52,7 +52,9 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     parser = winreg.WinRegistryParser()
     storage_writer = self._ParseFile([u'NTUSER.DAT'], parser)
 
-    parser_chains = self._GetParserChains(storage_writer.events)
+    events = list(storage_writer.GetEvents())
+
+    parser_chains = self._GetParserChains(events)
 
     expected_parser_chain = self._PluginNameToParserChain(u'userassist')
     self.assertTrue(expected_parser_chain in parser_chains)
@@ -73,7 +75,9 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     parser = winreg.WinRegistryParser()
     storage_writer = self._ParseFile([u'SYSTEM'], parser)
 
-    parser_chains = self._GetParserChains(storage_writer.events)
+    events = list(storage_writer.GetEvents())
+
+    parser_chains = self._GetParserChains(events)
 
     # Check the existence of few known plugins, see if they
     # are being properly picked up and are parsed.
