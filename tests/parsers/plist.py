@@ -36,7 +36,8 @@ class PlistParserTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_events, 12)
 
     timestamps, roots, keys = zip(
-        *[(evt.timestamp, evt.root, evt.key) for evt in storage_writer.events])
+        *[(event.timestamp, event.root, event.key)
+          for event in storage_writer.GetEvents()])
 
     expected_timestamps = frozenset([
         1345251192528750, 1351827808261762, 1345251268370453,

@@ -24,7 +24,7 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
         [u'Cookies.binarycookies'], parser)
 
     cookie_events = []
-    for event in storage_writer.events:
+    for event in storage_writer.GetEvents():
       if event.data_type == u'safari:cookie:entry':
         cookie_events.append(event)
 

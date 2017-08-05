@@ -128,16 +128,15 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
     # Test matching schema.
     storage_writer = self._ParseDatabaseFileWithPlugin(
         [u'wal_database.db'], plugin, cache=cache)
-    self.assertTrue(storage_writer.events)
-    for event in storage_writer.events:
+    for event in storage_writer.GetEvents():
       self.assertTrue(event.schema_match)
 
     # Test schema change with WAL.
     wal_file = self._GetTestFilePath([u'wal_database.db-wal'])
     storage_writer = self._ParseDatabaseFileWithPlugin(
         [u'wal_database.db'], plugin, cache=cache, wal_path=wal_file)
-    self.assertTrue(storage_writer.events)
-    for event in storage_writer.events:
+
+    for event in storage_writer.GetEvents():
       if event.from_wal:
         self.assertFalse(event.schema_match)
       else:
@@ -150,18 +149,18 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
          u'BLOB , NewField TEXT)',
          u'NewTable':
          u'CREATE TABLE NewTable(NewTableField1 TEXT, NewTableField2 TEXT)'})
+
     storage_writer = self._ParseDatabaseFileWithPlugin(
         [u'wal_database.db'], plugin, cache=cache, wal_path=wal_file)
-    self.assertTrue(storage_writer.events)
-    for event in storage_writer.events:
+    for event in storage_writer.GetEvents():
       self.assertTrue(event.schema_match)
 
     # Test without original schema.
     del plugin.SCHEMAS[0]
     storage_writer = self._ParseDatabaseFileWithPlugin(
         [u'wal_database.db'], plugin, cache=cache, wal_path=wal_file)
-    self.assertTrue(storage_writer.events)
-    for event in storage_writer.events:
+
+    for event in storage_writer.GetEvents():
       if event.from_wal:
         self.assertTrue(event.schema_match)
       else:

@@ -112,18 +112,6 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError(u'Unable to write to closed storage writer.')
 
-  # TODO: this property is for backwards compatibility during refactoring.
-  @property
-  def errors(self):
-    """list[ExtractionError]: errors."""
-    return self._errors
-
-  # TODO: this property is for backwards compatibility during refactoring.
-  @property
-  def events(self):
-    """list[EventObject]: events."""
-    return self._events
-
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
 
