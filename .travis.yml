@@ -26,6 +26,6 @@ script:
   - if test ${TRAVIS_OS_NAME} = "linux"; then python setup.py bdist; fi
   - if test ${TRAVIS_OS_NAME} = "linux"; then mkdir -p ${PWD}/tmp/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/ && PYTHONPATH=${PWD}/tmp/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/ python setup.py install --prefix=${PWD}/tmp/; fi
   - PYTHONPATH=${PYTHONPATH}:. ./tests/end-to-end.py --debug -c config/end-to-end.ini
-  - if test ${TRAVIS_OS_NAME} = "osx"; then mv ../l2tdevtools/dependencies ../l2tdevtools/build && ./config/macos/make_dist.sh; fi
+  - if test ${TRAVIS_OS_NAME} = "osx"; then mv dependencies ../l2tdevtools/build && ./config/macos/make_dist.sh; fi
 after_success:
   - if test ${TRAVIS_OS_NAME} = "linux" && test ${TRAVIS_PYTHON_VERSION} = "2.7"; then coveralls --verbose; fi
