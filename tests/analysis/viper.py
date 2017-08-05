@@ -4,7 +4,10 @@
 
 import unittest
 
-import mock
+try:
+  import mock  # pylint: disable=import-error
+except ImportError:
+  from unittest import mock
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfvfs.path import fake_path_spec

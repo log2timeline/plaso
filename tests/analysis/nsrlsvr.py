@@ -3,7 +3,11 @@
 """Tests for the nsrlsvr analysis plugin."""
 import unittest
 
-import mock
+try:
+  import mock  # pylint: disable=import-error
+except ImportError:
+  from unittest import mock
+
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import nsrlsvr
@@ -25,12 +29,15 @@ class _MockNsrlsvrSocket(object):
   # follow the Plaso style guide.
   def recv(self, unused_buffer_size):
     """Mocks the socket.recv method."""
-    if self._data == u'QUERY {0:s}\n'.format(NsrlSvrTest.EVENT_1_HASH):
-      self._data = None
+    expected_data = (
+        self._data == u'QUERY {0:s}\n'.format(NsrlSvrTest.EVENT_1_HASH))
+
+    self._data = None
+
+    if expected_data:
       return u'OK 1'
-    else:
-      self._data = None
-      return u'OK 0'
+
+    return u'OK 0'
 
   def sendall(self, data):
     """Mocks the socket.sendall method"""

@@ -63,6 +63,7 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
       },
   ]
 
+  # pylint: disable=arguments-differ
   def _CreateTestEventObject(self, event_attributes):
     """Create a test event with a set of attributes.
 
