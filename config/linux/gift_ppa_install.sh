@@ -28,6 +28,7 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-artifacts
                       python-bencode
                       python-binplist
+                      python-certifi
                       python-chardet
                       python-construct
                       python-crypto
@@ -40,6 +41,7 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-hachoir-core
                       python-hachoir-metadata
                       python-hachoir-parser
+                      python-idna
                       python-lzma
                       python-pefile
                       python-psutil
