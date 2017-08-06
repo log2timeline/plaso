@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 """This file contains preprocessors for Linux."""
 
+from __future__ import unicode_literals
+
 import csv
+import datetime
+
+from dateutil import tz
 
 from dfvfs.helpers import text_file as dfvfs_text_file
 
@@ -14,7 +19,7 @@ from plaso.preprocessors import manager
 class LinuxHostnamePlugin(interface.FileArtifactPreprocessorPlugin):
   """The Linux hostname plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'LinuxHostnameFile'
+  ARTIFACT_DEFINITION_NAME = 'LinuxHostnameFile'
 
   def _ParseFileData(self, knowledge_base, file_object):
     """Parses file content (data) for a hostname preprocessing attribute.
@@ -36,10 +41,10 @@ class LinuxHostnamePlugin(interface.FileArtifactPreprocessorPlugin):
     hostname = text_file_object.readline()
 
     try:
-      hostname = hostname.decode(u'utf-8')
+      hostname = hostname.decode('utf-8')
     except UnicodeDecodeError:
       # TODO: add and store preprocessing errors.
-      hostname = hostname.decode(u'utf-8', errors=u'replace')
+      hostname = hostname.decode('utf-8', errors='replace')
 
     hostname = hostname.strip()
     if hostname:
@@ -50,17 +55,17 @@ class LinuxHostnamePlugin(interface.FileArtifactPreprocessorPlugin):
     return result
 
 
-class LinuxTimeZonePlugin(interface.FileArtifactPreprocessorPlugin):
-  """The Linux time zone plugin."""
+class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
+  """Linux time zone plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'LinuxTimezoneFile'
+  ARTIFACT_DEFINITION_NAME = 'LinuxLocalTime'
 
-  def _ParseFileData(self, knowledge_base, file_object):
-    """Parses file content (data) for a time zone preprocessing attribute.
+  def _ParseFileEntry(self, knowledge_base, file_entry):
+    """Parses artifact file system data for a preprocessing attribute.
 
     Args:
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
-      file_object (dfvfs.FileIO): file-like object that contains the artifact
+      file_entry (dfvfs.FileEntry): file entry that contains the artifact
           value data.
 
     Returns:
@@ -71,10 +76,23 @@ class LinuxTimeZonePlugin(interface.FileArtifactPreprocessorPlugin):
       errors.PreProcessFail: if the preprocessing fails.
     """
     result = False
-    text_file_object = dfvfs_text_file.TextFile(file_object)
-    file_data = text_file_object.readline()
 
-    time_zone = file_data.strip()
+    if file_entry.link:
+      # Determine the timezone based on the file path.
+      _, _, time_zone = file_entry.link.partition('zoneinfo/')
+
+    else:
+      # Determine the timezone based on the timezone information file.
+      file_object = file_entry.GetFileObject()
+
+      time_zone = None
+      try:
+        time_zone_file = tz.tzfile(file_object)
+        date_time = datetime.datetime(2017, 1, 1)
+        time_zone = time_zone_file.tzname(date_time)
+      finally:
+        file_object.close()
+
     if time_zone:
       try:
         knowledge_base.SetTimeZone(time_zone)
@@ -89,7 +107,7 @@ class LinuxTimeZonePlugin(interface.FileArtifactPreprocessorPlugin):
 class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
   """The Linux user accounts plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'LinuxPasswdFile'
+  ARTIFACT_DEFINITION_NAME = 'LinuxPasswdFile'
 
   def _ParseFileData(self, knowledge_base, file_object):
     """Parses file content (data) for user account preprocessing attributes.
@@ -113,7 +131,7 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
       reader = csv.reader(text_file_object, delimiter=b':')
     except csv.Error as exception:
       raise errors.PreProcessFail(
-          u'Unable to read: {0:s} with error: {1!s}'.format(
+          'Unable to read: {0:s} with error: {1!s}'.format(
               self.ARTIFACT_DEFINITION_NAME, exception))
 
     for row in reader:
