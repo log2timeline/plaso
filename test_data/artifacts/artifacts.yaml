@@ -8,6 +8,14 @@ sources:
 labels: [Configuration Files, System]
 supported_os: [Linux]
 ---
+name: LinuxLocalTime
+doc: Local time zone configuation
+sources:
+- type: FILE
+  attributes: {paths: ['/etc/localtime']}
+labels: [System]
+supported_os: [Linux]
+---
 name: LinuxPasswdFile
 doc: |
   Linux passwd file.
@@ -17,14 +25,6 @@ doc: |
 sources:
 - type: FILE
   attributes: {paths: ['/etc/passwd']}
-labels: [Configuration Files, System]
-supported_os: [Linux]
----
-name: LinuxTimezoneFile
-doc: Linux timezone file.
-sources:
-- type: FILE
-  attributes: {paths: ['/etc/timezone']}
 labels: [Configuration Files, System]
 supported_os: [Linux]
 ---
