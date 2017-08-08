@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Linux preprocess plug-ins."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from dfvfs.helpers import fake_file_system_builder
@@ -20,34 +22,33 @@ class LinuxHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
   def testParseFileData(self):
     """Tests the _ParseFileData function."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    file_system_builder.AddFile(u'/etc/hostname', self._FILE_DATA)
+    file_system_builder.AddFile('/etc/hostname', self._FILE_DATA)
 
-    mount_point = fake_path_spec.FakePathSpec(location=u'/')
+    mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = linux.LinuxHostnamePlugin()
     knowledge_base = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, plugin)
 
-    self.assertEqual(knowledge_base.hostname, u'plaso.kiddaland.net')
+    self.assertEqual(knowledge_base.hostname, 'plaso.kiddaland.net')
 
 
 class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the Linux time zone plugin."""
 
-  _FILE_DATA = b'Europe/Zurich\n'
-
-  def testParseFileData(self):
-    """Tests the _ParseFileData function."""
+  def testParseFileEntry(self):
+    """Tests the _ParseFileEntry function."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    file_system_builder.AddFile(u'/etc/timezone', self._FILE_DATA)
+    file_system_builder.AddSymbolicLink(
+        '/etc/localtime', '/usr/share/zoneinfo/Europe/Zurich')
 
-    mount_point = fake_path_spec.FakePathSpec(location=u'/')
+    mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = linux.LinuxTimeZonePlugin()
     knowledge_base = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, plugin)
 
-    self.assertEqual(knowledge_base.timezone.zone, u'Europe/Zurich')
+    self.assertEqual(knowledge_base.timezone.zone, 'Europe/Zurich')
 
 
 class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
@@ -71,9 +72,9 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
   def testParseFileData(self):
     """Tests the _ParseFileData function."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    file_system_builder.AddFile(u'/etc/passwd', self._FILE_DATA)
+    file_system_builder.AddFile('/etc/passwd', self._FILE_DATA)
 
-    mount_point = fake_path_spec.FakePathSpec(location=u'/')
+    mount_point = fake_path_spec.FakePathSpec(location='/')
 
     plugin = linux.LinuxUserAccountsPlugin()
     knowledge_base = self._RunPreprocessorPluginOnFileSystem(
@@ -86,11 +87,11 @@ class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     user_account = users[4]
 
-    self.assertEqual(user_account.identifier, u'14')
-    self.assertEqual(user_account.group_identifier, u'50')
-    self.assertEqual(user_account.user_directory, u'/var/ftp')
-    self.assertEqual(user_account.username, u'ftp')
-    self.assertEqual(user_account.shell, u'/sbin/nologin')
+    self.assertEqual(user_account.identifier, '14')
+    self.assertEqual(user_account.group_identifier, '50')
+    self.assertEqual(user_account.user_directory, '/var/ftp')
+    self.assertEqual(user_account.username, 'ftp')
+    self.assertEqual(user_account.shell, '/sbin/nologin')
 
 
 if __name__ == '__main__':

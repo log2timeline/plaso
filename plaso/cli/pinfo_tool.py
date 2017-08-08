@@ -315,7 +315,8 @@ class PinfoTool(
 
     title = u'User accounts'
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, title=title)
+        self._views_format_type,
+        column_names=[u'Username', u'User directory'], title=title)
 
     for user_account in system_configuration.user_accounts:
       table_view.AddRow([
@@ -368,9 +369,7 @@ class PinfoTool(
       table_view.Write(self._output_writer)
 
       if self._verbose:
-        # TODO: disabled for now seeing the output is not yet complete.
-        # self._PrintPreprocessingInformation(storage, session_number + 1)
-        _ = session_number
+        self._PrintPreprocessingInformation(storage, session_number + 1)
 
         self._PrintParsersCounter(
             session.parsers_counter, session_identifier=session_identifier)
