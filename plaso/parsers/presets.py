@@ -1,46 +1,44 @@
 # -*- coding: utf-8 -*-
 """The parser preset categories."""
 
+from __future__ import unicode_literals
+
+
 CATEGORIES = {
-    u'win_gen': [
-        u'bencode', u'esedb', u'filestat', u'sqlite/google_drive', u'java_idx',
-        u'lnk', u'mcafee_protection', u'olecf', u'openxml', u'pe', u'prefetch',
-        u'sccm', u'skydrive_log', u'skydrive_log_old', u'sqlite/skype',
-        u'symantec_scanlog', u'webhist', u'winfirewall', u'winjob', u'winreg'],
-    u'winxp': [
-        u'recycle_bin_info2', u'win_gen', u'winevt'],
-    u'winxp_slow': [
-        u'hachoir', u'winxp'],
-    u'win7': [
-        u'recycle_bin', u'custom_destinations', u'esedb/esedb_file_history',
-        u'olecf/olecf_automatic_destinations', u'win_gen', u'winevtx'],
-    u'win7_slow': [
-        u'hachoir', u'win7'],
-    u'webhist': [
-        u'binary_cookies', u'chrome_cache', u'sqlite/chrome_cookies',
-        u'sqlite/chrome_extension_activity', u'sqlite/chrome_history',
-        u'chrome_preferences', u'firefox_cache', u'sqlite/firefox_cookies',
-        u'sqlite/firefox_downloads', u'sqlite/firefox_history', u'java_idx',
-        u'esedb/msie_webcache', u'msiecf', u'opera_global',
-        u'opera_typed_history', u'plist/safari_history'],
-    u'linux': [
-        u'bencode', u'filestat', u'sqlite/google_drive', u'java_idx', u'olecf',
-        u'openxml', u'pls_recall', u'popularity_contest', u'selinux',
-        u'sqlite/skype', u'syslog', u'utmp', u'webhist', u'xchatlog',
-        u'xchatscrollback', u'sqlite/zeitgeist'],
-    u'macosx': [
-        u'sqlite/appusage', u'asl_log', u'bencode', u'bsm_log', u'cups_ipp',
-        u'filestat', u'sqlite/google_drive', u'java_idx',
-        u'sqlite/ls_quarantine', u'mac_appfirewall_log',
-        u'sqlite/mac_document_versions', u'mac_keychain', u'mac_securityd',
-        u'sqlite/mackeeper_cache', u'macwifi', u'olecf', u'openxml', u'plist',
-        u'sqlite/skype', u'utmpx', u'webhist'],
-    # TODO: Once syslog parser has been rewritten to be faster than the current
-    # one it's moved out of the default parsers for Mac OS X and into the "slow"
-    # mode.
-    u'macosx_slow': [u'macosx', u'syslog'],
-    u'android': [
-        u'android_app_usage', u'filestat', u'chrome_cache',
-        u'sqlite/android_calls', u'sqlite/android_sms',
-        u'sqlite/android_webview', u'sqlite/android_webviewcache',
-        u'sqlite/chrome_cookies', u'sqlite/chrome_history', u'sqlite/skype',]}
+    'win_gen': [
+        'bencode', 'esedb', 'filestat', 'sqlite/google_drive', 'java_idx',
+        'lnk', 'mcafee_protection', 'mft', 'olecf', 'openxml', 'pe', 'prefetch',
+        'sccm', 'skydrive_log', 'skydrive_log_old', 'sqlite/skype',
+        'symantec_scanlog', 'usnjrnl', 'webhist', 'winfirewall', 'winjob',
+        'winreg'],
+    'winxp': ['recycle_bin_info2', 'rplog', 'win_gen', 'winevt'],
+    'winxp_slow': ['hachoir', 'winxp'],
+    'win7': [
+        'recycle_bin', 'custom_destinations', 'esedb/esedb_file_history',
+        'olecf/olecf_automatic_destinations', 'win_gen', 'winevtx'],
+    'win7_slow': ['hachoir', 'win7'],
+    'webhist': [
+        'binary_cookies', 'chrome_cache', 'sqlite/chrome_cookies',
+        'sqlite/chrome_extension_activity', 'sqlite/chrome_history',
+        'chrome_preferences', 'firefox_cache', 'sqlite/firefox_cookies',
+        'sqlite/firefox_downloads', 'sqlite/firefox_history', 'java_idx',
+        'esedb/msie_webcache', 'msiecf', 'opera_global', 'opera_typed_history',
+        'plist/safari_history'],
+    'linux': [
+        'bash_history', 'bencode', 'dockerjson', 'dpkg', 'filestat',
+        'sqlite/google_drive', 'java_idx', 'olecf', 'openxml', 'pls_recall',
+        'popularity_contest', 'selinux', 'sqlite/skype', 'syslog',
+        'systemd_journal', 'utmp', 'webhist', 'xchatlog', 'xchatscrollback',
+        'sqlite/zeitgeist', 'zsh_extended_history'],
+    'macosx': [
+        'sqlite/appusage', 'asl_log', 'bash_history', 'bencode', 'bsm_log',
+        'cups_ipp', 'filestat', 'sqlite/google_drive', 'sqlite/imessage',
+        'java_idx', 'sqlite/ls_quarantine', 'mac_appfirewall_log',
+        'sqlite/mac_document_versions', 'mac_keychain', 'mac_securityd',
+        'sqlite/mackeeper_cache', 'macwifi', 'olecf', 'openxml', 'plist',
+        'sqlite/skype', 'syslog', 'utmpx', 'webhist', 'zsh_extended_history'],
+    'android': [
+        'android_app_usage', 'filestat', 'chrome_cache',
+        'sqlite/android_calls', 'sqlite/android_sms', 'sqlite/android_webview',
+        'sqlite/android_webviewcache', 'sqlite/chrome_cookies',
+        'sqlite/chrome_history', 'sqlite/skype']}
