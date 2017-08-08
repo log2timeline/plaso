@@ -17,6 +17,8 @@ class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
     interface.WindowsRegistryValueArtifactPreprocessorPlugin):
   """Windows environment variable artifact preprocessor plugin interface."""
 
+  _NAME = None
+
   def _ParseValueData(self, knowledge_base, value_data):
     """Parses Windows Registry value data for a preprocessing attribute.
 
