@@ -95,7 +95,6 @@ class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
       except ValueError:
         # TODO: add and store preprocessing errors.
         logging.error('Unable to read time zone information file.')
-        pass
 
       finally:
         file_object.close()
@@ -107,7 +106,6 @@ class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
       except ValueError:
         # TODO: add and store preprocessing errors.
         logging.error('Unable to set time zone in knowledge base.')
-        pass
 
     return result
 
