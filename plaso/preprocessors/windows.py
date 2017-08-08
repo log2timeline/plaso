@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains preprocessors for Windows."""
 
+from __future__ import unicode_literals
+
 import logging
 
 from plaso.containers import artifacts
@@ -31,8 +33,8 @@ class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
     """
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
       raise errors.PreProcessFail(
-          u'Unsupported Windows Registry value type: {0:s} for '
-          u'artifact: {1:s}.'.format(
+          'Unsupported Windows Registry value type: {0:s} for '
+          'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
     result = False
@@ -81,12 +83,12 @@ class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
     relative_path = searcher.GetRelativePath(path_specification)
     if not relative_path:
       raise errors.PreProcessFail(
-          u'Unable to read: {0:s} with error: missing relative path'.format(
+          'Unable to read: {0:s} with error: missing relative path'.format(
               self.ARTIFACT_DEFINITION_NAME))
 
     if path_separator != file_system.PATH_SEPARATOR:
       relative_path_segments = file_system.SplitPath(relative_path)
-      relative_path = u'{0:s}{1:s}'.format(
+      relative_path = '{0:s}{1:s}'.format(
           path_separator, path_separator.join(relative_path_segments))
 
     evironment_variable = artifacts.EnvironmentVariableArtifact(
@@ -106,7 +108,7 @@ class WindowsCodepagePlugin(
     interface.WindowsRegistryValueArtifactPreprocessorPlugin):
   """The Windows codepage plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'WindowsCodePage'
+  ARTIFACT_DEFINITION_NAME = 'WindowsCodePage'
 
   def _ParseValueData(self, knowledge_base, value_data):
     """Parses Windows Registry value data for a preprocessing attribute.
@@ -124,13 +126,13 @@ class WindowsCodepagePlugin(
     """
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
       raise errors.PreProcessFail(
-          u'Unsupported Windows Registry value type: {0:s} for '
-          u'artifact: {1:s}.'.format(
+          'Unsupported Windows Registry value type: {0:s} for '
+          'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
     result = False
     # Map the Windows code page name to a Python equivalent name.
-    codepage = u'cp{0:s}'.format(value_data)
+    codepage = 'cp{0:s}'.format(value_data)
 
     try:
       knowledge_base.SetCodepage(codepage)
@@ -146,7 +148,7 @@ class WindowsHostnamePlugin(
     interface.WindowsRegistryValueArtifactPreprocessorPlugin):
   """The Windows hostname plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'WindowsComputerName'
+  ARTIFACT_DEFINITION_NAME = 'WindowsComputerName'
 
   def _ParseValueData(self, knowledge_base, value_data):
     """Parses Windows Registry value data for a preprocessing attribute.
@@ -164,8 +166,8 @@ class WindowsHostnamePlugin(
     """
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
       raise errors.PreProcessFail(
-          u'Unsupported Windows Registry value type: {0:s} for '
-          u'artifact: {1:s}.'.format(
+          'Unsupported Windows Registry value type: {0:s} for '
+          'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
     hostname_artifact = artifacts.HostnameArtifact(name=value_data)
@@ -177,25 +179,25 @@ class WindowsProgramFilesEnvironmentVariablePlugin(
     WindowsEnvironmentVariableArtifactPreprocessorPlugin):
   """The Windows %ProgramFiles% environment variable plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'WindowsEnvironmentVariableProgramFiles'
+  ARTIFACT_DEFINITION_NAME = 'WindowsEnvironmentVariableProgramFiles'
 
-  _NAME = u'programfiles'
+  _NAME = 'programfiles'
 
 
 class WindowsProgramFilesX86EnvironmentVariablePlugin(
     WindowsEnvironmentVariableArtifactPreprocessorPlugin):
   """The Windows %ProgramFilesX86% environment variable plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'WindowsEnvironmentVariableProgramFilesX86'
+  ARTIFACT_DEFINITION_NAME = 'WindowsEnvironmentVariableProgramFilesX86'
 
-  _NAME = u'programfilesx86'
+  _NAME = 'programfilesx86'
 
 
 class WindowsSystemProductPlugin(
     interface.WindowsRegistryValueArtifactPreprocessorPlugin):
   """The Windows system product information plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'WindowsProductName'
+  ARTIFACT_DEFINITION_NAME = 'WindowsProductName'
 
   def _ParseValueData(self, knowledge_base, value_data):
     """Parses Windows Registry value data for a preprocessing attribute.
@@ -213,11 +215,11 @@ class WindowsSystemProductPlugin(
     """
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
       raise errors.PreProcessFail(
-          u'Unsupported Windows Registry value type: {0:s} for '
-          u'artifact: {1:s}.'.format(
+          'Unsupported Windows Registry value type: {0:s} for '
+          'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
-    knowledge_base.SetValue(u'operating_system_product', value_data)
+    knowledge_base.SetValue('operating_system_product', value_data)
     return True
 
 
@@ -225,16 +227,16 @@ class WindowsSystemRootEnvironmentVariablePlugin(
     WindowsPathEnvironmentVariableArtifactPreprocessorPlugin):
   """The Windows %SystemRoot% environment variable plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'WindowsEnvironmentVariableSystemRoot'
+  ARTIFACT_DEFINITION_NAME = 'WindowsEnvironmentVariableSystemRoot'
 
-  _NAME = u'systemroot'
+  _NAME = 'systemroot'
 
 
 class WindowsSystemVersionPlugin(
     interface.WindowsRegistryValueArtifactPreprocessorPlugin):
-  """The Windows system verion information plugin."""
+  """The Windows system version information plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'WindowsCurrentVersion'
+  ARTIFACT_DEFINITION_NAME = 'WindowsCurrentVersion'
 
   def _ParseValueData(self, knowledge_base, value_data):
     """Parses Windows Registry value data for a preprocessing attribute.
@@ -252,11 +254,11 @@ class WindowsSystemVersionPlugin(
     """
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
       raise errors.PreProcessFail(
-          u'Unsupported Windows Registry value type: {0:s} for '
-          u'artifact: {1:s}.'.format(
+          'Unsupported Windows Registry value type: {0:s} for '
+          'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
-    knowledge_base.SetValue(u'operating_system_version', value_data)
+    knowledge_base.SetValue('operating_system_version', value_data)
     return True
 
 
@@ -264,7 +266,7 @@ class WindowsTimeZonePlugin(
     interface.WindowsRegistryValueArtifactPreprocessorPlugin):
   """The Windows time zone plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'WindowsTimezone'
+  ARTIFACT_DEFINITION_NAME = 'WindowsTimezone'
 
   def _ParseValueData(self, knowledge_base, value_data):
     """Parses Windows Registry value data for a preprocessing attribute.
@@ -282,13 +284,13 @@ class WindowsTimeZonePlugin(
     """
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
       raise errors.PreProcessFail(
-          u'Unsupported Windows Registry value type: {0:s} for '
-          u'artifact: {1:s}.'.format(
+          'Unsupported Windows Registry value type: {0:s} for '
+          'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
     result = False
     # Map the Windows time zone name to a Python equivalent name.
-    lookup_key = value_data.replace(u' ', u'')
+    lookup_key = value_data.replace(' ', '')
 
     time_zone = time_zones.TIME_ZONES.get(lookup_key, value_data)
     if not time_zone:
@@ -301,7 +303,7 @@ class WindowsTimeZonePlugin(
     except ValueError:
       # TODO: add and store preprocessing errors.
       time_zone = value_data
-      logging.warning(u'Unable to map: "{0:s}" to time zone'.format(value_data))
+      logging.warning('Unable to map: "{0:s}" to time zone'.format(value_data))
 
     return result
 
@@ -310,7 +312,7 @@ class WindowsUserAccountsPlugin(
     interface.WindowsRegistryKeyArtifactPreprocessorPlugin):
   """The Windows user account plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'WindowsRegistryProfiles'
+  ARTIFACT_DEFINITION_NAME = 'WindowsRegistryProfiles'
 
   def _GetUsernameFromProfilePath(self, path):
     """Retrieves the username from a Windows profile path.
@@ -324,11 +326,11 @@ class WindowsUserAccountsPlugin(
       str: basename which is the last path segment.
     """
     # Strip trailing key separators.
-    while path and path[-1] == u'\\':
+    while path and path[-1] == '\\':
       path = path[:-1]
 
     if path:
-      _, _, path = path.rpartition(u'\\')
+      _, _, path = path.rpartition('\\')
     return path
 
   def _ParseKey(self, knowledge_base, registry_key, value_name):
@@ -349,7 +351,7 @@ class WindowsUserAccountsPlugin(
     user_account = artifacts.UserAccountArtifact(
         identifier=registry_key.name)
 
-    registry_value = registry_key.GetValueByName(u'ProfileImagePath')
+    registry_value = registry_key.GetValueByName('ProfileImagePath')
     if registry_value:
       profile_path = registry_value.GetDataAsObject()
       username = self._GetUsernameFromProfilePath(profile_path)
@@ -370,9 +372,9 @@ class WindowsWinDirEnvironmentVariablePlugin(
     WindowsPathEnvironmentVariableArtifactPreprocessorPlugin):
   """The Windows %WinDir% environment variable plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'WindowsEnvironmentVariableWinDir'
+  ARTIFACT_DEFINITION_NAME = 'WindowsEnvironmentVariableWinDir'
 
-  _NAME = u'windir'
+  _NAME = 'windir'
 
 
 manager.PreprocessPluginsManager.RegisterPlugins([

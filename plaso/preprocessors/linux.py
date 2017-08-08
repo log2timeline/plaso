@@ -56,6 +56,44 @@ class LinuxHostnamePlugin(interface.FileArtifactPreprocessorPlugin):
     return result
 
 
+class LinuxSystemProductPlugin(interface.FileArtifactPreprocessorPlugin):
+  """The Linux system product plugin."""
+
+  ARTIFACT_DEFINITION_NAME = 'LinuxRelease'
+
+  def _ParseFileData(self, knowledge_base, file_object):
+    """Parses file content (data) for system product preprocessing attribute.
+
+    Args:
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      file_object (dfvfs.FileIO): file-like object that contains the artifact
+          value data.
+
+    Returns:
+      bool: True if all the preprocessing attributes were found and
+          the preprocessor plugin is done.
+
+    Raises:
+      errors.PreProcessFail: if the preprocessing fails.
+    """
+    result = False
+    text_file_object = dfvfs_text_file.TextFile(file_object)
+    system_product = text_file_object.readline()
+
+    try:
+      system_product = system_product.decode('utf-8')
+    except UnicodeDecodeError:
+      # TODO: add and store preprocessing errors.
+      system_product = system_product.decode('utf-8', errors='replace')
+
+    system_product = system_product.strip()
+    if system_product:
+      knowledge_base.SetValue('operating_system_product', system_product)
+      result = True
+
+    return result
+
+
 class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
   """Linux time zone plugin."""
 
@@ -163,4 +201,5 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
 
 
 manager.PreprocessPluginsManager.RegisterPlugins([
-    LinuxHostnamePlugin, LinuxTimeZonePlugin, LinuxUserAccountsPlugin])
+    LinuxHostnamePlugin, LinuxSystemProductPlugin, LinuxTimeZonePlugin,
+    LinuxUserAccountsPlugin])
