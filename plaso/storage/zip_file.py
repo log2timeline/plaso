@@ -2639,6 +2639,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     return False
 
+  # pylint: disable=arguments-differ
   def Open(self, path=None, read_only=True, **unused_kwargs):
     """Opens the storage.
 
