@@ -5,9 +5,9 @@ The ZIP-based storage can be described as a collection of storage files
 (named streams) bundled in a single ZIP archive file.
 
 There are multiple types of streams:
-* extraction_error_data.#
+* error_data.#
   The error data streams contain the serialized error objects.
-* extraction_error_index.#
+* error_index.#
   The error index streams contain the stream offset to the serialized
   error objects.
 * event_data.#
@@ -1589,8 +1589,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self._serializer = json_serializer.JSONAttributeContainerSerializer
 
     # TODO: create a single function to determine last stream numbers.
-    self._stream_numbers[u'extraction_error'] = self._GetLastStreamNumber(
-        u'extraction_error_data.')
+    self._stream_numbers[u'error'] = self._GetLastStreamNumber(
+        u'error_data.')
     self._event_stream_number = self._GetLastStreamNumber(u'event_data.')
 
     self._stream_numbers[u'event_source'] = self._GetLastStreamNumber(
@@ -2103,7 +2103,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       IOError: when the storage file is closed or read-only or
           if the error cannot be serialized.
     """
-    self._AddAttributeContainer(u'extraction_error', error)
+    self._AddAttributeContainer(u'error', error)
 
   def AddEvent(self, event):
     """Adds an event.
@@ -2326,7 +2326,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       self._WriteSerializedAttributeContainerList(u'event_source')
       self._WriteSerializedEvents()
       self._WriteSerializedAttributeContainerList(u'event_tag')
-      self._WriteSerializedAttributeContainerList(u'extraction_error')
+      self._WriteSerializedAttributeContainerList(u'error')
 
   def GetAnalysisReports(self):
     """Retrieves the analysis reports.
@@ -2358,18 +2358,17 @@ class ZIPStorageFile(interface.BaseFileStorage):
     Raises:
       IOError: if a stream is missing.
     """
-    error_stream_number = self._stream_numbers[u'extraction_error']
+    error_stream_number = self._stream_numbers[u'error']
 
     for stream_number in range(1, error_stream_number):
-      stream_name = u'extraction_error_data.{0:06}'.format(stream_number)
+      stream_name = u'error_data.{0:06}'.format(stream_number)
       if not self._HasStream(stream_name):
         raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
       data_stream = _SerializedDataStream(
           self._zipfile, self._zipfile_path, stream_name)
 
-      generator = self._ReadAttributeContainersFromStream(
-          data_stream, u'extraction_error')
+      generator = self._ReadAttributeContainersFromStream(data_stream, u'error')
       for entry_index, error in enumerate(generator):
         error_identifier = identifiers.SerializedStreamIdentifier(
             stream_number, entry_index)
@@ -2623,7 +2622,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       bool: True if the storage contains extraction errors.
     """
     for name in self._GetStreamNames():
-      if name.startswith(u'extraction_error_data.'):
+      if name.startswith(u'error_data.'):
         return True
 
     return False
