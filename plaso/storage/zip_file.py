@@ -796,7 +796,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self.storage_type = storage_type
 
   def _AddAttributeContainer(self, container_type, attribute_container):
-    """Adds an atttibute container.
+    """Adds an attribute container.
 
     Args:
       container_type (str): attribute container type.
@@ -1588,8 +1588,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     self._serializer = json_serializer.JSONAttributeContainerSerializer
 
-    # TODO: create a single function to determin last stream numbers.
-    self._stream_numbers[u'extraction_error'] = self._GetLastStreamNumber(
+    # TODO: create a single function to determine last stream numbers.
+    self._stream_numbers[u'error'] = self._GetLastStreamNumber(
         u'error_data.')
     self._event_stream_number = self._GetLastStreamNumber(u'event_data.')
 
@@ -2103,7 +2103,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       IOError: when the storage file is closed or read-only or
           if the error cannot be serialized.
     """
-    self._AddAttributeContainer(u'extraction_error', error)
+    self._AddAttributeContainer(u'error', error)
 
   def AddEvent(self, event):
     """Adds an event.
@@ -2326,7 +2326,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       self._WriteSerializedAttributeContainerList(u'event_source')
       self._WriteSerializedEvents()
       self._WriteSerializedAttributeContainerList(u'event_tag')
-      self._WriteSerializedAttributeContainerList(u'extraction_error')
+      self._WriteSerializedAttributeContainerList(u'error')
 
   def GetAnalysisReports(self):
     """Retrieves the analysis reports.
@@ -2358,7 +2358,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     Raises:
       IOError: if a stream is missing.
     """
-    error_stream_number = self._stream_numbers[u'extraction_error']
+    error_stream_number = self._stream_numbers[u'error']
 
     for stream_number in range(1, error_stream_number):
       stream_name = u'error_data.{0:06}'.format(stream_number)
@@ -2639,6 +2639,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     return False
 
+  # pylint: disable=arguments-differ
   def Open(self, path=None, read_only=True, **unused_kwargs):
     """Opens the storage.
 
