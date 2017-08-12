@@ -72,8 +72,8 @@ cp -rf ${SOURCE_DIRECTORY}/* .;
 TEST_FILE="psort_test.json.plaso";
 
 # Syslog does not contain a year we must pass preferred year to prevent the parser failing early on non-leap years.
-PYTHONPATH=. ./tools/log2timeline.py --buffer_size=300 --quiet --preferred_year 2012 ${TEST_FILE} test_data/syslog;
-PYTHONPATH=. ./tools/log2timeline.py --quiet --timezone=Iceland --preferred_year 2012 ${TEST_FILE} test_data/syslog;
+PYTHONPATH=. python ./tools/log2timeline.py --buffer_size=300 --quiet --preferred_year 2012 ${TEST_FILE} test_data/syslog;
+PYTHONPATH=. python ./tools/log2timeline.py --quiet --timezone=Iceland --preferred_year 2012 ${TEST_FILE} test_data/syslog;
 
 cat > tagging.txt <<EOI
 anacron
@@ -86,16 +86,16 @@ repeated
   body contains 'last message repeated'
 EOI
 
-PYTHONPATH=. ./tools/psort.py --analysis tagging --output-format=null --tagging-file=tagging.txt ${TEST_FILE};
+PYTHONPATH=. python ./tools/psort.py --analysis tagging --output-format=null --tagging-file=tagging.txt ${TEST_FILE};
 
 # Run tagging twice.
-PYTHONPATH=. ./tools/psort.py --analysis tagging --output-format=null --tagging-file=tagging.txt ${TEST_FILE};
+PYTHONPATH=. python ./tools/psort.py --analysis tagging --output-format=null --tagging-file=tagging.txt ${TEST_FILE};
 
 mv ${TEST_FILE} ${OLD_PWD}/test_data/;
 
 TEST_FILE="pinfo_test.json.plaso";
 
-PYTHONPATH=. ./tools/log2timeline.py --partition=all --quiet ${TEST_FILE} test_data/tsk_volume_system.raw;
+PYTHONPATH=. python ./tools/log2timeline.py --partition=all --quiet ${TEST_FILE} test_data/tsk_volume_system.raw;
 
 mv ${TEST_FILE} ${OLD_PWD}/test_data/;
 
