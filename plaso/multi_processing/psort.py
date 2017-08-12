@@ -12,6 +12,7 @@ from plaso.engine import zeromq_queue
 from plaso.containers import tasks
 from plaso.lib import bufferlib
 from plaso.lib import definitions
+from plaso.lib import py2to3
 from plaso.multi_processing import analysis_process
 from plaso.multi_processing import engine as multi_process_engine
 from plaso.multi_processing import multi_process_queue
@@ -91,8 +92,15 @@ class PsortEventHeap(object):
       elif isinstance(attribute_value, set):
         attribute_value = sorted(list(attribute_value))
 
-      attribute_string = u'{0:s}: {1!s}'.format(
-          attribute_name, attribute_value)
+      elif isinstance(attribute_value, py2to3.BYTES_TYPE):
+        attribute_value = repr(attribute_value)
+
+      try:
+        attribute_string = u'{0:s}: {1!s}'.format(
+            attribute_name, attribute_value)
+      except UnicodeDecodeError:
+        logging.error(u'Failed to decode attribute {0:s}'.format(
+            attribute_name))
       attributes.append(attribute_string)
 
     # The u'atime', u'ctime', u'crtime', u'mtime' are included for backwards
