@@ -805,6 +805,52 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
+  def testReadAndWriteAttributeContainerTypes(self):
+    """Tests that reading and writing attribute container types works."""
+    analysis_report = reports.AnalysisReport(
+        plugin_name=u'test', text=u'test report')
+    event_source = event_sources.EventSource()
+    extraction_error = errors.ExtractionError(message=u'Test extraction error')
+    test_events = self._CreateTestEvents()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      storage_file = zip_file.ZIPStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
+
+      storage_file.AddAnalysisReport(analysis_report)
+      storage_file.AddError(extraction_error)
+      for test_event in test_events:
+        storage_file.AddEvent(test_event)
+      storage_file.AddEventSource(event_source)
+      test_event_tags = self._CreateTestEventTags(test_events)
+      for event_tag in test_event_tags:
+        storage_file.AddEventTag(event_tag)
+
+      storage_file.Close()
+
+      storage_file.Open(path=temp_file, read_only=False)
+
+      self.assertTrue(storage_file.HasAnalysisReports())
+      retrieved_analysis_reports = list(storage_file.GetAnalysisReports())
+      self.assertEqual(1, len(retrieved_analysis_reports))
+
+      retrieved_event_sources = list(storage_file.GetEventSources())
+      self.assertEqual(1, len(retrieved_event_sources))
+
+      self.assertTrue(storage_file.HasErrors())
+      retrieved_errors = list(storage_file.GetErrors())
+      self.assertEqual(1, len(retrieved_errors))
+
+      retrieved_events = list(storage_file.GetEvents())
+      self.assertEqual(len(test_events), len(retrieved_events))
+
+      self.assertTrue(storage_file.HasEventTags())
+      retrieved_event_tags = list(storage_file.GetEventTags())
+      self.assertEqual(len(test_event_tags), len(retrieved_event_tags))
+
+      storage_file.Close()
+
   @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
   def testReadAttributeContainerFromStreamEntry(self):
     """Tests the _ReadAttributeContainerFromStreamEntry function."""
