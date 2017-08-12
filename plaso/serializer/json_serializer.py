@@ -374,7 +374,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     return json_dict
 
   @classmethod
-  def ReadSerialized(cls, json_string): # pylint: disable=arguments-differ
+  def ReadSerialized(cls, json_string):  # pylint: disable=arguments-differ
     """Reads an attribute container from serialized form.
 
     Args:
@@ -396,6 +396,10 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
 
     Returns:
       AttributeContainer: attribute container or None.
+
+    Raises:
+      TypeError: if the serialized dictionary does not contain an
+          AttributeContainer.
     """
     if json_dict:
       json_object = cls._ConvertDictToObject(json_dict)
