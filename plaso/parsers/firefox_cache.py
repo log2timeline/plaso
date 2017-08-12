@@ -80,7 +80,9 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
     try:
       http_header_start = header_data.index(b'request-method')
     except ValueError:
-      logging.debug(u'No request method in header: "{0:s}"'.format(header_data))
+      safe_headers = header_data.decode(u'ascii', errors=u'replace')
+      logging.debug(u'No request method in header: "{0:s}"'.format(
+          safe_headers))
       return None, None
 
     # HTTP request and response headers.

@@ -4,6 +4,7 @@
 from plaso.formatters import interface
 from plaso.formatters import manager
 from plaso.lib import errors
+from plaso.lib import py2to3
 
 
 class OLECFItemFormatter(interface.EventFormatter):
@@ -169,6 +170,10 @@ class OLECFSummaryInfoFormatter(interface.ConditionalEventFormatter):
           security, u','.join(security_flags))
 
       event_values[u'security'] = security_string
+
+    for key, value in iter(event_values.items()):
+      if isinstance(value, py2to3.BYTES_TYPE):
+        event_values[key] = repr(value)
 
     return self._ConditionalFormatMessages(event_values)
 
