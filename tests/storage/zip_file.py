@@ -735,10 +735,13 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.AddAnalysisReport(analysis_report)
       storage_file.AddError(extraction_error)
+
       for test_event in test_events:
         storage_file.AddEvent(test_event)
+
       storage_file.AddEventSource(event_source)
       test_event_tags = self._CreateTestEventTags(test_events)
+
       for event_tag in test_event_tags:
         storage_file.AddEventTag(event_tag)
 

@@ -2258,7 +2258,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       self._WriteSerializedAttributeContainerList(u'event_data')
       self._WriteSerializedEvents()
       self._WriteSerializedAttributeContainerList(u'event_tag')
-      self._WriteSerializedAttributeContainerList(u'error')
+      self._WriteSerializedAttributeContainerList(u'extraction_error')
 
   def GetAnalysisReports(self):
     """Retrieves the analysis reports.
