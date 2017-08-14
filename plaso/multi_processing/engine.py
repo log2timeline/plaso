@@ -365,9 +365,6 @@ class MultiProcessEngine(engine.BaseEngine):
     if pid in self._rpc_errors_per_pid:
       del self._rpc_errors_per_pid[pid]
 
-    if pid in self._processes_per_pid:
-      del self._processes_per_pid[pid]
-
     logging.debug(u'Stopped monitoring process: {0:s} (PID: {1:d})'.format(
         process.name, pid))
 
@@ -407,6 +404,7 @@ class MultiProcessEngine(engine.BaseEngine):
       self._KillProcess(pid)
 
     self._StopMonitoringProcess(process)
+    self._UnregisterProcess(process)
 
   @abc.abstractmethod
   def _UpdateProcessingStatus(self, pid, process_status, used_memory):
@@ -421,3 +419,19 @@ class MultiProcessEngine(engine.BaseEngine):
     Raises:
       KeyError: if the process is not registered with the engine.
     """
+
+  def _UnregisterProcess(self, process):
+    """Registers a process with the engine.
+
+    Args:
+      process (MultiProcessBaseProcess): process.
+
+    Raises:
+      KeyError: if the process is not registered with the engine.
+      ValueError: if the process is missing.
+    """
+    if process is None:
+      raise ValueError(u'Missing process.')
+    pid = process.pid
+    del self._processes_per_pid[pid]
+
