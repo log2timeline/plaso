@@ -598,6 +598,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     row = self._cursor.fetchone()
     return row and row[0] != 0
 
+  # pylint: disable=arguments-differ
   def Open(self, path=None, read_only=True, **unused_kwargs):
     """Opens the storage.
 

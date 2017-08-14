@@ -326,6 +326,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     """
     return len(self._GetAttributeContainerList(u'event_tags')) > 0
 
+  # pylint: disable=arguments-differ
   def Open(self, path=None, read_only=True, **unused_kwargs):
     """Opens the storage.
 

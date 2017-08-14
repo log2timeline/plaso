@@ -617,6 +617,7 @@ class _StorageMetadataReader(object):
       _StorageMetadata: storage metadata.
     """
     config_parser = configparser.RawConfigParser()
+    # pylint: disable=deprecated-method
     config_parser.readfp(io.BytesIO(stream_data))
 
     section_name = u'plaso_storage_file'
