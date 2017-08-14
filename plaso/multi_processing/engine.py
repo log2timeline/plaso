@@ -434,4 +434,3 @@ class MultiProcessEngine(engine.BaseEngine):
       raise ValueError(u'Missing process.')
     pid = process.pid
     del self._processes_per_pid[pid]
-
