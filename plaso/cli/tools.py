@@ -201,10 +201,9 @@ class CLITool(object):
     if profiling_sample_rate:
       try:
         self._profiling_sample_rate = int(profiling_sample_rate, 10)
-      except ValueError:
+      except (TypeError, ValueError):
         raise errors.BadConfigOption(
-            'Invalid profile sample rate: {0:s}.'.format(
-                profiling_sample_rate))
+            'Invalid profile sample rate: {0!s}.'.format(profiling_sample_rate))
 
   def _ParseTimezoneOption(self, options):
     """Parses the timezone options.

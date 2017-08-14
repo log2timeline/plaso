@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the CLI tools classes."""
 
+from __future__ import unicode_literals
+
 import argparse
 import io
 import locale
@@ -11,90 +13,158 @@ import unittest
 from plaso.cli import tools
 from plaso.lib import errors
 
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
 class CLIToolTest(test_lib.CLIToolTestCase):
   """Tests for the CLI tool base class."""
 
-  _EXPECTED_BASIC_OPTIONS = u'\n'.join([
-      u'usage: tool_test.py [-h] [-V]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  -V, --version  show the version information.',
-      u'  -h, --help     show this help message and exit.',
-      u''])
+  _EXPECTED_BASIC_OPTIONS = '\n'.join([
+      'usage: tool_test.py [-h] [-V]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  -V, --version  show the version information.',
+      '  -h, --help     show this help message and exit.',
+      ''])
 
-  _EXPECTED_INFORMATIONAL_OPTIONS = u'\n'.join([
-      u'usage: tool_test.py [-d] [-q]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  -d, --debug  enable debug output.',
-      u'  -q, --quiet  disable informational output.',
-      u''])
+  _EXPECTED_INFORMATIONAL_OPTIONS = '\n'.join([
+      'usage: tool_test.py [-d] [-q]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  -d, --debug  enable debug output.',
+      '  -q, --quiet  disable informational output.',
+      ''])
 
-  _EXPECTED_PROFILING_OPTIONS = u'\n'.join([
-      u'usage: tool_test.py [--profilers PROFILERS_LIST]',
-      u'                    [--profiling_directory DIRECTORY]',
-      u'                    [--profiling_sample_rate SAMPLE_RATE]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --profilers PROFILERS_LIST',
-      (u'                        Define a list of profilers to use by the '
-       u'tool. This is'),
-      (u'                        a comma separated list where each entry is '
-       u'the name of'),
-      (u'                        a profiler. Use "--profilers list" to list '
-       u'the'),
-      u'                        available profilers.',
-      u'  --profiling_directory DIRECTORY, --profiling-directory DIRECTORY',
-      (u'                        Path to the directory that should be used '
-       u'to store the'),
-      (u'                        profiling sample files. By default the '
-       u'sample files'),
-      u'                        are stored in the current working directory.',
-      (u'  --profiling_sample_rate SAMPLE_RATE, '
-       u'--profiling-sample-rate SAMPLE_RATE'),
-      (u'                        The profiling sample rate (defaults to a '
-       u'sample every'),
-      u'                        1000 files).',
-      u''])
+  _EXPECTED_PROFILING_OPTIONS = '\n'.join([
+      'usage: tool_test.py [--profilers PROFILERS_LIST]',
+      '                    [--profiling_directory DIRECTORY]',
+      '                    [--profiling_sample_rate SAMPLE_RATE]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --profilers PROFILERS_LIST',
+      ('                        Define a list of profilers to use by the '
+       'tool. This is'),
+      ('                        a comma separated list where each entry is '
+       'the name of'),
+      ('                        a profiler. Use "--profilers list" to list '
+       'the'),
+      '                        available profilers.',
+      '  --profiling_directory DIRECTORY, --profiling-directory DIRECTORY',
+      ('                        Path to the directory that should be used '
+       'to store the'),
+      ('                        profiling sample files. By default the '
+       'sample files'),
+      '                        are stored in the current working directory.',
+      ('  --profiling_sample_rate SAMPLE_RATE, '
+       '--profiling-sample-rate SAMPLE_RATE'),
+      ('                        The profiling sample rate (defaults to a '
+       'sample every'),
+      '                        1000 files).',
+      ''])
 
-  _EXPECTED_TIMEZONE_OPTION = u'\n'.join([
-      u'usage: tool_test.py [-z TIMEZONE]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  -z TIMEZONE, --zone TIMEZONE, --timezone TIMEZONE',
-      (u'                        explicitly define the timezone. Typically '
-       u'the timezone'),
-      (u'                        is determined automatically where possible '
-       u'otherwise'),
-      (u'                        it will default to UTC. Use "-z list" to see '
-       u'a list of'),
-      u'                        available timezones.',
-      u''])
+  _EXPECTED_TIMEZONE_OPTION = '\n'.join([
+      'usage: tool_test.py [-z TIMEZONE]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  -z TIMEZONE, --zone TIMEZONE, --timezone TIMEZONE',
+      ('                        explicitly define the timezone. Typically '
+       'the timezone'),
+      ('                        is determined automatically where possible '
+       'otherwise'),
+      ('                        it will default to UTC. Use "-z list" to see '
+       'a list of'),
+      '                        available timezones.',
+      ''])
 
   # TODO: add test for _ConfigureLogging
   # TODO: add test for _EncodeString
-  # TODO: add test for _ParseInformationalOptions
-  # TODO: add test for _ParseLogFileOptions
-  # TODO: add test for _ParseProfilingOptions
-  # TODO: add test for _ParseTimezoneOption
+
+  def testParseInformationalOptions(self):
+    """Tests the _ParseInformationalOptions function."""
+    test_tool = tools.CLITool()
+
+    options = test_lib.TestOptions()
+    options.debug = True
+    options.quiet = True
+
+    test_tool._ParseInformationalOptions(options)
+
+  def testParseLogFileOptions(self):
+    """Tests the _ParseLogFileOptions function."""
+    test_tool = tools.CLITool()
+
+    options = test_lib.TestOptions()
+    options.log_file = 'file.log'
+
+    test_tool._ParseLogFileOptions(options)
+
+  def testParseProfilingOptions(self):
+    """Tests the _ParseProfilingOptions function."""
+    test_tool = tools.CLITool()
+
+    options = test_lib.TestOptions()
+    options.profiling_sample_rate = '100'
+
+    test_tool._ParseProfilingOptions(options)
+    self.assertEqual(test_tool._profilers, set([]))
+
+    options.profilers = 'list'
+    test_tool._ParseProfilingOptions(options)
+    self.assertEqual(test_tool._profilers, set([]))
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      options.profilers = 'processing'
+      options.profiling_directory = temp_directory
+      test_tool._ParseProfilingOptions(options)
+      self.assertEqual(test_tool._profilers, set(['processing']))
+      self.assertEqual(test_tool._profiling_directory, temp_directory)
+      self.assertEqual(test_tool._profiling_sample_rate, 100)
+
+    with self.assertRaises(errors.BadConfigOption):
+      options.profiling_sample_rate = 'a'
+      test_tool._ParseProfilingOptions(options)
+
+    with self.assertRaises(errors.BadConfigOption):
+      options.profiling_sample_rate = 100
+      test_tool._ParseProfilingOptions(options)
+
+    with self.assertRaises(errors.BadConfigOption):
+      options.profiling_sample_rate = '/bogus'
+      options.profiling_sample_rate = 100
+      test_tool._ParseProfilingOptions(options)
+
+  def testParseTimezoneOption(self):
+    """Tests the _ParseTimezoneOption function."""
+    test_tool = tools.CLITool()
+
+    options = test_lib.TestOptions()
+
+    test_tool._ParseTimezoneOption(options)
+    self.assertIsNone(test_tool._preferred_time_zone)
+
+    options.timezone = 'list'
+    test_tool._ParseTimezoneOption(options)
+    self.assertIsNone(test_tool._preferred_time_zone)
+
+    options.timezone = 'CET'
+    test_tool._ParseTimezoneOption(options)
+    self.assertEqual(test_tool._preferred_time_zone, 'CET')
 
   # TODO: add test for _PromptUserForInput
 
   def testAddBasicOptions(self):
     """Tests the AddBasicOptions function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'tool_test.py', description=u'Test argument parser.',
+        prog='tool_test.py', description='Test argument parser.',
         add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = tools.CLITool()
@@ -106,7 +176,7 @@ class CLIToolTest(test_lib.CLIToolTestCase):
   def testAddInformationalOptions(self):
     """Tests the AddInformationalOptions function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'tool_test.py', description=u'Test argument parser.',
+        prog='tool_test.py', description='Test argument parser.',
         add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = tools.CLITool()
@@ -120,7 +190,7 @@ class CLIToolTest(test_lib.CLIToolTestCase):
   def testAddProfilingOptions(self):
     """Tests the AddProfilingOptions function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'tool_test.py', description=u'Test argument parser.',
+        prog='tool_test.py', description='Test argument parser.',
         add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = tools.CLITool()
@@ -132,7 +202,7 @@ class CLIToolTest(test_lib.CLIToolTestCase):
   def testAddTimeZoneOption(self):
     """Tests the AddTimeZoneOption function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'tool_test.py', description=u'Test argument parser.',
+        prog='tool_test.py', description='Test argument parser.',
         add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = tools.CLITool()
@@ -144,7 +214,7 @@ class CLIToolTest(test_lib.CLIToolTestCase):
   def testGetCommandLineArguments(self):
     """Tests the GetCommandLineArguments function."""
     cli_tool = tools.CLITool()
-    cli_tool.preferred_encoding = u'UTF-8'
+    cli_tool.preferred_encoding = 'UTF-8'
 
     command_line_arguments = cli_tool.GetCommandLineArguments()
     self.assertIsNotNone(command_line_arguments)
@@ -190,31 +260,31 @@ class CLIToolTest(test_lib.CLIToolTestCase):
 
     options = test_lib.TestOptions()
 
-    numeric_value = cli_tool.ParseNumericOption(options, u'buffer_size')
+    numeric_value = cli_tool.ParseNumericOption(options, 'buffer_size')
     self.assertIsNone(numeric_value)
 
     numeric_value = cli_tool.ParseNumericOption(
-        options, u'buffer_size', default_value=0)
+        options, 'buffer_size', default_value=0)
     self.assertEqual(numeric_value, 0)
 
-    options.buffer_size = u'10'
+    options.buffer_size = '10'
 
-    numeric_value = cli_tool.ParseNumericOption(options, u'buffer_size')
+    numeric_value = cli_tool.ParseNumericOption(options, 'buffer_size')
     self.assertEqual(numeric_value, 10)
 
     numeric_value = cli_tool.ParseNumericOption(
-        options, u'buffer_size', base=16)
+        options, 'buffer_size', base=16)
     self.assertEqual(numeric_value, 16)
 
-    options.buffer_size = u'bogus'
+    options.buffer_size = 'bogus'
 
     with self.assertRaises(errors.BadConfigOption):
-      cli_tool.ParseNumericOption(options, u'buffer_size')
+      cli_tool.ParseNumericOption(options, 'buffer_size')
 
-    options.buffer_size = (1, u'bogus')
+    options.buffer_size = (1, 'bogus')
 
     with self.assertRaises(errors.BadConfigOption):
-      cli_tool.ParseNumericOption(options, u'buffer_size')
+      cli_tool.ParseNumericOption(options, 'buffer_size')
 
   def testParseStringOption(self):
     """Tests the ParseStringOption function."""
@@ -225,37 +295,37 @@ class CLIToolTest(test_lib.CLIToolTestCase):
       encoding = locale.getpreferredencoding()
 
     cli_tool = tools.CLITool()
-    cli_tool.preferred_encoding = u'UTF-8'
+    cli_tool.preferred_encoding = 'UTF-8'
 
-    expected_string = u'Test Unicode string'
+    expected_string = 'Test Unicode string'
     options = test_lib.TestOptions()
     options.test = expected_string
 
-    string = cli_tool.ParseStringOption(options, u'test')
+    string = cli_tool.ParseStringOption(options, 'test')
     self.assertEqual(string, expected_string)
 
     options = test_lib.TestOptions()
 
-    string = cli_tool.ParseStringOption(options, u'test')
+    string = cli_tool.ParseStringOption(options, 'test')
     self.assertIsNone(string)
 
     string = cli_tool.ParseStringOption(
-        options, u'test', default_value=expected_string)
+        options, 'test', default_value=expected_string)
     self.assertEqual(string, expected_string)
 
     options = test_lib.TestOptions()
     options.test = expected_string.encode(encoding)
 
-    string = cli_tool.ParseStringOption(options, u'test')
+    string = cli_tool.ParseStringOption(options, 'test')
     self.assertEqual(string, expected_string)
 
-    if encoding and encoding.upper() == u'UTF-8':
+    if encoding and encoding.upper() == 'UTF-8':
       options = test_lib.TestOptions()
       options.test = (
           b'\xad\xfd\xab\x73\x99\xc7\xb4\x78\xd0\x8c\x8a\xee\x6d\x6a\xcb\x90')
 
       with self.assertRaises(errors.BadConfigOption):
-        cli_tool.ParseStringOption(options, u'test')
+        cli_tool.ParseStringOption(options, 'test')
 
   def testPrintSeparatorLine(self):
     """Tests the PrintSeparatorLine function."""
@@ -284,23 +354,23 @@ class StdinInputReaderTest(unittest.TestCase):
     original_stdin = sys.stdin
     sys.stdin = io.BytesIO(self._TEST_DATA)
 
-    input_reader = tools.StdinInputReader(encoding=u'ascii')
+    input_reader = tools.StdinInputReader(encoding='ascii')
 
     string = input_reader.Read()
-    self.assertEqual(string, u'A first string\n')
+    self.assertEqual(string, 'A first string\n')
 
     string = input_reader.Read()
-    self.assertEqual(string, u'A 2nd string\n')
+    self.assertEqual(string, 'A 2nd string\n')
 
     # UTF-8 string with non-ASCII characters.
     string = input_reader.Read()
-    self.assertEqual(string, u'\ufffd\ufffdri\ufffd\ufffdja string\n')
+    self.assertEqual(string, '\ufffd\ufffdri\ufffd\ufffdja string\n')
 
     # UTF-16 string with non-ASCII characters.
     string = input_reader.Read()
     expected_string = (
-        u'\ufffd\ufffdf\x00j\x00\ufffd\x00r\x00\ufffd\x00a\x00 '
-        u'\x00b\x00a\x00n\x00d\x00')
+        '\ufffd\ufffdf\x00j\x00\ufffd\x00r\x00\ufffd\x00a\x00 '
+        '\x00b\x00a\x00n\x00d\x00')
     self.assertEqual(string, expected_string)
 
     sys.stdin = original_stdin
@@ -313,20 +383,20 @@ class StdinInputReaderTest(unittest.TestCase):
     input_reader = tools.StdinInputReader()
 
     string = input_reader.Read()
-    self.assertEqual(string, u'A first string\n')
+    self.assertEqual(string, 'A first string\n')
 
     string = input_reader.Read()
-    self.assertEqual(string, u'A 2nd string\n')
+    self.assertEqual(string, 'A 2nd string\n')
 
     # UTF-8 string with non-ASCII characters.
     string = input_reader.Read()
-    self.assertEqual(string, u'þriðja string\n')
+    self.assertEqual(string, 'þriðja string\n')
 
     # UTF-16 string with non-ASCII characters.
     string = input_reader.Read()
     expected_string = (
-        u'\ufffd\ufffdf\x00j\x00\ufffd\x00r\x00\ufffd\x00a\x00 '
-        u'\x00b\x00a\x00n\x00d\x00')
+        '\ufffd\ufffdf\x00j\x00\ufffd\x00r\x00\ufffd\x00a\x00 '
+        '\x00b\x00a\x00n\x00d\x00')
     self.assertEqual(string, expected_string)
 
     sys.stdin = original_stdin
@@ -337,9 +407,9 @@ class FileObjectOutputWriterTest(unittest.TestCase):
 
   def testWriteAscii(self):
     """Tests the Write function with ASCII encoding."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'ascii')
+    output_writer = test_lib.TestOutputWriter(encoding='ascii')
 
-    output_writer.Write(u'A first string\n')
+    output_writer.Write('A first string\n')
     string = output_writer.ReadOutput()
     self.assertEqual(string, b'A first string\n')
 
@@ -349,7 +419,7 @@ class FileObjectOutputWriterTest(unittest.TestCase):
     self.assertEqual(string, b'A 2nd string\n')
 
     # Unicode string with non-ASCII characters.
-    output_writer.Write(u'þriðja string\n')
+    output_writer.Write('þriðja string\n')
     string = output_writer.ReadOutput()
     self.assertEqual(string, b'?ri?ja string\n')
 
@@ -363,7 +433,7 @@ class FileObjectOutputWriterTest(unittest.TestCase):
     """Tests the Write function with UTF-8 encoding."""
     output_writer = test_lib.TestOutputWriter()
 
-    output_writer.Write(u'A first string\n')
+    output_writer.Write('A first string\n')
     string = output_writer.ReadOutput()
     self.assertEqual(string, b'A first string\n')
 
@@ -373,7 +443,7 @@ class FileObjectOutputWriterTest(unittest.TestCase):
     self.assertEqual(string, b'A 2nd string\n')
 
     # Unicode string with non-ASCII characters.
-    output_writer.Write(u'þriðja string\n')
+    output_writer.Write('þriðja string\n')
     string = output_writer.ReadOutput()
     self.assertEqual(string, b'\xc3\xberi\xc3\xb0ja string\n')
 
