@@ -20,6 +20,8 @@ from tests.cli import test_lib
 class CLIToolTest(test_lib.CLIToolTestCase):
   """Tests for the CLI tool base class."""
 
+  # pylint: disable=protected-access
+
   _EXPECTED_BASIC_OPTIONS = '\n'.join([
       'usage: tool_test.py [-h] [-V]',
       '',
