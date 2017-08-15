@@ -40,7 +40,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     self._rpc_server = None
     self._status_is_running = False
 
-    self.daemon = True
     # We need to share the RPC port number with the engine process.
     self.rpc_port = multiprocessing.Value(u'I', 0)
 
