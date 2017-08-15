@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import sophos_av  # pylint: disable=unused-import
+from plaso.formatters import sophos_av as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import sophos_av
 
