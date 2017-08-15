@@ -66,6 +66,7 @@ from plaso.formatters import shell_items
 from plaso.formatters import shutdown
 from plaso.formatters import skydrivelog
 from plaso.formatters import skype
+from plaso.formatters import sophos_av
 from plaso.formatters import ssh
 from plaso.formatters import symantec
 from plaso.formatters import syslog

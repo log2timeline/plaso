@@ -1,0 +1,9 @@
+20100720 183814 File "C:\Documents and Settings\Administrator\Desktop\sxl_test_50.com" belongs to virus/spyware 'LiveProtectTest'.
+20100720 183818 File sample was successfully sent for Sophos Live Protection: File: 'C:\Documents and Settings\Administrator\Desktop\sxl_test_50.com' Checksum: 'a2c0f84a30bec1279a6591ceae76f75d47c3fe81.5'
+20160923 084229 Control of  "\\192.168.z.y\ONTAP_ADMIN$\vol\DATA\DATA\Something\Somethingelse.docx" returned a SAV error Interface 0xa0040212: File is crypted.
+20160923 084725 Running version 5.31 of data detection (detection engine 3.64.3). This version detects 11947014 elements.
+20160926 122635 File "C:\Tempo\EicarTest.txt" belongs to virus/spyware 'EICAR-AV-Test'.
+20160926 122636 The file "C:\Tempo\EicarTest.txt" was cleaned.
+20160926 122637 The virus/spyware 'EICAR-AV-Test' was deleted.
+20160926 123249 Infected file "\\192.168.103.244\ONTAP_ADMIN$\vol\\eicar - Copie.txt" moved in "C:\ProgramData\Sophos\Sophos Anti-Virus\INFECTED\eicar - Copie.txt.000".
+20160926 123249 Virus/spyware 'EICAR-AV-Test' detected in '\\192.168.103.244\ONTAP_ADMIN$\vol\Echange\eicar - Copie.txt'. Cleaning impossible.
