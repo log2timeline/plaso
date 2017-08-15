@@ -331,7 +331,7 @@ class TaskManager(object):
     """
     for abandoned_task in self._tasks_abandoned.values():
       if not (
-        abandoned_task.retried or abandoned_task.original_task_identifier):
+          abandoned_task.retried or abandoned_task.original_task_identifier):
         return True
 
   def GetRetryTask(self):
