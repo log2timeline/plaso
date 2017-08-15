@@ -556,7 +556,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     # Wake the processes to make sure that they are not blocking
     # waiting for the queue new items.
-    for _ in range(self._number_of_worker_processes):
+    for _ in self._processes_per_pid.keys():
       try:
         self._task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
       except errors.QueueFull:
