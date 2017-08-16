@@ -89,7 +89,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   # Maximum number of concurrent tasks.
   _MAXIMUM_NUMBER_OF_TASKS = 10000
 
-  _PROCESS_JOIN_TIMEOUT = 5.0
   _PROCESS_WORKER_TIMEOUT = 15.0 * 60.0
 
   _WORKER_PROCESSES_MINIMUM = 2
@@ -556,7 +555,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     # Wake the processes to make sure that they are not blocking
     # waiting for the queue new items.
-    for _ in self._processes_per_pid.keys():
+    for _ in self._processes_per_pid:
       try:
         self._task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
       except errors.QueueFull:
