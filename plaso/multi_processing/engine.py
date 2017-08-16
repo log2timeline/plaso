@@ -399,6 +399,8 @@ class MultiProcessEngine(engine.BaseEngine):
     logging.warning(u'Terminating process: (PID: {0:d}).'.format(pid))
     process.terminate()
 
+    process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
+
     if process.is_alive():
       logging.warning(u'Killing process: (PID: {0:d}).'.format(pid))
       self._KillProcess(pid)
