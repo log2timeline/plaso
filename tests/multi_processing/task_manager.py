@@ -112,11 +112,13 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
     self.assertTrue(manager.HasPendingTasks())
     abandoned_tasks = manager.GetAbandonedTasks()
     self.assertIn(task, abandoned_tasks)
+    self.assertTrue(manager._TaskIsRetriable(task))
 
     retry_task = manager.GetRetryTask()
     self.assertIsNotNone(retry_task)
     self.assertEqual(task.identifier, retry_task.original_task_identifier)
     self.assertTrue(task.retried)
+    self.assertFalse(manager._TaskIsRetriable(retry_task))
     manager.CompleteTask(retry_task)
 
     manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
