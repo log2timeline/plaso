@@ -309,6 +309,17 @@ class TaskManager(object):
     # There are no tasks pending any work.
     return False
 
+  def _TaskIsRetriable(self, task):
+    """Determines if a task is eligible to be retried.
+
+    Args:
+      task: task to be checked for its eligibility to be retried.
+
+    Returns:
+      bool: True if the task is eligible to be retried.
+    """
+    return not (task.retried or task.original_task_identifier)
+
   def _HasTasksPendingMerge(self):
     """Determines if there are tasks waiting to be merged.
 
@@ -330,8 +341,7 @@ class TaskManager(object):
       bool: True if there are abandoned tasks that need to be retried.
     """
     for abandoned_task in self._tasks_abandoned.values():
-      if not (abandoned_task.retried or
-              abandoned_task.original_task_identifier):
+      if self._TaskIsRetriable(abandoned_task):
         return True
 
   def GetRetryTask(self):
@@ -345,8 +355,7 @@ class TaskManager(object):
       for abandoned_task in self._tasks_abandoned.values():
         # Only retry abandoned tasks that are yet to be retried, and
         # aren't themselves retries of another task.
-        if not (abandoned_task.retried or
-                abandoned_task.original_task_identifier):
+        if self._TaskIsRetriable(abandoned_task):
           retry_task = abandoned_task.CreateRetry()
           logging.debug(
               u'Retrying task {0:s} as {1:s}'.format(
