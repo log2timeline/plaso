@@ -330,8 +330,8 @@ class TaskManager(object):
       bool: True if there are abandoned tasks that need to be retried.
     """
     for abandoned_task in self._tasks_abandoned.values():
-      if not (
-          abandoned_task.retried or abandoned_task.original_task_identifier):
+      if not (abandoned_task.retried or
+              abandoned_task.original_task_identifier):
         return True
 
   def GetRetryTask(self):
