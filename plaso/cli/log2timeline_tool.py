@@ -563,9 +563,7 @@ class Log2TimelineTool(
     # self._preferred_time_zone is None when not set.
     if self._preferred_time_zone:
       try:
-        logging.error("Marker1")
         extraction_engine.knowledge_base.SetTimeZone(self._preferred_time_zone)
-        logging.error("Marker2")
       except ValueError:
         # pylint: disable=protected-access
         logging.warning(
