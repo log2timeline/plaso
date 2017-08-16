@@ -565,17 +565,14 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
     self._task_queue.Close(abort=abort)
 
-    if abort:
-      # Kill any remaining processes.
-      self._AbortKill()
-    else:
+    if not abort:
       # Check if the processes are still alive and terminate them if necessary.
       self._AbortTerminate()
       self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
-
       self._task_queue.Close(abort=True)
-      # Kill any lingering processes.
-      self._AbortKill()
+
+    # Kill any lingering processes.
+    self._AbortKill()
 
   def _StopProfiling(self):
     """Stops profiling."""
