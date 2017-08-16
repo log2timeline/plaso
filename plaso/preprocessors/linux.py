@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import csv
 import datetime
+import logging
 
 from dateutil import tz
 
@@ -90,6 +91,11 @@ class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
         time_zone_file = tz.tzfile(file_object)
         date_time = datetime.datetime(2017, 1, 1)
         time_zone = time_zone_file.tzname(date_time)
+
+      except ValueError:
+        # TODO: add and store preprocessing errors.
+        logging.error('Unable to read time zone information file.')
+
       finally:
         file_object.close()
 
@@ -99,7 +105,7 @@ class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
         result = True
       except ValueError:
         # TODO: add and store preprocessing errors.
-        pass
+        logging.error('Unable to set time zone in knowledge base.')
 
     return result
 
