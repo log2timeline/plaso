@@ -313,7 +313,7 @@ class TaskManager(object):
     """Determines if a task is eligible to be retried.
 
     Args:
-      task: task to be checked for its eligibility to be retried.
+      task (Task): task to be checked for its eligibility to be retried.
 
     Returns:
       bool: True if the task is eligible to be retried.
