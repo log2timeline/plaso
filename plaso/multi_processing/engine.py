@@ -34,6 +34,8 @@ class MultiProcessEngine(engine.BaseEngine):
   # process
   _REPLACEMENT_WORKER_RETRY_DELAY = 1
 
+  _PROCESS_JOIN_TIMEOUT = 5.0
+
   _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 300
 
   def __init__(self):
@@ -399,6 +401,7 @@ class MultiProcessEngine(engine.BaseEngine):
     logging.warning(u'Terminating process: (PID: {0:d}).'.format(pid))
     process.terminate()
 
+    # Try waiting for the process to exit normally.
     process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
 
     if process.is_alive():

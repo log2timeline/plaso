@@ -89,7 +89,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   # Maximum number of concurrent tasks.
   _MAXIMUM_NUMBER_OF_TASKS = 10000
 
-  _PROCESS_JOIN_TIMEOUT = 5.0
   _PROCESS_WORKER_TIMEOUT = 15.0 * 60.0
 
   _WORKER_PROCESSES_MINIMUM = 2
