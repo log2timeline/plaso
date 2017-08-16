@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The psteal CLI tool."""
 
+from __future__ import unicode_literals
+
 import argparse
 import collections
 import datetime
@@ -69,34 +71,34 @@ class PstealTool(
         should be shown.
   """
 
-  NAME = u'psteal'
+  NAME = 'psteal'
 
   # TODO: is textwrap.dedent or the join really needed here?
-  DESCRIPTION = textwrap.dedent(u'\n'.join([
-      u'',
-      (u'psteal is a command line tool to extract events from individual '),
-      u'files, recursing a directory (e.g. mount point) or storage media ',
-      u'image or device. The output events will be stored in a storage file.',
-      u'This tool will then read the output and process the events into a CSV ',
-      u'file.',
-      u'',
-      u'More information can be gathered from here:',
-      u'    https://github.com/log2timeline/plaso/wiki/Using-log2timeline',
-      u'']))
+  DESCRIPTION = textwrap.dedent('\n'.join([
+      '',
+      ('psteal is a command line tool to extract events from individual '),
+      'files, recursing a directory (e.g. mount point) or storage media ',
+      'image or device. The output events will be stored in a storage file.',
+      'This tool will then read the output and process the events into a CSV ',
+      'file.',
+      '',
+      'More information can be gathered from here:',
+      '    https://github.com/log2timeline/plaso/wiki/Using-log2timeline',
+      '']))
 
-  EPILOG = textwrap.dedent(u'\n'.join([
-      u'',
-      u'Example usage:',
-      u'',
-      u'Run the tool against a storage media image (full kitchen sink)',
-      u'    psteal.py --source ímynd.dd -w imynd.timeline.txt',
-      u'',
-      u'And that is how you build a timeline using psteal...',
-      u'']))
+  EPILOG = textwrap.dedent('\n'.join([
+      '',
+      'Example usage:',
+      '',
+      'Run the tool against a storage media image (full kitchen sink)',
+      '    psteal.py --source ímynd.dd -w imynd.timeline.txt',
+      '',
+      'And that is how you build a timeline using psteal...',
+      '']))
 
   # The window status-view mode has an annoying flicker on Windows,
   # hence we default to linear status-view mode instead.
-  if sys.platform.startswith(u'win'):
+  if sys.platform.startswith('win'):
     _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_LINEAR
   else:
     _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_WINDOW
@@ -128,7 +130,7 @@ class PstealTool(
     self._number_of_extraction_workers = 0
     self._parser_filter_expression = None
     self._parsers_manager = parsers_manager.ParsersManager
-    self._preferred_language = u'en-US'
+    self._preferred_language = 'en-US'
     self._preferred_year = None
     self._resolver_context = dfvfs_context.Context()
     self._single_process_mode = False
@@ -173,10 +175,10 @@ class PstealTool(
       BadConfigOption: raised if the source path is not set.
     """
     if not self._source_path:
-      raise errors.BadConfigOption(u'Please define a source (--source).')
+      raise errors.BadConfigOption('Please define a source (--source).')
 
     timestamp = datetime.datetime.now()
-    datetime_string = timestamp.strftime(u'%Y%m%dT%H%M%S')
+    datetime_string = timestamp.strftime('%Y%m%dT%H%M%S')
 
     source_path = os.path.abspath(self._source_path)
     source_name = os.path.basename(source_path)
@@ -186,11 +188,11 @@ class PstealTool(
 
     source_name = os.path.basename(source_path)
 
-    if not source_name or source_name in (u'/', u'\\'):
+    if not source_name or source_name in ('/', '\\'):
       # The user passed the filesystem's root as source
-      source_name = u'ROOT'
+      source_name = 'ROOT'
 
-    return u'{0:s}-{1:s}.plaso'.format(datetime_string, source_name)
+    return '{0:s}-{1:s}.plaso'.format(datetime_string, source_name)
 
   def _PreprocessSources(self, extraction_engine):
     """Preprocesses the sources.
@@ -199,7 +201,7 @@ class PstealTool(
       extraction_engine (BaseEngine): extraction engine to preprocess
           the sources.
     """
-    logging.debug(u'Starting preprocessing.')
+    logging.debug('Starting preprocessing.')
 
     try:
       extraction_engine.PreprocessSources(
@@ -207,9 +209,9 @@ class PstealTool(
           resolver_context=self._resolver_context)
 
     except IOError as exception:
-      logging.error(u'Unable to preprocess with error: {0:s}'.format(exception))
+      logging.error('Unable to preprocess with error: {0:s}'.format(exception))
 
-    logging.debug(u'Preprocessing done.')
+    logging.debug('Preprocessing done.')
 
   def _ParseOutputModuleOptions(self, options):
     """Parses the output module options.
@@ -220,7 +222,7 @@ class PstealTool(
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    preferred_time_zone = self._preferred_time_zone or u'UTC'
+    preferred_time_zone = self._preferred_time_zone or 'UTC'
 
     formatter_mediator = formatters_mediator.FormatterMediator(
         data_location=self._data_location)
@@ -242,23 +244,23 @@ class PstealTool(
 
     except IOError as exception:
       raise RuntimeError(
-          u'Unable to create output module with error: {0:s}'.format(
+          'Unable to create output module with error: {0:s}'.format(
               exception))
 
     if not self._output_module:
-      raise RuntimeError(u'Missing output module.')
+      raise RuntimeError('Missing output module.')
 
     if isinstance(self._output_module, output_interface.LinearOutputModule):
       if not self._output_filename:
         raise errors.BadConfigOption((
-            u'Output format: {0:s} requires an output file').format(
+            'Output format: {0:s} requires an output file').format(
                 self._output_format))
 
       if os.path.exists(self._output_filename):
         raise errors.BadConfigOption(
-            u'Output file already exists: {0:s}.'.format(self._output_filename))
+            'Output file already exists: {0:s}.'.format(self._output_filename))
 
-      output_file_object = open(self._output_filename, u'wb')
+      output_file_object = open(self._output_filename, 'wb')
       output_writer = tools.FileObjectOutputWriter(output_file_object)
 
       self._output_module.SetOutputWriter(output_writer)
@@ -277,11 +279,11 @@ class PstealTool(
       if index + 1 <= number_of_analysis_reports:
         continue
 
-      title = u'Analysis report: {0:d}'.format(index)
+      title = 'Analysis report: {0:d}'.format(index)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
 
-      table_view.AddRow([u'String', analysis_report.GetString()])
+      table_view.AddRow(['String', analysis_report.GetString()])
 
       table_view.Write(self._output_writer)
 
@@ -303,7 +305,7 @@ class PstealTool(
     storage_reader.Close()
 
     counter = collections.Counter()
-    if self._output_format != u'null':
+    if self._output_format != 'null':
       self._status_view.SetMode(self._status_view_mode)
       self._status_view.SetStorageFileInformation(self._storage_file_path)
 
@@ -332,13 +334,13 @@ class PstealTool(
     if self._quiet_mode:
       return
 
-    self._output_writer.Write(u'Processing completed.\n')
+    self._output_writer.Write('Processing completed.\n')
 
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, title=u'Counter')
+        self._views_format_type, title='Counter')
     for element, count in counter.most_common():
       if not element:
-        element = u'N/A'
+        element = 'N/A'
       table_view.AddRow([element, count])
     table_view.Write(self._output_writer)
 
@@ -347,7 +349,7 @@ class PstealTool(
     self._PrintAnalysisReportsDetails(
         storage_reader, self._number_of_analysis_reports)
 
-    self._output_writer.Write(u'Storage file is {0:s}\n'.format(
+    self._output_writer.Write('Storage file is {0:s}\n'.format(
         self._storage_file_path))
 
   def ExtractEventsFromSources(self):
@@ -374,9 +376,9 @@ class PstealTool(
     status_update_callback = (
         self._status_view.GetExtractionStatusUpdateCallback())
 
-    self._output_writer.Write(u'\n')
+    self._output_writer.Write('\n')
     self._status_view.PrintExtractionStatusHeader(None)
-    self._output_writer.Write(u'Processing started.\n')
+    self._output_writer.Write('Processing started.\n')
 
     session = engine.BaseEngine.CreateSession(
         command_line_arguments=self._command_line_arguments,
@@ -409,18 +411,18 @@ class PstealTool(
 
     if not configuration.parser_filter_expression:
       operating_system = extraction_engine.knowledge_base.GetValue(
-          u'operating_system')
+          'operating_system')
       operating_system_product = extraction_engine.knowledge_base.GetValue(
-          u'operating_system_product')
+          'operating_system_product')
       operating_system_version = extraction_engine.knowledge_base.GetValue(
-          u'operating_system_version')
+          'operating_system_version')
       parser_filter_expression = (
           self._parsers_manager.GetPresetForOperatingSystem(
               operating_system, operating_system_product,
               operating_system_version))
 
       if parser_filter_expression:
-        logging.info(u'Parser filter expression changed to: {0:s}'.format(
+        logging.info('Parser filter expression changed to: {0:s}'.format(
             parser_filter_expression))
 
       configuration.parser_filter_expression = parser_filter_expression
@@ -429,15 +431,16 @@ class PstealTool(
               parser_filter_expression=configuration.parser_filter_expression))
       session.parser_filter_expression = configuration.parser_filter_expression
 
-    if session.preferred_time_zone:
+    # Note session.preferred_time_zone will default to UTC but
+    # self._preferred_time_zone is None when not set.
+    if self._preferred_time_zone:
       try:
-        extraction_engine.knowledge_base.SetTimeZone(
-            session.preferred_time_zone)
+        extraction_engine.knowledge_base.SetTimeZone(self._preferred_time_zone)
       except ValueError:
         # pylint: disable=protected-access
         logging.warning(
-            u'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
-                session.preferred_time_zone,
+            'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
+                self._preferred_time_zone,
                 extraction_engine.knowledge_base._time_zone.zone))
 
     filter_find_specs = None
@@ -450,7 +453,7 @@ class PstealTool(
 
     processing_status = None
     if single_process_mode:
-      logging.debug(u'Starting extraction in single process mode.')
+      logging.debug('Starting extraction in single process mode.')
 
       processing_status = extraction_engine.ProcessSources(
           self._source_path_specs, storage_writer, self._resolver_context,
@@ -458,7 +461,7 @@ class PstealTool(
           status_update_callback=status_update_callback)
 
     else:
-      logging.debug(u'Starting extraction in multi process mode.')
+      logging.debug('Starting extraction in multi process mode.')
 
       processing_status = extraction_engine.ProcessSources(
           session.identifier, self._source_path_specs, storage_writer,
@@ -483,59 +486,59 @@ class PstealTool(
     self.AddBasicOptions(argument_parser)
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_parser, names=[u'storage_file'])
+        argument_parser, names=['storage_file'])
 
     extraction_group = argument_parser.add_argument_group(
-        u'Extraction Arguments')
+        'Extraction Arguments')
 
     argument_helper_names = [
-        u'artifact_definitions', u'extraction', u'filter_file', u'hashers',
-        u'parsers', u'yara_rules']
+        'artifact_definitions', 'extraction', 'filter_file', 'hashers',
+        'parsers', 'yara_rules']
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         extraction_group, names=argument_helper_names)
 
     self.AddCredentialOptions(extraction_group)
 
-    info_group = argument_parser.add_argument_group(u'Informational Arguments')
+    info_group = argument_parser.add_argument_group('Informational Arguments')
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        info_group, names=[u'status_view'])
+        info_group, names=['status_view'])
 
-    input_group = argument_parser.add_argument_group(u'Input Arguments')
+    input_group = argument_parser.add_argument_group('Input Arguments')
     input_group.add_argument(
-        u'--source', dest=u'source', action=u'store',
-        type=str, help=u'The source to process')
+        '--source', dest='source', action='store',
+        type=str, help='The source to process')
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        input_group, names=[u'data_location'])
+        input_group, names=['data_location'])
 
-    output_group = argument_parser.add_argument_group(u'Output Arguments')
+    output_group = argument_parser.add_argument_group('Output Arguments')
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        output_group, names=[u'language'])
+        output_group, names=['language'])
 
     self.AddTimeZoneOption(output_group)
 
     output_format_group = argument_parser.add_argument_group(
-        u'Output Format Arguments')
+        'Output Format Arguments')
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        output_format_group, names=[u'output_modules'])
+        output_format_group, names=['output_modules'])
 
     try:
       options = argument_parser.parse_args()
     except UnicodeEncodeError:
       # If we get here we are attempting to print help in a non-Unicode
       # terminal.
-      self._output_writer.Write(u'\n')
+      self._output_writer.Write('\n')
       self._output_writer.Write(argument_parser.format_help())
       return False
 
     try:
       self.ParseOptions(options)
     except errors.BadConfigOption as exception:
-      self._output_writer.Write(u'ERROR: {0!s}\n'.format(exception))
-      self._output_writer.Write(u'\n')
+      self._output_writer.Write('ERROR: {0!s}\n'.format(exception))
+      self._output_writer.Write('\n')
       self._output_writer.Write(argument_parser.format_usage())
       return False
 
@@ -552,7 +555,7 @@ class PstealTool(
     """
     # The extraction options are dependent on the data location.
     helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=[u'data_location'])
+        options, self, names=['data_location'])
 
     # Check the list options first otherwise required options will raise.
 
@@ -561,15 +564,15 @@ class PstealTool(
     self._ParseTimezoneOption(options)
 
     argument_helper_names = [
-        u'analysis_plugins', u'hashers', u'language', u'output_modules',
-        u'parsers']
+        'analysis_plugins', 'hashers', 'language', 'output_modules',
+        'parsers']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
-    self.list_hashers = self._hasher_names_string == u'list'
-    self.list_language_identifiers = self._preferred_language == u'list'
-    self.list_output_modules = self._output_format == u'list'
-    self.list_parsers_and_plugins = self._parser_filter_expression == u'list'
+    self.list_hashers = self._hasher_names_string == 'list'
+    self.list_language_identifiers = self._preferred_language == 'list'
+    self.list_output_modules = self._output_format == 'list'
+    self.list_parsers_and_plugins = self._parser_filter_expression == 'list'
 
     if (self.list_analysis_plugins or self.list_hashers or
         self.list_language_identifiers or self.list_output_modules or
@@ -579,8 +582,8 @@ class PstealTool(
     self._ParseInformationalOptions(options)
 
     argument_helper_names = [
-        u'artifact_definitions', u'extraction', u'status_view', u'storage_file',
-        u'yara_rules']
+        'artifact_definitions', 'extraction', 'status_view', 'storage_file',
+        'yara_rules']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
@@ -590,7 +593,7 @@ class PstealTool(
 
     # These arguments are parsed from argparse.Namespace, so we can make
     # tests consistents with the log2timeline/psort ones.
-    self._single_process_mode = getattr(options, u'single_process', False)
+    self._single_process_mode = getattr(options, 'single_process', False)
 
     if not self._storage_file_path:
       self._storage_file_path = self._GenerateStorageFileName()

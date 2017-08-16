@@ -7,7 +7,10 @@ analysis phases, with essential information like e.g. the timezone and
 codepage of the source data.
 """
 
+from __future__ import unicode_literals
+
 import codecs
+import datetime
 import logging
 
 from plaso.containers import artifacts
@@ -24,7 +27,7 @@ class KnowledgeBase(object):
   def __init__(self):
     """Initializes a knowledge base."""
     super(KnowledgeBase, self).__init__()
-    self._codepage = u'cp1252'
+    self._codepage = 'cp1252'
     self._environment_variables = {}
     self._hostnames = {}
     self._time_zone = pytz.UTC
@@ -34,26 +37,26 @@ class KnowledgeBase(object):
   @property
   def codepage(self):
     """str: codepage of the current session."""
-    return self._values.get(u'codepage', self._codepage)
+    return self._values.get('codepage', self._codepage)
 
   @property
   def hostname(self):
     """str: hostname of the current session."""
     hostname_artifact = self._hostnames.get(self.CURRENT_SESSION, None)
     if not hostname_artifact:
-      return u''
+      return ''
 
-    return hostname_artifact.name or u''
+    return hostname_artifact.name or ''
 
   @property
   def platform(self):
     """str: platform of the current session."""
-    return self._values.get(u'guessed_os', u'')
+    return self._values.get('guessed_os', '')
 
   @platform.setter
   def platform(self, value):
     """str: platform of the current session."""
-    self._values[u'guessed_os'] = value
+    self._values['guessed_os'] = value
 
   @property
   def timezone(self):
@@ -68,7 +71,7 @@ class KnowledgeBase(object):
   @property
   def year(self):
     """int: year of the current session."""
-    return self._values.get(u'year', 0)
+    return self._values.get('year', 0)
 
   def AddUserAccount(self, user_account, session_identifier=CURRENT_SESSION):
     """Adds an user account.
@@ -86,7 +89,7 @@ class KnowledgeBase(object):
 
     user_accounts = self._user_accounts[session_identifier]
     if user_account.identifier in user_accounts:
-      raise KeyError(u'User account: {0:s} already exists.'.format(
+      raise KeyError('User account: {0:s} already exists.'.format(
           user_account.identifier))
 
     user_accounts[user_account.identifier] = user_account
@@ -103,7 +106,7 @@ class KnowledgeBase(object):
     """
     name = enviroment_variable.name.upper()
     if name in self._environment_variables:
-      raise KeyError(u'Environment variable: {0:s} already exists.'.format(
+      raise KeyError('Environment variable: {0:s} already exists.'.format(
           enviroment_variable.name))
 
     self._environment_variables[name] = enviroment_variable
@@ -144,9 +147,9 @@ class KnowledgeBase(object):
     """
     hostname_artifact = self._hostnames.get(session_identifier, None)
     if not hostname_artifact:
-      return u''
+      return ''
 
-    return hostname_artifact.name or u''
+    return hostname_artifact.name or ''
 
   # TODO: remove this function it is incorrect.
   def GetStoredHostname(self):
@@ -174,20 +177,23 @@ class KnowledgeBase(object):
     system_configuration = artifacts.SystemConfigurationArtifact()
 
     system_configuration.code_page = self._values.get(
-        u'codepage', self._codepage)
+        'codepage', self._codepage)
 
     system_configuration.hostname = self._hostnames.get(
         session_identifier, None)
 
     system_configuration.keyboard_layout = self._values.get(
-        u'keyboard_layout', None)
+        'keyboard_layout', None)
     system_configuration.operating_system = self._values.get(
-        u'operating_system', None)
+        'operating_system', None)
     system_configuration.operating_system_product = self._values.get(
-        u'operating_system_product', None)
+        'operating_system_product', None)
     system_configuration.operating_system_version = self._values.get(
-        u'operating_system_version', None)
-    system_configuration.time_zone = self._values.get(u'time_zone_str', u'UTC')
+        'operating_system_version', None)
+
+    date_time = datetime.datetime(2017, 1, 1)
+    time_zone = self._time_zone.tzname(date_time)
+    system_configuration.time_zone = time_zone
 
     user_accounts = self._user_accounts.get(session_identifier, {})
     system_configuration.user_accounts = user_accounts.values()
@@ -209,9 +215,9 @@ class KnowledgeBase(object):
     user_accounts = self._user_accounts.get(session_identifier, {})
     user_account = user_accounts.get(user_identifier, None)
     if not user_account:
-      return u''
+      return ''
 
-    return user_account.username or u''
+    return user_account.username or ''
 
   def GetUsernameForPath(self, path):
     """Retrieves a username for a specific path.
@@ -251,7 +257,7 @@ class KnowledgeBase(object):
       TypeError: if the identifier is not a string type.
     """
     if not isinstance(identifier, py2to3.STRING_TYPES):
-      raise TypeError(u'Identifier not a string type.')
+      raise TypeError('Identifier not a string type.')
 
     identifier = identifier.lower()
     return self._values.get(identifier, default_value)
@@ -289,7 +295,7 @@ class KnowledgeBase(object):
       self.SetTimeZone(system_configuration.time_zone)
     except ValueError:
       logging.warning(
-          u'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
+          'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
               system_configuration.time_zone, self.timezone.zone))
 
   def SetCodepage(self, codepage):
@@ -302,7 +308,7 @@ class KnowledgeBase(object):
       codecs.getencoder(codepage)
       self._codepage = codepage
     except LookupError:
-      raise ValueError(u'Unsupported codepage: {0:s}'.format(codepage))
+      raise ValueError('Unsupported codepage: {0:s}'.format(codepage))
 
   def SetEnvironmentVariable(self, environment_variable):
     """Sets an environment variable.
@@ -336,7 +342,7 @@ class KnowledgeBase(object):
     try:
       self._time_zone = pytz.timezone(time_zone)
     except (AttributeError, pytz.UnknownTimeZoneError):
-      raise ValueError(u'Unsupported timezone: {0!s}'.format(time_zone))
+      raise ValueError('Unsupported timezone: {0!s}'.format(time_zone))
 
   def SetValue(self, identifier, value):
     """Sets a value by identifier.
@@ -349,7 +355,7 @@ class KnowledgeBase(object):
       TypeError: if the identifier is not a string type.
     """
     if not isinstance(identifier, py2to3.STRING_TYPES):
-      raise TypeError(u'Identifier not a string type.')
+      raise TypeError('Identifier not a string type.')
 
     identifier = identifier.lower()
     self._values[identifier] = value
