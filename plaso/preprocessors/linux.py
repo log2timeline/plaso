@@ -59,7 +59,7 @@ class LinuxHostnamePlugin(interface.FileArtifactPreprocessorPlugin):
 class LinuxSystemProductPlugin(interface.FileArtifactPreprocessorPlugin):
   """The Linux system product plugin."""
 
-  ARTIFACT_DEFINITION_NAME = 'LinuxRelease'
+  ARTIFACT_DEFINITION_NAME = 'LinuxDistributionRelease'
 
   def _ParseFileData(self, knowledge_base, file_object):
     """Parses file content (data) for system product preprocessing attribute.
