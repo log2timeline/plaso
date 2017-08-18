@@ -42,7 +42,7 @@ class SophosAVLogParser(text_parser.PyparsingSingleLineTextParser):
   NAME = 'sophos_av'
   DESCRIPTION = 'Parser for Anti-Virus log (SAV.txt) files.'
 
-  _ENCODING = 'UTF-8'
+  _ENCODING = 'utf-16-le'
 
   _DATE_ELEMENTS = (
       text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName('year') +
@@ -116,7 +116,7 @@ class SophosAVLogParser(text_parser.PyparsingSingleLineTextParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
-      line (bytes): line from a text file.
+      line (str): line from a text file.
 
     Returns:
       bool: True if the line is in the expected format, False if not.
