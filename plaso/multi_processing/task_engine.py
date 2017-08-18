@@ -467,12 +467,13 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._StartMonitoringProcess(process)
 
     except (IOError, KeyError) as exception:
+      pid = process.pid
       logging.error((
           u'Unable to monitor replacement worker process: {0:s} '
           u'(PID: {1:d}) with error: {2:s}').format(
-              process_name, process.pid, exception))
+              process_name, pid, exception))
 
-      process.terminate()
+      self._TerminateProcess(pid)
       return
 
     self._RegisterProcess(process)
