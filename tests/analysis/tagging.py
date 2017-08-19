@@ -63,6 +63,7 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
       },
   ]
 
+  # pylint: disable=arguments-differ
   def _CreateTestEventObject(self, event_attributes):
     """Create a test event with a set of attributes.
 
@@ -102,7 +103,7 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
     storage_writer = self._AnalyzeEvents(test_events, plugin)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
-    self.assertEqual(len(storage_writer.event_tags), 4)
+    self.assertEqual(storage_writer.number_of_event_tags, 4)
 
     report = storage_writer.analysis_reports[0]
     self.assertIsNotNone(report)
@@ -111,7 +112,7 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(report.text, expected_text)
 
     labels = []
-    for event_tag in storage_writer.event_tags:
+    for event_tag in storage_writer.GetEventTags():
       labels.extend(event_tag.labels)
 
     self.assertEqual(len(labels), 5)

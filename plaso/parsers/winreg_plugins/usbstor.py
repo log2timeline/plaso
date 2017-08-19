@@ -39,17 +39,6 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
       values_dict = {}
       values_dict[u'subkey_name'] = subkey.name
 
-      event_data = windows_events.WindowsRegistryEventData()
-      event_data.key_path = registry_key.path
-      event_data.offset = registry_key.offset
-      event_data.regvalue = values_dict
-      event_data.source_append = self._SOURCE_APPEND
-
-      # Time last USB device of this class was first inserted.
-      event = time_events.DateTimeValuesEvent(
-          subkey.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
       name_values = subkey.name.split(u'&')
       number_of_name_values = len(name_values)
 
@@ -67,6 +56,19 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
       if number_of_name_values >= 4:
         values_dict[u'revision'] = name_values[3]
 
+      event_data = windows_events.WindowsRegistryEventData()
+      event_data.key_path = registry_key.path
+      event_data.offset = registry_key.offset
+      event_data.regvalue = values_dict
+      event_data.source_append = self._SOURCE_APPEND
+
+      if subkey.number_of_subkeys == 0:
+        # Time last USB device of this class was first inserted.
+        event = time_events.DateTimeValuesEvent(
+            subkey.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
+        continue
+
       for device_key in subkey.GetSubkeys():
         values_dict[u'serial'] = device_key.name
 
@@ -83,6 +85,11 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
               parent_id_prefix_value.GetDataAsObject())
         else:
           values_dict.pop(u'parent_id_prefix', None)
+
+        # Time last USB device of this class was first inserted.
+        event = time_events.DateTimeValuesEvent(
+            subkey.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
         # Win7 - Last Connection.
         # Vista/XP - Time of an insert.

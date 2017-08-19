@@ -36,6 +36,8 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     session = sessions.Session()
     storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
+    for event in event_objects:
+      storage_writer.AddEvent(event)
 
     mediator = analysis_mediator.AnalysisMediator(
         storage_writer, knowledge_base_object)
@@ -58,9 +60,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
       EventObject: event with the appropriate attributes for testing.
     """
     event = events.EventObject()
-    for attribute_name, attribute_value in event_dictionary.items():
-      setattr(event, attribute_name, attribute_value)
-
+    event.CopyFromDict(event_dictionary)
     return event
 
   def _ParseAndAnalyzeFile(
