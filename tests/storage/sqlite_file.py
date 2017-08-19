@@ -147,6 +147,9 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
+  # TODO: add tests for GetEventData
+  # TODO: add tests for GetEventDataByIdentifier
+
   def testGetEvents(self):
     """Tests the GetEvents function."""
     test_events = self._CreateTestEvents()
@@ -168,6 +171,8 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       self.assertEqual(len(test_events), 4)
 
       storage_file.Close()
+
+  # TODO: add tests for GetEventSourceByIndex
 
   def testGetEventSources(self):
     """Tests the GetEventSources function."""
