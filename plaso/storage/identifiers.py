@@ -4,6 +4,32 @@
 from plaso.containers import interface as containers_interface
 
 
+class FakeIdentifier(containers_interface.AttributeContainerIdentifier):
+  """Fake attribute container identifier intended for testing.
+
+  Attributes:
+    attribute_values_hash (int): hash value of the attribute values.
+  """
+
+  def __init__(self, attribute_values_hash):
+    """Initializes a fake attribute container identifier.
+
+    Args:
+      attribute_values_hash (int): hash value of the attribute values.
+    """
+    super(FakeIdentifier, self).__init__()
+    self.attribute_values_hash = attribute_values_hash
+
+  def CopyToString(self):
+    """Copies the identifier to a string representation.
+
+    Returns:
+      str: unique identifier or None.
+    """
+    if self.attribute_values_hash is not None:
+      return u'{0:d}'.format(self.attribute_values_hash)
+
+
 class SerializedStreamIdentifier(
     containers_interface.AttributeContainerIdentifier):
   """Serialized stream attribute container identifier.

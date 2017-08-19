@@ -1,68 +1,9 @@
 # -*- coding: utf-8 -*-
 """The fake storage intended for testing."""
 
-import heapq
-
 from plaso.lib import definitions
-from plaso.lib import py2to3
 from plaso.storage import interface
-
-
-class _EventsHeap(object):
-  """Events heap."""
-
-  def __init__(self):
-    """Initializes an events heap."""
-    super(_EventsHeap, self).__init__()
-    self._heap = []
-
-  def PopEvent(self):
-    """Pops an event from the heap.
-
-    Returns:
-      EventObject: event.
-    """
-    try:
-      _, _, _, event = heapq.heappop(self._heap)
-      return event
-
-    except IndexError:
-      return None
-
-  def PopEvents(self):
-    """Pops events from the heap.
-
-    Yields:
-      EventObject: event.
-    """
-    event = self.PopEvent()
-    while event:
-      yield event
-      event = self.PopEvent()
-
-  def PushEvent(self, event):
-    """Pushes an event onto the heap.
-
-    Args:
-      event (EventObject): event.
-    """
-    # TODO: replace this work-around for an event "comparable".
-    event_values = event.CopyToDict()
-    attributes = []
-    for attribute_name, attribute_value in sorted(event_values.items()):
-      if isinstance(attribute_value, dict):
-        attribute_value = sorted(attribute_value.items())
-
-      elif isinstance(attribute_value, py2to3.BYTES_TYPE):
-        attribute_value = repr(attribute_value)
-
-      comparable = u'{0:s}: {1!s}'.format(attribute_name, attribute_value)
-      attributes.append(comparable)
-
-    comparable = u', '.join(attributes)
-    event_values = sorted(event.CopyToDict().items())
-    heap_values = (event.timestamp, event.timestamp_desc, comparable, event)
-    heapq.heappush(self._heap, heap_values)
+from plaso.storage import event_heaps
 
 
 class FakeStorageWriter(interface.StorageWriter):
@@ -302,7 +243,7 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError(u'Unable to read from closed storage writer.')
 
-    events_heap = _EventsHeap()
+    event_heap = event_heaps.EventHeap()
 
     for event in self._events:
       if (time_range and (
@@ -310,9 +251,9 @@ class FakeStorageWriter(interface.StorageWriter):
           event.timestamp > time_range.end_timestamp)):
         continue
 
-      events_heap.PushEvent(event)
+      event_heap.PushEvent(event)
 
-    return iter(events_heap.PopEvents())
+    return iter(event_heap.PopEvents())
 
   def Open(self):
     """Opens the storage writer.

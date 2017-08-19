@@ -31,9 +31,6 @@ class EventData(interface.AttributeContainer):
     self.query = None
 
 
-# TODO: split event into source and event components.
-# https://github.com/log2timeline/plaso/wiki/Scribbles-about-events
-
 class EventObject(interface.AttributeContainer):
   """Event attribute container.
 
@@ -61,8 +58,9 @@ class EventObject(interface.AttributeContainer):
   DATA_TYPE = None
 
   def __init__(self):
-    """Initializes an event object."""
+    """Initializes an event attribute container."""
     super(EventObject, self).__init__()
+    self._event_data_identifier = None
     self.data_type = self.DATA_TYPE
     self.display_name = None
     self.filename = None
@@ -72,6 +70,28 @@ class EventObject(interface.AttributeContainer):
     self.pathspec = None
     self.tag = None
     self.timestamp = None
+
+  def GetEventDataIdentifier(self):
+    """Retrieves the identifier of the event data associated with the event.
+
+    The event data identifier is a storage specific value that should not
+    be serialized.
+
+    Returns:
+      AttributeContainerIdentifier: event identifier or None when not set.
+    """
+    return self._event_data_identifier
+
+  def SetEventDataIdentifier(self, event_data_identifier):
+    """Sets the identifier of the event data associated with the event.
+
+    The event data identifier is a storage specific value that should not
+    be serialized.
+
+    Args:
+      event_data_identifier (AttributeContainerIdentifier): event identifier.
+    """
+    self._event_data_identifier = event_data_identifier
 
 
 class EventTag(interface.AttributeContainer):
@@ -94,7 +114,7 @@ class EventTag(interface.AttributeContainer):
   _VALID_LABEL_REGEX = re.compile(r'^[A-Za-z0-9_]+$')
 
   def __init__(self, comment=None):
-    """Initializes an event tag.
+    """Initializes an event tag attribute container.
 
     Args:
       comment (Optional[str]): comments.
