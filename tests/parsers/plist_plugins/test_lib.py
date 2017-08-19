@@ -17,15 +17,15 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     """Parses a file using the parser and plugin object.
 
     Args:
-      plugin: a plist plugin object (instance of PlistPlugin).
-      path_segments: the path segments inside the test data directory to the
-                     test file.
-      plist_name: the name of the plist to parse.
-      knowledge_base_values: optional dict containing the knowledge base
-                             values.
+      plugin (PlistPlugin): a plist plugin.
+      path_segments (list[str]): the path segments inside the test data
+          directory to the test file.
+      plist_name (str): name of the plist to parse.
+      knowledge_base_values (Optional[dict[str, object]]): knowledge base
+          values.
 
     Returns:
-      A storage writer object (instance of FakeStorageWriter).
+      FakeStorageWriter: a storage writer.
     """
     file_entry = self._GetTestFileEntry(path_segments)
     file_object = file_entry.GetFileObject()
@@ -44,14 +44,14 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     """Parses a plist using the plugin object.
 
     Args:
-      plugin: a plist plugin object (instance of PlistPlugin).
-      plist_name: a string containg the name of the plist to parse.
-      top_level_object: the top-level plist object.
-      knowledge_base_values: optional dict containing the knowledge base
-                             values.
+      plugin (PlistPlugin): a plist plugin.
+      plist_name (str): name of the plist to parse.
+      top_level_object (dict[str, object]): plist top-level key.
+      knowledge_base_values (Optional[dict[str, object]]): knowledge base
+          values.
 
     Returns:
-      A storage writer object (instance of FakeStorageWriter).
+      FakeStorageWriter: a storage writer.
     """
     session = sessions.Session()
     storage_writer = fake_storage.FakeStorageWriter(session)

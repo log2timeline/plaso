@@ -33,18 +33,18 @@ class SoftwareUpdatePluginTest(test_lib.PlistPluginTestCase):
 
     self.assertEqual(event.key, u'')
     self.assertEqual(event.root, u'/')
-    expected_desc = (
+    expected_description = (
         u'Last Mac OS 10.9.1 (13B42) partially '
         u'update, pending 1: RAWCameraUpdate5.03(031-2664).')
-    self.assertEqual(event.desc, expected_desc)
+    self.assertEqual(event.desc, expected_description)
 
     event = events[1]
 
     self.assertEqual(event.key, u'')
     self.assertEqual(event.root, u'/')
-    expected_desc = u'Last Mac OS X 10.9.1 (13B42) full update.'
-    self.assertEqual(event.desc, expected_desc)
-    expected_string = u'// {0:s}'.format(expected_desc)
+    expected_description = u'Last Mac OS X 10.9.1 (13B42) full update.'
+    self.assertEqual(event.desc, expected_description)
+    expected_string = u'// {0:s}'.format(expected_description)
     self._TestGetMessageStrings(event, expected_string, expected_string)
 
 

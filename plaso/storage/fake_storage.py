@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
 """The fake storage intended for testing."""
 
+import copy
+
 from plaso.lib import definitions
-from plaso.storage import interface
 from plaso.storage import event_heaps
+from plaso.storage import identifiers
+from plaso.storage import interface
 
 
 class FakeStorageWriter(interface.StorageWriter):
-  """Class that implements a fake storage writer object.
+  """Fake storage writer object.
 
   Attributes:
     analysis_reports (list[AnalysisReport]): analysis reports.
     errors (list[ExtractionError]): extraction errors.
-    event_sources (list[EventSource]): event sources.
-    event_tags (list[EventTag]): event tags.
     session_completion (SessionCompletion): session completion attribute
         container.
     session_start (SessionStart): session start attribute container.
@@ -33,16 +34,34 @@ class FakeStorageWriter(interface.StorageWriter):
     super(FakeStorageWriter, self).__init__(
         session, storage_type=storage_type, task=task)
     self._errors = []
+    self._event_data = {}
+    self._event_sources = []
+    self._event_tags = []
     self._events = []
     self._is_open = False
     self._task_storage_writers = {}
     self.analysis_reports = []
-    self.event_sources = []
-    self.event_tags = []
     self.session_completion = None
     self.session_start = None
     self.task_completion = None
     self.task_start = None
+
+  def _PrepareAttributeContainer(self, attribute_container):
+    """Prepares an attribute container for storage.
+
+    Args:
+      attribute_container (AttributeContainer): attribute container.
+
+    Returns:
+      AttributeContainer: copy of the attribute container to store in
+          the fake storage.
+    """
+    attribute_values_hash = hash(attribute_container.GetAttributeValuesString())
+    identifier = identifiers.FakeIdentifier(attribute_values_hash)
+    attribute_container.SetIdentifier(identifier)
+
+    # Make sure the fake storage preserves the state of the attribute container.
+    return copy.deepcopy(attribute_container)
 
   def _RaiseIfNotWritable(self):
     """Raises if the storage file is not writable.
@@ -64,6 +83,8 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
+    analysis_report = self._PrepareAttributeContainer(analysis_report)
+
     self.analysis_reports.append(analysis_report)
 
   def AddError(self, error):
@@ -76,6 +97,8 @@ class FakeStorageWriter(interface.StorageWriter):
       IOError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
+
+    error = self._PrepareAttributeContainer(error)
 
     self._errors.append(error)
     self.number_of_errors += 1
@@ -92,8 +115,35 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
+    # TODO: change to no longer allow event_data_identifier is None
+    # after refactoring every parser to generate event data.
+    event_data_identifier = event.GetEventDataIdentifier()
+    if event_data_identifier:
+      if not isinstance(event_data_identifier, identifiers.FakeIdentifier):
+        raise IOError(u'Unsupported event data identifier type: {0:s}'.format(
+            type(event_data_identifier)))
+
+    event = self._PrepareAttributeContainer(event)
+
     self._events.append(event)
     self.number_of_events += 1
+
+  def AddEventData(self, event_data):
+    """Adds event data.
+
+    Args:
+      event_data (EventData): event data.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    event_data = self._PrepareAttributeContainer(event_data)
+
+    identifier = event_data.GetIdentifier()
+    lookup_key = identifier.CopyToString()
+    self._event_data[lookup_key] = event_data
 
   def AddEventSource(self, event_source):
     """Adds an event source.
@@ -106,7 +156,9 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self.event_sources.append(event_source)
+    event_source = self._PrepareAttributeContainer(event_source)
+
+    self._event_sources.append(event_source)
     self.number_of_event_sources += 1
 
   def AddEventTag(self, event_tag):
@@ -120,7 +172,15 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self.event_tags.append(event_tag)
+    event_identifier = event_tag.GetEventIdentifier()
+    if not isinstance(event_identifier, identifiers.FakeIdentifier):
+      raise IOError(u'Unsupported event identifier type: {0:s}'.format(
+          type(event_identifier)))
+
+    event_tag = self._PrepareAttributeContainer(event_tag)
+
+    self._event_tags.append(event_tag)
+    self.number_of_event_tags += 1
 
   def CreateTaskStorage(self, task):
     """Creates a task storage.
@@ -164,10 +224,18 @@ class FakeStorageWriter(interface.StorageWriter):
   def GetEvents(self):
     """Retrieves the events.
 
-    Returns:
-      generator(EventObject): event generator.
+    Yields:
+      EventObject: event.
     """
     return iter(self._events)
+
+  def GetEventData(self):
+    """Retrieves the event data.
+
+    Returns:
+      generator(EventData): event data generator.
+    """
+    return iter(self._event_data.values())
 
   def GetEventSources(self):
     """Retrieves the event sources.
@@ -175,7 +243,7 @@ class FakeStorageWriter(interface.StorageWriter):
     Returns:
       generator(EventSource): event source generator.
     """
-    return iter(self.event_sources)
+    return iter(self._event_sources)
 
   def GetEventTags(self):
     """Retrieves the event tags.
@@ -183,7 +251,7 @@ class FakeStorageWriter(interface.StorageWriter):
     Returns:
       generator(EventTags): event tag generator.
     """
-    return iter(self.event_tags)
+    return iter(self._event_tags)
 
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.
@@ -200,10 +268,10 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError(u'Unable to read from closed storage writer.')
 
-    if self._written_event_source_index >= len(self.event_sources):
+    if self._written_event_source_index >= len(self._event_sources):
       return
 
-    event_source = self.event_sources[self._first_written_event_source_index]
+    event_source = self._event_sources[self._first_written_event_source_index]
     self._written_event_source_index = (
         self._first_written_event_source_index + 1)
     return event_source
@@ -220,10 +288,10 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError(u'Unable to read from closed storage writer.')
 
-    if self._written_event_source_index >= len(self.event_sources):
+    if self._written_event_source_index >= len(self._event_sources):
       return
 
-    event_source = self.event_sources[self._written_event_source_index]
+    event_source = self._event_sources[self._written_event_source_index]
     self._written_event_source_index += 1
     return event_source
 
@@ -266,7 +334,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._is_open = True
 
-    self._first_written_event_source_index = len(self.event_sources)
+    self._first_written_event_source_index = len(self._event_sources)
     self._written_event_source_index = self._first_written_event_source_index
 
   def PrepareMergeTaskStorage(self, task):
