@@ -31,8 +31,15 @@ class EventObjectTest(shared_test_lib.BaseTestCase):
     attribute_container = events.EventObject()
 
     expected_attribute_names = [
-        u'data_type', u'display_name', u'filename', u'hostname', u'inode',
-        u'offset', u'pathspec', u'tag', u'timestamp']
+        u'data_type',
+        u'display_name',
+        u'filename',
+        u'hostname',
+        u'inode',
+        u'offset',
+        u'pathspec',
+        u'tag',
+        u'timestamp']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
@@ -47,7 +54,11 @@ class EventTagTest(shared_test_lib.BaseTestCase):
     attribute_container = events.EventTag()
 
     expected_attribute_names = [
-        u'comment', u'event_entry_index', u'event_stream_number', u'labels']
+        u'comment',
+        u'event_entry_index',
+        u'event_row_identifier',
+        u'event_stream_number',
+        u'labels']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

@@ -71,6 +71,9 @@ class EventObject(interface.AttributeContainer):
     self.tag = None
     self.timestamp = None
 
+    # TODO: add a solution for event_data_entry_index,
+    # event_data_stream_number and event_data_row_identifier
+
   def GetEventDataIdentifier(self):
     """Retrieves the identifier of the event data associated with the event.
 
@@ -123,6 +126,7 @@ class EventTag(interface.AttributeContainer):
     self._event_identifier = None
     self.comment = comment
     self.event_entry_index = None
+    self.event_row_identifier = None
     self.event_stream_number = None
     self.labels = []
 
