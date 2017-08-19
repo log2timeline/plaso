@@ -10,6 +10,7 @@ import time
 
 from plaso.lib import definitions
 from plaso.lib import platform_specific
+from plaso.storage import event_heaps
 from plaso.storage import identifiers
 from plaso.storage import interface
 
@@ -39,6 +40,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     super(GZIPStorageFile, self).__init__()
     self._attribute_containers = {}
     self._gzip_file = None
+    self._number_of_containers = 0
 
   def _AddAttributeContainer(self, attribute_container):
     """Adds an attribute container.
@@ -46,11 +48,10 @@ class GZIPStorageFile(interface.BaseFileStorage):
     Args:
       attribute_container (AttributeContainer): attribute container.
     """
-    container_type = attribute_container.CONTAINER_TYPE
-    if container_type not in self._attribute_containers:
-      self._attribute_containers[container_type] = []
+    container_list = self._GetAttributeContainerList(
+        attribute_container.CONTAINER_TYPE)
 
-    self._attribute_containers[container_type].append(attribute_container)
+    container_list.append(attribute_container)
 
   def _GetAttributeContainerList(self, container_type):
     """Retrieves an attribute container list.
@@ -61,7 +62,10 @@ class GZIPStorageFile(interface.BaseFileStorage):
     Returns:
       list[AttributeContainer]: attribute container list.
     """
-    return self._attribute_containers.get(container_type, [])
+    if container_type not in self._attribute_containers:
+      self._attribute_containers[container_type] = []
+
+    return self._attribute_containers[container_type]
 
   def _OpenRead(self):
     """Opens the storage file for reading."""
@@ -86,23 +90,16 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
     Args:
       attribute_container (AttributeContainer): attribute container.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
     """
-    if not self._is_open:
-      raise IOError(u'Unable to write to closed storage file.')
+    identifier = identifiers.SerializedStreamIdentifier(
+        1, self._number_of_containers)
+    attribute_container.SetIdentifier(identifier)
 
-    if self._read_only:
-      raise IOError(u'Unable to write to read-only storage file.')
+    serialized_data = self._SerializeAttributeContainer(attribute_container)
 
-    attribute_container_identifier = identifiers.SerializedStreamIdentifier(
-        1, len(self._attribute_containers))
-    attribute_container.SetIdentifier(attribute_container_identifier)
+    self._number_of_containers += 1
 
-    attribute_container_data = self._SerializeAttributeContainer(
-        attribute_container)
-    self._gzip_file.write(attribute_container_data)
+    self._gzip_file.write(serialized_data)
     self._gzip_file.write(b'\n')
 
   def AddAnalysisReport(self, analysis_report):
@@ -110,7 +107,12 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
     Args:
       analysis_report (AnalysisReport): analysis report.
+
+    Raises:
+      IOError: when the storage file is closed or read-only.
     """
+    self._RaiseIfNotWritable()
+
     self._WriteAttributeContainer(analysis_report)
 
   def AddError(self, error):
@@ -118,7 +120,12 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
     Args:
       error (ExtractionError): error.
+
+    Raises:
+      IOError: when the storage file is closed or read-only.
     """
+    self._RaiseIfNotWritable()
+
     self._WriteAttributeContainer(error)
 
   def AddEvent(self, event):
@@ -126,15 +133,50 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
     Args:
       event (EventObject): event.
+
+    Raises:
+      IOError: when the storage file is closed or read-only.
     """
+    self._RaiseIfNotWritable()
+
+    # TODO: change to no longer allow event_data_identifier is None
+    # after refactoring every parser to generate event data.
+    event_data_identifier = event.GetEventDataIdentifier()
+    if event_data_identifier:
+      if not isinstance(
+          event_data_identifier, identifiers.SerializedStreamIdentifier):
+        raise IOError(u'Unsupported event data identifier type: {0:s}'.format(
+            type(event_data_identifier)))
+
+      event.event_data_stream_number = event_data_identifier.stream_number
+      event.event_data_entry_index = event_data_identifier.entry_index
+
     self._WriteAttributeContainer(event)
+
+  def AddEventData(self, event_data):
+    """Adds event data.
+
+    Args:
+      event_data (EventData): event data.
+
+    Raises:
+      IOError: when the storage file is closed or read-only.
+    """
+    self._RaiseIfNotWritable()
+
+    self._WriteAttributeContainer(event_data)
 
   def AddEventSource(self, event_source):
     """Adds an event source.
 
     Args:
       event_source (EventSource): event source.
+
+    Raises:
+      IOError: when the storage file is closed or read-only.
     """
+    self._RaiseIfNotWritable()
+
     self._WriteAttributeContainer(event_source)
 
   def AddEventTag(self, event_tag):
@@ -144,8 +186,11 @@ class GZIPStorageFile(interface.BaseFileStorage):
       event_tag (EventTag): event tag.
 
     Raises:
-      IOError: if the event tag event identifier type is not supported.
+      IOError: when the storage file is closed or read-only or
+          if the event tag event identifier type is not supported.
     """
+    self._RaiseIfNotWritable()
+
     event_identifier = event_tag.GetEventIdentifier()
     if not isinstance(
         event_identifier, identifiers.SerializedStreamIdentifier):
@@ -187,6 +232,25 @@ class GZIPStorageFile(interface.BaseFileStorage):
     """
     return iter(self._GetAttributeContainerList(u'extraction_error'))
 
+  def GetEventData(self):
+    """Retrieves event data.
+
+    Returns:
+      generator(EventData): event data generator.
+    """
+    return iter(self._GetAttributeContainerList(u'event_data'))
+
+  def GetEventDataByIdentifier(self, identifier):
+    """Retrieves specific event data.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event data identifier.
+
+    Returns:
+      EventData: event data or None if not available.
+    """
+    raise NotImplementedError()
+
   def GetEvents(self):
     """Retrieves the events.
 
@@ -216,8 +280,6 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
       yield event_tag
 
-  # TODO: time_range is currently not operational, nor that events are
-  # returned in chronological order. Fix this.
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 
@@ -228,7 +290,17 @@ class GZIPStorageFile(interface.BaseFileStorage):
     Returns:
       generator(EventObject): event generator.
     """
-    return iter(self._GetAttributeContainerList(u'event'))
+    event_heap = event_heaps.EventHeap()
+
+    for event in self._GetAttributeContainerList(u'event'):
+      if (time_range and (
+          event.timestamp < time_range.start_timestamp or
+          event.timestamp > time_range.end_timestamp)):
+        continue
+
+      event_heap.PushEvent(event)
+
+    return iter(event_heap.PopEvents())
 
   def HasAnalysisReports(self):
     """Determines if a storage contains analysis reports.
@@ -254,6 +326,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     """
     return len(self._GetAttributeContainerList(u'event_tags')) > 0
 
+  # pylint: disable=arguments-differ
   def Open(self, path=None, read_only=True, **unused_kwargs):
     """Opens the storage.
 
@@ -309,7 +382,12 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
     Args:
       task_completion (TaskCompletion): task completion information.
+
+    Raises:
+      IOError: when the storage file is closed or read-only.
     """
+    self._RaiseIfNotWritable()
+
     self._WriteAttributeContainer(task_completion)
 
   def WriteTaskStart(self, task_start):
@@ -317,7 +395,12 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
     Args:
       task_start (TaskStart): task start information.
+
+    Raises:
+      IOError: when the storage file is closed or read-only.
     """
+    self._RaiseIfNotWritable()
+
     self._WriteAttributeContainer(task_start)
 
 
@@ -355,7 +438,9 @@ class GZIPStorageMergeReader(interface.FileStorageMergeReader):
 
     super(GZIPStorageMergeReader, self).__init__(storage_writer)
     self._data_buffer = None
+    self._event_data_identifier_mappings = {}
     self._gzip_file = gzip_file
+    self._number_of_containers = 0
     self._path = path
 
   def _AddAttributeContainer(self, attribute_container):
@@ -371,7 +456,31 @@ class GZIPStorageMergeReader(interface.FileStorageMergeReader):
     if container_type == u'event_source':
       self._storage_writer.AddEventSource(attribute_container)
 
+    elif container_type == u'event_data':
+      identifier = attribute_container.GetIdentifier()
+      lookup_key = identifier.CopyToString()
+
+      self._storage_writer.AddEventData(attribute_container)
+
+      identifier = attribute_container.GetIdentifier()
+      self._event_data_identifier_mappings[lookup_key] = identifier
+
     elif container_type == u'event':
+      if (hasattr(attribute_container, u'event_data_stream_number') and
+          hasattr(attribute_container, u'event_data_entry_index')):
+        event_data_identifier = identifiers.SerializedStreamIdentifier(
+            attribute_container.event_data_stream_number,
+            attribute_container.event_data_entry_index)
+        lookup_key = event_data_identifier.CopyToString()
+
+        event_data_identifier = self._event_data_identifier_mappings[lookup_key]
+        attribute_container.SetEventDataIdentifier(event_data_identifier)
+
+        del attribute_container.event_data_stream_number
+        del attribute_container.event_data_entry_index
+
+      # TODO: add event identifier mappings for event tags.
+
       self._storage_writer.AddEvent(attribute_container)
 
     elif container_type == u'event_tag':
@@ -409,6 +518,7 @@ class GZIPStorageMergeReader(interface.FileStorageMergeReader):
       # Do not use gzip.readlines() here since it can consume a large amount
       # of memory.
       self._data_buffer = self._gzip_file.read(self._DATA_BUFFER_SIZE)
+      self._number_of_containers = 0
 
     number_of_containers = 0
     while self._data_buffer:
@@ -419,9 +529,16 @@ class GZIPStorageMergeReader(interface.FileStorageMergeReader):
           self._data_buffer = b''.join(lines[index:])
           continue
 
+        identifier = identifiers.SerializedStreamIdentifier(
+            1, self._number_of_containers)
+
         attribute_container = self._DeserializeAttributeContainer(
             u'attribute_container', line)
+        attribute_container.SetIdentifier(identifier)
+
         self._AddAttributeContainer(attribute_container)
+
+        self._number_of_containers += 1
         number_of_containers += 1
 
         if (maximum_number_of_containers > 0 and

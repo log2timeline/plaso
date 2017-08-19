@@ -4,6 +4,14 @@ plaso\.storage package
 Submodules
 ----------
 
+plaso\.storage\.event\_heaps module
+-----------------------------------
+
+.. automodule:: plaso.storage.event_heaps
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso\.storage\.factory module
 ------------------------------
 

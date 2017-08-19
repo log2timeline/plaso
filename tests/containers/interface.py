@@ -64,6 +64,20 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(attributes, expected_attributes)
 
+  def testGetAttributeValuesString(self):
+    """Tests the GetAttributeValuesString function."""
+    attribute_container = interface.AttributeContainer()
+    attribute_container.attribute_name = u'attribute_name'
+    attribute_container.attribute_value = u'attribute_value'
+
+    attribute_values_string1 = attribute_container.GetAttributeValuesString()
+
+    attribute_container.attribute_value = u'changes'
+
+    attribute_values_string2 = attribute_container.GetAttributeValuesString()
+
+    self.assertNotEqual(attribute_values_string1, attribute_values_string2)
+
   def testGetIdentifier(self):
     """Tests the GetIdentifier function."""
     attribute_container = interface.AttributeContainer()

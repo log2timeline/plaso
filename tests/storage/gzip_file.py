@@ -161,6 +161,8 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
+  # TODO: add tests for GetEventData.
+
   def testGetEventSources(self):
     """Tests the GetEventSources function."""
     event_source = event_sources.EventSource()
