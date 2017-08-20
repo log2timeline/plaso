@@ -42,7 +42,7 @@ class AnalysisPluginOptions(object):
         analysis_manager.AnalysisPluginManager.GetPluginObjects(
             self._analysis_plugins))
 
-    for analysis_plugin in analysis_plugins:
+    for analysis_plugin in analysis_plugins.values():
       helpers_manager.ArgumentHelperManager.ParseOptions(
           options, analysis_plugin)
 
