@@ -202,7 +202,7 @@ class DependencyHelper(object):
           map(int, self._VERSION_SPLIT_REGEX.split(module_version)))
     except ValueError:
       status_message = 'unable to parse module version: {0:s} {1:s}'.format(
-          module_name, minimum_version)
+          module_name, module_version)
       return False, status_message
 
     try:
