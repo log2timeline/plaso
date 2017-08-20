@@ -374,7 +374,7 @@
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2017-07-15T07:55:06+00:00
+  2017-08-20T10:35:02+00:00
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
   
@@ -385,7 +385,7 @@
   {filename} /tmp/test/test_data/syslog
   {offset} 0
   {parser} filestat
-  {timestamp} 1500105306000000
+  {timestamp} 1503225302000000
   {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
@@ -396,7 +396,7 @@
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2017-07-15T07:55:06+00:00
+  2017-08-20T10:35:02+00:00
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
   
@@ -407,7 +407,7 @@
   {filename} /tmp/test/test_data/syslog
   {offset} 0
   {parser} filestat
-  {timestamp} 1500105306000000
+  {timestamp} 1503225302000000
   {timestamp_desc} Metadata Modification Time
 
 [Additional attributes]:
@@ -418,7 +418,7 @@
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2017-07-15T07:55:07+00:00
+  2017-08-20T10:35:04+00:00
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
   
@@ -429,7 +429,7 @@
   {filename} /tmp/test/test_data/syslog
   {offset} 0
   {parser} filestat
-  {timestamp} 1500105307000000
+  {timestamp} 1503225304000000
   {timestamp_desc} Last Access Time
 
 [Additional attributes]:
@@ -440,7 +440,7 @@
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2017-07-15T07:55:08+00:00
+  2017-08-20T10:35:05+00:00
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
   
@@ -451,7 +451,7 @@
   {filename} /tmp/test/test_data/syslog
   {offset} 0
   {parser} filestat
-  {timestamp} 1500105308000000
+  {timestamp} 1503225305000000
   {timestamp_desc} Last Access Time
 
 [Additional attributes]:

@@ -82,7 +82,7 @@ anacron1
 exit1
   body contains ' exit '
 
-repeated1
+repeated
   body contains 'last message repeated'
 EOI
 
@@ -96,7 +96,7 @@ anacron2
 exit2
   body contains ' exit '
 
-repeated2
+repeated
   body contains 'last message repeated'
 EOI
 
