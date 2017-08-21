@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """The parser mediator object."""
 
+from __future__ import unicode_literals
+
 import logging
 import os
+import time
 
 from plaso.containers import errors
 from plaso.engine import path_helper
@@ -11,7 +14,12 @@ from plaso.lib import timelib
 
 
 class ParserMediator(object):
-  """Class that implements the parser mediator."""
+  """Parser mediator.
+
+  Attributes:
+    last_activity_timestamp (int): timestamp received that indicates the last
+        time activity was observed.
+  """
 
   def __init__(
       self, storage_writer, knowledge_base, preferred_year=None,
@@ -42,6 +50,8 @@ class ParserMediator(object):
     self._storage_writer = storage_writer
     self._temporary_directory = temporary_directory
     self._text_prepend = None
+
+    self.last_activity_timestamp = 0.0
 
   @property
   def abort(self):
@@ -118,13 +128,13 @@ class ParserMediator(object):
 
     stat_object = file_entry.GetStat()
 
-    posix_time = getattr(stat_object, u'crtime', None)
+    posix_time = getattr(stat_object, 'crtime', None)
     if posix_time is None:
-      posix_time = getattr(stat_object, u'ctime', None)
+      posix_time = getattr(stat_object, 'ctime', None)
 
     if posix_time is None:
       logging.warning(
-          u'Unable to determine earliest year from file stat information.')
+          'Unable to determine earliest year from file stat information.')
       return
 
     try:
@@ -133,8 +143,8 @@ class ParserMediator(object):
       return year
     except ValueError as exception:
       logging.error((
-          u'Unable to determine earliest year from file stat information with '
-          u'error: {0:s}').format(exception))
+          'Unable to determine earliest year from file stat information with '
+          'error: {0:s}').format(exception))
       return
 
   def _GetInode(self, inode_value):
@@ -178,13 +188,13 @@ class ParserMediator(object):
 
     stat_object = file_entry.GetStat()
 
-    posix_time = getattr(stat_object, u'mtime', None)
+    posix_time = getattr(stat_object, 'mtime', None)
     if posix_time is None:
-      posix_time = getattr(stat_object, u'ctime', None)
+      posix_time = getattr(stat_object, 'ctime', None)
 
     if posix_time is None:
       logging.warning(
-          u'Unable to determine modification year from file stat information.')
+          'Unable to determine modification year from file stat information.')
       return
 
     try:
@@ -193,8 +203,8 @@ class ParserMediator(object):
       return year
     except ValueError as exception:
       logging.error((
-          u'Unable to determine creation year from file stat '
-          u'information with error: {0:s}').format(exception))
+          'Unable to determine creation year from file stat '
+          'information with error: {0:s}').format(exception))
       return
 
   def AddEventAttribute(self, attribute_name, attribute_value):
@@ -212,7 +222,7 @@ class ParserMediator(object):
       KeyError: if the event attribute is already set.
     """
     if attribute_name in self._extra_event_attributes:
-      raise KeyError(u'Event attribute {0:s} already set'.format(
+      raise KeyError('Event attribute {0:s} already set'.format(
           attribute_name))
 
     self._extra_event_attributes[attribute_name] = attribute_value
@@ -250,9 +260,9 @@ class ParserMediator(object):
       file_entry = self._file_entry
 
     if file_entry is None:
-      raise ValueError(u'Missing file entry')
+      raise ValueError('Missing file entry')
 
-    path_spec = getattr(file_entry, u'path_spec', None)
+    path_spec = getattr(file_entry, 'path_spec', None)
 
     relative_path = path_helper.PathHelper.GetRelativePathForPathSpec(
         path_spec, mount_path=self._mount_path)
@@ -318,9 +328,9 @@ class ParserMediator(object):
     if not self._file_entry:
       return
 
-    data_stream = getattr(self._file_entry.path_spec, u'data_stream', None)
+    data_stream = getattr(self._file_entry.path_spec, 'data_stream', None)
     if data_stream:
-      return u'{0:s}:{1:s}'.format(self._file_entry.name, data_stream)
+      return '{0:s}:{1:s}'.format(self._file_entry.name, data_stream)
 
     return self._file_entry.name
 
@@ -345,7 +355,7 @@ class ParserMediator(object):
     Returns:
       str: parser chain.
     """
-    return u'/'.join(self._parser_chain_components)
+    return '/'.join(self._parser_chain_components)
 
   def PopFromParserChain(self):
     """Removes the last added parser or parser plugin from the parser chain."""
@@ -363,11 +373,11 @@ class ParserMediator(object):
       query (Optional[str]): query that was used to obtain the event.
     """
     # TODO: rename this to event.parser_chain or equivalent.
-    if not getattr(event, u'parser', None) and parser_chain:
+    if not getattr(event, 'parser', None) and parser_chain:
       event.parser = parser_chain
 
     # TODO: deprecate text_prepend in favor of an event tag.
-    if not getattr(event, u'text_prepend', None) and self._text_prepend:
+    if not getattr(event, 'text_prepend', None) and self._text_prepend:
       event.text_prepend = self._text_prepend
 
     if file_entry is None:
@@ -377,8 +387,8 @@ class ParserMediator(object):
     if file_entry:
       event.pathspec = file_entry.path_spec
 
-      if not getattr(event, u'filename', None):
-        path_spec = getattr(file_entry, u'path_spec', None)
+      if not getattr(event, 'filename', None):
+        path_spec = getattr(file_entry, 'path_spec', None)
         event.filename = path_helper.PathHelper.GetRelativePathForPathSpec(
             path_spec, mount_path=self._mount_path)
 
@@ -388,28 +398,28 @@ class ParserMediator(object):
         display_name = self.GetDisplayName(file_entry)
 
       stat_object = file_entry.GetStat()
-      inode_value = getattr(stat_object, u'ino', None)
-      if not hasattr(event, u'inode') and inode_value:
+      inode_value = getattr(stat_object, 'ino', None)
+      if not hasattr(event, 'inode') and inode_value:
         event.inode = self._GetInode(inode_value)
 
-    if not getattr(event, u'display_name', None) and display_name:
+    if not getattr(event, 'display_name', None) and display_name:
       event.display_name = display_name
 
-    if not getattr(event, u'hostname', None) and self.hostname:
+    if not getattr(event, 'hostname', None) and self.hostname:
       event.hostname = self.hostname
 
-    if not getattr(event, u'username', None):
-      user_sid = getattr(event, u'user_sid', None)
+    if not getattr(event, 'username', None):
+      user_sid = getattr(event, 'user_sid', None)
       username = self._knowledge_base.GetUsernameByIdentifier(user_sid)
       if username:
         event.username = username
 
-    if not getattr(event, u'query', None) and query:
+    if not getattr(event, 'query', None) and query:
       event.query = query
 
     for attribute, value in iter(self._extra_event_attributes.items()):
       if hasattr(event, attribute):
-        raise KeyError(u'Event already has a value for {0:s}'.format(attribute))
+        raise KeyError('Event already has a value for {0:s}'.format(attribute))
 
       setattr(event, attribute, value)
 
@@ -424,7 +434,7 @@ class ParserMediator(object):
       RuntimeError: when storage writer is not set.
     """
     if not self._storage_writer:
-      raise RuntimeError(u'Storage writer not set.')
+      raise RuntimeError('Storage writer not set.')
 
     self.ProcessEvent(
         event, parser_chain=self.GetParserChain(),
@@ -432,6 +442,8 @@ class ParserMediator(object):
 
     self._storage_writer.AddEvent(event)
     self._number_of_events += 1
+
+    self.last_activity_timestamp = time.time()
 
   def ProduceEvents(self, events, query=None):
     """Produces events.
@@ -453,7 +465,7 @@ class ParserMediator(object):
       RuntimeError: when storage writer is not set.
     """
     if not self._storage_writer:
-      raise RuntimeError(u'Storage writer not set.')
+      raise RuntimeError('Storage writer not set.')
 
     self._storage_writer.AddEventSource(event_source)
     self._number_of_event_sources += 1
@@ -484,7 +496,7 @@ class ParserMediator(object):
       RuntimeError: when storage writer is not set.
     """
     if not self._storage_writer:
-      raise RuntimeError(u'Storage writer not set.')
+      raise RuntimeError('Storage writer not set.')
 
     if not path_spec and self._file_entry:
       path_spec = self._file_entry.path_spec
@@ -494,6 +506,8 @@ class ParserMediator(object):
         message=message, parser_chain=parser_chain, path_spec=path_spec)
     self._storage_writer.AddError(extraction_error)
     self._number_of_errors += 1
+
+    self.last_activity_timestamp = time.time()
 
   def RemoveEventAttribute(self, attribute_name):
     """Removes an attribute from being set on all events produced.
@@ -505,7 +519,7 @@ class ParserMediator(object):
       KeyError: if the event attribute is not set.
     """
     if attribute_name not in self._extra_event_attributes:
-      raise KeyError(u'Event attribute: {0:s} not set'.format(attribute_name))
+      raise KeyError('Event attribute: {0:s} not set'.format(attribute_name))
 
     del self._extra_event_attributes[attribute_name]
 
