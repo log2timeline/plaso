@@ -71,7 +71,7 @@ class OLECFParser(interface.FileObjectParser):
 
     try:
       for plugin in self._plugins:
-        if item_names < plugin.REQUIRED_ITEMS:
+        if not plugin.REQUIRED_ITEMS.issubset(item_names):
           continue
 
         try:
