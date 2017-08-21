@@ -76,10 +76,10 @@ PYTHONPATH=. python ./tools/log2timeline.py --buffer_size=300 --quiet --preferre
 PYTHONPATH=. python ./tools/log2timeline.py --quiet --timezone=Iceland --preferred_year 2012 ${TEST_FILE} test_data/syslog;
 
 cat > tagging.txt <<EOI
-anacron
+anacron1
   body contains 'anacron'
 
-exit
+exit1
   body contains ' exit '
 
 repeated
@@ -89,6 +89,17 @@ EOI
 PYTHONPATH=. python ./tools/psort.py --analysis tagging --output-format=null --tagging-file=tagging.txt ${TEST_FILE};
 
 # Run tagging twice.
+cat > tagging.txt <<EOI
+anacron2
+  body contains 'anacron'
+
+exit2
+  body contains ' exit '
+
+repeated
+  body contains 'last message repeated'
+EOI
+
 PYTHONPATH=. python ./tools/psort.py --analysis tagging --output-format=null --tagging-file=tagging.txt ${TEST_FILE};
 
 mv ${TEST_FILE} ${OLD_PWD}/test_data/;
