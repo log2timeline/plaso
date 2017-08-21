@@ -11,6 +11,8 @@ from plaso.parsers import manager
 class OLECFParser(interface.FileObjectParser):
   """Parses OLE Compound Files (OLECF)."""
 
+  # pylint: disable=no-member
+
   _INITIAL_FILE_OFFSET = None
 
   NAME = u'olecf'
