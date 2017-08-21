@@ -104,7 +104,7 @@ class DependencyDefinitionReader(object):
 class DependencyHelper(object):
   """Dependency helper."""
 
-  _VERSION_NUMBERS_REGEX = re.compile(r'[0-9].+')
+  _VERSION_NUMBERS_REGEX = re.compile(r'[0-9.]+')
   _VERSION_SPLIT_REGEX = re.compile(r'\.|\-')
 
   def __init__(self, configuration_file='dependencies.ini'):
