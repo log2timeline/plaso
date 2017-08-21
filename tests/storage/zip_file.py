@@ -228,8 +228,8 @@ class SerializedDataTimestampTableTest(test_lib.StorageTestCase):
     with self.assertRaises(IndexError):
       timestamp_table.GetTimestamp(99)
 
-    self.assertEqual(timestamp_table.GetTimestamp(-1), 1500105308000000)
-    self.assertEqual(timestamp_table.GetTimestamp(-2), 1500105306000000)
+    self.assertEqual(timestamp_table.GetTimestamp(-1), 1503225305000000)
+    self.assertEqual(timestamp_table.GetTimestamp(-2), 1503225302000000)
 
     with self.assertRaises(IndexError):
       timestamp_table.GetTimestamp(-99)
@@ -1416,8 +1416,8 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
       1364079678000000, 1364079678000000, 1384737320000000, 1384737320000000,
       1388512472000000, 1388512472000000, 1391699790000000, 1391699790000000,
       1416273343000000, 1416273343000000, 1416299420000000, 1416299420000000,
-      1416299480000000, 1416299480000000, 1500105306000000, 1500105306000000,
-      1500105306000000, 1500105306000000, 1500105307000000, 1500105308000000]
+      1416299480000000, 1416299480000000, 1503225302000000, 1503225302000000,
+      1503225302000000, 1503225302000000, 1503225304000000, 1503225305000000]
 
   # TODO: add test for GetEventSources.
 
