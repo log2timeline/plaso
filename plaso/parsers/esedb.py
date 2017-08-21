@@ -84,7 +84,7 @@ class ESEDBParser(interface.FileObjectParser):
         if parser_mediator.abort:
           break
 
-        if plugin.required_tables.difference(table_names):
+        if not plugin.required_tables.issubset(table_names):
           continue
 
         try:

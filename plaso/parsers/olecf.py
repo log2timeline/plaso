@@ -71,6 +71,9 @@ class OLECFParser(interface.FileObjectParser):
 
     try:
       for plugin in self._plugins:
+        if parser_mediator.abort:
+          break
+
         if not plugin.REQUIRED_ITEMS.issubset(item_names):
           continue
 
@@ -82,7 +85,7 @@ class OLECFParser(interface.FileObjectParser):
               u'plugin: {0:s} unable to parse OLECF file with error: '
               u'{1:s}').format(plugin.NAME, exception))
 
-      if self._default_plugin:
+      if self._default_plugin and not parser_mediator.abort:
         try:
           self._default_plugin.UpdateChainAndProcess(
               parser_mediator, root_item=root_item)
