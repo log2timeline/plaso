@@ -104,17 +104,23 @@ class DependencyDefinitionReader(object):
 class DependencyHelper(object):
   """Dependency helper."""
 
+  _VERSION_NUMBERS_REGEX = re.compile(r'[0-9.]+')
   _VERSION_SPLIT_REGEX = re.compile(r'\.|\-')
 
-  def __init__(self):
-    """Initializes a dependency helper."""
+  def __init__(self, configuration_file='dependencies.ini'):
+    """Initializes a dependency helper.
+
+    Args:
+      configuration_file (Optional[str]): path to the dependencies
+          configuration file.
+    """
     super(DependencyHelper, self).__init__()
     self._dependencies = {}
     self._test_dependencies = {}
 
     dependency_reader = DependencyDefinitionReader()
 
-    with open('dependencies.ini', 'r') as file_object:
+    with open(configuration_file, 'r') as file_object:
       for dependency in dependency_reader.Read(file_object):
         self._dependencies[dependency.name] = dependency
 
@@ -187,10 +193,28 @@ class DependencyHelper(object):
 
     # Split the version string and convert every digit into an integer.
     # A string compare of both version strings will yield an incorrect result.
-    module_version_map = list(
-        map(int, self._VERSION_SPLIT_REGEX.split(module_version)))
-    minimum_version_map = list(
-        map(int, self._VERSION_SPLIT_REGEX.split(minimum_version)))
+
+    # Strip any semantic suffixes such as a1, b1, pre, post, rc, dev.
+    module_version = self._VERSION_NUMBERS_REGEX.findall(module_version)[0]
+
+    if module_version[-1] == '.':
+      module_version = module_version[:-1]
+
+    try:
+      module_version_map = list(
+          map(int, self._VERSION_SPLIT_REGEX.split(module_version)))
+    except ValueError:
+      status_message = 'unable to parse module version: {0:s} {1:s}'.format(
+          module_name, module_version)
+      return False, status_message
+
+    try:
+      minimum_version_map = list(
+          map(int, self._VERSION_SPLIT_REGEX.split(minimum_version)))
+    except ValueError:
+      status_message = 'unable to parse minimum version: {0:s} {1:s}'.format(
+          module_name, minimum_version)
+      return False, status_message
 
     if module_version_map < minimum_version_map:
       status_message = (
@@ -199,8 +223,14 @@ class DependencyHelper(object):
       return False, status_message
 
     if maximum_version:
-      maximum_version_map = list(
-          map(int, self._VERSION_SPLIT_REGEX.split(maximum_version)))
+      try:
+        maximum_version_map = list(
+            map(int, self._VERSION_SPLIT_REGEX.split(maximum_version)))
+      except ValueError:
+        status_message = 'unable to parse maximum version: {0:s} {1:s}'.format(
+            module_name, maximum_version)
+        return False, status_message
+
       if module_version_map > maximum_version_map:
         status_message = (
             '{0:s} version: {1!s} is too recent, {2!s} or earlier '
