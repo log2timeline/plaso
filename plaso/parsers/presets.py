@@ -15,7 +15,8 @@ CATEGORIES = {
     'winxp_slow': ['hachoir', 'winxp'],
     'win7': [
         'recycle_bin', 'custom_destinations', 'esedb/esedb_file_history',
-        'olecf/olecf_automatic_destinations', 'win_gen', 'winevtx'],
+        'olecf/olecf_automatic_destinations', 'win_gen', 'winevtx',
+        'amcache'],
     'win7_slow': ['hachoir', 'win7'],
     'webhist': [
         'binary_cookies', 'chrome_cache', 'sqlite/chrome_cookies',

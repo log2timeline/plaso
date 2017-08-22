@@ -2,6 +2,7 @@
 """Imports for the parsers and plugins manager."""
 
 from plaso.parsers import asl
+from plaso.parsers import amcache
 from plaso.parsers import android_app_usage
 from plaso.parsers import bash_history
 from plaso.parsers import bencode_parser
