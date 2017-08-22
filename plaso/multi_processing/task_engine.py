@@ -473,7 +473,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           u'(PID: {1:d}) with error: {2:s}').format(
               process_name, pid, exception))
 
-      self._TerminateProcess(pid)
+      self._TerminateProcess(process)
       return
 
     self._RegisterProcess(process)
