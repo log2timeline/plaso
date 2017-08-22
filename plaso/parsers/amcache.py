@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import pyregf
 
 from dfdatetime import filetime
-from dfdatetime import posix_time 
+from dfdatetime import posix_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
@@ -25,7 +25,7 @@ class AmcacheEventData(events.EventData):
     fileversion (str): version of file
     languagecode (int): language code of file
     filesize (int): size of file in bytes
-    filedescription (str): description of file 
+    filedescription (str): description of file
     linkerts (int): unix timestamp when file was linked
     lastmodifiedts (int): filetime timestamp of last modified datetime of file
     createdtd (int): filetime timestamp of created datetime of file
@@ -197,7 +197,6 @@ class AmcacheParser(interface.FileObjectParser):
         if amcache_key_entry.get_value_by_name(self._AMCACHE_PROGRAMID) is not None:
           event_data.programid = amcache_key_entry.get_value_by_name(
               self._AMCACHE_PROGRAMID).get_data_as_string()
-  
         event = time_events.DateTimeValuesEvent(
             filetime.Filetime(amcache_datetime),
             definitions.TIME_DESCRIPTION_LAST_RUN)
@@ -217,56 +216,55 @@ class AmcacheParser(interface.FileObjectParser):
               posix_time.PosixTime(event_data.linkerts),
               definitions.TIME_DESCRIPTION_CHANGE)
           parser_mediator.ProduceEventWithEventData(event, event_data)
-  
-    root_program_key= root_key.get_sub_key_by_path(self._AMCACHE_ROOT_PROGRAM_KEY)
+    root_program_key = root_key.get_sub_key_by_path(self._AMCACHE_ROOT_PROGRAM_KEY)
     if root_program_key is None:
       regf_file.close()
       return
 
     for amcache_program_entry in root_program_key.sub_keys:
       amcache_datetime = amcache_program_entry.get_value_by_name(
-	  self._AMCACHE_PROGRAM_INSTALLDATE).get_data_as_integer()
-      event_data = AmcacheProgramEventData()
+	         self._AMCACHE_PROGRAM_INSTALLDATE).get_data_as_integer()
+      program_event_data = AmcacheProgramEventData()
       if amcache_program_entry.get_value_by_name(self._AMCACHE_PROGRAM_NAME) is not None:
-        event_data.name = amcache_program_entry.get_value_by_name(
-	    self._AMCACHE_PROGRAM_NAME).get_data_as_string()
+        program_event_data.name = amcache_program_entry.get_value_by_name(
+	           self._AMCACHE_PROGRAM_NAME).get_data_as_string()
       if amcache_program_entry.get_value_by_name(self._AMCACHE_PROGRAM_VERSION) is not None:
-	event_data.version = amcache_program_entry.get_value_by_name(
-	    self._AMCACHE_PROGRAM_VERSION).get_data_as_string()
+        program_event_data.version = amcache_program_entry.get_value_by_name(
+	           self._AMCACHE_PROGRAM_VERSION).get_data_as_string()
       if amcache_program_entry.get_value_by_name(self._AMCACHE_PROGRAM_PUBLISHER) is not None:
-	event_data.publisher = amcache_program_entry.get_value_by_name(
-	    self._AMCACHE_PROGRAM_PUBLISHER).get_data_as_string()
+        program_event_data.publisher = amcache_program_entry.get_value_by_name(
+	           self._AMCACHE_PROGRAM_PUBLISHER).get_data_as_string()
       if amcache_program_entry.get_value_by_name(self._AMCACHE_PROGRAM_LANGUAGECODE) is not None:
-	event_data.languagecode = amcache_program_entry.get_value_by_name(
-	    self._AMCACHE_PROGRAM_LANGUAGECODE).get_data_as_string()
+        program_event_data.languagecode = amcache_program_entry.get_value_by_name(
+	           self._AMCACHE_PROGRAM_LANGUAGECODE).get_data_as_string()
       if amcache_program_entry.get_value_by_name(self._AMCACHE_PROGRAM_ENTRYTYPE) is not None:
-	event_data.entrytype = amcache_program_entry.get_value_by_name(
-	    self._AMCACHE_PROGRAM_ENTRYTYPE).get_data_as_string()
+        program_event_data.entrytype = amcache_program_entry.get_value_by_name(
+	           self._AMCACHE_PROGRAM_ENTRYTYPE).get_data_as_string()
       if amcache_program_entry.get_value_by_name(self._AMCACHE_PROGRAM_UNINSTALLKEY) is not None:
-	event_data.uninstallkey = amcache_program_entry.get_value_by_name(
-	    self._AMCACHE_PROGRAM_UNINSTALLKEY).get_data().decode('utf-16-LE')
+        program_event_data.uninstallkey = amcache_program_entry.get_value_by_name(
+	           self._AMCACHE_PROGRAM_UNINSTALLKEY).get_data().decode('utf-16-LE')
       if amcache_program_entry.get_value_by_name(self._AMCACHE_PROGRAM_FILEPATHS) is not None:
-	event_data.filepaths = amcache_program_entry.get_value_by_name(
-	    self._AMCACHE_PROGRAM_FILEPATHS).get_data().decode('utf-16-LE')
+        program_event_data.filepaths = amcache_program_entry.get_value_by_name(
+	           self._AMCACHE_PROGRAM_FILEPATHS).get_data().decode('utf-16-LE')
       if amcache_program_entry.get_value_by_name(self._AMCACHE_PROGRAM_PRODUCTCODE) is not None:
-	event_data.productcode = amcache_program_entry.get_value_by_name(
-	    self._AMCACHE_PROGRAM_PRODUCTCODE).get_data_as_string()
+        program_event_data.productcode = amcache_program_entry.get_value_by_name(
+	           self._AMCACHE_PROGRAM_PRODUCTCODE).get_data_as_string()
       if amcache_program_entry.get_value_by_name(self._AMCACHE_PROGRAM_PACKAGECODE) is not None:
-	event_data.packagecode = amcache_program_entry.get_value_by_name(
-	    self._AMCACHE_PROGRAM_PACKAGECODE).get_data_as_string()
+        program_event_data.packagecode = amcache_program_entry.get_value_by_name(
+	           self._AMCACHE_PROGRAM_PACKAGECODE).get_data_as_string()
       if amcache_program_entry.get_value_by_name(self._AMCACHE_PROGRAM_MSIPRODUCTCODE) is not None:
-	event_data.msiproductcode = amcache_program_entry.get_value_by_name(
-	    self._AMCACHE_PROGRAM_MSIPRODUCTCODE).get_data().decode('utf-16-LE')
+        program_event_data.msiproductcode = amcache_program_entry.get_value_by_name(
+	           self._AMCACHE_PROGRAM_MSIPRODUCTCODE).get_data().decode('utf-16-LE')
       if amcache_program_entry.get_value_by_name(self._AMCACHE_PROGRAM_MSIPACKAGECODE) is not None:
-	event_data.msipackagecode = amcache_program_entry.get_value_by_name(
-	    self._AMCACHE_PROGRAM_MSIPACKAGECODE).get_data().decode('utf-16-LE')
+        program_event_data.msipackagecode = amcache_program_entry.get_value_by_name(
+	           self._AMCACHE_PROGRAM_MSIPACKAGECODE).get_data().decode('utf-16-LE')
       if amcache_program_entry.get_value_by_name(self._AMCACHE_PROGRAM_FILES) is not None:
-	event_data.files = amcache_program_entry.get_value_by_name(
-	    self._AMCACHE_PROGRAM_FILES).get_data()
+        program_event_data.files = amcache_program_entry.get_value_by_name(
+	           self._AMCACHE_PROGRAM_FILES).get_data()
       event = time_events.DateTimeValuesEvent(
-	  posix_time.PosixTime(amcache_datetime),
-	  definitions.TIME_DESCRIPTION_INSTALLATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+	         posix_time.PosixTime(amcache_datetime),
+	         definitions.TIME_DESCRIPTION_INSTALLATION)
+      parser_mediator.ProduceEventWithEventData(event, program_event_data)
 
     regf_file.close()
 
