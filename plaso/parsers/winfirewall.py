@@ -134,7 +134,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
       type or None: t
     """
     value = structure.get(key)
-    if isinstance(value, pyparsing.ParseResults) and len(value) == 0:
+    if isinstance(value, pyparsing.ParseResults):
       return None
     return value
 
