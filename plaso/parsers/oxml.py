@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains a parser for OXML files (i.e. MS Office 2007+)."""
 
+from __future__ import unicode_literals
+
 import logging
 import re
 import struct
@@ -48,7 +50,7 @@ class OpenXMLEventData(events.EventData):
     total_time (str): ???
   """
 
-  DATA_TYPE = u'metadata:openxml'
+  DATA_TYPE = 'metadata:openxml'
 
   def __init__(self):
     """Initializes event data."""
@@ -77,26 +79,26 @@ class OpenXMLEventData(events.EventData):
 class OpenXMLParser(interface.FileObjectParser):
   """Parse metadata from OXML files."""
 
-  NAME = u'openxml'
-  DESCRIPTION = u'Parser for OpenXML (OXML) files.'
+  NAME = 'openxml'
+  DESCRIPTION = 'Parser for OpenXML (OXML) files.'
 
   _METAKEY_TRANSLATE = {
-      u'creator': u'author',
-      u'lastModifiedBy': u'last_saved_by',
-      u'Total_Time': u'total_edit_time',
-      u'Pages': u'number_of_pages',
-      u'CharactersWithSpaces': u'number_of_characters_with_spaces',
-      u'Paragraphs': u'number_of_paragraphs',
-      u'Characters': u'number_of_characters',
-      u'Lines': u'number_of_lines',
-      u'revision': u'revision_number',
-      u'Words': u'number_of_words',
-      u'Application': u'creating_app',
-      u'Shared_Doc': u'shared',
+      'creator': 'author',
+      'lastModifiedBy': 'last_saved_by',
+      'Total_Time': 'total_edit_time',
+      'Pages': 'number_of_pages',
+      'CharactersWithSpaces': 'number_of_characters_with_spaces',
+      'Paragraphs': 'number_of_paragraphs',
+      'Characters': 'number_of_characters',
+      'Lines': 'number_of_lines',
+      'revision': 'revision_number',
+      'Words': 'number_of_words',
+      'Application': 'creating_app',
+      'Shared_Doc': 'shared',
   }
 
   _FILES_REQUIRED = frozenset([
-      u'[Content_Types].xml', u'_rels/.rels', u'docProps/core.xml'])
+      '[Content_Types].xml', '_rels/.rels', 'docProps/core.xml'])
 
   def _FixString(self, key):
     """Convert CamelCase to lower_with_underscore."""
@@ -119,91 +121,93 @@ class OpenXMLParser(interface.FileObjectParser):
 
     if not zipfile.is_zipfile(file_object):
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, file_name, u'Not a Zip file.'))
+          '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+              self.NAME, file_name, 'Not a Zip file.'))
 
+    # Some non-ZIP files pass the first test but will fail with a negative
+    # seek (IOError) or another error.
     try:
       zip_container = zipfile.ZipFile(file_object, 'r')
-    except (zipfile.BadZipfile, struct.error, zipfile.LargeZipFile):
+    except (IOError, struct.error, zipfile.BadZipfile, zipfile.LargeZipFile):
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, file_name, u'Bad Zip file.'))
+          '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+              self.NAME, file_name, 'Bad Zip file.'))
 
     zip_name_list = set(zip_container.namelist())
 
     if not self._FILES_REQUIRED.issubset(zip_name_list):
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, file_name, u'OXML element(s) missing.'))
+          '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+              self.NAME, file_name, 'OXML element(s) missing.'))
 
     metadata = {}
     timestamps = {}
 
     try:
-      rels_xml = zip_container.read(u'_rels/.rels')
+      rels_xml = zip_container.read('_rels/.rels')
     except zipfile.BadZipfile as exception:
       parser_mediator.ProduceExtractionError(
-          u'Unable to parse file with error: {0:s}'.format(exception))
+          'Unable to parse file with error: {0:s}'.format(exception))
       return
 
     rels_root = ElementTree.fromstring(rels_xml)
 
     for properties in rels_root.iter():
-      if u'properties' in repr(properties.get(u'Type')):
+      if 'properties' in repr(properties.get('Type')):
         try:
-          xml = zip_container.read(properties.get(u'Target'))
+          xml = zip_container.read(properties.get('Target'))
           root = ElementTree.fromstring(xml)
         except (
             OverflowError, IndexError, KeyError, ValueError,
             zipfile.BadZipfile) as exception:
           logging.warning(
-              u'[{0:s}] unable to read property with error: {1:s}.'.format(
+              '[{0:s}] unable to read property with error: {1:s}.'.format(
                   self.NAME, exception))
           continue
 
         for element in root.iter():
           if element.text:
-            _, _, tag = element.tag.partition(u'}')
+            _, _, tag = element.tag.partition('}')
             # Not including the 'lpstr' attribute because it is
             # very verbose.
-            if tag == u'lpstr':
+            if tag == 'lpstr':
               continue
 
-            if tag in (u'created', u'modified', u'lastPrinted'):
+            if tag in ('created', 'modified', 'lastPrinted'):
               timestamps[tag] = element.text
             else:
               tag_name = self._METAKEY_TRANSLATE.get(tag, self._FixString(tag))
               metadata[tag_name] = element.text
 
     event_data = OpenXMLEventData()
-    event_data.app_version = metadata.get(u'app_version', None)
-    event_data.author = metadata.get(u'author', None)
-    event_data.creating_app = metadata.get(u'creating_app', None)
-    event_data.doc_security = metadata.get(u'doc_security', None)
-    event_data.hyperlinks_changed = metadata.get(u'hyperlinks_changed', None)
-    event_data.i4 = metadata.get(u'i4', None)
-    event_data.last_saved_by = metadata.get(u'last_saved_by', None)
-    event_data.links_up_to_date = metadata.get(u'links_up_to_date', None)
+    event_data.app_version = metadata.get('app_version', None)
+    event_data.author = metadata.get('author', None)
+    event_data.creating_app = metadata.get('creating_app', None)
+    event_data.doc_security = metadata.get('doc_security', None)
+    event_data.hyperlinks_changed = metadata.get('hyperlinks_changed', None)
+    event_data.i4 = metadata.get('i4', None)
+    event_data.last_saved_by = metadata.get('last_saved_by', None)
+    event_data.links_up_to_date = metadata.get('links_up_to_date', None)
     event_data.number_of_characters = metadata.get(
-        u'number_of_characters', None)
+        'number_of_characters', None)
     event_data.number_of_characters_with_spaces = metadata.get(
-        u'number_of_characters_with_spaces', None)
-    event_data.number_of_lines = metadata.get(u'number_of_lines', None)
-    event_data.number_of_pages = metadata.get(u'number_of_pages', None)
+        'number_of_characters_with_spaces', None)
+    event_data.number_of_lines = metadata.get('number_of_lines', None)
+    event_data.number_of_pages = metadata.get('number_of_pages', None)
     event_data.number_of_paragraphs = metadata.get(
-        u'number_of_paragraphs', None)
-    event_data.number_of_words = metadata.get(u'number_of_words', None)
-    event_data.revision_number = metadata.get(u'revision_number', None)
-    event_data.scale_crop = metadata.get(u'scale_crop', None)
-    event_data.shared_doc = metadata.get(u'shared_doc', None)
-    event_data.template = metadata.get(u'template', None)
-    event_data.total_time = metadata.get(u'total_time', None)
+        'number_of_paragraphs', None)
+    event_data.number_of_words = metadata.get('number_of_words', None)
+    event_data.revision_number = metadata.get('revision_number', None)
+    event_data.scale_crop = metadata.get('scale_crop', None)
+    event_data.shared_doc = metadata.get('shared_doc', None)
+    event_data.template = metadata.get('template', None)
+    event_data.total_time = metadata.get('total_time', None)
 
     # Date and time strings are in ISO 8601 format with 1 second precision.
     # For example: 2012-11-07T23:29:00Z
     date_time = dfdatetime_time_elements.TimeElements()
 
-    time_string = timestamps.get(u'created', None)
+    time_string = timestamps.get('created', None)
     if time_string:
       try:
         date_time.CopyFromStringISO8601(time_string)
@@ -213,10 +217,10 @@ class OpenXMLParser(interface.FileObjectParser):
         parser_mediator.ProduceEventWithEventData(event, event_data)
       except ValueError as exception:
         parser_mediator.ProduceExtractionError(
-            u'unsupported created time: {0:s} with error: {1:s}.'.format(
+            'unsupported created time: {0:s} with error: {1:s}.'.format(
                 time_string, exception))
 
-    time_string = timestamps.get(u'modified', None)
+    time_string = timestamps.get('modified', None)
     if time_string:
       try:
         date_time.CopyFromStringISO8601(time_string)
@@ -226,10 +230,10 @@ class OpenXMLParser(interface.FileObjectParser):
         parser_mediator.ProduceEventWithEventData(event, event_data)
       except ValueError as exception:
         parser_mediator.ProduceExtractionError(
-            u'unsupported modified time: {0:s} with error: {1:s}.'.format(
+            'unsupported modified time: {0:s} with error: {1:s}.'.format(
                 time_string, exception))
 
-    time_string = timestamps.get(u'lastPrinted', None)
+    time_string = timestamps.get('lastPrinted', None)
     if time_string:
       try:
         date_time.CopyFromStringISO8601(time_string)
@@ -239,7 +243,7 @@ class OpenXMLParser(interface.FileObjectParser):
         parser_mediator.ProduceEventWithEventData(event, event_data)
       except ValueError as exception:
         parser_mediator.ProduceExtractionError(
-            u'unsupported last printed time: {0:s} with error: {1:s}.'.format(
+            'unsupported last printed time: {0:s} with error: {1:s}.'.format(
                 time_string, exception))
 
 
