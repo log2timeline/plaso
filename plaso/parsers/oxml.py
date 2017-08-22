@@ -106,6 +106,7 @@ class OpenXMLParser(interface.FileObjectParser):
     fix_key = re.sub(r'(.)([A-Z][a-z]+)', r'\1_\2', key)
     return re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', fix_key).lower()
 
+  # pylint: disable=arguments-differ
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses an OXML file-like object.
 
