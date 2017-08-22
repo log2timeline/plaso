@@ -25,15 +25,15 @@ class WinFirewallEventData(events.EventData):
     protocol (str): IP protocol.
     source_ip (str): source IP address.
     dest_ip (str): destination IP address.
-    source_port (str): TCP or UDP source port.
-    dest_port (str): TCP or UDP destination port.
-    size (str): size of ???
+    source_port (int): TCP or UDP source port.
+    dest_port (int): TCP or UDP destination port.
+    size (int): size of ???
     flags (str): TCP flags.
-    tcp_seq (str): TCP sequence number.
-    tcp_ack (str): TCP ACK ???
-    tcp_win (str): TCP window size ???
-    icmp_type (str): ICMP type.
-    icmp_code (str): ICMP code.
+    tcp_seq (int): TCP sequence number.
+    tcp_ack (int): TCP ACK ???
+    tcp_win (int): TCP window size ???
+    icmp_type (int): ICMP type.
+    icmp_code (int): ICMP code.
     info (str): ???
     path (str): ???
   """
@@ -100,7 +100,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
       _IP_ADDRESS.setResultsName('source_ip') +
       _IP_ADDRESS.setResultsName('dest_ip') +
       _PORT_NUMBER.setResultsName('source_port') +
-      _INTEGER.setResultsName('dest_port') +
+      _PORT_NUMBER.setResultsName('dest_port') +
       _INTEGER.setResultsName('size') +
       _WORD.setResultsName('flags') +
       _INTEGER.setResultsName('tcp_seq') +
@@ -159,21 +159,21 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
       return
 
     event_data = WinFirewallEventData()
-    event_data.action = structure.action or None
-    event_data.dest_ip = structure.dest_ip or None
-    event_data.dest_port = structure.dest_port or None
-    event_data.flags = structure.flags or None
-    event_data.icmp_code = structure.icmp_code or None
-    event_data.icmp_type = structure.icmp_type or None
-    event_data.info = structure.info or None
-    event_data.path = structure.path or None
-    event_data.protocol = structure.protocol or None
-    event_data.size = structure.size or None
-    event_data.source_ip = structure.source_ip or None
-    event_data.source_port = structure.source_port or None
-    event_data.tcp_ack = structure.tcp_ack or None
-    event_data.tcp_seq = structure.tcp_seq or None
-    event_data.tcp_win = structure.tcp_win or None
+    event_data.action = structure.get('action')
+    event_data.dest_ip = structure.get('dest_ip')
+    event_data.dest_port = structure.get('dest_port')
+    event_data.flags = structure.get('flags')
+    event_data.icmp_code = structure.get('icmp_code')
+    event_data.icmp_type = structure.get('icmp_type')
+    event_data.info = structure.get('info')
+    event_data.path = structure.get('path')
+    event_data.protocol = structure.get('protocol')
+    event_data.size = structure.get('size')
+    event_data.source_ip = structure.get('source_ip')
+    event_data.source_port = structure.get('source_port')
+    event_data.tcp_ack = structure.get('tcp_ack')
+    event_data.tcp_seq = structure.get('tcp_seq')
+    event_data.tcp_win = structure.get('tcp_win')
 
     if self._use_local_timezone:
       time_zone = parser_mediator.timezone
