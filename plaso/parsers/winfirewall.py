@@ -123,12 +123,26 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     self._use_local_timezone = False
     self._version = None
 
+  def _GetStructureValue(self, structure, key):
+    """Retrieves a value from a parsed log line, removing empty results.
+
+    Args:
+      structure (pyparsing.ParseResults): parsed log line.
+      key (str): results key to retrieve from the parsed log line.
+
+    Returns:
+      type or None: t
+    """
+    value = structure.get(key)
+    if isinstance(value, pyparsing.ParseResults) and len(value) == 0:
+      return None
+    return value
+
   def _ParseCommentRecord(self, structure):
     """Parse a comment and store appropriate attributes.
 
     Args:
-      structure: A pyparsing.ParseResults object from a line in the
-                 log file.
+      structure (pyparsing.ParseResults): parsed log line.
     """
     comment = structure[1]
     if comment.startswith('Version'):
@@ -159,21 +173,21 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
       return
 
     event_data = WinFirewallEventData()
-    event_data.action = structure.get('action')
-    event_data.dest_ip = structure.get('dest_ip')
-    event_data.dest_port = structure.get('dest_port')
-    event_data.flags = structure.get('flags')
-    event_data.icmp_code = structure.get('icmp_code')
-    event_data.icmp_type = structure.get('icmp_type')
-    event_data.info = structure.get('info')
-    event_data.path = structure.get('path')
-    event_data.protocol = structure.get('protocol')
-    event_data.size = structure.get('size')
-    event_data.source_ip = structure.get('source_ip')
-    event_data.source_port = structure.get('source_port')
-    event_data.tcp_ack = structure.get('tcp_ack')
-    event_data.tcp_seq = structure.get('tcp_seq')
-    event_data.tcp_win = structure.get('tcp_win')
+    event_data.action = self._GetStructureValue(structure, 'action')
+    event_data.dest_ip = self._GetStructureValue(structure, 'dest_ip')
+    event_data.dest_port = self._GetStructureValue(structure, 'dest_port')
+    event_data.flags = self._GetStructureValue(structure, 'flags')
+    event_data.icmp_code = self._GetStructureValue(structure, 'icmp_code')
+    event_data.icmp_type = self._GetStructureValue(structure, 'icmp_type')
+    event_data.info = self._GetStructureValue(structure, 'info')
+    event_data.path = self._GetStructureValue(structure, 'path')
+    event_data.protocol = self._GetStructureValue(structure, 'protocol')
+    event_data.size = self._GetStructureValue(structure, 'size')
+    event_data.source_ip = self._GetStructureValue(structure, 'source_ip')
+    event_data.source_port = self._GetStructureValue(structure, 'source_port')
+    event_data.tcp_ack = self._GetStructureValue(structure, 'tcp_ack')
+    event_data.tcp_seq = self._GetStructureValue(structure, 'tcp_seq')
+    event_data.tcp_win = self._GetStructureValue(structure, 'tcp_win')
 
     if self._use_local_timezone:
       time_zone = parser_mediator.timezone
