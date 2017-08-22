@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows EventLog (EVT) files."""
 
+from __future__ import unicode_literals
+
 import pyevt
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -32,7 +34,7 @@ class WinEvtRecordEventData(events.EventData):
     user_sid (str): user security identifier (SID) stored in the event record.
   """
 
-  DATA_TYPE = u'windows:evt:record'
+  DATA_TYPE = 'windows:evt:record'
 
   def __init__(self):
     """Initializes event data."""
@@ -56,8 +58,8 @@ class WinEvtParser(interface.FileObjectParser):
 
   _INITIAL_FILE_OFFSET = None
 
-  NAME = u'winevt'
-  DESCRIPTION = u'Parser for Windows EventLog (EVT) files.'
+  NAME = 'winevt'
+  DESCRIPTION = 'Parser for Windows EventLog (EVT) files.'
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -90,15 +92,15 @@ class WinEvtParser(interface.FileObjectParser):
       event_data.record_number = evt_record.identifier
     except OverflowError as exception:
       parser_mediator.ProduceExtractionError((
-          u'unable to read record identifier from event record: {0:d} '
-          u'with error: {1:s}').format(record_index, exception))
+          'unable to read record identifier from event record: {0:d} '
+          'with error: {1:s}').format(record_index, exception))
 
     try:
       event_identifier = evt_record.event_identifier
     except OverflowError as exception:
       parser_mediator.ProduceExtractionError((
-          u'unable to read event identifier from event record: {0:d} '
-          u'with error: {1:s}').format(record_index, exception))
+          'unable to read event identifier from event record: {0:d} '
+          'with error: {1:s}').format(record_index, exception))
 
       event_identifier = None
 
@@ -144,8 +146,8 @@ class WinEvtParser(interface.FileObjectParser):
       creation_time = evt_record.get_creation_time_as_integer()
     except OverflowError as exception:
       parser_mediator.ProduceExtractionError((
-          u'unable to read creation time from event record: {0:d} '
-          u'with error: {1:s}').format(record_index, exception))
+          'unable to read creation time from event record: {0:d} '
+          'with error: {1:s}').format(record_index, exception))
 
       creation_time = None
 
@@ -159,8 +161,8 @@ class WinEvtParser(interface.FileObjectParser):
       written_time = evt_record.get_written_time_as_integer()
     except OverflowError as exception:
       parser_mediator.ProduceExtractionError((
-          u'unable to read written time from event record: {0:d} '
-          u'with error: {1:s}').format(record_index, exception))
+          'unable to read written time from event record: {0:d} '
+          'with error: {1:s}').format(record_index, exception))
 
       written_time = None
 
@@ -171,7 +173,7 @@ class WinEvtParser(interface.FileObjectParser):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if not creation_time and not written_time:
-      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
       parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -184,28 +186,30 @@ class WinEvtParser(interface.FileObjectParser):
           and other components, such as storage and dfvfs.
       evt_file (pyevt.file): Windows EventLog (EVT) file.
     """
-    for record_index, evt_record in enumerate(evt_file.records):
+    for record_index in range(evt_file.number_of_records):
       if parser_mediator.abort:
         break
 
       try:
+        evt_record = evt_file.get_record(record_index)
         self._ParseRecord(parser_mediator, record_index, evt_record)
       except IOError as exception:
         parser_mediator.ProduceExtractionError(
-            u'unable to parse event record: {0:d} with error: {1:s}'.format(
+            'unable to parse event record: {0:d} with error: {1:s}'.format(
                 record_index, exception))
 
-    for record_index, evt_record in enumerate(evt_file.recovered_records):
+    for record_index in range(evt_file.number_of_recovered_records):
       if parser_mediator.abort:
         break
 
       try:
+        evt_record = evt_file.get_recovered_record(record_index)
         self._ParseRecord(
             parser_mediator, record_index, evt_record, recovered=True)
       except IOError as exception:
         parser_mediator.ProduceExtractionError((
-            u'unable to parse recovered event record: {0:d} with error: '
-            u'{1:s}').format(record_index, exception))
+            'unable to parse recovered event record: {0:d} with error: '
+            '{1:s}').format(record_index, exception))
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows EventLog (EVT) file-like object.
@@ -222,7 +226,7 @@ class WinEvtParser(interface.FileObjectParser):
       evt_file.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to open file with error: {0:s}'.format(exception))
+          'unable to open file with error: {0:s}'.format(exception))
       return
 
     try:

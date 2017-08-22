@@ -213,32 +213,32 @@ class WinEvtxParser(interface.FileObjectParser):
           and other components, such as storage and dfvfs.
       evtx_file (pyevt.file): Windows XML EventLog (EVTX) file.
     """
-    record_index = 0
-    try:
-      for record_index, evtx_record in enumerate(evtx_file.records):
-        if parser_mediator.abort:
-          break
+    for record_index in range(evtx_file.number_of_records):
+      if parser_mediator.abort:
+        break
 
+      try:
+        evtx_record = evtx_file.get_record(record_index)
         self._ParseRecord(parser_mediator, record_index, evtx_record)
 
-    except IOError as exception:
-      parser_mediator.ProduceExtractionError(
-          'unable to parse event record: {0:d} with error: {1:s}'.format(
-              record_index, exception))
+      except IOError as exception:
+        parser_mediator.ProduceExtractionError(
+            'unable to parse event record: {0:d} with error: {1:s}'.format(
+                record_index, exception))
 
-    record_index = 0
-    try:
-      for record_index, evtx_record in enumerate(evtx_file.recovered_records):
-        if parser_mediator.abort:
-          break
+    for record_index in range(evtx_file.number_of_recovered_records):
+      if parser_mediator.abort:
+        break
 
+      try:
+        evtx_record = evtx_file.get_recovered_record(record_index)
         self._ParseRecord(
             parser_mediator, record_index, evtx_record, recovered=True)
 
-    except IOError as exception:
-      parser_mediator.ProduceExtractionError((
-          'unable to parse recovered event record: {0:d} with error: '
-          '{1:s}').format(record_index, exception))
+      except IOError as exception:
+        parser_mediator.ProduceExtractionError((
+            'unable to parse recovered event record: {0:d} with error: '
+            '{1:s}').format(record_index, exception))
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows XML EventLog (EVTX) file-like object.
