@@ -30,7 +30,7 @@ class AmcacheFormatter(interface.ConditionalEventFormatter):
   SOURCE_SHORT = u'AMCACHE'
 
 class AmcacheProgramsFormatter(interface.ConditionalEventFormatter):
-  """Formatter for an Amcache greePrograms Windows Registry event."""
+  """Formatter for an Amcache Programs Windows Registry event."""
 
   DATA_TYPE = u'windows:registry:amcache:programs'
 
