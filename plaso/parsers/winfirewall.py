@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Firewall Log file."""
 
+from __future__ import unicode_literals
+
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -36,7 +38,7 @@ class WinFirewallEventData(events.EventData):
     path (str): ???
   """
 
-  DATA_TYPE = u'windows:firewall:log_entry'
+  DATA_TYPE = 'windows:firewall:log_entry'
 
   def __init__(self):
     """Initializes event data."""
@@ -61,19 +63,19 @@ class WinFirewallEventData(events.EventData):
 class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
   """Parses the Windows Firewall Log file."""
 
-  NAME = u'winfirewall'
-  DESCRIPTION = u'Parser for Windows Firewall Log files.'
+  NAME = 'winfirewall'
+  DESCRIPTION = 'Parser for Windows Firewall Log files.'
 
   # TODO: Add support for custom field names. Currently this parser only
   # supports the default fields, which are:
   #   date time action protocol src-ip dst-ip src-port dst-port size
   #   tcpflags tcpsyn tcpack tcpwin icmptype icmpcode info path
 
-  _BLANK = pyparsing.Suppress(pyparsing.Literal(u'-'))
+  _BLANK = pyparsing.Suppress(pyparsing.Literal('-'))
 
   _WORD = (
       pyparsing.Word(pyparsing.alphanums, min=1) |
-      pyparsing.Word(pyparsing.alphanums + u'-', min=2) |
+      pyparsing.Word(pyparsing.alphanums + '-', min=2) |
       _BLANK)
 
   _INTEGER = (
@@ -92,26 +94,26 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
       _BLANK)
 
   _LOG_LINE = (
-      text_parser.PyparsingConstants.DATE_TIME.setResultsName(u'date_time') +
-      _WORD.setResultsName(u'action') +
-      _WORD.setResultsName(u'protocol') +
-      _IP_ADDRESS.setResultsName(u'source_ip') +
-      _IP_ADDRESS.setResultsName(u'dest_ip') +
-      _PORT_NUMBER.setResultsName(u'source_port') +
-      _INTEGER.setResultsName(u'dest_port') +
-      _INTEGER.setResultsName(u'size') +
-      _WORD.setResultsName(u'flags') +
-      _INTEGER.setResultsName(u'tcp_seq') +
-      _INTEGER.setResultsName(u'tcp_ack') +
-      _INTEGER.setResultsName(u'tcp_win') +
-      _INTEGER.setResultsName(u'icmp_type') +
-      _INTEGER.setResultsName(u'icmp_code') +
-      _WORD.setResultsName(u'info') +
-      _WORD.setResultsName(u'path'))
+      text_parser.PyparsingConstants.DATE_TIME.setResultsName('date_time') +
+      _WORD.setResultsName('action') +
+      _WORD.setResultsName('protocol') +
+      _IP_ADDRESS.setResultsName('source_ip') +
+      _IP_ADDRESS.setResultsName('dest_ip') +
+      _PORT_NUMBER.setResultsName('source_port') +
+      _INTEGER.setResultsName('dest_port') +
+      _INTEGER.setResultsName('size') +
+      _WORD.setResultsName('flags') +
+      _INTEGER.setResultsName('tcp_seq') +
+      _INTEGER.setResultsName('tcp_ack') +
+      _INTEGER.setResultsName('tcp_win') +
+      _INTEGER.setResultsName('icmp_type') +
+      _INTEGER.setResultsName('icmp_code') +
+      _WORD.setResultsName('info') +
+      _WORD.setResultsName('path'))
 
   LINE_STRUCTURES = [
-      (u'comment', text_parser.PyparsingConstants.COMMENT_LINE_HASH),
-      (u'logline', _LOG_LINE),
+      ('comment', text_parser.PyparsingConstants.COMMENT_LINE_HASH),
+      ('logline', _LOG_LINE),
   ]
 
   def __init__(self):
@@ -129,13 +131,13 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
                  log file.
     """
     comment = structure[1]
-    if comment.startswith(u'Version'):
-      _, _, self._version = comment.partition(u':')
-    elif comment.startswith(u'Software'):
-      _, _, self._software = comment.partition(u':')
-    elif comment.startswith(u'Time'):
-      _, _, time_format = comment.partition(u':')
-      if u'local' in time_format.lower():
+    if comment.startswith('Version'):
+      _, _, self._version = comment.partition(':')
+    elif comment.startswith('Software'):
+      _, _, self._software = comment.partition(':')
+    elif comment.startswith('Time'):
+      _, _, time_format = comment.partition(':')
+      if 'local' in time_format.lower():
         self._use_local_timezone = True
 
   def _ParseLogLine(self, parser_mediator, structure):
@@ -153,25 +155,25 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
       date_time.is_local_time = True
     except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'invalid date time value: {0!s}'.format(structure.date_time))
+          'invalid date time value: {0!s}'.format(structure.date_time))
       return
 
     event_data = WinFirewallEventData()
-    event_data.action = structure.action
-    event_data.dest_ip = structure.dest_ip
-    event_data.dest_port = structure.dest_port
-    event_data.flags = structure.flags
-    event_data.icmp_code = structure.icmp_code
-    event_data.icmp_type = structure.icmp_type
-    event_data.info = structure.info
-    event_data.path = structure.path
-    event_data.protocol = structure.protocol
-    event_data.size = structure.size
-    event_data.source_ip = structure.source_ip
-    event_data.source_port = structure.source_port
-    event_data.tcp_ack = structure.tcp_ack
-    event_data.tcp_seq = structure.tcp_seq
-    event_data.tcp_win = structure.tcp_win
+    event_data.action = structure.action or None
+    event_data.dest_ip = structure.dest_ip or None
+    event_data.dest_port = structure.dest_port or None
+    event_data.flags = structure.flags or None
+    event_data.icmp_code = structure.icmp_code or None
+    event_data.icmp_type = structure.icmp_type or None
+    event_data.info = structure.info or None
+    event_data.path = structure.path or None
+    event_data.protocol = structure.protocol or None
+    event_data.size = structure.size or None
+    event_data.source_ip = structure.source_ip or None
+    event_data.source_port = structure.source_port or None
+    event_data.tcp_ack = structure.tcp_ack or None
+    event_data.tcp_seq = structure.tcp_seq or None
+    event_data.tcp_win = structure.tcp_win or None
 
     if self._use_local_timezone:
       time_zone = parser_mediator.timezone
@@ -195,14 +197,14 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key not in (u'comment', u'logline'):
+    if key not in ('comment', 'logline'):
       raise errors.ParseError(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key == u'comment':
+    if key == 'comment':
       self._ParseCommentRecord(structure)
 
-    elif key == u'logline':
+    elif key == 'logline':
       self._ParseLogLine(parser_mediator, structure)
 
   def VerifyStructure(self, unused_parser_mediator, line):
