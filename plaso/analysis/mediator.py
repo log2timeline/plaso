@@ -14,7 +14,12 @@ class AnalysisMediator(object):
 
   Attributes:
     last_activity_timestamp (int): timestamp received that indicates the last
-        time activity was observed.
+        time activity was observed. The last activity timestamp is updated
+        when the mediator produces an attribute container, such as an event
+        tag. This timestamp is used by the multi processing worker process
+        to indicate the last time the worker was known to be active. This
+        information is then used by the foreman to detect workers that are
+        not responding (stalled).
     number_of_produced_analysis_reports (int): number of produced analysis
         reports.
     number_of_produced_event_tags (int): number of produced event tags.

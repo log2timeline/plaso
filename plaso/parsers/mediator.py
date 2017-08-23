@@ -18,7 +18,12 @@ class ParserMediator(object):
 
   Attributes:
     last_activity_timestamp (int): timestamp received that indicates the last
-        time activity was observed.
+        time activity was observed. The last activity timestamp is updated
+        when the mediator produces an attribute container, such as an event
+        source. This timestamp is used by the multi processing worker process
+        to indicate the last time the worker was known to be active. This
+        information is then used by the foreman to detect workers that are
+        not responding (stalled).
   """
 
   def __init__(
@@ -469,6 +474,8 @@ class ParserMediator(object):
 
     self._storage_writer.AddEventSource(event_source)
     self._number_of_event_sources += 1
+
+    self.last_activity_timestamp = time.time()
 
   def ProduceEventWithEventData(self, event, event_data):
     """Produces an event.
