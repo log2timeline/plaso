@@ -131,12 +131,13 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
       key (str): results key to retrieve from the parsed log line.
 
     Returns:
-      type or None: t
+      type or None: the value of the named key in the parsed log line, or None
+        if the value is an empty ParseResults object.
     """
     value = structure.get(key)
-    if isinstance(value, pyparsing.ParseResults):
-      return None
-    return value
+    if not isinstance(value, pyparsing.ParseResults):
+      return value
+    return None
 
   def _ParseCommentRecord(self, structure):
     """Parse a comment and store appropriate attributes.
