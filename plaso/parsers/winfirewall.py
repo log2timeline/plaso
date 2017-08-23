@@ -132,7 +132,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
 
     Returns:
       type or None: the value of the named key in the parsed log line, or None
-        if the value is an empty ParseResults object.
+        if the value is a ParseResults object.
     """
     value = structure.get(key)
     if not isinstance(value, pyparsing.ParseResults):
