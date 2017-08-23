@@ -419,8 +419,6 @@ class MultiProcessEngine(engine.BaseEngine):
       logging.warning(u'Killing process: (PID: {0:d}).'.format(pid))
       self._KillProcess(pid)
 
-    self._StopMonitoringProcess(process)
-
   @abc.abstractmethod
   def _UpdateProcessingStatus(self, pid, process_status, used_memory):
     """Updates the processing status.
