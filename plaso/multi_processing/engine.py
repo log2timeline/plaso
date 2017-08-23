@@ -164,7 +164,7 @@ class MultiProcessEngine(engine.BaseEngine):
           u'Process {0:s} (PID: {1:d}) is not functioning correctly. '
           u'Status code: {2!s}.').format(process.name, pid, status_indicator))
 
-      self._TerminateProcess(pid)
+      self._TerminateProcessByPid(pid)
 
       logging.info(u'Starting replacement worker process for {0:s}'.format(
           process.name))
@@ -385,19 +385,30 @@ class MultiProcessEngine(engine.BaseEngine):
       self._status_update_thread.join()
     self._status_update_thread = None
 
-  def _TerminateProcess(self, pid):
-    """Terminate a process.
+  def _TerminateProcessByPid(self, pid):
+    """Terminate a process that's monitored by the engine.
 
     Args:
       pid (int): process identifier (PID).
 
     Raises:
-      KeyError: if the process is not registered with the engine.
+      KeyError: if the process is not registered with and monitored by the
+          engine.
     """
     self._RaiseIfNotRegistered(pid)
 
     process = self._processes_per_pid[pid]
 
+    self._TerminateProcess(process)
+    self._StopMonitoringProcess(process)
+
+  def _TerminateProcess(self, process):
+    """Terminate a process.
+
+    Args:
+      process (MultiProcessBaseProcess): process to terminate.
+    """
+    pid = process.pid
     logging.warning(u'Terminating process: (PID: {0:d}).'.format(pid))
     process.terminate()
 

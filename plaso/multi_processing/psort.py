@@ -388,7 +388,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           u'Status code: {2!s}.').format(
               process.name, pid, status_indicator))
 
-      self._TerminateProcess(pid)
+      self._TerminateProcessByPid(pid)
 
   def _ExportEvent(self, output_module, event, deduplicate_events=True):
     """Exports an event using an output module.
