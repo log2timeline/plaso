@@ -288,5 +288,4 @@ class AmcacheParser(interface.FileObjectParser):
           definitions.TIME_DESCRIPTION_CHANGE)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-
 manager.ParsersManager.RegisterParser(AmcacheParser)
