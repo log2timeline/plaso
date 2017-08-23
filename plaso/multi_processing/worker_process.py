@@ -77,8 +77,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       number_of_produced_events = None
       number_of_produced_sources = None
 
-    if self._extraction_worker:
-      last_activity_timestamp = self._extraction_worker.last_activity_timestamp
+    if self._extraction_worker and self._parser_mediator:
+      last_activity_timestamp = max(
+          self._extraction_worker.last_activity_timestamp,
+          self._parser_mediator.last_activity_timestamp)
       processing_status = self._extraction_worker.processing_status
     else:
       last_activity_timestamp = 0.0

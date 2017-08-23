@@ -1,14 +1,25 @@
 # -*- coding: utf-8 -*-
 """The analysis plugin mediator object."""
 
+from __future__ import unicode_literals
+
+import time
+
 from plaso.engine import path_helper
 from plaso.lib import timelib
 
 
 class AnalysisMediator(object):
-  """Class that implements the analysis plugin mediator.
+  """Analysis plugin mediator.
 
   Attributes:
+    last_activity_timestamp (int): timestamp received that indicates the last
+        time activity was observed. The last activity timestamp is updated
+        when the mediator produces an attribute container, such as an event
+        tag. This timestamp is used by the multi processing worker process
+        to indicate the last time the worker was known to be active. This
+        information is then used by the foreman to detect workers that are
+        not responding (stalled).
     number_of_produced_analysis_reports (int): number of produced analysis
         reports.
     number_of_produced_event_tags (int): number of produced event tags.
@@ -33,6 +44,7 @@ class AnalysisMediator(object):
     self._storage_writer = storage_writer
     self._text_prepend = None
 
+    self.last_activity_timestamp = 0.0
     self.number_of_produced_analysis_reports = 0
     self.number_of_produced_event_tags = 0
 
@@ -90,7 +102,7 @@ class AnalysisMediator(object):
 
     analysis_report.time_compiled = timelib.Timestamp.GetNow()
 
-    plugin_name = getattr(analysis_report, u'plugin_name', plugin.plugin_name)
+    plugin_name = getattr(analysis_report, 'plugin_name', plugin.plugin_name)
     if plugin_name:
       analysis_report.plugin_name = plugin_name
 
@@ -104,6 +116,8 @@ class AnalysisMediator(object):
     self.number_of_produced_event_tags = (
         self._storage_writer.number_of_event_tags)
 
+    self.last_activity_timestamp = time.time()
+
   def ProduceEventTag(self, event_tag):
     """Produces an event tag.
 
@@ -113,6 +127,8 @@ class AnalysisMediator(object):
     self._storage_writer.AddEventTag(event_tag)
 
     self.number_of_produced_event_tags += 1
+
+    self.last_activity_timestamp = time.time()
 
   def SignalAbort(self):
     """Signals the analysis plugins to abort."""
