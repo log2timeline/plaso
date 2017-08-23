@@ -213,6 +213,11 @@ class WinEvtxParser(interface.FileObjectParser):
           and other components, such as storage and dfvfs.
       evtx_file (pyevt.file): Windows XML EventLog (EVTX) file.
     """
+    # To handle errors when parsing a Windows XML EventLog (EVTX) file in the
+    # most granular way the following code iterates over every event record.
+    # The call to evt_file.get_record() and access to members of evt_record
+    # should be called within a try-except.
+
     for record_index in range(evtx_file.number_of_records):
       if parser_mediator.abort:
         break

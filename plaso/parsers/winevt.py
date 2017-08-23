@@ -186,6 +186,11 @@ class WinEvtParser(interface.FileObjectParser):
           and other components, such as storage and dfvfs.
       evt_file (pyevt.file): Windows EventLog (EVT) file.
     """
+    # To handle errors when parsing a Windows EventLog (EVT) file in the most
+    # granular way the following code iterates over every event record. The
+    # call to evt_file.get_record() and access to members of evt_record should
+    # be called within a try-except.
+
     for record_index in range(evt_file.number_of_records):
       if parser_mediator.abort:
         break
