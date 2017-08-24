@@ -173,116 +173,156 @@ class AmcacheParser(interface.FileObjectParser):
     regf_file.close()
 
   def _ProcessAMCacheProgramKey(self, am_entry, parser_mediator):
+    """Parses an Amcache Root/Programs key for events.
+
+    Args:
+      am_entry (pyregf.key): amcache Programs key.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+    """
     amcache_datetime = am_entry.get_value_by_name(
         self._AMCACHE_P_INSTALLDATE).get_data_as_integer()
-    pevent_data = AmcacheProgramEventData()
+    event_data = AmcacheProgramEventData()
+
     name = am_entry.get_value_by_name(self._AMCACHE_P_NAME)
     if name:
-      pevent_data.name = name.get_data_as_string()
+      event_data.name = name.get_data_as_string()
+
     version = am_entry.get_value_by_name(self._AMCACHE_P_VERSION)
     if version:
-      pevent_data.version = version.get_data_as_string()
+      event_data.version = version.get_data_as_string()
+
     publisher = am_entry.get_value_by_name(self._AMCACHE_P_PUBLISHER)
     if publisher:
-      pevent_data.publisher = publisher.get_data_as_string()
+      event_data.publisher = publisher.get_data_as_string()
+
     languagecode = am_entry.get_value_by_name(self._AMCACHE_P_LANGUAGECODE)
     if languagecode:
-      pevent_data.languagecode = languagecode.get_data_as_string()
+      event_data.languagecode = languagecode.get_data_as_string()
+
     entrytype = am_entry.get_value_by_name(self._AMCACHE_P_ENTRYTYPE)
     if entrytype:
-      pevent_data.entrytype = entrytype.get_data_as_string()
+      event_data.entrytype = entrytype.get_data_as_string()
+
     uninstallkey = am_entry.get_value_by_name(self._AMCACHE_P_UNINSTALLKEY)
     if uninstallkey:
-      pevent_data.uninstallkey = uninstallkey.get_data().decode('utf-16-LE')
+      uninstallkey = uninstallkey.get_data()
+      uninstallkey = uninstallkey.decode('utf-16-LE')
+      event_data.uninstallkey = uninstallkey
+
     filepaths = am_entry.get_value_by_name(self._AMCACHE_P_FILEPATHS)
     if filepaths:
-      pevent_data.filepaths = filepaths.get_data().decode('utf-16-LE')
+      filepaths = filepaths.get_data()
+      filepaths = filepaths.decode('utf-16-LE')
+      event_data.filepaths = filepaths
+
     productcode = am_entry.get_value_by_name(self._AMCACHE_P_PRODUCTCODE)
     if productcode:
-      pevent_data.productcode = productcode.get_data_as_string()
+      event_data.productcode = productcode.get_data_as_string()
+
     packagecode = am_entry.get_value_by_name(self._AMCACHE_P_PACKAGECODE)
     if packagecode:
-      pevent_data.packagecode = packagecode.get_data_as_string()
-    msiproductcode = (
-        am_entry.get_value_by_name(self._AMCACHE_P_MSIPRODUCTCODE)
-    )
+      event_data.packagecode = packagecode.get_data_as_string()
+
+    msiproductcode = am_entry.get_value_by_name(self._AMCACHE_P_MSIPRODUCTCODE)
     if msiproductcode:
-      pevent_data.msiproductcode = (
-          msiproductcode.get_data().decode('utf-16-LE')
-      )
-    msipackagecode = (
-        am_entry.get_value_by_name(self._AMCACHE_P_MSIPACKAGECODE)
-    )
+      msiproductcode = msiproductcode.get_data()
+      msiproductcode = msiproductcode.decode('utf-16-LE')
+      event_data.msiproductcode = msiproductcode
+
+    msipackagecode = am_entry.get_value_by_name(self._AMCACHE_P_MSIPACKAGECODE)
     if msipackagecode:
-      pevent_data.msipackagecode = (
-          msipackagecode.get_data().decode('utf-16-LE')
-      )
+      msipackagecode = msipackagecode.get_data()
+      msipackagecode = msipackagecode.decode('utf-16-LE')
+      event_data.msipackagecode = msipackagecode
+
     files = am_entry.get_value_by_name(self._AMCACHE_P_FILES)
     if files:
-      pevent_data.files = files.get_data().decode('utf-16-LE')
+      files = files.get_data()
+      files = files.decode('utf-16-LE')
+      event_data.files = files
+
     event = time_events.DateTimeValuesEvent(
         posix_time.PosixTime(amcache_datetime),
         definitions.TIME_DESCRIPTION_INSTALLATION)
-    parser_mediator.ProduceEventWithEventData(event, pevent_data)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ProcessAMCacheFileKey(self, am_entry, parser_mediator):
+    """"Parses an Amcache Root/File key for events.
+
+    Args:
+      am_entry (pyregf.key): amcache File key.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+    """
     amcache_datetime = am_entry.get_value_by_name(
         self._AMCACHE_DATETIME).get_data_as_integer()
     event_data = AmcacheEventData()
+
     event_data.full_path = am_entry.get_value_by_name(
         self._AMCACHE_FULL_PATH).get_data_as_string()
     # Strip off the 4 leading zero's from the sha1 hash.
     event_data.sha1 = am_entry.get_value_by_name(
         self._AMCACHE_SHA1).get_data_as_string()[4:]
+
     productname = am_entry.get_value_by_name(self._AMCACHE_PRODUCTNAME)
     if productname:
       event_data.productname = productname.get_data_as_string()
+
     companyname = am_entry.get_value_by_name(self._AMCACHE_COMPANYNAME)
     if companyname:
       event_data.companyname = companyname.get_data_as_string()
+
     fileversion = am_entry.get_value_by_name(self._AMCACHE_FILEVERSION)
     if fileversion:
       event_data.fileversion = fileversion.get_data_as_string()
+
     languagecode = am_entry.get_value_by_name(self._AMCACHE_LANGUAGECODE)
     if languagecode:
       event_data.languagecode = languagecode.get_data_as_integer()
+
     filesize = am_entry.get_value_by_name(self._AMCACHE_FILESIZE)
     if filesize:
       event_data.filesize = filesize.get_data_as_integer()
-    filedescription = (
-        am_entry.get_value_by_name(self._AMCACHE_FILEDESCRIPTION)
-    )
+
+    filedescription = am_entry.get_value_by_name(self._AMCACHE_FILEDESCRIPTION)
     if filedescription:
       event_data.filedescription = filedescription.get_data_as_string()
+
     linkerts = am_entry.get_value_by_name(self._AMCACHE_LINKERTS)
     if linkerts:
       event_data.linkerts = linkerts.get_data_as_integer()
-    lastmodifiedts = (
-        am_entry.get_value_by_name(self._AMCACHE_LASTMODIFIEDTS)
-    )
+
+    lastmodifiedts = am_entry.get_value_by_name(self._AMCACHE_LASTMODIFIEDTS)
     if lastmodifiedts:
       event_data.lastmodifiedts = lastmodifiedts.get_data_as_integer()
+
     createdts = am_entry.get_value_by_name(self._AMCACHE_CREATEDTS)
     if createdts:
       event_data.createdts = createdts.get_data_as_integer()
+
     programid = am_entry.get_value_by_name(self._AMCACHE_PROGRAMID)
     if programid:
       event_data.programid = programid.get_data_as_string()
+
     event = time_events.DateTimeValuesEvent(
         filetime.Filetime(amcache_datetime),
         definitions.TIME_DESCRIPTION_LAST_RUN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
-    if event_data.createdts is not None:
+
+    if event_data.createdts:
       event = time_events.DateTimeValuesEvent(
           filetime.Filetime(event_data.createdts),
           definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
-    if event_data.lastmodifiedts is not None:
+
+    if event_data.lastmodifiedts:
       event = time_events.DateTimeValuesEvent(
           filetime.Filetime(event_data.lastmodifiedts),
           definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
-    if event_data.linkerts is not None:
+
+    if event_data.linkerts:
       event = time_events.DateTimeValuesEvent(
           posix_time.PosixTime(event_data.linkerts),
           definitions.TIME_DESCRIPTION_CHANGE)
