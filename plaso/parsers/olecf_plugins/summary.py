@@ -6,6 +6,7 @@ from dfdatetime import filetime as dfdatetime_filetime
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import py2to3
 from plaso.parsers import olecf
 from plaso.parsers.olecf_plugins import interface
 
@@ -119,6 +120,8 @@ class OLECFPropertySetStream(object):
     """
     event_data = events.EventData(data_type=data_type)
     for property_name, property_value in iter(self._properties.items()):
+      if isinstance(property_value, py2to3.BYTES_TYPE):
+        property_value = repr(property_value)
       setattr(event_data, property_name, property_value)
 
     return event_data

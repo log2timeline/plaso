@@ -5,6 +5,7 @@ from plaso.formatters import amcache
 from plaso.formatters import android_app_usage
 from plaso.formatters import android_calls
 from plaso.formatters import android_sms
+from plaso.formatters import android_webview
 from plaso.formatters import android_webviewcache
 from plaso.formatters import appcompatcache
 from plaso.formatters import appusage
