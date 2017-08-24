@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows XML EventLog (EVTX) files."""
 
+from __future__ import unicode_literals
+
 from collections import namedtuple
 
 import pyevtx
@@ -33,7 +35,7 @@ class WinEvtxRecordEventData(events.EventData):
     xml_string (str): XML representation of the event.
   """
 
-  DATA_TYPE = u'windows:evtx:record'
+  DATA_TYPE = 'windows:evtx:record'
 
   def __init__(self):
     """Initializes event data."""
@@ -56,8 +58,8 @@ class WinEvtxParser(interface.FileObjectParser):
 
   _INITIAL_FILE_OFFSET = None
 
-  NAME = u'winevtx'
-  DESCRIPTION = u'Parser for Windows XML EventLog (EVTX) files.'
+  NAME = 'winevtx'
+  DESCRIPTION = 'Parser for Windows XML EventLog (EVTX) files.'
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -78,19 +80,19 @@ class WinEvtxParser(interface.FileObjectParser):
 
   _EVTX_FIELD_MAP = {
       4624: [
-          Rule(0, u'source_user_id'),
-          Rule(1, u'source_user_name'),
-          Rule(4, u'target_user_id'),
-          Rule(5, u'target_user_name'),
-          Rule(11, u'target_machine_name'),
-          Rule(18, u'target_machine_ip')
+          Rule(0, 'source_user_id'),
+          Rule(1, 'source_user_name'),
+          Rule(4, 'target_user_id'),
+          Rule(5, 'target_user_name'),
+          Rule(11, 'target_machine_name'),
+          Rule(18, 'target_machine_ip')
       ],
       4648: [
-          Rule(0, u'source_user_id'),
-          Rule(1, u'source_user_name'),
-          Rule(5, u'target_user_name'),
-          Rule(8, u'target_machine_name'),
-          Rule(12, u'target_machine_ip')
+          Rule(0, 'source_user_id'),
+          Rule(1, 'source_user_name'),
+          Rule(5, 'target_user_name'),
+          Rule(8, 'target_machine_name'),
+          Rule(12, 'target_machine_ip')
       ]
   }
 
@@ -114,15 +116,15 @@ class WinEvtxParser(interface.FileObjectParser):
       event_data.record_number = evtx_record.identifier
     except OverflowError as exception:
       parser_mediator.ProduceExtractionError((
-          u'unable to read record identifier from event record: {0:d} '
-          u'with error: {1:s}').format(record_index, exception))
+          'unable to read record identifier from event record: {0:d} '
+          'with error: {1:s}').format(record_index, exception))
 
     try:
       event_identifier = evtx_record.event_identifier
     except OverflowError as exception:
       parser_mediator.ProduceExtractionError((
-          u'unable to read event identifier from event record: {0:d} '
-          u'with error: {1:s}').format(record_index, exception))
+          'unable to read event identifier from event record: {0:d} '
+          'with error: {1:s}').format(record_index, exception))
 
       event_identifier = None
 
@@ -130,8 +132,8 @@ class WinEvtxParser(interface.FileObjectParser):
       event_identifier_qualifiers = evtx_record.event_identifier_qualifiers
     except OverflowError as exception:
       parser_mediator.ProduceExtractionError((
-          u'unable to read event identifier qualifiers from event record: '
-          u'{0:d} with error: {1:s}').format(record_index, exception))
+          'unable to read event identifier qualifiers from event record: '
+          '{0:d} with error: {1:s}').format(record_index, exception))
 
       event_identifier_qualifiers = None
 
@@ -161,8 +163,8 @@ class WinEvtxParser(interface.FileObjectParser):
       for rule in rules:
         if len(evtx_record.strings) <= rule.index:
           parser_mediator.ProduceExtractionError((
-              u'evtx_record.strings has unexpected length of {0:d} '
-              u'(expected at least {1:d})'.format(
+              'evtx_record.strings has unexpected length of {0:d} '
+              '(expected at least {1:d})'.format(
                   len(evtx_record.strings), rule.index)))
 
         event_data.strings_parsed[rule.name] = evtx_record.strings[rule.index]
@@ -189,13 +191,13 @@ class WinEvtxParser(interface.FileObjectParser):
       written_time = evtx_record.get_written_time_as_integer()
     except OverflowError as exception:
       parser_mediator.ProduceExtractionError((
-          u'unable to read written time from event record: {0:d} '
-          u'with error: {1:s}').format(record_index, exception))
+          'unable to read written time from event record: {0:d} '
+          'with error: {1:s}').format(record_index, exception))
 
       written_time = None
 
     if not written_time:
-      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
     else:
       date_time = dfdatetime_filetime.Filetime(timestamp=written_time)
 
@@ -211,28 +213,37 @@ class WinEvtxParser(interface.FileObjectParser):
           and other components, such as storage and dfvfs.
       evtx_file (pyevt.file): Windows XML EventLog (EVTX) file.
     """
-    for record_index, evtx_record in enumerate(evtx_file.records):
+    # To handle errors when parsing a Windows XML EventLog (EVTX) file in the
+    # most granular way the following code iterates over every event record.
+    # The call to evt_file.get_record() and access to members of evt_record
+    # should be called within a try-except.
+
+    for record_index in range(evtx_file.number_of_records):
       if parser_mediator.abort:
         break
 
       try:
+        evtx_record = evtx_file.get_record(record_index)
         self._ParseRecord(parser_mediator, record_index, evtx_record)
+
       except IOError as exception:
         parser_mediator.ProduceExtractionError(
-            u'unable to parse event record: {0:d} with error: {1:s}'.format(
+            'unable to parse event record: {0:d} with error: {1:s}'.format(
                 record_index, exception))
 
-    for record_index, evtx_record in enumerate(evtx_file.recovered_records):
+    for record_index in range(evtx_file.number_of_recovered_records):
       if parser_mediator.abort:
         break
 
       try:
+        evtx_record = evtx_file.get_recovered_record(record_index)
         self._ParseRecord(
             parser_mediator, record_index, evtx_record, recovered=True)
+
       except IOError as exception:
         parser_mediator.ProduceExtractionError((
-            u'unable to parse recovered event record: {0:d} with error: '
-            u'{1:s}').format(record_index, exception))
+            'unable to parse recovered event record: {0:d} with error: '
+            '{1:s}').format(record_index, exception))
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows XML EventLog (EVTX) file-like object.
@@ -249,7 +260,7 @@ class WinEvtxParser(interface.FileObjectParser):
       evtx_file.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to open file with error: {0:s}'.format(exception))
+          'unable to open file with error: {0:s}'.format(exception))
       return
 
     try:
