@@ -4,6 +4,14 @@ plaso\.formatters package
 Submodules
 ----------
 
+plaso\.formatters\.amcache module
+---------------------------------
+
+.. automodule:: plaso.formatters.amcache
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso\.formatters\.android\_app\_usage module
 ---------------------------------------------
 
