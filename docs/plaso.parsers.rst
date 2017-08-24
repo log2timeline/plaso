@@ -19,6 +19,14 @@ Subpackages
 Submodules
 ----------
 
+plaso\.parsers\.amcache module
+------------------------------
+
+.. automodule:: plaso.parsers.amcache
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso\.parsers\.android\_app\_usage module
 ------------------------------------------
 
