@@ -201,10 +201,7 @@ class Log2TimelineTool(
     self._single_process_mode = getattr(options, 'single_process', False)
 
     helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=['temporary_directory'])
-
-    self._worker_memory_limit = getattr(options, 'worker_memory_limit', None)
-    self._number_of_extraction_workers = getattr(options, 'workers', 0)
+        options, self, names=['temporary_directory', 'workers'])
 
     # TODO: add code to parse the worker options.
 
@@ -226,19 +223,7 @@ class Log2TimelineTool(
             'Indicate that the tool should run in a single process.'))
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_group, names=['temporary_directory'])
-
-    argument_group.add_argument(
-        '--worker-memory-limit', '--worker_memory_limit',
-        dest='worker_memory_limit', action='store', type=int,
-        metavar='SIZE', help=(
-            'Maximum amount of memory a worker process is allowed to consume. '
-            '[defaults to 2 GiB]'))
-
-    argument_group.add_argument(
-        '--workers', dest='workers', action='store', type=int, default=0,
-        help=('The number of worker processes [defaults to available system '
-              'CPUs minus one].'))
+        argument_group, names=['temporary_directory', 'workers'])
 
   def ParseArguments(self):
     """Parses the command line arguments.

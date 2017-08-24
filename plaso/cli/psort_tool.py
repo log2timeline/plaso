@@ -290,8 +290,8 @@ class PsortTool(
         '--worker-memory-limit', '--worker_memory_limit',
         dest='worker_memory_limit', action='store', type=int,
         metavar='SIZE', help=(
-            'Maximum amount of memory a worker process is allowed to consume. '
-            '[defaults to 2 GiB]'))
+            'Maximum amount of memory a worker process is allowed to consume, '
+            'where 0 represents no limit [defaults to 2 GiB].'))
 
   def ListLanguageIdentifiers(self):
     """Lists the language identifiers."""
