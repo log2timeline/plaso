@@ -135,9 +135,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
         if the value is a ParseResults object.
     """
     value = structure.get(key)
-    if not isinstance(value, pyparsing.ParseResults):
-      return value
-    return None
+    return value if not isinstance(value, pyparsing.ParseResults) else None
 
   def _ParseCommentRecord(self, structure):
     """Parse a comment and store appropriate attributes.
