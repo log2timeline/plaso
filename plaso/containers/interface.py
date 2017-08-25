@@ -55,7 +55,7 @@ class AttributeContainer(object):
       attributes (dict[str, object]): attribute values per name.
     """
     for attribute_name, attribute_value in attributes.items():
-      if attribute_name.startswith(u'_'):
+      if attribute_name[0] == u'_':
         continue
       setattr(self, attribute_name, attribute_value)
 
@@ -77,7 +77,7 @@ class AttributeContainer(object):
     """
     attribute_names = []
     for attribute_name in iter(self.__dict__.keys()):
-      if attribute_name.startswith(u'_'):
+      if attribute_name[0] == u'_':
         continue
       attribute_names.append(attribute_name)
 
@@ -92,7 +92,7 @@ class AttributeContainer(object):
       tuple[str, object]: attribute name and value.
     """
     for attribute_name, attribute_value in iter(self.__dict__.items()):
-      if attribute_name.startswith(u'_') or attribute_value is None:
+      if attribute_name[0] == u'_' or attribute_value is None:
         continue
 
       yield attribute_name, attribute_value
@@ -105,7 +105,7 @@ class AttributeContainer(object):
     """
     attributes = []
     for attribute_name, attribute_value in sorted(self.__dict__.items()):
-      if attribute_name.startswith(u'_') or attribute_value is None:
+      if attribute_name[0] == u'_' or attribute_value is None:
         continue
 
       if isinstance(attribute_value, dict):
