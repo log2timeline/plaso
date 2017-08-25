@@ -172,13 +172,13 @@ class _SerializedEventHeap(object):
       tuple: contains:
 
         int: event timestamp or None if the heap is empty
-        bytes: serialized event data or None if the heap is empty
+        bytes: serialized event or None if the heap is empty
     """
     try:
-      timestamp, event_data = heapq.heappop(self._heap)
+      timestamp, serialized_event = heapq.heappop(self._heap)
 
-      self.data_size -= len(event_data)
-      return timestamp, event_data
+      self.data_size -= len(serialized_event)
+      return timestamp, serialized_event
 
     except IndexError:
       return None, None
@@ -189,7 +189,7 @@ class _SerializedEventHeap(object):
     Args:
       timestamp (int): event timestamp, which contains the number of
           micro seconds since January 1, 1970, 00:00:00 UTC.
-      event_data (bytes): serialized event data.
+      event_data (bytes): serialized event.
     """
     heap_values = (timestamp, event_data)
     heapq.heappush(self._heap, heap_values)
@@ -241,6 +241,11 @@ class _SerializedDataStream(object):
   def entry_index(self):
     """int: entry index."""
     return self._entry_index
+
+  @property
+  def offset(self):
+    """int: offset into temporary file."""
+    return self._stream_offset
 
   def _OpenFileObject(self):
     """Opens the file-like object (instance of ZipExtFile).
@@ -302,7 +307,7 @@ class _SerializedDataStream(object):
       stream_offset (int): data stream offset.
     """
     self._entry_index = entry_index
-    self._stream_offset = stream_offset
+    self.stream_offset = stream_offset
 
   def WriteAbort(self):
     """Aborts the write of a serialized data stream."""
@@ -725,6 +730,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self._serialized_event_tags = []
     self._serialized_event_tags_size = 0
     self._streams = {}
+    self._saved_stream_offsets = {}
     self._streams_lfu = []
     self._temporary_path = None
     self._zipfile = None
@@ -1293,10 +1299,16 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
       data_stream = _SerializedDataStream(
           self._zipfile, self._temporary_path, stream_name)
+      if lookup_key in self._saved_stream_offsets:
+        entry_index, offset = self._saved_stream_offsets[lookup_key]
+        data_stream.SeekEntryAtOffset(entry_index, offset)
 
       number_of_tables = len(self._streams)
       if number_of_tables >= self._MAXIMUM_NUMBER_OF_CACHED_STREAMS:
         lfu_lookup_key = self._streams_lfu.pop()
+        expiring_stream = self._streams[lfu_lookup_key]
+        self._saved_stream_offsets[lfu_lookup_key] = (
+          expiring_stream.entry_index, expiring_stream.offset)
         del self._streams[lfu_lookup_key]
 
       self._streams[lookup_key] = data_stream
@@ -1470,7 +1482,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     return True
 
   def _InitializeMergeBuffer(self, time_range=None):
-    """Initializes the events into the merge buffer.
+    """Initializes events into the merge buffer.
 
     This function fills the merge buffer with the first relevant event
     from each stream.
