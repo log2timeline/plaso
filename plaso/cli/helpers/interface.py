@@ -39,7 +39,7 @@ class ArgumentsHelper(object):
           to a Unicode string.
     """
     argument_value = getattr(options, argument_name, None)
-    if not argument_value:
+    if argument_value is None:
       return default_value
 
     if not isinstance(argument_value, py2to3.INTEGER_TYPES):
@@ -67,7 +67,7 @@ class ArgumentsHelper(object):
           to a Unicode string.
     """
     argument_value = getattr(options, argument_name, None)
-    if not argument_value:
+    if argument_value is None:
       return default_value
 
     if isinstance(argument_value, py2to3.BYTES_TYPE):
