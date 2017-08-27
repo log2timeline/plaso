@@ -209,16 +209,20 @@ class _SerializedDataStream(object):
 
   def __init__(
       self, zip_file, temporary_path, stream_name,
-      maximum_data_size=DEFAULT_MAXIMUM_DATA_SIZE):
+      maximum_data_size=DEFAULT_MAXIMUM_DATA_SIZE, cache_stream=True):
     """Initializes a serialized data stream.
 
     Args:
       zip_file (zipfile.ZipFile): ZIP file that contains the stream.
-      temporary_path (str): temporary path.
+      temporary_path (str): path to temporary directory in which the stream will
+          be decompressed.
       stream_name (str): name of the stream.
       maximum_data_size (Optional[int]): maximum data size of the stream.
+      cache_stream (bool): whether to decompress the entire stream to disk to
+          improve performance.
     """
     super(_SerializedDataStream, self).__init__()
+    self._cache_stream = cache_stream
     self._entry_index = 0
     self._file_object = None
     self._maximum_data_size = maximum_data_size
@@ -254,7 +258,12 @@ class _SerializedDataStream(object):
       IOError: if the file-like object cannot be opened.
     """
     try:
-      self._zip_file.extract(self._stream_name, self._temporary_path)
+      if self._cache_stream:
+        self._zip_file.extract(self._stream_name, self._temporary_path)
+      else:
+        self._file_object = self._zip_file.open(self._stream_name, mode=b'r')
+        return
+
     except KeyError as exception:
       raise IOError(
           u'Unable to open stream with error: {0:s}'.format(exception))
@@ -274,8 +283,6 @@ class _SerializedDataStream(object):
     """
     if not self._file_object:
       self._OpenFileObject()
-
-    self._file_object.seek(self._stream_offset, os.SEEK_SET)
 
     data = self._file_object.read(self._DATA_ENTRY_SIZE)
     if not data:
@@ -299,6 +306,15 @@ class _SerializedDataStream(object):
 
     return data
 
+  def _ReopenFileObject(self):
+    """Reopens the file-like object (instance of ZipExtFile)."""
+    if self._file_object:
+      self._file_object.close()
+      self._file_object = None
+
+    self._file_object = self._zip_file.open(self._stream_name, mode='r')
+    self._stream_offset = 0
+
   def SeekEntryAtOffset(self, entry_index, stream_offset):
     """Seeks a specific serialized data stream entry at a specific offset.
 
@@ -306,8 +322,28 @@ class _SerializedDataStream(object):
       entry_index (int): serialized data stream entry index.
       stream_offset (int): data stream offset.
     """
+    if not self._file_object:
+      self._OpenFileObject()
+
     self._entry_index = entry_index
-    self.stream_offset = stream_offset
+    self._stream_offset = stream_offset
+
+    if self._cache_stream:
+      self._file_object.seek(self._stream_offset, os.SEEK_SET)
+      return
+
+    if stream_offset < self._stream_offset:
+      # Since zipfile.ZipExtFile is not seekable we need to close the stream
+      # and reopen it to fake a seek.
+      self._ReopenFileObject()
+      skip_read_size = stream_offset
+    else:
+      skip_read_size = stream_offset - self._stream_offset
+
+    if skip_read_size > 0:
+      # Since zipfile.ZipExtFile is not seekable we need to read up to
+      # the stream offset.
+      self._file_object.read(skip_read_size)
 
   def WriteAbort(self):
     """Aborts the write of a serialized data stream."""
@@ -672,7 +708,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
   _MAXIMUM_BUFFER_SIZE = 64 * 1024 * 1024
 
   # The maximum number of cached streams.
-  _MAXIMUM_NUMBER_OF_CACHED_STREAMS = 16
+  _MAXIMUM_NUMBER_OF_CACHED_STREAMS = 24
 
   # The maximum number of cached tables.
   _MAXIMUM_NUMBER_OF_CACHED_TABLES = 16
@@ -726,11 +762,11 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self._offset_tables = {}
     self._offset_tables_lfu = []
     self._path = None
+    self._saved_stream_offsets = {}
     self._serialized_event_heap = _SerializedEventHeap()
     self._serialized_event_tags = []
     self._serialized_event_tags_size = 0
     self._streams = {}
-    self._saved_stream_offsets = {}
     self._streams_lfu = []
     self._temporary_path = None
     self._zipfile = None
@@ -836,9 +872,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
   def _FillEventHeapFromStream(self, stream_number):
     """Fills the event heap with the next events from the stream.
 
-    This function will read events starting at the current stream entry that
-    have the same timestamp and adds them to the heap. This ensures that the
-    sorting order of events with the same timestamp is consistent.
+    This function will read events starting from the given stream number
+    starting at the streams current index that have the same timestamp and
+    adds them to the heap. This ensures that the sorting order of events with
+    the same timestamp is consistent.
 
     Except for the last event, all newly added events will have the same
     timestamp.
@@ -846,10 +883,9 @@ class ZIPStorageFile(interface.BaseFileStorage):
     Args:
       stream_number (int): serialized data stream number.
     """
-    event = self._GetEvent(stream_number)
+    event = self._GetEvent(stream_number, cache_stream=False)
     if not event:
       return
-
     self._event_heap.PushEvent(event)
 
     reference_timestamp = event.timestamp
@@ -986,7 +1022,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
         attribute_container.SetIdentifier(identifier)
         yield attribute_container
 
-  def _GetEvent(self, stream_number, entry_index=NEXT_AVAILABLE_ENTRY):
+  def _GetEvent(
+      self, stream_number, entry_index=NEXT_AVAILABLE_ENTRY, cache_stream=True):
     """Reads an event from a specific stream.
 
     Args:
@@ -994,12 +1031,14 @@ class ZIPStorageFile(interface.BaseFileStorage):
       entry_index (Optional[int]): number of the serialized event within
           the stream, where NEXT_AVAILABLE_ENTRY represents the next available
           event.
+      cache_stream (bool): whether to decompress the entire serialized event
+          stream to disk to improve performance.
 
     Returns:
       EventObject: an event or None if not available.
     """
     event_data, entry_index = self._GetEventSerializedData(
-        stream_number, entry_index=entry_index)
+        stream_number, entry_index=entry_index, cache_stream=cache_stream)
     if not event_data:
       return
 
@@ -1023,7 +1062,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     return event
 
   def _GetEventSerializedData(
-      self, stream_number, entry_index=NEXT_AVAILABLE_ENTRY):
+      self, stream_number, entry_index=NEXT_AVAILABLE_ENTRY, cache_stream=True):
     """Retrieves specific event serialized data.
 
     By default the first available entry in the specific serialized stream
@@ -1034,6 +1073,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
       entry_index (Optional[int]): number of the serialized event within
           the stream, where NEXT_AVAILABLE_ENTRY represents the next available
           event.
+      cache_stream (bool): whether to decompress the entire serialized event
+          stream to disk to improve performance.
 
     Returns:
       tuple: contains:
@@ -1060,7 +1101,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
           entry_index))
 
     try:
-      data_stream = self._GetSerializedDataStream(u'event', stream_number)
+      data_stream = self._GetSerializedDataStream(
+          u'event', stream_number, cache_stream=cache_stream)
     except IOError as exception:
       logging.error((
           u'Unable to retrieve serialized data steam: {0:d} '
@@ -1085,7 +1127,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       event_data = data_stream.ReadEntry()
     except IOError as exception:
       logging.error((
-          u'Unable to read entry from serialized data steam: {0:d} '
+          u'Unable to read entry from serialized data stream: {0:d} '
           u'with error: {1:s}.').format(stream_number, exception))
       return None, None
 
@@ -1275,12 +1317,15 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     return serialized_data, data_stream_entry_index
 
-  def _GetSerializedDataStream(self, container_type, stream_number):
+  def _GetSerializedDataStream(
+      self, container_type, stream_number, cache_stream=True):
     """Retrieves the serialized data stream.
 
     Args:
       container_type (str): attribute container type.
       stream_number (int): number of the stream.
+      cache_stream (bool): whether to decompress the entire serialized event
+          stream to disk to improve performance.
 
     Returns:
       _SerializedDataStream: serialized data stream.
@@ -1298,14 +1343,16 @@ class ZIPStorageFile(interface.BaseFileStorage):
         raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
       data_stream = _SerializedDataStream(
-          self._zipfile, self._temporary_path, stream_name)
+          self._zipfile, self._temporary_path, stream_name,
+          cache_stream=cache_stream)
+
       if lookup_key in self._saved_stream_offsets:
         entry_index, offset = self._saved_stream_offsets[lookup_key]
         data_stream.SeekEntryAtOffset(entry_index, offset)
 
-      number_of_tables = len(self._streams)
-      if number_of_tables >= self._MAXIMUM_NUMBER_OF_CACHED_STREAMS:
-        lfu_lookup_key = self._streams_lfu.pop()
+      number_of_cached_streams = len(self._streams)
+      if number_of_cached_streams >= self._MAXIMUM_NUMBER_OF_CACHED_STREAMS:
+        lfu_lookup_key = self._streams_lfu.pop(0)
         expiring_stream = self._streams[lfu_lookup_key]
         self._saved_stream_offsets[lfu_lookup_key] = (
           expiring_stream.entry_index, expiring_stream.offset)
@@ -1441,7 +1488,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       EventObject: event.
     """
     if not self._event_heap:
-      self._InitializeMergeBuffer(time_range=time_range)
+      self._InitializeEventHeap(time_range=time_range)
       if not self._event_heap:
         return
 
@@ -1481,10 +1528,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
     file_object.close()
     return True
 
-  def _InitializeMergeBuffer(self, time_range=None):
-    """Initializes events into the merge buffer.
+  def _InitializeEventHeap(self, time_range=None):
+    """Initializes events into the event heap.
 
-    This function fills the merge buffer with the first relevant event
+    This function fills the event heap with the first relevant event
     from each stream.
 
     Args:
@@ -1524,7 +1571,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       # Check the lower bound in case no timestamp table was available.
       while (event and time_range and
              event.timestamp < time_range.start_timestamp):
-        event = self._GetEvent(stream_number)
+        event = self._GetEvent(stream_number, cache_stream=False)
 
       if event:
         if time_range and event.timestamp > time_range.end_timestamp:
@@ -1545,7 +1592,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     has_storage_metadata = self._ReadStorageMetadata()
     if not has_storage_metadata:
       # TODO: remove serializer.txt stream support in favor
-      # of storage metatdata.
+      # of storage metadata.
       if self._read_only:
         logging.warning(u'Storage file does not contain a metadata stream.')
 
