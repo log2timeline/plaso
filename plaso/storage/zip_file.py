@@ -1355,7 +1355,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
         lfu_lookup_key = self._streams_lfu.pop(0)
         expiring_stream = self._streams[lfu_lookup_key]
         self._saved_stream_offsets[lfu_lookup_key] = (
-          expiring_stream.entry_index, expiring_stream.offset)
+            expiring_stream.entry_index, expiring_stream.offset)
         del self._streams[lfu_lookup_key]
 
       self._streams[lookup_key] = data_stream
