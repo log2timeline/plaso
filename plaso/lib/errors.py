@@ -25,10 +25,6 @@ class MaximumRecursionDepth(Error):
   """Raised when the maximum recursion depth is reached."""
 
 
-class NotAText(Error):
-  """Raised when trying to read a text on a non-text sample."""
-
-
 class NoFormatterFound(Error):
   """Raised when no formatter is found for a particular event object."""
 
