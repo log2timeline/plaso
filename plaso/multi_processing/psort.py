@@ -343,7 +343,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       process_information = self._process_information_per_pid[pid]
       used_memory = process_information.GetUsedMemory() or 0
 
-      if used_memory > self._worker_memory_limit:
+      if self._worker_memory_limit and used_memory > self._worker_memory_limit:
         logging.warning((
             u'Process: {0:s} (PID: {1:d}) killed because it exceeded the '
             u'memory limit: {2:d}.').format(
@@ -800,7 +800,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       status_update_callback (Optional[function]): callback function for status
           updates.
       worker_memory_limit (Optional[int]): maximum amount of memory a worker is
-          allowed to consume, where None represents the default memory limit.
+          allowed to consume, where None represents the default memory limit
+          and 0 represents no limit.
 
     Raises:
       KeyboardInterrupt: if a keyboard interrupt was raised.
@@ -815,8 +816,11 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._event_filter_expression = event_filter_expression
     self._knowledge_base = knowledge_base_object
     self._status_update_callback = status_update_callback
-    self._worker_memory_limit = (
-        worker_memory_limit or definitions.DEFAULT_WORKER_MEMORY_LIMIT)
+
+    if worker_memory_limit is None:
+      self._worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
+    else:
+      self._worker_memory_limit = worker_memory_limit
 
     # Set up the storage writer before the analysis processes.
     storage_writer.StartTaskStorage()

@@ -694,7 +694,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       status_update_callback (Optional[function]): callback function for status
           updates.
       worker_memory_limit (Optional[int]): maximum amount of memory a worker is
-          allowed to consume, where None represents the default memory limit.
+          allowed to consume, where None represents the default memory limit
+          and 0 represents no limit.
 
     Returns:
       ProcessingStatus: processing status.
@@ -726,8 +727,11 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     self._enable_sigsegv_handler = enable_sigsegv_handler
     self._number_of_worker_processes = number_of_worker_processes
-    self._worker_memory_limit = (
-        worker_memory_limit or definitions.DEFAULT_WORKER_MEMORY_LIMIT)
+
+    if worker_memory_limit is None:
+      self._worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
+    else:
+      self._worker_memory_limit = worker_memory_limit
 
     # Keep track of certain values so we can spawn new extraction workers.
     self._processing_configuration = processing_configuration

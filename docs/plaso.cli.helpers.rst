@@ -252,6 +252,14 @@ plaso\.cli\.helpers\.windows\_services\_analysis module
     :undoc-members:
     :show-inheritance:
 
+plaso\.cli\.helpers\.workers module
+-----------------------------------
+
+.. automodule:: plaso.cli.helpers.workers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso\.cli\.helpers\.xlsx\_output module
 ----------------------------------------
 
