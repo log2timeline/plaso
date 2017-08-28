@@ -13,7 +13,7 @@ class BadConfigOption(Error):
   """Raised when a faulty configuration option is encountered."""
 
 
-class ConnectionError(Error):
+class ConnectionError(Error):  # pylint: disable=redefined-builtin
   """Class that defines errors encountered connecting to a service."""
 
 
