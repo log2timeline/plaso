@@ -511,7 +511,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  # TODO: add test for _InitializeMergeBuffer.
+  # TODO: add test for _InitializeEventHeap.
 
   @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
   def testGetEventSourceSerializedData(self):
