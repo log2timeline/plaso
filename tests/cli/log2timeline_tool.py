@@ -45,7 +45,9 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
       u'  --worker-memory-limit SIZE, --worker_memory_limit SIZE',
       (u'                        Maximum amount of memory a worker process is '
        u'allowed'),
-      u'                        to consume. [defaults to 2 GiB]',
+      (u'                        to consume, where 0 represents no limit '
+       u'[defaults to 2'),
+      u'                        GiB].',
       (u'  --workers WORKERS     The number of worker processes [defaults to '
        u'available'),
       u'                        system CPUs minus one].',
