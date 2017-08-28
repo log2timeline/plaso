@@ -13,7 +13,7 @@ class BadConfigOption(Error):
   """Raised when a faulty configuration option is encountered."""
 
 
-class ConnectionError(Error):
+class ConnectionError(Error):  # pylint: disable=redefined-builtin
   """Class that defines errors encountered connecting to a service."""
 
 
@@ -23,10 +23,6 @@ class HeapFull(Error):
 
 class MaximumRecursionDepth(Error):
   """Raised when the maximum recursion depth is reached."""
-
-
-class NotAText(Error):
-  """Raised when trying to read a text on a non-text sample."""
 
 
 class NoFormatterFound(Error):
