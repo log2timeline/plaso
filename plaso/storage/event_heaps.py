@@ -83,7 +83,10 @@ class EventHeap(BaseEventHeap):
 
 
 class SerializedStreamEventHeap(object):
-  """Event heap for serialized stream storage."""
+  """Event heap for serialized stream storage.
+
+  This event heap is used to sort events from multiple streams.
+  """
 
   def __init__(self):
     """Initializes an event heap."""
@@ -131,12 +134,15 @@ class SerializedStreamEventHeap(object):
     """Pops events from the heap.
 
     Yields:
-      EventObject: event.
+      tuple: contains:
+
+        EventObject: event or None.
+        int: number of the stream or None.
     """
-    event = self.PopEvent()
+    event, stream_number = self.PopEvent()
     while event:
-      yield event
-      event = self.PopEvent()
+      yield event, stream_number
+      event, stream_number = self.PopEvent()
 
   def PushEvent(self, event):
     """Pushes an event onto the heap.
