@@ -7,17 +7,17 @@ from __future__ import unicode_literals
 CATEGORIES = {
     'win_gen': [
         'bencode', 'esedb', 'filestat', 'sqlite/google_drive', 'java_idx',
-        'lnk', 'mcafee_protection', 'mft', 'olecf', 'openxml', 'pe', 'prefetch',
+        'lnk', 'mcafee_protection', 'olecf', 'openxml', 'pe', 'prefetch',
         'sccm', 'skydrive_log', 'skydrive_log_old', 'sqlite/skype',
         'symantec_scanlog', 'usnjrnl', 'webhist', 'winfirewall', 'winjob',
         'winreg'],
     'winxp': ['recycle_bin_info2', 'rplog', 'win_gen', 'winevt'],
-    'winxp_slow': ['hachoir', 'winxp'],
+    'winxp_slow': ['hachoir', 'mft', 'winxp'],
     'win7': [
         'recycle_bin', 'custom_destinations', 'esedb/esedb_file_history',
         'olecf/olecf_automatic_destinations', 'win_gen', 'winevtx',
         'amcache'],
-    'win7_slow': ['hachoir', 'win7'],
+    'win7_slow': ['hachoir', 'mft', 'win7'],
     'webhist': [
         'binary_cookies', 'chrome_cache', 'sqlite/chrome_cookies',
         'sqlite/chrome_extension_activity', 'sqlite/chrome_history',
