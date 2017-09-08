@@ -113,14 +113,14 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     expected_parser_names = [
         'bencode', 'binary_cookies', 'chrome_cache', 'chrome_preferences',
         'esedb', 'esedb/msie_webcache', 'filestat', 'firefox_cache',
-        'java_idx', 'lnk', 'mcafee_protection', 'mft', 'msiecf', 'olecf',
-        'openxml', 'opera_global', 'opera_typed_history', 'pe',
-        'plist/safari_history', 'prefetch', 'sccm', 'skydrive_log',
-        'skydrive_log_old', 'sqlite/chrome_cookies',
-        'sqlite/chrome_extension_activity', 'sqlite/chrome_history',
-        'sqlite/firefox_cookies', 'sqlite/firefox_downloads',
-        'sqlite/firefox_history', 'sqlite/google_drive', 'sqlite/skype',
-        'symantec_scanlog', 'usnjrnl', 'winfirewall', 'winjob', 'winreg']
+        'java_idx', 'lnk', 'mcafee_protection', 'msiecf', 'olecf', 'openxml',
+        'opera_global', 'opera_typed_history', 'pe', 'plist/safari_history',
+        'prefetch', 'sccm', 'skydrive_log', 'skydrive_log_old',
+        'sqlite/chrome_cookies', 'sqlite/chrome_extension_activity',
+        'sqlite/chrome_history', 'sqlite/firefox_cookies',
+        'sqlite/firefox_downloads', 'sqlite/firefox_history',
+        'sqlite/google_drive', 'sqlite/skype', 'symantec_scanlog',
+        'usnjrnl', 'winfirewall', 'winjob', 'winreg']
 
     parser_names = manager.ParsersManager._GetParsersFromPresetCategory(
         'win_gen')
@@ -333,10 +333,10 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     expected_parser_names = [
         'bencode', 'binary_cookies', 'chrome_cache', 'chrome_preferences',
         'esedb', 'filestat', 'firefox_cache', 'java_idx', 'lnk',
-        'mcafee_protection', 'mft', 'msiecf', 'olecf', 'openxml',
-        'opera_global', 'opera_typed_history', 'pe', 'plist', 'prefetch',
-        'sccm', 'skydrive_log', 'skydrive_log_old', 'sqlite',
-        'symantec_scanlog', 'usnjrnl', 'winfirewall', 'winjob', 'winreg']
+        'mcafee_protection', 'msiecf', 'olecf', 'openxml', 'opera_global',
+        'opera_typed_history', 'pe', 'plist', 'prefetch', 'sccm',
+        'skydrive_log', 'skydrive_log_old', 'sqlite', 'symantec_scanlog',
+        'usnjrnl', 'winfirewall', 'winjob', 'winreg']
 
     parser_names = []
     for _, parser_class in manager.ParsersManager.GetParsers(
