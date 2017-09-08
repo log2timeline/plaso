@@ -468,7 +468,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
       storage_file._GetEventSource(1, entry_index=-2)
 
     with self.assertRaises(ValueError):
-      event_source = storage_file._GetEventSource(3)
+      storage_file._GetEventSource(3)
 
     storage_file.Close()
 
