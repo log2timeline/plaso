@@ -197,7 +197,11 @@ class _SerializedEventHeap(object):
 
 
 class _SerializedDataStream(object):
-  """Serialized data stream."""
+  """Serialized data stream.
+
+  Attributes:
+    name (str): name of the zip file stream.
+  """
 
   _DATA_ENTRY = construct.Struct(
       u'data_entry',
@@ -209,7 +213,7 @@ class _SerializedDataStream(object):
 
   def __init__(
       self, zip_file, temporary_path, stream_name,
-      maximum_data_size=DEFAULT_MAXIMUM_DATA_SIZE, cache_stream=True):
+      maximum_data_size=DEFAULT_MAXIMUM_DATA_SIZE, decompress_stream=True):
     """Initializes a serialized data stream.
 
     Args:
@@ -218,19 +222,20 @@ class _SerializedDataStream(object):
           be decompressed.
       stream_name (str): name of the stream.
       maximum_data_size (Optional[int]): maximum data size of the stream.
-      cache_stream (bool): whether to decompress the entire stream to disk to
-          improve performance.
+      decompress_stream (Optional [bool]): whether to decompress the entire
+          stream to disk to improve performance.
     """
     super(_SerializedDataStream, self).__init__()
-    self._cache_stream = cache_stream
     self._entry_index = 0
     self._file_object = None
     self._maximum_data_size = maximum_data_size
-    self._stream_name = stream_name
+    self._decompress_stream = decompress_stream
     self._stream_offset = 0
     self._stream_file_path = None
     self._temporary_path = temporary_path
     self._zip_file = zip_file
+    self.name = stream_name
+
 
   def __del__(self):
     """Clean up."""
@@ -240,6 +245,11 @@ class _SerializedDataStream(object):
           os.remove(self._stream_file_path)
         except (IOError, OSError):
           pass
+
+  @property
+  def is_decompressed(self):
+    """bool: whether the entire stream has been decompressed to disk."""
+    return self._decompress_stream
 
   @property
   def entry_index(self):
@@ -258,10 +268,10 @@ class _SerializedDataStream(object):
       IOError: if the file-like object cannot be opened.
     """
     try:
-      if self._cache_stream:
-        self._zip_file.extract(self._stream_name, self._temporary_path)
+      if self._decompress_stream:
+        self._zip_file.extract(self.name, self._temporary_path)
       else:
-        self._file_object = self._zip_file.open(self._stream_name, mode=b'r')
+        self._file_object = self._zip_file.open(self.name, mode=b'r')
         return
 
     except KeyError as exception:
@@ -269,7 +279,7 @@ class _SerializedDataStream(object):
           u'Unable to open stream with error: {0:s}'.format(exception))
 
     self._stream_file_path = os.path.join(
-        self._temporary_path, self._stream_name)
+        self._temporary_path, self.name)
     self._file_object = open(self._stream_file_path, 'rb')
 
   def ReadEntry(self):
@@ -312,7 +322,7 @@ class _SerializedDataStream(object):
       self._file_object.close()
       self._file_object = None
 
-    self._file_object = self._zip_file.open(self._stream_name, mode='r')
+    self._file_object = self._zip_file.open(self.name, mode='r')
     self._stream_offset = 0
 
   def SeekEntryAtOffset(self, entry_index, stream_offset):
@@ -325,25 +335,25 @@ class _SerializedDataStream(object):
     if not self._file_object:
       self._OpenFileObject()
 
+    if self._decompress_stream:
+      self._file_object.seek(stream_offset, os.SEEK_SET)
+
+    else:
+      if stream_offset < self._stream_offset:
+        # Since zipfile.ZipExtFile is not seekable we need to close the stream
+        # and reopen it to fake a seek.
+        self._ReopenFileObject()
+        skip_read_size = stream_offset
+      else:
+        skip_read_size = stream_offset - self._stream_offset
+
+      if skip_read_size > 0:
+        # Since zipfile.ZipExtFile is not seekable we need to read up to
+        # the stream offset.
+        self._file_object.read(skip_read_size)
+
     self._entry_index = entry_index
     self._stream_offset = stream_offset
-
-    if self._cache_stream:
-      self._file_object.seek(self._stream_offset, os.SEEK_SET)
-      return
-
-    if stream_offset < self._stream_offset:
-      # Since zipfile.ZipExtFile is not seekable we need to close the stream
-      # and reopen it to fake a seek.
-      self._ReopenFileObject()
-      skip_read_size = stream_offset
-    else:
-      skip_read_size = stream_offset - self._stream_offset
-
-    if skip_read_size > 0:
-      # Since zipfile.ZipExtFile is not seekable we need to read up to
-      # the stream offset.
-      self._file_object.read(skip_read_size)
 
   def WriteAbort(self):
     """Aborts the write of a serialized data stream."""
@@ -351,8 +361,8 @@ class _SerializedDataStream(object):
       self._file_object.close()
       self._file_object = None
 
-    if os.path.exists(self._stream_name):
-      os.remove(self._stream_name)
+    if os.path.exists(self.name):
+      os.remove(self.name)
 
   def WriteEntry(self, data):
     """Writes an entry to the file-like object.
@@ -405,9 +415,9 @@ class _SerializedDataStream(object):
     current_working_directory = os.getcwd()
     try:
       os.chdir(self._temporary_path)
-      self._zip_file.write(self._stream_name)
+      self._zip_file.write(self.name)
     finally:
-      os.remove(self._stream_name)
+      os.remove(self.name)
       os.chdir(current_working_directory)
 
     return offset
@@ -427,7 +437,7 @@ class _SerializedDataStream(object):
     if self._file_object:
       raise IOError(u'Serialized data stream already opened.')
 
-    stream_file_path = os.path.join(self._temporary_path, self._stream_name)
+    stream_file_path = os.path.join(self._temporary_path, self.name)
     self._file_object = open(stream_file_path, 'wb')
     if platform_specific.PlatformIsWindows():
       file_handle = self._file_object.fileno()
@@ -707,8 +717,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
   # a flush to disk (64 MiB).
   _MAXIMUM_BUFFER_SIZE = 64 * 1024 * 1024
 
-  # The maximum number of cached streams.
-  _MAXIMUM_NUMBER_OF_CACHED_STREAMS = 24
+  # The maximum number of streams that are decompressed to disk. This limits
+  # the amount of disk space used for the temporary files containing the
+  # decompressed data.
+  _MAXIMUM_NUMBER_OF_DECOMPRESSED_STREAMS = 24
 
   # The maximum number of cached tables.
   _MAXIMUM_NUMBER_OF_CACHED_TABLES = 16
@@ -766,7 +778,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self._serialized_event_heap = _SerializedEventHeap()
     self._serialized_event_tags = []
     self._serialized_event_tags_size = 0
-    self._streams = {}
+    self._open_streams = {}
     self._streams_lfu = []
     self._temporary_path = None
     self._zipfile = None
@@ -883,7 +895,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     Args:
       stream_number (int): serialized data stream number.
     """
-    event = self._GetEvent(stream_number, cache_stream=False)
+    event = self._GetEvent(stream_number, decompress_stream=False)
     if not event:
       return
     self._event_heap.PushEvent(event)
@@ -1023,7 +1035,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
         yield attribute_container
 
   def _GetEvent(
-      self, stream_number, entry_index=NEXT_AVAILABLE_ENTRY, cache_stream=True):
+      self, stream_number, entry_index=NEXT_AVAILABLE_ENTRY,
+      decompress_stream=False):
     """Reads an event from a specific stream.
 
     Args:
@@ -1031,14 +1044,15 @@ class ZIPStorageFile(interface.BaseFileStorage):
       entry_index (Optional[int]): number of the serialized event within
           the stream, where NEXT_AVAILABLE_ENTRY represents the next available
           event.
-      cache_stream (bool): whether to decompress the entire serialized event
-          stream to disk to improve performance.
+      decompress_stream (Optional[bool]): whether to decompress the entire
+          serialized event stream to disk to improve performance.
 
     Returns:
       EventObject: an event or None if not available.
     """
     event_data, entry_index = self._GetEventSerializedData(
-        stream_number, entry_index=entry_index, cache_stream=cache_stream)
+        stream_number, entry_index=entry_index,
+        decompress_stream=decompress_stream)
     if not event_data:
       return
 
@@ -1062,7 +1076,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
     return event
 
   def _GetEventSerializedData(
-      self, stream_number, entry_index=NEXT_AVAILABLE_ENTRY, cache_stream=True):
+      self, stream_number, entry_index=NEXT_AVAILABLE_ENTRY,
+      decompress_stream=True):
     """Retrieves specific event serialized data.
 
     By default the first available entry in the specific serialized stream
@@ -1073,8 +1088,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
       entry_index (Optional[int]): number of the serialized event within
           the stream, where NEXT_AVAILABLE_ENTRY represents the next available
           event.
-      cache_stream (bool): whether to decompress the entire serialized event
-          stream to disk to improve performance.
+      decompress_stream (Optional[bool]): whether to decompress the entire
+          serialized event stream to disk to improve performance.
 
     Returns:
       tuple: contains:
@@ -1102,7 +1117,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     try:
       data_stream = self._GetSerializedDataStream(
-          u'event', stream_number, cache_stream=cache_stream)
+          u'event', stream_number, decompress_stream=decompress_stream)
     except IOError as exception:
       logging.error((
           u'Unable to retrieve serialized data steam: {0:d} '
@@ -1318,14 +1333,15 @@ class ZIPStorageFile(interface.BaseFileStorage):
     return serialized_data, data_stream_entry_index
 
   def _GetSerializedDataStream(
-      self, container_type, stream_number, cache_stream=True):
+      self, container_type, stream_number, decompress_stream=True):
     """Retrieves the serialized data stream.
 
     Args:
       container_type (str): attribute container type.
       stream_number (int): number of the stream.
-      cache_stream (bool): whether to decompress the entire serialized event
-          stream to disk to improve performance.
+      decompress_stream (Optional[bool]): whether to decompress the entire
+          serialized data stream to disk to improve performance for
+          non-sequential reads.
 
     Returns:
       _SerializedDataStream: serialized data stream.
@@ -1333,40 +1349,85 @@ class ZIPStorageFile(interface.BaseFileStorage):
     Raises:
       IOError: if the stream cannot be opened.
     """
-    lookup_key = u'{0:s}.{1:d}'.format(container_type, stream_number)
+    stream_name = u'{0:s}_data.{1:06d}'.format(
+        self._STREAM_NAME_PREFIXES[container_type], stream_number)
 
-    data_stream = self._streams.get(lookup_key, None)
-    if not data_stream:
-      stream_name = u'{0:s}_data.{1:06d}'.format(
-          self._STREAM_NAME_PREFIXES[container_type], stream_number)
-      if not self._HasStream(stream_name):
-        raise IOError(u'No such stream: {0:s}'.format(stream_name))
+    if not self._HasStream(stream_name):
+      raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
+    data_stream = self._open_streams.get(stream_name, None)
+
+    if data_stream:
+      if not data_stream.is_decompressed and decompress_stream:
+        self._saved_stream_offsets[stream_name] = (
+            data_stream.entry_index, data_stream.offset)
+        del self._open_streams[stream_name]
+        data_stream = _SerializedDataStream(
+            self._zipfile, self._temporary_path, stream_name,
+            decompress_stream=True)
+        self._UpdateDecompressedStream(data_stream)
+    else:
       data_stream = _SerializedDataStream(
           self._zipfile, self._temporary_path, stream_name,
-          cache_stream=cache_stream)
+          decompress_stream=decompress_stream)
+      if decompress_stream:
+        self._UpdateDecompressedStream(data_stream)
+      else:
+        self._UpdateCompressedStream(data_stream)
 
-      if lookup_key in self._saved_stream_offsets:
-        entry_index, offset = self._saved_stream_offsets[lookup_key]
-        data_stream.SeekEntryAtOffset(entry_index, offset)
-
-      number_of_cached_streams = len(self._streams)
-      if number_of_cached_streams >= self._MAXIMUM_NUMBER_OF_CACHED_STREAMS:
-        lfu_lookup_key = self._streams_lfu.pop(0)
-        expiring_stream = self._streams[lfu_lookup_key]
-        self._saved_stream_offsets[lfu_lookup_key] = (
-            expiring_stream.entry_index, expiring_stream.offset)
-        del self._streams[lfu_lookup_key]
-
-      self._streams[lookup_key] = data_stream
-
-    if lookup_key in self._streams_lfu:
-      lfu_index = self._streams_lfu.index(lookup_key)
-      self._streams_lfu.pop(lfu_index)
-
-    self._streams_lfu.append(lookup_key)
+    if data_stream.is_decompressed:
+      self._UpdateDecompressedStreamLFU(data_stream)
 
     return data_stream
+
+  def _UpdateDecompressedStreamLFU(self, data_stream):
+    """Updates the list of Least Frequently Used streams.
+
+    Args:
+      data_stream (_SerializedDataStream): stream to update.
+    """
+    stream_name = data_stream.name
+    if stream_name in self._streams_lfu:
+      lfu_index = self._streams_lfu.index(stream_name)
+      self._streams_lfu.pop(lfu_index)
+    self._streams_lfu.append(stream_name)
+
+  def _UpdateDecompressedStream(self, data_stream):
+    """Updates structures after opening a new decompressed data stream.
+
+    The stream will be seek'd to the last known location, and if too many
+    decompressed streams are open already, the least frequently used
+    stream will be closed.
+
+    Args:
+      data_stream (_SerializedDataStream): stream to update.
+    """
+    stream_name = data_stream.name
+    if stream_name in self._saved_stream_offsets:
+      entry_index, offset = self._saved_stream_offsets[stream_name]
+      data_stream.SeekEntryAtOffset(entry_index, offset)
+
+    if len(self._streams_lfu) > self._MAXIMUM_NUMBER_OF_DECOMPRESSED_STREAMS:
+      expired_stream_name = self._streams_lfu.pop(0)
+      expiring_stream = self._open_streams[expired_stream_name]
+      self._saved_stream_offsets[expired_stream_name] = (
+          expiring_stream.entry_index, expiring_stream.offset)
+      del self._open_streams[expired_stream_name]
+
+    self._open_streams[stream_name] = data_stream
+
+  def _UpdateCompressedStream(self, data_stream):
+    """Updates structures after opening a new uncompressed data stream.
+
+    Args:
+      data_stream (_SerializedDataStream): stream to update.
+    """
+    stream_name = data_stream.name
+    if stream_name in self._saved_stream_offsets:
+      entry_index, offset = self._saved_stream_offsets[stream_name]
+      data_stream.SeekEntryAtOffset(entry_index, offset)
+
+    self._open_streams[stream_name] = data_stream
 
   def _GetSerializedDataOffsetTable(self, container_type, stream_number):
     """Retrieves the serialized data offset table.
@@ -1567,11 +1628,12 @@ class ZIPStorageFile(interface.BaseFileStorage):
               entry_index = table_index
               break
 
-      event = self._GetEvent(stream_number, entry_index=entry_index)
+      event = self._GetEvent(
+          stream_number, entry_index=entry_index)
       # Check the lower bound in case no timestamp table was available.
       while (event and time_range and
              event.timestamp < time_range.start_timestamp):
-        event = self._GetEvent(stream_number, cache_stream=False)
+        event = self._GetEvent(stream_number)
 
       if event:
         if time_range and event.timestamp > time_range.end_timestamp:
@@ -1586,6 +1648,9 @@ class ZIPStorageFile(interface.BaseFileStorage):
             break
 
           self._event_heap.PushEvent(event)
+    logging.info(u'Finished filling event heap, added {0:d} events'.format(
+        self._event_heap.number_of_events
+    ))
 
   def _OpenRead(self):
     """Opens the storage file for reading."""
@@ -2272,7 +2337,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self._offset_tables = {}
     self._offset_tables_lfu = []
 
-    self._streams = {}
+    self._open_streams = {}
     self._streams_lfu = []
 
     self._event_timestamp_tables = {}
