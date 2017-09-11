@@ -1,8 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+# pylint: disable=invalid-name
 """End-to-end test launcher."""
 
 from __future__ import print_function
+from __future__ import unicode_literals
+
 import abc
 import argparse
 import difflib
@@ -86,21 +89,21 @@ class TestCase(object):
   def _InitializeLog2TimelinePath(self):
     """Initializes the location of log2timeline."""
     for filename in (
-        u'log2timeline.exe', u'log2timeline.sh', u'log2timeline.py'):
+        'log2timeline.exe', 'log2timeline.sh', 'log2timeline.py'):
       self._log2timeline_path = os.path.join(self._tools_path, filename)
       if os.path.exists(self._log2timeline_path):
         break
 
   def _InitializePinfoPath(self):
     """Initializes the location of pinfo."""
-    for filename in (u'pinfo.exe', u'pinfo.sh', u'pinfo.py'):
+    for filename in ('pinfo.exe', 'pinfo.sh', 'pinfo.py'):
       self._pinfo_path = os.path.join(self._tools_path, filename)
       if os.path.exists(self._pinfo_path):
         break
 
   def _InitializePsortPath(self):
     """Initializes the location of psort."""
-    for filename in (u'psort.exe', u'psort.sh', u'psort.py'):
+    for filename in ('psort.exe', 'psort.sh', 'psort.py'):
       self._psort_path = os.path.join(self._tools_path, filename)
       if os.path.exists(self._psort_path):
         break
@@ -118,15 +121,15 @@ class TestCase(object):
     Returns:
       bool: True if the command ran successfully.
     """
-    if command[0].endswith(u'py'):
+    if command[0].endswith('py'):
       command.insert(0, sys.executable)
-    logging.info(u'Running: {0:s}'.format(u' '.join(command)))
+    logging.info('Running: {0:s}'.format(' '.join(command)))
     child = subprocess.Popen(command, stdout=stdout, stderr=stderr)
     child.communicate()
     exit_code = child.returncode
 
     if exit_code != 0:
-      logging.error(u'Running: "{0:s}" failed (exit code {1:d}).'.format(
+      logging.error('Running: "{0:s}" failed (exit code {1:d}).'.format(
           command, exit_code))
       return False
 
@@ -177,7 +180,7 @@ class TestCasesManager(object):
     test_case_name = test_case_class.NAME.lower()
     if test_case_name not in cls._test_case_classes:
       raise KeyError(
-          u'Formatter class not set for name: {0:s}.'.format(
+          'Formatter class not set for name: {0:s}.'.format(
               test_case_class.NAME))
 
     del cls._test_case_classes[test_case_name]
@@ -232,7 +235,7 @@ class TestCasesManager(object):
     test_case_name = test_case_class.NAME.lower()
     if test_case_name in cls._test_case_classes:
       raise KeyError((
-          u'Formatter class already set for name: {0:s}.').format(
+          'Formatter class already set for name: {0:s}.').format(
               test_case_class.NAME))
 
     cls._test_case_classes[test_case_name] = test_case_class
@@ -269,7 +272,7 @@ class TestDefinition(object):
       name (str): name of the test.
     """
     super(TestDefinition, self).__init__()
-    self.case = u''
+    self.case = ''
     self.name = name
 
 
@@ -314,7 +317,7 @@ class TestDefinitionReader(object):
       RuntimeError: if the configuration parser is not set.
     """
     if not self._config_parser:
-      raise RuntimeError(u'Missing configuration parser.')
+      raise RuntimeError('Missing configuration parser.')
 
     try:
       return self._config_parser.get(section_name, value_name).decode('utf-8')
@@ -340,10 +343,10 @@ class TestDefinitionReader(object):
       for section_name in self._config_parser.sections():
         test_definition = TestDefinition(section_name)
 
-        test_definition.case = self.GetConfigValue(section_name, u'case')
+        test_definition.case = self.GetConfigValue(section_name, 'case')
         if not test_definition.case:
           logging.warning(
-              u'Test case missing in test definition: {0:s}.'.format(
+              'Test case missing in test definition: {0:s}.'.format(
                   section_name))
           continue
 
@@ -352,13 +355,13 @@ class TestDefinitionReader(object):
             self._test_references_path, self._test_results_path,
             debug_output=self._debug_output)
         if not test_case:
-          logging.warning(u'Undefined test case: {0:s}'.format(
+          logging.warning('Undefined test case: {0:s}'.format(
               test_definition.case))
           continue
 
         if not test_case.ReadAttributes(self, test_definition):
           logging.warning(
-              u'Unable to read attributes of test case: {0:s}'.format(
+              'Unable to read attributes of test case: {0:s}'.format(
                   test_definition.case))
           continue
 
@@ -409,7 +412,7 @@ class TestLauncher(object):
         test_definition.case, self._tools_path, self._test_sources_path,
         self._test_references_path, self._test_results_path)
     if not test_case:
-      logging.error(u'Unsupported test case: {0:s}'.format(
+      logging.error('Unsupported test case: {0:s}'.format(
           test_definition.case))
       return False
 
@@ -454,7 +457,7 @@ class ExtractAndOutputTestCase(TestCase):
   file is readable.
   """
 
-  NAME = u'extract_and_output'
+  NAME = 'extract_and_output'
 
   def __init__(
       self, tools_path, test_sources_path, test_references_path,
@@ -488,23 +491,23 @@ class ExtractAndOutputTestCase(TestCase):
     Returns:
       bool: True if log2timeline ran successfully.
     """
-    extract_options = [u'--status-view=none']
+    extract_options = ['--status-view=none']
     extract_options.extend(test_definition.extract_options)
 
     stdout_file = os.path.join(
-        temp_directory, u'{0:s}-log2timeline.out'.format(test_definition.name))
+        temp_directory, '{0:s}-log2timeline.out'.format(test_definition.name))
     stderr_file = os.path.join(
-        temp_directory, u'{0:s}-log2timeline.err'.format(test_definition.name))
+        temp_directory, '{0:s}-log2timeline.err'.format(test_definition.name))
     command = [self._log2timeline_path]
     command.extend(extract_options)
     command.extend([storage_file, source_path])
 
-    with open(stdout_file, u'w') as stdout:
-      with open(stderr_file, u'w') as stderr:
+    with open(stdout_file, 'w') as stdout:
+      with open(stderr_file, 'w') as stderr:
         result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
-      with open(stderr_file, u'rb') as file_object:
+      with open(stderr_file, 'rb') as file_object:
         output_data = file_object.read()
         print(output_data)
 
@@ -530,17 +533,17 @@ class ExtractAndOutputTestCase(TestCase):
       bool: True if pinfo ran successfully.
     """
     stdout_file = os.path.join(
-        temp_directory, u'{0:s}-pinfo.out'.format(test_definition.name))
+        temp_directory, '{0:s}-pinfo.out'.format(test_definition.name))
     stderr_file = os.path.join(
-        temp_directory, u'{0:s}-pinfo.err'.format(test_definition.name))
-    command = [self._pinfo_path, storage_file]
+        temp_directory, '{0:s}-pinfo.err'.format(test_definition.name))
+    command = [self._pinfo_path, '--output-format', 'json', storage_file]
 
-    with open(stdout_file, u'w') as stdout:
-      with open(stderr_file, u'w') as stderr:
+    with open(stdout_file, 'w') as stdout:
+      with open(stderr_file, 'w') as stderr:
         result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
-      with open(stderr_file, u'rb') as file_object:
+      with open(stderr_file, 'rb') as file_object:
         output_data = file_object.read()
         print(output_data)
 
@@ -568,23 +571,23 @@ class ExtractAndOutputTestCase(TestCase):
           self._test_references_path, reference_storage_file)
 
     if not os.path.exists(reference_storage_file):
-      logging.error(u'No such reference storage file: {0:s}'.format(
+      logging.error('No such reference storage file: {0:s}'.format(
           reference_storage_file))
       return False
 
     stdout_file = os.path.join(
-        temp_directory, u'{0:s}-compare-pinfo.out'.format(test_definition.name))
+        temp_directory, '{0:s}-compare-pinfo.out'.format(test_definition.name))
     stderr_file = os.path.join(
-        temp_directory, u'{0:s}-compare-pinfo.err'.format(test_definition.name))
+        temp_directory, '{0:s}-compare-pinfo.err'.format(test_definition.name))
     command = [
-        self._pinfo_path, u'--compare', reference_storage_file, storage_file]
+        self._pinfo_path, '--compare', reference_storage_file, storage_file]
 
-    with open(stdout_file, u'w') as stdout:
-      with open(stderr_file, u'w') as stderr:
+    with open(stdout_file, 'w') as stdout:
+      with open(stderr_file, 'w') as stderr:
         result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
-      with open(stderr_file, u'rb') as file_object:
+      with open(stderr_file, 'rb') as file_object:
         output_data = file_object.read()
         print(output_data)
 
@@ -609,29 +612,29 @@ class ExtractAndOutputTestCase(TestCase):
     output_options = test_definition.output_options
 
     if test_definition.output_format:
-      output_options.extend([u'-o', test_definition.output_format])
+      output_options.extend(['-o', test_definition.output_format])
 
     output_file_path = None
     if test_definition.output_file:
       output_file_path = os.path.join(
           temp_directory, test_definition.output_file)
-    output_options.extend([u'-w', output_file_path])
+    output_options.extend(['-w', output_file_path])
 
     stdout_file = os.path.join(
-        temp_directory, u'{0:s}-psort.out'.format(test_definition.name))
+        temp_directory, '{0:s}-psort.out'.format(test_definition.name))
     stderr_file = os.path.join(
-        temp_directory, u'{0:s}-psort.err'.format(test_definition.name))
+        temp_directory, '{0:s}-psort.err'.format(test_definition.name))
 
     command = [self._psort_path]
     command.extend(output_options)
     command.append(storage_file)
 
-    with open(stdout_file, u'w') as stdout:
-      with open(stderr_file, u'w') as stderr:
+    with open(stdout_file, 'w') as stdout:
+      with open(stderr_file, 'w') as stderr:
         result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
-      with open(stderr_file, u'rb') as file_object:
+      with open(stderr_file, 'rb') as file_object:
         output_data = file_object.read()
         print(output_data)
 
@@ -656,41 +659,41 @@ class ExtractAndOutputTestCase(TestCase):
       bool: True if the read was successful.
     """
     test_definition.extract_options = test_definition_reader.GetConfigValue(
-        test_definition.name, u'extract_options')
+        test_definition.name, 'extract_options')
 
     if test_definition.extract_options is None:
       test_definition.extract_options = []
     elif isinstance(test_definition.extract_options, STRING_TYPES):
       tmp_extract_options = []
       for option_and_value in test_definition.extract_options.split(
-          u' '):
-        if option_and_value.find(u'=') > 0:
-          tmp_extract_options.extend(option_and_value.split(u'='))
+          ' '):
+        if option_and_value.find('=') > 0:
+          tmp_extract_options.extend(option_and_value.split('='))
         else:
           tmp_extract_options.append(option_and_value)
       test_definition.extract_options = tmp_extract_options
 
     test_definition.output_file = test_definition_reader.GetConfigValue(
-        test_definition.name, u'output_file')
+        test_definition.name, 'output_file')
 
     test_definition.output_format = test_definition_reader.GetConfigValue(
-        test_definition.name, u'output_format')
+        test_definition.name, 'output_format')
 
     test_definition.output_options = test_definition_reader.GetConfigValue(
-        test_definition.name, u'output_options')
+        test_definition.name, 'output_options')
 
     if test_definition.output_options is None:
       test_definition.output_options = []
     elif isinstance(test_definition.output_options, STRING_TYPES):
       test_definition.output_options = test_definition.output_options.split(
-          u',')
+          ',')
 
     test_definition.reference_storage_file = (
         test_definition_reader.GetConfigValue(
-            test_definition.name, u'reference_storage_file'))
+            test_definition.name, 'reference_storage_file'))
 
     test_definition.source = test_definition_reader.GetConfigValue(
-        test_definition.name, u'source')
+        test_definition.name, 'source')
 
     return True
 
@@ -708,12 +711,12 @@ class ExtractAndOutputTestCase(TestCase):
       source_path = os.path.join(self._test_sources_path, source_path)
 
     if not os.path.exists(source_path):
-      logging.error(u'No such source: {0:s}'.format(source_path))
+      logging.error('No such source: {0:s}'.format(source_path))
       return False
 
     with TempDirectory() as temp_directory:
       storage_file = os.path.join(
-          temp_directory, u'{0:s}.plaso'.format(test_definition.name))
+          temp_directory, '{0:s}.plaso'.format(test_definition.name))
 
       # Extract events with log2timeline.
       if not self._RunLog2Timeline(
@@ -746,7 +749,7 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
   extracted psort is run to tag events in the resulting storage file.
   """
 
-  NAME = u'extract_and_tag'
+  NAME = 'extract_and_tag'
 
   def _RunPsortWithTaggingOptions(
       self, test_definition, temp_directory, storage_file):
@@ -767,23 +770,23 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
 
     # TODO: determine why --analysis=tagging fails.
     tagging_options = [
-        u'--analysis', u'tagging', u'--output-format=null', u'--tagging-file',
+        '--analysis', 'tagging', '--output-format=null', '--tagging-file',
         tagging_file_path]
 
     stdout_file = os.path.join(
-        temp_directory, u'{0:s}-psort-tagging.out'.format(test_definition.name))
+        temp_directory, '{0:s}-psort-tagging.out'.format(test_definition.name))
     stderr_file = os.path.join(
-        temp_directory, u'{0:s}-psort-tagging.err'.format(test_definition.name))
+        temp_directory, '{0:s}-psort-tagging.err'.format(test_definition.name))
     command = [self._psort_path]
     command.extend(tagging_options)
     command.append(storage_file)
 
-    with open(stdout_file, u'w') as stdout:
-      with open(stderr_file, u'w') as stderr:
+    with open(stdout_file, 'w') as stdout:
+      with open(stderr_file, 'w') as stderr:
         result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
-      with open(stderr_file, u'rb') as file_object:
+      with open(stderr_file, 'rb') as file_object:
         output_data = file_object.read()
         print(output_data)
 
@@ -809,7 +812,7 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
       return False
 
     test_definition.tagging_file = test_definition_reader.GetConfigValue(
-        test_definition.name, u'tagging_file')
+        test_definition.name, 'tagging_file')
 
     return True
 
@@ -827,12 +830,12 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
       source_path = os.path.join(self._test_sources_path, source_path)
 
     if not os.path.exists(source_path):
-      logging.error(u'No such source: {0:s}'.format(source_path))
+      logging.error('No such source: {0:s}'.format(source_path))
       return False
 
     with TempDirectory() as temp_directory:
       storage_file = os.path.join(
-          temp_directory, u'{0:s}.plaso'.format(test_definition.name))
+          temp_directory, '{0:s}.plaso'.format(test_definition.name))
 
       # Extract events with log2timeline.
       if not self._RunLog2Timeline(
@@ -858,7 +861,7 @@ class ImageExportTestCase(TestCase):
   media image, specified by the test definition.
   """
 
-  NAME = u'image_export'
+  NAME = 'image_export'
 
   def __init__(
       self, tools_path, test_sources_path, test_references_path,
@@ -881,7 +884,7 @@ class ImageExportTestCase(TestCase):
   def _InitializeImageExportPath(self):
     """Initializes the location of image_export."""
     for filename in (
-        u'image_export.exe', u'image_export.sh', u'image_export.py'):
+        'image_export.exe', 'image_export.sh', 'image_export.py'):
       self._image_export_path = os.path.join(self._tools_path, filename)
       if os.path.exists(self._image_export_path):
         break
@@ -897,23 +900,23 @@ class ImageExportTestCase(TestCase):
     Returns:
       bool: True if image_export ran successfully.
     """
-    output_file_path = os.path.join(temp_directory, u'export')
-    output_options = [u'-w', output_file_path]
+    output_file_path = os.path.join(temp_directory, 'export')
+    output_options = ['-w', output_file_path]
 
     stdout_file = os.path.join(
-        temp_directory, u'{0:s}-image_export.out'.format(test_definition.name))
+        temp_directory, '{0:s}-image_export.out'.format(test_definition.name))
     stderr_file = os.path.join(
-        temp_directory, u'{0:s}-image_export.err'.format(test_definition.name))
+        temp_directory, '{0:s}-image_export.err'.format(test_definition.name))
     command = [self._image_export_path]
     command.extend(output_options)
     command.append(source_path)
 
-    with open(stdout_file, u'w') as stdout:
-      with open(stderr_file, u'w') as stderr:
+    with open(stdout_file, 'w') as stdout:
+      with open(stderr_file, 'w') as stderr:
         result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
-      with open(stderr_file, u'rb') as file_object:
+      with open(stderr_file, 'rb') as file_object:
         output_data = file_object.read()
         print(output_data)
 
@@ -937,10 +940,10 @@ class ImageExportTestCase(TestCase):
       bool: True if the read was successful.
     """
     test_definition.filter_file = test_definition_reader.GetConfigValue(
-        test_definition.name, u'filter_file')
+        test_definition.name, 'filter_file')
 
     test_definition.source = test_definition_reader.GetConfigValue(
-        test_definition.name, u'source')
+        test_definition.name, 'source')
 
     return True
 
@@ -958,7 +961,7 @@ class ImageExportTestCase(TestCase):
       source_path = os.path.join(self._test_sources_path, source_path)
 
     if not os.path.exists(source_path):
-      logging.error(u'No such source: {0:s}'.format(source_path))
+      logging.error('No such source: {0:s}'.format(source_path))
       return False
 
     with TempDirectory() as temp_directory:
@@ -977,11 +980,11 @@ class OutputTestCase(TestCase):
   output formats.
   """
 
-  NAME = u'output'
+  NAME = 'output'
 
   _SUPPORTED_OUTPUT_FORMATS = frozenset([
-      u'dynamic', u'json', u'json_line', u'l2tcsv', u'l2ttln', u'rawpy',
-      u'tln'])
+      'dynamic', 'json', 'json_line', 'l2tcsv', 'l2ttln', 'rawpy',
+      'tln'])
 
   def __init__(
       self, tools_path, test_sources_path, test_references_path,
@@ -1011,7 +1014,7 @@ class OutputTestCase(TestCase):
       bool: True if he output files are identical.
     """
     if test_definition.output_format not in self._SUPPORTED_OUTPUT_FORMATS:
-      logging.error(u'Unsuppored output format: {0:s}'.format(
+      logging.error('Unsuppored output format: {0:s}'.format(
           test_definition.output_format))
       return False
 
@@ -1027,25 +1030,25 @@ class OutputTestCase(TestCase):
             self._test_references_path, reference_output_file_path)
 
       if not os.path.exists(reference_output_file_path):
-        logging.error(u'No such reference output file: {0:s}'.format(
+        logging.error('No such reference output file: {0:s}'.format(
             reference_output_file_path))
         return False
 
-      with open(reference_output_file_path, u'r') as reference_output_file:
-        with open(output_file_path, u'r') as output_file:
+      with open(reference_output_file_path, 'r') as reference_output_file:
+        with open(output_file_path, 'r') as output_file:
           # Hack to remove paths in the output that are different when running
           # the tests under UNIX and Windows.
           reference_output_list = [
-              line.decode(u'utf-8').replace(u'/tmp/test/test_data/', u'')
+              line.decode('utf-8').replace('/tmp/test/test_data/', '')
               for line in reference_output_file.readlines()]
           output_list = [
-              line.decode(u'utf-8').replace(u'/tmp/test/test_data/', u'')
+              line.decode('utf-8').replace('/tmp/test/test_data/', '')
               for line in output_file.readlines()]
           output_list = [
-              line.replace(u'C:\\tmp\\test\\test_data\\', u'')
+              line.replace('C:\\tmp\\test\\test_data\\', '')
               for line in output_list]
           output_list = [
-              line.replace(u'C:\\\\tmp\\\\test\\\\test_data\\\\', u'')
+              line.replace('C:\\\\tmp\\\\test\\\\test_data\\\\', '')
               for line in output_list]
           differences = list(difflib.unified_diff(
               reference_output_list, output_list,
@@ -1055,8 +1058,8 @@ class OutputTestCase(TestCase):
         differences_output = []
         for difference in differences:
           differences_output.append(difference)
-        differences_output = u'\n'.join(differences_output)
-        logging.error(u'Differences: {0:s}'.format(differences_output))
+        differences_output = '\n'.join(differences_output)
+        logging.error('Differences: {0:s}'.format(differences_output))
 
       if not differences:
         result = True
@@ -1077,28 +1080,28 @@ class OutputTestCase(TestCase):
     output_options = test_definition.output_options
 
     if test_definition.output_format:
-      output_options.extend([u'-o', test_definition.output_format])
+      output_options.extend(['-o', test_definition.output_format])
 
     output_file_path = None
     if test_definition.output_file:
       output_file_path = os.path.join(
           temp_directory, test_definition.output_file)
-      output_options.extend([u'-w', output_file_path])
+      output_options.extend(['-w', output_file_path])
 
     stdout_file = os.path.join(
-        temp_directory, u'{0:s}-psort.out'.format(test_definition.name))
+        temp_directory, '{0:s}-psort.out'.format(test_definition.name))
     stderr_file = os.path.join(
-        temp_directory, u'{0:s}-psort.err'.format(test_definition.name))
+        temp_directory, '{0:s}-psort.err'.format(test_definition.name))
     command = [self._psort_path]
     command.extend(output_options)
     command.append(storage_file)
 
-    with open(stdout_file, u'w') as stdout:
-      with open(stderr_file, u'w') as stderr:
+    with open(stdout_file, 'w') as stdout:
+      with open(stderr_file, 'w') as stderr:
         result = self._RunCommand(command, stdout=stdout, stderr=stderr)
 
     if self._debug_output:
-      with open(stderr_file, u'rb') as file_object:
+      with open(stderr_file, 'rb') as file_object:
         output_data = file_object.read()
         print(output_data)
 
@@ -1123,26 +1126,26 @@ class OutputTestCase(TestCase):
       bool: True if the read was successful.
     """
     test_definition.output_file = test_definition_reader.GetConfigValue(
-        test_definition.name, u'output_file')
+        test_definition.name, 'output_file')
 
     test_definition.output_format = test_definition_reader.GetConfigValue(
-        test_definition.name, u'output_format')
+        test_definition.name, 'output_format')
 
     test_definition.output_options = test_definition_reader.GetConfigValue(
-        test_definition.name, u'output_options')
+        test_definition.name, 'output_options')
 
     if test_definition.output_options is None:
       test_definition.output_options = []
     elif isinstance(test_definition.output_options, STRING_TYPES):
       test_definition.output_options = test_definition.output_options.split(
-          u',')
+          ',')
 
     test_definition.reference_output_file = (
         test_definition_reader.GetConfigValue(
-            test_definition.name, u'reference_output_file'))
+            test_definition.name, 'reference_output_file'))
 
     test_definition.source = test_definition_reader.GetConfigValue(
-        test_definition.name, u'source')
+        test_definition.name, 'source')
 
     return True
 
@@ -1160,7 +1163,7 @@ class OutputTestCase(TestCase):
       source_path = os.path.join(self._test_sources_path, source_path)
 
     if not os.path.exists(source_path):
-      logging.error(u'No such source: {0:s}'.format(source_path))
+      logging.error('No such source: {0:s}'.format(source_path))
       return False
 
     with TempDirectory() as temp_directory:
@@ -1183,45 +1186,45 @@ TestCasesManager.RegisterTestCases([
 def Main():
   """The main function."""
   argument_parser = argparse.ArgumentParser(
-      description=u'End-to-end test launcher.', add_help=False,
+      description='End-to-end test launcher.', add_help=False,
       formatter_class=argparse.RawDescriptionHelpFormatter)
 
   argument_parser.add_argument(
-      u'-c', u'--config', dest=u'config_file', action=u'store',
-      metavar=u'CONFIG_FILE', default=None,
-      help=u'path of the test configuration file.')
+      '-c', '--config', dest='config_file', action='store',
+      metavar='CONFIG_FILE', default=None,
+      help='path of the test configuration file.')
 
   argument_parser.add_argument(
-      u'--debug', dest=u'debug_output', action=u'store_true', default=False,
-      help=u'enable debug output.')
+      '--debug', dest='debug_output', action='store_true', default=False,
+      help='enable debug output.')
 
   argument_parser.add_argument(
-      u'-h', u'--help', action=u'help',
-      help=u'show this help message and exit.')
+      '-h', '--help', action='help',
+      help='show this help message and exit.')
 
   argument_parser.add_argument(
-      u'--references-directory', u'--references_directory', action=u'store',
-      metavar=u'DIRECTORY', dest=u'references_directory', type=str,
+      '--references-directory', '--references_directory', action='store',
+      metavar='DIRECTORY', dest='references_directory', type=str,
       default=None, help=(
-          u'The location of the directory where the test references are '
-          u'stored.'))
+          'The location of the directory where the test references are '
+          'stored.'))
 
   argument_parser.add_argument(
-      u'--results-directory', u'--results_directory', action=u'store',
-      metavar=u'DIRECTORY', dest=u'results_directory', type=str,
+      '--results-directory', '--results_directory', action='store',
+      metavar='DIRECTORY', dest='results_directory', type=str,
       default=None, help=(
-          u'The location of the directory where to store the test results.'))
+          'The location of the directory where to store the test results.'))
 
   argument_parser.add_argument(
-      u'--sources-directory', u'--sources_directory', action=u'store',
-      metavar=u'DIRECTORY', dest=u'sources_directory', type=str,
+      '--sources-directory', '--sources_directory', action='store',
+      metavar='DIRECTORY', dest='sources_directory', type=str,
       default=None, help=(
-          u'The location of the directory where the test sources are stored.'))
+          'The location of the directory where the test sources are stored.'))
 
   argument_parser.add_argument(
-      u'--tools-directory', u'--tools_directory', action=u'store',
-      metavar=u'DIRECTORY', dest=u'tools_directory', type=str,
-      default=None, help=u'The location of the plaso tools directory.')
+      '--tools-directory', '--tools_directory', action='store',
+      metavar='DIRECTORY', dest='tools_directory', type=str,
+      default=None, help='The location of the plaso tools directory.')
 
   options = argument_parser.parse_args()
 
@@ -1229,31 +1232,31 @@ def Main():
     options.config_file = os.path.dirname(__file__)
     options.config_file = os.path.dirname(options.config_file)
     options.config_file = os.path.join(
-        options.config_file, u'config', u'end-to-end.ini')
+        options.config_file, 'config', 'end-to-end.ini')
 
   if not os.path.exists(options.config_file):
-    print(u'No such config file: {0:s}.'.format(options.config_file))
-    print(u'')
+    print('No such config file: {0:s}.'.format(options.config_file))
+    print('')
     return False
 
   logging.basicConfig(
-      format=u'[%(levelname)s] %(message)s', level=logging.INFO)
+      format='[%(levelname)s] %(message)s', level=logging.INFO)
 
   tools_path = options.tools_directory
   if not tools_path:
     tools_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), u'tools')
+        os.path.dirname(os.path.dirname(__file__)), 'tools')
 
   test_sources_path = options.sources_directory
   if test_sources_path and not os.path.isdir(test_sources_path):
-    print(u'No such sources directory: {0:s}.'.format(test_sources_path))
-    print(u'')
+    print('No such sources directory: {0:s}.'.format(test_sources_path))
+    print('')
     return False
 
   test_references_path = options.references_directory
   if test_references_path and not os.path.isdir(test_references_path):
-    print(u'No such references directory: {0:s}.'.format(test_references_path))
-    print(u'')
+    print('No such references directory: {0:s}.'.format(test_references_path))
+    print('')
     return False
 
   test_results_path = options.results_directory
@@ -1261,8 +1264,8 @@ def Main():
     test_results_path = os.getcwd()
 
   if not os.path.isdir(test_results_path):
-    print(u'No such results directory: {0:s}.'.format(test_results_path))
-    print(u'')
+    print('No such results directory: {0:s}.'.format(test_results_path))
+    print('')
     return False
 
   tests = []
@@ -1280,17 +1283,17 @@ def Main():
 
   failed_tests = test_launcher.RunTests()
   if failed_tests:
-    print(u'Failed tests:')
+    print('Failed tests:')
     for failed_test in failed_tests:
-      print(u' {0:s}'.format(failed_test))
+      print(' {0:s}'.format(failed_test))
 
-    print(u'')
+    print('')
     return False
 
   return True
 
 
-if __name__ == u'__main__':
+if __name__ == '__main__':
   if not Main():
     sys.exit(1)
   else:
