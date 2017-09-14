@@ -311,10 +311,12 @@ class ParserMediator(object):
     # TODO: Find a decent way to actually calculate the correct year
     # instead of relying on stats object.
     year = self._GetEarliestYearFromFileEntry()
-    if year:
-      return year
+    if not year:
+      year = self._GetLatestYearFromFileEntry()
 
-    return timelib.GetCurrentYear()
+    if not year:
+      year = timelib.GetCurrentYear()
+    return year
 
   def GetFileEntry(self):
     """Retrieves the active file entry.
