@@ -707,9 +707,13 @@ class EventExtractionWorker(object):
     self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
 
     self._event_extractor.ParseFileEntryMetadata(mediator, file_entry)
-    self._event_extractor.ParseMetadataFile(mediator, file_entry, '')
+    for data_stream in file_entry.data_streams:
+      if self._abort:
+        break
+      self.last_activity_timestamp = time.time()
 
-    self.last_activity_timestamp = time.time()
+      self._event_extractor.ParseMetadataFile(
+          mediator, file_entry, data_stream.name)
 
   def _SetHashers(self, hasher_names_string):
     """Sets the hasher names.
