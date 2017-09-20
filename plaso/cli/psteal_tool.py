@@ -23,20 +23,16 @@ from plaso import output  # pylint: disable=unused-import
 from plaso.cli import status_view
 from plaso.cli import storage_media_tool
 from plaso.cli import tool_options
-from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.engine import knowledge_base
 from plaso.engine import single_process as single_process_engine
-from plaso.formatters import mediator as formatters_mediator
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
 from plaso.multi_processing import psort
 from plaso.multi_processing import task_engine as multi_process_engine
-from plaso.output import interface as output_interface
-from plaso.output import manager as output_manager
 from plaso.output import mediator as output_mediator
 from plaso.parsers import manager as parsers_manager
 from plaso.storage import zip_file as storage_zip_file
