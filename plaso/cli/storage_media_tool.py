@@ -589,6 +589,7 @@ class StorageMediaTool(tools.CLITool):
       if credential_type == u'skip':
         break
 
+      # pylint: disable=redefined-variable-type
       getpass_string = u'Enter credential data: '
       if sys.platform.startswith(u'win') and sys.version_info[0] < 3:
         # For Python 2 on Windows getpass (win_getpass) requires an encoded
@@ -604,6 +605,7 @@ class StorageMediaTool(tools.CLITool):
         except TypeError:
           self._output_writer.Write(u'Unsupported credential data.\n')
           continue
+      # pylint: enable=redefined-variable-type
 
       try:
         result = self._source_scanner.Unlock(

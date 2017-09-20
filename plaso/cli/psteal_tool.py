@@ -33,7 +33,6 @@ from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
 from plaso.multi_processing import psort
 from plaso.multi_processing import task_engine as multi_process_engine
-from plaso.output import mediator as output_mediator
 from plaso.parsers import manager as parsers_manager
 from plaso.storage import zip_file as storage_zip_file
 
@@ -322,11 +321,14 @@ class PstealTool(
       # No need to multi process a single file source.
       single_process_mode = True
 
+
+    # pylint: disable=redefined-variable-type
     if single_process_mode:
       extraction_engine = single_process_engine.SingleProcessEngine()
     else:
       extraction_engine = multi_process_engine.TaskMultiProcessEngine(
           use_zeromq=self._use_zeromq)
+    # pylint: enable=redefined-variable-type
 
     # If the source is a directory or a storage media image
     # run pre-processing.
