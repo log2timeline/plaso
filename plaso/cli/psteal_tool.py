@@ -47,8 +47,7 @@ class PstealTool(
     tool_options.AnalysisPluginOptions,
     tool_options.HashersOptions,
     tool_options.OutputModuleOptions,
-    tool_options.ParsersOptions,
-    tool_options.StorageFileOptions):
+    tool_options.ParsersOptions):
   """Psteal CLI tool.
 
   Psteal extract events from the provided source and stores them in an
@@ -60,15 +59,6 @@ class PstealTool(
   Attributes:
     dependencies_check (bool): True if the availability and versions of
         dependencies should be checked.
-    list_analysis_plugins (bool): True if information about the analysis
-        plugins should be shown.
-    list_hashers (bool): True if the hashers should be listed.
-    list_language_identifiers (bool): True if information about the language
-        identifiers should be shown.
-    list_parsers_and_plugins (bool): True if the parsers and plugins should
-        be listed.
-    list_output_modules (bool): True if information about the output modules
-        should be shown.
   """
 
   NAME = 'psteal'
@@ -119,7 +109,6 @@ class PstealTool(
     """
     super(PstealTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
-    self._analysis_plugins = None
     self._artifacts_registry = None
     self._command_line_arguments = None
     self._deduplicate_events = True
@@ -128,6 +117,7 @@ class PstealTool(
     self._knowledge_base = knowledge_base.KnowledgeBase()
     self._number_of_analysis_reports = 0
     self._number_of_extraction_workers = 0
+    self._output_format = u'dynamic'
     self._parser_filter_expression = None
     self._parsers_manager = parsers_manager.ParsersManager
     self._preferred_language = 'en-US'
@@ -141,12 +131,6 @@ class PstealTool(
     self._use_time_slicer = False
     self._use_zeromq = True
     self._yara_rules_string = None
-
-    self.list_analysis_plugins = False
-    self.list_hashers = False
-    self.list_language_identifiers = False
-    self.list_parsers_and_plugins = False
-    self.list_output_modules = False
 
   def _CreateProcessingConfiguration(self):
     """Creates a processing configuration.
@@ -169,7 +153,8 @@ class PstealTool(
   def _GenerateStorageFileName(self):
     """Generates a name for the storage file.
 
-    The result use a timestamp and the basename of the source path.
+    Returns:
+      str: a filename for the storage file in the form <time>-<source>.plaso
 
     Raises:
       BadConfigOption: raised if the source path is not set.
@@ -212,61 +197,6 @@ class PstealTool(
       logging.error('Unable to preprocess with error: {0:s}'.format(exception))
 
     logging.debug('Preprocessing done.')
-
-  def _ParseOutputModuleOptions(self, options):
-    """Parses the output module options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    preferred_time_zone = self._preferred_time_zone or 'UTC'
-
-    formatter_mediator = formatters_mediator.FormatterMediator(
-        data_location=self._data_location)
-
-    try:
-      formatter_mediator.SetPreferredLanguageIdentifier(
-          self._preferred_language)
-    except (KeyError, TypeError) as exception:
-      raise RuntimeError(exception)
-
-    output_mediator_object = output_mediator.OutputMediator(
-        self._knowledge_base, formatter_mediator,
-        preferred_encoding=self.preferred_encoding)
-    output_mediator_object.SetTimezone(preferred_time_zone)
-
-    try:
-      self._output_module = output_manager.OutputManager.NewOutputModule(
-          self._output_format, output_mediator_object)
-
-    except IOError as exception:
-      raise RuntimeError(
-          'Unable to create output module with error: {0:s}'.format(
-              exception))
-
-    if not self._output_module:
-      raise RuntimeError('Missing output module.')
-
-    if isinstance(self._output_module, output_interface.LinearOutputModule):
-      if not self._output_filename:
-        raise errors.BadConfigOption((
-            'Output format: {0:s} requires an output file').format(
-                self._output_format))
-
-      if os.path.exists(self._output_filename):
-        raise errors.BadConfigOption(
-            'Output file already exists: {0:s}.'.format(self._output_filename))
-
-      output_file_object = open(self._output_filename, 'wb')
-      output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-      self._output_module.SetOutputWriter(output_writer)
-
-    helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self._output_module)
 
   def _PrintAnalysisReportsDetails(self, storage, number_of_analysis_reports):
     """Prints the details of the analysis reports.
@@ -364,7 +294,6 @@ class PstealTool(
           file system.
       UserAbort: if the user initiated an abort.
     """
-    self._CheckStorageFile(self._storage_file_path)
 
     scan_context = self.ScanSource()
     source_type = scan_context.source_type
@@ -485,18 +414,21 @@ class PstealTool(
 
     self.AddBasicOptions(argument_parser)
 
-    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_parser, names=['storage_file'])
-
     extraction_group = argument_parser.add_argument_group(
         'Extraction Arguments')
 
-    argument_helper_names = [
-        'artifact_definitions', 'extraction', 'filter_file', 'hashers',
-        'parsers', 'yara_rules']
+    argument_helper_names = ['extraction']
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         extraction_group, names=argument_helper_names)
 
+    extraction_group.add_argument(
+        u'--storage_file', metavar=u'STORAGE_FILE', type=str, default=None,
+        help=(
+            u'The path of the storage file. If not specified, will generate one'
+            u' in the form <timestamp>-<source>.plaso')
+    )
+
+    self.AddStorageMediaImageOptions(extraction_group)
     self.AddCredentialOptions(extraction_group)
 
     info_group = argument_parser.add_argument_group('Informational Arguments')
@@ -514,16 +446,11 @@ class PstealTool(
 
     output_group = argument_parser.add_argument_group('Output Arguments')
 
-    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        output_group, names=['language'])
+    output_group.add_argument(
+        u'-w', u'--write', metavar=u'OUTPUT_FILE', dest=u'write',
+        help=u'Output filename.')
 
     self.AddTimeZoneOption(output_group)
-
-    output_format_group = argument_parser.add_argument_group(
-        'Output Format Arguments')
-
-    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        output_format_group, names=['output_modules'])
 
     try:
       options = argument_parser.parse_args()
@@ -553,50 +480,53 @@ class PstealTool(
     Raises:
       BadConfigOption: if the options are invalid.
     """
+
     # The extraction options are dependent on the data location.
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['data_location'])
 
-    # Check the list options first otherwise required options will raise.
 
     # The output modules options are dependent on the preferred language
     # and preferred time zone options.
     self._ParseTimezoneOption(options)
 
     argument_helper_names = [
-        'analysis_plugins', 'hashers', 'language', 'output_modules',
-        'parsers']
+        'analysis_plugins', 'hashers', 'language', 'parsers']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
-
-    self.list_hashers = self._hasher_names_string == 'list'
-    self.list_language_identifiers = self._preferred_language == 'list'
-    self.list_output_modules = self._output_format == 'list'
-    self.list_parsers_and_plugins = self._parser_filter_expression == 'list'
-
-    if (self.list_analysis_plugins or self.list_hashers or
-        self.list_language_identifiers or self.list_output_modules or
-        self.list_parsers_and_plugins or self.list_timezones):
-      return
 
     self._ParseInformationalOptions(options)
 
-    argument_helper_names = [
-        'artifact_definitions', 'extraction', 'status_view', 'storage_file',
-        'yara_rules']
-    helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=argument_helper_names)
-
-    self._ParseLogFileOptions(options)
-
-    self._ParseStorageMediaOptions(options)
 
     # These arguments are parsed from argparse.Namespace, so we can make
     # tests consistents with the log2timeline/psort ones.
     self._single_process_mode = getattr(options, 'single_process', False)
 
+    # Check the list options first otherwise required options will raise.
+    if self.list_timezones:
+      return
+
+    self._ParseStorageMediaOptions(options)
+
+    self._storage_file_path = getattr(options, u'storage_file', None)
     if not self._storage_file_path:
       self._storage_file_path = self._GenerateStorageFileName()
 
-    self._analysis_plugins = self._CreateAnalysisPlugins(options)
+    self._output_filename = getattr(options, u'write', None)
+
+    if not self._output_filename:
+      raise errors.BadConfigOption((
+          u'Output format: {0:s} requires an output file (-w OUTPUT_FILE)'
+      ).format(self._output_format))
+    if os.path.exists(self._output_filename):
+      raise errors.BadConfigOption(
+          u'Output file already exists: {0:s}.'.format(self._output_filename))
+
+    argument_helper_names = ['extraction', 'status_view']
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=argument_helper_names)
+
+
+    self._ParseLogFileOptions(options)
+
     self._output_module = self._CreateOutputModule(options)
