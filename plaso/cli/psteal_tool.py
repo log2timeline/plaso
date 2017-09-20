@@ -488,6 +488,10 @@ class PstealTool(
     # and preferred time zone options.
     self._ParseTimezoneOption(options)
 
+    # Check the list options first otherwise required options will raise.
+    if self.list_timezones:
+      return
+
     argument_helper_names = [
         'analysis_plugins', 'hashers', 'language', 'parsers']
     helpers_manager.ArgumentHelperManager.ParseOptions(
@@ -495,16 +499,17 @@ class PstealTool(
 
     self._ParseInformationalOptions(options)
 
+    argument_helper_names = ['extraction', 'status_view']
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=argument_helper_names)
+
+    self._ParseLogFileOptions(options)
+
+    self._ParseStorageMediaOptions(options)
 
     # These arguments are parsed from argparse.Namespace, so we can make
     # tests consistents with the log2timeline/psort ones.
     self._single_process_mode = getattr(options, 'single_process', False)
-
-    # Check the list options first otherwise required options will raise.
-    if self.list_timezones:
-      return
-
-    self._ParseStorageMediaOptions(options)
 
     self._storage_file_path = getattr(options, u'storage_file', None)
     if not self._storage_file_path:
@@ -519,12 +524,5 @@ class PstealTool(
     if os.path.exists(self._output_filename):
       raise errors.BadConfigOption(
           u'Output file already exists: {0:s}.'.format(self._output_filename))
-
-    argument_helper_names = ['extraction', 'status_view']
-    helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=argument_helper_names)
-
-
-    self._ParseLogFileOptions(options)
 
     self._output_module = self._CreateOutputModule(options)
