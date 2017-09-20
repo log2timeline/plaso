@@ -307,6 +307,7 @@ class PsortTool(
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     self.AddBasicOptions(argument_parser)
+    self.AddProfilingOptions(argument_parser)
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         argument_parser, names=['storage_file'])
@@ -430,7 +431,10 @@ class PsortTool(
 
     self._ParseLogFileOptions(options)
 
+    self._ParseProfilingOptions(options)
+
     self._ParseProcessingOptions(options)
+
 
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['event_filters'])
@@ -507,6 +511,9 @@ class PsortTool(
 
     configuration = configurations.ProcessingConfiguration()
     configuration.data_location = self._data_location
+    configuration.profiling.directory = self._profiling_directory
+    configuration.profiling.sample_rate = self._profiling_sample_rate
+    configuration.profiling.profilers = self._profilers
 
     analysis_counter = None
     if self._analysis_plugins:
@@ -523,7 +530,8 @@ class PsortTool(
           self._knowledge_base, storage_writer, self._data_location,
           self._analysis_plugins, event_filter=self._event_filter,
           event_filter_expression=self._event_filter_expression,
-          status_update_callback=status_update_callback)
+          status_update_callback=status_update_callback,
+          profiling_configuration=configuration.profiling)
 
       analysis_counter = collections.Counter()
       for item, value in iter(session.analysis_reports_counter.items()):
@@ -545,7 +553,8 @@ class PsortTool(
           deduplicate_events=self._deduplicate_events,
           event_filter=self._event_filter,
           status_update_callback=status_update_callback,
-          time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
+          time_slice=self._time_slice, use_time_slicer=self._use_time_slicer,
+          profiling_configuration=configuration.profiling)
 
     if self._quiet_mode:
       return
