@@ -497,9 +497,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
             output_module, event, deduplicate_events=deduplicate_events)
         self._number_of_consumed_events += 1
 
-        if self._guppy_memory_profiler and self._number_of_consumed_events % 1000 == 0:
-          self._guppy_memory_profiler.Sample()
-
         # pylint: disable=singleton-comparison
         if (filter_match == True and filter_limit and
             filter_limit == self._number_of_consumed_events):
@@ -966,6 +963,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       use_time_slicer (Optional[bool]): True if the 'time slicer' should be
           used. The 'time slicer' will provide a context of events around
           an event of interest.
+      profiling_configuration (Optional[ProfilingConfiguration]): profiling
+          configuration.
 
     Returns:
       collections.Counter: counter that tracks the number of events extracted

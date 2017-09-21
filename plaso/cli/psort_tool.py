@@ -435,7 +435,6 @@ class PsortTool(
 
     self._ParseProcessingOptions(options)
 
-
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['event_filters'])
 
