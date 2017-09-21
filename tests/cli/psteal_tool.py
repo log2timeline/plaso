@@ -127,7 +127,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     result = test_tool.ParseArguments()
     self.assertFalse(result)
     output = output_writer.ReadOutput()
-    expected_error = u'ERROR: Missing source path'
+    expected_error = u'Output format: dynamic requires an output file'
     self.assertIn(expected_error, output)
 
   def testExtractEventsFromSourceDirectory(self):
