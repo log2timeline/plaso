@@ -50,8 +50,8 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
 
   _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = u'\n'.join([
       u'usage: storage_media_tool_test.py [--partition PARTITION]',
-      (u'                                  [--partitions PARTITIONS] '
-       u'[-o IMAGE_OFFSET]'),
+      u'                                  [--partitions PARTITIONS]',
+      u'                                  [--offset IMAGE_OFFSET]',
       u'                                  [--ob IMAGE_OFFSET_BYTES]',
       u'                                  [--sector_size BYTES_PER_SECTOR]',
       u'',
@@ -63,6 +63,14 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       (u'                        The offset of the volume within the storage '
        u'media'),
       u'                        image in number of bytes.',
+      u'  --offset IMAGE_OFFSET',
+      (u'                        The offset of the volume within the storage '
+       u'media'),
+      (u'                        image in number of sectors. A sector is 512 '
+       u'bytes in'),
+      (u'                        size by default this can be overwritten with '
+       u'the'),
+      u'                        --sector_size option.',
       u'  --partition PARTITION',
       (u'                        Choose a partition number from a disk image. '
        u'This'),
@@ -87,14 +95,6 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       (u'                        The number of bytes per sector, which is 512 '
        u'by'),
       u'                        default.',
-      u'  -o IMAGE_OFFSET, --offset IMAGE_OFFSET',
-      (u'                        The offset of the volume within the storage '
-       u'media'),
-      (u'                        image in number of sectors. A sector is 512 '
-       u'bytes in'),
-      (u'                        size by default this can be overwritten with '
-       u'the'),
-      u'                        --sector_size option.',
       u''])
 
   _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = u'\n'.join([

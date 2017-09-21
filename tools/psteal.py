@@ -34,6 +34,10 @@ def Main():
     tool.ListTimeZones()
     have_list_option = True
 
+  if tool.list_output_modules:
+    tool.ListOutputModules()
+    have_list_option = True
+
   if have_list_option:
     return True
 

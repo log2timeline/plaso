@@ -43,9 +43,7 @@ class OutputModulesArgumentsHelper(interface.ArgumentsHelper):
     arguments = sys.argv[1:]
     argument_index = 0
 
-    if u'-o' in arguments:
-      argument_index = arguments.index(u'-o') + 1
-    elif u'--output_format' in arguments:
+    if u'--output_format' in arguments:
       argument_index = arguments.index(u'--output_format') + 1
     elif u'--output-format' in arguments:
       argument_index = arguments.index(u'--output-format') + 1

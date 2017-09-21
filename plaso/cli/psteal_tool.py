@@ -54,6 +54,8 @@ class PstealTool(
   Attributes:
     dependencies_check (bool): True if the availability and versions of
         dependencies should be checked.
+    list_output_modules (bool): True if information about the output modules
+        should be shown.
   """
 
   NAME = 'psteal'
@@ -112,7 +114,7 @@ class PstealTool(
     self._knowledge_base = knowledge_base.KnowledgeBase()
     self._number_of_analysis_reports = 0
     self._number_of_extraction_workers = 0
-    self._output_format = u'dynamic'
+    self._output_format = None
     self._parser_filter_expression = None
     self._parsers_manager = parsers_manager.ParsersManager
     self._preferred_language = 'en-US'
@@ -126,6 +128,8 @@ class PstealTool(
     self._use_time_slicer = False
     self._use_zeromq = True
     self._yara_rules_string = None
+
+    self.list_output_modules = False
 
   def _CreateProcessingConfiguration(self):
     """Creates a processing configuration.
@@ -444,11 +448,13 @@ class PstealTool(
 
     output_group = argument_parser.add_argument_group('Output Arguments')
 
-    output_group.add_argument(
-        u'-w', u'--write', metavar=u'OUTPUT_FILE', dest=u'write',
-        help=u'Output filename.')
-
     self.AddTimeZoneOption(output_group)
+
+    output_format_group = argument_parser.add_argument_group(
+        'Output Format Arguments')
+
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        output_format_group, names=['output_modules'])
 
     try:
       options = argument_parser.parse_args()
@@ -488,14 +494,17 @@ class PstealTool(
     # and preferred time zone options.
     self._ParseTimezoneOption(options)
 
-    # Check the list options first otherwise required options will raise.
-    if self.list_timezones:
-      return
 
     argument_helper_names = [
-        'analysis_plugins', 'hashers', 'language', 'parsers']
+        'analysis_plugins', 'hashers', 'language', 'output_modules', 'parsers']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
+
+    self.list_output_modules = self._output_format == 'list'
+
+    # Check the list options first otherwise required options will raise.
+    if self.list_timezones or self.list_output_modules:
+      return
 
     self._ParseInformationalOptions(options)
 
