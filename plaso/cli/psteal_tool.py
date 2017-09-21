@@ -426,7 +426,7 @@ class PstealTool(
     extraction_group.add_argument(
         u'--storage_file', metavar=u'STORAGE_FILE', type=str, default=None,
         help=(
-            u'The path of the storage file. If not specified, will generate one'
+            u'The path of the storage file. If not specified, one will be made '
             u' in the form <timestamp>-<source>.plaso')
     )
 

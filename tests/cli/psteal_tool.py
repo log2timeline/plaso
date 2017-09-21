@@ -30,9 +30,11 @@ class PstealToolTest(test_lib.CLIToolTestCase):
   _STORAGE_FILENAME_TEMPLATE = r'\d{{8}}T\d{{6}}-{filename}.plaso'
 
   def setUp(self):
+    """Makes preparations before running an individual test."""
     self.curdir = os.path.realpath(os.path.curdir)
 
   def tearDown(self):
+    """Cleans up after running an individual test."""
     os.chdir(self.curdir)
 
   def testGenerateStorageFileName(self):
