@@ -326,13 +326,11 @@ class PstealTool(
       single_process_mode = True
 
 
-    # pylint: disable=redefined-variable-type
     if single_process_mode:
       extraction_engine = single_process_engine.SingleProcessEngine()
     else:
       extraction_engine = multi_process_engine.TaskMultiProcessEngine(
           use_zeromq=self._use_zeromq)
-    # pylint: enable=redefined-variable-type
 
     # If the source is a directory or a storage media image
     # run pre-processing.

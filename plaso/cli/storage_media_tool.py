@@ -589,7 +589,6 @@ class StorageMediaTool(tools.CLITool):
       if credential_type == u'skip':
         break
 
-      #pylint: disable=redefined-variable-type
       getpass_string = u'Enter credential data: '
       if sys.platform.startswith(u'win') and sys.version_info[0] < 3:
         # For Python 2 on Windows getpass (win_getpass) requires an encoded
@@ -610,7 +609,6 @@ class StorageMediaTool(tools.CLITool):
         result = self._source_scanner.Unlock(
             scan_context, locked_scan_node.path_spec, credential_type,
             credential_data)
-      #pylint: enable=redefined-variable-type
 
       except IOError as exception:
         logging.debug(u'Unable to unlock volume with error: {0:s}'.format(
