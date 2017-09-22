@@ -1007,7 +1007,7 @@ class StorageMediaTool(tools.CLITool):
             u'partition is 1. All partition can be defined as: "all".'))
 
     argument_group.add_argument(
-        u'-o', u'--offset', dest=u'image_offset', action=u'store', default=None,
+        u'--offset', dest=u'image_offset', action=u'store', default=None,
         type=int, help=(
             u'The offset of the volume within the storage media image in '
             u'number of sectors. A sector is {0:d} bytes in size by default '
