@@ -730,7 +730,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
   # The maximum number of events to read into the serialized event heap from
   # a single stream per iteration
-  _MAXIMUM_NUMBER_OF_EVENTS_PER_MERGE = 1000
+  _MAXIMUM_NUMBER_OF_EVENTS_PER_FILL = 1000
 
   _MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS = 5
   _LOCKED_FILE_SLEEP_TIME = 0.5
@@ -904,7 +904,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     reference_timestamp = event.timestamp
     filled_events = 1
     while (event.timestamp == reference_timestamp and
-           filled_events < self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS):
+           filled_events < self._MAXIMUM_NUMBER_OF_EVENTS_PER_FILL):
       event = self._GetEvent(stream_number)
       if not event:
         break
