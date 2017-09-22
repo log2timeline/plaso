@@ -28,6 +28,19 @@ def Main():
   if not tool.ParseArguments():
     return False
 
+  have_list_option = False
+
+  if tool.list_timezones:
+    tool.ListTimeZones()
+    have_list_option = True
+
+  if tool.list_output_modules:
+    tool.ListOutputModules()
+    have_list_option = True
+
+  if have_list_option:
+    return True
+
   try:
     tool.ExtractEventsFromSources()
     tool.AnalyzeEvents()
