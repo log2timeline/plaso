@@ -728,6 +728,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
   # The maximum serialized report size (32 MiB).
   _MAXIMUM_SERIALIZED_REPORT_SIZE = 32 * 1024 * 1024
 
+  # The maximum number of events to read into the serialized event heap from
+  # a single stream per iteration
+  _MAXIMUM_NUMBER_OF_EVENTS_PER_FILL = 1000
+
   _MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS = 5
   _LOCKED_FILE_SLEEP_TIME = 0.5
 
@@ -889,9 +893,6 @@ class ZIPStorageFile(interface.BaseFileStorage):
     adds them to the heap. This ensures that the sorting order of events with
     the same timestamp is consistent.
 
-    Except for the last event, all newly added events will have the same
-    timestamp.
-
     Args:
       stream_number (int): serialized data stream number.
     """
@@ -901,10 +902,13 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self._event_heap.PushEvent(event)
 
     reference_timestamp = event.timestamp
-    while event.timestamp == reference_timestamp:
+    filled_events = 1
+    while (event.timestamp == reference_timestamp and
+           filled_events < self._MAXIMUM_NUMBER_OF_EVENTS_PER_FILL):
       event = self._GetEvent(stream_number)
       if not event:
         break
+      filled_events += 1
 
       self._event_heap.PushEvent(event)
 
