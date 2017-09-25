@@ -494,7 +494,8 @@ class PstealTool(
 
 
     argument_helper_names = [
-        'analysis_plugins', 'hashers', 'language', 'output_modules', 'parsers']
+        'artifact_definitions', 'analysis_plugins', 'hashers', 'language',
+        'output_modules', 'parsers']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
