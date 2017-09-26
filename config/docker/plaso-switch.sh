@@ -6,6 +6,7 @@
 # docker run <container_id> log2timeline
 # docker run <container_id> pinfo
 # docker run <container_id> psort
+# docker run <container_id> psteal
 #
 # or to run it on actual data:
 # mkdir -p /data/sources    # put the files to parse here
@@ -22,6 +23,8 @@ case "$1" in
     /usr/bin/pinfo.py "${@:2}" ;;
   psort|psort.py)
     /usr/bin/psort.py "${@:2}" ;;
+  psteal|psteal.py)
+    /usr/bin/psteal.py "${@:2}" ;;
   "")
     /usr/bin/log2timeline.py "${@:2}" ;;
   *)
