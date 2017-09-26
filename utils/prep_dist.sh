@@ -51,7 +51,7 @@ rm -f config/licenses/LICENSE.libwrc
 rm -f config/licenses/LICENSE.mock
 rm -f config/licenses/LICENSE.pbr
 
-python ./utils/update_dependencies.py
+PYTHONPATH=../l2tdevtools python ../l2tdevtools/tools/update-dependencies.py
 
 exit ${EXIT_SUCCESS};
 
