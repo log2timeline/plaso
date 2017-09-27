@@ -80,7 +80,7 @@ done
 
 # If the --only-dependencies option was passed to the installer script
 # the plaso package is not installed.
-if test ${DEPENDENCIES_ONLY} -ne 0;
+if test ${DEPENDENCIES_ONLY} -eq 0;
 then
   echo "Installing plaso.";
 
