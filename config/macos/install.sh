@@ -71,12 +71,16 @@ echo "Installing dependencies.";
 
 for PACKAGE_NAME in ${DEPENDENCIES};
 do
-  sudo installer -target / -pkg "${VOLUME_NAME}/packages/${PACKAGE_NAME}";
+  for PACKAGE in `find ${VOLUME_NAME} -name "PACKAGE_NAME-*.pkg"`;
+  do
+    FILENAME=`basename ${PACKAGE}`
+    sudo installer -target / -pkg "${VOLUME_NAME}/packages/${FILENAME}";
+  done
 done
 
 # If the --only-dependencies option was passed to the installer script
 # the plaso package is not installed.
-if && test ${DEPENDENCIES_ONLY} -ne 0;
+if test ${DEPENDENCIES_ONLY} -ne 0;
 then
   echo "Installing plaso.";
 
