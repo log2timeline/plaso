@@ -71,7 +71,7 @@ echo "Installing dependencies.";
 
 for PACKAGE_NAME in ${DEPENDENCIES};
 do
-  for PACKAGE in `find ${VOLUME_NAME} -name "PACKAGE_NAME-*.pkg"`;
+  for PACKAGE in `find ${VOLUME_NAME} -name "${PACKAGE_NAME}-*.pkg"`;
   do
     FILENAME=`basename ${PACKAGE}`
     sudo installer -target / -pkg "${VOLUME_NAME}/packages/${FILENAME}";
