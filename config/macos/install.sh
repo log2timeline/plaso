@@ -84,7 +84,7 @@ if test ${DEPENDENCIES_ONLY} -eq 0;
 then
   echo "Installing plaso.";
 
-  sudo installer -target / -pkg "${VOLUME_NAME}/packages/plaso-@VERSION@.pkg";
+  sudo installer -target / -pkg "${VOLUME_NAME}/packages/python-plaso-@VERSION@.pkg";
 fi
 
 echo "Done.";
