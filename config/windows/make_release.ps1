@@ -2,8 +2,8 @@
 # It needs to be run from a freshly cloned plaso directory
 
 # Remove support for hachoir which is GPLv2 and cannot be distributed
-# # in binary form. Leave the formatter because it does not link in the
-# # hachoir code.
+# in binary form. Leave the formatter because it does not link in the
+# hachoir code.
 Get-Content ".\plaso\parsers\__init__.py" | %{$_ -replace "from plaso.parsers import hachoir", ""} | Set-Content ".\plaso\parsers\__init__.py.patched"
 mv -Force .\plaso\parsers\__init__.py.patched .\plaso\parsers\__init__.py
 
@@ -13,7 +13,7 @@ mv -Force .\plaso\parsers\presets.py.patched .\plaso\parsers\presets.py
 Get-Content ".\plaso\dependencies.py" | Select-String -pattern 'hachoir_' -notmatch | Set-Content ".\plaso\dependencies.py.patched"
 mv -Force .\plaso\dependencies.py.patched .\plaso\dependencies.py
 
-# Copy all licenses in .\config\licenses\
+# Copy all licenses to .\config\licenses\
 mkdir .\config\licenses
 git.exe clone https://github.com/log2timeline/l2tdevtools
 $dep = Get-Content ..\l2tdevtools\data\presets.ini | Select-String -pattern '\[plaso\]' -context 0,1
@@ -28,6 +28,7 @@ rm -Force .\config\licenses\LICENSE.libwrc
 rm -Force .\config\licenses\LICENSE.mock
 rm -Force .\config\licenses\LICENSE.pbr
 
+# Build the binaries for each tool
 pyinstaller.exe --hidden-import artifacts --onedir tools\image_export.py
 pyinstaller.exe --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\log2timeline.py
 pyinstaller.exe --hidden-import artifacts --onedir tools\pinfo.py
