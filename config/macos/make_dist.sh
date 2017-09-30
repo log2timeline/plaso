@@ -8,9 +8,9 @@ EXIT_FAILURE=1;
 
 DEPENDENCIES="PyYAML XlsxWriter artifacts bencode binplist construct dateutil dfdatetime dfvfs dfwinreg dpkt efilter hachoir-core hachoir-metadata hachoir-parser libbde libesedb libevt libevtx libewf libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm lzma pefile psutil pycrypto pyparsing pysqlite pytsk3 pytz pyzmq requests six yara-python";
 
-MACOS_VERSION=`sw_vers -productVersion | awk -F '.' '{print $1 "." $2}'`;
+MACOS_VERSION=$(sw_vers -productVersion | awk -F '.' '{print $1 "." $2}');
 
-PLASO_VERSION=`grep -e '^__version' plaso/__init__.py | sed -e "s/^[^=]*= '\([^']*\)'/\1/g"`;
+PLASO_VERSION=$(grep -e '^__version' plaso/__init__.py | sed -e "s/^[^=]*= '\([^']*\)'/\1/g");
 DEPENDENCIES_PATH="../l2tdevtools/build";
 LICENSES_PATH="../l2tdevtools/data/licenses";
 
@@ -79,13 +79,13 @@ mkdir ${DISTDIR}/packages;
 
 for DEPENDENCY in ${DEPENDENCIES};
 do
-  DEPENDENCY_DMG=`ls -1 ${DEPENDENCIES_PATH}/${DEPENDENCY}-*.dmg`;
+  DEPENDENCY_DMG=$(ls -1 ${DEPENDENCIES_PATH}/${DEPENDENCY}-*.dmg);
 
   if test -z ${DEPENDENCY_DMG};
   then
     continue;
   fi
-  DEPENDENCY_PKG=`basename ${DEPENDENCY_DMG/.dmg/.pkg}`;
+  DEPENDENCY_PKG=$(basename ${DEPENDENCY_DMG/.dmg/.pkg});
 
   hdiutil attach ${DEPENDENCY_DMG};
   cp -rf /Volumes/${DEPENDENCY_PKG}/${DEPENDENCY_PKG} ${DISTDIR}/packages;
