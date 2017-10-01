@@ -38,11 +38,40 @@ rm -Force .\config\licenses\LICENSE.mock
 rm -Force .\config\licenses\LICENSE.pbr
 
 # Build the binaries for each tool
-${PyInstaller} --hidden-import artifacts --onedir tools\image_export.py
-${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\log2timeline.py
-${PyInstaller} --hidden-import artifacts --onedir tools\pinfo.py
-${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psort.py
-${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psteal.py
+
+$Output = Invoke-Expression ${PyInstaller} --hidden-import artifacts --onedir tools\image_export.py
+
+If (${LastExitCode} -ne ${ExitSuccess})
+{
+	Write-Host ${Output} -foreground Red
+
+	Exit 1
+}
+$Output = Invoke-Expression ${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\log2timeline.py
+
+If (${LastExitCode} -ne ${ExitSuccess})
+{
+	Write-Host ${Output} -foreground Red
+
+	Exit 1
+}
+$Output = Invoke-Expression ${PyInstaller} --hidden-import artifacts --onedir tools\pinfo.py
+
+If (${LastExitCode} -ne ${ExitSuccess})
+{
+	Write-Host ${Output} -foreground Red
+
+	Exit 1
+}
+$Output = Invoke-Expression ${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psort.py
+
+If (${LastExitCode} -ne ${ExitSuccess})
+{
+	Write-Host ${Output} -foreground Red
+
+	Exit 1
+}
+$Output = Invoke-Expression ${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psteal.py
 
 mkdir dist\plaso
 mkdir dist\plaso\data
