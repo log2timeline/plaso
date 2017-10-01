@@ -23,11 +23,22 @@ Get-Content ".\plaso\dependencies.py" | Select-String -pattern 'hachoir_' -notma
 mv -Force .\plaso\dependencies.py.patched .\plaso\dependencies.py
 
 # Copy all licenses to .\config\licenses\
-mkdir .\config\licenses
+$LicensesPath = ".\config\licenses"
+
+If (-Not (Test-Path ${LicensesPath}))
+{
+	mkdir ${LicensesPath}
+}
+
+If (Test-Path "l2tdevtools")
+{
+	rm -Force "l2tdevtools"
+}
 git.exe clone https://github.com/log2timeline/l2tdevtools
+
 $dep = Get-Content ..\l2tdevtools\data\presets.ini | Select-String -pattern '\[plaso\]' -context 0,1
 Foreach ($d in $dep.context.DisplayPostContext.split(': ')[2].split(',')) {
-    cp "..\l2tdevtools\data\licenses\LICENSE.$($d)" .\config\licenses\
+	cp "..\l2tdevtools\data\licenses\LICENSE.$($d)" .\config\licenses\
 }
 
 rm -Force .\config\licenses\LICENSE.hachoir-*
