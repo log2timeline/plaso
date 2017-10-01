@@ -1,6 +1,15 @@
 # This scripts builds a release of plaso, in the form of plaso.zip
 # It needs to be run from a freshly cloned plaso directory
 
+$PyInstaller = "pyinstaller.exe"
+
+If (-Not (Test-Path ${PyInstaller}))
+{
+	Write-Host "Missing PyInstaller." -foreground Red
+
+	Exit 1
+}
+
 # Remove support for hachoir which is GPLv2 and cannot be distributed
 # in binary form. Leave the formatter because it does not link in the
 # hachoir code.
@@ -29,11 +38,11 @@ rm -Force .\config\licenses\LICENSE.mock
 rm -Force .\config\licenses\LICENSE.pbr
 
 # Build the binaries for each tool
-pyinstaller.exe --hidden-import artifacts --onedir tools\image_export.py
-pyinstaller.exe --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\log2timeline.py
-pyinstaller.exe --hidden-import artifacts --onedir tools\pinfo.py
-pyinstaller.exe --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psort.py
-pyinstaller.exe --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psteal.py
+${PyInstaller} --hidden-import artifacts --onedir tools\image_export.py
+${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\log2timeline.py
+${PyInstaller} --hidden-import artifacts --onedir tools\pinfo.py
+${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psort.py
+${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psteal.py
 
 mkdir dist\plaso
 mkdir dist\plaso\data
