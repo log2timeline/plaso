@@ -1,4 +1,5 @@
-# Scripts to build a PyInstaller packaged version of plaso archived in a ZIP.
+# Scripts to build a onedir PyInstaller versions of the plaso tools.
+# The tools are bundled into a single ZIP file.
 
 $PyInstaller = "pyinstaller.exe"
 
@@ -58,6 +59,15 @@ xcopy /q /y AUTHORS dist\plaso
 xcopy /q /y LICENSE dist\plaso
 xcopy /q /y README dist\plaso
 
+xcopy /q /y /s dist\image_export\* dist\plaso
+xcopy /q /y /s dist\log2timeline\* dist\plaso
+xcopy /q /y /s dist\pinfo\* dist\plaso
+xcopy /q /y /s dist\psort\* dist\plaso
+xcopy /q /y /s dist\psteal\* dist\plaso
+xcopy /q /y data\* dist\plaso\data
+xcopy /q /y C:\Python27\Lib\site-packages\zmq\libzmq.pyd dist\plaso
+
+# Copy the license files of the dependencies
 $dep = Get-Content l2tdevtools\data\presets.ini | Select-String -pattern '\[plaso\]' -context 0,1
 Foreach ($d in $dep.context.DisplayPostContext.split(': ')[2].split(',')) {
 	cp "l2tdevtools\data\licenses\LICENSE.$($d)" dist\plaso\licenses
@@ -69,14 +79,6 @@ rm -Force dist\plaso\licenses\LICENSE.libexe
 rm -Force dist\plaso\licenses\LICENSE.libwrc
 rm -Force dist\plaso\licenses\LICENSE.mock
 rm -Force dist\plaso\licenses\LICENSE.pbr
-
-xcopy /q /y /s dist\image_export\* dist\plaso
-xcopy /q /y /s dist\log2timeline\* dist\plaso
-xcopy /q /y /s dist\pinfo\* dist\plaso
-xcopy /q /y /s dist\psort\* dist\plaso
-xcopy /q /y /s dist\psteal\* dist\plaso
-xcopy /q /y data\* dist\plaso\data
-xcopy /q /y C:\Python27\Lib\site-packages\zmq\libzmq.pyd dist\plaso
 
 # Copy the artifacts yaml files
 git.exe clone https://github.com/ForensicArtifacts/artifacts
