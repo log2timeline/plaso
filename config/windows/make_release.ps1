@@ -1,5 +1,4 @@
-# This scripts builds a release of plaso, in the form of plaso.zip
-# It needs to be run from a freshly cloned plaso directory
+# Scripts to build a PyInstaller packaged version of plaso archived in a ZIP.
 
 $PyInstaller = "pyinstaller.exe"
 
@@ -23,40 +22,20 @@ Get-Content ".\plaso\dependencies.py" | Select-String -pattern 'hachoir_' -notma
 mv -Force .\plaso\dependencies.py.patched .\plaso\dependencies.py
 
 # Build the binaries for each tool
-
-$Output = Invoke-Expression "${PyInstaller} --hidden-import artifacts --onedir tools\image_export.py"
-
-If (${LastExitCode} -ne ${ExitSuccess})
+If (Test-Path "dist")
 {
-	Write-Host ${Output} -foreground Red
-
-	Exit 1
+	rm -Force -Recurse "dist"
 }
-$Output = Invoke-Expression "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\log2timeline.py"
 
-If (${LastExitCode} -ne ${ExitSuccess})
-{
-	Write-Host ${Output} -foreground Red
+Invoke-Expression "${PyInstaller} --hidden-import artifacts --onedir tools\image_export.py"
 
-	Exit 1
-}
-$Output = Invoke-Expression "${PyInstaller} --hidden-import artifacts --onedir tools\pinfo.py"
+Invoke-Expression "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\log2timeline.py"
 
-If (${LastExitCode} -ne ${ExitSuccess})
-{
-	Write-Host ${Output} -foreground Red
+Invoke-Expression "${PyInstaller} --hidden-import artifacts --onedir tools\pinfo.py"
 
-	Exit 1
-}
-$Output = Invoke-Expression "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psort.py"
+Invoke-Expression "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psort.py"
 
-If (${LastExitCode} -ne ${ExitSuccess})
-{
-	Write-Host ${Output} -foreground Red
-
-	Exit 1
-}
-$Output = Invoke-Expression "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psteal.py"
+Invoke-Expression "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psteal.py"
 
 # Clone l2tdevtools for the licenses
 If (Test-Path "l2tdevtools")
