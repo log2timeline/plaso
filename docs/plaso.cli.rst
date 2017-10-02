@@ -1,5 +1,5 @@
-plaso.cli package
-=================
+plaso\.cli package
+==================
 
 Subpackages
 -----------
@@ -11,104 +11,104 @@ Subpackages
 Submodules
 ----------
 
-plaso.cli.extraction_tool module
---------------------------------
+plaso\.cli\.extraction\_tool module
+-----------------------------------
 
 .. automodule:: plaso.cli.extraction_tool
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.image_export_tool module
-----------------------------------
+plaso\.cli\.image\_export\_tool module
+--------------------------------------
 
 .. automodule:: plaso.cli.image_export_tool
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.log2timeline_tool module
-----------------------------------
+plaso\.cli\.log2timeline\_tool module
+-------------------------------------
 
 .. automodule:: plaso.cli.log2timeline_tool
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.logging_filter module
--------------------------------
+plaso\.cli\.logging\_filter module
+----------------------------------
 
 .. automodule:: plaso.cli.logging_filter
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.pinfo_tool module
----------------------------
+plaso\.cli\.pinfo\_tool module
+------------------------------
 
 .. automodule:: plaso.cli.pinfo_tool
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.psort_tool module
----------------------------
+plaso\.cli\.psort\_tool module
+------------------------------
 
 .. automodule:: plaso.cli.psort_tool
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.psteal_tool module
-----------------------------
+plaso\.cli\.psteal\_tool module
+-------------------------------
 
 .. automodule:: plaso.cli.psteal_tool
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.status_view module
-----------------------------
+plaso\.cli\.status\_view module
+-------------------------------
 
 .. automodule:: plaso.cli.status_view
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.storage_media_tool module
------------------------------------
+plaso\.cli\.storage\_media\_tool module
+---------------------------------------
 
 .. automodule:: plaso.cli.storage_media_tool
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.time_slices module
-----------------------------
+plaso\.cli\.time\_slices module
+-------------------------------
 
 .. automodule:: plaso.cli.time_slices
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.tool_options module
------------------------------
+plaso\.cli\.tool\_options module
+--------------------------------
 
 .. automodule:: plaso.cli.tool_options
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.tools module
-----------------------
+plaso\.cli\.tools module
+------------------------
 
 .. automodule:: plaso.cli.tools
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.views module
-----------------------
+plaso\.cli\.views module
+------------------------
 
 .. automodule:: plaso.cli.views
     :members:
