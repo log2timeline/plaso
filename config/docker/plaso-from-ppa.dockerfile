@@ -8,13 +8,14 @@ MAINTAINER Log2Timeline <log2timeline-dev@googlegroups.com>
 # docker run -ti -v /data/:/data/ <container_id> log2timeline \
 #   /data/results/result.plaso /data/artifacts
 
-RUN apt-get update
+RUN apt-get -y update
 RUN apt-get -y install software-properties-common apt-transport-https
 RUN add-apt-repository -y ppa:gift/stable
 
-RUN apt-get update && apt-get -y upgrade
+RUN apt-get -y update
+RUN apt-get -y upgrade
 
-RUN apt-get -y install python-plaso
+RUN apt-get -y install python-plaso plaso-tools
 RUN apt-get clean &&  rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 # Set terminal to UTF-8 by default
