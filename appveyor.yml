@@ -4,9 +4,10 @@ environment:
 
 install:
   - cmd: '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x86 /release'
-  - ps: [Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls; (new-object net.webclient).DownloadFile('https://bootstrap.pypa.io/get-pip.py', 'C:\Projects\get-pip.py')
-  - ps: [Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls; (new-object net.webclient).DownloadFile('https://github.com/log2timeline/l2tbinaries/raw/master/win32/pywin32-220.win32-py2.7.exe', 'C:\Projects\pywin32-220.win32-py2.7.exe')
-  - ps: [Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls; (new-object net.webclient).DownloadFile('https://github.com/log2timeline/l2tbinaries/raw/master/win32/WMI-1.4.9.win32.exe', 'C:\Projects\WMI-1.4.9.win32.exe')
+  - ps: "[Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls"
+  - ps: (new-object net.webclient).DownloadFile('https://bootstrap.pypa.io/get-pip.py', 'C:\Projects\get-pip.py')
+  - ps: (new-object net.webclient).DownloadFile('https://github.com/log2timeline/l2tbinaries/raw/master/win32/pywin32-220.win32-py2.7.exe', 'C:\Projects\pywin32-220.win32-py2.7.exe')
+  - ps: (new-object net.webclient).DownloadFile('https://github.com/log2timeline/l2tbinaries/raw/master/win32/WMI-1.4.9.win32.exe', 'C:\Projects\WMI-1.4.9.win32.exe')
   - cmd: "%PYTHON%\\python.exe C:\\Projects\\get-pip.py"
   - cmd: "%PYTHON%\\Scripts\\easy_install.exe C:\\Projects\\pywin32-220.win32-py2.7.exe"
   - cmd: "%PYTHON%\\Scripts\\easy_install.exe C:\\Projects\\WMI-1.4.9.win32.exe"
