@@ -4,6 +4,7 @@ environment:
 
 install:
   - cmd: '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x86 /release'
+  - ps: "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12"
   - ps: (new-object net.webclient).DownloadFile('https://bootstrap.pypa.io/get-pip.py', 'C:\Projects\get-pip.py')
   - ps: (new-object net.webclient).DownloadFile('https://github.com/log2timeline/l2tbinaries/raw/master/win32/pywin32-220.win32-py2.7.exe', 'C:\Projects\pywin32-220.win32-py2.7.exe')
   - ps: (new-object net.webclient).DownloadFile('https://github.com/log2timeline/l2tbinaries/raw/master/win32/WMI-1.4.9.win32.exe', 'C:\Projects\WMI-1.4.9.win32.exe')
