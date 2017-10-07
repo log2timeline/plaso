@@ -117,8 +117,7 @@ class DynamicFieldsHelper(object):
     """
     inode = event.inode
     if inode is None:
-      if (hasattr(event, 'pathspec') and
-          hasattr(event.pathspec, 'image_inode')):
+      if hasattr(event, 'pathspec') and hasattr(event.pathspec, 'image_inode'):
         inode = event.pathspec.image_inode
     if inode is None:
       inode = '-'
