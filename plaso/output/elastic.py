@@ -10,7 +10,7 @@ from dfvfs.serializer.json_serializer import JsonPathSpecSerializer
 
 try:
   from elasticsearch import Elasticsearch
-  from elasticsearch.exceptions import ConnectionError
+  from elasticsearch.exceptions import ConnectionError as ElasticConnectionError
 except ImportError:
   Elasticsearch = None
 
@@ -93,8 +93,10 @@ class ElasticSearchHelper(object):
       if not self.client.indices.exists(index_name):
         self.client.indices.create(
             index=index_name, body={'mappings': mapping})
-    except ConnectionError:
-      raise RuntimeError('Unable to connect to Elasticsearch backend.')
+    except ElasticConnectionError as exception:
+      raise RuntimeError(
+          'Unable to connect to Elasticsearch backend with error: {0!s}'.format(
+              exception))
     return index_name
 
   def _GetSanitizedEventValues(self, event_object):
@@ -106,7 +108,7 @@ class ElasticSearchHelper(object):
     Elasticsearch automatic indexing.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event_object (EventObject): event object.
 
     Returns:
       Dictionary with sanitized event object values.
@@ -276,13 +278,13 @@ class ElasticSearchOutputModule(interface.OutputModule):
     self._elastic_password = elastic_password
     logging.info('Elastic password: {0:s}'.format('****'))
 
-  def WriteEventBody(self, event_object):
-    """Writes the body of an event object to the output.
+  def WriteEventBody(self, event):
+    """Writes the body of an event to the output.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
     """
-    self._elastic.AddEvent(event_object)
+    self._elastic.AddEvent(event)
 
   def WriteHeader(self):
     """Setup the Elasticsearch index."""

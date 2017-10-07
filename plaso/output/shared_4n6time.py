@@ -36,17 +36,17 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
     self._set_status = None
 
   def _GetSanitizedEventValues(self, event):
-    """Sanitizes the event object for use in 4n6time.
+    """Sanitizes the event for use in 4n6time.
 
     Args:
       event (EventObject): event.
 
     Returns:
-      A dictionary object containing the sanitized values.
+      dict[str, object]: dictionary containing the sanitized event values.
 
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data
-                        type in the event object.
+          type in the event object.
     """
     data_type = getattr(event, 'data_type', 'UNKNOWN')
 
@@ -154,7 +154,7 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
       event (EventObject): event.
 
     Returns:
-      The VSS store number or -1 if not available.
+      int: VSS store number or -1 if not available.
     """
     if not hasattr(event, 'pathspec'):
       return -1
@@ -165,18 +165,15 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
     """Set the append status.
 
     Args:
-      append: boolean that determines whether or not to append to the database.
+      append (bool): True if the events should be added to the database.
     """
-    if append:
-      self._append = True
-    else:
-      self._append = False
+    self._append = append
 
   def SetEvidence(self, evidence):
     """Set the evidence field.
 
     Args:
-      evidence: the evidence field.
+      evidence (str): the evidence field.
     """
     self._evidence = evidence
 
@@ -184,7 +181,7 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
     """Set the fields that will be indexed in the database.
 
     Args:
-      fields: a list of fields that should be indexed.
+      fields (list[str]): a list of fields that should be indexed.
     """
     self._fields = fields
 

@@ -41,11 +41,11 @@ class JSONOutputModule(interface.LinearOutputModule):
     json_dict = self._JSON_SERIALIZER.WriteSerializedDict(event)
     json_string = json.dumps(json_dict, sort_keys=True)
 
-    line = '"event_{0:d}": {1:s}\n'.format(self._event_counter, json_string)
     if self._event_counter != 0:
-      line = ', '.join(['', line])
+      self._output_writer.Write(', ')
 
-    self._WriteLine(line)
+    line = '"event_{0:d}": {1:s}\n'.format(self._event_counter, json_string)
+    self._output_writer.Write(line)
 
     self._event_counter += 1
 

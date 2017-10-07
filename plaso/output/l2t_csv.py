@@ -78,7 +78,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
 
     output_line = ','.join(output_values)
     output_line = '{0:s}\n'.format(output_line)
-    self._WriteLine(output_line)
+    self._output_writer.Write(output_line)
 
   def _GetOutputValues(self, event):
     """Retrieves output values.

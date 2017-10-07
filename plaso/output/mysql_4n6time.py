@@ -165,7 +165,7 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Shared4n6TimeOutputModule):
       IOError: If Unable to insert into database.
       ValueError: If no database name given.
     """
-    if not self.dbname:
+    if not self._dbname:
       raise ValueError('Missing database name.')
 
     try:
@@ -182,8 +182,8 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Shared4n6TimeOutputModule):
       self._cursor.execute('SET GLOBAL innodb_file_format=barracuda')
       self._cursor.execute('SET GLOBAL innodb_file_per_table=ON')
       self._cursor.execute(
-          'CREATE DATABASE IF NOT EXISTS {0:s}'.format(self.dbname))
-      self._cursor.execute('USE {0:s}'.format(self.dbname))
+          'CREATE DATABASE IF NOT EXISTS {0:s}'.format(self._dbname))
+      self._cursor.execute('USE {0:s}'.format(self._dbname))
       # Create tables.
       self._cursor.execute(self._CREATE_TABLE_QUERY)
       if self._set_status:

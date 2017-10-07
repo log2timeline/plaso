@@ -21,14 +21,14 @@ class KMLOutputModule(interface.LinearOutputModule):
   NAME = 'kml'
   DESCRIPTION = 'Saves events with geography data into a KML format.'
 
-  def WriteEventBody(self, event_object):
-    """Writes the body of an event object to the output.
+  def WriteEventBody(self, event):
+    """Writes the body of an event to the output.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
     """
-    latitude = getattr(event_object, 'latitude', None)
-    longitude = getattr(event_object, 'longitude', None)
+    latitude = getattr(event, 'latitude', None)
+    longitude = getattr(event, 'longitude', None)
     if latitude is not None and longitude is not None:
       placemark_xml_element = ElementTree.Element('Placemark')
 
@@ -40,8 +40,7 @@ class KMLOutputModule(interface.LinearOutputModule):
           placemark_xml_element, 'description')
       # TODO: move the description formatting into this output module.
       description_xml_element.text = (
-          rawpy.NativePythonFormatterHelper.GetFormattedEventObject(
-              event_object))
+          rawpy.NativePythonFormatterHelper.GetFormattedEventObject(event))
 
       point_xml_element = ElementTree.SubElement(
           placemark_xml_element, 'Point')

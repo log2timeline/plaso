@@ -43,8 +43,8 @@ class JSONLineOutputModule(interface.LinearOutputModule):
 
     json_dict = self._JSON_SERIALIZER.WriteSerializedDict(event)
     json_string = json.dumps(json_dict, sort_keys=True)
-    self._WriteLine(json_string)
-    self._WriteLine('\n')
+    self._output_writer.Write(json_string)
+    self._output_writer.Write('\n')
 
 
 manager.OutputManager.RegisterOutput(JSONLineOutputModule)

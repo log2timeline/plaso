@@ -62,14 +62,13 @@ class NativePythonOutputModule(interface.LinearOutputModule):
   NAME = 'rawpy'
   DESCRIPTION = '"raw" (or native) Python output.'
 
-  def WriteEventBody(self, event_object):
-    """Writes the body of an event object to the output.
+  def WriteEventBody(self, event):
+    """Writes the body of an event to the output.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
     """
-    output_string = NativePythonFormatterHelper.GetFormattedEventObject(
-        event_object)
+    output_string = NativePythonFormatterHelper.GetFormattedEventObject(event)
     self._output_writer.Write(output_string)
 
 
