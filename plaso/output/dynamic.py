@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Contains a formatter for a dynamic output module for plaso."""
 
+from __future__ import unicode_literals
+
 import logging
 
 from plaso.lib import errors
@@ -16,26 +18,26 @@ class DynamicFieldsHelper(object):
   # A dict containing mappings between the name of fields and
   # a callback function that formats the field value.
   _FIELD_FORMAT_CALLBACKS = {
-      u'date': u'_FormatDate',
-      u'datetime': u'_FormatDateTime',
-      u'description': u'_FormatMessage',
-      u'description_short': u'_FormatMessageShort',
-      u'host': u'_FormatHostname',
-      u'hostname': u'_FormatHostname',
-      u'inode': u'_FormatInode',
-      u'macb': u'_FormatMACB',
-      u'message': u'_FormatMessage',
-      u'message_short': u'_FormatMessageShort',
-      u'source': u'_FormatSourceShort',
-      u'sourcetype': u'_FormatSource',
-      u'source_long': u'_FormatSource',
-      u'tag': u'_FormatTag',
-      u'time': u'_FormatTime',
-      u'timezone': u'_FormatZone',
-      u'type': u'_FormatTimestampDescription',
-      u'user': u'_FormatUsername',
-      u'username': u'_FormatUsername',
-      u'zone': u'_FormatZone',
+      'date': '_FormatDate',
+      'datetime': '_FormatDateTime',
+      'description': '_FormatMessage',
+      'description_short': '_FormatMessageShort',
+      'host': '_FormatHostname',
+      'hostname': '_FormatHostname',
+      'inode': '_FormatInode',
+      'macb': '_FormatMACB',
+      'message': '_FormatMessage',
+      'message_short': '_FormatMessageShort',
+      'source': '_FormatSourceShort',
+      'sourcetype': '_FormatSource',
+      'source_long': '_FormatSource',
+      'tag': '_FormatTag',
+      'time': '_FormatTime',
+      'timezone': '_FormatZone',
+      'type': '_FormatTimestampDescription',
+      'user': '_FormatUsername',
+      'username': '_FormatUsername',
+      'zone': '_FormatZone',
   }
 
   def __init__(self, output_mediator):
@@ -62,13 +64,13 @@ class DynamicFieldsHelper(object):
           raise_error=True)
     except OverflowError as exception:
       self._ReportEventError(event, (
-          u'unable to copy timestamp: {0:d} to a human readable date '
-          u'with error: {1:s}. Defaulting to: "0000-00-00"').format(
+          'unable to copy timestamp: {0:d} to a human readable date '
+          'with error: {1:s}. Defaulting to: "0000-00-00"').format(
               event.timestamp, exception))
 
-      return u'0000-00-00'
+      return '0000-00-00'
 
-    return u'{0:04d}-{1:02d}-{2:02d}'.format(
+    return '{0:04d}-{1:02d}-{2:02d}'.format(
         date_use.year, date_use.month, date_use.day)
 
   def _FormatDateTime(self, event):
@@ -87,11 +89,11 @@ class DynamicFieldsHelper(object):
 
     except OverflowError as exception:
       self._ReportEventError(event, (
-          u'unable to copy timestamp: {0:d} to a human readable date and time '
-          u'with error: {1:s}. Defaulting to: "0000-00-00T00:00:00"').format(
+          'unable to copy timestamp: {0:d} to a human readable date and time '
+          'with error: {1:s}. Defaulting to: "0000-00-00T00:00:00"').format(
               event.timestamp, exception))
 
-      return u'0000-00-00T00:00:00'
+      return '0000-00-00T00:00:00'
 
   def _FormatHostname(self, event):
     """Formats the hostname.
@@ -115,11 +117,11 @@ class DynamicFieldsHelper(object):
     """
     inode = event.inode
     if inode is None:
-      if (hasattr(event, u'pathspec') and
-          hasattr(event.pathspec, u'image_inode')):
+      if (hasattr(event, 'pathspec') and
+          hasattr(event.pathspec, 'image_inode')):
         inode = event.pathspec.image_inode
     if inode is None:
-      inode = u'-'
+      inode = '-'
 
     return inode
 
@@ -149,9 +151,9 @@ class DynamicFieldsHelper(object):
     """
     message, _ = self._output_mediator.GetFormattedMessages(event)
     if message is None:
-      data_type = getattr(event, u'data_type', u'UNKNOWN')
+      data_type = getattr(event, 'data_type', 'UNKNOWN')
       raise errors.NoFormatterFound(
-          u'Unable to find event formatter for: {0:s}.'.format(data_type))
+          'Unable to find event formatter for: {0:s}.'.format(data_type))
 
     return message
 
@@ -170,9 +172,9 @@ class DynamicFieldsHelper(object):
     """
     _, message_short = self._output_mediator.GetFormattedMessages(event)
     if message_short is None:
-      data_type = getattr(event, u'data_type', u'UNKNOWN')
+      data_type = getattr(event, 'data_type', 'UNKNOWN')
       raise errors.NoFormatterFound(
-          u'Unable to find event formatter for: {0:s}.'.format(data_type))
+          'Unable to find event formatter for: {0:s}.'.format(data_type))
 
     return message_short
 
@@ -191,9 +193,9 @@ class DynamicFieldsHelper(object):
     """
     _, source = self._output_mediator.GetFormattedSources(event)
     if source is None:
-      data_type = getattr(event, u'data_type', u'UNKNOWN')
+      data_type = getattr(event, 'data_type', 'UNKNOWN')
       raise errors.NoFormatterFound(
-          u'Unable to find event formatter for: {0:s}.'.format(data_type))
+          'Unable to find event formatter for: {0:s}.'.format(data_type))
 
     return source
 
@@ -212,9 +214,9 @@ class DynamicFieldsHelper(object):
     """
     source_short, _ = self._output_mediator.GetFormattedSources(event)
     if source_short is None:
-      data_type = getattr(event, u'data_type', u'UNKNOWN')
+      data_type = getattr(event, 'data_type', 'UNKNOWN')
       raise errors.NoFormatterFound(
-          u'Unable to find event formatter for: {0:s}.'.format(data_type))
+          'Unable to find event formatter for: {0:s}.'.format(data_type))
 
     return source_short
 
@@ -227,12 +229,12 @@ class DynamicFieldsHelper(object):
     Returns:
       str: event tag field.
     """
-    tag = getattr(event, u'tag', None)
+    tag = getattr(event, 'tag', None)
 
     if not tag:
-      return u'-'
+      return '-'
 
-    return u' '.join(tag.labels)
+    return ' '.join(tag.labels)
 
   def _FormatTime(self, event):
     """Formats the time.
@@ -249,13 +251,13 @@ class DynamicFieldsHelper(object):
           raise_error=True)
     except OverflowError as exception:
       self._ReportEventError(event, (
-          u'unable to copy timestamp: {0:d} to a human readable time '
-          u'with error: {1:s}. Defaulting to: "00:00:00"').format(
+          'unable to copy timestamp: {0:d} to a human readable time '
+          'with error: {1:s}. Defaulting to: "00:00:00"').format(
               event.timestamp, exception))
 
-      return u'00:00:00'
+      return '00:00:00'
 
-    return u'{0:02d}:{1:02d}:{2:02d}'.format(
+    return '{0:02d}:{1:02d}:{2:02d}'.format(
         date_use.hour, date_use.minute, date_use.second)
 
   def _FormatTimestampDescription(self, event):
@@ -267,7 +269,7 @@ class DynamicFieldsHelper(object):
     Returns:
       str: timestamp description field.
     """
-    return getattr(event, u'timestamp_desc', u'-')
+    return getattr(event, 'timestamp_desc', '-')
 
   def _FormatUsername(self, event):
     """Formats the username.
@@ -301,8 +303,8 @@ class DynamicFieldsHelper(object):
     event_identifier = event.GetIdentifier()
     event_identifier_string = event_identifier.CopyToString()
     error_message = (
-        u'Event: {0!s} data type: {1:s} display name: {2:s} '
-        u'parser chain: {3:s} with error: {4:s}').format(
+        'Event: {0!s} data type: {1:s} display name: {2:s} '
+        'parser chain: {3:s} with error: {4:s}').format(
             event_identifier_string, event.data_type, event.display_name,
             event.parser, error_message)
     logging.error(error_message)
@@ -325,13 +327,13 @@ class DynamicFieldsHelper(object):
     if callback_function:
       output_value = callback_function(event)
     else:
-      output_value = getattr(event, field_name, u'-')
+      output_value = getattr(event, field_name, '-')
 
     if output_value is None:
-      output_value = u'-'
+      output_value = '-'
 
     elif not isinstance(output_value, py2to3.STRING_TYPES):
-      output_value = u'{0!s}'.format(output_value)
+      output_value = '{0!s}'.format(output_value)
 
     return output_value
 
@@ -339,15 +341,15 @@ class DynamicFieldsHelper(object):
 class DynamicOutputModule(interface.LinearOutputModule):
   """Dynamic selection of fields for a separated value output format."""
 
-  NAME = u'dynamic'
+  NAME = 'dynamic'
   DESCRIPTION = (
-      u'Dynamic selection of fields for a separated value output format.')
+      'Dynamic selection of fields for a separated value output format.')
 
-  _DEFAULT_FIELD_DELIMITER = u','
+  _DEFAULT_FIELD_DELIMITER = ','
 
   _DEFAULT_FIELDS = [
-      u'datetime', u'timestamp_desc', u'source', u'source_long',
-      u'message', u'parser', u'display_name', u'tag']
+      'datetime', 'timestamp_desc', 'source', 'source_long',
+      'message', 'parser', 'display_name', 'tag']
 
   def __init__(self, output_mediator):
     """Initializes an output module object.
@@ -372,7 +374,7 @@ class DynamicOutputModule(interface.LinearOutputModule):
       str: value of the field.
     """
     if self._field_delimiter and isinstance(field, py2to3.STRING_TYPES):
-      return field.replace(self._field_delimiter, u' ')
+      return field.replace(self._field_delimiter, ' ')
     return field
 
   def SetFieldDelimiter(self, field_delimiter):
@@ -405,13 +407,13 @@ class DynamicOutputModule(interface.LinearOutputModule):
       output_value = self._SanitizeField(output_value)
       output_values.append(output_value)
 
-    output_line = u'{0:s}\n'.format(self._field_delimiter.join(output_values))
+    output_line = '{0:s}\n'.format(self._field_delimiter.join(output_values))
     self._output_writer.Write(output_line)
 
   def WriteHeader(self):
     """Writes the header to the output."""
     output_text = self._field_delimiter.join(self._fields)
-    output_text = u'{0:s}\n'.format(output_text)
+    output_text = '{0:s}\n'.format(output_text)
     self._output_writer.Write(output_text)
 
 

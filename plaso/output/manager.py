@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Output plugin manager."""
 
+from __future__ import unicode_literals
+
 from plaso.lib import py2to3
 
 from plaso.output import interface

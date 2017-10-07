@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Output module that saves data into a JSON format."""
 
+from __future__ import unicode_literals
+
 import json
 
 from plaso.output import interface
@@ -11,8 +13,8 @@ from plaso.serializer import json_serializer
 class JSONOutputModule(interface.LinearOutputModule):
   """Output module for the JSON format."""
 
-  NAME = u'json'
-  DESCRIPTION = u'Saves the events into a JSON format.'
+  NAME = 'json'
+  DESCRIPTION = 'Saves the events into a JSON format.'
 
   _JSON_SERIALIZER = json_serializer.JSONAttributeContainerSerializer
 
@@ -32,16 +34,16 @@ class JSONOutputModule(interface.LinearOutputModule):
     Args:
       event (EventObject): event.
     """
-    inode = getattr(event, u'inode', None)
+    inode = getattr(event, 'inode', None)
     if inode is None:
       event.inode = 0
 
     json_dict = self._JSON_SERIALIZER.WriteSerializedDict(event)
     json_string = json.dumps(json_dict, sort_keys=True)
 
-    line = u'"event_{0:d}": {1:s}\n'.format(self._event_counter, json_string)
+    line = '"event_{0:d}": {1:s}\n'.format(self._event_counter, json_string)
     if self._event_counter != 0:
-      line = u', '.join([u'', line])
+      line = ', '.join(['', line])
 
     self._WriteLine(line)
 
@@ -49,11 +51,11 @@ class JSONOutputModule(interface.LinearOutputModule):
 
   def WriteFooter(self):
     """Writes the footer to the output."""
-    self._output_writer.Write(u'}')
+    self._output_writer.Write('}')
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    self._output_writer.Write(u'{')
+    self._output_writer.Write('{')
     self._event_counter = 0
 
 

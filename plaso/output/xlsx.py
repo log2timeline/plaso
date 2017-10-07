@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Output module for the Excel Spreadsheet (XLSX) output format."""
 
+from __future__ import unicode_literals
+
 import datetime
 import os
 import re
@@ -20,14 +22,14 @@ from plaso.output import manager
 class XLSXOutputModule(interface.OutputModule):
   """Output module for the Excel Spreadsheet (XLSX) output format."""
 
-  NAME = u'xlsx'
-  DESCRIPTION = u'Excel Spreadsheet (XLSX) output'
+  NAME = 'xlsx'
+  DESCRIPTION = 'Excel Spreadsheet (XLSX) output'
 
   _DEFAULT_FIELDS = [
-      u'datetime', u'timestamp_desc', u'source', u'source_long',
-      u'message', u'parser', u'display_name', u'tag']
+      'datetime', 'timestamp_desc', 'source', 'source_long',
+      'message', 'parser', 'display_name', 'tag']
 
-  _DEFAULT_TIMESTAMP_FORMAT = u'YYYY-MM-DD HH:MM:SS.000'
+  _DEFAULT_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH:MM:SS.000'
 
   _MAX_COLUMN_WIDTH = 50
   _MIN_COLUMN_WIDTH = 6
@@ -74,10 +76,10 @@ class XLSXOutputModule(interface.OutputModule):
 
     except OverflowError as exception:
       self._ReportEventError(event, (
-          u'unable to copy timestamp: {0:d} to a human readable date and time '
-          u'with error: {1:s}. Defaulting to: "ERROR"').format(
+          'unable to copy timestamp: {0:d} to a human readable date and time '
+          'with error: {1:s}. Defaulting to: "ERROR"').format(
               event.timestamp, exception))
-      return u'ERROR'
+      return 'ERROR'
 
   def _RemoveIllegalXMLCharacters(self, xml_string):
     """Removes illegal characters for XML.
@@ -93,7 +95,7 @@ class XLSXOutputModule(interface.OutputModule):
     if not isinstance(xml_string, py2to3.STRING_TYPES):
       return xml_string
 
-    return self._ILLEGAL_XML_RE.sub(u'\ufffd', xml_string)
+    return self._ILLEGAL_XML_RE.sub('\ufffd', xml_string)
 
   def Close(self):
     """Closes the output."""
@@ -107,20 +109,20 @@ class XLSXOutputModule(interface.OutputModule):
       ValueError: if the filename is not set.
     """
     if not self._filename:
-      raise ValueError(u'Missing filename.')
+      raise ValueError('Missing filename.')
 
     if os.path.isfile(self._filename):
       raise IOError((
-          u'Unable to use an already existing file for output '
-          u'[{0:s}]').format(self._filename))
+          'Unable to use an already existing file for output '
+          '[{0:s}]').format(self._filename))
 
     options = {
-        u'constant_memory': True,
-        u'strings_to_urls': False,
-        u'strings_to_formulas': False,
-        u'default_date_format': self._timestamp_format}
+        'constant_memory': True,
+        'strings_to_urls': False,
+        'strings_to_formulas': False,
+        'default_date_format': self._timestamp_format}
     self._workbook = xlsxwriter.Workbook(self._filename, options)
-    self._sheet = self._workbook.add_worksheet(u'Sheet')
+    self._sheet = self._workbook.add_worksheet('Sheet')
     self._current_row = 0
 
   def SetFields(self, fields):
@@ -154,7 +156,7 @@ class XLSXOutputModule(interface.OutputModule):
       event (EventObject): event.
     """
     for field_name in self._fields:
-      if field_name == u'datetime':
+      if field_name == 'datetime':
         output_value = self._FormatDateTime(event)
       else:
         output_value = self._dynamic_fields_helper.GetFormattedField(
@@ -166,7 +168,7 @@ class XLSXOutputModule(interface.OutputModule):
       column_index = self._fields.index(field_name)
       self._column_widths.setdefault(column_index, 0)
 
-      if field_name == u'datetime':
+      if field_name == 'datetime':
         column_width = min(
             self._MAX_COLUMN_WIDTH, len(self._timestamp_format) + 2)
       else:
@@ -178,7 +180,7 @@ class XLSXOutputModule(interface.OutputModule):
       self._sheet.set_column(
           column_index, column_index, self._column_widths[column_index])
 
-      if (field_name == u'datetime'
+      if (field_name == 'datetime'
           and isinstance(output_value, datetime.datetime)):
         self._sheet.write_datetime(
             self._current_row, column_index, output_value)
@@ -190,8 +192,8 @@ class XLSXOutputModule(interface.OutputModule):
   def WriteHeader(self):
     """Writes the header to the spreadsheet."""
     self._column_widths = {}
-    bold = self._workbook.add_format({u'bold': True})
-    bold.set_align(u'center')
+    bold = self._workbook.add_format({'bold': True})
+    bold.set_align('center')
     for index, field_name in enumerate(self._fields):
       self._sheet.write(self._current_row, index, field_name, bold)
       self._column_widths[index] = len(field_name) + 2
