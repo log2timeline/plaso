@@ -34,6 +34,26 @@ class LinuxHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     self.assertEqual(knowledge_base.hostname, 'plaso.kiddaland.net')
 
 
+class LinuxSystemProductPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
+  """Tests for the Linux system product plugin."""
+
+  _FILE_DATA = b'Fedora release 26 (Twenty Six)\n'
+
+  def testParseFileData(self):
+    """Tests the _ParseFileData function."""
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile('/etc/system-release', self._FILE_DATA)
+
+    mount_point = fake_path_spec.FakePathSpec(location='/')
+
+    plugin = linux.LinuxSystemProductPlugin()
+    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, plugin)
+
+    system_product = knowledge_base.GetValue('operating_system_product')
+    self.assertEqual(system_product, 'Fedora release 26 (Twenty Six)')
+
+
 class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
   """Tests for the Linux time zone plugin."""
 

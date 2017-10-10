@@ -28,6 +28,46 @@ sources:
 labels: [Configuration Files, System]
 supported_os: [Linux]
 ---
+name: LinuxDistributionRelease
+doc: Linux distribution release information of non-LSB compliant systems.
+sources:
+- type: FILE
+  attributes:
+    paths:
+      - '/etc/enterprise-release'
+      - '/etc/oracle-release'
+      - '/etc/redhat-release'
+      - '/etc/system-release'
+provides: [os_release, os_major_version, os_minor_version]
+labels: [Software]
+supported_os: [Linux]
+---
+name: LinuxLSBRelease
+doc: |
+  Linux Standard Base (LSB) release information.
+
+  See: lsb_release(1) man page, or the LSB Specification under the 'Command
+  Behaviour' section.
+sources:
+- type: FILE
+  attributes: {paths: ['/etc/lsb-release']}
+provides: [os_release, os_major_version, os_minor_version]
+labels: [Software]
+supported_os: [Linux]
+---
+name: LinuxSystemdOSRelease
+doc: Linux systemd /etc/os-release file
+sources:
+- type: FILE
+  attributes:
+    paths:
+      - '/etc/os-release'
+      - '/usr/lib/os-release'
+provides: [os_release, os_major_version, os_minor_version]
+labels: [Software]
+supported_os: [Linux]
+urls: ['https://www.freedesktop.org/software/systemd/man/os-release.html']
+---
 name: MacOSKeyboardLayoutPlistFile
 doc: Keyboard layout plist file
 sources:
