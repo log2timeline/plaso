@@ -96,12 +96,12 @@ class TestOutputModuleMissingParameters(output_interface.LinearOutputModule):
     """
     message, _ = self._output_mediator.GetFormattedMessages(event)
     source_short, source_long = self._output_mediator.GetFormattedSources(event)
-    self._WriteLine(u'{0:s}/{1:s} {2:s}\n'.format(
+    self._output_writer.Write(u'{0:s}/{1:s} {2:s}\n'.format(
         source_short, source_long, message))
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    self._WriteLine(self._HEADER)
+    self._output_writer.Write(self._HEADER)
 
 
 class PsortToolTest(test_lib.CLIToolTestCase):

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the output module interface classes."""
 
+from __future__ import unicode_literals
+
 import abc
 import logging
 
@@ -8,10 +10,10 @@ from plaso.lib import errors
 
 
 class OutputModule(object):
-  """Class that implements the output module object interface."""
+  """Output module interface."""
 
-  NAME = u''
-  DESCRIPTION = u''
+  NAME = ''
+  DESCRIPTION = ''
 
   def __init__(self, output_mediator):
     """Initializes an output module.
@@ -36,8 +38,8 @@ class OutputModule(object):
     event_identifier = event.GetIdentifier()
     event_identifier_string = event_identifier.CopyToString()
     error_message = (
-        u'Event: {0!s} data type: {1:s} display name: {2:s} '
-        u'parser chain: {3:s} with error: {4:s}').format(
+        'Event: {0!s} data type: {1:s} display name: {2:s} '
+        'parser chain: {3:s} with error: {4:s}').format(
             event_identifier_string, event.data_type, event.display_name,
             event.parser, error_message)
     logging.error(error_message)
@@ -71,12 +73,12 @@ class OutputModule(object):
       self.WriteEventBody(event)
 
     except errors.NoFormatterFound as exception:
-      error_message = u'unable to retrieve formatter with error: {0!s}'.format(
+      error_message = 'unable to retrieve formatter with error: {0!s}'.format(
           exception)
       self._ReportEventError(event, error_message)
 
     except errors.WrongFormatter as exception:
-      error_message = u'wrong formatter with error: {0!s}'.format(exception)
+      error_message = 'wrong formatter with error: {0!s}'.format(exception)
       self._ReportEventError(event, error_message)
 
     self.WriteEventEnd()
@@ -141,7 +143,7 @@ class OutputModule(object):
 
 
 class LinearOutputModule(OutputModule):
-  """Class that implements a linear output module object."""
+  """Linear output module."""
 
   # Need to suppress this since these classes do not implement the
   # abstract method WriteEventBody, classes that inherit from one of these
@@ -149,7 +151,7 @@ class LinearOutputModule(OutputModule):
   # pylint: disable=abstract-method
 
   def __init__(self, output_mediator):
-    """Initializes the output module object.
+    """Initializes a linear output module.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
@@ -160,14 +162,6 @@ class LinearOutputModule(OutputModule):
     """
     super(LinearOutputModule, self).__init__(output_mediator)
     self._output_writer = None
-
-  def _WriteLine(self, line):
-    """Write a single line to the supplied file-like object.
-
-    Args:
-      line (str): line of text to write.
-    """
-    self._output_writer.Write(line)
 
   def SetOutputWriter(self, output_writer):
     """Set the output writer.

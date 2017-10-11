@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""This file contains the output manager class."""
+"""Output plugin manager."""
+
+from __future__ import unicode_literals
 
 from plaso.lib import py2to3
 
@@ -7,7 +9,7 @@ from plaso.output import interface
 
 
 class OutputManager(object):
-  """Class that implements the output manager."""
+  """Output module manager."""
 
   _disabled_output_classes = {}
   _output_classes = {}
@@ -33,7 +35,7 @@ class OutputManager(object):
 
     if output_class_name not in class_dict:
       raise KeyError(
-          u'Output class not set for name: {0:s}.'.format(
+          'Output class not set for name: {0:s}.'.format(
               output_class.NAME))
 
     del class_dict[output_class_name]
@@ -63,12 +65,12 @@ class OutputManager(object):
       ValueError: if name is not a string.
     """
     if not isinstance(name, py2to3.STRING_TYPES):
-      raise ValueError(u'Name attribute is not a string.')
+      raise ValueError('Name attribute is not a string.')
 
     name = name.lower()
     if name not in cls._output_classes:
       raise KeyError(
-          u'Name: [{0:s}] not registered as an output module.'.format(name))
+          'Name: [{0:s}] not registered as an output module.'.format(name))
 
     return cls._output_classes[name]
 
@@ -157,7 +159,7 @@ class OutputManager(object):
 
     if output_name in class_dict:
       raise KeyError((
-          u'Output class already set for name: {0:s}.').format(
+          'Output class already set for name: {0:s}.').format(
               output_class.NAME))
 
     class_dict[output_name] = output_class

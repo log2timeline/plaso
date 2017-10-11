@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The output mediator object."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
 
@@ -17,7 +19,7 @@ class OutputMediator(object):
 
   def __init__(
       self, knowledge_base, formatter_mediator, fields_filter=None,
-      preferred_encoding=u'utf-8'):
+      preferred_encoding='utf-8'):
     """Initializes an output mediator.
 
     Args:
@@ -62,7 +64,7 @@ class OutputMediator(object):
     Returns:
       EventFormatter: event formatter or None.
     """
-    data_type = getattr(event, u'data_type', None)
+    data_type = getattr(event, 'data_type', None)
     if not data_type:
       return
 
@@ -119,7 +121,7 @@ class OutputMediator(object):
 
     return event_formatter.GetFormatStringAttributeNames()
 
-  def GetHostname(self, event, default_hostname=u'-'):
+  def GetHostname(self, event, default_hostname='-'):
     """Retrieves the hostname related to the event.
 
     Args:
@@ -129,7 +131,7 @@ class OutputMediator(object):
     Returns:
       str: hostname.
     """
-    hostname = getattr(event, u'hostname', None)
+    hostname = getattr(event, 'hostname', None)
     if hostname:
       return hostname
 
@@ -150,30 +152,30 @@ class OutputMediator(object):
     Returns:
       str: MACB representation.
     """
-    data_type = getattr(event, u'data_type', None)
+    data_type = getattr(event, 'data_type', None)
     if not data_type:
-      return u'....'
+      return '....'
 
     # The filestat parser is somewhat limited.
-    if data_type == u'fs:stat':
-      descriptions = event.timestamp_desc.split(u';')
+    if data_type == 'fs:stat':
+      descriptions = event.timestamp_desc.split(';')
 
-      return_characters = [u'.', u'.', u'.', u'.']
+      return_characters = ['.', '.', '.', '.']
       for description in descriptions:
         if description in (
-            u'mtime', definitions.TIME_DESCRIPTION_MODIFICATION):
-          return_characters[0] = u'M'
+            'mtime', definitions.TIME_DESCRIPTION_MODIFICATION):
+          return_characters[0] = 'M'
         elif description in (
-            u'atime', definitions.TIME_DESCRIPTION_LAST_ACCESS):
-          return_characters[1] = u'A'
+            'atime', definitions.TIME_DESCRIPTION_LAST_ACCESS):
+          return_characters[1] = 'A'
         elif description in (
-            u'ctime', definitions.TIME_DESCRIPTION_CHANGE):
-          return_characters[2] = u'C'
+            'ctime', definitions.TIME_DESCRIPTION_CHANGE):
+          return_characters[2] = 'C'
         elif description in (
-            u'crtime', definitions.TIME_DESCRIPTION_CREATION):
-          return_characters[3] = u'B'
+            'crtime', definitions.TIME_DESCRIPTION_CREATION):
+          return_characters[3] = 'B'
 
-      return u''.join(return_characters)
+      return ''.join(return_characters)
 
     # Access time.
     if event.timestamp_desc in [
@@ -187,14 +189,14 @@ class OutputMediator(object):
         definitions.TIME_DESCRIPTION_LAST_CONNECTED,
         definitions.TIME_DESCRIPTION_LAST_RUN,
         definitions.TIME_DESCRIPTION_LAST_PRINTED]:
-      return u'.A..'
+      return '.A..'
 
     # Content modification.
     if event.timestamp_desc in [
         definitions.TIME_DESCRIPTION_MODIFICATION,
         definitions.TIME_DESCRIPTION_WRITTEN,
         definitions.TIME_DESCRIPTION_DELETED]:
-      return u'M...'
+      return 'M...'
 
     # Content creation time.
     if event.timestamp_desc in [
@@ -208,9 +210,9 @@ class OutputMediator(object):
     if event.timestamp_desc in [
         definitions.TIME_DESCRIPTION_CHANGE,
         definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION]:
-      return u'..C.'
+      return '..C.'
 
-    return u'....'
+    return '....'
 
   def GetMACBRepresentationFromDescriptions(self, timestamp_descriptions):
     """Determines the MACB representation from the timestamp descriptions.
@@ -231,31 +233,31 @@ class OutputMediator(object):
     """
     macb_representation = []
 
-    if (u'mtime' in timestamp_descriptions or
+    if ('mtime' in timestamp_descriptions or
         definitions.TIME_DESCRIPTION_MODIFICATION in timestamp_descriptions):
-      macb_representation.append(u'M')
+      macb_representation.append('M')
     else:
-      macb_representation.append(u'.')
+      macb_representation.append('.')
 
-    if (u'atime' in timestamp_descriptions or
+    if ('atime' in timestamp_descriptions or
         definitions.TIME_DESCRIPTION_LAST_ACCESS in timestamp_descriptions):
-      macb_representation.append(u'A')
+      macb_representation.append('A')
     else:
-      macb_representation.append(u'.')
+      macb_representation.append('.')
 
-    if (u'ctime' in timestamp_descriptions or
+    if ('ctime' in timestamp_descriptions or
         definitions.TIME_DESCRIPTION_CHANGE in timestamp_descriptions):
-      macb_representation.append(u'C')
+      macb_representation.append('C')
     else:
-      macb_representation.append(u'.')
+      macb_representation.append('.')
 
-    if (u'crtime' in timestamp_descriptions or
+    if ('crtime' in timestamp_descriptions or
         definitions.TIME_DESCRIPTION_CREATION in timestamp_descriptions):
-      macb_representation.append(u'B')
+      macb_representation.append('B')
     else:
-      macb_representation.append(u'.')
+      macb_representation.append('.')
 
-    return u''.join(macb_representation)
+    return ''.join(macb_representation)
 
   # TODO: remove this function it is incorrect.
   def GetStoredHostname(self):
@@ -266,7 +268,7 @@ class OutputMediator(object):
     """
     return self._knowledge_base.GetStoredHostname()
 
-  def GetUsername(self, event, default_username=u'-'):
+  def GetUsername(self, event, default_username='-'):
     """Retrieves the username related to the event.
 
     Args:
@@ -276,15 +278,15 @@ class OutputMediator(object):
     Returns:
       str: username.
     """
-    username = getattr(event, u'username', None)
-    if username and username != u'-':
+    username = getattr(event, 'username', None)
+    if username and username != '-':
       return username
 
     session_identifier = event.GetSessionIdentifier()
     if session_identifier is None:
       return default_username
 
-    user_sid = getattr(event, u'user_sid', None)
+    user_sid = getattr(event, 'user_sid', None)
     username = self._knowledge_base.GetUsernameByIdentifier(
         user_sid, session_identifier=session_identifier)
     return username or default_username
@@ -304,4 +306,4 @@ class OutputMediator(object):
     try:
       self._timezone = pytz.timezone(timezone)
     except pytz.UnknownTimeZoneError:
-      raise ValueError(u'Unsupported timezone: {0:s}'.format(timezone))
+      raise ValueError('Unsupported timezone: {0:s}'.format(timezone))
