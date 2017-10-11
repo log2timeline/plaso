@@ -39,7 +39,6 @@ from plaso.storage import zip_file as storage_zip_file
 
 class PstealTool(
     storage_media_tool.StorageMediaTool,
-    tool_options.AnalysisPluginOptions,
     tool_options.HashersOptions,
     tool_options.OutputModuleOptions,
     tool_options.ParsersOptions):
@@ -129,7 +128,11 @@ class PstealTool(
     self._use_zeromq = True
     self._yara_rules_string = None
 
+    self.list_hashers = False
+    self.list_language_identifiers = False
     self.list_output_modules = False
+    self.list_parsers_and_plugins = False
+    self.list_timezones = False
 
   def _CreateProcessingConfiguration(self):
     """Creates a processing configuration.
@@ -165,7 +168,6 @@ class PstealTool(
     datetime_string = timestamp.strftime('%Y%m%dT%H%M%S')
 
     source_path = os.path.abspath(self._source_path)
-    source_name = os.path.basename(source_path)
 
     if source_path.endswith(os.path.sep):
       source_path = os.path.dirname(source_path)
@@ -487,23 +489,44 @@ class PstealTool(
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['data_location'])
 
-
     # The output modules options are dependent on the preferred language
     # and preferred time zone options.
     self._ParseTimezoneOption(options)
 
-
     argument_helper_names = [
-        'artifact_definitions', 'analysis_plugins', 'hashers', 'language',
-        'output_modules', 'parsers']
+        'artifact_definitions', 'hashers', 'language', 'parsers']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
-    self.list_output_modules = self._output_format == 'list'
+
+    if self._preferred_language == 'list':
+      self.list_language_identifiers = True
+
+    if self._hasher_names_string == 'list':
+      self.list_hashers = True
+
+    if self._parser_filter_expression == 'list':
+      self.list_parsers_and_plugins = True
+
+    if (self.list_language_identifiers or self.list_timezones or
+        self.list_hashers or self.list_parsers_and_plugins or
+        self.list_hashers):
+      return
+
 
     # Check the list options first otherwise required options will raise.
     if self.list_timezones or self.list_output_modules:
       return
+
+    # Check output modules after the other listable options, as otherwise
+    # a required argument will raise.
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=['output_modules'])
+
+    if self._output_format == 'list':
+      self.list_output_modules = True
+      return
+
 
     self._ParseInformationalOptions(options)
 

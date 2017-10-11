@@ -17,6 +17,7 @@ from plaso.output import manager as output_manager
 from plaso.output import mediator as output_mediator
 from plaso.parsers import manager as parsers_manager
 from plaso.parsers import presets as parsers_presets
+from plaso.winnt import language_ids
 
 
 # TODO: pass argument_parser instead of argument_group and add groups
@@ -166,6 +167,16 @@ class OutputModuleOptions(object):
       missing_parameters = output_module.GetMissingArguments()
 
     return output_module
+
+  def ListLanguageIdentifiers(self):
+    """Lists the language identifiers."""
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=['Identifier', 'Language'],
+        title='Language identifiers')
+    for language_id, value_list in sorted(
+        language_ids.LANGUAGE_IDENTIFIERS.items()):
+      table_view.AddRow([language_id, value_list[1]])
+    table_view.Write(self._output_writer)
 
   def _GetOutputModulesInformation(self):
     """Retrieves the output modules information.

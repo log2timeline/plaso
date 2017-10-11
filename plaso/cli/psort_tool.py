@@ -34,7 +34,6 @@ from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.multi_processing import psort
 from plaso.storage import factory as storage_factory
-from plaso.winnt import language_ids
 
 import pytz
 
@@ -293,15 +292,6 @@ class PsortTool(
             'Maximum amount of memory a worker process is allowed to consume, '
             'where 0 represents no limit [defaults to 2 GiB].'))
 
-  def ListLanguageIdentifiers(self):
-    """Lists the language identifiers."""
-    table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=['Identifier', 'Language'],
-        title='Language identifiers')
-    for language_id, value_list in sorted(
-        language_ids.LANGUAGE_IDENTIFIERS.items()):
-      table_view.AddRow([language_id, value_list[1]])
-    table_view.Write(self._output_writer)
 
   def ParseArguments(self):
     """Parses the command line arguments.
@@ -409,23 +399,31 @@ class PsortTool(
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    # Check the list options first otherwise required options will raise.
-
     # The output modules options are dependent on the preferred language
     # and preferred time zone options.
     self._ParseTimezoneOption(options)
 
-    names = ['analysis_plugins', 'language', 'output_modules']
+    names = ['analysis_plugins', 'language']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=names)
 
-    if self._output_format == 'list':
-      self.list_output_modules = True
+    if self._analysis_plugins == 'list':
+      self.list_analysis_plugins = True
+
     if self._preferred_language == 'list':
       self.list_language_identifiers = True
 
     if (self.list_analysis_plugins or self.list_language_identifiers or
-        self.list_output_modules or self.list_timezones):
+        self.list_timezones):
+      return
+
+    # Check output modules after the other listable options, as otherwise
+    # a required argument will raise.
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=['output_modules'])
+
+    if self._output_format == 'list':
+      self.list_output_modules = True
       return
 
     self._ParseInformationalOptions(options)
