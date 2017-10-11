@@ -40,8 +40,8 @@ class LinearOutputModuleTest(test_lib.OutputModuleTestCase):
     output_module = test_lib.TestOutputModule(output_mediator)
     output_module.SetOutputWriter(output_writer)
     output_module.WriteHeader()
-    for event_object in events:
-      output_module.WriteEvent(event_object)
+    for event in events:
+      output_module.WriteEvent(event)
     output_module.WriteFooter()
 
     expected_output = (

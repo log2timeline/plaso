@@ -4,6 +4,8 @@
 For documentation on the TLN format see: http://forensicswiki.org/wiki/TLN
 """
 
+from __future__ import unicode_literals
+
 from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.lib import timelib
@@ -16,10 +18,10 @@ class TLNBaseOutputModule(interface.LinearOutputModule):
   # Stop pylint from complaining about missing WriteEventBody.
   # pylint: disable=abstract-method
 
-  _FIELD_DELIMITER = u'|'
-  _DESCRIPTION_FIELD_DELIMITER = u';'
+  _FIELD_DELIMITER = '|'
+  _DESCRIPTION_FIELD_DELIMITER = ';'
 
-  _HEADER = u''
+  _HEADER = ''
 
   def _FormatDescription(self, event):
     """Formats the description.
@@ -32,17 +34,17 @@ class TLNBaseOutputModule(interface.LinearOutputModule):
     """
     date_time_string = timelib.Timestamp.CopyToIsoFormat(
         event.timestamp, timezone=self._output_mediator.timezone)
-    timestamp_description = getattr(event, u'timestamp_desc', u'UNKNOWN')
+    timestamp_description = getattr(event, 'timestamp_desc', 'UNKNOWN')
 
     message, _ = self._output_mediator.GetFormattedMessages(event)
     if message is None:
-      data_type = getattr(event, u'data_type', u'UNKNOWN')
+      data_type = getattr(event, 'data_type', 'UNKNOWN')
       raise errors.NoFormatterFound(
-          u'Unable to find event formatter for: {0:s}.'.format(data_type))
+          'Unable to find event formatter for: {0:s}.'.format(data_type))
 
-    description = u'{0:s}; {1:s}; {2:s}'.format(
+    description = '{0:s}; {1:s}; {2:s}'.format(
         date_time_string, timestamp_description,
-        message.replace(self._DESCRIPTION_FIELD_DELIMITER, u' '))
+        message.replace(self._DESCRIPTION_FIELD_DELIMITER, ' '))
     return self._SanitizeField(description)
 
   def _FormatHostname(self, event):
@@ -68,9 +70,9 @@ class TLNBaseOutputModule(interface.LinearOutputModule):
     """
     source_short, _ = self._output_mediator.GetFormattedSources(event)
     if source_short is None:
-      data_type = getattr(event, u'data_type', u'UNKNOWN')
+      data_type = getattr(event, 'data_type', 'UNKNOWN')
       raise errors.NoFormatterFound(
-          u'Unable to find event formatter for: {0:s}.'.format(data_type))
+          'Unable to find event formatter for: {0:s}.'.format(data_type))
 
     return self._SanitizeField(source_short)
 
@@ -98,12 +100,12 @@ class TLNBaseOutputModule(interface.LinearOutputModule):
        str: formatted field value.
     """
     if self._FIELD_DELIMITER and isinstance(field, py2to3.STRING_TYPES):
-      return field.replace(self._FIELD_DELIMITER, u' ')
+      return field.replace(self._FIELD_DELIMITER, ' ')
     return field
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    self._WriteLine(self._HEADER)
+    self._output_writer.Write(self._HEADER)
 
 
 class TLNOutputModule(TLNBaseOutputModule):
@@ -116,10 +118,10 @@ class TLNOutputModule(TLNBaseOutputModule):
   * User - The user associated with the data.
   * Description - Message string describing the data.
   """
-  NAME = u'tln'
-  DESCRIPTION = u'TLN 5 field | delimited output.'
+  NAME = 'tln'
+  DESCRIPTION = 'TLN 5 field | delimited output.'
 
-  _HEADER = u'Time|Source|Host|User|Description\n'
+  _HEADER = 'Time|Source|Host|User|Description\n'
 
   def WriteEventBody(self, event):
     """Writes the body of an event object to the output.
@@ -127,7 +129,7 @@ class TLNOutputModule(TLNBaseOutputModule):
     Args:
       event (EventObject): event.
     """
-    if not hasattr(event, u'timestamp'):
+    if not hasattr(event, 'timestamp'):
       return
 
     posix_timestamp = timelib.Timestamp.CopyToPosix(event.timestamp)
@@ -136,9 +138,9 @@ class TLNOutputModule(TLNBaseOutputModule):
     username = self._FormatUsername(event)
     description = self._FormatDescription(event)
 
-    out_write = u'{0:d}|{1:s}|{2:s}|{3:s}|{4!s}\n'.format(
+    out_write = '{0:d}|{1:s}|{2:s}|{3:s}|{4!s}\n'.format(
         posix_timestamp, source, hostname, username, description)
-    self._WriteLine(out_write)
+    self._output_writer.Write(out_write)
 
 
 class L2TTLNOutputModule(TLNBaseOutputModule):
@@ -155,10 +157,10 @@ class L2TTLNOutputModule(TLNBaseOutputModule):
   * TZ - L2T 0.65 field. Timezone of the event.
   * Notes - L2T 0.65 field. Optional notes field or filename and inode.
   """
-  NAME = u'l2ttln'
-  DESCRIPTION = u'Extended TLN 7 field | delimited output.'
+  NAME = 'l2ttln'
+  DESCRIPTION = 'Extended TLN 7 field | delimited output.'
 
-  _HEADER = u'Time|Source|Host|User|Description|TZ|Notes\n'
+  _HEADER = 'Time|Source|Host|User|Description|TZ|Notes\n'
 
   def _FormatNotes(self, event):
     """Formats the notes.
@@ -171,12 +173,12 @@ class L2TTLNOutputModule(TLNBaseOutputModule):
     """
     inode = event.inode
     if inode is None:
-      inode = u'-'
+      inode = '-'
 
-    notes = getattr(event, u'notes', u'')
+    notes = getattr(event, 'notes', '')
     if not notes:
-      display_name = getattr(event, u'display_name', u'')
-      notes = u'File: {0:s} inode: {1!s}'.format(display_name, inode)
+      display_name = getattr(event, 'display_name', '')
+      notes = 'File: {0:s} inode: {1!s}'.format(display_name, inode)
     return self._SanitizeField(notes)
 
   def WriteEventBody(self, event):
@@ -185,7 +187,7 @@ class L2TTLNOutputModule(TLNBaseOutputModule):
     Args:
       event (EventObject): event.
     """
-    if not hasattr(event, u'timestamp'):
+    if not hasattr(event, 'timestamp'):
       return
 
     posix_timestamp = timelib.Timestamp.CopyToPosix(event.timestamp)
@@ -195,11 +197,11 @@ class L2TTLNOutputModule(TLNBaseOutputModule):
     description = self._FormatDescription(event)
     notes = self._FormatNotes(event)
 
-    out_write = u'{0:d}|{1:s}|{2:s}|{3:s}|{4:s}|{5!s}|{6!s}\n'.format(
+    out_write = '{0:d}|{1:s}|{2:s}|{3:s}|{4:s}|{5!s}|{6!s}\n'.format(
         posix_timestamp, source, hostname, username, description,
         self._output_mediator.timezone, notes)
 
-    self._WriteLine(out_write)
+    self._output_writer.Write(out_write)
 
 
 manager.OutputManager.RegisterOutputs([L2TTLNOutputModule, TLNOutputModule])
