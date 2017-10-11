@@ -43,7 +43,7 @@ PYTHON_DEPENDENCIES = {
     u'pyfwsi': (u'get_version()', u'20150606', None, True),
     u'pylnk': (u'get_version()', u'20150830', None, True),
     u'pymsiecf': (u'get_version()', u'20150314', None, True),
-    u'pyolecf': (u'get_version()', u'20151223', None, True),
+    u'pyolecf': (u'get_version()', u'20161117', None, True),
     u'pyparsing': (u'__version__', u'2.0.3', None, True),
     u'pyqcow': (u'get_version()', u'20131204', None, True),
     u'pyregf': (u'get_version()', u'20150315', None, True),

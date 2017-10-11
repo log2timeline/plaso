@@ -3,6 +3,8 @@
 
 from dfdatetime import filetime as dfdatetime_filetime
 
+import pyolecf
+
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
@@ -18,21 +20,19 @@ class OLECFPropertySetStream(object):
     date_time_properties (dict[str, dfdatetime.DateTimeValues]): date and time
         properties and values.
   """
-  # OLE variant types.
-  VT_I2 = 0x0002
-  VT_I4 = 0x0003
-  VT_BOOL = 0x000b
-  VT_LPSTR = 0x001e
-  VT_LPWSTR = 0x001e
-  VT_FILETIME = 0x0040
-  VT_CF = 0x0047
-
   _CLASS_IDENTIFIER = None
 
-  _INTEGER_TYPES = frozenset([VT_I2, VT_I4, VT_FILETIME])
-  _STRING_TYPES = frozenset([VT_LPSTR, VT_LPWSTR])
+  _INTEGER_TYPES = frozenset([
+      pyolecf.value_types.INTEGER_16BIT_SIGNED,
+      pyolecf.value_types.INTEGER_32BIT_SIGNED,
+      pyolecf.value_types.FILETIME])
+
+  _STRING_TYPES = frozenset([
+      pyolecf.value_types.STRING_ASCII,
+      pyolecf.value_types.STRING_UNICODE])
 
   _DATE_TIME_PROPERTIES = frozenset([])
+
   _PROPERTY_NAMES = None
   _PROPERTY_VALUE_MAPPINGS = None
 
@@ -57,7 +57,7 @@ class OLECFPropertySetStream(object):
     Returns:
       object: property value as a Python object.
     """
-    if property_value.type == self.VT_BOOL:
+    if property_value.type == pyolecf.value_types.BOOLEAN:
       return property_value.data_as_boolean
 
     elif property_value.type in self._INTEGER_TYPES:
