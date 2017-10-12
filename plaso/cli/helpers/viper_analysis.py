@@ -10,7 +10,7 @@ from plaso.lib import errors
 class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
   """Viper analysis plugin CLI arguments helper."""
 
-  NAME = u'viper_analysis'
+  NAME = u'viper'
   CATEGORY = u'analysis'
   DESCRIPTION = u'Argument helper for the Viper analysis plugin.'
 
@@ -63,6 +63,7 @@ class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
                     viper.ViperAnalyzer.SUPPORTED_PROTOCOLS)))
 
   @classmethod
+  # pylint: disable=arguments-differ
   def ParseOptions(cls, options, analysis_plugin):
     """Parses and validates options.
 
