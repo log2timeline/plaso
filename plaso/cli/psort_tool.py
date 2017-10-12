@@ -407,14 +407,12 @@ class PsortTool(
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=names)
 
-    if self._analysis_plugins == 'list':
-      self.list_analysis_plugins = True
-
-    if self._preferred_language == 'list':
-      self.list_language_identifiers = True
+    self.list_analysis_plugins = self._analysis_plugins == 'list'
+    self.list_language_identifiers = self._preferred_language == 'list'
+    self.list_output_modules = self._output_format == 'list'
 
     if (self.list_analysis_plugins or self.list_language_identifiers or
-        self.list_timezones):
+        self.list_output_modules or self.list_timezones):
       return
 
     # Check output modules after the other listable options, as otherwise

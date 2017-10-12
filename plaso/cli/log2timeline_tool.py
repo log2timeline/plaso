@@ -20,6 +20,7 @@ from plaso import filters  # pylint: disable=unused-import
 # The following import makes sure the output modules are registered.
 from plaso import output  # pylint: disable=unused-import
 
+from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.cli import extraction_tool
 from plaso.cli import logging_filter
 from plaso.cli import status_view
@@ -31,7 +32,6 @@ from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.engine import single_process as single_process_engine
 from plaso.frontend import utils as frontend_utils
-from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import task_engine as multi_process_engine
@@ -43,6 +43,7 @@ from plaso.storage import zip_file as storage_zip_file
 class Log2TimelineTool(
     extraction_tool.ExtractionTool,
     tool_options.HashersOptions,
+    tool_options.OutputModuleOptions,
     tool_options.ParsersOptions,
     tool_options.StorageFileOptions):
   """Log2timeline CLI tool.
@@ -51,8 +52,6 @@ class Log2TimelineTool(
     dependencies_check (bool): True if the availability and versions of
         dependencies should be checked.
     list_hashers (bool): True if the hashers should be listed.
-    list_output_modules (bool): True if information about the output modules
-        should be shown.
     list_parsers_and_plugins (bool): True if the parsers and plugins should
         be listed.
     show_info (bool): True if information about hashers, parsers, plugins,
@@ -129,7 +128,6 @@ class Log2TimelineTool(
 
     self.dependencies_check = True
     self.list_hashers = False
-    self.list_output_modules = False
     self.list_parsers_and_plugins = False
     self.show_info = False
 
@@ -469,7 +467,7 @@ class Log2TimelineTool(
           file system.
       UserAbort: if the user initiated an abort.
     """
-    self._CheckStorageFile(self._storage_file_path)
+    self._CheckStorageFile(self._storage_file_path, warn_about_existing=True)
 
     scan_context = self.ScanSource()
     self._source_type = scan_context.source_type

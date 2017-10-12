@@ -41,7 +41,8 @@ class PstealTool(
     storage_media_tool.StorageMediaTool,
     tool_options.HashersOptions,
     tool_options.OutputModuleOptions,
-    tool_options.ParsersOptions):
+    tool_options.ParsersOptions,
+    tool_options.StorageFileOptions):
   """Psteal CLI tool.
 
   Psteal extract events from the provided source and stores them in an
@@ -53,8 +54,15 @@ class PstealTool(
   Attributes:
     dependencies_check (bool): True if the availability and versions of
         dependencies should be checked.
+    list_analysis_plugins (bool): True if information about the analysis
+        plugins should be shown.
+    list_hashers (bool): True if the hashers should be listed.
+    list_language_identifiers (bool): True if information about the language
+        identifiers should be shown.
     list_output_modules (bool): True if information about the output modules
         should be shown.
+    list_parsers_and_plugins (bool): True if the parsers and plugins should
+        be listed.
   """
 
   NAME = 'psteal'
@@ -106,6 +114,7 @@ class PstealTool(
     super(PstealTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._artifacts_registry = None
+    self._analysis_plugins = None
     self._command_line_arguments = None
     self._deduplicate_events = True
     self._enable_sigsegv_handler = False
@@ -127,7 +136,7 @@ class PstealTool(
     self._use_time_slicer = False
     self._use_zeromq = True
     self._yara_rules_string = None
-
+    self.list_analysis_plugins = False
     self.list_hashers = False
     self.list_language_identifiers = False
     self.list_output_modules = False
@@ -154,6 +163,8 @@ class PstealTool(
 
   def _GenerateStorageFileName(self):
     """Generates a name for the storage file.
+
+    The result use a timestamp and the basename of the source path.
 
     Returns:
       str: a filename for the storage file in the form <time>-<source>.plaso
@@ -295,6 +306,7 @@ class PstealTool(
           file system.
       UserAbort: if the user initiated an abort.
     """
+    self._CheckStorageFile(self._storage_file_path, warn_about_existing=True)
 
     scan_context = self.ScanSource()
     source_type = scan_context.source_type
@@ -424,11 +436,9 @@ class PstealTool(
         extraction_group, names=argument_helper_names)
 
     extraction_group.add_argument(
-        u'--storage_file', metavar=u'STORAGE_FILE', type=str, default=None,
-        help=(
-            u'The path of the storage file. If not specified, one will be made '
-            u' in the form <timestamp>-<source>.plaso')
-    )
+        '--storage_file', metavar='STORAGE_FILE', type=str, default=None, help=(
+            'The path of the storage file. If not specified, one will be made '
+            'in the form <timestamp>-<source>.plaso'))
 
     self.AddStorageMediaImageOptions(extraction_group)
     self.AddCredentialOptions(extraction_group)
@@ -447,6 +457,9 @@ class PstealTool(
         input_group, names=['data_location'])
 
     output_group = argument_parser.add_argument_group('Output Arguments')
+
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        output_group, names=['language'])
 
     self.AddTimeZoneOption(output_group)
 
@@ -484,7 +497,6 @@ class PstealTool(
     Raises:
       BadConfigOption: if the options are invalid.
     """
-
     # The extraction options are dependent on the data location.
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['data_location'])
@@ -498,24 +510,16 @@ class PstealTool(
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
-
-    if self._preferred_language == 'list':
-      self.list_language_identifiers = True
-
-    if self._hasher_names_string == 'list':
-      self.list_hashers = True
-
-    if self._parser_filter_expression == 'list':
-      self.list_parsers_and_plugins = True
-
-    if (self.list_language_identifiers or self.list_timezones or
-        self.list_hashers or self.list_parsers_and_plugins or
-        self.list_hashers):
-      return
-
+    self.list_analysis_plugins = self._analysis_plugins == 'list'
+    self.list_hashers = self._hasher_names_string == 'list'
+    self.list_language_identifiers = self._preferred_language == 'list'
+    self.list_output_modules = self._output_format == 'list'
+    self.list_parsers_and_plugins = self._parser_filter_expression == 'list'
 
     # Check the list options first otherwise required options will raise.
-    if self.list_timezones or self.list_output_modules:
+    if (self.list_analysis_plugins or self.list_hashers or
+        self.list_language_identifiers or self.list_output_modules or
+        self.list_parsers_and_plugins or self.list_timezones):
       return
 
     # Check output modules after the other listable options, as otherwise
@@ -545,14 +549,16 @@ class PstealTool(
     if not self._storage_file_path:
       self._storage_file_path = self._GenerateStorageFileName()
 
-    self._output_filename = getattr(options, u'write', None)
+    self._output_filename = getattr(options, 'write', None)
 
     if not self._output_filename:
       raise errors.BadConfigOption((
-          u'Output format: {0:s} requires an output file (-w OUTPUT_FILE)'
-      ).format(self._output_format))
+          'Output format: {0:s} requires an output file '
+          '(-w OUTPUT_FILE)').format(self._output_format))
+
     if os.path.exists(self._output_filename):
       raise errors.BadConfigOption(
-          u'Output file already exists: {0:s}.'.format(self._output_filename))
+          'Output file already exists: {0:s}.'.format(self._output_filename))
 
+    self._analysis_plugins = self._CreateAnalysisPlugins(options)
     self._output_module = self._CreateOutputModule(options)
