@@ -53,7 +53,7 @@ class Session(interface.AttributeContainer):
     self.enabled_parser_names = None
     self.event_labels_counter = collections.Counter()
     self.filter_file = None
-    self.identifier = '{0:s}'.format(uuid.uuid4().get_hex())
+    self.identifier = '{0:s}'.format(uuid.uuid4().hex)
     self.parser_filter_expression = None
     self.parsers_counter = collections.Counter()
     self.preferred_encoding = 'utf-8'
