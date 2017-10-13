@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The serializer object interfaces."""
 
+from __future__ import unicode_literals
+
 import abc
 
 

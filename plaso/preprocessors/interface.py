@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains classes used for preprocessing in plaso."""
 
+from __future__ import unicode_literals
+
 import abc
 
 from artifacts import definitions as artifact_definitions
@@ -136,12 +138,12 @@ class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
       relative_path = searcher.GetRelativePath(path_specification)
       if path_separator != file_system.PATH_SEPARATOR:
         relative_path_segments = file_system.SplitPath(relative_path)
-        relative_path = u'{0:s}{1:s}'.format(
+        relative_path = '{0:s}{1:s}'.format(
             path_separator, path_separator.join(relative_path_segments))
 
       raise errors.PreProcessFail((
-          u'Unable to retrieve file entry: {0:s} with error: '
-          u'{1:s}').format(relative_path, exception))
+          'Unable to retrieve file entry: {0:s} with error: '
+          '{1:s}').format(relative_path, exception))
 
     return self._ParseFileEntry(knowledge_base, file_entry)
 
@@ -239,20 +241,20 @@ class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
 
       if source.type_indicator == (
           artifact_definitions.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY):
-        key_value_pairs = [{u'key': key} for key in source.keys]
+        key_value_pairs = [{'key': key} for key in source.keys]
       else:
         key_value_pairs = source.key_value_pairs
 
       for key_value_pair in key_value_pairs:
-        key_path = key_value_pair[u'key']
+        key_path = key_value_pair['key']
 
         # The artifact definitions currently incorrectly define
         # CurrentControlSet so we correct it here for now.
         # Also see: https://github.com/ForensicArtifacts/artifacts/issues/120
         key_path_upper = key_path.upper()
-        if key_path_upper.startswith(u'%%CURRENT_CONTROL_SET%%'):
-          key_path = u'{0:s}{1:s}'.format(
-              u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet', key_path[23:])
+        if key_path_upper.startswith('%%CURRENT_CONTROL_SET%%'):
+          key_path = '{0:s}{1:s}'.format(
+              'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet', key_path[23:])
 
         find_spec = registry_searcher.FindSpec(key_path_glob=key_path)
 
@@ -261,11 +263,11 @@ class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
             registry_key = searcher.GetKeyByPath(key_path)
           except IOError as exception:
             raise errors.PreProcessFail((
-                u'Unable to retrieve Windows Registry key: {0:s} with error: '
-                u'{1:s}').format(key_path, exception))
+                'Unable to retrieve Windows Registry key: {0:s} with error: '
+                '{1:s}').format(key_path, exception))
 
           if registry_key:
-            value_name = key_value_pair.get(u'value', None)
+            value_name = key_value_pair.get('value', None)
             if self._ParseKey(knowledge_base, registry_key, value_name):
               return True
 
@@ -297,8 +299,8 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
       registry_value = registry_key.GetValueByName(value_name)
     except IOError as exception:
       raise errors.PreProcessFail((
-          u'Unable to retrieve Windows Registry key: {0:s} value: {1:s} '
-          u'with error: {2:s}').format(
+          'Unable to retrieve Windows Registry key: {0:s} value: {1:s} '
+          'with error: {2:s}').format(
               registry_key.path, value_name, exception))
 
     result = False
