@@ -51,33 +51,33 @@ class BinaryCookieParser(interface.FileObjectParser):
 
   _FILE_HEADER = construct.Struct(
       'file_header',
-      construct.Bytes(u'signature', 4),
-      construct.UBInt32(u'number_of_pages'),
+      construct.Bytes('signature', 4),
+      construct.UBInt32('number_of_pages'),
       construct.Array(
           lambda ctx: ctx.number_of_pages,
-          construct.UBInt32(u'page_sizes')))
+          construct.UBInt32('page_sizes')))
 
   _COOKIE_RECORD = construct.Struct(
       'cookie_record',
-      construct.ULInt32(u'size'),
-      construct.Bytes(u'unknown_1', 4),
-      construct.ULInt32(u'flags'),
-      construct.Bytes(u'unknown_2', 4),
-      construct.ULInt32(u'url_offset'),
-      construct.ULInt32(u'name_offset'),
-      construct.ULInt32(u'path_offset'),
-      construct.ULInt32(u'value_offset'),
-      construct.Bytes(u'end_of_cookie', 8),
-      construct.LFloat64(u'expiration_date'),
-      construct.LFloat64(u'creation_date'))
+      construct.ULInt32('size'),
+      construct.Bytes('unknown_1', 4),
+      construct.ULInt32('flags'),
+      construct.Bytes('unknown_2', 4),
+      construct.ULInt32('url_offset'),
+      construct.ULInt32('name_offset'),
+      construct.ULInt32('path_offset'),
+      construct.ULInt32('value_offset'),
+      construct.Bytes('end_of_cookie', 8),
+      construct.LFloat64('expiration_date'),
+      construct.LFloat64('creation_date'))
 
   _PAGE_HEADER = construct.Struct(
       'page_header',
-      construct.Bytes(u'header', 4),
-      construct.ULInt32(u'number_of_records'),
+      construct.Bytes('header', 4),
+      construct.ULInt32('number_of_records'),
       construct.Array(
           lambda ctx: ctx.number_of_records,
-          construct.ULInt32(u'offsets')))
+          construct.ULInt32('offsets')))
 
   def __init__(self):
     """Initializes a parser object."""
@@ -125,11 +125,11 @@ class BinaryCookieParser(interface.FileObjectParser):
       data_dict[value] = data
 
     event_data = SafariBinaryCookieEventData()
-    event_data.cookie_name = data_dict.get(u'name')
-    event_data.cookie_value = data_dict.get(u'value')
+    event_data.cookie_name = data_dict.get('name')
+    event_data.cookie_value = data_dict.get('value')
     event_data.flags = cookie.flags
-    event_data.path = data_dict.get(u'path')
-    event_data.url = data_dict.get(u'url')
+    event_data.path = data_dict.get('path')
+    event_data.url = data_dict.get('url')
 
     if cookie.creation_date:
       date_time = dfdatetime_cocoa_time.CocoaTime(
@@ -142,7 +142,7 @@ class BinaryCookieParser(interface.FileObjectParser):
       date_time = dfdatetime_cocoa_time.CocoaTime(
           timestamp=cookie.expiration_date)
     else:
-      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
@@ -220,7 +220,7 @@ class BinaryCookieParser(interface.FileObjectParser):
       raise errors.UnableToParseFile()
 
     if file_header.signature != b'cook':
-      parser_mediator.ProduceExtractionError(u'unsupported file signature.')
+      parser_mediator.ProduceExtractionError('unsupported file signature.')
       raise errors.UnableToParseFile()
 
     for index, page_size in enumerate(file_header.page_sizes):

@@ -71,7 +71,7 @@ class BasePlugin(object):
       ValueError: When there are unused keyword arguments.
     """
     if kwargs:
-      raise ValueError(u'Unused keyword arguments: {0:s}.'.format(
+      raise ValueError('Unused keyword arguments: {0:s}.'.format(
           ', '.join(kwargs.keys())))
 
   def UpdateChainAndProcess(self, parser_mediator, **kwargs):

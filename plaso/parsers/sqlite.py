@@ -186,7 +186,7 @@ class SQLiteDatabase(object):
       ValueError: if the file-like object is missing.
     """
     if not file_object:
-      raise ValueError(u'Missing file object.')
+      raise ValueError('Missing file object.')
 
     # TODO: Current design copies the entire file into a buffer
     # that is parsed by each SQLite parser. This is not very efficient,

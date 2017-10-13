@@ -127,6 +127,7 @@ class WinLnkParser(interface.FileObjectParser):
           date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
+  # pylint: disable=arguments-differ
   def ParseFileObject(
       self, parser_mediator, file_object, display_name=None, **kwargs):
     """Parses a Windows Shortcut (LNK) file-like object.
@@ -187,7 +188,7 @@ class WinLnkParser(interface.FileObjectParser):
       parser_mediator.ProduceEvent(event)
 
     if access_time == 0 and creation_time == 0 and modification_time == 0:
-      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
       event = WinLnkLinkEvent(
           date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME, lnk_file,
           link_target)

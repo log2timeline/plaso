@@ -94,37 +94,37 @@ class DpkgParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Literal(_DPKG_STARTUP) +
       pyparsing.oneOf(_DPKG_STARTUP_TYPES) +
       pyparsing.oneOf(_DPKG_STARTUP_COMMANDS),
-      joinString=u' ', adjacent=False)
+      joinString=' ', adjacent=False)
 
   _DPKG_STATUS_BODY = pyparsing.Combine(
       pyparsing.Literal(_DPKG_STATUS) +
       pyparsing.Word(pyparsing.printables) +
       pyparsing.Word(pyparsing.printables) +
       pyparsing.Word(pyparsing.printables),
-      joinString=u' ', adjacent=False)
+      joinString=' ', adjacent=False)
 
   _DPKG_ACTION_BODY = pyparsing.Combine(
       pyparsing.oneOf(_DPKG_ACTIONS) +
       pyparsing.Word(pyparsing.printables) +
       pyparsing.Word(pyparsing.printables) +
       pyparsing.Word(pyparsing.printables),
-      joinString=u' ', adjacent=False)
+      joinString=' ', adjacent=False)
 
   _DPKG_CONFFILE_BODY = pyparsing.Combine(
       pyparsing.Literal(_DPKG_CONFFILE) +
       pyparsing.Word(pyparsing.printables) +
       pyparsing.oneOf(_DPKG_CONFFILE_DECISIONS),
-      joinString=u' ', adjacent=False)
+      joinString=' ', adjacent=False)
 
   _DPKG_LOG_LINE = (
-      text_parser.PyparsingConstants.DATE_TIME.setResultsName(u'date_time') +
+      text_parser.PyparsingConstants.DATE_TIME.setResultsName('date_time') +
       pyparsing.MatchFirst([
           _DPKG_STARTUP_BODY,
           _DPKG_STATUS_BODY,
           _DPKG_ACTION_BODY,
-          _DPKG_CONFFILE_BODY]).setResultsName(u'body'))
+          _DPKG_CONFFILE_BODY]).setResultsName('body'))
 
-  LINE_STRUCTURES = [(u'line', _DPKG_LOG_LINE)]
+  LINE_STRUCTURES = [('line', _DPKG_LOG_LINE)]
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a structure of tokens derived from a line of a text file.

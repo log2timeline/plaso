@@ -80,12 +80,12 @@ class ASLParser(interface.FileObjectParser):
   # last_offset: last record in the file.
   _ASL_HEADER_STRUCT = construct.Struct(
       'asl_header_struct',
-      construct.String(u'signature', 12),
-      construct.UBInt32(u'version'),
-      construct.UBInt64(u'offset'),
-      construct.UBInt64(u'timestamp'),
-      construct.UBInt32(u'cache_size'),
-      construct.UBInt64(u'last_offset'),
+      construct.String('signature', 12),
+      construct.UBInt32('version'),
+      construct.UBInt64('offset'),
+      construct.UBInt64('timestamp'),
+      construct.UBInt32('cache_size'),
+      construct.UBInt64('last_offset'),
       construct.Padding(36))
 
   # The record structure is:
@@ -108,19 +108,19 @@ class ASLParser(interface.FileObjectParser):
   _ASL_RECORD_STRUCT = construct.Struct(
       'asl_record_struct',
       construct.Padding(2),
-      construct.UBInt32(u'tam_entry'),
-      construct.UBInt64(u'next_offset'),
-      construct.UBInt64(u'asl_message_id'),
-      construct.UBInt64(u'timestamp'),
-      construct.UBInt32(u'nanoseconds'),
-      construct.UBInt16(u'level'),
-      construct.UBInt16(u'flags'),
-      construct.UBInt32(u'pid'),
-      construct.UBInt32(u'uid'),
-      construct.UBInt32(u'gid'),
-      construct.UBInt32(u'read_uid'),
-      construct.UBInt32(u'read_gid'),
-      construct.UBInt64(u'ref_pid'))
+      construct.UBInt32('tam_entry'),
+      construct.UBInt64('next_offset'),
+      construct.UBInt64('asl_message_id'),
+      construct.UBInt64('timestamp'),
+      construct.UBInt32('nanoseconds'),
+      construct.UBInt16('level'),
+      construct.UBInt16('flags'),
+      construct.UBInt32('pid'),
+      construct.UBInt32('uid'),
+      construct.UBInt32('gid'),
+      construct.UBInt32('read_uid'),
+      construct.UBInt32('read_gid'),
+      construct.UBInt64('ref_pid'))
 
   _ASL_RECORD_STRUCT_SIZE = _ASL_RECORD_STRUCT.sizeof()
 
@@ -133,7 +133,7 @@ class ASLParser(interface.FileObjectParser):
   # If the field is a String, we use this structure to decode each
   # integer byte in the corresponding character (ASCII Char).
   _ASL_OCTET_STRING = construct.ExprAdapter(
-      construct.Octet(u'string'),
+      construct.Octet('string'),
       encoder=lambda obj, ctx: ord(obj),
       decoder=lambda obj, ctx: chr(obj))
 
@@ -142,25 +142,25 @@ class ASLParser(interface.FileObjectParser):
   # characters. The last 7 bytes are the number of bytes.
   _ASL_STRING = construct.BitStruct(
       'string',
-      construct.Flag(u'type'),
-      construct.Bits(u'filler', 3),
+      construct.Flag('type'),
+      construct.Bits('filler', 3),
       construct.If(
           lambda ctx: ctx.type,
-          construct.Nibble(u'string_length')),
+          construct.Nibble('string_length')),
       construct.If(
           lambda ctx: ctx.type,
           construct.Array(7, _ASL_OCTET_STRING)))
 
   # 8-byte pointer to a byte position in the file.
-  _ASL_POINTER = construct.UBInt64(u'pointer')
+  _ASL_POINTER = construct.UBInt64('pointer')
 
   # Dynamic data structure pointed by a pointer that contains a String:
   # [2 bytes padding][4 bytes size of String][String].
   _ASL_RECORD_DYN_VALUE = construct.Struct(
       'asl_record_dyn_value',
       construct.Padding(2),
-      construct.UBInt32(u'size'),
-      construct.Bytes(u'value', lambda ctx: ctx.size))
+      construct.UBInt32('size'),
+      construct.Bytes('value', lambda ctx: ctx.size))
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -191,7 +191,7 @@ class ASLParser(interface.FileObjectParser):
           'Unable to parse ASL Header with error: {0:s}.'.format(exception))
 
     if header.signature != self._ASL_SIGNATURE:
-      raise errors.UnableToParseFile(u'Not an ASL Header, unable to parse.')
+      raise errors.UnableToParseFile('Not an ASL Header, unable to parse.')
 
     offset = header.offset
     if not offset:
@@ -391,16 +391,16 @@ class ASLParser(interface.FileObjectParser):
     message = 'N/A'
 
     if number_of_values >= 1:
-      computer_name = values[0].decode(u'utf-8')
+      computer_name = values[0].decode('utf-8')
 
     if number_of_values >= 2:
-      sender = values[1].decode(u'utf-8')
+      sender = values[1].decode('utf-8')
 
     if number_of_values >= 3:
-      facility = values[2].decode(u'utf-8')
+      facility = values[2].decode('utf-8')
 
     if number_of_values >= 4:
-      message = values[3].decode(u'utf-8')
+      message = values[3].decode('utf-8')
 
     # If the entry has an extra fields, they works as a pairs:
     # The first is the name of the field and the second the value.
@@ -411,7 +411,7 @@ class ASLParser(interface.FileObjectParser):
       try:
         extra_values = map(py2to3.UNICODE_TYPE, values[4:])
         extra_information = ', '.join(
-            map(u': '.join, zip(extra_values[0::2], extra_values[1::2])))
+            map(': '.join, zip(extra_values[0::2], extra_values[1::2])))
       except UnicodeDecodeError as exception:
         parser_mediator.ProduceExtractionError(
             'unable to decode all ASL values in the extra information fields.')

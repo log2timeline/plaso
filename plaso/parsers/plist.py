@@ -36,7 +36,7 @@ class PlistParser(interface.FileObjectParser):
 
   _plugin_classes = {}
 
-  def GetTopLevel(self, file_object, file_name=u''):
+  def GetTopLevel(self, file_object, file_name=''):
     """Returns the deserialized content of a plist as a dictionary object.
 
     Args:
@@ -55,7 +55,7 @@ class PlistParser(interface.FileObjectParser):
 
     except binplist.FormatError as exception:
       if not isinstance(exception, py2to3.BYTES_TYPE):
-        error_string = str(exception).decode(u'utf8', errors=u'replace')
+        error_string = str(exception).decode('utf8', errors='replace')
       else:
         error_string = exception
 
@@ -128,7 +128,7 @@ class PlistParser(interface.FileObjectParser):
         matching_plugin = plugin
 
       except errors.WrongPlistPlugin as exception:
-        logging.debug(u'Wrong plugin: {0:s} for: {1:s}'.format(
+        logging.debug('Wrong plugin: {0:s} for: {1:s}'.format(
             exception.args[0], exception.args[1]))
 
     if not matching_plugin and self._default_plugin:

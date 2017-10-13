@@ -66,39 +66,39 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
   DESCRIPTION = 'Parser for SELinux audit.log files.'
 
   _SELINUX_KEY_VALUE_GROUP = pyparsing.Group(
-      pyparsing.Word(pyparsing.alphanums).setResultsName(u'key') +
-      pyparsing.Suppress(u'=') + (
-          pyparsing.QuotedString(u'"') ^
-          pyparsing.Word(pyparsing.printables)).setResultsName(u'value'))
+      pyparsing.Word(pyparsing.alphanums).setResultsName('key') +
+      pyparsing.Suppress('=') + (
+          pyparsing.QuotedString('"') ^
+          pyparsing.Word(pyparsing.printables)).setResultsName('value'))
 
   _SELINUX_KEY_VALUE_DICT = pyparsing.Dict(
       pyparsing.ZeroOrMore(_SELINUX_KEY_VALUE_GROUP))
 
   _SELINUX_BODY_GROUP = pyparsing.Group(
-      pyparsing.Empty().setResultsName(u'key') +
-      pyparsing.restOfLine.setResultsName(u'value'))
+      pyparsing.Empty().setResultsName('key') +
+      pyparsing.restOfLine.setResultsName('value'))
 
   _SELINUX_MSG_GROUP = pyparsing.Group(
-      pyparsing.Literal(u'msg').setResultsName(u'key') +
-      pyparsing.Suppress(u'=audit(') +
-      pyparsing.Word(pyparsing.nums).setResultsName(u'seconds') +
-      pyparsing.Suppress(u'.') +
-      pyparsing.Word(pyparsing.nums).setResultsName(u'milliseconds') +
-      pyparsing.Suppress(u':') +
-      pyparsing.Word(pyparsing.nums).setResultsName(u'serial') +
-      pyparsing.Suppress(u'):'))
+      pyparsing.Literal('msg').setResultsName('key') +
+      pyparsing.Suppress('=audit(') +
+      pyparsing.Word(pyparsing.nums).setResultsName('seconds') +
+      pyparsing.Suppress('.') +
+      pyparsing.Word(pyparsing.nums).setResultsName('milliseconds') +
+      pyparsing.Suppress(':') +
+      pyparsing.Word(pyparsing.nums).setResultsName('serial') +
+      pyparsing.Suppress('):'))
 
   _SELINUX_TYPE_GROUP = pyparsing.Group(
-      pyparsing.Literal(u'type').setResultsName(u'key') +
-      pyparsing.Suppress(u'=') + (
-          pyparsing.Word(pyparsing.srange(u'[A-Z_]')) ^
-          pyparsing.Regex(r'UNKNOWN\[[0-9]+\]')).setResultsName(u'value'))
+      pyparsing.Literal('type').setResultsName('key') +
+      pyparsing.Suppress('=') + (
+          pyparsing.Word(pyparsing.srange('[A-Z_]')) ^
+          pyparsing.Regex(r'UNKNOWN\[[0-9]+\]')).setResultsName('value'))
 
   _SELINUX_TYPE_AVC_GROUP = pyparsing.Group(
-      pyparsing.Literal(u'type').setResultsName(u'key') +
-      pyparsing.Suppress(u'=') + (
-          pyparsing.Word(u'AVC') ^
-          pyparsing.Word(u'USER_AVC')).setResultsName(u'value'))
+      pyparsing.Literal('type').setResultsName('key') +
+      pyparsing.Suppress('=') + (
+          pyparsing.Word('AVC') ^
+          pyparsing.Word('USER_AVC')).setResultsName('value'))
 
   # A log line is formatted as: type=TYPE msg=audit([0-9]+\.[0-9]+:[0-9]+): .*
   _SELINUX_LOG_LINE = pyparsing.Dict(
@@ -106,7 +106,7 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
       _SELINUX_MSG_GROUP +
       _SELINUX_BODY_GROUP)
 
-  LINE_STRUCTURES = [(u'line', _SELINUX_LOG_LINE)]
+  LINE_STRUCTURES = [('line', _SELINUX_LOG_LINE)]
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a structure of tokens derived from a line of a text file.
@@ -125,7 +125,7 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    msg_value = structure.get(u'msg')
+    msg_value = structure.get('msg')
     if not msg_value:
       parser_mediator.ProduceExtractionError(
           'missing msg value: {0!s}'.format(structure))
@@ -158,9 +158,9 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
       key_value_dict = {}
 
     event_data = SELinuxLogEventData()
-    event_data.audit_type = structure.get(u'type', None)
+    event_data.audit_type = structure.get('type', None)
     event_data.body = body_text
-    event_data.pid = key_value_dict.get(u'pid', None)
+    event_data.pid = key_value_dict.get('pid', None)
     # TODO: pass line number to offset or remove.
     event_data.offset = 0
 

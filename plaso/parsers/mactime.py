@@ -96,13 +96,13 @@ class MactimeParser(text_parser.TextCSVParser):
       row_offset (int): number of the corresponding line.
       row (dict[str, str]): fields of a single row, as denoted in COLUMNS.
     """
-    filename = row.get(u'name', None)
-    md5_hash = row.get(u'md5', None)
-    mode = row.get(u'mode_as_string', None)
+    filename = row.get('name', None)
+    md5_hash = row.get('md5', None)
+    mode = row.get('mode_as_string', None)
 
-    inode_number = row.get(u'inode', None)
+    inode_number = row.get('inode', None)
     if '-' in inode_number:
-      inode_number, _, _ = inode_number.partition(u'-')
+      inode_number, _, _ = inode_number.partition('-')
 
     try:
       inode_number = int(inode_number, 10)
@@ -151,7 +151,7 @@ class MactimeParser(text_parser.TextCSVParser):
       bool: True if the row is valid.
     """
     # The md5 value is '0' if not set.
-    if row[u'md5'] != b'0' and not self._MD5_RE.match(row[u'md5']):
+    if row['md5'] != b'0' and not self._MD5_RE.match(row['md5']):
       return False
 
     try:
@@ -159,7 +159,7 @@ class MactimeParser(text_parser.TextCSVParser):
       # and then back to string so it can be compared, if the value is
       # not a string representation of an integer, e.g. '12a' then this
       # conversion will fail and we return a False value.
-      if str(int(row.get(u'size', b'0'), 10)) != row.get(u'size', None):
+      if str(int(row.get('size', b'0'), 10)) != row.get('size', None):
         return False
     except ValueError:
       return False

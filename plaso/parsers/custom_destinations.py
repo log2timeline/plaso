@@ -37,28 +37,28 @@ class CustomDestinationsParser(interface.FileObjectParser):
 
   _FILE_HEADER = construct.Struct(
       'file_header',
-      construct.ULInt32(u'unknown1'),
-      construct.ULInt32(u'unknown2'),
-      construct.ULInt32(u'unknown3'),
-      construct.ULInt32(u'header_values_type'))
+      construct.ULInt32('unknown1'),
+      construct.ULInt32('unknown2'),
+      construct.ULInt32('unknown3'),
+      construct.ULInt32('header_values_type'))
 
   _HEADER_VALUE_TYPE_0 = construct.Struct(
       'header_value_type_0',
-      construct.ULInt32(u'number_of_characters'),
-      construct.String(u'string', lambda ctx: ctx.number_of_characters * 2),
-      construct.ULInt32(u'unknown1'))
+      construct.ULInt32('number_of_characters'),
+      construct.String('string', lambda ctx: ctx.number_of_characters * 2),
+      construct.ULInt32('unknown1'))
 
   _HEADER_VALUE_TYPE_1_OR_2 = construct.Struct(
       'header_value_type_1_or_2',
-      construct.ULInt32(u'unknown1'))
+      construct.ULInt32('unknown1'))
 
   _ENTRY_HEADER = construct.Struct(
       'entry_header',
-      construct.String(u'guid', 16))
+      construct.String('guid', 16))
 
   _FILE_FOOTER = construct.Struct(
       'file_footer',
-      construct.ULInt32(u'signature'))
+      construct.ULInt32('signature'))
 
   def _ParseLNKFile(
       self, parser_mediator, file_entry, file_offset, remaining_file_size):

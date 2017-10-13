@@ -59,21 +59,21 @@ class UtmpParser(interface.FileObjectParser):
 
   LINUX_UTMP_ENTRY = construct.Struct(
       'utmp_linux',
-      construct.ULInt32(u'type'),
-      construct.ULInt32(u'pid'),
-      construct.String(u'terminal', 32),
-      construct.ULInt32(u'terminal_id'),
-      construct.String(u'username', 32),
-      construct.String(u'hostname', 256),
-      construct.ULInt16(u'termination'),
-      construct.ULInt16(u'exit'),
-      construct.ULInt32(u'session'),
-      construct.ULInt32(u'timestamp'),
-      construct.ULInt32(u'microseconds'),
-      construct.ULInt32(u'address_a'),
-      construct.ULInt32(u'address_b'),
-      construct.ULInt32(u'address_c'),
-      construct.ULInt32(u'address_d'),
+      construct.ULInt32('type'),
+      construct.ULInt32('pid'),
+      construct.String('terminal', 32),
+      construct.ULInt32('terminal_id'),
+      construct.String('username', 32),
+      construct.String('hostname', 256),
+      construct.ULInt16('termination'),
+      construct.ULInt16('exit'),
+      construct.ULInt32('session'),
+      construct.ULInt32('timestamp'),
+      construct.ULInt32('microseconds'),
+      construct.ULInt32('address_a'),
+      construct.ULInt32('address_b'),
+      construct.ULInt32('address_c'),
+      construct.ULInt32('address_d'),
       construct.Padding(20))
 
   LINUX_UTMP_ENTRY_SIZE = LINUX_UTMP_ENTRY.sizeof()
@@ -97,7 +97,7 @@ class UtmpParser(interface.FileObjectParser):
   _DEFAULT_TEST_VALUE = 'Ekki Fraedilegur Moguleiki, thetta er bull ! = + _<>'
 
   def _GetTextFromNullTerminatedString(
-      self, null_terminated_string, default_string=u'N/A'):
+      self, null_terminated_string, default_string='N/A'):
     """Get a UTF-8 text from a raw null terminated string.
 
     Args:
@@ -110,11 +110,11 @@ class UtmpParser(interface.FileObjectParser):
     """
     text, _, _ = null_terminated_string.partition(b'\x00')
     try:
-      text = text.decode(u'utf-8')
+      text = text.decode('utf-8')
     except UnicodeDecodeError:
       logging.warning(
           '[UTMP] Decode UTF8 failed, the message string may be cut short.')
-      text = text.decode(u'utf-8', 'ignore')
+      text = text.decode('utf-8', 'ignore')
     if not text:
       return default_string
     return text
@@ -157,7 +157,7 @@ class UtmpParser(interface.FileObjectParser):
     else:
       try:
         ip_address = socket.inet_ntoa(
-            construct.ULInt32(u'int').build(entry.address_a))
+            construct.ULInt32('int').build(entry.address_a))
         if ip_address == '0.0.0.0':
           ip_address = 'localhost'
       except (IOError, construct.FieldError, socket.error):

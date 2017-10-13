@@ -46,21 +46,21 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
   _VERIFICATION_REGEX = re.compile(r'^:\s\d+:\d+;')
 
   _PYPARSING_COMPONENTS = {
-      'timestamp': text_parser.PyparsingConstants.INTEGER.
-                    setResultsName(u'timestamp'),
-      'elapsed_seconds': text_parser.PyparsingConstants.INTEGER.
-                          setResultsName(u'elapsed_seconds'),
-      'command': pyparsing.Regex(r'.+?(?=($|\n:\s\d+:\d+;))', re.DOTALL).
-                  setResultsName(u'command'),
+      'timestamp': text_parser.PyparsingConstants.INTEGER.setResultsName(
+          'timestamp'),
+      'elapsed_seconds': text_parser.PyparsingConstants.INTEGER.setResultsName(
+          'elapsed_seconds'),
+      'command': pyparsing.Regex(
+          r'.+?(?=($|\n:\s\d+:\d+;))', re.DOTALL).setResultsName('command'),
   }
 
   _LINE_GRAMMAR = (
-      pyparsing.Literal(u':') +
-      _PYPARSING_COMPONENTS[u'timestamp'] + pyparsing.Literal(u':') +
-      _PYPARSING_COMPONENTS[u'elapsed_seconds'] + pyparsing.Literal(u';') +
-      _PYPARSING_COMPONENTS[u'command'] + pyparsing.LineEnd())
+      pyparsing.Literal(':') +
+      _PYPARSING_COMPONENTS['timestamp'] + pyparsing.Literal(':') +
+      _PYPARSING_COMPONENTS['elapsed_seconds'] + pyparsing.Literal(';') +
+      _PYPARSING_COMPONENTS['command'] + pyparsing.LineEnd())
 
-  LINE_STRUCTURES = [(u'command', _LINE_GRAMMAR)]
+  LINE_STRUCTURES = [('command', _LINE_GRAMMAR)]
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a record and produces a Zsh history event.
@@ -79,11 +79,11 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     event_data = ZshHistoryEventData()
-    event_data.command = structure[u'command']
-    event_data.elapsed_seconds = structure[u'elapsed_seconds']
+    event_data.command = structure['command']
+    event_data.elapsed_seconds = structure['elapsed_seconds']
 
     date_time = dfdatetime_posix_time.PosixTime(
-        timestamp=structure[u'timestamp'])
+        timestamp=structure['timestamp'])
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -94,7 +94,7 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      line (str): single line from the text file.
+      lines (str): one or more lines from the text file.
 
     Returns:
       bool: True if the line was successfully parsed.

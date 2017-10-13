@@ -4,14 +4,13 @@
 from __future__ import unicode_literals
 
 import os
-import sys
 
 from xml.etree import ElementTree
 
-if sys.version_info[0] < 3:
+try:
   import urlparse
-else:
-  from urllib import parse as urlparse  # pylint: disable=no-name-in-module
+except ImportError:
+  from urllib import parse as urlparse
 
 # pylint: disable=wrong-import-position
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -104,19 +103,19 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
 
     xml = ElementTree.parse(file_object)
 
-    for history_item in xml.iterfind(u'typed_history_item'):
+    for history_item in xml.iterfind('typed_history_item'):
       event_data = OperaTypedHistoryEventData()
-      event_data.entry_type = history_item.get(u'type', None)
-      event_data.url = history_item.get(u'content', None)
+      event_data.entry_type = history_item.get('type', None)
+      event_data.url = history_item.get('content', None)
 
       if event_data.entry_type == 'selected':
         event_data.entry_selection = 'Filled from autocomplete.'
       elif event_data.entry_type == 'text':
         event_data.entry_selection = 'Manually typed.'
 
-      last_typed_time = history_item.get(u'last_typed', None)
+      last_typed_time = history_item.get('last_typed', None)
       if last_typed_time is None:
-        parser_mediator.ProduceExtractionError(u'missing last typed time.')
+        parser_mediator.ProduceExtractionError('missing last typed time.')
         continue
 
       date_time = dfdatetime_time_elements.TimeElements()
@@ -142,7 +141,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
 
   _MAXIMUM_LINE_SIZE = 512
 
-  _SUPPORTED_URL_SCHEMES = frozenset([u'file', 'http', 'https', 'ftp'])
+  _SUPPORTED_URL_SCHEMES = frozenset(['file', 'http', 'https', 'ftp'])
 
   def _IsValidUrl(self, url):
     """Checks if an URL is considered valid.
@@ -180,9 +179,9 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
     event_data = OperaGlobalHistoryEventData()
 
     try:
-      title = title.decode(u'utf-8')
+      title = title.decode('utf-8')
     except UnicodeDecodeError:
-      title = title.decode(u'utf-8', errors=u'replace')
+      title = title.decode('utf-8', errors='replace')
       message = (
           'unable to properly determine string due to encoding error. '
           'Switching to error tolerant encoding which can result in '
@@ -190,7 +189,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
           '"\\ufffd". Title: {0:s}').format(title)
       parser_mediator.ProduceExtractionError(message)
 
-    event_data.url = url.decode(u'utf-8')
+    event_data.url = url.decode('utf-8')
 
     if title != event_data.url:
       event_data.title = title
@@ -214,7 +213,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
       timestamp = None
 
     if timestamp is None:
-      date_time = dfdatetime_semantic_time.SemanticTime(u'Invalid')
+      date_time = dfdatetime_semantic_time.SemanticTime('Invalid')
     else:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
 
@@ -264,8 +263,8 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
     event_data = OperaGlobalHistoryEventData()
 
     try:
-      title = title.decode(u'utf-8')
-      url = url.decode(u'utf-8')
+      title = title.decode('utf-8')
+      url = url.decode('utf-8')
     except UnicodeDecodeError:
       return False
 

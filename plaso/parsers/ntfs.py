@@ -112,7 +112,7 @@ class NTFSMFTParser(interface.FileObjectParser):
       dfdatetime.DateTimeValues: date and time.
     """
     if filetime == 0:
-      return dfdatetime_semantic_time.SemanticTime(u'Not set')
+      return dfdatetime_semantic_time.SemanticTime('Not set')
 
     return dfdatetime_filetime.Filetime(timestamp=filetime)
 
@@ -313,20 +313,20 @@ class NTFSUsnJrnlParser(interface.FileObjectParser):
 
   _USN_RECORD_V2 = construct.Struct(
       'usn_record_v2',
-      construct.ULInt32(u'size'),
-      construct.ULInt16(u'major_version'),
-      construct.ULInt16(u'minor_version'),
-      construct.ULInt64(u'file_reference'),
-      construct.ULInt64(u'parent_file_reference'),
-      construct.ULInt64(u'update_sequence_number'),
-      construct.ULInt64(u'update_date_time'),
-      construct.ULInt32(u'update_reason_flags'),
-      construct.ULInt32(u'update_source_flags'),
-      construct.ULInt32(u'security_descriptor_identifier'),
-      construct.ULInt32(u'file_attribute_flags'),
-      construct.ULInt16(u'name_size'),
-      construct.ULInt16(u'name_offset'),
-      construct.String(u'name', lambda ctx: ctx.size - 60))
+      construct.ULInt32('size'),
+      construct.ULInt16('major_version'),
+      construct.ULInt16('minor_version'),
+      construct.ULInt64('file_reference'),
+      construct.ULInt64('parent_file_reference'),
+      construct.ULInt64('update_sequence_number'),
+      construct.ULInt64('update_date_time'),
+      construct.ULInt32('update_reason_flags'),
+      construct.ULInt32('update_source_flags'),
+      construct.ULInt32('security_descriptor_identifier'),
+      construct.ULInt32('file_attribute_flags'),
+      construct.ULInt16('name_size'),
+      construct.ULInt16('name_offset'),
+      construct.String('name', lambda ctx: ctx.size - 60))
 
   # TODO: add support for USN_RECORD_V3 when actually seen to be used.
 
@@ -358,9 +358,9 @@ class NTFSUsnJrnlParser(interface.FileObjectParser):
           name_offset:usn_record_struct.name_size]
 
       try:
-        name_string = utf16_stream.decode(u'utf-16-le')
+        name_string = utf16_stream.decode('utf-16-le')
       except (UnicodeDecodeError, UnicodeEncodeError) as exception:
-        name_string = utf16_stream.decode(u'utf-16-le', errors=u'replace')
+        name_string = utf16_stream.decode('utf-16-le', errors='replace')
         parser_mediator.ProduceExtractionError((
             'unable to decode USN record name string with error: '
             '{0:s}. Characters that cannot be decoded will be replaced '
@@ -378,7 +378,7 @@ class NTFSUsnJrnlParser(interface.FileObjectParser):
       event_data.update_source_flags = usn_record_struct.update_source_flags
 
       if not usn_record_struct.update_date_time:
-        date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+        date_time = dfdatetime_semantic_time.SemanticTime('Not set')
       else:
         date_time = dfdatetime_filetime.Filetime(
             timestamp=usn_record_struct.update_date_time)

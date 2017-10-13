@@ -220,7 +220,7 @@ class SymantecParser(text_parser.TextCSVParser):
     """
     try:
       timestamp = self._ConvertToTimestamp(
-          row[u'time'], timezone=parser_mediator.timezone)
+          row['time'], timezone=parser_mediator.timezone)
     except (TypeError, ValueError, errors.TimestampError) as exception:
       timestamp = timelib.Timestamp.NONE_TIMESTAMP
       parser_mediator.ProduceExtractionError(
@@ -229,67 +229,67 @@ class SymantecParser(text_parser.TextCSVParser):
 
     # TODO: remove unused attributes.
     event_data = SymantecEventData()
-    event_data.access = row.get(u'access', None)
-    event_data.action0 = row.get(u'action0', None)
-    event_data.action1 = row.get(u'action1', None)
-    event_data.action1_status = row.get(u'action1_status', None)
-    event_data.action2 = row.get(u'action2', None)
-    event_data.action2_status = row.get(u'action2_status', None)
-    event_data.address = row.get(u'address', None)
-    event_data.backup_id = row.get(u'backup_id', None)
-    event_data.cat = row.get(u'cat', None)
-    event_data.cleaninfo = row.get(u'cleaninfo', None)
-    event_data.clientgroup = row.get(u'clientgroup', None)
-    event_data.compressed = row.get(u'compressed', None)
-    event_data.computer = row.get(u'computer', None)
-    event_data.definfo = row.get(u'definfo', None)
-    event_data.defseqnumber = row.get(u'defseqnumber', None)
-    event_data.deleteinfo = row.get(u'deleteinfo', None)
-    event_data.depth = row.get(u'depth', None)
-    event_data.description = row.get(u'description', None)
-    event_data.domain_guid = row.get(u'domain_guid', None)
-    event_data.domainname = row.get(u'domainname', None)
-    event_data.err_code = row.get(u'err_code', None)
-    event_data.event_data = row.get(u'event_data', None)
-    event_data.event = row.get(u'event', None)
-    event_data.extra = row.get(u'extra', None)
-    event_data.file = row.get(u'file', None)
-    event_data.flags = row.get(u'flags', None)
-    event_data.groupid = row.get(u'groupid', None)
-    event_data.guid = row.get(u'guid', None)
-    event_data.license_expiration_dt = row.get(u'license_expiration_dt', None)
-    event_data.license_feature_name = row.get(u'license_feature_name', None)
-    event_data.license_feature_ver = row.get(u'license_feature_ver', None)
-    event_data.license_fulfillment_id = row.get(u'license_fulfillment_id', None)
-    event_data.license_lifecycle = row.get(u'license_lifecycle', None)
-    event_data.license_seats_delta = row.get(u'license_seats_delta', None)
-    event_data.license_seats = row.get(u'license_seats', None)
-    event_data.license_seats_total = row.get(u'license_seats_total', None)
-    event_data.license_serial_num = row.get(u'license_serial_num', None)
-    event_data.license_start_dt = row.get(u'license_start_dt', None)
-    event_data.logger = row.get(u'logger', None)
-    event_data.login_domain = row.get(u'login_domain', None)
-    event_data.log_session_guid = row.get(u'log_session_guid', None)
-    event_data.macaddr = row.get(u'macaddr', None)
-    event_data.new_ext = row.get(u'new_ext', None)
-    event_data.ntdomain = row.get(u'ntdomain', None)
+    event_data.access = row.get('access', None)
+    event_data.action0 = row.get('action0', None)
+    event_data.action1 = row.get('action1', None)
+    event_data.action1_status = row.get('action1_status', None)
+    event_data.action2 = row.get('action2', None)
+    event_data.action2_status = row.get('action2_status', None)
+    event_data.address = row.get('address', None)
+    event_data.backup_id = row.get('backup_id', None)
+    event_data.cat = row.get('cat', None)
+    event_data.cleaninfo = row.get('cleaninfo', None)
+    event_data.clientgroup = row.get('clientgroup', None)
+    event_data.compressed = row.get('compressed', None)
+    event_data.computer = row.get('computer', None)
+    event_data.definfo = row.get('definfo', None)
+    event_data.defseqnumber = row.get('defseqnumber', None)
+    event_data.deleteinfo = row.get('deleteinfo', None)
+    event_data.depth = row.get('depth', None)
+    event_data.description = row.get('description', None)
+    event_data.domain_guid = row.get('domain_guid', None)
+    event_data.domainname = row.get('domainname', None)
+    event_data.err_code = row.get('err_code', None)
+    event_data.event_data = row.get('event_data', None)
+    event_data.event = row.get('event', None)
+    event_data.extra = row.get('extra', None)
+    event_data.file = row.get('file', None)
+    event_data.flags = row.get('flags', None)
+    event_data.groupid = row.get('groupid', None)
+    event_data.guid = row.get('guid', None)
+    event_data.license_expiration_dt = row.get('license_expiration_dt', None)
+    event_data.license_feature_name = row.get('license_feature_name', None)
+    event_data.license_feature_ver = row.get('license_feature_ver', None)
+    event_data.license_fulfillment_id = row.get('license_fulfillment_id', None)
+    event_data.license_lifecycle = row.get('license_lifecycle', None)
+    event_data.license_seats_delta = row.get('license_seats_delta', None)
+    event_data.license_seats = row.get('license_seats', None)
+    event_data.license_seats_total = row.get('license_seats_total', None)
+    event_data.license_serial_num = row.get('license_serial_num', None)
+    event_data.license_start_dt = row.get('license_start_dt', None)
+    event_data.logger = row.get('logger', None)
+    event_data.login_domain = row.get('login_domain', None)
+    event_data.log_session_guid = row.get('log_session_guid', None)
+    event_data.macaddr = row.get('macaddr', None)
+    event_data.new_ext = row.get('new_ext', None)
+    event_data.ntdomain = row.get('ntdomain', None)
     event_data.offset = row_offset
-    event_data.parent = row.get(u'parent', None)
-    event_data.quarfwd_status = row.get(u'quarfwd_status', None)
-    event_data.remote_machine_ip = row.get(u'remote_machine_ip', None)
-    event_data.remote_machine = row.get(u'remote_machine', None)
-    event_data.scanid = row.get(u'scanid', None)
-    event_data.snd_status = row.get(u'snd_status', None)
-    event_data.status = row.get(u'status', None)
-    event_data.still_infected = row.get(u'still_infected', None)
-    event_data.time = row.get(u'time', None)
-    event_data.user = row.get(u'user', None)
-    event_data.vbin_id = row.get(u'vbin_id', None)
-    event_data.vbin_session_id = row.get(u'vbin_session_id', None)
-    event_data.version = row.get(u'version:', None)
-    event_data.virus_id = row.get(u'virus_id', None)
-    event_data.virus = row.get(u'virus', None)
-    event_data.virustype = row.get(u'virustype', None)
+    event_data.parent = row.get('parent', None)
+    event_data.quarfwd_status = row.get('quarfwd_status', None)
+    event_data.remote_machine_ip = row.get('remote_machine_ip', None)
+    event_data.remote_machine = row.get('remote_machine', None)
+    event_data.scanid = row.get('scanid', None)
+    event_data.snd_status = row.get('snd_status', None)
+    event_data.status = row.get('status', None)
+    event_data.still_infected = row.get('still_infected', None)
+    event_data.time = row.get('time', None)
+    event_data.user = row.get('user', None)
+    event_data.vbin_id = row.get('vbin_id', None)
+    event_data.vbin_session_id = row.get('vbin_session_id', None)
+    event_data.version = row.get('version:', None)
+    event_data.virus_id = row.get('virus_id', None)
+    event_data.virus = row.get('virus', None)
+    event_data.virustype = row.get('virustype', None)
 
     event = time_events.TimestampEvent(
         timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
@@ -308,7 +308,7 @@ class SymantecParser(text_parser.TextCSVParser):
     """
     try:
       timestamp = self._ConvertToTimestamp(
-          row[u'time'], timezone=parser_mediator.timezone)
+          row['time'], timezone=parser_mediator.timezone)
     except (TypeError, ValueError, errors.TimestampError):
       return False
 
@@ -317,7 +317,7 @@ class SymantecParser(text_parser.TextCSVParser):
 
     # Check few entries.
     try:
-      my_event = int(row[u'event'])
+      my_event = int(row['event'])
     except (TypeError, ValueError):
       return False
 
@@ -325,7 +325,7 @@ class SymantecParser(text_parser.TextCSVParser):
       return False
 
     try:
-      category = int(row[u'cat'])
+      category = int(row['cat'])
     except (TypeError, ValueError):
       return False
 

@@ -81,27 +81,27 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
 
   # Define how a log line should look like.
   LOG_LINE = (
-      pyparsing.Literal(u'T').suppress() +
-      pyparsing.Word(pyparsing.nums).setResultsName(u'timestamp') +
-      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName(u'text'))
+      pyparsing.Literal('T').suppress() +
+      pyparsing.Word(pyparsing.nums).setResultsName('timestamp') +
+      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('text'))
   LOG_LINE.parseWithTabs()
 
   # Define the available log line structures.
   LINE_STRUCTURES = [
-      (u'logline', LOG_LINE),
+      ('logline', LOG_LINE),
   ]
 
   # Define for the stripping phase.
   STRIPPER = (
-      pyparsing.Word(u'\x03', pyparsing.nums, max=3).suppress() |
-      pyparsing.Word(u'\x02\x07\x08\x0f\x16\x1d\x1f', exact=1).suppress())
+      pyparsing.Word('\x03', pyparsing.nums, max=3).suppress() |
+      pyparsing.Word('\x02\x07\x08\x0f\x16\x1d\x1f', exact=1).suppress())
 
   # Define the structure for parsing <text> and get <nickname> and <text>
-  MSG_NICK_START = pyparsing.Literal(u'<')
-  MSG_NICK_END = pyparsing.Literal(u'>')
-  MSG_NICK = pyparsing.SkipTo(MSG_NICK_END).setResultsName(u'nickname')
+  MSG_NICK_START = pyparsing.Literal('<')
+  MSG_NICK_END = pyparsing.Literal('>')
+  MSG_NICK = pyparsing.SkipTo(MSG_NICK_END).setResultsName('nickname')
   MSG_ENTRY_NICK = pyparsing.Optional(MSG_NICK_START + MSG_NICK + MSG_NICK_END)
-  MSG_ENTRY_TEXT = pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName(u'text')
+  MSG_ENTRY_TEXT = pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('text')
   MSG_ENTRY = MSG_ENTRY_NICK + MSG_ENTRY_TEXT
   MSG_ENTRY.parseWithTabs()
 
@@ -132,7 +132,7 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
     """
     stripped = self.STRIPPER.transformString(text)
     structure = self.MSG_ENTRY.parseString(stripped)
-    text = structure.text.replace(u'\t', ' ')
+    text = structure.text.replace('\t', ' ')
     return structure.nickname, text
 
   def ParseRecord(self, parser_mediator, key, structure):
@@ -152,14 +152,14 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
     try:
       timestamp = int(structure.timestamp)
     except ValueError:
-      logging.debug(u'Invalid timestamp string {0:s}, skipping record'.format(
+      logging.debug('Invalid timestamp string {0:s}, skipping record'.format(
           structure.timestamp))
       return
 
     try:
       nickname, text = self._StripThenGetNicknameAndText(structure.text)
     except pyparsing.ParseException:
-      logging.debug(u'Error parsing entry at offset {0:d}'.format(self._offset))
+      logging.debug('Error parsing entry at offset {0:d}'.format(self._offset))
       return
 
     event_data = XChatScrollbackEventData()
@@ -188,7 +188,7 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
     try:
       parsed_structure = structure.parseString(line)
     except pyparsing.ParseException:
-      logging.debug(u'Not a XChat scrollback log file')
+      logging.debug('Not a XChat scrollback log file')
       return False
 
     try:
@@ -199,7 +199,7 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
       return False
 
     if not timelib.Timestamp.FromPosixTime(timestamp):
-      logging.debug(u'Not a XChat scrollback log file, invalid timestamp')
+      logging.debug('Not a XChat scrollback log file, invalid timestamp')
       return False
 
     return True

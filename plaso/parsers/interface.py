@@ -219,7 +219,7 @@ class FileEntryParser(BaseParser):
     """
     file_entry = parser_mediator.GetFileEntry()
     if not file_entry:
-      raise errors.UnableToParseFile(u'Invalid file entry')
+      raise errors.UnableToParseFile('Invalid file entry')
 
     parser_mediator.AppendToParserChain(self)
     try:
@@ -258,7 +258,7 @@ class FileObjectParser(BaseParser):
       UnableToParseFile: when the file cannot be parsed.
     """
     if not file_object:
-      raise errors.UnableToParseFile(u'Invalid file object')
+      raise errors.UnableToParseFile('Invalid file object')
 
     if self._INITIAL_FILE_OFFSET is not None:
       file_object.seek(self._INITIAL_FILE_OFFSET, os.SEEK_SET)

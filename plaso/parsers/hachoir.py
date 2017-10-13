@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 
 import datetime
 
-# pylint: disable=wrong-import-position
+# pylint: disable=import-error,wrong-import-position
 import hachoir_core.config
 
 # This is necessary to do PRIOR to loading up other parts of hachoir
@@ -112,7 +112,7 @@ class HachoirParser(interface.FileObjectParser):
     attributes = {}
     extracted_events = []
     for meta in metatext:
-      if not meta.startswith(u'-'):
+      if not meta.startswith('-'):
         continue
 
       if len(meta) < 3:

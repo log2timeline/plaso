@@ -65,7 +65,7 @@ class PEParser(interface.FileObjectParser):
       section_name = getattr(section, 'Name', b'')
       # Ensure the name is decoded correctly.
       try:
-        section_name = '{0:s}'.format(section_name.decode(u'unicode_escape'))
+        section_name = '{0:s}'.format(section_name.decode('unicode_escape'))
       except UnicodeDecodeError:
         section_name = '{0:s}'.format(repr(section_name))
       section_names.append(section_name)
@@ -177,10 +177,10 @@ class PEParser(interface.FileObjectParser):
       pefile_object = pefile.PE(data=pe_data, fast_load=True)
       pefile_object.parse_data_directories(
           directories=[
-              pefile.DIRECTORY_ENTRY[u'IMAGE_DIRECTORY_ENTRY_IMPORT'],
-              pefile.DIRECTORY_ENTRY[u'IMAGE_DIRECTORY_ENTRY_EXPORT'],
-              pefile.DIRECTORY_ENTRY[u'IMAGE_DIRECTORY_ENTRY_RESOURCE'],
-              pefile.DIRECTORY_ENTRY[u'IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT'],])
+              pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_IMPORT'],
+              pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_EXPORT'],
+              pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_RESOURCE'],
+              pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT'],])
     except:
       raise errors.UnableToParseFile()
 

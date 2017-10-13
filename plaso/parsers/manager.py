@@ -43,12 +43,12 @@ class ParsersManager(object):
 
     preset_categories = presets.CATEGORIES.keys()
 
-    for parser_filter in parser_filter_expression.split(u','):
+    for parser_filter in parser_filter_expression.split(','):
       parser_filter = parser_filter.strip()
       if not parser_filter:
         continue
 
-      if parser_filter.startswith(u'!'):
+      if parser_filter.startswith('!'):
         parser_filter = parser_filter[1:]
         active_dict = excludes
       else:
@@ -58,13 +58,13 @@ class ParsersManager(object):
       if parser_filter in preset_categories:
         for parser_in_category in cls._GetParsersFromPresetCategory(
             parser_filter):
-          parser, _, plugin = parser_in_category.partition(u'/')
+          parser, _, plugin = parser_in_category.partition('/')
           active_dict.setdefault(parser, [])
           if plugin:
             active_dict[parser].append(plugin)
 
       else:
-        parser, _, plugin = parser_filter.partition(u'/')
+        parser, _, plugin = parser_filter.partition('/')
         active_dict.setdefault(parser, [])
         if plugin:
           active_dict[parser].append(plugin)
@@ -162,7 +162,7 @@ class ParsersManager(object):
     """
     parser_name = parser_class.NAME.lower()
     if parser_name not in cls._parser_classes:
-      raise KeyError(u'Parser class not set for name: {0:s}.'.format(
+      raise KeyError('Parser class not set for name: {0:s}.'.format(
           parser_class.NAME))
 
     del cls._parser_classes[parser_name]
@@ -365,19 +365,19 @@ class ParsersManager(object):
       operating_system_product = ''
 
     if operating_system_version:
-      operating_system_version = operating_system_version.split(u'.')
+      operating_system_version = operating_system_version.split('.')
     else:
-      operating_system_version = [u'0', '0']
+      operating_system_version = ['0', '0']
 
     # Windows NT 5 (2000, XP and 2003).
-    if (u'windows' in operating_system_product and
+    if ('windows' in operating_system_product and
         operating_system_version[0] == '5'):
       return 'winxp'
 
     # TODO: Improve this detection, this should be more 'intelligent', since
     # there are quite a lot of versions out there that would benefit from
     # loading up the set of 'winxp' parsers.
-    if (u'windows xp' in operating_system_product or
+    if ('windows xp' in operating_system_product or
         'windows server 2000' in operating_system_product or
         'windows server 2003' in operating_system_product):
       return 'winxp'
@@ -463,7 +463,7 @@ class ParsersManager(object):
     """
     parser_name = parser_class.NAME.lower()
     if parser_name in cls._parser_classes:
-      raise KeyError(u'Parser class already set for name: {0:s}.'.format(
+      raise KeyError('Parser class already set for name: {0:s}.'.format(
           parser_class.NAME))
 
     cls._parser_classes[parser_name] = parser_class

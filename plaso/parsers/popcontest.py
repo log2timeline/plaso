@@ -152,33 +152,33 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
       py2to3.UNICHR(character) for character in range(65536)
       if not py2to3.UNICHR(character).isspace())
 
-  MRU = pyparsing.Word(_UNICODE_PRINTABLES).setResultsName(u'mru')
-  PACKAGE = pyparsing.Word(_ASCII_PRINTABLES).setResultsName(u'package')
-  TAG = pyparsing.QuotedString(u'<', endQuoteChar=u'>').setResultsName(u'tag')
+  MRU = pyparsing.Word(_UNICODE_PRINTABLES).setResultsName('mr')
+  PACKAGE = pyparsing.Word(_ASCII_PRINTABLES).setResultsName('package')
+  TAG = pyparsing.QuotedString('<', endQuoteChar='>').setResultsName('tag')
   TIMESTAMP = text_parser.PyparsingConstants.INTEGER.setResultsName(
       'timestamp')
 
   HEADER = (
-      pyparsing.Literal(u'POPULARITY-CONTEST-').suppress() +
-      text_parser.PyparsingConstants.INTEGER.setResultsName(u'session') +
-      pyparsing.Literal(u'TIME:').suppress() + TIMESTAMP +
-      pyparsing.Literal(u'ID:').suppress() +
-      pyparsing.Word(pyparsing.alphanums, exact=32).setResultsName(u'id') +
-      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName(u'details'))
+      pyparsing.Literal('POPULARITY-CONTEST-').suppress() +
+      text_parser.PyparsingConstants.INTEGER.setResultsName('session') +
+      pyparsing.Literal('TIME:').suppress() + TIMESTAMP +
+      pyparsing.Literal('ID:').suppress() +
+      pyparsing.Word(pyparsing.alphanums, exact=32).setResultsName('id') +
+      pyparsing.SkipTo(pyparsing.LineEnd()).setResultsName('details'))
 
   FOOTER = (
-      pyparsing.Literal(u'END-POPULARITY-CONTEST-').suppress() +
-      text_parser.PyparsingConstants.INTEGER.setResultsName(u'session') +
-      pyparsing.Literal(u'TIME:').suppress() + TIMESTAMP)
+      pyparsing.Literal('END-POPULARITY-CONTEST-').suppress() +
+      text_parser.PyparsingConstants.INTEGER.setResultsName('session') +
+      pyparsing.Literal('TIME:').suppress() + TIMESTAMP)
 
   LOG_LINE = (
-      TIMESTAMP.setResultsName(u'atime') + TIMESTAMP.setResultsName(u'ctime') +
+      TIMESTAMP.setResultsName('atime') + TIMESTAMP.setResultsName('ctime') +
       (PACKAGE + TAG | PACKAGE + MRU + pyparsing.Optional(TAG)))
 
   LINE_STRUCTURES = [
-      (u'logline', LOG_LINE),
-      (u'header', HEADER),
-      (u'footer', FOOTER),
+      ('logline', LOG_LINE),
+      ('header', HEADER),
+      ('footer', FOOTER),
   ]
 
   _ENCODING = 'UTF-8'
@@ -228,7 +228,7 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): structure parsed from the log file.
     """
-    if key not in (u'footer', 'header', 'logline'):
+    if key not in ('footer', 'header', 'logline'):
       logging.warning(
           'PopularityContestParser, unknown structure: {0:s}.'.format(key))
       return
@@ -274,11 +274,11 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
     try:
       header_struct = self.HEADER.parseString(line)
     except pyparsing.ParseException:
-      logging.debug(u'Not a Popularity Contest log file, invalid header')
+      logging.debug('Not a Popularity Contest log file, invalid header')
       return False
 
     if not timelib.Timestamp.FromPosixTime(header_struct.timestamp):
-      logging.debug(u'Invalid Popularity Contest log file header timestamp.')
+      logging.debug('Invalid Popularity Contest log file header timestamp.')
       return False
 
     return True

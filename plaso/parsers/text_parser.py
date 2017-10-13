@@ -86,7 +86,7 @@ class TextCSVParser(interface.FileObjectParser):
       try:
         row[key] = value.decode(self.encoding)
       except UnicodeDecodeError:
-        replaced_value = value.decode(self.encoding, errors=u'replace')
+        replaced_value = value.decode(self.encoding, errors='replace')
         parser_mediator.ProduceExtractionError(
             'error decoding string as {0:s}, characters have been '
             'replaced in {1:s}'.format(self.encoding, replaced_value))
@@ -122,7 +122,7 @@ class TextCSVParser(interface.FileObjectParser):
       UnableToParseFile: when the file cannot be parsed.
     """
     file_entry = parser_mediator.GetFileEntry()
-    path_spec_printable = file_entry.path_spec.comparable.replace(u'\n', ';')
+    path_spec_printable = file_entry.path_spec.comparable.replace('\n', ';')
 
     text_file_object = text_file.TextFile(file_object)
 
@@ -268,7 +268,7 @@ def PyParseIntCast(unused_string, unused_location, tokens):
     try:
       tokens[index] = int(token)
     except ValueError:
-      logging.error(u'Unable to cast [{0:s}] to an int, setting to 0'.format(
+      logging.error('Unable to cast [{0:s}] to an int, setting to 0'.format(
           token))
       tokens[index] = 0
 
@@ -325,11 +325,13 @@ class PyparsingConstants(object):
   IP_ADDRESS = (IPV4_ADDRESS | IPV6_ADDRESS)
 
   # TODO: deprecate and remove, use THREE_LETTERS instead.
+  # TODO: fix Python 3 compatibility of ".uppercase" and ".lowercase".
+  # pylint: disable=no-member
   MONTH = pyparsing.Word(
       pyparsing.string.uppercase, pyparsing.string.lowercase, exact=3)
 
   # Define date structures.
-  HYPHEN = pyparsing.Literal(u'-').suppress()
+  HYPHEN = pyparsing.Literal('-').suppress()
 
   ONE_OR_TWO_DIGITS = pyparsing.Word(
       pyparsing.nums, min=1, max=2).setParseAction(PyParseIntCast)
@@ -343,16 +345,16 @@ class PyparsingConstants(object):
   THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
 
   DATE_ELEMENTS = (
-      FOUR_DIGITS.setResultsName(u'year') + pyparsing.Suppress(u'-') +
-      TWO_DIGITS.setResultsName(u'month') + pyparsing.Suppress(u'-') +
-      TWO_DIGITS.setResultsName(u'day_of_month'))
+      FOUR_DIGITS.setResultsName('year') + pyparsing.Suppress('-') +
+      TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
+      TWO_DIGITS.setResultsName('day_of_month'))
   TIME_ELEMENTS = (
-      TWO_DIGITS.setResultsName(u'hours') + pyparsing.Suppress(':') +
-      TWO_DIGITS.setResultsName(u'minutes') + pyparsing.Suppress(':') +
-      TWO_DIGITS.setResultsName(u'seconds'))
+      TWO_DIGITS.setResultsName('hours') + pyparsing.Suppress(':') +
+      TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
+      TWO_DIGITS.setResultsName('seconds'))
   TIME_MSEC_ELEMENTS = (
       TIME_ELEMENTS + pyparsing.Suppress('.') +
-      INTEGER.setResultsName(u'microseconds'))
+      INTEGER.setResultsName('microseconds'))
 
   # Date structures defined as a single group.
   DATE = pyparsing.Group(DATE_ELEMENTS)
@@ -364,7 +366,7 @@ class PyparsingConstants(object):
   # TODO: replace by
   # TIME_MSEC = pyparsing.Group(TIME_MSEC_ELEMENTS)
 
-  COMMENT_LINE_HASH = pyparsing.Literal(u'#') + pyparsing.SkipTo(
+  COMMENT_LINE_HASH = pyparsing.Literal('#') + pyparsing.SkipTo(
       pyparsing.LineEnd())
   # TODO: Add more commonly used structs that can be used by parsers.
   PID = pyparsing.Word(
@@ -482,7 +484,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
         parser_mediator, text_file_object, max_len=self.MAX_LINE_LENGTH,
         quiet=True)
     if not line:
-      raise errors.UnableToParseFile(u'Not a text file.')
+      raise errors.UnableToParseFile('Not a text file.')
 
     if len(line) == self.MAX_LINE_LENGTH or len(
         line) == self.MAX_LINE_LENGTH - 1:
@@ -493,10 +495,10 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
               self.MAX_LINE_LENGTH, repr(line[-10:]), self.NAME))
 
     if not utils.IsText(line):
-      raise errors.UnableToParseFile(u'Not a text file, unable to proceed.')
+      raise errors.UnableToParseFile('Not a text file, unable to proceed.')
 
     if not self.VerifyStructure(parser_mediator, line):
-      raise errors.UnableToParseFile(u'Wrong file structure.')
+      raise errors.UnableToParseFile('Wrong file structure.')
 
     # Set the offset to the beginning of the file.
     self._current_offset = 0
@@ -643,10 +645,10 @@ class EncodedTextReader(object):
     Returns:
       str: line read from the lines buffer.
     """
-    line, _, self.lines = self.lines.partition(u'\n')
+    line, _, self.lines = self.lines.partition('\n')
     if not line:
       self.ReadLines(file_object)
-      line, _, self.lines = self.lines.partition(u'\n')
+      line, _, self.lines = self.lines.partition('\n')
 
     return line
 
@@ -718,7 +720,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       UnableToParseFile: when the file cannot be parsed.
     """
     if not self.LINE_STRUCTURES:
-      raise errors.UnableToParseFile(u'Missing line structures.')
+      raise errors.UnableToParseFile('Missing line structures.')
 
     self._text_reader.Reset()
 
@@ -729,10 +731,10 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
           'Not a text file, with error: {0:s}'.format(exception))
 
     if not utils.IsText(self._text_reader.lines):
-      raise errors.UnableToParseFile(u'Not a text file, unable to proceed.')
+      raise errors.UnableToParseFile('Not a text file, unable to proceed.')
 
     if not self.VerifyStructure(parser_mediator, self._text_reader.lines):
-      raise errors.UnableToParseFile(u'Wrong file structure.')
+      raise errors.UnableToParseFile('Wrong file structure.')
 
     # Using parseWithTabs() overrides Pyparsing's default replacement of tabs
     # with spaces to SkipAhead() the correct number of bytes after a match.
@@ -811,8 +813,9 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       EventObject: event or None.
     """
 
+  # pylint: disable=arguments-differ
   @abc.abstractmethod
-  def VerifyStructure(self, parser_mediator, line):
+  def VerifyStructure(self, parser_mediator, lines):
     """Verify the structure of the file and return boolean based on that check.
 
     This function should read enough text from the text file to confirm
@@ -821,7 +824,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      line (str): single line from the text file.
+      lines (str): one or more lines from the text file.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.

@@ -67,54 +67,54 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       '_processSystemPSKAssoc']
 
   _AGENT = (
-      pyparsing.Literal(u'<') +
+      pyparsing.Literal('<') +
       pyparsing.Combine(
-          pyparsing.Literal(u'airportd') + pyparsing.CharsNotIn(u'>'),
-          joinString='', adjacent=True).setResultsName(u'agent') +
-      pyparsing.Literal(u'>'))
+          pyparsing.Literal('airportd') + pyparsing.CharsNotIn('>'),
+          joinString='', adjacent=True).setResultsName('agent') +
+      pyparsing.Literal('>'))
 
   _DATE_TIME = pyparsing.Group(
-      THREE_LETTERS.setResultsName(u'day_of_week') +
-      THREE_LETTERS.setResultsName(u'month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
+      THREE_LETTERS.setResultsName('day_of_week') +
+      THREE_LETTERS.setResultsName('month') +
+      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
       text_parser.PyparsingConstants.TIME_ELEMENTS + pyparsing.Suppress('.') +
-      THREE_DIGITS.setResultsName(u'milliseconds'))
+      THREE_DIGITS.setResultsName('milliseconds'))
 
   # Define how a log line should look like.
   _MAC_WIFI_KNOWN_FUNCTION_LINE = (
-      _DATE_TIME.setResultsName(u'date_time') + _AGENT +
-      pyparsing.oneOf(_KNOWN_FUNCTIONS).setResultsName(u'function') +
-      pyparsing.Literal(u':') +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'text'))
+      _DATE_TIME.setResultsName('date_time') + _AGENT +
+      pyparsing.oneOf(_KNOWN_FUNCTIONS).setResultsName('function') +
+      pyparsing.Literal(':') +
+      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
 
   _MAC_WIFI_LINE = (
-      _DATE_TIME.setResultsName(u'date_time') +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'text'))
+      _DATE_TIME.setResultsName('date_time') +
+      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
 
   _MAC_WIFI_HEADER = (
-      _DATE_TIME.setResultsName(u'date_time') +
-      pyparsing.Literal(u'***Starting Up***').setResultsName(u'text'))
+      _DATE_TIME.setResultsName('date_time') +
+      pyparsing.Literal('***Starting Up***').setResultsName('text'))
 
   _DATE_TIME_TURNED_OVER_HEADER = pyparsing.Group(
-      text_parser.PyparsingConstants.MONTH.setResultsName(u'month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
+      text_parser.PyparsingConstants.MONTH.setResultsName('month') +
+      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
       text_parser.PyparsingConstants.TIME_ELEMENTS)
 
   _MAC_WIFI_TURNED_OVER_HEADER = (
-      _DATE_TIME_TURNED_OVER_HEADER.setResultsName(u'date_time') +
+      _DATE_TIME_TURNED_OVER_HEADER.setResultsName('date_time') +
       pyparsing.Combine(
           pyparsing.Word(pyparsing.printables) +
           pyparsing.Word(pyparsing.printables) +
-          pyparsing.Literal(u'logfile turned over') +
+          pyparsing.Literal('logfile turned over') +
           pyparsing.LineEnd(),
-          joinString=u' ', adjacent=False).setResultsName(u'text'))
+          joinString=' ', adjacent=False).setResultsName('text'))
 
   # Define the available log line structures.
   LINE_STRUCTURES = [
-      (u'header', _MAC_WIFI_HEADER),
-      (u'turned_over_header', _MAC_WIFI_TURNED_OVER_HEADER),
-      (u'known_function_logline', _MAC_WIFI_KNOWN_FUNCTION_LINE),
-      (u'logline', _MAC_WIFI_LINE)]
+      ('header', _MAC_WIFI_HEADER),
+      ('turned_over_header', _MAC_WIFI_TURNED_OVER_HEADER),
+      ('known_function_logline', _MAC_WIFI_KNOWN_FUNCTION_LINE),
+      ('logline', _MAC_WIFI_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
@@ -288,7 +288,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
         structure = None
 
     if not structure:
-      logging.debug(u'Not a Mac Wifi log file')
+      logging.debug('Not a Mac Wifi log file')
       return False
 
     time_elements_tuple = self._GetTimeElementsTuple(key, structure)

@@ -45,20 +45,20 @@ class RestorePointLogParser(interface.FileObjectParser):
   DESCRIPTION = 'Parser for Windows Restore Point (rp.log) files.'
 
   FILTERS = frozenset([
-      interface.FileNameFileEntryFilter(u'rp.log')])
+      interface.FileNameFileEntryFilter('rp.log')])
 
   _FILE_HEADER_STRUCT = construct.Struct(
       'file_header',
-      construct.ULInt32(u'event_type'),
-      construct.ULInt32(u'restore_point_type'),
-      construct.ULInt64(u'sequence_number'),
+      construct.ULInt32('event_type'),
+      construct.ULInt32('restore_point_type'),
+      construct.ULInt64('sequence_number'),
       construct.RepeatUntil(
           lambda character, ctx: character == b'\x00\x00',
-          construct.Field(u'description', 2)))
+          construct.Field('description', 2)))
 
   _FILE_FOOTER_STRUCT = construct.Struct(
       'file_footer',
-      construct.ULInt64(u'creation_time'))
+      construct.ULInt64('creation_time'))
 
   def ParseFileObject(self, parser_mediator, file_object, **unused_kwargs):
     """Parses a Windows Restore Point (rp.log) log file-like object.
@@ -88,7 +88,7 @@ class RestorePointLogParser(interface.FileObjectParser):
       description = b''.join(file_header_struct.description)
       # The struct includes the end-of-string character that we need
       # to strip off.
-      description = description.decode(u'utf16')[:-1]
+      description = description.decode('utf16')[:-1]
     except UnicodeDecodeError as exception:
       description = ''
       parser_mediator.ProduceExtractionError((
@@ -96,7 +96,7 @@ class RestorePointLogParser(interface.FileObjectParser):
           '{0:s}').format(exception))
 
     if file_footer_struct.creation_time == 0:
-      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
     else:
       date_time = dfdatetime_filetime.Filetime(
           timestamp=file_footer_struct.creation_time)

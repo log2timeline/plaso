@@ -56,7 +56,7 @@ class BencodeParser(interface.FileObjectParser):
     file_object.seek(0, os.SEEK_SET)
     header = file_object.read(2)
     if not self.BENCODE_RE.match(header):
-      raise errors.UnableToParseFile(u'Not a valid Bencoded file.')
+      raise errors.UnableToParseFile('Not a valid Bencoded file.')
 
     file_object.seek(0, os.SEEK_SET)
     try:
@@ -76,7 +76,7 @@ class BencodeParser(interface.FileObjectParser):
       try:
         plugin.UpdateChainAndProcess(parser_mediator, data=data_object)
       except errors.WrongBencodePlugin as exception:
-        logging.debug(u'[{0:s}] wrong plugin: {1:s}'.format(
+        logging.debug('[{0:s}] wrong plugin: {1:s}'.format(
             self.NAME, exception))
 
 

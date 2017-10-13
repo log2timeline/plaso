@@ -119,10 +119,10 @@ class CupsIppParser(interface.FileObjectParser):
   # CUPS IPP File header.
   CUPS_IPP_HEADER = construct.Struct(
       'cups_ipp_header_struct',
-      construct.UBInt8(u'major_version'),
-      construct.UBInt8(u'minor_version'),
-      construct.UBInt16(u'operation_id'),
-      construct.UBInt32(u'request_id'))
+      construct.UBInt8('major_version'),
+      construct.UBInt8('minor_version'),
+      construct.UBInt16('operation_id'),
+      construct.UBInt32('request_id'))
 
   # Group ID that indicates the end of the IPP Control file.
   GROUP_END = 3
@@ -137,12 +137,12 @@ class CupsIppParser(interface.FileObjectParser):
   TYPE_DATETIME = 0x31
 
   # Type of values that can be extracted.
-  INTEGER_8 = construct.UBInt8(u'integer')
-  INTEGER_32 = construct.UBInt32(u'integer')
+  INTEGER_8 = construct.UBInt8('integer')
+  INTEGER_32 = construct.UBInt32('integer')
   TEXT = construct.PascalString(
       'text',
       encoding='utf-8',
-      length_field=construct.UBInt8(u'length'))
+      length_field=construct.UBInt8('length'))
   BOOLEAN = construct.Struct(
       'boolean_value',
       construct.Padding(1),
@@ -156,16 +156,16 @@ class CupsIppParser(interface.FileObjectParser):
   DATETIME = construct.Struct(
       'datetime',
       construct.Padding(1),
-      construct.UBInt16(u'year'),
-      construct.UBInt8(u'month'),
-      construct.UBInt8(u'day'),
-      construct.UBInt8(u'hour'),
-      construct.UBInt8(u'minutes'),
-      construct.UBInt8(u'seconds'),
-      construct.UBInt8(u'deciseconds'),
-      construct.String(u'direction_from_utc', length=1, encoding='ascii'),
-      construct.UBInt8(u'hours_from_utc'),
-      construct.UBInt8(u'minutes_from_utc'),
+      construct.UBInt16('year'),
+      construct.UBInt8('month'),
+      construct.UBInt8('day'),
+      construct.UBInt8('hour'),
+      construct.UBInt8('minutes'),
+      construct.UBInt8('seconds'),
+      construct.UBInt8('deciseconds'),
+      construct.String('direction_from_utc', length=1, encoding='ascii'),
+      construct.UBInt8('hours_from_utc'),
+      construct.UBInt8('minutes_from_utc'),
   )
 
   # Name of the pair.
@@ -358,7 +358,7 @@ class CupsIppParser(interface.FileObjectParser):
     event_data = CupsIppEventData()
     event_data.application = self._GetStringValue(data_dict, 'application')
     event_data.computer_name = self._GetStringValue(data_dict, 'computer_name')
-    event_data.copies = data_dict.get(u'copies', [0])[0]
+    event_data.copies = data_dict.get('copies', [0])[0]
     event_data.data_dict = data_dict
     event_data.doc_type = self._GetStringValue(data_dict, 'doc_type')
     event_data.job_id = self._GetStringValue(data_dict, 'job_id')

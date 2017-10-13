@@ -71,11 +71,11 @@ class PlsRecallParser(interface.FileObjectParser):
 
   _PLS_RECALL_RECORD = construct.Struct(
       'PL/SQL_Recall',
-      construct.ULInt32(u'Sequence'),
-      construct.LFloat64(u'TimeStamp'),
-      construct.String(u'Username', 31, None, b'\x00'),
-      construct.String(u'Database', 81, None, b'\x00'),
-      construct.String(u'Query', 4001, None, b'\x00'))
+      construct.ULInt32('Sequence'),
+      construct.LFloat64('TimeStamp'),
+      construct.String('Username', 31, None, b'\x00'),
+      construct.String('Database', 81, None, b'\x00'),
+      construct.String('Query', 4001, None, b'\x00'))
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a PLSRecall.dat file-like object.

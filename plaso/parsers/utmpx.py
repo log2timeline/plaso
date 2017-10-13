@@ -55,15 +55,15 @@ class UtmpxParser(interface.FileObjectParser):
   # byte follow by 3 bytes with \x00 value.
   _UTMPX_ENTRY = construct.Struct(
       'utmpx_mac',
-      construct.String(u'user', 256),
-      construct.ULInt32(u'id'),
-      construct.String(u'tty_name', 32),
-      construct.ULInt32(u'pid'),
-      construct.ULInt16(u'status_type'),
-      construct.ULInt16(u'unknown'),
-      construct.ULInt32(u'timestamp'),
-      construct.ULInt32(u'microseconds'),
-      construct.String(u'hostname', 256),
+      construct.String('user', 256),
+      construct.ULInt32('id'),
+      construct.String('tty_name', 32),
+      construct.ULInt32('pid'),
+      construct.ULInt16('status_type'),
+      construct.ULInt16('unknown'),
+      construct.ULInt32('timestamp'),
+      construct.ULInt32('microseconds'),
+      construct.String('hostname', 256),
       construct.Padding(64))
 
   _UTMPX_ENTRY_SIZE = _UTMPX_ENTRY.sizeof()
@@ -143,7 +143,7 @@ class UtmpxParser(interface.FileObjectParser):
     # can be converted into a Unicode string, otherwise we can assume
     # we are dealing with non UTMPX data.
     try:
-      user.decode(u'utf-8')
+      user.decode('utf-8')
     except UnicodeDecodeError:
       return False
 

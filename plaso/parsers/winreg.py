@@ -19,7 +19,8 @@ from plaso.parsers import manager
 class FileObjectWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
   """A single file-like object Windows Registry file reader."""
 
-  def Open(self, file_object, ascii_codepage=u'cp1252'):
+  # pylint: disable=arguments-differ
+  def Open(self, file_object, ascii_codepage='cp1252'):
     """Opens a Windows Registry file-like object.
 
     Args:
@@ -92,7 +93,7 @@ class WinRegistryParser(interface.FileObjectParser):
       self._default_plugin = self._plugins.pop(default_plugin_list_index)
 
     self._path_filter = path_filter.PathFilterScanTree(
-        key_paths, case_sensitive=False, path_segment_separator=u'\\')
+        key_paths, case_sensitive=False, path_segment_separator='\\')
 
   def _CanProcessKeyWithPlugin(self, registry_key, plugin):
     """Determines if a plugin can process a Windows Registry key or its values.
@@ -214,7 +215,7 @@ class WinRegistryParser(interface.FileObjectParser):
     try:
       self._ParseRecurseKeys(parser_mediator, root_key)
     except IOError as exception:
-      parser_mediator.ProduceExtractionError(u'{0:s}'.format(exception))
+      parser_mediator.ProduceExtractionError('{0:s}'.format(exception))
 
 
 manager.ParsersManager.RegisterParser(WinRegistryParser)

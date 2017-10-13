@@ -98,7 +98,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
   DESCRIPTION = 'Parser for Chrome Preferences files.'
 
-  REQUIRED_KEYS = frozenset([u'browser', 'extensions'])
+  REQUIRED_KEYS = frozenset(['browser', 'extensions'])
 
   # TODO site_engagement & ssl_cert_decisions
   _EXCEPTIONS_KEYS = frozenset([
@@ -119,7 +119,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
           and other components, such as storage and dfvfs.
     """
     for extension_id, extension in sorted(settings_dict.items()):
-      install_time = extension.get(u'install_time', None)
+      install_time = extension.get('install_time', None)
       if not install_time:
         parser_mediator.ProduceExtractionError(
             'installation time missing for extension ID {0:s}'.format(
@@ -134,7 +134,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
             '{0:s}').format(extension_id))
         continue
 
-      manifest = extension.get(u'manifest', None)
+      manifest = extension.get('manifest', None)
       if not manifest:
         parser_mediator.ProduceExtractionError(
             'manifest missing for extension ID {0:s}'.format(extension_id))
@@ -142,8 +142,8 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
       event_data = ChromeExtensionInstallationEventData()
       event_data.extension_id = extension_id
-      event_data.extension_name = manifest.get(u'name', None)
-      event_data.path = extension.get(u'path', None)
+      event_data.extension_name = manifest.get('name', None)
+      event_data.path = extension.get('path', None)
 
       date_time = dfdatetime_webkit_time.WebKitTime(timestamp=install_time)
       event = time_events.DateTimeValuesEvent(
@@ -164,14 +164,14 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
       exception_dict = exceptions_dict.get(permission, {})
       for urls, url_dict in exception_dict.items():
-        last_used = url_dict.get(u'last_used', None)
+        last_used = url_dict.get('last_used', None)
         if not last_used:
           continue
 
         # If secondary_url is '*', the permission applies to primary_url.
         # If secondary_url is a valid URL, the permission applies to
         # elements loaded from secondary_url being embedded in primary_url.
-        primary_url, secondary_url = urls.split(u',')
+        primary_url, secondary_url = urls.split(',')
 
         event_data = ChromeContentSettingsExceptionsEventData()
         event_data.permission = permission
@@ -220,23 +220,23 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
     # Third pass to verify the file has the correct keys in it for Preferences
     if not set(self.REQUIRED_KEYS).issubset(set(json_dict.keys())):
-      raise errors.UnableToParseFile(u'File does not contain Preference data.')
+      raise errors.UnableToParseFile('File does not contain Preference data.')
 
-    extensions_setting_dict = json_dict.get(u'extensions')
+    extensions_setting_dict = json_dict.get('extensions')
     if not extensions_setting_dict:
       raise errors.UnableToParseFile(
           '[{0:s}] {1:s} is not a valid Preference file, '
           'does not contain extensions value.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
 
-    extensions_dict = extensions_setting_dict.get(u'settings')
+    extensions_dict = extensions_setting_dict.get('settings')
     if not extensions_dict:
       raise errors.UnableToParseFile(
           '[{0:s}] {1:s} is not a valid Preference file, '
           'does not contain extensions settings value.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
 
-    extensions_autoupdate_dict = extensions_setting_dict.get(u'autoupdate')
+    extensions_autoupdate_dict = extensions_setting_dict.get('autoupdate')
     if extensions_autoupdate_dict:
       autoupdate_lastcheck_timestamp = extensions_autoupdate_dict.get(
           'last_check', None)
@@ -267,7 +267,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
             date_time, definitions.TIME_DESCRIPTION_ADDED)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    browser_dict = json_dict.get(u'browser', None)
+    browser_dict = json_dict.get('browser', None)
     if browser_dict and 'last_clear_browsing_data_time' in browser_dict:
       last_clear_history_timestamp = browser_dict.get(
           'last_clear_browsing_data_time', None)
@@ -286,11 +286,11 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
     self._ExtractExtensionInstallEvents(extensions_dict, parser_mediator)
 
-    profile_dict = json_dict.get(u'profile', None)
+    profile_dict = json_dict.get('profile', None)
     if profile_dict:
-      content_settings_dict = profile_dict.get(u'content_settings', None)
+      content_settings_dict = profile_dict.get('content_settings', None)
       if content_settings_dict:
-        exceptions_dict = content_settings_dict.get(u'exceptions', None)
+        exceptions_dict = content_settings_dict.get('exceptions', None)
         if exceptions_dict:
           self._ExtractContentSettingsExceptions(
               exceptions_dict, parser_mediator)

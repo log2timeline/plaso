@@ -62,38 +62,38 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
   _DEFAULT_YEAR = 2012
 
   DATE_TIME = pyparsing.Group(
-      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName(u'month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
+      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
+      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
       text_parser.PyparsingConstants.TIME_ELEMENTS)
 
   SECURITYD_LINE = (
-      DATE_TIME.setResultsName(u'date_time') +
-      pyparsing.CharsNotIn(u'[').setResultsName(u'sender') +
-      pyparsing.Literal(u'[').suppress() +
-      text_parser.PyparsingConstants.PID.setResultsName(u'sender_pid') +
-      pyparsing.Literal(u']').suppress() +
-      pyparsing.Literal(u'<').suppress() +
-      pyparsing.CharsNotIn(u'>').setResultsName(u'level') +
-      pyparsing.Literal(u'>').suppress() +
-      pyparsing.Literal(u'[').suppress() +
-      pyparsing.CharsNotIn(u'{').setResultsName(u'facility') +
-      pyparsing.Literal(u'{').suppress() +
+      DATE_TIME.setResultsName('date_time') +
+      pyparsing.CharsNotIn('[').setResultsName('sender') +
+      pyparsing.Literal('[').suppress() +
+      text_parser.PyparsingConstants.PID.setResultsName('sender_pid') +
+      pyparsing.Literal(']').suppress() +
+      pyparsing.Literal('<').suppress() +
+      pyparsing.CharsNotIn('>').setResultsName('level') +
+      pyparsing.Literal('>').suppress() +
+      pyparsing.Literal('[').suppress() +
+      pyparsing.CharsNotIn('{').setResultsName('facility') +
+      pyparsing.Literal('{').suppress() +
       pyparsing.Optional(pyparsing.CharsNotIn(
-          '}').setResultsName(u'security_api')) +
-      pyparsing.Literal(u'}').suppress() +
-      pyparsing.Optional(pyparsing.CharsNotIn(u']:').setResultsName(
-          'caller')) + pyparsing.Literal(u']:').suppress() +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'message'))
+          '}').setResultsName('security_api')) +
+      pyparsing.Literal('}').suppress() +
+      pyparsing.Optional(pyparsing.CharsNotIn(']:').setResultsName(
+          'caller')) + pyparsing.Literal(']:').suppress() +
+      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('message'))
 
   REPEATED_LINE = (
-      DATE_TIME.setResultsName(u'date_time') +
-      pyparsing.Literal(u'--- last message repeated').suppress() +
-      text_parser.PyparsingConstants.INTEGER.setResultsName(u'times') +
-      pyparsing.Literal(u'time ---').suppress())
+      DATE_TIME.setResultsName('date_time') +
+      pyparsing.Literal('--- last message repeated').suppress() +
+      text_parser.PyparsingConstants.INTEGER.setResultsName('times') +
+      pyparsing.Literal('time ---').suppress())
 
   LINE_STRUCTURES = [
-      (u'logline', SECURITYD_LINE),
-      (u'repeated', REPEATED_LINE)]
+      ('logline', SECURITYD_LINE),
+      ('repeated', REPEATED_LINE)]
 
   def __init__(self):
     """Initializes a parser object."""
@@ -207,7 +207,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key not in (u'logline', 'repeated'):
+    if key not in ('logline', 'repeated'):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
@@ -230,7 +230,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       structure = self.SECURITYD_LINE.parseString(line)
     except pyparsing.ParseException:
-      logging.debug(u'Not a Mac securityd log file')
+      logging.debug('Not a Mac securityd log file')
       return False
 
     time_elements_tuple = self._GetTimeElementsTuple(structure)

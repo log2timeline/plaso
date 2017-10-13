@@ -107,7 +107,7 @@ class MSIECFParser(interface.FileObjectParser):
       recovered (Optional[bool]): True if the item was recovered.
     """
     # TODO: add support for possible last cache synchronization date and time.
-    date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+    date_time = dfdatetime_semantic_time.SemanticTime('Not set')
 
     event_data = MSIECFLeakEventData()
     event_data.cached_filename = msiecf_item.filename
@@ -188,7 +188,7 @@ class MSIECFParser(interface.FileObjectParser):
       msiecf_item (pymsiecf.redirected): MSIECF redirected item.
       recovered (Optional[bool]): True if the item was recovered.
     """
-    date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+    date_time = dfdatetime_semantic_time.SemanticTime('Not set')
 
     event_data = MSIECFRedirectedEventData()
     event_data.offset = msiecf_item.offset
@@ -220,7 +220,7 @@ class MSIECFParser(interface.FileObjectParser):
     # between the different type of files.
     timestamp = msiecf_item.get_primary_time_as_integer()
     if not timestamp:
-      primary_date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+      primary_date_time = dfdatetime_semantic_time.SemanticTime('Not set')
     else:
       primary_date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
     primary_date_time_description = 'Primary Time'
@@ -269,14 +269,14 @@ class MSIECFParser(interface.FileObjectParser):
           # TODO: determine correct encoding currently indications that
           # this could be the system narrow string codepage.
           try:
-            http_headers = msiecf_item.data[:-1].decode(u'ascii')
+            http_headers = msiecf_item.data[:-1].decode('ascii')
           except UnicodeDecodeError:
             parser_mediator.ProduceExtractionError((
                 'unable to decode HTTP headers of URL record at offset: '
                 '0x{0:08x}. Characters that cannot be decoded will be '
                 'replaced with "?" or "\\ufffd".').format(msiecf_item.offset))
             http_headers = msiecf_item.data[:-1].decode(
-                'ascii', errors=u'replace')
+                'ascii', errors='replace')
 
       # TODO: parse data of other URL item type like history which requires
       # OLE VT parsing.
@@ -314,13 +314,13 @@ class MSIECFParser(interface.FileObjectParser):
       # apply the right conversion here.
       if format_version == '4.7':
         if expiration_timestamp == 0x7fffffffffffffff:
-          expiration_date_time = dfdatetime_semantic_time.SemanticTime(u'Never')
+          expiration_date_time = dfdatetime_semantic_time.SemanticTime('Never')
         else:
           expiration_date_time = dfdatetime_filetime.Filetime(
               timestamp=expiration_timestamp)
       else:
         if expiration_timestamp == 0xffffffff:
-          expiration_date_time = dfdatetime_semantic_time.SemanticTime(u'Never')
+          expiration_date_time = dfdatetime_semantic_time.SemanticTime('Never')
         else:
           expiration_date_time = dfdatetime_fat_date_time.FATDateTime(
               fat_date_time=expiration_timestamp)

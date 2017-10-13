@@ -63,54 +63,54 @@ class JavaIDXParser(interface.FileObjectParser):
 
   IDX_SHORT_STRUCT = construct.Struct(
       'magic',
-      construct.UBInt8(u'busy'),
-      construct.UBInt8(u'incomplete'),
-      construct.UBInt32(u'idx_version'))
+      construct.UBInt8('busy'),
+      construct.UBInt8('incomplete'),
+      construct.UBInt32('idx_version'))
 
   IDX_602_STRUCT = construct.Struct(
       'IDX_602_Full',
-      construct.UBInt16(u'null_space'),
-      construct.UBInt8(u'shortcut'),
-      construct.UBInt32(u'content_length'),
-      construct.UBInt64(u'last_modified_date'),
-      construct.UBInt64(u'expiration_date'),
+      construct.UBInt16('null_space'),
+      construct.UBInt8('shortcut'),
+      construct.UBInt32('content_length'),
+      construct.UBInt64('last_modified_date'),
+      construct.UBInt64('expiration_date'),
       construct.PascalString(
-          'version_string', length_field=construct.UBInt16(u'length')),
+          'version_string', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          'url', length_field=construct.UBInt16(u'length')),
+          'url', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          'namespace', length_field=construct.UBInt16(u'length')),
-      construct.UBInt32(u'FieldCount'))
+          'namespace', length_field=construct.UBInt16('length')),
+      construct.UBInt32('FieldCount'))
 
   IDX_605_SECTION_ONE_STRUCT = construct.Struct(
       'IDX_605_Section1',
-      construct.UBInt8(u'shortcut'),
-      construct.UBInt32(u'content_length'),
-      construct.UBInt64(u'last_modified_date'),
-      construct.UBInt64(u'expiration_date'),
-      construct.UBInt64(u'validation_date'),
-      construct.UBInt8(u'signed'),
-      construct.UBInt32(u'sec2len'),
-      construct.UBInt32(u'sec3len'),
-      construct.UBInt32(u'sec4len'))
+      construct.UBInt8('shortcut'),
+      construct.UBInt32('content_length'),
+      construct.UBInt64('last_modified_date'),
+      construct.UBInt64('expiration_date'),
+      construct.UBInt64('validation_date'),
+      construct.UBInt8('signed'),
+      construct.UBInt32('sec2len'),
+      construct.UBInt32('sec3len'),
+      construct.UBInt32('sec4len'))
 
   IDX_605_SECTION_TWO_STRUCT = construct.Struct(
       'IDX_605_Section2',
       construct.PascalString(
-          'version', length_field=construct.UBInt16(u'length')),
+          'version', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          'url', length_field=construct.UBInt16(u'length')),
+          'url', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          'namespec', length_field=construct.UBInt16(u'length')),
+          'namespec', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          'ip_address', length_field=construct.UBInt16(u'length')),
-      construct.UBInt32(u'FieldCount'))
+          'ip_address', length_field=construct.UBInt16('length')),
+      construct.UBInt32('FieldCount'))
 
   # Java uses Pascal-style strings, but with a 2-byte length field.
   JAVA_READUTF_STRING = construct.Struct(
       'Java.ReadUTF',
       construct.PascalString(
-          'string', length_field=construct.UBInt16(u'length')))
+          'string', length_field=construct.UBInt16('length')))
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Java WebStart Cache IDX file-like object.
@@ -136,10 +136,10 @@ class JavaIDXParser(interface.FileObjectParser):
     # Field magic.idx_version is the file version, of which only
     # certain versions are supported.
     if magic.busy > 1 or magic.incomplete > 1:
-      raise errors.UnableToParseFile(u'Not a valid Java IDX file')
+      raise errors.UnableToParseFile('Not a valid Java IDX file')
 
     if not magic.idx_version in [602, 603, 604, 605]:
-      raise errors.UnableToParseFile(u'Not a valid Java IDX file')
+      raise errors.UnableToParseFile('Not a valid Java IDX file')
 
     # Obtain the relevant values from the file. The last modified date
     # denotes when the file was last modified on the HOST. For example,
@@ -205,7 +205,7 @@ class JavaIDXParser(interface.FileObjectParser):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if section_one:
-      expiration_date = section_one.get(u'expiration_date', None)
+      expiration_date = section_one.get('expiration_date', None)
       if expiration_date:
         date_time = dfdatetime_java_time.JavaTime(
             timestamp=expiration_date)

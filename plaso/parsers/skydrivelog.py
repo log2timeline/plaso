@@ -71,7 +71,7 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
   _ENCODING = 'utf-8'
 
   # Common SDF (SkyDrive Format) structures.
-  _COMMA = pyparsing.Literal(u',').suppress()
+  _COMMA = pyparsing.Literal(',').suppress()
   _HYPHEN = text_parser.PyparsingConstants.HYPHEN
 
   _THREE_DIGITS = text_parser.PyparsingConstants.THREE_DIGITS
@@ -79,33 +79,33 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
 
   MSEC = pyparsing.Word(pyparsing.nums, max=3).setParseAction(
       text_parser.PyParseIntCast)
-  IGNORE_FIELD = pyparsing.CharsNotIn(u',').suppress()
+  IGNORE_FIELD = pyparsing.CharsNotIn(',').suppress()
 
   # Date and time format used in the header is: YYYY-MM-DD-hhmmss.###
   # For example: 2013-07-25-160323.291
   _SDF_HEADER_DATE_TIME = pyparsing.Group(
       text_parser.PyparsingConstants.DATE_ELEMENTS + _HYPHEN +
-      _TWO_DIGITS.setResultsName(u'hours') +
-      _TWO_DIGITS.setResultsName(u'minutes') +
-      _TWO_DIGITS.setResultsName(u'seconds') +
-      pyparsing.Literal(u'.').suppress() +
-      _THREE_DIGITS.setResultsName(u'milliseconds')).setResultsName(
+      _TWO_DIGITS.setResultsName('hours') +
+      _TWO_DIGITS.setResultsName('minutes') +
+      _TWO_DIGITS.setResultsName('seconds') +
+      pyparsing.Literal('.').suppress() +
+      _THREE_DIGITS.setResultsName('milliseconds')).setResultsName(
           'header_date_time')
 
   # Date and time format used in lines other than the header is:
   # MM-DD-YY,hh:mm:ss.###
   # For example: 07-25-13,16:06:31.820
   _SDF_DATE_TIME = (
-      _TWO_DIGITS.setResultsName(u'month') + _HYPHEN +
-      _TWO_DIGITS.setResultsName(u'day') + _HYPHEN +
-      _TWO_DIGITS.setResultsName(u'year') + _COMMA +
+      _TWO_DIGITS.setResultsName('month') + _HYPHEN +
+      _TWO_DIGITS.setResultsName('day') + _HYPHEN +
+      _TWO_DIGITS.setResultsName('year') + _COMMA +
       text_parser.PyparsingConstants.TIME_ELEMENTS + pyparsing.Suppress('.') +
-      _THREE_DIGITS.setResultsName(u'milliseconds')).setResultsName(
+      _THREE_DIGITS.setResultsName('milliseconds')).setResultsName(
           'date_time')
 
   _SDF_HEADER_START = (
-      pyparsing.Literal(u'######').suppress() +
-      pyparsing.Literal(u'Logging started.').setResultsName(u'log_start'))
+      pyparsing.Literal('######').suppress() +
+      pyparsing.Literal('Logging started.').setResultsName('log_start'))
 
   # Multiline entry end marker, matched from right to left.
   _SDF_ENTRY_END = pyparsing.StringEnd() | _SDF_HEADER_START | _SDF_DATE_TIME
@@ -113,33 +113,33 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
   _SDF_LINE = (
       _SDF_DATE_TIME + _COMMA +
       IGNORE_FIELD + _COMMA + IGNORE_FIELD + _COMMA + IGNORE_FIELD + _COMMA +
-      pyparsing.CharsNotIn(u',').setResultsName(u'module') + _COMMA +
-      pyparsing.CharsNotIn(u',').setResultsName(u'source_code') + _COMMA +
+      pyparsing.CharsNotIn(',').setResultsName('module') + _COMMA +
+      pyparsing.CharsNotIn(',').setResultsName('source_code') + _COMMA +
       IGNORE_FIELD + _COMMA + IGNORE_FIELD + _COMMA +
-      pyparsing.CharsNotIn(u',').setResultsName(u'log_level') + _COMMA +
-      pyparsing.SkipTo(_SDF_ENTRY_END).setResultsName(u'detail') +
+      pyparsing.CharsNotIn(',').setResultsName('log_level') + _COMMA +
+      pyparsing.SkipTo(_SDF_ENTRY_END).setResultsName('detail') +
       pyparsing.ZeroOrMore(pyparsing.lineEnd()))
 
   _SDF_HEADER = (
       _SDF_HEADER_START +
-      pyparsing.Literal(u'Version=').setResultsName(u'version_string') +
-      pyparsing.Word(pyparsing.nums + '.').setResultsName(u'version_number') +
-      pyparsing.Literal(u'StartSystemTime:').suppress() +
+      pyparsing.Literal('Version=').setResultsName('version_string') +
+      pyparsing.Word(pyparsing.nums + '.').setResultsName('version_number') +
+      pyparsing.Literal('StartSystemTime:').suppress() +
       _SDF_HEADER_DATE_TIME +
-      pyparsing.Literal(u'StartLocalTime:').setResultsName(
+      pyparsing.Literal('StartLocalTime:').setResultsName(
           'local_time_string') +
-      pyparsing.SkipTo(pyparsing.lineEnd()).setResultsName(u'details') +
+      pyparsing.SkipTo(pyparsing.lineEnd()).setResultsName('details') +
       pyparsing.lineEnd())
 
   LINE_STRUCTURES = [
-      (u'logline', _SDF_LINE),
-      (u'header', _SDF_HEADER)
+      ('logline', _SDF_LINE),
+      ('header', _SDF_HEADER)
   ]
 
   def _ParseHeader(self, parser_mediator, structure):
     """Parse header lines and store appropriate attributes.
 
-    [u'Logging started.', 'Version=', '17.0.2011.0627',
+    ['Logging started.', 'Version=', '17.0.2011.0627',
     [2013, 7, 25], 16, 3, 23, 291, 'StartLocalTime', '<details>']
 
     Args:
@@ -195,7 +195,7 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
     event_data = SkyDriveLogEventData()
     # Replace newlines with spaces in structure.detail to preserve output.
     # TODO: refactor detail to individual event data attributes.
-    event_data.detail = structure.detail.replace(u'\n', ' ')
+    event_data.detail = structure.detail.replace('\n', ' ')
     event_data.log_level = structure.log_level
     event_data.module = structure.module
     event_data.source_code = structure.source_code
@@ -217,7 +217,7 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key not in (u'header', 'logline'):
+    if key not in ('header', 'logline'):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
@@ -227,21 +227,21 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
     elif key == 'header':
       self._ParseHeader(parser_mediator, structure)
 
-  def VerifyStructure(self, parser_mediator, line):
+  def VerifyStructure(self, parser_mediator, lines):
     """Verify that this file is a SkyDrive log file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      line (bytes): line from a text file.
+      lines (str): one or more lines from the text file.
 
     Returns:
-      bool: True if the line is in the expected format, False if not.
+      bool: True if this is the correct parser, False otherwise.
     """
     try:
-      structure = self._SDF_HEADER.parseString(line)
+      structure = self._SDF_HEADER.parseString(lines)
     except pyparsing.ParseException:
-      logging.debug(u'Not a SkyDrive log file')
+      logging.debug('Not a SkyDrive log file')
       return False
 
     try:
@@ -268,33 +268,33 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
   _TWO_DIGITS = text_parser.PyparsingConstants.TWO_DIGITS
 
   # Common SDOL (SkyDriveOldLog) pyparsing objects.
-  _SDOL_COLON = pyparsing.Literal(u':')
-  _SDOL_EXCLAMATION = pyparsing.Literal(u'!')
+  _SDOL_COLON = pyparsing.Literal(':')
+  _SDOL_EXCLAMATION = pyparsing.Literal('!')
 
   # Date and time format used in the header is: DD-MM-YYYY hhmmss.###
   # For example: 08-01-2013 21:22:28.999
   _SDOL_DATE_TIME = pyparsing.Group(
-      _TWO_DIGITS.setResultsName(u'month') + pyparsing.Suppress(u'-') +
-      _TWO_DIGITS.setResultsName(u'day_of_month') + pyparsing.Suppress(u'-') +
-      _FOUR_DIGITS.setResultsName(u'year') +
+      _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
+      _TWO_DIGITS.setResultsName('day_of_month') + pyparsing.Suppress('-') +
+      _FOUR_DIGITS.setResultsName('year') +
       text_parser.PyparsingConstants.TIME_MSEC_ELEMENTS).setResultsName(
           'date_time')
 
   _SDOL_SOURCE_CODE = pyparsing.Combine(
-      pyparsing.CharsNotIn(u':') +
+      pyparsing.CharsNotIn(':') +
       _SDOL_COLON +
       text_parser.PyparsingConstants.INTEGER +
       _SDOL_EXCLAMATION +
-      pyparsing.Word(pyparsing.printables)).setResultsName(u'source_code')
+      pyparsing.Word(pyparsing.printables)).setResultsName('source_code')
 
   _SDOL_LOG_LEVEL = (
-      pyparsing.Literal(u'(').suppress() +
-      pyparsing.SkipTo(u')').setResultsName(u'log_level') +
-      pyparsing.Literal(u')').suppress())
+      pyparsing.Literal('(').suppress() +
+      pyparsing.SkipTo(')').setResultsName('log_level') +
+      pyparsing.Literal(')').suppress())
 
   _SDOL_LINE = (
       _SDOL_DATE_TIME + _SDOL_SOURCE_CODE + _SDOL_LOG_LEVEL +
-      _SDOL_COLON + pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'text'))
+      _SDOL_COLON + pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
 
   # Sometimes the timestamped log line is followed by an empy line,
   # then by a file name plus other data and finally by another empty
@@ -302,13 +302,13 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
   # These lines will not be discarded and an event will be generated
   # ad-hoc (see source), based on the last one if available.
   _SDOL_NO_HEADER_SINGLE_LINE = (
-      pyparsing.Optional(pyparsing.Literal(u'->').suppress()) +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'text'))
+      pyparsing.Optional(pyparsing.Literal('->').suppress()) +
+      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
 
   # Define the available log line structures.
   LINE_STRUCTURES = [
-      (u'logline', _SDOL_LINE),
-      (u'no_header_single_line', _SDOL_NO_HEADER_SINGLE_LINE),
+      ('logline', _SDOL_LINE),
+      ('no_header_single_line', _SDOL_NO_HEADER_SINGLE_LINE),
   ]
 
   def __init__(self):
@@ -365,7 +365,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
           a line of a text file.
     """
     if not self._last_event_data:
-      logging.debug(u'SkyDrive, found isolated line with no previous events')
+      logging.debug('SkyDrive, found isolated line with no previous events')
       return
 
     event_data = SkyDriveOldLogEventData()
@@ -393,7 +393,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key not in (u'logline', 'no_header_single_line'):
+    if key not in ('logline', 'no_header_single_line'):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
@@ -417,7 +417,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       structure = self._SDOL_LINE.parseString(line)
     except pyparsing.ParseException:
-      logging.debug(u'Not a SkyDrive old log file')
+      logging.debug('Not a SkyDrive old log file')
       return False
 
     day_of_month, month, year, hours, minutes, seconds, milliseconds = (

@@ -101,52 +101,52 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
   # TODO: Only English ASCII timestamp supported ATM, add support for others.
 
   _WEEKDAY = pyparsing.Group(
-      pyparsing.Keyword(u'Sun') |
-      pyparsing.Keyword(u'Mon') |
-      pyparsing.Keyword(u'Tue') |
-      pyparsing.Keyword(u'Wed') |
-      pyparsing.Keyword(u'Thu') |
-      pyparsing.Keyword(u'Fri') |
-      pyparsing.Keyword(u'Sat'))
+      pyparsing.Keyword('Sun') |
+      pyparsing.Keyword('Mon') |
+      pyparsing.Keyword('Tue') |
+      pyparsing.Keyword('Wed') |
+      pyparsing.Keyword('Th') |
+      pyparsing.Keyword('Fri') |
+      pyparsing.Keyword('Sat'))
 
   # Header/footer pyparsing structures.
   # Sample: "**** BEGIN LOGGING AT Mon Dec 31 21:11:55 2011".
   # Note that "BEGIN LOGGING" text is localized (default, English) and can be
   # different if XChat locale is different.
 
-  _HEADER_SIGNATURE = pyparsing.Keyword(u'****')
+  _HEADER_SIGNATURE = pyparsing.Keyword('****')
   _HEADER_DATE_TIME = pyparsing.Group(
-      _WEEKDAY.setResultsName(u'weekday') +
-      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName(u'month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
+      _WEEKDAY.setResultsName('weekday') +
+      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
+      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
       text_parser.PyparsingConstants.TIME_ELEMENTS +
-      text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName(u'year'))
+      text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName('year'))
   _LOG_ACTION = pyparsing.Group(
       pyparsing.Word(pyparsing.printables) +
       pyparsing.Word(pyparsing.printables) +
       pyparsing.Word(pyparsing.printables))
   _HEADER = (
-      _HEADER_SIGNATURE.suppress() + _LOG_ACTION.setResultsName(u'log_action') +
-      _HEADER_DATE_TIME.setResultsName(u'date_time'))
+      _HEADER_SIGNATURE.suppress() + _LOG_ACTION.setResultsName('log_action') +
+      _HEADER_DATE_TIME.setResultsName('date_time'))
 
   # Body (nickname, text and/or service messages) pyparsing structures.
   # Sample: "dec 31 21:11:58 <fpi> ola plas-ing guys!".
 
   _DATE_TIME = pyparsing.Group(
-      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName(u'month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
+      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
+      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
       text_parser.PyparsingConstants.TIME_ELEMENTS)
-  _NICKNAME = pyparsing.QuotedString(u'<', endQuoteChar=u'>').setResultsName(
+  _NICKNAME = pyparsing.QuotedString('<', endQuoteChar='>').setResultsName(
       'nickname')
   _LOG_LINE = (
-      _DATE_TIME.setResultsName(u'date_time') +
+      _DATE_TIME.setResultsName('date_time') +
       pyparsing.Optional(_NICKNAME) +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'text'))
+      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
 
   LINE_STRUCTURES = [
-      (u'logline', _LOG_LINE),
-      (u'header', _HEADER),
-      (u'header_signature', _HEADER_SIGNATURE),
+      ('logline', _LOG_LINE),
+      ('header', _HEADER),
+      ('header_signature', _HEADER_SIGNATURE),
   ]
 
   def __init__(self):
@@ -219,7 +219,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       event_data.text = 'XChat end logging'
 
     else:
-      logging.debug(u'Unknown log action: {0:s}.'.format(
+      logging.debug('Unknown log action: {0:s}.'.format(
           ' '.join(structure.log_action)))
       return
 
@@ -277,7 +277,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key not in (u'header', 'header_signature', 'logline'):
+    if key not in ('header', 'header_signature', 'logline'):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
@@ -293,7 +293,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       # is found. Stop parsing is done setting xchat_year to 0.
       # Note that the code assumes that LINE_STRUCTURES will be used in the
       # exact order as defined!
-      logging.warning(u'Unknown locale header.')
+      logging.warning('Unknown locale header.')
       self._xchat_year = 0
 
   def VerifyStructure(self, parser_mediator, line):
@@ -310,7 +310,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       structure = self._HEADER.parseString(line)
     except pyparsing.ParseException:
-      logging.debug(u'Not a XChat log file')
+      logging.debug('Not a XChat log file')
       return False
 
     _, month, day, hours, minutes, seconds, year = structure.date_time

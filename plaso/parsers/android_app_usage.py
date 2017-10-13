@@ -71,15 +71,15 @@ class AndroidAppUsageParser(interface.FileObjectParser):
     root_node = xml.getroot()
 
     for application_node in root_node:
-      package_name = application_node.get(u'name', None)
+      package_name = application_node.get('name', None)
 
       for part_node in application_node.iter():
         if part_node.tag != 'comp':
           continue
 
-        last_resume_time = part_node.get(u'lrt', None)
+        last_resume_time = part_node.get('lrt', None)
         if last_resume_time is None:
-          parser_mediator.ProduceExtractionError(u'missing last resume time.')
+          parser_mediator.ProduceExtractionError('missing last resume time.')
           continue
 
         try:
@@ -90,7 +90,7 @@ class AndroidAppUsageParser(interface.FileObjectParser):
           continue
 
         event_data = AndroidAppUsageEventData()
-        event_data.component = part_node.get(u'name', None)
+        event_data.component = part_node.get('name', None)
         event_data.package = package_name
 
         date_time = dfdatetime_java_time.JavaTime(timestamp=last_resume_time)

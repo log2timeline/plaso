@@ -58,33 +58,33 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
   # INFO: process_name is going to have a white space at the beginning.
 
   DATE_TIME = pyparsing.Group(
-      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName(u'month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
+      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
+      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName('day') +
       text_parser.PyparsingConstants.TIME_ELEMENTS)
 
   FIREWALL_LINE = (
-      DATE_TIME.setResultsName(u'date_time') +
-      pyparsing.Word(pyparsing.printables).setResultsName(u'computer_name') +
-      pyparsing.Word(pyparsing.printables).setResultsName(u'agent') +
-      pyparsing.Literal(u'<').suppress() +
-      pyparsing.CharsNotIn(u'>').setResultsName(u'status') +
-      pyparsing.Literal(u'>:').suppress() +
-      pyparsing.CharsNotIn(u':').setResultsName(u'process_name') +
-      pyparsing.Literal(u':') +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'action'))
+      DATE_TIME.setResultsName('date_time') +
+      pyparsing.Word(pyparsing.printables).setResultsName('computer_name') +
+      pyparsing.Word(pyparsing.printables).setResultsName('agent') +
+      pyparsing.Literal('<').suppress() +
+      pyparsing.CharsNotIn('>').setResultsName('status') +
+      pyparsing.Literal('>:').suppress() +
+      pyparsing.CharsNotIn(':').setResultsName('process_name') +
+      pyparsing.Literal(':') +
+      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('action'))
 
   # Repeated line.
   # Example: Nov 29 22:18:29 --- last message repeated 1 time ---
 
   REPEATED_LINE = (
-      DATE_TIME.setResultsName(u'date_time') +
-      pyparsing.Literal(u'---').suppress() +
-      pyparsing.CharsNotIn(u'---').setResultsName(u'process_name') +
-      pyparsing.Literal(u'---').suppress())
+      DATE_TIME.setResultsName('date_time') +
+      pyparsing.Literal('---').suppress() +
+      pyparsing.CharsNotIn('---').setResultsName('process_name') +
+      pyparsing.Literal('---').suppress())
 
   LINE_STRUCTURES = [
-      (u'logline', FIREWALL_LINE),
-      (u'repeated', REPEATED_LINE)]
+      ('logline', FIREWALL_LINE),
+      ('repeated', REPEATED_LINE)]
 
   def __init__(self):
     """Initializes a parser object."""
@@ -152,11 +152,11 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
 
     # Pyparsing reads in RAW, but the text is in UTF8.
     try:
-      action = structure.action.decode(u'utf-8')
+      action = structure.action.decode('utf-8')
     except UnicodeDecodeError:
       logging.warning(
           'Decode UTF8 failed, the message string may be cut short.')
-      action = structure.action.decode(u'utf-8', 'ignore')
+      action = structure.action.decode('utf-8', 'ignore')
 
     event_data = MacAppFirewallLogEventData()
     event_data.action = action
@@ -184,7 +184,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key not in (u'logline', 'repeated'):
+    if key not in ('logline', 'repeated'):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 

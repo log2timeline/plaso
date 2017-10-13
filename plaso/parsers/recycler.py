@@ -47,13 +47,13 @@ class WinRecycleBinParser(interface.FileObjectParser):
 
   _FILE_HEADER_STRUCT = construct.Struct(
       'file_header',
-      construct.ULInt64(u'format_version'),
-      construct.ULInt64(u'file_size'),
-      construct.ULInt64(u'deletion_time'))
+      construct.ULInt64('format_version'),
+      construct.ULInt64('file_size'),
+      construct.ULInt64('deletion_time'))
 
   _FILENAME_V2_STRUCT = construct.Struct(
       'filename_v2',
-      construct.ULInt32(u'number_of_characters'),
+      construct.ULInt32('number_of_characters'),
       construct.String(
           'string', lambda ctx: ctx.number_of_characters * 2))
 
@@ -94,7 +94,7 @@ class WinRecycleBinParser(interface.FileObjectParser):
 
     # TODO: Rethink this and potentially make a better test.
     filename = parser_mediator.GetFilename()
-    if not filename.startswith(u'$I'):
+    if not filename.startswith('$I'):
       return
 
     try:
@@ -111,7 +111,7 @@ class WinRecycleBinParser(interface.FileObjectParser):
       return
 
     if header_struct.deletion_time == 0:
-      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
     else:
       date_time = dfdatetime_filetime.Filetime(
           timestamp=header_struct.deletion_time)
@@ -134,20 +134,20 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
 
   _FILE_HEADER_STRUCT = construct.Struct(
       'file_header',
-      construct.ULInt32(u'unknown1'),
-      construct.ULInt32(u'unknown2'),
-      construct.ULInt32(u'unknown3'),
-      construct.ULInt32(u'record_size'),
-      construct.ULInt32(u'unknown4'))
+      construct.ULInt32('unknown1'),
+      construct.ULInt32('unknown2'),
+      construct.ULInt32('unknown3'),
+      construct.ULInt32('record_size'),
+      construct.ULInt32('unknown4'))
 
   _RECYCLER_RECORD_STRUCT = construct.Struct(
       'recycler_record',
-      construct.ULInt32(u'index'),
-      construct.ULInt32(u'drive_number'),
-      construct.ULInt64(u'deletion_time'),
-      construct.ULInt32(u'file_size'))
+      construct.ULInt32('index'),
+      construct.ULInt32('drive_number'),
+      construct.ULInt64('deletion_time'),
+      construct.ULInt32('file_size'))
 
-  _ASCII_STRING = construct.CString(u'string')
+  _ASCII_STRING = construct.CString('string')
 
   _RECORD_INDEX_OFFSET = 0x104
   _UNICODE_FILENAME_OFFSET = 0x118
@@ -193,13 +193,13 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
         ascii_filename = ascii_filename.decode(parser_mediator.codepage)
       except UnicodeDecodeError:
         ascii_filename = ascii_filename.decode(
-            parser_mediator.codepage, errors=u'replace')
+            parser_mediator.codepage, errors='replace')
 
     elif ascii_filename:
       ascii_filename = repr(ascii_filename)
 
     if recycler_record_struct.deletion_time == 0:
-      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
     else:
       date_time = dfdatetime_filetime.Filetime(
           timestamp=recycler_record_struct.deletion_time)
@@ -229,7 +229,7 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
 
     # TODO: Rethink this and potentially make a better test.
     filename = parser_mediator.GetFilename()
-    if not filename.startswith(u'INFO2'):
+    if not filename.startswith('INFO2'):
       return
 
     try:
@@ -240,7 +240,7 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
       return
 
     if file_header_struct.unknown1 != 5:
-      parser_mediator.ProduceExtractionError(u'unsupport format signature.')
+      parser_mediator.ProduceExtractionError('unsupport format signature.')
       return
 
     record_size = file_header_struct.record_size
