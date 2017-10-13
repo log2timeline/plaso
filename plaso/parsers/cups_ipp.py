@@ -23,8 +23,6 @@ Also see:
   CUPS%20Internet%20Printing%20Protocol%20format.asciidoc
 """
 
-from __future__ import unicode_literals
-
 import logging
 
 import construct
@@ -65,7 +63,7 @@ class CupsIppEventData(events.EventData):
     user (str): system user name.
   """
 
-  DATA_TYPE = 'cups:ipp:event'
+  DATA_TYPE = u'cups:ipp:event'
 
   def __init__(self):
     """Initializes event data."""
@@ -88,8 +86,8 @@ class CupsIppEventData(events.EventData):
 class CupsIppParser(interface.FileObjectParser):
   """Parser for CUPS IPP files. """
 
-  NAME = 'cups_ipp'
-  DESCRIPTION = 'Parser for CUPS IPP files.'
+  NAME = u'cups_ipp'
+  DESCRIPTION = u'Parser for CUPS IPP files.'
 
   # INFO:
   # For each file, we have only one document with three different timestamps:
@@ -118,11 +116,11 @@ class CupsIppParser(interface.FileObjectParser):
 
   # CUPS IPP File header.
   CUPS_IPP_HEADER = construct.Struct(
-      'cups_ipp_header_struct',
-      construct.UBInt8('major_version'),
-      construct.UBInt8('minor_version'),
-      construct.UBInt16('operation_id'),
-      construct.UBInt32('request_id'))
+      u'cups_ipp_header_struct',
+      construct.UBInt8(u'major_version'),
+      construct.UBInt8(u'minor_version'),
+      construct.UBInt16(u'operation_id'),
+      construct.UBInt32(u'request_id'))
 
   # Group ID that indicates the end of the IPP Control file.
   GROUP_END = 3
@@ -137,64 +135,64 @@ class CupsIppParser(interface.FileObjectParser):
   TYPE_DATETIME = 0x31
 
   # Type of values that can be extracted.
-  INTEGER_8 = construct.UBInt8('integer')
-  INTEGER_32 = construct.UBInt32('integer')
+  INTEGER_8 = construct.UBInt8(u'integer')
+  INTEGER_32 = construct.UBInt32(u'integer')
   TEXT = construct.PascalString(
-      'text',
+      u'text',
       encoding='utf-8',
-      length_field=construct.UBInt8('length'))
+      length_field=construct.UBInt8(u'length'))
   BOOLEAN = construct.Struct(
-      'boolean_value',
+      u'boolean_value',
       construct.Padding(1),
       INTEGER_8)
   INTEGER = construct.Struct(
-      'integer_value',
+      u'integer_value',
       construct.Padding(1),
       INTEGER_32)
 
   # This is an RFC2579 datetime.
   DATETIME = construct.Struct(
-      'datetime',
+      u'datetime',
       construct.Padding(1),
-      construct.UBInt16('year'),
-      construct.UBInt8('month'),
-      construct.UBInt8('day'),
-      construct.UBInt8('hour'),
-      construct.UBInt8('minutes'),
-      construct.UBInt8('seconds'),
-      construct.UBInt8('deciseconds'),
-      construct.String('direction_from_utc', length=1, encoding='ascii'),
-      construct.UBInt8('hours_from_utc'),
-      construct.UBInt8('minutes_from_utc'),
+      construct.UBInt16(u'year'),
+      construct.UBInt8(u'month'),
+      construct.UBInt8(u'day'),
+      construct.UBInt8(u'hour'),
+      construct.UBInt8(u'minutes'),
+      construct.UBInt8(u'seconds'),
+      construct.UBInt8(u'deciseconds'),
+      construct.String(u'direction_from_utc', length=1, encoding='ascii'),
+      construct.UBInt8(u'hours_from_utc'),
+      construct.UBInt8(u'minutes_from_utc'),
   )
 
   # Name of the pair.
   PAIR_NAME = construct.Struct(
-      'pair_name',
+      u'pair_name',
       TEXT,
       construct.Padding(1))
 
   # Specific CUPS IPP to generic name.
   _NAME_PAIR_TRANSLATION = {
-      'com.apple.print.JobInfo.PMApplicationName': 'application',
-      'com.apple.print.JobInfo.PMJobOwner': 'owner',
-      'DestinationPrinterID': 'printer_id',
-      'document-format': 'doc_type',
-      'job-name': 'job_name',
-      'job-originating-host-name': 'computer_name',
-      'job-originating-user-name': 'user',
-      'job-uuid': 'job_id',
-      'printer-uri': 'uri'}
+      u'com.apple.print.JobInfo.PMApplicationName': u'application',
+      u'com.apple.print.JobInfo.PMJobOwner': u'owner',
+      u'DestinationPrinterID': u'printer_id',
+      u'document-format': u'doc_type',
+      u'job-name': u'job_name',
+      u'job-originating-host-name': u'computer_name',
+      u'job-originating-user-name': u'user',
+      u'job-uuid': u'job_id',
+      u'printer-uri': u'uri'}
 
   _DATE_TIME_VALUES = {
-      'date-time-at-creation': definitions.TIME_DESCRIPTION_CREATION,
-      'date-time-at-processing': definitions.TIME_DESCRIPTION_START,
-      'date-time-at-completed': definitions.TIME_DESCRIPTION_END}
+      u'date-time-at-creation': definitions.TIME_DESCRIPTION_CREATION,
+      u'date-time-at-processing': definitions.TIME_DESCRIPTION_START,
+      u'date-time-at-completed': definitions.TIME_DESCRIPTION_END}
 
   _POSIX_TIME_VALUES = {
-      'time-at-creation': definitions.TIME_DESCRIPTION_CREATION,
-      'time-at-processing': definitions.TIME_DESCRIPTION_START,
-      'time-at-completed': definitions.TIME_DESCRIPTION_END}
+      u'time-at-creation': definitions.TIME_DESCRIPTION_CREATION,
+      u'time-at-processing': definitions.TIME_DESCRIPTION_START,
+      u'time-at-completed': definitions.TIME_DESCRIPTION_END}
 
   _DATE_TIME_VALUE_NAMES = _DATE_TIME_VALUES.keys()
   _DATE_TIME_VALUE_NAMES.extend(_POSIX_TIME_VALUES.keys())
@@ -214,10 +212,10 @@ class CupsIppParser(interface.FileObjectParser):
       return default_value
 
     for index, value in enumerate(values):
-      if ',' in value:
-        values[index] = '"{0:s}"'.format(value)
+      if u',' in value:
+        values[index] = u'"{0:s}"'.format(value)
 
-    return ', '.join(values)
+    return u', '.join(values)
 
   def _ReadPair(self, parser_mediator, file_object):
     """Reads an attribute name and value pair from a CUPS IPP event.
@@ -252,7 +250,7 @@ class CupsIppParser(interface.FileObjectParser):
 
     except (IOError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to parse pair identifier with error: {0:s}'.format(
+          u'unable to parse pair identifier with error: {0:s}'.format(
               exception))
       return None, None
 
@@ -261,7 +259,7 @@ class CupsIppParser(interface.FileObjectParser):
       name = self.PAIR_NAME.parse_stream(file_object).text
     except (IOError, UnicodeDecodeError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to parse pair name with error: {0:s}'.format(exception))
+          u'unable to parse pair name with error: {0:s}'.format(exception))
       return None, None
 
     # Value: can be integer, boolean or text select by Type ID.
@@ -288,7 +286,7 @@ class CupsIppParser(interface.FileObjectParser):
 
     except (IOError, UnicodeDecodeError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to parse pair value with error: {0:s}'.format(exception))
+          u'unable to parse pair value with error: {0:s}'.format(exception))
       return None, None
 
     return name, value
@@ -330,19 +328,19 @@ class CupsIppParser(interface.FileObjectParser):
       header = self.CUPS_IPP_HEADER.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          'Unable to parse CUPS IPP Header with error: {0:s}'.format(
+          u'Unable to parse CUPS IPP Header with error: {0:s}'.format(
               exception))
 
     if (header.major_version != self.IPP_MAJOR_VERSION or
         header.minor_version != self.IPP_MINOR_VERSION):
       raise errors.UnableToParseFile(
-          '[{0:s}] Unsupported version number.'.format(self.NAME))
+          u'[{0:s}] Unsupported version number.'.format(self.NAME))
 
     if header.operation_id != self.IPP_OP_ID:
       # Warn if the operation ID differs from the standard one. We should be
       # able to parse the file nonetheless.
       logging.debug(
-          '[{0:s}] Unsupported operation identifier in file: {1:s}.'.format(
+          u'[{0:s}] Unsupported operation identifier in file: {1:s}.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
 
     data_dict = self._ReadPairs(parser_mediator, file_object)
@@ -356,17 +354,17 @@ class CupsIppParser(interface.FileObjectParser):
         del data_dict[name]
 
     event_data = CupsIppEventData()
-    event_data.application = self._GetStringValue(data_dict, 'application')
-    event_data.computer_name = self._GetStringValue(data_dict, 'computer_name')
-    event_data.copies = data_dict.get('copies', [0])[0]
+    event_data.application = self._GetStringValue(data_dict, u'application')
+    event_data.computer_name = self._GetStringValue(data_dict, u'computer_name')
+    event_data.copies = data_dict.get(u'copies', [0])[0]
     event_data.data_dict = data_dict
-    event_data.doc_type = self._GetStringValue(data_dict, 'doc_type')
-    event_data.job_id = self._GetStringValue(data_dict, 'job_id')
-    event_data.job_name = self._GetStringValue(data_dict, 'job_name')
-    event_data.user = self._GetStringValue(data_dict, 'user')
-    event_data.owner = self._GetStringValue(data_dict, 'owner')
-    event_data.printer_id = self._GetStringValue(data_dict, 'printer_id')
-    event_data.uri = self._GetStringValue(data_dict, 'uri')
+    event_data.doc_type = self._GetStringValue(data_dict, u'doc_type')
+    event_data.job_id = self._GetStringValue(data_dict, u'job_id')
+    event_data.job_name = self._GetStringValue(data_dict, u'job_name')
+    event_data.user = self._GetStringValue(data_dict, u'user')
+    event_data.owner = self._GetStringValue(data_dict, u'owner')
+    event_data.printer_id = self._GetStringValue(data_dict, u'printer_id')
+    event_data.uri = self._GetStringValue(data_dict, u'uri')
 
     for name, usage in iter(self._DATE_TIME_VALUES.items()):
       time_values = time_dict.get(name, [])
