@@ -36,6 +36,7 @@ class ServerArgumentsHelper(interface.ArgumentsHelper):
         default=cls._DEFAULT_PORT, metavar='PORT',
         help='The port number of the server.')
 
+  # pylint: disable=arguments-differ
   @classmethod
   def ParseOptions(cls, options, output_module):
     """Parses and validates options.

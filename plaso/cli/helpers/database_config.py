@@ -44,6 +44,7 @@ class DatabaseArgumentsHelper(interface.ArgumentsHelper):
 
     server_config.ServerArgumentsHelper.AddArguments(argument_group)
 
+  # pylint: disable=arguments-differ
   @classmethod
   def ParseOptions(cls, options, output_module):
     """Parses and validates options.

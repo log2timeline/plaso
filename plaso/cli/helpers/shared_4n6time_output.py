@@ -51,6 +51,7 @@ class Shared4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
             ' the default fields, which are {0:s}.'.format(
                 cls._DEFAULT_FIELDS)))
 
+  # pylint: disable=arguments-differ
   @classmethod
   def ParseOptions(cls, options, output_module):
     """Parses and validates options.

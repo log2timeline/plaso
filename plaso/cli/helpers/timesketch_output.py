@@ -66,6 +66,7 @@ class TimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
         action='store', default=cls._DEFAULT_USERNAME, help=(
             'Username of a Timesketch user that will own the timeline.'))
 
+  # pylint: disable=arguments-differ
   @classmethod
   def ParseOptions(cls, options, output_module):
     """Parses and validates options.

@@ -41,6 +41,7 @@ class MySQL4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
         argument_group)
     MySQL4n6TimeDatabaseArgumentsHelper.AddArguments(argument_group)
 
+  # pylint: disable=arguments-differ
   @classmethod
   def ParseOptions(cls, options, output_module):
     """Parses and validates options.

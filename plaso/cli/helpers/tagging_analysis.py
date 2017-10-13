@@ -33,6 +33,7 @@ class TaggingAnalysisArgumentsHelper(interface.ArgumentsHelper):
         '--tagging-file', '--tagging_file', dest='tagging_file', type=str,
         help='Specify a file to read tagging criteria from.', action='store')
 
+  # pylint: disable=arguments-differ
   @classmethod
   def ParseOptions(cls, options, analysis_plugin):
     """Parses and validates options.

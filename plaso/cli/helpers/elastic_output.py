@@ -68,6 +68,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
 
     ElasticSearchServerArgumentsHelper.AddArguments(argument_group)
 
+  # pylint: disable=arguments-differ
   @classmethod
   def ParseOptions(cls, options, output_module):
     """Parses and validates options.

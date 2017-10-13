@@ -31,6 +31,7 @@ class SQLite4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
     shared_4n6time_output.Shared4n6TimeOutputArgumentsHelper.AddArguments(
         argument_group)
 
+  # pylint: disable=arguments-differ
   @classmethod
   def ParseOptions(cls, options, output_module):
     """Parses and validates options.

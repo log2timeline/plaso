@@ -49,6 +49,7 @@ class XLSXOutputArgumentsHelper(interface.ArgumentsHelper):
             'Set the timestamp format that will be used in the datetime'
             'column of the XLSX spreadsheet.'))
 
+  # pylint: disable=arguments-differ
   @classmethod
   def ParseOptions(cls, options, output_module):
     """Parses and validates options.
