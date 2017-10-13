@@ -357,9 +357,10 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
       header_struct = self._HEADER_2003_STRUCT.parse(value_data)
       header_object.header_size = self._HEADER_2003_STRUCT.sizeof()
 
-    elif format_type == self._FORMAT_TYPE_VISTA:
-      header_struct = self._HEADER_VISTA_STRUCT.parse(value_data)
-      header_object.header_size = self._HEADER_VISTA_STRUCT.sizeof()
+    # TODO: fix missing _HEADER_VISTA_STRUCT definition.
+    # elif format_type == self._FORMAT_TYPE_VISTA:
+    #   header_struct = self._HEADER_VISTA_STRUCT.parse(value_data)
+    #   header_object.header_size = self._HEADER_VISTA_STRUCT.sizeof()
 
     elif format_type == self._FORMAT_TYPE_7:
       header_struct = self._HEADER_7_STRUCT.parse(value_data)

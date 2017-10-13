@@ -226,6 +226,7 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
     """
 
   # TODO: merge with UpdateChainAndProcess, also requires changes to tests.
+  # pylint: disable=arguments-differ
   def Process(self, parser_mediator, registry_key, **kwargs):
     """Processes a Windows Registry key or value.
 
@@ -245,6 +246,7 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
 
     self.ExtractEvents(parser_mediator, registry_key, **kwargs)
 
+  # pylint: disable=arguments-differ
   def UpdateChainAndProcess(self, parser_mediator, registry_key, **kwargs):
     """Updates the parser chain and processes a Windows Registry key or value.
 

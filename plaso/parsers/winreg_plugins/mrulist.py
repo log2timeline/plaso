@@ -190,6 +190,7 @@ class MRUListStringPlugin(BaseMRUListPlugin):
 
     return value_string
 
+  # pylint: disable=arguments-differ
   def ExtractEvents(
       self, parser_mediator, registry_key, codepage='cp1252', **kwargs):
     """Extracts events from a Windows Registry key.
@@ -216,6 +217,7 @@ class MRUListShellItemListPlugin(BaseMRUListPlugin):
 
   URLS = ['https://github.com/libyal/winreg-kb/wiki/MRU-keys']
 
+  # pylint: disable=arguments-differ
   def _ParseMRUListEntryValue(
       self, parser_mediator, registry_key, entry_index, entry_letter,
       codepage='cp1252', **kwargs):
@@ -256,6 +258,7 @@ class MRUListShellItemListPlugin(BaseMRUListPlugin):
 
     return value_string
 
+  # pylint: disable=arguments-differ
   def ExtractEvents(
       self, parser_mediator, registry_key, codepage='cp1252', **kwargs):
     """Extracts events from a Windows Registry key.

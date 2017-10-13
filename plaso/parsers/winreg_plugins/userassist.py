@@ -186,6 +186,7 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
         # Check if we might need to substitute values.
         if '%' in value_name:
           # TODO: fix missing self._knowledge_base
+          # pylint: disable=no-member
           environment_variables = self._knowledge_base.GetEnvironmentVariables()
           value_name = path_helper.PathHelper.ExpandWindowsPath(
               value_name, environment_variables)

@@ -208,6 +208,7 @@ class MRUListExStringPlugin(BaseMRUListExPlugin):
 
     return value_string
 
+  # pylint: disable=arguments-differ
   def ExtractEvents(
       self, parser_mediator, registry_key, codepage='cp1252', **kwargs):
     """Extracts events from a Windows Registry key.
@@ -235,6 +236,7 @@ class MRUListExShellItemListPlugin(BaseMRUListExPlugin):
           'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
           'Explorer\\StreamMRU')])
 
+  # pylint: disable=arguments-differ
   def _ParseMRUListExEntryValue(
       self, parser_mediator, registry_key, entry_index, entry_number,
       codepage='cp1252', **kwargs):
@@ -275,6 +277,7 @@ class MRUListExShellItemListPlugin(BaseMRUListExPlugin):
 
     return value_string
 
+  # pylint: disable=arguments-differ
   def ExtractEvents(
       self, parser_mediator, registry_key, codepage='cp1252', **kwargs):
     """Extracts events from a Windows Registry key.
@@ -312,6 +315,7 @@ class MRUListExStringAndShellItemPlugin(BaseMRUListExPlugin):
           lambda obj, ctx: obj == b'\x00\x00', construct.Field('string', 2)),
       construct.Anchor('shell_item'))
 
+  # pylint: disable=arguments-differ
   def _ParseMRUListExEntryValue(
       self, parser_mediator, registry_key, entry_index, entry_number,
       codepage='cp1252', **kwargs):
@@ -375,6 +379,7 @@ class MRUListExStringAndShellItemPlugin(BaseMRUListExPlugin):
 
     return value_string
 
+  # pylint: disable=arguments-differ
   def ExtractEvents(
       self, parser_mediator, registry_key, codepage='cp1252', **kwargs):
     """Extracts events from a Windows Registry key.
@@ -411,6 +416,7 @@ class MRUListExStringAndShellItemListPlugin(BaseMRUListExPlugin):
           lambda obj, ctx: obj == b'\x00\x00', construct.Field('string', 2)),
       construct.Anchor('shell_item_list'))
 
+  # pylint: disable=arguments-differ
   def _ParseMRUListExEntryValue(
       self, parser_mediator, registry_key, entry_index, entry_number,
       codepage='cp1252', **kwargs):
@@ -474,6 +480,7 @@ class MRUListExStringAndShellItemListPlugin(BaseMRUListExPlugin):
 
     return value_string
 
+  # pylint: disable=arguments-differ
   def ExtractEvents(
       self, parser_mediator, registry_key, codepage='cp1252', **kwargs):
     """Extracts events from a Windows Registry key.
