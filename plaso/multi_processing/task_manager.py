@@ -116,6 +116,8 @@ class TaskManager(object):
   them.
   """
 
+  # pylint: disable=not-context-manager
+
   # Consider a task inactive after 5 minutes of no activity.
   _TASK_INACTIVE_TIME = 5 * 60 * 1000000
 

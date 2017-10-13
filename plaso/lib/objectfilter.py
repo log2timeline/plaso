@@ -324,8 +324,8 @@ class InSet(GenericBinaryOperator):
 
     # x might be an iterable
     # first we need to skip strings or we'll do silly things
-    if (isinstance(x, py2to3.STRING_TYPES)
-        or isinstance(x, bytes)):
+    # pylint: disable=consider-merging-isinstance
+    if isinstance(x, py2to3.STRING_TYPES) or isinstance(x, bytes):
       return False
 
     try:
@@ -926,5 +926,3 @@ class DictFilterImplementation(BaseFilterImplementation):
   FILTERS = {}
   FILTERS.update(BaseFilterImplementation.FILTERS)
   FILTERS.update({'ValueExpander': DictValueExpander})
-
-

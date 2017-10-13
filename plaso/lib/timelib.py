@@ -552,6 +552,7 @@ class Timestamp(object):
     Returns:
       A boolean value indicating the year is a leap year.
     """
+    # pylint: disable=consider-using-ternary
     return (year % 4 == 0 and year % 100 != 0) or year % 400 == 0
 
   @classmethod

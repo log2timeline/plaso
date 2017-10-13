@@ -75,10 +75,6 @@ class DictObject(object):
 class PlasoValueExpander(objectfilter.AttributeValueExpander):
   """An expander that gives values based on object attribute names."""
 
-  def __init__(self):
-    """Initialize an attribute value expander."""
-    super(PlasoValueExpander, self).__init__()
-
   def _GetMessage(self, event_object):
     """Returns a properly formatted message string.
 

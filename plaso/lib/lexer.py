@@ -190,6 +190,7 @@ class SelfFeederMixIn(Lexer):
     super(SelfFeederMixIn, self).__init__()
     self.file_object = file_object
 
+  # pylint: disable=arguments-differ
   def Feed(self, size=512):
     """Feed data into the buffer.
 
