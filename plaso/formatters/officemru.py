@@ -11,7 +11,7 @@ class OfficeMRUWindowsRegistryEventFormatter(
     interface.ConditionalEventFormatter):
   """Formatter for a Microsoft Office MRU Windows Registry event."""
 
-  DATA_TYPE = 'windows:registry:office_mr'
+  DATA_TYPE = 'windows:registry:office_mru'
 
   FORMAT_STRING_PIECES = [
       '[{key_path}]',
