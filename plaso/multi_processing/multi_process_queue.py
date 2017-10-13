@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """A multiprocessing-backed queue."""
 
+from __future__ import unicode_literals
+
 import logging
 import multiprocessing
 
@@ -40,8 +42,8 @@ class MultiProcessingQueue(plaso_queue.Queue):
 
     if maximum_number_of_queued_items > queue_max_length:
       logging.warning((
-          u'Requested maximum queue size: {0:d} is larger than the maximum '
-          u'size supported by the system. Defaulting to: {1:d}').format(
+          'Requested maximum queue size: {0:d} is larger than the maximum '
+          'size supported by the system. Defaulting to: {1:d}').format(
               maximum_number_of_queued_items, queue_max_length))
       maximum_number_of_queued_items = queue_max_length
 

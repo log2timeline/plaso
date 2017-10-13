@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Base class for a process used in multi-processing."""
 
+from __future__ import unicode_literals
+
 import abc
 import logging
 import multiprocessing
@@ -41,7 +43,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     self._status_is_running = False
 
     # We need to share the RPC port number with the engine process.
-    self.rpc_port = multiprocessing.Value(u'I', 0)
+    self.rpc_port = multiprocessing.Value('I', 0)
 
   @property
   def name(self):
@@ -109,7 +111,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
     self._rpc_server = plaso_xmlrpc.XMLProcessStatusRPCServer(self._GetStatus)
 
-    hostname = u'localhost'
+    hostname = 'localhost'
 
     # Try the PID as port number first otherwise pick something random
     # between 1024 and 60000.
@@ -129,15 +131,15 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
     if not port:
       logging.error((
-          u'Unable to start a process status RPC server for {0!s} '
-          u'(PID: {1:d})').format(self._name, self._pid))
+          'Unable to start a process status RPC server for {0!s} '
+          '(PID: {1:d})').format(self._name, self._pid))
       self._rpc_server = None
       return
 
     self.rpc_port.value = port
 
     logging.debug(
-        u'Process: {0!s} process status RPC server started'.format(self._name))
+        'Process: {0!s} process status RPC server started'.format(self._name))
 
   def _StopProcessStatusRPCServer(self):
     """Stops the process status RPC server."""
@@ -153,7 +155,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     self.rpc_port.value = 0
 
     logging.debug(
-        u'Process: {0!s} process status RPC server stopped'.format(self._name))
+        'Process: {0!s} process status RPC server stopped'.format(self._name))
 
   def _WaitForStatusNotRunning(self):
     """Waits for the status is running to change to false."""
@@ -193,7 +195,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     self._status_is_running = True
 
     logging.debug(
-        u'Process: {0!s} (PID: {1:d}) started'.format(self._name, self._pid))
+        'Process: {0!s} (PID: {1:d}) started'.format(self._name, self._pid))
 
     self._StartProcessStatusRPCServer()
 
@@ -202,7 +204,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     self._StopProcessStatusRPCServer()
 
     logging.debug(
-        u'Process: {0!s} (PID: {1:d}) stopped'.format(self._name, self._pid))
+        'Process: {0!s} (PID: {1:d}) stopped'.format(self._name, self._pid))
 
     self._status_is_running = False
 

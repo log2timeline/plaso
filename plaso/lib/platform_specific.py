@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """This file contains functions for certain platform specific operations."""
-import sys
 
+from __future__ import unicode_literals
+
+import sys
 
 # Windows-only imports
 try:
@@ -34,7 +36,7 @@ def PlatformIsDarwin():
   Returns:
     bool: True if Python is running on Darwin.
   """
-  return sys.platform.startswith(u'darwin')
+  return sys.platform.startswith('darwin')
 
 
 def PlatformIsLinux():
@@ -43,7 +45,7 @@ def PlatformIsLinux():
   Returns:
     bool: True if Python is running on Windows.
   """
-  return sys.platform.startswith(u'linux')
+  return sys.platform.startswith('linux')
 
 
 def PlatformIsWindows():
@@ -52,4 +54,4 @@ def PlatformIsWindows():
   Returns:
     bool: True if Python is running on Windows.
   """
-  return sys.platform.startswith(u'win') or sys.platform.startswith(u'cygwin')
+  return sys.platform.startswith('win') or sys.platform.startswith('cygwin')

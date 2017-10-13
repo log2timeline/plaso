@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains a helper library to read binary files."""
 
+from __future__ import unicode_literals
+
 import binascii
 import logging
 import os
@@ -8,7 +10,7 @@ import os
 from plaso.lib import py2to3
 
 
-def ByteArrayCopyToString(byte_array, codepage=u'utf-8'):
+def ByteArrayCopyToString(byte_array, codepage='utf-8'):
   """Copies a UTF-8 encoded byte array into a Unicode string.
 
   Args:
@@ -22,7 +24,7 @@ def ByteArrayCopyToString(byte_array, codepage=u'utf-8'):
   return ByteStreamCopyToString(byte_stream, codepage=codepage)
 
 
-def ByteStreamCopyToString(byte_stream, codepage=u'utf-8'):
+def ByteStreamCopyToString(byte_stream, codepage='utf-8'):
   """Copies a UTF-8 encoded byte stream into a Unicode string.
 
   Args:
@@ -36,10 +38,10 @@ def ByteStreamCopyToString(byte_stream, codepage=u'utf-8'):
     string = byte_stream.decode(codepage)
   except UnicodeDecodeError:
     logging.warning(
-        u'Unable to decode {0:s} formatted byte stream.'.format(codepage))
+        'Unable to decode {0:s} formatted byte stream.'.format(codepage))
     string = byte_stream.decode(codepage, errors='ignore')
 
-  string, _, _ = string.partition(u'\x00')
+  string, _, _ = string.partition('\x00')
   return string
 
 
@@ -125,12 +127,12 @@ def UTF16StreamCopyToString(byte_stream, byte_stream_size=None):
       byte_stream, byte_stream_size=byte_stream_size)
 
   try:
-    return utf16_stream.decode(u'utf-16-le')
+    return utf16_stream.decode('utf-16-le')
   except (UnicodeDecodeError, UnicodeEncodeError) as exception:
-    logging.error(u'Unable to decode string: {0:s} with error: {1:s}'.format(
+    logging.error('Unable to decode string: {0:s} with error: {1:s}'.format(
         HexifyBuffer(utf16_stream), exception))
 
-  return utf16_stream.decode(u'utf-16-le', errors=u'ignore')
+  return utf16_stream.decode('utf-16-le', errors='ignore')
 
 
 def ArrayOfUTF16StreamCopyToString(byte_stream, byte_stream_size=None):
@@ -162,7 +164,7 @@ def ArrayOfUTF16StreamCopyToString(byte_stream, byte_stream_size=None):
 
       array_of_strings.append(
           byte_stream[utf16_stream_start:byte_stream_index].decode(
-              u'utf-16-le'))
+              'utf-16-le'))
       utf16_stream_start = byte_stream_index + 2
 
     byte_stream_index += 2
@@ -199,7 +201,7 @@ def ArrayOfUTF16StreamCopyToStringTable(byte_stream, byte_stream_size=None):
         break
 
       string = byte_stream[utf16_stream_start:byte_stream_index].decode(
-          u'utf-16-le')
+          'utf-16-le')
       string_table[utf16_stream_start] = string
       utf16_stream_start = byte_stream_index + 2
 
@@ -211,23 +213,23 @@ def ArrayOfUTF16StreamCopyToStringTable(byte_stream, byte_stream_size=None):
 def ReadUTF16(string_buffer):
   """Returns a decoded UTF-16 string from a string buffer."""
   if isinstance(string_buffer, (list, tuple)):
-    use_buffer = u''.join(string_buffer)
+    use_buffer = ''.join(string_buffer)
   else:
     use_buffer = string_buffer
 
   if not isinstance(use_buffer, py2to3.STRING_TYPES):
-    return u''
+    return ''
 
   try:
-    return use_buffer.decode(u'utf-16').replace(u'\x00', u'')
+    return use_buffer.decode('utf-16').replace('\x00', '')
   except SyntaxError as exception:
-    logging.error(u'Unable to decode string: {0:s} with error: {1:s}.'.format(
+    logging.error('Unable to decode string: {0:s} with error: {1:s}.'.format(
         HexifyBuffer(string_buffer), exception))
   except (UnicodeDecodeError, UnicodeEncodeError) as exception:
-    logging.error(u'Unable to decode string: {0:s} with error: {1:s}'.format(
+    logging.error('Unable to decode string: {0:s} with error: {1:s}'.format(
         HexifyBuffer(string_buffer), exception))
 
-  return use_buffer.decode(u'utf-16', errors=u'ignore').replace(u'\x00', u'')
+  return use_buffer.decode('utf-16', errors='ignore').replace('\x00', '')
 
 
 def HexifyBuffer(string_buffer):
@@ -236,4 +238,4 @@ def HexifyBuffer(string_buffer):
   for char in string_buffer:
     chars.append(binascii.hexlify(char))
 
-  return u'\\x{0:s}'.format(u'\\x'.join(chars))
+  return '\\x{0:s}'.format('\\x'.join(chars))

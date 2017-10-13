@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """XML RPC proxy server and client."""
 
+from __future__ import unicode_literals
+
 import logging
 import sys
 import threading
@@ -22,7 +24,7 @@ from plaso.multi_processing import rpc
 class XMLRPCClient(rpc.RPCClient):
   """Class that defines the XML RPC client."""
 
-  _RPC_FUNCTION_NAME = u''
+  _RPC_FUNCTION_NAME = ''
 
   def __init__(self):
     """Initializes the process status RPC client object."""
@@ -43,7 +45,7 @@ class XMLRPCClient(rpc.RPCClient):
     except (
         expat.ExpatError, SocketServer.socket.error,
         xmlrpclib.Fault) as exception:
-      logging.warning(u'Error while making RPC call: {0:s}'.format(exception))
+      logging.warning('Error while making RPC call: {0:s}'.format(exception))
       return
 
   def Close(self):
@@ -60,13 +62,13 @@ class XMLRPCClient(rpc.RPCClient):
     Returns:
       A boolean indicating if the communication channel was established.
     """
-    server_url = u'http://{0:s}:{1:d}'.format(hostname, port)
+    server_url = 'http://{0:s}:{1:d}'.format(hostname, port)
     try:
       self._xmlrpc_proxy = xmlrpclib.ServerProxy(server_url, allow_none=True)
     except SocketServer.socket.error as exception:
       logging.warning((
-          u'Unable to connect to RPC server on {0:s}:{1:d} with error: '
-          u'{2:s}').format(hostname, port, exception))
+          'Unable to connect to RPC server on {0:s}:{1:d} with error: '
+          '{2:s}').format(hostname, port, exception))
       return False
 
     return True
@@ -75,8 +77,8 @@ class XMLRPCClient(rpc.RPCClient):
 class ThreadedXMLRPCServer(rpc.RPCServer):
   """Class that defines the threaded XML RPC server."""
 
-  _RPC_FUNCTION_NAME = u''
-  _THREAD_NAME = u''
+  _RPC_FUNCTION_NAME = ''
+  _THREAD_NAME = ''
 
   def __init__(self, callback):
     """Initialize the RPC server.
@@ -110,8 +112,8 @@ class ThreadedXMLRPCServer(rpc.RPCServer):
           (hostname, port), logRequests=False, allow_none=True)
     except SocketServer.socket.error as exception:
       logging.warning((
-          u'Unable to bind a RPC server on {0:s}:{1:d} with error: '
-          u'{2:s}').format(hostname, port, exception))
+          'Unable to bind a RPC server on {0:s}:{1:d} with error: '
+          '{2:s}').format(hostname, port, exception))
       return False
 
     self._xmlrpc_server.register_function(
@@ -148,11 +150,11 @@ class ThreadedXMLRPCServer(rpc.RPCServer):
 class XMLProcessStatusRPCClient(XMLRPCClient):
   """Class that defines a XML process status RPC client."""
 
-  _RPC_FUNCTION_NAME = u'status'
+  _RPC_FUNCTION_NAME = 'status'
 
 
 class XMLProcessStatusRPCServer(ThreadedXMLRPCServer):
   """Class that defines a XML process status RPC server."""
 
-  _RPC_FUNCTION_NAME = u'status'
-  _THREAD_NAME = u'process_status_rpc_server'
+  _RPC_FUNCTION_NAME = 'status'
+  _THREAD_NAME = 'process_status_rpc_server'
