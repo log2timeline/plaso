@@ -288,9 +288,13 @@ class ConditionalEventFormatter(EventFormatter):
           # that in the format string, since that is still potentially valid
           # information. Otherwise we would like to skip it.
           # pylint: disable=unidiomatic-typecheck
-          if type(attribute) not in (bool, int, long, float) and not attribute:
+          if (not isinstance(attribute, (bool, float) and
+              not isinstance(attribute, py2to3.INTEGER_TYPES) and
+              not attribute):
             continue
+
         string_pieces.append(self.FORMAT_STRING_PIECES[map_index])
+
     format_string = self.FORMAT_STRING_SEPARATOR.join(string_pieces)
 
     string_pieces = []
