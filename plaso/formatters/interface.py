@@ -288,7 +288,7 @@ class ConditionalEventFormatter(EventFormatter):
           # that in the format string, since that is still potentially valid
           # information. Otherwise we would like to skip it.
           # pylint: disable=unidiomatic-typecheck
-          if (not isinstance(attribute, (bool, float) and
+          if (not isinstance(attribute, (bool, float)) and
               not isinstance(attribute, py2to3.INTEGER_TYPES) and
               not attribute):
             continue
