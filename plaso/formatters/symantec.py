@@ -115,7 +115,7 @@ class SymantecAVFormatter(interface.ConditionalEventFormatter):
       '4': 'Left alone',
       '5': 'Cleaned',
       '6': ('Cleaned or macros deleted (no longer used as of '
-             'Symantec AntiVirus 9.x)'),
+            'Symantec AntiVirus 9.x)'),
       '7': 'Saved file as...',
       '8': 'Sent to Intel (AMS)',
       '9': 'Moved to backup location',
