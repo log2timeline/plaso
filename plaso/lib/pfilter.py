@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """An extension of the objectfilter to provide plaso specific options."""
 
-from __future__ import unicode_literals
-
 import datetime
 import logging
 
@@ -64,8 +62,8 @@ class DictObject(object):
     if attr == '__all__':
       ret = []
       for key, value in self._dict_translated.items():
-        ret.append('{}:{}'.format(key, value))
-      return ' '.join(ret)
+        ret.append(u'{}:{}'.format(key, value))
+      return u' '.join(ret)
 
     test = self._StripKey(attr)
     if test in self._dict_translated:
@@ -74,6 +72,10 @@ class DictObject(object):
 
 class PlasoValueExpander(objectfilter.AttributeValueExpander):
   """An expander that gives values based on object attribute names."""
+
+  def __init__(self):
+    """Initialize an attribute value expander."""
+    super(PlasoValueExpander, self).__init__()
 
   def _GetMessage(self, event_object):
     """Returns a properly formatted message string.
@@ -87,12 +89,12 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
     # TODO: move this somewhere where the mediator can be instantiated once.
     formatter_mediator = formatters_mediator.FormatterMediator()
 
-    result = ''
+    result = u''
     try:
       result, _ = formatters_manager.FormattersManager.GetMessageStrings(
           formatter_mediator, event_object)
     except KeyError as exception:
-      logging.warning('Unable to correctly assemble event: {0:s}'.format(
+      logging.warning(u'Unable to correctly assemble event: {0:s}'.format(
           exception))
 
     return result
@@ -107,7 +109,7 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
       source_short, source_long = (
           formatters_manager.FormattersManager.GetSourceStrings(event_object))
     except KeyError as exception:
-      logging.warning('Unable to correctly assemble event: {0:s}'.format(
+      logging.warning(u'Unable to correctly assemble event: {0:s}'.format(
           exception))
 
     return source_short, source_long
@@ -173,7 +175,7 @@ class PlasoExpression(objectfilter.BasicExpression):
     operator = filter_implementation.OPS.get(op_str, None)
 
     if not operator:
-      raise errors.ParseError('Unknown operator {0:s} provided.'.format(
+      raise errors.ParseError(u'Unknown operator {0:s} provided.'.format(
           self.operator))
 
     # Plaso specific implementation - if we are comparing a timestamp
@@ -213,8 +215,8 @@ class ParserList(objectfilter.GenericBinaryOperator):
   def Operation(self, x, unused_y):
     """Return a bool depending on the parser list contains the parser."""
     if self.left_operand != 'parser':
-      raise errors.MalformedQueryError(
-          'Unable to use keyword "inlist" for other than parser.')
+      raise objectfilter.MalformedQueryError(
+          u'Unable to use keyword "inlist" for other than parser.')
 
     if x in self.compiled_list:
       return True
@@ -262,40 +264,40 @@ class DateCompareObject(object):
     """
     if isinstance(data, py2to3.INTEGER_TYPES):
       self.data = data
-      self.text = '{0:d}'.format(data)
+      self.text = u'{0:d}'.format(data)
 
     elif isinstance(data, float):
       self.data = py2to3.LONG_TYPE(data)
-      self.text = '{0:f}'.format(data)
+      self.text = u'{0:f}'.format(data)
 
     elif isinstance(data, py2to3.STRING_TYPES):
       if isinstance(data, py2to3.BYTES_TYPE):
-        self.text = data.decode('utf-8', errors='ignore')
+        self.text = data.decode(u'utf-8', errors=u'ignore')
       else:
         self.text = data
 
       try:
         self.data = timelib.Timestamp.FromTimeString(self.text)
       except (ValueError, errors.TimestampError):
-        raise ValueError('Wrongly formatted date string: {0:s}'.format(
+        raise ValueError(u'Wrongly formatted date string: {0:s}'.format(
             self.text))
 
     elif isinstance(data, datetime.datetime):
       self.data = timelib.Timestamp.FromPythonDatetime(data)
-      self.text = '{0!s}'.format(data)
+      self.text = u'{0!s}'.format(data)
 
     elif isinstance(data, DateCompareObject):
       self.data = data.data
-      self.text = '{0!s}'.format(data)
+      self.text = u'{0!s}'.format(data)
 
     else:
-      raise ValueError('Unsupported type: {0:s}.'.format(type(data)))
+      raise ValueError(u'Unsupported type: {0:s}.'.format(type(data)))
 
   def __cmp__(self, x):
     """A simple comparison operation."""
     try:
       x_date = DateCompareObject(x)
-      return (self.data > x_date.data) - (self.data < x_date.data)
+      return cmp(self.data, x_date.data)
     except ValueError:
       return False
 
@@ -359,5 +361,5 @@ class TimeRangeCache(object):
 
     if first < last:
       return first, last
-
-    return last, first
+    else:
+      return last, first
