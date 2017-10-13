@@ -4,6 +4,8 @@
 Only supports task storage at the moment.
 """
 
+from __future__ import unicode_literals
+
 import gzip
 import os
 import time
@@ -34,7 +36,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
       ValueError: if the storage type is not supported.
     """
     if storage_type != definitions.STORAGE_TYPE_TASK:
-      raise ValueError(u'Unsupported storage type: {0:s}.'.format(
+      raise ValueError('Unsupported storage type: {0:s}.'.format(
           storage_type))
 
     super(GZIPStorageFile, self).__init__()
@@ -78,7 +80,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
       for index, line in enumerate(lines):
         if line.endswith(b'\n'):
           attribute_container = self._DeserializeAttributeContainer(
-              u'attribute_container', line)
+              'attribute_container', line)
           self._AddAttributeContainer(attribute_container)
         else:
           data_buffer = b''.join(lines[index:])
@@ -145,7 +147,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     if event_data_identifier:
       if not isinstance(
           event_data_identifier, identifiers.SerializedStreamIdentifier):
-        raise IOError(u'Unsupported event data identifier type: {0:s}'.format(
+        raise IOError('Unsupported event data identifier type: {0:s}'.format(
             type(event_data_identifier)))
 
       event.event_data_stream_number = event_data_identifier.stream_number
@@ -194,7 +196,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     event_identifier = event_tag.GetEventIdentifier()
     if not isinstance(
         event_identifier, identifiers.SerializedStreamIdentifier):
-      raise IOError(u'Unsupported event identifier type: {0:s}'.format(
+      raise IOError('Unsupported event identifier type: {0:s}'.format(
           type(event_identifier)))
 
     event_tag.event_stream_number = event_identifier.stream_number
@@ -209,7 +211,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
       IOError: if the storage file is already closed.
     """
     if not self._is_open:
-      raise IOError(u'Storage file already closed.')
+      raise IOError('Storage file already closed.')
 
     if self._gzip_file:
       self._gzip_file.close()
@@ -222,7 +224,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     Returns:
       generator(AnalysisReport): analysis report generator.
     """
-    return iter(self._GetAttributeContainerList(u'analysis_report'))
+    return iter(self._GetAttributeContainerList('analysis_report'))
 
   def GetErrors(self):
     """Retrieves the errors.
@@ -230,7 +232,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     Returns:
       generator(ExtractionError): error generator.
     """
-    return iter(self._GetAttributeContainerList(u'extraction_error'))
+    return iter(self._GetAttributeContainerList('extraction_error'))
 
   def GetEventData(self):
     """Retrieves event data.
@@ -238,7 +240,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     Returns:
       generator(EventData): event data generator.
     """
-    return iter(self._GetAttributeContainerList(u'event_data'))
+    return iter(self._GetAttributeContainerList('event_data'))
 
   def GetEventDataByIdentifier(self, identifier):
     """Retrieves specific event data.
@@ -257,7 +259,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     Returns:
       generator(EventObject): event generator.
     """
-    return iter(self._GetAttributeContainerList(u'event'))
+    return iter(self._GetAttributeContainerList('event'))
 
   def GetEventSources(self):
     """Retrieves the event sources.
@@ -265,7 +267,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     Returns:
       generator(EventSource): event source generator.
     """
-    return iter(self._GetAttributeContainerList(u'event_source'))
+    return iter(self._GetAttributeContainerList('event_source'))
 
   def GetEventTags(self):
     """Retrieves the event tags.
@@ -273,7 +275,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     Yields:
       EventTag: event tag.
     """
-    for event_tag in iter(self._GetAttributeContainerList(u'event_tag')):
+    for event_tag in iter(self._GetAttributeContainerList('event_tag')):
       event_identifier = identifiers.SerializedStreamIdentifier(
           event_tag.event_stream_number, event_tag.event_entry_index)
       event_tag.SetEventIdentifier(event_identifier)
@@ -292,7 +294,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     """
     event_heap = event_heaps.EventHeap()
 
-    for event in self._GetAttributeContainerList(u'event'):
+    for event in self._GetAttributeContainerList('event'):
       if (time_range and (
           event.timestamp < time_range.start_timestamp or
           event.timestamp > time_range.end_timestamp)):
@@ -308,7 +310,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     Returns:
       bool: True if the storage contains analysis reports.
     """
-    return len(self._GetAttributeContainerList(u'analysis_report')) > 0
+    return len(self._GetAttributeContainerList('analysis_report')) > 0
 
   def HasErrors(self):
     """Determines if a storage contains extraction errors.
@@ -316,7 +318,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     Returns:
       bool: True if the storage contains extraction errors.
     """
-    return len(self._GetAttributeContainerList(u'extraction_error')) > 0
+    return len(self._GetAttributeContainerList('extraction_error')) > 0
 
   def HasEventTags(self):
     """Determines if a storage contains event tags.
@@ -324,7 +326,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     Returns:
       bool: True if the storage contains event tags.
     """
-    return len(self._GetAttributeContainerList(u'event_tags')) > 0
+    return len(self._GetAttributeContainerList('event_tags')) > 0
 
   # pylint: disable=arguments-differ
   def Open(self, path=None, read_only=True, **unused_kwargs):
@@ -340,10 +342,10 @@ class GZIPStorageFile(interface.BaseFileStorage):
       ValueError: if path is missing.
     """
     if self._is_open:
-      raise IOError(u'Storage file already opened.')
+      raise IOError('Storage file already opened.')
 
     if not path:
-      raise ValueError(u'Missing path.')
+      raise ValueError('Missing path.')
 
     if read_only:
       access_mode = 'rb'
@@ -453,10 +455,10 @@ class GZIPStorageMergeReader(interface.FileStorageMergeReader):
       RuntimeError: if the attribute container type is not supported.
     """
     container_type = attribute_container.CONTAINER_TYPE
-    if container_type == u'event_source':
+    if container_type == 'event_source':
       self._storage_writer.AddEventSource(attribute_container)
 
-    elif container_type == u'event_data':
+    elif container_type == 'event_data':
       identifier = attribute_container.GetIdentifier()
       lookup_key = identifier.CopyToString()
 
@@ -465,9 +467,9 @@ class GZIPStorageMergeReader(interface.FileStorageMergeReader):
       identifier = attribute_container.GetIdentifier()
       self._event_data_identifier_mappings[lookup_key] = identifier
 
-    elif container_type == u'event':
-      if (hasattr(attribute_container, u'event_data_stream_number') and
-          hasattr(attribute_container, u'event_data_entry_index')):
+    elif container_type == 'event':
+      if (hasattr(attribute_container, 'event_data_stream_number') and
+          hasattr(attribute_container, 'event_data_entry_index')):
         event_data_identifier = identifiers.SerializedStreamIdentifier(
             attribute_container.event_data_stream_number,
             attribute_container.event_data_entry_index)
@@ -483,7 +485,7 @@ class GZIPStorageMergeReader(interface.FileStorageMergeReader):
 
       self._storage_writer.AddEvent(attribute_container)
 
-    elif container_type == u'event_tag':
+    elif container_type == 'event_tag':
       event_identifier = identifiers.SerializedStreamIdentifier(
           attribute_container.event_stream_number,
           attribute_container.event_entry_index)
@@ -491,14 +493,14 @@ class GZIPStorageMergeReader(interface.FileStorageMergeReader):
 
       self._storage_writer.AddEventTag(attribute_container)
 
-    elif container_type == u'extraction_error':
+    elif container_type == 'extraction_error':
       self._storage_writer.AddError(attribute_container)
 
-    elif container_type == u'analysis_report':
+    elif container_type == 'analysis_report':
       self._storage_writer.AddAnalysisReport(attribute_container)
 
-    elif container_type not in (u'task_completion', u'task_start'):
-      raise RuntimeError(u'Unsupported container type: {0:s}'.format(
+    elif container_type not in ('task_completion', 'task_start'):
+      raise RuntimeError('Unsupported container type: {0:s}'.format(
           container_type))
 
   def MergeAttributeContainers(self, maximum_number_of_containers=0):
@@ -533,7 +535,7 @@ class GZIPStorageMergeReader(interface.FileStorageMergeReader):
             1, self._number_of_containers)
 
         attribute_container = self._DeserializeAttributeContainer(
-            u'attribute_container', line)
+            'attribute_container', line)
         attribute_container.SetIdentifier(identifier)
 
         self._AddAttributeContainer(attribute_container)

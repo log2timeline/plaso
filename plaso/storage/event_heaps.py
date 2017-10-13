@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Heaps to sort events in chronological order."""
 
+from __future__ import unicode_literals
+
 import abc
 import heapq
 
