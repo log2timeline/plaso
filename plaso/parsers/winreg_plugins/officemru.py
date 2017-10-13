@@ -26,7 +26,7 @@ class OfficeMRUWindowsRegistryEventData(events.EventData):
     key_path (str): Windows Registry key path.
     value_string (str): MRU value.
   """
-  DATA_TYPE = 'windows:registry:office_mr'
+  DATA_TYPE = 'windows:registry:office_mru'
 
   def __init__(self):
     """Initializes event data."""
