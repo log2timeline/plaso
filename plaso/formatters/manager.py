@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the event formatters manager class."""
 
+from __future__ import unicode_literals
+
 import logging
 
 from plaso.formatters import default
@@ -27,7 +29,7 @@ class FormattersManager(object):
     formatter_data_type = formatter_class.DATA_TYPE.lower()
     if formatter_data_type not in cls._formatter_classes:
       raise KeyError(
-          u'Formatter class not set for data type: {0:s}.'.format(
+          'Formatter class not set for data type: {0:s}.'.format(
               formatter_class.DATA_TYPE))
 
     del cls._formatter_classes[formatter_data_type]
@@ -55,7 +57,7 @@ class FormattersManager(object):
 
       if not formatter_object:
         logging.warning(
-            u'Using default formatter for data type: {0:s}'.format(data_type))
+            'Using default formatter for data type: {0:s}'.format(data_type))
         formatter_object = default.DefaultFormatter()
 
       cls._formatter_objects[data_type] = formatter_object
@@ -109,7 +111,7 @@ class FormattersManager(object):
     formatter_data_type = formatter_class.DATA_TYPE.lower()
     if formatter_data_type in cls._formatter_classes:
       raise KeyError((
-          u'Formatter class already set for data type: {0:s}.').format(
+          'Formatter class already set for data type: {0:s}.').format(
               formatter_class.DATA_TYPE))
 
     cls._formatter_classes[formatter_data_type] = formatter_class

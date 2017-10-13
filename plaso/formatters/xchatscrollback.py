@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The XChat scrollback file event formatter."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 
@@ -8,18 +10,18 @@ from plaso.formatters import manager
 class XChatScrollbackFormatter(interface.ConditionalEventFormatter):
   """Formatter for a XChat scrollback file entry event."""
 
-  DATA_TYPE = u'xchat:scrollback:line'
+  DATA_TYPE = 'xchat:scrollback:line'
 
-  FORMAT_STRING_SEPARATOR = u''
+  FORMAT_STRING_SEPARATOR = ''
 
   FORMAT_STRING_PIECES = [
-      u'[',
-      u'nickname: {nickname}',
-      u']',
-      u' {text}']
+      '[',
+      'nickname: {nickname}',
+      ']',
+      ' {text}']
 
-  SOURCE_LONG = u'XChat Scrollback File'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'XChat Scrollback File'
+  SOURCE_SHORT = 'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(XChatScrollbackFormatter)

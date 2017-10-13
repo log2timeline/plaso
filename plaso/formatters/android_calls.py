@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The Android contacts2.db database event formatter."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 
@@ -8,18 +10,18 @@ from plaso.formatters import manager
 class AndroidCallFormatter(interface.ConditionalEventFormatter):
   """Formatter for an Android call history event."""
 
-  DATA_TYPE = u'android:event:call'
+  DATA_TYPE = 'android:event:call'
 
   FORMAT_STRING_PIECES = [
-      u'{call_type}',
-      u'Number: {number}',
-      u'Name: {name}',
-      u'Duration: {duration} seconds']
+      '{call_type}',
+      'Number: {number}',
+      'Name: {name}',
+      'Duration: {duration} seconds']
 
-  FORMAT_STRING_SHORT_PIECES = [u'{call_type} Call']
+  FORMAT_STRING_SHORT_PIECES = ['{call_type} Call']
 
-  SOURCE_LONG = u'Android Call History'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'Android Call History'
+  SOURCE_SHORT = 'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(AndroidCallFormatter)

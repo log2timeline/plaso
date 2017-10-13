@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The MacKeeper Cache event formatter."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 
@@ -8,25 +10,25 @@ from plaso.formatters import manager
 class MacKeeperCacheFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MacKeeper Cache event."""
 
-  DATA_TYPE = u'mackeeper:cache'
+  DATA_TYPE = 'mackeeper:cache'
 
   FORMAT_STRING_PIECES = [
-      u'{description}',
-      u'<{event_type}>',
-      u':',
-      u'{text}',
-      u'[',
-      u'URL: {url}',
-      u'Event ID: {record_id}',
-      u'Room: {room}',
-      u']']
+      '{description}',
+      '<{event_type}>',
+      ':',
+      '{text}',
+      '[',
+      'URL: {url}',
+      'Event ID: {record_id}',
+      'Room: {room}',
+      ']']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'<{event_type}>',
-      u'{text}']
+      '<{event_type}>',
+      '{text}']
 
-  SOURCE_LONG = u'MacKeeper Cache'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'MacKeeper Cache'
+  SOURCE_SHORT = 'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(MacKeeperCacheFormatter)

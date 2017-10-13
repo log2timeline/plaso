@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The Android WebViewCache database event formatter."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 
@@ -9,17 +11,17 @@ from plaso.formatters import manager
 class AndroidWebViewCacheFormatter(interface.ConditionalEventFormatter):
   """Formatter for Android WebViewCache event data."""
 
-  DATA_TYPE = u'android:webviewcache'
+  DATA_TYPE = 'android:webviewcache'
 
   FORMAT_STRING_PIECES = [
-      u'URL: {url}',
-      u'Content Length: {content_length}']
+      'URL: {url}',
+      'Content Length: {content_length}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'{url}']
+      '{url}']
 
-  SOURCE_LONG = u'Android WebViewCache'
-  SOURCE_SHORT = u'WebViewCache'
+  SOURCE_LONG = 'Android WebViewCache'
+  SOURCE_SHORT = 'WebViewCache'
 
 
 manager.FormattersManager.RegisterFormatter(AndroidWebViewCacheFormatter)

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The syslog file event formatter."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 
@@ -8,31 +10,31 @@ from plaso.formatters import manager
 class SyslogLineFormatter(interface.ConditionalEventFormatter):
   """Formatter for a syslog line event."""
 
-  DATA_TYPE = u'syslog:line'
+  DATA_TYPE = 'syslog:line'
 
-  FORMAT_STRING_SEPARATOR = u''
+  FORMAT_STRING_SEPARATOR = ''
 
   FORMAT_STRING_PIECES = [
-      u'{severity} ',
-      u'[',
-      u'{reporter}',
-      u', pid: {pid}',
-      u'] {body}']
+      '{severity} ',
+      '[',
+      '{reporter}',
+      ', pid: {pid}',
+      '] {body}']
 
-  SOURCE_LONG = u'Log File'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'Log File'
+  SOURCE_SHORT = 'LOG'
 
 
 class SyslogCommentFormatter(interface.ConditionalEventFormatter):
   """Formatter for a syslog comment"""
-  DATA_TYPE = u'syslog:comment'
+  DATA_TYPE = 'syslog:comment'
 
-  FORMAT_STRING_SEPARATOR = u''
+  FORMAT_STRING_SEPARATOR = ''
 
-  FORMAT_STRING_PIECES = [u'{body}']
+  FORMAT_STRING_PIECES = ['{body}']
 
-  SOURCE_LONG = u'Log File'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'Log File'
+  SOURCE_SHORT = 'LOG'
 
 
 manager.FormattersManager.RegisterFormatters(

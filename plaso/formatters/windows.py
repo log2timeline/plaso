@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The Windows event formatter."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 
@@ -9,91 +11,91 @@ class WindowsDistributedLinkTrackingCreationEventFormatter(
     interface.ConditionalEventFormatter):
   """Formatter for a Windows distributed link creation event."""
 
-  DATA_TYPE = u'windows:distributed_link_tracking:creation'
+  DATA_TYPE = 'windows:distributed_link_tracking:creation'
 
   FORMAT_STRING_PIECES = [
-      u'{uuid}',
-      u'MAC address: {mac_address}',
-      u'Origin: {origin}']
+      '{uuid}',
+      'MAC address: {mac_address}',
+      'Origin: {origin}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'{uuid}',
-      u'Origin: {origin}']
+      '{uuid}',
+      'Origin: {origin}']
 
-  SOURCE_LONG = u'System'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'System'
+  SOURCE_SHORT = 'LOG'
 
 
 class WindowsRegistryInstallationEventFormatter(
     interface.ConditionalEventFormatter):
   """Formatter for a Windows installation event."""
 
-  DATA_TYPE = u'windows:registry:installation'
+  DATA_TYPE = 'windows:registry:installation'
 
   FORMAT_STRING_PIECES = [
-      u'{product_name}',
-      u'{version}',
-      u'{service_pack}',
-      u'Owner: owner',
-      u'Origin: {key_path}']
+      '{product_name}',
+      '{version}',
+      '{service_pack}',
+      'Owner: owner',
+      'Origin: {key_path}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'{product_name}',
-      u'{version}',
-      u'{service_pack}',
-      u'Origin: {key_path}']
+      '{product_name}',
+      '{version}',
+      '{service_pack}',
+      'Origin: {key_path}']
 
-  SOURCE_LONG = u'System'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'System'
+  SOURCE_SHORT = 'LOG'
 
 
 class WindowsRegistryListEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Windows list event e.g. MRU or Jump list."""
 
-  DATA_TYPE = u'windows:registry:list'
+  DATA_TYPE = 'windows:registry:list'
 
   FORMAT_STRING_PIECES = [
-      u'Key: {key_path}',
-      u'Value: {value_name}',
-      u'List: {list_name}',
-      u'[{list_values}]']
+      'Key: {key_path}',
+      'Value: {value_name}',
+      'List: {list_name}',
+      '[{list_values}]']
 
-  SOURCE_LONG = u'System'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'System'
+  SOURCE_SHORT = 'LOG'
 
 
 class WindowsRegistryNetworkEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Windows network event."""
 
-  DATA_TYPE = u'windows:registry:network'
+  DATA_TYPE = 'windows:registry:network'
 
   FORMAT_STRING_PIECES = [
-      u'SSID: {ssid}',
-      u'Description: {description}',
-      u'Connection Type: {connection_type}',
-      u'Default Gateway Mac: {default_gateway_mac}',
-      u'DNS Suffix: {dns_suffix}']
+      'SSID: {ssid}',
+      'Description: {description}',
+      'Connection Type: {connection_type}',
+      'Default Gateway Mac: {default_gateway_mac}',
+      'DNS Suffix: {dns_suffix}']
 
-  SOURCE_LONG = u'System: Network Connection'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'System: Network Connection'
+  SOURCE_SHORT = 'LOG'
 
 
 class WindowsVolumeCreationEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Windows volume creation event."""
 
-  DATA_TYPE = u'windows:volume:creation'
+  DATA_TYPE = 'windows:volume:creation'
 
   FORMAT_STRING_PIECES = [
-      u'{device_path}',
-      u'Serial number: 0x{serial_number:08X}',
-      u'Origin: {origin}']
+      '{device_path}',
+      'Serial number: 0x{serial_number:08X}',
+      'Origin: {origin}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'{device_path}',
-      u'Origin: {origin}']
+      '{device_path}',
+      'Origin: {origin}']
 
-  SOURCE_LONG = u'System'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'System'
+  SOURCE_SHORT = 'LOG'
 
 
 manager.FormattersManager.RegisterFormatters([

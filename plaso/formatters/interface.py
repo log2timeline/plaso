@@ -11,6 +11,8 @@ the event object values into a formatted string that is similar
 to the description_long and description_short field.
 """
 
+from __future__ import unicode_literals
+
 import logging
 import re
 
@@ -31,20 +33,20 @@ class EventFormatter(object):
   # approach is to define it as human readable string in the format
   # root:branch: ... :leaf, e.g. a page visited entry inside a Chrome History
   # database is defined as: chrome:history:page_visited.
-  DATA_TYPE = u'internal'
+  DATA_TYPE = 'internal'
 
   # The format string.
-  FORMAT_STRING = u''
-  FORMAT_STRING_SHORT = u''
+  FORMAT_STRING = ''
+  FORMAT_STRING_SHORT = ''
 
   # The source short and long strings.
-  SOURCE_SHORT = u'LOG'
-  SOURCE_LONG = u''
+  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = ''
 
   # The format string can be defined as:
   # {name}, {name:format}, {name!conversion}, {name!conversion:format}
   _FORMAT_STRING_ATTRIBUTE_NAME_RE = re.compile(
-      u'{([a-z][a-zA-Z0-9_]*)[!]?[^:}]*[:]?[^}]*}')
+      '{([a-z][a-zA-Z0-9_]*)[!]?[^:}]*[:]?[^}]*}')
 
   def __init__(self):
     """Initializes an event formatter object."""
@@ -62,58 +64,58 @@ class EventFormatter(object):
       str: formatted message string.
     """
     if not isinstance(format_string, py2to3.UNICODE_TYPE):
-      logging.warning(u'Format string: {0:s} is non-Unicode.'.format(
+      logging.warning('Format string: {0:s} is non-Unicode.'.format(
           format_string))
 
       # Plaso code files should be in UTF-8 any thus binary strings are
       # assumed UTF-8. If this is not the case this should be fixed.
-      format_string = format_string.decode(u'utf-8', errors=u'ignore')
+      format_string = format_string.decode('utf-8', errors='ignore')
 
     try:
       message_string = format_string.format(**event_values)
 
     except KeyError as exception:
-      data_type = event_values.get(u'data_type', u'N/A')
-      display_name = event_values.get(u'display_name', u'N/A')
-      event_identifier = event_values.get(u'uuid', u'N/A')
-      parser_chain = event_values.get(u'parser', u'N/A')
+      data_type = event_values.get('data_type', 'N/A')
+      display_name = event_values.get('display_name', 'N/A')
+      event_identifier = event_values.get('uuid', 'N/A')
+      parser_chain = event_values.get('parser', 'N/A')
 
       error_message = (
-          u'unable to format string: "{0:s}" event object is missing required '
-          u'attributes: {1:s}').format(format_string, exception)
+          'unable to format string: "{0:s}" event object is missing required '
+          'attributes: {1:s}').format(format_string, exception)
       error_message = (
-          u'Event: {0:s} data type: {1:s} display name: {2:s} '
-          u'parser chain: {3:s} with error: {4:s}').format(
+          'Event: {0:s} data type: {1:s} display name: {2:s} '
+          'parser chain: {3:s} with error: {4:s}').format(
               event_identifier, data_type, display_name, parser_chain,
               error_message)
       logging.error(error_message)
 
       attribute_values = []
       for attribute, value in iter(event_values.items()):
-        attribute_values.append(u'{0:s}: {1!s}'.format(attribute, value))
+        attribute_values.append('{0:s}: {1!s}'.format(attribute, value))
 
-      message_string = u' '.join(attribute_values)
+      message_string = ' '.join(attribute_values)
 
     except UnicodeDecodeError as exception:
-      data_type = event_values.get(u'data_type', u'N/A')
-      display_name = event_values.get(u'display_name', u'N/A')
-      event_identifier = event_values.get(u'uuid', u'N/A')
-      parser_chain = event_values.get(u'parser', u'N/A')
+      data_type = event_values.get('data_type', 'N/A')
+      display_name = event_values.get('display_name', 'N/A')
+      event_identifier = event_values.get('uuid', 'N/A')
+      parser_chain = event_values.get('parser', 'N/A')
 
-      error_message = u'Unicode decode error: {0:s}'.format(exception)
+      error_message = 'Unicode decode error: {0:s}'.format(exception)
       error_message = (
-          u'Event: {0:s} data type: {1:s} display name: {2:s} '
-          u'parser chain: {3:s} with error: {4:s}').format(
+          'Event: {0:s} data type: {1:s} display name: {2:s} '
+          'parser chain: {3:s} with error: {4:s}').format(
               event_identifier, data_type, display_name, parser_chain,
               error_message)
       logging.error(error_message)
 
-      message_string = u''
+      message_string = ''
 
     # Strip carriage return and linefeed form the message strings.
     # Using replace function here because it is faster than re.sub() or
     # string.strip().
-    return message_string.replace(u'\r', u'').replace(u'\n', u'')
+    return message_string.replace('\r', '').replace('\n', '')
 
   def _FormatMessages(self, format_string, short_format_string, event_values):
     """Determines the formatted message strings.
@@ -136,7 +138,7 @@ class EventFormatter(object):
 
     # Truncate the short message string if necessary.
     if len(short_message_string) > 80:
-      short_message_string = u'{0:s}...'.format(short_message_string[:77])
+      short_message_string = '{0:s}...'.format(short_message_string[:77])
 
     return message_string, short_message_string
 
@@ -169,7 +171,7 @@ class EventFormatter(object):
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event.data_type:
-      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
           event.data_type))
 
     event_values = event.CopyToDict()
@@ -189,7 +191,7 @@ class EventFormatter(object):
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event.data_type:
-      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
           event.data_type))
 
     return self.SOURCE_SHORT, self.SOURCE_LONG
@@ -208,11 +210,11 @@ class ConditionalEventFormatter(EventFormatter):
   string pieces should be joined. It contains a space by default.
   """
   # The format string pieces.
-  FORMAT_STRING_PIECES = [u'']
-  FORMAT_STRING_SHORT_PIECES = [u'']
+  FORMAT_STRING_PIECES = ['']
+  FORMAT_STRING_SHORT_PIECES = ['']
 
   # The separator used to join the string pieces.
-  FORMAT_STRING_SEPARATOR = u' '
+  FORMAT_STRING_SEPARATOR = ' '
 
   def __init__(self):
     """Initializes the conditional formatter.
@@ -227,8 +229,8 @@ class ConditionalEventFormatter(EventFormatter):
 
     # The format string can be defined as:
     # {name}, {name:format}, {name!conversion}, {name!conversion:format}
-    regexp = re.compile(u'{[a-z][a-zA-Z0-9_]*[!]?[^:}]*[:]?[^}]*}')
-    regexp_name = re.compile(u'[a-z][a-zA-Z0-9_]*')
+    regexp = re.compile('{[a-z][a-zA-Z0-9_]*[!]?[^:}]*[:]?[^}]*}')
+    regexp_name = re.compile('[a-z][a-zA-Z0-9_]*')
 
     # The format string pieces map is a list containing the attribute name
     # per format string piece. E.g. ["Description: {description}"] would be
@@ -240,15 +242,15 @@ class ConditionalEventFormatter(EventFormatter):
       if not result:
         # The text format string piece is stored as an empty map entry to
         # keep the index in the map equal to the format string pieces.
-        self._format_string_pieces_map.append(u'')
+        self._format_string_pieces_map.append('')
       elif len(result) == 1:
         # Extract the attribute name.
         attribute_name = regexp_name.findall(result[0])[0]
         self._format_string_pieces_map.append(attribute_name)
       else:
         raise RuntimeError((
-            u'Invalid format string piece: [{0:s}] contains more than 1 '
-            u'attribute name.').format(format_string_piece))
+            'Invalid format string piece: [{0:s}] contains more than 1 '
+            'attribute name.').format(format_string_piece))
 
     self._format_string_short_pieces_map = []
     for format_string_piece in self.FORMAT_STRING_SHORT_PIECES:
@@ -256,15 +258,15 @@ class ConditionalEventFormatter(EventFormatter):
       if not result:
         # The text format string piece is stored as an empty map entry to
         # keep the index in the map equal to the format string pieces.
-        self._format_string_short_pieces_map.append(u'')
+        self._format_string_short_pieces_map.append('')
       elif len(result) == 1:
         # Extract the attribute name.
         attribute_name = regexp_name.findall(result[0])[0]
         self._format_string_short_pieces_map.append(attribute_name)
       else:
         raise RuntimeError((
-            u'Invalid short format string piece: [{0:s}] contains more '
-            u'than 1 attribute name.').format(format_string_piece))
+            'Invalid short format string piece: [{0:s}] contains more '
+            'than 1 attribute name.').format(format_string_piece))
 
   def _ConditionalFormatMessages(self, event_values):
     """Determines the conditional formatted message strings.
@@ -334,7 +336,7 @@ class ConditionalEventFormatter(EventFormatter):
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event.data_type:
-      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
           event.data_type))
 
     event_values = event.CopyToDict()

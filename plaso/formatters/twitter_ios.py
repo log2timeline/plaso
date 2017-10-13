@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Twitter on iOS 8+ database formatter."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 from plaso.lib import errors
@@ -9,32 +11,32 @@ from plaso.lib import errors
 class TwitterIOSContactFormatter(interface.ConditionalEventFormatter):
   """Twitter on iOS 8+ contact event formatter."""
 
-  DATA_TYPE = u'twitter:ios:contact'
+  DATA_TYPE = 'twitter:ios:contact'
 
   FORMAT_STRING_PIECES = [
-      u'Screen name: {screen_name}',
-      u'Profile picture URL: {profile_url}',
-      u'Name: {name}',
-      u'Location: {location}',
-      u'Description: {description}',
-      u'URL: {url}',
-      u'Following: {following}',
-      u'Number of followers: {followers_count}',
-      u'Number of following: {following_count}',
+      'Screen name: {screen_name}',
+      'Profile picture URL: {profile_url}',
+      'Name: {name}',
+      'Location: {location}',
+      'Description: {description}',
+      'URL: {url}',
+      'Following: {following}',
+      'Number of followers: {followers_count}',
+      'Number of following: {following_count}',
   ]
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'Screen name: {screen_name}',
-      u'Description: {description}',
-      u'URL: {url}',
+      'Screen name: {screen_name}',
+      'Description: {description}',
+      'URL: {url}',
   ]
 
-  SOURCE_LONG = u'Twitter iOS Contacts'
-  SOURCE_SHORT = u'Twitter iOS'
+  SOURCE_LONG = 'Twitter iOS Contacts'
+  SOURCE_SHORT = 'Twitter iOS'
 
   _FOLLOWING = {
-      0: u'No',
-      1: u'Yes',
+      0: 'No',
+      1: 'Yes',
   }
 
   def GetMessages(self, unused_formatter_mediator, event):
@@ -53,15 +55,15 @@ class TwitterIOSContactFormatter(interface.ConditionalEventFormatter):
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event.data_type:
-      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
           event.data_type))
 
     event_values = event.CopyToDict()
 
-    following = event_values.get(u'following', None)
+    following = event_values.get('following', None)
     if following is not None:
-      event_values[u'following'] = (
-          self._FOLLOWING.get(following, u'UNKNOWN'))
+      event_values['following'] = (
+          self._FOLLOWING.get(following, 'UNKNOWN'))
 
     return self._ConditionalFormatMessages(event_values)
 
@@ -69,28 +71,28 @@ class TwitterIOSContactFormatter(interface.ConditionalEventFormatter):
 class TwitterIOSStatusFormatter(interface.ConditionalEventFormatter):
   """Twitter on iOS 8+ status event formatter."""
 
-  DATA_TYPE = u'twitter:ios:status'
+  DATA_TYPE = 'twitter:ios:status'
 
   FORMAT_STRING_PIECES = [
-      u'Name: {name}',
-      u'User Id: {user_id}',
-      u'Message: {text}',
-      u'Favorite: {favorited}',
-      u'Retweet Count: {retweet_count}',
-      u'Favorite Count: {favorite_count}',
+      'Name: {name}',
+      'User Id: {user_id}',
+      'Message: {text}',
+      'Favorite: {favorited}',
+      'Retweet Count: {retweet_count}',
+      'Favorite Count: {favorite_count}',
   ]
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'Name: {name}',
-      u'Message: {text}',
+      'Name: {name}',
+      'Message: {text}',
   ]
 
-  SOURCE_LONG = u'Twitter iOS Status'
-  SOURCE_SHORT = u'Twitter iOS'
+  SOURCE_LONG = 'Twitter iOS Status'
+  SOURCE_SHORT = 'Twitter iOS'
 
   _FAVORITED = {
-      0: u'No',
-      1: u'Yes',
+      0: 'No',
+      1: 'Yes',
   }
 
   def GetMessages(self, unused_formatter_mediator, event):
@@ -109,15 +111,15 @@ class TwitterIOSStatusFormatter(interface.ConditionalEventFormatter):
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event.data_type:
-      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
           event.data_type))
 
     event_values = event.CopyToDict()
 
-    favorited = event_values.get(u'favorited', None)
+    favorited = event_values.get('favorited', None)
     if favorited is not None:
-      event_values[u'favorited'] = (
-          self._FAVORITED.get(favorited, u'UNKNOWN'))
+      event_values['favorited'] = (
+          self._FAVORITED.get(favorited, 'UNKNOWN'))
 
     return self._ConditionalFormatMessages(event_values)
 
