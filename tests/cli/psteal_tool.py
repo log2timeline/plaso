@@ -81,7 +81,6 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = 'unused_source'
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      os.chdir(temp_directory)
       options.write = os.path.join(temp_directory, 'output.txt')
 
       with open(options.write, 'w') as file_object:
