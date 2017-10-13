@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """Parser for Systemd journal files."""
 
+from __future__ import unicode_literals
+
 import os
+
 try:
   import lzma
 except ImportError:
@@ -29,7 +32,7 @@ class SystemdJournalEventData(events.EventData):
     reporter (str): reporter.
   """
 
-  DATA_TYPE = u'systemd:journal'
+  DATA_TYPE = 'systemd:journal'
 
   def __init__(self):
     """Initializes event data."""
@@ -43,9 +46,9 @@ class SystemdJournalEventData(events.EventData):
 class SystemdJournalParser(interface.FileObjectParser):
   """Parses Systemd Journal files."""
 
-  NAME = u'systemd_journal'
+  NAME = 'systemd_journal'
 
-  DESCRIPTION = u'Parser for Systemd Journal files.'
+  DESCRIPTION = 'Parser for Systemd Journal files.'
 
   _OBJECT_COMPRESSED_FLAG = 0x00000001
 
@@ -79,7 +82,7 @@ class SystemdJournalParser(interface.FileObjectParser):
   _ULInt64 = construct.ULInt64(u'int')
 
   _OBJECT_HEADER = construct.Struct(
-      u'object_header',
+      'object_header',
       _OBJECT_HEADER_TYPE,
       construct.ULInt8(u'flags'),
       construct.Bytes(u'reserved', 6),
@@ -89,7 +92,7 @@ class SystemdJournalParser(interface.FileObjectParser):
   _OBJECT_HEADER_SIZE = _OBJECT_HEADER.sizeof()
 
   _DATA_OBJECT = construct.Struct(
-      u'data_object',
+      'data_object',
       construct.ULInt64(u'hash'),
       construct.ULInt64(u'next_hash_offset'),
       construct.ULInt64(u'next_field_offset'),
@@ -101,18 +104,18 @@ class SystemdJournalParser(interface.FileObjectParser):
   _DATA_OBJECT_SIZE = _DATA_OBJECT.sizeof()
 
   _ENTRY_ITEM = construct.Struct(
-      u'entry_item',
+      'entry_item',
       construct.ULInt64(u'object_offset'),
       construct.ULInt64(u'hash')
   )
 
   _ENTRY_OBJECT = construct.Struct(
-      u'entry_object',
+      'entry_object',
       construct.ULInt64(u'seqnum'),
       construct.ULInt64(u'realtime'),
       construct.ULInt64(u'monotonic'),
       construct.Struct(
-          u'boot_id',
+          'boot_id',
           construct.Bytes(u'bytes', 16),
           construct.ULInt64(u'qword1'),
           construct.ULInt64(u'qword2')),
@@ -121,7 +124,7 @@ class SystemdJournalParser(interface.FileObjectParser):
   )
 
   _JOURNAL_HEADER = construct.Struct(
-      u'journal_header',
+      'journal_header',
       construct.Const(construct.String(u'signature', 8), b'LPKSHHRH'),
       construct.ULInt32(u'compatible_flags'),
       construct.ULInt32(u'incompatible_flags'),
@@ -195,9 +198,9 @@ class SystemdJournalParser(interface.FileObjectParser):
     object_header, payload_size = self._ParseObjectHeader(file_object, offset)
     file_object.read(self._DATA_OBJECT_SIZE)
 
-    if object_header.type != u'DATA':
+    if object_header.type != 'DATA':
       raise errors.ParseError(
-          u'Expected an object of type DATA, but got {0:s}'.format(
+          'Expected an object of type DATA, but got {0:s}'.format(
               object_header.type))
 
     event_data = file_object.read(payload_size - self._DATA_OBJECT_SIZE)
@@ -226,22 +229,22 @@ class SystemdJournalParser(interface.FileObjectParser):
     entry_object_data = file_object.read(payload_size)
     entry_object = self._ENTRY_OBJECT.parse(entry_object_data)
 
-    if object_header.type != u'ENTRY':
+    if object_header.type != 'ENTRY':
       raise errors.ParseError(
-          u'Expected an object of type ENTRY, but got {0:s}'.format(
+          'Expected an object of type ENTRY, but got {0:s}'.format(
               object_header.type))
 
     fields = {}
     for item in entry_object.object_items:
       if item.object_offset < self._max_journal_file_offset:
         raise errors.ParseError(
-            u'object offset should be after hash tables ({0:d} < {1:d})'.format(
+            'object offset should be after hash tables ({0:d} < {1:d})'.format(
                 offset, self._max_journal_file_offset))
       key, value = self._ParseItem(file_object, item.object_offset)
       fields[key] = value
 
     reporter = fields.get(u'SYSLOG_IDENTIFIER', None)
-    if reporter and reporter != u'kernel':
+    if reporter and reporter != 'kernel':
       pid = fields.get(u'_PID', fields.get(u'SYSLOG_PID', None))
     else:
       pid = None
@@ -274,9 +277,9 @@ class SystemdJournalParser(interface.FileObjectParser):
     entry_offsets = []
     object_header, payload_size = self._ParseObjectHeader(file_object, offset)
 
-    if object_header.type != u'ENTRY_ARRAY':
+    if object_header.type != 'ENTRY_ARRAY':
       raise errors.ParseError(
-          u'Expected an object of type ENTRY_ARRAY, but got {0:s}'.format(
+          'Expected an object of type ENTRY_ARRAY, but got {0:s}'.format(
               object_header.type))
 
     next_array_offset = self._ULInt64.parse_stream(file_object)
@@ -306,7 +309,7 @@ class SystemdJournalParser(interface.FileObjectParser):
       journal_header = self._JOURNAL_HEADER.parse_stream(file_object)
     except construct.ConstructError as exception:
       raise errors.UnableToParseFile(
-          u'Unable to parse journal header with error: {0:s}'.format(exception))
+          'Unable to parse journal header with error: {0:s}'.format(exception))
 
     max_data_hash_table_offset = (
         journal_header.data_hash_table_offset +
@@ -325,13 +328,13 @@ class SystemdJournalParser(interface.FileObjectParser):
         self._ParseJournalEntry(parser_mediator, file_object, entry_offset)
       except errors.ParseError as exception:
         parser_mediator.ProduceExtractionError((
-            u'Unable to complete parsing journal file: {0:s} at offset '
-            u'0x{1:08x}').format(exception, entry_offset))
+            'Unable to complete parsing journal file: {0:s} at offset '
+            '0x{1:08x}').format(exception, entry_offset))
         return
       except construct.ConstructError as exception:
         raise errors.UnableToParseFile((
-            u'Unable to parse journal header at offset: 0x{0:08x} with '
-            u'error: {1:s}').format(entry_offset, exception))
+            'Unable to parse journal header at offset: 0x{0:08x} with '
+            'error: {1:s}').format(entry_offset, exception))
 
 
 if lzma:

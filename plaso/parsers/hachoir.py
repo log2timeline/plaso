@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains a parser for extracting metadata."""
+
+from __future__ import unicode_literals
+
 # TODO: Add a unit test for this parser.
 
 import datetime
@@ -30,7 +33,7 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class HachoirEvent(time_events.TimestampEvent):
   """Class to represent Hachoir events."""
 
-  DATA_TYPE = u'metadata:hachoir'
+  DATA_TYPE = 'metadata:hachoir'
 
   def __init__(self, dt_timestamp, usage, attributes):
     """Initializes an event object.
@@ -48,8 +51,8 @@ class HachoirEvent(time_events.TimestampEvent):
 class HachoirParser(interface.FileObjectParser):
   """Class to parse meta data from files using Hachoir."""
 
-  NAME = u'hachoir'
-  DESCRIPTION = u'Parser that wraps Hachoir.'
+  NAME = 'hachoir'
+  DESCRIPTION = 'Parser that wraps Hachoir.'
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a file-like object using Hachoir.
@@ -67,43 +70,43 @@ class HachoirParser(interface.FileObjectParser):
       fstream = hachoir_core.stream.InputIOStream(file_object, None, tags=[])
     except hachoir_core.error.HachoirError as exception:
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+          '[{0:s}] unable to parse file {1:s}: {2:s}'.format(
               self.NAME, file_name, exception))
 
     if not fstream:
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_name, u'Not fstream'))
+          '[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+              self.NAME, file_name, 'Not fstream'))
 
     try:
       doc_parser = hachoir_parser.guessParser(fstream)
     except hachoir_core.error.HachoirError as exception:
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+          '[{0:s}] unable to parse file {1:s}: {2:s}'.format(
               self.NAME, file_name, exception))
 
     if not doc_parser:
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_name, u'Not parser'))
+          '[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+              self.NAME, file_name, 'Not parser'))
 
     try:
       metadata = hachoir_metadata.extractMetadata(doc_parser)
     except (AssertionError, AttributeError) as exception:
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+          '[{0:s}] unable to parse file {1:s}: {2:s}'.format(
               self.NAME, file_name, exception))
 
     try:
       metatext = metadata.exportPlaintext(human=False)
     except AttributeError as exception:
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+          '[{0:s}] unable to parse file {1:s}: {2:s}'.format(
               self.NAME, file_name, exception))
 
     if not metatext:
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file {1:s}: No metadata'.format(
+          '[{0:s}] unable to parse file {1:s}: No metadata'.format(
               self.NAME, file_name))
 
     attributes = {}
@@ -118,7 +121,7 @@ class HachoirParser(interface.FileObjectParser):
       key, _, value = meta[2:].partition(': ')
 
       key2, _, value2 = value.partition(': ')
-      if key2 == u'LastPrinted' and value2 != u'False':
+      if key2 == 'LastPrinted' and value2 != 'False':
         date_object = timelib.Timestamp.FromTimeString(
             value2, timezone=parser_mediator.timezone)
         if isinstance(date_object, datetime.datetime):
@@ -142,8 +145,8 @@ class HachoirParser(interface.FileObjectParser):
 
     if not extracted_events:
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file {1:s}: {2:s}'.format(
-              self.NAME, file_name, u'No events discovered'))
+          '[{0:s}] unable to parse file {1:s}: {2:s}'.format(
+              self.NAME, file_name, 'No events discovered'))
 
     for date, key in extracted_events:
       event_object = HachoirEvent(date, key, attributes)

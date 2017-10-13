@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for bash history files."""
+
+from __future__ import unicode_literals
+
 import re
 
 import pyparsing
@@ -21,7 +24,7 @@ class BashHistoryEventData(events.EventData):
     command (str): command that was executed.
   """
 
-  DATA_TYPE = u'bash:history:command'
+  DATA_TYPE = 'bash:history:command'
 
   def __init__(self):
     """Initializes event data."""
@@ -32,11 +35,11 @@ class BashHistoryEventData(events.EventData):
 class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
   """Parses events from Bash history files."""
 
-  NAME = u'bash'
+  NAME = 'bash'
 
-  DESCRIPTION = u'Parser for Bash history files'
+  DESCRIPTION = 'Parser for Bash history files'
 
-  _ENCODING = u'utf-8'
+  _ENCODING = 'utf-8'
 
   _TIMESTAMP = pyparsing.Suppress(u'#') + pyparsing.Word(
       pyparsing.nums, min=9, max=10).setParseAction(
@@ -65,9 +68,9 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key != u'log_entry':
+    if key != 'log_entry':
       raise errors.ParseError(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     event_data = BashHistoryEventData()
     event_data.command = structure.command

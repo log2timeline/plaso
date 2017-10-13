@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """A parser for Portable Executable format files."""
 
+from __future__ import unicode_literals
+
 import pefile
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -25,7 +27,7 @@ class PEEventData(events.EventData):
     section_names (list[str]): names of the PE file's sections.
   """
 
-  DATA_TYPE = u'pe'
+  DATA_TYPE = 'pe'
 
   def __init__(self):
     """Initializes event data."""
@@ -39,8 +41,8 @@ class PEEventData(events.EventData):
 class PEParser(interface.FileObjectParser):
   """Parser for Portable Executable (PE) files."""
 
-  NAME = u'pe'
-  DESCRIPTION = u'Parser for Portable Executable (PE) files.'
+  NAME = 'pe'
+  DESCRIPTION = 'Parser for Portable Executable (PE) files.'
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -60,12 +62,12 @@ class PEParser(interface.FileObjectParser):
     """
     section_names = []
     for section in pefile_object.sections:
-      section_name = getattr(section, u'Name', b'')
+      section_name = getattr(section, 'Name', b'')
       # Ensure the name is decoded correctly.
       try:
-        section_name = u'{0:s}'.format(section_name.decode(u'unicode_escape'))
+        section_name = '{0:s}'.format(section_name.decode(u'unicode_escape'))
       except UnicodeDecodeError:
-        section_name = u'{0:s}'.format(repr(section_name))
+        section_name = '{0:s}'.format(repr(section_name))
       section_names.append(section_name)
 
     return section_names
@@ -80,11 +82,11 @@ class PEParser(interface.FileObjectParser):
       list[int]: import timestamps.
     """
     import_timestamps = []
-    if not hasattr(pefile_object, u'DIRECTORY_ENTRY_IMPORT'):
+    if not hasattr(pefile_object, 'DIRECTORY_ENTRY_IMPORT'):
       return import_timestamps
     for importdata in pefile_object.DIRECTORY_ENTRY_IMPORT:
-      timestamp = getattr(importdata.struct, u'TimeDateStamp', 0)
-      dll_name = getattr(importdata, u'dll', u'<NO DLL NAME>')
+      timestamp = getattr(importdata.struct, 'TimeDateStamp', 0)
+      dll_name = getattr(importdata, 'dll', '<NO DLL NAME>')
       if timestamp:
         import_timestamps.append([dll_name, timestamp])
     return import_timestamps
@@ -99,11 +101,11 @@ class PEParser(interface.FileObjectParser):
       list[int]: resource timestamps.
     """
     timestamps = []
-    if not hasattr(pefile_object, u'DIRECTORY_ENTRY_RESOURCE'):
+    if not hasattr(pefile_object, 'DIRECTORY_ENTRY_RESOURCE'):
       return timestamps
     for entrydata in pefile_object.DIRECTORY_ENTRY_RESOURCE.entries:
       directory = entrydata.directory
-      timestamp = getattr(directory, u'TimeDateStamp', 0)
+      timestamp = getattr(directory, 'TimeDateStamp', 0)
       if timestamp:
         timestamps.append(timestamp)
     return timestamps
@@ -117,10 +119,10 @@ class PEParser(interface.FileObjectParser):
     Returns:
       int: load configuration timestamps.
     """
-    if not hasattr(pefile_object, u'DIRECTORY_ENTRY_LOAD_CONFIG'):
+    if not hasattr(pefile_object, 'DIRECTORY_ENTRY_LOAD_CONFIG'):
       return
     timestamp = getattr(
-        pefile_object.DIRECTORY_ENTRY_LOAD_CONFIG.struct, u'TimeDateStamp', 0)
+        pefile_object.DIRECTORY_ENTRY_LOAD_CONFIG.struct, 'TimeDateStamp', 0)
     return timestamp
 
   def _GetDelayImportTimestamps(self, pefile_object):
@@ -134,11 +136,11 @@ class PEParser(interface.FileObjectParser):
       being imported, and the second is the timestamp of the entry.
     """
     delay_import_timestamps = []
-    if not hasattr(pefile_object, u'DIRECTORY_ENTRY_DELAY_IMPORT'):
+    if not hasattr(pefile_object, 'DIRECTORY_ENTRY_DELAY_IMPORT'):
       return delay_import_timestamps
     for importdata in pefile_object.DIRECTORY_ENTRY_DELAY_IMPORT:
       dll_name = importdata.dll
-      timestamp = getattr(importdata.struct, u'dwTimeStamp', 0)
+      timestamp = getattr(importdata.struct, 'dwTimeStamp', 0)
       delay_import_timestamps.append([dll_name, timestamp])
     return delay_import_timestamps
 
@@ -152,12 +154,12 @@ class PEParser(interface.FileObjectParser):
       str: type of the Portable Executable (PE) file.
     """
     if pefile_object.is_dll():
-      return u'Dynamic Link Library (DLL)'
+      return 'Dynamic Link Library (DLL)'
     if pefile_object.is_exe():
-      return u'Executable (EXE)'
+      return 'Executable (EXE)'
     if pefile_object.is_driver():
-      return u'Driver (SYS)'
-    return u'Unknown PE type'
+      return 'Driver (SYS)'
+    return 'Unknown PE type'
 
   def ParseFileObject(self, parser_mediator, file_object, **unused_kwargs):
     """Parses a Portable Executable (PE) file-like object.
@@ -188,9 +190,9 @@ class PEParser(interface.FileObjectParser):
     event_data.section_names = self._GetSectionNames(pefile_object)
 
     # TODO: remove after refactoring the pe event formatter.
-    event_data.data_type = u'pe:compilation:compilation_time'
+    event_data.data_type = 'pe:compilation:compilation_time'
 
-    timestamp = getattr(pefile_object.FILE_HEADER, u'TimeDateStamp', None)
+    timestamp = getattr(pefile_object.FILE_HEADER, 'TimeDateStamp', None)
     # TODO: handle timestamp is None.
     date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
@@ -200,7 +202,7 @@ class PEParser(interface.FileObjectParser):
     for dll_name, timestamp in self._GetImportTimestamps(pefile_object):
       if timestamp:
         event_data.dll_name = dll_name
-        event_data.data_type = u'pe:import:import_time'
+        event_data.data_type = 'pe:import:import_time'
 
         date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
         event = time_events.DateTimeValuesEvent(
@@ -210,7 +212,7 @@ class PEParser(interface.FileObjectParser):
     for dll_name, timestamp in self._GetDelayImportTimestamps(pefile_object):
       if timestamp:
         event_data.dll_name = dll_name
-        event_data.data_type = u'pe:delay_import:import_time'
+        event_data.data_type = 'pe:delay_import:import_time'
 
         date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
         event = time_events.DateTimeValuesEvent(
@@ -221,7 +223,7 @@ class PEParser(interface.FileObjectParser):
 
     for timestamp in self._GetResourceTimestamps(pefile_object):
       if timestamp:
-        event_data.data_type = u'pe:resource:creation_time'
+        event_data.data_type = 'pe:resource:creation_time'
 
         date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
         event = time_events.DateTimeValuesEvent(
@@ -230,7 +232,7 @@ class PEParser(interface.FileObjectParser):
 
     timestamp = self._GetLoadConfigTimestamp(pefile_object)
     if timestamp:
-      event_data.data_type = u'pe:load_config:modification_time'
+      event_data.data_type = 'pe:load_config:modification_time'
 
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(

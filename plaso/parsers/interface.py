@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The parsers and plugins interface classes."""
 
+from __future__ import unicode_literals
+
 import abc
 import os
 
@@ -53,8 +55,8 @@ class FileNameFileEntryFilter(BaseFileEntryFilter):
 class BaseParser(object):
   """The parser interface."""
 
-  NAME = u'base_parser'
-  DESCRIPTION = u''
+  NAME = 'base_parser'
+  DESCRIPTION = ''
 
   # List of filters that should match for the parser to be applied.
   FILTERS = frozenset()
@@ -97,7 +99,7 @@ class BaseParser(object):
     plugin_name = plugin_class.NAME.lower()
     if plugin_name not in cls._plugin_classes:
       raise KeyError(
-          u'Plugin class not set for name: {0:s}.'.format(
+          'Plugin class not set for name: {0:s}.'.format(
               plugin_class.NAME))
 
     del cls._plugin_classes[plugin_name]
@@ -114,7 +116,7 @@ class BaseParser(object):
     if not self._plugin_classes:
       return
 
-    default_plugin_name = u'{0:s}_default'.format(self.NAME)
+    default_plugin_name = '{0:s}_default'.format(self.NAME)
     for plugin_name, plugin_class in iter(self._plugin_classes.items()):
       if plugin_name == default_plugin_name:
         self._default_plugin = plugin_class()
@@ -175,7 +177,7 @@ class BaseParser(object):
     plugin_name = plugin_class.NAME.lower()
     if plugin_name in cls._plugin_classes:
       raise KeyError((
-          u'Plugin class already set for name: {0:s}.').format(
+          'Plugin class already set for name: {0:s}.').format(
               plugin_class.NAME))
 
     cls._plugin_classes[plugin_name] = plugin_class

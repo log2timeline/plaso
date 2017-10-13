@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Google Chrome and Chromium Cache files."""
 
+from __future__ import unicode_literals
+
 import os
 
 import construct
@@ -55,19 +57,19 @@ class CacheAddress(object):
     self.value = cache_address
 
     if cache_address & 0x80000000:
-      self.is_initialized = u'True'
+      self.is_initialized = 'True'
     else:
-      self.is_initialized = u'False'
+      self.is_initialized = 'False'
 
     self.file_type = (cache_address & 0x70000000) >> 28
     if not cache_address == 0x00000000:
       if self.file_type == self.FILE_TYPE_SEPARATE:
         file_selector = cache_address & 0x0fffffff
-        self.filename = u'f_{0:06x}'.format(file_selector)
+        self.filename = 'f_{0:06x}'.format(file_selector)
 
       elif self.file_type in self._BLOCK_DATA_FILE_TYPES:
         file_selector = (cache_address & 0x00ff0000) >> 16
-        self.filename = u'data_{0:d}'.format(file_selector)
+        self.filename = 'data_{0:d}'.format(file_selector)
 
         file_block_size = self._FILE_TYPE_BLOCK_SIZES[self.file_type]
         self.block_number = cache_address & 0x0000ffff
@@ -104,7 +106,7 @@ class IndexFile(object):
   SIGNATURE = 0xc103cac3
 
   _FILE_HEADER = construct.Struct(
-      u'chrome_cache_index_file_header',
+      'chrome_cache_index_file_header',
       construct.ULInt32(u'signature'),
       construct.ULInt16(u'minor_version'),
       construct.ULInt16(u'major_version'),
@@ -146,11 +148,11 @@ class IndexFile(object):
     if signature != self.SIGNATURE:
       raise IOError(u'Unsupported index file signature')
 
-    self.version = u'{0:d}.{1:d}'.format(
+    self.version = '{0:d}.{1:d}'.format(
         file_header.get(u'major_version'),
         file_header.get(u'minor_version'))
 
-    if self.version not in [u'2.0', u'2.1']:
+    if self.version not in [u'2.0', '2.1']:
       raise IOError(u'Unsupported index file version: {0:s}'.format(
           self.version))
 
@@ -194,7 +196,7 @@ class DataBlockFile(object):
   SIGNATURE = 0xc104cac3
 
   _FILE_HEADER = construct.Struct(
-      u'chrome_cache_data_file_header',
+      'chrome_cache_data_file_header',
       construct.ULInt32(u'signature'),
       construct.ULInt16(u'minor_version'),
       construct.ULInt16(u'major_version'),
@@ -209,7 +211,7 @@ class DataBlockFile(object):
       construct.Array(5, construct.ULInt32(u'user')))
 
   _CACHE_ENTRY = construct.Struct(
-      u'chrome_cache_entry',
+      'chrome_cache_entry',
       construct.ULInt32(u'hash'),
       construct.ULInt32(u'next_address'),
       construct.ULInt32(u'rankings_node_address'),
@@ -254,11 +256,11 @@ class DataBlockFile(object):
     if signature != self.SIGNATURE:
       raise IOError(u'Unsupported data block file signature')
 
-    self.version = u'{0:d}.{1:d}'.format(
+    self.version = '{0:d}.{1:d}'.format(
         file_header.get(u'major_version'),
         file_header.get(u'minor_version'))
 
-    if self.version not in [u'2.0', u'2.1']:
+    if self.version not in [u'2.0', '2.1']:
       raise IOError(u'Unsupported data block file version: {0:s}'.format(
           self.version))
 
@@ -288,7 +290,7 @@ class DataBlockFile(object):
 
     cache_entry.next = CacheAddress(cache_entry_struct.get(u'next_address'))
     cache_entry.rankings_node = CacheAddress(cache_entry_struct.get(
-        u'rankings_node_address'))
+        'rankings_node_address'))
 
     cache_entry.creation_time = cache_entry_struct.get(u'creation_time')
 
@@ -321,7 +323,7 @@ class ChromeCacheEntryEventData(events.EventData):
     original_url (str): original URL.
   """
 
-  DATA_TYPE = u'chrome:cache:entry'
+  DATA_TYPE = 'chrome:cache:entry'
 
   def __init__(self):
     """Initializes event data."""
@@ -332,8 +334,8 @@ class ChromeCacheEntryEventData(events.EventData):
 class ChromeCacheParser(interface.FileEntryParser):
   """Parses Chrome Cache files."""
 
-  NAME = u'chrome_cache'
-  DESCRIPTION = u'Parser for Chrome Cache files.'
+  NAME = 'chrome_cache'
+  DESCRIPTION = 'Parser for Chrome Cache files.'
 
   def _ParseCacheEntries(self, parser_mediator, index_file, data_block_files):
     """Parses Chrome Cache file entries.
@@ -351,12 +353,12 @@ class ChromeCacheParser(interface.FileEntryParser):
       while cache_address.value != 0x00000000:
         if cache_address_chain_length >= 64:
           parser_mediator.ProduceExtractionError(
-              u'Maximum allowed cache address chain length reached.')
+              'Maximum allowed cache address chain length reached.')
           break
 
         data_file = data_block_files.get(cache_address.filename, None)
         if not data_file:
-          message = u'Cache address: 0x{0:08x} missing data file.'.format(
+          message = 'Cache address: 0x{0:08x} missing data file.'.format(
               cache_address.value)
           parser_mediator.ProduceExtractionError(message)
           break
@@ -365,7 +367,7 @@ class ChromeCacheParser(interface.FileEntryParser):
           cache_entry = data_file.ReadCacheEntry(cache_address.block_offset)
         except (IOError, UnicodeDecodeError) as exception:
           parser_mediator.ProduceExtractionError(
-              u'Unable to parse cache entry with error: {0:s}'.format(
+              'Unable to parse cache entry with error: {0:s}'.format(
                   exception))
           break
 
@@ -374,9 +376,9 @@ class ChromeCacheParser(interface.FileEntryParser):
         except UnicodeDecodeError:
           original_url = cache_entry.key.decode(u'ascii', errors=u'replace')
           parser_mediator.ProduceExtractionError((
-              u'unable to decode cache entry key at cache address: '
-              u'0x{0:08x}. Characters that cannot be decoded will be '
-              u'replaced with "?" or "\\ufffd".').format(cache_address.value))
+              'unable to decode cache entry key at cache address: '
+              '0x{0:08x}. Characters that cannot be decoded will be '
+              'replaced with "?" or "\\ufffd".').format(cache_address.value))
 
         event_data = ChromeCacheEntryEventData()
         event_data.original_url = original_url
@@ -410,7 +412,7 @@ class ChromeCacheParser(interface.FileEntryParser):
 
       display_name = parser_mediator.GetDisplayName()
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse index file {1:s} with error: {2:s}'.format(
+          '[{0:s}] unable to parse index file {1:s} with error: {2:s}'.format(
               self.NAME, display_name, exception))
 
     try:
@@ -457,13 +459,13 @@ class ChromeCacheParser(interface.FileEntryParser):
               data_block_file_path_spec)
         except RuntimeError as exception:
           message = (
-              u'Unable to open data block file: {0:s} with error: '
-              u'{1:s}'.format(kwargs[u'location'], exception))
+              'Unable to open data block file: {0:s} with error: '
+              '{1:s}'.format(kwargs[u'location'], exception))
           parser_mediator.ProduceExtractionError(message)
           data_block_file_entry = None
 
         if not data_block_file_entry:
-          message = u'Missing data block file: {0:s}'.format(
+          message = 'Missing data block file: {0:s}'.format(
               cache_address.filename)
           parser_mediator.ProduceExtractionError(message)
           data_block_file = None
@@ -476,8 +478,8 @@ class ChromeCacheParser(interface.FileEntryParser):
             data_block_file.Open(data_block_file_object)
           except IOError as exception:
             message = (
-                u'Unable to open data block file: {0:s} with error: '
-                u'{1:s}').format(cache_address.filename, exception)
+                'Unable to open data block file: {0:s} with error: '
+                '{1:s}').format(cache_address.filename, exception)
             parser_mediator.ProduceExtractionError(message)
             data_block_file = None
 

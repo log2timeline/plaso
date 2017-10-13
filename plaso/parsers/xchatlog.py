@@ -52,6 +52,8 @@ References
 http://xchat.org
 """
 
+from __future__ import unicode_literals
+
 import logging
 
 import pyparsing
@@ -78,7 +80,7 @@ class XChatLogEventData(events.EventData):
     text (str): text sent by nickname or other text (server, messages, etc.).
   """
 
-  DATA_TYPE = u'xchat:log:line'
+  DATA_TYPE = 'xchat:log:line'
 
   def __init__(self):
     """Initializes event data."""
@@ -90,10 +92,10 @@ class XChatLogEventData(events.EventData):
 class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parse XChat log files."""
 
-  NAME = u'xchatlog'
-  DESCRIPTION = u'Parser for XChat log files.'
+  NAME = 'xchatlog'
+  DESCRIPTION = 'Parser for XChat log files.'
 
-  _ENCODING = u'UTF-8'
+  _ENCODING = 'UTF-8'
 
   # Common (header/footer/body) pyparsing structures.
   # TODO: Only English ASCII timestamp supported ATM, add support for others.
@@ -135,7 +137,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
       text_parser.PyparsingConstants.TIME_ELEMENTS)
   _NICKNAME = pyparsing.QuotedString(u'<', endQuoteChar=u'>').setResultsName(
-      u'nickname')
+      'nickname')
   _LOG_LINE = (
       _DATE_TIME.setResultsName(u'date_time') +
       pyparsing.Optional(_NICKNAME) +
@@ -201,24 +203,24 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       date_time.is_local_time = True
     except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'invalid date time value: {0!s}'.format(structure.date_time))
+          'invalid date time value: {0!s}'.format(structure.date_time))
       return
 
     self._last_month = month
 
     event_data = XChatLogEventData()
 
-    if structure.log_action[0] == u'BEGIN':
+    if structure.log_action[0] == 'BEGIN':
       self._xchat_year = year
-      event_data.text = u'XChat start logging'
+      event_data.text = 'XChat start logging'
 
-    elif structure.log_action[0] == u'END':
+    elif structure.log_action[0] == 'END':
       self._xchat_year = None
-      event_data.text = u'XChat end logging'
+      event_data.text = 'XChat end logging'
 
     else:
       logging.debug(u'Unknown log action: {0:s}.'.format(
-          u' '.join(structure.log_action)))
+          ' '.join(structure.log_action)))
       return
 
     event = time_events.DateTimeValuesEvent(
@@ -246,7 +248,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       date_time.is_local_time = True
     except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'invalid date time value: {0!s}'.format(structure.date_time))
+          'invalid date time value: {0!s}'.format(structure.date_time))
       return
 
     self._last_month = time_elements_tuple[1]
@@ -255,7 +257,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     event_data.nickname = structure.nickname
     # The text string contains multiple unnecessary whitespaces that need to
     # be removed, thus the split and re-join.
-    event_data.text = u' '.join(structure.text.split())
+    event_data.text = ' '.join(structure.text.split())
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_ADDED,
@@ -275,17 +277,17 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key not in (u'header', u'header_signature', u'logline'):
+    if key not in (u'header', 'header_signature', 'logline'):
       raise errors.ParseError(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key == u'logline':
+    if key == 'logline':
       self._ParseLogLine(parser_mediator, structure)
 
-    elif key == u'header':
+    elif key == 'header':
       self._ParseHeader(parser_mediator, structure)
 
-    elif key == u'header_signature':
+    elif key == 'header_signature':
       # If this key is matched (after others keys failed) we got a different
       # localized header and we should stop parsing until a new good header
       # is found. Stop parsing is done setting xchat_year to 0.
@@ -322,7 +324,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
           time_elements_tuple=time_elements_tuple)
     except ValueError:
       logging.debug(
-          u'Not a XChat log file, invalid date and time: {0!s}'.format(
+          'Not a XChat log file, invalid date and time: {0!s}'.format(
               structure.date_time))
       return False
 

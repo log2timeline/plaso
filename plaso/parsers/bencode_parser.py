@@ -5,6 +5,8 @@ Plaso's engine calls BencodeParser when it encounters bencoded files to be
 processed, typically seen for BitTorrent data.
 """
 
+from __future__ import unicode_literals
+
 import logging
 import re
 import os
@@ -35,8 +37,8 @@ class BencodeParser(interface.FileObjectParser):
   # Regex match for a bencode dictionary followed by a field size.
   BENCODE_RE = re.compile(r'd[0-9]')
 
-  NAME = u'bencode'
-  DESCRIPTION = u'Parser for bencoded files.'
+  NAME = 'bencode'
+  DESCRIPTION = 'Parser for bencoded files.'
 
   _plugin_classes = {}
 
@@ -62,12 +64,12 @@ class BencodeParser(interface.FileObjectParser):
 
     except (IOError, bencode.BTFailure) as exception:
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+          '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
               self.NAME, parser_mediator.GetDisplayName(), exception))
 
     if not data_object:
       raise errors.UnableToParseFile(
-          u'[{0:s}] missing decoded data for file: {1:s}'.format(
+          '[{0:s}] missing decoded data for file: {1:s}'.format(
               self.NAME, parser_mediator.GetDisplayName()))
 
     for plugin in self._plugins:

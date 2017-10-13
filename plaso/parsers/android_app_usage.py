@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for the Android usage-history.xml files."""
 
+from __future__ import unicode_literals
+
 import os
 
 from xml.etree import ElementTree
@@ -23,7 +25,7 @@ class AndroidAppUsageEventData(events.EventData):
     component_name (str): name of the individual component of the application.
   """
 
-  DATA_TYPE = u'android:event:last_resume_time'
+  DATA_TYPE = 'android:event:last_resume_time'
 
   def __init__(self):
     """Initializes event data."""
@@ -35,8 +37,8 @@ class AndroidAppUsageEventData(events.EventData):
 class AndroidAppUsageParser(interface.FileObjectParser):
   """Parses the Android usage-history.xml file."""
 
-  NAME = u'android_app_usage'
-  DESCRIPTION = u'Parser for Android usage-history.xml files.'
+  NAME = 'android_app_usage'
+  DESCRIPTION = 'Parser for Android usage-history.xml files.'
 
   _HEADER_READ_SIZE = 128
 
@@ -54,12 +56,12 @@ class AndroidAppUsageParser(interface.FileObjectParser):
     data = file_object.read(self._HEADER_READ_SIZE)
     if not data.startswith(b'<?xml'):
       raise errors.UnableToParseFile(
-          u'Not an Android usage history file [not XML]')
+          'Not an Android usage history file [not XML]')
 
     _, _, data = data.partition(b'\n')
     if not data.startswith(b'<usage-history'):
       raise errors.UnableToParseFile(
-          u'Not an Android usage history file [wrong XML root key]')
+          'Not an Android usage history file [wrong XML root key]')
 
     # The current offset of the file-like object needs to point at
     # the start of the file for ElementTree to parse the XML data correctly.
@@ -72,7 +74,7 @@ class AndroidAppUsageParser(interface.FileObjectParser):
       package_name = application_node.get(u'name', None)
 
       for part_node in application_node.iter():
-        if part_node.tag != u'comp':
+        if part_node.tag != 'comp':
           continue
 
         last_resume_time = part_node.get(u'lrt', None)
@@ -84,7 +86,7 @@ class AndroidAppUsageParser(interface.FileObjectParser):
           last_resume_time = int(last_resume_time, 10)
         except ValueError:
           parser_mediator.ProduceExtractionError(
-              u'unsupported last resume time: {0:s}.'.format(last_resume_time))
+              'unsupported last resume time: {0:s}.'.format(last_resume_time))
           continue
 
         event_data = AndroidAppUsageEventData()

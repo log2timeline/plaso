@@ -8,6 +8,8 @@ This is provided as a separate file to make it easier to inherit in other
 projects that may want to use the Plaso plugin system.
 """
 
+from __future__ import unicode_literals
+
 
 class BasePlugin(object):
   """A plugin is a lightweight parser that makes use of a common data structure.
@@ -32,9 +34,9 @@ class BasePlugin(object):
   # The name of the plugin. This is the name that is used in the registration
   # and used for parser/plugin selection, so this needs to be concise and unique
   # for all plugins/parsers, e.g. 'Chrome', 'Safari', 'UserAssist', etc.
-  NAME = u'base_plugin'
+  NAME = 'base_plugin'
 
-  DESCRIPTION = u''
+  DESCRIPTION = ''
 
   # The URLS should contain a list of URLs with additional information about
   # the plugin, for instance some additional reading material. That can be
@@ -70,7 +72,7 @@ class BasePlugin(object):
     """
     if kwargs:
       raise ValueError(u'Unused keyword arguments: {0:s}.'.format(
-          u', '.join(kwargs.keys())))
+          ', '.join(kwargs.keys())))
 
   def UpdateChainAndProcess(self, parser_mediator, **kwargs):
     """Wrapper for Process() to synchronize the parser chain.

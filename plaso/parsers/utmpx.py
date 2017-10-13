@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for utmpx files."""
 
+from __future__ import unicode_literals
+
 # TODO: Add support for other implementations than Mac OS X.
 #       The parser should be checked against IOS UTMPX file.
 
@@ -31,7 +33,7 @@ class UtmpxMacOsXEventData(events.EventData):
     user (str): active user name.
   """
 
-  DATA_TYPE = u'mac:utmpx:event'
+  DATA_TYPE = 'mac:utmpx:event'
 
   def __init__(self):
     """Initializes event data."""
@@ -45,14 +47,14 @@ class UtmpxMacOsXEventData(events.EventData):
 class UtmpxParser(interface.FileObjectParser):
   """Parser for UTMPX files."""
 
-  NAME = u'utmpx'
-  DESCRIPTION = u'Parser for UTMPX files.'
+  NAME = 'utmpx'
+  DESCRIPTION = 'Parser for UTMPX files.'
 
   # INFO: Type is suppose to be a short (2 bytes),
   # however if we analyze the file it is always
   # byte follow by 3 bytes with \x00 value.
   _UTMPX_ENTRY = construct.Struct(
-      u'utmpx_mac',
+      'utmpx_mac',
       construct.String(u'user', 256),
       construct.ULInt32(u'id'),
       construct.String(u'tty_name', 32),
@@ -87,21 +89,21 @@ class UtmpxParser(interface.FileObjectParser):
       entry_struct = self._UTMPX_ENTRY.parse(data)
     except (IOError, construct.FieldError) as exception:
       logging.warning(
-          u'Unable to parse Mac OS X UTMPX entry with error: {0:s}'.format(
+          'Unable to parse Mac OS X UTMPX entry with error: {0:s}'.format(
               exception))
       return False
 
     user, _, _ = entry_struct.user.partition(b'\x00')
     if not user:
-      user = u'N/A'
+      user = 'N/A'
 
     terminal, _, _ = entry_struct.tty_name.partition(b'\x00')
     if not terminal:
-      terminal = u'N/A'
+      terminal = 'N/A'
 
     computer_name, _, _ = entry_struct.hostname.partition(b'\x00')
     if not computer_name:
-      computer_name = u'localhost'
+      computer_name = 'localhost'
 
     event_data = UtmpxMacOsXEventData()
     event_data.computer_name = computer_name
@@ -172,7 +174,7 @@ class UtmpxParser(interface.FileObjectParser):
     """
     if not self._VerifyStructure(file_object):
       raise errors.UnableToParseFile(
-          u'The file is not an UTMPX file.')
+          'The file is not an UTMPX file.')
 
     while self._ReadEntry(parser_mediator, file_object):
       pass

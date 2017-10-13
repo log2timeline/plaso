@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for syslog formatted log files"""
+
+from __future__ import unicode_literals
+
 import re
 
 import pyparsing
@@ -24,7 +27,7 @@ class SyslogLineEventData(events.EventData):
     severity (str): severity.
   """
 
-  DATA_TYPE = u'syslog:line'
+  DATA_TYPE = 'syslog:line'
 
   def __init__(self, data_type=DATA_TYPE):
     """Initializes an event data attribute container.
@@ -47,7 +50,7 @@ class SyslogCommentEventData(events.EventData):
     body (str): message body.
   """
 
-  DATA_TYPE = u'syslog:comment'
+  DATA_TYPE = 'syslog:comment'
 
   def __init__(self):
     """Initializes event data."""
@@ -57,11 +60,11 @@ class SyslogCommentEventData(events.EventData):
 
 class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   """Parses syslog formatted log files"""
-  NAME = u'syslog'
+  NAME = 'syslog'
 
-  DESCRIPTION = u'Syslog Parser'
+  DESCRIPTION = 'Syslog Parser'
 
-  _ENCODING = u'utf-8'
+  _ENCODING = 'utf-8'
 
   _plugin_classes = {}
 
@@ -69,24 +72,24 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   # to allow for processing of syslog formats that delimit the reporter and
   # facility with printable characters, we remove certain common delimiters
   # from the set of printable characters.
-  _REPORTER_CHARACTERS = u''.join(
-      [c for c in pyparsing.printables if c not in [u':', u'[', u'<']])
-  _FACILITY_CHARACTERS = u''.join(
-      [c for c in pyparsing.printables if c not in [u':', u'>']])
+  _REPORTER_CHARACTERS = ''.join(
+      [c for c in pyparsing.printables if c not in [u':', '[', '<']])
+  _FACILITY_CHARACTERS = ''.join(
+      [c for c in pyparsing.printables if c not in [u':', '>']])
 
   _SYSLOG_SEVERITY = [
-      u'EMERG',
-      u'ALERT',
-      u'CRIT',
-      u'ERR',
-      u'WARNING',
-      u'NOTICE',
-      u'INFO',
-      u'DEBUG']
+      'EMERG',
+      'ALERT',
+      'CRIT',
+      'ERR',
+      'WARNING',
+      'NOTICE',
+      'INFO',
+      'DEBUG']
 
   _OFFSET_PREFIX = [
-      u'-',
-      u'+']
+      '-',
+      '+']
 
   _BODY_CONTENT = (
       r'.*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2})|' \
@@ -110,36 +113,36 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       r'(EMERG|ALERT|CRIT|ERR|WARNING|NOTICE|INFO|DEBUG)' + _BODY_CONTENT)
 
   _PYPARSING_COMPONENTS = {
-      u'year': text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName(
-          u'year'),
-      u'two_digit_month': (
+      'year': text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName(
+          'year'),
+      'two_digit_month': (
           text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
-              u'two_digit_month')),
-      u'month': text_parser.PyparsingConstants.MONTH.setResultsName(u'month'),
-      u'day': text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
-          u'day'),
-      u'hour': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
-          u'hour'),
-      u'minute': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
-          u'minute'),
-      u'second': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
-          u'second'),
-      u'fractional_seconds': pyparsing.Word(pyparsing.nums).setResultsName(
-          u'fractional_seconds'),
-      u'hostname': pyparsing.Word(pyparsing.printables).setResultsName(
-          u'hostname'),
-      u'reporter': pyparsing.Word(_REPORTER_CHARACTERS).setResultsName(
-          u'reporter'),
-      u'pid': text_parser.PyparsingConstants.PID.setResultsName(u'pid'),
-      u'facility': pyparsing.Word(_FACILITY_CHARACTERS).setResultsName(
-          u'facility'),
-      u'severity': pyparsing.oneOf(_SYSLOG_SEVERITY).setResultsName(
-          u'severity'),
-      u'body': pyparsing.Regex(_BODY_CONTENT, re.DOTALL).setResultsName(
-          u'body'),
-      u'comment_body': pyparsing.SkipTo(u' ---').setResultsName(
-          u'body'),
-      u'iso_8601_offset': (
+              'two_digit_month')),
+      'month': text_parser.PyparsingConstants.MONTH.setResultsName(u'month'),
+      'day': text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
+          'day'),
+      'hour': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          'hour'),
+      'minute': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          'minute'),
+      'second': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          'second'),
+      'fractional_seconds': pyparsing.Word(pyparsing.nums).setResultsName(
+          'fractional_seconds'),
+      'hostname': pyparsing.Word(pyparsing.printables).setResultsName(
+          'hostname'),
+      'reporter': pyparsing.Word(_REPORTER_CHARACTERS).setResultsName(
+          'reporter'),
+      'pid': text_parser.PyparsingConstants.PID.setResultsName(u'pid'),
+      'facility': pyparsing.Word(_FACILITY_CHARACTERS).setResultsName(
+          'facility'),
+      'severity': pyparsing.oneOf(_SYSLOG_SEVERITY).setResultsName(
+          'severity'),
+      'body': pyparsing.Regex(_BODY_CONTENT, re.DOTALL).setResultsName(
+          'body'),
+      'comment_body': pyparsing.SkipTo(u' ---').setResultsName(
+          'body'),
+      'iso_8601_offset': (
           pyparsing.oneOf(_OFFSET_PREFIX) +
           text_parser.PyparsingConstants.TWO_DIGITS +
           pyparsing.Optional(
@@ -271,9 +274,9 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     """
     if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key == u'chromeos_syslog_line':
+    if key == 'chromeos_syslog_line':
       timestamp = timelib.Timestamp.FromTimeString(structure.iso_8601_date[0])
     else:
       month = timelib.MONTH_DICT.get(structure.month.lower(), None)
@@ -288,7 +291,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
           seconds=structure.second, timezone=mediator.timezone)
 
     plugin = None
-    if key == u'syslog_comment':
+    if key == 'syslog_comment':
       event_data = SyslogCommentEventData()
       event_data.body = structure.body
       # TODO: pass line number to offset or remove.
@@ -307,11 +310,11 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       plugin = self._plugin_by_reporter.get(structure.reporter, None)
       if plugin:
         attributes = {
-            u'hostname': structure.hostname,
-            u'severity': structure.severity,
-            u'reporter': structure.reporter,
-            u'pid': structure.pid,
-            u'body': structure.body}
+            'hostname': structure.hostname,
+            'severity': structure.severity,
+            'reporter': structure.reporter,
+            'pid': structure.pid,
+            'body': structure.body}
 
         try:
           # TODO: pass event_data instead of attributes.

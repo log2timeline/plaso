@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Linux UTMP files."""
 
+from __future__ import unicode_literals
+
 import logging
 import os
 import socket
@@ -34,7 +36,7 @@ class UtmpEventData(events.EventData):
     user (str): active user name.
   """
 
-  DATA_TYPE = u'linux:utmp:event'
+  DATA_TYPE = 'linux:utmp:event'
 
   def __init__(self):
     """Initializes event data."""
@@ -52,11 +54,11 @@ class UtmpEventData(events.EventData):
 class UtmpParser(interface.FileObjectParser):
   """Parser for Linux/Unix UTMP files."""
 
-  NAME = u'utmp'
-  DESCRIPTION = u'Parser for Linux/Unix UTMP files.'
+  NAME = 'utmp'
+  DESCRIPTION = 'Parser for Linux/Unix UTMP files.'
 
   LINUX_UTMP_ENTRY = construct.Struct(
-      u'utmp_linux',
+      'utmp_linux',
       construct.ULInt32(u'type'),
       construct.ULInt32(u'pid'),
       construct.String(u'terminal', 32),
@@ -77,22 +79,22 @@ class UtmpParser(interface.FileObjectParser):
   LINUX_UTMP_ENTRY_SIZE = LINUX_UTMP_ENTRY.sizeof()
 
   STATUS_TYPE = {
-      0: u'EMPTY',
-      1: u'RUN_LVL',
-      2: u'BOOT_TIME',
-      3: u'NEW_TIME',
-      4: u'OLD_TIME',
-      5: u'INIT_PROCESS',
-      6: u'LOGIN_PROCESS',
-      7: u'USER_PROCESS',
-      8: u'DEAD_PROCESS',
-      9: u'ACCOUNTING'}
+      0: 'EMPTY',
+      1: 'RUN_LVL',
+      2: 'BOOT_TIME',
+      3: 'NEW_TIME',
+      4: 'OLD_TIME',
+      5: 'INIT_PROCESS',
+      6: 'LOGIN_PROCESS',
+      7: 'USER_PROCESS',
+      8: 'DEAD_PROCESS',
+      9: 'ACCOUNTING'}
 
   # Set a default test value for few fields, this is supposed to be a text
   # that is highly unlikely to be seen in a terminal field, or a username field.
   # It is important that this value does show up in such fields, but otherwise
   # it can be a free flowing text field.
-  _DEFAULT_TEST_VALUE = u'Ekki Fraedilegur Moguleiki, thetta er bull ! = + _<>'
+  _DEFAULT_TEST_VALUE = 'Ekki Fraedilegur Moguleiki, thetta er bull ! = + _<>'
 
   def _GetTextFromNullTerminatedString(
       self, null_terminated_string, default_string=u'N/A'):
@@ -111,8 +113,8 @@ class UtmpParser(interface.FileObjectParser):
       text = text.decode(u'utf-8')
     except UnicodeDecodeError:
       logging.warning(
-          u'[UTMP] Decode UTF8 failed, the message string may be cut short.')
-      text = text.decode(u'utf-8', u'ignore')
+          '[UTMP] Decode UTF8 failed, the message string may be cut short.')
+      text = text.decode(u'utf-8', 'ignore')
     if not text:
       return default_string
     return text
@@ -137,29 +139,29 @@ class UtmpParser(interface.FileObjectParser):
       entry = self.LINUX_UTMP_ENTRY.parse(data)
     except (IOError, construct.FieldError):
       logging.warning((
-          u'UTMP entry at 0x{0:x} couldn\'t be parsed.').format(offset))
+          'UTMP entry at 0x{0:x} couldn\'t be parsed.').format(offset))
       return False
 
     user = self._GetTextFromNullTerminatedString(entry.username)
     terminal = self._GetTextFromNullTerminatedString(entry.terminal)
-    if terminal == u'~':
-      terminal = u'system boot'
+    if terminal == '~':
+      terminal = 'system boot'
     computer_name = self._GetTextFromNullTerminatedString(entry.hostname)
-    if computer_name == u'N/A' or computer_name == u':0':
-      computer_name = u'localhost'
-    status = self.STATUS_TYPE.get(entry.type, u'N/A')
+    if computer_name == 'N/A' or computer_name == ':0':
+      computer_name = 'localhost'
+    status = self.STATUS_TYPE.get(entry.type, 'N/A')
 
     if entry.address_b:
-      ip_address = u'{0:d}.{1:d}.{2:d}.{3:d}'.format(
+      ip_address = '{0:d}.{1:d}.{2:d}.{3:d}'.format(
           entry.address_a, entry.address_b, entry.address_c, entry.address_d)
     else:
       try:
         ip_address = socket.inet_ntoa(
             construct.ULInt32(u'int').build(entry.address_a))
-        if ip_address == u'0.0.0.0':
-          ip_address = u'localhost'
+        if ip_address == '0.0.0.0':
+          ip_address = 'localhost'
       except (IOError, construct.FieldError, socket.error):
-        ip_address = u'N/A'
+        ip_address = 'N/A'
 
     event_data = UtmpEventData()
     event_data.computer_name = computer_name
@@ -209,42 +211,42 @@ class UtmpParser(interface.FileObjectParser):
       structure = self.LINUX_UTMP_ENTRY.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          u'Unable to parse UTMP Header with error: {0:s}'.format(exception))
+          'Unable to parse UTMP Header with error: {0:s}'.format(exception))
 
     if structure.type not in self.STATUS_TYPE:
       raise errors.UnableToParseFile((
-          u'Not an UTMP file, unknown type '
-          u'[{0:d}].').format(structure.type))
+          'Not an UTMP file, unknown type '
+          '[{0:d}].').format(structure.type))
 
     if not self._VerifyTextField(structure.terminal):
       raise errors.UnableToParseFile(
-          u'Not an UTMP file, unknown terminal.')
+          'Not an UTMP file, unknown terminal.')
 
     if not self._VerifyTextField(structure.username):
       raise errors.UnableToParseFile(
-          u'Not an UTMP file, unknown username.')
+          'Not an UTMP file, unknown username.')
 
     if not self._VerifyTextField(structure.hostname):
       raise errors.UnableToParseFile(
-          u'Not an UTMP file, unknown hostname.')
+          'Not an UTMP file, unknown hostname.')
 
     # Check few values.
     terminal = self._GetTextFromNullTerminatedString(
         structure.terminal, self._DEFAULT_TEST_VALUE)
     if terminal == self._DEFAULT_TEST_VALUE:
       raise errors.UnableToParseFile(
-          u'Not an UTMP file, no terminal set.')
+          'Not an UTMP file, no terminal set.')
 
     username = self._GetTextFromNullTerminatedString(
         structure.username, self._DEFAULT_TEST_VALUE)
 
     if username == self._DEFAULT_TEST_VALUE:
       raise errors.UnableToParseFile(
-          u'Not an UTMP file, no username set.')
+          'Not an UTMP file, no username set.')
 
     if not structure.timestamp:
       raise errors.UnableToParseFile(
-          u'Not an UTMP file, no timestamp set in the first record.')
+          'Not an UTMP file, no timestamp set in the first record.')
 
     file_object.seek(0, os.SEEK_SET)
     while self._ReadEntry(parser_mediator, file_object):

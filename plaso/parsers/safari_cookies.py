@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Safari Binary Cookie files."""
 
+from __future__ import unicode_literals
+
 import construct
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
@@ -29,7 +31,7 @@ class SafariBinaryCookieEventData(events.EventData):
     url (str): URL where this cookie is valid.
   """
 
-  DATA_TYPE = u'safari:cookie:entry'
+  DATA_TYPE = 'safari:cookie:entry'
 
   def __init__(self):
     """Initializes event data."""
@@ -44,11 +46,11 @@ class SafariBinaryCookieEventData(events.EventData):
 class BinaryCookieParser(interface.FileObjectParser):
   """Parser for Safari Binary Cookie files."""
 
-  NAME = u'binary_cookies'
-  DESCRIPTION = u'Parser for Safari Binary Cookie files.'
+  NAME = 'binary_cookies'
+  DESCRIPTION = 'Parser for Safari Binary Cookie files.'
 
   _FILE_HEADER = construct.Struct(
-      u'file_header',
+      'file_header',
       construct.Bytes(u'signature', 4),
       construct.UBInt32(u'number_of_pages'),
       construct.Array(
@@ -56,7 +58,7 @@ class BinaryCookieParser(interface.FileObjectParser):
           construct.UBInt32(u'page_sizes')))
 
   _COOKIE_RECORD = construct.Struct(
-      u'cookie_record',
+      'cookie_record',
       construct.ULInt32(u'size'),
       construct.Bytes(u'unknown_1', 4),
       construct.ULInt32(u'flags'),
@@ -70,7 +72,7 @@ class BinaryCookieParser(interface.FileObjectParser):
       construct.LFloat64(u'creation_date'))
 
   _PAGE_HEADER = construct.Struct(
-      u'page_header',
+      'page_header',
       construct.Bytes(u'header', 4),
       construct.ULInt32(u'number_of_records'),
       construct.Array(
@@ -95,7 +97,7 @@ class BinaryCookieParser(interface.FileObjectParser):
     try:
       cookie = self._COOKIE_RECORD.parse(page_data[page_offset:])
     except construct.FieldError:
-      message = u'Unable to read cookie record at offset: {0:d}'.format(
+      message = 'Unable to read cookie record at offset: {0:d}'.format(
           page_offset)
       parser_mediator.ProduceExtractionError(message)
       return
@@ -105,8 +107,8 @@ class BinaryCookieParser(interface.FileObjectParser):
     # the proper ordering of the offsets, since they are not always in the
     # same ordering.
     offset_dict = {
-        cookie.url_offset: u'url', cookie.name_offset: u'name',
-        cookie.value_offset: u'value', cookie.path_offset: u'path'}
+        cookie.url_offset: 'url', cookie.name_offset: 'name',
+        cookie.value_offset: 'value', cookie.path_offset: 'path'}
 
     offsets = sorted(offset_dict.keys())
     offsets.append(cookie.size + page_offset)
@@ -160,7 +162,7 @@ class BinaryCookieParser(interface.FileObjectParser):
 
       except Exception as exception:  # pylint: disable=broad-except
         parser_mediator.ProduceExtractionError(
-            u'plugin: {0:s} unable to parse cookie with error: {1:s}'.format(
+            'plugin: {0:s} unable to parse cookie with error: {1:s}'.format(
                 plugin.NAME, exception))
 
   def _ParsePage(self, parser_mediator, page_number, page_data):
@@ -176,7 +178,7 @@ class BinaryCookieParser(interface.FileObjectParser):
     except construct.FieldError:
       # TODO: add offset
       parser_mediator.ProduceExtractionError(
-          u'unable to read header of page: {0:d} at offset: 0x{1:08x}'.format(
+          'unable to read header of page: {0:d} at offset: 0x{1:08x}'.format(
               page_number, 0))
       return
 
@@ -214,7 +216,7 @@ class BinaryCookieParser(interface.FileObjectParser):
       file_header = self._FILE_HEADER.parse_stream(file_object)
     except (IOError, construct.ArrayError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to read file header with error: {0:s}.'.format(exception))
+          'unable to read file header with error: {0:s}.'.format(exception))
       raise errors.UnableToParseFile()
 
     if file_header.signature != b'cook':
@@ -228,7 +230,7 @@ class BinaryCookieParser(interface.FileObjectParser):
       page_data = file_object.read(page_size)
       if len(page_data) != page_size:
         parser_mediator.ProduceExtractionError(
-            u'unable to read page: {0:d}'.format(index))
+            'unable to read page: {0:d}'.format(index))
         break
 
       self._ParsePage(parser_mediator, index, page_data)

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The parsers and plugins manager."""
 
+from __future__ import unicode_literals
+
 import logging
 
 import pysigscan
@@ -112,8 +114,8 @@ class ParsersManager(object):
       # Check parser and plugin list for exact equivalence.
       if includes[parser_name] == excludes[parser_name]:
         logging.warning(
-            u'Parser {0:s} was in both the inclusion and exclusion lists. '
-            u'Ignoring included parser.'.format(parser_name))
+            'Parser {0:s} was in both the inclusion and exclusion lists. '
+            'Ignoring included parser.'.format(parser_name))
         includes.pop(parser_name)
         continue
 
@@ -125,9 +127,9 @@ class ParsersManager(object):
         continue
 
       logging.warning(
-          u'Parser {0:s} plugins: {1:s} in both the inclusion and exclusion '
-          u'lists. Ignoring included plugins.'.format(
-              parser_name, u', '.join(intersection)))
+          'Parser {0:s} plugins: {1:s} in both the inclusion and exclusion '
+          'lists. Ignoring included plugins.'.format(
+              parser_name, ', '.join(intersection)))
       plugins_list = list(set(plugin_includes).difference(intersection))
       includes[parser_name] = plugins_list
 
@@ -138,9 +140,9 @@ class ParsersManager(object):
         continue
 
       logging.warning(
-          u'The excluded parser: {0:s} is not associated with the included '
-          u'parsers: {1:s}. Ignoring excluded parser.'.format(
-              parser_name, u', '.join(includes.keys())))
+          'The excluded parser: {0:s} is not associated with the included '
+          'parsers: {1:s}. Ignoring excluded parser.'.format(
+              parser_name, ', '.join(includes.keys())))
       parsers_to_pop.append(parser_name)
 
     for parser_name in parsers_to_pop:
@@ -199,7 +201,7 @@ class ParsersManager(object):
       if parser_class.SupportsPlugins():
         for plugin_name, _ in parser_class.GetPlugins():
           parser_and_plugin_names.append(
-              u'{0:s}/{1:s}'.format(parser_name, plugin_name))
+              '{0:s}/{1:s}'.format(parser_name, plugin_name))
 
     return parser_and_plugin_names
 
@@ -219,7 +221,7 @@ class ParsersManager(object):
         parser_filter_expression=parser_filter_expression):
       if parser_class.SupportsPlugins():
         for plugin_name, plugin_class in parser_class.GetPlugins():
-          description = getattr(plugin_class, u'DESCRIPTION', u'')
+          description = getattr(plugin_class, 'DESCRIPTION', '')
           parser_plugins_information.append((plugin_name, description))
 
     return parser_plugins_information
@@ -321,7 +323,7 @@ class ParsersManager(object):
     """
     parsers_information = []
     for _, parser_class in cls.GetParsers():
-      description = getattr(parser_class, u'DESCRIPTION', u'')
+      description = getattr(parser_class, 'DESCRIPTION', '')
       parsers_information.append((parser_class.NAME, description))
 
     return parsers_information
@@ -352,40 +354,40 @@ class ParsersManager(object):
     # care of overwriting this behavior.
 
     if operating_system == definitions.OPERATING_SYSTEM_LINUX:
-      return u'linux'
+      return 'linux'
 
     if operating_system == definitions.OPERATING_SYSTEM_MACOSX:
-      return u'macosx'
+      return 'macosx'
 
     if operating_system_product:
       operating_system_product = operating_system_product.lower()
     else:
-      operating_system_product = u''
+      operating_system_product = ''
 
     if operating_system_version:
       operating_system_version = operating_system_version.split(u'.')
     else:
-      operating_system_version = [u'0', u'0']
+      operating_system_version = [u'0', '0']
 
     # Windows NT 5 (2000, XP and 2003).
     if (u'windows' in operating_system_product and
-        operating_system_version[0] == u'5'):
-      return u'winxp'
+        operating_system_version[0] == '5'):
+      return 'winxp'
 
     # TODO: Improve this detection, this should be more 'intelligent', since
     # there are quite a lot of versions out there that would benefit from
     # loading up the set of 'winxp' parsers.
     if (u'windows xp' in operating_system_product or
-        u'windows server 2000' in operating_system_product or
-        u'windows server 2003' in operating_system_product):
-      return u'winxp'
+        'windows server 2000' in operating_system_product or
+        'windows server 2003' in operating_system_product):
+      return 'winxp'
 
     # Fallback for other Windows versions.
-    if u'windows' in operating_system_product:
-      return u'win7'
+    if 'windows' in operating_system_product:
+      return 'win7'
 
     if operating_system == definitions.OPERATING_SYSTEM_WINDOWS:
-      return u'win7'
+      return 'win7'
 
   @classmethod
   def GetScanner(cls, specification_store):

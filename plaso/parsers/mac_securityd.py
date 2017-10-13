@@ -5,6 +5,8 @@ Also see:
   http://opensource.apple.com/source/Security/Security-55471/sec/securityd/
 """
 
+from __future__ import unicode_literals
+
 import logging
 
 import pyparsing
@@ -36,7 +38,7 @@ class MacSecuritydLogEventData(events.EventData):
     sender (str): name of the sender.
   """
 
-  DATA_TYPE = u'mac:securityd:line'
+  DATA_TYPE = 'mac:securityd:line'
 
   def __init__(self):
     """Initializes event data."""
@@ -53,10 +55,10 @@ class MacSecuritydLogEventData(events.EventData):
 class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parses the securityd file that contains logs from the security daemon."""
 
-  NAME = u'mac_securityd'
-  DESCRIPTION = u'Parser for Mac OS X securityd log files.'
+  NAME = 'mac_securityd'
+  DESCRIPTION = 'Parser for Mac OS X securityd log files.'
 
-  _ENCODING = u'utf-8'
+  _ENCODING = 'utf-8'
   _DEFAULT_YEAR = 2012
 
   DATE_TIME = pyparsing.Group(
@@ -77,10 +79,10 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.CharsNotIn(u'{').setResultsName(u'facility') +
       pyparsing.Literal(u'{').suppress() +
       pyparsing.Optional(pyparsing.CharsNotIn(
-          u'}').setResultsName(u'security_api')) +
+          '}').setResultsName(u'security_api')) +
       pyparsing.Literal(u'}').suppress() +
       pyparsing.Optional(pyparsing.CharsNotIn(u']:').setResultsName(
-          u'caller')) + pyparsing.Literal(u']:').suppress() +
+          'caller')) + pyparsing.Literal(u']:').suppress() +
       pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'message'))
 
   REPEATED_LINE = (
@@ -163,16 +165,16 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
           time_elements_tuple=time_elements_tuple)
     except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'invalid date time value: {0!s}'.format(structure.date_time))
+          'invalid date time value: {0!s}'.format(structure.date_time))
       return
 
     self._last_month = time_elements_tuple[1]
 
-    if key == u'logline':
+    if key == 'logline':
       self._previous_structure = structure
       message = structure.message
     else:
-      message = u'Repeated {0:d} times: {1:s}'.format(
+      message = 'Repeated {0:d} times: {1:s}'.format(
           structure.times, self._previous_structure.message)
       structure = self._previous_structure
 
@@ -180,11 +182,11 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     # at the beginning of the sender and the caller.
 
     event_data = MacSecuritydLogEventData()
-    event_data.caller = structure.caller.strip() or u'unknown'
+    event_data.caller = structure.caller.strip() or 'unknown'
     event_data.facility = structure.facility
     event_data.level = structure.level
     event_data.message = message
-    event_data.security_api = structure.security_api or u'unknown'
+    event_data.security_api = structure.security_api or 'unknown'
     event_data.sender_pid = structure.sender_pid
     event_data.sender = structure.sender.strip()
 
@@ -205,9 +207,9 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key not in (u'logline', u'repeated'):
+    if key not in (u'logline', 'repeated'):
       raise errors.ParseError(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     self._ParseLogLine(parser_mediator, structure, key)
 
@@ -238,7 +240,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
           time_elements_tuple=time_elements_tuple)
     except ValueError:
       logging.debug(
-          u'Not a Mac securityd log file, invalid date and time: {0!s}'.format(
+          'Not a Mac securityd log file, invalid date and time: {0!s}'.format(
               structure.date_time))
       return False
 

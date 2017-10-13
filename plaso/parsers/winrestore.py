@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Restore Point (rp.log) files."""
 
+from __future__ import unicode_literals
+
 import os
 
 import construct
@@ -25,7 +27,7 @@ class RestorePointEventData(events.EventData):
     sequence_number (str): sequence number.
   """
 
-  DATA_TYPE = u'windows:restore_point:info'
+  DATA_TYPE = 'windows:restore_point:info'
 
   def __init__(self):
     """Initializes Windows Recycle Bin event data."""
@@ -39,14 +41,14 @@ class RestorePointEventData(events.EventData):
 class RestorePointLogParser(interface.FileObjectParser):
   """A parser for Windows Restore Point (rp.log) files."""
 
-  NAME = u'rplog'
-  DESCRIPTION = u'Parser for Windows Restore Point (rp.log) files.'
+  NAME = 'rplog'
+  DESCRIPTION = 'Parser for Windows Restore Point (rp.log) files.'
 
   FILTERS = frozenset([
       interface.FileNameFileEntryFilter(u'rp.log')])
 
   _FILE_HEADER_STRUCT = construct.Struct(
-      u'file_header',
+      'file_header',
       construct.ULInt32(u'event_type'),
       construct.ULInt32(u'restore_point_type'),
       construct.ULInt64(u'sequence_number'),
@@ -55,7 +57,7 @@ class RestorePointLogParser(interface.FileObjectParser):
           construct.Field(u'description', 2)))
 
   _FILE_FOOTER_STRUCT = construct.Struct(
-      u'file_footer',
+      'file_footer',
       construct.ULInt64(u'creation_time'))
 
   def ParseFileObject(self, parser_mediator, file_object, **unused_kwargs):
@@ -70,7 +72,7 @@ class RestorePointLogParser(interface.FileObjectParser):
       file_header_struct = self._FILE_HEADER_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to parse file header with error: {0:s}'.format(exception))
+          'unable to parse file header with error: {0:s}'.format(exception))
       return
 
     file_object.seek(-8, os.SEEK_END)
@@ -79,7 +81,7 @@ class RestorePointLogParser(interface.FileObjectParser):
       file_footer_struct = self._FILE_FOOTER_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to parse file footer with error: {0:s}'.format(exception))
+          'unable to parse file footer with error: {0:s}'.format(exception))
       return
 
     try:
@@ -88,10 +90,10 @@ class RestorePointLogParser(interface.FileObjectParser):
       # to strip off.
       description = description.decode(u'utf16')[:-1]
     except UnicodeDecodeError as exception:
-      description = u''
+      description = ''
       parser_mediator.ProduceExtractionError((
-          u'unable to decode description UTF-16 stream with error: '
-          u'{0:s}').format(exception))
+          'unable to decode description UTF-16 stream with error: '
+          '{0:s}').format(exception))
 
     if file_footer_struct.creation_time == 0:
       date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')

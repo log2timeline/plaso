@@ -4,6 +4,8 @@
 Plaso's engine calls PlistParser when it encounters Plist files to be processed.
 """
 
+from __future__ import unicode_literals
+
 import binascii
 import logging
 
@@ -29,8 +31,8 @@ class PlistParser(interface.FileObjectParser):
   implemented.
   """
 
-  NAME = u'plist'
-  DESCRIPTION = u'Parser for binary and text plist files.'
+  NAME = 'plist'
+  DESCRIPTION = 'Parser for binary and text plist files.'
 
   _plugin_classes = {}
 
@@ -58,21 +60,21 @@ class PlistParser(interface.FileObjectParser):
         error_string = exception
 
       raise errors.UnableToParseFile(
-          u'File is not a plist file: {0:s}'.format(error_string))
+          'File is not a plist file: {0:s}'.format(error_string))
 
     except (
         AttributeError, LookupError, ValueError, binascii.Error) as exception:
       raise errors.UnableToParseFile(
-          u'Unable to parse XML file, reason: {0:s}'.format(exception))
+          'Unable to parse XML file, reason: {0:s}'.format(exception))
 
     except OverflowError as exception:
       raise errors.UnableToParseFile(
-          u'Unable to parse: {0:s} with error: {1:s}'.format(
+          'Unable to parse: {0:s} with error: {1:s}'.format(
               file_name, exception))
 
     if not top_level_object:
       raise errors.UnableToParseFile(
-          u'File is not a plist: missing top level object')
+          'File is not a plist: missing top level object')
 
     # Since we are using readPlist from binplist now instead of manually
     # opening  the binary plist file we loose this option. Keep it commented
@@ -80,7 +82,7 @@ class PlistParser(interface.FileObjectParser):
     # TODO: Re-evaluate if we can delete this or still require it.
     #if bpl.is_corrupt:
     #  logging.warning(
-    #      u'Corruption detected in binary plist: {0:s}'.format(file_name))
+    #      'Corruption detected in binary plist: {0:s}'.format(file_name))
 
     return top_level_object
 
@@ -100,12 +102,12 @@ class PlistParser(interface.FileObjectParser):
 
     if file_size <= 0:
       raise errors.UnableToParseFile(
-          u'File size: {0:d} bytes is less equal 0.'.format(file_size))
+          'File size: {0:d} bytes is less equal 0.'.format(file_size))
 
     # 50MB is 10x larger than any plist seen to date.
     if file_size > 50000000:
       raise errors.UnableToParseFile(
-          u'File size: {0:d} bytes is larger than 50 MB.'.format(file_size))
+          'File size: {0:d} bytes is larger than 50 MB.'.format(file_size))
 
     top_level_object = None
     try:
@@ -115,7 +117,7 @@ class PlistParser(interface.FileObjectParser):
 
     if not top_level_object:
       raise errors.UnableToParseFile(
-          u'Unable to parse: {0:s} skipping.'.format(filename))
+          'Unable to parse: {0:s} skipping.'.format(filename))
 
     # TODO: add a parser filter.
     matching_plugin = None

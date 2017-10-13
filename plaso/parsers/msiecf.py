@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Microsoft Internet Explorer (MSIE) Cache Files (CF)."""
 
+from __future__ import unicode_literals
+
 import pymsiecf
 
 from dfdatetime import fat_date_time as dfdatetime_fat_date_time
@@ -26,7 +28,7 @@ class MSIECFLeakEventData(events.EventData):
     recovered (bool): True if the item was recovered.
   """
 
-  DATA_TYPE = u'msiecf:leak'
+  DATA_TYPE = 'msiecf:leak'
 
   def __init__(self):
     """Initializes event data."""
@@ -46,7 +48,7 @@ class MSIECFRedirectedEventData(events.EventData):
     url (str): location URL.
   """
 
-  DATA_TYPE = u'msiecf:redirected'
+  DATA_TYPE = 'msiecf:redirected'
 
   def __init__(self):
     """Initializes event data."""
@@ -69,7 +71,7 @@ class MSIECFURLEventData(events.EventData):
     url (str): location URL.
   """
 
-  DATA_TYPE = u'msiecf:url'
+  DATA_TYPE = 'msiecf:url'
 
   def __init__(self):
     """Initializes event data."""
@@ -88,8 +90,8 @@ class MSIECFURLEventData(events.EventData):
 class MSIECFParser(interface.FileObjectParser):
   """Parses MSIE Cache Files (MSIECF)."""
 
-  NAME = u'msiecf'
-  DESCRIPTION = u'Parser for MSIE Cache Files (MSIECF) also known as index.dat.'
+  NAME = 'msiecf'
+  DESCRIPTION = 'Parser for MSIE Cache Files (MSIECF) also known as index.dat.'
 
   def _ParseLeak(
       self, parser_mediator, cache_directories, msiecf_item, recovered=False):
@@ -151,7 +153,7 @@ class MSIECFParser(interface.FileObjectParser):
 
       except IOError as exception:
         parser_mediator.ProduceExtractionError(
-            u'Unable to parse item: {0:d} with error: {1:s}'.format(
+            'Unable to parse item: {0:d} with error: {1:s}'.format(
                 item_index, exception))
 
     for item_index in range(0, msiecf_file.number_of_recovered_items):
@@ -171,7 +173,7 @@ class MSIECFParser(interface.FileObjectParser):
 
       except IOError as exception:
         parser_mediator.ProduceExtractionError(
-            u'Unable to parse recovered item: {0:d} with error: {1:s}'.format(
+            'Unable to parse recovered item: {0:d} with error: {1:s}'.format(
                 item_index, exception))
 
   def _ParseRedirected(
@@ -221,30 +223,30 @@ class MSIECFParser(interface.FileObjectParser):
       primary_date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
     else:
       primary_date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-    primary_date_time_description = u'Primary Time'
+    primary_date_time_description = 'Primary Time'
 
     timestamp = msiecf_item.get_secondary_time_as_integer()
     secondary_date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
-    secondary_date_time_description = u'Secondary Time'
+    secondary_date_time_description = 'Secondary Time'
 
     if msiecf_item.type:
-      if msiecf_item.type == u'cache':
+      if msiecf_item.type == 'cache':
         primary_date_time_description = definitions.TIME_DESCRIPTION_LAST_ACCESS
         secondary_date_time_description = (
             definitions.TIME_DESCRIPTION_MODIFICATION)
 
-      elif msiecf_item.type == u'cookie':
+      elif msiecf_item.type == 'cookie':
         primary_date_time_description = definitions.TIME_DESCRIPTION_LAST_ACCESS
         secondary_date_time_description = (
             definitions.TIME_DESCRIPTION_MODIFICATION)
 
-      elif msiecf_item.type == u'history':
+      elif msiecf_item.type == 'history':
         primary_date_time_description = (
             definitions.TIME_DESCRIPTION_LAST_VISITED)
         secondary_date_time_description = (
             definitions.TIME_DESCRIPTION_LAST_VISITED)
 
-      elif msiecf_item.type == u'history-daily':
+      elif msiecf_item.type == 'history-daily':
         primary_date_time_description = (
             definitions.TIME_DESCRIPTION_LAST_VISITED)
         secondary_date_time_description = (
@@ -252,16 +254,16 @@ class MSIECFParser(interface.FileObjectParser):
         # The secondary_date_time is in localtime normalize it to be in UTC.
         secondary_date_time.is_local_time = True
 
-      elif msiecf_item.type == u'history-weekly':
+      elif msiecf_item.type == 'history-weekly':
         primary_date_time_description = definitions.TIME_DESCRIPTION_CREATION
         secondary_date_time_description = (
             definitions.TIME_DESCRIPTION_LAST_VISITED)
         # The secondary_date_time is in localtime normalize it to be in UTC.
         secondary_date_time.is_local_time = True
 
-    http_headers = u''
+    http_headers = ''
     if msiecf_item.type and msiecf_item.data:
-      if msiecf_item.type == u'cache':
+      if msiecf_item.type == 'cache':
         if msiecf_item.data[:4] == b'HTTP':
           # Make sure the HTTP headers are ASCII encoded.
           # TODO: determine correct encoding currently indications that
@@ -270,11 +272,11 @@ class MSIECFParser(interface.FileObjectParser):
             http_headers = msiecf_item.data[:-1].decode(u'ascii')
           except UnicodeDecodeError:
             parser_mediator.ProduceExtractionError((
-                u'unable to decode HTTP headers of URL record at offset: '
-                u'0x{0:08x}. Characters that cannot be decoded will be '
-                u'replaced with "?" or "\\ufffd".').format(msiecf_item.offset))
+                'unable to decode HTTP headers of URL record at offset: '
+                '0x{0:08x}. Characters that cannot be decoded will be '
+                'replaced with "?" or "\\ufffd".').format(msiecf_item.offset))
             http_headers = msiecf_item.data[:-1].decode(
-                u'ascii', errors=u'replace')
+                'ascii', errors=u'replace')
 
       # TODO: parse data of other URL item type like history which requires
       # OLE VT parsing.
@@ -310,7 +312,7 @@ class MSIECFParser(interface.FileObjectParser):
       # in version 5.2 it is stored as a FAT date time value.
       # Since the as_integer function returns the raw integer value we need to
       # apply the right conversion here.
-      if format_version == u'4.7':
+      if format_version == '4.7':
         if expiration_timestamp == 0x7fffffffffffffff:
           expiration_date_time = dfdatetime_semantic_time.SemanticTime(u'Never')
         else:
@@ -363,7 +365,7 @@ class MSIECFParser(interface.FileObjectParser):
       msiecf_file.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to open file with error: {0:s}'.format(exception))
+          'unable to open file with error: {0:s}'.format(exception))
       return
 
     try:

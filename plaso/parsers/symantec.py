@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains a Symantec parser in plaso."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
@@ -82,7 +84,7 @@ class SymantecEventData(events.EventData):
     virustype (str): virustype.
   """
 
-  DATA_TYPE = u'av:symantec:scanlog'
+  DATA_TYPE = 'av:symantec:scanlog'
 
   def __init__(self):
     """Initializes event data."""
@@ -153,27 +155,27 @@ class SymantecEventData(events.EventData):
 class SymantecParser(text_parser.TextCSVParser):
   """Parse Symantec AV Corporate Edition and Endpoint Protection log files."""
 
-  NAME = u'symantec_scanlog'
-  DESCRIPTION = u'Parser for Symantec Anti-Virus log files.'
+  NAME = 'symantec_scanlog'
+  DESCRIPTION = 'Parser for Symantec Anti-Virus log files.'
 
   # Define the columns that make up the structure of a Symantec log file.
   # http://www.symantec.com/docs/TECH100099
   COLUMNS = [
-      u'time', u'event', u'cat', u'logger', u'computer', u'user',
-      u'virus', u'file', u'action1', u'action2', u'action0', u'virustype',
-      u'flags', u'description', u'scanid', u'new_ext', u'groupid',
-      u'event_data', u'vbin_id', u'virus_id', u'quarfwd_status',
-      u'access', u'snd_status', u'compressed', u'depth', u'still_infected',
-      u'definfo', u'defseqnumber', u'cleaninfo', u'deleteinfo',
-      u'backup_id', u'parent', u'guid', u'clientgroup', u'address',
-      u'domainname', u'ntdomain', u'macaddr', u'version:',
-      u'remote_machine', u'remote_machine_ip', u'action1_status',
-      u'action2_status', u'license_feature_name', u'license_feature_ver',
-      u'license_serial_num', u'license_fulfillment_id', u'license_start_dt',
-      u'license_expiration_dt', u'license_lifecycle', u'license_seats_total',
-      u'license_seats', u'err_code', u'license_seats_delta', u'status',
-      u'domain_guid', u'log_session_guid', u'vbin_session_id',
-      u'login_domain', u'extra']
+      'time', 'event', 'cat', 'logger', 'computer', 'user',
+      'virus', 'file', 'action1', 'action2', 'action0', 'virustype',
+      'flags', 'description', 'scanid', 'new_ext', 'groupid',
+      'event_data', 'vbin_id', 'virus_id', 'quarfwd_status',
+      'access', 'snd_status', 'compressed', 'depth', 'still_infected',
+      'definfo', 'defseqnumber', 'cleaninfo', 'deleteinfo',
+      'backup_id', 'parent', 'guid', 'clientgroup', 'address',
+      'domainname', 'ntdomain', 'macaddr', 'version:',
+      'remote_machine', 'remote_machine_ip', 'action1_status',
+      'action2_status', 'license_feature_name', 'license_feature_ver',
+      'license_serial_num', 'license_fulfillment_id', 'license_start_dt',
+      'license_expiration_dt', 'license_lifecycle', 'license_seats_total',
+      'license_seats', 'err_code', 'license_seats_delta', 'status',
+      'domain_guid', 'log_session_guid', 'vbin_session_id',
+      'login_domain', 'extra']
 
   def _ConvertToTimestamp(self, date_time_values, timezone=pytz.UTC):
     """Converts the given parsed date and time values to a timestamp.
@@ -222,7 +224,7 @@ class SymantecParser(text_parser.TextCSVParser):
     except (TypeError, ValueError, errors.TimestampError) as exception:
       timestamp = timelib.Timestamp.NONE_TIMESTAMP
       parser_mediator.ProduceExtractionError(
-          u'unable to determine timestamp with error: {0:s}'.format(
+          'unable to determine timestamp with error: {0:s}'.format(
               exception))
 
     # TODO: remove unused attributes.

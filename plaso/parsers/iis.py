@@ -6,6 +6,8 @@ http://www.microsoft.com/technet/prodtechnol/WindowsServer2003/Library/
 IIS/676400bc-8969-4aa7-851a-9319490a9bbb.mspx?mfr=true
 """
 
+from __future__ import unicode_literals
+
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -27,7 +29,7 @@ class IISEventData(events.EventData):
   Attributes:
   """
 
-  DATA_TYPE = u'iis:log:line'
+  DATA_TYPE = 'iis:log:line'
 
   def __init__(self):
     """Initializes event data."""
@@ -37,8 +39,8 @@ class IISEventData(events.EventData):
 class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   """Parses a Microsoft IIS log file."""
 
-  NAME = u'winiis'
-  DESCRIPTION = u'Parser for Microsoft IIS log files.'
+  NAME = 'winiis'
+  DESCRIPTION = 'Parser for Microsoft IIS log files.'
 
   # Common Fields (6.0: date time s-sitename s-ip cs-method cs-uri-stem
   # cs-uri-query s-port cs-username c-ip cs(User-Agent) sc-status
@@ -48,7 +50,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   # sc-win32-status time-taken
 
   BLANK = pyparsing.Literal(u'-')
-  WORD = pyparsing.Word(pyparsing.alphanums + u'-') | BLANK
+  WORD = pyparsing.Word(pyparsing.alphanums + '-') | BLANK
 
   INTEGER = (
       pyparsing.Word(pyparsing.nums, min=1).setParseAction(
@@ -62,7 +64,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Word(pyparsing.nums, min=1, max=6).setParseAction(
           text_parser.ConvertTokenToInteger) | BLANK)
 
-  URI = pyparsing.Word(pyparsing.alphanums + u'/.?&+;_=()-:,%') | BLANK
+  URI = pyparsing.Word(pyparsing.alphanums + '/.?&+;_=()-:,%') | BLANK
 
   DATE_TIME = (
       text_parser.PyparsingConstants.DATE_ELEMENTS +
@@ -105,7 +107,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   _LOG_LINE_STRUCTURES[u's-ip'] = IP_ADDRESS.setResultsName(u'dest_ip')
   _LOG_LINE_STRUCTURES[u'cs-method'] = WORD.setResultsName(u'http_method')
   _LOG_LINE_STRUCTURES[u'cs-uri-stem'] = URI.setResultsName(
-      u'requested_uri_stem')
+      'requested_uri_stem')
   _LOG_LINE_STRUCTURES[u'cs-uri-query'] = URI.setResultsName(u'cs_uri_query')
   _LOG_LINE_STRUCTURES[u's-port'] = PORT.setResultsName(u'dest_port')
   _LOG_LINE_STRUCTURES[u'cs-username'] = WORD.setResultsName(u'cs_username')
@@ -113,13 +115,13 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   _LOG_LINE_STRUCTURES[u'cs(User-Agent)'] = URI.setResultsName(u'user_agent')
   _LOG_LINE_STRUCTURES[u'sc-status'] = INTEGER.setResultsName(u'http_status')
   _LOG_LINE_STRUCTURES[u'sc-substatus'] = INTEGER.setResultsName(
-      u'sc_substatus')
+      'sc_substatus')
   _LOG_LINE_STRUCTURES[u'sc-win32-status'] = INTEGER.setResultsName(
-      u'sc_win32_status')
+      'sc_win32_status')
 
   # Less common fields.
   _LOG_LINE_STRUCTURES[u's-computername'] = URI.setResultsName(
-      u's_computername')
+      's_computername')
   _LOG_LINE_STRUCTURES[u'sc-bytes'] = INTEGER.setResultsName(u'sent_bytes')
   _LOG_LINE_STRUCTURES[u'cs-bytes'] = INTEGER.setResultsName(u'received_bytes')
   _LOG_LINE_STRUCTURES[u'time-taken'] = INTEGER.setResultsName(u'time_taken')
@@ -151,9 +153,9 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     Args:
       structure (pyparsing.ParseResults): structure parsed from the log file.
     """
-    if structure[1] == u'Date:':
+    if structure[1] == 'Date:':
       self._year, self._month, self._day_of_month, _, _, _ = structure.date_time
-    elif structure[1] == u'Fields:':
+    elif structure[1] == 'Fields:':
       self._ParseFieldsMetadata(structure)
 
   def _ParseFieldsMetadata(self, structure):
@@ -165,7 +167,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     fields = structure.fields.split(u' ')
 
     log_line_structure = pyparsing.Empty()
-    if fields[0] == u'date' and fields[1] == u'time':
+    if fields[0] == 'date' and fields[1] == 'time':
       log_line_structure += self.DATE_TIME.setResultsName(u'date_time')
       fields = fields[2:]
 
@@ -206,17 +208,17 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
           time_elements_tuple=time_elements_tuple)
     except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'invalid date time value: {0!s}'.format(time_elements_tuple))
+          'invalid date time value: {0!s}'.format(time_elements_tuple))
       return
 
     event_data = IISEventData()
 
     for key, value in iter(structure.items()):
-      if key in (u'date', u'date_time', u'time') or value == u'-':
+      if key in (u'date', 'date_time', 'time') or value == '-':
         continue
 
       if isinstance(value, pyparsing.ParseResults):
-        value = u''.join(value)
+        value = ''.join(value)
 
       setattr(event_data, key, value)
 
@@ -236,13 +238,13 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key not in (u'comment', u'logline'):
+    if key not in (u'comment', 'logline'):
       raise errors.ParseError(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key == u'logline':
+    if key == 'logline':
       self._ParseLogLine(parser_mediator, structure)
-    elif key == u'comment':
+    elif key == 'comment':
       self._ParseComment(structure)
 
   def VerifyStructure(self, unused_parser_mediator, line):

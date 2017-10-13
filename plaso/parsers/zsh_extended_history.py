@@ -4,6 +4,9 @@
 The file format is described here:
 http://zsh.sourceforge.net/Doc/Release/Options.html#index-EXTENDEDHISTORY
 """
+
+from __future__ import unicode_literals
+
 import re
 
 import pyparsing
@@ -25,7 +28,7 @@ class ZshHistoryEventData(events.EventData):
     command (str): command that was run.
     elapsed_seconds (int): number of seconds that the command took to execute.
   """
-  DATA_TYPE = u'shell:zsh:history'
+  DATA_TYPE = 'shell:zsh:history'
 
   def __init__(self):
     """Initializes event data."""
@@ -37,17 +40,17 @@ class ZshHistoryEventData(events.EventData):
 class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
   """Parser for Zsh extended_history files"""
 
-  NAME = u'zsh_extended_history'
-  DESCRIPTION = u'Parser for ZSH extended history files'
+  NAME = 'zsh_extended_history'
+  DESCRIPTION = 'Parser for ZSH extended history files'
 
   _VERIFICATION_REGEX = re.compile(r'^:\s\d+:\d+;')
 
   _PYPARSING_COMPONENTS = {
-      u'timestamp': text_parser.PyparsingConstants.INTEGER.
+      'timestamp': text_parser.PyparsingConstants.INTEGER.
                     setResultsName(u'timestamp'),
-      u'elapsed_seconds': text_parser.PyparsingConstants.INTEGER.
+      'elapsed_seconds': text_parser.PyparsingConstants.INTEGER.
                           setResultsName(u'elapsed_seconds'),
-      u'command': pyparsing.Regex(r'.+?(?=($|\n:\s\d+:\d+;))', re.DOTALL).
+      'command': pyparsing.Regex(r'.+?(?=($|\n:\s\d+:\d+;))', re.DOTALL).
                   setResultsName(u'command'),
   }
 
@@ -71,9 +74,9 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key != u'command':
+    if key != 'command':
       raise errors.ParseError(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     event_data = ZshHistoryEventData()
     event_data.command = structure[u'command']

@@ -23,6 +23,8 @@ References:
 taste_of_training/Summit_2010_SELinux.pdf
 """
 
+from __future__ import unicode_literals
+
 import logging
 
 import pyparsing
@@ -47,7 +49,7 @@ class SELinuxLogEventData(events.EventData):
     pid (int): process identifier (PID) that created the SELinux log line.
   """
 
-  DATA_TYPE = u'selinux:line'
+  DATA_TYPE = 'selinux:line'
 
   def __init__(self):
     """Initializes event data."""
@@ -60,8 +62,8 @@ class SELinuxLogEventData(events.EventData):
 class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
   """Parser for SELinux audit.log files."""
 
-  NAME = u'selinux'
-  DESCRIPTION = u'Parser for SELinux audit.log files.'
+  NAME = 'selinux'
+  DESCRIPTION = 'Parser for SELinux audit.log files.'
 
   _SELINUX_KEY_VALUE_GROUP = pyparsing.Group(
       pyparsing.Word(pyparsing.alphanums).setResultsName(u'key') +
@@ -119,21 +121,21 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key != u'line':
+    if key != 'line':
       raise errors.ParseError(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     msg_value = structure.get(u'msg')
     if not msg_value:
       parser_mediator.ProduceExtractionError(
-          u'missing msg value: {0!s}'.format(structure))
+          'missing msg value: {0!s}'.format(structure))
       return
 
     try:
       seconds = int(msg_value[0], 10)
     except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'unsupported number of seconds in msg value: {0!s}'.format(
+          'unsupported number of seconds in msg value: {0!s}'.format(
               structure))
       return
 
@@ -141,7 +143,7 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
       milliseconds = int(msg_value[1], 10)
     except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'unsupported number of milliseconds in msg value: {0!s}'.format(
+          'unsupported number of milliseconds in msg value: {0!s}'.format(
               structure))
       return
 
@@ -181,11 +183,11 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
       structure = self._SELINUX_LOG_LINE.parseString(line)
     except pyparsing.ParseException as exception:
       logging.debug(
-          u'Unable to parse SELinux audit.log file with error: {0:s}'.format(
+          'Unable to parse SELinux audit.log file with error: {0:s}'.format(
               exception))
       return False
 
-    return u'type' in structure and u'msg' in structure
+    return 'type' in structure and 'msg' in structure
 
 
 manager.ParsersManager.RegisterParser(SELinuxParser)

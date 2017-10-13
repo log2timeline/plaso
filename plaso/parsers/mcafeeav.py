@@ -4,6 +4,8 @@
 McAfee AV uses 4 logs to track when scans were run, when virus databases were
 updated, and when files match the virus database."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
@@ -25,7 +27,7 @@ class McafeeAVEventData(events.EventData):
     username (str): username.
   """
 
-  DATA_TYPE = u'av:mcafee:accessprotectionlog'
+  DATA_TYPE = 'av:mcafee:accessprotectionlog'
 
   def __init__(self):
     """Initializes event data."""
@@ -41,13 +43,13 @@ class McafeeAVEventData(events.EventData):
 class McafeeAccessProtectionParser(text_parser.TextCSVParser):
   """Parses the McAfee AV Access Protection Log."""
 
-  NAME = u'mcafee_protection'
-  DESCRIPTION = u'Parser for McAfee AV Access Protection log files.'
+  NAME = 'mcafee_protection'
+  DESCRIPTION = 'Parser for McAfee AV Access Protection log files.'
 
   VALUE_SEPARATOR = b'\t'
   COLUMNS = [
-      u'date', u'time', u'status', u'username', u'filename',
-      u'trigger_location', u'rule', u'action']
+      'date', 'time', 'status', 'username', 'filename',
+      'trigger_location', 'rule', 'action']
 
   def _ConvertToTimestamp(self, date, time, timezone):
     """Converts date and time values into a timestamp.
@@ -74,12 +76,12 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     # is more accurate.
     if not date and not time:
       raise errors.TimestampError(
-          u'Unable to extract timestamp from McAfee AV logline.')
+          'Unable to extract timestamp from McAfee AV logline.')
 
     # TODO: Figure out how McAfee sets Day First and use that here.
     # The in-file time format is '07/30/2013\t10:22:48 AM'.
     try:
-      time_string = u'{0:s} {1:s}'.format(date, time)
+      time_string = '{0:s} {1:s}'.format(date, time)
     except UnicodeDecodeError:
       raise errors.TimestampError(u'Unable to form a timestamp string.')
 
@@ -99,7 +101,7 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
           row[u'date'], row[u'time'], parser_mediator.timezone)
     except errors.TimestampError as exception:
       parser_mediator.ProduceExtractionError(
-          u'Unable to parse time string: [{0:s} {1:s}] with error {2:s}'.format(
+          'Unable to parse time string: [{0:s} {1:s}] with error {2:s}'.format(
               repr(row[u'date']), repr(row[u'time']), exception))
       return
 
@@ -138,7 +140,7 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     # TODO: Find out all the code pages this can have.  Asked McAfee 10/31.
     if row[u'date'][0:3] == b'\xef\xbb\xbf':
       row[u'date'] = row[u'date'][3:]
-      self.encoding = u'utf-8'
+      self.encoding = 'utf-8'
 
     # Check the date format!
     # If it doesn't parse, then this isn't a McAfee AV Access Protection Log
@@ -152,8 +154,8 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
       return False
 
     # Use the presence of these strings as a backup or in case of partial file.
-    if (not u'Access Protection' in row[u'status'] and
-        not u'Would be blocked' in row[u'status']):
+    if (not 'Access Protection' in row[u'status'] and
+        not 'Would be blocked' in row[u'status']):
       return False
 
     return True

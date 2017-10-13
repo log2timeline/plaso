@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Implements a parser for Firefox cache 1 and 2 files."""
 
+from __future__ import unicode_literals
+
 import collections
 import logging
 import os
@@ -39,7 +41,7 @@ class FirefoxCacheEventData(events.EventData):
     version (int): Firefox cache format version.
   """
 
-  DATA_TYPE = u'firefox:cache:record'
+  DATA_TYPE = 'firefox:cache:record'
 
   def __init__(self):
     """Initializes event data."""
@@ -66,8 +68,8 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
   _MAXIMUM_URL_LENGTH = 65536
 
   _REQUEST_METHODS = frozenset([
-      u'CONNECT', u'DELETE', u'GET', u'HEAD', u'OPTIONS', u'PATCH', u'POST',
-      u'PUT', u'TRACE'])
+      'CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST',
+      'PUT', 'TRACE'])
 
   def _ParseHTTPHeaders(self, header_data, offset, display_name):
     """Extract relevant information from HTTP header.
@@ -96,8 +98,8 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
     if request_method not in self._REQUEST_METHODS:
       safe_headers = header_data.decode(u'ascii', errors=u'replace')
       logging.debug((
-          u'[{0:s}] {1:s}:{2:d}: Unknown HTTP method \'{3:s}\'. Response '
-          u'headers: \'{4:s}\'').format(
+          '[{0:s}] {1:s}:{2:d}: Unknown HTTP method \'{3:s}\'. Response '
+          'headers: \'{4:s}\'').format(
               self.NAME, display_name, offset, request_method, safe_headers))
 
     try:
@@ -124,8 +126,8 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
     if not response_code.startswith(b'HTTP'):
       safe_headers = header_data.decode(u'ascii', errors=u'replace')
       logging.debug((
-          u'[{0:s}] {1:s}:{2:d}: Could not determine HTTP response code. '
-          u'Response headers: \'{3:s}\'.').format(
+          '[{0:s}] {1:s}:{2:d}: Could not determine HTTP response code. '
+          'Response headers: \'{3:s}\'.').format(
               self.NAME, display_name, offset, safe_headers))
 
     return request_method, response_code
@@ -151,9 +153,9 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
 class FirefoxCacheParser(BaseFirefoxCacheParser):
   """Parses Firefox cache version 1 files (Firefox 31 or earlier)."""
 
-  NAME = u'firefox_cache'
+  NAME = 'firefox_cache'
   DESCRIPTION = (
-      u'Parser for Firefox Cache version 1 files (Firefox 31 or earlier).')
+      'Parser for Firefox Cache version 1 files (Firefox 31 or earlier).')
 
   _CACHE_VERSION = 1
 
@@ -164,7 +166,7 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
   _MINUMUM_BLOCK_SIZE = 256
 
   _CACHE_RECORD_HEADER_STRUCT = construct.Struct(
-      u'record_header',
+      'record_header',
       construct.UBInt16(u'major'),
       construct.UBInt16(u'minor'),
       construct.UBInt32(u'location'),
@@ -185,8 +187,8 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
       pyparsing.Word(pyparsing.nums, exact=2))
 
   FIREFOX_CACHE_CONFIG = collections.namedtuple(
-      u'firefox_cache_config',
-      u'block_size first_record_offset')
+      'firefox_cache_config',
+      'block_size first_record_offset')
 
   def _GetFirefoxConfig(self, file_object, display_name):
     """Determine cache file block size.
@@ -233,7 +235,7 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
             self.NAME, display_name, offset))
 
     raise errors.UnableToParseFile(
-        u'Could not find a valid cache record. Not a Firefox cache file.')
+        'Could not find a valid cache record. Not a Firefox cache file.')
 
   def _ParseCacheEntry(
       self, parser_mediator, file_object, display_name, block_size):
@@ -363,16 +365,16 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
       except IOError:
         file_offset = file_object.get_offset() - self._MINUMUM_BLOCK_SIZE
         logging.debug((
-            u'[{0:s}] Invalid cache record in file: {1:s} at offset: '
-            u'{2:d}.').format(self.NAME, display_name, file_offset))
+            '[{0:s}] Invalid cache record in file: {1:s} at offset: '
+            '{2:d}.').format(self.NAME, display_name, file_offset))
 
 
 class FirefoxCache2Parser(BaseFirefoxCacheParser):
   """Parses Firefox cache version 2 files (Firefox 32 or later)."""
 
-  NAME = u'firefox_cache2'
+  NAME = 'firefox_cache2'
   DESCRIPTION = (
-      u'Parser for Firefox Cache version 2 files (Firefox 32 or later).')
+      'Parser for Firefox Cache version 2 files (Firefox 32 or later).')
 
   _CACHE_VERSION = 2
 
@@ -384,7 +386,7 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
   _LENGTH = construct.UBInt32(u'length')
 
   _CACHE_RECORD_HEADER_STRUCT = construct.Struct(
-      u'record_header',
+      'record_header',
       construct.UBInt32(u'major'),
       construct.UBInt32(u'fetch_count'),
       construct.UBInt32(u'last_fetched'),

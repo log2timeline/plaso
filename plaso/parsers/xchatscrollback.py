@@ -35,6 +35,8 @@ References
 http://xchat.org
 """
 
+from __future__ import unicode_literals
+
 import logging
 
 import pyparsing
@@ -60,7 +62,7 @@ class XChatScrollbackEventData(events.EventData):
     text (str): text sent by nickname service messages.
   """
 
-  DATA_TYPE = u'xchat:scrollback:line'
+  DATA_TYPE = 'xchat:scrollback:line'
 
   def __init__(self):
     """Initializes event data."""
@@ -72,10 +74,10 @@ class XChatScrollbackEventData(events.EventData):
 class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   """Parses XChat scrollback log files."""
 
-  NAME = u'xchatscrollback'
-  DESCRIPTION = u'Parser for XChat scrollback log files.'
+  NAME = 'xchatscrollback'
+  DESCRIPTION = 'Parser for XChat scrollback log files.'
 
-  _ENCODING = u'UTF-8'
+  _ENCODING = 'UTF-8'
 
   # Define how a log line should look like.
   LOG_LINE = (
@@ -130,7 +132,7 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
     """
     stripped = self.STRIPPER.transformString(text)
     structure = self.MSG_ENTRY.parseString(stripped)
-    text = structure.text.replace(u'\t', u' ')
+    text = structure.text.replace(u'\t', ' ')
     return structure.nickname, text
 
   def ParseRecord(self, parser_mediator, key, structure):
@@ -142,9 +144,9 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): structure parsed from the log file.
     """
-    if key != u'logline':
+    if key != 'logline':
       logging.warning(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
       return
 
     try:
@@ -193,7 +195,7 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
       timestamp = int(parsed_structure.timestamp)
     except ValueError:
       logging.debug(
-          u'Not a XChat scrollback log file, invalid timestamp string')
+          'Not a XChat scrollback log file, invalid timestamp string')
       return False
 
     if not timelib.Timestamp.FromPosixTime(timestamp):

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains a appfirewall.log (Mac OS X Firewall) parser."""
 
+from __future__ import unicode_literals
+
 import logging
 
 import pyparsing
@@ -30,7 +32,7 @@ class MacAppFirewallLogEventData(events.EventData):
     status (str): saved status action.
   """
 
-  DATA_TYPE = u'mac:appfirewall:line'
+  DATA_TYPE = 'mac:appfirewall:line'
 
   def __init__(self):
     """Initializes event data."""
@@ -45,10 +47,10 @@ class MacAppFirewallLogEventData(events.EventData):
 class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
   """Parse text based on appfirewall.log file."""
 
-  NAME = u'mac_appfirewall_log'
-  DESCRIPTION = u'Parser for appfirewall.log files.'
+  NAME = 'mac_appfirewall_log'
+  DESCRIPTION = 'Parser for appfirewall.log files.'
 
-  ENCODING = u'utf-8'
+  ENCODING = 'utf-8'
 
   # Define how a log line should look like.
   # Example: 'Nov  2 04:07:35 DarkTemplar-2.local socketfilterfw[112] '
@@ -136,14 +138,14 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
           time_elements_tuple=time_elements_tuple)
     except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'invalid date time value: {0!s}'.format(structure.date_time))
+          'invalid date time value: {0!s}'.format(structure.date_time))
       return
 
     self._last_month = time_elements_tuple[1]
 
     # If the actual entry is a repeated entry, we take the basic information
     # from the previous entry, but using the timestmap from the actual entry.
-    if key == u'logline':
+    if key == 'logline':
       self._previous_structure = structure
     else:
       structure = self._previous_structure
@@ -153,8 +155,8 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       action = structure.action.decode(u'utf-8')
     except UnicodeDecodeError:
       logging.warning(
-          u'Decode UTF8 failed, the message string may be cut short.')
-      action = structure.action.decode(u'utf-8', u'ignore')
+          'Decode UTF8 failed, the message string may be cut short.')
+      action = structure.action.decode(u'utf-8', 'ignore')
 
     event_data = MacAppFirewallLogEventData()
     event_data.action = action
@@ -182,9 +184,9 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key not in (u'logline', u'repeated'):
+    if key not in (u'logline', 'repeated'):
       raise errors.ParseError(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     self._ParseLogLine(parser_mediator, structure, key)
 
@@ -206,19 +208,19 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       structure = self.FIREWALL_LINE.parseString(line)
     except pyparsing.ParseException as exception:
       logging.debug((
-          u'Unable to parse file as a Mac AppFirewall log file with error: '
-          u'{0:s}').format(exception))
+          'Unable to parse file as a Mac AppFirewall log file with error: '
+          '{0:s}').format(exception))
       return False
 
-    if structure.action != u'creating /var/log/appfirewall.log':
+    if structure.action != 'creating /var/log/appfirewall.log':
       logging.debug(
-          u'Not a Mac AppFirewall log file, invalid action: {0!s}'.format(
+          'Not a Mac AppFirewall log file, invalid action: {0!s}'.format(
               structure.action))
       return False
 
-    if structure.status != u'Error':
+    if structure.status != 'Error':
       logging.debug(
-          u'Not a Mac AppFirewall log file, invalid status: {0!s}'.format(
+          'Not a Mac AppFirewall log file, invalid status: {0!s}'.format(
               structure.status))
       return False
 
@@ -229,8 +231,8 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
           time_elements_tuple=time_elements_tuple)
     except ValueError:
       logging.debug((
-          u'Not a Mac AppFirewall log file, invalid date and time: '
-          u'{0!s}').format(structure.date_time))
+          'Not a Mac AppFirewall log file, invalid date and time: '
+          '{0!s}').format(structure.date_time))
       return False
 
     self._last_month = time_elements_tuple[1]

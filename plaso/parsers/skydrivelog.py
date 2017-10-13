@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains SkyDrive log file parser in plaso."""
 
+from __future__ import unicode_literals
+
 import logging
 
 import pyparsing
@@ -29,7 +31,7 @@ class SkyDriveLogEventData(events.EventData):
         message.
   """
 
-  DATA_TYPE = u'skydrive:log:line'
+  DATA_TYPE = 'skydrive:log:line'
 
   def __init__(self):
     """Initializes event data."""
@@ -50,7 +52,7 @@ class SkyDriveOldLogEventData(events.EventData):
     text (str): log message.
   """
 
-  DATA_TYPE = u'skydrive:log:old:line'
+  DATA_TYPE = 'skydrive:log:old:line'
 
   def __init__(self):
     """Initializes event data."""
@@ -63,10 +65,10 @@ class SkyDriveOldLogEventData(events.EventData):
 class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
   """Parses SkyDrive log files."""
 
-  NAME = u'skydrive_log'
-  DESCRIPTION = u'Parser for OneDrive (or SkyDrive) log files.'
+  NAME = 'skydrive_log'
+  DESCRIPTION = 'Parser for OneDrive (or SkyDrive) log files.'
 
-  _ENCODING = u'utf-8'
+  _ENCODING = 'utf-8'
 
   # Common SDF (SkyDrive Format) structures.
   _COMMA = pyparsing.Literal(u',').suppress()
@@ -88,7 +90,7 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
       _TWO_DIGITS.setResultsName(u'seconds') +
       pyparsing.Literal(u'.').suppress() +
       _THREE_DIGITS.setResultsName(u'milliseconds')).setResultsName(
-          u'header_date_time')
+          'header_date_time')
 
   # Date and time format used in lines other than the header is:
   # MM-DD-YY,hh:mm:ss.###
@@ -99,7 +101,7 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
       _TWO_DIGITS.setResultsName(u'year') + _COMMA +
       text_parser.PyparsingConstants.TIME_ELEMENTS + pyparsing.Suppress('.') +
       _THREE_DIGITS.setResultsName(u'milliseconds')).setResultsName(
-          u'date_time')
+          'date_time')
 
   _SDF_HEADER_START = (
       pyparsing.Literal(u'######').suppress() +
@@ -121,11 +123,11 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
   _SDF_HEADER = (
       _SDF_HEADER_START +
       pyparsing.Literal(u'Version=').setResultsName(u'version_string') +
-      pyparsing.Word(pyparsing.nums + u'.').setResultsName(u'version_number') +
+      pyparsing.Word(pyparsing.nums + '.').setResultsName(u'version_number') +
       pyparsing.Literal(u'StartSystemTime:').suppress() +
       _SDF_HEADER_DATE_TIME +
       pyparsing.Literal(u'StartLocalTime:').setResultsName(
-          u'local_time_string') +
+          'local_time_string') +
       pyparsing.SkipTo(pyparsing.lineEnd()).setResultsName(u'details') +
       pyparsing.lineEnd())
 
@@ -137,8 +139,8 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
   def _ParseHeader(self, parser_mediator, structure):
     """Parse header lines and store appropriate attributes.
 
-    [u'Logging started.', u'Version=', u'17.0.2011.0627',
-    [2013, 7, 25], 16, 3, 23, 291, u'StartLocalTime', u'<details>']
+    [u'Logging started.', 'Version=', '17.0.2011.0627',
+    [2013, 7, 25], 16, 3, 23, 291, 'StartLocalTime', '<details>']
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -151,12 +153,12 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
           time_elements_tuple=structure.header_date_time)
     except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'invalid date time value: {0!s}'.format(structure.header_date_time))
+          'invalid date time value: {0!s}'.format(structure.header_date_time))
       return
 
     event_data = SkyDriveLogEventData()
     # TODO: refactor detail to individual event data attributes.
-    event_data.detail = u'{0:s} {1:s} {2:s} {3:s} {4:s}'.format(
+    event_data.detail = '{0:s} {1:s} {2:s} {3:s} {4:s}'.format(
         structure.log_start, structure.version_string,
         structure.version_number, structure.local_time_string,
         structure.details)
@@ -187,13 +189,13 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
           time_elements_tuple=time_elements_tuple)
     except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'invalid date time value: {0!s}'.format(structure.date_time))
+          'invalid date time value: {0!s}'.format(structure.date_time))
       return
 
     event_data = SkyDriveLogEventData()
     # Replace newlines with spaces in structure.detail to preserve output.
     # TODO: refactor detail to individual event data attributes.
-    event_data.detail = structure.detail.replace(u'\n', u' ')
+    event_data.detail = structure.detail.replace(u'\n', ' ')
     event_data.log_level = structure.log_level
     event_data.module = structure.module
     event_data.source_code = structure.source_code
@@ -215,14 +217,14 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key not in (u'header', u'logline'):
+    if key not in (u'header', 'logline'):
       raise errors.ParseError(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key == u'logline':
+    if key == 'logline':
       self._ParseLine(parser_mediator, structure)
 
-    elif key == u'header':
+    elif key == 'header':
       self._ParseHeader(parser_mediator, structure)
 
   def VerifyStructure(self, parser_mediator, line):
@@ -247,7 +249,7 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
           time_elements_tuple=structure.header_date_time)
     except ValueError:
       logging.debug(
-          u'Not a SkyDrive log file, invalid date and time: {0!s}'.format(
+          'Not a SkyDrive log file, invalid date and time: {0!s}'.format(
               structure.header_date_time))
       return False
 
@@ -257,10 +259,10 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
 class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parse SkyDrive old log files."""
 
-  NAME = u'skydrive_log_old'
-  DESCRIPTION = u'Parser for OneDrive (or SkyDrive) old log files.'
+  NAME = 'skydrive_log_old'
+  DESCRIPTION = 'Parser for OneDrive (or SkyDrive) old log files.'
 
-  _ENCODING = u'UTF-8-SIG'
+  _ENCODING = 'UTF-8-SIG'
 
   _FOUR_DIGITS = text_parser.PyparsingConstants.FOUR_DIGITS
   _TWO_DIGITS = text_parser.PyparsingConstants.TWO_DIGITS
@@ -276,7 +278,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
       _TWO_DIGITS.setResultsName(u'day_of_month') + pyparsing.Suppress(u'-') +
       _FOUR_DIGITS.setResultsName(u'year') +
       text_parser.PyparsingConstants.TIME_MSEC_ELEMENTS).setResultsName(
-          u'date_time')
+          'date_time')
 
   _SDOL_SOURCE_CODE = pyparsing.Combine(
       pyparsing.CharsNotIn(u':') +
@@ -337,7 +339,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
           time_elements_tuple=time_elements_tuple)
     except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'invalid date time value: {0!s}'.format(structure.date_time))
+          'invalid date time value: {0!s}'.format(structure.date_time))
       return
 
     event_data = SkyDriveOldLogEventData()
@@ -391,14 +393,14 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key not in (u'logline', u'no_header_single_line'):
+    if key not in (u'logline', 'no_header_single_line'):
       raise errors.ParseError(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key == u'logline':
+    if key == 'logline':
       self._ParseLogline(parser_mediator, structure)
 
-    elif key == u'no_header_single_line':
+    elif key == 'no_header_single_line':
       self._ParseNoHeaderSingleLine(parser_mediator, structure)
 
   def VerifyStructure(self, parser_mediator, line):
@@ -429,7 +431,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
           time_elements_tuple=time_elements_tuple)
     except ValueError:
       logging.debug(
-          u'Not a SkyDrive old log file, invalid date and time: {0!s}'.format(
+          'Not a SkyDrive old log file, invalid date and time: {0!s}'.format(
               structure.date_time))
       return False
 

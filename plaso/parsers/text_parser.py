@@ -6,6 +6,8 @@ also some implementations that extend it to provide a more comprehensive
 parser.
 """
 
+from __future__ import unicode_literals
+
 import abc
 import csv
 import logging
@@ -86,8 +88,8 @@ class TextCSVParser(interface.FileObjectParser):
       except UnicodeDecodeError:
         replaced_value = value.decode(self.encoding, errors=u'replace')
         parser_mediator.ProduceExtractionError(
-            u'error decoding string as {0:s}, characters have been '
-            u'replaced in {1:s}'.format(self.encoding, replaced_value))
+            'error decoding string as {0:s}, characters have been '
+            'replaced in {1:s}'.format(self.encoding, replaced_value))
         row[key] = replaced_value
     return row
 
@@ -120,7 +122,7 @@ class TextCSVParser(interface.FileObjectParser):
       UnableToParseFile: when the file cannot be parsed.
     """
     file_entry = parser_mediator.GetFileEntry()
-    path_spec_printable = file_entry.path_spec.comparable.replace(u'\n', u';')
+    path_spec_printable = file_entry.path_spec.comparable.replace(u'\n', ';')
 
     text_file_object = text_file.TextFile(file_object)
 
@@ -137,7 +139,7 @@ class TextCSVParser(interface.FileObjectParser):
       row = reader.next()
     except (csv.Error, StopIteration):
       raise errors.UnableToParseFile(
-          u'[{0:s}] Unable to parse CSV file: {1:s}.'.format(
+          '[{0:s}] Unable to parse CSV file: {1:s}.'.format(
               self.NAME, path_spec_printable))
 
     number_of_columns = len(self.COLUMNS)
@@ -145,21 +147,21 @@ class TextCSVParser(interface.FileObjectParser):
 
     if number_of_records != number_of_columns:
       raise errors.UnableToParseFile((
-          u'[{0:s}] Unable to parse CSV file: {1:s}. Wrong number of '
-          u'records (expected: {2:d}, got: {3:d})').format(
+          '[{0:s}] Unable to parse CSV file: {1:s}. Wrong number of '
+          'records (expected: {2:d}, got: {3:d})').format(
               self.NAME, path_spec_printable, number_of_columns,
               number_of_records))
 
     for key, value in row.items():
       if key == self.MAGIC_TEST_STRING or value == self.MAGIC_TEST_STRING:
         raise errors.UnableToParseFile((
-            u'[{0:s}] Unable to parse CSV file: {1:s}. Signature '
-            u'mismatch.').format(self.NAME, path_spec_printable))
+            '[{0:s}] Unable to parse CSV file: {1:s}. Signature '
+            'mismatch.').format(self.NAME, path_spec_printable))
 
     if not self.VerifyRow(parser_mediator, row):
       raise errors.UnableToParseFile((
-          u'[{0:s}] Unable to parse CSV file: {1:s}. Verification '
-          u'failed.').format(self.NAME, path_spec_printable))
+          '[{0:s}] Unable to parse CSV file: {1:s}. Verification '
+          'failed.').format(self.NAME, path_spec_printable))
 
     row = self._ConvertRowToUnicode(parser_mediator, row)
     self.ParseRow(parser_mediator, text_file_object.tell(), row)
@@ -232,12 +234,12 @@ def PyParseRangeCheck(lower_bound, upper_bound):
 
     if check_number < lower_bound:
       raise pyparsing.ParseException(
-          u'Value: {0:d} precedes lower bound: {1:d}'.format(
+          'Value: {0:d} precedes lower bound: {1:d}'.format(
               check_number, lower_bound))
 
     if check_number > upper_bound:
       raise pyparsing.ParseException(
-          u'Value: {0:d} exceeds upper bound: {1:d}'.format(
+          'Value: {0:d} exceeds upper bound: {1:d}'.format(
               check_number, upper_bound))
 
   # Since callback methods for pyparsing need to accept certain parameters
@@ -276,7 +278,7 @@ def PyParseIntCast(unused_string, unused_location, tokens):
       tokens[key] = int(tokens[key], 10)
     except ValueError:
       logging.error(
-          u'Unable to cast [{0:s} = {1:d}] to an int, setting to 0'.format(
+          'Unable to cast [{0:s} = {1:d}] to an int, setting to 0'.format(
               key, tokens[key]))
       tokens[key] = 0
 
@@ -301,7 +303,7 @@ def PyParseJoinList(unused_string, unused_location, tokens):
     except UnicodeDecodeError:
       join_list.append(repr(token))
 
-  tokens[0] = u''.join(join_list)
+  tokens[0] = ''.join(join_list)
   del tokens[1:]
 
 
@@ -398,7 +400,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
   # If this value needs to be calculated on the fly (not a fixed constant for
   # this particular file type) it can be done by modifying the self.encoding
   # attribute.
-  _ENCODING = u'ascii'
+  _ENCODING = 'ascii'
 
   _EMPTY_LINES = frozenset([b'\n', b'\r', b'\r\n'])
 
@@ -439,7 +441,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     if line in self._EMPTY_LINES:
       # Max 40 new lines in a row before we bail out.
       if depth == 40:
-        return u''
+        return ''
 
       return self._ReadLine(
           parser_mediator, text_file_object, max_len=max_len, depth=depth + 1)
@@ -452,7 +454,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     except UnicodeDecodeError:
       if not quiet:
         parser_mediator.ProduceExtractionError(
-            u'unable to decode line: "{0:s}..." with encoding: {1:s}'.format(
+            'unable to decode line: "{0:s}..." with encoding: {1:s}'.format(
                 repr(line[:30]), self.encoding))
 
     return line.strip()
@@ -472,7 +474,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     # a structural fix.
     if not self._line_structures:
       raise errors.UnableToParseFile(
-          u'Line structure undeclared, unable to proceed.')
+          'Line structure undeclared, unable to proceed.')
 
     text_file_object = text_file.TextFile(file_object)
 
@@ -485,9 +487,9 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     if len(line) == self.MAX_LINE_LENGTH or len(
         line) == self.MAX_LINE_LENGTH - 1:
       logging.debug((
-          u'Trying to read a line and reached the maximum allowed length of '
-          u'{0:d}. The last few bytes of the line are: {1:s} [parser '
-          u'{2:s}]').format(
+          'Trying to read a line and reached the maximum allowed length of '
+          '{0:d}. The last few bytes of the line are: {1:s} [parser '
+          '{2:s}]').format(
               self.MAX_LINE_LENGTH, repr(line[-10:]), self.NAME))
 
     if not utils.IsText(line):
@@ -522,9 +524,9 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
           parser_mediator.ProduceEvent(parsed_event)
       else:
         if len(line) > 80:
-          line = u'{0:s}...'.format(line[:77])
+          line = '{0:s}...'.format(line[:77])
         parser_mediator.ProduceExtractionError(
-            u'unable to parse log line: {0:s} at offset {1:d}'.format(
+            'unable to parse log line: {0:s} at offset {1:d}'.format(
                 repr(line), self._current_offset))
 
       self._current_offset = text_file_object.get_offset()
@@ -581,8 +583,8 @@ class EncodedTextReader(object):
     self._encoding = encoding
 
     if self._encoding:
-      self._new_line = u'\n'.encode(self._encoding)
-      self._carriage_return = u'\r'.encode(self._encoding)
+      self._new_line = '\n'.encode(self._encoding)
+      self._carriage_return = '\r'.encode(self._encoding)
     else:
       self._new_line = b'\n'
       self._carriage_return = b'\r'
@@ -590,7 +592,7 @@ class EncodedTextReader(object):
     self._new_line_length = len(self._new_line)
     self._carriage_return_length = len(self._carriage_return)
 
-    self.lines = u''
+    self.lines = ''
 
   def _ReadLine(self, file_object):
     """Reads a line from the file object.
@@ -662,7 +664,7 @@ class EncodedTextReader(object):
         if not line:
           break
 
-        self.lines = u''.join([self.lines, line])
+        self.lines = ''.join([self.lines, line])
         lines_size -= len(line)
 
   def Reset(self):
@@ -670,7 +672,7 @@ class EncodedTextReader(object):
     self._buffer = b''
     self._current_offset = 0
 
-    self.lines = u''
+    self.lines = ''
 
   def SkipAhead(self, file_object, number_of_characters):
     """Skips ahead a number of characters.
@@ -683,7 +685,7 @@ class EncodedTextReader(object):
     while number_of_characters >= lines_size:
       number_of_characters -= lines_size
 
-      self.lines = u''
+      self.lines = ''
       self.ReadLines(file_object)
       lines_size = len(self.lines)
       if lines_size == 0:
@@ -724,7 +726,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       self._text_reader.ReadLines(file_object)
     except UnicodeDecodeError as exception:
       raise errors.UnableToParseFile(
-          u'Not a text file, with error: {0:s}'.format(exception))
+          'Not a text file, with error: {0:s}'.format(exception))
 
     if not utils.IsText(self._text_reader.lines):
       raise errors.UnableToParseFile(u'Not a text file, unable to proceed.')
@@ -773,7 +775,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
           self.ParseRecord(parser_mediator, key, tokens)
         except (errors.ParseError, errors.TimestampError) as exception:
           parser_mediator.ProduceExtractionError(
-              u'unable parse record: {0:s} with error: {1:s}'.format(
+              'unable parse record: {0:s} with error: {1:s}'.format(
                   key, exception))
 
         self._text_reader.SkipAhead(file_object, end)
@@ -782,15 +784,15 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
         odd_line = self._text_reader.ReadLine(file_object)
         if odd_line:
           if len(odd_line) > 80:
-            odd_line = u'{0:s}...'.format(odd_line[:77])
+            odd_line = '{0:s}...'.format(odd_line[:77])
           parser_mediator.ProduceExtractionError(
-              u'unable to parse log line: {0:s}'.format(repr(odd_line)))
+              'unable to parse log line: {0:s}'.format(repr(odd_line)))
 
       try:
         self._text_reader.ReadLines(file_object)
       except UnicodeDecodeError as exception:
         parser_mediator.ProduceExtractionError(
-            u'unable to read lines with error: {0:s}'.format(exception))
+            'unable to read lines with error: {0:s}'.format(exception))
 
   @abc.abstractmethod
   def ParseRecord(self, parser_mediator, key, structure):
