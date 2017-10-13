@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """The Elastic Search output module CLI arguments helper."""
 
-from uuid import uuid4
+from __future__ import unicode_literals
+
 import getpass
+
+from uuid import uuid4
 
 from plaso.lib import errors
 from plaso.cli.helpers import interface
@@ -14,19 +17,19 @@ from plaso.output import elastic
 class ElasticSearchServerArgumentsHelper(server_config.ServerArgumentsHelper):
   """Elastic Search server CLI arguments helper."""
 
-  _DEFAULT_SERVER = u'127.0.0.1'
+  _DEFAULT_SERVER = '127.0.0.1'
   _DEFAULT_PORT = 9200
 
 
 class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
   """Elastic Search output module CLI arguments helper."""
 
-  NAME = u'elastic'
-  CATEGORY = u'output'
-  DESCRIPTION = u'Argument helper for the Elastic Search output module.'
+  NAME = 'elastic'
+  CATEGORY = 'output'
+  DESCRIPTION = 'Argument helper for the Elastic Search output module.'
 
   _DEFAULT_INDEX_NAME = uuid4().hex
-  _DEFAULT_DOC_TYPE = u'plaso_event'
+  _DEFAULT_DOC_TYPE = 'plaso_event'
   _DEFAULT_FLUSH_INTERVAL = 1000
   _DEFAULT_RAW_FIELDS = False
   _DEFAULT_ELASTIC_USER = None
@@ -43,25 +46,25 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        u'--index_name', dest=u'index_name', type=str, action=u'store',
+        '--index_name', dest='index_name', type=str, action='store',
         default=cls._DEFAULT_INDEX_NAME, help=(
-            u'Name of the index in ElasticSearch.'))
+            'Name of the index in ElasticSearch.'))
     argument_group.add_argument(
-        u'--doc_type', dest=u'doc_type', type=str,
-        action=u'store', default=cls._DEFAULT_DOC_TYPE, help=(
-            u'Name of the document type that will be used in ElasticSearch.'))
+        '--doc_type', dest='doc_type', type=str,
+        action='store', default=cls._DEFAULT_DOC_TYPE, help=(
+            'Name of the document type that will be used in ElasticSearch.'))
     argument_group.add_argument(
-        u'--flush_interval', dest=u'flush_interval', type=int,
-        action=u'store', default=cls._DEFAULT_FLUSH_INTERVAL, help=(
-            u'Events to queue up before bulk insert to ElasticSearch.'))
+        '--flush_interval', dest='flush_interval', type=int,
+        action='store', default=cls._DEFAULT_FLUSH_INTERVAL, help=(
+            'Events to queue up before bulk insert to ElasticSearch.'))
     argument_group.add_argument(
-        u'--raw_fields', dest=u'raw_fields', action=u'store_true',
+        '--raw_fields', dest='raw_fields', action='store_true',
         default=cls._DEFAULT_RAW_FIELDS, help=(
-            u'Export string fields that will not be analyzed by Lucene.'))
+            'Export string fields that will not be analyzed by Lucene.'))
     argument_group.add_argument(
-        u'--elastic_user', dest=u'elastic_user', action=u'store',
+        '--elastic_user', dest='elastic_user', action='store',
         default=cls._DEFAULT_ELASTIC_USER, help=(
-            u'Username to use for Elasticsearch authentication.'))
+            'Username to use for Elasticsearch authentication.'))
 
     ElasticSearchServerArgumentsHelper.AddArguments(argument_group)
 
@@ -79,22 +82,22 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     """
     if not isinstance(output_module, elastic.ElasticSearchOutputModule):
       raise errors.BadConfigObject(
-          u'Output module is not an instance of ElasticSearchOutputModule')
+          'Output module is not an instance of ElasticSearchOutputModule')
 
     index_name = cls._ParseStringOption(
-        options, u'index_name', default_value=cls._DEFAULT_INDEX_NAME)
+        options, 'index_name', default_value=cls._DEFAULT_INDEX_NAME)
     doc_type = cls._ParseStringOption(
-        options, u'doc_type', default_value=cls._DEFAULT_DOC_TYPE)
+        options, 'doc_type', default_value=cls._DEFAULT_DOC_TYPE)
     flush_interval = cls._ParseNumericOption(
-        options, u'flush_interval', default_value=cls._DEFAULT_FLUSH_INTERVAL)
+        options, 'flush_interval', default_value=cls._DEFAULT_FLUSH_INTERVAL)
     raw_fields = getattr(
-        options, u'raw_fields', cls._DEFAULT_RAW_FIELDS)
+        options, 'raw_fields', cls._DEFAULT_RAW_FIELDS)
     elastic_user = cls._ParseStringOption(
-        options, u'elastic_user', default_value=cls._DEFAULT_ELASTIC_USER)
+        options, 'elastic_user', default_value=cls._DEFAULT_ELASTIC_USER)
 
     if elastic_user is not None:
       elastic_password = getpass.getpass(
-          u'Enter your Elasticsearch password: ')
+          'Enter your Elasticsearch password: ')
     else:
       elastic_password = None
 

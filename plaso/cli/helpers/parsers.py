@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The parsers CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 from plaso.cli import tools
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
@@ -10,8 +12,8 @@ from plaso.lib import errors
 class ParsersArgumentsHelper(interface.ArgumentsHelper):
   """Parsers CLI arguments helper."""
 
-  NAME = u'parsers'
-  DESCRIPTION = u'Parsers command line arguments.'
+  NAME = 'parsers'
+  DESCRIPTION = 'Parsers command line arguments.'
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -26,19 +28,19 @@ class ParsersArgumentsHelper(interface.ArgumentsHelper):
     """
     # TODO: rename option name to parser_filter_expression.
     argument_group.add_argument(
-        u'--parsers', dest=u'parsers', type=str, action=u'store',
-        default=u'', metavar=u'PARSER_LIST', help=(
-            u'Define a list of parsers to use by the tool. This is a comma '
-            u'separated list where each entry can be either a name of a parser '
-            u'or a parser list. Each entry can be prepended with an '
-            u'exclamation mark to negate the selection (exclude it). The list '
-            u'match is an exact match while an individual parser matching is '
-            u'a case insensitive substring match, with support for glob '
-            u'patterns. Examples would be: "reg" that matches the substring '
-            u'"reg" in all parser names or the glob pattern "sky[pd]" that '
-            u'would match all parsers that have the string "skyp" or "skyd" '
-            u'in its name. All matching is case insensitive. Use "--parsers '
-            u'list" or "--info" to list the available parsers.'))
+        '--parsers', dest='parsers', type=str, action='store',
+        default='', metavar='PARSER_LIST', help=(
+            'Define a list of parsers to use by the tool. This is a comma '
+            'separated list where each entry can be either a name of a parser '
+            'or a parser list. Each entry can be prepended with an '
+            'exclamation mark to negate the selection (exclude it). The list '
+            'match is an exact match while an individual parser matching is '
+            'a case insensitive substring match, with support for glob '
+            'patterns. Examples would be: "reg" that matches the substring '
+            '"reg" in all parser names or the glob pattern "sky[pd]" that '
+            'would match all parsers that have the string "skyp" or "skyd" '
+            'in its name. All matching is case insensitive. Use "--parsers '
+            'list" or "--info" to list the available parsers.'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
@@ -54,14 +56,14 @@ class ParsersArgumentsHelper(interface.ArgumentsHelper):
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
-          u'Configuration object is not an instance of CLITool')
+          'Configuration object is not an instance of CLITool')
 
-    parsers = cls._ParseStringOption(options, u'parsers', default_value=u'')
-    parsers = parsers.replace(u'\\', u'/')
+    parsers = cls._ParseStringOption(options, 'parsers', default_value='')
+    parsers = parsers.replace('\\', '/')
 
     # TODO: validate parser names.
 
-    setattr(configuration_object, u'_parser_filter_expression', parsers)
+    setattr(configuration_object, '_parser_filter_expression', parsers)
 
 
 manager.ArgumentHelperManager.RegisterHelper(ParsersArgumentsHelper)

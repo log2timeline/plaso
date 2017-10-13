@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The tagging analysis plugin CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import os
 
 from plaso.lib import errors
@@ -12,9 +14,9 @@ from plaso.analysis import tagging
 class TaggingAnalysisArgumentsHelper(interface.ArgumentsHelper):
   """Tagging analysis plugin CLI arguments helper."""
 
-  NAME = u'tagging'
-  CATEGORY = u'analysis'
-  DESCRIPTION = u'Argument helper for the Tagging analysis plugin.'
+  NAME = 'tagging'
+  CATEGORY = 'analysis'
+  DESCRIPTION = 'Argument helper for the Tagging analysis plugin.'
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -28,8 +30,8 @@ class TaggingAnalysisArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        u'--tagging-file', u'--tagging_file', dest=u'tagging_file', type=str,
-        help=u'Specify a file to read tagging criteria from.', action=u'store')
+        '--tagging-file', '--tagging_file', dest='tagging_file', type=str,
+        help='Specify a file to read tagging criteria from.', action='store')
 
   @classmethod
   def ParseOptions(cls, options, analysis_plugin):
@@ -45,9 +47,9 @@ class TaggingAnalysisArgumentsHelper(interface.ArgumentsHelper):
     """
     if not isinstance(analysis_plugin, tagging.TaggingAnalysisPlugin):
       raise errors.BadConfigObject(
-          u'Analysis plugin is not an instance of TaggingAnalysisPlugin')
+          'Analysis plugin is not an instance of TaggingAnalysisPlugin')
 
-    tagging_file = cls._ParseStringOption(options, u'tagging_file')
+    tagging_file = cls._ParseStringOption(options, 'tagging_file')
     if tagging_file:
       if not os.path.exists(tagging_file) or not os.path.isfile(tagging_file):
         # Check if the file exists in the data location path.
@@ -60,7 +62,7 @@ class TaggingAnalysisArgumentsHelper(interface.ArgumentsHelper):
             return
 
         raise errors.BadConfigOption(
-            u'Tagging file {0:s} does not exist.'.format(tagging_file))
+            'Tagging file {0:s} does not exist.'.format(tagging_file))
       analysis_plugin.SetAndLoadTagFile(tagging_file)
 
 

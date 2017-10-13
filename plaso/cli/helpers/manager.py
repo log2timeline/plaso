@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The CLI arguments helper manager objects."""
 
+from __future__ import unicode_literals
+
 from plaso.lib import errors
 
 
@@ -47,7 +49,7 @@ class ArgumentHelperManager(object):
     """
     helper_name = helper_class.NAME.lower()
     if helper_name not in cls._helper_classes:
-      raise KeyError(u'Helper class not set for name: {0:s}.'.format(
+      raise KeyError('Helper class not set for name: {0:s}.'.format(
           helper_class.NAME))
 
     del cls._helper_classes[helper_name]
@@ -90,7 +92,7 @@ class ArgumentHelperManager(object):
     """
     helper_name = helper_class.NAME.lower()
     if helper_name in cls._helper_classes:
-      raise KeyError(u'Helper class already set for name: {0:s}.'.format(
+      raise KeyError('Helper class already set for name: {0:s}.'.format(
           helper_class.NAME))
 
     cls._helper_classes[helper_name] = helper_class

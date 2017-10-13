@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The database configuration CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 from plaso.lib import errors
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import server_config
@@ -9,12 +11,12 @@ from plaso.cli.helpers import server_config
 class DatabaseArgumentsHelper(interface.ArgumentsHelper):
   """Database configuration CLI arguments helper."""
 
-  NAME = u'database_config'
-  DESCRIPTION = u'Argument helper for a database configuration.'
+  NAME = 'database_config'
+  DESCRIPTION = 'Argument helper for a database configuration.'
 
-  _DEFAULT_NAME = u'data'
-  _DEFAULT_PASSWORD = u'toor'
-  _DEFAULT_USERNAME = u'root'
+  _DEFAULT_NAME = 'data'
+  _DEFAULT_PASSWORD = 'toor'
+  _DEFAULT_USERNAME = 'root'
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -28,17 +30,17 @@ class DatabaseArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        u'--user', dest=u'username', type=str, action=u'store',
-        default=cls._DEFAULT_USERNAME, metavar=u'USERNAME', required=False,
-        help=u'The username used to connect to the database.')
+        '--user', dest='username', type=str, action='store',
+        default=cls._DEFAULT_USERNAME, metavar='USERNAME', required=False,
+        help='The username used to connect to the database.')
     argument_group.add_argument(
-        u'--password', dest=u'password', type=str, action=u'store',
-        default=cls._DEFAULT_PASSWORD, metavar=u'PASSWORD', help=(
-            u'The password for the database user.'))
+        '--password', dest='password', type=str, action='store',
+        default=cls._DEFAULT_PASSWORD, metavar='PASSWORD', help=(
+            'The password for the database user.'))
     argument_group.add_argument(
-        u'--db_name', '--db-name', dest=u'db_name', action=u'store',
+        '--db_name', '--db-name', dest='db_name', action='store',
         type=str, default=cls._DEFAULT_NAME, required=False, help=(
-            u'The name of the database to connect to.'))
+            'The name of the database to connect to.'))
 
     server_config.ServerArgumentsHelper.AddArguments(argument_group)
 
@@ -54,18 +56,18 @@ class DatabaseArgumentsHelper(interface.ArgumentsHelper):
       BadConfigObject: when the output module object does not have the
           SetCredentials or SetDatabaseName methods.
     """
-    if not hasattr(output_module, u'SetCredentials'):
-      raise errors.BadConfigObject(u'Unable to set username information.')
+    if not hasattr(output_module, 'SetCredentials'):
+      raise errors.BadConfigObject('Unable to set username information.')
 
-    if not hasattr(output_module, u'SetDatabaseName'):
-      raise errors.BadConfigObject(u'Unable to set database information.')
+    if not hasattr(output_module, 'SetDatabaseName'):
+      raise errors.BadConfigObject('Unable to set database information.')
 
     username = cls._ParseStringOption(
-        options, u'username', default_value=cls._DEFAULT_USERNAME)
+        options, 'username', default_value=cls._DEFAULT_USERNAME)
     password = cls._ParseStringOption(
-        options, u'password', default_value=cls._DEFAULT_PASSWORD)
+        options, 'password', default_value=cls._DEFAULT_PASSWORD)
     name = cls._ParseStringOption(
-        options, u'db_name', default_value=cls._DEFAULT_NAME)
+        options, 'db_name', default_value=cls._DEFAULT_NAME)
 
     output_module.SetCredentials(username=username, password=password)
     output_module.SetDatabaseName(name)

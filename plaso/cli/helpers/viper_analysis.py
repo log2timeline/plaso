@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The Viper analysis plugin CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 from plaso.analysis import viper
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
@@ -10,14 +12,14 @@ from plaso.lib import errors
 class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
   """Viper analysis plugin CLI arguments helper."""
 
-  NAME = u'viper_analysis'
-  CATEGORY = u'analysis'
-  DESCRIPTION = u'Argument helper for the Viper analysis plugin.'
+  NAME = 'viper_analysis'
+  CATEGORY = 'analysis'
+  DESCRIPTION = 'Argument helper for the Viper analysis plugin.'
 
-  _DEFAULT_HASH = u'sha256'
-  _DEFAULT_HOST = u'localhost'
+  _DEFAULT_HASH = 'sha256'
+  _DEFAULT_HOST = 'localhost'
   _DEFAULT_PORT = 8080
-  _DEFAULT_PROTOCOL = u'http'
+  _DEFAULT_PROTOCOL = 'http'
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -31,35 +33,35 @@ class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        u'--viper-hash', u'--viper_hash', dest=u'viper_hash', type=str,
+        '--viper-hash', '--viper_hash', dest='viper_hash', type=str,
         action='store', choices=viper.ViperAnalyzer.SUPPORTED_HASHES,
-        default=cls._DEFAULT_HASH, metavar=u'HASH', help=(
-            u'Type of hash to use to query the Viper server, the default is: '
-            u'{0:s}. Supported options: {1:s}').format(
-                cls._DEFAULT_HASH, u', '.join(
+        default=cls._DEFAULT_HASH, metavar='HASH', help=(
+            'Type of hash to use to query the Viper server, the default is: '
+            '{0:s}. Supported options: {1:s}').format(
+                cls._DEFAULT_HASH, ', '.join(
                     viper.ViperAnalyzer.SUPPORTED_HASHES)))
 
     argument_group.add_argument(
-        u'--viper-host', u'--viper_host', dest=u'viper_host', type=str,
-        action='store', default=cls._DEFAULT_HOST, metavar=u'HOST',
+        '--viper-host', '--viper_host', dest='viper_host', type=str,
+        action='store', default=cls._DEFAULT_HOST, metavar='HOST',
         help=(
-            u'Hostname of the Viper server to query, the default is: '
-            u'{0:s}'.format(cls._DEFAULT_HOST)))
+            'Hostname of the Viper server to query, the default is: '
+            '{0:s}'.format(cls._DEFAULT_HOST)))
 
     argument_group.add_argument(
-        u'--viper-port', u'--viper_port', dest=u'viper_port', type=int,
-        action='store', default=cls._DEFAULT_PORT, metavar=u'PORT', help=(
-            u'Port of the Viper server to query, the default is: {0:d}.'.format(
+        '--viper-port', '--viper_port', dest='viper_port', type=int,
+        action='store', default=cls._DEFAULT_PORT, metavar='PORT', help=(
+            'Port of the Viper server to query, the default is: {0:d}.'.format(
                 cls._DEFAULT_PORT)))
 
     argument_group.add_argument(
-        u'--viper-protocol', u'--viper_protocol', dest=u'viper_protocol',
+        '--viper-protocol', '--viper_protocol', dest='viper_protocol',
         type=str, choices=viper.ViperAnalyzer.SUPPORTED_PROTOCOLS,
-        action='store', default=cls._DEFAULT_PROTOCOL, metavar=u'PROTOCOL',
+        action='store', default=cls._DEFAULT_PROTOCOL, metavar='PROTOCOL',
         help=(
-            u'Protocol to use to query Viper, the default is: {0:s}. '
-            u'Supported options: {1:s}').format(
-                cls._DEFAULT_PROTOCOL, u', '.join(
+            'Protocol to use to query Viper, the default is: {0:s}. '
+            'Supported options: {1:s}').format(
+                cls._DEFAULT_PROTOCOL, ', '.join(
                     viper.ViperAnalyzer.SUPPORTED_PROTOCOLS)))
 
   @classmethod
@@ -76,28 +78,28 @@ class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
     """
     if not isinstance(analysis_plugin, viper.ViperAnalysisPlugin):
       raise errors.BadConfigObject(
-          u'Analysis plugin is not an instance of ViperAnalysisPlugin')
+          'Analysis plugin is not an instance of ViperAnalysisPlugin')
 
     lookup_hash = cls._ParseStringOption(
-        options, u'viper_hash', default_value=cls._DEFAULT_HASH)
+        options, 'viper_hash', default_value=cls._DEFAULT_HASH)
     analysis_plugin.SetLookupHash(lookup_hash)
 
     host = cls._ParseStringOption(
-        options, u'viper_host', default_value=cls._DEFAULT_HOST)
+        options, 'viper_host', default_value=cls._DEFAULT_HOST)
     analysis_plugin.SetHost(host)
 
     port = cls._ParseNumericOption(
-        options, u'viper_port', default_value=cls._DEFAULT_PORT)
+        options, 'viper_port', default_value=cls._DEFAULT_PORT)
     analysis_plugin.SetPort(port)
 
     protocol = cls._ParseStringOption(
-        options, u'viper_protocol', default_value=cls._DEFAULT_PROTOCOL)
+        options, 'viper_protocol', default_value=cls._DEFAULT_PROTOCOL)
     protocol = protocol.lower().strip()
     analysis_plugin.SetProtocol(protocol)
 
     if not analysis_plugin.TestConnection():
       raise errors.BadConfigOption(
-          u'Unable to connect to Viper {0:s}:{1:d}'.format(host, port))
+          'Unable to connect to Viper {0:s}:{1:d}'.format(host, port))
 
 
 manager.ArgumentHelperManager.RegisterHelper(ViperAnalysisArgumentsHelper)

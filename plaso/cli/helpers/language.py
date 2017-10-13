@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The language CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 from plaso.cli import tools
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
@@ -10,8 +12,8 @@ from plaso.lib import errors
 class LanguageArgumentsHelper(interface.ArgumentsHelper):
   """Language CLI arguments helper."""
 
-  NAME = u'language'
-  DESCRIPTION = u'Language command line arguments.'
+  NAME = 'language'
+  DESCRIPTION = 'Language command line arguments.'
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -25,13 +27,13 @@ class LanguageArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        u'--language', metavar=u'LANGUAGE', dest=u'preferred_language',
-        default=u'en-US', type=str, help=(
-            u'The preferred language identifier for Windows Event Log message '
-            u'strings. Use "--language list" to see a list of available '
-            u'language identifiers. Note that formatting will fall back on '
-            u'en-US (LCID 0x0409) if the preferred language is not available '
-            u'in the database of message string templates.'))
+        '--language', metavar='LANGUAGE', dest='preferred_language',
+        default='en-US', type=str, help=(
+            'The preferred language identifier for Windows Event Log message '
+            'strings. Use "--language list" to see a list of available '
+            'language identifiers. Note that formatting will fall back on '
+            'en-US (LCID 0x0409) if the preferred language is not available '
+            'in the database of message string templates.'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
@@ -47,12 +49,12 @@ class LanguageArgumentsHelper(interface.ArgumentsHelper):
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
-          u'Configuration object is not an instance of CLITool')
+          'Configuration object is not an instance of CLITool')
 
     preferred_language = cls._ParseStringOption(
-        options, u'preferred_language', default_value=u'en-US')
+        options, 'preferred_language', default_value='en-US')
 
-    setattr(configuration_object, u'_preferred_language', preferred_language)
+    setattr(configuration_object, '_preferred_language', preferred_language)
 
 
 manager.ArgumentHelperManager.RegisterHelper(LanguageArgumentsHelper)
