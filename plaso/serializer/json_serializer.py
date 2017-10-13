@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The json serializer object implementation."""
 
+from __future__ import unicode_literals
+
 import binascii
 import collections
 import json
@@ -47,17 +49,17 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     """
     if not isinstance(
         attribute_container, containers_interface.AttributeContainer):
-      raise TypeError(u'{0:s} is not an attribute container type.'.format(
+      raise TypeError('{0:s} is not an attribute container type.'.format(
           type(attribute_container)))
 
-    container_type = getattr(attribute_container, u'CONTAINER_TYPE', None)
+    container_type = getattr(attribute_container, 'CONTAINER_TYPE', None)
     if not container_type:
-      raise ValueError(u'Unsupported attribute container type: {0:s}.'.format(
+      raise ValueError('Unsupported attribute container type: {0:s}.'.format(
           type(attribute_container)))
 
     json_dict = {
-        u'__type__': u'AttributeContainer',
-        u'__container_type__': container_type,
+        '__type__': 'AttributeContainer',
+        '__container_type__': container_type,
     }
 
     for attribute_name, attribute_value in attribute_container.GetAttributes():
@@ -80,8 +82,8 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     """
     if isinstance(attribute_value, py2to3.BYTES_TYPE):
       attribute_value = {
-          u'__type__': u'bytes',
-          u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
+          '__type__': 'bytes',
+          'stream': '{0:s}'.format(binascii.b2a_qp(attribute_value))
       }
 
     elif isinstance(attribute_value, (list, tuple)):
@@ -94,8 +96,8 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
         attribute_value = json_list
       else:
         attribute_value = {
-            u'__type__': u'tuple',
-            u'values': json_list
+            '__type__': 'tuple',
+            'values': json_list
         }
 
     elif isinstance(attribute_value, collections.Counter):
@@ -135,15 +137,15 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     if not isinstance(collections_counter, collections.Counter):
       raise TypeError
 
-    json_dict = {u'__type__': u'collections.Counter'}
+    json_dict = {'__type__': 'collections.Counter'}
     for attribute_name, attribute_value in iter(collections_counter.items()):
       if attribute_value is None:
         continue
 
       if isinstance(attribute_value, py2to3.BYTES_TYPE):
         attribute_value = {
-            u'__type__': u'bytes',
-            u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
+            '__type__': 'bytes',
+            'stream': '{0:s}'.format(binascii.b2a_qp(attribute_value))
         }
 
       json_dict[attribute_name] = attribute_value
@@ -182,49 +184,49 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       ValueError: if the class type or container type is not supported.
     """
     # Use __type__ to indicate the object class type.
-    class_type = json_dict.get(u'__type__', None)
+    class_type = json_dict.get('__type__', None)
     if not class_type:
       # Dealing with a regular dict.
       return json_dict
 
-    if class_type == u'bytes':
-      return binascii.a2b_qp(json_dict[u'stream'])
+    if class_type == 'bytes':
+      return binascii.a2b_qp(json_dict['stream'])
 
-    elif class_type == u'tuple':
-      return tuple(cls._ConvertListToObject(json_dict[u'values']))
+    elif class_type == 'tuple':
+      return tuple(cls._ConvertListToObject(json_dict['values']))
 
-    elif class_type == u'collections.Counter':
+    elif class_type == 'collections.Counter':
       return cls._ConvertDictToCollectionsCounter(json_dict)
 
-    elif class_type == u'AttributeContainer':
+    elif class_type == 'AttributeContainer':
       # Use __container_type__ to indicate the attribute container type.
-      container_type = json_dict.get(u'__container_type__', None)
+      container_type = json_dict.get('__container_type__', None)
 
     # Since we would like the JSON as flat as possible we handle decoding
     # a path specification.
-    elif class_type == u'PathSpec':
+    elif class_type == 'PathSpec':
       return cls._ConvertDictToPathSpec(json_dict)
 
     else:
-      raise ValueError(u'Unsupported class type: {0:s}'.format(class_type))
+      raise ValueError('Unsupported class type: {0:s}'.format(class_type))
 
     container_class = (
         containers_manager.AttributeContainersManager.GetAttributeContainer(
             container_type))
     if not container_class:
-      raise ValueError(u'Unsupported container type: {0:s}'.format(
+      raise ValueError('Unsupported container type: {0:s}'.format(
           container_type))
 
     container_object = container_class()
     supported_attribute_names = container_object.GetAttributeNames()
     for attribute_name, attribute_value in iter(json_dict.items()):
-      # Be strict about which attributes to set in non events.
-      if (container_type != u'event' and
+      # Be strict about which attributes to set in non event values.
+      if (container_type not in ('event', 'event_data') and
           attribute_name not in supported_attribute_names):
 
-        if attribute_name not in (u'__container_type__', u'__type__'):
+        if attribute_name not in ('__container_type__', '__type__'):
           logging.debug(
-              u'Unsupported attribute name: {0:s}.{1:s}'.format(
+              'Unsupported attribute name: {0:s}.{1:s}'.format(
                   container_type, attribute_name))
 
         continue
@@ -262,7 +264,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     collections_counter = collections.Counter()
 
     for key, value in iter(json_dict.items()):
-      if key == u'__type__':
+      if key == '__type__':
         continue
       collections_counter[key] = value
 
@@ -313,15 +315,15 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     Returns:
       path.PathSpec: path specification.
     """
-    type_indicator = json_dict.get(u'type_indicator', None)
+    type_indicator = json_dict.get('type_indicator', None)
     if type_indicator:
-      del json_dict[u'type_indicator']
+      del json_dict['type_indicator']
 
-    if u'parent' in json_dict:
-      json_dict[u'parent'] = cls._ConvertDictToPathSpec(json_dict[u'parent'])
+    if 'parent' in json_dict:
+      json_dict['parent'] = cls._ConvertDictToPathSpec(json_dict['parent'])
 
     # Remove the class type from the JSON dict since we cannot pass it.
-    del json_dict[u'__type__']
+    del json_dict['__type__']
 
     return dfvfs_path_spec_factory.Factory.NewPathSpec(
         type_indicator, **json_dict)
@@ -357,19 +359,19 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     if not isinstance(path_spec_object, dfvfs_path_spec.PathSpec):
       raise TypeError
 
-    json_dict = {u'__type__': u'PathSpec'}
+    json_dict = {'__type__': 'PathSpec'}
     for property_name in dfvfs_path_spec_factory.Factory.PROPERTY_NAMES:
       property_value = getattr(path_spec_object, property_name, None)
       if property_value is not None:
         json_dict[property_name] = property_value
 
     if path_spec_object.HasParent():
-      json_dict[u'parent'] = cls._ConvertPathSpecToDict(path_spec_object.parent)
+      json_dict['parent'] = cls._ConvertPathSpecToDict(path_spec_object.parent)
 
-    json_dict[u'type_indicator'] = path_spec_object.type_indicator
-    location = getattr(path_spec_object, u'location', None)
+    json_dict['type_indicator'] = path_spec_object.type_indicator
+    location = getattr(path_spec_object, 'location', None)
     if location:
-      json_dict[u'location'] = location
+      json_dict['location'] = location
 
     return json_dict
 
@@ -404,7 +406,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     if json_dict:
       json_object = cls._ConvertDictToObject(json_dict)
       if not isinstance(json_object, containers_interface.AttributeContainer):
-        raise TypeError(u'{0:s} is not an attribute container type.'.format(
+        raise TypeError('{0:s} is not an attribute container type.'.format(
             type(json_object)))
       return json_object
 

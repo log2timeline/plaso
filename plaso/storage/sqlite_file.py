@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """SQLite-based storage."""
 
+from __future__ import unicode_literals
+
 import logging
 import os
 import sqlite3
@@ -28,27 +30,27 @@ class SQLiteStorageFile(interface.BaseFileStorage):
   _COMPATIBLE_FORMAT_VERSION = 20170707
 
   _CONTAINER_TYPES = (
-      u'analysis_report', u'extraction_error', u'event', u'event_data',
-      u'event_source', u'event_tag', u'session_completion', u'session_start',
-      u'system_configuration', u'task_completion', u'task_start')
+      'analysis_report', 'extraction_error', 'event', 'event_data',
+      'event_source', 'event_tag', 'session_completion', 'session_start',
+      'system_configuration', 'task_completion', 'task_start')
 
   _CREATE_METADATA_TABLE_QUERY = (
-      u'CREATE TABLE metadata (key TEXT, value TEXT);')
+      'CREATE TABLE metadata (key TEXT, value TEXT);')
 
   _CREATE_TABLE_QUERY = (
-      u'CREATE TABLE {0:s} ('
-      u'_identifier INTEGER PRIMARY KEY AUTOINCREMENT,'
-      u'_data {1:s});')
+      'CREATE TABLE {0:s} ('
+      '_identifier INTEGER PRIMARY KEY AUTOINCREMENT,'
+      '_data {1:s});')
 
   _CREATE_EVENT_TABLE_QUERY = (
-      u'CREATE TABLE {0:s} ('
-      u'_identifier INTEGER PRIMARY KEY AUTOINCREMENT,'
-      u'_timestamp INTEGER,'
-      u'_data {1:s});')
+      'CREATE TABLE {0:s} ('
+      '_identifier INTEGER PRIMARY KEY AUTOINCREMENT,'
+      '_timestamp INTEGER,'
+      '_data {1:s});')
 
   _HAS_TABLE_QUERY = (
-      u'SELECT name FROM sqlite_master '
-      u'WHERE type = "table" AND name = "{0:s}"')
+      'SELECT name FROM sqlite_master '
+      'WHERE type = "table" AND name = "{0:s}"')
 
   # The maximum buffer size of serialized data before triggering
   # a flush to disk (64 MiB).
@@ -70,7 +72,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     """
     if (maximum_buffer_size < 0 or
         maximum_buffer_size > self._MAXIMUM_BUFFER_SIZE):
-      raise ValueError(u'Maximum buffer size value out of bounds.')
+      raise ValueError('Maximum buffer size value out of bounds.')
 
     if not maximum_buffer_size:
       maximum_buffer_size = self._MAXIMUM_BUFFER_SIZE
@@ -126,41 +128,41 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     Raises:
       IOError: if the format version or the serializer format is not supported.
     """
-    format_version = metadata_values.get(u'format_version', None)
+    format_version = metadata_values.get('format_version', None)
 
     if not format_version:
-      raise IOError(u'Missing format version.')
+      raise IOError('Missing format version.')
 
     try:
       format_version = int(format_version, 10)
     except (TypeError, ValueError):
-      raise IOError(u'Invalid format version: {0!s}.'.format(format_version))
+      raise IOError('Invalid format version: {0!s}.'.format(format_version))
 
     if format_version < cls._COMPATIBLE_FORMAT_VERSION:
       raise IOError(
-          u'Format version: {0:d} is too old and no longer supported.'.format(
+          'Format version: {0:d} is too old and no longer supported.'.format(
               format_version))
 
     if format_version > cls._FORMAT_VERSION:
       raise IOError(
-          u'Format version: {0:d} is too new and not yet supported.'.format(
+          'Format version: {0:d} is too new and not yet supported.'.format(
               format_version))
 
-    metadata_values[u'format_version'] = format_version
+    metadata_values['format_version'] = format_version
 
-    compression_format = metadata_values.get(u'compression_format', None)
+    compression_format = metadata_values.get('compression_format', None)
     if compression_format not in definitions.COMPRESSION_FORMATS:
-      raise IOError(u'Unsupported compression format: {0:s}'.format(
+      raise IOError('Unsupported compression format: {0:s}'.format(
           compression_format))
 
-    serialization_format = metadata_values.get(u'serialization_format', None)
+    serialization_format = metadata_values.get('serialization_format', None)
     if serialization_format != definitions.SERIALIZER_FORMAT_JSON:
-      raise IOError(u'Unsupported serialization format: {0:s}'.format(
+      raise IOError('Unsupported serialization format: {0:s}'.format(
           serialization_format))
 
-    storage_type = metadata_values.get(u'storage_type', None)
+    storage_type = metadata_values.get('storage_type', None)
     if storage_type not in definitions.STORAGE_TYPES:
-      raise IOError(u'Unsupported storage type: {0:s}'.format(
+      raise IOError('Unsupported storage type: {0:s}'.format(
           storage_type))
 
   def _GetAttributeContainerByIndex(self, container_type, index):
@@ -174,7 +176,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
       AttributeContainer: attribute container or None if not available.
     """
     sequence_number = index + 1
-    query = u'SELECT _data FROM {0:s} WHERE rowid = {1:d}'.format(
+    query = 'SELECT _data FROM {0:s} WHERE rowid = {1:d}'.format(
         container_type, sequence_number)
     self._cursor.execute(query)
 
@@ -193,7 +195,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
       attribute_container.SetIdentifier(identifier)
       return attribute_container
 
-    query = u'SELECT COUNT(*) FROM {0:s}'.format(container_type)
+    query = 'SELECT COUNT(*) FROM {0:s}'.format(container_type)
     self._cursor.execute(query)
 
     row = self._cursor.fetchone()
@@ -222,11 +224,11 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     Yields:
       AttributeContainer: attribute container.
     """
-    query = u'SELECT _identifier, _data FROM {0:s}'.format(container_type)
+    query = 'SELECT _identifier, _data FROM {0:s}'.format(container_type)
     if filter_expression:
-      query = u'{0:s} WHERE {1:s}'.format(query, filter_expression)
+      query = '{0:s} WHERE {1:s}'.format(query, filter_expression)
     if order_by:
-      query = u'{0:s} ORDER BY {1:s}'.format(query, order_by)
+      query = '{0:s} ORDER BY {1:s}'.format(query, order_by)
 
     # Use a local cursor to prevent another query interrupting the generator.
     cursor = self._connection.cursor()
@@ -269,17 +271,17 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     Returns:
       bool: True if the storage metadata was read.
     """
-    query = u'SELECT key, value FROM metadata'
+    query = 'SELECT key, value FROM metadata'
     self._cursor.execute(query)
 
     metadata_values = {row[0]: row[1] for row in self._cursor.fetchall()}
 
     SQLiteStorageFile._CheckStorageMetadata(metadata_values)
 
-    self.format_version = metadata_values[u'format_version']
-    self.compression_format = metadata_values[u'compression_format']
-    self.serialization_format = metadata_values[u'serialization_format']
-    self.storage_type = metadata_values[u'storage_type']
+    self.format_version = metadata_values['format_version']
+    self.compression_format = metadata_values['compression_format']
+    self.serialization_format = metadata_values['serialization_format']
+    self.storage_type = metadata_values['storage_type']
 
   def _WriteAttributeContainer(self, attribute_container):
     """Writes an attribute container.
@@ -295,7 +297,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
       serialized_data = zlib.compress(serialized_data)
       serialized_data = sqlite3.Binary(serialized_data)
 
-    query = u'INSERT INTO {0:s} (_data) VALUES (?)'.format(
+    query = 'INSERT INTO {0:s} (_data) VALUES (?)'.format(
         attribute_container.CONTAINER_TYPE)
     self._cursor.execute(query, (serialized_data, ))
 
@@ -314,9 +316,9 @@ class SQLiteStorageFile(interface.BaseFileStorage):
       return
 
     if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(u'write')
+      self._serializers_profiler.StartTiming('write')
 
-    query = u'INSERT INTO {0:s} (_data) VALUES (?)'.format(container_type)
+    query = 'INSERT INTO {0:s} (_data) VALUES (?)'.format(container_type)
 
     # TODO: directly use container_list instead of values_tuple_list.
     values_tuple_list = []
@@ -332,7 +334,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     self._cursor.executemany(query, values_tuple_list)
 
     if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(u'write')
+      self._serializers_profiler.StopTiming('write')
 
     container_list.Empty()
 
@@ -340,21 +342,21 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     """Writes the storage metadata."""
     self._cursor.execute(self._CREATE_METADATA_TABLE_QUERY)
 
-    query = u'INSERT INTO metadata (key, value) VALUES (?, ?)'
+    query = 'INSERT INTO metadata (key, value) VALUES (?, ?)'
 
-    key = u'format_version'
-    value = u'{0:d}'.format(self._FORMAT_VERSION)
+    key = 'format_version'
+    value = '{0:d}'.format(self._FORMAT_VERSION)
     self._cursor.execute(query, (key, value))
 
-    key = u'compression_format'
+    key = 'compression_format'
     value = self.compression_format
     self._cursor.execute(query, (key, value))
 
-    key = u'serialization_format'
+    key = 'serialization_format'
     value = self.serialization_format
     self._cursor.execute(query, (key, value))
 
-    key = u'storage_type'
+    key = 'storage_type'
     value = self.storage_type
     self._cursor.execute(query, (key, value))
 
@@ -382,7 +384,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(u'extraction_error', error)
+    self._AddAttributeContainer('extraction_error', error)
 
   def AddEvent(self, event):
     """Adds an event.
@@ -401,12 +403,12 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     event_data_identifier = event.GetEventDataIdentifier()
     if event_data_identifier:
       if not isinstance(event_data_identifier, identifiers.SQLTableIdentifier):
-        raise IOError(u'Unsupported event data identifier type: {0:s}'.format(
+        raise IOError('Unsupported event data identifier type: {0:s}'.format(
             type(event_data_identifier)))
 
       event.event_data_row_identifier = event_data_identifier.row_identifier
 
-    self._AddAttributeContainer(u'event', event)
+    self._AddAttributeContainer('event', event)
 
   def AddEventData(self, event_data):
     """Adds event data.
@@ -419,7 +421,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(u'event_data', event_data)
+    self._AddAttributeContainer('event_data', event_data)
 
   def AddEventSource(self, event_source):
     """Adds an event source.
@@ -432,7 +434,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(u'event_source', event_source)
+    self._AddAttributeContainer('event_source', event_source)
 
   def AddEventTag(self, event_tag):
     """Adds an event tag.
@@ -448,12 +450,12 @@ class SQLiteStorageFile(interface.BaseFileStorage):
 
     event_identifier = event_tag.GetEventIdentifier()
     if not isinstance(event_identifier, identifiers.SQLTableIdentifier):
-      raise IOError(u'Unsupported event identifier type: {0:s}'.format(
+      raise IOError('Unsupported event identifier type: {0:s}'.format(
           type(event_identifier)))
 
     event_tag.event_row_identifier = event_identifier.row_identifier
 
-    self._AddAttributeContainer(u'event_tag', event_tag)
+    self._AddAttributeContainer('event_tag', event_tag)
 
   @classmethod
   def CheckSupportedFormat(cls, path):
@@ -471,7 +473,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
 
       cursor = connection.cursor()
 
-      query = u'SELECT * FROM metadata'
+      query = 'SELECT * FROM metadata'
       cursor.execute(query)
 
       metadata_values = {row[0]: row[1] for row in cursor.fetchall()}
@@ -493,14 +495,14 @@ class SQLiteStorageFile(interface.BaseFileStorage):
       IOError: if the storage file is already closed.
     """
     if not self._is_open:
-      raise IOError(u'Storage file already closed.')
+      raise IOError('Storage file already closed.')
 
     if not self._read_only:
-      self._WriteSerializedAttributeContainerList(u'event_source')
-      self._WriteSerializedAttributeContainerList(u'event_data')
-      self._WriteSerializedAttributeContainerList(u'event')
-      self._WriteSerializedAttributeContainerList(u'event_tag')
-      self._WriteSerializedAttributeContainerList(u'extraction_error')
+      self._WriteSerializedAttributeContainerList('event_source')
+      self._WriteSerializedAttributeContainerList('event_data')
+      self._WriteSerializedAttributeContainerList('event')
+      self._WriteSerializedAttributeContainerList('event_tag')
+      self._WriteSerializedAttributeContainerList('extraction_error')
 
     if self._serializers_profiler:
       self._serializers_profiler.Write()
@@ -521,7 +523,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     Returns:
       generator(AnalysisReport): analysis report generator.
     """
-    return self._GetAttributeContainers(u'analysis_report')
+    return self._GetAttributeContainers('analysis_report')
 
   def GetErrors(self):
     """Retrieves the errors.
@@ -529,7 +531,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     Returns:
       generator(ExtractionError): error generator.
     """
-    return self._GetAttributeContainers(u'extraction_error')
+    return self._GetAttributeContainers('extraction_error')
 
   def GetEvents(self):
     """Retrieves the events.
@@ -537,10 +539,10 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     Yield:
       EventObject: event.
     """
-    for event in self._GetAttributeContainers(u'event'):
-      if hasattr(event, u'event_data_row_identifier'):
+    for event in self._GetAttributeContainers('event'):
+      if hasattr(event, 'event_data_row_identifier'):
         event_data_identifier = identifiers.SQLTableIdentifier(
-            u'event_data', event.event_data_row_identifier)
+            'event_data', event.event_data_row_identifier)
         event.SetEventDataIdentifier(event_data_identifier)
 
         del event.event_data_row_identifier
@@ -553,7 +555,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     Yields:
       generator(EventData): event data generator.
     """
-    return self._GetAttributeContainers(u'event_data')
+    return self._GetAttributeContainers('event_data')
 
   def GetEventDataByIdentifier(self, identifier):
     """Retrieves specific event data.
@@ -565,7 +567,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
       EventData: event data or None if not available.
     """
     return self._GetAttributeContainerByIndex(
-        u'event_data', identifier.row_identifier - 1)
+        'event_data', identifier.row_identifier - 1)
 
   def GetEventSourceByIndex(self, index):
     """Retrieves a specific event source.
@@ -576,7 +578,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     Returns:
       EventSource: event source or None if not availabl.e
     """
-    return self._GetAttributeContainerByIndex(u'event_source', index)
+    return self._GetAttributeContainerByIndex('event_source', index)
 
   def GetEventSources(self):
     """Retrieves the event sources.
@@ -584,7 +586,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     Yields:
       generator(EventSource): event source generator.
     """
-    return self._GetAttributeContainers(u'event_source')
+    return self._GetAttributeContainers('event_source')
 
   def GetEventTags(self):
     """Retrieves the event tags.
@@ -592,9 +594,9 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     Yields:
       EventTag: event tag.
     """
-    for event_tag in self._GetAttributeContainers(u'event_tag'):
+    for event_tag in self._GetAttributeContainers('event_tag'):
       event_identifier = identifiers.SQLTableIdentifier(
-          u'event', event_tag.event_row_identifier)
+          'event', event_tag.event_row_identifier)
       event_tag.SetEventIdentifier(event_identifier)
 
       del event_tag.event_row_identifier
@@ -607,10 +609,10 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     Returns:
       int: number of analysis reports.
     """
-    if not self._HasTable(u'analysis_reports'):
+    if not self._HasTable('analysis_reports'):
       return 0
 
-    query = u'SELECT COUNT(*) FROM analysis_reports'
+    query = 'SELECT COUNT(*) FROM analysis_reports'
     self._cursor.execute(query)
 
     row = self._cursor.fetchone()
@@ -622,17 +624,17 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     Returns:
       int: number of event sources.
     """
-    if not self._HasTable(u'event_source'):
+    if not self._HasTable('event_source'):
       return 0
 
-    query = u'SELECT COUNT(*) FROM event_source'
+    query = 'SELECT COUNT(*) FROM event_source'
     self._cursor.execute(query)
 
     row = self._cursor.fetchone()
     number_of_event_sources = row[0]
 
     number_of_event_sources += self._GetNumberOfSerializedAttributeContainers(
-        u'event_sources')
+        'event_sources')
     return number_of_event_sources
 
   def GetSessions(self):
@@ -646,9 +648,9 @@ class SQLiteStorageFile(interface.BaseFileStorage):
           identifiers between the session start and completion attribute
           containers.
     """
-    session_start_generator = self._GetAttributeContainers(u'session_start')
+    session_start_generator = self._GetAttributeContainers('session_start')
     session_completion_generator = self._GetAttributeContainers(
-        u'session_completion')
+        'session_completion')
 
     for session_index in range(0, self._last_session):
       session_start = next(session_start_generator)
@@ -661,7 +663,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
           session.CopyAttributesFromSessionCompletion(session_completion)
         except ValueError:
           raise IOError(
-              u'Session identifier mismatch for session: {0:d}'.format(
+              'Session identifier mismatch for session: {0:d}'.format(
                   session_index))
 
       yield session
@@ -682,21 +684,21 @@ class SQLiteStorageFile(interface.BaseFileStorage):
 
       if time_range.start_timestamp:
         filter_expression.append(
-            u'_timestamp >= {0:d}'.format(time_range.start_timestamp))
+            '_timestamp >= {0:d}'.format(time_range.start_timestamp))
 
       if time_range.end_timestamp:
         filter_expression.append(
-            u'_timestamp <= {0:d}'.format(time_range.end_timestamp))
+            '_timestamp <= {0:d}'.format(time_range.end_timestamp))
 
-      filter_expression = u' AND '.join(filter_expression)
+      filter_expression = ' AND '.join(filter_expression)
 
     event_generator = self._GetAttributeContainers(
-        u'event', filter_expression=filter_expression, order_by=u'_timestamp')
+        'event', filter_expression=filter_expression, order_by='_timestamp')
 
     for event in event_generator:
-      if hasattr(event, u'event_data_row_identifier'):
+      if hasattr(event, 'event_data_row_identifier'):
         event_data_identifier = identifiers.SQLTableIdentifier(
-            u'event_data', event.event_data_row_identifier)
+            'event_data', event.event_data_row_identifier)
         event.SetEventDataIdentifier(event_data_identifier)
 
         del event.event_data_row_identifier
@@ -709,7 +711,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     Returns:
       bool: True if the storage contains analysis reports.
     """
-    query = u'SELECT COUNT(*) FROM analysis_report'
+    query = 'SELECT COUNT(*) FROM analysis_report'
     self._cursor.execute(query)
 
     row = self._cursor.fetchone()
@@ -721,7 +723,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     Returns:
       bool: True if the storage contains extraction errors.
     """
-    query = u'SELECT COUNT(*) FROM extraction_error'
+    query = 'SELECT COUNT(*) FROM extraction_error'
     self._cursor.execute(query)
 
     row = self._cursor.fetchone()
@@ -733,7 +735,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     Returns:
       bool: True if the storage contains event tags.
     """
-    query = u'SELECT COUNT(*) FROM event_tags'
+    query = 'SELECT COUNT(*) FROM event_tags'
     self._cursor.execute(query)
 
     row = self._cursor.fetchone()
@@ -754,10 +756,10 @@ class SQLiteStorageFile(interface.BaseFileStorage):
       ValueError: if path is missing.
     """
     if self._is_open:
-      raise IOError(u'Storage file already opened.')
+      raise IOError('Storage file already opened.')
 
     if not path:
-      raise ValueError(u'Missing path.')
+      raise ValueError('Missing path.')
 
     connection = sqlite3.connect(
         path, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
@@ -772,24 +774,24 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     self._read_only = read_only
 
     if not read_only:
-      # self._cursor.execute(u'PRAGMA journal_mode=MEMORY')
+      # self._cursor.execute('PRAGMA journal_mode=MEMORY')
 
       # Turn off insert transaction integrity since we want to do bulk insert.
-      self._cursor.execute(u'PRAGMA synchronous=OFF')
+      self._cursor.execute('PRAGMA synchronous=OFF')
 
-      if not self._HasTable(u'metadata'):
+      if not self._HasTable('metadata'):
         self._WriteStorageMetadata()
       else:
         self._ReadStorageMetadata()
 
       if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
-        data_column_type = u'BLOB'
+        data_column_type = 'BLOB'
       else:
-        data_column_type = u'TEXT'
+        data_column_type = 'TEXT'
 
       for container_type in self._CONTAINER_TYPES:
         if not self._HasTable(container_type):
-          if container_type == u'event':
+          if container_type == 'event':
             query = self._CREATE_EVENT_TABLE_QUERY.format(
                 container_type, data_column_type)
           else:
@@ -800,22 +802,22 @@ class SQLiteStorageFile(interface.BaseFileStorage):
       self._connection.commit()
 
     last_session_start = 0
-    if self._HasTable(u'session_start'):
-      query = u'SELECT COUNT(*) FROM session_start'
+    if self._HasTable('session_start'):
+      query = 'SELECT COUNT(*) FROM session_start'
       self._cursor.execute(query)
       row = self._cursor.fetchone()
       last_session_start = row[0]
 
     last_session_completion = 0
-    if self._HasTable(u'session_completion'):
-      query = u'SELECT COUNT(*) FROM session_completion'
+    if self._HasTable('session_completion'):
+      query = 'SELECT COUNT(*) FROM session_completion'
       self._cursor.execute(query)
       row = self._cursor.fetchone()
       last_session_completion = row[0]
 
     # TODO: handle open sessions.
     if last_session_start != last_session_completion:
-      logging.warning(u'Detected unclosed session.')
+      logging.warning('Detected unclosed session.')
 
     self._last_session = last_session_completion
 
@@ -830,7 +832,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
       knowledge_base (KnowledgeBase): is used to store the preprocessing
           information.
     """
-    generator = self._GetAttributeContainers(u'system_configuration')
+    generator = self._GetAttributeContainers('system_configuration')
     for stream_number, system_configuration in enumerate(generator):
       # TODO: replace stream_number by session_identifier.
       knowledge_base.ReadSystemConfigurationArtifact(
@@ -849,7 +851,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     self._RaiseIfNotWritable()
 
     if self.storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError(u'Preprocess information not supported by storage type.')
+      raise IOError('Preprocess information not supported by storage type.')
 
     system_configuration = knowledge_base.GetSystemConfigurationArtifact()
 
@@ -912,11 +914,11 @@ class SQLiteStorageMergeReader(interface.FileStorageMergeReader):
   """SQLite-based storage file reader for merging."""
 
   _CONTAINER_TYPES = (
-      u'event_source', u'event_data', u'event', u'event_tag',
-      u'extraction_error', u'analysis_report')
+      'event_source', 'event_data', 'event', 'event_tag',
+      'extraction_error', 'analysis_report')
 
   _TABLE_NAMES_QUERY = (
-      u'SELECT name FROM sqlite_master WHERE type = "table"')
+      'SELECT name FROM sqlite_master WHERE type = "table"')
 
   def __init__(self, storage_writer, path):
     """Initializes a storage merge reader.
@@ -947,10 +949,10 @@ class SQLiteStorageMergeReader(interface.FileStorageMergeReader):
       RuntimeError: if the attribute container type is not supported.
     """
     container_type = attribute_container.CONTAINER_TYPE
-    if container_type == u'event_source':
+    if container_type == 'event_source':
       self._storage_writer.AddEventSource(attribute_container)
 
-    elif container_type == u'event_data':
+    elif container_type == 'event_data':
       identifier = attribute_container.GetIdentifier()
       lookup_key = identifier.CopyToString()
 
@@ -959,10 +961,10 @@ class SQLiteStorageMergeReader(interface.FileStorageMergeReader):
       identifier = attribute_container.GetIdentifier()
       self._event_data_identifier_mappings[lookup_key] = identifier
 
-    elif container_type == u'event':
-      if hasattr(attribute_container, u'event_data_row_identifier'):
+    elif container_type == 'event':
+      if hasattr(attribute_container, 'event_data_row_identifier'):
         event_data_identifier = identifiers.SQLTableIdentifier(
-            u'event_data', attribute_container.event_data_row_identifier)
+            'event_data', attribute_container.event_data_row_identifier)
         lookup_key = event_data_identifier.CopyToString()
 
         event_data_identifier = self._event_data_identifier_mappings[lookup_key]
@@ -972,21 +974,21 @@ class SQLiteStorageMergeReader(interface.FileStorageMergeReader):
 
       self._storage_writer.AddEvent(attribute_container)
 
-    elif container_type == u'event_tag':
+    elif container_type == 'event_tag':
       event_identifier = identifiers.SQLTableIdentifier(
-          u'event', attribute_container.event_row_identifier)
+          'event', attribute_container.event_row_identifier)
       attribute_container.SetEventIdentifier(event_identifier)
 
       self._storage_writer.AddEventTag(attribute_container)
 
-    elif container_type == u'extraction_error':
+    elif container_type == 'extraction_error':
       self._storage_writer.AddError(attribute_container)
 
-    elif container_type == u'analysis_report':
+    elif container_type == 'analysis_report':
       self._storage_writer.AddAnalysisReport(attribute_container)
 
-    elif container_type not in (u'task_completion', u'task_start'):
-      raise RuntimeError(u'Unsupported container type: {0:s}'.format(
+    elif container_type not in ('task_completion', 'task_start'):
+      raise RuntimeError('Unsupported container type: {0:s}'.format(
           container_type))
 
   def MergeAttributeContainers(self, maximum_number_of_containers=0):
@@ -1022,7 +1024,7 @@ class SQLiteStorageMergeReader(interface.FileStorageMergeReader):
       if not self._active_cursor:
         self._active_container_type = self._container_types.pop(0)
 
-        query = u'SELECT _identifier, _data FROM {0:s}'.format(
+        query = 'SELECT _identifier, _data FROM {0:s}'.format(
             self._active_container_type)
         self._cursor.execute(query)
 

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Storage attribute container identifier objects."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import interface as containers_interface
 
 
@@ -27,7 +29,7 @@ class FakeIdentifier(containers_interface.AttributeContainerIdentifier):
       str: unique identifier or None.
     """
     if self.attribute_values_hash is not None:
-      return u'{0:d}'.format(self.attribute_values_hash)
+      return '{0:d}'.format(self.attribute_values_hash)
 
 
 class SerializedStreamIdentifier(
@@ -61,7 +63,7 @@ class SerializedStreamIdentifier(
       str: unique identifier or None.
     """
     if self.stream_number is not None and self.entry_index is not None:
-      return u'{0:d}.{1:d}'.format(self.stream_number, self.entry_index)
+      return '{0:d}.{1:d}'.format(self.stream_number, self.entry_index)
 
 
 class SQLTableIdentifier(containers_interface.AttributeContainerIdentifier):
@@ -94,4 +96,4 @@ class SQLTableIdentifier(containers_interface.AttributeContainerIdentifier):
       str: unique identifier or None.
     """
     if self.name is not None and self.row_identifier is not None:
-      return u'{0:s}.{1:d}'.format(self.name, self.row_identifier)
+      return '{0:s}.{1:d}'.format(self.name, self.row_identifier)

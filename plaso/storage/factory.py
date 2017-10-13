@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the storage factory class."""
 
+from __future__ import unicode_literals
+
 from plaso.storage import sqlite_file as storage_sqlite_file
 from plaso.storage import zip_file as storage_zip_file
 
