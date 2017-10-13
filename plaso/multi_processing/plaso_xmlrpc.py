@@ -7,16 +7,18 @@ import logging
 import sys
 import threading
 
+# pylint: disable=import-error,wrong-import-order
 if sys.version_info[0] < 3:
   import xmlrpclib
   import SimpleXMLRPCServer
   import SocketServer
 else:
-  from xmlrpc.server import SimpleXMLRPCServer  # pylint: disable=import-error
-  from xmlrpc import client as xmlrpclib  # pylint: disable=import-error
-  import socketserver as SocketServer  # pylint: disable=import-error
+  from xmlrpc.server import SimpleXMLRPCServer
+  from xmlrpc import client as xmlrpclib
+  import socketserver as SocketServer
 
-from xml.parsers import expat # pylint: disable=wrong-import-order
+# pylint: disable=wrong-import-position
+from xml.parsers import expat
 
 from plaso.multi_processing import rpc
 
