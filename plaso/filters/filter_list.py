@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """List of object-filters."""
 
+from __future__ import unicode_literals
+
 import logging
 import os
 
@@ -44,7 +46,7 @@ class ObjectFilterList(interface.FilterObject):
 
       except yaml.ParserError as exception:
         logging.error(
-            u'Unable to load rule file with error: {0:s}'.format(exception))
+            'Unable to load rule file with error: {0:s}'.format(exception))
         return
 
   def _ParseEntry(self, entry):
@@ -58,16 +60,16 @@ class ObjectFilterList(interface.FilterObject):
     """
     # A single file with a list of filters to parse.
     for name, meta in entry.items():
-      if u'filter' not in meta:
+      if 'filter' not in meta:
         raise errors.WrongPlugin(
-            u'Entry inside {0:s} does not contain a filter statement.'.format(
+            'Entry inside {0:s} does not contain a filter statement.'.format(
                 name))
 
-      meta_filter = meta.get(u'filter')
+      meta_filter = meta.get('filter')
       matcher = self._GetMatcher(meta_filter)
       if not matcher:
         raise errors.WrongPlugin(
-            u'Filter entry [{0:s}] malformed for rule: <{1:s}>'.format(
+            'Filter entry [{0:s}] malformed for rule: <{1:s}>'.format(
                 meta_filter, name))
 
       self.filters.append((name, matcher, meta))
@@ -85,11 +87,11 @@ class ObjectFilterList(interface.FilterObject):
     """
     if not os.path.isfile(filter_expression):
       raise errors.WrongPlugin((
-          u'ObjectFilterList requires an YAML file to be passed on, '
-          u'this filter string is not a file.'))
+          'ObjectFilterList requires an YAML file to be passed on, '
+          'this filter string is not a file.'))
 
     yaml.add_constructor(
-        u'!include', self._IncludeKeyword, Loader=yaml.loader.SafeLoader)
+        '!include', self._IncludeKeyword, Loader=yaml.loader.SafeLoader)
     results = None
 
     with open(filter_expression, 'rb') as file_object:
@@ -97,7 +99,7 @@ class ObjectFilterList(interface.FilterObject):
         results = yaml.safe_load(file_object)
       except (yaml.scanner.ScannerError, IOError) as exception:
         raise errors.WrongPlugin(
-            u'Unable to parse YAML file with error: {0:s}.'.format(exception))
+            'Unable to parse YAML file with error: {0:s}.'.format(exception))
 
     self.filters = []
     results_type = type(results)
@@ -107,12 +109,12 @@ class ObjectFilterList(interface.FilterObject):
       for result in results:
         if not isinstance(result, dict):
           raise errors.WrongPlugin(
-              u'Wrong format of YAML file, entry not a dict ({0:s})'.format(
+              'Wrong format of YAML file, entry not a dict ({0:s})'.format(
                   results_type))
         self._ParseEntry(result)
     else:
       raise errors.WrongPlugin(
-          u'Wrong format of YAML file, entry not a dict ({0:s})'.format(
+          'Wrong format of YAML file, entry not a dict ({0:s})'.format(
               results_type))
     self._filter_expression = filter_expression
 

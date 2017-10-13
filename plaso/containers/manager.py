@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the attribute container manager class."""
 
+from __future__ import unicode_literals
+
 
 class AttributeContainersManager(object):
   """Class that implements the attribute container manager."""
@@ -24,8 +26,8 @@ class AttributeContainersManager(object):
     container_type = attribute_container_class.CONTAINER_TYPE.lower()
     if container_type not in cls._attribute_container_classes:
       raise KeyError(
-          u'Attribute container class not set for container type: '
-          u'{0:s}.'.format(attribute_container_class.CONTAINER_TYPE))
+          'Attribute container class not set for container type: '
+          '{0:s}.'.format(attribute_container_class.CONTAINER_TYPE))
 
     del cls._attribute_container_classes[container_type]
 
@@ -58,8 +60,8 @@ class AttributeContainersManager(object):
     container_type = attribute_container_class.CONTAINER_TYPE.lower()
     if container_type in cls._attribute_container_classes:
       raise KeyError((
-          u'Attribute container class already set for container type: '
-          u'{0:s}.').format(attribute_container_class.CONTAINER_TYPE))
+          'Attribute container class already set for container type: '
+          '{0:s}.').format(attribute_container_class.CONTAINER_TYPE))
 
     cls._attribute_container_classes[container_type] = attribute_container_class
 

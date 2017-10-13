@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Shell item event attribute container."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import events
 
 
@@ -17,7 +19,7 @@ class ShellItemFileEntryEventData(events.EventData):
     origin (str): origin of the event.
   """
 
-  DATA_TYPE = u'windows:shell_item:file_entry'
+  DATA_TYPE = 'windows:shell_item:file_entry'
 
   def __init__(self):
     """Initializes event data."""

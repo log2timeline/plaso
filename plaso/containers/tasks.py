@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Task related attribute container definitions."""
 
+from __future__ import unicode_literals
+
 import time
 import uuid
 
@@ -35,7 +37,7 @@ class Task(interface.AttributeContainer):
         of micro seconds since January 1, 1970, 00:00:00 UTC.
     storage_file_size (int): size of the storage file in bytes.
   """
-  CONTAINER_TYPE = u'task'
+  CONTAINER_TYPE = 'task'
 
   def __init__(self, session_identifier=None):
     """Initializes a task attribute container.
@@ -48,7 +50,7 @@ class Task(interface.AttributeContainer):
     self.aborted = False
     self.completion_time = None
     self.file_entry_type = None
-    self.identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+    self.identifier = '{0:s}'.format(uuid.uuid4().get_hex())
     self.last_processing_time = None
     self.merge_priority = None
     self.original_task_identifier = None
@@ -114,7 +116,7 @@ class TaskCompletion(interface.AttributeContainer):
     timestamp (int): time that the task was completed. Contains the number
         of micro seconds since January 1, 1970, 00:00:00 UTC.
   """
-  CONTAINER_TYPE = u'task_completion'
+  CONTAINER_TYPE = 'task_completion'
 
   def __init__(self, identifier=None, session_identifier=None):
     """Initializes a task completion attribute container.
@@ -143,7 +145,7 @@ class TaskStart(interface.AttributeContainer):
     timestamp (int): time that the task was started. Contains the number
         of micro seconds since January 1, 1970, 00:00:00 UTC.
   """
-  CONTAINER_TYPE = u'task_start'
+  CONTAINER_TYPE = 'task_start'
 
   def __init__(self, identifier=None, session_identifier=None):
     """Initializes a task start attribute container.

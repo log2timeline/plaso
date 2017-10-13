@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Analyzer result attribute container."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import interface
 
 
@@ -17,7 +19,7 @@ class AnalyzerResult(interface.AttributeContainer):
     attribute_value (str): value of the attribute produced.
   """
 
-  CONTAINER_TYPE = u'analyzer_result'
+  CONTAINER_TYPE = 'analyzer_result'
 
   def __init__(self):
     """Initializes an analyzer result."""

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Windows event data attribute containers."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import events
 
 
@@ -15,7 +17,7 @@ class WindowsDistributedLinkTrackingEventData(events.EventData):
     uuid (str): UUID.
   """
 
-  DATA_TYPE = u'windows:distributed_link_tracking:creation'
+  DATA_TYPE = 'windows:distributed_link_tracking:creation'
 
   def __init__(self, uuid, origin):
     """Initializes an event object.
@@ -30,9 +32,9 @@ class WindowsDistributedLinkTrackingEventData(events.EventData):
       ValueError: if the UUID version is not supported.
     """
     if uuid.version != 1:
-      raise ValueError(u'Unsupported UUID version.')
+      raise ValueError('Unsupported UUID version.')
 
-    mac_address = u'{0:s}:{1:s}:{2:s}:{3:s}:{4:s}:{5:s}'.format(
+    mac_address = '{0:s}:{1:s}:{2:s}:{3:s}:{4:s}:{5:s}'.format(
         uuid.hex[20:22], uuid.hex[22:24], uuid.hex[24:26], uuid.hex[26:28],
         uuid.hex[28:30], uuid.hex[30:32])
 
@@ -41,7 +43,7 @@ class WindowsDistributedLinkTrackingEventData(events.EventData):
     self.mac_address = mac_address
     # TODO: replace origin my something machine readable.
     self.origin = origin
-    self.uuid = u'{0!s}'.format(uuid)
+    self.uuid = '{0!s}'.format(uuid)
 
 
 class WindowsRegistryInstallationEventData(events.EventData):
@@ -55,7 +57,7 @@ class WindowsRegistryInstallationEventData(events.EventData):
     version (str): version.
   """
 
-  DATA_TYPE = u'windows:registry:installation'
+  DATA_TYPE = 'windows:registry:installation'
 
   def __init__(self):
     """Initializes event data."""
@@ -78,7 +80,7 @@ class WindowsRegistryEventData(events.EventData):
     urls (list[str]): URLs.
   """
 
-  DATA_TYPE = u'windows:registry:key_value'
+  DATA_TYPE = 'windows:registry:key_value'
 
   def __init__(self):
     """Initializes event data."""
@@ -103,7 +105,7 @@ class WindowsRegistryListEventData(events.EventData):
     list_values (str): values in the list.
     value_name (str): Windows Registry value name.
   """
-  DATA_TYPE = u'windows:registry:list'
+  DATA_TYPE = 'windows:registry:list'
 
   def __init__(self):
     """Initializes event data."""
@@ -124,7 +126,7 @@ class WindowsRegistryServiceEventData(events.EventData):
     urls (Optional[list[str]]): URLs.
   """
 
-  DATA_TYPE = u'windows:registry:service'
+  DATA_TYPE = 'windows:registry:service'
 
   def __init__(self):
     """Initializes event data."""
@@ -148,7 +150,7 @@ class WindowsVolumeEventData(events.EventData):
         the corresponding Prefetch file name.
     serial_number (str): volume serial number.
   """
-  DATA_TYPE = u'windows:volume:creation'
+  DATA_TYPE = 'windows:volume:creation'
 
   def __init__(self):
     """Initializes event data."""

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Error attribute containers."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import interface
 from plaso.containers import manager
 
@@ -17,7 +19,7 @@ class ExtractionError(interface.AttributeContainer):
     path_spec (dfvfs.PathSpec):
         path specification of the file entry to which the error applies.
   """
-  CONTAINER_TYPE = u'extraction_error'
+  CONTAINER_TYPE = 'extraction_error'
 
   def __init__(self, message=None, parser_chain=None, path_spec=None):
     """Initializes a parse error.

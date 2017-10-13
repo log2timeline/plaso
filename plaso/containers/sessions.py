@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Session related attribute container definitions."""
 
+from __future__ import unicode_literals
+
 import collections
 import time
 import uuid
@@ -38,7 +40,7 @@ class Session(interface.AttributeContainer):
     start_time (int): time that the session was started. Contains the number
         of micro seconds since January 1, 1970, 00:00:00 UTC.
   """
-  CONTAINER_TYPE = u'session'
+  CONTAINER_TYPE = 'session'
 
   def __init__(self):
     """Initializes a session attribute container."""
@@ -51,13 +53,13 @@ class Session(interface.AttributeContainer):
     self.enabled_parser_names = None
     self.event_labels_counter = collections.Counter()
     self.filter_file = None
-    self.identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+    self.identifier = '{0:s}'.format(uuid.uuid4().get_hex())
     self.parser_filter_expression = None
     self.parsers_counter = collections.Counter()
-    self.preferred_encoding = u'utf-8'
-    self.preferred_time_zone = u'UTC'
+    self.preferred_encoding = 'utf-8'
+    self.preferred_time_zone = 'UTC'
     self.preferred_year = None
-    self.product_name = u'plaso'
+    self.product_name = 'plaso'
     self.product_version = plaso.__version__
     self.start_time = int(time.time() * 1000000)
 
@@ -73,7 +75,7 @@ class Session(interface.AttributeContainer):
           that of the session.
     """
     if self.identifier != session_completion.identifier:
-      raise ValueError(u'Session identifier mismatch.')
+      raise ValueError('Session identifier mismatch.')
 
     self.aborted = session_completion.aborted
 
@@ -159,7 +161,7 @@ class SessionCompletion(interface.AttributeContainer):
     timestamp (int): time that the session was completed. Contains the number
         of micro seconds since January 1, 1970, 00:00:00 UTC.
   """
-  CONTAINER_TYPE = u'session_completion'
+  CONTAINER_TYPE = 'session_completion'
 
   def __init__(self, identifier=None):
     """Initializes a session completion attribute container.
@@ -198,7 +200,7 @@ class SessionStart(interface.AttributeContainer):
     timestamp (int): time that the session was started. Contains the number
         of micro seconds since January 1, 1970, 00:00:00 UTC.
   """
-  CONTAINER_TYPE = u'session_start'
+  CONTAINER_TYPE = 'session_start'
 
   def __init__(self, identifier=None):
     """Initializes a session start attribute container.
