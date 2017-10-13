@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The Windows Registry plugin interface."""
 
+from __future__ import unicode_literals
+
 import abc
 
 from plaso.parsers import plugins
@@ -30,14 +32,14 @@ class WindowsRegistryKeyPathFilter(BaseWindowsRegistryKeyFilter):
   """Windows Registry key path filter."""
 
   _CONTROL_SET_PREFIX = (
-      u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet')
+      'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet')
 
   # This list must be ordered with most specific matches first.
   _WOW64_PREFIXES = [
-      u'HKEY_CURRENT_USER\\Software\\Classes',
-      u'HKEY_CURRENT_USER\\Software',
-      u'HKEY_LOCAL_MACHINE\\Software\\Classes',
-      u'HKEY_LOCAL_MACHINE\\Software']
+      'HKEY_CURRENT_USER\\Software\\Classes',
+      'HKEY_CURRENT_USER\\Software',
+      'HKEY_LOCAL_MACHINE\\Software\\Classes',
+      'HKEY_LOCAL_MACHINE\\Software']
 
   def __init__(self, key_path):
     """Initializes a Windows Registry key filter.
@@ -47,7 +49,7 @@ class WindowsRegistryKeyPathFilter(BaseWindowsRegistryKeyFilter):
     """
     super(WindowsRegistryKeyPathFilter, self).__init__()
 
-    key_path.rstrip(u'\\')
+    key_path.rstrip('\\')
     self._key_path = key_path
 
     key_path = key_path.upper()
@@ -58,7 +60,7 @@ class WindowsRegistryKeyPathFilter(BaseWindowsRegistryKeyFilter):
 
     if key_path.startswith(self._CONTROL_SET_PREFIX.upper()):
       self._key_path_prefix, _, self._key_path_suffix = key_path.partition(
-          u'CurrentControlSet'.upper())
+          'CurrentControlSet'.upper())
 
     else:
       self._key_path_prefix = None
@@ -78,10 +80,10 @@ class WindowsRegistryKeyPathFilter(BaseWindowsRegistryKeyFilter):
 
       if wow64_prefix:
         key_path_suffix = self._key_path[len(wow64_prefix):]
-        if key_path_suffix.startswith(u'\\'):
+        if key_path_suffix.startswith('\\'):
           key_path_suffix = key_path_suffix[1:]
-        self._wow64_key_path = u'\\'.join([
-            wow64_prefix, u'Wow6432Node', key_path_suffix])
+        self._wow64_key_path = '\\'.join([
+            wow64_prefix, 'Wow6432Node', key_path_suffix])
         self._wow64_key_path_upper = self._wow64_key_path.upper()
 
   @property
@@ -107,7 +109,7 @@ class WindowsRegistryKeyPathFilter(BaseWindowsRegistryKeyFilter):
 
         key_path_segment = key_path[
             len(self._key_path_prefix):-len(self._key_path_suffix)]
-        if key_path_segment.startswith(u'ControlSet'.upper()):
+        if key_path_segment.startswith('ControlSet'.upper()):
           try:
             control_set = int(key_path_segment[10:], 10)
           except ValueError:
@@ -201,8 +203,8 @@ class WindowsRegistryKeyWithValuesFilter(BaseWindowsRegistryKeyFilter):
 class WindowsRegistryPlugin(plugins.BasePlugin):
   """The Windows Registry plugin interface."""
 
-  NAME = u'winreg_plugin'
-  DESCRIPTION = u'Parser for Windows Registry value data.'
+  NAME = 'winreg_plugin'
+  DESCRIPTION = 'Parser for Windows Registry value data.'
 
   # List of Windows Registry key filters (instances of
   # BaseWindowsRegistryKeyFilter) that should match for the plugin to
@@ -236,7 +238,7 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
       ValueError: If the Windows Registry key is not set.
     """
     if registry_key is None:
-      raise ValueError(u'Windows Registry key is not set.')
+      raise ValueError('Windows Registry key is not set.')
 
     # This will raise if unhandled keyword arguments are passed.
     super(WindowsRegistryPlugin, self).Process(parser_mediator, **kwargs)

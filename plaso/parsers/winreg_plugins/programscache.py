@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Windows Registry plugin to parse the Explorer ProgramsCache key."""
 
+from __future__ import unicode_literals
+
 import construct
 
 from plaso.containers import time_events
@@ -14,32 +16,32 @@ from plaso.parsers.winreg_plugins import interface
 class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
   """Class that parses the Explorer ProgramsCache Registry data."""
 
-  NAME = u'explorer_programscache'
-  DESCRIPTION = u'Parser for Explorer ProgramsCache Registry data.'
+  NAME = 'explorer_programscache'
+  DESCRIPTION = 'Parser for Explorer ProgramsCache Registry data.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          u'Explorer\\StartPage'),
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          'Explorer\\StartPage'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          u'Explorer\\StartPage2')])
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          'Explorer\\StartPage2')])
 
   URLS = [
-      (u'https://github.com/libyal/winreg-kb/blob/master/documentation/'
-       u'Programs%20Cache%20values.asciidoc')]
+      ('https://github.com/libyal/winreg-kb/blob/master/documentation/'
+       'Programs%20Cache%20values.asciidoc')]
 
   _HEADER_STRUCT = construct.Struct(
-      u'programscache_header',
-      construct.ULInt32(u'format_version'))
+      'programscache_header',
+      construct.ULInt32('format_version'))
 
   _ENTRY_HEADER_STRUCT = construct.Struct(
-      u'programscache_entry_header',
-      construct.ULInt32(u'data_size'))
+      'programscache_entry_header',
+      construct.ULInt32('data_size'))
 
   _ENTRY_FOOTER_STRUCT = construct.Struct(
-      u'programscache_entry_footer',
-      construct.Byte(u'sentinel'))
+      'programscache_entry_footer',
+      construct.Byte('sentinel'))
 
   def _ParseValueData(self, parser_mediator, registry_key, registry_value):
     """Extracts event objects from a Explorer ProgramsCache value data.
@@ -58,14 +60,14 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
       header_struct = self._HEADER_STRUCT.parse(value_data)
     except construct.FieldError as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to parse header with error: {0:s}'.format(
+          'unable to parse header with error: {0:s}'.format(
               exception))
       return
 
-    format_version = header_struct.get(u'format_version')
+    format_version = header_struct.get('format_version')
     if format_version not in (0x01, 0x09, 0x0c, 0x13):
       parser_mediator.ProduceExtractionError(
-          u'unsupported format version: 0x{0:08x}'.format(format_version))
+          'unsupported format version: 0x{0:08x}'.format(format_version))
       return
 
     if format_version == 0x01:
@@ -86,13 +88,13 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
             value_data[value_data_offset:])
       except construct.FieldError as exception:
         parser_mediator.ProduceExtractionError((
-            u'unable to parse sentinel at offset: 0x{0:08x} '
-            u'with error: {1:s}').format(value_data_offset, exception))
+            'unable to parse sentinel at offset: 0x{0:08x} '
+            'with error: {1:s}').format(value_data_offset, exception))
         return
 
       value_data_offset += self._ENTRY_FOOTER_STRUCT.sizeof()
 
-      sentinel = entry_footer_struct.get(u'sentinel')
+      sentinel = entry_footer_struct.get('sentinel')
 
     link_targets = []
     while sentinel in (0x00, 0x01):
@@ -101,15 +103,15 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
             value_data[value_data_offset:])
       except construct.FieldError as exception:
         parser_mediator.ProduceExtractionError((
-            u'unable to parse entry header at offset: 0x{0:08x} '
-            u'with error: {1:s}').format(value_data_offset, exception))
+            'unable to parse entry header at offset: 0x{0:08x} '
+            'with error: {1:s}').format(value_data_offset, exception))
         break
 
       value_data_offset += self._ENTRY_HEADER_STRUCT.sizeof()
 
-      entry_data_size = entry_header_struct.get(u'data_size')
+      entry_data_size = entry_header_struct.get('data_size')
 
-      display_name = u'{0:s} {1:s}'.format(
+      display_name = '{0:s} {1:s}'.format(
           registry_key.path, registry_value.name)
 
       shell_items_parser = shell_items.ShellItemsParser(display_name)
@@ -127,21 +129,21 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
             value_data[value_data_offset:])
       except construct.FieldError as exception:
         parser_mediator.ProduceExtractionError((
-            u'unable to parse entry footer at offset: 0x{0:08x} '
-            u'with error: {1:s}').format(value_data_offset, exception))
+            'unable to parse entry footer at offset: 0x{0:08x} '
+            'with error: {1:s}').format(value_data_offset, exception))
         break
 
       value_data_offset += self._ENTRY_FOOTER_STRUCT.sizeof()
 
-      sentinel = entry_footer_struct.get(u'sentinel')
+      sentinel = entry_footer_struct.get('sentinel')
 
     # TODO: recover remaining items.
 
     event_data = windows_events.WindowsRegistryListEventData()
     event_data.key_path = registry_key.path
     event_data.list_name = registry_value.name
-    event_data.list_values = u' '.join([
-        u'{0:d}: {1:s}'.format(index, link_target)
+    event_data.list_values = ' '.join([
+        '{0:d}: {1:s}'.format(index, link_target)
         for index, link_target in enumerate(link_targets)])
     event_data.value_name = registry_value.name
 
@@ -157,15 +159,15 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
           and other components, such as storage and dfvfs.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
-    registry_value = registry_key.GetValueByName(u'ProgramsCache')
+    registry_value = registry_key.GetValueByName('ProgramsCache')
     if registry_value:
       self._ParseValueData(parser_mediator, registry_key, registry_value)
 
-    registry_value = registry_key.GetValueByName(u'ProgramsCacheSMP')
+    registry_value = registry_key.GetValueByName('ProgramsCacheSMP')
     if registry_value:
       self._ParseValueData(parser_mediator, registry_key, registry_value)
 
-    registry_value = registry_key.GetValueByName(u'ProgramsCacheTBP')
+    registry_value = registry_key.GetValueByName('ProgramsCacheTBP')
     if registry_value:
       self._ParseValueData(parser_mediator, registry_key, registry_value)
 
@@ -173,7 +175,7 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
     for registry_value in registry_key.GetValues():
       # Ignore the default value.
       if not registry_value.name or registry_value.name in (
-          u'ProgramsCache', u'ProgramsCacheSMP', u'ProgramsCacheTBP'):
+          'ProgramsCache', 'ProgramsCacheSMP', 'ProgramsCacheTBP'):
         continue
 
       # Ignore any value that is empty or that does not contain a string.

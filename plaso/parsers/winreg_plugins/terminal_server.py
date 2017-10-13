@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the Terminal Server Registry plugins."""
 
+from __future__ import unicode_literals
+
 import re
 
 from plaso.containers import time_events
@@ -16,18 +18,18 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for Terminal Server Client Connection keys."""
 
-  NAME = u'mstsc_rdp'
-  DESCRIPTION = u'Parser for Terminal Server Client Connection Registry data.'
+  NAME = 'mstsc_rdp'
+  DESCRIPTION = 'Parser for Terminal Server Client Connection Registry data.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
-          u'Servers'),
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
+          'Servers'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
-          u'Default\\AddIns\\RDPDR')])
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
+          'Default\\AddIns\\RDPDR')])
 
-  _SOURCE_APPEND = u': RDP Connection'
+  _SOURCE_APPEND = ': RDP Connection'
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Terminal Server Client Windows Registry key.
@@ -39,20 +41,20 @@ class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
     """
     mru_values_dict = {}
     for subkey in registry_key.GetSubkeys():
-      username_value = subkey.GetValueByName(u'UsernameHint')
+      username_value = subkey.GetValueByName('UsernameHint')
 
       if (username_value and username_value.data and
           username_value.DataIsString()):
         username = username_value.GetDataAsObject()
       else:
-        username = u'N/A'
+        username = 'N/A'
 
       mru_values_dict[subkey.name] = username
 
       event_data = windows_events.WindowsRegistryEventData()
       event_data.key_path = subkey.path
       event_data.offset = subkey.offset
-      event_data.regvalue = {u'Username hint': username}
+      event_data.regvalue = {'Username hint': username}
       event_data.source_append = self._SOURCE_APPEND
 
       event = time_events.DateTimeValuesEvent(
@@ -73,19 +75,19 @@ class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
 class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for Terminal Server Client Connection MRUs keys."""
 
-  NAME = u'mstsc_rdp_mru'
-  DESCRIPTION = u'Parser for Terminal Server Client MRU Registry data.'
+  NAME = 'mstsc_rdp_mr'
+  DESCRIPTION = 'Parser for Terminal Server Client MRU Registry data.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
-          u'Default'),
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
+          'Default'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
-          u'LocalDevices')])
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
+          'LocalDevices')])
 
   _RE_VALUE_DATA = re.compile(r'MRU[0-9]+')
-  _SOURCE_APPEND = u': RDP Connection'
+  _SOURCE_APPEND = ': RDP Connection'
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Terminal Server Client MRU Windows Registry key.

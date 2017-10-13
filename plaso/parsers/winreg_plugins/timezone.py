@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Plug-in to collect information about the Windows timezone settings."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
@@ -14,18 +16,18 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
   """Plug-in to collect information about the Windows timezone settings."""
 
-  NAME = u'windows_timezone'
-  DESCRIPTION = u'Parser for Windows timezone settings.'
+  NAME = 'windows_timezone'
+  DESCRIPTION = 'Parser for Windows timezone settings.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
-          u'TimeZoneInformation')])
+          'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
+          'TimeZoneInformation')])
 
   _VALUE_NAMES = frozenset([
-      u'ActiveTimeBias', u'Bias', u'DaylightBias', u'DaylightName',
-      u'DynamicDaylightTimeDisabled', u'StandardBias', u'StandardName',
-      u'TimeZoneKeyName'])
+      'ActiveTimeBias', 'Bias', 'DaylightBias', 'DaylightName',
+      'DynamicDaylightTimeDisabled', 'StandardBias', 'StandardName',
+      'TimeZoneKeyName'])
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.

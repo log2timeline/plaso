@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains BagMRU Windows Registry plugins (shellbags)."""
 
+from __future__ import unicode_literals
+
 import construct
 
 from plaso.containers import time_events
@@ -14,33 +16,33 @@ from plaso.parsers.winreg_plugins import interface
 class BagMRUPlugin(interface.WindowsRegistryPlugin):
   """Class that defines a BagMRU Windows Registry plugin."""
 
-  NAME = u'bagmru'
-  DESCRIPTION = u'Parser for BagMRU Registry data.'
+  NAME = 'bagmr'
+  DESCRIPTION = 'Parser for BagMRU Registry data.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\Shell\\BagMRU'),
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\Shell\\BagMRU'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\ShellNoRoam\\'
-          u'BagMRU'),
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\ShellNoRoam\\'
+          'BagMRU'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Classes\\Local Settings\\Software\\'
-          u'Microsoft\\Windows\\Shell\\BagMRU'),
+          'HKEY_CURRENT_USER\\Software\\Classes\\Local Settings\\Software\\'
+          'Microsoft\\Windows\\Shell\\BagMRU'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Classes\\Local Settings\\Software\\'
-          u'Microsoft\\Windows\\ShellNoRoam\\BagMRU')])
+          'HKEY_CURRENT_USER\\Software\\Classes\\Local Settings\\Software\\'
+          'Microsoft\\Windows\\ShellNoRoam\\BagMRU')])
 
   URLS = [
-      (u'https://github.com/libyal/winreg-kb/blob/master/documentation/'
-       u'MRU%20keys.asciidoc#bagmru-key')]
+      ('https://github.com/libyal/winreg-kb/blob/master/documentation/'
+       'MRU%20keys.asciidoc#bagmru-key')]
 
-  _MRULISTEX_ENTRY = construct.ULInt32(u'entry_number')
+  _MRULISTEX_ENTRY = construct.ULInt32('entry_number')
 
-  _SOURCE_APPEND = u': BagMRU'
+  _SOURCE_APPEND = ': BagMRU'
 
   def _ParseMRUListExEntryValue(
       self, parser_mediator, registry_key, entry_index, entry_number,
-      values_dict, value_strings, parent_path_segments, codepage=u'cp1252'):
+      values_dict, value_strings, parent_path_segments, codepage='cp1252'):
     """Parses the MRUListEx entry value.
 
     Args:
@@ -58,17 +60,17 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
     Returns:
       str: path segment of the shell item.
     """
-    value = registry_key.GetValueByName(u'{0:d}'.format(entry_number))
-    path_segment = u'N/A'
-    value_string = u''
+    value = registry_key.GetValueByName('{0:d}'.format(entry_number))
+    path_segment = 'N/A'
+    value_string = ''
     if value is None:
       parser_mediator.ProduceExtractionError(
-          u'Missing MRUListEx entry value: {0:d} in key: {1:s}.'.format(
+          'Missing MRUListEx entry value: {0:d} in key: {1:s}.'.format(
               entry_number, registry_key.path))
 
     elif not value.DataIsBinaryData():
       parser_mediator.ProduceExtractionError(
-          u'Non-binary MRUListEx entry value: {0:d} in key: {1:s}.'.format(
+          'Non-binary MRUListEx entry value: {0:d} in key: {1:s}.'.format(
               entry_number, registry_key.path))
 
     elif value.data:
@@ -82,9 +84,9 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
 
       value_strings[entry_number] = value_string
 
-      value_string = u'Shell item path: {0:s}'.format(value_string)
+      value_string = 'Shell item path: {0:s}'.format(value_string)
 
-    value_text = u'Index: {0:d} [MRU Value {1:d}]'.format(
+    value_text = 'Index: {0:d} [MRU Value {1:d}]'.format(
         entry_index + 1, entry_number)
 
     values_dict[value_text] = value_string
@@ -106,7 +108,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
         int: MRUListEx index, where 0 is the first index value.
         int: entry number.
     """
-    mru_list_value = registry_key.GetValueByName(u'MRUListEx')
+    mru_list_value = registry_key.GetValueByName('MRUListEx')
     if mru_list_value:
       mrulistex_data = mru_list_value.data
       data_size = len(mrulistex_data)
@@ -114,8 +116,8 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
 
       if remainder != 0:
         parser_mediator.ProduceExtractionError((
-            u'MRUListEx value data size is not a multitude of 4 '
-            u'in MRU key: {0:s}').format(registry_key.path))
+            'MRUListEx value data size is not a multitude of 4 '
+            'in MRU key: {0:s}').format(registry_key.path))
         data_size -= remainder
 
       entry_index = 0
@@ -127,15 +129,15 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
           yield entry_index, entry_number
         except construct.FieldError:
           parser_mediator.ProduceExtractionError((
-              u'Unable to parse MRUListEx value data at offset: {0:d} '
-              u'in MRU key: {1:s}').format(data_offset, registry_key.path))
+              'Unable to parse MRUListEx value data at offset: {0:d} '
+              'in MRU key: {1:s}').format(data_offset, registry_key.path))
 
         entry_index += 1
         data_offset += 4
 
   def _ParseSubKey(
       self, parser_mediator, registry_key, parent_path_segments,
-      codepage=u'cp1252'):
+      codepage='cp1252'):
     """Extract event objects from a MRUListEx Registry key.
 
     Args:
@@ -158,8 +160,8 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
 
       if found_terminator:
         parser_mediator.ProduceExtractionError((
-            u'Found additional MRUListEx entries after terminator '
-            u'in key: {0:s}.').format(registry_key.path))
+            'Found additional MRUListEx entries after terminator '
+            'in key: {0:s}.').format(registry_key.path))
 
         # Only create one parser error per terminator.
         found_terminator = False
@@ -182,11 +184,11 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     for entry_number, path_segment in iter(entry_numbers.items()):
-      sub_key_name = u'{0:d}'.format(entry_number)
+      sub_key_name = '{0:d}'.format(entry_number)
       sub_key = registry_key.GetSubkeyByName(sub_key_name)
       if not sub_key:
         parser_mediator.ProduceExtractionError(
-            u'Missing BagMRU sub key: {0:d} in key: {1:s}.'.format(
+            'Missing BagMRU sub key: {0:d} in key: {1:s}.'.format(
                 entry_number, registry_key.path))
         continue
 
@@ -196,7 +198,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
       parent_path_segments.pop()
 
   def ExtractEvents(
-      self, parser_mediator, registry_key, codepage=u'cp1252', **kwargs):
+      self, parser_mediator, registry_key, codepage='cp1252', **kwargs):
     """Extracts events from a Windows Registry key.
 
     Args:

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for the CCleaner Registry key."""
 
+from __future__ import unicode_literals
+
 import re
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -23,7 +25,7 @@ class CCleanerUpdateEventData(events.EventData):
     key_path (str): Windows Registry key path.
   """
 
-  DATA_TYPE = u'ccleaner:update'
+  DATA_TYPE = 'ccleaner:update'
 
   def __init__(self):
     """Initializes event data."""
@@ -34,17 +36,17 @@ class CCleanerUpdateEventData(events.EventData):
 class CCleanerPlugin(interface.WindowsRegistryPlugin):
   """Gathers the CCleaner Keys for NTUSER hive."""
 
-  NAME = u'ccleaner'
-  DESCRIPTION = u'Parser for CCleaner Registry data.'
+  NAME = 'ccleaner'
+  DESCRIPTION = 'Parser for CCleaner Registry data.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Piriform\\CCleaner')])
+          'HKEY_CURRENT_USER\\Software\\Piriform\\CCleaner')])
 
-  URLS = [(u'http://cheeky4n6monkey.blogspot.com/2012/02/writing-ccleaner'
-           u'-regripper-plugin-part_05.html')]
+  URLS = [('http://cheeky4n6monkey.blogspot.com/2012/02/writing-ccleaner'
+           '-regripper-plugin-part_05.html')]
 
-  _SOURCE_APPEND = u': CCleaner Registry key'
+  _SOURCE_APPEND = ': CCleaner Registry key'
 
   # Date and time string in the form: MM/DD/YYYY hh:mm:ss [A|P]M
   # e.g. 07/13/2013 10:03:14 AM
@@ -64,19 +66,19 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
     """
     if not registry_value.DataIsString():
       parser_mediator.ProduceExtractionError(
-          u'unsupported UpdateKey value data type: {0:s}'.format(
+          'unsupported UpdateKey value data type: {0:s}'.format(
               registry_value.data_type_string))
       return
 
     date_time_string = registry_value.GetDataAsObject()
     if not date_time_string:
-      parser_mediator.ProduceExtractionError(u'missing UpdateKey value data')
+      parser_mediator.ProduceExtractionError('missing UpdateKey value data')
       return
 
     re_match = self._UPDATE_DATE_TIME_RE.match(date_time_string)
     if not re_match:
       parser_mediator.ProduceExtractionError(
-          u'unsupported UpdateKey value data: {0!s}'.format(date_time_string))
+          'unsupported UpdateKey value data: {0!s}'.format(date_time_string))
       return
 
     month, day_of_month, year, hours, minutes, seconds, part_of_day = (
@@ -91,10 +93,10 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
       seconds = int(seconds, 10)
     except (TypeError, ValueError):
       parser_mediator.ProduceExtractionError(
-          u'invalid UpdateKey date time value: {0!s}'.format(date_time_string))
+          'invalid UpdateKey date time value: {0!s}'.format(date_time_string))
       return
 
-    if part_of_day == u'PM':
+    if part_of_day == 'PM':
       hours += 12
 
     time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
@@ -105,7 +107,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
       date_time.is_local_time = True
     except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'invalid UpdateKey date time value: {0!s}'.format(
+          'invalid UpdateKey date time value: {0!s}'.format(
               time_elements_tuple))
       return
 
@@ -130,7 +132,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
       if not registry_value.name or not registry_value.data:
         continue
 
-      if registry_value.name == u'UpdateKey':
+      if registry_value.name == 'UpdateKey':
         self._ParseUpdateKeyValue(
             parser_mediator, registry_value, registry_key.path)
       else:

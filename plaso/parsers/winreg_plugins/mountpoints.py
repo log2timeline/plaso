@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the MountPoints2 plugin."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
@@ -11,15 +13,15 @@ from plaso.parsers.winreg_plugins import interface
 class MountPoints2Plugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing the MountPoints2 key."""
 
-  NAME = u'explorer_mountpoints2'
-  DESCRIPTION = u'Parser for mount points Registry data.'
+  NAME = 'explorer_mountpoints2'
+  DESCRIPTION = 'Parser for mount points Registry data.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          u'Explorer\\MountPoints2')])
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          'Explorer\\MountPoints2')])
 
-  URLS = [u'http://support.microsoft.com/kb/932463']
+  URLS = ['http://support.microsoft.com/kb/932463']
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
@@ -35,25 +37,25 @@ class MountPoints2Plugin(interface.WindowsRegistryPlugin):
         continue
 
       values_dict = {}
-      values_dict[u'Volume'] = name
+      values_dict['Volume'] = name
 
-      label_value = subkey.GetValueByName(u'_LabelFromReg')
+      label_value = subkey.GetValueByName('_LabelFromReg')
       if label_value:
-        values_dict[u'Label'] = label_value.GetDataAsObject()
+        values_dict['Label'] = label_value.GetDataAsObject()
 
-      if name.startswith(u'{'):
-        values_dict[u'Type'] = u'Volume'
+      if name.startswith('{'):
+        values_dict['Type'] = 'Volume'
 
-      elif name.startswith(u'#'):
+      elif name.startswith('#'):
         # The format is: ##Server_Name#Share_Name.
-        values_dict[u'Type'] = u'Remote Drive'
-        server_name, _, share_name = name[2:].partition(u'#')
-        values_dict[u'Remote_Server'] = server_name
-        values_dict[u'Share_Name'] = u'\\{0:s}'.format(
-            share_name.replace(u'#', u'\\'))
+        values_dict['Type'] = 'Remote Drive'
+        server_name, _, share_name = name[2:].partition('#')
+        values_dict['Remote_Server'] = server_name
+        values_dict['Share_Name'] = '\\{0:s}'.format(
+            share_name.replace('#', '\\'))
 
       else:
-        values_dict[u'Type'] = u'Drive'
+        values_dict['Type'] = 'Drive'
 
       event_data = windows_events.WindowsRegistryEventData()
       event_data.key_path = registry_key.path
