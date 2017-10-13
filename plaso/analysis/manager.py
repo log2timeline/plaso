@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the analysis plugin manager class."""
 
+from __future__ import unicode_literals
+
 from plaso.analysis import definitions
 
 
@@ -11,15 +13,15 @@ class AnalysisPluginManager(object):
 
   _PLUGIN_TYPE_STRINGS = {
       definitions.PLUGIN_TYPE_ANNOTATION: (
-          u'Annotation/Tagging plugin'),
+          'Annotation/Tagging plugin'),
       definitions.PLUGIN_TYPE_ANOMALY: (
-          u'Anomaly plugin'),
+          'Anomaly plugin'),
       definitions.PLUGIN_TYPE_REPORT: (
-          u'Summary/Report plugin'),
+          'Summary/Report plugin'),
       definitions.PLUGIN_TYPE_STATISTICS: (
-          u'Statistics plugin')
+          'Statistics plugin')
   }
-  _PLUGIN_TYPE_STRINGS.setdefault(u'Unknown type')
+  _PLUGIN_TYPE_STRINGS.setdefault('Unknown type')
 
   @classmethod
   def DeregisterPlugin(cls, plugin_class):
@@ -36,7 +38,7 @@ class AnalysisPluginManager(object):
     """
     plugin_name = plugin_class.NAME.lower()
     if plugin_name not in cls._plugin_classes:
-      raise KeyError(u'Plugin class not set for name: {0:s}.'.format(
+      raise KeyError('Plugin class not set for name: {0:s}.'.format(
           plugin_class.NAME))
 
     del cls._plugin_classes[plugin_name]
@@ -61,7 +63,7 @@ class AnalysisPluginManager(object):
         continue
 
       # TODO: Use a specific description variable, not the docstring.
-      doc_string, _, _ = plugin_class.__doc__.partition(u'\n')
+      doc_string, _, _ = plugin_class.__doc__.partition('\n')
       type_string = cls._PLUGIN_TYPE_STRINGS.get(plugin_object.plugin_type)
       information_tuple = (plugin_object.plugin_name, doc_string, type_string)
       results.append(information_tuple)
@@ -124,7 +126,7 @@ class AnalysisPluginManager(object):
     """
     plugin_name = plugin_class.NAME.lower()
     if plugin_name in cls._plugin_classes:
-      raise KeyError(u'Plugin class already set for name: {0:s}.'.format(
+      raise KeyError('Plugin class already set for name: {0:s}.'.format(
           plugin_class.NAME))
 
     cls._plugin_classes[plugin_name] = plugin_class
