@@ -136,7 +136,7 @@ class TextCSVParser(interface.FileObjectParser):
         delimiter=self.VALUE_SEPARATOR, quotechar=self.QUOTE_CHAR)
 
     try:
-      row = reader.next()
+      row = next(reader)
     except (csv.Error, StopIteration):
       raise errors.UnableToParseFile(
           '[{0:s}] Unable to parse CSV file: {1:s}.'.format(
