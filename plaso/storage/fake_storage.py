@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The fake storage intended for testing."""
 
+from __future__ import unicode_literals
+
 import copy
 
 from plaso.lib import definitions
@@ -70,7 +72,7 @@ class FakeStorageWriter(interface.StorageWriter):
       IOError: when the storage writer is closed.
     """
     if not self._is_open:
-      raise IOError(u'Unable to write to closed storage writer.')
+      raise IOError('Unable to write to closed storage writer.')
 
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
@@ -120,7 +122,7 @@ class FakeStorageWriter(interface.StorageWriter):
     event_data_identifier = event.GetEventDataIdentifier()
     if event_data_identifier:
       if not isinstance(event_data_identifier, identifiers.FakeIdentifier):
-        raise IOError(u'Unsupported event data identifier type: {0:s}'.format(
+        raise IOError('Unsupported event data identifier type: {0:s}'.format(
             type(event_data_identifier)))
 
     event = self._PrepareAttributeContainer(event)
@@ -174,7 +176,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     event_identifier = event_tag.GetEventIdentifier()
     if not isinstance(event_identifier, identifiers.FakeIdentifier):
-      raise IOError(u'Unsupported event identifier type: {0:s}'.format(
+      raise IOError('Unsupported event identifier type: {0:s}'.format(
           type(event_identifier)))
 
     event_tag = self._PrepareAttributeContainer(event_tag)
@@ -195,7 +197,7 @@ class FakeStorageWriter(interface.StorageWriter):
       IOError: if the task storage already exists.
     """
     if task.identifier in self._task_storage_writers:
-      raise IOError(u'Storage writer for task: {0:s} already exists.'.format(
+      raise IOError('Storage writer for task: {0:s} already exists.'.format(
           task.identifier))
 
     storage_writer = FakeStorageWriter(
@@ -266,7 +268,7 @@ class FakeStorageWriter(interface.StorageWriter):
       IOError: when the storage writer is closed.
     """
     if not self._is_open:
-      raise IOError(u'Unable to read from closed storage writer.')
+      raise IOError('Unable to read from closed storage writer.')
 
     if self._written_event_source_index >= len(self._event_sources):
       return
@@ -286,7 +288,7 @@ class FakeStorageWriter(interface.StorageWriter):
       IOError: when the storage writer is closed.
     """
     if not self._is_open:
-      raise IOError(u'Unable to read from closed storage writer.')
+      raise IOError('Unable to read from closed storage writer.')
 
     if self._written_event_source_index >= len(self._event_sources):
       return
@@ -309,7 +311,7 @@ class FakeStorageWriter(interface.StorageWriter):
       IOError: when the storage writer is closed.
     """
     if not self._is_open:
-      raise IOError(u'Unable to read from closed storage writer.')
+      raise IOError('Unable to read from closed storage writer.')
 
     event_heap = event_heaps.EventHeap()
 
@@ -330,7 +332,7 @@ class FakeStorageWriter(interface.StorageWriter):
       IOError: if the storage writer is already opened.
     """
     if self._is_open:
-      raise IOError(u'Storage writer already opened.')
+      raise IOError('Storage writer already opened.')
 
     self._is_open = True
 
@@ -347,7 +349,7 @@ class FakeStorageWriter(interface.StorageWriter):
       IOError: if the task storage does not exist.
     """
     if task.identifier not in self._task_storage_writers:
-      raise IOError(u'Storage writer for task: {0:s} does not exist.'.format(
+      raise IOError('Storage writer for task: {0:s} does not exist.'.format(
           task.identifier))
 
   def ReadPreprocessingInformation(self, unused_knowledge_base):
@@ -368,7 +370,7 @@ class FakeStorageWriter(interface.StorageWriter):
     self._RaiseIfNotWritable()
 
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError(u'Preprocessing information not supported by storage type.')
+      raise IOError('Preprocessing information not supported by storage type.')
 
     # TODO: implement.
 
@@ -393,7 +395,7 @@ class FakeStorageWriter(interface.StorageWriter):
     self._RaiseIfNotWritable()
 
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError(u'Preprocessing information not supported by storage type.')
+      raise IOError('Preprocessing information not supported by storage type.')
 
     # TODO: implement.
 
@@ -410,7 +412,7 @@ class FakeStorageWriter(interface.StorageWriter):
     self._RaiseIfNotWritable()
 
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError(u'Session start not supported by storage type.')
+      raise IOError('Session start not supported by storage type.')
 
     self._session.aborted = aborted
     self.session_completion = self._session.CreateSessionCompletion()
@@ -425,7 +427,7 @@ class FakeStorageWriter(interface.StorageWriter):
     self._RaiseIfNotWritable()
 
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError(u'Session start not supported by storage type.')
+      raise IOError('Session start not supported by storage type.')
 
     self.session_start = self._session.CreateSessionStart()
 
@@ -442,7 +444,7 @@ class FakeStorageWriter(interface.StorageWriter):
     self._RaiseIfNotWritable()
 
     if self._storage_type != definitions.STORAGE_TYPE_TASK:
-      raise IOError(u'Task completion not supported by storage type.')
+      raise IOError('Task completion not supported by storage type.')
 
     self._task.aborted = aborted
     self.task_completion = self._task.CreateTaskCompletion()
@@ -457,6 +459,6 @@ class FakeStorageWriter(interface.StorageWriter):
     self._RaiseIfNotWritable()
 
     if self._storage_type != definitions.STORAGE_TYPE_TASK:
-      raise IOError(u'Task start not supported by storage type.')
+      raise IOError('Task start not supported by storage type.')
 
     self.task_start = self._task.CreateTaskStart()
