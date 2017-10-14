@@ -43,7 +43,6 @@ from plaso.storage import zip_file as storage_zip_file
 class Log2TimelineTool(
     extraction_tool.ExtractionTool,
     tool_options.HashersOptions,
-    tool_options.OutputModuleOptions,
     tool_options.ParsersOptions,
     tool_options.StorageFileOptions):
   """Log2timeline CLI tool.
