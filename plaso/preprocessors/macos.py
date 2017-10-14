@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains preprocessors for MacOS."""
 
+from __future__ import unicode_literals
+
 import abc
 import plistlib
 
@@ -23,7 +25,7 @@ class PlistFileArtifactPreprocessorPlugin(
   # The key that's value should be returned back. It is an ordered list
   # of preference. If the first value is found it will be returned and no
   # others will be searched.
-  _PLIST_KEYS = [u'']
+  _PLIST_KEYS = ['']
 
   def _FindKeys(self, key, names, matches):
     """Searches the plist key hierarchy for keys with matching names.
@@ -66,12 +68,12 @@ class PlistFileArtifactPreprocessorPlugin(
 
     except IOError as exception:
       raise errors.PreProcessFail(
-          u'Unable to read: {0:s} with error: {1!s}'.format(
+          'Unable to read: {0:s} with error: {1!s}'.format(
               self.ARTIFACT_DEFINITION_NAME, exception))
 
     if not plist_file.root_key:
       raise errors.PreProcessFail((
-          u'Unable to read: {0:s} with error: missing root key').format(
+          'Unable to read: {0:s} with error: missing root key').format(
               self.ARTIFACT_DEFINITION_NAME))
 
     matches = []
@@ -79,8 +81,8 @@ class PlistFileArtifactPreprocessorPlugin(
     self._FindKeys(plist_file.root_key, self._PLIST_KEYS, matches)
     if not matches:
       raise errors.PreProcessFail(
-          u'Unable to read: {0:s} with error: no such keys: {1:s}.'.format(
-              self.ARTIFACT_DEFINITION_NAME, u', '.join(self._PLIST_KEYS)))
+          'Unable to read: {0:s} with error: no such keys: {1:s}.'.format(
+              self.ARTIFACT_DEFINITION_NAME, ', '.join(self._PLIST_KEYS)))
 
     name = None
     value = None
@@ -90,9 +92,9 @@ class PlistFileArtifactPreprocessorPlugin(
 
     if value is None:
       raise errors.PreProcessFail((
-          u'Unable to read: {0:s} with error: no values found for keys: '
-          u'{1:s}.').format(
-              self.ARTIFACT_DEFINITION_NAME, u', '.join(self._PLIST_KEYS)))
+          'Unable to read: {0:s} with error: no values found for keys: '
+          '{1:s}.').format(
+              self.ARTIFACT_DEFINITION_NAME, ', '.join(self._PLIST_KEYS)))
 
     return self._ParsePlistKeyValue(knowledge_base, name, value)
 
@@ -114,9 +116,9 @@ class PlistFileArtifactPreprocessorPlugin(
 class MacOSHostnamePlugin(PlistFileArtifactPreprocessorPlugin):
   """MacOS hostname plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'MacOSSystemConfigurationPreferencesPlistFile'
+  ARTIFACT_DEFINITION_NAME = 'MacOSSystemConfigurationPreferencesPlistFile'
 
-  _PLIST_KEYS = [u'ComputerName', u'LocalHostName']
+  _PLIST_KEYS = ['ComputerName', 'LocalHostName']
 
   def _ParsePlistKeyValue(self, knowledge_base, name, value):
     """Parses a plist key value.
@@ -140,9 +142,9 @@ class MacOSHostnamePlugin(PlistFileArtifactPreprocessorPlugin):
 class MacOSKeyboardLayoutPlugin(PlistFileArtifactPreprocessorPlugin):
   """MacOS keyboard layout plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'MacOSKeyboardLayoutPlistFile'
+  ARTIFACT_DEFINITION_NAME = 'MacOSKeyboardLayoutPlistFile'
 
-  _PLIST_KEYS = [u'AppleCurrentKeyboardLayoutInputSourceID']
+  _PLIST_KEYS = ['AppleCurrentKeyboardLayoutInputSourceID']
 
   def _ParsePlistKeyValue(self, knowledge_base, name, value):
     """Parses a plist key value.
@@ -160,9 +162,9 @@ class MacOSKeyboardLayoutPlugin(PlistFileArtifactPreprocessorPlugin):
       if isinstance(value, (list, tuple)):
         value = value[0]
 
-      _, _, keyboard_layout = value.rpartition(u'.')
+      _, _, keyboard_layout = value.rpartition('.')
 
-      knowledge_base.SetValue(u'keyboard_layout', keyboard_layout)
+      knowledge_base.SetValue('keyboard_layout', keyboard_layout)
 
     return name in self._PLIST_KEYS
 
@@ -170,9 +172,9 @@ class MacOSKeyboardLayoutPlugin(PlistFileArtifactPreprocessorPlugin):
 class MacOSSystemVersionPlugin(PlistFileArtifactPreprocessorPlugin):
   """MacOS system version information plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'MacOSSystemVersionPlistFile'
+  ARTIFACT_DEFINITION_NAME = 'MacOSSystemVersionPlistFile'
 
-  _PLIST_KEYS = [u'ProductUserVisibleVersion']
+  _PLIST_KEYS = ['ProductUserVisibleVersion']
 
   def _ParsePlistKeyValue(self, knowledge_base, name, value):
     """Parses a plist key value.
@@ -187,7 +189,7 @@ class MacOSSystemVersionPlugin(PlistFileArtifactPreprocessorPlugin):
           the preprocessor plugin is done.
     """
     if name in self._PLIST_KEYS:
-      knowledge_base.SetValue(u'operating_system_version', value)
+      knowledge_base.SetValue('operating_system_version', value)
 
     return name in self._PLIST_KEYS
 
@@ -195,7 +197,7 @@ class MacOSSystemVersionPlugin(PlistFileArtifactPreprocessorPlugin):
 class MacOSTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
   """MacOS time zone plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'MacOSLocalTime'
+  ARTIFACT_DEFINITION_NAME = 'MacOSLocalTime'
 
   def _ParseFileEntry(self, knowledge_base, file_entry):
     """Parses artifact file system data for a preprocessing attribute.
@@ -214,12 +216,12 @@ class MacOSTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
     """
     if not file_entry or not file_entry.link:
       raise errors.PreProcessFail(
-          u'Unable to read: {0:s} with error: not a symbolic link'.format(
+          'Unable to read: {0:s} with error: not a symbolic link'.format(
               self.ARTIFACT_DEFINITION_NAME))
 
     result = False
 
-    _, _, time_zone = file_entry.link.partition(u'zoneinfo/')
+    _, _, time_zone = file_entry.link.partition('zoneinfo/')
     if time_zone:
       try:
         knowledge_base.SetTimeZone(time_zone)
@@ -234,9 +236,9 @@ class MacOSTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
 class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
   """MacOS user accounts plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'MacOSUserPasswordHashesPlistFiles'
+  ARTIFACT_DEFINITION_NAME = 'MacOSUserPasswordHashesPlistFiles'
 
-  _KEYS = frozenset([u'gid', 'home', u'name', u'realname', u'shell', u'uid'])
+  _KEYS = frozenset(['gid', 'home', 'name', 'realname', 'shell', 'uid'])
 
   def _GetKeysDefaultEmpty(self, top_level, keys, depth=1):
     """Retrieves plist keys, defaulting to empty values.
@@ -285,9 +287,9 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
       plist_file.Read(file_object)
 
     except IOError as exception:
-      location = getattr(file_entry.path_spec, u'location', u'')
+      location = getattr(file_entry.path_spec, 'location', '')
       raise errors.PreProcessFail(
-          u'Unable to read plist file: {0:s} with error: {1:s}'.format(
+          'Unable to read plist file: {0:s} with error: {1:s}'.format(
               location, exception))
 
     finally:
@@ -312,21 +314,21 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
     """
     root_key = self._GetPlistRootKey(file_entry)
     if not root_key:
-      location = getattr(file_entry.path_spec, u'location', u'')
+      location = getattr(file_entry.path_spec, 'location', '')
       raise errors.PreProcessFail((
-          u'Unable to read: {0:s} plist: {1:s} with error: missing root '
-          u'key.').format(self.ARTIFACT_DEFINITION_NAME, location))
+          'Unable to read: {0:s} plist: {1:s} with error: missing root '
+          'key.').format(self.ARTIFACT_DEFINITION_NAME, location))
 
     try:
       match = self._GetKeysDefaultEmpty(root_key, self._KEYS)
     except KeyError as exception:
-      location = getattr(file_entry.path_spec, u'location', u'')
+      location = getattr(file_entry.path_spec, 'location', '')
       raise errors.PreProcessFail(
-          u'Unable to read: {0:s} plist: {1:s} with error: {2!s}'.format(
+          'Unable to read: {0:s} plist: {1:s} with error: {2!s}'.format(
               self.ARTIFACT_DEFINITION_NAME, location, exception))
 
-    name = match.get(u'name', [None])[0]
-    uid = match.get(u'uid', [None])[0]
+    name = match.get('name', [None])[0]
+    uid = match.get('uid', [None])[0]
 
     if not name or not uid:
       # TODO: add and store preprocessing errors.
@@ -334,10 +336,10 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
 
     user_account = artifacts.UserAccountArtifact(
         identifier=uid, username=name)
-    user_account.group_identifier = match.get(u'gid', [None])[0]
-    user_account.full_name = match.get(u'realname', [None])[0]
-    user_account.shell = match.get(u'shell', [None])[0]
-    user_account.user_directory = match.get(u'home', [None])[0]
+    user_account.group_identifier = match.get('gid', [None])[0]
+    user_account.full_name = match.get('realname', [None])[0]
+    user_account.shell = match.get('shell', [None])[0]
+    user_account.user_directory = match.get('home', [None])[0]
 
     try:
       knowledge_base.AddUserAccount(user_account)
