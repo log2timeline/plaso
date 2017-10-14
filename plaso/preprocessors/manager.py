@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The preprocess plugins manager."""
 
+from __future__ import unicode_literals
+
 import logging
 
 from dfvfs.helpers import file_system_searcher
@@ -52,7 +54,7 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
 
     for environment_variable in environment_variables:
       name = environment_variable.name.lower()
-      if name not in (u'systemroot', u'userprofile'):
+      if name not in ('systemroot', 'userprofile'):
         continue
 
       path_resolver.SetEnvironmentVariable(
@@ -60,7 +62,7 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
 
     return path_resolver
 
-  def _OpenPathSpec(self, path_specification, ascii_codepage=u'cp1252'):
+  def _OpenPathSpec(self, path_specification, ascii_codepage='cp1252'):
     """Opens the Windows Registry file specified by the path specification.
 
     Args:
@@ -88,14 +90,14 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
       registry_file.Open(file_object)
     except IOError as exception:
       logging.warning(
-          u'Unable to open Windows Registry file with error: {0:s}'.format(
+          'Unable to open Windows Registry file with error: {0:s}'.format(
               exception))
       file_object.close()
       return
 
     return registry_file
 
-  def Open(self, path, ascii_codepage=u'cp1252'):
+  def Open(self, path, ascii_codepage='cp1252'):
     """Opens the Windows Registry file specified by the path.
 
     Args:
@@ -136,7 +138,7 @@ class PreprocessPluginsManager(object):
       artifact_definition = artifacts_registry.GetDefinitionByName(
           preprocess_plugin.ARTIFACT_DEFINITION_NAME)
       if not artifact_definition:
-        logging.warning(u'Missing artifact definition: {0:s}'.format(
+        logging.warning('Missing artifact definition: {0:s}'.format(
             preprocess_plugin.ARTIFACT_DEFINITION_NAME))
         continue
 
@@ -145,8 +147,8 @@ class PreprocessPluginsManager(object):
             knowledge_base, artifact_definition, searcher, file_system)
       except (IOError, errors.PreProcessFail) as exception:
         logging.warning((
-            u'Unable to collect value from artifact definition: {0:s} '
-            u'with error: {1:s}').format(
+            'Unable to collect value from artifact definition: {0:s} '
+            'with error: {1:s}').format(
                 preprocess_plugin.ARTIFACT_DEFINITION_NAME, exception))
         continue
 
@@ -166,7 +168,7 @@ class PreprocessPluginsManager(object):
       artifact_definition = artifacts_registry.GetDefinitionByName(
           preprocess_plugin.ARTIFACT_DEFINITION_NAME)
       if not artifact_definition:
-        logging.warning(u'Missing artifact definition: {0:s}'.format(
+        logging.warning('Missing artifact definition: {0:s}'.format(
             preprocess_plugin.ARTIFACT_DEFINITION_NAME))
         continue
 
@@ -174,8 +176,8 @@ class PreprocessPluginsManager(object):
         preprocess_plugin.Collect(knowledge_base, artifact_definition, searcher)
       except (IOError, errors.PreProcessFail) as exception:
         logging.warning((
-            u'Unable to collect value from artifact definition: {0:s} '
-            u'with error: {1:s}').format(
+            'Unable to collect value from artifact definition: {0:s} '
+            'with error: {1:s}').format(
                 preprocess_plugin.ARTIFACT_DEFINITION_NAME, exception))
         continue
 
@@ -193,7 +195,7 @@ class PreprocessPluginsManager(object):
     name = plugin_class.ARTIFACT_DEFINITION_NAME.lower()
     if name not in cls._plugins:
       raise KeyError(
-          u'Artifact plugin class not set for name: {0:s}.'.format(name))
+          'Artifact plugin class not set for name: {0:s}.'.format(name))
 
     del cls._plugins[name]
 
@@ -228,7 +230,7 @@ class PreprocessPluginsManager(object):
     name = plugin_class.ARTIFACT_DEFINITION_NAME.lower()
     if name in cls._plugins:
       raise KeyError(
-          u'Artifact plugin class already set for name: {0:s}.'.format(name))
+          'Artifact plugin class already set for name: {0:s}.'.format(name))
 
     preprocess_plugin = plugin_class()
 
@@ -292,4 +294,4 @@ class PreprocessPluginsManager(object):
         artifacts_registry, knowledge_base, searcher)
 
     if not knowledge_base.HasUserAccounts():
-      logging.warning(u'Unable to find any user accounts on the system.')
+      logging.warning('Unable to find any user accounts on the system.')
