@@ -338,6 +338,7 @@ class TestDefinitionReader(object):
     self._config_parser = configparser.RawConfigParser()
 
     try:
+      # pylint: disable=deprecated-method
       self._config_parser.readfp(file_object)
 
       for section_name in self._config_parser.sections():
