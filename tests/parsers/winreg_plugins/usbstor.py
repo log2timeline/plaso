@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the USBStor Windows Registry plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
@@ -16,11 +18,11 @@ from tests.parsers.winreg_plugins import test_lib
 class USBStorPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the USBStor Windows Registry plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
+  @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntry([u'SYSTEM'])
-    key_path = u'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Enum\\USBSTOR'
+    test_file_entry = self._GetTestFileEntry(['SYSTEM'])
+    key_path = 'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Enum\\USBSTOR'
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
@@ -41,29 +43,29 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.parser, plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-04-07 10:31:37.640871')
+        '2012-04-07 10:31:37.640871')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
-    expected_value = u'Disk&Ven_HP&Prod_v100w&Rev_1024'
-    self._TestRegvalue(event, u'subkey_name', expected_value)
+    expected_value = 'Disk&Ven_HP&Prod_v100w&Rev_1024'
+    self._TestRegvalue(event, 'subkey_name', expected_value)
 
-    self._TestRegvalue(event, u'device_type', u'Disk')
-    self._TestRegvalue(event, u'vendor', u'Ven_HP')
-    self._TestRegvalue(event, u'product', u'Prod_v100w')
-    self._TestRegvalue(event, u'revision', u'Rev_1024')
+    self._TestRegvalue(event, 'device_type', 'Disk')
+    self._TestRegvalue(event, 'vendor', 'Ven_HP')
+    self._TestRegvalue(event, 'product', 'Prod_v100w')
+    self._TestRegvalue(event, 'revision', 'Rev_1024')
 
     expected_message = (
-        u'[{0:s}] '
-        u'device_type: Disk '
-        u'friendly_name: HP v100w USB Device '
-        u'product: Prod_v100w '
-        u'revision: Rev_1024 '
-        u'serial: AA951D0000007252&0 '
-        u'subkey_name: Disk&Ven_HP&Prod_v100w&Rev_1024 '
-        u'vendor: Ven_HP').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+        '[{0:s}] '
+        'device_type: Disk '
+        'friendly_name: HP v100w USB Device '
+        'product: Prod_v100w '
+        'revision: Rev_1024 '
+        'serial: AA951D0000007252&0 '
+        'subkey_name: Disk&Ven_HP&Prod_v100w&Rev_1024 '
+        'vendor: Ven_HP').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 

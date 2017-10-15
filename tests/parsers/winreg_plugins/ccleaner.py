@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the CCleaner Windows Registry plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
@@ -18,12 +20,12 @@ __author__ = 'Marc Seguin (segumarc@gmail.com)'
 class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the CCleaner Windows Registry plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER-CCLEANER.DAT'])
+  @shared_test_lib.skipUnlessHasTestFile(['NTUSER-CCLEANER.DAT'])
   def testProcess(self):
     """Tests the Process function."""
     plugin = ccleaner.CCleanerPlugin()
-    test_file_entry = self._GetTestFileEntry([u'NTUSER-CCLEANER.DAT'])
-    key_path = u'HKEY_CURRENT_USER\\Software\\Piriform\\CCleaner'
+    test_file_entry = self._GetTestFileEntry(['NTUSER-CCLEANER.DAT'])
+    key_path = 'HKEY_CURRENT_USER\\Software\\Piriform\\CCleaner'
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
@@ -42,41 +44,41 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.parser, plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-07-13 10:03:14')
+        '2013-07-13 10:03:14')
     self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_message = u'Origin: {0:s}'.format(key_path)
+    expected_message = 'Origin: {0:s}'.format(key_path)
     self._TestGetMessageStrings(event, expected_message, expected_message)
 
     event = events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-07-13 14:03:26.861688')
+        '2013-07-13 14:03:26.861688')
     self.assertEqual(event.timestamp, expected_timestamp)
 
-    regvalue_identifier = u'(App)Delete Index.dat files'
-    expected_value = u'True'
+    regvalue_identifier = '(App)Delete Index.dat files'
+    expected_value = 'True'
     self._TestRegvalue(event, regvalue_identifier, expected_value)
 
     expected_message = (
-        u'[{0:s}] '
-        u'(App)Cookies: True '
-        u'(App)Delete Index.dat files: True '
-        u'(App)History: True '
-        u'(App)Last Download Location: True '
-        u'(App)Other Explorer MRUs: True '
-        u'(App)Recent Documents: True '
-        u'(App)Recently Typed URLs: True '
-        u'(App)Run (in Start Menu): True '
-        u'(App)Temporary Internet Files: True '
-        u'(App)Thumbnail Cache: True '
-        u'CookiesToSave: *.piriform.com '
-        u'WINDOW_HEIGHT: 524 '
-        u'WINDOW_LEFT: 146 '
-        u'WINDOW_MAX: 0 '
-        u'WINDOW_TOP: 102 '
-        u'WINDOW_WIDTH: 733').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+        '[{0:s}] '
+        '(App)Cookies: True '
+        '(App)Delete Index.dat files: True '
+        '(App)History: True '
+        '(App)Last Download Location: True '
+        '(App)Other Explorer MRUs: True '
+        '(App)Recent Documents: True '
+        '(App)Recently Typed URLs: True '
+        '(App)Run (in Start Menu): True '
+        '(App)Temporary Internet Files: True '
+        '(App)Thumbnail Cache: True '
+        'CookiesToSave: *.piriform.com '
+        'WINDOW_HEIGHT: 524 '
+        'WINDOW_LEFT: 146 '
+        'WINDOW_MAX: 0 '
+        'WINDOW_TOP: 102 '
+        'WINDOW_WIDTH: 733').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the UserAssist Windows Registry plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import userassist  # pylint: disable=unused-import
@@ -16,13 +18,13 @@ from tests.parsers.winreg_plugins import test_lib
 class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the UserAssist Windows Registry plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER.DAT'])
+  @shared_test_lib.skipUnlessHasTestFile(['NTUSER.DAT'])
   def testProcessOnWinXP(self):
     """Tests the Process function on a Windows XP Registry file."""
-    test_file_entry = self._GetTestFileEntry([u'NTUSER.DAT'])
+    test_file_entry = self._GetTestFileEntry(['NTUSER.DAT'])
     key_path = (
-        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        u'Explorer\\UserAssist\\{75048700-EF1F-11D0-9888-006097DEACF9}')
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Explorer\\UserAssist\\{75048700-EF1F-11D0-9888-006097DEACF9}')
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
@@ -43,30 +45,30 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.parser, plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2009-08-04 15:11:22.811067')
+        '2009-08-04 15:11:22.811067')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
-    expected_value_name = u'UEME_RUNPIDL:%csidl2%\\MSN.lnk'
+    expected_value_name = 'UEME_RUNPIDL:%csidl2%\\MSN.lnk'
     self.assertEqual(event.value_name, expected_value_name)
     self.assertEqual(event.number_of_executions, 14)
 
     expected_message = (
-        u'[{0:s}\\Count] '
-        u'Value name: {1:s} '
-        u'Count: 14').format(key_path, expected_value_name)
-    expected_short_message = u'{0:s} Count: 14'.format(expected_value_name)
+        '[{0:s}\\Count] '
+        'Value name: {1:s} '
+        'Count: 14').format(key_path, expected_value_name)
+    expected_short_message = '{0:s} Count: 14'.format(expected_value_name)
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER-WIN7.DAT'])
+  @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcessOnWin7(self):
     """Tests the Process function on a Windows 7 Registry file."""
-    test_file_entry = self._GetTestFileEntry([u'NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntry(['NTUSER-WIN7.DAT'])
     key_path = (
-        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        u'Explorer\\UserAssist\\{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}')
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Explorer\\UserAssist\\{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}')
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
@@ -89,24 +91,24 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2010-11-10 07:49:37.078067')
+        '2010-11-10 07:49:37.078067')
     self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_value_name = u'Microsoft.Windows.GettingStarted'
+    expected_value_name = 'Microsoft.Windows.GettingStarted'
     self.assertEqual(event.value_name, expected_value_name)
     self.assertEqual(event.number_of_executions, 14)
     self.assertEqual(event.application_focus_count, 21)
     self.assertEqual(event.application_focus_duration, 420000)
 
     expected_message = (
-        u'[{0:s}\\Count] '
-        u'UserAssist entry: 1 '
-        u'Value name: {1:s} '
-        u'Count: 14 '
-        u'Application focus count: 21 '
-        u'Application focus duration: 420000').format(
+        '[{0:s}\\Count] '
+        'UserAssist entry: 1 '
+        'Value name: {1:s} '
+        'Count: 14 '
+        'Application focus count: 21 '
+        'Application focus duration: 420000').format(
             key_path, expected_value_name)
-    expected_short_message = u'{0:s} Count: 14'.format(expected_value_name)
+    expected_short_message = '{0:s} Count: 14'.format(expected_value_name)
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 

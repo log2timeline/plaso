@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Network Drives Windows Registry plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -31,101 +33,101 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        u'Network', key_path=key_path,
+        'Network', key_path=key_path,
         last_written_time=filetime.timestamp, offset=153)
 
     # Setup H drive.
     h_key = dfwinreg_fake.FakeWinRegistryKey(
-        u'H', last_written_time=filetime.timestamp)
+        'H', last_written_time=filetime.timestamp)
     registry_key.AddSubkey(h_key)
 
     value_data = b'\x00\x00\x00\x01'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'ConnectionType', data=value_data,
+        'ConnectionType', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
     h_key.AddValue(registry_value)
 
     value_data = b'\x00\x00\x00\x04'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'DeferFlags', data=value_data,
+        'DeferFlags', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
     h_key.AddValue(registry_value)
 
     value_data = b'\x00\x00\x00\x01'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'ProviderFlags', data=value_data,
+        'ProviderFlags', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
     h_key.AddValue(registry_value)
 
-    value_data = u'Microsoft Windows Network'.encode(u'utf_16_le')
+    value_data = 'Microsoft Windows Network'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'ProviderName', data=value_data,
+        'ProviderName', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
     h_key.AddValue(registry_value)
 
     value_data = b'\x00\x02\x00\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'ProviderType', data=value_data,
+        'ProviderType', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
     h_key.AddValue(registry_value)
 
-    value_data = u'\\\\acme.local\\Shares\\User_Data\\John.Doe'.encode(
-        u'utf_16_le')
+    value_data = '\\\\acme.local\\Shares\\User_Data\\John.Doe'.encode(
+        'utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'RemotePath', data=value_data,
+        'RemotePath', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
     h_key.AddValue(registry_value)
 
     value_data = b'\x00\x00\x00\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'UserName', data=value_data,
+        'UserName', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
     h_key.AddValue(registry_value)
 
     # Setup Z drive.
     z_key = dfwinreg_fake.FakeWinRegistryKey(
-        u'Z', last_written_time=filetime.timestamp)
+        'Z', last_written_time=filetime.timestamp)
     registry_key.AddSubkey(z_key)
 
     value_data = b'\x00\x00\x00\x01'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'ConnectionType', data=value_data,
+        'ConnectionType', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
     z_key.AddValue(registry_value)
 
     value_data = b'\x00\x00\x00\x04'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'DeferFlags', data=value_data,
+        'DeferFlags', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
     z_key.AddValue(registry_value)
 
     value_data = b'\x00\x00\x00\x01'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'ProviderFlags', data=value_data,
+        'ProviderFlags', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
     z_key.AddValue(registry_value)
 
-    value_data = u'Microsoft Windows Network'.encode(u'utf_16_le')
+    value_data = 'Microsoft Windows Network'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'ProviderName', data=value_data,
+        'ProviderName', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
     z_key.AddValue(registry_value)
 
     value_data = b'\x00\x02\x00\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'ProviderType', data=value_data,
+        'ProviderType', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
     z_key.AddValue(registry_value)
 
-    value_data = u'\\\\secret_computer\\Media'.encode(u'utf_16_le')
+    value_data = '\\\\secret_computer\\Media'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'RemotePath', data=value_data,
+        'RemotePath', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ)
     z_key.AddValue(registry_value)
 
     value_data = b'\x00\x00\x00\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'UserName', data=value_data,
+        'UserName', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_BIG_ENDIAN)
     z_key.AddValue(registry_value)
 
@@ -133,8 +135,8 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function on created key."""
-    key_path = u'HKEY_CURRENT_USER\\Network'
-    time_string = u'2013-01-30 10:47:57'
+    key_path = 'HKEY_CURRENT_USER\\Network'
+    time_string = '2013-01-30 10:47:57'
     registry_key = self._CreateTestKey(key_path, time_string)
 
     plugin = network_drives.NetworkDrivesPlugin()
@@ -150,12 +152,12 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_message = (
-        u'[{0:s}] '
-        u'DriveLetter: H '
-        u'RemoteServer: acme.local '
-        u'ShareName: \\Shares\\User_Data\\John.Doe '
-        u'Type: Mapped Drive').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+        '[{0:s}] '
+        'DriveLetter: H '
+        'RemoteServer: acme.local '
+        'ShareName: \\Shares\\User_Data\\John.Doe '
+        'Type: Mapped Drive').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the SAM Users Account information plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
@@ -19,11 +21,11 @@ __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
 class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests the SAM Users Account information plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'SAM'])
+  @shared_test_lib.skipUnlessHasTestFile(['SAM'])
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntry([u'SAM'])
-    key_path = u'HKEY_LOCAL_MACHINE\\SAM\\SAM\\Domains\\Account\\Users'
+    test_file_entry = self._GetTestFileEntry(['SAM'])
+    key_path = 'HKEY_LOCAL_MACHINE\\SAM\\SAM\\Domains\\Account\\Users'
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
@@ -38,23 +40,23 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
-    self._TestRegvalue(event, u'account_rid', 500)
-    self._TestRegvalue(event, u'login_count', 6)
-    self._TestRegvalue(event, u'username', u'Administrator')
+    self._TestRegvalue(event, 'account_rid', 500)
+    self._TestRegvalue(event, 'login_count', 6)
+    self._TestRegvalue(event, 'username', 'Administrator')
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2014-09-24 03:36:06.358837')
+        '2014-09-24 03:36:06.358837')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
     expected_message = (
-        u'[{0:s}] '
-        u'account_rid: 500 '
-        u'comments: Built-in account for administering the computer/domain '
-        u'login_count: 6 '
-        u'username: Administrator').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+        '[{0:s}] '
+        'account_rid: 500 '
+        'comments: Built-in account for administering the computer/domain '
+        'login_count: 6 '
+        'username: Administrator').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
@@ -63,24 +65,24 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     self.assertEqual(event.account_rid, 500)
     self.assertEqual(event.login_count, 6)
-    self.assertEqual(event.username, u'Administrator')
+    self.assertEqual(event.username, 'Administrator')
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2010-11-20 21:48:12.569244')
+        '2010-11-20 21:48:12.569244')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_LOGIN)
 
     expected_message = (
-        u'[{0:s}] '
-        u'Username: Administrator '
-        u'Comments: Built-in account for administering the computer/domain '
-        u'RID: 500 '
-        u'Login count: 6').format(key_path)
+        '[{0:s}] '
+        'Username: Administrator '
+        'Comments: Built-in account for administering the computer/domain '
+        'RID: 500 '
+        'Login count: 6').format(key_path)
     expected_short_message = (
-        u'Administrator '
-        u'RID: 500 '
-        u'Login count: 6')
+        'Administrator '
+        'RID: 500 '
+        'Login count: 6')
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 

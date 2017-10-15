@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Outlook Windows Registry plugins."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -31,12 +33,12 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        u'Search', key_path=key_path, last_written_time=filetime.timestamp,
+        'Search', key_path=key_path, last_written_time=filetime.timestamp,
         offset=1456)
 
     value_name = (
-        u'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
-        u'username@example.com.ost')
+        'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
+        'username@example.com.ost')
     value_data = b'\xcf\x2b\x37\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         value_name, data=value_data, data_type=dfwinreg_definitions.REG_DWORD,
@@ -48,9 +50,9 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     key_path = (
-        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\15.0\\Outlook\\'
-        u'Search')
-    time_string = u'2012-08-28 09:23:49.002031'
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\15.0\\Outlook\\'
+        'Search')
+    time_string = '2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
     plugin = outlook.OutlookSearchMRUPlugin()
@@ -70,10 +72,10 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
-        u'[{0:s}] '
-        u'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
-        u'username@example.com.ost: 0x00372bcf').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+        '[{0:s}] '
+        'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
+        'username@example.com.ost: 0x00372bcf').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
@@ -89,19 +91,19 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
 #   def testProcess(self):
 #     """Tests the Process function."""
 #     key_path = (
-#         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\15.0\\Outlook\\'
-#         u'Search\\Catalog')
-#     time_string = u'2012-08-28 09:23:49.002031'
+#         'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\15.0\\Outlook\\'
+#         'Search\\Catalog')
+#     time_string = '2012-08-28 09:23:49.002031'
 #
 #     filetime = dfdatetime_filetime.Filetime()
 #     filetime.CopyFromString(time_string)
 #     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-#         u'Catalog', key_path=key_path, last_written_time=filetime.timestamp,
+#         'Catalog', key_path=key_path, last_written_time=filetime.timestamp,
 #         offset=3421)
 #
 #     value_name = (
-#         u'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
-#         u'username@example.com.ost')
+#         'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
+#         'username@example.com.ost')
 #     value_data = b'\x94\x01\x00\x00\x00\x00'
 #     registry_value = dfwinreg_fake.FakeWinRegistryValue(
 #         value_name, data=value_data,

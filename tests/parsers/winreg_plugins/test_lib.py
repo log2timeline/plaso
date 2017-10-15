@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Windows Registry plugin related functions and classes for testing."""
 
+from __future__ import unicode_literals
+
 from dfwinreg import registry as dfwinreg_registry
 
 from plaso.containers import sessions
@@ -76,7 +78,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       # In the rare case that a test is checking for a particular chain, we
       # provide a way set it directly. There's no public API for this,
       # as access to the parser chain should be very infrequent.
-      parser_mediator._parser_chain_components = parser_chain.split(u'/')
+      parser_mediator._parser_chain_components = parser_chain.split('/')
 
     plugin.Process(parser_mediator, registry_key)
 
@@ -91,6 +93,6 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       identifier (str): identifier of the 'regvalue' attribute.
       expected_value (object): expected value of the 'regvalue' attribute.
     """
-    self.assertTrue(hasattr(event, u'regvalue'))
+    self.assertTrue(hasattr(event, 'regvalue'))
     self.assertIn(identifier, event.regvalue)
     self.assertEqual(event.regvalue[identifier], expected_value)

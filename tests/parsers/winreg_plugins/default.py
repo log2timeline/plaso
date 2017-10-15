@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the default Windows Registry plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -31,30 +33,30 @@ class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        u'TimeZoneInformation', key_path=key_path,
+        'TimeZoneInformation', key_path=key_path,
         last_written_time=filetime.timestamp, offset=1456)
 
-    value_data = u'acb'.encode(u'utf_16_le')
+    value_data = 'acb'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'MRUList', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        'MRUList', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=123)
     registry_key.AddValue(registry_value)
 
-    value_data = u'Some random text here'.encode(u'utf_16_le')
+    value_data = 'Some random text here'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'a', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        'a', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=1892)
     registry_key.AddValue(registry_value)
 
-    value_data = u'c:/evil.exe'.encode(u'utf_16_le')
+    value_data = 'c:/evil.exe'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'b', data=value_data, data_type=dfwinreg_definitions.REG_BINARY,
+        'b', data=value_data, data_type=dfwinreg_definitions.REG_BINARY,
         offset=612)
     registry_key.AddValue(registry_value)
 
-    value_data = u'C:/looks_legit.exe'.encode(u'utf_16_le')
+    value_data = 'C:/looks_legit.exe'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'c', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        'c', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=1001)
     registry_key.AddValue(registry_value)
 
@@ -62,8 +64,8 @@ class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = u'\\Microsoft\\Some Windows\\InterestingApp\\MRU'
-    time_string = u'2012-08-28 09:23:49.002031'
+    key_path = '\\Microsoft\\Some Windows\\InterestingApp\\MRU'
+    time_string = '2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
     plugin = default.DefaultPlugin()
@@ -83,12 +85,12 @@ class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
-        u'[{0:s}] '
-        u'MRUList: [REG_SZ] acb '
-        u'a: [REG_SZ] Some random text here '
-        u'b: [REG_BINARY] '
-        u'c: [REG_SZ] C:/looks_legit.exe').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+        '[{0:s}] '
+        'MRUList: [REG_SZ] acb '
+        'a: [REG_SZ] Some random text here '
+        'b: [REG_BINARY] '
+        'c: [REG_SZ] C:/looks_legit.exe').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
