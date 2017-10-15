@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The task manager."""
 
+from __future__ import unicode_literals
+
 import collections
 import heapq
 import logging
@@ -74,9 +76,9 @@ class _PendingMergeTaskHeap(object):
     Raises:
       ValueError: if the size of the storage file is not set in the task.
     """
-    storage_file_size = getattr(task, u'storage_file_size', None)
+    storage_file_size = getattr(task, 'storage_file_size', None)
     if not storage_file_size:
-      raise ValueError(u'Task storage file size not set')
+      raise ValueError('Task storage file size not set')
 
     if task.file_entry_type == dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY:
       weight = 1
@@ -113,6 +115,10 @@ class TaskManager(object):
   considered "pending", as there is more work that needs to be done to complete
   them.
   """
+
+  # Stop pylint from reporting:
+  # Context manager 'lock' doesn't implement __enter__ and __exit__.
+  # pylint: disable=not-context-manager
 
   # Consider a task inactive after 5 minutes of no activity.
   _TASK_INACTIVE_TIME = 5 * 60 * 1000000
@@ -168,22 +174,22 @@ class TaskManager(object):
     with self._lock:
       if task.identifier in self._tasks_merging:
         del self._tasks_merging[task.identifier]
-        logging.debug(u'Task {0:s} is complete.'.format(task.identifier))
+        logging.debug('Task {0:s} is complete.'.format(task.identifier))
 
       if task.identifier in self._tasks_pending_merge:
-        logging.debug(u'Task {0:s} completed while pending merge.'.format(
+        logging.debug('Task {0:s} completed while pending merge.'.format(
             task.identifier))
         return
 
       if task.identifier in self._tasks_processing:
         del self._tasks_processing[task.identifier]
-        logging.debug(u'Task {0:s} completed from processing'.format(
+        logging.debug('Task {0:s} completed from processing'.format(
             task.identifier))
         return
 
       if task.identifier in self._tasks_queued:
         del self._tasks_queued[task.identifier]
-        logging.debug(u'Task {0:s} is completed from queued'.format(
+        logging.debug('Task {0:s} is completed from queued'.format(
             task.identifier))
         return
 
@@ -273,7 +279,7 @@ class TaskManager(object):
       if not last_active_time:
         last_active_time = task.start_time
       if last_active_time < inactive_time:
-        logging.debug(u'Task {0:s} is abandoned'.format(task_identifier))
+        logging.debug('Task {0:s} is abandoned'.format(task_identifier))
         self._tasks_abandoned[task_identifier] = task
         del tasks_for_timeout[task_identifier]
 
@@ -358,7 +364,7 @@ class TaskManager(object):
         if self._TaskIsRetriable(abandoned_task):
           retry_task = abandoned_task.CreateRetry()
           logging.debug(
-              u'Retrying task {0:s} as {1:s}'.format(
+              'Retrying task {0:s} as {1:s}'.format(
                   abandoned_task.identifier, retry_task.identifier))
           self._tasks_queued[retry_task.identifier] = retry_task
           self._total_number_of_tasks += 1
@@ -379,7 +385,7 @@ class TaskManager(object):
       is_queued = task.identifier in self._tasks_queued
 
       if not (is_queued or is_abandoned or is_processing):
-        raise KeyError(u'Status of task {0:s} is unknown'.format(
+        raise KeyError('Status of task {0:s} is unknown'.format(
             task.identifier))
 
       self._tasks_pending_merge.PushTask(task)
@@ -396,10 +402,10 @@ class TaskManager(object):
 
     if is_abandoned:
       logging.warning(
-          u'Previously abandoned task {0:s} is now pending merge'.format(
+          'Previously abandoned task {0:s} is now pending merge'.format(
               task.identifier))
     else:
-      logging.debug(u'Task {0:s} is pending merge'.format(task.identifier))
+      logging.debug('Task {0:s} is pending merge'.format(task.identifier))
 
   def UpdateTaskAsProcessingByIdentifier(self, task_identifier):
     """Updates the task manager to reflect the task is processing.
@@ -418,7 +424,7 @@ class TaskManager(object):
 
       task_queued = self._tasks_queued.get(task_identifier, None)
       if task_queued:
-        logging.debug(u'Task {0:s} was queued, now processing'.format(
+        logging.debug('Task {0:s} was queued, now processing'.format(
             task_identifier))
         self._tasks_processing[task_identifier] = task_queued
         del self._tasks_queued[task_identifier]
@@ -429,7 +435,7 @@ class TaskManager(object):
       if task_abandoned:
         del self._tasks_abandoned[task_identifier]
         self._tasks_processing[task_identifier] = task_abandoned
-        logging.debug(u'Task {0:s} was abandoned, but now processing'.format(
+        logging.debug('Task {0:s} was abandoned, but now processing'.format(
             task_identifier))
         task_abandoned.UpdateProcessingTime()
         return
@@ -440,4 +446,4 @@ class TaskManager(object):
         return
 
     # If we get here, we don't know what state the tasks is in, so raise.
-    raise KeyError(u'Status of task {0:s} is unknown'.format(task_identifier))
+    raise KeyError('Status of task {0:s} is unknown'.format(task_identifier))

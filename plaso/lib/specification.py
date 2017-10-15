@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The format specification classes."""
 
+from __future__ import unicode_literals
+
 
 class Signature(object):
   """The format specification signature.
@@ -98,7 +100,7 @@ class FormatSpecificationStore(object):
     """
     if identifier in self._format_specifications:
       raise KeyError(
-          u'Format specification {0:s} is already defined in store.'.format(
+          'Format specification {0:s} is already defined in store.'.format(
               identifier))
 
     self._format_specifications[identifier] = FormatSpecification(identifier)
@@ -117,7 +119,7 @@ class FormatSpecificationStore(object):
     """
     if specification.identifier in self._format_specifications:
       raise KeyError(
-          u'Format specification {0:s} is already defined in store.'.format(
+          'Format specification {0:s} is already defined in store.'.format(
               specification.identifier))
 
     self._format_specifications[specification.identifier] = specification
@@ -125,12 +127,12 @@ class FormatSpecificationStore(object):
     for signature in specification.signatures:
       signature_index = len(self._signature_map)
 
-      signature_identifier = u'{0:s}:{1:d}'.format(
+      signature_identifier = '{0:s}:{1:d}'.format(
           specification.identifier, signature_index)
 
       if signature_identifier in self._signature_map:
         raise KeyError(
-            u'Signature {0:s} is already defined in map.'.format(
+            'Signature {0:s} is already defined in map.'.format(
                 signature_identifier))
 
       signature.SetIdentifier(signature_identifier)

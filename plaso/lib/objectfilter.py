@@ -95,6 +95,8 @@ filter is easy. Three basic filter implementations are given:
   to the given object. So "a.b" expands the object obj to obj["a"]["b"]
 """
 
+from __future__ import unicode_literals
+
 import abc
 import binascii
 import logging
@@ -111,7 +113,7 @@ from plaso.lib import py2to3
 def GetUnicodeString(string):
   """Converts the string to Unicode if necessary."""
   if not isinstance(string, py2to3.UNICODE_TYPE):
-    return str(string).decode(u'utf8', errors=u'ignore')
+    return str(string).decode('utf8', errors='ignore')
   return string
 
 
@@ -138,11 +140,11 @@ class Filter(object):
     self.value_expander_cls = value_expander
     if self.value_expander_cls:
       if not issubclass(self.value_expander_cls, ValueExpander):
-        raise ValueError(u'{0:s} is not a valid value expander'.format(
+        raise ValueError('{0:s} is not a valid value expander'.format(
             self.value_expander_cls))
       self.value_expander = self.value_expander_cls()
     self.args = arguments or []
-    logging.debug(u'Adding {0:s}'.format(arguments))
+    logging.debug('Adding {0:s}'.format(arguments))
 
   @abc.abstractmethod
   def Matches(self, obj):
@@ -202,7 +204,7 @@ class UnaryOperator(Operator):
     super(UnaryOperator, self).__init__(arguments=[operand], **kwargs)
     if len(self.args) != 1:
       raise InvalidNumberOfOperands(
-          u'Only one operand is accepted by {0:s}. Received {1:d}.'.format(
+          'Only one operand is accepted by {0:s}. Received {1:d}.'.format(
               self.__class__.__name__, len(self.args)))
 
 
@@ -217,7 +219,7 @@ class BinaryOperator(Operator):
     super(BinaryOperator, self).__init__(arguments=arguments, **kwargs)
     if len(self.args) != 2:
       raise InvalidNumberOfOperands(
-          u'Only two operands are accepted by {0:s}. Received {1:s}.'.format(
+          'Only two operands are accepted by {0:s}. Received {1:s}.'.format(
               self.__class__.__name__, len(self.args)))
 
     self.left_operand = self.args[0]
@@ -232,7 +234,7 @@ class GenericBinaryOperator(BinaryOperator):
     self.bool_value = True
 
   def FlipBool(self):
-    logging.debug(u'Negative matching.')
+    logging.debug('Negative matching.')
     self.bool_value = not self.bool_value
 
   def Operation(self, x, y):
@@ -322,8 +324,8 @@ class InSet(GenericBinaryOperator):
 
     # x might be an iterable
     # first we need to skip strings or we'll do silly things
-    if (isinstance(x, py2to3.STRING_TYPES)
-        or isinstance(x, bytes)):
+    # pylint: disable=consider-merging-isinstance
+    if isinstance(x, py2to3.STRING_TYPES) or isinstance(x, bytes):
       return False
 
     try:
@@ -341,12 +343,12 @@ class Regexp(GenericBinaryOperator):
   def __init__(self, *children, **kwargs):
     super(Regexp, self).__init__(*children, **kwargs)
     # Note that right_operand is not necessarily a string.
-    logging.debug(u'Compiled: {0!s}'.format(self.right_operand))
+    logging.debug('Compiled: {0!s}'.format(self.right_operand))
     try:
       self.compiled_re = re.compile(
           GetUnicodeString(self.right_operand), re.DOTALL)
     except re.error:
-      raise ValueError(u'Regular expression "{0!s}" is malformed.'.format(
+      raise ValueError('Regular expression "{0!s}" is malformed.'.format(
           self.right_operand))
 
   def Operation(self, x, unused_y):
@@ -365,12 +367,12 @@ class RegexpInsensitive(Regexp):
   def __init__(self, *children, **kwargs):
     super(RegexpInsensitive, self).__init__(*children, **kwargs)
     # Note that right_operand is not necessarily a string.
-    logging.debug(u'Compiled: {0!s}'.format(self.right_operand))
+    logging.debug('Compiled: {0!s}'.format(self.right_operand))
     try:
       self.compiled_re = re.compile(GetUnicodeString(self.right_operand),
                                     re.I | re.DOTALL)
     except re.error:
-      raise ValueError(u'Regular expression "{0!s}" is malformed.'.format(
+      raise ValueError('Regular expression "{0!s}" is malformed.'.format(
           self.right_operand))
 
 
@@ -383,7 +385,7 @@ class Context(Operator):
   imported functions name.
 
   Imagine that a malicious DLL is injected into processes and its indicators are
-  that it only imports one function and that it is RegQueryValueEx. You'd write
+  that it only imports one function and that it is RegQueryValueEx. Yo'd write
   your indicator like this:
 
 
@@ -448,7 +450,7 @@ class Context(Operator):
 
   def __init__(self, arguments=None, **kwargs):
     if len(arguments) != 2:
-      raise InvalidNumberOfOperands(u'Context accepts only 2 operands.')
+      raise InvalidNumberOfOperands('Context accepts only 2 operands.')
     super(Context, self).__init__(arguments=arguments, **kwargs)
     self.context, self.condition = self.args
 
@@ -583,7 +585,7 @@ class BasicExpression(lexer.Expression):
     operator = filter_implementation.OPS.get(op_str, None)
 
     if not operator:
-      raise errors.ParseError(u'Unknown operator {0:s} provided.'.format(
+      raise errors.ParseError('Unknown operator {0:s} provided.'.format(
           self.operator))
 
     arguments.extend(self.args)
@@ -616,7 +618,7 @@ class ContextExpression(lexer.Expression):
       self.args = [expression]
     else:
       raise errors.ParseError(
-          u'Expected expression, got {0:s}.'.format(expression))
+          'Expected expression, got {0:s}.'.format(expression))
 
   def Compile(self, filter_implementation):
     """Compile the expression."""
@@ -639,7 +641,7 @@ class BinaryExpression(lexer.BinaryExpression):
       method = 'OrFilter'
     else:
       raise errors.ParseError(
-          u'Invalid binary operator {0:s}.'.format(operator))
+          'Invalid binary operator {0:s}.'.format(operator))
 
     args = [x.Compile(filter_implementation) for x in self.args]
     return filter_implementation.FILTERS[method](arguments=args)
@@ -713,7 +715,7 @@ class Parser(lexer.SearchParser):
   def FlipAllowed(self):
     """Raise an error if the not keyword is used where it is not allowed."""
     if not hasattr(self, 'flipped'):
-      raise errors.ParseError(u'Not defined.')
+      raise errors.ParseError('Not defined.')
 
     if not self.flipped:
       return
@@ -722,7 +724,7 @@ class Parser(lexer.SearchParser):
       if not self.current_expression.operator.lower() in (
           'is', 'contains', 'inset', 'equals'):
         raise errors.ParseError(
-            u'Keyword \'not\' does not work against operator: {0:s}'.format(
+            'Keyword \'not\' does not work against operator: {0:s}'.format(
                 self.current_expression.operator))
 
   def FlipLogic(self, **unused_kwargs):
@@ -733,11 +735,11 @@ class Parser(lexer.SearchParser):
     """
     if hasattr(self, 'flipped') and self.flipped:
       raise errors.ParseError(
-          u'The operator \'not\' can only be expressed once.')
+          'The operator \'not\' can only be expressed once.')
 
     if self.current_expression.args:
       raise errors.ParseError(
-          u'Unable to place the keyword \'not\' after an argument.')
+          'Unable to place the keyword \'not\' after an argument.')
 
     self.flipped = True
 
@@ -746,15 +748,15 @@ class Parser(lexer.SearchParser):
 
     if hasattr(self.current_expression, 'FlipBool'):
       self.current_expression.FlipBool()
-      logging.debug(u'Negative matching [flipping boolean logic].')
+      logging.debug('Negative matching [flipping boolean logic].')
     else:
       logging.warning(
-          u'Unable to perform a negative match, issuing a positive one.')
+          'Unable to perform a negative match, issuing a positive one.')
 
   def InsertArg(self, string='', **unused_kwargs):
     """Insert an arg to the current expression."""
     # Note that "string" is not necessarily of type string.
-    logging.debug(u'Storing argument: {0!s}'.format(string))
+    logging.debug('Storing argument: {0!s}'.format(string))
 
     # Check if this flip operation should be allowed.
     self.FlipAllowed()
@@ -771,7 +773,7 @@ class Parser(lexer.SearchParser):
     try:
       float_value = float(string)
     except (TypeError, ValueError):
-      raise errors.ParseError(u'{0:s} is not a valid float.'.format(string))
+      raise errors.ParseError('{0:s} is not a valid float.'.format(string))
     return self.InsertArg(float_value)
 
   def InsertIntArg(self, string='', **unused_kwargs):
@@ -779,7 +781,7 @@ class Parser(lexer.SearchParser):
     try:
       int_value = int(string)
     except (TypeError, ValueError):
-      raise errors.ParseError(u'{0:s} is not a valid integer.'.format(string))
+      raise errors.ParseError('{0:s} is not a valid integer.'.format(string))
     return self.InsertArg(int_value)
 
   def InsertInt16Arg(self, string='', **unused_kwargs):
@@ -788,7 +790,7 @@ class Parser(lexer.SearchParser):
       int_value = int(string, 16)
     except (TypeError, ValueError):
       raise errors.ParseError(
-          u'{0:s} is not a valid base16 integer.'.format(string))
+          '{0:s} is not a valid base16 integer.'.format(string))
     return self.InsertArg(int_value)
 
   def StringFinish(self, **unused_kwargs):
@@ -815,16 +817,16 @@ class Parser(lexer.SearchParser):
     if match.group(1) in '\\\'"rnbt\\.ws':
       self.string += string.decode('string_escape')
     else:
-      raise errors.ParseError(u'Invalid escape character {0:s}.'.format(string))
+      raise errors.ParseError('Invalid escape character {0:s}.'.format(string))
 
   def HexEscape(self, string, match, **unused_kwargs):
     """Converts a hex escaped string."""
-    logging.debug(u'HexEscape matched {0:s}.'.format(string))
+    logging.debug('HexEscape matched {0:s}.'.format(string))
     hex_string = match.group(1)
     try:
       self.string += binascii.unhexlify(hex_string)
     except TypeError:
-      raise errors.ParseError(u'Invalid hex escape {0:s}.'.format(string))
+      raise errors.ParseError('Invalid hex escape {0:s}.'.format(string))
 
   def ContextOperator(self, string='', **unused_kwargs):
     self.stack.append(self.context_cls(string[1:]))
@@ -833,7 +835,7 @@ class Parser(lexer.SearchParser):
     """Reduce the token stack into an AST."""
     # Check for sanity
     if self.state != 'INITIAL' and self.state != 'BINARY':
-      self.Error(u'Premature end of expression')
+      self.Error('Premature end of expression')
 
     length = len(self.stack)
     while length > 1:
@@ -849,14 +851,14 @@ class Parser(lexer.SearchParser):
       length = len(self.stack)
 
     if length != 1:
-      self.Error(u'Illegal query expression')
+      self.Error('Illegal query expression')
 
     return self.stack[0]
 
   def Error(self, message=None, _=None):
     # Note that none of the values necessarily are strings.
     raise errors.ParseError(
-        u'{0!s} in position {1!s}: {2!s} <----> {3!s} )'.format(
+        '{0!s} in position {1!s}: {2!s} <----> {3!s} )'.format(
             message, len(self.processed_buffer), self.processed_buffer,
             self.buffer))
 
@@ -924,5 +926,3 @@ class DictFilterImplementation(BaseFilterImplementation):
   FILTERS = {}
   FILTERS.update(BaseFilterImplementation.FILTERS)
   FILTERS.update({'ValueExpander': DictValueExpander})
-
-

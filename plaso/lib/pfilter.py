@@ -73,10 +73,6 @@ class DictObject(object):
 class PlasoValueExpander(objectfilter.AttributeValueExpander):
   """An expander that gives values based on object attribute names."""
 
-  def __init__(self):
-    """Initialize an attribute value expander."""
-    super(PlasoValueExpander, self).__init__()
-
   def _GetMessage(self, event_object):
     """Returns a properly formatted message string.
 
@@ -215,7 +211,7 @@ class ParserList(objectfilter.GenericBinaryOperator):
   def Operation(self, x, unused_y):
     """Return a bool depending on the parser list contains the parser."""
     if self.left_operand != 'parser':
-      raise objectfilter.MalformedQueryError(
+      raise errors.MalformedQueryError(
           u'Unable to use keyword "inlist" for other than parser.')
 
     if x in self.compiled_list:
@@ -297,7 +293,10 @@ class DateCompareObject(object):
     """A simple comparison operation."""
     try:
       x_date = DateCompareObject(x)
-      return cmp(self.data, x_date.data)
+
+      # The following implements a Python3 compatible:
+      # cmp(self.data, x_date.data)
+      return (self.data > x_date.data) - (self.data < x_date.data)
     except ValueError:
       return False
 
@@ -361,5 +360,5 @@ class TimeRangeCache(object):
 
     if first < last:
       return first, last
-    else:
-      return last, first
+
+    return last, first

@@ -9,6 +9,8 @@ It also contains various functions to represent timestamps in a more
 human readable form.
 """
 
+from __future__ import unicode_literals
+
 import calendar
 import datetime
 import logging
@@ -22,18 +24,18 @@ from plaso.lib import py2to3
 
 
 MONTH_DICT = {
-    u'jan': 1,
-    u'feb': 2,
-    u'mar': 3,
-    u'apr': 4,
-    u'may': 5,
-    u'jun': 6,
-    u'jul': 7,
-    u'aug': 8,
-    u'sep': 9,
-    u'oct': 10,
-    u'nov': 11,
-    u'dec': 12}
+    'jan': 1,
+    'feb': 2,
+    'mar': 3,
+    'apr': 4,
+    'may': 5,
+    'jun': 6,
+    'jul': 7,
+    'aug': 8,
+    'sep': 9,
+    'oct': 10,
+    'nov': 11,
+    'dec': 12}
 
 
 class Timestamp(object):
@@ -90,42 +92,42 @@ class Timestamp(object):
       ValueError: if the time string is invalid or not supported.
     """
     if not time_string:
-      raise ValueError(u'Invalid time string.')
+      raise ValueError('Invalid time string.')
 
     time_string_length = len(time_string)
 
     # The time string should at least contain 'YYYY-MM-DD'.
-    if (time_string_length < 10 or time_string[4] != u'-' or
-        time_string[7] != u'-'):
-      raise ValueError(u'Invalid time string.')
+    if (time_string_length < 10 or time_string[4] != '-' or
+        time_string[7] != '-'):
+      raise ValueError('Invalid time string.')
 
     # If a time of day is specified the time string it should at least
     # contain 'YYYY-MM-DD hh:mm:ss'.
     if (time_string_length > 10 and (
-        time_string_length < 19 or time_string[10] != u' ' or
-        time_string[13] != u':' or time_string[16] != u':')):
-      raise ValueError(u'Invalid time string.')
+        time_string_length < 19 or time_string[10] != ' ' or
+        time_string[13] != ':' or time_string[16] != ':')):
+      raise ValueError('Invalid time string.')
 
     try:
       year = int(time_string[0:4], 10)
     except ValueError:
-      raise ValueError(u'Unable to parse year.')
+      raise ValueError('Unable to parse year.')
 
     try:
       month = int(time_string[5:7], 10)
     except ValueError:
-      raise ValueError(u'Unable to parse month.')
+      raise ValueError('Unable to parse month.')
 
     if month not in range(1, 13):
-      raise ValueError(u'Month value out of bounds.')
+      raise ValueError('Month value out of bounds.')
 
     try:
       day_of_month = int(time_string[8:10], 10)
     except ValueError:
-      raise ValueError(u'Unable to parse day of month.')
+      raise ValueError('Unable to parse day of month.')
 
     if day_of_month not in range(1, 32):
-      raise ValueError(u'Day of month value out of bounds.')
+      raise ValueError('Day of month value out of bounds.')
 
     hours = 0
     minutes = 0
@@ -135,36 +137,36 @@ class Timestamp(object):
       try:
         hours = int(time_string[11:13], 10)
       except ValueError:
-        raise ValueError(u'Unable to parse hours.')
+        raise ValueError('Unable to parse hours.')
 
       if hours not in range(0, 24):
-        raise ValueError(u'Hours value out of bounds.')
+        raise ValueError('Hours value out of bounds.')
 
       try:
         minutes = int(time_string[14:16], 10)
       except ValueError:
-        raise ValueError(u'Unable to parse minutes.')
+        raise ValueError('Unable to parse minutes.')
 
       if minutes not in range(0, 60):
-        raise ValueError(u'Minutes value out of bounds.')
+        raise ValueError('Minutes value out of bounds.')
 
       try:
         seconds = int(time_string[17:19], 10)
       except ValueError:
-        raise ValueError(u'Unable to parse day of seconds.')
+        raise ValueError('Unable to parse day of seconds.')
 
       if seconds not in range(0, 60):
-        raise ValueError(u'Seconds value out of bounds.')
+        raise ValueError('Seconds value out of bounds.')
 
     micro_seconds = 0
     timezone_offset = 0
 
     if time_string_length > 19:
-      if time_string[19] != u'.':
+      if time_string[19] != '.':
         timezone_index = 19
       else:
         for timezone_index in range(19, time_string_length):
-          if time_string[timezone_index] in [u'+', u'-']:
+          if time_string[timezone_index] in ['+', '-']:
             break
 
           # The calculation that follow rely on the timezone index to point
@@ -175,33 +177,33 @@ class Timestamp(object):
       if timezone_index > 19:
         fraction_of_seconds_length = timezone_index - 20
         if fraction_of_seconds_length not in [3, 6]:
-          raise ValueError(u'Invalid time string.')
+          raise ValueError('Invalid time string.')
 
         try:
           micro_seconds = int(time_string[20:timezone_index], 10)
         except ValueError:
-          raise ValueError(u'Unable to parse fraction of seconds.')
+          raise ValueError('Unable to parse fraction of seconds.')
 
         if fraction_of_seconds_length == 3:
           micro_seconds *= 1000
 
       if timezone_index < time_string_length:
         if (time_string_length - timezone_index != 6 or
-            time_string[timezone_index + 3] != u':'):
-          raise ValueError(u'Invalid time string.')
+            time_string[timezone_index + 3] != ':'):
+          raise ValueError('Invalid time string.')
 
         try:
           timezone_offset = int(time_string[
               timezone_index + 1:timezone_index + 3])
         except ValueError:
-          raise ValueError(u'Unable to parse timezone hours offset.')
+          raise ValueError('Unable to parse timezone hours offset.')
 
         if timezone_offset not in range(0, 24):
-          raise ValueError(u'Timezone hours offset value out of bounds.')
+          raise ValueError('Timezone hours offset value out of bounds.')
 
         # Note that when the sign of the timezone offset is negative
         # the difference needs to be added. We do so by flipping the sign.
-        if time_string[timezone_index] == u'-':
+        if time_string[timezone_index] == '-':
           timezone_offset *= 60
         else:
           timezone_offset *= -60
@@ -210,7 +212,7 @@ class Timestamp(object):
           timezone_offset += int(time_string[
               timezone_index + 4:timezone_index + 6])
         except ValueError:
-          raise ValueError(u'Unable to parse timezone minutes offset.')
+          raise ValueError('Unable to parse timezone minutes offset.')
 
         timezone_offset *= 60
 
@@ -249,8 +251,8 @@ class Timestamp(object):
         raise
 
       logging.error((
-          u'Unable to copy {0:d} to a datetime object with error: '
-          u'{1:s}').format(timestamp, exception))
+          'Unable to copy {0:d} to a datetime object with error: '
+          '{1:s}').format(timestamp, exception))
 
     return datetime_object
 
@@ -302,7 +304,7 @@ class Timestamp(object):
       ValueError: if the month value is invalid.
     """
     if month not in range(0, 12):
-      raise ValueError(u'Invalid month value')
+      raise ValueError('Invalid month value')
 
     days_per_month = cls.DAYS_PER_MONTH[month]
 
@@ -432,7 +434,7 @@ class Timestamp(object):
     """
     microseconds = deciseconds * 100000
     utc_offset_minutes = (hours_from_utc * 60) + minutes_from_utc
-    if direction_from_utc == u'-':
+    if direction_from_utc == '-':
       utc_offset_minutes = -utc_offset_minutes
     timezone = pytz.FixedOffset(utc_offset_minutes)
     return cls.FromTimeParts(
@@ -467,8 +469,8 @@ class Timestamp(object):
           year, month, day, hour, minutes, seconds, microseconds)
     except ValueError as exception:
       raise errors.TimestampError((
-          u'Unable to create timestamp from {0:04d}-{1:02d}-{2:02d} '
-          u'{3:02d}:{4:02d}:{5:02d}.{6:06d} with error: {7:s}').format(
+          'Unable to create timestamp from {0:04d}-{1:02d}-{2:02d} '
+          '{3:02d}:{4:02d}:{5:02d}.{6:06d} with error: {7:s}').format(
               year, month, day, hour, minutes, seconds, microseconds,
               exception))
 
@@ -509,7 +511,7 @@ class Timestamp(object):
       TimestampError: if the time string could not be parsed.
     """
     if not gmt_as_timezone and time_string.endswith(' GMT'):
-      time_string = u'{0:s}UTC'.format(time_string[:-3])
+      time_string = '{0:s}UTC'.format(time_string[:-3])
 
     try:
       # TODO: deprecate the use of dateutil parser.
@@ -517,8 +519,8 @@ class Timestamp(object):
 
     except (TypeError, ValueError) as exception:
       raise errors.TimestampError((
-          u'Unable to convert time string: {0:s} in to a datetime object '
-          u'with error: {1:s}').format(time_string, exception))
+          'Unable to convert time string: {0:s} in to a datetime object '
+          'with error: {1:s}').format(time_string, exception))
 
     if datetime_object.tzinfo:
       datetime_object = datetime_object.astimezone(pytz.UTC)
@@ -550,6 +552,7 @@ class Timestamp(object):
     Returns:
       A boolean value indicating the year is a leap year.
     """
+    # pylint: disable=consider-using-ternary
     return (year % 4 == 0 and year % 100 != 0) or year % 400 == 0
 
   @classmethod

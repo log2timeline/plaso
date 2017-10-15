@@ -5,6 +5,8 @@ This lexer is originally copied from the GRR project:
 https://code.google.com/p/grr
 """
 
+from __future__ import unicode_literals
+
 import logging
 import re
 
@@ -108,7 +110,7 @@ class Lexer(object):
 
     # Check that we are making progress - if we are too full, we assume we are
     # stuck.
-    self.Error(u'Expected {0:s}'.format(self.state))
+    self.Error('Expected {0:s}'.format(self.state))
     self.processed_buffer += self.buffer[:1]
     self.buffer = self.buffer[1:]
     return self._ERROR_TOKEN
@@ -121,7 +123,7 @@ class Lexer(object):
 
   def Default(self, **kwarg):
     """The default callback handler."""
-    logging.debug(u'Default handler: {0:s}'.format(kwarg))
+    logging.debug('Default handler: {0:s}'.format(kwarg))
 
   def Empty(self):
     """Returns a boolean indicating if the buffer is empty."""
@@ -134,25 +136,25 @@ class Lexer(object):
       message: optional error message.
       weight: optional error weight.
     """
-    logging.debug(u'Error({0:d}): {1:s}'.format(weight, message))
+    logging.debug('Error({0:d}): {1:s}'.format(weight, message))
     # Keep a count of errors
     self.error += weight
 
   def PushState(self, **unused_kwargs):
     """Push the current state on the state stack."""
-    logging.debug(u'Storing state {0:s}'.format(repr(self.state)))
+    logging.debug('Storing state {0:s}'.format(repr(self.state)))
     self.state_stack.append(self.state)
 
   def PopState(self, **unused_kwargs):
     """Pop the previous state from the stack."""
     try:
       self.state = self.state_stack.pop()
-      logging.debug(u'Returned state to {0:s}'.format(self.state))
+      logging.debug('Returned state to {0:s}'.format(self.state))
 
       return self.state
     except IndexError:
       self.Error(
-          u'Tried to pop the state but failed - possible recursion error')
+          'Tried to pop the state but failed - possible recursion error')
 
   def Feed(self, data):
     """Feed the buffer with data.
@@ -188,6 +190,7 @@ class SelfFeederMixIn(Lexer):
     super(SelfFeederMixIn, self).__init__()
     self.file_object = file_object
 
+  # pylint: disable=arguments-differ
   def Feed(self, size=512):
     """Feed data into the buffer.
 
@@ -245,7 +248,7 @@ class Expression(object):
     """
     self.args.append(arg)
     if len(self.args) > self.number_of_args:
-      raise errors.ParseError(u'Too many args for this expression.')
+      raise errors.ParseError('Too many args for this expression.')
 
     elif len(self.args) == self.number_of_args:
       return True
@@ -255,12 +258,12 @@ class Expression(object):
   def Compile(self, unused_filter_implementation):
     """Given a filter implementation, compile this expression."""
     raise NotImplementedError(
-        u'{0:s} does not implement Compile.'.format(self.__class__.__name__))
+        '{0:s} does not implement Compile.'.format(self.__class__.__name__))
 
   # TODO: rename this function to GetTreeAsString or equivalent.
   def PrintTree(self, depth=''):
     """Print the tree."""
-    return u'{0:s} {1:s}'.format(depth, self)
+    return '{0:s} {1:s}'.format(depth, self)
 
   def SetAttribute(self, attribute):
     """Set the attribute."""
@@ -293,15 +296,15 @@ class BinaryExpression(Expression):
       self.args = [lhs, rhs]
     else:
       raise errors.ParseError(
-          u'Expected expression, got {0:s} {1:s} {2:s}'.format(
+          'Expected expression, got {0:s} {1:s} {2:s}'.format(
               lhs, self.operator, rhs))
 
   # TODO: rename this function to GetTreeAsString or equivalent.
   def PrintTree(self, depth=''):
     """Print the tree."""
-    result = u'{0:s}{1:s}\n'.format(depth, self.operator)
+    result = '{0:s}{1:s}\n'.format(depth, self.operator)
     for part in self.args:
-      result += u'{0:s}-{1:s}\n'.format(depth, part.PrintTree(depth + '  '))
+      result += '{0:s}-{1:s}\n'.format(depth, part.PrintTree(depth + '  '))
 
     return result
 
@@ -314,7 +317,7 @@ class BinaryExpression(Expression):
       method = 'OrFilter'
     else:
       raise errors.ParseError(
-          u'Invalid binary operator {0:s}'.format(operator))
+          'Invalid binary operator {0:s}'.format(operator))
 
     args = [x.Compile(filter_implementation) for x in self.args]
     return getattr(filter_implementation, method)(*args)
@@ -429,24 +432,24 @@ class SearchParser(Lexer):
 
   def StoreAttribute(self, string='', **unused_kwargs):
     """Store the attribute."""
-    logging.debug(u'Storing attribute {0:s}'.format(repr(string)))
+    logging.debug('Storing attribute {0:s}'.format(repr(string)))
 
     # TODO: Update the expected number_of_args
     try:
       self.current_expression.SetAttribute(string)
     except AttributeError:
-      raise errors.ParseError(u'Invalid attribute \'{0:s}\''.format(string))
+      raise errors.ParseError('Invalid attribute \'{0:s}\''.format(string))
 
     return 'OPERATOR'
 
   def StoreOperator(self, string='', **unused_kwargs):
     """Store the operator."""
-    logging.debug(u'Storing operator {0:s}'.format(repr(string)))
+    logging.debug('Storing operator {0:s}'.format(repr(string)))
     self.current_expression.SetOperator(string)
 
   def InsertArg(self, string='', **unused_kwargs):
     """Insert an arg to the current expression."""
-    logging.debug(u'Storing Argument {0:s}'.format(string))
+    logging.debug('Storing Argument {0:s}'.format(string))
 
     # This expression is complete
     if self.current_expression.AddArg(string):
@@ -484,7 +487,7 @@ class SearchParser(Lexer):
     """Reduce the token stack into an AST."""
     # Check for sanity
     if self.state != 'INITIAL':
-      self.Error(u'Premature end of expression')
+      self.Error('Premature end of expression')
 
     length = len(self.stack)
     while length > 1:
@@ -499,14 +502,14 @@ class SearchParser(Lexer):
       length = len(self.stack)
 
     if length != 1:
-      self.Error(u'Illegal query expression')
+      self.Error('Illegal query expression')
 
     return self.stack[0]
 
   def Error(self, message=None, unused_weight=1):
     """Raise an error message."""
     raise errors.ParseError(
-        u'{0:s} in position {1:s}: {2:s} <----> {3:s} )'.format(
+        '{0:s} in position {1:s}: {2:s} <----> {3:s} )'.format(
             message, len(self.processed_buffer), self.processed_buffer,
             self.buffer))
 

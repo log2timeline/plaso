@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The multi-process processing engine."""
 
+from __future__ import unicode_literals
+
 import abc
 import ctypes
 import logging
@@ -41,7 +43,7 @@ class MultiProcessEngine(engine.BaseEngine):
   def __init__(self):
     """Initializes a multi-process engine."""
     super(MultiProcessEngine, self).__init__()
-    self._name = u'Main'
+    self._name = 'Main'
     self._pid = os.getpid()
     self._process_information = process_info.ProcessInfo(self._pid)
     self._process_information_per_pid = {}
@@ -62,11 +64,11 @@ class MultiProcessEngine(engine.BaseEngine):
           None represents no timeout.
     """
     for pid, process in iter(self._processes_per_pid.items()):
-      logging.debug(u'Waiting for process: {0:s} (PID: {1:d}).'.format(
+      logging.debug('Waiting for process: {0:s} (PID: {1:d}).'.format(
           process.name, pid))
       process.join(timeout=timeout)
       if not process.is_alive():
-        logging.debug(u'Process {0:s} (PID: {1:d}) stopped.'.format(
+        logging.debug('Process {0:s} (PID: {1:d}) stopped.'.format(
             process.name, pid))
 
   def _AbortKill(self):
@@ -75,7 +77,7 @@ class MultiProcessEngine(engine.BaseEngine):
       if not process.is_alive():
         continue
 
-      logging.warning(u'Killing process: {0:s} (PID: {1:d}).'.format(
+      logging.warning('Killing process: {0:s} (PID: {1:d}).'.format(
           process.name, pid))
       self._KillProcess(pid)
 
@@ -85,7 +87,7 @@ class MultiProcessEngine(engine.BaseEngine):
       if not process.is_alive():
         continue
 
-      logging.warning(u'Terminating process: {0:s} (PID: {1:d}).'.format(
+      logging.warning('Terminating process: {0:s} (PID: {1:d}).'.format(
           process.name, pid))
       process.terminate()
 
@@ -118,14 +120,14 @@ class MultiProcessEngine(engine.BaseEngine):
 
     if self._worker_memory_limit and used_memory > self._worker_memory_limit:
       logging.warning((
-          u'Process: {0:s} (PID: {1:d}) killed because it exceeded the '
-          u'memory limit: {2:d}.').format(
+          'Process: {0:s} (PID: {1:d}) killed because it exceeded the '
+          'memory limit: {2:d}.').format(
               process.name, pid, self._worker_memory_limit))
       self._KillProcess(pid)
 
     if isinstance(process_status, dict):
       self._rpc_errors_per_pid[pid] = 0
-      status_indicator = process_status.get(u'processing_status', None)
+      status_indicator = process_status.get('processing_status', None)
 
     else:
       rpc_errors = self._rpc_errors_per_pid.get(pid, 0) + 1
@@ -137,18 +139,18 @@ class MultiProcessEngine(engine.BaseEngine):
       if process_is_alive:
         rpc_port = process.rpc_port.value
         logging.warning((
-            u'Unable to retrieve process: {0:s} (PID: {1:d}) status via '
-            u'RPC socket: http://localhost:{2:d}').format(
+            'Unable to retrieve process: {0:s} (PID: {1:d}) status via '
+            'RPC socket: http://localhost:{2:d}').format(
                 process.name, pid, rpc_port))
 
-        processing_status_string = u'RPC error'
+        processing_status_string = 'RPC error'
         status_indicator = definitions.PROCESSING_STATUS_RUNNING
       else:
-        processing_status_string = u'killed'
+        processing_status_string = 'killed'
         status_indicator = definitions.PROCESSING_STATUS_KILLED
 
       process_status = {
-          u'processing_status': processing_status_string}
+          'processing_status': processing_status_string}
 
     self._UpdateProcessingStatus(pid, process_status, used_memory)
 
@@ -161,12 +163,12 @@ class MultiProcessEngine(engine.BaseEngine):
 
     if status_indicator in definitions.PROCESSING_ERROR_STATUS:
       logging.error((
-          u'Process {0:s} (PID: {1:d}) is not functioning correctly. '
-          u'Status code: {2!s}.').format(process.name, pid, status_indicator))
+          'Process {0:s} (PID: {1:d}) is not functioning correctly. '
+          'Status code: {2!s}.').format(process.name, pid, status_indicator))
 
       self._TerminateProcessByPid(pid)
 
-      logging.info(u'Starting replacement worker process for {0:s}'.format(
+      logging.info('Starting replacement worker process for {0:s}'.format(
           process.name))
       replacement_process_attempts = 0
       replacement_process = None
@@ -179,7 +181,7 @@ class MultiProcessEngine(engine.BaseEngine):
           break
       if not replacement_process:
         logging.error(
-            u'Unable to create replacement worker process for: {0:s}'.format(
+            'Unable to create replacement worker process for: {0:s}'.format(
                 process.name))
 
   def _QueryProcessStatus(self, process):
@@ -205,7 +207,7 @@ class MultiProcessEngine(engine.BaseEngine):
     Args:
       pid (int): process identifier (PID).
     """
-    if sys.platform.startswith(u'win'):
+    if sys.platform.startswith('win'):
       process_terminate = 1
       handle = ctypes.windll.kernel32.OpenProcess(
           process_terminate, False, pid)
@@ -216,7 +218,7 @@ class MultiProcessEngine(engine.BaseEngine):
       try:
         os.kill(pid, signal.SIGKILL)
       except OSError as exception:
-        logging.error(u'Unable to kill process {0:d} with error: {1:s}'.format(
+        logging.error('Unable to kill process {0:d} with error: {1:s}'.format(
             pid, exception))
 
   def _RaiseIfNotMonitored(self, pid):
@@ -230,7 +232,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """
     if pid not in self._process_information_per_pid:
       raise KeyError(
-          u'Process (PID: {0:d}) not monitored by engine.'.format(pid))
+          'Process (PID: {0:d}) not monitored by engine.'.format(pid))
 
   def _RaiseIfNotRegistered(self, pid):
     """Raises if the process is not registered with the engine.
@@ -243,7 +245,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """
     if pid not in self._processes_per_pid:
       raise KeyError(
-          u'Process (PID: {0:d}) not registered with engine'.format(pid))
+          'Process (PID: {0:d}) not registered with engine'.format(pid))
 
   def _RegisterProcess(self, process):
     """Registers a process with the engine.
@@ -256,11 +258,11 @@ class MultiProcessEngine(engine.BaseEngine):
       ValueError: if the process is missing.
     """
     if process is None:
-      raise ValueError(u'Missing process.')
+      raise ValueError('Missing process.')
 
     if process.pid in self._processes_per_pid:
       raise KeyError(
-          u'Already managing process: {0!s} (PID: {1:d})'.format(
+          'Already managing process: {0!s} (PID: {1:d})'.format(
               process.name, process.pid))
 
     self._processes_per_pid[process.pid] = process
@@ -291,17 +293,17 @@ class MultiProcessEngine(engine.BaseEngine):
       ValueError: if the process is missing.
     """
     if process is None:
-      raise ValueError(u'Missing process.')
+      raise ValueError('Missing process.')
 
     pid = process.pid
 
     if pid in self._process_information_per_pid:
       raise KeyError(
-          u'Already monitoring process (PID: {0:d}).'.format(pid))
+          'Already monitoring process (PID: {0:d}).'.format(pid))
 
     if pid in self._rpc_clients_per_pid:
       raise KeyError(
-          u'RPC client (PID: {0:d}) already exists'.format(pid))
+          'RPC client (PID: {0:d}) already exists'.format(pid))
 
     rpc_client = plaso_xmlrpc.XMLProcessStatusRPCClient()
 
@@ -316,15 +318,15 @@ class MultiProcessEngine(engine.BaseEngine):
 
       if time_waited_for_process >= self._RPC_SERVER_TIMEOUT:
         raise IOError(
-            u'RPC client unable to determine server (PID: {0:d}) port.'.format(
+            'RPC client unable to determine server (PID: {0:d}) port.'.format(
                 pid))
 
-    hostname = u'localhost'
+    hostname = 'localhost'
 
     if not rpc_client.Open(hostname, rpc_port):
       raise IOError((
-          u'RPC client unable to connect to server (PID: {0:d}) '
-          u'http://{1:s}:{2:d}').format(pid, hostname, rpc_port))
+          'RPC client unable to connect to server (PID: {0:d}) '
+          'http://{1:s}:{2:d}').format(pid, hostname, rpc_port))
 
     self._rpc_clients_per_pid[pid] = rpc_client
     self._process_information_per_pid[pid] = process_info.ProcessInfo(pid)
@@ -333,7 +335,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """Starts the status update thread."""
     self._status_update_active = True
     self._status_update_thread = threading.Thread(
-        name=u'Status update', target=self._StatusUpdateThreadMain)
+        name='Status update', target=self._StatusUpdateThreadMain)
     self._status_update_thread.start()
 
   @abc.abstractmethod
@@ -351,7 +353,7 @@ class MultiProcessEngine(engine.BaseEngine):
       ValueError: if the process is missing.
     """
     if process is None:
-      raise ValueError(u'Missing process.')
+      raise ValueError('Missing process.')
 
     pid = process.pid
 
@@ -367,7 +369,7 @@ class MultiProcessEngine(engine.BaseEngine):
     if pid in self._rpc_errors_per_pid:
       del self._rpc_errors_per_pid[pid]
 
-    logging.debug(u'Stopped monitoring process: {0:s} (PID: {1:d})'.format(
+    logging.debug('Stopped monitoring process: {0:s} (PID: {1:d})'.format(
         process.name, pid))
 
   def _StopMonitoringProcesses(self):
@@ -409,14 +411,14 @@ class MultiProcessEngine(engine.BaseEngine):
       process (MultiProcessBaseProcess): process to terminate.
     """
     pid = process.pid
-    logging.warning(u'Terminating process: (PID: {0:d}).'.format(pid))
+    logging.warning('Terminating process: (PID: {0:d}).'.format(pid))
     process.terminate()
 
     # Wait for the process to exit.
     process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
 
     if process.is_alive():
-      logging.warning(u'Killing process: (PID: {0:d}).'.format(pid))
+      logging.warning('Killing process: (PID: {0:d}).'.format(pid))
       self._KillProcess(pid)
 
   @abc.abstractmethod

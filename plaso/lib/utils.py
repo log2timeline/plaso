@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains utility functions."""
 
+from __future__ import unicode_literals
+
 import logging
 
 from plaso.lib import py2to3
@@ -45,7 +47,7 @@ def IsText(bytes_in, encoding=None):
 
   # Check if this is UTF-8
   try:
-    bytes_in.decode(u'utf-8')
+    bytes_in.decode('utf-8')
     return True
 
   except UnicodeDecodeError:
@@ -57,7 +59,7 @@ def IsText(bytes_in, encoding=None):
       return True
 
     except LookupError:
-      logging.error(u'Unsupported encoding: {0:s}'.format(encoding))
+      logging.error('Unsupported encoding: {0:s}'.format(encoding))
     except UnicodeDecodeError:
       pass
 

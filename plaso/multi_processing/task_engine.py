@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The task multi-process processing engine."""
 
+from __future__ import unicode_literals
+
 import heapq
 import logging
 import multiprocessing
@@ -152,10 +154,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           with the first written event source.
     """
     if self._processing_profiler:
-      self._processing_profiler.StartTiming(u'fill_event_source_heap')
+      self._processing_profiler.StartTiming('fill_event_source_heap')
 
     if self._processing_profiler:
-      self._processing_profiler.StartTiming(u'get_event_source')
+      self._processing_profiler.StartTiming('get_event_source')
 
     if start_with_first:
       event_source = storage_writer.GetFirstWrittenEventSource()
@@ -163,7 +165,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       event_source = storage_writer.GetNextWrittenEventSource()
 
     if self._processing_profiler:
-      self._processing_profiler.StopTiming(u'get_event_source')
+      self._processing_profiler.StopTiming('get_event_source')
 
     while event_source:
       try:
@@ -172,15 +174,15 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         break
 
       if self._processing_profiler:
-        self._processing_profiler.StartTiming(u'get_event_source')
+        self._processing_profiler.StartTiming('get_event_source')
 
       event_source = storage_writer.GetNextWrittenEventSource()
 
       if self._processing_profiler:
-        self._processing_profiler.StopTiming(u'get_event_source')
+        self._processing_profiler.StopTiming('get_event_source')
 
     if self._processing_profiler:
-      self._processing_profiler.StopTiming(u'fill_event_source_heap')
+      self._processing_profiler.StopTiming('fill_event_source_heap')
 
   def _MergeTaskStorage(self, storage_writer):
     """Merges a task storage with the session storage.
@@ -194,7 +196,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           to merge task storage.
     """
     if self._processing_profiler:
-      self._processing_profiler.StartTiming(u'merge_check')
+      self._processing_profiler.StartTiming('merge_check')
 
     for task in self._task_manager.GetTasksCheckMerge():
       if self._abort:
@@ -205,7 +207,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         self._task_manager.UpdateTaskAsPendingMerge(task)
 
     if self._processing_profiler:
-      self._processing_profiler.StopTiming(u'merge_check')
+      self._processing_profiler.StopTiming('merge_check')
 
     task = None
     if not self._storage_merge_reader_on_hold:
@@ -217,7 +219,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._status = definitions.PROCESSING_STATUS_MERGING
 
       if self._processing_profiler:
-        self._processing_profiler.StartTiming(u'merge')
+        self._processing_profiler.StartTiming('merge')
 
       if task:
         if self._storage_merge_reader:
@@ -230,8 +232,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
               task)
         except IOError as exception:
           logging.error((
-              u'Unable to merge results of task: {0:s} '
-              u'with error: {1:s}').format(task.identifier, exception))
+              'Unable to merge results of task: {0:s} '
+              'with error: {1:s}').format(task.identifier, exception))
           self._storage_merge_reader = None
 
       if self._storage_merge_reader:
@@ -244,14 +246,14 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         fully_merged = True
 
       if self._processing_profiler:
-        self._processing_profiler.StopTiming(u'merge')
+        self._processing_profiler.StopTiming('merge')
 
       if fully_merged:
         try:
           self._task_manager.CompleteTask(self._merge_task)
         except KeyError as exception:
           logging.error(
-              u'Unable to complete task {0:s}, with Error {1:s}'.format(
+              'Unable to complete task {0:s}, with Error {1:s}'.format(
                   self._merge_task.identifier, exception))
 
         if self._storage_merge_reader_on_hold:
@@ -282,7 +284,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           that match the find specification will be processed.
     """
     if self._processing_profiler:
-      self._processing_profiler.StartTiming(u'process_sources')
+      self._processing_profiler.StartTiming('process_sources')
 
     self._status = definitions.PROCESSING_STATUS_COLLECTING
     self._number_of_consumed_errors = 0
@@ -323,7 +325,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._number_of_produced_sources = storage_writer.number_of_event_sources
 
     if self._processing_profiler:
-      self._processing_profiler.StopTiming(u'process_sources')
+      self._processing_profiler.StopTiming('process_sources')
 
   def _ProfilingSampleMemory(self):
     """Creates a memory profiling sample."""
@@ -340,7 +342,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       bool: True if the task was scheduled.
     """
     if self._processing_profiler:
-      self._processing_profiler.StartTiming(u'schedule_task')
+      self._processing_profiler.StartTiming('schedule_task')
 
     try:
       self._task_queue.PushItem(task, block=False)
@@ -350,7 +352,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       is_scheduled = False
 
     if self._processing_profiler:
-      self._processing_profiler.StopTiming(u'schedule_task')
+      self._processing_profiler.StopTiming('schedule_task')
 
     return is_scheduled
 
@@ -360,7 +362,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     Args:
       storage_writer (StorageWriter): storage writer for a session storage.
     """
-    logging.debug(u'Task scheduler started')
+    logging.debug('Task scheduler started')
 
     self._status = definitions.PROCESSING_STATUS_RUNNING
 
@@ -399,7 +401,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         if task:
           if self._ScheduleTask(task):
             logging.debug(
-                u'Scheduled task {0:s} for path specification {1:s}'.format(
+                'Scheduled task {0:s} for path specification {1:s}'.format(
                     task.identifier, task.path_spec.comparable))
             task = None
 
@@ -420,7 +422,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     for task in self._task_manager.GetAbandonedTasks():
       if not task.retried:
         error = error_containers.ExtractionError(
-            message=u'Worker failed to process pathspec',
+            message='Worker failed to process pathspec',
             path_spec=task.path_spec)
         self._storage_writer.AddError(error)
         self._processing_status.error_path_specs.append(task.path_spec)
@@ -428,9 +430,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._status = definitions.PROCESSING_STATUS_IDLE
 
     if self._abort:
-      logging.debug(u'Task scheduler aborted')
+      logging.debug('Task scheduler aborted')
     else:
-      logging.debug(u'Task scheduler stopped')
+      logging.debug('Task scheduler stopped')
 
   def _StartWorkerProcess(self, process_name, storage_writer):
     """Creates, starts, monitors and registers a worker process.
@@ -444,11 +446,11 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       MultiProcessWorkerProcess: extraction worker process or None if the
           process could not be started.
     """
-    process_name = u'Worker_{0:02d}'.format(self._last_worker_number)
-    logging.debug(u'Starting worker process {0:s}'.format(process_name))
+    process_name = 'Worker_{0:02d}'.format(self._last_worker_number)
+    logging.debug('Starting worker process {0:s}'.format(process_name))
 
     if self._use_zeromq:
-      queue_name = u'{0:s} task queue'.format(process_name)
+      queue_name = '{0:s} task queue'.format(process_name)
       task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
           delay_open=True, linger_seconds=0, name=queue_name,
           port=self._task_queue_port,
@@ -469,8 +471,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     except (IOError, KeyError) as exception:
       pid = process.pid
       logging.error((
-          u'Unable to monitor replacement worker process: {0:s} '
-          u'(PID: {1:d}) with error: {2:s}').format(
+          'Unable to monitor replacement worker process: {0:s} '
+          '(PID: {1:d}) with error: {2:s}').format(
               process_name, pid, exception))
 
       self._TerminateProcess(process)
@@ -488,7 +490,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       return
 
     if self._processing_configuration.profiling.HaveProfileMemoryGuppy():
-      identifier = u'{0:s}-memory'.format(self._name)
+      identifier = '{0:s}-memory'.format(self._name)
       self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
           identifier, path=self._processing_configuration.profiling.directory,
           profiling_sample_rate=(
@@ -496,12 +498,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._guppy_memory_profiler.Start()
 
     if self._processing_configuration.profiling.HaveProfileProcessing():
-      identifier = u'{0:s}-processing'.format(self._name)
+      identifier = '{0:s}-processing'.format(self._name)
       self._processing_profiler = profiler.ProcessingProfiler(
           identifier, path=self._processing_configuration.profiling.directory)
 
     if self._processing_configuration.profiling.HaveProfileSerializers():
-      identifier = u'{0:s}-serializers'.format(self._name)
+      identifier = '{0:s}-serializers'.format(self._name)
       self._serializers_profiler = profiler.SerializersProfiler(
           identifier, path=self._processing_configuration.profiling.directory)
 
@@ -515,7 +517,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
       used_memory = self._process_information.GetUsedMemory() or 0
 
-      display_name = getattr(self._merge_task, u'identifier', u'')
+      display_name = getattr(self._merge_task, 'identifier', '')
 
       self._processing_status.UpdateForemanStatus(
           self._name, self._status, self._pid, used_memory, display_name,
@@ -540,7 +542,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     Args:
       abort (bool): True to indicated the stop is issued on abort.
     """
-    logging.debug(u'Stopping extraction processes.')
+    logging.debug('Stopping extraction processes.')
     self._StopMonitoringProcesses()
 
     # Note that multiprocessing.Queue is very sensitive regarding
@@ -551,7 +553,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       # Signal all the processes to abort.
       self._AbortTerminate()
 
-    logging.debug(u'Emptying task queue.')
+    logging.debug('Emptying task queue.')
     self._task_queue.Empty()
 
     # Wake the processes to make sure that they are not blocking
@@ -560,7 +562,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       try:
         self._task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
       except errors.QueueFull:
-        logging.warning(u'Task queue full, unable to push abort message.')
+        logging.warning('Task queue full, unable to push abort message.')
 
     # Try waiting for the processes to exit normally.
     self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
@@ -608,39 +610,39 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     process = self._processes_per_pid[pid]
 
-    processing_status = process_status.get(u'processing_status', None)
+    processing_status = process_status.get('processing_status', None)
 
     self._RaiseIfNotMonitored(pid)
 
-    display_name = process_status.get(u'display_name', u'')
+    display_name = process_status.get('display_name', '')
     number_of_consumed_errors = process_status.get(
-        u'number_of_consumed_errors', None)
+        'number_of_consumed_errors', None)
     number_of_produced_errors = process_status.get(
-        u'number_of_produced_errors', None)
+        'number_of_produced_errors', None)
 
     number_of_consumed_event_tags = process_status.get(
-        u'number_of_consumed_event_tags', None)
+        'number_of_consumed_event_tags', None)
     number_of_produced_event_tags = process_status.get(
-        u'number_of_produced_event_tags', None)
+        'number_of_produced_event_tags', None)
 
     number_of_consumed_events = process_status.get(
-        u'number_of_consumed_events', None)
+        'number_of_consumed_events', None)
     number_of_produced_events = process_status.get(
-        u'number_of_produced_events', None)
+        'number_of_produced_events', None)
 
     number_of_consumed_reports = process_status.get(
-        u'number_of_consumed_reports', None)
+        'number_of_consumed_reports', None)
     number_of_produced_reports = process_status.get(
-        u'number_of_produced_reports', None)
+        'number_of_produced_reports', None)
 
     number_of_consumed_sources = process_status.get(
-        u'number_of_consumed_sources', None)
+        'number_of_consumed_sources', None)
     number_of_produced_sources = process_status.get(
-        u'number_of_produced_sources', None)
+        'number_of_produced_sources', None)
 
     if processing_status != definitions.PROCESSING_STATUS_IDLE:
       last_activity_timestamp = process_status.get(
-          u'last_activity_timestamp', 0.0)
+          'last_activity_timestamp', 0.0)
 
       if last_activity_timestamp:
         last_activity_timestamp += self._PROCESS_WORKER_TIMEOUT
@@ -648,8 +650,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         current_timestamp = time.time()
         if current_timestamp > last_activity_timestamp:
           logging.error((
-              u'Process {0:s} (PID: {1:d}) has not reported activity within '
-              u'the timeout period.').format(process.name, pid))
+              'Process {0:s} (PID: {1:d}) has not reported activity within '
+              'the timeout period.').format(process.name, pid))
           processing_status = definitions.PROCESSING_STATUS_NOT_RESPONDING
 
     self._processing_status.UpdateWorkerStatus(
@@ -660,7 +662,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         number_of_consumed_errors, number_of_produced_errors,
         number_of_consumed_reports, number_of_produced_reports)
 
-    task_identifier = process_status.get(u'task_identifier', u'')
+    task_identifier = process_status.get('task_identifier', '')
     if not task_identifier:
       return
 
@@ -669,7 +671,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       return
     except KeyError:
       logging.debug(
-          u'Worker {0:s} is processing unknown task: {1:s}.'.format(
+          'Worker {0:s} is processing unknown task: {1:s}.'.format(
               process.name, task_identifier))
 
   def ProcessSources(
@@ -719,8 +721,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
       except NotImplementedError:
         logging.error((
-            u'Unable to determine number of CPUs defaulting to {0:d} worker '
-            u'processes.').format(self._WORKER_PROCESSES_MINIMUM))
+            'Unable to determine number of CPUs defaulting to {0:d} worker '
+            'processes.').format(self._WORKER_PROCESSES_MINIMUM))
         cpu_count = self._WORKER_PROCESSES_MINIMUM
 
       number_of_worker_processes = cpu_count
@@ -749,13 +751,13 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     else:
       task_outbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
           delay_open=True, linger_seconds=0, maximum_items=1,
-          name=u'main_task_queue',
+          name='main_task_queue',
           timeout_seconds=self._ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS)
       self._task_queue = task_outbound_queue
 
       # The ZeroMQ backed queue must be started first, so we can save its port.
       # TODO: raises: attribute-defined-outside-init
-      # self._task_queue.name = u'Task queue'
+      # self._task_queue.name = 'Task queue'
       self._task_queue.Open()
       self._task_queue_port = self._task_queue.port
 
@@ -769,9 +771,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     for worker_number in range(number_of_worker_processes):
       # First argument to _StartWorkerProcess is not used.
-      extraction_process = self._StartWorkerProcess(u'', storage_writer)
+      extraction_process = self._StartWorkerProcess('', storage_writer)
       if not extraction_process:
-        logging.error(u'Unable to create worker process: {0:d}'.format(
+        logging.error('Unable to create worker process: {0:d}'.format(
             worker_number))
 
     self._StartStatusUpdateThread()
@@ -828,14 +830,14 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     try:
       storage_writer.StopTaskStorage(abort=task_storage_abort)
     except (IOError, OSError) as exception:
-      logging.error(u'Unable to stop task storage with error: {0:s}'.format(
+      logging.error('Unable to stop task storage with error: {0:s}'.format(
           exception))
 
     if self._abort:
-      logging.debug(u'Processing aborted.')
+      logging.debug('Processing aborted.')
       self._processing_status.aborted = True
     else:
-      logging.debug(u'Processing completed.')
+      logging.debug('Processing completed.')
 
     # Reset values.
     self._enable_sigsegv_handler = None
