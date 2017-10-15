@@ -154,7 +154,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
         ('source_user_id', 'S-1-5-21-1539974973-2753941131-3212641383-1000'),
         ('source_user_name', 'gold_administrator'),
         ('target_machine_ip', '-'),
-        ('target_machine_name', 'DC1.internal.greendale.ed'),
+        ('target_machine_name', 'DC1.internal.greendale.edu'),
         ('target_user_name', 'administrator')]
 
     strings_parsed = sorted(event.strings_parsed.items())
