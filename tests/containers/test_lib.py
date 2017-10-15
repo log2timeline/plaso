@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Containers related functions and classes for testing."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
@@ -31,16 +33,16 @@ def CreateTestEvents():
     list[EventObject]: events.
   """
   test_events = []
-  hostname = u'MYHOSTNAME'
-  data_type = u'test:event'
+  hostname = 'MYHOSTNAME'
+  data_type = 'test:event'
 
   event = events.EventObject()
-  event.username = u'joesmith'
-  event.filename = u'c:/Users/joesmith/NTUSER.DAT'
+  event.username = 'joesmith'
+  event.filename = 'c:/Users/joesmith/NTUSER.DAT'
   event.hostname = hostname
   event.timestamp = 0
   event.data_type = data_type
-  event.text = u''
+  event.text = ''
 
   test_events.append(event)
 
@@ -48,11 +50,11 @@ def CreateTestEvents():
 
   # TODO: move this to a WindowsRegistryEvent unit test.
   event_data = windows_events.WindowsRegistryEventData()
-  event_data.key_path = u'MY AutoRun key'
+  event_data.key_path = 'MY AutoRun key'
   event_data.hostname = hostname
-  event_data.regvalue = {u'Value': u'c:/Temp/evil.exe'}
+  event_data.regvalue = {'Value': 'c:/Temp/evil.exe'}
 
-  filetime.CopyFromString(u'2012-04-20 22:38:46.929596')
+  filetime.CopyFromString('2012-04-20 22:38:46.929596')
   event = time_events.DateTimeValuesEvent(
       filetime, definitions.TIME_DESCRIPTION_WRITTEN)
 
@@ -60,11 +62,11 @@ def CreateTestEvents():
   test_events.append(event)
 
   event_data = windows_events.WindowsRegistryEventData()
-  event_data.key_path = u'HKEY_CURRENT_USER\\Secret\\EvilEmpire\\Malicious_key'
+  event_data.key_path = 'HKEY_CURRENT_USER\\Secret\\EvilEmpire\\Malicious_key'
   event_data.hostname = hostname
-  event_data.regvalue = {u'Value': u'send all the exes to the other world'}
+  event_data.regvalue = {'Value': 'send all the exes to the other world'}
 
-  filetime.CopyFromString(u'2012-04-20 23:56:46.929596')
+  filetime.CopyFromString('2012-04-20 23:56:46.929596')
   event = time_events.DateTimeValuesEvent(
       filetime, definitions.TIME_DESCRIPTION_WRITTEN)
 
@@ -72,59 +74,59 @@ def CreateTestEvents():
   test_events.append(event)
 
   event_data = windows_events.WindowsRegistryEventData()
-  event_data.key_path = u'HKEY_CURRENT_USER\\Windows\\Normal'
+  event_data.key_path = 'HKEY_CURRENT_USER\\Windows\\Normal'
   event_data.hostname = hostname
-  event_data.regvalue = {u'Value': u'run all the benign stuff'}
+  event_data.regvalue = {'Value': 'run all the benign stuff'}
 
-  filetime.CopyFromString(u'2012-04-20 16:44:46')
+  filetime.CopyFromString('2012-04-20 16:44:46')
   event = time_events.DateTimeValuesEvent(
       filetime, definitions.TIME_DESCRIPTION_WRITTEN)
 
   _MergeEventAndEventData(event, event_data)
   test_events.append(event)
 
-  timestamp = timelib.Timestamp.CopyFromString(u'2012-04-30 10:29:47.929596')
-  filename = u'c:/Temp/evil.exe'
+  timestamp = timelib.Timestamp.CopyFromString('2012-04-30 10:29:47.929596')
+  filename = 'c:/Temp/evil.exe'
   attributes = {
-      u'text': u'This log line reads ohh so much.'}
+      'text': 'This log line reads ohh so much.'}
   event = TestEvent(timestamp, attributes)
   event.filename = filename
   event.hostname = hostname
 
   test_events.append(event)
 
-  timestamp = timelib.Timestamp.CopyFromString(u'2012-04-30 10:29:47.929596')
+  timestamp = timelib.Timestamp.CopyFromString('2012-04-30 10:29:47.929596')
   attributes = {
-      u'text': u'Nothing of interest here, move on.'}
+      'text': 'Nothing of interest here, move on.'}
   event = TestEvent(timestamp, attributes)
   event.filename = filename
   event.hostname = hostname
 
   test_events.append(event)
 
-  timestamp = timelib.Timestamp.CopyFromString(u'2012-04-30 13:06:47.939596')
+  timestamp = timelib.Timestamp.CopyFromString('2012-04-30 13:06:47.939596')
   attributes = {
-      u'text': u'Mr. Evil just logged into the machine and got root.'}
+      'text': 'Mr. Evil just logged into the machine and got root.'}
   event = TestEvent(timestamp, attributes)
   event.filename = filename
   event.hostname = hostname
 
   test_events.append(event)
 
-  timestamp = timelib.Timestamp.CopyFromString(u'2012-06-05 22:14:19.000000')
+  timestamp = timelib.Timestamp.CopyFromString('2012-06-05 22:14:19.000000')
   # TODO: refactor to use event data.
   event = time_events.TimestampEvent(
       timestamp, definitions.TIME_DESCRIPTION_WRITTEN,
-      data_type=u'text:entry')
-  event.hostname = u'nomachine'
+      data_type='text:entry')
+  event.hostname = 'nomachine'
   event.offset = 12
   event.body = (
-      u'This is a line by someone not reading the log line properly. And '
-      u'since this log line exceeds the accepted 80 chars it will be '
-      u'shortened.')
+      'This is a line by someone not reading the log line properly. And '
+      'since this log line exceeds the accepted 80 chars it will be '
+      'shortened.')
   # TODO: fix missing body attribute
   event.text = event.body
-  event.username = u'johndoe'
+  event.username = 'johndoe'
 
   test_events.append(event)
 
@@ -133,17 +135,17 @@ def CreateTestEvents():
 
 class TestAttributeContainer(interface.AttributeContainer):
   """Class to define a test attribute container."""
-  CONTAINER_TYPE = u'test_attribute_container'
+  CONTAINER_TYPE = 'test_attribute_container'
 
 
 class TestEvent(events.EventObject):
   """Class to define a test event."""
-  DATA_TYPE = u'test:event'
+  DATA_TYPE = 'test:event'
 
   def __init__(self, timestamp, attributes):
     """Initializes an event object."""
     super(TestEvent, self).__init__()
     self.timestamp = timestamp
-    self.timestamp_desc = u'Some time in the future'
+    self.timestamp_desc = 'Some time in the future'
     for attribute, value in iter(attributes.items()):
       setattr(self, attribute, value)

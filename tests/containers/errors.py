@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the errors attribute containers."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.containers import errors
@@ -17,7 +19,7 @@ class ExtractionErrorTest(shared_test_lib.BaseTestCase):
     attribute_container = errors.ExtractionError()
 
     expected_attribute_names = [
-        u'message', u'parser_chain', u'path_spec']
+        'message', 'parser_chain', 'path_spec']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

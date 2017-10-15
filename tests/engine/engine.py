@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests the engine."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 try:
@@ -29,17 +31,17 @@ class TestEngine(engine.BaseEngine):
   def __init__(self):
     """Initialize a test engine object."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    test_file_path = shared_test_lib.GetTestFilePath([u'SOFTWARE'])
+    test_file_path = shared_test_lib.GetTestFilePath(['SOFTWARE'])
     file_system_builder.AddFileReadData(
-        u'/Windows/System32/config/SOFTWARE', test_file_path)
-    test_file_path = shared_test_lib.GetTestFilePath([u'SYSTEM'])
+        '/Windows/System32/config/SOFTWARE', test_file_path)
+    test_file_path = shared_test_lib.GetTestFilePath(['SYSTEM'])
     file_system_builder.AddFileReadData(
-        u'/Windows/System32/config/SYSTEM', test_file_path)
+        '/Windows/System32/config/SYSTEM', test_file_path)
 
     super(TestEngine, self).__init__()
     self._file_system = file_system_builder.file_system
     self._mount_point = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
+        dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')
 
   def GetSourceFileSystem(self, source_path_spec, resolver_context=None):
     """Retrieves the file system of the source.
@@ -71,16 +73,16 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
   # TODO: add tests for _GuessOS
   # TODO: add tests for CreateSession
 
-  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
+  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testGetSourceFileSystem(self):
     """Tests the GetSourceFileSystem function."""
     test_engine = engine.BaseEngine()
 
-    source_path = self._GetTestFilePath([u'ímynd.dd'])
+    source_path = self._GetTestFilePath(['ímynd.dd'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=os_path_spec)
 
     resolver_context = context.Context()
@@ -98,24 +100,24 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     with self.assertRaises(RuntimeError):
       test_engine.GetSourceFileSystem(None)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'artifacts'])
-  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
-  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
+  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
+  @shared_test_lib.skipUnlessHasTestFile(['SOFTWARE'])
+  @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testPreprocessSources(self):
     """Tests the PreprocessSources function."""
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
-    path = shared_test_lib.GetTestFilePath([u'artifacts'])
+    path = shared_test_lib.GetTestFilePath(['artifacts'])
     registry.ReadFromDirectory(reader, path)
 
     test_engine = TestEngine()
 
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
+        dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')
 
     test_engine.PreprocessSources(registry, [source_path_spec])
 
-    self.assertEqual(test_engine.knowledge_base.platform, u'Windows')
+    self.assertEqual(test_engine.knowledge_base.platform, 'Windows')
 
     test_engine.PreprocessSources(registry, [None])
 

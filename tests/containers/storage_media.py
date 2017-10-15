@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the storage media attribute containers."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.containers import storage_media
@@ -16,7 +18,7 @@ class MountPointTest(shared_test_lib.BaseTestCase):
     """Tests the GetAttributeNames function."""
     attribute_container = storage_media.MountPoint()
 
-    expected_attribute_names = ['mount_path', u'path_specification']
+    expected_attribute_names = ['mount_path', 'path_specification']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

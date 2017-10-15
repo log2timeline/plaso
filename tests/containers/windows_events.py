@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows event data attribute containers."""
 
+from __future__ import unicode_literals
+
 import unittest
 import uuid
 
@@ -20,7 +22,7 @@ class WindowsDistributedLinkTrackingEventDataTest(shared_test_lib.BaseTestCase):
         windows_events.WindowsDistributedLinkTrackingEventData(test_uuid, None))
 
     expected_attribute_names = [
-        u'data_type', u'mac_address', u'offset', u'origin', u'query', u'uuid']
+        'data_type', 'mac_address', 'offset', 'origin', 'query', 'uuid']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
@@ -35,8 +37,8 @@ class WindowsRegistryInstallationEventDataTest(shared_test_lib.BaseTestCase):
     attribute_container = windows_events.WindowsRegistryInstallationEventData()
 
     expected_attribute_names = [
-        u'data_type', u'key_path', u'offset', u'owner', u'product_name',
-        u'query', u'service_pack', u'version']
+        'data_type', 'key_path', 'offset', 'owner', 'product_name',
+        'query', 'service_pack', 'version']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
@@ -51,8 +53,8 @@ class WindowsRegistryListEventDataTest(shared_test_lib.BaseTestCase):
     attribute_container = windows_events.WindowsRegistryListEventData()
 
     expected_attribute_names = [
-        u'data_type', u'key_path', u'list_name', u'list_values', u'offset',
-        u'query', u'value_name']
+        'data_type', 'key_path', 'list_name', 'list_values', 'offset',
+        'query', 'value_name']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
@@ -67,8 +69,8 @@ class WindowsRegistryServiceEventDataTest(shared_test_lib.BaseTestCase):
     attribute_container = windows_events.WindowsRegistryServiceEventData()
 
     expected_attribute_names = [
-        u'data_type', u'key_path', u'offset', u'query', u'regvalue',
-        u'source_append', u'urls']
+        'data_type', 'key_path', 'offset', 'query', 'regvalue',
+        'source_append', 'urls']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
@@ -83,8 +85,8 @@ class WindowsVolumeEventDataTest(shared_test_lib.BaseTestCase):
     attribute_container = windows_events.WindowsVolumeEventData()
 
     expected_attribute_names = [
-        u'data_type', u'device_path', u'offset', u'origin', u'query',
-        u'serial_number']
+        'data_type', 'device_path', 'offset', 'origin', 'query',
+        'serial_number']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

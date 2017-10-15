@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the artifacts attribute containers."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.containers import artifacts
@@ -16,14 +18,14 @@ class EnvironmentVariableArtifactTest(shared_test_lib.BaseTestCase):
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
     attribute_container = artifacts.EnvironmentVariableArtifact(
-        case_sensitive=False, name=u'SystemRoot', value=u'C:\\Windows')
+        case_sensitive=False, name='SystemRoot', value='C:\\Windows')
 
-    self.assertEqual(attribute_container.name, u'SystemRoot')
+    self.assertEqual(attribute_container.name, 'SystemRoot')
 
     expected_dict = {
-        u'case_sensitive': False,
-        u'name': u'SystemRoot',
-        u'value': u'C:\\Windows'}
+        'case_sensitive': False,
+        'name': 'SystemRoot',
+        'value': 'C:\\Windows'}
 
     test_dict = attribute_container.CopyToDict()
 
@@ -36,13 +38,13 @@ class HostnameArtifactTest(shared_test_lib.BaseTestCase):
   # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
-    attribute_container = artifacts.HostnameArtifact(name=u'mydomain.com')
+    attribute_container = artifacts.HostnameArtifact(name='mydomain.com')
 
-    self.assertEqual(attribute_container.name, u'mydomain.com')
+    self.assertEqual(attribute_container.name, 'mydomain.com')
 
     expected_dict = {
-        u'name': u'mydomain.com',
-        u'schema': u'DNS'}
+        'name': 'mydomain.com',
+        'schema': 'DNS'}
 
     test_dict = attribute_container.CopyToDict()
 
@@ -56,14 +58,14 @@ class SystemConfigurationArtifactTest(shared_test_lib.BaseTestCase):
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
     attribute_container = artifacts.SystemConfigurationArtifact(
-        code_page=u'cp1252', time_zone=u'UTC')
+        code_page='cp1252', time_zone='UTC')
 
-    self.assertEqual(attribute_container.time_zone, u'UTC')
+    self.assertEqual(attribute_container.time_zone, 'UTC')
 
     expected_dict = {
-        u'code_page': u'cp1252',
-        u'time_zone': u'UTC',
-        u'user_accounts': []}
+        'code_page': 'cp1252',
+        'time_zone': 'UTC',
+        'user_accounts': []}
 
     test_dict = attribute_container.CopyToDict()
 
@@ -77,17 +79,17 @@ class UserAccountArtifactTest(shared_test_lib.BaseTestCase):
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
     attribute_container = artifacts.UserAccountArtifact(
-        full_name=u'Full Name', group_identifier=1001, identifier=1000,
-        user_directory=u'/home/username', username=u'username')
+        full_name='Full Name', group_identifier=1001, identifier=1000,
+        user_directory='/home/username', username='username')
 
-    self.assertEqual(attribute_container.username, u'username')
+    self.assertEqual(attribute_container.username, 'username')
 
     expected_dict = {
-        u'full_name': u'Full Name',
-        u'group_identifier': 1001,
-        u'identifier': 1000,
-        u'user_directory': u'/home/username',
-        u'username': u'username'}
+        'full_name': 'Full Name',
+        'group_identifier': 1001,
+        'identifier': 1000,
+        'user_directory': '/home/username',
+        'username': 'username'}
 
     test_dict = attribute_container.CopyToDict()
 

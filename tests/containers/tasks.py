@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the tasks attribute containers."""
 
+from __future__ import unicode_literals
+
 import time
 import unittest
 import uuid
@@ -17,7 +19,7 @@ class TaskTest(shared_test_lib.BaseTestCase):
   # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
-    session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+    session_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
     task = tasks.Task(session_identifier=session_identifier)
 
     self.assertIsNotNone(task.identifier)
@@ -25,11 +27,11 @@ class TaskTest(shared_test_lib.BaseTestCase):
     self.assertIsNone(task.completion_time)
 
     expected_dict = {
-        u'aborted': False,
-        u'identifier': task.identifier,
-        u'retried': False,
-        u'session_identifier': task.session_identifier,
-        u'start_time': task.start_time}
+        'aborted': False,
+        'identifier': task.identifier,
+        'retried': False,
+        'session_identifier': task.session_identifier,
+        'start_time': task.start_time}
 
     test_dict = task.CopyToDict()
 
@@ -37,9 +39,9 @@ class TaskTest(shared_test_lib.BaseTestCase):
 
   def testCreateRetry(self):
     """Tests the CreateRetry function."""
-    session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+    session_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
     task = tasks.Task(session_identifier=session_identifier)
-    task.path_spec = u'test_pathspec_value'
+    task.path_spec = 'test_pathspec_value'
     retry_task = task.CreateRetry()
 
     self.assertEqual(task.path_spec, retry_task.path_spec)
@@ -58,9 +60,9 @@ class TaskCompletionTest(shared_test_lib.BaseTestCase):
   # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
-    session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+    session_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
     timestamp = int(time.time() * 1000000)
-    task_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+    task_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
     task_completion = tasks.TaskCompletion(
         identifier=task_identifier, session_identifier=session_identifier)
     task_completion.timestamp = timestamp
@@ -68,10 +70,10 @@ class TaskCompletionTest(shared_test_lib.BaseTestCase):
     self.assertEqual(task_completion.identifier, task_identifier)
 
     expected_dict = {
-        u'aborted': False,
-        u'identifier': task_completion.identifier,
-        u'session_identifier': task_completion.session_identifier,
-        u'timestamp': timestamp}
+        'aborted': False,
+        'identifier': task_completion.identifier,
+        'session_identifier': task_completion.session_identifier,
+        'timestamp': timestamp}
 
     test_dict = task_completion.CopyToDict()
 
@@ -84,9 +86,9 @@ class TaskStartTest(shared_test_lib.BaseTestCase):
   # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
-    session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+    session_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
     timestamp = int(time.time() * 1000000)
-    task_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+    task_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
     task_start = tasks.TaskStart(
         identifier=task_identifier, session_identifier=session_identifier)
     task_start.timestamp = timestamp
@@ -94,9 +96,9 @@ class TaskStartTest(shared_test_lib.BaseTestCase):
     self.assertEqual(task_start.identifier, task_identifier)
 
     expected_dict = {
-        u'identifier': task_start.identifier,
-        u'session_identifier': session_identifier,
-        u'timestamp': timestamp}
+        'identifier': task_start.identifier,
+        'session_identifier': session_identifier,
+        'timestamp': timestamp}
 
     test_dict = task_start.CopyToDict()
 

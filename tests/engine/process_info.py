@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests the class to get process information."""
 
+from __future__ import unicode_literals
+
 import os
 import unittest
 
