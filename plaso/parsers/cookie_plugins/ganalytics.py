@@ -10,6 +10,7 @@ if sys.version_info[0] < 3:
 else:
   from urllib import parse as urlparse
 
+# pylint: disable=wrong-import-position
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
