@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import winevtx  # pylint: disable=unused-import
+from plaso.formatters import winevtx as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import winevtx

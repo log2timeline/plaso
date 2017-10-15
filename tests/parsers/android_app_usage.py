@@ -6,7 +6,8 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import android_app_usage  # pylint: disable=unused-import
+# pylint: disable=unused-import
+from plaso.formatters import android_app_usage as _
 from plaso.lib import timelib
 from plaso.parsers import android_app_usage
 

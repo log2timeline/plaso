@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import mac_appfirewall  # pylint: disable=unused-import
+from plaso.formatters import mac_appfirewall as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import mac_appfirewall
 

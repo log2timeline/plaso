@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import chrome_cache  # pylint: disable=unused-import
+from plaso.formatters import chrome_cache as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import chrome_cache
 

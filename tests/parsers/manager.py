@@ -4,8 +4,6 @@
 
 from __future__ import unicode_literals
 
-from __future__ import unicode_literals
-
 import unittest
 
 from plaso.parsers import interface

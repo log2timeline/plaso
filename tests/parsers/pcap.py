@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import pcap  # pylint: disable=unused-import
+from plaso.formatters import pcap as _  # pylint: disable=unused-import
 from plaso.parsers import pcap
 
 from tests import test_lib as shared_test_lib

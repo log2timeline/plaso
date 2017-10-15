@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import bsm  # pylint: disable=unused-import
+from plaso.formatters import bsm as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import bsm
 
@@ -82,8 +82,9 @@ class MacOSXBSMParserTest(test_lib.ParserTestCase):
             'terminal_port': 143,
             'uid': 92},
 
-        'BSM_TOKEN_TEXT': ('Verify password for record type Users '
-                            '\'moxilo\' node \'/Local/Default\''),
+        'BSM_TOKEN_TEXT': (
+            'Verify password for record type Users \'moxilo\' node '
+            '\'/Local/Default\''),
 
         'BSM_TOKEN_TRAILER': 140
     }
