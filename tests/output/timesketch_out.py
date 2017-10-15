@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Timesketch output class."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from mock import Mock
@@ -31,9 +33,9 @@ if timesketch_out.timesketch is None:
 
 class TimesketchTestConfig(object):
   """Config object for the tests."""
-  timeline_name = u'Test'
-  output_format = u'timesketch'
-  index = u''
+  timeline_name = 'Test'
+  output_format = 'timesketch'
+  index = ''
   show_stats = False
   flush_interval = 1000
 
@@ -51,14 +53,14 @@ class TimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
   def testMissingParameters(self):
     """Tests the GetMissingArguments function."""
     self.assertListEqual(
-        self._timesketch_output.GetMissingArguments(), [u'timeline_name'])
+        self._timesketch_output.GetMissingArguments(), ['timeline_name'])
 
     config = TimesketchTestConfig()
 
     self._timesketch_output.SetIndexName(config.index)
     self._timesketch_output.SetFlushInterval(config.flush_interval)
     self.assertListEqual(
-        self._timesketch_output.GetMissingArguments(), [u'timeline_name'])
+        self._timesketch_output.GetMissingArguments(), ['timeline_name'])
 
     self._timesketch_output.SetTimelineName(config.timeline_name)
     self.assertListEqual(self._timesketch_output.GetMissingArguments(), [])

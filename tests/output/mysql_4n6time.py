@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the 4n6time MySQL output class."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.containers import events
@@ -20,19 +22,19 @@ if mysql_4n6time.MySQLdb is None:
 class MySQL4n6TimeTestEvent(events.EventObject):
   """Test event."""
 
-  DATA_TYPE = u'syslog:line'
+  DATA_TYPE = 'syslog:line'
 
   def __init__(self, event_timestamp):
     """Initializes an event."""
     super(MySQL4n6TimeTestEvent, self).__init__()
-    self.display_name = u'log/syslog.1'
-    self.filename = u'log/syslog.1'
-    self.hostname = u'ubuntu'
+    self.display_name = 'log/syslog.1'
+    self.filename = 'log/syslog.1'
+    self.hostname = 'ubuntu'
     self.my_number = 123
     self.some_additional_foo = True
     self.text = (
-        u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
-        u'closed for user root)')
+        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
+        'closed for user root)')
     self.timestamp_desc = definitions.TIME_DESCRIPTION_WRITTEN
     self.timestamp = event_timestamp
 
@@ -45,14 +47,14 @@ class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
   def testGetTags(self):
     """Tests the _GetTags function."""
     fake_cursor = fake_mysqldb.FakeMySQLdbCursor()
-    fake_cursor.expected_query = u'SELECT DISTINCT tag FROM log2timeline'
-    fake_cursor.query_results = [(u'one',), (u'two,three',), (u'four',)]
+    fake_cursor.expected_query = 'SELECT DISTINCT tag FROM log2timeline'
+    fake_cursor.query_results = [('one',), ('two,three',), ('four',)]
 
     output_mediator = self._CreateOutputMediator()
     output_module = mysql_4n6time.MySQL4n6TimeOutputModule(output_mediator)
     output_module._cursor = fake_cursor
 
-    expected_tags = [u'one', u'two', u'three', u'four']
+    expected_tags = ['one', 'two', 'three', 'four']
     tags = output_module._GetTags()
     self.assertEqual(tags, expected_tags)
 
@@ -60,15 +62,15 @@ class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
     """Tests the _GetUniqueValues function."""
     fake_cursor = fake_mysqldb.FakeMySQLdbCursor()
     fake_cursor.expected_query = (
-        u'SELECT source, COUNT(source) FROM log2timeline GROUP BY source')
-    fake_cursor.query_results = [(u'one', 1), (u'two', 2), (u'three', 3)]
+        'SELECT source, COUNT(source) FROM log2timeline GROUP BY source')
+    fake_cursor.query_results = [('one', 1), ('two', 2), ('three', 3)]
 
     output_mediator = self._CreateOutputMediator()
     output_module = mysql_4n6time.MySQL4n6TimeOutputModule(output_mediator)
     output_module._cursor = fake_cursor
 
-    expected_unique_values = {u'one': 1, u'two': 2, u'three': 3}
-    unique_values = output_module._GetUniqueValues(u'source')
+    expected_unique_values = {'one': 1, 'two': 2, 'three': 3}
+    unique_values = output_module._GetUniqueValues('source')
     self.assertEqual(unique_values, expected_unique_values)
 
   # TODO: add test for Open and Close
@@ -79,40 +81,40 @@ class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
     output_module = mysql_4n6time.MySQL4n6TimeOutputModule(output_mediator)
 
     expected_dict = {
-        u'type': u'Content Modification Time',
-        u'host': u'ubuntu',
-        u'filename': u'log/syslog.1',
-        u'source': u'LOG',
-        u'description': u'[',
-        u'datetime': u'2012-06-27 18:17:01',
-        u'inreport': u'',
-        u'source_name': u'-',
-        u'extra': (
-            u'my_number: 123  some_additional_foo: True  text: '
-            u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
-            u'session closed for user root) '
+        'type': 'Content Modification Time',
+        'host': 'ubuntu',
+        'filename': 'log/syslog.1',
+        'source': 'LOG',
+        'description': '[',
+        'datetime': '2012-06-27 18:17:01',
+        'inreport': '',
+        'source_name': '-',
+        'extra': (
+            'my_number: 123  some_additional_foo: True  text: '
+            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
+            'session closed for user root) '
         ),
-        u'tag': u'',
-        u'timezone': u'UTC',
-        u'inode': u'-',
-        u'reportnotes': u'',
-        u'sourcetype': u'Log File',
-        u'event_identifier': u'-',
-        u'format': u'-',
-        u'URL': u'-',
-        u'record_number': 0,
-        u'MACB': u'M...',
-        u'computer_name': u'-',
-        u'offset': 0,
-        u'evidence': u'-',
-        u'user_sid': u'-',
-        u'notes': u'-',
-        u'vss_store_number': -1,
-        u'user': u'-'
+        'tag': '',
+        'timezone': 'UTC',
+        'inode': '-',
+        'reportnotes': '',
+        'sourcetype': 'Log File',
+        'event_identifier': '-',
+        'format': '-',
+        'URL': '-',
+        'record_number': 0,
+        'MACB': 'M...',
+        'computer_name': '-',
+        'offset': 0,
+        'evidence': '-',
+        'user_sid': '-',
+        'notes': '-',
+        'vss_store_number': -1,
+        'user': '-'
     }
 
     timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-06-27 18:17:01+00:00')
+        '2012-06-27 18:17:01+00:00')
     event = MySQL4n6TimeTestEvent(timestamp)
     event_dict = output_module._GetSanitizedEventValues(event)
 
@@ -124,25 +126,25 @@ class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     output_module = mysql_4n6time.MySQL4n6TimeOutputModule(output_mediator)
 
-    output_module.SetCredentials(password=u'password', username=u'username')
-    self.assertEqual(output_module._password, u'password')
-    self.assertEqual(output_module._user, u'username')
+    output_module.SetCredentials(password='password', username='username')
+    self.assertEqual(output_module._password, 'password')
+    self.assertEqual(output_module._user, 'username')
 
   def testSetDatabaseName(self):
     """Tests the SetDatabaseName function."""
     output_mediator = self._CreateOutputMediator()
     output_module = mysql_4n6time.MySQL4n6TimeOutputModule(output_mediator)
 
-    output_module.SetDatabaseName(u'database')
-    self.assertEqual(output_module._dbname, u'database')
+    output_module.SetDatabaseName('database')
+    self.assertEqual(output_module._dbname, 'database')
 
   def testSetServerInformation(self):
     """Tests the SetServerInformation function."""
     output_mediator = self._CreateOutputMediator()
     output_module = mysql_4n6time.MySQL4n6TimeOutputModule(output_mediator)
 
-    output_module.SetServerInformation(u'127.0.0.1', 3306)
-    self.assertEqual(output_module._host, u'127.0.0.1')
+    output_module.SetServerInformation('127.0.0.1', 3306)
+    self.assertEqual(output_module._host, '127.0.0.1')
     self.assertEqual(output_module._port, 3306)
 
   def testWriteEventBody(self):
@@ -152,37 +154,37 @@ class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
         mysql_4n6time.MySQL4n6TimeOutputModule._INSERT_QUERY)
 
     fake_cursor.expected_query_args = {
-        u'computer_name': u'-',
-        u'datetime': u'2012-06-27 18:17:01',
-        u'description': u'[',
-        u'event_identifier': u'-',
-        u'event_type': u'-',
-        u'evidence': u'-',
-        u'extra': (
-            u'my_number: 123  '
-            u'some_additional_foo: True  '
-            u'text: Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
-            u'session closed for user root) '),
-        u'filename': u'log/syslog.1',
-        u'format': u'-',
-        u'host': u'ubuntu',
-        u'inode': u'-',
-        u'inreport': u'',
-        u'MACB': u'M...',
-        u'notes': u'-',
-        u'offset': 0,
-        u'record_number': 0,
-        u'reportnotes': u'',
-        u'source_name': u'-',
-        u'sourcetype': u'Log File',
-        u'source': u'LOG',
-        u'tag': u'',
-        u'timezone': u'UTC',
-        u'type': u'Content Modification Time',
-        u'URL': u'-',
-        u'user_sid': u'-',
-        u'user': u'-',
-        u'vss_store_number': -1}
+        'computer_name': '-',
+        'datetime': '2012-06-27 18:17:01',
+        'description': '[',
+        'event_identifier': '-',
+        'event_type': '-',
+        'evidence': '-',
+        'extra': (
+            'my_number: 123  '
+            'some_additional_foo: True  '
+            'text: Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
+            'session closed for user root) '),
+        'filename': 'log/syslog.1',
+        'format': '-',
+        'host': 'ubuntu',
+        'inode': '-',
+        'inreport': '',
+        'MACB': 'M...',
+        'notes': '-',
+        'offset': 0,
+        'record_number': 0,
+        'reportnotes': '',
+        'source_name': '-',
+        'sourcetype': 'Log File',
+        'source': 'LOG',
+        'tag': '',
+        'timezone': 'UTC',
+        'type': 'Content Modification Time',
+        'URL': '-',
+        'user_sid': '-',
+        'user': '-',
+        'vss_store_number': -1}
 
     output_mediator = self._CreateOutputMediator()
     output_module = mysql_4n6time.MySQL4n6TimeOutputModule(output_mediator)
@@ -190,7 +192,7 @@ class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
     output_module._cursor = fake_cursor
 
     timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-06-27 18:17:01+00:00')
+        '2012-06-27 18:17:01+00:00')
     event = MySQL4n6TimeTestEvent(timestamp)
     output_module.WriteEventBody(event)
 
