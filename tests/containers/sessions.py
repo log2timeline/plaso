@@ -56,7 +56,7 @@ class SessionCompletionTest(shared_test_lib.BaseTestCase):
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
     timestamp = int(time.time() * 1000000)
-    session_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
+    session_identifier = '{0:s}'.format(uuid.uuid4().hex)
     session_completion = sessions.SessionCompletion(
         identifier=session_identifier)
     session_completion.timestamp = timestamp
@@ -80,7 +80,7 @@ class SessionStartTest(shared_test_lib.BaseTestCase):
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
     timestamp = int(time.time() * 1000000)
-    session_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
+    session_identifier = '{0:s}'.format(uuid.uuid4().hex)
     session_start = sessions.SessionStart(identifier=session_identifier)
     session_start.timestamp = timestamp
     session_start.product_name = 'plaso'

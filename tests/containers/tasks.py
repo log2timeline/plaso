@@ -19,7 +19,7 @@ class TaskTest(shared_test_lib.BaseTestCase):
   # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
-    session_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
+    session_identifier = '{0:s}'.format(uuid.uuid4().hex)
     task = tasks.Task(session_identifier=session_identifier)
 
     self.assertIsNotNone(task.identifier)
@@ -39,7 +39,7 @@ class TaskTest(shared_test_lib.BaseTestCase):
 
   def testCreateRetry(self):
     """Tests the CreateRetry function."""
-    session_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
+    session_identifier = '{0:s}'.format(uuid.uuid4().hex)
     task = tasks.Task(session_identifier=session_identifier)
     task.path_spec = 'test_pathspec_value'
     retry_task = task.CreateRetry()
@@ -60,9 +60,9 @@ class TaskCompletionTest(shared_test_lib.BaseTestCase):
   # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
-    session_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
+    session_identifier = '{0:s}'.format(uuid.uuid4().hex)
     timestamp = int(time.time() * 1000000)
-    task_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
+    task_identifier = '{0:s}'.format(uuid.uuid4().hex)
     task_completion = tasks.TaskCompletion(
         identifier=task_identifier, session_identifier=session_identifier)
     task_completion.timestamp = timestamp
@@ -86,9 +86,9 @@ class TaskStartTest(shared_test_lib.BaseTestCase):
   # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
-    session_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
+    session_identifier = '{0:s}'.format(uuid.uuid4().hex)
     timestamp = int(time.time() * 1000000)
-    task_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
+    task_identifier = '{0:s}'.format(uuid.uuid4().hex)
     task_start = tasks.TaskStart(
         identifier=task_identifier, session_identifier=session_identifier)
     task_start.timestamp = timestamp

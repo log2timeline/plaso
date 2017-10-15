@@ -17,7 +17,7 @@ class WindowsDistributedLinkTrackingEventDataTest(shared_test_lib.BaseTestCase):
 
   def testGetAttributeNames(self):
     """Tests the GetAttributeNames function."""
-    test_uuid = uuid.UUID(uuid.uuid1().get_hex())
+    test_uuid = uuid.UUID(uuid.uuid1().hex)
     attribute_container = (
         windows_events.WindowsDistributedLinkTrackingEventData(test_uuid, None))
 

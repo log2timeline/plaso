@@ -44,7 +44,7 @@ class ZeroMQBufferedReplyConnectQueue(zeromq_queue.ZeroMQBufferedReplyQueue):
   SOCKET_CONNECTION_TYPE = zeromq_queue.ZeroMQQueue.SOCKET_CONNECTION_CONNECT
 
 
-class testZeroMQQueues(shared_test_lib.BaseTestCase):
+class ZeroMQQueuesTest(shared_test_lib.BaseTestCase):
   """Tests for ZeroMQ queues."""
 
   # pylint: disable=protected-access
