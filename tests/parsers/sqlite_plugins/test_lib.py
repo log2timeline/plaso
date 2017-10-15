@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """SQLite database plugin related functions and classes for testing."""
 
+from __future__ import unicode_literals
+
 from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
