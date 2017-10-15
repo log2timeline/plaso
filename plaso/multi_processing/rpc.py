@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """The RPC client and server interface."""
 
+from __future__ import unicode_literals
+
 import abc
 
 
 class RPCClient(object):
-  """Class that defines the RPC client interface."""
+  """RPC client interface."""
 
   @abc.abstractmethod
   def CallFunction(self):
@@ -20,16 +22,16 @@ class RPCClient(object):
     """Opens a RPC communication channel to the server.
 
     Args:
-      hostname: the hostname or IP address to connect to for requests.
-      port: the port to connect to for requests.
+      hostname (str): hostname or IP address to connect to for requests.
+      port (int): port to connect to for requests.
 
     Returns:
-      A boolean indicating if the communication channel was established.
+      bool: True if the communication channel was established.
     """
 
 
 class RPCServer(object):
-  """Class that defines the RPC server interface."""
+  """RPC server interface."""
 
   def __init__(self, callback):
     """Initializes the RPC server object.
@@ -45,11 +47,11 @@ class RPCServer(object):
     """Starts the RPC server.
 
     Args:
-      hostname: the hostname or IP address to connect to for requests.
-      port: the port to connect to for requests.
+      hostname (str): hostname or IP address to connect to for requests.
+      port (int): port to connect to for requests.
 
     Returns:
-      A boolean indicating if the RPC server was successfully started.
+      bool: True if the RPC server was successfully started.
     """
 
   @abc.abstractmethod

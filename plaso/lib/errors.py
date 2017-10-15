@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """This file contains the error classes."""
 
+from __future__ import unicode_literals
+
+
 class Error(Exception):
   """Base error class."""
 
@@ -19,6 +22,10 @@ class ConnectionError(Error):  # pylint: disable=redefined-builtin
 
 class HeapFull(Error):
   """Class that implements a heap full exception."""
+
+
+class MalformedQueryError(Error):
+  """Raised when an objectfilter query is malformed."""
 
 
 class MaximumRecursionDepth(Error):

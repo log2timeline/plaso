@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Engine utility functions."""
 
+from __future__ import unicode_literals
+
 import logging
 
 from dfvfs.helpers import file_system_searcher
@@ -36,11 +38,11 @@ def BuildFindSpecsFromFile(filter_file_path, environment_variables=None):
         continue
 
       # Remove the drive letter.
-      if len(attribute_value) > 2 and attribute_value[1] == u':':
-        _, _, attribute_value = attribute_value.rpartition(u':')
+      if len(attribute_value) > 2 and attribute_value[1] == ':':
+        _, _, attribute_value = attribute_value.rpartition(':')
 
-      if attribute_value.startswith(u'\\'):
-        attribute_value = attribute_value.replace(u'\\', u'/')
+      if attribute_value.startswith('\\'):
+        attribute_value = attribute_value.replace('\\', '/')
 
       path_attributes[attribute_name] = attribute_value
 
@@ -48,7 +50,7 @@ def BuildFindSpecsFromFile(filter_file_path, environment_variables=None):
   with open(filter_file_path, 'rb') as file_object:
     for line in file_object:
       line = line.strip()
-      if line.startswith(u'#'):
+      if line.startswith('#'):
         continue
 
       if path_attributes:
@@ -56,25 +58,25 @@ def BuildFindSpecsFromFile(filter_file_path, environment_variables=None):
           line = line.format(**path_attributes)
         except KeyError as exception:
           logging.error((
-              u'Unable to expand filter path: {0:s} with error: '
-              u'{1:s}').format(line, exception))
+              'Unable to expand filter path: {0:s} with error: '
+              '{1:s}').format(line, exception))
           continue
 
-      if not line.startswith(u'/'):
+      if not line.startswith('/'):
         logging.warning((
-            u'The filter string must be defined as an abolute path: '
-            u'{0:s}').format(line))
+            'The filter string must be defined as an abolute path: '
+            '{0:s}').format(line))
         continue
 
-      _, _, file_path = line.rstrip().rpartition(u'/')
+      _, _, file_path = line.rstrip().rpartition('/')
       if not file_path:
         logging.warning(
-            u'Unable to parse the filter string: {0:s}'.format(line))
+            'Unable to parse the filter string: {0:s}'.format(line))
         continue
 
       # Convert the filter paths into a list of path segments and strip
       # the root path segment.
-      path_segments = line.split(u'/')
+      path_segments = line.split('/')
       path_segments.pop(0)
 
       find_specs.append(file_system_searcher.FindSpec(
