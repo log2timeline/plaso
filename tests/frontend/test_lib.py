@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Front-end related functions and classes for testing."""
 
+from __future__ import unicode_literals
+
 import io
 
 from plaso.analysis import interface as analysis_interface
@@ -42,7 +44,7 @@ class StringIOOutputWriter(object):
 class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
   """Test analysis plugin."""
 
-  NAME = u'test_analysis_plugin'
+  NAME = 'test_analysis_plugin'
 
   def CompileReport(self, unused_analysis_mediator):
     """Compiles a report of the analysis.

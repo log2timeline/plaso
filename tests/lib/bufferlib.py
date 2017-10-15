@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the circular buffer for storing event objects."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.lib import bufferlib

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests the multi-process processing engine."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from tests import test_lib as shared_test_lib
