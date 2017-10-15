@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the psort CLI tool."""
 
+from __future__ import unicode_literals
+
 import argparse
 import os
 import unittest
@@ -28,13 +30,13 @@ class TestInputReader(object):
   def Read(self):
     """Mock a read operation by user."""
     self.read_called = True
-    return u'foobar'
+    return 'foobar'
 
 
 class TestOutputModuleArgumentHelper(helpers_interface.ArgumentsHelper):
   """Test argument helper for the test output module."""
 
-  NAME = u'test_missing'
+  NAME = 'test_missing'
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -47,26 +49,26 @@ class TestOutputModuleArgumentHelper(helpers_interface.ArgumentsHelper):
     """Provide a test parse options section."""
     if not isinstance(output_module, TestOutputModuleMissingParameters):
       raise errors.BadConfigObject((
-          u'Output module is not an instance of '
-          u'TestOutputModuleMissingParameters'))
+          'Output module is not an instance of '
+          'TestOutputModuleMissingParameters'))
 
-    missing = getattr(options, u'missing', None)
+    missing = getattr(options, 'missing', None)
     if missing:
-      output_module.SetMissingValue(u'missing', missing)
+      output_module.SetMissingValue('missing', missing)
 
-    parameters = getattr(options, u'parameters', None)
+    parameters = getattr(options, 'parameters', None)
     if parameters:
-      output_module.SetMissingValue(u'parameters', parameters)
+      output_module.SetMissingValue('parameters', parameters)
 
 
 class TestOutputModuleMissingParameters(output_interface.LinearOutputModule):
   """Test output module that is missing some parameters."""
 
-  NAME = u'test_missing'
+  NAME = 'test_missing'
 
   _HEADER = (
-      u'date,time,timezone,MACB,source,sourcetype,type,user,host,'
-      u'short,desc,version,filename,inode,notes,format,extra\n')
+      'date,time,timezone,MACB,source,sourcetype,type,user,host,'
+      'short,desc,version,filename,inode,notes,format,extra\n')
 
   # For test purpose assign these as class attributes.
   missing = None
@@ -76,10 +78,10 @@ class TestOutputModuleMissingParameters(output_interface.LinearOutputModule):
     """Return a list of missing parameters."""
     missing_parameters = []
     if self.missing is None:
-      missing_parameters.append(u'missing')
+      missing_parameters.append('missing')
 
     if self.parameters is None:
-      missing_parameters.append(u'parameters')
+      missing_parameters.append('parameters')
 
     return missing_parameters
 
@@ -96,7 +98,7 @@ class TestOutputModuleMissingParameters(output_interface.LinearOutputModule):
     """
     message, _ = self._output_mediator.GetFormattedMessages(event)
     source_short, source_long = self._output_mediator.GetFormattedSources(event)
-    self._output_writer.Write(u'{0:s}/{1:s} {2:s}\n'.format(
+    self._output_writer.Write('{0:s}/{1:s} {2:s}\n'.format(
         source_short, source_long, message))
 
   def WriteHeader(self):
@@ -107,29 +109,29 @@ class TestOutputModuleMissingParameters(output_interface.LinearOutputModule):
 class PsortToolTest(test_lib.CLIToolTestCase):
   """Tests for the psort tool."""
 
-  _EXPECTED_PROCESSING_OPTIONS = u'\n'.join([
-      (u'usage: psort_test.py [--disable_zeromq] '
-       u'[--temporary_directory DIRECTORY]'),
-      u'                     [--worker-memory-limit SIZE]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --disable_zeromq, --disable-zeromq',
-      (u'                        Disable queueing using ZeroMQ. A '
-       u'Multiprocessing queue'),
-      u'                        will be used instead.',
-      u'  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
-      (u'                        Path to the directory that should be used to '
-       u'store'),
-      u'                        temporary files created during processing.',
-      u'  --worker-memory-limit SIZE, --worker_memory_limit SIZE',
-      (u'                        Maximum amount of memory a worker process is '
-       u'allowed'),
-      (u'                        to consume, where 0 represents no limit '
-       u'[defaults to 2'),
-      u'                        GiB].',
-      u''])
+  _EXPECTED_PROCESSING_OPTIONS = '\n'.join([
+      ('usage: psort_test.py [--disable_zeromq] '
+       '[--temporary_directory DIRECTORY]'),
+      '                     [--worker-memory-limit SIZE]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --disable_zeromq, --disable-zeromq',
+      ('                        Disable queueing using ZeroMQ. A '
+       'Multiprocessing queue'),
+      '                        will be used instead.',
+      '  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
+      ('                        Path to the directory that should be used to '
+       'store'),
+      '                        temporary files created during processing.',
+      '  --worker-memory-limit SIZE, --worker_memory_limit SIZE',
+      ('                        Maximum amount of memory a worker process is '
+       'allowed'),
+      ('                        to consume, where 0 represents no limit '
+       '[defaults to 2'),
+      '                        GiB].',
+      ''])
 
   # TODO: add test for _CreateOutputModule.
   # TODO: add test for _FormatStatusTableRow.
@@ -144,8 +146,8 @@ class PsortToolTest(test_lib.CLIToolTestCase):
   def testAddProcessingOptions(self):
     """Tests the AddProcessingOptions function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'psort_test.py',
-        description=u'Test argument parser.', add_help=False,
+        prog='psort_test.py',
+        description='Test argument parser.', add_help=False,
         formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = psort_tool.PsortTool()
@@ -156,7 +158,7 @@ class PsortToolTest(test_lib.CLIToolTestCase):
 
   def testListLanguageIdentifiers(self):
     """Tests the ListLanguageIdentifiers function."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psort_tool.PsortTool(output_writer=output_writer)
 
     test_tool.ListLanguageIdentifiers()
@@ -172,7 +174,7 @@ class PsortToolTest(test_lib.CLIToolTestCase):
       if line.startswith(b'*****') and line.endswith(b'*****'):
         number_of_tables += 1
 
-    self.assertIn(u'Language identifiers', lines[1])
+    self.assertIn('Language identifiers', lines[1])
 
     lines = frozenset(lines)
 
@@ -183,7 +185,7 @@ class PsortToolTest(test_lib.CLIToolTestCase):
 
   def testParseArguments(self):
     """Tests the ParseArguments function."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psort_tool.PsortTool(output_writer=output_writer)
 
     result = test_tool.ParseArguments()
@@ -194,12 +196,12 @@ class PsortToolTest(test_lib.CLIToolTestCase):
 
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psort_tool.PsortTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.output_format = u'null'
-    options.storage_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    options.output_format = 'null'
+    options.storage_file = self._GetTestFilePath(['psort_test.json.plaso'])
 
     test_tool.ParseOptions(options)
 
@@ -209,7 +211,7 @@ class PsortToolTest(test_lib.CLIToolTestCase):
       test_tool.ParseOptions(options)
 
     options = test_lib.TestOptions()
-    options.storage_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    options.storage_file = self._GetTestFilePath(['psort_test.json.plaso'])
 
     with self.assertRaises(errors.BadConfigOption):
       test_tool.ParseOptions(options)
@@ -219,13 +221,13 @@ class PsortToolTest(test_lib.CLIToolTestCase):
   def testProcessStorageWithMissingParameters(self):
     """Tests the ProcessStorage function with parameters missing."""
     input_reader = TestInputReader()
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psort_tool.PsortTool(
         input_reader=input_reader, output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.storage_file = self._GetTestFilePath([u'psort_test.json.plaso'])
-    options.output_format = u'test_missing'
+    options.storage_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    options.output_format = 'test_missing'
 
     output_manager.OutputManager.RegisterOutput(
         TestOutputModuleMissingParameters)
@@ -234,7 +236,7 @@ class PsortToolTest(test_lib.CLIToolTestCase):
 
     lines = []
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file_name = os.path.join(temp_directory, u'output.txt')
+      temp_file_name = os.path.join(temp_directory, 'output.txt')
       options.write = temp_file_name
 
       test_tool.ParseOptions(options)
@@ -245,12 +247,12 @@ class PsortToolTest(test_lib.CLIToolTestCase):
           lines.append(line.strip())
 
     self.assertTrue(input_reader.read_called)
-    self.assertEqual(TestOutputModuleMissingParameters.missing, u'foobar')
-    self.assertEqual(TestOutputModuleMissingParameters.parameters, u'foobar')
+    self.assertEqual(TestOutputModuleMissingParameters.missing, 'foobar')
+    self.assertEqual(TestOutputModuleMissingParameters.parameters, 'foobar')
 
     expected_line = (
-        u'FILE/OS Metadata Modification Time OS:/tmp/test/test_data/syslog '
-        u'Type: file')
+        'FILE/OS Metadata Modification Time OS:/tmp/test/test_data/syslog '
+        'Type: file')
     self.assertIn(expected_line, lines)
 
     output_manager.OutputManager.DeregisterOutput(

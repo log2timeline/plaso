@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the temporary directory CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -17,22 +19,22 @@ class TemporaryDirectoryArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--temporary_directory DIRECTORY]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
-      (u'                        Path to the directory that should be used '
-       u'to store'),
-      u'                        temporary files created during processing.',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [--temporary_directory DIRECTORY]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
+      ('                        Path to the directory that should be used '
+       'to store'),
+      '                        temporary files created during processing.',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py', description=u'Test argument parser.',
+        prog='cli_helper.py', description='Test argument parser.',
         add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
@@ -45,7 +47,7 @@ class TemporaryDirectoryArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
-    options.temporary_directory = self._GetTestFilePath([u'testdir'])
+    options.temporary_directory = self._GetTestFilePath(['testdir'])
 
     test_tool = tools.CLITool()
     temporary_directory.TemporaryDirectoryArgumentsHelper.ParseOptions(

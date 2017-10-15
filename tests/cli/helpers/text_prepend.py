@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the text prepend CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -17,24 +19,24 @@ class TextPrependArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [-t TEXT]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      (u'  -t TEXT, --text TEXT  Define a free form text string that is '
-       u'prepended to'),
-      (u'                        each path to make it easier to distinguish '
-       u'one record'),
-      (u'                        from another in a timeline (like c:\\, or '
-       u'host_w_c:\\)'),
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [-t TEXT]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      ('  -t TEXT, --text TEXT  Define a free form text string that is '
+       'prepended to'),
+      ('                        each path to make it easier to distinguish '
+       'one record'),
+      ('                        from another in a timeline (like c:\\, or '
+       'host_w_c:\\)'),
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py', description=u'Test argument parser.',
+        prog='cli_helper.py', description='Test argument parser.',
         add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
@@ -46,7 +48,7 @@ class TextPrependArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
-    options.text_prepend = u'host_w_c:\\'
+    options.text_prepend = 'host_w_c:\\'
 
     test_tool = tools.CLITool()
     text_prepend.TextPrependArgumentsHelper.ParseOptions(options, test_tool)

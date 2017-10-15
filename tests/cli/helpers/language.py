@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the language CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -17,29 +19,29 @@ class LanguagergumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--language LANGUAGE]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      (u'  --language LANGUAGE  The preferred language identifier for Windows '
-       u'Event Log'),
-      (u'                       message strings. Use "--language list" to see '
-       u'a list of'),
-      (u'                       available language identifiers. Note that '
-       u'formatting'),
-      (u'                       will fall back on en-US (LCID 0x0409) if the '
-       u'preferred'),
-      (u'                       language is not available in the database of '
-       u'message'),
-      u'                       string templates.',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [--language LANGUAGE]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      ('  --language LANGUAGE  The preferred language identifier for Windows '
+       'Event Log'),
+      ('                       message strings. Use "--language list" to see '
+       'a list of'),
+      ('                       available language identifiers. Note that '
+       'formatting'),
+      ('                       will fall back on en-US (LCID 0x0409) if the '
+       'preferred'),
+      ('                       language is not available in the database of '
+       'message'),
+      '                       string templates.',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py', description=u'Test argument parser.',
+        prog='cli_helper.py', description='Test argument parser.',
         add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
@@ -51,7 +53,7 @@ class LanguagergumentsHelperTest(cli_test_lib.CLIToolTestCase):
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
-    options.preferred_language = u'is'
+    options.preferred_language = 'is'
 
     test_tool = tools.CLITool()
     language.LanguageArgumentsHelper.ParseOptions(options, test_tool)

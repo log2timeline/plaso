@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the analysis plugins CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -17,24 +19,24 @@ class AnalysisPluginsArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--analysis PLUGIN_LIST]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --analysis PLUGIN_LIST',
-      (u'                        A comma separated list of analysis plugin '
-       u'names to be'),
-      (u'                        loaded or "--analysis list" to see a list '
-       u'of available'),
-      u'                        plugins.',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [--analysis PLUGIN_LIST]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --analysis PLUGIN_LIST',
+      ('                        A comma separated list of analysis plugin '
+       'names to be'),
+      ('                        loaded or "--analysis list" to see a list '
+       'of available'),
+      '                        plugins.',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py', description=u'Test argument parser.',
+        prog='cli_helper.py', description='Test argument parser.',
         add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
@@ -47,19 +49,19 @@ class AnalysisPluginsArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
-    options.analysis_plugins = u'tagging'
+    options.analysis_plugins = 'tagging'
 
     test_tool = tools.CLITool()
     analysis_plugins.AnalysisPluginsArgumentsHelper.ParseOptions(
         options, test_tool)
 
-    self.assertEqual(test_tool._analysis_plugins, [u'tagging'])
+    self.assertEqual(test_tool._analysis_plugins, ['tagging'])
 
     with self.assertRaises(errors.BadConfigObject):
       analysis_plugins.AnalysisPluginsArgumentsHelper.ParseOptions(
           options, None)
 
-    options.analysis_plugins = u'bogus'
+    options.analysis_plugins = 'bogus'
 
     with self.assertRaises(errors.BadConfigOption):
       analysis_plugins.AnalysisPluginsArgumentsHelper.ParseOptions(

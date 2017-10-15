@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the storage media tool object."""
 
+from __future__ import unicode_literals
+
 import argparse
 import os
 import unittest
@@ -23,109 +25,109 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_OUTPUT_CREDENTIAL_OPTIONS = u'\n'.join([
-      u'usage: storage_media_tool_test.py [--credential TYPE:DATA]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --credential TYPE:DATA',
-      (u'                        Define a credentials that can be used to '
-       u'unlock'),
-      (u'                        encrypted volumes e.g. BitLocker. The '
-       u'credential is'),
-      (u'                        defined as type:data e.g. '
-       u'"password:BDE-test".'),
-      (u'                        Supported credential types are: key_data, '
-       u'password,'),
-      (u'                        recovery_password, startup_key. Binary '
-       u'key data is'),
-      u'                        expected to be passed in BASE-16 encoding',
-      (u'                        (hexadecimal). WARNING credentials passed '
-       u'via command'),
-      (u'                        line arguments can end up in logs, so use '
-       u'this option'),
-      u'                        with care.',
-      u''])
+  _EXPECTED_OUTPUT_CREDENTIAL_OPTIONS = '\n'.join([
+      'usage: storage_media_tool_test.py [--credential TYPE:DATA]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --credential TYPE:DATA',
+      ('                        Define a credentials that can be used to '
+       'unlock'),
+      ('                        encrypted volumes e.g. BitLocker. The '
+       'credential is'),
+      ('                        defined as type:data e.g. '
+       '"password:BDE-test".'),
+      ('                        Supported credential types are: key_data, '
+       'password,'),
+      ('                        recovery_password, startup_key. Binary '
+       'key data is'),
+      '                        expected to be passed in BASE-16 encoding',
+      ('                        (hexadecimal). WARNING credentials passed '
+       'via command'),
+      ('                        line arguments can end up in logs, so use '
+       'this option'),
+      '                        with care.',
+      ''])
 
-  _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = u'\n'.join([
-      u'usage: storage_media_tool_test.py [--partition PARTITION]',
-      u'                                  [--partitions PARTITIONS]',
-      u'                                  [--offset IMAGE_OFFSET]',
-      u'                                  [--ob IMAGE_OFFSET_BYTES]',
-      u'                                  [--sector_size BYTES_PER_SECTOR]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      (u'  --ob IMAGE_OFFSET_BYTES, --offset_bytes IMAGE_OFFSET_BYTES, '
-       u'--offset_bytes IMAGE_OFFSET_BYTES'),
-      (u'                        The offset of the volume within the storage '
-       u'media'),
-      u'                        image in number of bytes.',
-      u'  --offset IMAGE_OFFSET',
-      (u'                        The offset of the volume within the storage '
-       u'media'),
-      (u'                        image in number of sectors. A sector is 512 '
-       u'bytes in'),
-      (u'                        size by default this can be overwritten with '
-       u'the'),
-      u'                        --sector_size option.',
-      u'  --partition PARTITION',
-      (u'                        Choose a partition number from a disk image. '
-       u'This'),
-      (u'                        partition number should correspond to the '
-       u'partition'),
-      (u'                        number on the disk image, starting from '
-       u'partition 1.'),
-      u'                        All partitions can be defined as: "all".',
-      u'  --partitions PARTITIONS',
-      (u'                        Define partitions that need to be processed. '
-       u'A range'),
-      (u'                        of partitions can be defined as: "3..5". '
-       u'Multiple'),
-      (u'                        partitions can be defined as: "1,3,5" (a'
-       u' list of comma'),
-      (u'                        separated values). Ranges and lists can '
-       u'also be'),
-      (u'                        combined as: "1,3..5". The first partition '
-       u'is 1. All'),
-      u'                        partition can be defined as: "all".',
-      u'  --sector_size BYTES_PER_SECTOR, --sector-size BYTES_PER_SECTOR',
-      (u'                        The number of bytes per sector, which is 512 '
-       u'by'),
-      u'                        default.',
-      u''])
+  _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = '\n'.join([
+      'usage: storage_media_tool_test.py [--partition PARTITION]',
+      '                                  [--partitions PARTITIONS]',
+      '                                  [--offset IMAGE_OFFSET]',
+      '                                  [--ob IMAGE_OFFSET_BYTES]',
+      '                                  [--sector_size BYTES_PER_SECTOR]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      ('  --ob IMAGE_OFFSET_BYTES, --offset_bytes IMAGE_OFFSET_BYTES, '
+       '--offset_bytes IMAGE_OFFSET_BYTES'),
+      ('                        The offset of the volume within the storage '
+       'media'),
+      '                        image in number of bytes.',
+      '  --offset IMAGE_OFFSET',
+      ('                        The offset of the volume within the storage '
+       'media'),
+      ('                        image in number of sectors. A sector is 512 '
+       'bytes in'),
+      ('                        size by default this can be overwritten with '
+       'the'),
+      '                        --sector_size option.',
+      '  --partition PARTITION',
+      ('                        Choose a partition number from a disk image. '
+       'This'),
+      ('                        partition number should correspond to the '
+       'partition'),
+      ('                        number on the disk image, starting from '
+       'partition 1.'),
+      '                        All partitions can be defined as: "all".',
+      '  --partitions PARTITIONS',
+      ('                        Define partitions that need to be processed. '
+       'A range'),
+      ('                        of partitions can be defined as: "3..5". '
+       'Multiple'),
+      ('                        partitions can be defined as: "1,3,5" (a'
+       ' list of comma'),
+      ('                        separated values). Ranges and lists can '
+       'also be'),
+      ('                        combined as: "1,3..5". The first partition '
+       'is 1. All'),
+      '                        partition can be defined as: "all".',
+      '  --sector_size BYTES_PER_SECTOR, --sector-size BYTES_PER_SECTOR',
+      ('                        The number of bytes per sector, which is 512 '
+       'by'),
+      '                        default.',
+      ''])
 
-  _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = u'\n'.join([
-      u'usage: storage_media_tool_test.py [--no_vss] [--vss_only]',
-      u'                                  [--vss_stores VSS_STORES]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      (u'  --no_vss, --no-vss    Do not scan for Volume Shadow Snapshots '
-       u'(VSS). This'),
-      (u'                        means that Volume Shadow Snapshots (VSS) '
-       u'are not'),
-      u'                        processed.',
-      u'  --vss_only, --vss-only',
-      (u'                        Do not process the current volume if '
-       u'Volume Shadow'),
-      u'                        Snapshots (VSS) have been selected.',
-      u'  --vss_stores VSS_STORES, --vss-stores VSS_STORES',
-      (u'                        Define Volume Shadow Snapshots (VSS) (or '
-       u'stores that'),
-      (u'                        need to be processed. A range of stores can '
-       u'be defined'),
-      (u'                        as: "3..5". Multiple stores can be defined '
-       u'as: "1,3,5"'),
-      (u'                        (a list of comma separated values). Ranges '
-       u'and lists'),
-      (u'                        can also be combined as: "1,3..5". The '
-       u'first store is'),
-      u'                        1. All stores can be defined as: "all".',
-      u''])
+  _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = '\n'.join([
+      'usage: storage_media_tool_test.py [--no_vss] [--vss_only]',
+      '                                  [--vss_stores VSS_STORES]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      ('  --no_vss, --no-vss    Do not scan for Volume Shadow Snapshots '
+       '(VSS). This'),
+      ('                        means that Volume Shadow Snapshots (VSS) '
+       'are not'),
+      '                        processed.',
+      '  --vss_only, --vss-only',
+      ('                        Do not process the current volume if '
+       'Volume Shadow'),
+      '                        Snapshots (VSS) have been selected.',
+      '  --vss_stores VSS_STORES, --vss-stores VSS_STORES',
+      ('                        Define Volume Shadow Snapshots (VSS) (or '
+       'stores that'),
+      ('                        need to be processed. A range of stores can '
+       'be defined'),
+      ('                        as: "3..5". Multiple stores can be defined '
+       'as: "1,3,5"'),
+      ('                        (a list of comma separated values). Ranges '
+       'and lists'),
+      ('                        can also be combined as: "1,3..5". The '
+       'first store is'),
+      '                        1. All stores can be defined as: "all".',
+      ''])
 
   def _GetTestScanNode(self, scan_context):
     """Retrieves the scan node for testing.
@@ -205,7 +207,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     test_tool = storage_media_tool.StorageMediaTool()
 
     options = test_lib.TestOptions()
-    options.partitions = u'all'
+    options.partitions = 'all'
     options.source = source_path
 
     test_tool._ParseStorageMediaImageOptions(options)
@@ -224,7 +226,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     self.assertEqual(len(scan_node.sub_nodes), 7)
 
     for scan_node in scan_node.sub_nodes:
-      if getattr(scan_node.path_spec, u'location', None) == u'/p2':
+      if getattr(scan_node.path_spec, 'location', None) == '/p2':
         break
 
     self.assertIsNotNone(scan_node)
@@ -251,7 +253,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
 
     options = test_lib.TestOptions()
     options.source = source_path
-    options.vss_stores = u'all'
+    options.vss_stores = 'all'
 
     test_tool._ParseStorageMediaImageOptions(options)
     test_tool._ParseVSSProcessingOptions(options)
@@ -290,28 +292,28 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     """Tests the _FormatHumanReadableSize function."""
     test_tool = storage_media_tool.StorageMediaTool()
 
-    expected_size_string = u'1000 B'
+    expected_size_string = '1000 B'
     size_string = test_tool._FormatHumanReadableSize(1000)
     self.assertEqual(size_string, expected_size_string)
 
-    expected_size_string = u'1.0KiB / 1.0kB (1024 B)'
+    expected_size_string = '1.0KiB / 1.0kB (1024 B)'
     size_string = test_tool._FormatHumanReadableSize(1024)
     self.assertEqual(size_string, expected_size_string)
 
-    expected_size_string = u'976.6KiB / 1.0MB (1000000 B)'
+    expected_size_string = '976.6KiB / 1.0MB (1000000 B)'
     size_string = test_tool._FormatHumanReadableSize(1000000)
     self.assertEqual(size_string, expected_size_string)
 
-    expected_size_string = u'1.0MiB / 1.0MB (1048576 B)'
+    expected_size_string = '1.0MiB / 1.0MB (1048576 B)'
     size_string = test_tool._FormatHumanReadableSize(1048576)
     self.assertEqual(size_string, expected_size_string)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'tsk_volume_system.raw'])
+  @shared_test_lib.skipUnlessHasTestFile(['tsk_volume_system.raw'])
   def testGetNormalizedTSKVolumeIdentifiers(self):
     """Tests the _GetNormalizedTSKVolumeIdentifiers function."""
     test_tool = storage_media_tool.StorageMediaTool()
 
-    test_path = self._GetTestFilePath([u'tsk_volume_system.raw'])
+    test_path = self._GetTestFilePath(['tsk_volume_system.raw'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
     tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -321,7 +323,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     volume_system.Open(tsk_partition_path_spec)
 
     volume_identifiers = test_tool._GetNormalizedTSKVolumeIdentifiers(
-        volume_system, [u'p1', u'p2'])
+        volume_system, ['p1', 'p2'])
     self.assertEqual(volume_identifiers, [1, 2])
 
     with self.assertRaises(KeyError):
@@ -330,14 +332,14 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
 
     with self.assertRaises(KeyError):
       test_tool._GetNormalizedTSKVolumeIdentifiers(
-          volume_system, [u'p3'])
+          volume_system, ['p3'])
 
-  @shared_test_lib.skipUnlessHasTestFile([u'vsstest.qcow2'])
+  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testGetNormalizedVShadowVolumeIdentifiers(self):
     """Tests the _GetNormalizedVShadowVolumeIdentifiers function."""
     test_tool = storage_media_tool.StorageMediaTool()
 
-    test_path = self._GetTestFilePath([u'vsstest.qcow2'])
+    test_path = self._GetTestFilePath(['vsstest.qcow2'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
     qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -349,7 +351,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     volume_system.Open(vss_path_spec)
 
     volume_identifiers = test_tool._GetNormalizedVShadowVolumeIdentifiers(
-        volume_system, [u'vss1', u'vss2'])
+        volume_system, ['vss1', 'vss2'])
     self.assertEqual(volume_identifiers, [1, 2])
 
     with self.assertRaises(KeyError):
@@ -358,7 +360,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
 
     with self.assertRaises(KeyError):
       test_tool._GetNormalizedTSKVolumeIdentifiers(
-          volume_system, [u'vss3'])
+          volume_system, ['vss3'])
 
   # TODO: add test for _GetTSKPartitionIdentifiers.
   # TODO: add test for _GetVSSStoreIdentifiers.
@@ -373,7 +375,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
 
     # TODO: improve test coverage.
 
-  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
+  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testParseSourcePathOption(self):
     """Tests the _ParseSourcePathOption function."""
     test_tool = storage_media_tool.StorageMediaTool()
@@ -383,18 +385,18 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     with self.assertRaises(errors.BadConfigOption):
       test_tool._ParseSourcePathOption(options)
 
-    options.source = self._GetTestFilePath([u'ímynd.dd'])
+    options.source = self._GetTestFilePath(['ímynd.dd'])
 
     test_tool._ParseSourcePathOption(options)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
+  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testParseStorageMediaOptions(self):
     """Tests the _ParseStorageMediaOptions function."""
     test_tool = storage_media_tool.StorageMediaTool()
 
     options = test_lib.TestOptions()
-    options.partitions = u'all'
-    options.source = self._GetTestFilePath([u'ímynd.dd'])
+    options.partitions = 'all'
+    options.source = self._GetTestFilePath(['ímynd.dd'])
 
     test_tool._ParseStorageMediaImageOptions(options)
 
@@ -403,15 +405,15 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     test_tool = storage_media_tool.StorageMediaTool()
 
     options = test_lib.TestOptions()
-    options.partitions = u'all'
+    options.partitions = 'all'
 
     test_tool._ParseStorageMediaImageOptions(options)
 
     # Test if 'partition' option raises in combination with
     # 'partitions' option.
     options = test_lib.TestOptions()
-    options.partitions = u'all'
-    options.partition = u'1'
+    options.partitions = 'all'
+    options.partition = '1'
 
     with self.assertRaises(errors.BadConfigOption):
       test_tool._ParseStorageMediaImageOptions(options)
@@ -419,7 +421,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     # Test if 'image_offset_bytes' option raises in combination with
     # 'partitions' option.
     options = test_lib.TestOptions()
-    options.partitions = u'all'
+    options.partitions = 'all'
     options.image_offset_bytes = 512
 
     with self.assertRaises(errors.BadConfigOption):
@@ -429,7 +431,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     # 'partitions' option.
     options = test_lib.TestOptions()
     options.bytes_per_sector = 512
-    options.partitions = u'all'
+    options.partitions = 'all'
     options.image_offset = 1
 
     with self.assertRaises(errors.BadConfigOption):
@@ -459,8 +461,8 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
   def testAddCredentialOptions(self):
     """Tests the AddCredentialOptions function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'storage_media_tool_test.py',
-        description=u'Test argument parser.', add_help=False,
+        prog='storage_media_tool_test.py',
+        description='Test argument parser.', add_help=False,
         formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = storage_media_tool.StorageMediaTool()
@@ -472,8 +474,8 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
   def testAddStorageMediaImageOptions(self):
     """Tests the AddStorageMediaImageOptions function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'storage_media_tool_test.py',
-        description=u'Test argument parser.', add_help=False,
+        prog='storage_media_tool_test.py',
+        description='Test argument parser.', add_help=False,
         formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = storage_media_tool.StorageMediaTool()
@@ -485,8 +487,8 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
   def testAddVSSProcessingOptions(self):
     """Tests the AddVSSProcessingOptions function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'storage_media_tool_test.py',
-        description=u'Test argument parser.', add_help=False,
+        prog='storage_media_tool_test.py',
+        description='Test argument parser.', add_help=False,
         formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = storage_media_tool.StorageMediaTool()
@@ -495,58 +497,58 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'tsk_volume_system.raw'])
+  @shared_test_lib.skipUnlessHasTestFile(['tsk_volume_system.raw'])
   def testScanSourcePartitionedImage(self):
     """Tests the ScanSource function on a partitioned image."""
-    source_path = self._GetTestFilePath([u'tsk_volume_system.raw'])
+    source_path = self._GetTestFilePath(['tsk_volume_system.raw'])
     self._TestScanSourcePartitionedImage(source_path)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'image-split.E01'])
+  @shared_test_lib.skipUnlessHasTestFile(['image-split.E01'])
   def testScanSourceSplitEWF(self):
     """Tests the ScanSource function on a split EWF image."""
-    source_path = self._GetTestFilePath([u'image-split.E01'])
+    source_path = self._GetTestFilePath(['image-split.E01'])
     self._TestScanSourcePartitionedImage(source_path)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'image.E01'])
+  @shared_test_lib.skipUnlessHasTestFile(['image.E01'])
   def testScanSourceEWF(self):
     """Tests the ScanSource function on an EWF image."""
-    source_path = self._GetTestFilePath([u'image.E01'])
+    source_path = self._GetTestFilePath(['image.E01'])
     self._TestScanSourceImage(source_path)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'image.qcow2'])
+  @shared_test_lib.skipUnlessHasTestFile(['image.qcow2'])
   def testScanSourceQCOW(self):
     """Tests the ScanSource function on a QCOW image."""
-    source_path = self._GetTestFilePath([u'image.qcow2'])
+    source_path = self._GetTestFilePath(['image.qcow2'])
     self._TestScanSourceImage(source_path)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'vsstest.qcow2'])
+  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testScanSourceVSS(self):
     """Tests the ScanSource function on a VSS."""
-    source_path = self._GetTestFilePath([u'vsstest.qcow2'])
+    source_path = self._GetTestFilePath(['vsstest.qcow2'])
     self._TestScanSourceVSSImage(source_path)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'text_parser'])
+  @shared_test_lib.skipUnlessHasTestFile(['text_parser'])
   def testScanSourceTextDirectory(self):
     """Tests the ScanSource function on a directory."""
-    source_path = self._GetTestFilePath([u'text_parser'])
+    source_path = self._GetTestFilePath(['text_parser'])
     self._TestScanSourceDirectory(source_path)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'image.vhd'])
+  @shared_test_lib.skipUnlessHasTestFile(['image.vhd'])
   def testScanSourceVHDI(self):
     """Tests the ScanSource function on a VHD image."""
-    source_path = self._GetTestFilePath([u'image.vhd'])
+    source_path = self._GetTestFilePath(['image.vhd'])
     self._TestScanSourceImage(source_path)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'image.vmdk'])
+  @shared_test_lib.skipUnlessHasTestFile(['image.vmdk'])
   def testScanSourceVMDK(self):
     """Tests the ScanSource function on a VMDK image."""
-    source_path = self._GetTestFilePath([u'image.vmdk'])
+    source_path = self._GetTestFilePath(['image.vmdk'])
     self._TestScanSourceImage(source_path)
 
   def testScanSourceNonExisitingFile(self):
     """Tests the ScanSource function on a non existing file."""
     with self.assertRaises(errors.SourceScannerError):
-      source_path = self._GetTestFilePath([u'nosuchfile.raw'])
+      source_path = self._GetTestFilePath(['nosuchfile.raw'])
       self._TestScanSourceImage(source_path)
 
 

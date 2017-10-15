@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the artifact definitions CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -18,26 +20,26 @@ class ArtifactDefinitionsArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--artifact_definitions PATH]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --artifact_definitions PATH, --artifact-definitions PATH',
-      (u'                        Path to a directory containing artifact '
-       u'definitions.'),
-      (u'                        Artifact definitions can be used to '
-       u'describe and'),
-      (u'                        quickly collect data data of interest, '
-       u'such as'),
-      u'                        specific files or Windows Registry keys.',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [--artifact_definitions PATH]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --artifact_definitions PATH, --artifact-definitions PATH',
+      ('                        Path to a directory containing artifact '
+       'definitions.'),
+      ('                        Artifact definitions can be used to '
+       'describe and'),
+      ('                        quickly collect data data of interest, '
+       'such as'),
+      '                        specific files or Windows Registry keys.',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py', description=u'Test argument parser.',
+        prog='cli_helper.py', description='Test argument parser.',
         add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
@@ -47,11 +49,11 @@ class ArtifactDefinitionsArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'artifacts'])
+  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
 
     test_tool = tools.CLITool()
     artifact_definitions.ArtifactDefinitionsArgumentsHelper.ParseOptions(

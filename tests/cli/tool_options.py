@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the CLI tool options mix-ins."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.cli import tool_options
@@ -21,7 +23,7 @@ class AnalysisPluginOptionsTest(test_lib.CLIToolTestCase):
 
   def testListAnalysisPlugins(self):
     """Tests the ListAnalysisPlugins function."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = TestToolWithAnalysisPluginOptions(output_writer=output_writer)
 
     test_tool.ListAnalysisPlugins()
@@ -37,7 +39,7 @@ class AnalysisPluginOptionsTest(test_lib.CLIToolTestCase):
       if line.startswith(b'*****') and line.endswith(b'*****'):
         number_of_tables += 1
 
-    self.assertIn(u'Analysis Plugins', lines[1])
+    self.assertIn('Analysis Plugins', lines[1])
 
     lines = frozenset(lines)
 
@@ -58,7 +60,7 @@ class HashersOptionsTest(test_lib.CLIToolTestCase):
 
   def testListHashers(self):
     """Tests the ListHashers function."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = TestToolWithHashersOptions(output_writer=output_writer)
 
     test_tool.ListHashers()
@@ -74,7 +76,7 @@ class HashersOptionsTest(test_lib.CLIToolTestCase):
       if line.startswith(b'*****') and line.endswith(b'*****'):
         number_of_tables += 1
 
-    self.assertIn(u'Hashers', lines[1])
+    self.assertIn('Hashers', lines[1])
 
     lines = frozenset(lines)
 
@@ -102,12 +104,12 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
     self.assertIsNotNone(modules_info)
 
     available_module_names = [name for name, _ in modules_info]
-    self.assertIn(u'dynamic', available_module_names)
-    self.assertIn(u'json', available_module_names)
+    self.assertIn('dynamic', available_module_names)
+    self.assertIn('json', available_module_names)
 
   def testListOutputModules(self):
     """Tests the ListOutputModules function."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = TestToolWithOutputModuleOptions(output_writer=output_writer)
 
     test_tool.ListOutputModules()
@@ -123,7 +125,7 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
       if line.startswith(b'*****') and line.endswith(b'*****'):
         number_of_tables += 1
 
-    self.assertIn(u'Output Modules', lines[1])
+    self.assertIn('Output Modules', lines[1])
 
     lines = frozenset(lines)
     disabled_outputs = list(
@@ -159,11 +161,11 @@ class ParsersOptionsTest(test_lib.CLIToolTestCase):
     self.assertGreaterEqual(len(parser_presets_information), 1)
 
     available_parser_names = [name for name, _ in parser_presets_information]
-    self.assertIn(u'linux', available_parser_names)
+    self.assertIn('linux', available_parser_names)
 
   def testListParsersAndPlugins(self):
     """Tests the ListParsersAndPlugins function."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = TestToolWithParsersOptions(output_writer=output_writer)
 
     test_tool.ListParsersAndPlugins()
@@ -179,7 +181,7 @@ class ParsersOptionsTest(test_lib.CLIToolTestCase):
       if line.startswith(b'*****') and line.endswith(b'*****'):
         number_of_tables += 1
 
-    self.assertIn(u'Parsers', lines[1])
+    self.assertIn('Parsers', lines[1])
 
     lines = frozenset(lines)
 

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the extraction CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -17,41 +19,41 @@ class ExtractionArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--preferred_year YEAR] [-p] [--process_archives]',
-      u'                     [--skip_compressed_streams]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --preferred_year YEAR, --preferred-year YEAR',
-      (u'                        When a format\'s timestamp does not include '
-       u'a year,'),
-      (u'                        e.g. syslog, use this as the initial year '
-       u'instead of'),
-      u'                        attempting auto-detection.',
-      u'  --process_archives, --process-archives',
-      (u'                        Process file entries embedded within archive '
-       u'files,'),
-      (u'                        such as archive.tar and archive.zip. This '
-       u'can make'),
-      u'                        processing significantly slower.',
-      u'  --skip_compressed_streams, --skip-compressed-streams',
-      u'                        Skip processing file content within compressed',
-      u'                        streams, such as syslog.gz and syslog.bz2.',
-      (u'  -p, --preprocess      Turn on preprocessing. Preprocessing is '
-       u'turned on by'),
-      (u'                        default when parsing image files, however if '
-       u'a mount'),
-      (u'                        point is being parsed then this parameter '
-       u'needs to be'),
-      u'                        set manually.',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [--preferred_year YEAR] [-p] [--process_archives]',
+      '                     [--skip_compressed_streams]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --preferred_year YEAR, --preferred-year YEAR',
+      ('                        When a format\'s timestamp does not include '
+       'a year,'),
+      ('                        e.g. syslog, use this as the initial year '
+       'instead of'),
+      '                        attempting auto-detection.',
+      '  --process_archives, --process-archives',
+      ('                        Process file entries embedded within archive '
+       'files,'),
+      ('                        such as archive.tar and archive.zip. This '
+       'can make'),
+      '                        processing significantly slower.',
+      '  --skip_compressed_streams, --skip-compressed-streams',
+      '                        Skip processing file content within compressed',
+      '                        streams, such as syslog.gz and syslog.bz2.',
+      ('  -p, --preprocess      Turn on preprocessing. Preprocessing is '
+       'turned on by'),
+      ('                        default when parsing image files, however if '
+       'a mount'),
+      ('                        point is being parsed then this parameter '
+       'needs to be'),
+      '                        set manually.',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py', description=u'Test argument parser.',
+        prog='cli_helper.py', description='Test argument parser.',
         add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 

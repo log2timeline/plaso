@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the server configuration CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -39,21 +41,21 @@ class MockOutputModule(object):
 class ServerArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests the server configuration CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--server HOSTNAME] [--port PORT]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --port PORT        The port number of the server.',
-      u'  --server HOSTNAME  The hostname or server IP address of the server.',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [--server HOSTNAME] [--port PORT]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --port PORT        The port number of the server.',
+      '  --server HOSTNAME  The hostname or server IP address of the server.',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py',
-        description=u'Test argument parser.', add_help=False,
+        prog='cli_helper.py',
+        description='Test argument parser.', add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     server_config.ServerArgumentsHelper.AddArguments(argument_parser)

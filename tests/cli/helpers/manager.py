@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the CLI argument helper manager."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -16,23 +18,23 @@ class AnotherTestHelper(interface.ArgumentsHelper):
   """Another test CLI argument helper."""
 
   NAME = 'another_test_helper'
-  DESCRIPTION = u'Another test helper that does nothing.'
+  DESCRIPTION = 'Another test helper that does nothing.'
 
   @classmethod
   def AddArguments(cls, argument_group):
     """Add command line arguments to an argument group."""
     argument_group.add_argument(
-        u'-c', u'--correcto', dest=u'correcto', action='store_true',
-        default=False, help=u'The correcto option.')
+        '-c', '--correcto', dest='correcto', action='store_true',
+        default=False, help='The correcto option.')
 
   @classmethod
   def ParseOptions(cls, options, unused_config_object):
     """Parse and validate the configurational options."""
     if not hasattr(options, 'correcto'):
-      raise errors.BadConfigOption(u'Correcto not set.')
+      raise errors.BadConfigOption('Correcto not set.')
 
-    if not isinstance(getattr(options, u'correcto', None), bool):
-      raise errors.BadConfigOption(u'Correcto wrongly formatted.')
+    if not isinstance(getattr(options, 'correcto', None), bool):
+      raise errors.BadConfigOption('Correcto wrongly formatted.')
 
 
 class HelperManagerTest(unittest.TestCase):
@@ -61,16 +63,16 @@ class HelperManagerTest(unittest.TestCase):
     manager.ArgumentHelperManager.RegisterHelpers([
         test_lib.TestHelper, AnotherTestHelper])
 
-    arg_parser = argparse.ArgumentParser(conflict_handler=u'resolve')
+    arg_parser = argparse.ArgumentParser(conflict_handler='resolve')
     manager.ArgumentHelperManager.AddCommandLineArguments(arg_parser)
 
     # Assert the parameters have been set.
     options = arg_parser.parse_args([])
 
-    self.assertTrue(hasattr(options, u'dynamic'))
-    self.assertTrue(hasattr(options, u'correcto'))
+    self.assertTrue(hasattr(options, 'dynamic'))
+    self.assertTrue(hasattr(options, 'correcto'))
 
-    self.assertFalse(hasattr(options, u'foobar'))
+    self.assertFalse(hasattr(options, 'foobar'))
 
     # Make the parameters fail validation.
     options.correcto = 'sfd'

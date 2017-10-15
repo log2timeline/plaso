@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the tagging analysis plugin CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -17,21 +19,21 @@ class TaggingAnalysisArgumentsHelperTest(
     test_lib.AnalysisPluginArgumentsHelperTest):
   """Tests the tagging analysis plugin CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--tagging-file TAGGING_FILE]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --tagging-file TAGGING_FILE, --tagging_file TAGGING_FILE',
-      u'                        Specify a file to read tagging criteria from.',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [--tagging-file TAGGING_FILE]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --tagging-file TAGGING_FILE, --tagging_file TAGGING_FILE',
+      '                        Specify a file to read tagging criteria from.',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py',
-        description=u'Test argument parser.', add_help=False,
+        prog='cli_helper.py',
+        description='Test argument parser.', add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     tagging_analysis.TaggingAnalysisArgumentsHelper.AddArguments(

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the filter file CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -17,28 +19,28 @@ class FilterFileArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [-f FILE_FILTER]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  -f FILE_FILTER, --file_filter FILE_FILTER, --file-filter FILE_FILTER',
-      (u'                        List of files to include for targeted '
-       u'collection of'),
-      (u'                        files to parse, one line per file path, '
-       u'setup is'),
-      (u'                        /path|file - where each element can contain '
-       u'either a'),
-      (u'                        variable set in the preprocessing stage or '
-       u'a regular'),
-      u'                        expression.',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [-f FILE_FILTER]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  -f FILE_FILTER, --file_filter FILE_FILTER, --file-filter FILE_FILTER',
+      ('                        List of files to include for targeted '
+       'collection of'),
+      ('                        files to parse, one line per file path, '
+       'setup is'),
+      ('                        /path|file - where each element can contain '
+       'either a'),
+      ('                        variable set in the preprocessing stage or '
+       'a regular'),
+      '                        expression.',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py', description=u'Test argument parser.',
+        prog='cli_helper.py', description='Test argument parser.',
         add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
@@ -50,7 +52,7 @@ class FilterFileArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
-    options.file_filter = self._GetTestFilePath([u'testdir', u'filter2.txt'])
+    options.file_filter = self._GetTestFilePath(['testdir', 'filter2.txt'])
 
     test_tool = tools.CLITool()
     filter_file.FilterFileArgumentsHelper.ParseOptions(options, test_tool)

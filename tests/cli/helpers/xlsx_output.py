@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the XLSX output module CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -16,34 +18,34 @@ from tests.cli.helpers import test_lib
 class XLSXOutputArgumentsHelperTest(test_lib.OutputModuleArgumentsHelperTest):
   """Tests the XLSX output module CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      (u'usage: cli_helper.py [--fields FIELDS] '
-       u'[--additional_fields ADDITIONAL_FIELDS]'),
-      u'                     [--timestamp_format TIMESTAMP_FORMAT]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --additional_fields ADDITIONAL_FIELDS',
-      (u'                        Defines extra fields to be included in the '
-       u'output, in'),
-      (u'                        addition to the default fields, which are '
-       u'datetime,tim'),
-      (u'                        estamp_desc,source,source_long,message,parser,'
-       u'display_'), u'                        name,tag.',
-      (u'  --fields FIELDS       Defines which fields should be included in '
-       u'the output.'),
-      u'  --timestamp_format TIMESTAMP_FORMAT',
-      (u'                        Set the timestamp format that will be used '
-       u'in the'),
-      u'                        datetimecolumn of the XLSX spreadsheet.',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      ('usage: cli_helper.py [--fields FIELDS] '
+       '[--additional_fields ADDITIONAL_FIELDS]'),
+      '                     [--timestamp_format TIMESTAMP_FORMAT]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --additional_fields ADDITIONAL_FIELDS',
+      ('                        Defines extra fields to be included in the '
+       'output, in'),
+      ('                        addition to the default fields, which are '
+       'datetime,tim'),
+      ('                        estamp_desc,source,source_long,message,parser,'
+       'display_'), '                        name,tag.',
+      ('  --fields FIELDS       Defines which fields should be included in '
+       'the output.'),
+      '  --timestamp_format TIMESTAMP_FORMAT',
+      ('                        Set the timestamp format that will be used '
+       'in the'),
+      '                        datetimecolumn of the XLSX spreadsheet.',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py',
-        description=u'Test argument parser.', add_help=False,
+        prog='cli_helper.py',
+        description='Test argument parser.', add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     xlsx_output.XLSXOutputArgumentsHelper.AddArguments(argument_parser)
@@ -61,7 +63,7 @@ class XLSXOutputArgumentsHelperTest(test_lib.OutputModuleArgumentsHelperTest):
       xlsx_output.XLSXOutputArgumentsHelper.ParseOptions(
           options, output_module)
 
-    options.write = u'plaso.xlsx'
+    options.write = 'plaso.xlsx'
     xlsx_output.XLSXOutputArgumentsHelper.ParseOptions(
         options, output_module)
 

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """CLI related functions and classes for testing."""
 
+from __future__ import unicode_literals
+
 import argparse
 import io
 import operator
@@ -20,7 +22,7 @@ class SortedArgumentsHelpFormatter(argparse.HelpFormatter):
     Args:
       actions (TODO): TODO.
     """
-    actions = sorted(actions, key=operator.attrgetter(u'option_strings'))
+    actions = sorted(actions, key=operator.attrgetter('option_strings'))
     super(SortedArgumentsHelpFormatter, self).add_arguments(actions)
 
 
@@ -31,7 +33,7 @@ class TestOptions(object):
 class TestOutputWriter(tools.FileObjectOutputWriter):
   """Class that implements a test output writer."""
 
-  def __init__(self, encoding=u'utf-8'):
+  def __init__(self, encoding='utf-8'):
     """Initializes the output writer object.
 
     Args:
@@ -66,15 +68,15 @@ class CLIToolTestCase(shared_test_lib.BaseTestCase):
     Returns:
       bytes: output of argparse.format_help().
     """
-    columns_environment_variable = os.environ.get(u'COLUMNS', None)
-    os.environ[u'COLUMNS'] = u'80'
+    columns_environment_variable = os.environ.get('COLUMNS', None)
+    os.environ['COLUMNS'] = '80'
 
     try:
       output = argument_parser.format_help()
     finally:
       if columns_environment_variable:
-        os.environ[u'COLUMNS'] = columns_environment_variable
+        os.environ['COLUMNS'] = columns_environment_variable
       else:
-        del os.environ[u'COLUMNS']
+        del os.environ['COLUMNS']
 
     return output
