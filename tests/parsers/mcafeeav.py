@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the McAfee AV Log parser."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import mcafeeav  # pylint: disable=unused-import
@@ -15,12 +17,12 @@ from tests.parsers import test_lib
 class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
   """Tests for the McAfee AV Log parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'AccessProtectionLog.txt'])
+  @shared_test_lib.skipUnlessHasTestFile(['AccessProtectionLog.txt'])
   def testParse(self):
     """Tests the Parse function."""
     parser = mcafeeav.McafeeAccessProtectionParser()
     storage_writer = self._ParseFile(
-        [u'AccessProtectionLog.txt'], parser)
+        ['AccessProtectionLog.txt'], parser)
 
     # The file contains 14 lines which results in 14 events.
     self.assertEqual(storage_writer.number_of_events, 14)
@@ -30,7 +32,7 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-09-27 14:42:26')
+        '2013-09-27 14:42:26')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     # TODO: Test that the UTF-8 byte order mark gets removed from
@@ -46,24 +48,24 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     event = events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-09-27 14:42:39')
+        '2013-09-27 14:42:39')
     self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event.username, u'SOMEDOMAIN\\someUser')
+    self.assertEqual(event.username, 'SOMEDOMAIN\\someUser')
     self.assertEqual(
-        event.filename, u'C:\\Windows\\System32\\procexp64.exe')
+        event.filename, 'C:\\Windows\\System32\\procexp64.exe')
 
     expected_message = (
-        u'File Name: C:\\Windows\\System32\\procexp64.exe '
-        u'User: SOMEDOMAIN\\someUser '
-        u'C:\\Program Files (x86)\\McAfee\\Common Framework\\Frame'
-        u'workService.exe '
-        u'Blocked by Access Protection rule  '
-        u'Common Standard Protection:Prevent termination of McAfee processes '
-        u'Action blocked : Terminate')
+        'File Name: C:\\Windows\\System32\\procexp64.exe '
+        'User: SOMEDOMAIN\\someUser '
+        'C:\\Program Files (x86)\\McAfee\\Common Framework\\Frame'
+        'workService.exe '
+        'Blocked by Access Protection rule  '
+        'Common Standard Protection:Prevent termination of McAfee processes '
+        'Action blocked : Terminate')
     expected_short_message = (
-        u'C:\\Windows\\System32\\procexp64.exe '
-        u'Action blocked : Terminate')
+        'C:\\Windows\\System32\\procexp64.exe '
+        'Action blocked : Terminate')
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 

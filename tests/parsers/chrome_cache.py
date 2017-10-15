@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Chrome Cache files parser."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import chrome_cache  # pylint: disable=unused-import
@@ -15,12 +17,12 @@ from tests.parsers import test_lib
 class ChromeCacheParserTest(test_lib.ParserTestCase):
   """Tests for the Chrome Cache files parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'chrome_cache', u'index'])
+  @shared_test_lib.skipUnlessHasTestFile(['chrome_cache', 'index'])
   def testParse(self):
     """Tests the Parse function."""
     parser = chrome_cache.ChromeCacheParser()
     storage_writer = self._ParseFile(
-        [u'chrome_cache', u'index'], parser)
+        ['chrome_cache', 'index'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 217)
 
@@ -29,14 +31,14 @@ class ChromeCacheParserTest(test_lib.ParserTestCase):
     event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2014-04-30 16:44:36.226091')
+        '2014-04-30 16:44:36.226091')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_original_url = (
-        u'https://s.ytimg.com/yts/imgbin/player-common-vfliLfqPT.webp')
+        'https://s.ytimg.com/yts/imgbin/player-common-vfliLfqPT.webp')
     self.assertEqual(event.original_url, expected_original_url)
 
-    expected_message = u'Original URL: {0:s}'.format(expected_original_url)
+    expected_message = 'Original URL: {0:s}'.format(expected_original_url)
 
     self._TestGetMessageStrings(event, expected_message, expected_message)
 

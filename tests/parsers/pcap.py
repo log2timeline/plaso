@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the PCAP parser."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import pcap  # pylint: disable=unused-import
@@ -14,11 +16,11 @@ from tests.parsers import test_lib
 class PcapParserTest(test_lib.ParserTestCase):
   """Tests for the PCAP parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'test.pcap'])
+  @shared_test_lib.skipUnlessHasTestFile(['test.pcap'])
   def testParse(self):
     """Tests the Parse function."""
     parser = pcap.PcapParser()
-    storage_writer = self._ParseFile([u'test.pcap'], parser)
+    storage_writer = self._ParseFile(['test.pcap'], parser)
 
     # PCAP information:
     #    Number of streams: 96 (TCP: 47, UDP: 39, ICMP: 0, Other: 10)
@@ -42,12 +44,12 @@ class PcapParserTest(test_lib.ParserTestCase):
 
     event = events[6]
     self.assertEqual(event.packet_count, 3)
-    self.assertEqual(event.protocol, u'TCP')
-    self.assertEqual(event.source_ip, u'192.168.195.130')
-    self.assertEqual(event.dest_ip, u'63.245.217.43')
+    self.assertEqual(event.protocol, 'TCP')
+    self.assertEqual(event.source_ip, '192.168.195.130')
+    self.assertEqual(event.dest_ip, '63.245.217.43')
     self.assertEqual(event.dest_port, 443)
     self.assertEqual(event.source_port, 1038)
-    self.assertEqual(event.stream_type, u'SSL')
+    self.assertEqual(event.stream_type, 'SSL')
     self.assertEqual(event.first_packet_id, 4)
     self.assertEqual(event.last_packet_id, 6)
 
@@ -64,35 +66,35 @@ class PcapParserTest(test_lib.ParserTestCase):
 
     event = events[12]
     self.assertEqual(event.packet_count, 5)
-    self.assertEqual(event.protocol, u'UDP')
-    self.assertEqual(event.source_ip, u'192.168.195.130')
-    self.assertEqual(event.dest_ip, u'192.168.195.2')
+    self.assertEqual(event.protocol, 'UDP')
+    self.assertEqual(event.source_ip, '192.168.195.130')
+    self.assertEqual(event.dest_ip, '192.168.195.2')
     self.assertEqual(event.dest_port, 53)
     self.assertEqual(event.source_port, 55679)
-    self.assertEqual(event.stream_type, u'DNS')
+    self.assertEqual(event.stream_type, 'DNS')
     self.assertEqual(event.first_packet_id, 11)
     self.assertEqual(event.last_packet_id, 1307)
     self.assertEqual(
-        event.protocol_data, u'DNS Query for  wpad.localdomain')
+        event.protocol_data, 'DNS Query for  wpad.localdomain')
 
     expected_message = (
-        u'Source IP: 192.168.195.130 '
-        u'Destination IP: 192.168.195.2 '
-        u'Source Port: 55679 '
-        u'Destination Port: 53 '
-        u'Protocol: UDP '
-        u'Type: DNS '
-        u'Size: 380 '
-        u'Protocol Data: DNS Query for  wpad.localdomain '
-        u'Stream Data: \'\\xb8\\x9c\\x01\\x00\\x00\\x01\\x00\\x00\\x00\\x00'
-        u'\\x00\\x00\\x04wpad\\x0blocaldomain\\x00\\x00\\x01\\x00\\x01\\xb8'
-        u'\\x9c\\x01\\x00\\x00\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x04wpa\' '
-        u'First Packet ID: 11 '
-        u'Last Packet ID: 1307 '
-        u'Packet Count: 5')
+        'Source IP: 192.168.195.130 '
+        'Destination IP: 192.168.195.2 '
+        'Source Port: 55679 '
+        'Destination Port: 53 '
+        'Protocol: UDP '
+        'Type: DNS '
+        'Size: 380 '
+        'Protocol Data: DNS Query for  wpad.localdomain '
+        'Stream Data: \'\\xb8\\x9c\\x01\\x00\\x00\\x01\\x00\\x00\\x00\\x00'
+        '\\x00\\x00\\x04wpad\\x0blocaldomain\\x00\\x00\\x01\\x00\\x01\\xb8'
+        '\\x9c\\x01\\x00\\x00\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x04wpa\' '
+        'First Packet ID: 11 '
+        'Last Packet ID: 1307 '
+        'Packet Count: 5')
     expected_short_message = (
-        u'Type: DNS '
-        u'First Packet ID: 11')
+        'Type: DNS '
+        'First Packet ID: 11')
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 

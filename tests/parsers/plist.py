@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests the plist parser."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.parsers import plist
@@ -20,18 +22,18 @@ class PlistParserTest(test_lib.ParserTestCase):
   def testEnablePlugins(self):
     """Tests the EnablePlugins function."""
     parser = plist.PlistParser()
-    parser.EnablePlugins([u'airport'])
+    parser.EnablePlugins(['airport'])
 
     self.assertIsNotNone(parser)
     self.assertIsNotNone(parser._default_plugin)
     self.assertNotEqual(parser._plugins, [])
     self.assertEqual(len(parser._plugins), 1)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'plist_binary'])
+  @shared_test_lib.skipUnlessHasTestFile(['plist_binary'])
   def testParse(self):
     """Tests the Parse function."""
     parser = plist.PlistParser()
-    storage_writer = self._ParseFile([u'plist_binary'], parser)
+    storage_writer = self._ParseFile(['plist_binary'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 12)
 
@@ -49,19 +51,19 @@ class PlistParserTest(test_lib.ParserTestCase):
     self.assertEqual(12, len(set(timestamps)))
 
     expected_roots = frozenset([
-        u'/DeviceCache/00-0d-fd-00-00-00',
-        u'/DeviceCache/44-00-00-00-00-00',
-        u'/DeviceCache/44-00-00-00-00-01',
-        u'/DeviceCache/44-00-00-00-00-02',
-        u'/DeviceCache/44-00-00-00-00-03',
-        u'/DeviceCache/44-00-00-00-00-04'])
+        '/DeviceCache/00-0d-fd-00-00-00',
+        '/DeviceCache/44-00-00-00-00-00',
+        '/DeviceCache/44-00-00-00-00-01',
+        '/DeviceCache/44-00-00-00-00-02',
+        '/DeviceCache/44-00-00-00-00-03',
+        '/DeviceCache/44-00-00-00-00-04'])
     self.assertTrue(expected_roots == set(roots))
     self.assertEqual(6, len(set(roots)))
 
     expected_keys = frozenset([
-        u'LastInquiryUpdate',
-        u'LastServicesUpdate',
-        u'LastNameUpdate'])
+        'LastInquiryUpdate',
+        'LastServicesUpdate',
+        'LastNameUpdate'])
     self.assertTrue(expected_keys == set(keys))
     self.assertEqual(3, len(set(keys)))
 
