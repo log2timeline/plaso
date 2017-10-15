@@ -48,6 +48,7 @@ class StorageFileArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     test_tool = tools.CLITool()
     storage_file.StorageFileArgumentsHelper.ParseOptions(options, test_tool)
 
+    # pylint: disable=no-member
     self.assertEqual(test_tool._storage_file_path, options.storage_file)
 
     with self.assertRaises(errors.BadConfigObject):

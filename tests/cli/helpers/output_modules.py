@@ -67,6 +67,7 @@ class OutputModulesArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     output_modules.OutputModulesArgumentsHelper.ParseOptions(
         options, test_tool)
 
+    # pylint: disable=no-member
     self.assertEqual(test_tool._output_format, options.output_format)
     self.assertEqual(test_tool._output_filename, options.write)
 

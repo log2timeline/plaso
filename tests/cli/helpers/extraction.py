@@ -69,6 +69,7 @@ class ExtractionArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     test_tool = tools.CLITool()
     extraction.ExtractionArgumentsHelper.ParseOptions(options, test_tool)
 
+    # pylint: disable=no-member
     self.assertFalse(test_tool._force_preprocessing)
     self.assertIsNone(test_tool._preferred_year)
     self.assertFalse(test_tool._process_archives)

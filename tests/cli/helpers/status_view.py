@@ -52,6 +52,7 @@ class StatusViewArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     test_tool = tools.CLITool()
     status_view.StatusViewArgumentsHelper.ParseOptions(options, test_tool)
 
+    # pylint: disable=no-member
     self.assertEqual(test_tool._status_view_mode, options.status_view_mode)
 
     with self.assertRaises(errors.BadConfigObject):

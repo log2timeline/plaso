@@ -59,6 +59,7 @@ class ArtifactDefinitionsArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     artifact_definitions.ArtifactDefinitionsArgumentsHelper.ParseOptions(
         options, test_tool)
 
+    # pylint: disable=no-member
     self.assertIsNotNone(test_tool._artifacts_registry)
 
     with self.assertRaises(errors.BadConfigObject):

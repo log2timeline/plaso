@@ -53,6 +53,7 @@ class TextPrependArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     test_tool = tools.CLITool()
     text_prepend.TextPrependArgumentsHelper.ParseOptions(options, test_tool)
 
+    # pylint: disable=no-member
     self.assertEqual(test_tool._text_prepend, options.text_prepend)
 
     with self.assertRaises(errors.BadConfigObject):

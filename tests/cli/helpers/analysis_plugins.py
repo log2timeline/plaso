@@ -55,6 +55,7 @@ class AnalysisPluginsArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     analysis_plugins.AnalysisPluginsArgumentsHelper.ParseOptions(
         options, test_tool)
 
+    # pylint: disable=no-member
     self.assertEqual(test_tool._analysis_plugins, ['tagging'])
 
     with self.assertRaises(errors.BadConfigObject):

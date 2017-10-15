@@ -57,6 +57,7 @@ class FilterFileArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     test_tool = tools.CLITool()
     filter_file.FilterFileArgumentsHelper.ParseOptions(options, test_tool)
 
+    # pylint: disable=no-member
     self.assertEqual(test_tool._filter_file, options.file_filter)
 
     with self.assertRaises(errors.BadConfigObject):

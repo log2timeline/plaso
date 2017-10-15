@@ -52,6 +52,7 @@ class YaraRulesArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     test_tool = tools.CLITool()
     yara_rules.YaraRulesArgumentsHelper.ParseOptions(options, test_tool)
 
+    # pylint: disable=no-member
     self.assertIsNotNone(test_tool._yara_rules_string)
 
     with self.assertRaises(errors.BadConfigObject):

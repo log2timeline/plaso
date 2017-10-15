@@ -89,6 +89,7 @@ class EventFiltersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     test_tool = tools.CLITool()
     event_filters.EventFiltersArgumentsHelper.ParseOptions(options, test_tool)
 
+    # pylint: disable=no-member
     self.assertEqual(test_tool._event_filter_expression, options.filter)
     self.assertIsNotNone(test_tool._event_filter)
 

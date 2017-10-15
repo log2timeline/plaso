@@ -53,6 +53,7 @@ class TemporaryDirectoryArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     temporary_directory.TemporaryDirectoryArgumentsHelper.ParseOptions(
         options, test_tool)
 
+    # pylint: disable=no-member
     self.assertEqual(
         test_tool._temporary_directory, options.temporary_directory)
 

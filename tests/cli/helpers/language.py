@@ -58,6 +58,7 @@ class LanguagergumentsHelperTest(cli_test_lib.CLIToolTestCase):
     test_tool = tools.CLITool()
     language.LanguageArgumentsHelper.ParseOptions(options, test_tool)
 
+    # pylint: disable=no-member
     self.assertEqual(test_tool._preferred_language, options.preferred_language)
 
     with self.assertRaises(errors.BadConfigObject):

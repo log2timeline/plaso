@@ -73,6 +73,7 @@ class ParsersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     test_tool = tools.CLITool()
     parsers.ParsersArgumentsHelper.ParseOptions(options, test_tool)
 
+    # pylint: disable=no-member
     self.assertEqual(test_tool._parser_filter_expression, options.parsers)
 
     with self.assertRaises(errors.BadConfigObject):
