@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Apple account plist plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import plist  # pylint: disable=unused-import
@@ -15,13 +17,13 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
   """Tests for the Apple account plist plugin."""
 
   @shared_test_lib.skipUnlessHasTestFile([
-      u'com.apple.coreservices.appleidauthenticationinfo.'
-      u'ABC0ABC1-ABC0-ABC0-ABC0-ABC0ABC1ABC2.plist'])
+      'com.apple.coreservices.appleidauthenticationinfo.'
+      'ABC0ABC1-ABC0-ABC0-ABC0-ABC0ABC1ABC2.plist'])
   def testProcess(self):
     """Tests the Process function."""
     plist_file = (
-        u'com.apple.coreservices.appleidauthenticationinfo.'
-        u'ABC0ABC1-ABC0-ABC0-ABC0-ABC0ABC1ABC2.plist')
+        'com.apple.coreservices.appleidauthenticationinfo.'
+        'ABC0ABC1-ABC0-ABC0-ABC0-ABC0ABC1ABC2.plist')
     plist_name = plist_file
 
     plugin = appleaccount.AppleAccountPlugin()
@@ -40,28 +42,28 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
     self.assertEqual(timestamps, expected_timestamps)
 
     event = events[0]
-    self.assertEqual(event.root, u'/Accounts')
-    self.assertEqual(event.key, u'email@domain.com')
+    self.assertEqual(event.root, '/Accounts')
+    self.assertEqual(event.key, 'email@domain.com')
 
     expected_description = (
-        u'Configured Apple account email@domain.com (Joaquin Moreno Garijo)')
+        'Configured Apple account email@domain.com (Joaquin Moreno Garijo)')
     self.assertEqual(event.desc, expected_description)
 
-    expected_message = u'/Accounts/email@domain.com {0:s}'.format(
+    expected_message = '/Accounts/email@domain.com {0:s}'.format(
         expected_description)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[1]
     expected_description = (
-        u'Connected Apple account '
-        u'email@domain.com (Joaquin Moreno Garijo)')
+        'Connected Apple account '
+        'email@domain.com (Joaquin Moreno Garijo)')
     self.assertEqual(event.desc, expected_description)
 
     event = events[2]
     expected_description = (
-        u'Last validation Apple account '
-        u'email@domain.com (Joaquin Moreno Garijo)')
+        'Last validation Apple account '
+        'email@domain.com (Joaquin Moreno Garijo)')
     self.assertEqual(event.desc, expected_description)
 
 

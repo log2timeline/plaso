@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """OLECF plugin related functions and classes for testing."""
 
+from __future__ import unicode_literals
+
 import pyolecf
 
 from plaso.containers import sessions
@@ -10,22 +12,22 @@ from tests.parsers import test_lib
 
 
 class OLECFPluginTestCase(test_lib.ParserTestCase):
-  """The unit test case for OLE CF based plugins."""
+  """OLE CF-based plugin test case."""
 
   def _ParseOLECFFileWithPlugin(
-      self, path_segments, plugin, codepage=u'cp1252',
+      self, path_segments, plugin, codepage='cp1252',
       knowledge_base_values=None):
     """Parses a file as an OLE compound file and returns an event generator.
 
     Args:
-      path_segments: a list of strings containinge the path segments inside
-      plugin: an OLE CF plugin object (instance of OLECFPlugin).
-      codepage: optional string containing the codepage.
-      knowledge_base_values: optional dictionary containing the knowledge base
-                             values.
+      path_segments (list[str]): path segments inside the test data directory.
+      plugin (OLECFPlugin): OLE CF plugin.
+      codepage (Optional[str]): codepage.
+      knowledge_base_values (Optional[dict[str, object]]): knowledge base
+          values.
 
     Returns:
-      A storage writer object (instance of FakeStorageWriter).
+      FakeStorageWriter: storage writer.
     """
     session = sessions.Session()
     storage_writer = fake_storage.FakeStorageWriter(session)

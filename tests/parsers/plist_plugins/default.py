@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the default plist plugin."""
 
+from __future__ import unicode_literals
+
 import datetime
 import unittest
 
@@ -20,14 +22,14 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
   def testProcessSingle(self):
     """Tests Process on a plist containing a root, value and timestamp."""
     top_level_dict_single = {
-        u'DE-00-AD-00-BE-EF': {
-            u'Name': u'DBF Industries Slideshow Lazer', u'LastUsed':
+        'DE-00-AD-00-BE-EF': {
+            'Name': 'DBF Industries Slideshow Lazer', 'LastUsed':
             datetime.datetime(
                 2012, 11, 2, 1, 21, 38, 997672, tzinfo=pytz.UTC)}}
 
     plugin = default.DefaultPlugin()
     storage_writer = self._ParsePlistWithPlugin(
-        plugin, u'single', top_level_dict_single)
+        plugin, 'single', top_level_dict_single)
 
     self.assertEqual(storage_writer.number_of_events, 1)
 
@@ -38,46 +40,46 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
     event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-11-02 01:21:38.997672')
+        '2012-11-02 01:21:38.997672')
     self.assertEqual(event.timestamp, expected_timestamp)
-    self.assertEqual(event.root, u'/DE-00-AD-00-BE-EF')
-    self.assertEqual(event.key, u'LastUsed')
+    self.assertEqual(event.root, '/DE-00-AD-00-BE-EF')
+    self.assertEqual(event.key, 'LastUsed')
 
     expected_string = (
-        u'/DE-00-AD-00-BE-EF/LastUsed')
+        '/DE-00-AD-00-BE-EF/LastUsed')
 
     self._TestGetMessageStrings(event, expected_string, expected_string)
 
   def testProcessMulti(self):
     """Tests Process on a plist containing five keys with date values."""
     top_level_dict_many_keys = {
-        u'DeviceCache': {
-            u'44-00-00-00-00-04': {
-                u'Name': u'Apple Magic Trackpad 2', u'LMPSubversion': 796,
-                u'LMPVersion': 3, u'PageScanMode': 0, u'ClassOfDevice': 9620,
-                u'SupportedFeatures': b'\x00\x00\x00\x00', u'Manufacturer': 76,
-                u'PageScanPeriod': 0, u'ClockOffset': 17981, u'LastNameUpdate':
+        'DeviceCache': {
+            '44-00-00-00-00-04': {
+                'Name': 'Apple Magic Trackpad 2', 'LMPSubversion': 796,
+                'LMPVersion': 3, 'PageScanMode': 0, 'ClassOfDevice': 9620,
+                'SupportedFeatures': b'\x00\x00\x00\x00', 'Manufacturer': 76,
+                'PageScanPeriod': 0, 'ClockOffset': 17981, 'LastNameUpdate':
                 datetime.datetime(
                     2012, 11, 2, 1, 21, 38, 997672, tzinfo=pytz.UTC),
-                u'InquiryRSSI': 198, u'PageScanRepetitionMode': 1,
-                u'LastServicesUpdate':
+                'InquiryRSSI': 198, 'PageScanRepetitionMode': 1,
+                'LastServicesUpdate':
                 datetime.datetime(2012, 11, 2, 1, 13, 23, tzinfo=pytz.UTC),
-                u'displayName': u'Apple Magic Trackpad 2', u'LastInquiryUpdate':
+                'displayName': 'Apple Magic Trackpad 2', 'LastInquiryUpdate':
                 datetime.datetime(
                     2012, 11, 2, 1, 13, 17, 324095, tzinfo=pytz.UTC),
-                u'Services': u'', u'BatteryPercent': 0.61},
-            u'44-00-00-00-00-02': {
-                u'Name': u'test-macpro', u'ClockOffset': 28180,
-                u'ClassOfDevice': 3670276, u'PageScanMode': 0,
-                u'LastNameUpdate': datetime.datetime(
+                'Services': '', 'BatteryPercent': 0.61},
+            '44-00-00-00-00-02': {
+                'Name': 'test-macpro', 'ClockOffset': 28180,
+                'ClassOfDevice': 3670276, 'PageScanMode': 0,
+                'LastNameUpdate': datetime.datetime(
                     2011, 4, 7, 17, 56, 53, 524275, tzinfo=pytz.UTC),
-                u'PageScanPeriod': 2, u'PageScanRepetitionMode': 1,
-                u'LastInquiryUpdate': datetime.datetime(
+                'PageScanPeriod': 2, 'PageScanRepetitionMode': 1,
+                'LastInquiryUpdate': datetime.datetime(
                     2012, 7, 10, 22, 5, 0, 20116, tzinfo=pytz.UTC)}}}
 
     plugin = default.DefaultPlugin()
     storage_writer = self._ParsePlistWithPlugin(
-        plugin, u'nested', top_level_dict_many_keys)
+        plugin, 'nested', top_level_dict_many_keys)
 
     self.assertEqual(storage_writer.number_of_events, 5)
 
@@ -88,10 +90,10 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
     event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2011-04-07 17:56:53.524275')
+        '2011-04-07 17:56:53.524275')
     self.assertEqual(event.timestamp, expected_timestamp)
-    self.assertEqual(event.root, u'/DeviceCache/44-00-00-00-00-02')
-    self.assertEqual(event.key, u'LastNameUpdate')
+    self.assertEqual(event.root, '/DeviceCache/44-00-00-00-00-02')
+    self.assertEqual(event.key, 'LastNameUpdate')
 
 
 if __name__ == '__main__':

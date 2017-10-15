@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the install history plist plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import plist  # pylint: disable=unused-import
@@ -14,10 +16,10 @@ from tests.parsers.plist_plugins import test_lib
 class InstallHistoryPluginTest(test_lib.PlistPluginTestCase):
   """Tests for the install history plist plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'InstallHistory.plist'])
+  @shared_test_lib.skipUnlessHasTestFile(['InstallHistory.plist'])
   def testProcess(self):
     """Tests the Process function."""
-    plist_name = u'InstallHistory.plist'
+    plist_name = 'InstallHistory.plist'
 
     plugin = install_history.InstallHistoryPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
@@ -37,24 +39,24 @@ class InstallHistoryPluginTest(test_lib.PlistPluginTestCase):
     self.assertEqual(timestamps, expected_timestamps)
 
     event = events[0]
-    self.assertEqual(event.key, u'')
-    self.assertEqual(event.root, u'/item')
+    self.assertEqual(event.key, '')
+    self.assertEqual(event.root, '/item')
 
     expected_description = (
-        u'Installation of [OS X 10.9 (13A603)] using [OS X Installer]. '
-        u'Packages: com.apple.pkg.BaseSystemBinaries, '
-        u'com.apple.pkg.BaseSystemResources, '
-        u'com.apple.pkg.Essentials, com.apple.pkg.BSD, '
-        u'com.apple.pkg.JavaTools, com.apple.pkg.AdditionalEssentials, '
-        u'com.apple.pkg.AdditionalSpeechVoices, '
-        u'com.apple.pkg.AsianLanguagesSupport, com.apple.pkg.MediaFiles, '
-        u'com.apple.pkg.JavaEssentials, com.apple.pkg.OxfordDictionaries, '
-        u'com.apple.pkg.X11redirect, com.apple.pkg.OSInstall, '
-        u'com.apple.pkg.update.compatibility.2013.001.')
+        'Installation of [OS X 10.9 (13A603)] using [OS X Installer]. '
+        'Packages: com.apple.pkg.BaseSystemBinaries, '
+        'com.apple.pkg.BaseSystemResources, '
+        'com.apple.pkg.Essentials, com.apple.pkg.BSD, '
+        'com.apple.pkg.JavaTools, com.apple.pkg.AdditionalEssentials, '
+        'com.apple.pkg.AdditionalSpeechVoices, '
+        'com.apple.pkg.AsianLanguagesSupport, com.apple.pkg.MediaFiles, '
+        'com.apple.pkg.JavaEssentials, com.apple.pkg.OxfordDictionaries, '
+        'com.apple.pkg.X11redirect, com.apple.pkg.OSInstall, '
+        'com.apple.pkg.update.compatibility.2013.001.')
     self.assertEqual(event.desc, expected_description)
 
-    expected_message = u'/item/ {0:s}'.format(expected_description)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+    expected_message = '/item/ {0:s}'.format(expected_description)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 

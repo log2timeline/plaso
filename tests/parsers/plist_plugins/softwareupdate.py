@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Software Update plist plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import plist  # pylint: disable=unused-import
@@ -14,10 +16,10 @@ from tests.parsers.plist_plugins import test_lib
 class SoftwareUpdatePluginTest(test_lib.PlistPluginTestCase):
   """Tests for the SoftwareUpdate plist plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'com.apple.SoftwareUpdate.plist'])
+  @shared_test_lib.skipUnlessHasTestFile(['com.apple.SoftwareUpdate.plist'])
   def testProcess(self):
     """Tests the Process function."""
-    plist_name = u'com.apple.SoftwareUpdate.plist'
+    plist_name = 'com.apple.SoftwareUpdate.plist'
 
     plugin = softwareupdate.SoftwareUpdatePlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
@@ -31,20 +33,20 @@ class SoftwareUpdatePluginTest(test_lib.PlistPluginTestCase):
 
     event = events[0]
 
-    self.assertEqual(event.key, u'')
-    self.assertEqual(event.root, u'/')
+    self.assertEqual(event.key, '')
+    self.assertEqual(event.root, '/')
     expected_description = (
-        u'Last Mac OS 10.9.1 (13B42) partially '
-        u'update, pending 1: RAWCameraUpdate5.03(031-2664).')
+        'Last Mac OS 10.9.1 (13B42) partially '
+        'update, pending 1: RAWCameraUpdate5.03(031-2664).')
     self.assertEqual(event.desc, expected_description)
 
     event = events[1]
 
-    self.assertEqual(event.key, u'')
-    self.assertEqual(event.root, u'/')
-    expected_description = u'Last Mac OS X 10.9.1 (13B42) full update.'
+    self.assertEqual(event.key, '')
+    self.assertEqual(event.root, '/')
+    expected_description = 'Last Mac OS X 10.9.1 (13B42) full update.'
     self.assertEqual(event.desc, expected_description)
-    expected_string = u'// {0:s}'.format(expected_description)
+    expected_string = '// {0:s}'.format(expected_description)
     self._TestGetMessageStrings(event, expected_string, expected_string)
 
 

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the cookie plugins manager."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.parsers.cookie_plugins import interface
@@ -11,8 +13,8 @@ from plaso.parsers.cookie_plugins import manager
 class TestCookiePlugin(interface.BaseCookiePlugin):
   """Test cookie plugin."""
 
-  NAME = u'test_cookie_plugin'
-  DESCRIPTION = u'Test cookie plugin.'
+  NAME = 'test_cookie_plugin'
+  DESCRIPTION = 'Test cookie plugin.'
 
   def GetEntries(
       self, unused_parser_mediator, cookie_data=None, url=None, **kwargs):
