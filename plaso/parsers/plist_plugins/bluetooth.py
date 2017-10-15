@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Bluetooth plist plugin."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import plist_event
@@ -30,11 +32,11 @@ class BluetoothPlugin(interface.PlistPlugin):
     done at setup or manually requested via advanced menu.
   """
 
-  NAME = u'macosx_bluetooth'
-  DESCRIPTION = u'Parser for Bluetooth plist files.'
+  NAME = 'macosx_bluetooth'
+  DESCRIPTION = 'Parser for Bluetooth plist files.'
 
-  PLIST_PATH = u'com.apple.bluetooth.plist'
-  PLIST_KEYS = frozenset([u'DeviceCache', u'PairedDevices'])
+  PLIST_PATH = 'com.apple.bluetooth.plist'
+  PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])
 
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant BT entries.
@@ -44,20 +46,20 @@ class BluetoothPlugin(interface.PlistPlugin):
           and other components, such as storage and dfvfs.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
-    device_cache = match.get(u'DeviceCache', {})
+    device_cache = match.get('DeviceCache', {})
     for device, value in iter(device_cache.items()):
-      name = value.get(u'Name', u'')
+      name = value.get('Name', '')
       if name:
-        name = u''.join((u'Name:', name))
+        name = ''.join(('Name:', name))
 
       event_data = plist_event.PlistTimeEventData()
-      event_data.root = u'/DeviceCache'
+      event_data.root = '/DeviceCache'
 
-      datetime_value = value.get(u'LastInquiryUpdate', None)
+      datetime_value = value.get('LastInquiryUpdate', None)
       if datetime_value:
-        event_data.desc = u' '.join(
-            filter(None, (u'Bluetooth Discovery', name)))
-        event_data.key = u'{0:s}/LastInquiryUpdate'.format(device)
+        event_data.desc = ' '.join(
+            filter(None, ('Bluetooth Discovery', name)))
+        event_data.key = '{0:s}/LastInquiryUpdate'.format(device)
 
         timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
         date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
@@ -66,8 +68,8 @@ class BluetoothPlugin(interface.PlistPlugin):
             date_time, definitions.TIME_DESCRIPTION_WRITTEN)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-        if device in match.get(u'PairedDevices', []):
-          event_data.desc = u'Paired:True {0:s}'.format(name)
+        if device in match.get('PairedDevices', []):
+          event_data.desc = 'Paired:True {0:s}'.format(name)
           event_data.key = device
 
           timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
@@ -77,10 +79,10 @@ class BluetoothPlugin(interface.PlistPlugin):
               date_time, definitions.TIME_DESCRIPTION_WRITTEN)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
-      datetime_value = value.get(u'LastNameUpdate', None)
+      datetime_value = value.get('LastNameUpdate', None)
       if datetime_value:
-        event_data.desc = u' '.join(filter(None, (u'Device Name Set', name)))
-        event_data.key = u'{0:s}/LastNameUpdate'.format(device)
+        event_data.desc = ' '.join(filter(None, ('Device Name Set', name)))
+        event_data.key = '{0:s}/LastNameUpdate'.format(device)
 
         timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
         date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
@@ -89,10 +91,10 @@ class BluetoothPlugin(interface.PlistPlugin):
             date_time, definitions.TIME_DESCRIPTION_WRITTEN)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-      datetime_value = value.get(u'LastServicesUpdate', None)
+      datetime_value = value.get('LastServicesUpdate', None)
       if datetime_value:
-        event_data.desc = u' '.join(filter(None, (u'Services Updated', name)))
-        event_data.key = u'{0:s}/LastServicesUpdate'.format(device)
+        event_data.desc = ' '.join(filter(None, ('Services Updated', name)))
+        event_data.key = '{0:s}/LastServicesUpdate'.format(device)
 
         timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
         date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(

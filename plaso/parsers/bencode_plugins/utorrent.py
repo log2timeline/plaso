@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Bencode parser plugin for uTorrent files."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
@@ -20,7 +22,7 @@ class UTorrentEventData(events.EventData):
     seedtime (int): number of seconds client seeded torrent
   """
 
-  DATA_TYPE = u'p2p:bittorrent:utorrent'
+  DATA_TYPE = 'p2p:bittorrent:utorrent'
 
   def __init__(self):
     """Initializes event data."""
@@ -33,13 +35,13 @@ class UTorrentEventData(events.EventData):
 class UTorrentPlugin(interface.BencodePlugin):
   """Plugin to extract uTorrent active torrent events."""
 
-  NAME = u'bencode_utorrent'
-  DESCRIPTION = u'Parser for uTorrent bencoded files.'
+  NAME = 'bencode_utorrent'
+  DESCRIPTION = 'Parser for uTorrent bencoded files.'
 
   # The following set is used to determine if the bencoded data is appropriate
   # for this plugin. If there's a match, the entire bencoded data block is
   # returned for analysis.
-  BENCODE_KEYS = frozenset([u'.fileguard'])
+  BENCODE_KEYS = frozenset(['.fileguard'])
 
   def GetEntries(
       self, parser_mediator, data=None, **unused_kwargs):
@@ -69,42 +71,42 @@ class UTorrentPlugin(interface.BencodePlugin):
     """
     # Walk through one of the torrent keys to ensure it's from a valid file.
     for key, value in iter(data.items()):
-      if not u'.torrent' in key:
+      if not '.torrent' in key:
         continue
 
-      caption = value.get(u'caption')
-      path = value.get(u'path')
-      seedtime = value.get(u'seedtime')
+      caption = value.get('caption')
+      path = value.get('path')
+      seedtime = value.get('seedtime')
       if not caption or not path or seedtime < 0:
         raise errors.WrongBencodePlugin(self.NAME)
 
     for torrent, value in iter(data.items()):
-      if not u'.torrent' in torrent:
+      if not '.torrent' in torrent:
         continue
 
       event_data = UTorrentEventData()
-      event_data.caption = value.get(u'caption', None)
-      event_data.path = value.get(u'path', None)
+      event_data.caption = value.get('caption', None)
+      event_data.path = value.get('path', None)
 
       # Convert seconds to minutes.
-      seedtime = value.get(u'seedtime', None)
+      seedtime = value.get('seedtime', None)
       event_data.seedtime, _ = divmod(seedtime, 60)
 
       # Create timeline events based on extracted values.
       for event_key, event_value in iter(value.items()):
-        if event_key == u'added_on':
+        if event_key == 'added_on':
           date_time = dfdatetime_posix_time.PosixTime(timestamp=event_value)
           event = time_events.DateTimeValuesEvent(
               date_time, definitions.TIME_DESCRIPTION_ADDED)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
-        elif event_key == u'completed_on':
+        elif event_key == 'completed_on':
           date_time = dfdatetime_posix_time.PosixTime(timestamp=event_value)
           event = time_events.DateTimeValuesEvent(
               date_time, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
-        elif event_key == u'modtimes':
+        elif event_key == 'modtimes':
           for modtime in event_value:
             # Some values are stored as 0, skip those.
             if not modtime:

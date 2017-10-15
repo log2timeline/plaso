@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains a plist plugin for the iPod/iPhone storage plist."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
@@ -17,7 +19,7 @@ class IPodPlistEventData(events.EventData):
     device_id (str): unique identifier of the iPod device.
   """
 
-  DATA_TYPE = u'ipod:device:entry'
+  DATA_TYPE = 'ipod:device:entry'
 
   def __init__(self):
     """Initializes event data."""
@@ -28,11 +30,11 @@ class IPodPlistEventData(events.EventData):
 class IPodPlugin(interface.PlistPlugin):
   """Plugin to extract iPod/iPad/iPhone device information."""
 
-  NAME = u'ipod_device'
-  DESCRIPTION = u'Parser for iPod, iPad and iPhone plist files.'
+  NAME = 'ipod_device'
+  DESCRIPTION = 'Parser for iPod, iPad and iPhone plist files.'
 
-  PLIST_PATH = u'com.apple.iPod.plist'
-  PLIST_KEYS = frozenset([u'Devices'])
+  PLIST_PATH = 'com.apple.iPod.plist'
+  PLIST_KEYS = frozenset(['Devices'])
 
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extract device information from the iPod plist.
@@ -42,9 +44,9 @@ class IPodPlugin(interface.PlistPlugin):
           and other components, such as storage and dfvfs.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
-    devices = match.get(u'Devices', {})
+    devices = match.get('Devices', {})
     for device_identifier, device_information in iter(devices.items()):
-      connected_time = device_information.get(u'Connected', None)
+      connected_time = device_information.get('Connected', None)
       if not connected_time:
         continue
 
@@ -53,9 +55,9 @@ class IPodPlugin(interface.PlistPlugin):
 
       # TODO: refactor.
       for key, value in iter(device_information.items()):
-        if key == u'Connected':
+        if key == 'Connected':
           continue
-        attribute_name = key.lower().replace(u' ', u'_')
+        attribute_name = key.lower().replace(' ', '_')
         setattr(event_data, attribute_name, value)
 
       timestamp = timelib.Timestamp.FromPythonDatetime(connected_time)

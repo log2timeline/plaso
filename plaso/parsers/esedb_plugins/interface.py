@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the interface for ESE database plugins."""
 
+from __future__ import unicode_literals
+
 import logging
 
 import construct
@@ -12,7 +14,7 @@ from plaso.parsers import plugins
 class ESEDBPlugin(plugins.BasePlugin):
   """The ESE database plugin interface."""
 
-  NAME = u'esedb'
+  NAME = 'esedb'
 
   BINARY_DATA_COLUMN_TYPES = frozenset([
       pyesedb.column_types.BINARY_DATA,
@@ -36,8 +38,8 @@ class ESEDBPlugin(plugins.BasePlugin):
       pyesedb.column_types.TEXT,
       pyesedb.column_types.LARGE_TEXT])
 
-  _UINT64_BIG_ENDIAN = construct.UBInt64(u'value')
-  _UINT64_LITTLE_ENDIAN = construct.ULInt64(u'value')
+  _UINT64_BIG_ENDIAN = construct.UBInt64('value')
+  _UINT64_LITTLE_ENDIAN = construct.ULInt64('value')
 
   # Dictionary containing a callback method per table name.
   # E.g. 'SystemIndex_0A': 'ParseSystemIndex_0A'
@@ -66,7 +68,7 @@ class ESEDBPlugin(plugins.BasePlugin):
       str: string representation of binary data value or None.
     """
     if value:
-      return value.decode(u'ascii')
+      return value.decode('ascii')
 
   def _ConvertValueBinaryDataToStringBase16(self, value):
     """Converts a binary data value into a base-16 (hexadecimal) string.
@@ -78,7 +80,7 @@ class ESEDBPlugin(plugins.BasePlugin):
       str: string representation of binary data value or None.
     """
     if value:
-      return value.encode(u'hex')
+      return value.encode('hex')
 
   def _ConvertValueBinaryDataToUBInt64(self, value):
     """Converts a binary data value into an integer.
@@ -127,23 +129,23 @@ class ESEDBPlugin(plugins.BasePlugin):
 
     if record.is_multi_value(value_entry):
       # TODO: implement
-      raise ValueError(u'Multi value support not implemented yet.')
+      raise ValueError('Multi value support not implemented yet.')
 
     if column_type == pyesedb.column_types.NULL:
       return
 
     elif column_type == pyesedb.column_types.BOOLEAN:
       # TODO: implement
-      raise ValueError(u'Boolean value support not implemented yet.')
+      raise ValueError('Boolean value support not implemented yet.')
 
     elif column_type in self.INTEGER_COLUMN_TYPES:
       if long_value:
-        raise ValueError(u'Long integer value not supported.')
+        raise ValueError('Long integer value not supported.')
       return record.get_value_data_as_integer(value_entry)
 
     elif column_type in self.FLOATING_POINT_COLUMN_TYPES:
       if long_value:
-        raise ValueError(u'Long floating point value not supported.')
+        raise ValueError('Long floating point value not supported.')
       return record.get_value_data_as_floating_point(value_entry)
 
     elif column_type in self.STRING_COLUMN_TYPES:
@@ -153,7 +155,7 @@ class ESEDBPlugin(plugins.BasePlugin):
 
     elif column_type == pyesedb.column_types.GUID:
       # TODO: implement
-      raise ValueError(u'GUID value support not implemented yet.')
+      raise ValueError('GUID value support not implemented yet.')
 
     if long_value:
       return long_value.get_data()
@@ -183,7 +185,7 @@ class ESEDBPlugin(plugins.BasePlugin):
       column_name = record.get_column_name(value_entry)
       if column_name in record_values:
         logging.warning(
-            u'[{0:s}] duplicate column: {1:s} in table: {2:s}'.format(
+            '[{0:s}] duplicate column: {1:s} in table: {2:s}'.format(
                 self.NAME, column_name, table_name))
         continue
 
@@ -194,8 +196,8 @@ class ESEDBPlugin(plugins.BasePlugin):
           value_callback = getattr(self, value_callback_method, None)
           if value_callback is None:
             logging.warning((
-                u'[{0:s}] missing value callback method: {1:s} for column: '
-                u'{2:s} in table: {3:s}').format(
+                '[{0:s}] missing value callback method: {1:s} for column: '
+                '{2:s} in table: {3:s}').format(
                     self.NAME, value_callback_method, column_name, table_name))
 
       try:
@@ -223,7 +225,7 @@ class ESEDBPlugin(plugins.BasePlugin):
       ValueError: If the database attribute is not valid.
     """
     if database is None:
-      raise ValueError(u'Invalid database.')
+      raise ValueError('Invalid database.')
 
     for table_name, callback_method in iter(self._tables.items()):
       if parser_mediator.abort:
@@ -237,13 +239,13 @@ class ESEDBPlugin(plugins.BasePlugin):
       callback = getattr(self, callback_method, None)
       if callback is None:
         logging.warning(
-            u'[{0:s}] missing callback method: {1:s} for table: {2:s}'.format(
+            '[{0:s}] missing callback method: {1:s} for table: {2:s}'.format(
                 self.NAME, callback_method, table_name))
         continue
 
       esedb_table = database.get_table_by_name(table_name)
       if not esedb_table:
-        logging.warning(u'[{0:s}] missing table: {1:s}'.format(
+        logging.warning('[{0:s}] missing table: {1:s}'.format(
             self.NAME, table_name))
         continue
 
@@ -267,7 +269,7 @@ class ESEDBPlugin(plugins.BasePlugin):
       ValueError: If the database attribute is not valid.
     """
     if database is None:
-      raise ValueError(u'Invalid database.')
+      raise ValueError('Invalid database.')
 
     # This will raise if unhandled keyword arguments are passed.
     super(ESEDBPlugin, self).Process(parser_mediator)

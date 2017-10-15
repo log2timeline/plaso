@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Spotlight Volume Configuration plist plugin."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import plist_event
@@ -17,11 +19,11 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 class SpotlightVolumePlugin(interface.PlistPlugin):
   """Basic plugin to extract the Spotlight Volume Configuration."""
 
-  NAME = u'spotlight_volume'
-  DESCRIPTION = u'Parser for Spotlight volume configuration plist files.'
+  NAME = 'spotlight_volume'
+  DESCRIPTION = 'Parser for Spotlight volume configuration plist files.'
 
-  PLIST_PATH = u'VolumeConfiguration.plist'
-  PLIST_KEYS = frozenset([u'Stores'])
+  PLIST_PATH = 'VolumeConfiguration.plist'
+  PLIST_KEYS = frozenset(['Stores'])
 
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant Volume Configuration Spotlight entries.
@@ -31,19 +33,19 @@ class SpotlightVolumePlugin(interface.PlistPlugin):
           and other components, such as storage and dfvfs.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
-    stores = match.get(u'Stores', {})
+    stores = match.get('Stores', {})
     for volume_name, volume in iter(stores.items()):
-      datetime_value = volume.get(u'CreationDate', None)
+      datetime_value = volume.get('CreationDate', None)
       if not datetime_value:
         continue
 
-      partial_path = volume[u'PartialPath']
+      partial_path = volume['PartialPath']
 
       event_data = plist_event.PlistTimeEventData()
-      event_data.desc = u'Spotlight Volume {0:s} ({1:s}) activated.'.format(
+      event_data.desc = 'Spotlight Volume {0:s} ({1:s}) activated.'.format(
           volume_name, partial_path)
-      event_data.key = u''
-      event_data.root = u'/Stores'
+      event_data.key = ''
+      event_data.root = '/Stores'
 
       timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(

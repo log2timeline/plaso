@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Airport plist plugin."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
@@ -18,11 +20,11 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 class AirportPlugin(interface.PlistPlugin):
   """Plist plugin that extracts WiFi information."""
 
-  NAME = u'airport'
-  DESCRIPTION = u'Parser for Airport plist files.'
+  NAME = 'airport'
+  DESCRIPTION = 'Parser for Airport plist files.'
 
-  PLIST_PATH = u'com.apple.airport.preferences.plist'
-  PLIST_KEYS = frozenset([u'RememberedNetworks'])
+  PLIST_PATH = 'com.apple.airport.preferences.plist'
+  PLIST_KEYS = frozenset(['RememberedNetworks'])
 
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant Airport entries.
@@ -32,21 +34,21 @@ class AirportPlugin(interface.PlistPlugin):
           and other components, such as storage and dfvfs.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
-    if u'RememberedNetworks' not in match:
+    if 'RememberedNetworks' not in match:
       return
 
-    for wifi in match[u'RememberedNetworks']:
-      ssid = wifi.get(u'SSIDString', u'UNKNOWN_SSID')
-      security_type = wifi.get(u'SecurityType', u'UNKNOWN_SECURITY_TYPE')
+    for wifi in match['RememberedNetworks']:
+      ssid = wifi.get('SSIDString', 'UNKNOWN_SSID')
+      security_type = wifi.get('SecurityType', 'UNKNOWN_SECURITY_TYPE')
 
       event_data = plist_event.PlistTimeEventData()
       event_data.desc = (
-          u'[WiFi] Connected to network: <{0:s}> using security {1:s}').format(
+          '[WiFi] Connected to network: <{0:s}> using security {1:s}').format(
               ssid, security_type)
-      event_data.key = u'item'
-      event_data.root = u'/RememberedNetworks'
+      event_data.key = 'item'
+      event_data.root = '/RememberedNetworks'
 
-      datetime_value = wifi.get(u'LastConnected', None)
+      datetime_value = wifi.get('LastConnected', None)
       if datetime_value:
         timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
         date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
@@ -54,7 +56,7 @@ class AirportPlugin(interface.PlistPlugin):
         event = time_events.DateTimeValuesEvent(
             date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       else:
-        date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+        date_time = dfdatetime_semantic_time.SemanticTime('Not set')
         event = time_events.DateTimeValuesEvent(
             date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
 

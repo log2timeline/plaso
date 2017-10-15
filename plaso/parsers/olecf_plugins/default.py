@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The default plugin for parsing OLE Compound Files (OLECF)."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
@@ -13,7 +15,7 @@ from plaso.parsers.olecf_plugins import interface
 class OLECFItemEvent(time_events.DateTimeValuesEvent):
   """Convenience class for an OLECF item event."""
 
-  DATA_TYPE = u'olecf:item'
+  DATA_TYPE = 'olecf:item'
 
   def __init__(self, date_time, date_time_description, olecf_item):
     """Initializes an event.
@@ -39,8 +41,8 @@ class OLECFItemEvent(time_events.DateTimeValuesEvent):
 class DefaultOLECFPlugin(interface.OLECFPlugin):
   """Class to define the default OLECF file plugin."""
 
-  NAME = u'olecf_default'
-  DESCRIPTION = u'Parser for a generic OLECF item.'
+  NAME = 'olecf_default'
+  DESCRIPTION = 'Parser for a generic OLECF item.'
 
   def _ParseItem(self, parser_mediator, olecf_item):
     """Parses an OLECF item.
@@ -94,11 +96,11 @@ class DefaultOLECFPlugin(interface.OLECFPlugin):
     super(DefaultOLECFPlugin, self).Process(parser_mediator, **kwargs)
 
     if not root_item:
-      raise ValueError(u'Root item not set.')
+      raise ValueError('Root item not set.')
 
     if not self._ParseItem(parser_mediator, root_item):
       # If no event was produced, produce at least one for the root item.
-      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
       event = OLECFItemEvent(
           date_time, definitions.TIME_DESCRIPTION_CREATION, root_item)
       parser_mediator.ProduceEvent(event)

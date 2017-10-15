@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Plugin to parse .automaticDestinations-ms OLECF files."""
 
+from __future__ import unicode_literals
+
 import re
 import uuid
 
@@ -35,7 +37,7 @@ class AutomaticDestinationsDestListEntryEvent(time_events.DateTimeValuesEvent):
         the DestList stream.
   """
 
-  DATA_TYPE = u'olecf:dest_list:entry'
+  DATA_TYPE = 'olecf:dest_list:entry'
 
   def __init__(
       self, date_time, date_time_description, entry_offset, dest_list_entry,
@@ -57,7 +59,7 @@ class AutomaticDestinationsDestListEntryEvent(time_events.DateTimeValuesEvent):
     """
     # TODO: move to parser plugin.
     hostname = binary.ByteStreamCopyToString(
-        dest_list_entry.hostname, codepage=u'ascii')
+        dest_list_entry.hostname, codepage='ascii')
     path = binary.UTF16StreamCopyToString(dest_list_entry.path)
 
     super(AutomaticDestinationsDestListEntryEvent, self).__init__(
@@ -76,10 +78,10 @@ class AutomaticDestinationsDestListEntryEvent(time_events.DateTimeValuesEvent):
 class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
   """Plugin that parses an .automaticDestinations-ms OLECF file."""
 
-  NAME = u'olecf_automatic_destinations'
-  DESCRIPTION = u'Parser for *.automaticDestinations-ms OLECF files.'
+  NAME = 'olecf_automatic_destinations'
+  DESCRIPTION = 'Parser for *.automaticDestinations-ms OLECF files.'
 
-  REQUIRED_ITEMS = frozenset([u'DestList'])
+  REQUIRED_ITEMS = frozenset(['DestList'])
 
   _RE_LNK_ITEM_NAME = re.compile(r'^[1-9a-f][0-9a-f]*$')
 
@@ -88,14 +90,14 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
   _WINLNK_PARSER = winlnk.WinLnkParser()
 
   _DEST_LIST_STREAM_HEADER = construct.Struct(
-      u'dest_list_stream_header',
-      construct.ULInt32(u'format_version'),
-      construct.ULInt32(u'number_of_entries'),
-      construct.ULInt32(u'number_of_pinned_entries'),
+      'dest_list_stream_header',
+      construct.ULInt32('format_version'),
+      construct.ULInt32('number_of_entries'),
+      construct.ULInt32('number_of_pinned_entries'),
       construct.Padding(4),
-      construct.ULInt32(u'last_entry_number'),
+      construct.ULInt32('last_entry_number'),
       construct.Padding(4),
-      construct.ULInt32(u'last_revision_number'),
+      construct.ULInt32('last_revision_number'),
       construct.Padding(4))
 
   _DEST_LIST_STREAM_HEADER_SIZE = _DEST_LIST_STREAM_HEADER.sizeof()
@@ -104,35 +106,35 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
   # end-of-string characters exposed. Instead the strings are read as
   # binary strings and converted using ReadUTF16().
   _DEST_LIST_STREAM_ENTRY_V1 = construct.Struct(
-      u'dest_list_stream_entry_v1',
+      'dest_list_stream_entry_v1',
       construct.Padding(8),
-      construct.Bytes(u'droid_volume_identifier', 16),
-      construct.Bytes(u'droid_file_identifier', 16),
-      construct.Bytes(u'birth_droid_volume_identifier', 16),
-      construct.Bytes(u'birth_droid_file_identifier', 16),
-      construct.String(u'hostname', 16),
-      construct.ULInt32(u'entry_number'),
+      construct.Bytes('droid_volume_identifier', 16),
+      construct.Bytes('droid_file_identifier', 16),
+      construct.Bytes('birth_droid_volume_identifier', 16),
+      construct.Bytes('birth_droid_file_identifier', 16),
+      construct.String('hostname', 16),
+      construct.ULInt32('entry_number'),
       construct.Padding(8),
-      construct.ULInt64(u'last_modification_time'),
-      construct.ULInt32(u'pin_status'),
-      construct.ULInt16(u'path_size'),
-      construct.String(u'path', lambda ctx: ctx.path_size * 2))
+      construct.ULInt64('last_modification_time'),
+      construct.ULInt32('pin_status'),
+      construct.ULInt16('path_size'),
+      construct.String('path', lambda ctx: ctx.path_size * 2))
 
   _DEST_LIST_STREAM_ENTRY_V3 = construct.Struct(
-      u'dest_list_stream_entry_v3',
+      'dest_list_stream_entry_v3',
       construct.Padding(8),
-      construct.Bytes(u'droid_volume_identifier', 16),
-      construct.Bytes(u'droid_file_identifier', 16),
-      construct.Bytes(u'birth_droid_volume_identifier', 16),
-      construct.Bytes(u'birth_droid_file_identifier', 16),
-      construct.String(u'hostname', 16),
-      construct.ULInt32(u'entry_number'),
+      construct.Bytes('droid_volume_identifier', 16),
+      construct.Bytes('droid_file_identifier', 16),
+      construct.Bytes('birth_droid_volume_identifier', 16),
+      construct.Bytes('birth_droid_file_identifier', 16),
+      construct.String('hostname', 16),
+      construct.ULInt32('entry_number'),
       construct.Padding(8),
-      construct.ULInt64(u'last_modification_time'),
-      construct.ULInt32(u'pin_status'),
+      construct.ULInt64('last_modification_time'),
+      construct.ULInt32('pin_status'),
       construct.Padding(16),
-      construct.ULInt16(u'path_size'),
-      construct.String(u'path', lambda ctx: ctx.path_size * 2),
+      construct.ULInt16('path_size'),
+      construct.String('path', lambda ctx: ctx.path_size * 2),
       construct.Padding(4))
 
   def _ParseDistributedTrackingIdentifier(
@@ -158,7 +160,7 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
           date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    return u'{{{0!s}}}'.format(uuid_object)
+    return '{{{0!s}}}'.format(uuid_object)
 
   def ParseDestList(self, parser_mediator, olecf_item):
     """Parses the DestList OLECF item.
@@ -172,12 +174,12 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
       header = self._DEST_LIST_STREAM_HEADER.parse_stream(olecf_item)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          u'Unable to parse DestList header with error: {0:s}'.format(
+          'Unable to parse DestList header with error: {0:s}'.format(
               exception))
 
     if header.format_version not in (1, 3, 4):
       parser_mediator.ProduceExtractionError(
-          u'unsupported format version: {0:d}.'.format(header.format_version))
+          'unsupported format version: {0:d}.'.format(header.format_version))
 
     if header.format_version == 1:
       dest_list_stream_entry = self._DEST_LIST_STREAM_ENTRY_V1
@@ -190,22 +192,22 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
         entry = dest_list_stream_entry.parse_stream(olecf_item)
       except (IOError, construct.FieldError) as exception:
         raise errors.UnableToParseFile(
-            u'Unable to parse DestList entry with error: {0:s}'.format(
+            'Unable to parse DestList entry with error: {0:s}'.format(
                 exception))
 
       if not entry:
         break
 
-      display_name = u'DestList entry at offset: 0x{0:08x}'.format(entry_offset)
+      display_name = 'DestList entry at offset: 0x{0:08x}'.format(entry_offset)
 
       try:
         droid_volume_identifier = self._ParseDistributedTrackingIdentifier(
             parser_mediator, entry.droid_volume_identifier, display_name)
 
       except (TypeError, ValueError) as exception:
-        droid_volume_identifier = u''
+        droid_volume_identifier = ''
         parser_mediator.ProduceExtractionError(
-            u'unable to read droid volume identifier with error: {0:s}'.format(
+            'unable to read droid volume identifier with error: {0:s}'.format(
                 exception))
 
       try:
@@ -213,9 +215,9 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
             parser_mediator, entry.droid_file_identifier, display_name)
 
       except (TypeError, ValueError) as exception:
-        droid_file_identifier = u''
+        droid_file_identifier = ''
         parser_mediator.ProduceExtractionError(
-            u'unable to read droid file identifier with error: {0:s}'.format(
+            'unable to read droid file identifier with error: {0:s}'.format(
                 exception))
 
       try:
@@ -225,10 +227,10 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
                 display_name))
 
       except (TypeError, ValueError) as exception:
-        birth_droid_volume_identifier = u''
+        birth_droid_volume_identifier = ''
         parser_mediator.ProduceExtractionError((
-            u'unable to read birth droid volume identifier with error: '
-            u'{0:s}').format(
+            'unable to read birth droid volume identifier with error: '
+            '{0:s}').format(
                 exception))
 
       try:
@@ -236,14 +238,14 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
             parser_mediator, entry.birth_droid_file_identifier, display_name)
 
       except (TypeError, ValueError) as exception:
-        birth_droid_file_identifier = u''
+        birth_droid_file_identifier = ''
         parser_mediator.ProduceExtractionError((
-            u'unable to read birth droid file identifier with error: '
-            u'{0:s}').format(
+            'unable to read birth droid file identifier with error: '
+            '{0:s}').format(
                 exception))
 
       if entry.last_modification_time == 0:
-        date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+        date_time = dfdatetime_semantic_time.SemanticTime('Not set')
       else:
         date_time = dfdatetime_filetime.Filetime(
             timestamp=entry.last_modification_time)
@@ -272,18 +274,18 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
         parser_mediator, **kwargs)
 
     if not root_item:
-      raise ValueError(u'Root item not set.')
+      raise ValueError('Root item not set.')
 
     for item in root_item.sub_items:
-      if item.name == u'DestList':
+      if item.name == 'DestList':
         self.ParseDestList(parser_mediator, item)
 
       elif self._RE_LNK_ITEM_NAME.match(item.name):
         display_name = parser_mediator.GetDisplayName()
         if display_name:
-          display_name = u'{0:s} # {1:s}'.format(display_name, item.name)
+          display_name = '{0:s} # {1:s}'.format(display_name, item.name)
         else:
-          display_name = u'# {0:s}'.format(item.name)
+          display_name = '# {0:s}'.format(item.name)
 
         self._WINLNK_PARSER.Parse(
             parser_mediator, item, display_name=display_name)

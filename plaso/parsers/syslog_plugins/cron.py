@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains a plugin for SSH syslog entries."""
 
+from __future__ import unicode_literals
+
 import pyparsing
 
 from plaso.containers import time_events
@@ -17,7 +19,7 @@ class CronTaskRunEventData(syslog.SyslogLineEventData):
     username (str): name of user the command was executed.
   """
 
-  DATA_TYPE = u'syslog:cron:task_run'
+  DATA_TYPE = 'syslog:cron:task_run'
 
   def __init__(self):
     """Initializes event data."""
@@ -28,29 +30,29 @@ class CronTaskRunEventData(syslog.SyslogLineEventData):
 
 class CronPlugin(interface.SyslogPlugin):
   """A syslog plugin for parsing cron messages."""
-  NAME = u'cron'
+  NAME = 'cron'
 
-  DESCRIPTION = u'Parser for syslog cron messages.'
+  DESCRIPTION = 'Parser for syslog cron messages.'
 
-  REPORTER = u'CRON'
+  REPORTER = 'CRON'
 
   _PYPARSING_COMPONENTS = {
-      u'command': pyparsing.Combine(
+      'command': pyparsing.Combine(
           pyparsing.SkipTo(
-              pyparsing.Literal(u')') + pyparsing.StringEnd())).
-                  setResultsName(u'command'),
-      u'username': pyparsing.Word(pyparsing.alphanums).setResultsName(
-          u'username'),
+              pyparsing.Literal(')') + pyparsing.StringEnd())).
+                  setResultsName('command'),
+      'username': pyparsing.Word(pyparsing.alphanums).setResultsName(
+          'username'),
   }
 
   _TASK_RUN_GRAMMAR = (
-      pyparsing.Literal(u'(') + _PYPARSING_COMPONENTS[u'username'] +
-      pyparsing.Literal(u')') + pyparsing.Literal(u'CMD') +
-      pyparsing.Literal(u'(') + _PYPARSING_COMPONENTS[u'command'] +
-      pyparsing.Literal(u')') + pyparsing.StringEnd()
+      pyparsing.Literal('(') + _PYPARSING_COMPONENTS['username'] +
+      pyparsing.Literal(')') + pyparsing.Literal('CMD') +
+      pyparsing.Literal('(') + _PYPARSING_COMPONENTS['command'] +
+      pyparsing.Literal(')') + pyparsing.StringEnd()
   )
 
-  MESSAGE_GRAMMARS = [(u'task_run', _TASK_RUN_GRAMMAR)]
+  MESSAGE_GRAMMARS = [('task_run', _TASK_RUN_GRAMMAR)]
 
   def ParseMessage(self, parser_mediator, key, timestamp, tokens):
     """Parses a syslog body that matched one of defined grammars.
@@ -68,19 +70,19 @@ class CronPlugin(interface.SyslogPlugin):
       AttributeError: If an unknown key is provided.
     """
     # TODO: change AttributeError into ValueError or equiv.
-    if key != u'task_run':
-      raise AttributeError(u'Unknown grammar key: {0:s}'.format(key))
+    if key != 'task_run':
+      raise AttributeError('Unknown grammar key: {0:s}'.format(key))
 
     event_data = CronTaskRunEventData()
-    event_data.body = tokens.get(u'body', None)
-    event_data.command = tokens.get(u'command', None)
-    event_data.hostname = tokens.get(u'hostname', None)
+    event_data.body = tokens.get('body', None)
+    event_data.command = tokens.get('command', None)
+    event_data.hostname = tokens.get('hostname', None)
     # TODO: pass line number to offset or remove.
     event_data.offset = 0
-    event_data.pid = tokens.get(u'pid', None)
-    event_data.reporter = tokens.get(u'reporter', None)
-    event_data.severity = tokens.get(u'severity', None)
-    event_data.username = tokens.get(u'username', None)
+    event_data.pid = tokens.get('pid', None)
+    event_data.reporter = tokens.get('reporter', None)
+    event_data.severity = tokens.get('severity', None)
+    event_data.username = tokens.get('username', None)
 
     event = time_events.TimestampEvent(
         timestamp, definitions.TIME_DESCRIPTION_WRITTEN)

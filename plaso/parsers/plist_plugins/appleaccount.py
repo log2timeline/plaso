@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Apple Account plist plugin."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import plist_event
@@ -27,12 +29,12 @@ class AppleAccountPlugin(interface.PlistPlugin):
     ValidationDate: last time when the account was validated.
   """
 
-  NAME = u'apple_id'
-  DESCRIPTION = u'Parser for Apple account information plist files.'
+  NAME = 'apple_id'
+  DESCRIPTION = 'Parser for Apple account information plist files.'
 
-  PLIST_PATH = u'com.apple.coreservices.appleidauthenticationinfo'
+  PLIST_PATH = 'com.apple.coreservices.appleidauthenticationinfo'
   PLIST_KEYS = frozenset(
-      [u'AuthCertificates', u'AccessorVersions', u'Accounts'])
+      ['AuthCertificates', 'AccessorVersions', 'Accounts'])
 
   def Process(self, parser_mediator, plist_name, top_level, **kwargs):
     """Check if it is a valid Apple account plist file name.
@@ -56,20 +58,20 @@ class AppleAccountPlugin(interface.PlistPlugin):
           and other components, such as storage and dfvfs.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
-    accounts = match.get(u'Accounts', {})
+    accounts = match.get('Accounts', {})
     for name_account, account in iter(accounts.items()):
-      first_name = account.get(u'FirstName', u'<FirstName>')
-      last_name = account.get(u'LastName', u'<LastName>')
-      general_description = u'{0:s} ({1:s} {2:s})'.format(
+      first_name = account.get('FirstName', '<FirstName>')
+      last_name = account.get('LastName', '<LastName>')
+      general_description = '{0:s} ({1:s} {2:s})'.format(
           name_account, first_name, last_name)
 
       event_data = plist_event.PlistTimeEventData()
       event_data.key = name_account
-      event_data.root = u'/Accounts'
+      event_data.root = '/Accounts'
 
-      datetime_value = account.get(u'CreationDate', None)
+      datetime_value = account.get('CreationDate', None)
       if datetime_value:
-        event_data.desc = u'Configured Apple account {0:s}'.format(
+        event_data.desc = 'Configured Apple account {0:s}'.format(
             general_description)
 
         timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
@@ -79,9 +81,9 @@ class AppleAccountPlugin(interface.PlistPlugin):
             date_time, definitions.TIME_DESCRIPTION_WRITTEN)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-      datetime_value = account.get(u'LastSuccessfulConnect', None)
+      datetime_value = account.get('LastSuccessfulConnect', None)
       if datetime_value:
-        event_data.desc = u'Connected Apple account {0:s}'.format(
+        event_data.desc = 'Connected Apple account {0:s}'.format(
             general_description)
 
         timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
@@ -91,9 +93,9 @@ class AppleAccountPlugin(interface.PlistPlugin):
             date_time, definitions.TIME_DESCRIPTION_WRITTEN)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-      datetime_value = account.get(u'ValidationDate', None)
+      datetime_value = account.get('ValidationDate', None)
       if datetime_value:
-        event_data.desc = u'Last validation Apple account {0:s}'.format(
+        event_data.desc = 'Last validation Apple account {0:s}'.format(
             general_description)
 
         timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)

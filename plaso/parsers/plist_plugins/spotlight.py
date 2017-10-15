@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Spotlight searched terms plist plugin."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import plist_event
@@ -31,11 +33,11 @@ class SpotlightPlugin(interface.PlistPlugin):
       the display name of the program associated.
   """
 
-  NAME = u'spotlight'
-  DESCRIPTION = u'Parser for Spotlight plist files.'
+  NAME = 'spotlight'
+  DESCRIPTION = 'Parser for Spotlight plist files.'
 
-  PLIST_PATH = u'com.apple.spotlight.plist'
-  PLIST_KEYS = frozenset([u'UserShortcuts'])
+  PLIST_PATH = 'com.apple.spotlight.plist'
+  PLIST_KEYS = frozenset(['UserShortcuts'])
 
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant Spotlight entries.
@@ -45,21 +47,21 @@ class SpotlightPlugin(interface.PlistPlugin):
           and other components, such as storage and dfvfs.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
-    shortcuts = match.get(u'UserShortcuts', {})
+    shortcuts = match.get('UserShortcuts', {})
     for search_text, data in iter(shortcuts.items()):
-      datetime_value = data.get(u'LAST_USED', None)
+      datetime_value = data.get('LAST_USED', None)
       if not datetime_value:
         continue
 
-      display_name = data.get(u'DISPLAY_NAME', u'<DISPLAY_NAME>')
-      path = data.get(u'PATH', u'<PATH>')
+      display_name = data.get('DISPLAY_NAME', '<DISPLAY_NAME>')
+      path = data.get('PATH', '<PATH>')
 
       event_data = plist_event.PlistTimeEventData()
       event_data.desc = (
-          u'Spotlight term searched "{0:s}" associate to {1:s} ({2:s})').format(
+          'Spotlight term searched "{0:s}" associate to {1:s} ({2:s})').format(
               search_text, display_name, path)
       event_data.key = search_text
-      event_data.root = u'/UserShortcuts'
+      event_data.root = '/UserShortcuts'
 
       timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(

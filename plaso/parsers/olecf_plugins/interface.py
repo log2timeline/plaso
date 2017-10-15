@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the necessary interface for OLECF plugins."""
 
+from __future__ import unicode_literals
+
 import abc
 import logging
 
@@ -10,7 +12,7 @@ from plaso.parsers import plugins
 class OLECFPlugin(plugins.BasePlugin):
   """The OLECF parser plugin interface."""
 
-  NAME = u'olecf'
+  NAME = 'olecf'
 
   # List of tables that should be present in the database, for verification.
   REQUIRED_ITEMS = frozenset([])
@@ -31,7 +33,7 @@ class OLECFPlugin(plugins.BasePlugin):
       creation_time = olecf_item.get_creation_time_as_integer()
     except OverflowError as exception:
       logging.warning(
-          u'Unable to read the creation time with error: {0:s}'.format(
+          'Unable to read the creation time with error: {0:s}'.format(
               exception))
       creation_time = 0
 
@@ -39,7 +41,7 @@ class OLECFPlugin(plugins.BasePlugin):
       modification_time = olecf_item.get_modification_time_as_integer()
     except OverflowError as exception:
       logging.warning(
-          u'Unable to read the modification time with error: {0:s}'.format(
+          'Unable to read the modification time with error: {0:s}'.format(
               exception))
       modification_time = 0
 

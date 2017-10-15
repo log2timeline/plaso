@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The cookie plugins manager object."""
 
+from __future__ import unicode_literals
+
 
 class CookiePluginsManager(object):
   """Class that implements the cookie plugins manager."""
@@ -21,7 +23,7 @@ class CookiePluginsManager(object):
     """
     plugin_name = plugin_class.NAME.lower()
     if plugin_name not in cls._plugin_classes:
-      raise KeyError(u'Plugin class not set for name: {0:s}.'.format(
+      raise KeyError('Plugin class not set for name: {0:s}.'.format(
           plugin_class.NAME))
 
     del cls._plugin_classes[plugin_name]
@@ -50,7 +52,7 @@ class CookiePluginsManager(object):
     """
     plugin_name = plugin_class.NAME.lower()
     if plugin_name in cls._plugin_classes:
-      raise KeyError((u'Plugin class already set for name: {0:s}.').format(
+      raise KeyError(('Plugin class already set for name: {0:s}.').format(
           plugin_class.NAME))
 
     cls._plugin_classes[plugin_name] = plugin_class
