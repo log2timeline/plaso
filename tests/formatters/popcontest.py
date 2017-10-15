@@ -48,7 +48,7 @@ class PopularityContestLogFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = popcontest.PopularityContestLogFormatter()
 
     expected_attribute_names = [
-        'mr',
+        'mru',
         'package',
         'record_tag']
 
