@@ -39,6 +39,7 @@ class SpotlightPlugin(interface.PlistPlugin):
   PLIST_PATH = 'com.apple.spotlight.plist'
   PLIST_KEYS = frozenset(['UserShortcuts'])
 
+  # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant Spotlight entries.
 

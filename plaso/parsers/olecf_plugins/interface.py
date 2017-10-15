@@ -56,6 +56,7 @@ class OLECFPlugin(plugins.BasePlugin):
 
     return creation_time, modification_time
 
+  # pylint: disable=arguments-differ
   @abc.abstractmethod
   def Process(self, parser_mediator, root_item=None, **kwargs):
     """Parses an OLECF file.

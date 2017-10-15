@@ -256,6 +256,7 @@ class ESEDBPlugin(plugins.BasePlugin):
           parser_mediator, cache=cache, database=database, table=esedb_table,
           **kwargs)
 
+  # pylint: disable=arguments-differ
   def Process(self, parser_mediator, cache=None, database=None, **kwargs):
     """Determines if this is the appropriate plugin for the database.
 

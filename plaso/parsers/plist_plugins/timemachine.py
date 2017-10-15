@@ -44,6 +44,7 @@ class TimeMachinePlugin(interface.PlistPlugin):
       construct.PascalString(
           'value', length_field=construct.UBInt8('length')))
 
+  # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant TimeMachine entries.
 

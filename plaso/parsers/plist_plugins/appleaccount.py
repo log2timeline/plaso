@@ -50,6 +50,7 @@ class AppleAccountPlugin(interface.PlistPlugin):
     super(AppleAccountPlugin, self).Process(
         parser_mediator, plist_name=self.PLIST_PATH, top_level=top_level)
 
+  # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant Apple Account entries.
 

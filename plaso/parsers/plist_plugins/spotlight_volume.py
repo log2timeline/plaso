@@ -25,6 +25,7 @@ class SpotlightVolumePlugin(interface.PlistPlugin):
   PLIST_PATH = 'VolumeConfiguration.plist'
   PLIST_KEYS = frozenset(['Stores'])
 
+  # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant Volume Configuration Spotlight entries.
 

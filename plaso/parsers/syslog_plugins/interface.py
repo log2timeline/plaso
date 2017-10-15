@@ -45,6 +45,7 @@ class SyslogPlugin(plugins.BasePlugin):
           fields.
     """
 
+  # pylint: disable=arguments-differ
   def Process(self, parser_mediator, timestamp, syslog_tokens, **kwargs):
     """Processes the data structure produced by the parser.
 

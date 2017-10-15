@@ -38,6 +38,7 @@ class BaseCookiePlugin(plugins.BasePlugin):
       url: Optional URL or path where the cookie got set.
     """
 
+  # pylint: disable=arguments-differ
   def Process(self, parser_mediator, cookie_name, cookie_data, url, **kwargs):
     """Determine if this is the right plugin for this cookie.
 

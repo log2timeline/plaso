@@ -139,6 +139,7 @@ class BencodePlugin(plugins.BasePlugin):
              BENCODE_KEYS.
     """
 
+  # pylint: disable=arguments-differ
   def Process(self, parser_mediator, data, **kwargs):
     """Determine if this is the correct plugin; if so proceed with processing.
 

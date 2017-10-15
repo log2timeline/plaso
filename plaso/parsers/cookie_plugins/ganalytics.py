@@ -3,7 +3,12 @@
 
 from __future__ import unicode_literals
 
-import urllib
+import sys
+
+if sys.version_info[0] < 3:
+  import urllib as urlparse
+else:
+  from urllib import parse as urlparse
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
@@ -416,7 +421,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
               'Cookie contains non 7-bit ASCII characters, which have been '
               'replaced with a "?".')
 
-        utf_stream = urllib.unquote(ascii_value)
+        utf_stream = urlparse.unquote(ascii_value)
 
         try:
           value_line = utf_stream.decode('utf-8')

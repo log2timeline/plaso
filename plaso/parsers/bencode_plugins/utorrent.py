@@ -43,8 +43,8 @@ class UTorrentPlugin(interface.BencodePlugin):
   # returned for analysis.
   BENCODE_KEYS = frozenset(['.fileguard'])
 
-  def GetEntries(
-      self, parser_mediator, data=None, **unused_kwargs):
+  # pylint: disable=arguments-differ
+  def GetEntries(self, parser_mediator, data=None, **unused_kwargs):
     """Extracts uTorrent active torrents.
 
     This is the main parsing engine for the plugin. It determines if

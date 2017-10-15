@@ -39,6 +39,7 @@ class TransmissionPlugin(interface.BencodePlugin):
       'activity-date', 'done-date', 'added-date', 'destination',
       'seeding-time-seconds'])
 
+  # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, data=None, **unused_kwargs):
     """Extract data from Transmission's resume folder files.
 

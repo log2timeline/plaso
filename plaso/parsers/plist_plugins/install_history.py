@@ -27,6 +27,7 @@ class InstallHistoryPlugin(interface.PlistPlugin):
       'date', 'displayName', 'displayVersion', 'processName',
       'packageIdentifiers'])
 
+  # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, top_level=None, **unused_kwargs):
     """Extracts relevant install history entries.
 

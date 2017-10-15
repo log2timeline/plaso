@@ -22,6 +22,7 @@ class DefaultPlugin(interface.PlistPlugin):
   NAME = 'plist_default'
   DESCRIPTION = 'Parser for plist files.'
 
+  # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, top_level=None, **unused_kwargs):
     """Simple method to exact date values from a Plist.
 

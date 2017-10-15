@@ -72,6 +72,7 @@ class MacUserPlugin(interface.PlistPlugin):
     super(MacUserPlugin, self).Process(
         parser_mediator, plist_name=self.PLIST_PATH, top_level=top_level)
 
+  # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant user timestamp entries.
 

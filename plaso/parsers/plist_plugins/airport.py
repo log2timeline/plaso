@@ -26,6 +26,7 @@ class AirportPlugin(interface.PlistPlugin):
   PLIST_PATH = 'com.apple.airport.preferences.plist'
   PLIST_KEYS = frozenset(['RememberedNetworks'])
 
+  # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant Airport entries.
 

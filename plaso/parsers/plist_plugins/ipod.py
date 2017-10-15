@@ -36,6 +36,7 @@ class IPodPlugin(interface.PlistPlugin):
   PLIST_PATH = 'com.apple.iPod.plist'
   PLIST_KEYS = frozenset(['Devices'])
 
+  # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extract device information from the iPod plist.
 
