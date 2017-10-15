@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Microsoft IIS log file event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import iis
@@ -22,9 +24,9 @@ class IISLogFileEventFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = iis.IISLogFileEventFormatter()
 
     expected_attribute_names = [
-        u'http_method', u'requested_uri_stem', u'source_ip', u'dest_ip',
-        u'dest_port', u'http_status', u'sent_bytes', u'received_bytes',
-        u'user_agent', u'protocol_version']
+        'http_method', 'requested_uri_stem', 'source_ip', 'dest_ip',
+        'dest_port', 'http_status', 'sent_bytes', 'received_bytes',
+        'user_agent', 'protocol_version']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

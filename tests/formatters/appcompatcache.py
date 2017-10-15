@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows Registry AppCompatCache entries event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import appcompatcache
@@ -22,7 +24,7 @@ class AppCompatCacheFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = appcompatcache.AppCompatCacheFormatter()
 
     expected_attribute_names = [
-        u'key_path', u'entry_index', u'path']
+        'key_path', 'entry_index', 'path']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

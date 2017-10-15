@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the Firefox history event formatter."""
+"""Tests for the Firefox history event 
+formatter."""
+from __future__ import unicode_literals
 
 import unittest
 
@@ -21,7 +23,7 @@ class FirefoxBookmarkAnnotationFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = firefox.FirefoxBookmarkAnnotationFormatter()
 
-    expected_attribute_names = [u'content', u'title', u'url']
+    expected_attribute_names = ['content', 'title', 'url']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -42,7 +44,7 @@ class FirefoxBookmarkFolderFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = firefox.FirefoxBookmarkFolderFormatter()
 
-    expected_attribute_names = [u'title']
+    expected_attribute_names = ['title']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -64,7 +66,7 @@ class FirefoxBookmarkFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = firefox.FirefoxBookmarkFormatter()
 
     expected_attribute_names = [
-        u'type', u'title', u'url', u'places_title', u'visit_count']
+        'type', 'title', 'url', 'places_title', 'visit_count']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -86,7 +88,7 @@ class FirefoxPageVisitFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = firefox.FirefoxPageVisitFormatter()
 
     expected_attribute_names = [
-        u'url', u'title', u'visit_count', u'host', u'extra_string']
+        'url', 'title', 'visit_count', 'host', 'extra_string']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -108,7 +110,7 @@ class FirefoxDowloadFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = firefox.FirefoxDowloadFormatter()
 
     expected_attribute_names = [
-        u'url', u'full_path', u'received_bytes', u'total_bytes']
+        'url', 'full_path', 'received_bytes', 'total_bytes']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Opera history event formatters."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import opera
@@ -22,9 +24,9 @@ class OperaGlobalHistoryFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = opera.OperaGlobalHistoryFormatter()
 
     expected_attribute_names = [
-        u'url',
-        u'title',
-        u'description']
+        'url',
+        'title',
+        'description']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -45,8 +47,8 @@ class OperaTypedHistoryFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = opera.OperaTypedHistoryFormatter()
 
     expected_attribute_names = [
-        u'url',
-        u'entry_selection']
+        'url',
+        'entry_selection']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

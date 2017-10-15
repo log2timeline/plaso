@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Task Scheduler event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import task_scheduler
@@ -22,8 +24,8 @@ class TaskCacheEventFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = task_scheduler.TaskCacheEventFormatter()
 
     expected_attribute_names = [
-        u'task_name',
-        u'task_identifier']
+        'task_name',
+        'task_identifier']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

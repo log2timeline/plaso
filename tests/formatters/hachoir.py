@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Hachoir event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import hachoir
@@ -21,7 +23,7 @@ class HachoirFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = hachoir.HachoirFormatter()
 
-    expected_attribute_names = [u'data']
+    expected_attribute_names = ['data']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

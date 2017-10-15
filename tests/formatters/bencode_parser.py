@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the bencode parser event formatters."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import bencode_parser
@@ -22,7 +24,7 @@ class TransmissionEventFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = bencode_parser.TransmissionEventFormatter()
 
     expected_attribute_names = [
-        u'destination', u'seedtime']
+        'destination', 'seedtime']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -43,7 +45,7 @@ class UTorrentEventFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = bencode_parser.UTorrentEventFormatter()
 
     expected_attribute_names = [
-        u'caption', u'path', u'seedtime']
+        'caption', 'path', 'seedtime']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

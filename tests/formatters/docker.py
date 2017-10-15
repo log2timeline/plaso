@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Docker JSON event formatters."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import docker
@@ -39,26 +41,26 @@ class DockerJSONFormatterTest(test_lib.EventFormatterTestCase):
 
     event_formatter1 = docker.DockerContainerEventFormatter()
 
-    expected_attribute_names = [u'action',
-                                u'container_id',
-                                u'container_name']
+    expected_attribute_names = ['action',
+                                'container_id',
+                                'container_name']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter1, expected_attribute_names)
 
     event_formatter2 = docker.DockerContainerLogEventFormatter()
 
-    expected_attribute_names = [u'container_id',
-                                u'log_line',
-                                u'log_source']
+    expected_attribute_names = ['container_id',
+                                'log_line',
+                                'log_source']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter2, expected_attribute_names)
 
     event_formatter3 = docker.DockerLayerEventFormatter()
 
-    expected_attribute_names = [u'command',
-                                u'layer_id']
+    expected_attribute_names = ['command',
+                                'layer_id']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter3, expected_attribute_names)

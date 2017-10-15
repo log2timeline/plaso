@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the CUPS IPP file event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import cups_ipp
@@ -22,8 +24,8 @@ class CupsIppFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = cups_ipp.CupsIppFormatter()
 
     expected_attribute_names = [
-        u'status', u'user', u'owner', u'job_name', u'application', u'type_doc',
-        u'printer_id']
+        'status', 'user', 'owner', 'job_name', 'application', 'type_doc',
+        'printer_id']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

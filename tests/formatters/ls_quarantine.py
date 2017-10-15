@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Mac OS X launch services (LS) quarantine event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import ls_quarantine
@@ -22,9 +24,9 @@ class LSQuarantineFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = ls_quarantine.LSQuarantineFormatter()
 
     expected_attribute_names = [
-        u'agent',
-        u'url',
-        u'data']
+        'agent',
+        'url',
+        'data']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

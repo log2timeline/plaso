@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the  Mac OS X ASL securityd log file event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import mac_securityd
@@ -22,11 +24,11 @@ class MacSecuritydLogFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = mac_securityd.MacSecuritydLogFormatter()
 
     expected_attribute_names = [
-        u'sender',
-        u'sender_pid',
-        u'level',
-        u'facility',
-        u'message']
+        'sender',
+        'sender_pid',
+        'level',
+        'facility',
+        'message']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

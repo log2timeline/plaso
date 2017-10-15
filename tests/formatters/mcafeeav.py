@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the McAfee AV Logs file event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import mcafeeav
@@ -23,12 +25,12 @@ class McafeeAccessProtectionLogEventFormatterTest(
     event_formatter = mcafeeav.McafeeAccessProtectionLogEventFormatter()
 
     expected_attribute_names = [
-        u'filename',
-        u'username',
-        u'trigger_location',
-        u'status',
-        u'rule',
-        u'action']
+        'filename',
+        'username',
+        'trigger_location',
+        'status',
+        'rule',
+        'action']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

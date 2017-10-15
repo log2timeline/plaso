@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Google Analytics cookie event formatters."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import ganalytics
@@ -22,7 +24,7 @@ class AnalyticsUtmaCookieFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = ganalytics.AnalyticsUtmaCookieFormatter()
 
     expected_attribute_names = [
-        u'url', u'cookie_name', u'sessions', u'domain_hash', u'visitor_id']
+        'url', 'cookie_name', 'sessions', 'domain_hash', 'visitor_id']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -44,7 +46,7 @@ class AnalyticsUtmbCookieFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = ganalytics.AnalyticsUtmbCookieFormatter()
 
     expected_attribute_names = [
-        u'url', u'cookie_name', u'pages_viewed', u'domain_hash']
+        'url', 'cookie_name', 'pages_viewed', 'domain_hash']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -65,7 +67,7 @@ class AnalyticsUtmtCookieFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = ganalytics.AnalyticsUtmtCookieFormatter()
 
-    expected_attribute_names = [u'url', u'cookie_name']
+    expected_attribute_names = ['url', 'cookie_name']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -87,8 +89,8 @@ class AnalyticsUtmzCookieFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = ganalytics.AnalyticsUtmzCookieFormatter()
 
     expected_attribute_names = [
-        u'url', u'cookie_name', u'sessions', u'domain_hash', u'sources',
-        u'utmcsr', u'utmccn', u'utmcmd', u'utmctr', u'utmcct']
+        'url', 'cookie_name', 'sessions', 'domain_hash', 'sources',
+        'utmcsr', 'utmccn', 'utmcmd', 'utmctr', 'utmcct']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

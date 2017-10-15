@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the shell item event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import shell_items
@@ -22,12 +24,12 @@ class ShellItemFileEntryEventFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = shell_items.ShellItemFileEntryEventFormatter()
 
     expected_attribute_names = [
-        u'name',
-        u'long_name',
-        u'localized_name',
-        u'file_reference',
-        u'shell_item_path',
-        u'origin']
+        'name',
+        'long_name',
+        'localized_name',
+        'file_reference',
+        'shell_item_path',
+        'origin']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

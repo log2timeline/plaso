@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Android WebViewCache event formatters."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import android_webviewcache
@@ -21,7 +23,7 @@ class AndroidWebViewCacheFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = android_webviewcache.AndroidWebViewCacheFormatter()
 
-    expected_attribute_names = [u'url', u'content_length']
+    expected_attribute_names = ['url', 'content_length']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

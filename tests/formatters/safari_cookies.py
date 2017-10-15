@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Safari Binary cookie event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import safari_cookies
@@ -22,10 +24,10 @@ class SafaryCookieFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = safari_cookies.SafaryCookieFormatter()
 
     expected_attribute_names = [
-        u'url',
-        u'path',
-        u'cookie_name',
-        u'flags']
+        'url',
+        'path',
+        'cookie_name',
+        'flags']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows Recycler/Recycle Bin event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import recycler
@@ -22,10 +24,10 @@ class WinRecyclerFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = recycler.WinRecyclerFormatter()
 
     expected_attribute_names = [
-        u'drive_letter',
-        u'original_filename',
-        u'record_index',
-        u'short_filename']
+        'drive_letter',
+        'original_filename',
+        'record_index',
+        'short_filename']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

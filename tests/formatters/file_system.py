@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the file system stat event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import file_system
@@ -22,7 +24,7 @@ class FileStatEventFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = file_system.FileStatEventFormatter()
 
     expected_attribute_names = [
-        u'display_name', u'file_entry_type', u'unallocated']
+        'display_name', 'file_entry_type', 'unallocated']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -44,8 +46,8 @@ class NTFSFileStatEventFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = file_system.NTFSFileStatEventFormatter()
 
     expected_attribute_names = [
-        u'attribute_name', u'display_name', u'file_reference', u'name',
-        u'parent_file_reference', u'unallocated']
+        'attribute_name', 'display_name', 'file_reference', 'name',
+        'parent_file_reference', 'unallocated']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

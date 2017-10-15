@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows services event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import winregservice
@@ -22,8 +24,8 @@ class WinRegistryServiceFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = winregservice.WinRegistryServiceFormatter()
 
     expected_attribute_names = [
-        u'key_path',
-        u'text']
+        'key_path',
+        'text']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

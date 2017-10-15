@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Zeitgeist event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import zeitgeist
@@ -21,7 +23,7 @@ class ZeitgeistFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = zeitgeist.ZeitgeistFormatter()
 
-    expected_attribute_names = [u'subject_uri']
+    expected_attribute_names = ['subject_uri']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

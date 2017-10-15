@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Android WebView database event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import android_webview
@@ -22,7 +24,7 @@ class AndroidWebViewCookieEventFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = android_webview.AndroidWebViewCookieEventFormatter()
 
     expected_attribute_names = [
-        u'domain', u'path', u'name', u'value', u'secure']
+        'domain', 'path', 'name', 'value', 'secure']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows Prefetch event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import winprefetch
@@ -22,11 +24,11 @@ class WinPrefetchExecutionFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = winprefetch.WinPrefetchExecutionFormatter()
 
     expected_attribute_names = [
-        u'executable',
-        u'run_count',
-        u'path',
-        u'prefetch_hash',
-        u'volumes_string']
+        'executable',
+        'run_count',
+        'path',
+        'prefetch_hash',
+        'volumes_string']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the formatter mediator object."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import mediator
