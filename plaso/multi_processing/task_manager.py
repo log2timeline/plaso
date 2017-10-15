@@ -116,6 +116,8 @@ class TaskManager(object):
   them.
   """
 
+  # Stop pylint from reporting:
+  # Context manager 'lock' doesn't implement __enter__ and __exit__.
   # pylint: disable=not-context-manager
 
   # Consider a task inactive after 5 minutes of no activity.
