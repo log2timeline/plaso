@@ -6,7 +6,8 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import bencode_parser  # pylint: disable=unused-import
+# pylint: disable=unused-import
+from plaso.formatters import bencode_parser as _
 from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import bencode_parser

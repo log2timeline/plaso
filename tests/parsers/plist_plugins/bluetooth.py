@@ -55,11 +55,12 @@ class TestBtPlugin(test_lib.PlistPluginTestCase):
 
     # One of the paired event descriptions should contain the string:
     # Paired:True Name:Apple Magic Trackpad 2.
-    paired_descriptions = [
-        event.desc for event in paired_events]
+    paired_descriptions = [event.desc for event in paired_events]
 
     self.assertTrue(
         'Paired:True Name:Apple Magic Trackpad 2' in paired_descriptions)
+
+    event = events[10]
 
     expected_string = (
         '/DeviceCache/44-00-00-00-00-04 '

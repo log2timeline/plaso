@@ -14,6 +14,8 @@ from tests.parsers import test_lib
 class OLECFPluginTestCase(test_lib.ParserTestCase):
   """OLE CF-based plugin test case."""
 
+  # pylint: disable=no-member
+
   def _ParseOLECFFileWithPlugin(
       self, path_segments, plugin, codepage='cp1252',
       knowledge_base_values=None):
