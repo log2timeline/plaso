@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.formatters import officemru  # pylint: disable=unused-import
+from plaso.formatters import officemru as _  # pylint: disable=unused-import
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import timelib
