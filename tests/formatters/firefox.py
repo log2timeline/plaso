@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the Firefox history event 
-formatter."""
+"""Tests for the Firefox history event formatter."""
+
 from __future__ import unicode_literals
 
 import unittest
