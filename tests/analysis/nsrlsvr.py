@@ -1,6 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """Tests for the nsrlsvr analysis plugin."""
+
+from __future__ import unicode_literals
+
 import unittest
 
 try:
@@ -30,14 +33,14 @@ class _MockNsrlsvrSocket(object):
   def recv(self, unused_buffer_size):
     """Mocks the socket.recv method."""
     expected_data = (
-        self._data == u'QUERY {0:s}\n'.format(NsrlSvrTest.EVENT_1_HASH))
+        self._data == 'QUERY {0:s}\n'.format(NsrlSvrTest.EVENT_1_HASH))
 
     self._data = None
 
     if expected_data:
-      return u'OK 1'
+      return 'OK 1'
 
-    return u'OK 0'
+    return 'OK 0'
 
   def sendall(self, data):
     """Mocks the socket.sendall method"""
@@ -52,25 +55,25 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
   """Tests for the nsrlsvr analysis plugin."""
 
   EVENT_1_HASH = (
-      u'2d79fcc6b02a2e183a0cb30e0e25d103f42badda9fbf86bbee06f93aa3855aff')
+      '2d79fcc6b02a2e183a0cb30e0e25d103f42badda9fbf86bbee06f93aa3855aff')
 
   _EVENT_2_HASH = (
-      u'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
   _TEST_EVENTS = [
-      {u'timestamp': timelib.Timestamp.CopyFromString(u'2015-01-01 17:00:00'),
-       u'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
-       u'sha256_hash': EVENT_1_HASH,
-       u'data_type': u'fs:stat',
-       u'pathspec': fake_path_spec.FakePathSpec(
-           location=u'C:\\WINDOWS\\system32\\good.exe')
+      {'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
+       'sha256_hash': EVENT_1_HASH,
+       'data_type': 'fs:stat',
+       'pathspec': fake_path_spec.FakePathSpec(
+           location='C:\\WINDOWS\\system32\\good.exe')
       },
-      {u'timestamp': timelib.Timestamp.CopyFromString(u'2016-01-01 17:00:00'),
-       u'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
-       u'sha256_hash': _EVENT_2_HASH,
-       u'data_type': u'fs:stat:ntfs',
-       u'pathspec': fake_path_spec.FakePathSpec(
-           location=u'C:\\WINDOWS\\system32\\evil.exe')}]
+      {'timestamp': timelib.Timestamp.CopyFromString('2016-01-01 17:00:00'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
+       'sha256_hash': _EVENT_2_HASH,
+       'data_type': 'fs:stat:ntfs',
+       'pathspec': fake_path_spec.FakePathSpec(
+           location='C:\\WINDOWS\\system32\\evil.exe')}]
 
   def _MockCreateConnection(
       self, unused_connection_information, unused_timeout):
@@ -85,7 +88,7 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
   def setUp(self):
     """Makes preparations before running an individual test."""
     self._socket_patcher = mock.patch(
-        u'socket.create_connection', self._MockCreateConnection)
+        'socket.create_connection', self._MockCreateConnection)
     self._socket_patcher.start()
 
   def tearDown(self):
@@ -100,9 +103,9 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
       events.append(event)
 
     plugin = nsrlsvr.NsrlsvrAnalysisPlugin()
-    plugin.SetHost(u'localhost')
+    plugin.SetHost('localhost')
     plugin.SetPort(9120)
-    plugin.SetLabel(u'nsrl_present')
+    plugin.SetLabel('nsrl_present')
 
     storage_writer = self._AnalyzeEvents(events, plugin)
 
@@ -113,8 +116,8 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
     self.assertIsNotNone(report)
 
     expected_text = (
-        u'nsrlsvr hash tagging results\n'
-        u'1 path specifications tagged with label: nsrl_present\n')
+        'nsrlsvr hash tagging results\n'
+        '1 path specifications tagged with label: nsrl_present\n')
     self.assertEqual(report.text, expected_text)
 
     labels = []
@@ -122,7 +125,7 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
       labels.extend(event_tag.labels)
     self.assertEqual(len(labels), 1)
 
-    expected_labels = [u'nsrl_present']
+    expected_labels = ['nsrl_present']
     self.assertEqual(labels, expected_labels)
 
 

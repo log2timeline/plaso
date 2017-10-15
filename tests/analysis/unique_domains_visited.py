@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the unique domains visited analysis plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.analysis import unique_domains_visited
@@ -14,30 +16,30 @@ class UniqueDomainsPluginTest(test_lib.AnalysisPluginTestCase):
   """Tests for the unique domains analysis plugin."""
 
   _TEST_EVENTS = [
-      {u'data_type': u'chrome:history:file_downloaded',
-       u'domain':u'firstevent.com',
-       u'path': u'/1/index.html',
-       u'timestamp': timelib.Timestamp.CopyFromString(u'2015-01-01 01:00:00')},
-      {u'data_type': u'firefox:places:page_visited',
-       u'domain': u'secondevent.net',
-       u'path': u'/2/index.html',
-       u'timestamp': timelib.Timestamp.CopyFromString(u'2015-02-02 02:00:00')},
-      {u'data_type': u'msiecf:redirected',
-       u'domain': u'thirdevent.org',
-       u'path': u'/3/index.html',
-       u'timestamp': timelib.Timestamp.CopyFromString(u'2015-03-03 03:00:00')},
-      {u'data_type': u'safari:history:visit',
-       u'domain': u'fourthevent.co',
-       u'path': u'/4/index.html',
-       u'timestamp': timelib.Timestamp.CopyFromString(u'2015-04-04 04:00:00')},
+      {'data_type': 'chrome:history:file_downloaded',
+       'domain':'firstevent.com',
+       'path': '/1/index.html',
+       'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 01:00:00')},
+      {'data_type': 'firefox:places:page_visited',
+       'domain': 'secondevent.net',
+       'path': '/2/index.html',
+       'timestamp': timelib.Timestamp.CopyFromString('2015-02-02 02:00:00')},
+      {'data_type': 'msiecf:redirected',
+       'domain': 'thirdevent.org',
+       'path': '/3/index.html',
+       'timestamp': timelib.Timestamp.CopyFromString('2015-03-03 03:00:00')},
+      {'data_type': 'safari:history:visit',
+       'domain': 'fourthevent.co',
+       'path': '/4/index.html',
+       'timestamp': timelib.Timestamp.CopyFromString('2015-04-04 04:00:00')},
       ]
 
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
     events = []
     for event_dictionary in self._TEST_EVENTS:
-      event_dictionary[u'url'] = u'https://{0:s}/{1:s}'.format(
-          event_dictionary[u'domain'], event_dictionary[u'path'])
+      event_dictionary['url'] = 'https://{0:s}/{1:s}'.format(
+          event_dictionary['domain'], event_dictionary['path'])
 
       event = self._CreateTestEventObject(event_dictionary)
       events.append(event)
@@ -51,7 +53,7 @@ class UniqueDomainsPluginTest(test_lib.AnalysisPluginTestCase):
 
     report_text = analysis_report.GetString()
     for event_dictionary in self._TEST_EVENTS:
-      domain = event_dictionary.get(u'domain', u'')
+      domain = event_dictionary.get('domain', '')
       self.assertIn(domain, report_text)
 
 

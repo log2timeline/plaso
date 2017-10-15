@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the VirusTotal analysis plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 try:
@@ -35,13 +37,13 @@ class MockResponse(dict):
 class VirusTotalTest(test_lib.AnalysisPluginTestCase):
   """Tests for the VirusTotal analysis plugin."""
 
-  _EVENT_1_HASH = u'90'
+  _EVENT_1_HASH = '90'
 
-  _FAKE_API_KEY = u'4'
+  _FAKE_API_KEY = '4'
 
   _TEST_EVENTS = [{
-      u'timestamp': timelib.Timestamp.CopyFromString(u'2015-01-01 17:00:00'),
-      u'sha256_hash': _EVENT_1_HASH}]
+      'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
+      'sha256_hash': _EVENT_1_HASH}]
 
   def _MockGet(self, url, params):
     """Mock function to simulate a VirusTotal API request.
@@ -58,13 +60,13 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
     # pylint: disable=protected-access
     self.assertEqual(
         url, virustotal.VirusTotalAnalyzer._VIRUSTOTAL_API_REPORT_URL)
-    if params[u'resource'] == self._EVENT_1_HASH:
+    if params['resource'] == self._EVENT_1_HASH:
       response = MockResponse()
-      response[u'resource'] = self._EVENT_1_HASH
-      response[u'response_code'] = 1
-      response[u'positives'] = 10
+      response['resource'] = self._EVENT_1_HASH
+      response['response_code'] = 1
+      response['positives'] = 10
       return response
-    self.fail(u'Unexpected parameters to request.get()')
+    self.fail('Unexpected parameters to request.get()')
 
   def _CreateTestEventObject(self, event_dictionary):
     """Create a test event with a set of attributes.
@@ -77,15 +79,15 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
       EventObject: event with the appropriate attributes for testing.
     """
     date_time = dfdatetime_posix_time.PosixTime(
-        timestamp=event_dictionary[u'timestamp'])
+        timestamp=event_dictionary['timestamp'])
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_CREATION)
 
-    event.data_type = u'pe:compilation:compilation_time'
-    event.pe_type = u'Executable (EXE)'
+    event.data_type = 'pe:compilation:compilation_time'
+    event.pe_type = 'Executable (EXE)'
 
     for attribute_name, attribute_value in event_dictionary.items():
-      if attribute_name == u'timestamp':
+      if attribute_name == 'timestamp':
         continue
 
       setattr(event, attribute_name, attribute_value)
@@ -94,7 +96,7 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self.requests_patcher = mock.patch(u'requests.get', self._MockGet)
+    self.requests_patcher = mock.patch('requests.get', self._MockGet)
     self.requests_patcher.start()
 
   def tearDown(self):
@@ -105,8 +107,8 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
     """Tests the ExamineEvent and CompileReport functions."""
     events = []
     for event_dictionary in self._TEST_EVENTS:
-      event_dictionary[u'pathspec'] = fake_path_spec.FakePathSpec(
-          location=u'C:\\WINDOWS\\system32\\evil.exe')
+      event_dictionary['pathspec'] = fake_path_spec.FakePathSpec(
+          location='C:\\WINDOWS\\system32\\evil.exe')
 
       event = self._CreateTestEventObject(event_dictionary)
       events.append(event)
@@ -123,8 +125,8 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
     self.assertIsNotNone(report)
 
     expected_text = (
-        u'virustotal hash tagging results\n'
-        u'1 path specifications tagged with label: virustotal_detections_10\n')
+        'virustotal hash tagging results\n'
+        '1 path specifications tagged with label: virustotal_detections_10\n')
     self.assertEqual(report.text, expected_text)
 
     labels = []
@@ -132,7 +134,7 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
       labels.extend(event_tag.labels)
     self.assertEqual(len(labels), 1)
 
-    expected_labels = [u'virustotal_detections_10']
+    expected_labels = ['virustotal_detections_10']
     self.assertEqual(labels, expected_labels)
 
 

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the chrome extension analysis plugin."""
 
+from __future__ import unicode_literals
+
 import os
 import unittest
 
@@ -26,14 +28,14 @@ class MockChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
       str: page content or None.
     """
     chrome_web_store_file = shared_test_lib.GetTestFilePath([
-        u'chrome_extensions', extension_identifier])
+        'chrome_extensions', extension_identifier])
     if not os.path.exists(chrome_web_store_file):
       return
 
     with open(chrome_web_store_file, 'rb') as file_object:
       page_content = file_object.read()
 
-    return page_content.decode(u'utf-8')
+    return page_content.decode('utf-8')
 
   def _GetTestFilePath(self, path_segments):
     """Retrieves the path of a test file in the test data directory.
@@ -55,132 +57,132 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
   # pylint: disable=protected-access
 
   _MACOSX_PATHS = [
-      u'/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions',
-      (u'/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions/'
-       u'apdfllckaahabafndbhieahigkjlhalf'),
-      u'/private/var/log/system.log',
-      u'/Users/frank/Library/Application Data/Google/Chrome/Default',
-      u'/Users/hans/Library/Application Data/Google/Chrome/Default',
-      (u'/Users/frank/Library/Application Data/Google/Chrome/Default/'
-       u'Extensions/pjkljhegncpnkpknbcohdijeoejaedia'),
-      u'/Users/frank/Library/Application Data/Google/Chrome/Default/Extensions']
+      '/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions',
+      ('/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions/'
+       'apdfllckaahabafndbhieahigkjlhalf'),
+      '/private/var/log/system.log',
+      '/Users/frank/Library/Application Data/Google/Chrome/Default',
+      '/Users/hans/Library/Application Data/Google/Chrome/Default',
+      ('/Users/frank/Library/Application Data/Google/Chrome/Default/'
+       'Extensions/pjkljhegncpnkpknbcohdijeoejaedia'),
+      '/Users/frank/Library/Application Data/Google/Chrome/Default/Extensions']
 
   _WINDOWS_PATHS = [
-      u'C:\\Users\\Dude\\SomeFolder\\Chrome\\Default\\Extensions',
-      (u'C:\\Users\\Dude\\SomeNoneStandardFolder\\Chrome\\Default\\Extensions\\'
-       u'hmjkmjkepdijhoojdojkdfohbdgmmhki'),
-      (u'C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions\\'
-       u'blpcfgokakmgnkcojhhkbfbldkacnbeo'),
-      u'C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions',
-      (u'C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions\\'
-       u'icppfcnhkcmnfdhfhphakoifcfokfdhg'),
-      u'C:\\Windows\\System32',
-      u'C:\\Stuff/with path separator\\Folder']
+      'C:\\Users\\Dude\\SomeFolder\\Chrome\\Default\\Extensions',
+      ('C:\\Users\\Dude\\SomeNoneStandardFolder\\Chrome\\Default\\Extensions\\'
+       'hmjkmjkepdijhoojdojkdfohbdgmmhki'),
+      ('C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions\\'
+       'blpcfgokakmgnkcojhhkbfbldkacnbeo'),
+      'C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions',
+      ('C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions\\'
+       'icppfcnhkcmnfdhfhphakoifcfokfdhg'),
+      'C:\\Windows\\System32',
+      'C:\\Stuff/with path separator\\Folder']
 
   _MACOSX_USERS = [
-      {u'name': u'root', u'path': u'/var/root', u'sid': u'0'},
-      {u'name': u'frank', u'path': u'/Users/frank', u'sid': u'4052'},
-      {u'name': u'hans', u'path': u'/Users/hans', u'sid': u'4352'},
-      {u'name': u'dude', u'path': u'/Users/dude', u'sid': u'1123'}]
+      {'name': 'root', 'path': '/var/root', 'sid': '0'},
+      {'name': 'frank', 'path': '/Users/frank', 'sid': '4052'},
+      {'name': 'hans', 'path': '/Users/hans', 'sid': '4352'},
+      {'name': 'dude', 'path': '/Users/dude', 'sid': '1123'}]
 
   _WINDOWS_USERS = [
-      {u'name': u'dude', u'path': u'C:\\Users\\dude', u'sid': u'S-1'},
-      {u'name': u'frank', u'path': u'C:\\Users\\frank', u'sid': u'S-2'}]
+      {'name': 'dude', 'path': 'C:\\Users\\dude', 'sid': 'S-1'},
+      {'name': 'frank', 'path': 'C:\\Users\\frank', 'sid': 'S-2'}]
 
-  @shared_test_lib.skipUnlessHasTestFile([u'chrome_extensions'])
+  @shared_test_lib.skipUnlessHasTestFile(['chrome_extensions'])
   def testGetPathSegmentSeparator(self):
     """Tests the _GetPathSegmentSeparator function."""
     plugin = MockChromeExtensionPlugin()
 
     for path in self._MACOSX_PATHS:
       path_segment_separator = plugin._GetPathSegmentSeparator(path)
-      self.assertEqual(path_segment_separator, u'/')
+      self.assertEqual(path_segment_separator, '/')
 
     for path in self._WINDOWS_PATHS:
       path_segment_separator = plugin._GetPathSegmentSeparator(path)
-      self.assertEqual(path_segment_separator, u'\\')
+      self.assertEqual(path_segment_separator, '\\')
 
-  @shared_test_lib.skipUnlessHasTestFile([u'chrome_extensions'])
+  @shared_test_lib.skipUnlessHasTestFile(['chrome_extensions'])
   def testExamineEventAndCompileReportMacOSXPaths(self):
     """Tests the ExamineEvent and CompileReport functions on Mac OS X paths."""
     events = []
     for path in self._MACOSX_PATHS:
       event_dictionary = {
-          u'data_type': u'fs:stat',
-          u'filename': path,
-          u'timestamp': 12345,
-          u'timestamp_desc': u'Some stuff'}
+          'data_type': 'fs:stat',
+          'filename': path,
+          'timestamp': 12345,
+          'timestamp_desc': 'Some stuff'}
 
       event = self._CreateTestEventObject(event_dictionary)
       events.append(event)
 
     plugin = MockChromeExtensionPlugin()
     storage_writer = self._AnalyzeEvents(
-        events, plugin, knowledge_base_values={u'users': self._MACOSX_USERS})
+        events, plugin, knowledge_base_values={'users': self._MACOSX_USERS})
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
 
     analysis_report = storage_writer.analysis_reports[0]
 
-    self.assertEqual(plugin._sep, u'/')
+    self.assertEqual(plugin._sep, '/')
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.
-    expected_text = u'\n'.join([
-        u' == USER: dude ==',
-        u'  Google Drive [apdfllckaahabafndbhieahigkjlhalf]',
-        u'',
-        u' == USER: frank ==',
-        u'  Gmail [pjkljhegncpnkpknbcohdijeoejaedia]',
-        u'',
-        u''])
+    expected_text = '\n'.join([
+        ' == USER: dude ==',
+        '  Google Drive [apdfllckaahabafndbhieahigkjlhalf]',
+        '',
+        ' == USER: frank ==',
+        '  Gmail [pjkljhegncpnkpknbcohdijeoejaedia]',
+        '',
+        ''])
 
     self.assertEqual(analysis_report.text, expected_text)
     self.assertEqual(analysis_report.plugin_name, 'chrome_extension_test')
 
-    expected_keys = set([u'frank', u'dude'])
+    expected_keys = set(['frank', 'dude'])
     self.assertEqual(set(analysis_report.report_dict.keys()), expected_keys)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'chrome_extensions'])
+  @shared_test_lib.skipUnlessHasTestFile(['chrome_extensions'])
   def testExamineEventAndCompileReportWindowsPaths(self):
     """Tests the ExamineEvent and CompileReport functions on Windows paths."""
     events = []
     for path in self._WINDOWS_PATHS:
       event_dictionary = {
-          u'data_type': u'fs:stat',
-          u'filename': path,
-          u'timestamp': 12345,
-          u'timestamp_desc': u'Some stuff'}
+          'data_type': 'fs:stat',
+          'filename': path,
+          'timestamp': 12345,
+          'timestamp_desc': 'Some stuff'}
 
       event = self._CreateTestEventObject(event_dictionary)
       events.append(event)
 
     plugin = MockChromeExtensionPlugin()
     storage_writer = self._AnalyzeEvents(
-        events, plugin, knowledge_base_values={u'users': self._WINDOWS_USERS})
+        events, plugin, knowledge_base_values={'users': self._WINDOWS_USERS})
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
 
     analysis_report = storage_writer.analysis_reports[0]
 
-    self.assertEqual(plugin._sep, u'\\')
+    self.assertEqual(plugin._sep, '\\')
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.
-    expected_text = u'\n'.join([
-        u' == USER: dude ==',
-        u'  Google Keep - notes and lists [hmjkmjkepdijhoojdojkdfohbdgmmhki]',
-        u'',
-        u' == USER: frank ==',
-        u'  Google Play Music [icppfcnhkcmnfdhfhphakoifcfokfdhg]',
-        u'  YouTube [blpcfgokakmgnkcojhhkbfbldkacnbeo]',
-        u'',
-        u''])
+    expected_text = '\n'.join([
+        ' == USER: dude ==',
+        '  Google Keep - notes and lists [hmjkmjkepdijhoojdojkdfohbdgmmhki]',
+        '',
+        ' == USER: frank ==',
+        '  Google Play Music [icppfcnhkcmnfdhfhphakoifcfokfdhg]',
+        '  YouTube [blpcfgokakmgnkcojhhkbfbldkacnbeo]',
+        '',
+        ''])
 
     self.assertEqual(analysis_report.text, expected_text)
     self.assertEqual(analysis_report.plugin_name, 'chrome_extension_test')
 
-    expected_keys = set([u'frank', u'dude'])
+    expected_keys = set(['frank', 'dude'])
     self.assertEqual(set(analysis_report.report_dict.keys()), expected_keys)
 
 

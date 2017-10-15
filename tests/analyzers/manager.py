@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the analyzer manager."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.analyzers import interface
@@ -13,7 +15,7 @@ from tests import test_lib as shared_test_lib
 class TestAnalyzer(interface.BaseAnalyzer):
   """Test analyzer."""
 
-  NAME = u'testanalyze'
+  NAME = 'testanalyze'
 
   def __init__(self):
     """Initializes a test analyzer."""
@@ -24,8 +26,8 @@ class TestAnalyzer(interface.BaseAnalyzer):
     """Adds a result to the results object."""
     if not self._results:
       result = analyzer_result.AnalyzerResult()
-      result.attribute_name = u'test_result'
-      result.attribute_value = u'is_vegetable'
+      result.attribute_name = 'test_result'
+      result.attribute_value = 'is_vegetable'
       self._results.append(result)
 
   def Analyze(self, data):
@@ -81,16 +83,16 @@ class AnalyzersManagerTest(shared_test_lib.BaseTestCase):
   def testGetAnalyzerInstance(self):
     """Tests the GetAnalyzerInstance function."""
     manager.AnalyzersManager.RegisterAnalyzer(TestAnalyzer)
-    analyzer = manager.AnalyzersManager.GetAnalyzerInstance(u'testanalyze')
+    analyzer = manager.AnalyzersManager.GetAnalyzerInstance('testanalyze')
     self.assertIsNotNone(analyzer)
-    self.assertEqual(analyzer.NAME, u'testanalyze')
+    self.assertEqual(analyzer.NAME, 'testanalyze')
 
-    analyzer = manager.AnalyzersManager.GetAnalyzerInstance(u'testanalyze')
+    analyzer = manager.AnalyzersManager.GetAnalyzerInstance('testanalyze')
     self.assertIsNotNone(analyzer)
-    self.assertEqual(analyzer.NAME, u'testanalyze')
+    self.assertEqual(analyzer.NAME, 'testanalyze')
 
     with self.assertRaises(KeyError):
-      manager.AnalyzersManager.GetAnalyzerInstance(u'bogus')
+      manager.AnalyzersManager.GetAnalyzerInstance('bogus')
     manager.AnalyzersManager.DeregisterAnalyzer(TestAnalyzer)
 
   def testGetAnalyzerInstances(self):
