@@ -307,7 +307,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
   def testReadAndWriteSerializedSessionCompletion(self):
     """Test ReadSerialized and WriteSerialized of SessionCompletion."""
     timestamp = int(time.time() * 1000000)
-    session_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
+    session_identifier = '{0:s}'.format(uuid.uuid4().hex)
 
     parsers_counter = collections.Counter()
     parsers_counter['filestat'] = 3
@@ -346,7 +346,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
   def testReadAndWriteSerializedSessionStart(self):
     """Test ReadSerialized and WriteSerialized of SessionStart."""
     timestamp = int(time.time() * 1000000)
-    session_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
+    session_identifier = '{0:s}'.format(uuid.uuid4().hex)
 
     expected_session_start = sessions.SessionStart(
         identifier=session_identifier)
@@ -382,7 +382,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
   def testReadAndWriteSerializedTask(self):
     """Test ReadSerialized and WriteSerialized of Task."""
-    session_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
+    session_identifier = '{0:s}'.format(uuid.uuid4().hex)
 
     expected_task = tasks.Task(session_identifier=session_identifier)
 
@@ -413,8 +413,8 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
   def testReadAndWriteSerializedTaskCompletion(self):
     """Test ReadSerialized and WriteSerialized of TaskCompletion."""
     timestamp = int(time.time() * 1000000)
-    session_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
-    task_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
+    session_identifier = '{0:s}'.format(uuid.uuid4().hex)
+    task_identifier = '{0:s}'.format(uuid.uuid4().hex)
 
     expected_task_completion = tasks.TaskCompletion(
         identifier=task_identifier, session_identifier=session_identifier)
@@ -448,8 +448,8 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
   def testReadAndWriteSerializedTaskStart(self):
     """Test ReadSerialized and WriteSerialized of TaskStart."""
     timestamp = int(time.time() * 1000000)
-    session_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
-    task_identifier = '{0:s}'.format(uuid.uuid4().get_hex())
+    session_identifier = '{0:s}'.format(uuid.uuid4().hex)
+    task_identifier = '{0:s}'.format(uuid.uuid4().hex)
 
     expected_task_start = tasks.TaskStart(
         identifier=task_identifier, session_identifier=session_identifier)

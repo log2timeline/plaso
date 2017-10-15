@@ -6,7 +6,10 @@ from __future__ import unicode_literals
 
 import unittest
 
-from mock import MagicMock
+try:
+  from mock import MagicMock
+except ImportError:
+  from unittest.mock import MagicMock
 
 from plaso.containers import events
 from plaso.lib import definitions
@@ -72,7 +75,7 @@ class ElasticSearchHelperTest(test_lib.OutputModuleTestCase):
         'source_short': 'LOG',
         'tag': [label],
         'text': ('Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
-                  'session\n closed for user root)'),
+                 'session\n closed for user root)'),
         'timestamp': event_timestamp,
         'timestamp_desc': 'Content Modification Time',
     }

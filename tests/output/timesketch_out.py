@@ -6,8 +6,15 @@ from __future__ import unicode_literals
 
 import unittest
 
-from mock import Mock
-from mock import MagicMock
+try:
+  from mock import Mock
+except ImportError:
+  from unittest.mock import Mock
+
+try:
+  from mock import MagicMock
+except ImportError:
+  from unittest.mock import MagicMock
 
 from plaso.output import timesketch_out
 
