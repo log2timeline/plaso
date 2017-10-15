@@ -215,7 +215,7 @@ class ParserList(objectfilter.GenericBinaryOperator):
   def Operation(self, x, unused_y):
     """Return a bool depending on the parser list contains the parser."""
     if self.left_operand != 'parser':
-      raise objectfilter.MalformedQueryError(
+      raise errors.MalformedQueryError(
           u'Unable to use keyword "inlist" for other than parser.')
 
     if x in self.compiled_list:
