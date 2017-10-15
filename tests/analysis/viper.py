@@ -67,14 +67,14 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
             'rat',
             'darkcomet'],
         'sha512': '7e81e0c4f49f1884ebebdf6e53531e7836721c2ae417'
-                   '29cf5bc0340f3369e7d37fe4168a7434b2b0420b299f5c'
-                   '1d9a4f482f1bda8e66e40345757d97e5602b2d',
+                  '29cf5bc0340f3369e7d37fe4168a7434b2b0420b299f5c'
+                  '1d9a4f482f1bda8e66e40345757d97e5602b2d',
         'created_at': '2015-03-30 23:13:20.595238',
         'crc32': '2238B48E',
         'ssdeep': '12288:D9HFJ9rJxRX1uVVjoaWSoynxdO1FVBaOiRZTERfIhNk'
-                   'NCCLo9Ek5C/hlg:NZ1xuVVjfFoynPaVBUR8f+kN10EB/g',
+                  'NCCLo9Ek5C/hlg:NZ1xuVVjfFoynPaVBUR8f+kN10EB/g',
         'sha256': '2d79fcc6b02a2e183a0cb30e0e25d103f42badda9fbf86bbee06f9'
-                   '3aa3855aff',
+                  '3aa3855aff',
         'type': 'PE32 executable (GUI) Intel 80386, for MS Windows',
         'id': 10,
         'md5': '9f2520a3056543d49bb0f822d85ce5dd',

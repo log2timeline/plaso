@@ -24,13 +24,13 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
   _TEST_EVENTS = [
       {'key_path': '\\ControlSet001\\services\\TestbDriver',
        'regvalue': {'ImagePath': 'C:\\Dell\\testdriver.sys', 'Type': 2,
-                     'Start': 2, 'ObjectName': ''},
+                    'Start': 2, 'ObjectName': ''},
        'timestamp': 1346145829002031},
       # This is almost the same, but different timestamp and source, so that
       # we can test the service de-duplication.
       {'key_path': '\\ControlSet003\\services\\TestbDriver',
        'regvalue': {'ImagePath': 'C:\\Dell\\testdriver.sys', 'Type': 2,
-                     'Start': 2, 'ObjectName': ''},
+                    'Start': 2, 'ObjectName': ''},
        'timestamp': 1346145839002031},
   ]
 

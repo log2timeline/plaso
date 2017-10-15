@@ -18,6 +18,8 @@ class MockChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
 
   NAME = 'chrome_extension_test'
 
+  _TEST_DATA_PATH = os.path.join(os.getcwd(), 'test_data')
+
   def _GetChromeWebStorePage(self, extension_identifier):
     """Retrieves the page for the extension from the Chrome store website.
 
