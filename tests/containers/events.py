@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the event attribute containers."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.containers import events
@@ -16,7 +18,7 @@ class EventDataTest(shared_test_lib.BaseTestCase):
     """Tests the GetAttributeNames function."""
     attribute_container = events.EventData()
 
-    expected_attribute_names = [u'data_type', u'offset', u'query']
+    expected_attribute_names = ['data_type', 'offset', 'query']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
@@ -31,15 +33,15 @@ class EventObjectTest(shared_test_lib.BaseTestCase):
     attribute_container = events.EventObject()
 
     expected_attribute_names = [
-        u'data_type',
-        u'display_name',
-        u'filename',
-        u'hostname',
-        u'inode',
-        u'offset',
-        u'pathspec',
-        u'tag',
-        u'timestamp']
+        'data_type',
+        'display_name',
+        'filename',
+        'hostname',
+        'inode',
+        'offset',
+        'pathspec',
+        'tag',
+        'timestamp']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
@@ -54,11 +56,11 @@ class EventTagTest(shared_test_lib.BaseTestCase):
     attribute_container = events.EventTag()
 
     expected_attribute_names = [
-        u'comment',
-        u'event_entry_index',
-        u'event_row_identifier',
-        u'event_stream_number',
-        u'labels']
+        'comment',
+        'event_entry_index',
+        'event_row_identifier',
+        'event_stream_number',
+        'labels']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the analyzer result attribute container."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.containers import analyzer_result
@@ -17,7 +19,7 @@ class AnalyzerResultTest(shared_test_lib.BaseTestCase):
     attribute_container = analyzer_result.AnalyzerResult()
 
     expected_attribute_names = [
-        u'analyzer_name', u'attribute_name', u'attribute_value']
+        'analyzer_name', 'attribute_name', 'attribute_value']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

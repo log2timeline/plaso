@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the event source attribute containers."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.containers import event_sources
@@ -17,7 +19,7 @@ class EventSourceTest(shared_test_lib.BaseTestCase):
     attribute_container = event_sources.EventSource()
 
     expected_attribute_names = [
-        u'data_type', u'file_entry_type', u'path_spec']
+        'data_type', 'file_entry_type', 'path_spec']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
@@ -32,7 +34,7 @@ class FileEntryEventSourceTest(shared_test_lib.BaseTestCase):
     attribute_container = event_sources.FileEntryEventSource()
 
     expected_attribute_names = [
-        u'data_type', u'file_entry_type', u'path_spec']
+        'data_type', 'file_entry_type', 'path_spec']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

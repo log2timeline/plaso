@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the profiler classes."""
 
+from __future__ import unicode_literals
+
 import time
 import unittest
 
@@ -22,12 +24,12 @@ class CPUTimeProfilerTest(shared_test_lib.BaseTestCase):
     """Tests the StartTiming, StopTiming and Write functions."""
     with shared_test_lib.TempDirectory() as temp_directory:
       test_profiler = profiler.CPUTimeProfiler(
-          u'unittest', path=temp_directory)
+          'unittest', path=temp_directory)
 
       for _ in range(5):
-        test_profiler.StartTiming(u'test_profile')
+        test_profiler.StartTiming('test_profile')
         time.sleep(0.01)
-        test_profiler.StopTiming(u'test_profile')
+        test_profiler.StopTiming('test_profile')
 
       test_profiler.Write()
 
@@ -44,7 +46,7 @@ class GuppyMemoryProfilerTest(shared_test_lib.BaseTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       test_profiler = profiler.GuppyMemoryProfiler(
-          u'unittest', path=temp_directory)
+          'unittest', path=temp_directory)
 
       test_profiler.Start()
 

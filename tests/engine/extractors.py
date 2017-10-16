@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the extractor classes."""
 
+from __future__ import unicode_literals
+
 import os
 import shutil
 import unittest
@@ -33,11 +35,11 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
     """
     file_paths = []
     for path_spec in path_specs:
-      data_stream = getattr(path_spec, u'data_stream', None)
-      location = getattr(path_spec, u'location', None)
+      data_stream = getattr(path_spec, 'data_stream', None)
+      location = getattr(path_spec, 'location', None)
       if location is not None:
         if data_stream:
-          location = u'{0:s}:{1:s}'.format(location, data_stream)
+          location = '{0:s}:{1:s}'.format(location, data_stream)
         file_paths.append(location)
 
     return file_paths
@@ -55,7 +57,7 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
     for location_expression in location_expressions:
       # Convert the filter paths into a list of path segments and strip
       # the root path segment.
-      path_segments = location_expression.split(u'/')
+      path_segments = location_expression.split('/')
       path_segments.pop(0)
 
       find_spec = file_system_searcher.FindSpec(
@@ -64,17 +66,17 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
     return find_specs
 
-  @shared_test_lib.skipUnlessHasTestFile([u'syslog.bz2'])
-  @shared_test_lib.skipUnlessHasTestFile([u'syslog.tgz'])
-  @shared_test_lib.skipUnlessHasTestFile([u'syslog.zip'])
-  @shared_test_lib.skipUnlessHasTestFile([u'wtmp.1'])
+  @shared_test_lib.skipUnlessHasTestFile(['syslog.bz2'])
+  @shared_test_lib.skipUnlessHasTestFile(['syslog.tgz'])
+  @shared_test_lib.skipUnlessHasTestFile(['syslog.zip'])
+  @shared_test_lib.skipUnlessHasTestFile(['wtmp.1'])
   def testExtractPathSpecsFileSystem(self):
     """Tests the ExtractPathSpecs function on the file system."""
     test_files = [
-        self._GetTestFilePath([u'syslog.bz2']),
-        self._GetTestFilePath([u'syslog.tgz']),
-        self._GetTestFilePath([u'syslog.zip']),
-        self._GetTestFilePath([u'wtmp.1'])]
+        self._GetTestFilePath(['syslog.bz2']),
+        self._GetTestFilePath(['syslog.tgz']),
+        self._GetTestFilePath(['syslog.zip']),
+        self._GetTestFilePath(['wtmp.1'])]
 
     with shared_test_lib.TempDirectory() as temp_directory:
       for a_file in test_files:
@@ -90,19 +92,19 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
       self.assertEqual(len(path_specs), 4)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'System.evtx'])
-  @shared_test_lib.skipUnlessHasTestFile([u'testdir', u'filter_1.txt'])
-  @shared_test_lib.skipUnlessHasTestFile([u'testdir', u'filter_3.txt'])
+  @shared_test_lib.skipUnlessHasTestFile(['System.evtx'])
+  @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_1.txt'])
+  @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_3.txt'])
   def testExtractPathSpecsFileSystemWithFindSpecs(self):
     """Tests the ExtractPathSpecs function with find specifications."""
     location_expressions = [
-        u'/test_data/testdir/filter_.+.txt',
-        u'/test_data/.+evtx',
-        u'/AUTHORS',
-        u'/does_not_exist/some_file_[0-9]+txt']
+        '/test_data/testdir/filter_.+.txt',
+        '/test_data/.+evtx',
+        '/AUTHORS',
+        '/does_not_exist/some_file_[0-9]+txt']
 
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=u'.')
+        dfvfs_definitions.TYPE_INDICATOR_OS, location='.')
 
     resolver_context = context.Context()
     test_extractor = extractors.PathSpecExtractor()
@@ -121,22 +123,22 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
     current_directory = os.getcwd()
 
     expected_path = os.path.join(
-        current_directory, u'test_data', u'testdir', u'filter_1.txt')
+        current_directory, 'test_data', 'testdir', 'filter_1.txt')
     self.assertTrue(expected_path in paths)
 
     expected_path = os.path.join(
-        current_directory, u'test_data', u'testdir', u'filter_2.txt')
+        current_directory, 'test_data', 'testdir', 'filter_2.txt')
     self.assertFalse(expected_path in paths)
 
     expected_path = os.path.join(
-        current_directory, u'test_data', u'testdir', u'filter_3.txt')
+        current_directory, 'test_data', 'testdir', 'filter_3.txt')
     self.assertTrue(expected_path in paths)
 
     expected_path = os.path.join(
-        current_directory, u'AUTHORS')
+        current_directory, 'AUTHORS')
     self.assertTrue(expected_path in paths)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'syslog_image.dd'])
+  @shared_test_lib.skipUnlessHasTestFile(['syslog_image.dd'])
   def testExtractPathSpecsStorageMediaImage(self):
     """Tests the ExtractPathSpecs function an image file.
 
@@ -157,12 +159,12 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
     This means that the collection script should collect 6 files in total.
     """
-    test_file = self._GetTestFilePath([u'syslog_image.dd'])
+    test_file = self._GetTestFilePath(['syslog_image.dd'])
 
     volume_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=volume_path_spec)
 
     resolver_context = context.Context()
@@ -172,20 +174,20 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(len(path_specs), 3)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
+  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testExtractPathSpecsStorageMediaImageWithFilter(self):
     """Tests the ExtractPathSpecs function on an image file with a filter."""
     location_expressions = [
-        u'/a_directory/.+zip',
-        u'/a_directory/another.+',
-        u'/passwords.txt']
+        '/a_directory/.+zip',
+        '/a_directory/another.+',
+        '/passwords.txt']
 
-    test_file = self._GetTestFilePath([u'ímynd.dd'])
+    test_file = self._GetTestFilePath(['ímynd.dd'])
 
     volume_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=volume_path_spec)
 
     resolver_context = context.Context()
@@ -205,16 +207,16 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
     # file_path: '/a_directory/another_file'
     # container_path: 'test_data/ímynd.dd'
     # image_offset: 0
-    self.assertEqual(paths[0], u'/a_directory/another_file')
+    self.assertEqual(paths[0], '/a_directory/another_file')
 
     # path_specs[1]
     # type: TSK
     # file_path: '/passwords.txt'
     # container_path: 'test_data/ímynd.dd'
     # image_offset: 0
-    self.assertEqual(paths[1], u'/passwords.txt')
+    self.assertEqual(paths[1], '/passwords.txt')
 
-  @shared_test_lib.skipUnlessHasTestFile([u'multi_partition_image.vmdk'])
+  @shared_test_lib.skipUnlessHasTestFile(['multi_partition_image.vmdk'])
   def testExtractPathSpecsStorageMediaImageWithPartitions(self):
     """Tests the ExtractPathSpecs function an image file with partitions.
 
@@ -222,23 +224,23 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
     file systems.
     """
     # Note that the source file is a RAW (VMDK flat) image.
-    test_file = self._GetTestFilePath([u'multi_partition_image.vmdk'])
+    test_file = self._GetTestFilePath(['multi_partition_image.vmdk'])
 
     image_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
 
     p1_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/p1',
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location='/p1',
         part_index=2, start_offset=0x00010000, parent=image_path_spec)
     p1_file_system_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=p1_path_spec)
 
     p2_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location=u'/p2',
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location='/p2',
         part_index=3, start_offset=0x00510000, parent=image_path_spec)
     p2_file_system_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=p2_path_spec)
 
     resolver_context = context.Context()
@@ -249,52 +251,52 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
         resolver_context=resolver_context))
 
     expected_paths_p1 = [
-        u'/$AttrDef',
-        u'/$BadClus',
-        u'/$BadClus:$Bad',
-        u'/$Bitmap',
-        u'/$Boot',
-        u'/$Extend',
-        u'/$Extend/$ObjId',
-        u'/$Extend/$Quota',
-        u'/$Extend/$Reparse',
-        u'/$Extend/$RmMetadata',
-        u'/$Extend/$RmMetadata/$Repair',
-        u'/$Extend/$RmMetadata/$Repair:$Config',
-        u'/$Extend/$RmMetadata/$TxfLog',
-        u'/$LogFile',
-        u'/$MFT',
-        u'/$MFTMirr',
-        u'/$Secure',
-        u'/$Secure:$SDS',
-        u'/$UpCase',
-        u'/$Volume',
-        u'/file1.txt',
-        u'/file2.txt']
+        '/$AttrDef',
+        '/$BadClus',
+        '/$BadClus:$Bad',
+        '/$Bitmap',
+        '/$Boot',
+        '/$Extend',
+        '/$Extend/$ObjId',
+        '/$Extend/$Quota',
+        '/$Extend/$Reparse',
+        '/$Extend/$RmMetadata',
+        '/$Extend/$RmMetadata/$Repair',
+        '/$Extend/$RmMetadata/$Repair:$Config',
+        '/$Extend/$RmMetadata/$TxfLog',
+        '/$LogFile',
+        '/$MFT',
+        '/$MFTMirr',
+        '/$Secure',
+        '/$Secure:$SDS',
+        '/$UpCase',
+        '/$Volume',
+        '/file1.txt',
+        '/file2.txt']
 
     expected_paths_p2 = [
-        u'/$AttrDef',
-        u'/$BadClus',
-        u'/$BadClus:$Bad',
-        u'/$Bitmap',
-        u'/$Boot',
-        u'/$Extend',
-        u'/$Extend/$ObjId',
-        u'/$Extend/$Quota',
-        u'/$Extend/$Reparse',
-        u'/$Extend/$RmMetadata',
-        u'/$Extend/$RmMetadata/$Repair',
-        u'/$Extend/$RmMetadata/$Repair:$Config',
-        u'/$Extend/$RmMetadata/$TxfLog',
-        u'/$LogFile',
-        u'/$MFT',
-        u'/$MFTMirr',
-        u'/$Secure',
-        u'/$Secure:$SDS',
-        u'/$UpCase',
-        u'/$Volume',
-        u'/file1_on_part_2.txt',
-        u'/file2_on_part_2.txt']
+        '/$AttrDef',
+        '/$BadClus',
+        '/$BadClus:$Bad',
+        '/$Bitmap',
+        '/$Boot',
+        '/$Extend',
+        '/$Extend/$ObjId',
+        '/$Extend/$Quota',
+        '/$Extend/$Reparse',
+        '/$Extend/$RmMetadata',
+        '/$Extend/$RmMetadata/$Repair',
+        '/$Extend/$RmMetadata/$Repair:$Config',
+        '/$Extend/$RmMetadata/$TxfLog',
+        '/$LogFile',
+        '/$MFT',
+        '/$MFTMirr',
+        '/$Secure',
+        '/$Secure:$SDS',
+        '/$UpCase',
+        '/$Volume',
+        '/file1_on_part_2.txt',
+        '/file2_on_part_2.txt']
 
     paths = self._GetFilePaths(path_specs)
     expected_paths = expected_paths_p1
