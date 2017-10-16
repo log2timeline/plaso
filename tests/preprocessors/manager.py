@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the preprocess plugins manager."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from artifacts import reader as artifacts_reader
@@ -17,7 +19,7 @@ from tests import test_lib as shared_test_lib
 class TestArtifactPreprocessorPlugin(interface.ArtifactPreprocessorPlugin):
   """Test artifact preprocessor plugin."""
 
-  ARTIFACT_DEFINITION_NAME = u'TestArtifactDefinition'
+  ARTIFACT_DEFINITION_NAME = 'TestArtifactDefinition'
 
   def ParseValueData(self, unused_knowledge_base, unused_value_data):
     """Parses artifact value data for a preprocessing attribute.
@@ -34,10 +36,10 @@ class PreprocessPluginsManagerTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  @shared_test_lib.skipUnlessHasTestFile([u'artifacts'])
+  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
   def testCollectFromFileSystem(self):
     """Tests the CollectFromFileSystem function."""
-    path = self._GetTestFilePath([u'artifacts'])
+    path = self._GetTestFilePath(['artifacts'])
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
     registry.ReadFromDirectory(reader, path)

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the dynamic output module."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.containers import events
@@ -17,27 +19,27 @@ from tests.output import test_lib
 
 class TestEvent(events.EventObject):
   """Test event object."""
-  DATA_TYPE = u'test:dynamic'
+  DATA_TYPE = 'test:dynamic'
 
   def __init__(self):
     """Initializes an event object."""
     super(TestEvent, self).__init__()
-    self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
+    self.timestamp = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01')
     self.timestamp_desc = definitions.TIME_DESCRIPTION_CHANGE
-    self.hostname = u'ubuntu'
-    self.filename = u'log/syslog.1'
+    self.hostname = 'ubuntu'
+    self.filename = 'log/syslog.1'
     self.text = (
-        u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
-        u'closed for user root)')
+        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
+        'closed for user root)')
 
 
 class TestEventFormatter(formatters_interface.EventFormatter):
   """Test event formatter."""
-  DATA_TYPE = u'test:dynamic'
-  FORMAT_STRING = u'{text}'
+  DATA_TYPE = 'test:dynamic'
+  FORMAT_STRING = '{text}'
 
-  SOURCE_SHORT = u'LOG'
-  SOURCE_LONG = u'Syslog'
+  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = 'Syslog'
 
 
 class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
@@ -63,7 +65,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     output_writer = cli_test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
     output_module.SetFields([
-        u'date', u'time', u'message', u'hostname', u'filename', u'some_stuff'])
+        'date', 'time', 'message', 'hostname', 'filename', 'some_stuff'])
     output_module.SetOutputWriter(output_writer)
 
     expected_header = b'date,time,message,hostname,filename,some_stuff\n'
@@ -75,8 +77,8 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     output_writer = cli_test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
     output_module.SetFields([
-        u'date', u'time', u'message', u'hostname', u'filename', u'some_stuff'])
-    output_module.SetFieldDelimiter(u'@')
+        'date', 'time', 'message', 'hostname', 'filename', 'some_stuff'])
+    output_module.SetFieldDelimiter('@')
     output_module.SetOutputWriter(output_writer)
 
     expected_header = b'date@time@message@hostname@filename@some_stuff\n'
@@ -95,9 +97,9 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     output_writer = cli_test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
     output_module.SetFields([
-        u'date', u'time', u'timezone', u'macb', u'source', u'sourcetype',
-        u'type', u'user', u'host', u'message_short', u'message',
-        u'filename', u'inode', u'notes', u'format', u'extra'])
+        'date', 'time', 'timezone', 'macb', 'source', 'sourcetype',
+        'type', 'user', 'host', 'message_short', 'message',
+        'filename', 'inode', 'notes', 'format', 'extra'])
     output_module.SetOutputWriter(output_writer)
 
     output_module.WriteHeader()
@@ -121,7 +123,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     output_writer = cli_test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
     output_module.SetFields([
-        u'datetime', u'nonsense', u'hostname', u'message'])
+        'datetime', 'nonsense', 'hostname', 'message'])
     output_module.SetOutputWriter(output_writer)
 
     expected_header = b'datetime,nonsense,hostname,message\n'

@@ -1,6 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """Test for the null output module."""
+
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.output import null
@@ -24,7 +27,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     output_module.WriteFooter()
 
     output = output_writer.ReadOutput()
-    self.assertEqual(u'', output)
+    self.assertEqual('', output)
 
 
 if __name__ == '__main__':

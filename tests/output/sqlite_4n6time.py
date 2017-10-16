@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the 4n6time SQLite output module."""
 
+from __future__ import unicode_literals
+
 import os
 import unittest
 
@@ -23,19 +25,19 @@ from tests.output import test_lib
 class TestEventData(events.EventData):
   """Event data for testing 4n6time SQLite output module."""
 
-  DATA_TYPE = u'syslog:line'
+  DATA_TYPE = 'syslog:line'
 
   def __init__(self):
     """Initializes event data."""
     super(TestEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.hostname = u'ubuntu'
-    self.filename = u'log/syslog.1'
-    self.display_name = u'log/syslog.1'
+    self.hostname = 'ubuntu'
+    self.filename = 'log/syslog.1'
+    self.display_name = 'log/syslog.1'
     self.some_additional_foo = True
     self.my_number = 123
     self.text = (
-        u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
-        u'closed for user root)')
+        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
+        'closed for user root)')
 
 
 class SqliteOutputModuleTest(test_lib.OutputModuleTestCase):
@@ -57,49 +59,49 @@ class SqliteOutputModuleTest(test_lib.OutputModuleTestCase):
     event_data = TestEventData()
 
     timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-06-27 18:17:01+00:00')
+        '2012-06-27 18:17:01+00:00')
     event = time_events.TimestampEvent(
         timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
 
     self._MergeEventAndEventData(event, event_data)
 
     expected_dict = {
-        u'type': u'Content Modification Time',
-        u'host': u'ubuntu',
-        u'filename': u'log/syslog.1',
-        u'source': u'LOG',
-        u'description': u'[',
-        u'datetime': u'2012-06-27 18:17:01',
-        u'inreport': u'',
-        u'source_name': u'-',
-        u'extra': (
-            u'my_number: 123  some_additional_foo: True  text: '
-            u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
-            u'session closed for user root) '),
-        u'tag': u'',
-        u'timezone': u'UTC',
-        u'inode': u'-',
-        u'reportnotes': u'',
-        u'sourcetype': u'Log File',
-        u'event_identifier': u'-',
-        u'format': u'-',
-        u'url': u'-',
-        u'record_number': u'0',
-        u'MACB': u'M...',
-        u'computer_name': u'-',
-        u'offset': 0,
-        u'evidence': u'-',
-        u'user_sid': u'-',
-        u'notes': u'-',
-        u'vss_store_number': -1,
-        u'user': u'-'
+        'type': 'Content Modification Time',
+        'host': 'ubuntu',
+        'filename': 'log/syslog.1',
+        'source': 'LOG',
+        'description': '[',
+        'datetime': '2012-06-27 18:17:01',
+        'inreport': '',
+        'source_name': '-',
+        'extra': (
+            'my_number: 123  some_additional_foo: True  text: '
+            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
+            'session closed for user root) '),
+        'tag': '',
+        'timezone': 'UTC',
+        'inode': '-',
+        'reportnotes': '',
+        'sourcetype': 'Log File',
+        'event_identifier': '-',
+        'format': '-',
+        'url': '-',
+        'record_number': '0',
+        'MACB': 'M...',
+        'computer_name': '-',
+        'offset': 0,
+        'evidence': '-',
+        'user_sid': '-',
+        'notes': '-',
+        'vss_store_number': -1,
+        'user': '-'
     }
     with shared_test_lib.TempDirectory() as temp_directory:
       output_mediator = self._CreateOutputMediator()
       sqlite_output = sqlite_4n6time.SQLite4n6TimeOutputModule(
           output_mediator)
 
-      sqlite_file = os.path.join(temp_directory, u'4n6time.db')
+      sqlite_file = os.path.join(temp_directory, '4n6time.db')
       sqlite_output.SetFilename(sqlite_file)
 
       sqlite_output.Open()
@@ -109,7 +111,7 @@ class SqliteOutputModuleTest(test_lib.OutputModuleTestCase):
       sqlite_connection = sqlite3.connect(sqlite_file)
       sqlite_connection.row_factory = sqlite3.Row
 
-      cursor = sqlite_connection.execute(u'SELECT * from log2timeline')
+      cursor = sqlite_connection.execute('SELECT * from log2timeline')
       row = cursor.fetchone()
       row_dict = dict(zip(row.keys(), row))
       self.assertDictContainsSubset(expected_dict, row_dict)

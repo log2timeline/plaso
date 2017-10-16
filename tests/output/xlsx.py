@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the XLSX output module."""
 
+from __future__ import unicode_literals
+
 import os
 import unittest
 import zipfile
@@ -21,42 +23,42 @@ from tests.output import test_lib
 
 class TestEvent(events.EventObject):
   """Event object used for testing."""
-  DATA_TYPE = u'test:xlsx'
+  DATA_TYPE = 'test:xlsx'
 
   def __init__(self):
     """Initializes an event object used for testing."""
     super(TestEvent, self).__init__()
-    self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
+    self.timestamp = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01')
     self.timestamp_desc = definitions.TIME_DESCRIPTION_CHANGE
-    self.hostname = u'ubuntu'
-    self.filename = u'log/syslog.1'
+    self.hostname = 'ubuntu'
+    self.filename = 'log/syslog.1'
     self.text = (
-        u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
-        u'closed for user root) Invalid character -> \ud801')
+        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
+        'closed for user root) Invalid character -> \ud801')
 
 
 class TestEventFormatter(formatters_interface.EventFormatter):
   """Event object formatter used for testing."""
 
-  DATA_TYPE = u'test:xlsx'
-  FORMAT_STRING = u'{text}'
+  DATA_TYPE = 'test:xlsx'
+  FORMAT_STRING = '{text}'
 
-  SOURCE_SHORT = u'LOG'
-  SOURCE_LONG = u'Syslog'
+  SOURCE_SHORT = 'LOG'
+  SOURCE_LONG = 'Syslog'
 
 
 class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
   """Test the XLSX output module."""
 
-  _SHARED_STRINGS = u'xl/sharedStrings.xml'
-  _SHEET1 = u'xl/worksheets/sheet1.xml'
+  _SHARED_STRINGS = 'xl/sharedStrings.xml'
+  _SHEET1 = 'xl/worksheets/sheet1.xml'
 
-  _COLUMN_TAG = u'}c'
-  _ROW_TAG = u'}row'
-  _SHARED_STRING_TAG = u'}t'
-  _SHARED_STRING_TYPE = u's'
-  _TYPE_ATTRIBUTE = u't'
-  _VALUE_STRING_TAG = u'}v'
+  _COLUMN_TAG = '}c'
+  _ROW_TAG = '}row'
+  _SHARED_STRING_TAG = '}t'
+  _SHARED_STRING_TYPE = 's'
+  _TYPE_ATTRIBUTE = 't'
+  _VALUE_STRING_TAG = '}v'
 
   def _GetSheetRows(self, filename):
     """Parses the contents of the first sheet of an XLSX document.
@@ -73,7 +75,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
     # Fail if we can't find the expected first sheet.
     if self._SHEET1 not in zip_file.namelist():
       raise ValueError(
-          u'Unable to locate expected sheet: {0:s}'.format(self._SHEET1))
+          'Unable to locate expected sheet: {0:s}'.format(self._SHEET1))
 
     # Generate a reference table of shared strings if available.
     strings = []
@@ -85,7 +87,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
 
     row = []
     rows = []
-    value = u''
+    value = ''
     zip_file_object = zip_file.open(self._SHEET1)
     for _, element in ElementTree.iterparse(zip_file_object):
       if (element.tag.endswith(self._VALUE_STRING_TAG) or
@@ -100,7 +102,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
             value = strings[int(value)]
           except (IndexError, ValueError):
             raise ValueError(
-                u'Unable to successfully dereference shared string.')
+                'Unable to successfully dereference shared string.')
 
         row.append(value)
 
@@ -116,19 +118,19 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
     formatters_manager.FormattersManager.RegisterFormatter(TestEventFormatter)
 
     expected_header = [
-        u'datetime', u'timestamp_desc', u'source', u'source_long',
-        u'message', u'parser', u'display_name', u'tag']
+        'datetime', 'timestamp_desc', 'source', 'source_long',
+        'message', 'parser', 'display_name', 'tag']
     expected_event_body = [
-        u'41087.76181712963', u'Metadata Modification Time', u'LOG', u'Syslog',
-        u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
-        u'closed for user root) Invalid character -> \ufffd',
-        u'-', u'-', u'-']
+        '41087.76181712963', 'Metadata Modification Time', 'LOG', 'Syslog',
+        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
+        'closed for user root) Invalid character -> \ufffd',
+        '-', '-', '-']
 
     with shared_test_lib.TempDirectory() as temp_directory:
       output_mediator = self._CreateOutputMediator()
       output_module = xlsx.XLSXOutputModule(output_mediator)
 
-      xslx_file = os.path.join(temp_directory, u'xlsx.out')
+      xslx_file = os.path.join(temp_directory, 'xlsx.out')
       output_module.SetFilename(xslx_file)
 
       output_module.Open()
@@ -149,14 +151,14 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
     expected_header = [
-        u'datetime', u'timestamp_desc', u'source', u'source_long',
-        u'message', u'parser', u'display_name', u'tag']
+        'datetime', 'timestamp_desc', 'source', 'source_long',
+        'message', 'parser', 'display_name', 'tag']
 
     with shared_test_lib.TempDirectory() as temp_directory:
       output_mediator = self._CreateOutputMediator()
       output_module = xlsx.XLSXOutputModule(output_mediator)
 
-      xlsx_file = os.path.join(temp_directory, u'xlsx.out')
+      xlsx_file = os.path.join(temp_directory, 'xlsx.out')
       output_module.SetFilename(xlsx_file)
 
       output_module.Open()
@@ -172,5 +174,5 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
       self.assertEqual(expected_header, rows[0])
 
 
-if __name__ == u'__main__':
+if __name__ == '__main__':
   unittest.main()

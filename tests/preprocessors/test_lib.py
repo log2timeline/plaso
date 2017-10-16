@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Preprocessing related functions and classes for testing."""
 
+from __future__ import unicode_literals
+
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
 from dfvfs.helpers import fake_file_system_builder
@@ -17,7 +19,7 @@ from plaso.preprocessors import manager
 from tests import test_lib as shared_test_lib
 
 
-@shared_test_lib.skipUnlessHasTestFile([u'artifacts'])
+@shared_test_lib.skipUnlessHasTestFile(['artifacts'])
 class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
   """Artifact preprocessor plugin test case."""
 
@@ -27,7 +29,7 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
     cls._artifacts_registry = artifacts_registry.ArtifactDefinitionsRegistry()
 
     reader = artifacts_reader.YamlArtifactsReader()
-    path = shared_test_lib.GetTestFilePath([u'artifacts'])
+    path = shared_test_lib.GetTestFilePath(['artifacts'])
     cls._artifacts_registry.ReadFromDirectory(reader, path)
 
   def _RunPreprocessorPluginOnFileSystem(
@@ -74,7 +76,7 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
     self.assertIsNotNone(artifact_definition)
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
-        case_sensitive=False, name=u'SystemRoot', value=u'C:\\Windows')
+        case_sensitive=False, name='SystemRoot', value='C:\\Windows')
 
     registry_file_reader = manager.FileSystemWinRegistryFileReader(
         file_system, mount_point, environment_variables=[environment_variable])
@@ -99,12 +101,12 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
       KnowledgeBase: knowledge base filled with preprocessing information.
     """
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    test_file_path = self._GetTestFilePath([u'SOFTWARE'])
+    test_file_path = self._GetTestFilePath(['SOFTWARE'])
     file_system_builder.AddFileReadData(
-        u'/Windows/System32/config/SOFTWARE', test_file_path)
+        '/Windows/System32/config/SOFTWARE', test_file_path)
 
     mount_point = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
+        dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')
 
     return self._RunPreprocessorPluginOnWindowsRegistryValue(
         file_system_builder.file_system, mount_point, plugin)
@@ -119,12 +121,12 @@ class ArtifactPreprocessorPluginTestCase(shared_test_lib.BaseTestCase):
       KnowledgeBase: knowledge base filled with preprocessing information.
     """
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    test_file_path = self._GetTestFilePath([u'SYSTEM'])
+    test_file_path = self._GetTestFilePath(['SYSTEM'])
     file_system_builder.AddFileReadData(
-        u'/Windows/System32/config/SYSTEM', test_file_path)
+        '/Windows/System32/config/SYSTEM', test_file_path)
 
     mount_point = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
+        dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')
 
     return self._RunPreprocessorPluginOnWindowsRegistryValue(
         file_system_builder.file_system, mount_point, plugin)

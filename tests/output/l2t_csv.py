@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the log2timeline (l2t) CSV output module."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.containers import events
@@ -17,27 +19,27 @@ from tests.output import test_lib
 
 class L2TTestEvent(events.EventObject):
   """Test event object."""
-  DATA_TYPE = u'test:l2t_csv'
+  DATA_TYPE = 'test:l2t_csv'
 
   def __init__(self):
     """Initializes an event object."""
     super(L2TTestEvent, self).__init__()
-    self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
+    self.timestamp = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01')
     self.timestamp_desc = definitions.TIME_DESCRIPTION_WRITTEN
-    self.hostname = u'ubuntu'
-    self.filename = u'log/syslog.1'
-    self.display_name = u'log/syslog.1'
+    self.hostname = 'ubuntu'
+    self.filename = 'log/syslog.1'
+    self.display_name = 'log/syslog.1'
     self.some_additional_foo = True
     self.my_number = 123
     self.text = (
-        u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
-        u'closed for user root)')
+        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
+        'closed for user root)')
 
 
 class L2TTestEventFormatter(formatters_interface.EventFormatter):
   """Test event formatter."""
-  DATA_TYPE = u'test:l2t_csv'
-  FORMAT_STRING = u'{text}'
+  DATA_TYPE = 'test:l2t_csv'
+  FORMAT_STRING = '{text}'
 
   SOURCE_SHORT = 'LOG'
   SOURCE_LONG = 'Syslog'
@@ -70,7 +72,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         L2TTestEventFormatter)
 
     event_tag = events.EventTag()
-    event_tag.AddLabels([u'Malware', u'Printed'])
+    event_tag.AddLabels(['Malware', 'Printed'])
 
     event = L2TTestEvent()
     event.tag = event_tag

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Fake implementation of MySQLdb module for testing."""
 
+from __future__ import unicode_literals
+
 
 class Error(object):
   """Fake implementation of MySQLdb Error class for testing."""
@@ -70,11 +72,11 @@ class FakeMySQLdbCursor(object):
           values.
     """
     if self.expected_query is not None and self.expected_query != query:
-      raise ValueError(u'Query mismatch.')
+      raise ValueError('Query mismatch.')
 
     if (self.expected_query_args is not None and
         self.expected_query_args != args):
-      raise ValueError(u'Query arguments mismatch.')
+      raise ValueError('Query arguments mismatch.')
 
     self._result_index = 0
 

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the JSON output module."""
 
+from __future__ import unicode_literals
+
 import json
 import os
 import sys
@@ -48,48 +50,48 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
     self._output_module.WriteEventBody(self._event_object)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-06-27 18:17:01')
+        '2012-06-27 18:17:01')
 
-    if sys.platform.startswith(u'win'):
+    if sys.platform.startswith('win'):
       # The dict comparison is very picky on Windows hence we
       # have to make sure the drive letter is in the same case.
-      expected_os_location = os.path.abspath(u'\\{0:s}'.format(
-          os.path.join(u'cases', u'image.dd')))
+      expected_os_location = os.path.abspath('\\{0:s}'.format(
+          os.path.join('cases', 'image.dd')))
     else:
-      expected_os_location = u'{0:s}{1:s}'.format(
-          os.path.sep, os.path.join(u'cases', u'image.dd'))
+      expected_os_location = '{0:s}{1:s}'.format(
+          os.path.sep, os.path.join('cases', 'image.dd'))
 
     expected_json_dict = {
-        u'event_0': {
-            u'__container_type__': u'event',
-            u'__type__': u'AttributeContainer',
-            u'data_type': u'test:output',
-            u'display_name': u'OS: /var/log/syslog.1',
-            u'hostname': u'ubuntu',
-            u'inode': 12345678,
-            u'pathspec': {
-                u'__type__': u'PathSpec',
-                u'type_indicator': u'TSK',
-                u'location': u'/var/log/syslog.1',
-                u'inode': 15,
-                u'parent': {
-                    u'__type__': u'PathSpec',
-                    u'type_indicator': u'OS',
-                    u'location': expected_os_location,
+        'event_0': {
+            '__container_type__': 'event',
+            '__type__': 'AttributeContainer',
+            'data_type': 'test:output',
+            'display_name': 'OS: /var/log/syslog.1',
+            'hostname': 'ubuntu',
+            'inode': 12345678,
+            'pathspec': {
+                '__type__': 'PathSpec',
+                'type_indicator': 'TSK',
+                'location': '/var/log/syslog.1',
+                'inode': 15,
+                'parent': {
+                    '__type__': 'PathSpec',
+                    'type_indicator': 'OS',
+                    'location': expected_os_location,
                 }
             },
-            u'text': (
-                u'Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
-                u'session\n closed for user root)'),
-            u'timestamp': expected_timestamp,
-            u'username': u'root',
+            'text': (
+                'Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
+                'session\n closed for user root)'),
+            'timestamp': expected_timestamp,
+            'username': 'root',
         }
     }
     event_body = self._output_writer.ReadOutput()
 
     # We need to compare dicts since we cannot determine the order
     # of values in the string.
-    json_string = u'{{ {0:s} }}'.format(event_body)
+    json_string = '{{ {0:s} }}'.format(event_body)
     json_dict = json.loads(json_string)
     self.assertEqual(json_dict, expected_json_dict)
 
