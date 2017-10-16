@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Shared functions and classes for testing."""
 
+from __future__ import unicode_literals
+
 import os
 import shutil
 import sys
@@ -22,14 +24,14 @@ def skipUnlessHasTestFile(path_segments):
     function: to invoke.
   """
   fail_unless_has_test_file = getattr(
-      unittest, u'fail_unless_has_test_file', False)
+      unittest, 'fail_unless_has_test_file', False)
 
-  path = os.path.join(u'test_data', *path_segments)
+  path = os.path.join('test_data', *path_segments)
   if fail_unless_has_test_file or os.path.exists(path):
     return lambda function: function
 
   if sys.version_info[0] < 3:
-    path = path.encode(u'utf-8')
+    path = path.encode('utf-8')
 
   # Note that the message should be of type str which is different for
   # different versions of Python.
@@ -47,14 +49,14 @@ def GetTestFilePath(path_segments):
   """
   # Note that we need to pass the individual path segments to os.path.join
   # and not a list.
-  return os.path.join(os.getcwd(), u'test_data', *path_segments)
+  return os.path.join(os.getcwd(), 'test_data', *path_segments)
 
 
 class BaseTestCase(unittest.TestCase):
   """The base test case."""
 
-  _DATA_PATH = os.path.join(os.getcwd(), u'data')
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
+  _DATA_PATH = os.path.join(os.getcwd(), 'data')
+  _TEST_DATA_PATH = os.path.join(os.getcwd(), 'test_data')
 
   # Show full diff results, part of TestCase so does not follow our naming
   # conventions.
@@ -108,7 +110,7 @@ class TempDirectory(object):
   def __init__(self):
     """Initializes a temporary directory."""
     super(TempDirectory, self).__init__()
-    self.name = u''
+    self.name = ''
 
   def __enter__(self):
     """Make this work with the 'with' statement."""

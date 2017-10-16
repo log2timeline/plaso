@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the tagging analysis plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.analysis import tagging
@@ -14,17 +16,17 @@ from tests.analysis import test_lib
 
 class TestPrefetchEvent(events.EventObject):
   """A test event type for the tagging analysis plugin."""
-  DATA_TYPE = u'windows:prefetch'
+  DATA_TYPE = 'windows:prefetch'
 
 
 class TestChromeDownloadEvent(events.EventObject):
   """A test event type for the tagging analysis plugin."""
-  DATA_TYPE = u'chrome:history:file_downloaded'
+  DATA_TYPE = 'chrome:history:file_downloaded'
 
 
 class TestEvtRecordEvent(events.EventObject):
   """A test event type for the tagging analysis plugin."""
-  DATA_TYPE = u'windows:evt:record'
+  DATA_TYPE = 'windows:evt:record'
 
 
 class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
@@ -32,34 +34,34 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
 
   # pylint: disable=protected-access
 
-  _INVALID_TEST_TAG_FILE_NAME = u'invalid_test_tag_file.txt'
-  _TEST_TAG_FILE_NAME = u'test_tag_file.txt'
+  _INVALID_TEST_TAG_FILE_NAME = 'invalid_test_tag_file.txt'
+  _TEST_TAG_FILE_NAME = 'test_tag_file.txt'
 
   _TEST_EVENTS = [
-      {u'event_type': u'prefetch',
-       u'timestamp': timelib.Timestamp.CopyFromString(u'2015-05-01 15:12:00'),
-       u'attributes': {}
+      {'event_type': 'prefetch',
+       'timestamp': timelib.Timestamp.CopyFromString('2015-05-01 15:12:00'),
+       'attributes': {}
       },
-      {u'event_type': u'chrome_download',
-       u'timestamp': timelib.Timestamp.CopyFromString(u'2015-05-01 05:06:00'),
-       u'attributes': {}
+      {'event_type': 'chrome_download',
+       'timestamp': timelib.Timestamp.CopyFromString('2015-05-01 05:06:00'),
+       'attributes': {}
       },
-      {u'event_type': u'something_else',
-       u'timestamp': timelib.Timestamp.CopyFromString(u'2015-02-19 08:00:01'),
-       u'attributes': {}
+      {'event_type': 'something_else',
+       'timestamp': timelib.Timestamp.CopyFromString('2015-02-19 08:00:01'),
+       'attributes': {}
       },
-      {u'event_type': u'evt',
-       u'timestamp': timelib.Timestamp.CopyFromString(u'2016-05-25 13:00:06'),
-       u'attributes': {
-           u'source_name': u'Security',
-           u'event_identifier': 538}
+      {'event_type': 'evt',
+       'timestamp': timelib.Timestamp.CopyFromString('2016-05-25 13:00:06'),
+       'attributes': {
+           'source_name': 'Security',
+           'event_identifier': 538}
       },
-      {u'event_type': u'evt',
-       u'timestamp': timelib.Timestamp.CopyFromString(u'2016-05-25 13:00:06'),
-       u'attributes': {
-           u'source_name': u'Messaging',
-           u'event_identifier': 16,
-           u'body': u'this is a message'}
+      {'event_type': 'evt',
+       'timestamp': timelib.Timestamp.CopyFromString('2016-05-25 13:00:06'),
+       'attributes': {
+           'source_name': 'Messaging',
+           'event_identifier': 16,
+           'body': 'this is a message'}
       },
   ]
 
@@ -74,21 +76,21 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
     Returns:
       EventObject: event with the appropriate attributes for testing.
     """
-    if event_attributes[u'event_type'] == u'prefetch':
+    if event_attributes['event_type'] == 'prefetch':
       event_object = TestPrefetchEvent()
-    elif event_attributes[u'event_type'] == u'chrome_download':
+    elif event_attributes['event_type'] == 'chrome_download':
       event_object = TestChromeDownloadEvent()
-    elif event_attributes[u'event_type'] == u'evt':
+    elif event_attributes['event_type'] == 'evt':
       event_object = TestEvtRecordEvent()
     else:
       event_object = events.EventObject()
 
-    event_object.timestamp = event_attributes[u'timestamp']
-    for key, value in iter(event_attributes[u'attributes'].items()):
+    event_object.timestamp = event_attributes['timestamp']
+    for key, value in iter(event_attributes['attributes'].items()):
       setattr(event_object, key, value)
     return event_object
 
-  @shared_test_lib.skipUnlessHasTestFile([u'test_tag_file.txt'])
+  @shared_test_lib.skipUnlessHasTestFile(['test_tag_file.txt'])
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
     test_events = []
@@ -108,7 +110,7 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
     report = storage_writer.analysis_reports[0]
     self.assertIsNotNone(report)
 
-    expected_text = u'Tagging plugin produced 4 tags.\n'
+    expected_text = 'Tagging plugin produced 4 tags.\n'
     self.assertEqual(report.text, expected_text)
 
     labels = []
@@ -118,14 +120,14 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(len(labels), 5)
 
     # This is from a tag rule declared in objectfilter syntax.
-    self.assertIn(u'application_execution', labels)
+    self.assertIn('application_execution', labels)
     # This is from a tag rule declared in dotty syntax.
-    self.assertIn(u'login_attempt', labels)
+    self.assertIn('login_attempt', labels)
     # This is from a rule using the "contains" operator
-    self.assertIn(u'text_contains', labels)
+    self.assertIn('text_contains', labels)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'test_tag_file.txt'])
-  @shared_test_lib.skipUnlessHasTestFile([u'invalid_test_tag_file.txt'])
+  @shared_test_lib.skipUnlessHasTestFile(['test_tag_file.txt'])
+  @shared_test_lib.skipUnlessHasTestFile(['invalid_test_tag_file.txt'])
   def testParseTaggingFile(self):
     """Tests the _ParseTaggingFile function."""
     plugin = tagging.TaggingAnalysisPlugin()

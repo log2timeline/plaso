@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the analysis mediator."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -26,11 +28,11 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
     analysis_mediator = mediator.AnalysisMediator(
         storage_writer, knowledge_base)
 
-    test_path = self._GetTestFilePath([u'syslog.gz'])
+    test_path = self._GetTestFilePath(['syslog.gz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
 
-    expected_display_name = u'OS:{0:s}'.format(test_path)
+    expected_display_name = 'OS:{0:s}'.format(test_path)
     display_name = analysis_mediator.GetDisplayNameForPathSpec(os_path_spec)
     self.assertEqual(display_name, expected_display_name)
 
