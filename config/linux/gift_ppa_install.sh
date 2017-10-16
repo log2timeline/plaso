@@ -47,7 +47,7 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-pefile
                       python-psutil
                       python-pyparsing
-                      python-pysqlite
+                      python-pysqlite2
                       python-pytsk3
                       python-requests
                       python-six
