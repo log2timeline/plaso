@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the output manager."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.output import interface
@@ -12,7 +14,7 @@ class TestOutput(interface.OutputModule):
   """Test output module."""
 
   NAME = 'test_output'
-  DESCRIPTION = u'This is a test output module.'
+  DESCRIPTION = 'This is a test output module.'
 
   def WriteEventBody(self, unused_event_object):
     """Writes the body of an event object to the output.
@@ -52,14 +54,14 @@ class OutputManagerTest(unittest.TestCase):
     """Tests the GetOutputClass function."""
     manager.OutputManager.RegisterOutput(TestOutput)
 
-    output_class = manager.OutputManager.GetOutputClass(u'test_output')
+    output_class = manager.OutputManager.GetOutputClass('test_output')
     self.assertEqual(output_class, TestOutput)
 
     with self.assertRaises(ValueError):
       _ = manager.OutputManager.GetOutputClass(1)
 
     with self.assertRaises(KeyError):
-      _ = manager.OutputManager.GetOutputClass(u'bogus')
+      _ = manager.OutputManager.GetOutputClass('bogus')
 
     manager.OutputManager.DeregisterOutput(TestOutput)
 
@@ -74,7 +76,7 @@ class OutputManagerTest(unittest.TestCase):
       names.append(name)
       output_classes.append(output_class)
 
-    self.assertIn(u'test_output', names)
+    self.assertIn('test_output', names)
     self.assertIn(TestOutput, output_classes)
 
     manager.OutputManager.DeregisterOutput(TestOutput)
@@ -90,7 +92,7 @@ class OutputManagerTest(unittest.TestCase):
       names.append(name)
       output_classes.append(output_class)
 
-    self.assertIn(u'test_output', names)
+    self.assertIn('test_output', names)
     self.assertIn(TestOutput, output_classes)
 
     manager.OutputManager.DeregisterOutput(TestOutput)
@@ -99,8 +101,8 @@ class OutputManagerTest(unittest.TestCase):
     """Tests the HasOutputClass function."""
     manager.OutputManager.RegisterOutput(TestOutput)
 
-    self.assertTrue(manager.OutputManager.HasOutputClass(u'test_output'))
-    self.assertFalse(manager.OutputManager.HasOutputClass(u'bogus'))
+    self.assertTrue(manager.OutputManager.HasOutputClass('test_output'))
+    self.assertFalse(manager.OutputManager.HasOutputClass('bogus'))
     self.assertFalse(manager.OutputManager.HasOutputClass(1))
 
     manager.OutputManager.DeregisterOutput(TestOutput)
@@ -111,14 +113,14 @@ class OutputManagerTest(unittest.TestCase):
     """Tests the NewOutputModule function."""
     manager.OutputManager.RegisterOutput(TestOutput)
 
-    output_module = manager.OutputManager.NewOutputModule(u'test_output', None)
+    output_module = manager.OutputManager.NewOutputModule('test_output', None)
     self.assertIsInstance(output_module, TestOutput)
 
     with self.assertRaises(ValueError):
       _ = manager.OutputManager.NewOutputModule(1, None)
 
     with self.assertRaises(KeyError):
-      _ = manager.OutputManager.NewOutputModule(u'bogus', None)
+      _ = manager.OutputManager.NewOutputModule('bogus', None)
 
     manager.OutputManager.DeregisterOutput(TestOutput)
 

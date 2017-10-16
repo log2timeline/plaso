@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the output module interface."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.output import manager
@@ -16,7 +18,7 @@ class TestEvent(object):
   def __init__(self, timestamp, entry):
     """Initializes an event object."""
     super(TestEvent, self).__init__()
-    self.date = u'03/01/2012'
+    self.date = '03/01/2012'
     try:
       self.timestamp = int(timestamp)
     except ValueError:
@@ -30,10 +32,10 @@ class LinearOutputModuleTest(test_lib.OutputModuleTestCase):
   def testOutput(self):
     """Tests an implementation of output module."""
     events = [
-        TestEvent(123456, u'My Event Is Now!'),
-        TestEvent(123458, u'There is no tomorrow.'),
-        TestEvent(123462, u'Tomorrow is now.'),
-        TestEvent(123489, u'This is just some stuff to fill the line.')]
+        TestEvent(123456, 'My Event Is Now!'),
+        TestEvent(123458, 'There is no tomorrow.'),
+        TestEvent(123462, 'Tomorrow is now.'),
+        TestEvent(123489, 'This is just some stuff to fill the line.')]
 
     output_mediator = self._CreateOutputMediator()
     output_writer = cli_test_lib.TestOutputWriter()
@@ -77,10 +79,10 @@ class LinearOutputModuleTest(test_lib.OutputModuleTestCase):
 
     test_output_class = None
     for name, output_class in manager.OutputManager.GetOutputClasses():
-      if name == u'test_xml':
+      if name == 'test_xml':
         test_output_class = output_class
 
-    expected_description = u'Test output that provides a simple mocked XML.'
+    expected_description = 'Test output that provides a simple mocked XML.'
     self.assertIsNotNone(test_output_class)
     self.assertEqual(test_output_class.DESCRIPTION, expected_description)
 

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the TLN output class."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import manager as formatters_manager

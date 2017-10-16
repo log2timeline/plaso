@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the JSON lines output module."""
 
+from __future__ import unicode_literals
+
 import json
 import os
 import sys
@@ -30,13 +32,13 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
     """Tests the WriteHeader function."""
     self._output_module.WriteHeader()
     header = self._output_writer.ReadOutput()
-    self.assertEqual(header, u'')
+    self.assertEqual(header, '')
 
   def testWriteFooter(self):
     """Tests the WriteFooter function."""
     self._output_module.WriteFooter()
     footer = self._output_writer.ReadOutput()
-    self.assertEqual(footer, u'')
+    self.assertEqual(footer, '')
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
@@ -47,43 +49,43 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
         test_lib.TestEventFormatter)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-06-27 18:17:01')
+        '2012-06-27 18:17:01')
 
-    if sys.platform.startswith(u'win'):
+    if sys.platform.startswith('win'):
       # The dict comparison is very picky on Windows hence we
       # have to make sure the drive letter is in the same case.
-      expected_os_location = os.path.abspath(u'\\{0:s}'.format(
-          os.path.join(u'cases', u'image.dd')))
+      expected_os_location = os.path.abspath('\\{0:s}'.format(
+          os.path.join('cases', 'image.dd')))
     else:
-      expected_os_location = u'{0:s}{1:s}'.format(
-          os.path.sep, os.path.join(u'cases', u'image.dd'))
+      expected_os_location = '{0:s}{1:s}'.format(
+          os.path.sep, os.path.join('cases', 'image.dd'))
 
     expected_json_dict = {
-        u'__container_type__': u'event',
-        u'__type__': u'AttributeContainer',
-        u'data_type': u'test:output',
-        u'display_name': u'OS: /var/log/syslog.1',
-        u'hostname': u'ubuntu',
-        u'inode': 12345678,
-        u'message': (
-            u'Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
-            u'session closed for user root)'),
-        u'pathspec': {
-            u'__type__': u'PathSpec',
-            u'type_indicator': u'TSK',
-            u'location': u'/var/log/syslog.1',
-            u'inode': 15,
-            u'parent': {
-                u'__type__': u'PathSpec',
-                u'type_indicator': u'OS',
-                u'location': expected_os_location,
+        '__container_type__': 'event',
+        '__type__': 'AttributeContainer',
+        'data_type': 'test:output',
+        'display_name': 'OS: /var/log/syslog.1',
+        'hostname': 'ubuntu',
+        'inode': 12345678,
+        'message': (
+            'Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
+            'session closed for user root)'),
+        'pathspec': {
+            '__type__': 'PathSpec',
+            'type_indicator': 'TSK',
+            'location': '/var/log/syslog.1',
+            'inode': 15,
+            'parent': {
+                '__type__': 'PathSpec',
+                'type_indicator': 'OS',
+                'location': expected_os_location,
             }
         },
-        u'text': (
-            u'Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
-            u'session\n closed for user root)'),
-        u'timestamp': expected_timestamp,
-        u'username': u'root',
+        'text': (
+            'Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
+            'session\n closed for user root)'),
+        'timestamp': expected_timestamp,
+        'username': 'root',
     }
     event_body = self._output_writer.ReadOutput()
 

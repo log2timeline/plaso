@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the "raw" (or native) Python output modulr."""
 
+from __future__ import unicode_literals
+
 import os
 import sys
 import unittest
@@ -27,14 +29,14 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
     """Tests the WriteEventBody function."""
     self._output_module.WriteEventBody(self._event_object)
 
-    if sys.platform.startswith(u'win'):
+    if sys.platform.startswith('win'):
       # The dict comparison is very picky on Windows hence we
       # have to make sure the drive letter is in the same case.
-      expected_os_location = os.path.abspath(u'\\{0:s}'.format(
-          os.path.join(u'cases', u'image.dd')))
+      expected_os_location = os.path.abspath('\\{0:s}'.format(
+          os.path.join('cases', 'image.dd')))
     else:
-      expected_os_location = u'{0:s}{1:s}'.format(
-          os.path.sep, os.path.join(u'cases', u'image.dd'))
+      expected_os_location = '{0:s}{1:s}'.format(
+          os.path.sep, os.path.join('cases', 'image.dd'))
 
     expected_event_body = (
         b'+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-'
