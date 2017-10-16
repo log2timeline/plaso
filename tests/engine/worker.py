@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests the event extraction worker."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -67,10 +69,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     storage_writer.WriteSessionCompletion()
     storage_writer.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
+  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testAnalyzeFileObject(self):
     """Tests the _AnalyzeFileObject function."""
-    knowledge_base_values = {u'year': 2016}
+    knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
     storage_writer = fake_storage.FakeStorageWriter(session)
@@ -92,7 +94,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     extraction_worker._analyzers = [test_analyzer]
 
-    file_entry = self._GetTestFileEntry([u'ímynd.dd'])
+    file_entry = self._GetTestFileEntry(['ímynd.dd'])
     mediator.SetFileEntry(file_entry)
 
     file_object = file_entry.GetFileObject()
@@ -104,59 +106,59 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(len(mediator._extra_event_attributes), 1)
 
-    event_attribute = mediator._extra_event_attributes.get(u'test_result', None)
-    self.assertEqual(event_attribute, u'is_vegetable')
+    event_attribute = mediator._extra_event_attributes.get('test_result', None)
+    self.assertEqual(event_attribute, 'is_vegetable')
 
-  @shared_test_lib.skipUnlessHasTestFile([u'syslog'])
+  @shared_test_lib.skipUnlessHasTestFile(['syslog'])
   def testProcessPathSpecFile(self):
     """Tests the ProcessPathSpec function on a file."""
-    knowledge_base_values = {u'year': 2016}
+    knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
-    path_spec = self._GetTestFilePathSpec([u'syslog'])
+    path_spec = self._GetTestFilePathSpec(['syslog'])
     storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values)
 
     self.assertEqual(storage_writer.number_of_events, 19)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'syslog.gz'])
+  @shared_test_lib.skipUnlessHasTestFile(['syslog.gz'])
   def testProcessPathSpecCompressedFileGZIP(self):
     """Tests the ProcessPathSpec function on a gzip compressed file."""
-    knowledge_base_values = {u'year': 2016}
+    knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
-    path_spec = self._GetTestFilePathSpec([u'syslog.gz'])
+    path_spec = self._GetTestFilePathSpec(['syslog.gz'])
     storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values)
 
     self.assertEqual(storage_writer.number_of_events, 16)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'syslog.bz2'])
+  @shared_test_lib.skipUnlessHasTestFile(['syslog.bz2'])
   def testProcessPathSpecCompressedFileBZIP2(self):
     """Tests the ProcessPathSpec function on a bzip2 compressed file."""
-    knowledge_base_values = {u'year': 2016}
+    knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
-    path_spec = self._GetTestFilePathSpec([u'syslog.bz2'])
+    path_spec = self._GetTestFilePathSpec(['syslog.bz2'])
     storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values)
 
     self.assertEqual(storage_writer.number_of_events, 15)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'syslog.tar'])
+  @shared_test_lib.skipUnlessHasTestFile(['syslog.tar'])
   def testProcessPathSpec(self):
     """Tests the ProcessPathSpec function on an archive file."""
-    knowledge_base_values = {u'year': 2016}
+    knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
-    source_path = self._GetTestFilePath([u'syslog.tar'])
+    source_path = self._GetTestFilePath(['syslog.tar'])
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
     path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TAR, location=u'/syslog',
+        dfvfs_definitions.TYPE_INDICATOR_TAR, location='/syslog',
         parent=path_spec)
 
     storage_writer = fake_storage.FakeStorageWriter(session)
@@ -166,7 +168,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(storage_writer.number_of_events, 13)
 
     # Process an archive file without "process archive files" mode.
-    path_spec = self._GetTestFilePathSpec([u'syslog.tar'])
+    path_spec = self._GetTestFilePathSpec(['syslog.tar'])
     storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values)
@@ -174,7 +176,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(storage_writer.number_of_events, 3)
 
     # Process an archive file with "process archive files" mode.
-    path_spec = self._GetTestFilePathSpec([u'syslog.tar'])
+    path_spec = self._GetTestFilePathSpec(['syslog.tar'])
     storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values,
@@ -182,19 +184,19 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(storage_writer.number_of_events, 16)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'syslog.tgz'])
+  @shared_test_lib.skipUnlessHasTestFile(['syslog.tgz'])
   def testProcessPathSpecCompressedArchive(self):
     """Tests the ProcessPathSpec function on a compressed archive file."""
-    knowledge_base_values = {u'year': 2016}
+    knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
-    source_path = self._GetTestFilePath([u'syslog.tgz'])
+    source_path = self._GetTestFilePath(['syslog.tgz'])
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_GZIP, parent=path_spec)
     path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TAR, location=u'/syslog',
+        dfvfs_definitions.TYPE_INDICATOR_TAR, location='/syslog',
         parent=path_spec)
 
     storage_writer = fake_storage.FakeStorageWriter(session)
@@ -204,7 +206,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(storage_writer.number_of_events, 13)
 
     # Process an archive file with "process archive files" mode.
-    path_spec = self._GetTestFilePathSpec([u'syslog.tgz'])
+    path_spec = self._GetTestFilePathSpec(['syslog.tgz'])
     storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values,
@@ -212,19 +214,19 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(storage_writer.number_of_events, 17)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'image.vmdk'])
+  @shared_test_lib.skipUnlessHasTestFile(['image.vmdk'])
   def testProcessPathSpecVMDK(self):
     """Tests the ProcessPathSpec function on a VMDK with symbolic links."""
-    knowledge_base_values = {u'year': 2016}
+    knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
-    source_path = self._GetTestFilePath([u'image.vmdk'])
+    source_path = self._GetTestFilePath(['image.vmdk'])
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_VMDK, parent=path_spec)
     path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=path_spec)
     storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(
@@ -232,18 +234,18 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(storage_writer.number_of_events, 18)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'empty_file'])
+  @shared_test_lib.skipUnlessHasTestFile(['empty_file'])
   def testExtractionWorkerHashing(self):
     """Test that the worker sets up and runs hashing code correctly."""
     extraction_worker = worker.EventExtractionWorker()
 
-    extraction_worker._SetHashers(u'md5')
-    self.assertIn(u'hashing', extraction_worker.GetAnalyzerNames())
+    extraction_worker._SetHashers('md5')
+    self.assertIn('hashing', extraction_worker.GetAnalyzerNames())
 
-    knowledge_base_values = {u'year': 2016}
+    knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
-    path_spec = self._GetTestFilePathSpec([u'empty_file'])
+    path_spec = self._GetTestFilePathSpec(['empty_file'])
     storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, extraction_worker=extraction_worker,
@@ -251,30 +253,30 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     storage_writer.Open()
 
-    empty_file_md5 = u'd41d8cd98f00b204e9800998ecf8427e'
+    empty_file_md5 = 'd41d8cd98f00b204e9800998ecf8427e'
     for event in storage_writer.GetSortedEvents():
-      md5_hash = getattr(event, u'md5_hash', None)
+      md5_hash = getattr(event, 'md5_hash', None)
       self.assertEqual(md5_hash, empty_file_md5)
 
     storage_writer.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'yara.rules'])
-  @shared_test_lib.skipUnlessHasTestFile([u'test_pe.exe'])
+  @shared_test_lib.skipUnlessHasTestFile(['yara.rules'])
+  @shared_test_lib.skipUnlessHasTestFile(['test_pe.exe'])
   def testExtractionWorkerYara(self):
     """Tests that the worker applies Yara matching code correctly."""
     extraction_worker = worker.EventExtractionWorker()
 
-    rule_path = self._GetTestFilePath([u'yara.rules'])
+    rule_path = self._GetTestFilePath(['yara.rules'])
     with open(rule_path, 'r') as rule_file:
       rule_string = rule_file.read()
 
     extraction_worker._SetYaraRules(rule_string)
-    self.assertIn(u'yara', extraction_worker.GetAnalyzerNames())
+    self.assertIn('yara', extraction_worker.GetAnalyzerNames())
 
-    knowledge_base_values = {u'year': 2016}
+    knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
-    path_spec = self._GetTestFilePathSpec([u'test_pe.exe'])
+    path_spec = self._GetTestFilePathSpec(['test_pe.exe'])
     storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, extraction_worker=extraction_worker,
@@ -282,9 +284,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     storage_writer.Open()
 
-    expected_yara_match = u'PEfileBasic,PEfile'
+    expected_yara_match = 'PEfileBasic,PEfile'
     for event in storage_writer.GetSortedEvents():
-      yara_match = getattr(event, u'yara_match', None)
+      yara_match = getattr(event, 'yara_match', None)
       self.assertEqual(yara_match, expected_yara_match)
 
     storage_writer.Close()

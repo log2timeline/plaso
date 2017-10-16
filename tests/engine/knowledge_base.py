@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the knowledge base."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.containers import artifacts
@@ -14,37 +16,37 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
   """Tests for the knowledge base."""
 
   _MACOSX_PATHS = [
-      u'/Users/dude/Library/Application Data/Google/Chrome/Default/Extensions',
-      (u'/Users/dude/Library/Application Data/Google/Chrome/Default/Extensions/'
-       u'apdfllckaahabafndbhieahigkjlhalf'),
-      u'/private/var/log/system.log',
-      u'/Users/frank/Library/Application Data/Google/Chrome/Default',
-      u'/Users/hans/Library/Application Data/Google/Chrome/Default',
-      (u'/Users/frank/Library/Application Data/Google/Chrome/Default/'
-       u'Extensions/pjkljhegncpnkpknbcohdijeoejaedia'),
-      u'/Users/frank/Library/Application Data/Google/Chrome/Default/Extensions']
+      '/Users/dude/Library/Application Data/Google/Chrome/Default/Extensions',
+      ('/Users/dude/Library/Application Data/Google/Chrome/Default/Extensions/'
+       'apdfllckaahabafndbhieahigkjlhalf'),
+      '/private/var/log/system.log',
+      '/Users/frank/Library/Application Data/Google/Chrome/Default',
+      '/Users/hans/Library/Application Data/Google/Chrome/Default',
+      ('/Users/frank/Library/Application Data/Google/Chrome/Default/'
+       'Extensions/pjkljhegncpnkpknbcohdijeoejaedia'),
+      '/Users/frank/Library/Application Data/Google/Chrome/Default/Extensions']
 
   _MACOSX_USERS = [
-      {u'name': u'root', u'path': u'/var/root', u'sid': u'0'},
-      {u'name': u'frank', u'path': u'/Users/frank', u'sid': u'4052'},
-      {u'name': u'hans', u'path': u'/Users/hans', u'sid': u'4352'},
-      {u'name': u'dude', u'path': u'/Users/dude', u'sid': u'1123'}]
+      {'name': 'root', 'path': '/var/root', 'sid': '0'},
+      {'name': 'frank', 'path': '/Users/frank', 'sid': '4052'},
+      {'name': 'hans', 'path': '/Users/hans', 'sid': '4352'},
+      {'name': 'dude', 'path': '/Users/dude', 'sid': '1123'}]
 
   _WINDOWS_PATHS = [
-      u'C:\\Users\\Dude\\SomeFolder\\Chrome\\Default\\Extensions',
-      (u'C:\\Users\\Dude\\SomeNoneStandardFolder\\Chrome\\Default\\Extensions\\'
-       u'hmjkmjkepdijhoojdojkdfohbdgmmhki'),
-      (u'C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions\\'
-       u'blpcfgokakmgnkcojhhkbfbldkacnbeo'),
-      u'C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions',
-      (u'C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions\\'
-       u'icppfcnhkcmnfdhfhphakoifcfokfdhg'),
-      u'C:\\Windows\\System32',
-      u'C:\\Stuff/with path separator\\Folder']
+      'C:\\Users\\Dude\\SomeFolder\\Chrome\\Default\\Extensions',
+      ('C:\\Users\\Dude\\SomeNoneStandardFolder\\Chrome\\Default\\Extensions\\'
+       'hmjkmjkepdijhoojdojkdfohbdgmmhki'),
+      ('C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions\\'
+       'blpcfgokakmgnkcojhhkbfbldkacnbeo'),
+      'C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions',
+      ('C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions\\'
+       'icppfcnhkcmnfdhfhphakoifcfokfdhg'),
+      'C:\\Windows\\System32',
+      'C:\\Stuff/with path separator\\Folder']
 
   _WINDOWS_USERS = [
-      {u'name': u'dude', u'path': u'C:\\Users\\dude', u'sid': u'S-1'},
-      {u'name': u'frank', u'path': u'C:\\Users\\frank', u'sid': u'S-2'}]
+      {'name': 'dude', 'path': 'C:\\Users\\dude', 'sid': 'S-1'},
+      {'name': 'frank', 'path': 'C:\\Users\\frank', 'sid': 'S-2'}]
 
   def _SetUserAccounts(self, knowledge_base_object, users):
     """Sets the user accounts in the knowledge base.
@@ -54,13 +56,13 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
       users (list[dict[str,str])): users.
     """
     for user in users:
-      identifier = user.get(u'sid', user.get(u'uid', None))
+      identifier = user.get('sid', user.get('uid', None))
       if not identifier:
         continue
 
       user_account = artifacts.UserAccountArtifact(
-          identifier=identifier, user_directory=user.get(u'path', None),
-          username=user.get(u'name', None))
+          identifier=identifier, user_directory=user.get('path', None),
+          username=user.get('name', None))
 
       knowledge_base_object.AddUserAccount(user_account)
 
@@ -68,29 +70,29 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     """Tests the codepage property."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    self.assertEqual(knowledge_base_object.codepage, u'cp1252')
+    self.assertEqual(knowledge_base_object.codepage, 'cp1252')
 
   def testHostnameProperty(self):
     """Tests the hostname property."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    self.assertEqual(knowledge_base_object.hostname, u'')
+    self.assertEqual(knowledge_base_object.hostname, '')
 
   def testPlatformProperty(self):
     """Tests the platform property."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    self.assertEqual(knowledge_base_object.platform, u'')
+    self.assertEqual(knowledge_base_object.platform, '')
 
-    knowledge_base_object.platform = u'Windows'
+    knowledge_base_object.platform = 'Windows'
 
-    self.assertEqual(knowledge_base_object.platform, u'Windows')
+    self.assertEqual(knowledge_base_object.platform, 'Windows')
 
   def testTimezoneProperty(self):
     """Tests the timezone property."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    self.assertEqual(knowledge_base_object.timezone.zone, u'UTC')
+    self.assertEqual(knowledge_base_object.timezone.zone, 'UTC')
 
   def testUserAccountsProperty(self):
     """Tests the user accounts property."""
@@ -99,8 +101,8 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(knowledge_base_object.user_accounts), 0)
 
     user_account = artifacts.UserAccountArtifact(
-        identifier=u'1000', user_directory=u'/home/testuser',
-        username=u'testuser')
+        identifier='1000', user_directory='/home/testuser',
+        username='testuser')
     knowledge_base_object.AddUserAccount(user_account)
 
     self.assertEqual(len(knowledge_base_object.user_accounts), 1)
@@ -116,8 +118,8 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
     user_account = artifacts.UserAccountArtifact(
-        identifier=u'1000', user_directory=u'/home/testuser',
-        username=u'testuser')
+        identifier='1000', user_directory='/home/testuser',
+        username='testuser')
     knowledge_base_object.AddUserAccount(user_account)
 
     with self.assertRaises(KeyError):
@@ -128,7 +130,7 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
-        case_sensitive=False, name=u'SystemRoot', value=u'C:\\Windows')
+        case_sensitive=False, name='SystemRoot', value='C:\\Windows')
 
     knowledge_base_object.AddEnvironmentVariable(environment_variable)
 
@@ -140,19 +142,19 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
-        case_sensitive=False, name=u'SystemRoot', value=u'C:\\Windows')
+        case_sensitive=False, name='SystemRoot', value='C:\\Windows')
     knowledge_base_object.AddEnvironmentVariable(environment_variable)
 
     test_environment_variable = knowledge_base_object.GetEnvironmentVariable(
-        u'SystemRoot')
+        'SystemRoot')
     self.assertIsNotNone(test_environment_variable)
 
     test_environment_variable = knowledge_base_object.GetEnvironmentVariable(
-        u'sYsTeMrOoT')
+        'sYsTeMrOoT')
     self.assertIsNotNone(test_environment_variable)
 
     test_environment_variable = knowledge_base_object.GetEnvironmentVariable(
-        u'Bogus')
+        'Bogus')
     self.assertIsNone(test_environment_variable)
 
   def testGetEnvironmentVariables(self):
@@ -160,11 +162,11 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
-        case_sensitive=False, name=u'SystemRoot', value=u'C:\\Windows')
+        case_sensitive=False, name='SystemRoot', value='C:\\Windows')
     knowledge_base_object.AddEnvironmentVariable(environment_variable)
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
-        case_sensitive=False, name=u'WinDir', value=u'C:\\Windows')
+        case_sensitive=False, name='WinDir', value='C:\\Windows')
     knowledge_base_object.AddEnvironmentVariable(environment_variable)
 
     environment_variables = knowledge_base_object.GetEnvironmentVariables()
@@ -175,43 +177,43 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
     hostname = knowledge_base_object.GetHostname()
-    self.assertEqual(hostname, u'')
+    self.assertEqual(hostname, '')
 
   def testGetSystemConfigurationArtifact(self):
     """Tests the GetSystemConfigurationArtifact function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    hostname_artifact = artifacts.HostnameArtifact(name=u'myhost.mydomain')
+    hostname_artifact = artifacts.HostnameArtifact(name='myhost.mydomain')
     knowledge_base_object.SetHostname(hostname_artifact)
 
     user_account = artifacts.UserAccountArtifact(
-        identifier=u'1000', user_directory=u'/home/testuser',
-        username=u'testuser')
+        identifier='1000', user_directory='/home/testuser',
+        username='testuser')
     knowledge_base_object.AddUserAccount(user_account)
 
     system_configuration = (
         knowledge_base_object.GetSystemConfigurationArtifact())
     self.assertIsNotNone(system_configuration)
     self.assertIsNotNone(system_configuration.hostname)
-    self.assertEqual(system_configuration.hostname.name, u'myhost.mydomain')
+    self.assertEqual(system_configuration.hostname.name, 'myhost.mydomain')
 
   def testGetUsernameByIdentifier(self):
     """Tests the GetUsernameByIdentifier function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
     user_account = artifacts.UserAccountArtifact(
-        identifier=u'1000', user_directory=u'/home/testuser',
-        username=u'testuser')
+        identifier='1000', user_directory='/home/testuser',
+        username='testuser')
     knowledge_base_object.AddUserAccount(user_account)
 
-    usename = knowledge_base_object.GetUsernameByIdentifier(u'1000')
-    self.assertEqual(usename, u'testuser')
+    usename = knowledge_base_object.GetUsernameByIdentifier('1000')
+    self.assertEqual(usename, 'testuser')
 
     usename = knowledge_base_object.GetUsernameByIdentifier(1000)
-    self.assertEqual(usename, u'')
+    self.assertEqual(usename, '')
 
-    usename = knowledge_base_object.GetUsernameByIdentifier(u'1001')
-    self.assertEqual(usename, u'')
+    usename = knowledge_base_object.GetUsernameByIdentifier('1001')
+    self.assertEqual(usename, '')
 
   def testGetUsernameForPath(self):
     """Tests the GetUsernameForPath function."""
@@ -220,11 +222,11 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
 
     username = knowledge_base_object.GetUsernameForPath(
         self._MACOSX_PATHS[0])
-    self.assertEqual(username, u'dude')
+    self.assertEqual(username, 'dude')
 
     username = knowledge_base_object.GetUsernameForPath(
         self._MACOSX_PATHS[4])
-    self.assertEqual(username, u'hans')
+    self.assertEqual(username, 'hans')
 
     username = knowledge_base_object.GetUsernameForPath(
         self._WINDOWS_PATHS[0])
@@ -235,11 +237,11 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
 
     username = knowledge_base_object.GetUsernameForPath(
         self._WINDOWS_PATHS[0])
-    self.assertEqual(username, u'dude')
+    self.assertEqual(username, 'dude')
 
     username = knowledge_base_object.GetUsernameForPath(
         self._WINDOWS_PATHS[2])
-    self.assertEqual(username, u'frank')
+    self.assertEqual(username, 'frank')
 
     username = knowledge_base_object.GetUsernameForPath(
         self._MACOSX_PATHS[2])
@@ -249,16 +251,16 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     """Tests the Get and SetValue functions."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    expected_value = u'test value'
-    knowledge_base_object.SetValue(u'Test', expected_value)
+    expected_value = 'test value'
+    knowledge_base_object.SetValue('Test', expected_value)
 
-    value = knowledge_base_object.GetValue(u'Test')
+    value = knowledge_base_object.GetValue('Test')
     self.assertEqual(value, expected_value)
 
-    value = knowledge_base_object.GetValue(u'tEsT')
+    value = knowledge_base_object.GetValue('tEsT')
     self.assertEqual(value, expected_value)
 
-    value = knowledge_base_object.GetValue(u'Bogus')
+    value = knowledge_base_object.GetValue('Bogus')
     self.assertIsNone(value)
 
   def testHasUserAccounts(self):
@@ -268,8 +270,8 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     self.assertFalse(knowledge_base_object.HasUserAccounts())
 
     user_account = artifacts.UserAccountArtifact(
-        identifier=u'1000', user_directory=u'/home/testuser',
-        username=u'testuser')
+        identifier='1000', user_directory='/home/testuser',
+        username='testuser')
     knowledge_base_object.AddUserAccount(user_account)
 
     self.assertTrue(knowledge_base_object.HasUserAccounts())
@@ -280,42 +282,42 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
 
     system_configuration = artifacts.SystemConfigurationArtifact()
     system_configuration.hostname = artifacts.HostnameArtifact(
-        name=u'myhost.mydomain')
+        name='myhost.mydomain')
 
     user_account = artifacts.UserAccountArtifact(
-        identifier=u'1000', user_directory=u'/home/testuser',
-        username=u'testuser')
+        identifier='1000', user_directory='/home/testuser',
+        username='testuser')
     system_configuration.user_accounts.append(user_account)
 
     knowledge_base_object.ReadSystemConfigurationArtifact(system_configuration)
 
     hostname = knowledge_base_object.GetHostname()
-    self.assertEqual(hostname, u'myhost.mydomain')
+    self.assertEqual(hostname, 'myhost.mydomain')
 
   def testSetCodepage(self):
     """Tests the SetCodepage function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    knowledge_base_object.SetCodepage(u'cp1252')
+    knowledge_base_object.SetCodepage('cp1252')
 
     with self.assertRaises(ValueError):
-      knowledge_base_object.SetCodepage(u'bogus')
+      knowledge_base_object.SetCodepage('bogus')
 
   def testSetHostname(self):
     """Tests the SetHostname function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    hostname_artifact = artifacts.HostnameArtifact(name=u'myhost.mydomain')
+    hostname_artifact = artifacts.HostnameArtifact(name='myhost.mydomain')
     knowledge_base_object.SetHostname(hostname_artifact)
 
   def testSetTimeZone(self):
     """Tests the SetTimeZone function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    knowledge_base_object.SetTimeZone(u'Europe/Zurich')
+    knowledge_base_object.SetTimeZone('Europe/Zurich')
 
     with self.assertRaises(ValueError):
-      knowledge_base_object.SetTimeZone(u'Bogus')
+      knowledge_base_object.SetTimeZone('Bogus')
 
 
 if __name__ == '__main__':

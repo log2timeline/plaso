@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the attribute container manager."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.containers import manager

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the plist event attribute containers."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.containers import plist_event
@@ -17,8 +19,8 @@ class PlistTimeEventDataTest(shared_test_lib.BaseTestCase):
     attribute_container = plist_event.PlistTimeEventData()
 
     expected_attribute_names = [
-        u'data_type', u'desc', u'hostname', u'key', u'offset', u'query',
-        u'root', u'username']
+        'data_type', 'desc', 'hostname', 'key', 'offset', 'query',
+        'root', 'username']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

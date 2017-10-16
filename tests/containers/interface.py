@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the attribute container interface."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.containers import interface
@@ -16,7 +18,7 @@ class AttributeContainerIdentifierTest(shared_test_lib.BaseTestCase):
     """Tests the CopyToString function."""
     identifier = interface.AttributeContainerIdentifier()
 
-    expected_identifier_string = u'{0:d}'.format(id(identifier))
+    expected_identifier_string = '{0:d}'.format(id(identifier))
     identifier_string = identifier.CopyToString()
     self.assertEqual(identifier_string, expected_identifier_string)
 
@@ -27,12 +29,12 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
     attribute_container = interface.AttributeContainer()
-    attribute_container.attribute_name = u'attribute_name'
-    attribute_container.attribute_value = u'attribute_value'
+    attribute_container.attribute_name = 'attribute_name'
+    attribute_container.attribute_value = 'attribute_value'
 
     expected_dict = {
-        u'attribute_name': u'attribute_name',
-        u'attribute_value': u'attribute_value'}
+        'attribute_name': 'attribute_name',
+        'attribute_value': 'attribute_value'}
 
     test_dict = attribute_container.CopyToDict()
 
@@ -41,10 +43,10 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
   def testGetAttributeNames(self):
     """Tests the GetAttributeNames function."""
     attribute_container = interface.AttributeContainer()
-    attribute_container.attribute_name = u'attribute_name'
-    attribute_container.attribute_value = u'attribute_value'
+    attribute_container.attribute_name = 'attribute_name'
+    attribute_container.attribute_value = 'attribute_value'
 
-    expected_attribute_names = [u'attribute_name', u'attribute_value']
+    expected_attribute_names = ['attribute_name', 'attribute_value']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
@@ -53,12 +55,12 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
   def testGetAttributes(self):
     """Tests the GetAttributes function."""
     attribute_container = interface.AttributeContainer()
-    attribute_container.attribute_name = u'attribute_name'
-    attribute_container.attribute_value = u'attribute_value'
+    attribute_container.attribute_name = 'attribute_name'
+    attribute_container.attribute_value = 'attribute_value'
 
     expected_attributes = [
-        (u'attribute_name', u'attribute_name'),
-        (u'attribute_value', u'attribute_value')]
+        ('attribute_name', 'attribute_name'),
+        ('attribute_value', 'attribute_value')]
 
     attributes = sorted(attribute_container.GetAttributes())
 
@@ -67,12 +69,12 @@ class AttributeContainerTest(shared_test_lib.BaseTestCase):
   def testGetAttributeValuesString(self):
     """Tests the GetAttributeValuesString function."""
     attribute_container = interface.AttributeContainer()
-    attribute_container.attribute_name = u'attribute_name'
-    attribute_container.attribute_value = u'attribute_value'
+    attribute_container.attribute_name = 'attribute_name'
+    attribute_container.attribute_value = 'attribute_value'
 
     attribute_values_string1 = attribute_container.GetAttributeValuesString()
 
-    attribute_container.attribute_value = u'changes'
+    attribute_container.attribute_value = 'changes'
 
     attribute_values_string2 = attribute_container.GetAttributeValuesString()
 

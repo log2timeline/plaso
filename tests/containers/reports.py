@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the report attribute containers."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.containers import reports
@@ -17,8 +19,8 @@ class AnalysisReportTest(shared_test_lib.BaseTestCase):
     attribute_container = reports.AnalysisReport()
 
     expected_attribute_names = [
-        u'filter_string', u'plugin_name', u'report_array', u'report_dict',
-        u'text', u'time_compiled']
+        'filter_string', 'plugin_name', 'report_array', 'report_dict',
+        'text', 'time_compiled']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
