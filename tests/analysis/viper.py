@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Viper analysis plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 try:
@@ -36,11 +38,11 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
   """Tests for the Viper analysis plugin."""
 
   _EVENT_1_HASH = (
-      u'2d79fcc6b02a2e183a0cb30e0e25d103f42badda9fbf86bbee06f93aa3855aff')
+      '2d79fcc6b02a2e183a0cb30e0e25d103f42badda9fbf86bbee06f93aa3855aff')
 
   _TEST_EVENTS = [{
-      u'timestamp': timelib.Timestamp.CopyFromString(u'2015-01-01 17:00:00'),
-      u'sha256_hash': _EVENT_1_HASH}]
+      'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
+      'sha256_hash': _EVENT_1_HASH}]
 
   def _MockPost(self, unused_url, data=None):
     """Mock funtion to simulate a Viper API request.
@@ -53,30 +55,30 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
       MockResponse: mocked response that simulates a real response object
           returned by the requests library from the Viper API.
     """
-    sha256_hash = data.get(u'sha256', None)
+    sha256_hash = data.get('sha256', None)
     if sha256_hash != self._EVENT_1_HASH:
-      self.fail(u'Unexpected data in request.post().')
+      self.fail('Unexpected data in request.post().')
 
     response = MockResponse()
-    response[u'default'] = ({
-        u'sha1': u'13da502ab0d75daca5e5075c60e81bfe3b7a637f',
-        u'name': u'darkcomet.exe',
-        u'tags': [
-            u'rat',
-            u'darkcomet'],
-        u'sha512': u'7e81e0c4f49f1884ebebdf6e53531e7836721c2ae417'
-                   u'29cf5bc0340f3369e7d37fe4168a7434b2b0420b299f5c'
-                   u'1d9a4f482f1bda8e66e40345757d97e5602b2d',
-        u'created_at': u'2015-03-30 23:13:20.595238',
-        u'crc32': u'2238B48E',
-        u'ssdeep': u'12288:D9HFJ9rJxRX1uVVjoaWSoynxdO1FVBaOiRZTERfIhNk'
-                   u'NCCLo9Ek5C/hlg:NZ1xuVVjfFoynPaVBUR8f+kN10EB/g',
-        u'sha256': u'2d79fcc6b02a2e183a0cb30e0e25d103f42badda9fbf86bbee06f9'
-                   u'3aa3855aff',
-        u'type': u'PE32 executable (GUI) Intel 80386, for MS Windows',
-        u'id': 10,
-        u'md5': u'9f2520a3056543d49bb0f822d85ce5dd',
-        u'size': 774144},)
+    response['default'] = ({
+        'sha1': '13da502ab0d75daca5e5075c60e81bfe3b7a637f',
+        'name': 'darkcomet.exe',
+        'tags': [
+            'rat',
+            'darkcomet'],
+        'sha512': '7e81e0c4f49f1884ebebdf6e53531e7836721c2ae417'
+                  '29cf5bc0340f3369e7d37fe4168a7434b2b0420b299f5c'
+                  '1d9a4f482f1bda8e66e40345757d97e5602b2d',
+        'created_at': '2015-03-30 23:13:20.595238',
+        'crc32': '2238B48E',
+        'ssdeep': '12288:D9HFJ9rJxRX1uVVjoaWSoynxdO1FVBaOiRZTERfIhNk'
+                  'NCCLo9Ek5C/hlg:NZ1xuVVjfFoynPaVBUR8f+kN10EB/g',
+        'sha256': '2d79fcc6b02a2e183a0cb30e0e25d103f42badda9fbf86bbee06f9'
+                  '3aa3855aff',
+        'type': 'PE32 executable (GUI) Intel 80386, for MS Windows',
+        'id': 10,
+        'md5': '9f2520a3056543d49bb0f822d85ce5dd',
+        'size': 774144},)
 
     return response
 
@@ -91,15 +93,15 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
       EventObject: event with the appropriate attributes for testing.
     """
     date_time = dfdatetime_posix_time.PosixTime(
-        timestamp=event_dictionary[u'timestamp'])
+        timestamp=event_dictionary['timestamp'])
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_CREATION)
 
-    event.data_type = u'pe:compilation:compilation_time'
-    event.pe_type = u'Executable (EXE)'
+    event.data_type = 'pe:compilation:compilation_time'
+    event.pe_type = 'Executable (EXE)'
 
     for attribute_name, attribute_value in event_dictionary.items():
-      if attribute_name == u'timestamp':
+      if attribute_name == 'timestamp':
         continue
 
       setattr(event, attribute_name, attribute_value)
@@ -108,7 +110,7 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self.requests_patcher = mock.patch(u'requests.post', self._MockPost)
+    self.requests_patcher = mock.patch('requests.post', self._MockPost)
     self.requests_patcher.start()
 
   def tearDown(self):
@@ -119,16 +121,16 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
     """Tests the ExamineEvent and CompileReport functions."""
     events = []
     for event_dictionary in self._TEST_EVENTS:
-      event_dictionary[u'pathspec'] = fake_path_spec.FakePathSpec(
-          location=u'C:\\WINDOWS\\system32\\evil.exe')
+      event_dictionary['pathspec'] = fake_path_spec.FakePathSpec(
+          location='C:\\WINDOWS\\system32\\evil.exe')
 
       event = self._CreateTestEventObject(event_dictionary)
       events.append(event)
 
     plugin = viper.ViperAnalysisPlugin()
-    plugin.SetHost(u'localhost')
+    plugin.SetHost('localhost')
     plugin.SetPort(8080)
-    plugin.SetProtocol(u'http')
+    plugin.SetProtocol('http')
 
     storage_writer = self._AnalyzeEvents(events, plugin)
 
@@ -139,11 +141,11 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
     self.assertIsNotNone(report)
 
     expected_text = (
-        u'viper hash tagging results\n'
-        u'1 path specifications tagged with label: viper_present\n'
-        u'1 path specifications tagged with label: viper_project_default\n'
-        u'1 path specifications tagged with label: viper_tag_darkcomet\n'
-        u'1 path specifications tagged with label: viper_tag_rat\n')
+        'viper hash tagging results\n'
+        '1 path specifications tagged with label: viper_present\n'
+        '1 path specifications tagged with label: viper_project_default\n'
+        '1 path specifications tagged with label: viper_tag_darkcomet\n'
+        '1 path specifications tagged with label: viper_tag_rat\n')
 
     self.assertEqual(report.text, expected_text)
 
@@ -153,8 +155,8 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(len(labels), 4)
 
     expected_labels = [
-        u'viper_present', u'viper_project_default', u'viper_tag_darkcomet',
-        u'viper_tag_rat']
+        'viper_present', 'viper_project_default', 'viper_tag_darkcomet',
+        'viper_tag_rat']
     self.assertEqual(sorted(labels), expected_labels)
 
 

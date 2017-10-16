@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the analysis plugin manager."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.analysis import interface
@@ -71,7 +73,7 @@ class AnalysisPluginManagerTest(shared_test_lib.BaseTestCase):
 
     plugin_set = set([name for name, _ in list(
         manager.AnalysisPluginManager.GetPlugins())])
-    self.assertTrue(u'test_plugin' in plugin_set)
+    self.assertTrue('test_plugin' in plugin_set)
 
     manager.AnalysisPluginManager.DeregisterPlugin(TestAnalysisPlugin)
 
