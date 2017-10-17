@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains a default plist plugin in Plaso."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
@@ -22,7 +24,7 @@ class SafariHistoryEventData(events.EventData):
         HTTP request.
   """
 
-  DATA_TYPE = u'safari:history:visit'
+  DATA_TYPE = 'safari:history:visit'
 
   def __init__(self):
     """Initializes event data."""
@@ -37,12 +39,13 @@ class SafariHistoryEventData(events.EventData):
 class SafariHistoryPlugin(interface.PlistPlugin):
   """Plugin to extract Safari history timestamps."""
 
-  NAME = u'safari_history'
-  DESCRIPTION = u'Parser for Safari history plist files.'
+  NAME = 'safari_history'
+  DESCRIPTION = 'Parser for Safari history plist files.'
 
-  PLIST_PATH = u'History.plist'
-  PLIST_KEYS = frozenset([u'WebHistoryDates', u'WebHistoryFileVersion'])
+  PLIST_PATH = 'History.plist'
+  PLIST_KEYS = frozenset(['WebHistoryDates', 'WebHistoryFileVersion'])
 
+  # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts Safari history items.
 
@@ -51,19 +54,19 @@ class SafariHistoryPlugin(interface.PlistPlugin):
           and other components, such as storage and dfvfs.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
-    format_version = match.get(u'WebHistoryFileVersion', None)
+    format_version = match.get('WebHistoryFileVersion', None)
     if format_version != 1:
       parser_mediator.ProduceExtractionError(
-          u'unsupported Safari history version: {0!s}'.format(format_version))
+          'unsupported Safari history version: {0!s}'.format(format_version))
       return
 
-    if u'WebHistoryDates' not in match:
+    if 'WebHistoryDates' not in match:
       return
 
-    for history_entry in match.get(u'WebHistoryDates', {}):
-      last_visited_date = history_entry.get(u'lastVisitedDate', None)
+    for history_entry in match.get('WebHistoryDates', {}):
+      last_visited_date = history_entry.get('lastVisitedDate', None)
       if last_visited_date is None:
-        parser_mediator.ProduceExtractionError(u'missing last vistited date')
+        parser_mediator.ProduceExtractionError('missing last vistited date')
         continue
 
       try:
@@ -71,20 +74,20 @@ class SafariHistoryPlugin(interface.PlistPlugin):
         timestamp = float(last_visited_date)
       except (TypeError, ValueError):
         parser_mediator.ProduceExtractionError(
-            u'unable to convert last vistited date {0:s}'.format(
+            'unable to convert last vistited date {0:s}'.format(
                 last_visited_date))
         continue
 
-      display_title = history_entry.get(u'displayTitle', None)
+      display_title = history_entry.get('displayTitle', None)
 
       event_data = SafariHistoryEventData()
       if display_title != event_data.title:
         event_data.display_title = display_title
-      event_data.title = history_entry.get(u'title', None)
-      event_data.url = history_entry.get(u'', None)
-      event_data.visit_count = history_entry.get(u'visitCount', None)
+      event_data.title = history_entry.get('title', None)
+      event_data.url = history_entry.get('', None)
+      event_data.visit_count = history_entry.get('visitCount', None)
       event_data.was_http_non_get = history_entry.get(
-          u'lastVisitWasHTTPNonGet', None)
+          'lastVisitWasHTTPNonGet', None)
 
       # Convert the floating point value to an integer.
       # TODO: add support for the fractional part of the floating point value.

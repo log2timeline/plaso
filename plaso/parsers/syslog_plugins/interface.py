@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the interface for syslog plugins."""
 
+from __future__ import unicode_literals
+
 import abc
 
 import pyparsing
@@ -11,12 +13,12 @@ from plaso.parsers import plugins
 
 class SyslogPlugin(plugins.BasePlugin):
   """The interface for syslog plugins."""
-  NAME = u'syslog_plugin'
-  DESCRIPTION = u''
+  NAME = 'syslog_plugin'
+  DESCRIPTION = ''
 
   # The syslog 'reporter' value for syslog messages that the plugin is able to
   # parse.
-  REPORTER = u''
+  REPORTER = ''
 
   # Tuples of (key, grammar), where grammar is a PyParsing definition for a
   # line type that the plugin can handle. This must be defined by each plugin.
@@ -43,6 +45,7 @@ class SyslogPlugin(plugins.BasePlugin):
           fields.
     """
 
+  # pylint: disable=arguments-differ
   def Process(self, parser_mediator, timestamp, syslog_tokens, **kwargs):
     """Processes the data structure produced by the parser.
 
@@ -59,9 +62,9 @@ class SyslogPlugin(plugins.BasePlugin):
       AttributeError: If the syslog_tokens do not include a 'body' attribute.
       WrongPlugin: If the plugin is unable to parse the syslog tokens.
     """
-    body = syslog_tokens.get(u'body', None)
+    body = syslog_tokens.get('body', None)
     if not body:
-      raise AttributeError(u'Missing required attribute: body')
+      raise AttributeError('Missing required attribute: body')
 
     for key, grammar in iter(self.MESSAGE_GRAMMARS):
       try:
@@ -72,4 +75,4 @@ class SyslogPlugin(plugins.BasePlugin):
       except pyparsing.ParseException:
         pass
 
-    raise errors.WrongPlugin(u'Unable to create event from: {0:s}'.format(body))
+    raise errors.WrongPlugin('Unable to create event from: {0:s}'.format(body))

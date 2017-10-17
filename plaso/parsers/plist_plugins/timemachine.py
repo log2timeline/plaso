@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """TimeMachine plist plugin."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 import construct
@@ -30,18 +32,19 @@ class TimeMachinePlugin(interface.PlistPlugin):
       list of the backup dates.
   """
 
-  NAME = u'time_machine'
-  DESCRIPTION = u'Parser for TimeMachine plist files.'
+  NAME = 'time_machine'
+  DESCRIPTION = 'Parser for TimeMachine plist files.'
 
-  PLIST_PATH = u'com.apple.TimeMachine.plist'
-  PLIST_KEYS = frozenset([u'Destinations', u'RootVolumeUUID'])
+  PLIST_PATH = 'com.apple.TimeMachine.plist'
+  PLIST_KEYS = frozenset(['Destinations', 'RootVolumeUUID'])
 
   TM_BACKUP_ALIAS = construct.Struct(
-      u'tm_backup_alias',
+      'tm_backup_alias',
       construct.Padding(10),
       construct.PascalString(
-          u'value', length_field=construct.UBInt8(u'length')))
+          'value', length_field=construct.UBInt8('length')))
 
+  # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant TimeMachine entries.
 
@@ -50,24 +53,24 @@ class TimeMachinePlugin(interface.PlistPlugin):
           and other components, such as storage and dfvfs.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
-    destinations = match.get(u'Destinations', [])
+    destinations = match.get('Destinations', [])
     for destination in destinations:
       destination_identifier = (
-          destination.get(u'DestinationID', None) or u'Unknown device')
+          destination.get('DestinationID', None) or 'Unknown device')
 
-      alias = destination.get(u'BackupAlias', u'<ALIAS>')
+      alias = destination.get('BackupAlias', '<ALIAS>')
       try:
         alias = self.TM_BACKUP_ALIAS.parse(alias).value
       except construct.FieldError:
-        alias = u'Unknown alias'
+        alias = 'Unknown alias'
 
       event_data = plist_event.PlistTimeEventData()
-      event_data.desc = u'TimeMachine Backup in {0:s} ({1:s})'.format(
+      event_data.desc = 'TimeMachine Backup in {0:s} ({1:s})'.format(
           alias, destination_identifier)
-      event_data.key = u'item/SnapshotDates'
-      event_data.root = u'/Destinations'
+      event_data.key = 'item/SnapshotDates'
+      event_data.root = '/Destinations'
 
-      snapshot_dates = destination.get(u'SnapshotDates', [])
+      snapshot_dates = destination.get('SnapshotDates', [])
       for datetime_value in snapshot_dates:
         timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
         date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(

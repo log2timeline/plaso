@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains a default plist plugin in Plaso."""
 
+from __future__ import unicode_literals
+
 import datetime
 import logging
 
@@ -17,9 +19,10 @@ from plaso.parsers.plist_plugins import interface
 class DefaultPlugin(interface.PlistPlugin):
   """Basic plugin to extract keys with timestamps as values from plists."""
 
-  NAME = u'plist_default'
-  DESCRIPTION = u'Parser for plist files.'
+  NAME = 'plist_default'
+  DESCRIPTION = 'Parser for plist files.'
 
+  # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, top_level=None, **unused_kwargs):
     """Simple method to exact date values from a Plist.
 
@@ -64,7 +67,7 @@ class DefaultPlugin(interface.PlistPlugin):
       plist_name (str): name of the plist.
       top_level (dict[str, object]): plist top-level key.
     """
-    logging.debug(u'Plist {0:s} plugin used for: {1:s}'.format(
+    logging.debug('Plist {0:s} plugin used for: {1:s}'.format(
         self.NAME, plist_name))
     self.GetEntries(parser_mediator, top_level=top_level, **kwargs)
 
