@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The CLI tool options mix-ins."""
 
+from __future__ import unicode_literals
+
 import logging
 import os
 
@@ -59,11 +61,11 @@ class AnalysisPluginOptions(object):
         column_width = len(name)
 
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=[u'Name', u'Description'],
-        title=u'Analysis Plugins')
+        self._views_format_type, column_names=['Name', 'Description'],
+        title='Analysis Plugins')
     # TODO: add support for a 3 column table.
     for name, description, type_string in analysis_plugin_info:
-      description = u'{0:s} [{1:s}]'.format(description, type_string)
+      description = '{0:s} [{1:s}]'.format(description, type_string)
       table_view.AddRow([name, description])
     table_view.Write(self._output_writer)
 
@@ -84,8 +86,8 @@ class HashersOptions(object):
     hashers_information = hashers_manager.HashersManager.GetHashersInformation()
 
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=[u'Name', u'Description'],
-        title=u'Hashers')
+        self._views_format_type, column_names=['Name', 'Description'],
+        title='Hashers')
 
     for name, description in sorted(hashers_information):
       table_view.AddRow([name, description])
@@ -133,11 +135,11 @@ class OutputModuleOptions(object):
 
     except (KeyError, ValueError) as exception:
       raise RuntimeError(
-          u'Unable to create output module with error: {0:s}'.format(
+          'Unable to create output module with error: {0:s}'.format(
               exception))
 
     if output_manager.OutputManager.IsLinearOutputModule(self._output_format):
-      output_file_object = open(self._output_filename, u'wb')
+      output_file_object = open(self._output_filename, 'wb')
       output_writer = tools.FileObjectOutputWriter(output_file_object)
       output_module.SetOutputWriter(output_writer)
 
@@ -150,10 +152,10 @@ class OutputModuleOptions(object):
     while missing_parameters:
       for parameter in missing_parameters:
         value = self._PromptUserForInput(
-            u'Missing parameter {0:s} for output module'.format(parameter))
+            'Missing parameter {0:s} for output module'.format(parameter))
         if value is None:
           logging.warning(
-              u'Unable to set the missing parameter for: {0:s}'.format(
+              'Unable to set the missing parameter for: {0:s}'.format(
                   parameter))
           continue
 
@@ -180,8 +182,8 @@ class OutputModuleOptions(object):
   def ListOutputModules(self):
     """Lists the output modules."""
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=[u'Name', u'Description'],
-        title=u'Output Modules')
+        self._views_format_type, column_names=['Name', 'Description'],
+        title='Output Modules')
 
     for name, output_class in output_manager.OutputManager.GetOutputClasses():
       table_view.AddRow([name, output_class.DESCRIPTION])
@@ -193,8 +195,8 @@ class OutputModuleOptions(object):
       return
 
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=[u'Name', u'Description'],
-        title=u'Disabled Output Modules')
+        self._views_format_type, column_names=['Name', 'Description'],
+        title='Disabled Output Modules')
     for name, output_class in disabled_classes:
       table_view.AddRow([name, output_class.DESCRIPTION])
     table_view.Write(self._output_writer)
@@ -221,7 +223,7 @@ class ParsersOptions(object):
     """
     parser_presets_information = []
     for preset_name, parser_names in sorted(parsers_presets.CATEGORIES.items()):
-      parser_presets_information.append((preset_name, u', '.join(parser_names)))
+      parser_presets_information.append((preset_name, ', '.join(parser_names)))
 
     return parser_presets_information
 
@@ -230,8 +232,8 @@ class ParsersOptions(object):
     parsers_information = parsers_manager.ParsersManager.GetParsersInformation()
 
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=[u'Name', u'Description'],
-        title=u'Parsers')
+        self._views_format_type, column_names=['Name', 'Description'],
+        title='Parsers')
 
     for name, description in sorted(parsers_information):
       table_view.AddRow([name, description])
@@ -243,9 +245,9 @@ class ParsersOptions(object):
           parsers_manager.ParsersManager.GetParserPluginsInformation(
               parser_filter_expression=parser_name))
 
-      table_title = u'Parser plugins: {0:s}'.format(parser_name)
+      table_title = 'Parser plugins: {0:s}'.format(parser_name)
       table_view = views.ViewsFactory.GetTableView(
-          self._views_format_type, column_names=[u'Name', u'Description'],
+          self._views_format_type, column_names=['Name', 'Description'],
           title=table_title)
       for name, description in sorted(plugins_information):
         table_view.AddRow([name, description])
@@ -254,8 +256,8 @@ class ParsersOptions(object):
     presets_information = self._GetParserPresetsInformation()
 
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=[u'Name', u'Parsers and plugins'],
-        title=u'Parser presets')
+        self._views_format_type, column_names=['Name', 'Parsers and plugins'],
+        title='Parser presets')
     for name, description in sorted(presets_information):
       table_view.AddRow([name, description])
     table_view.Write(self._output_writer)
@@ -276,17 +278,17 @@ class StorageFileOptions(object):
     if os.path.exists(storage_file_path):
       if not os.path.isfile(storage_file_path):
         raise errors.BadConfigOption(
-            u'Storage file: {0:s} already exists and is not a file.'.format(
+            'Storage file: {0:s} already exists and is not a file.'.format(
                 storage_file_path))
-      logging.warning(u'Appending to an already existing storage file.')
+      logging.warning('Appending to an already existing storage file.')
 
     dirname = os.path.dirname(storage_file_path)
     if not dirname:
-      dirname = u'.'
+      dirname = '.'
 
     # TODO: add a more thorough check to see if the storage file really is
     # a plaso storage file.
 
     if not os.access(dirname, os.W_OK):
       raise errors.BadConfigOption(
-          u'Unable to write to storage file: {0:s}'.format(storage_file_path))
+          'Unable to write to storage file: {0:s}'.format(storage_file_path))

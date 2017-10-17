@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The storage format CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 from plaso.cli import tools
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
@@ -11,8 +13,8 @@ from plaso.lib import errors
 class StorageFormatArgumentsHelper(interface.ArgumentsHelper):
   """Storage format CLI arguments helper."""
 
-  NAME = u'storage_format'
-  DESCRIPTION = u'Storage format command line arguments.'
+  NAME = 'storage_format'
+  DESCRIPTION = 'Storage format command line arguments.'
 
   _DEFAULT_STORAGE_FORMAT = definitions.STORAGE_FORMAT_ZIP
 
@@ -30,12 +32,12 @@ class StorageFormatArgumentsHelper(interface.ArgumentsHelper):
     storage_formats = sorted(definitions.STORAGE_FORMATS)
 
     argument_group.add_argument(
-        u'--storage_format', u'--storage-format', action=u'store',
-        choices=storage_formats, dest=u'storage_format', type=str,
-        metavar=u'FORMAT', default=cls._DEFAULT_STORAGE_FORMAT, help=(
-            u'Format of the storage file, the default is: {0:s}. Supported '
-            u'options: {1:s}'.format(
-                cls._DEFAULT_STORAGE_FORMAT, u', '.join(storage_formats))))
+        '--storage_format', '--storage-format', action='store',
+        choices=storage_formats, dest='storage_format', type=str,
+        metavar='FORMAT', default=cls._DEFAULT_STORAGE_FORMAT, help=(
+            'Format of the storage file, the default is: {0:s}. Supported '
+            'options: {1:s}'.format(
+                cls._DEFAULT_STORAGE_FORMAT, ', '.join(storage_formats))))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
@@ -52,17 +54,17 @@ class StorageFormatArgumentsHelper(interface.ArgumentsHelper):
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
-          u'Configuration object is not an instance of CLITool')
+          'Configuration object is not an instance of CLITool')
 
-    storage_format = cls._ParseStringOption(options, u'storage_format')
+    storage_format = cls._ParseStringOption(options, 'storage_format')
     if not storage_format:
-      raise errors.BadConfigOption(u'Unable to determine storage format.')
+      raise errors.BadConfigOption('Unable to determine storage format.')
 
     if storage_format not in definitions.STORAGE_FORMATS:
       raise errors.BadConfigOption(
-          u'Unsupported storage format: {0:s}'.format(storage_format))
+          'Unsupported storage format: {0:s}'.format(storage_format))
 
-    setattr(configuration_object, u'_storage_format', storage_format)
+    setattr(configuration_object, '_storage_format', storage_format)
 
 
 manager.ArgumentHelperManager.RegisterHelper(StorageFormatArgumentsHelper)

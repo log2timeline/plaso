@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The YARA rules CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import yara
 
 from plaso.cli import tools
@@ -12,8 +14,8 @@ from plaso.lib import errors
 class YaraRulesArgumentsHelper(interface.ArgumentsHelper):
   """YARA rules CLI arguments helper."""
 
-  NAME = u'yara_rules'
-  DESCRIPTION = u'YARA rules command line arguments.'
+  NAME = 'yara_rules'
+  DESCRIPTION = 'YARA rules command line arguments.'
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -27,9 +29,9 @@ class YaraRulesArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        u'--yara_rules', u'--yara-rules', dest=u'yara_rules_path',
-        type=str, metavar=u'PATH', action=u'store', help=(
-            u'Path to a file containing Yara rules definitions.'))
+        '--yara_rules', '--yara-rules', dest='yara_rules_path',
+        type=str, metavar='PATH', action='store', help=(
+            'Path to a file containing Yara rules definitions.'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
@@ -45,11 +47,11 @@ class YaraRulesArgumentsHelper(interface.ArgumentsHelper):
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
-          u'Configuration object is not an instance of CLITool')
+          'Configuration object is not an instance of CLITool')
 
     yara_rules_string = None
 
-    path = getattr(options, u'yara_rules_path', None)
+    path = getattr(options, 'yara_rules_path', None)
     if path:
       try:
         with open(path, 'rb') as rules_file:
@@ -57,7 +59,7 @@ class YaraRulesArgumentsHelper(interface.ArgumentsHelper):
 
       except IOError as exception:
         raise errors.BadConfigObject(
-            u'Unable to read Yara rules file: {0:s} with error: {1!s}'.format(
+            'Unable to read Yara rules file: {0:s} with error: {1!s}'.format(
                 path, exception))
 
       try:
@@ -68,10 +70,10 @@ class YaraRulesArgumentsHelper(interface.ArgumentsHelper):
 
       except yara.Error as exception:
         raise errors.BadConfigObject(
-            u'Unable to parse Yara rules in: {0:s} with error: {1!s}'.format(
+            'Unable to parse Yara rules in: {0:s} with error: {1!s}'.format(
                 path, exception))
 
-    setattr(configuration_object, u'_yara_rules_string', yara_rules_string)
+    setattr(configuration_object, '_yara_rules_string', yara_rules_string)
 
 
 manager.ArgumentHelperManager.RegisterHelper(YaraRulesArgumentsHelper)

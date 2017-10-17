@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The CLI view classes."""
 
+from __future__ import unicode_literals
+
 import abc
 
 from plaso.lib import py2to3
@@ -32,7 +34,7 @@ class BaseTableView(object):
       ValueError: if the number of values is out of bounds.
     """
     if self._number_of_columns and len(values) != self._number_of_columns:
-      raise ValueError(u'Number of values is out of bounds.')
+      raise ValueError('Number of values is out of bounds.')
 
     self._rows.append(values)
 
@@ -58,7 +60,7 @@ class CLITableView(BaseTableView):
   # The standard width of Windows cmd.exe is 80 characters.
   _MAXIMUM_WIDTH = 80
 
-  _HEADER_FORMAT_STRING = u'{{0:*^{0:d}}}\n'.format(_MAXIMUM_WIDTH)
+  _HEADER_FORMAT_STRING = '{{0:*^{0:d}}}\n'.format(_MAXIMUM_WIDTH)
 
   def __init__(self, column_names=None, title=None):
     """Initializes the command line table view object.
@@ -83,17 +85,17 @@ class CLITableView(BaseTableView):
     maximum_row_width = self._MAXIMUM_WIDTH - self._column_width - 3
 
     # The format string of the first line of the column value.
-    primary_format_string = u'{{0:>{0:d}s}} : {{1:s}}\n'.format(
+    primary_format_string = '{{0:>{0:d}s}} : {{1:s}}\n'.format(
         self._column_width)
 
     # The format string of successive lines of the column value.
-    secondary_format_string = u'{{0:<{0:d}s}}{{1:s}}\n'.format(
+    secondary_format_string = '{{0:<{0:d}s}}{{1:s}}\n'.format(
         self._column_width + 3)
 
     if isinstance(values[1], py2to3.STRING_TYPES):
       value_string = values[1]
     else:
-      value_string = u'{0!s}'.format(values[1])
+      value_string = '{0!s}'.format(values[1])
 
     if len(value_string) < maximum_row_width:
       output_writer.Write(primary_format_string.format(
@@ -111,17 +113,17 @@ class CLITableView(BaseTableView):
       current += len(word) + 1
       if current >= maximum_row_width:
         current = len(word)
-        lines.append(u' '.join(word_buffer))
+        lines.append(' '.join(word_buffer))
         word_buffer = [word]
       else:
         word_buffer.append(word)
-    lines.append(u' '.join(word_buffer))
+    lines.append(' '.join(word_buffer))
 
     # Split the column value across multiple lines.
     output_writer.Write(
         primary_format_string.format(values[0], lines[0]))
     for line in lines[1:]:
-      output_writer.Write(secondary_format_string.format(u'', line))
+      output_writer.Write(secondary_format_string.format('', line))
 
   def _WriteSeparatorLine(self, output_writer):
     """Writes a separator line.
@@ -129,8 +131,8 @@ class CLITableView(BaseTableView):
     Args:
       output_writer (OutputWriter): output writer.
     """
-    output_writer.Write(u'-' * self._MAXIMUM_WIDTH)
-    output_writer.Write(u'\n')
+    output_writer.Write('-' * self._MAXIMUM_WIDTH)
+    output_writer.Write('\n')
 
   def AddRow(self, values):
     """Adds a row of values.
@@ -159,21 +161,21 @@ class CLITableView(BaseTableView):
                     if the column width is out of bounds.
     """
     if self._title and len(self._title) > self._MAXIMUM_WIDTH:
-      raise RuntimeError(u'Title length out of bounds.')
+      raise RuntimeError('Title length out of bounds.')
 
     if self._number_of_columns not in (0, 2):
-      raise RuntimeError(u'Unsupported number of columns: {0:d}.'.format(
+      raise RuntimeError('Unsupported number of columns: {0:d}.'.format(
           self._number_of_columns))
 
     if self._column_width < 0 or self._column_width >= self._MAXIMUM_WIDTH:
-      raise RuntimeError(u'Column width out of bounds.')
+      raise RuntimeError('Column width out of bounds.')
 
-    output_writer.Write(u'\n')
+    output_writer.Write('\n')
 
     if self._title:
-      header_string = u' {0:s} '.format(self._title)
+      header_string = ' {0:s} '.format(self._title)
     else:
-      header_string = u''
+      header_string = ''
     header_string = self._HEADER_FORMAT_STRING.format(header_string)
     output_writer.Write(header_string)
 
@@ -197,30 +199,30 @@ class MarkdownTableView(BaseTableView):
       output_writer (OutputWriter): output writer.
     """
     if self._title:
-      output_writer.Write(u'### {0:s}\n\n'.format(self._title))
+      output_writer.Write('### {0:s}\n\n'.format(self._title))
 
     if not self._columns:
-      self._columns = [u'' for _ in range(0, self._number_of_columns)]
+      self._columns = ['' for _ in range(0, self._number_of_columns)]
 
-    output_writer.Write(u' | '.join(self._columns))
-    output_writer.Write(u'\n')
+    output_writer.Write(' | '.join(self._columns))
+    output_writer.Write('\n')
 
-    output_writer.Write(u' | '.join([u'---' for _ in self._columns]))
-    output_writer.Write(u'\n')
+    output_writer.Write(' | '.join(['---' for _ in self._columns]))
+    output_writer.Write('\n')
 
     for values in self._rows:
-      values = [u'{0!s}'.format(value) for value in values]
-      output_writer.Write(u' | '.join(values))
-      output_writer.Write(u'\n')
+      values = ['{0!s}'.format(value) for value in values]
+      output_writer.Write(' | '.join(values))
+      output_writer.Write('\n')
 
-    output_writer.Write(u'\n')
+    output_writer.Write('\n')
 
 
 class ViewsFactory(object):
   """Class that implements the views factory."""
 
-  FORMAT_TYPE_CLI = u'cli'
-  FORMAT_TYPE_MARKDOWN = u'markdown'
+  FORMAT_TYPE_CLI = 'cli'
+  FORMAT_TYPE_MARKDOWN = 'markdown'
 
   _TABLE_VIEW_FORMAT_CLASSES = {
       FORMAT_TYPE_CLI: CLITableView,
@@ -241,6 +243,6 @@ class ViewsFactory(object):
     """
     view_class = cls._TABLE_VIEW_FORMAT_CLASSES.get(format_type, None)
     if not view_class:
-      raise ValueError(u'Unsupported format type: {0:s}'.format(format_type))
+      raise ValueError('Unsupported format type: {0:s}'.format(format_type))
 
     return view_class(column_names=column_names, title=title)

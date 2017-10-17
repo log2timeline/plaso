@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The 4n6time MySQL database output module CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 from plaso.lib import errors
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import database_config
@@ -13,16 +15,16 @@ class MySQL4n6TimeDatabaseArgumentsHelper(
     database_config.DatabaseArgumentsHelper):
   """4n6time MySQL database server CLI arguments helper."""
 
-  _DEFAULT_USERNAME = u'root'
-  _DEFAULT_PASSWORD = u'forensic'
+  _DEFAULT_USERNAME = 'root'
+  _DEFAULT_PASSWORD = 'forensic'
 
 
 class MySQL4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
   """4n6time MySQL database output module CLI arguments helper."""
 
-  NAME = u'4n6time_mysql'
-  CATEGORY = u'output'
-  DESCRIPTION = u'Argument helper for the 4n6Time MySQL output module.'
+  NAME = '4n6time_mysql'
+  CATEGORY = 'output'
+  DESCRIPTION = 'Argument helper for the 4n6Time MySQL output module.'
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -39,6 +41,7 @@ class MySQL4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
         argument_group)
     MySQL4n6TimeDatabaseArgumentsHelper.AddArguments(argument_group)
 
+  # pylint: disable=arguments-differ
   @classmethod
   def ParseOptions(cls, options, output_module):
     """Parses and validates options.
@@ -52,7 +55,7 @@ class MySQL4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
     """
     if not isinstance(output_module, mysql_4n6time.MySQL4n6TimeOutputModule):
       raise errors.BadConfigObject(
-          u'Output module is not an instance of MySQL4n6TimeOutputModule')
+          'Output module is not an instance of MySQL4n6TimeOutputModule')
 
     MySQL4n6TimeDatabaseArgumentsHelper.ParseOptions(options, output_module)
     shared_4n6time_output.Shared4n6TimeOutputArgumentsHelper.ParseOptions(

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The status view CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import sys
 
 from plaso.cli import status_view
@@ -13,12 +15,12 @@ from plaso.lib import errors
 class StatusViewArgumentsHelper(interface.ArgumentsHelper):
   """Status view CLI arguments helper."""
 
-  NAME = u'status_view'
-  DESCRIPTION = u'Status view command line arguments.'
+  NAME = 'status_view'
+  DESCRIPTION = 'Status view command line arguments.'
 
   # The window status-view mode has an annoying flicker on Windows,
   # hence we default to linear status-view mode instead.
-  if sys.platform.startswith(u'win'):
+  if sys.platform.startswith('win'):
     _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_LINEAR
   else:
     _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_WINDOW
@@ -35,10 +37,10 @@ class StatusViewArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        u'--status_view', u'--status-view', dest=u'status_view_mode',
-        choices=[u'linear', u'none', u'window'], action=u'store',
-        metavar=u'TYPE', default=cls._DEFAULT_STATUS_VIEW_MODE, help=(
-            u'The processing status view mode: "linear", "none" or "window".'))
+        '--status_view', '--status-view', dest='status_view_mode',
+        choices=['linear', 'none', 'window'], action='store',
+        metavar='TYPE', default=cls._DEFAULT_STATUS_VIEW_MODE, help=(
+            'The processing status view mode: "linear", "none" or "window".'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
@@ -54,13 +56,13 @@ class StatusViewArgumentsHelper(interface.ArgumentsHelper):
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
-          u'Configuration object is not an instance of CLITool')
+          'Configuration object is not an instance of CLITool')
 
     status_view_mode = cls._ParseStringOption(
-        options, u'status_view_mode',
+        options, 'status_view_mode',
         default_value=cls._DEFAULT_STATUS_VIEW_MODE)
 
-    setattr(configuration_object, u'_status_view_mode', status_view_mode)
+    setattr(configuration_object, '_status_view_mode', status_view_mode)
 
 
 manager.ArgumentHelperManager.RegisterHelper(StatusViewArgumentsHelper)

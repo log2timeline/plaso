@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The dynamic output module CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 from plaso.lib import errors
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
@@ -10,13 +12,13 @@ from plaso.output import dynamic
 class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
   """Dynamic output module CLI arguments helper."""
 
-  NAME = u'dynamic'
-  CATEGORY = u'output'
-  DESCRIPTION = u'Argument helper for the dynamic output module.'
+  NAME = 'dynamic'
+  CATEGORY = 'output'
+  DESCRIPTION = 'Argument helper for the dynamic output module.'
 
   _DEFAULT_FIELDS = [
-      u'datetime', u'timestamp_desc', u'source', u'source_long',
-      u'message', u'parser', u'display_name', u'tag']
+      'datetime', 'timestamp_desc', 'source', 'source_long',
+      'message', 'parser', 'display_name', 'tag']
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -29,18 +31,18 @@ class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
       argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
           argparse group.
     """
-    default_fields = u','.join(cls._DEFAULT_FIELDS)
+    default_fields = ','.join(cls._DEFAULT_FIELDS)
     argument_group.add_argument(
-        u'--fields', dest=u'fields', type=str, action=u'store',
+        '--fields', dest='fields', type=str, action='store',
         default=default_fields, help=(
-            u'Defines which fields should be included in the output.'))
+            'Defines which fields should be included in the output.'))
 
-    default_fields = u', '.join(cls._DEFAULT_FIELDS)
+    default_fields = ', '.join(cls._DEFAULT_FIELDS)
     argument_group.add_argument(
-        u'--additional_fields', dest=u'additional_fields', type=str,
-        action=u'store', default=u'', help=(
-            u'Defines extra fields to be included in the output, in addition to'
-            u' the default fields, which are {0:s}.'.format(default_fields)))
+        '--additional_fields', dest='additional_fields', type=str,
+        action='store', default='', help=(
+            'Defines extra fields to be included in the output, in addition to'
+            ' the default fields, which are {0:s}.'.format(default_fields)))
 
   @classmethod
   def ParseOptions(cls, options, output_module):  # pylint: disable=arguments-differ
@@ -56,20 +58,20 @@ class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
     """
     if not isinstance(output_module, dynamic.DynamicOutputModule):
       raise errors.BadConfigObject(
-          u'Output module is not an instance of DynamicOutputModule')
+          'Output module is not an instance of DynamicOutputModule')
 
-    default_fields = u','.join(cls._DEFAULT_FIELDS)
+    default_fields = ','.join(cls._DEFAULT_FIELDS)
     fields = cls._ParseStringOption(
-        options, u'fields', default_value=default_fields)
+        options, 'fields', default_value=default_fields)
 
     additional_fields = cls._ParseStringOption(
-        options, u'additional_fields')
+        options, 'additional_fields')
 
     if additional_fields:
-      fields = u'{0:s},{1:s}'.format(fields, additional_fields)
+      fields = '{0:s},{1:s}'.format(fields, additional_fields)
 
     output_module.SetFields([
-        field_name.strip() for field_name in fields.split(u',')])
+        field_name.strip() for field_name in fields.split(',')])
 
 
 manager.ArgumentHelperManager.RegisterHelper(DynamicOutputArgumentsHelper)
