@@ -14,7 +14,7 @@ class VirusTotalAnalysisArgumentsHelper(interface.ArgumentsHelper):
 
   # pylint: disable=arguments-differ
 
-  NAME = 'virustotal_analysis'
+  NAME = 'virustotal'
   CATEGORY = 'analysis'
   DESCRIPTION = 'Argument helper for the VirusTotal analysis plugin.'
 

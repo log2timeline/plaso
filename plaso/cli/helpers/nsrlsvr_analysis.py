@@ -10,7 +10,7 @@ from plaso.lib import errors
 class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
   """Nsrlsvr analysis plugin CLI arguments helper."""
 
-  NAME = u'nsrlsvr_analysis'
+  NAME = u'nsrlsvr'
   CATEGORY = u'analysis'
   DESCRIPTION = u'Argument helper for the nsrlsvr analysis plugin.'
 
@@ -59,6 +59,7 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
             u'{0:d}.').format(cls._DEFAULT_PORT))
 
   @classmethod
+  # pylint: disable=arguments-differ
   def ParseOptions(cls, options, analysis_plugin):
     """Parses and validates options.
 
