@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Bencode parser plugin for Transmission BitTorrent files."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
@@ -18,7 +20,7 @@ class TransmissionEventData(events.EventData):
     seedtime (int): number of seconds client seeded torrent
   """
 
-  DATA_TYPE = u'p2p:bittorrent:transmission'
+  DATA_TYPE = 'p2p:bittorrent:transmission'
 
   def __init__(self):
     """Initializes event data."""
@@ -30,13 +32,14 @@ class TransmissionEventData(events.EventData):
 class TransmissionPlugin(interface.BencodePlugin):
   """Parse Transmission BitTorrent activity file for current torrents."""
 
-  NAME = u'bencode_transmission'
-  DESCRIPTION = u'Parser for Transmission bencoded files.'
+  NAME = 'bencode_transmission'
+  DESCRIPTION = 'Parser for Transmission bencoded files.'
 
   BENCODE_KEYS = frozenset([
-      u'activity-date', u'done-date', u'added-date', u'destination',
-      u'seeding-time-seconds'])
+      'activity-date', 'done-date', 'added-date', 'destination',
+      'seeding-time-seconds'])
 
+  # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, data=None, **unused_kwargs):
     """Extract data from Transmission's resume folder files.
 
@@ -52,29 +55,29 @@ class TransmissionPlugin(interface.BencodePlugin):
           and other components, such as storage and dfvfs.
       data (Optional[dict[str, object]]): bencode data values.
     """
-    seeding_time = data.get(u'seeding-time-seconds', None)
+    seeding_time = data.get('seeding-time-seconds', None)
 
     event_data = TransmissionEventData()
-    event_data.destination = data.get(u'destination', None)
+    event_data.destination = data.get('destination', None)
     # Convert seconds to minutes.
     event_data.seedtime, _ = divmod(seeding_time, 60)
 
     # Create timeline events based on extracted values.
-    timestamp = data.get(u'added-date', None)
+    timestamp = data.get('added-date', None)
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_ADDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = data.get(u'done-date', None)
+    timestamp = data.get('done-date', None)
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = data.get(u'activity-date', None)
+    timestamp = data.get('activity-date', None)
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(

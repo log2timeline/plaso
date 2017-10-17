@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Install history plist plugin."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import plist_event
@@ -17,14 +19,15 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 class InstallHistoryPlugin(interface.PlistPlugin):
   """Plist plugin that extracts the installation history."""
 
-  NAME = u'macosx_install_history'
-  DESCRIPTION = u'Parser for installation history plist files.'
+  NAME = 'macosx_install_history'
+  DESCRIPTION = 'Parser for installation history plist files.'
 
-  PLIST_PATH = u'InstallHistory.plist'
+  PLIST_PATH = 'InstallHistory.plist'
   PLIST_KEYS = frozenset([
-      u'date', u'displayName', u'displayVersion', u'processName',
-      u'packageIdentifiers'])
+      'date', 'displayName', 'displayVersion', 'processName',
+      'packageIdentifiers'])
 
+  # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, top_level=None, **unused_kwargs):
     """Extracts relevant install history entries.
 
@@ -34,24 +37,24 @@ class InstallHistoryPlugin(interface.PlistPlugin):
       top_level (dict[str, object]): plist top-level key.
     """
     for entry in top_level:
-      datetime_value = entry.get(u'date', None)
-      package_identifiers = entry.get(u'packageIdentifiers', [])
+      datetime_value = entry.get('date', None)
+      package_identifiers = entry.get('packageIdentifiers', [])
 
       if not datetime_value or not package_identifiers:
         continue
 
-      display_name = entry.get(u'displayName', u'<UNKNOWN>')
-      display_version = entry.get(u'displayVersion', u'<DISPLAY_VERSION>')
-      process_name = entry.get(u'processName', u'<PROCESS_NAME>')
-      package_identifiers = u', '.join(package_identifiers)
+      display_name = entry.get('displayName', '<UNKNOWN>')
+      display_version = entry.get('displayVersion', '<DISPLAY_VERSION>')
+      process_name = entry.get('processName', '<PROCESS_NAME>')
+      package_identifiers = ', '.join(package_identifiers)
 
       event_data = plist_event.PlistTimeEventData()
       event_data.desc = (
-          u'Installation of [{0:s} {1:s}] using [{2:s}]. Packages: '
-          u'{3:s}.').format(
+          'Installation of [{0:s} {1:s}] using [{2:s}]. Packages: '
+          '{3:s}.').format(
               display_name, display_version, process_name, package_identifiers)
-      event_data.key = u''
-      event_data.root = u'/item'
+      event_data.key = ''
+      event_data.root = '/item'
 
       timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(

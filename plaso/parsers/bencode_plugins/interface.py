@@ -10,6 +10,8 @@ and operation of plugins for bencoded files which will be used by
 BencodeParser.
 """
 
+from __future__ import unicode_literals
+
 import abc
 import logging
 
@@ -22,16 +24,16 @@ class BencodePlugin(plugins.BasePlugin):
 
   # BENCODE_KEYS is a list of keys required by a plugin.
   # This is expected to be overridden by the processing plugin.
-  # Ex. frozenset([u'activity-date', u'done-date'])
-  BENCODE_KEYS = frozenset([u'any'])
+  # Ex. frozenset(['activity-date', 'done-date'])
+  BENCODE_KEYS = frozenset(['any'])
 
   # This is expected to be overridden by the processing plugin.
   # URLS should contain a list of URLs with additional information about
   # this key or value.
-  # Ex. [u'https://wiki.theory.org/BitTorrentSpecification#Bencoding']
+  # Ex. ['https://wiki.theory.org/BitTorrentSpecification#Bencoding']
   URLS = []
 
-  NAME = u'bencode'
+  NAME = 'bencode'
 
   def _GetKeys(self, data, keys, depth=1):
     """Helper function to return keys nested in a bencode dict.
@@ -68,7 +70,7 @@ class BencodePlugin(plugins.BasePlugin):
             return match
     return match
 
-  def _RecurseKey(self, recur_item, root=u'', depth=15):
+  def _RecurseKey(self, recur_item, root='', depth=15):
     """Flattens nested dictionaries and lists by yielding it's values.
 
     The hierarchy of a bencode file is a series of nested dictionaries and
@@ -88,7 +90,7 @@ class BencodePlugin(plugins.BasePlugin):
       A tuple of the root, key, and value from a bencoded file.
     """
     if depth < 1:
-      logging.debug(u'Recursion limit hit for key: {0:s}'.format(root))
+      logging.debug('Recursion limit hit for key: {0:s}'.format(root))
       return
 
     if isinstance(recur_item, (list, tuple)):
@@ -97,7 +99,7 @@ class BencodePlugin(plugins.BasePlugin):
           yield key
       return
 
-    if not hasattr(recur_item, u'iteritems'):
+    if not hasattr(recur_item, 'iteritems'):
       return
 
     for key, value in iter(recur_item.items()):
@@ -108,7 +110,7 @@ class BencodePlugin(plugins.BasePlugin):
         for item in value:
           if isinstance(item, dict):
             for keyval in self._RecurseKey(
-                item, root=root + u'/' + key, depth=depth - 1):
+                item, root=root + '/' + key, depth=depth - 1):
               yield keyval
 
   @abc.abstractmethod
@@ -137,6 +139,7 @@ class BencodePlugin(plugins.BasePlugin):
              BENCODE_KEYS.
     """
 
+  # pylint: disable=arguments-differ
   def Process(self, parser_mediator, data, **kwargs):
     """Determine if this is the correct plugin; if so proceed with processing.
 
@@ -159,7 +162,7 @@ class BencodePlugin(plugins.BasePlugin):
       ValueError: If top level is not set.
     """
     if data is None:
-      raise ValueError(u'Data is not set.')
+      raise ValueError('Data is not set.')
 
     if not set(data.keys()).issuperset(self.BENCODE_KEYS):
       raise errors.WrongBencodePlugin(self.NAME)
@@ -167,7 +170,7 @@ class BencodePlugin(plugins.BasePlugin):
     # This will raise if unhandled keyword arguments are passed.
     super(BencodePlugin, self).Process(parser_mediator)
 
-    logging.debug(u'Bencode Plugin Used: {0:s}'.format(self.NAME))
+    logging.debug('Bencode Plugin Used: {0:s}'.format(self.NAME))
     match = self._GetKeys(data, self.BENCODE_KEYS, 3)
 
     self.GetEntries(parser_mediator, data=data, match=match)

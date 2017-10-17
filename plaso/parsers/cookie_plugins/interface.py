@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains an interface for browser cookie plugins."""
 
+from __future__ import unicode_literals
+
 import abc
 
 from plaso.lib import errors
@@ -13,18 +15,18 @@ class BaseCookiePlugin(plugins.BasePlugin):
   This is a generic cookie parsing interface that can handle parsing
   cookies from all browsers.
   """
-  NAME = u'cookie'
-  DESCRIPTION = u''
+  NAME = 'cookie'
+  DESCRIPTION = ''
 
   # The name of the cookie value that this plugin is designed to parse.
   # This value is used to evaluate whether the plugin is the correct one
   # to parse the browser cookie.
-  COOKIE_NAME = u''
+  COOKIE_NAME = ''
 
   def __init__(self):
     """Initialize the browser cookie plugin."""
     super(BaseCookiePlugin, self).__init__()
-    self.cookie_data = u''
+    self.cookie_data = ''
 
   @abc.abstractmethod
   def GetEntries(self, parser_mediator, cookie_data=None, url=None, **kwargs):
@@ -36,6 +38,7 @@ class BaseCookiePlugin(plugins.BasePlugin):
       url: Optional URL or path where the cookie got set.
     """
 
+  # pylint: disable=arguments-differ
   def Process(self, parser_mediator, cookie_name, cookie_data, url, **kwargs):
     """Determine if this is the right plugin for this cookie.
 
@@ -51,11 +54,11 @@ class BaseCookiePlugin(plugins.BasePlugin):
       ValueError: If cookie_name or cookie_data are not set.
     """
     if cookie_name is None or cookie_data is None:
-      raise ValueError(u'Cookie name or data are not set.')
+      raise ValueError('Cookie name or data are not set.')
 
     if cookie_name != self.COOKIE_NAME:
       raise errors.WrongPlugin(
-          u'Not the correct cookie plugin for: {0:s} [{1:s}]'.format(
+          'Not the correct cookie plugin for: {0:s} [{1:s}]'.format(
               cookie_name, self.NAME))
 
     # This will raise if unhandled keyword arguments are passed.

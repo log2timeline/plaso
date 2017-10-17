@@ -9,6 +9,8 @@ PlistPlugin defines the attributes necessary for registration, discovery
 and operation of plugins for plist files which will be used by PlistParser.
 """
 
+from __future__ import unicode_literals
+
 import abc
 import logging
 
@@ -40,17 +42,17 @@ class PlistPlugin(plugins.BasePlugin):
   GetEntries() - extract and format info from keys and yields event.PlistEvent.
   """
 
-  NAME = u'plist_plugin'
+  NAME = 'plist_plugin'
 
   # PLIST_PATH is a string for the filename this parser is designed to process.
   # This is expected to be overriden by the processing plugin.
   # Ex. 'com.apple.bluetooth.plist'
-  PLIST_PATH = u'any'
+  PLIST_PATH = 'any'
 
   # PLIST_KEYS is a list of keys required by a plugin.
   # This is expected to be overriden by the processing plugin.
   # Ex. frozenset(['DeviceCache', 'PairedDevices'])
-  PLIST_KEYS = frozenset([u'any'])
+  PLIST_KEYS = frozenset(['any'])
 
   # This is expected to be overriden by the processing plugin.
   # URLS should contain a list of URLs with additional information about
@@ -170,7 +172,7 @@ class PlistPlugin(plugins.BasePlugin):
       ValueError: If top_level or plist_name are not set.
     """
     if plist_name is None or top_level is None:
-      raise ValueError(u'Top level or plist name are not set.')
+      raise ValueError('Top level or plist name are not set.')
 
     if plist_name.lower() != self.PLIST_PATH.lower():
       raise errors.WrongPlistPlugin(self.NAME, plist_name)
@@ -181,7 +183,7 @@ class PlistPlugin(plugins.BasePlugin):
 
     else:
       # Make sure we are getting back an object that has an iterator.
-      if not hasattr(top_level, u'__iter__'):
+      if not hasattr(top_level, '__iter__'):
         raise errors.WrongPlistPlugin(self.NAME, plist_name)
 
       # This is a list and we need to just look at the first level
@@ -199,14 +201,14 @@ class PlistPlugin(plugins.BasePlugin):
     # This will raise if unhandled keyword arguments are passed.
     super(PlistPlugin, self).Process(parser_mediator)
 
-    logging.debug(u'Plist Plugin Used: {0:s} for: {1:s}'.format(
+    logging.debug('Plist Plugin Used: {0:s} for: {1:s}'.format(
         self.NAME, plist_name))
     match = self._GetKeys(top_level, self.PLIST_KEYS)
     self.GetEntries(parser_mediator, top_level=top_level, match=match)
 
 
 # TODO: move to lib.plist.
-def RecurseKey(recur_item, depth=15, key_path=u''):
+def RecurseKey(recur_item, depth=15, key_path=''):
   """Flattens nested dictionaries and lists by yielding it's values.
 
   The hierarchy of a plist file is a series of nested dictionaries and lists.
@@ -236,7 +238,7 @@ def RecurseKey(recur_item, depth=15, key_path=u''):
     A tuple of the key path, key, and value from a plist.
   """
   if depth < 1:
-    logging.debug(u'Recursion limit hit for key: {0:s}'.format(key_path))
+    logging.debug('Recursion limit hit for key: {0:s}'.format(key_path))
     return
 
   if isinstance(recur_item, (list, tuple)):
@@ -245,7 +247,7 @@ def RecurseKey(recur_item, depth=15, key_path=u''):
         yield key
     return
 
-  if not hasattr(recur_item, u'iteritems'):
+  if not hasattr(recur_item, 'iteritems'):
     return
 
   # TODO determine if recur_item is a plistlib._InternalDict to determine
@@ -263,7 +265,7 @@ def RecurseKey(recur_item, depth=15, key_path=u''):
         if not isinstance(item, dict):
           continue
 
-        subkey_path = u'{0:s}/{1:s}'.format(key_path, subkey)
+        subkey_path = '{0:s}/{1:s}'.format(key_path, subkey)
         for tuple_value in RecurseKey(
             item, depth=depth - 1, key_path=subkey_path):
           yield tuple_value
