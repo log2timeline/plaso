@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The attribute container interface."""
 
+from __future__ import unicode_literals
+
 from plaso.lib import py2to3
 
 from efilter.protocols import structured
@@ -24,7 +26,7 @@ class AttributeContainerIdentifier(object):
     Returns:
       str: unique identifier or None.
     """
-    return u'{0:d}'.format(self._identifier)
+    return '{0:d}'.format(self._identifier)
 
 
 class AttributeContainer(object):
@@ -56,7 +58,7 @@ class AttributeContainer(object):
     """
     for attribute_name, attribute_value in attributes.items():
       # Not using startswith to improve performance.
-      if attribute_name[0] == u'_':
+      if attribute_name[0] == '_':
         continue
       setattr(self, attribute_name, attribute_value)
 
@@ -79,7 +81,7 @@ class AttributeContainer(object):
     attribute_names = []
     for attribute_name in iter(self.__dict__.keys()):
       # Not using startswith to improve performance.
-      if attribute_name[0] == u'_':
+      if attribute_name[0] == '_':
         continue
       attribute_names.append(attribute_name)
 
@@ -95,7 +97,7 @@ class AttributeContainer(object):
     """
     for attribute_name, attribute_value in iter(self.__dict__.items()):
       # Not using startswith to improve performance.
-      if attribute_name[0] == u'_' or attribute_value is None:
+      if attribute_name[0] == '_' or attribute_value is None:
         continue
 
       yield attribute_name, attribute_value
@@ -109,7 +111,7 @@ class AttributeContainer(object):
     attributes = []
     for attribute_name, attribute_value in sorted(self.__dict__.items()):
       # Not using startswith to improve performance.
-      if attribute_name[0] == u'_' or attribute_value is None:
+      if attribute_name[0] == '_' or attribute_value is None:
         continue
 
       if isinstance(attribute_value, dict):
@@ -118,10 +120,10 @@ class AttributeContainer(object):
       elif isinstance(attribute_value, py2to3.BYTES_TYPE):
         attribute_value = repr(attribute_value)
 
-      attribute_string = u'{0:s}: {1!s}'.format(attribute_name, attribute_value)
+      attribute_string = '{0:s}: {1!s}'.format(attribute_name, attribute_value)
       attributes.append(attribute_string)
 
-    return u', '.join(attributes)
+    return ', '.join(attributes)
 
   def GetIdentifier(self):
     """Retrieves the identifier.

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Event source attribute containers."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import interface
 from plaso.containers import manager
 
@@ -17,7 +19,7 @@ class EventSource(interface.AttributeContainer):
     file_entry_type (str): dfVFS file entry type.
     path_spec (dfvfs.PathSpec): path specification.
   """
-  CONTAINER_TYPE = u'event_source'
+  CONTAINER_TYPE = 'event_source'
   DATA_TYPE = None
 
   def __init__(self, path_spec=None):
@@ -38,7 +40,7 @@ class FileEntryEventSource(EventSource):
   The file entry event source is an event source that represents a file
   within a file system.
   """
-  DATA_TYPE = u'file_entry'
+  DATA_TYPE = 'file_entry'
 
 
 manager.AttributeContainersManager.RegisterAttributeContainer(EventSource)

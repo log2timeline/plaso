@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Storage media related attribute container definitions."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import interface
 from plaso.containers import manager
 
@@ -13,7 +15,7 @@ class MountPoint(interface.AttributeContainer):
         "/mnt/image" or "C:\\".
     path_spec (dfvfs.PathSpec): path specification.
   """
-  CONTAINER_TYPE = u'mount_point'
+  CONTAINER_TYPE = 'mount_point'
 
   def __init__(self, mount_path=None, path_specification=None):
     """Initializes a mount point.

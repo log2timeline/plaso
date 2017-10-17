@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The dynamic event object filter."""
 
+from __future__ import unicode_literals
+
 from plaso.filters import event_filter
 from plaso.filters import manager
 from plaso.lib import errors
@@ -49,7 +51,7 @@ class SelectiveLexer(lexer.Lexer):
     self.fields = []
     self.limit = 0
     self.lex_filter = None
-    self.separator = u','
+    self.separator = ','
 
   def SetFields(self, match, **unused_kwargs):
     """Sets the output fields.
@@ -130,14 +132,14 @@ class DynamicFilter(event_filter.EventObjectFilter):
   fields field_a and field_b to be used in the output.
   """
 
-  _STATE_END = u'END'
+  _STATE_END = 'END'
 
   def __init__(self):
     """Initializes a filter object."""
     super(DynamicFilter, self).__init__()
     self._fields = []
     self._limit = 0
-    self._separator = u','
+    self._separator = ','
 
   @property
   def fields(self):
@@ -170,24 +172,24 @@ class DynamicFilter(event_filter.EventObjectFilter):
 
     lexer_object.NextToken()
     if lexer_object.error:
-      raise errors.WrongPlugin(u'Malformed filter string.')
+      raise errors.WrongPlugin('Malformed filter string.')
 
     lexer_object.NextToken()
     if lexer_object.error:
-      raise errors.WrongPlugin(u'No fields defined.')
+      raise errors.WrongPlugin('No fields defined.')
 
     while lexer_object.state != self._STATE_END:
       lexer_object.NextToken()
       if lexer_object.error:
-        raise errors.WrongPlugin(u'No filter defined for DynamicFilter.')
+        raise errors.WrongPlugin('No filter defined for DynamicFilter.')
 
     if lexer_object.state != self._STATE_END:
       raise errors.WrongPlugin(
-          u'Malformed DynamicFilter, end state not reached.')
+          'Malformed DynamicFilter, end state not reached.')
 
     self._fields = lexer_object.fields
     self._limit = lexer_object.limit
-    self._separator = u'{0:s}'.format(lexer_object.separator)
+    self._separator = '{0:s}'.format(lexer_object.separator)
 
     if lexer_object.lex_filter:
       super(DynamicFilter, self).CompileFilter(lexer_object.lex_filter)
