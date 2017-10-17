@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Report related attribute container definitions."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import interface
 from plaso.containers import manager
 from plaso.lib import timelib
@@ -17,7 +19,7 @@ class AnalysisReport(interface.AttributeContainer):
     text (str): report text.
     time_compiled (int): timestamp of the date and time the report was compiled.
   """
-  CONTAINER_TYPE = u'analysis_report'
+  CONTAINER_TYPE = 'analysis_report'
 
   def __init__(self, plugin_name=None, text=None):
     """Initializes the analysis report.
@@ -58,22 +60,22 @@ class AnalysisReport(interface.AttributeContainer):
       str: string representation of the report.
     """
     string_list = []
-    string_list.append(u'Report generated from: {0:s}'.format(self.plugin_name))
+    string_list.append('Report generated from: {0:s}'.format(self.plugin_name))
 
-    time_compiled = getattr(self, u'time_compiled', 0)
+    time_compiled = getattr(self, 'time_compiled', 0)
     if time_compiled:
       time_compiled = timelib.Timestamp.CopyToIsoFormat(time_compiled)
-      string_list.append(u'Generated on: {0:s}'.format(time_compiled))
+      string_list.append('Generated on: {0:s}'.format(time_compiled))
 
-    filter_string = getattr(self, u'filter_string', u'')
+    filter_string = getattr(self, 'filter_string', '')
     if filter_string:
-      string_list.append(u'Filter String: {0:s}'.format(filter_string))
+      string_list.append('Filter String: {0:s}'.format(filter_string))
 
-    string_list.append(u'')
-    string_list.append(u'Report text:')
+    string_list.append('')
+    string_list.append('Report text:')
     string_list.append(self.text)
 
-    return u'\n'.join(string_list)
+    return '\n'.join(string_list)
 
 
 manager.AttributeContainersManager.RegisterAttributeContainer(AnalysisReport)

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Event attribute containers."""
 
+from __future__ import unicode_literals
+
 import re
 
 from plaso.containers import interface
@@ -17,7 +19,7 @@ class EventData(interface.AttributeContainer):
         the event data is stored.
     query (str): query that was used to obtain the event data.
   """
-  CONTAINER_TYPE = u'event_data'
+  CONTAINER_TYPE = 'event_data'
 
   def __init__(self, data_type=None):
     """Initializes an event data attribute container.
@@ -52,7 +54,7 @@ class EventObject(interface.AttributeContainer):
     timestamp (int): timestamp, which contains the number of microseconds
         since January 1, 1970, 00:00:00 UTC.
   """
-  CONTAINER_TYPE = u'event'
+  CONTAINER_TYPE = 'event'
   # TODO: eventually move data type out of event since the event source
   # has a data type not the event itself.
   DATA_TYPE = None
@@ -110,7 +112,7 @@ class EventTag(interface.AttributeContainer):
         identify the event linked to the tag.
     labels (list[str]): labels, such as "malware", "application_execution".
   """
-  CONTAINER_TYPE = u'event_tag'
+  CONTAINER_TYPE = 'event_tag'
 
   _INVALID_LABEL_CHARACTERS_REGEX = re.compile(r'[^A-Za-z0-9_]')
 
@@ -142,7 +144,7 @@ class EventTag(interface.AttributeContainer):
     if not self.comment:
       self.comment = comment
     else:
-      self.comment = u''.join([self.comment, comment])
+      self.comment = ''.join([self.comment, comment])
 
   def AddLabel(self, label):
     """Adds a label to the event tag.
@@ -154,12 +156,12 @@ class EventTag(interface.AttributeContainer):
       ValueError: if a label is malformed.
     """
     if not isinstance(label, py2to3.STRING_TYPES):
-      raise TypeError(u'label is not a string type. Is {0:s}'.format(
+      raise TypeError('label is not a string type. Is {0:s}'.format(
           type(label)))
     if not self._VALID_LABEL_REGEX.match(label):
       raise ValueError((
-          u'Unsupported label: "{0:s}". A label must only consist of '
-          u'alphanumeric characters or underscores.').format(label))
+          'Unsupported label: "{0:s}". A label must only consist of '
+          'alphanumeric characters or underscores.').format(label))
 
     if label not in self.labels:
       self.labels.append(label)
@@ -176,8 +178,8 @@ class EventTag(interface.AttributeContainer):
     for label in labels:
       if not self._VALID_LABEL_REGEX.match(label):
         raise ValueError((
-            u'Unsupported label: "{0:s}". A label must only consist of '
-            u'alphanumeric characters or underscores.').format(label))
+            'Unsupported label: "{0:s}". A label must only consist of '
+            'alphanumeric characters or underscores.').format(label))
 
     for label in labels:
       if label not in self.labels:
@@ -190,15 +192,15 @@ class EventTag(interface.AttributeContainer):
       dict[str, object]: event tag attributes.
     """
     result_dict = {
-        u'labels': self.labels
+        'labels': self.labels
     }
     if self.comment:
-      result_dict[u'comment'] = self.comment
+      result_dict['comment'] = self.comment
 
     return result_dict
 
   @classmethod
-  def CopyTextToLabel(cls, text, prefix=u''):
+  def CopyTextToLabel(cls, text, prefix=''):
     """Copies a string to a label.
 
     A label only supports a limited set of characters therefore
@@ -211,8 +213,8 @@ class EventTag(interface.AttributeContainer):
     Returns:
       str: label.
     """
-    text = u'{0:s}{1:s}'.format(prefix, text)
-    return cls._INVALID_LABEL_CHARACTERS_REGEX.sub(u'_', text)
+    text = '{0:s}{1:s}'.format(prefix, text)
+    return cls._INVALID_LABEL_CHARACTERS_REGEX.sub('_', text)
 
   def GetEventIdentifier(self):
     """Retrieves the identifier of the event associated with the event tag.

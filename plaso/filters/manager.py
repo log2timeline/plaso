@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the event filters manager class."""
 
+from __future__ import unicode_literals
+
 import logging
 
 from plaso.lib import errors
@@ -26,7 +28,7 @@ class FiltersManager(object):
     filter_name = filter_class.__name__
     if filter_name not in cls._filter_classes:
       raise KeyError(
-          u'Filter class not set for filter name: {0:s}.'.format(
+          'Filter class not set for filter name: {0:s}.'.format(
               filter_class.__name__))
 
     del cls._filter_classes[filter_name]
@@ -52,7 +54,7 @@ class FiltersManager(object):
         return filter_object
 
       except errors.WrongPlugin:
-        logging.debug(u'Filter string [{0:s}] is not a filter: {1:s}'.format(
+        logging.debug('Filter string [{0:s}] is not a filter: {1:s}'.format(
             filter_string, filter_object.filter_name))
 
   @classmethod
@@ -80,7 +82,7 @@ class FiltersManager(object):
     filter_name = filter_class.__name__
     if filter_name in cls._filter_classes:
       raise KeyError((
-          u'Filter class already set for filter name: {0:s}.').format(
+          'Filter class already set for filter name: {0:s}.').format(
               filter_class.__name__))
 
     cls._filter_classes[filter_name] = filter_class

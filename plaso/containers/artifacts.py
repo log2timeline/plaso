@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Artifact attribute containers."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import interface
 from plaso.containers import manager
 
@@ -21,7 +23,7 @@ class EnvironmentVariableArtifact(ArtifactAttributeContainer):
         '%SystemRoot%' or 'HOME' in '$HOME'.
     value (str): environment variable value e.g. 'C:\\Windows' or '/home/user'.
   """
-  CONTAINER_TYPE = u'environment_variable'
+  CONTAINER_TYPE = 'environment_variable'
 
   def __init__(self, case_sensitive=True, name=None, value=None):
     """Initializes an environment variable artifact.
@@ -50,9 +52,9 @@ class HostnameArtifact(ArtifactAttributeContainer):
     name (str): name of the host according to the naming schema.
     schema (str): naming schema e.g. DNS, NIS, SMB/NetBIOS.
   """
-  CONTAINER_TYPE = u'hostname'
+  CONTAINER_TYPE = 'hostname'
 
-  def __init__(self, name=None, schema=u'DNS'):
+  def __init__(self, name=None, schema='DNS'):
     """Initializes a hostname artifact.
 
     Args:
@@ -83,7 +85,7 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
     time_zone (str): system time zone.
     user_accounts (list[UserAccountArtifact]): user accounts.
   """
-  CONTAINER_TYPE = u'system_configuration'
+  CONTAINER_TYPE = 'system_configuration'
 
   def __init__(self, code_page=None, time_zone=None):
     """Initializes a system configuration artifact.
@@ -117,7 +119,7 @@ class UserAccountArtifact(ArtifactAttributeContainer):
     user_directory (str): path of the user (or home or profile) directory.
     username (str): name uniquely identifying the user.
   """
-  CONTAINER_TYPE = u'user_account'
+  CONTAINER_TYPE = 'user_account'
 
   def __init__(
       self, full_name=None, group_identifier=None, identifier=None,

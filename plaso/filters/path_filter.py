@@ -10,6 +10,8 @@ https://github.com/libyal/libsigscan/wiki/Internals
 The scan tree is used in the filter to filter provided paths.
 """
 
+from __future__ import unicode_literals
+
 from plaso.lib import py2to3
 
 
@@ -19,7 +21,7 @@ class _PathFilterTable(object):
   The path filter table is used to construct a scan tree.
   """
 
-  def __init__(self, paths, ignore_list, path_segment_separator=u'/'):
+  def __init__(self, paths, ignore_list, path_segment_separator='/'):
     """Initializes and builds the path filter table from a list of paths.
 
     Args:
@@ -84,14 +86,14 @@ class _PathFilterTable(object):
 
   def ToDebugString(self):
     """Converts the path filter table into a debug string."""
-    text_parts = [u'Path segment index\tPath segments(s)']
+    text_parts = ['Path segment index\tPath segments(s)']
     for index, path_segments in self.path_segments_per_index.items():
-      text_parts.append(u'{0:d}\t\t\t[{1:s}]'.format(
-          index, u', '.join(path_segments)))
+      text_parts.append('{0:d}\t\t\t[{1:s}]'.format(
+          index, ', '.join(path_segments)))
 
-    text_parts.append(u'')
+    text_parts.append('')
 
-    return u'\n'.join(text_parts)
+    return '\n'.join(text_parts)
 
 
 class _PathSegmentWeights(object):
@@ -119,7 +121,7 @@ class _PathSegmentWeights(object):
                   the path segment index.
     """
     if path_segment_index in self._weight_per_index:
-      raise ValueError(u'Path segment index already set.')
+      raise ValueError('Path segment index already set.')
 
     self._weight_per_index[path_segment_index] = 0
 
@@ -135,7 +137,7 @@ class _PathSegmentWeights(object):
                   the path segment index.
     """
     if path_segment_index not in self._weight_per_index:
-      raise ValueError(u'Path segment index not set.')
+      raise ValueError('Path segment index not set.')
 
     self._weight_per_index[path_segment_index] += weight
 
@@ -184,7 +186,7 @@ class _PathSegmentWeights(object):
                   the path segment index.
     """
     if path_segment_index not in self._weight_per_index:
-      raise ValueError(u'Path segment index not set.')
+      raise ValueError('Path segment index not set.')
 
     self._weight_per_index[path_segment_index] = weight
 
@@ -195,25 +197,25 @@ class _PathSegmentWeights(object):
 
   def ToDebugString(self):
     """Converts the path segment weights into a debug string."""
-    text_parts = [u'Path segment index\tWeight']
+    text_parts = ['Path segment index\tWeight']
     for path_segment_index, weight in self._weight_per_index.items():
-      text_parts.append(u'{0:d}\t\t\t{1:d}'.format(
+      text_parts.append('{0:d}\t\t\t{1:d}'.format(
           path_segment_index, weight))
-    text_parts.append(u'')
+    text_parts.append('')
 
-    text_parts.append(u'Weight\t\t\tPath segment index(es)')
+    text_parts.append('Weight\t\t\tPath segment index(es)')
     for weight, path_segment_indexes in self._indexes_per_weight.items():
-      text_parts.append(u'{0:d}\t\t\t{1!s}'.format(
+      text_parts.append('{0:d}\t\t\t{1!s}'.format(
           weight, path_segment_indexes))
-    text_parts.append(u'')
+    text_parts.append('')
 
-    return u'\n'.join(text_parts)
+    return '\n'.join(text_parts)
 
 
 class PathFilterScanTree(object):
   """Class that implements a path filter scan tree."""
 
-  def __init__(self, paths, case_sensitive=True, path_segment_separator=u'/'):
+  def __init__(self, paths, case_sensitive=True, path_segment_separator='/'):
     """Initializes and builds a path filter scan tree.
 
     Args:
@@ -290,7 +292,7 @@ class PathFilterScanTree(object):
     ignore_list.append(path_segment_index)
 
     if path_segment_index < 0:
-      raise ValueError(u'Invalid path segment index value out of bounds.')
+      raise ValueError('Invalid path segment index value out of bounds.')
 
     scan_tree_node = PathFilterScanTreeNode(path_segment_index)
 
@@ -298,7 +300,7 @@ class PathFilterScanTree(object):
 
     for path_segment, paths_per_segment_list in path_segments.items():
       if not paths_per_segment_list:
-        raise ValueError(u'Invalid number of paths value out of bounds.')
+        raise ValueError('Invalid number of paths value out of bounds.')
 
       if len(paths_per_segment_list) == 1:
         for path in paths_per_segment_list:
@@ -351,7 +353,7 @@ class PathFilterScanTree(object):
       ValueError: when paths is an empty list.
     """
     if not paths:
-      raise ValueError(u'Missing paths.')
+      raise ValueError('Missing paths.')
 
     number_of_paths = len(paths)
 
@@ -490,7 +492,7 @@ class PathFilterScanTree(object):
       path_segment_index = value_weights.GetFirstAvailableIndex()
 
     if path_segment_index is None:
-      raise RuntimeError(u'No path segment index found.')
+      raise RuntimeError('No path segment index found.')
 
     return path_segment_index
 
@@ -582,7 +584,7 @@ class PathFilterScanTreeNode(object):
                   the path segment.
     """
     if path_segment in self._path_segments:
-      raise ValueError(u'Path segment already set.')
+      raise ValueError('Path segment already set.')
 
     if isinstance(scan_object, PathFilterScanTreeNode):
       scan_object.parent = self
@@ -614,10 +616,10 @@ class PathFilterScanTreeNode(object):
     """
     if (not isinstance(scan_object, PathFilterScanTreeNode) and
         not isinstance(scan_object, py2to3.STRING_TYPES)):
-      raise TypeError(u'Unsupported scan object type.')
+      raise TypeError('Unsupported scan object type.')
 
     if self.default_value:
-      raise ValueError(u'Default value already set.')
+      raise ValueError('Default value already set.')
 
     self.default_value = scan_object
 
@@ -631,33 +633,33 @@ class PathFilterScanTreeNode(object):
       A string containing a debug representation of the path filter scan
       tree node.
     """
-    indentation = u'  ' * indentation_level
+    indentation = '  ' * indentation_level
 
-    text_parts = [u'{0:s}path segment index: {1:d}\n'.format(
+    text_parts = ['{0:s}path segment index: {1:d}\n'.format(
         indentation, self.path_segment_index)]
 
     for path_segment, scan_object in self._path_segments.items():
-      text_parts.append(u'{0:s}path segment: {1:s}\n'.format(
+      text_parts.append('{0:s}path segment: {1:s}\n'.format(
           indentation, path_segment))
 
       if isinstance(scan_object, PathFilterScanTreeNode):
-        text_parts.append(u'{0:s}scan tree node:\n'.format(indentation))
+        text_parts.append('{0:s}scan tree node:\n'.format(indentation))
         text_parts.append(scan_object.ToDebugString(indentation_level + 1))
 
       elif isinstance(scan_object, py2to3.STRING_TYPES):
-        text_parts.append(u'{0:s}path: {1:s}\n'.format(
+        text_parts.append('{0:s}path: {1:s}\n'.format(
             indentation, scan_object))
 
-    text_parts.append(u'{0:s}default value:\n'.format(indentation))
+    text_parts.append('{0:s}default value:\n'.format(indentation))
 
     if isinstance(self.default_value, PathFilterScanTreeNode):
-      text_parts.append(u'{0:s}scan tree node:\n'.format(indentation))
+      text_parts.append('{0:s}scan tree node:\n'.format(indentation))
       text_parts.append(self.default_value.ToDebugString(indentation_level + 1))
 
     elif isinstance(self.default_value, py2to3.STRING_TYPES):
-      text_parts.append(u'{0:s}pattern: {1:s}\n'.format(
+      text_parts.append('{0:s}pattern: {1:s}\n'.format(
           indentation, self.default_value))
 
-    text_parts.append(u'\n')
+    text_parts.append('\n')
 
-    return u''.join(text_parts)
+    return ''.join(text_parts)

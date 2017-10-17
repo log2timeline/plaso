@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Time-based event attribute containers."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import events
 from plaso.lib import timelib
 

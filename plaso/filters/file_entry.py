@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """File entry filters."""
 
+from __future__ import unicode_literals
+
 import abc
 import collections
 import logging
@@ -39,10 +41,10 @@ class DateTimeFileEntryFilter(FileEntryFilter):
   """Date and time-based file entry filter."""
 
   _DATE_TIME_RANGE_TUPLE = collections.namedtuple(
-      u'date_time_range_tuple', u'time_value start_timestamp end_timestamp')
+      'date_time_range_tuple', 'time_value start_timestamp end_timestamp')
 
   _SUPPORTED_TIME_VALUES = frozenset([
-      u'atime', u'bkup', u'ctime', u'crtime', u'dtime', u'mtime'])
+      'atime', 'bkup', 'ctime', 'crtime', 'dtime', 'mtime'])
 
   def __init__(self):
     """Initializes a date and time-based file entry filter."""
@@ -69,16 +71,16 @@ class DateTimeFileEntryFilter(FileEntryFilter):
       ValueError: If the filter is badly formed.
     """
     if not isinstance(time_value, py2to3.STRING_TYPES):
-      raise ValueError(u'Filter type must be a string.')
+      raise ValueError('Filter type must be a string.')
 
     if start_time_string is None and end_time_string is None:
       raise ValueError(
-          u'Filter must have either a start or an end date time value.')
+          'Filter must have either a start or an end date time value.')
 
     time_value_lower = time_value.lower()
     if time_value_lower not in self._SUPPORTED_TIME_VALUES:
       raise ValueError(
-          u'Unsupported time value: {0:s}.'.format(time_value))
+          'Unsupported time value: {0:s}.'.format(time_value))
 
     if start_time_string:
       start_timestamp = timelib.Timestamp.CopyFromString(start_time_string)
@@ -95,7 +97,7 @@ class DateTimeFileEntryFilter(FileEntryFilter):
     if (None not in [start_timestamp, end_timestamp] and
         start_timestamp > end_timestamp):
       raise ValueError(
-          u'Invalid date time value start must be earlier than end.')
+          'Invalid date time value start must be earlier than end.')
 
     self._date_time_ranges.append(self._DATE_TIME_RANGE_TUPLE(
         time_value_lower, start_timestamp, end_timestamp))
@@ -120,7 +122,7 @@ class DateTimeFileEntryFilter(FileEntryFilter):
       if timestamp is None:
         continue
 
-      nano_time_value = u'{0:s}_nano'.format(time_value)
+      nano_time_value = '{0:s}_nano'.format(time_value)
       nano_time_value = getattr(stat_object, nano_time_value, None)
 
       timestamp = timelib.Timestamp.FromPosixTime(timestamp)
@@ -150,13 +152,13 @@ class DateTimeFileEntryFilter(FileEntryFilter):
         if date_time_range.start_timestamp is None:
           end_time_string = timelib.Timestamp.CopyToIsoFormat(
               date_time_range.end_timestamp)
-          output_writer.Write(u'\t{0:s} after {1:s}\n'.format(
+          output_writer.Write('\t{0:s} after {1:s}\n'.format(
               date_time_range.time_value, end_time_string))
 
         elif date_time_range.end_timestamp is None:
           start_time_string = timelib.Timestamp.CopyToIsoFormat(
               date_time_range.start_timestamp)
-          output_writer.Write(u'\t{0:s} before {1:s}\n'.format(
+          output_writer.Write('\t{0:s} before {1:s}\n'.format(
               date_time_range.time_value, start_time_string))
 
         else:
@@ -164,7 +166,7 @@ class DateTimeFileEntryFilter(FileEntryFilter):
               date_time_range.start_timestamp)
           end_time_string = timelib.Timestamp.CopyToIsoFormat(
               date_time_range.end_timestamp)
-          output_writer.Write(u'\t{0:s} between {1:s} and {2:s}\n'.format(
+          output_writer.Write('\t{0:s} between {1:s} and {2:s}\n'.format(
               date_time_range.time_value, start_time_string,
               end_time_string))
 
@@ -193,14 +195,14 @@ class ExtensionsFileEntryFilter(FileEntryFilter):
       bool: True if the file entry matches the filter, False if not or
           None if the filter does not apply.
     """
-    location = getattr(file_entry.path_spec, u'location', None)
+    location = getattr(file_entry.path_spec, 'location', None)
     if not location:
       return
 
-    if u'.' not in location:
+    if '.' not in location:
       return False
 
-    _, _, extension = location.rpartition(u'.')
+    _, _, extension = location.rpartition('.')
     return extension.lower() in self._extensions
 
   def Print(self, output_writer):
@@ -210,8 +212,8 @@ class ExtensionsFileEntryFilter(FileEntryFilter):
       output_writer (CLIOutputWriter): output writer.
     """
     if self._extensions:
-      output_writer.Write(u'\textensions: {0:s}\n'.format(
-          u', '.join(self._extensions)))
+      output_writer.Write('\textensions: {0:s}\n'.format(
+          ', '.join(self._extensions)))
 
 
 class NamesFileEntryFilter(FileEntryFilter):
@@ -247,8 +249,8 @@ class NamesFileEntryFilter(FileEntryFilter):
       output_writer (CLIOutputWriter): output writer.
     """
     if self._names:
-      output_writer.Write(u'\tnames: {0:s}\n'.format(
-          u', '.join(self._names)))
+      output_writer.Write('\tnames: {0:s}\n'.format(
+          ', '.join(self._names)))
 
 
 class SignaturesFileEntryFilter(FileEntryFilter):
@@ -328,10 +330,10 @@ class SignaturesFileEntryFilter(FileEntryFilter):
 
     except IOError as exception:
       # TODO: replace location by display name.
-      location = getattr(file_entry.path_spec, u'location', u'')
+      location = getattr(file_entry.path_spec, 'location', '')
       logging.error((
-          u'[skipping] unable to scan file: {0:s} for signatures '
-          u'with error: {1:s}').format(location, exception))
+          '[skipping] unable to scan file: {0:s} for signatures '
+          'with error: {1:s}').format(location, exception))
       return False
 
     finally:
@@ -346,8 +348,8 @@ class SignaturesFileEntryFilter(FileEntryFilter):
       output_writer (CLIOutputWriter): output writer.
     """
     if self._file_scanner:
-      output_writer.Write(u'\tsignature identifiers: {0:s}\n'.format(
-          u', '.join(self._signature_identifiers)))
+      output_writer.Write('\tsignature identifiers: {0:s}\n'.format(
+          ', '.join(self._signature_identifiers)))
 
 
 class FileEntryFilterCollection(object):
@@ -401,6 +403,6 @@ class FileEntryFilterCollection(object):
       output_writer (CLIOutputWriter): output writer.
     """
     if self._filters:
-      output_writer.Write(u'Filters:\n')
+      output_writer.Write('Filters:\n')
       for file_entry_filter in self._filters:
         file_entry_filter.Print(output_writer)

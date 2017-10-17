@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Plist event attribute containers."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import events
 
 
@@ -16,7 +18,7 @@ class PlistTimeEventData(events.EventData):
     user (str): unique username.
   """
 
-  DATA_TYPE = u'plist:key'
+  DATA_TYPE = 'plist:key'
 
   def __init__(self):
     """Initializes event data."""
