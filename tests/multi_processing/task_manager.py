@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """This file contains tests for the task manager."""
 
+from __future__ import unicode_literals
+
 import time
 import unittest
 
@@ -18,7 +20,7 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  _TEST_SESSION_IDENTIFIER = u'4'
+  _TEST_SESSION_IDENTIFIER = '4'
 
   def testCreateTask(self):
     """Tests the CreateTask methods."""
