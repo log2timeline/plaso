@@ -23,7 +23,7 @@ except ImportError:
 
 
 if sys.version_info[0] < 3:
-  STRING_TYPES = (basestring, )
+  STRING_TYPES = (basestring, )  # pylint: disable=undefined-variable
 else:
   STRING_TYPES = (str, )
 
@@ -34,10 +34,10 @@ __file__ = os.path.abspath(__file__)
 
 
 class TempDirectory(object):
-  """Class that implements a temporary directory."""
+  """Temporary directory."""
 
   def __init__(self):
-    """Initializes a temporary directory object."""
+    """Initializes a temporary directory."""
     super(TempDirectory, self).__init__()
     self.name = u''
 
@@ -52,7 +52,7 @@ class TempDirectory(object):
 
 
 class TestCase(object):
-  """Class that defines the test case object interface.
+  """Test case interface.
 
   The test case defines what aspect of the plaso tools to test.
   A test definition is used to provide parameters for the test
@@ -67,7 +67,7 @@ class TestCase(object):
   def __init__(
       self, tools_path, test_sources_path, test_references_path,
       test_results_path, debug_output=False):
-    """Initializes a test case object.
+    """Initializes a test case.
 
     Args:
       tools_path (str): path to the plaso tools.
@@ -160,7 +160,7 @@ class TestCase(object):
 
 
 class TestCasesManager(object):
-  """Class that implements the test cases manager."""
+  """Test cases manager."""
 
   _test_case_classes = {}
   _test_case_objects = {}
@@ -258,7 +258,7 @@ class TestCasesManager(object):
 
 
 class TestDefinition(object):
-  """Class that implements a test definition.
+  """Test definition.
 
   Attributes:
     case (str): name of test case.
@@ -266,7 +266,7 @@ class TestDefinition(object):
   """
 
   def __init__(self, name):
-    """Initializes a test definition object.
+    """Initializes a test definition.
 
     Args:
       name (str): name of the test.
@@ -277,7 +277,7 @@ class TestDefinition(object):
 
 
 class TestDefinitionReader(object):
-  """Class that implements a test definition reader.
+  """Test definition reader.
 
   The test definition reader reads tests definitions from a configuration
   file.
@@ -286,7 +286,7 @@ class TestDefinitionReader(object):
   def __init__(
       self, tools_path, test_sources_path, test_references_path,
       test_results_path, debug_output=False):
-    """Initializes a test definition reader object.
+    """Initializes a test definition reader.
 
     Args:
       tools_path (str): path to the plaso tools.
@@ -338,6 +338,7 @@ class TestDefinitionReader(object):
     self._config_parser = configparser.RawConfigParser()
 
     try:
+      # pylint: disable=deprecated-method
       self._config_parser.readfp(file_object)
 
       for section_name in self._config_parser.sections():
@@ -372,7 +373,7 @@ class TestDefinitionReader(object):
 
 
 class TestLauncher(object):
-  """Class that implements the test launcher.
+  """Test launcher.
 
   The test launcher reads the test definitions from a file, looks up
   the corresponding test cases in the test case manager and then runs
@@ -382,7 +383,7 @@ class TestLauncher(object):
   def __init__(
       self, tools_path, test_sources_path, test_references_path,
       test_results_path, debug_output=False):
-    """Initializes a test launcher object.
+    """Initializes a test launcher.
 
     Args:
       tools_path (str): path to the plaso tools.
@@ -449,7 +450,7 @@ class TestLauncher(object):
 
 
 class ExtractAndOutputTestCase(TestCase):
-  """Class that implements the extract and output test case.
+  """Extract and output test case.
 
   The extract and output test case runs log2timeline to extract data
   from a source, specified by the test definition. After the data has been
@@ -462,7 +463,7 @@ class ExtractAndOutputTestCase(TestCase):
   def __init__(
       self, tools_path, test_sources_path, test_references_path,
       test_results_path, debug_output=False):
-    """Initializes a test case object.
+    """Initializes a test case.
 
     Args:
       tools_path (str): path to the plaso tools.
@@ -742,7 +743,7 @@ class ExtractAndOutputTestCase(TestCase):
 
 
 class ExtractAndTagTestCase(ExtractAndOutputTestCase):
-  """Class that implements the extract and tag test case.
+  """Extract and tag test case.
 
   The extract and tag test case runs log2timeline to extract data
   from a source, specified by the test definition. After the data has been
@@ -855,7 +856,7 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
 
 
 class ImageExportTestCase(TestCase):
-  """Class that implements the image export test case.
+  """Image export test case.
 
   The image export test case runs image_export to extract files from a storage
   media image, specified by the test definition.
@@ -866,7 +867,7 @@ class ImageExportTestCase(TestCase):
   def __init__(
       self, tools_path, test_sources_path, test_references_path,
       test_results_path, debug_output=False):
-    """Initializes a test case object.
+    """Initializes a test case.
 
     Args:
       tools_path (str): path to the plaso tools.
@@ -974,7 +975,7 @@ class ImageExportTestCase(TestCase):
 
 
 class OutputTestCase(TestCase):
-  """Class that implements the output test case.
+  """Output test case.
 
   The output test case runs psort on a storage file to its various
   output formats.
@@ -989,7 +990,7 @@ class OutputTestCase(TestCase):
   def __init__(
       self, tools_path, test_sources_path, test_references_path,
       test_results_path, debug_output=False):
-    """Initializes a test case object.
+    """Initializes a test case.
 
     Args:
       tools_path (str): path to the plaso tools.
