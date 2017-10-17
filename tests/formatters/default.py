@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the default event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import default
@@ -21,7 +23,7 @@ class DefaultFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = default.DefaultFormatter()
 
-    expected_attribute_names = [u'attribute_driven']
+    expected_attribute_names = ['attribute_driven']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

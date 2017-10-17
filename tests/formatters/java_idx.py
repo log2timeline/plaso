@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Java WebStart Cache IDX event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import java_idx
@@ -22,9 +24,9 @@ class JavaIDXFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = java_idx.JavaIDXFormatter()
 
     expected_attribute_names = [
-        u'idx_version',
-        u'ip_address',
-        u'url']
+        'idx_version',
+        'ip_address',
+        'url']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the syslog file event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import syslog
@@ -22,10 +24,10 @@ class SyslogLineFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = syslog.SyslogLineFormatter()
 
     expected_attribute_names = [
-        u'reporter',
-        u'pid',
-        u'body',
-        u'severity']
+        'reporter',
+        'pid',
+        'body',
+        'severity']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -45,7 +47,7 @@ class SyslogCommentFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = syslog.SyslogCommentFormatter()
 
-    expected_attribute_names = [u'body']
+    expected_attribute_names = ['body']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

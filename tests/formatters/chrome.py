@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Google Chrome history event formatters."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import chrome
@@ -22,7 +24,7 @@ class ChromeFileDownloadFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = chrome.ChromeFileDownloadFormatter()
 
     expected_attribute_names = [
-        u'url', u'full_path', u'received_bytes', u'total_bytes']
+        'url', 'full_path', 'received_bytes', 'total_bytes']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -43,8 +45,8 @@ class ChromePageVisitedFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = chrome.ChromePageVisitedFormatter()
 
     expected_attribute_names = [
-        u'url', u'title', u'typed_count', u'host', u'from_visit',
-        u'visit_source', u'extra']
+        'url', 'title', 'typed_count', 'host', 'from_visit',
+        'visit_source', 'extra']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

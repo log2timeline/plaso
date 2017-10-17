@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the PL/SQL Recall event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import pls_recall
@@ -22,10 +24,10 @@ class PlsRecallFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = pls_recall.PlsRecallFormatter()
 
     expected_attribute_names = [
-        u'sequence_number',
-        u'username',
-        u'database_name',
-        u'query']
+        'sequence_number',
+        'username',
+        'database_name',
+        'query']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the XChat scrollback file event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import xchatscrollback
@@ -22,8 +24,8 @@ class XChatScrollbackFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = xchatscrollback.XChatScrollbackFormatter()
 
     expected_attribute_names = [
-        u'nickname',
-        u'text']
+        'nickname',
+        'text']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

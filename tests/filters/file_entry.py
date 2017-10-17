@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the file entry filters."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -25,8 +27,8 @@ class DateTimeFileEntryFilterTest(shared_test_lib.BaseTestCase):
     test_filter = file_entry_filters.DateTimeFileEntryFilter()
 
     test_filter.AddDateTimeRange(
-        u'ctime', end_time_string=u'2012-05-25 15:59:25',
-        start_time_string=u'2012-05-25 15:59:20')
+        'ctime', end_time_string='2012-05-25 15:59:25',
+        start_time_string='2012-05-25 15:59:20')
 
     with self.assertRaises(ValueError):
       test_filter.AddDateTimeRange(None)
@@ -34,26 +36,26 @@ class DateTimeFileEntryFilterTest(shared_test_lib.BaseTestCase):
     # Testing adding a badly formatter filter.
     with self.assertRaises(ValueError):
       test_filter.AddDateTimeRange(
-          u'foobar', start_time_string=u'2012-02-01 01:01:01')
+          'foobar', start_time_string='2012-02-01 01:01:01')
 
     with self.assertRaises(ValueError):
       test_filter.AddDateTimeRange(
-          u'ctime', end_time_string=u'2012-05-25 15:59:20',
-          start_time_string=u'2012-05-25 15:59:25')
+          'ctime', end_time_string='2012-05-25 15:59:20',
+          start_time_string='2012-05-25 15:59:25')
 
     # Testing adding a badly formatter filter, no date set.
     with self.assertRaises(ValueError):
-      test_filter.AddDateTimeRange(u'atime')
+      test_filter.AddDateTimeRange('atime')
 
-  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
+  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testMatches(self):
     """Tests the Matches function."""
-    test_path = self._GetTestFilePath([u'ímynd.dd'])
+    test_path = self._GetTestFilePath(['ímynd.dd'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
-        location=u'/a_directory/another_file', parent=os_path_spec)
+        location='/a_directory/another_file', parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
 
@@ -69,69 +71,69 @@ class DateTimeFileEntryFilterTest(shared_test_lib.BaseTestCase):
 
     # Add a date to the date filter.
     test_filter.AddDateTimeRange(
-        u'ctime', start_time_string=u'2012-05-25 15:59:20',
-        end_time_string=u'2012-05-25 15:59:25')
+        'ctime', start_time_string='2012-05-25 15:59:20',
+        end_time_string='2012-05-25 15:59:25')
     self.assertTrue(test_filter.Matches(file_entry))
 
     test_filter = file_entry_filters.DateTimeFileEntryFilter()
     test_filter.AddDateTimeRange(
-        u'ctime', start_time_string=u'2012-05-25 15:59:24',
-        end_time_string=u'2012-05-25 15:59:55')
+        'ctime', start_time_string='2012-05-25 15:59:24',
+        end_time_string='2012-05-25 15:59:55')
     self.assertFalse(test_filter.Matches(file_entry))
 
     # Testing a timestamp that does not exist in the stat object.
     test_filter = file_entry_filters.DateTimeFileEntryFilter()
     test_filter.AddDateTimeRange(
-        u'bkup', start_time_string=u'2012-02-02 12:12:12')
+        'bkup', start_time_string='2012-02-02 12:12:12')
     self.assertTrue(test_filter.Matches(file_entry))
 
     # Just end date set.
     test_filter = file_entry_filters.DateTimeFileEntryFilter()
     test_filter.AddDateTimeRange(
-        u'mtime', end_time_string=u'2012-05-25 15:59:55')
+        'mtime', end_time_string='2012-05-25 15:59:55')
     self.assertTrue(test_filter.Matches(file_entry))
 
     # Just with a start date but within range.
     test_filter = file_entry_filters.DateTimeFileEntryFilter()
     test_filter.AddDateTimeRange(
-        u'atime', start_time_string=u'2012-03-25 15:59:55')
+        'atime', start_time_string='2012-03-25 15:59:55')
     self.assertTrue(test_filter.Matches(file_entry))
 
     # And now with a start date, but out of range.
     test_filter = file_entry_filters.DateTimeFileEntryFilter()
     test_filter.AddDateTimeRange(
-        u'ctime', start_time_string=u'2012-05-25 15:59:55')
+        'ctime', start_time_string='2012-05-25 15:59:55')
     self.assertFalse(test_filter.Matches(file_entry))
 
     # Test with more than one date filter.
     test_filter = file_entry_filters.DateTimeFileEntryFilter()
     test_filter.AddDateTimeRange(
-        u'ctime', start_time_string=u'2012-05-25 15:59:55',
-        end_time_string=u'2012-05-25 17:34:12')
+        'ctime', start_time_string='2012-05-25 15:59:55',
+        end_time_string='2012-05-25 17:34:12')
     test_filter.AddDateTimeRange(
-        u'atime', start_time_string=u'2012-05-25 15:59:20',
-        end_time_string=u'2012-05-25 15:59:25')
+        'atime', start_time_string='2012-05-25 15:59:20',
+        end_time_string='2012-05-25 15:59:25')
     test_filter.AddDateTimeRange(
-        u'mtime', start_time_string=u'2012-05-25 15:59:24',
-        end_time_string=u'2012-05-25 15:59:55')
+        'mtime', start_time_string='2012-05-25 15:59:24',
+        end_time_string='2012-05-25 15:59:55')
 
     self.assertFalse(test_filter.Matches(file_entry))
     self.assertEqual(len(test_filter._date_time_ranges), 3)
 
   def testPrint(self):
     """Tests the Print function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = cli_test_lib.TestOutputWriter(encoding='utf-8')
     test_filter = file_entry_filters.DateTimeFileEntryFilter()
 
     test_filter.AddDateTimeRange(
-        u'ctime', end_time_string=u'2012-05-25 15:59:25',
-        start_time_string=u'2012-05-25 15:59:20')
+        'ctime', end_time_string='2012-05-25 15:59:25',
+        start_time_string='2012-05-25 15:59:20')
 
     test_filter.AddDateTimeRange(
-        u'atime', end_time_string=u'2012-05-25 15:59:25')
+        'atime', end_time_string='2012-05-25 15:59:25')
 
     test_filter.AddDateTimeRange(
-        u'mtime', start_time_string=u'2012-05-25 15:59:20')
+        'mtime', start_time_string='2012-05-25 15:59:20')
 
     test_filter.Print(output_writer)
 
@@ -152,19 +154,19 @@ class DateTimeFileEntryFilterTest(shared_test_lib.BaseTestCase):
 class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
   """Tests the extensions file entry filter."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
+  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testMatches(self):
     """Tests the Matches function."""
-    test_path = self._GetTestFilePath([u'ímynd.dd'])
+    test_path = self._GetTestFilePath(['ímynd.dd'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
 
-    test_filter = file_entry_filters.ExtensionsFileEntryFilter([u'txt'])
+    test_filter = file_entry_filters.ExtensionsFileEntryFilter(['txt'])
 
     # Test a filter match.
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=15,
-        location=u'/passwords.txt', parent=os_path_spec)
+        location='/passwords.txt', parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
     self.assertTrue(test_filter.Matches(file_entry))
@@ -172,7 +174,7 @@ class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
     # Test a filter non-match.
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
-        location=u'/a_directory/another_file', parent=os_path_spec)
+        location='/a_directory/another_file', parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
     self.assertFalse(test_filter.Matches(file_entry))
@@ -186,8 +188,8 @@ class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
 
   def testPrint(self):
     """Tests the Print function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_filter = file_entry_filters.ExtensionsFileEntryFilter([u'exe', u'pdf'])
+    output_writer = cli_test_lib.TestOutputWriter(encoding='utf-8')
+    test_filter = file_entry_filters.ExtensionsFileEntryFilter(['exe', 'pdf'])
 
     test_filter.Print(output_writer)
 
@@ -205,19 +207,19 @@ class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
 class NamesFileEntryFilterTest(shared_test_lib.BaseTestCase):
   """Tests the names file entry filter."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
+  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testMatches(self):
     """Tests the Matches function."""
-    test_path = self._GetTestFilePath([u'ímynd.dd'])
+    test_path = self._GetTestFilePath(['ímynd.dd'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
 
-    test_filter = file_entry_filters.NamesFileEntryFilter([u'passwords.txt'])
+    test_filter = file_entry_filters.NamesFileEntryFilter(['passwords.txt'])
 
     # Test a filter non-match.
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
-        location=u'/a_directory/another_file', parent=os_path_spec)
+        location='/a_directory/another_file', parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
     self.assertFalse(test_filter.Matches(file_entry))
@@ -225,7 +227,7 @@ class NamesFileEntryFilterTest(shared_test_lib.BaseTestCase):
     # Test a filter on a directory.
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=12,
-        location=u'/a_directory', parent=os_path_spec)
+        location='/a_directory', parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
     self.assertFalse(test_filter.Matches(file_entry))
@@ -233,7 +235,7 @@ class NamesFileEntryFilterTest(shared_test_lib.BaseTestCase):
     # Test a filter match.
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=15,
-        location=u'/passwords.txt', parent=os_path_spec)
+        location='/passwords.txt', parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
     self.assertTrue(test_filter.Matches(file_entry))
@@ -244,8 +246,8 @@ class NamesFileEntryFilterTest(shared_test_lib.BaseTestCase):
 
   def testPrint(self):
     """Tests the Print function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_filter = file_entry_filters.NamesFileEntryFilter([u'myfile'])
+    output_writer = cli_test_lib.TestOutputWriter(encoding='utf-8')
+    test_filter = file_entry_filters.NamesFileEntryFilter(['myfile'])
 
     test_filter.Print(output_writer)
 
@@ -273,44 +275,44 @@ class SignaturesFileEntryFilterTest(shared_test_lib.BaseTestCase):
     self.assertIsNone(test_filter._file_scanner)
 
     specification_store = specification.FormatSpecificationStore()
-    format_specification = specification.FormatSpecification(u'no_offset')
+    format_specification = specification.FormatSpecification('no_offset')
     format_specification.AddNewSignature(b'test1')
     specification_store.AddSpecification(format_specification)
 
-    format_specification = specification.FormatSpecification(u'negative_offset')
+    format_specification = specification.FormatSpecification('negative_offset')
     format_specification.AddNewSignature(b'test2', offset=-4)
     specification_store.AddSpecification(format_specification)
 
-    format_specification = specification.FormatSpecification(u'positive_offset')
+    format_specification = specification.FormatSpecification('positive_offset')
     format_specification.AddNewSignature(b'test3', offset=4)
     specification_store.AddSpecification(format_specification)
 
     with self.assertRaises(TypeError):
       # Currently pysigscan does not support patterns without an offset.
-      test_filter._GetScanner(specification_store, [u'no_offset'])
+      test_filter._GetScanner(specification_store, ['no_offset'])
 
     file_scanner = test_filter._GetScanner(
-        specification_store, [u'negative_offset'])
+        specification_store, ['negative_offset'])
     self.assertIsNotNone(file_scanner)
 
     file_scanner = test_filter._GetScanner(
-        specification_store, [u'positive_offset'])
+        specification_store, ['positive_offset'])
     self.assertIsNotNone(file_scanner)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER.DAT'])
-  @shared_test_lib.skipUnlessHasTestFile([u'test_pe.exe'])
+  @shared_test_lib.skipUnlessHasTestFile(['NTUSER.DAT'])
+  @shared_test_lib.skipUnlessHasTestFile(['test_pe.exe'])
   def testMatches(self):
     """Tests the Matches function."""
     specification_store = specification.FormatSpecificationStore()
-    format_specification = specification.FormatSpecification(u'regf')
+    format_specification = specification.FormatSpecification('regf')
     format_specification.AddNewSignature(b'regf', offset=0)
     specification_store.AddSpecification(format_specification)
 
     test_filter = file_entry_filters.SignaturesFileEntryFilter(
-        specification_store, [u'regf'])
+        specification_store, ['regf'])
 
     # Test a filter match.
-    test_path = self._GetTestFilePath([u'NTUSER.DAT'])
+    test_path = self._GetTestFilePath(['NTUSER.DAT'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
 
@@ -318,7 +320,7 @@ class SignaturesFileEntryFilterTest(shared_test_lib.BaseTestCase):
     self.assertTrue(test_filter.Matches(file_entry))
 
     # Test a filter non-match.
-    test_path = self._GetTestFilePath([u'test_pe.exe'])
+    test_path = self._GetTestFilePath(['test_pe.exe'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
 
@@ -327,13 +329,13 @@ class SignaturesFileEntryFilterTest(shared_test_lib.BaseTestCase):
 
   def testPrint(self):
     """Tests the Print function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = cli_test_lib.TestOutputWriter(encoding='utf-8')
 
     specification_store = specification.FormatSpecificationStore()
-    specification_store.AddNewSpecification(u'7z')
+    specification_store.AddNewSpecification('7z')
 
     test_filter = file_entry_filters.SignaturesFileEntryFilter(
-        specification_store, [u'7z', u'bzip2'])
+        specification_store, ['7z', 'bzip2'])
 
     test_filter.Print(output_writer)
 
@@ -359,7 +361,7 @@ class FileEntryFilterCollectionTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(len(test_filter_collection._filters), 0)
 
-    file_entry_filter = file_entry_filters.NamesFileEntryFilter([u'name'])
+    file_entry_filter = file_entry_filters.NamesFileEntryFilter(['name'])
     test_filter_collection.AddFilter(file_entry_filter)
     self.assertEqual(len(test_filter_collection._filters), 1)
 
@@ -369,7 +371,7 @@ class FileEntryFilterCollectionTest(shared_test_lib.BaseTestCase):
     self.assertFalse(test_filter_collection.HasFilters())
 
     test_filter_collection = file_entry_filters.FileEntryFilterCollection()
-    file_entry_filter = file_entry_filters.NamesFileEntryFilter([u'name'])
+    file_entry_filter = file_entry_filters.NamesFileEntryFilter(['name'])
     test_filter_collection.AddFilter(file_entry_filter)
     self.assertTrue(test_filter_collection.HasFilters())
 

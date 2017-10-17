@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the SkyDrive log event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import skydrivelog
@@ -22,10 +24,10 @@ class SkyDriveLogFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = skydrivelog.SkyDriveLogFormatter()
 
     expected_attribute_names = [
-        u'module',
-        u'source_code',
-        u'log_level',
-        u'detail']
+        'module',
+        'source_code',
+        'log_level',
+        'detail']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -46,9 +48,9 @@ class SkyDriveOldLogFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = skydrivelog.SkyDriveOldLogFormatter()
 
     expected_attribute_names = [
-        u'source_code',
-        u'log_level',
-        u'text']
+        'source_code',
+        'log_level',
+        'text']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

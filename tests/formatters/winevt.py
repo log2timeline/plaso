@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows EventLog (EVT) file event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import winevt
@@ -22,15 +24,15 @@ class WinEVTFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = winevt.WinEVTFormatter()
 
     expected_attribute_names = [
-        u'event_identifier',
-        u'severity',
-        u'record_number',
-        u'event_type',
-        u'event_category',
-        u'source_name',
-        u'computer_name',
-        u'message_string',
-        u'strings']
+        'event_identifier',
+        'severity',
+        'record_number',
+        'event_type',
+        'event_category',
+        'source_name',
+        'computer_name',
+        'message_string',
+        'strings']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

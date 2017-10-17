@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Android Application Usage event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import android_app_usage
@@ -21,7 +23,7 @@ class AndroidApplicationFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = android_app_usage.AndroidApplicationFormatter()
 
-    expected_attribute_names = [u'package', u'component']
+    expected_attribute_names = ['package', 'component']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Basic Security Module (BSM) binary files event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import bsm
@@ -22,8 +24,8 @@ class BSMFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = bsm.BSMFormatter()
 
     expected_attribute_names = [
-        u'event_type',
-        u'extra_tokens']
+        'event_type',
+        'extra_tokens']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -44,9 +46,9 @@ class MacBSMFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = bsm.MacBSMFormatter()
 
     expected_attribute_names = [
-        u'event_type',
-        u'return_value',
-        u'extra_tokens']
+        'event_type',
+        'return_value',
+        'extra_tokens']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the SSH event formatters."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import ssh
@@ -22,7 +24,7 @@ class SSHLoginEventFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = ssh.SSHLoginEventFormatter()
 
     expected_attribute_names = [
-        u'username', u'address', u'port', u'authentication_method', u'pid']
+        'username', 'address', 'port', 'authentication_method', 'pid']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -44,7 +46,7 @@ class SSHFailedConnectionEventFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = ssh.SSHFailedConnectionEventFormatter()
 
     expected_attribute_names = [
-        u'username', u'address', u'port', u'authentication_method', u'pid']
+        'username', 'address', 'port', 'authentication_method', 'pid']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -65,7 +67,7 @@ class SSHOpenedConnectionEventFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = ssh.SSHOpenedConnectionEventFormatter()
 
-    expected_attribute_names = [u'address', u'port', u'pid']
+    expected_attribute_names = ['address', 'port', 'pid']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Skype main database event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import skype
@@ -22,9 +24,9 @@ class SkypeAccountFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = skype.SkypeAccountFormatter()
 
     expected_attribute_names = [
-        u'username',
-        u'email',
-        u'country']
+        'username',
+        'email',
+        'country']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -45,10 +47,10 @@ class SkypeChatFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = skype.SkypeChatFormatter()
 
     expected_attribute_names = [
-        u'from_account',
-        u'to_account',
-        u'title',
-        u'text']
+        'from_account',
+        'to_account',
+        'title',
+        'text']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -69,8 +71,8 @@ class SkypeSMSFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = skype.SkypeSMSFormatter()
 
     expected_attribute_names = [
-        u'number',
-        u'text']
+        'number',
+        'text']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -91,9 +93,9 @@ class SkypeCallFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = skype.SkypeCallFormatter()
 
     expected_attribute_names = [
-        u'src_call',
-        u'dst_call',
-        u'call_type']
+        'src_call',
+        'dst_call',
+        'call_type']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -114,10 +116,10 @@ class SkypeTransferFileFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = skype.SkypeTransferFileFormatter()
 
     expected_attribute_names = [
-        u'source',
-        u'destination',
-        u'transferred_filename',
-        u'action_type']
+        'source',
+        'destination',
+        'transferred_filename',
+        'action_type']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

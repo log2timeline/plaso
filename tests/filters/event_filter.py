@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the event object filter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.filters import event_filter
@@ -22,19 +24,19 @@ class EventObjectFilterTest(test_lib.FilterTestCase):
 
     with self.assertRaises(errors.WrongPlugin):
       test_filter.CompileFilter(
-          u'SELECT stuff FROM machine WHERE conditions are met')
+          'SELECT stuff FROM machine WHERE conditions are met')
 
     with self.assertRaises(errors.WrongPlugin):
       test_filter.CompileFilter(
-          u'/tmp/file_that_most_likely_does_not_exist')
+          '/tmp/file_that_most_likely_does_not_exist')
 
     with self.assertRaises(errors.WrongPlugin):
       test_filter.CompileFilter(
-          u'some random stuff that is destined to fail')
+          'some random stuff that is destined to fail')
 
     with self.assertRaises(errors.WrongPlugin):
       test_filter.CompileFilter(
-          u'some_stuff is "random" and other_stuff ')
+          'some_stuff is "random" and other_stuff ')
 
 
 if __name__ == '__main__':

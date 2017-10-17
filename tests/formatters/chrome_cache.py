@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Google Chrome Cache files event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import chrome_cache
@@ -21,7 +23,7 @@ class ChromeCacheEntryEventFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = chrome_cache.ChromeCacheEntryEventFormatter()
 
-    expected_attribute_names = [u'original_url']
+    expected_attribute_names = ['original_url']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

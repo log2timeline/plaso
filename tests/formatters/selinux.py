@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the selinux event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import selinux
@@ -22,9 +24,9 @@ class SELinuxFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = selinux.SELinuxFormatter()
 
     expected_attribute_names = [
-        u'audit_type',
-        u'pid',
-        u'body']
+        'audit_type',
+        'pid',
+        'body']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

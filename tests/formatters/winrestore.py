@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows Restore Point (rp.log) file event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import winrestore
@@ -22,9 +24,9 @@ class RestorePointInfoFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = winrestore.RestorePointInfoFormatter()
 
     expected_attribute_names = [
-        u'description',
-        u'restore_point_event_type',
-        u'restore_point_type']
+        'description',
+        'restore_point_event_type',
+        'restore_point_type']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

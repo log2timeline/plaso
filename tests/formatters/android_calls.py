@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Android contacts2.db database event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import android_calls
@@ -22,7 +24,7 @@ class AndroidCallFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = android_calls.AndroidCallFormatter()
 
     expected_attribute_names = [
-        u'call_type', u'number', u'name', u'duration']
+        'call_type', 'number', 'name', 'duration']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

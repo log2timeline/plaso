@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the OLE Compound File (OLECF) event formatters."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import olecf
@@ -21,7 +23,7 @@ class OLECFItemFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = olecf.OLECFItemFormatter()
 
-    expected_attribute_names = [u'name']
+    expected_attribute_names = ['name']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -42,14 +44,14 @@ class OLECFDestListEntryFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = olecf.OLECFDestListEntryFormatter()
 
     expected_attribute_names = [
-        u'entry_number',
-        u'pin_status',
-        u'hostname',
-        u'path',
-        u'droid_volume_identifier',
-        u'droid_file_identifier',
-        u'birth_droid_volume_identifier',
-        u'birth_droid_file_identifier']
+        'entry_number',
+        'pin_status',
+        'hostname',
+        'path',
+        'droid_volume_identifier',
+        'droid_file_identifier',
+        'birth_droid_volume_identifier',
+        'birth_droid_file_identifier']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -70,21 +72,21 @@ class OLECFDocumentSummaryInfoFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = olecf.OLECFDocumentSummaryInfoFormatter()
 
     expected_attribute_names = [
-        u'number_of_bytes',
-        u'number_of_lines',
-        u'number_of_paragraphs',
-        u'number_of_slides',
-        u'number_of_notes',
-        u'number_of_hidden_slides',
-        u'number_of_clips',
-        u'company',
-        u'manager',
-        u'shared_document',
-        u'application_version',
-        u'content_type',
-        u'content_status',
-        u'language',
-        u'document_version']
+        'number_of_bytes',
+        'number_of_lines',
+        'number_of_paragraphs',
+        'number_of_slides',
+        'number_of_notes',
+        'number_of_hidden_slides',
+        'number_of_clips',
+        'company',
+        'manager',
+        'shared_document',
+        'application_version',
+        'content_type',
+        'content_status',
+        'language',
+        'document_version']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -105,20 +107,20 @@ class OLECFSummaryInfoFormatter(test_lib.EventFormatterTestCase):
     event_formatter = olecf.OLECFSummaryInfoFormatter()
 
     expected_attribute_names = [
-        u'title',
-        u'subject',
-        u'author',
-        u'keywords',
-        u'comments',
-        u'template',
-        u'revision_number',
-        u'last_saved_by',
-        u'total_edit_time',
-        u'number_of_pages',
-        u'number_of_words',
-        u'number_of_characters',
-        u'application',
-        u'security']
+        'title',
+        'subject',
+        'author',
+        'keywords',
+        'comments',
+        'template',
+        'revision_number',
+        'last_saved_by',
+        'total_edit_time',
+        'number_of_pages',
+        'number_of_words',
+        'number_of_characters',
+        'application',
+        'security']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

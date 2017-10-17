@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Mac OS X keychain password database file event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import mac_keychain
@@ -22,8 +24,8 @@ class KeychainApplicationRecordFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = mac_keychain.KeychainApplicationRecordFormatter()
 
     expected_attribute_names = [
-        u'entry_name',
-        u'account_name']
+        'entry_name',
+        'account_name']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -44,11 +46,11 @@ class KeychainInternetRecordFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = mac_keychain.KeychainInternetRecordFormatter()
 
     expected_attribute_names = [
-        u'entry_name',
-        u'account_name',
-        u'where',
-        u'protocol',
-        u'type_protocol']
+        'entry_name',
+        'account_name',
+        'where',
+        'protocol',
+        'type_protocol']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the shutdown Windows Registry event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import shutdown
@@ -23,8 +25,8 @@ class ShutdownWindowsRegistryEventFormatterTest(
     event_formatter = shutdown.ShutdownWindowsRegistryEventFormatter()
 
     expected_attribute_names = [
-        u'key_path',
-        u'value_name']
+        'key_path',
+        'value_name']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

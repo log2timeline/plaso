@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the iPod device event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import ipod
@@ -22,12 +24,12 @@ class IPodDeviceFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = ipod.IPodDeviceFormatter()
 
     expected_attribute_names = [
-        u'device_id',
-        u'device_class',
-        u'family_id',
-        u'use_count',
-        u'serial_number',
-        u'imei']
+        'device_id',
+        'device_class',
+        'family_id',
+        'use_count',
+        'serial_number',
+        'imei']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

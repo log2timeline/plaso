@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the MSIE WebCache ESE database event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import msie_webcache
@@ -22,18 +24,18 @@ class MsieWebCacheContainerEventFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = msie_webcache.MsieWebCacheContainerEventFormatter()
 
     expected_attribute_names = [
-        u'entry_identifier',
-        u'container_identifier',
-        u'cache_identifier',
-        u'url',
-        u'redirect_url',
-        u'access_count',
-        u'sync_count',
-        u'cached_filename',
-        u'file_extension',
-        u'cached_file_size',
-        u'request_headers',
-        u'response_headers']
+        'entry_identifier',
+        'container_identifier',
+        'cache_identifier',
+        'url',
+        'redirect_url',
+        'access_count',
+        'sync_count',
+        'cached_filename',
+        'file_extension',
+        'cached_file_size',
+        'request_headers',
+        'response_headers']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -54,10 +56,10 @@ class MsieWebCacheContainersEventFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = msie_webcache.MsieWebCacheContainersEventFormatter()
 
     expected_attribute_names = [
-        u'container_identifier',
-        u'set_identifier',
-        u'name',
-        u'directory']
+        'container_identifier',
+        'set_identifier',
+        'name',
+        'directory']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
