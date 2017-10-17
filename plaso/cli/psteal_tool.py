@@ -527,7 +527,6 @@ class PstealTool(
       self.list_output_modules = True
       return
 
-
     self._ParseInformationalOptions(options)
 
     argument_helper_names = ['extraction', 'status_view']
