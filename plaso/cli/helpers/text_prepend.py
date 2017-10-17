@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The text prepend CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 from plaso.cli import tools
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
@@ -10,8 +12,8 @@ from plaso.lib import errors
 class TextPrependArgumentsHelper(interface.ArgumentsHelper):
   """Text prepend CLI arguments helper."""
 
-  NAME = u'text_prepend'
-  DESCRIPTION = u'Text prepend command line arguments.'
+  NAME = 'text_prepend'
+  DESCRIPTION = 'Text prepend command line arguments.'
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -25,11 +27,11 @@ class TextPrependArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        u'-t', u'--text', dest=u'text_prepend', action=u'store', type=str,
-        default=u'', metavar=u'TEXT', help=(
-            u'Define a free form text string that is prepended to each path '
-            u'to make it easier to distinguish one record from another in a '
-            u'timeline (like c:\\, or host_w_c:\\)'))
+        '-t', '--text', dest='text_prepend', action='store', type=str,
+        default='', metavar='TEXT', help=(
+            'Define a free form text string that is prepended to each path '
+            'to make it easier to distinguish one record from another in a '
+            'timeline (like c:\\, or host_w_c:\\)'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
@@ -45,11 +47,11 @@ class TextPrependArgumentsHelper(interface.ArgumentsHelper):
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
-          u'Configuration object is not an instance of CLITool')
+          'Configuration object is not an instance of CLITool')
 
-    text_prepend = cls._ParseStringOption(options, u'text_prepend')
+    text_prepend = cls._ParseStringOption(options, 'text_prepend')
 
-    setattr(configuration_object, u'_text_prepend', text_prepend)
+    setattr(configuration_object, '_text_prepend', text_prepend)
 
 
 manager.ArgumentHelperManager.RegisterHelper(TextPrependArgumentsHelper)

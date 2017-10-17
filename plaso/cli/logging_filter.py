@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The logging filter classes."""
 
+from __future__ import unicode_literals
+
 import logging
 
 
@@ -19,7 +21,7 @@ class LoggingFilter(logging.Filter):
     Returns:
       bool: True if the record should be included in the logging.
     """
-    if record.module == u'binplist' and record.levelno < logging.ERROR:
+    if record.module == 'binplist' and record.levelno < logging.ERROR:
       return False
 
     return True

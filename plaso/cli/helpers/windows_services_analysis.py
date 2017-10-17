@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The Windows Services analysis plugin CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 from plaso.lib import errors
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
@@ -10,11 +12,11 @@ from plaso.analysis import windows_services
 class WindowsServicesAnalysisArgumentsHelper(interface.ArgumentsHelper):
   """Windows Services analysis plugin CLI arguments helper."""
 
-  NAME = u'windows_services'
-  CATEGORY = u'analysis'
-  DESCRIPTION = u'Argument helper for the Windows Services analysis plugin.'
+  NAME = 'windows_services'
+  CATEGORY = 'analysis'
+  DESCRIPTION = 'Argument helper for the Windows Services analysis plugin.'
 
-  _DEFAULT_OUTPUT = u'text'
+  _DEFAULT_OUTPUT = 'text'
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -28,12 +30,13 @@ class WindowsServicesAnalysisArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        u'--windows-services-output', dest=u'windows_services_output',
-        type=str, action=u'store', default=cls._DEFAULT_OUTPUT,
-        choices=[u'text', u'yaml'], help=(
-            u'Specify how the results should be displayed. Options are text '
-            u'and yaml.'))
+        '--windows-services-output', dest='windows_services_output',
+        type=str, action='store', default=cls._DEFAULT_OUTPUT,
+        choices=['text', 'yaml'], help=(
+            'Specify how the results should be displayed. Options are text '
+            'and yaml.'))
 
+  # pylint: disable=arguments-differ
   @classmethod
   def ParseOptions(cls, options, analysis_plugin):
     """Parses and validates options.
@@ -48,11 +51,11 @@ class WindowsServicesAnalysisArgumentsHelper(interface.ArgumentsHelper):
     if not isinstance(
         analysis_plugin, windows_services.WindowsServicesAnalysisPlugin):
       raise errors.BadConfigObject((
-          u'Analysis plugin is not an instance of '
-          u'WindowsServicesAnalysisPlugin'))
+          'Analysis plugin is not an instance of '
+          'WindowsServicesAnalysisPlugin'))
 
     output_format = cls._ParseStringOption(
-        options, u'windows_services_output', default_value=cls._DEFAULT_OUTPUT)
+        options, 'windows_services_output', default_value=cls._DEFAULT_OUTPUT)
     analysis_plugin.SetOutputFormat(output_format)
 
 

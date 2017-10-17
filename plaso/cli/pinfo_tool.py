@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The pinfo CLI tool."""
 
+from __future__ import unicode_literals
+
 import argparse
 import collections
 import logging
@@ -24,10 +26,10 @@ class PinfoTool(
     tool_options.StorageFileOptions):
   """Pinfo CLI tool."""
 
-  NAME = u'pinfo'
+  NAME = 'pinfo'
   DESCRIPTION = (
-      u'Shows information about a Plaso storage file, for example how it was '
-      u'collected, what information was extracted from a source, etc.')
+      'Shows information about a Plaso storage file, for example how it was '
+      'collected, what information was extracted from a source, etc.')
 
   _INDENTATION_LEVEL = 8
 
@@ -96,13 +98,13 @@ class PinfoTool(
     storage_counters = {}
 
     if not analysis_reports_counter_error:
-      storage_counters[u'analysis_reports'] = analysis_reports_counter
+      storage_counters['analysis_reports'] = analysis_reports_counter
 
     if not event_labels_counter_error:
-      storage_counters[u'event_labels'] = event_labels_counter
+      storage_counters['event_labels'] = event_labels_counter
 
     if not parsers_counter_error:
-      storage_counters[u'parsers'] = parsers_counter
+      storage_counters['parsers'] = parsers_counter
 
     return storage_counters
 
@@ -135,25 +137,25 @@ class PinfoTool(
     if not analysis_reports_counter:
       return
 
-    title = u'Reports generated per plugin'
+    title = 'Reports generated per plugin'
     if session_identifier:
-      title = u'{0:s}: {1:s}'.format(title, session_identifier)
+      title = '{0:s}: {1:s}'.format(title, session_identifier)
 
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type,
-        column_names=[u'Plugin name', u'Number of reports'], title=title)
+        column_names=['Plugin name', 'Number of reports'], title=title)
 
     for key, value in sorted(analysis_reports_counter.items()):
-      if key == u'total':
+      if key == 'total':
         continue
       table_view.AddRow([key, value])
 
     try:
-      total = analysis_reports_counter[u'total']
+      total = analysis_reports_counter['total']
     except KeyError:
-      total = u'N/A'
+      total = 'N/A'
 
-    table_view.AddRow([u'Total', total])
+    table_view.AddRow(['Total', total])
 
     table_view.Write(self._output_writer)
 
@@ -164,15 +166,15 @@ class PinfoTool(
       storage (BaseStorage): storage.
     """
     if not storage.HasAnalysisReports():
-      self._output_writer.Write(u'No analysis reports stored.\n\n')
+      self._output_writer.Write('No analysis reports stored.\n\n')
       return
 
     for index, analysis_report in enumerate(storage.GetAnalysisReports()):
-      title = u'Analysis report: {0:d}'.format(index)
+      title = 'Analysis report: {0:d}'.format(index)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
 
-      table_view.AddRow([u'String', analysis_report.GetString()])
+      table_view.AddRow(['String', analysis_report.GetString()])
 
       table_view.Write(self._output_writer)
 
@@ -183,26 +185,26 @@ class PinfoTool(
       storage (BaseStorage): storage.
     """
     if not storage.HasErrors():
-      self._output_writer.Write(u'No errors stored.\n\n')
+      self._output_writer.Write('No errors stored.\n\n')
       return
 
     for index, error in enumerate(storage.GetErrors()):
-      title = u'Error: {0:d}'.format(index)
+      title = 'Error: {0:d}'.format(index)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
 
-      table_view.AddRow([u'Message', error.message])
-      table_view.AddRow([u'Parser chain', error.parser_chain])
+      table_view.AddRow(['Message', error.message])
+      table_view.AddRow(['Parser chain', error.parser_chain])
 
       path_specification = error.path_spec.comparable
-      for path_index, line in enumerate(path_specification.split(u'\n')):
+      for path_index, line in enumerate(path_specification.split('\n')):
         if not line:
           continue
 
         if path_index == 0:
-          table_view.AddRow([u'Path specification', line])
+          table_view.AddRow(['Path specification', line])
         else:
-          table_view.AddRow([u'', line])
+          table_view.AddRow(['', line])
 
       table_view.Write(self._output_writer)
 
@@ -218,25 +220,25 @@ class PinfoTool(
     if not event_labels_counter:
       return
 
-    title = u'Event tags generated per label'
+    title = 'Event tags generated per label'
     if session_identifier:
-      title = u'{0:s}: {1:s}'.format(title, session_identifier)
+      title = '{0:s}: {1:s}'.format(title, session_identifier)
 
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type,
-        column_names=[u'Label', u'Number of event tags'], title=title)
+        column_names=['Label', 'Number of event tags'], title=title)
 
     for key, value in sorted(event_labels_counter.items()):
-      if key == u'total':
+      if key == 'total':
         continue
       table_view.AddRow([key, value])
 
     try:
-      total = event_labels_counter[u'total']
+      total = event_labels_counter['total']
     except KeyError:
-      total = u'N/A'
+      total = 'N/A'
 
-    table_view.AddRow([u'Total', total])
+    table_view.AddRow(['Total', total])
 
     table_view.Write(self._output_writer)
 
@@ -251,21 +253,21 @@ class PinfoTool(
     if not parsers_counter:
       return
 
-    title = u'Events generated per parser'
+    title = 'Events generated per parser'
     if session_identifier:
-      title = u'{0:s}: {1:s}'.format(title, session_identifier)
+      title = '{0:s}: {1:s}'.format(title, session_identifier)
 
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type,
-        column_names=[u'Parser (plugin) name', u'Number of events'],
+        column_names=['Parser (plugin) name', 'Number of events'],
         title=title)
 
     for key, value in sorted(parsers_counter.items()):
-      if key == u'total':
+      if key == 'total':
         continue
       table_view.AddRow([key, value])
 
-    table_view.AddRow([u'Total', parsers_counter[u'total']])
+    table_view.AddRow(['Total', parsers_counter['total']])
 
     table_view.Write(self._output_writer)
 
@@ -286,37 +288,37 @@ class PinfoTool(
     if not system_configuration:
       return
 
-    title = u'System configuration'
+    title = 'System configuration'
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title=title)
 
-    hostname = u'N/A'
+    hostname = 'N/A'
     if system_configuration.hostname:
       hostname = system_configuration.hostname.name
 
-    operating_system = system_configuration.operating_system or u'N/A'
+    operating_system = system_configuration.operating_system or 'N/A'
     operating_system_product = (
-        system_configuration.operating_system_product or u'N/A')
+        system_configuration.operating_system_product or 'N/A')
     operating_system_version = (
-        system_configuration.operating_system_version or u'N/A')
-    code_page = system_configuration.code_page or u'N/A'
-    keyboard_layout = system_configuration.keyboard_layout or u'N/A'
-    time_zone = system_configuration.time_zone or u'N/A'
+        system_configuration.operating_system_version or 'N/A')
+    code_page = system_configuration.code_page or 'N/A'
+    keyboard_layout = system_configuration.keyboard_layout or 'N/A'
+    time_zone = system_configuration.time_zone or 'N/A'
 
-    table_view.AddRow([u'Hostname', hostname])
-    table_view.AddRow([u'Operating system', operating_system])
-    table_view.AddRow([u'Operating system product', operating_system_product])
-    table_view.AddRow([u'Operating system version', operating_system_version])
-    table_view.AddRow([u'Code page', code_page])
-    table_view.AddRow([u'Keyboard layout', keyboard_layout])
-    table_view.AddRow([u'Time zone', time_zone])
+    table_view.AddRow(['Hostname', hostname])
+    table_view.AddRow(['Operating system', operating_system])
+    table_view.AddRow(['Operating system product', operating_system_product])
+    table_view.AddRow(['Operating system version', operating_system_version])
+    table_view.AddRow(['Code page', code_page])
+    table_view.AddRow(['Keyboard layout', keyboard_layout])
+    table_view.AddRow(['Time zone', time_zone])
 
     table_view.Write(self._output_writer)
 
-    title = u'User accounts'
+    title = 'User accounts'
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type,
-        column_names=[u'Username', u'User directory'], title=title)
+        column_names=['Username', 'User directory'], title=title)
 
     for user_account in system_configuration.user_accounts:
       table_view.AddRow([
@@ -333,38 +335,38 @@ class PinfoTool(
     for session_number, session in enumerate(storage.GetSessions()):
       session_identifier = uuid.UUID(hex=session.identifier)
 
-      start_time = u'N/A'
+      start_time = 'N/A'
       if session.start_time is not None:
         start_time = timelib.Timestamp.CopyToIsoFormat(session.start_time)
 
-      completion_time = u'N/A'
+      completion_time = 'N/A'
       if session.completion_time is not None:
         completion_time = timelib.Timestamp.CopyToIsoFormat(
             session.completion_time)
 
-      enabled_parser_names = u'N/A'
+      enabled_parser_names = 'N/A'
       if session.enabled_parser_names:
-        enabled_parser_names = u', '.join(sorted(session.enabled_parser_names))
+        enabled_parser_names = ', '.join(sorted(session.enabled_parser_names))
 
-      command_line_arguments = session.command_line_arguments or u'N/A'
-      parser_filter_expression = session.parser_filter_expression or u'N/A'
-      preferred_encoding = session.preferred_encoding or u'N/A'
-      filter_file = session.filter_file or u'N/A'
+      command_line_arguments = session.command_line_arguments or 'N/A'
+      parser_filter_expression = session.parser_filter_expression or 'N/A'
+      preferred_encoding = session.preferred_encoding or 'N/A'
+      filter_file = session.filter_file or 'N/A'
 
-      title = u'Session: {0!s}'.format(session_identifier)
+      title = 'Session: {0!s}'.format(session_identifier)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
 
-      table_view.AddRow([u'Start time', start_time])
-      table_view.AddRow([u'Completion time', completion_time])
-      table_view.AddRow([u'Product name', session.product_name])
-      table_view.AddRow([u'Product version', session.product_version])
-      table_view.AddRow([u'Command line arguments', command_line_arguments])
-      table_view.AddRow([u'Parser filter expression', parser_filter_expression])
-      table_view.AddRow([u'Enabled parser and plugins', enabled_parser_names])
-      table_view.AddRow([u'Preferred encoding', preferred_encoding])
-      table_view.AddRow([u'Debug mode', session.debug_mode])
-      table_view.AddRow([u'Filter file', filter_file])
+      table_view.AddRow(['Start time', start_time])
+      table_view.AddRow(['Completion time', completion_time])
+      table_view.AddRow(['Product name', session.product_name])
+      table_view.AddRow(['Product version', session.product_version])
+      table_view.AddRow(['Command line arguments', command_line_arguments])
+      table_view.AddRow(['Parser filter expression', parser_filter_expression])
+      table_view.AddRow(['Enabled parser and plugins', enabled_parser_names])
+      table_view.AddRow(['Preferred encoding', preferred_encoding])
+      table_view.AddRow(['Debug mode', session.debug_mode])
+      table_view.AddRow(['Filter file', filter_file])
 
       table_view.Write(self._output_writer)
 
@@ -389,7 +391,7 @@ class PinfoTool(
       storage (BaseStorage): storage.
     """
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, title=u'Sessions')
+        self._views_format_type, title='Sessions')
 
     for session in storage.GetSessions():
       start_time = timelib.Timestamp.CopyToIsoFormat(
@@ -406,10 +408,10 @@ class PinfoTool(
       storage (BaseStorage): storage.
     """
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, title=u'Plaso Storage Information')
-    table_view.AddRow([u'Filename', os.path.basename(self._storage_file_path)])
-    table_view.AddRow([u'Format version', storage.format_version])
-    table_view.AddRow([u'Serialization format', storage.serialization_format])
+        self._views_format_type, title='Plaso Storage Information')
+    table_view.AddRow(['Filename', os.path.basename(self._storage_file_path)])
+    table_view.AddRow(['Format version', storage.format_version])
+    table_view.AddRow(['Serialization format', storage.serialization_format])
     table_view.Write(self._output_writer)
 
     if storage.storage_type == definitions.STORAGE_TYPE_SESSION:
@@ -418,23 +420,23 @@ class PinfoTool(
 
       storage_counters = self._CalculateStorageCounters(storage)
 
-      if u'parsers' not in storage_counters:
+      if 'parsers' not in storage_counters:
         self._output_writer.Write(
-            u'Unable to determine number of events generated per parser.\n')
+            'Unable to determine number of events generated per parser.\n')
       else:
-        self._PrintParsersCounter(storage_counters[u'parsers'])
+        self._PrintParsersCounter(storage_counters['parsers'])
 
-      if u'analysis_reports' not in storage_counters:
+      if 'analysis_reports' not in storage_counters:
         self._output_writer.Write(
-            u'Unable to determine number of reports generated per plugin.\n')
+            'Unable to determine number of reports generated per plugin.\n')
       else:
-        self._PrintAnalysisReportCounter(storage_counters[u'analysis_reports'])
+        self._PrintAnalysisReportCounter(storage_counters['analysis_reports'])
 
-      if u'event_labels' not in storage_counters:
+      if 'event_labels' not in storage_counters:
         self._output_writer.Write(
-            u'Unable to determine number of event tags generated per label.\n')
+            'Unable to determine number of event tags generated per label.\n')
       else:
-        self._PrintEventLabelsCounter(storage_counters[u'event_labels'])
+        self._PrintEventLabelsCounter(storage_counters['event_labels'])
 
       self._PrintErrorsDetails(storage)
       self._PrintAnalysisReportsDetails(storage)
@@ -449,14 +451,14 @@ class PinfoTool(
       storage (BaseStorage): storage.
     """
     serializer = json_serializer.JSONAttributeContainerSerializer
-    self._output_writer.Write(u'{')
+    self._output_writer.Write('{')
     for index, session in enumerate(storage.GetSessions()):
       json_string = serializer.WriteSerialized(session)
       if index != 0:
-        self._output_writer.Write(u',\n')
-      self._output_writer.Write(u'"session_{0:s}": {1:s} '.format(
+        self._output_writer.Write(',\n')
+      self._output_writer.Write('"session_{0:s}": {1:s} '.format(
           session.identifier, json_string))
-    self._output_writer.Write(u'}')
+    self._output_writer.Write('}')
 
   def _PrintTasksInformation(self, storage):
     """Prints information about the tasks.
@@ -465,7 +467,7 @@ class PinfoTool(
       storage (BaseStorage): storage.
     """
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, title=u'Tasks')
+        self._views_format_type, title='Tasks')
 
     for task_start, _ in storage.GetSessions():
       start_time = timelib.Timestamp.CopyToIsoFormat(
@@ -485,7 +487,7 @@ class PinfoTool(
         self._storage_file_path)
     if not storage_file:
       logging.error(
-          u'Format of storage file: {0:s} not supported'.format(
+          'Format of storage file: {0:s} not supported'.format(
               self._storage_file_path))
       return
 
@@ -493,7 +495,7 @@ class PinfoTool(
       storage_file.Open(path=self._storage_file_path, read_only=True)
     except IOError as exception:
       logging.error(
-          u'Unable to open storage file: {0:s} with error: {1:s}'.format(
+          'Unable to open storage file: {0:s} with error: {1:s}'.format(
               self._storage_file_path, exception))
       return
 
@@ -502,7 +504,7 @@ class PinfoTool(
             self._compare_storage_file_path))
     if not compare_storage_file:
       logging.error(
-          u'Format of storage file: {0:s} not supported'.format(
+          'Format of storage file: {0:s} not supported'.format(
               self._compare_storage_file_path))
       return
 
@@ -511,7 +513,7 @@ class PinfoTool(
           path=self._compare_storage_file_path, read_only=True)
     except IOError as exception:
       logging.error(
-          u'Unable to open storage file: {0:s} with error: {1:s}'.format(
+          'Unable to open storage file: {0:s} with error: {1:s}'.format(
               self._compare_storage_file_path, exception))
       storage_file.Close()
       return
@@ -524,9 +526,9 @@ class PinfoTool(
       storage_file.Close()
 
     if result:
-      self._output_writer.Write(u'Storage files are identical.\n')
+      self._output_writer.Write('Storage files are identical.\n')
     else:
-      self._output_writer.Write(u'Storage files are different.\n')
+      self._output_writer.Write('Storage files are different.\n')
 
     return result
 
@@ -545,40 +547,40 @@ class PinfoTool(
     self.AddBasicOptions(argument_parser)
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_parser, names=[u'storage_file'])
+        argument_parser, names=['storage_file'])
 
     argument_parser.add_argument(
-        u'-v', u'--verbose', dest=u'verbose', action=u'store_true',
-        default=False, help=u'Print verbose output.')
+        '-v', '--verbose', dest='verbose', action='store_true',
+        default=False, help='Print verbose output.')
 
     argument_parser.add_argument(
-        u'--compare', dest=u'compare_storage_file', type=str,
-        action=u'store', default=u'', metavar=u'STORAGE_FILE', help=(
-            u'The path of the storage file to compare against.'))
+        '--compare', dest='compare_storage_file', type=str,
+        action='store', default='', metavar='STORAGE_FILE', help=(
+            'The path of the storage file to compare against.'))
 
     argument_parser.add_argument(
-        u'-w', u'--write', metavar=u'OUTPUTFILE', dest=u'write',
-        help=u'Output filename.')
+        '-w', '--write', metavar='OUTPUTFILE', dest='write',
+        help='Output filename.')
 
     argument_parser.add_argument(
-        u'--output-format', dest=u'output_format', type=str,
-        choices=[u'text', u'json'], action=u'store', default=u'text',
-        metavar=u'FORMAT', help=u'Type of output to produce')
+        '--output-format', dest='output_format', type=str,
+        choices=['text', 'json'], action='store', default='text',
+        metavar='FORMAT', help='Type of output to produce')
 
     try:
       options = argument_parser.parse_args()
     except UnicodeEncodeError:
       # If we get here we are attempting to print help in a non-Unicode
       # terminal.
-      self._output_writer.Write(u'\n')
+      self._output_writer.Write('\n')
       self._output_writer.Write(argument_parser.format_help())
       return False
 
     try:
       self.ParseOptions(options)
     except errors.BadConfigOption as exception:
-      self._output_writer.Write(u'ERROR: {0!s}\n'.format(exception))
-      self._output_writer.Write(u'\n')
+      self._output_writer.Write('ERROR: {0!s}\n'.format(exception))
+      self._output_writer.Write('\n')
       self._output_writer.Write(argument_parser.format_usage())
       return False
 
@@ -604,38 +606,38 @@ class PinfoTool(
 
     self._ConfigureLogging(log_level=logging_level)
 
-    self._verbose = getattr(options, u'verbose', False)
+    self._verbose = getattr(options, 'verbose', False)
 
-    self._output_filename = getattr(options, u'write', None)
+    self._output_filename = getattr(options, 'write', None)
 
     helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=[u'storage_file'])
+        options, self, names=['storage_file'])
 
     # TODO: move check into _CheckStorageFile.
     if not self._storage_file_path:
-      raise errors.BadConfigOption(u'Missing storage file option.')
+      raise errors.BadConfigOption('Missing storage file option.')
 
     if not os.path.isfile(self._storage_file_path):
       raise errors.BadConfigOption(
-          u'No such storage file: {0:s}.'.format(self._storage_file_path))
+          'No such storage file: {0:s}.'.format(self._storage_file_path))
 
     compare_storage_file_path = self.ParseStringOption(
-        options, u'compare_storage_file')
+        options, 'compare_storage_file')
     if compare_storage_file_path:
       if not os.path.isfile(compare_storage_file_path):
         raise errors.BadConfigOption(
-            u'No such storage file: {0:s}.'.format(compare_storage_file_path))
+            'No such storage file: {0:s}.'.format(compare_storage_file_path))
 
       self._compare_storage_file_path = compare_storage_file_path
       self.compare_storage_information = True
 
-    self._output_format = self.ParseStringOption(options, u'output_format')
+    self._output_format = self.ParseStringOption(options, 'output_format')
 
     if self._output_filename:
       if os.path.exists(self._output_filename):
         raise errors.BadConfigOption(
-            u'Output file already exists: {0:s}.'.format(self._output_filename))
-      output_file_object = open(self._output_filename, u'wb')
+            'Output file already exists: {0:s}.'.format(self._output_filename))
+      output_file_object = open(self._output_filename, 'wb')
       self._output_writer = tools.FileObjectOutputWriter(output_file_object)
 
   def PrintStorageInformation(self):
@@ -644,7 +646,7 @@ class PinfoTool(
         self._storage_file_path)
     if not storage_file:
       logging.error(
-          u'Format of storage file: {0:s} not supported'.format(
+          'Format of storage file: {0:s} not supported'.format(
               self._storage_file_path))
       return
 
@@ -652,14 +654,14 @@ class PinfoTool(
       storage_file.Open(path=self._storage_file_path, read_only=True)
     except IOError as exception:
       logging.error(
-          u'Unable to open storage file: {0:s} with error: {1:s}'.format(
+          'Unable to open storage file: {0:s} with error: {1:s}'.format(
               self._storage_file_path, exception))
       return
 
     try:
-      if self._output_format == u'json':
+      if self._output_format == 'json':
         self._PrintStorageInformationAsJSON(storage_file)
-      elif self._output_format == u'text':
+      elif self._output_format == 'text':
         self._PrintStorageInformationAsText(storage_file)
     finally:
       storage_file.Close()

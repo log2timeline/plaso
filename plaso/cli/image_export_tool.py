@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The image export CLI tool."""
 
+from __future__ import unicode_literals
+
 import argparse
 import logging
 import os
@@ -34,29 +36,29 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         identifiers should be shown.
   """
 
-  NAME = u'image_export'
+  NAME = 'image_export'
   DESCRIPTION = (
-      u'This is a simple collector designed to export files inside an '
-      u'image, both within a regular RAW image as well as inside a VSS. '
-      u'The tool uses a collection filter that uses the same syntax as a '
-      u'targeted plaso filter.')
+      'This is a simple collector designed to export files inside an '
+      'image, both within a regular RAW image as well as inside a VSS. '
+      'The tool uses a collection filter that uses the same syntax as a '
+      'targeted plaso filter.')
 
-  EPILOG = u'And that is how you export files, plaso style.'
+  EPILOG = 'And that is how you export files, plaso style.'
 
   _DIRTY_CHARACTERS = frozenset([
-      u'\x00', u'\x01', u'\x02', u'\x03', u'\x04', u'\x05', u'\x06', u'\x07',
-      u'\x08', u'\x09', u'\x0a', u'\x0b', u'\x0c', u'\x0d', u'\x0e', u'\x0f',
-      u'\x10', u'\x11', u'\x12', u'\x13', u'\x14', u'\x15', u'\x16', u'\x17',
-      u'\x18', u'\x19', u'\x1a', u'\x1b', u'\x1c', u'\x1d', u'\x1e', u'\x1f',
-      os.path.sep, u'!', u'$', u'%', u'&', u'*', u'+', u':', u';', u'<', u'>',
-      u'?', u'@', u'|', u'~', u'\x7f'])
+      '\x00', '\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x07',
+      '\x08', '\x09', '\x0a', '\x0b', '\x0c', '\x0d', '\x0e', '\x0f',
+      '\x10', '\x11', '\x12', '\x13', '\x14', '\x15', '\x16', '\x17',
+      '\x18', '\x19', '\x1a', '\x1b', '\x1c', '\x1d', '\x1e', '\x1f',
+      os.path.sep, '!', '$', '%', '&', '*', '+', ':', ';', '<', '>',
+      '?', '@', '|', '~', '\x7f'])
 
   _COPY_BUFFER_SIZE = 32768
 
   _READ_BUFFER_SIZE = 4096
 
   # TODO: remove this redirect.
-  _SOURCE_OPTION = u'image'
+  _SOURCE_OPTION = 'image'
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
@@ -102,7 +104,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     try:
       file_object.seek(0, os.SEEK_SET)
 
-      hasher_object = hashers_manager.HashersManager.GetHasher(u'sha256')
+      hasher_object = hashers_manager.HashersManager.GetHasher('sha256')
 
       data = file_object.read(self._READ_BUFFER_SIZE)
       while data:
@@ -131,13 +133,13 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           filename.
     """
     file_system = source_file_entry.GetFileSystem()
-    path = getattr(source_path_spec, u'location', None)
+    path = getattr(source_path_spec, 'location', None)
     path_segments = file_system.SplitPath(path)
 
     # Sanitize each path segment.
     for index, path_segment in enumerate(path_segments):
-      path_segments[index] = u''.join([
-          character if character not in self._DIRTY_CHARACTERS else u'_'
+      path_segments[index] = ''.join([
+          character if character not in self._DIRTY_CHARACTERS else '_'
           for character in path_segment])
 
     return (
@@ -156,7 +158,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       skip_duplicates (Optional[bool]): True if files with duplicate content
           should be skipped.
     """
-    output_writer.Write(u'Extracting file entries.\n')
+    output_writer.Write('Extracting file entries.\n')
     path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
         source_path_specs, resolver_context=self._resolver_context)
 
@@ -189,21 +191,21 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         digest = self._CalculateDigestHash(file_entry, data_stream_name)
       except (IOError, dfvfs_errors.BackEndError) as exception:
         output_writer.Write((
-            u'[skipping] unable to read content of file entry: {0:s} '
-            u'with error: {1:s}\n').format(display_name, exception))
+            '[skipping] unable to read content of file entry: {0:s} '
+            'with error: {1:s}\n').format(display_name, exception))
         return
 
       if not digest:
         output_writer.Write(
-            u'[skipping] unable to read content of file entry: {0:s}\n'.format(
+            '[skipping] unable to read content of file entry: {0:s}\n'.format(
                 display_name))
         return
 
       duplicate_display_name = self._digests.get(digest, None)
       if duplicate_display_name:
         output_writer.Write((
-            u'[skipping] file entry: {0:s} is a duplicate of: {1:s} with '
-            u'digest: {2:s}\n').format(
+            '[skipping] file entry: {0:s} is a duplicate of: {1:s} with '
+            'digest: {2:s}\n').format(
                 display_name, duplicate_display_name, digest))
         return
 
@@ -212,15 +214,15 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     target_directory, target_filename = self._CreateSanitizedDestination(
         file_entry, file_entry.path_spec, destination_path)
 
-    parent_path_spec = getattr(file_entry.path_spec, u'parent', None)
+    parent_path_spec = getattr(file_entry.path_spec, 'parent', None)
     if parent_path_spec:
-      vss_store_number = getattr(parent_path_spec, u'store_index', None)
+      vss_store_number = getattr(parent_path_spec, 'store_index', None)
       if vss_store_number is not None:
-        target_filename = u'vss{0:d}_{1:s}'.format(
+        target_filename = 'vss{0:d}_{1:s}'.format(
             vss_store_number + 1, target_filename)
 
     if data_stream_name:
-      target_filename = u'{0:s}_{1:s}'.format(target_filename, data_stream_name)
+      target_filename = '{0:s}_{1:s}'.format(target_filename, data_stream_name)
 
     if not target_directory:
       target_directory = destination_path
@@ -232,8 +234,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     if os.path.exists(target_path):
       output_writer.Write((
-          u'[skipping] unable to export contents of file entry: {0:s} '
-          u'because exported file: {1:s} already exists.\n').format(
+          '[skipping] unable to export contents of file entry: {0:s} '
+          'because exported file: {1:s} already exists.\n').format(
               display_name, target_path))
       return
 
@@ -241,8 +243,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       self._WriteFileEntry(file_entry, data_stream_name, target_path)
     except (IOError, dfvfs_errors.BackEndError) as exception:
       output_writer.Write((
-          u'[skipping] unable to export contents of file entry: {0:s} '
-          u'with error: {1:s}\n').format(display_name, exception))
+          '[skipping] unable to export contents of file entry: {0:s} '
+          'with error: {1:s}\n').format(display_name, exception))
 
       try:
         os.remove(target_path)
@@ -277,7 +279,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     if not file_entry_processed:
       self._ExtractDataStream(
-          file_entry, u'', destination_path, output_writer,
+          file_entry, '', destination_path, output_writer,
           skip_duplicates=skip_duplicates)
 
   # TODO: merge with collector and/or engine.
@@ -308,7 +310,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
           source_path_spec)
       output_writer.Write(
-          u'Extracting file entries from: {0:s}\n'.format(display_name))
+          'Extracting file entries from: {0:s}\n'.format(display_name))
 
       environment_variables = self._knowledge_base.GetEnvironmentVariables()
       find_specs = frontend_utils.BuildFindSpecsFromFile(
@@ -343,7 +345,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       RuntimeError: if source path specification is not set.
     """
     if not source_path_spec:
-      raise RuntimeError(u'Missing source.')
+      raise RuntimeError('Missing source.')
 
     file_system = path_spec_resolver.Resolver.OpenFileSystem(
         source_path_spec, resolver_context=resolver_context)
@@ -367,7 +369,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     extensions_string = extensions_string.lower()
     extensions = [
-        extension.strip() for extension in extensions_string.split(u',')]
+        extension.strip() for extension in extensions_string.split(',')]
     file_entry_filter = file_entry_filters.ExtensionsFileEntryFilter(extensions)
     self._filter_collection.AddFilter(file_entry_filter)
 
@@ -381,7 +383,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       return
 
     names_string = names_string.lower()
-    names = [name.strip() for name in names_string.split(u',')]
+    names = [name.strip() for name in names_string.split(',')]
     file_entry_filter = file_entry_filters.NamesFileEntryFilter(names)
     self._filter_collection.AddFilter(file_entry_filter)
 
@@ -394,17 +396,17 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    names = [u'date_filters', u'filter_file']
+    names = ['date_filters', 'filter_file']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=names)
 
-    extensions_string = self.ParseStringOption(options, u'extensions_string')
+    extensions_string = self.ParseStringOption(options, 'extensions_string')
     self._ParseExtensionsString(extensions_string)
 
-    names_string = getattr(options, u'names_string', None)
+    names_string = getattr(options, 'names_string', None)
     self._ParseNamesString(names_string)
 
-    signature_identifiers = getattr(options, u'signature_identifiers', None)
+    signature_identifiers = getattr(options, 'signature_identifiers', None)
     try:
       self._ParseSignatureIdentifiers(
           self._data_location, signature_identifiers)
@@ -433,23 +435,23 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       return
 
     if not data_location:
-      raise ValueError(u'Missing data location.')
+      raise ValueError('Missing data location.')
 
-    path = os.path.join(data_location, u'signatures.conf')
+    path = os.path.join(data_location, 'signatures.conf')
     if not os.path.exists(path):
       raise IOError(
-          u'No such format specification file: {0:s}'.format(path))
+          'No such format specification file: {0:s}'.format(path))
 
     try:
       specification_store = self._ReadSpecificationFile(path)
     except IOError as exception:
       raise IOError((
-          u'Unable to read format specification file: {0:s} with error: '
-          u'{1:s}').format(path, exception))
+          'Unable to read format specification file: {0:s} with error: '
+          '{1:s}').format(path, exception))
 
     signature_identifiers = signature_identifiers.lower()
     signature_identifiers = [
-        identifier.strip() for identifier in signature_identifiers.split(u',')]
+        identifier.strip() for identifier in signature_identifiers.split(',')]
     file_entry_filter = file_entry_filters.SignaturesFileEntryFilter(
         specification_store, signature_identifiers)
     self._filter_collection.AddFilter(file_entry_filter)
@@ -462,7 +464,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       mount_point (dfvfs.PathSpec): mount point path specification that refers
           to the base location of the file system.
     """
-    logging.debug(u'Starting preprocessing.')
+    logging.debug('Starting preprocessing.')
 
     try:
       preprocess_manager.PreprocessPluginsManager.RunPlugins(
@@ -470,9 +472,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           self._knowledge_base)
 
     except IOError as exception:
-      logging.error(u'Unable to preprocess with error: {0:s}'.format(exception))
+      logging.error('Unable to preprocess with error: {0:s}'.format(exception))
 
-    logging.debug(u'Preprocessing done.')
+    logging.debug('Preprocessing done.')
 
   def _ReadSpecificationFile(self, path):
     """Reads the format specification file.
@@ -494,24 +496,24 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         try:
           identifier, offset, pattern = line.split()
         except ValueError:
-          logging.error(u'[skipping] invalid line: {0:s}'.format(
-              line.decode(u'utf-8')))
+          logging.error('[skipping] invalid line: {0:s}'.format(
+              line.decode('utf-8')))
           continue
 
         try:
           offset = int(offset, 10)
         except ValueError:
-          logging.error(u'[skipping] invalid offset in line: {0:s}'.format(
-              line.decode(u'utf-8')))
+          logging.error('[skipping] invalid offset in line: {0:s}'.format(
+              line.decode('utf-8')))
           continue
 
         try:
-          pattern = pattern.decode(u'string_escape')
+          pattern = pattern.decode('string_escape')
         # ValueError is raised e.g. when the patterns contains "\xg1".
         except ValueError:
           logging.error(
-              u'[skipping] invalid pattern in line: {0:s}'.format(
-                  line.decode(u'utf-8')))
+              '[skipping] invalid pattern in line: {0:s}'.format(
+                  line.decode('utf-8')))
           continue
 
         format_specification = specification.FormatSpecification(identifier)
@@ -554,30 +556,30 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     Args:
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
-    names = [u'date_filters', u'filter_file']
+    names = ['date_filters', 'filter_file']
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         argument_group, names=names)
 
     argument_group.add_argument(
-        u'-x', u'--extensions', dest=u'extensions_string', action=u'store',
-        type=str, metavar=u'EXTENSIONS', help=(
-            u'Filter on file name extensions. This option accepts multiple '
-            u'multiple comma separated values e.g. "csv,docx,pst".'))
+        '-x', '--extensions', dest='extensions_string', action='store',
+        type=str, metavar='EXTENSIONS', help=(
+            'Filter on file name extensions. This option accepts multiple '
+            'multiple comma separated values e.g. "csv,docx,pst".'))
 
     argument_group.add_argument(
-        u'--names', dest=u'names_string', action=u'store',
-        type=str, metavar=u'NAMES', help=(
-            u'Filter on file names.  This option accepts a comma separated '
-            u'string denoting all file names, e.g. -x '
-            u'"NTUSER.DAT,UsrClass.dat".'))
+        '--names', dest='names_string', action='store',
+        type=str, metavar='NAMES', help=(
+            'Filter on file names.  This option accepts a comma separated '
+            'string denoting all file names, e.g. -x '
+            '"NTUSER.DAT,UsrClass.dat".'))
 
     argument_group.add_argument(
-        u'--signatures', dest=u'signature_identifiers', action=u'store',
-        type=str, metavar=u'IDENTIFIERS', help=(
-            u'Filter on file format signature identifiers. This option '
-            u'accepts multiple comma separated values e.g. "esedb,lnk". '
-            u'Use "list" to show an overview of the supported file format '
-            u'signatures.'))
+        '--signatures', dest='signature_identifiers', action='store',
+        type=str, metavar='IDENTIFIERS', help=(
+            'Filter on file format signature identifiers. This option '
+            'accepts multiple comma separated values e.g. "esedb,lnk". '
+            'Use "list" to show an overview of the supported file format '
+            'signatures.'))
 
   def ListSignatureIdentifiers(self):
     """Lists the signature identifier.
@@ -586,28 +588,28 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       BadConfigOption: if the data location is invalid.
     """
     if not self._data_location:
-      raise errors.BadConfigOption(u'Missing data location.')
+      raise errors.BadConfigOption('Missing data location.')
 
-    path = os.path.join(self._data_location, u'signatures.conf')
+    path = os.path.join(self._data_location, 'signatures.conf')
     if not os.path.exists(path):
       raise errors.BadConfigOption(
-          u'No such format specification file: {0:s}'.format(path))
+          'No such format specification file: {0:s}'.format(path))
 
     try:
       specification_store = self._ReadSpecificationFile(path)
     except IOError as exception:
       raise errors.BadConfigOption((
-          u'Unable to read format specification file: {0:s} with error: '
-          u'{1:s}').format(path, exception))
+          'Unable to read format specification file: {0:s} with error: '
+          '{1:s}').format(path, exception))
 
     identifiers = []
     for format_specification in specification_store.specifications:
       identifiers.append(format_specification.identifier)
 
-    self._output_writer.Write(u'Available signature identifiers:\n')
+    self._output_writer.Write('Available signature identifiers:\n')
     self._output_writer.Write(
-        u'\n'.join(textwrap.wrap(u', '.join(sorted(identifiers)), 79)))
-    self._output_writer.Write(u'\n\n')
+        '\n'.join(textwrap.wrap(', '.join(sorted(identifiers)), 79)))
+    self._output_writer.Write('\n\n')
 
   def ParseArguments(self):
     """Parses the command line arguments.
@@ -624,7 +626,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self.AddBasicOptions(argument_parser)
     self.AddInformationalOptions(argument_parser)
 
-    names = [u'artifact_definitions', u'data_location']
+    names = ['artifact_definitions', 'data_location']
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         argument_parser, names=names)
 
@@ -636,39 +638,39 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self.AddFilterOptions(argument_parser)
 
     argument_parser.add_argument(
-        u'-w', u'--write', action=u'store', dest=u'path', type=str,
-        metavar=u'PATH', default=u'export', help=(
-            u'The directory in which extracted files should be stored.'))
+        '-w', '--write', action='store', dest='path', type=str,
+        metavar='PATH', default='export', help=(
+            'The directory in which extracted files should be stored.'))
 
     argument_parser.add_argument(
-        u'--include_duplicates', dest=u'include_duplicates',
-        action=u'store_true', default=False, help=(
-            u'If extraction from VSS is enabled, by default a digest hash '
-            u'is calculated for each file. These hashes are compared to the '
-            u'previously exported files and duplicates are skipped. Use '
-            u'this option to include duplicate files in the export.'))
+        '--include_duplicates', dest='include_duplicates',
+        action='store_true', default=False, help=(
+            'If extraction from VSS is enabled, by default a digest hash '
+            'is calculated for each file. These hashes are compared to the '
+            'previously exported files and duplicates are skipped. Use '
+            'this option to include duplicate files in the export.'))
 
     argument_parser.add_argument(
-        self._SOURCE_OPTION, nargs='?', action=u'store', metavar=u'IMAGE',
+        self._SOURCE_OPTION, nargs='?', action='store', metavar='IMAGE',
         default=None, type=str, help=(
-            u'The full path to the image file that we are about to extract '
-            u'files from, it should be a raw image or another image that '
-            u'plaso supports.'))
+            'The full path to the image file that we are about to extract '
+            'files from, it should be a raw image or another image that '
+            'plaso supports.'))
 
     try:
       options = argument_parser.parse_args()
     except UnicodeEncodeError:
       # If we get here we are attempting to print help in a non-Unicode
       # terminal.
-      self._output_writer.Write(u'')
+      self._output_writer.Write('')
       self._output_writer.Write(argument_parser.format_help())
       return False
 
     try:
       self.ParseOptions(options)
     except errors.BadConfigOption as exception:
-      self._output_writer.Write(u'ERROR: {0!s}\n'.format(exception))
-      self._output_writer.Write(u'')
+      self._output_writer.Write('ERROR: {0!s}\n'.format(exception))
+      self._output_writer.Write('')
       self._output_writer.Write(argument_parser.format_usage())
       return False
 
@@ -685,12 +687,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """
     # The data location is required to list signatures.
     helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=[u'data_location'])
+        options, self, names=['data_location'])
 
     # Check the list options first otherwise required options will raise.
     signature_identifiers = self.ParseStringOption(
-        options, u'signature_identifiers')
-    if signature_identifiers == u'list':
+        options, 'signature_identifiers')
+    if signature_identifiers == 'list':
       self.list_signature_identifiers = True
 
     if self.list_signature_identifiers:
@@ -702,8 +704,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._ParseStorageMediaOptions(options)
 
     format_string = (
-        u'%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
-        u'<%(module)s> %(message)s')
+        '%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
+        '<%(module)s> %(message)s')
 
     if self._debug_mode:
       logging_level = logging.DEBUG
@@ -717,18 +719,18 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         log_level=logging_level)
 
     self._destination_path = self.ParseStringOption(
-        options, u'path', default_value=u'export')
+        options, 'path', default_value='export')
 
     if not self._data_location:
-      logging.warning(u'Unable to automatically determine data location.')
+      logging.warning('Unable to automatically determine data location.')
 
     helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=[u'artifact_definitions'])
+        options, self, names=['artifact_definitions'])
 
     self._ParseFilterOptions(options)
 
-    if (getattr(options, u'no_vss', False) or
-        getattr(options, u'include_duplicates', False)):
+    if (getattr(options, 'no_vss', False) or
+        getattr(options, 'include_duplicates', False)):
       self._skip_duplicates = False
 
   def PrintFilterCollection(self):
@@ -745,7 +747,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """
     self.ScanSource()
 
-    self._output_writer.Write(u'Export started.\n')
+    self._output_writer.Write('Export started.\n')
 
     if not os.path.isdir(self._destination_path):
       os.makedirs(self._destination_path)
@@ -759,5 +761,5 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           self._source_path_specs, self._destination_path, self._output_writer,
           skip_duplicates=self._skip_duplicates)
 
-    self._output_writer.Write(u'Export completed.\n')
-    self._output_writer.Write(u'\n')
+    self._output_writer.Write('Export completed.\n')
+    self._output_writer.Write('\n')

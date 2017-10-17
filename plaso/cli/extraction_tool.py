@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The extraction CLI tool."""
 
+from __future__ import unicode_literals
+
 # The following import makes sure the analyzers are registered.
 from plaso import analyzers  # pylint: disable=unused-import
 
@@ -50,22 +52,22 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    self._buffer_size = getattr(options, u'buffer_size', 0)
+    self._buffer_size = getattr(options, 'buffer_size', 0)
     if self._buffer_size:
       # TODO: turn this into a generic function that supports more size
       # suffixes both MB and MiB and also that does not allow m as a valid
       # indicator for MiB since m represents milli not Mega.
       try:
-        if self._buffer_size[-1].lower() == u'm':
+        if self._buffer_size[-1].lower() == 'm':
           self._buffer_size = int(self._buffer_size[:-1], 10)
           self._buffer_size *= self._BYTES_IN_A_MIB
         else:
           self._buffer_size = int(self._buffer_size, 10)
       except ValueError:
         raise errors.BadConfigOption(
-            u'Invalid buffer size: {0:s}.'.format(self._buffer_size))
+            'Invalid buffer size: {0:s}.'.format(self._buffer_size))
 
-    self._queue_size = self.ParseNumericOption(options, u'queue_size')
+    self._queue_size = self.ParseNumericOption(options, 'queue_size')
 
   def AddPerformanceOptions(self, argument_group):
     """Adds the performance options to the argument group.
@@ -74,12 +76,12 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
-        u'--buffer_size', u'--buffer-size', u'--bs', dest=u'buffer_size',
-        action=u'store', default=0, help=(
-            u'The buffer size for the output (defaults to 196MiB).'))
+        '--buffer_size', '--buffer-size', '--bs', dest='buffer_size',
+        action='store', default=0, help=(
+            'The buffer size for the output (defaults to 196MiB).'))
 
     argument_group.add_argument(
-        u'--queue_size', u'--queue-size', dest=u'queue_size', action=u'store',
+        '--queue_size', '--queue-size', dest='queue_size', action='store',
         default=0, help=(
-            u'The maximum number of queued items per worker '
-            u'(defaults to {0:d})').format(self._DEFAULT_QUEUE_SIZE))
+            'The maximum number of queued items per worker '
+            '(defaults to {0:d})').format(self._DEFAULT_QUEUE_SIZE))

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The 4n6time SQLite database output module CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 from plaso.lib import errors
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import shared_4n6time_output
@@ -11,9 +13,9 @@ from plaso.output import sqlite_4n6time
 class SQLite4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
   """4n6time SQLite database output module CLI arguments helper."""
 
-  NAME = u'4n6time_sqlite'
-  CATEGORY = u'output'
-  DESCRIPTION = u'Argument helper for the 4n6Time SQLite output module.'
+  NAME = '4n6time_sqlite'
+  CATEGORY = 'output'
+  DESCRIPTION = 'Argument helper for the 4n6Time SQLite output module.'
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -29,6 +31,7 @@ class SQLite4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
     shared_4n6time_output.Shared4n6TimeOutputArgumentsHelper.AddArguments(
         argument_group)
 
+  # pylint: disable=arguments-differ
   @classmethod
   def ParseOptions(cls, options, output_module):
     """Parses and validates options.
@@ -43,15 +46,15 @@ class SQLite4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
     """
     if not isinstance(output_module, sqlite_4n6time.SQLite4n6TimeOutputModule):
       raise errors.BadConfigObject(
-          u'Output module is not an instance of SQLite4n6TimeOutputModule')
+          'Output module is not an instance of SQLite4n6TimeOutputModule')
 
     shared_4n6time_output.Shared4n6TimeOutputArgumentsHelper.ParseOptions(
         options, output_module)
 
-    filename = getattr(options, u'write', None)
+    filename = getattr(options, 'write', None)
     if not filename:
       raise errors.BadConfigOption(
-          u'Output filename was not provided use "-w filename" to specify.')
+          'Output filename was not provided use "-w filename" to specify.')
 
     output_module.SetFilename(filename)
 
