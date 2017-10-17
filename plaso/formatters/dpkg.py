@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The dpkg.log event formatter."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 
@@ -8,15 +10,15 @@ from plaso.formatters import manager
 class DpkgFormatter(interface.ConditionalEventFormatter):
   """Formatter for a dpkg log file event."""
 
-  DATA_TYPE = u'dpkg:line'
+  DATA_TYPE = 'dpkg:line'
 
-  FORMAT_STRING_SEPARATOR = u''
+  FORMAT_STRING_SEPARATOR = ''
 
   FORMAT_STRING_PIECES = [
-      u'{body}']
+      '{body}']
 
-  SOURCE_LONG = u'dpkg log File'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'dpkg log File'
+  SOURCE_SHORT = 'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(DpkgFormatter)

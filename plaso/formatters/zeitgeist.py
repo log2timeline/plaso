@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The Zeitgeist event formatter."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 
@@ -8,12 +10,12 @@ from plaso.formatters import manager
 class ZeitgeistFormatter(interface.EventFormatter):
   """Formatter for a Zeitgeist activity database event."""
 
-  DATA_TYPE = u'zeitgeist:activity'
+  DATA_TYPE = 'zeitgeist:activity'
 
-  FORMAT_STRING = u'{subject_uri}'
+  FORMAT_STRING = '{subject_uri}'
 
-  SOURCE_LONG = u'Zeitgeist activity log'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'Zeitgeist activity log'
+  SOURCE_SHORT = 'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(ZeitgeistFormatter)

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The formatter mediator object."""
 
+from __future__ import unicode_literals
+
 import os
 
 from plaso.formatters import winevt_rc
@@ -11,13 +13,13 @@ from plaso.winnt import language_ids
 class FormatterMediator(object):
   """Class that implements the formatter mediator."""
 
-  DEFAULT_LANGUAGE_IDENTIFIER = u'en-US'
+  DEFAULT_LANGUAGE_IDENTIFIER = 'en-US'
   # TODO: add smarter language ID to LCID resolving e.g.
   # 'en-US' falls back to 'en'.
   # LCID 0x0409 is en-US.
   DEFAULT_LCID = 0x0409
 
-  _WINEVT_RC_DATABASE = u'winevt-rc.db'
+  _WINEVT_RC_DATABASE = 'winevt-rc.db'
 
   def __init__(self, data_location=None):
     """Initializes a formatter mediator object.
@@ -91,12 +93,12 @@ class FormatterMediator(object):
       TypeError: if the language identifier is not a string type.
     """
     if not isinstance(language_identifier, py2to3.STRING_TYPES):
-      raise ValueError(u'Language identifier is not a string.')
+      raise ValueError('Language identifier is not a string.')
 
     values = language_ids.LANGUAGE_IDENTIFIERS.get(
         language_identifier.lower(), None)
     if not values:
-      raise KeyError(u'Language identifier: {0:s} is not defined.'.format(
+      raise KeyError('Language identifier: {0:s} is not defined.'.format(
           language_identifier))
     self._language_identifier = language_identifier
     self._lcid = values[0]

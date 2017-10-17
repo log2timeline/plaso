@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The UTMP binary file event formatter."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 
@@ -8,22 +10,22 @@ from plaso.formatters import manager
 class UtmpSessionFormatter(interface.ConditionalEventFormatter):
   """Formatter for an UTMP session event."""
 
-  DATA_TYPE = u'linux:utmp:event'
+  DATA_TYPE = 'linux:utmp:event'
 
   FORMAT_STRING_PIECES = [
-      u'User: {user}',
-      u'Computer Name: {computer_name}',
-      u'Terminal: {terminal}',
-      u'PID: {pid}',
-      u'Terminal_ID: {terminal_id}',
-      u'Status: {status}',
-      u'IP Address: {ip_address}',
-      u'Exit: {exit}']
+      'User: {user}',
+      'Computer Name: {computer_name}',
+      'Terminal: {terminal}',
+      'PID: {pid}',
+      'Terminal_ID: {terminal_id}',
+      'Status: {status}',
+      'IP Address: {ip_address}',
+      'Exit: {exit}']
 
-  FORMAT_STRING_SHORT_PIECES = [u'User: {user}']
+  FORMAT_STRING_SHORT_PIECES = ['User: {user}']
 
-  SOURCE_LONG = u'UTMP session'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'UTMP session'
+  SOURCE_SHORT = 'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(UtmpSessionFormatter)

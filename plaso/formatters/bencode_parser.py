@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The bencode parser event formatters."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 
@@ -8,32 +10,32 @@ from plaso.formatters import manager
 class TransmissionEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Transmission active torrents event."""
 
-  DATA_TYPE = u'p2p:bittorrent:transmission'
+  DATA_TYPE = 'p2p:bittorrent:transmission'
 
-  SOURCE_LONG = u'Transmission Active Torrents'
-  SOURCE_SHORT = u'TORRENT'
+  SOURCE_LONG = 'Transmission Active Torrents'
+  SOURCE_SHORT = 'TORRENT'
 
-  FORMAT_STRING_SEPARATOR = u'; '
+  FORMAT_STRING_SEPARATOR = '; '
 
   FORMAT_STRING_PIECES = [
-      u'Saved to {destination}',
-      u'Minutes seeded: {seedtime}']
+      'Saved to {destination}',
+      'Minutes seeded: {seedtime}']
 
 
 class UTorrentEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a BitTorrent uTorrent active torrents event."""
 
-  DATA_TYPE = u'p2p:bittorrent:utorrent'
+  DATA_TYPE = 'p2p:bittorrent:utorrent'
 
-  SOURCE_LONG = u'uTorrent Active Torrents'
-  SOURCE_SHORT = u'TORRENT'
+  SOURCE_LONG = 'uTorrent Active Torrents'
+  SOURCE_SHORT = 'TORRENT'
 
-  FORMAT_STRING_SEPARATOR = u'; '
+  FORMAT_STRING_SEPARATOR = '; '
 
   FORMAT_STRING_PIECES = [
-      u'Torrent {caption}',
-      u'Saved to {path}',
-      u'Minutes seeded: {seedtime}']
+      'Torrent {caption}',
+      'Saved to {path}',
+      'Minutes seeded: {seedtime}']
 
 
 manager.FormattersManager.RegisterFormatters([

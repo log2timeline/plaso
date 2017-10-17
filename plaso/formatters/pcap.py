@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The PCAP event formatter."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 
@@ -11,28 +13,28 @@ __author__ = 'Dominique Kilman (lexistar97@gmail.com)'
 class PCAPFormatter(interface.ConditionalEventFormatter):
   """Formatter for a PCAP event."""
 
-  DATA_TYPE = u'metadata:pcap'
+  DATA_TYPE = 'metadata:pcap'
 
   FORMAT_STRING_PIECES = [
-      u'Source IP: {source_ip}',
-      u'Destination IP: {dest_ip}',
-      u'Source Port: {source_port}',
-      u'Destination Port: {dest_port}',
-      u'Protocol: {protocol}',
-      u'Type: {stream_type}',
-      u'Size: {size}',
-      u'Protocol Data: {protocol_data}',
-      u'Stream Data: {stream_data}',
-      u'First Packet ID: {first_packet_id}',
-      u'Last Packet ID: {last_packet_id}',
-      u'Packet Count: {packet_count}']
+      'Source IP: {source_ip}',
+      'Destination IP: {dest_ip}',
+      'Source Port: {source_port}',
+      'Destination Port: {dest_port}',
+      'Protocol: {protocol}',
+      'Type: {stream_type}',
+      'Size: {size}',
+      'Protocol Data: {protocol_data}',
+      'Stream Data: {stream_data}',
+      'First Packet ID: {first_packet_id}',
+      'Last Packet ID: {last_packet_id}',
+      'Packet Count: {packet_count}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'Type: {stream_type}',
-      u'First Packet ID: {first_packet_id}']
+      'Type: {stream_type}',
+      'First Packet ID: {first_packet_id}']
 
-  SOURCE_LONG = u'Packet Capture File (pcap)'
-  SOURCE_SHORT = u'PCAP'
+  SOURCE_LONG = 'Packet Capture File (pcap)'
+  SOURCE_SHORT = 'PCAP'
 
 
 manager.FormattersManager.RegisterFormatter(PCAPFormatter)

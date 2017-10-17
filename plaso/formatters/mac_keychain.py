@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The Mac OS X keychain password database file event formatter."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 
@@ -8,34 +10,34 @@ from plaso.formatters import manager
 class KeychainApplicationRecordFormatter(interface.ConditionalEventFormatter):
   """Formatter for a keychain application record event."""
 
-  DATA_TYPE = u'mac:keychain:application'
+  DATA_TYPE = 'mac:keychain:application'
 
   FORMAT_STRING_PIECES = [
-      u'Name: {entry_name}',
-      u'Account: {account_name}']
+      'Name: {entry_name}',
+      'Account: {account_name}']
 
-  FORMAT_STRING_SHORT_PIECES = [u'{entry_name}']
+  FORMAT_STRING_SHORT_PIECES = ['{entry_name}']
 
-  SOURCE_LONG = u'Keychain Application password'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'Keychain Application password'
+  SOURCE_SHORT = 'LOG'
 
 
 class KeychainInternetRecordFormatter(interface.ConditionalEventFormatter):
   """Formatter for a keychain Internet record event."""
 
-  DATA_TYPE = u'mac:keychain:internet'
+  DATA_TYPE = 'mac:keychain:internet'
 
   FORMAT_STRING_PIECES = [
-      u'Name: {entry_name}',
-      u'Account: {account_name}',
-      u'Where: {where}',
-      u'Protocol: {protocol}',
-      u'({type_protocol})']
+      'Name: {entry_name}',
+      'Account: {account_name}',
+      'Where: {where}',
+      'Protocol: {protocol}',
+      '({type_protocol})']
 
-  FORMAT_STRING_SHORT_PIECES = [u'{entry_name}']
+  FORMAT_STRING_SHORT_PIECES = ['{entry_name}']
 
-  SOURCE_LONG = u'Keychain Internet password'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'Keychain Internet password'
+  SOURCE_SHORT = 'LOG'
 
 
 manager.FormattersManager.RegisterFormatters([
