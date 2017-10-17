@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Shortcut (LNK) files."""
 
+from __future__ import unicode_literals
+
 import uuid
 
 import pylnk
@@ -48,7 +50,7 @@ class WinLnkLinkEvent(time_events.DateTimeValuesEvent):
     working_directory (str): working directory.
   """
 
-  DATA_TYPE = u'windows:lnk:link'
+  DATA_TYPE = 'windows:lnk:link'
 
   def __init__(
       self, date_time, date_time_description, lnk_file, link_target, offset=0):
@@ -89,8 +91,8 @@ class WinLnkParser(interface.FileObjectParser):
 
   _INITIAL_FILE_OFFSET = None
 
-  NAME = u'lnk'
-  DESCRIPTION = u'Parser for Windows Shortcut (LNK) files.'
+  NAME = 'lnk'
+  DESCRIPTION = 'Parser for Windows Shortcut (LNK) files.'
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -125,6 +127,7 @@ class WinLnkParser(interface.FileObjectParser):
           date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
+  # pylint: disable=arguments-differ
   def ParseFileObject(
       self, parser_mediator, file_object, display_name=None, **kwargs):
     """Parses a Windows Shortcut (LNK) file-like object.
@@ -145,7 +148,7 @@ class WinLnkParser(interface.FileObjectParser):
       lnk_file.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to open file with error: {0:s}'.format(exception))
+          'unable to open file with error: {0:s}'.format(exception))
       return
 
     link_target = None
@@ -185,7 +188,7 @@ class WinLnkParser(interface.FileObjectParser):
       parser_mediator.ProduceEvent(event)
 
     if access_time == 0 and creation_time == 0 and modification_time == 0:
-      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
       event = WinLnkLinkEvent(
           date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME, lnk_file,
           link_target)
@@ -197,7 +200,7 @@ class WinLnkParser(interface.FileObjectParser):
             parser_mediator, lnk_file.droid_file_identifier, display_name)
       except (TypeError, ValueError) as exception:
         parser_mediator.ProduceExtractionError(
-            u'unable to read droid file identifier with error: {0:s}.'.format(
+            'unable to read droid file identifier with error: {0:s}.'.format(
                 exception))
 
     if lnk_file.birth_droid_file_identifier:
@@ -206,8 +209,8 @@ class WinLnkParser(interface.FileObjectParser):
             parser_mediator, lnk_file.birth_droid_file_identifier, display_name)
       except (TypeError, ValueError) as exception:
         parser_mediator.ProduceExtractionError((
-            u'unable to read birth droid file identifier with error: '
-            u'{0:s}.').format(exception))
+            'unable to read birth droid file identifier with error: '
+            '{0:s}.').format(exception))
 
     lnk_file.close()
 

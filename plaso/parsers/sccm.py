@@ -1,5 +1,8 @@
 # -*_ coding: utf-8 -*-
 """Parser for SCCM Logs."""
+
+from __future__ import unicode_literals
+
 import re
 
 import pyparsing
@@ -21,7 +24,7 @@ class SCCMLogEventData(events.EventData):
     text (str): text.
   """
 
-  DATA_TYPE = u'software_management:sccm:log'
+  DATA_TYPE = 'software_management:sccm:log'
 
   def __init__(self):
     """Initializes event data."""
@@ -33,10 +36,10 @@ class SCCMLogEventData(events.EventData):
 class SCCMParser(text_parser.PyparsingMultiLineTextParser):
   """Parser for Windows System Center Configuration Manager (SCCM) logs."""
 
-  NAME = u'sccm'
-  DESCRIPTION = u'Parser for SCCM logs files.'
+  NAME = 'sccm'
+  DESCRIPTION = 'Parser for SCCM logs files.'
 
-  _ENCODING = u'utf-8-sig'
+  _ENCODING = 'utf-8-sig'
 
   # Increasing the buffer size as SCCM messages are commonly well larger
   # than the default value.
@@ -51,74 +54,73 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
 
   # PyParsing Components used to construct grammars for parsing lines.
   _PARSING_COMPONENTS = {
-      u'msg_left_delimiter': pyparsing.Literal(u'<![LOG['),
-      u'msg_right_delimiter': pyparsing.Literal(u']LOG]!><time="'),
-      u'year': _FOUR_DIGITS.setResultsName(u'year'),
-      u'month': _ONE_OR_TWO_DIGITS.setResultsName(u'month'),
-      u'day': _ONE_OR_TWO_DIGITS.setResultsName(u'day'),
-      u'microsecond': pyparsing.Regex(r'\d{3,7}').
-                      setResultsName(u'microsecond'),
-      u'utc_offset_minutes': pyparsing.Regex(r'[-+]\d{3}').
-                             setResultsName(u'utc_offset_minutes'),
-      u'date_prefix': pyparsing.Literal(u'" date="').
-                      setResultsName(u'date_prefix'),
-      u'component_prefix': pyparsing.Literal(u'" component="').
-                           setResultsName(u'component_prefix'),
-      u'component': pyparsing.Word(pyparsing.alphanums).
-                    setResultsName(u'component'),
-      u'text': pyparsing.Regex(r'.*?(?=(]LOG]!><time="))', re.DOTALL).
-               setResultsName(u'text'),
-      u'line_remainder': pyparsing.Regex(r'.*?(?=(\<!\[LOG\[))', re.DOTALL).
-                         setResultsName(u'line_remainder'),
-      u'lastline_remainder': pyparsing.restOfLine.
-                             setResultsName(u'lastline_remainder'),
-      u'hour': _ONE_OR_TWO_DIGITS.setResultsName(u'hour'),
-      u'minute': text_parser.PyparsingConstants.TWO_DIGITS.
-                 setResultsName(u'minute'),
-      u'second': text_parser.PyparsingConstants.TWO_DIGITS.
-                 setResultsName(u'second')}
+      'msg_left_delimiter': pyparsing.Literal('<![LOG['),
+      'msg_right_delimiter': pyparsing.Literal(']LOG]!><time="'),
+      'year': _FOUR_DIGITS.setResultsName('year'),
+      'month': _ONE_OR_TWO_DIGITS.setResultsName('month'),
+      'day': _ONE_OR_TWO_DIGITS.setResultsName('day'),
+      'microsecond': pyparsing.Regex(r'\d{3,7}'). setResultsName('microsecond'),
+      'utc_offset_minutes': pyparsing.Regex(r'[-+]\d{3}').setResultsName(
+          'utc_offset_minutes'),
+      'date_prefix': pyparsing.Literal('" date="'). setResultsName(
+          'date_prefix'),
+      'component_prefix': pyparsing.Literal('" component="').setResultsName(
+          'component_prefix'),
+      'component': pyparsing.Word(pyparsing.alphanums).setResultsName(
+          'component'),
+      'text': pyparsing.Regex(
+          r'.*?(?=(]LOG]!><time="))', re.DOTALL).setResultsName('text'),
+      'line_remainder': pyparsing.Regex(
+          r'.*?(?=(\<!\[LOG\[))', re.DOTALL).setResultsName('line_remainder'),
+      'lastline_remainder': pyparsing.restOfLine.setResultsName(
+          'lastline_remainder'),
+      'hour': _ONE_OR_TWO_DIGITS.setResultsName('hour'),
+      'minute': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          'minute'),
+      'second': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          'second')}
 
   # Base grammar for individual log event lines.
   LINE_GRAMMAR_BASE = (
-      _PARSING_COMPONENTS[u'msg_left_delimiter'] +
-      _PARSING_COMPONENTS[u'text'] +
-      _PARSING_COMPONENTS[u'msg_right_delimiter'] +
-      _PARSING_COMPONENTS[u'hour'] +
-      pyparsing.Suppress(u':') + _PARSING_COMPONENTS[u'minute'] +
-      pyparsing.Suppress(u':') + _PARSING_COMPONENTS[u'second'] +
-      pyparsing.Suppress(u'.') + _PARSING_COMPONENTS[u'microsecond'] +
-      _PARSING_COMPONENTS[u'date_prefix'] + _PARSING_COMPONENTS[u'month'] +
-      pyparsing.Suppress(u'-') + _PARSING_COMPONENTS[u'day'] +
-      pyparsing.Suppress(u'-') + _PARSING_COMPONENTS[u'year'] +
-      _PARSING_COMPONENTS[u'component_prefix'] +
-      _PARSING_COMPONENTS[u'component'])
+      _PARSING_COMPONENTS['msg_left_delimiter'] +
+      _PARSING_COMPONENTS['text'] +
+      _PARSING_COMPONENTS['msg_right_delimiter'] +
+      _PARSING_COMPONENTS['hour'] +
+      pyparsing.Suppress(':') + _PARSING_COMPONENTS['minute'] +
+      pyparsing.Suppress(':') + _PARSING_COMPONENTS['second'] +
+      pyparsing.Suppress('.') + _PARSING_COMPONENTS['microsecond'] +
+      _PARSING_COMPONENTS['date_prefix'] + _PARSING_COMPONENTS['month'] +
+      pyparsing.Suppress('-') + _PARSING_COMPONENTS['day'] +
+      pyparsing.Suppress('-') + _PARSING_COMPONENTS['year'] +
+      _PARSING_COMPONENTS['component_prefix'] +
+      _PARSING_COMPONENTS['component'])
 
   # Grammar for individual log event lines with a minutes offset from UTC.
   LINE_GRAMMAR_OFFSET = (
-      _PARSING_COMPONENTS[u'msg_left_delimiter'] +
-      _PARSING_COMPONENTS[u'text'] +
-      _PARSING_COMPONENTS[u'msg_right_delimiter'] +
-      _PARSING_COMPONENTS[u'hour'] +
-      pyparsing.Suppress(u':') + _PARSING_COMPONENTS[u'minute'] +
-      pyparsing.Suppress(u':') + _PARSING_COMPONENTS[u'second'] +
-      pyparsing.Suppress(u'.') + _PARSING_COMPONENTS[u'microsecond'] +
-      _PARSING_COMPONENTS[u'utc_offset_minutes'] +
-      _PARSING_COMPONENTS[u'date_prefix'] + _PARSING_COMPONENTS[u'month'] +
-      pyparsing.Suppress(u'-') + _PARSING_COMPONENTS[u'day'] +
-      pyparsing.Suppress(u'-') + _PARSING_COMPONENTS[u'year'] +
-      _PARSING_COMPONENTS[u'component_prefix'] +
-      _PARSING_COMPONENTS[u'component'])
+      _PARSING_COMPONENTS['msg_left_delimiter'] +
+      _PARSING_COMPONENTS['text'] +
+      _PARSING_COMPONENTS['msg_right_delimiter'] +
+      _PARSING_COMPONENTS['hour'] +
+      pyparsing.Suppress(':') + _PARSING_COMPONENTS['minute'] +
+      pyparsing.Suppress(':') + _PARSING_COMPONENTS['second'] +
+      pyparsing.Suppress('.') + _PARSING_COMPONENTS['microsecond'] +
+      _PARSING_COMPONENTS['utc_offset_minutes'] +
+      _PARSING_COMPONENTS['date_prefix'] + _PARSING_COMPONENTS['month'] +
+      pyparsing.Suppress('-') + _PARSING_COMPONENTS['day'] +
+      pyparsing.Suppress('-') + _PARSING_COMPONENTS['year'] +
+      _PARSING_COMPONENTS['component_prefix'] +
+      _PARSING_COMPONENTS['component'])
 
   LINE_STRUCTURES = [
-      (u'log_entry',
-       LINE_GRAMMAR_BASE + _PARSING_COMPONENTS[u'line_remainder']),
-      (u'log_entry_at_end',
-       LINE_GRAMMAR_BASE +_PARSING_COMPONENTS[u'lastline_remainder'] +
+      ('log_entry',
+       LINE_GRAMMAR_BASE + _PARSING_COMPONENTS['line_remainder']),
+      ('log_entry_at_end',
+       LINE_GRAMMAR_BASE +_PARSING_COMPONENTS['lastline_remainder'] +
        pyparsing.lineEnd),
-      (u'log_entry_offset',
-       LINE_GRAMMAR_OFFSET + _PARSING_COMPONENTS[u'line_remainder']),
-      (u'log_entry_offset_at_end',
-       LINE_GRAMMAR_OFFSET + _PARSING_COMPONENTS[u'lastline_remainder'] +
+      ('log_entry_offset',
+       LINE_GRAMMAR_OFFSET + _PARSING_COMPONENTS['line_remainder']),
+      ('log_entry_offset_at_end',
+       LINE_GRAMMAR_OFFSET + _PARSING_COMPONENTS['lastline_remainder'] +
        pyparsing.lineEnd)]
 
   def ParseRecord(self, parser_mediator, key, structure):
@@ -136,10 +138,10 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
       TimestampError: when a non-int value for microseconds is encountered.
     """
     if key not in (
-        u'log_entry', u'log_entry_at_end', u'log_entry_offset',
-        u'log_entry_offset_at_end'):
+        'log_entry', 'log_entry_at_end', 'log_entry_offset',
+        'log_entry_offset_at_end'):
       raise errors.ParseError(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     # Sometimes, SCCM logs will exhibit a seven-digit sub-second precision
     # (100 nanosecond intervals). Using six-digit precision because
@@ -151,7 +153,7 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
       microseconds = int(structure.microsecond, 10)
     except ValueError as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to determine microseconds with error: {0:s}'.format(
+          'unable to determine microseconds with error: {0:s}'.format(
               exception))
       return
 
@@ -167,20 +169,20 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     except errors.TimestampError as exception:
       timestamp = timelib.Timestamp.NONE_TIMESTAMP
       parser_mediator.ProduceExtractionError(
-          u'unable to determine timestamp with error: {0:s}'.format(
+          'unable to determine timestamp with error: {0:s}'.format(
               exception))
 
     # If an offset is given for the event, apply the offset to convert to UTC.
-    if timestamp and u'offset' in key:
+    if timestamp and 'offset' in key:
       try:
         delta_microseconds = int(structure.utc_offset_minutes[1:], 10)
       except (IndexError, ValueError) as exception:
         raise errors.TimestampError(
-            u'Unable to parse minute offset from UTC with error: {0:s}.'.format(
+            'Unable to parse minute offset from UTC with error: {0:s}.'.format(
                 exception))
 
       delta_microseconds *= self._MICRO_SECONDS_PER_MINUTE
-      if structure.utc_offset_minutes[0] == u'-':
+      if structure.utc_offset_minutes[0] == '-':
         delta_microseconds = -delta_microseconds
       timestamp += delta_microseconds
 
@@ -198,15 +200,15 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     """Verifies whether content corresponds to an SCCM log file.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      lines: A buffer containing lines from a log file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      lines (str): one or more lines from the text file.
 
     Returns:
-      Returns a boolean that indicates the log lines appear to contain
-      content from an SCCM log file.
+      bool: True if this is the correct parser, False otherwise.
     """
     # Identify the token to which we attempt a match.
-    match = self._PARSING_COMPONENTS[u'msg_left_delimiter'].match
+    match = self._PARSING_COMPONENTS['msg_left_delimiter'].match
 
     # Because logs files can lead with a partial event,
     # we can't assume that the first character (post-BOM)

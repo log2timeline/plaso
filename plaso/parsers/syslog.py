@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for syslog formatted log files"""
+
+from __future__ import unicode_literals
+
 import re
 
 import pyparsing
@@ -24,7 +27,7 @@ class SyslogLineEventData(events.EventData):
     severity (str): severity.
   """
 
-  DATA_TYPE = u'syslog:line'
+  DATA_TYPE = 'syslog:line'
 
   def __init__(self, data_type=DATA_TYPE):
     """Initializes an event data attribute container.
@@ -47,7 +50,7 @@ class SyslogCommentEventData(events.EventData):
     body (str): message body.
   """
 
-  DATA_TYPE = u'syslog:comment'
+  DATA_TYPE = 'syslog:comment'
 
   def __init__(self):
     """Initializes event data."""
@@ -57,11 +60,11 @@ class SyslogCommentEventData(events.EventData):
 
 class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   """Parses syslog formatted log files"""
-  NAME = u'syslog'
+  NAME = 'syslog'
 
-  DESCRIPTION = u'Syslog Parser'
+  DESCRIPTION = 'Syslog Parser'
 
-  _ENCODING = u'utf-8'
+  _ENCODING = 'utf-8'
 
   _plugin_classes = {}
 
@@ -69,24 +72,24 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   # to allow for processing of syslog formats that delimit the reporter and
   # facility with printable characters, we remove certain common delimiters
   # from the set of printable characters.
-  _REPORTER_CHARACTERS = u''.join(
-      [c for c in pyparsing.printables if c not in [u':', u'[', u'<']])
-  _FACILITY_CHARACTERS = u''.join(
-      [c for c in pyparsing.printables if c not in [u':', u'>']])
+  _REPORTER_CHARACTERS = ''.join(
+      [c for c in pyparsing.printables if c not in [':', '[', '<']])
+  _FACILITY_CHARACTERS = ''.join(
+      [c for c in pyparsing.printables if c not in [':', '>']])
 
   _SYSLOG_SEVERITY = [
-      u'EMERG',
-      u'ALERT',
-      u'CRIT',
-      u'ERR',
-      u'WARNING',
-      u'NOTICE',
-      u'INFO',
-      u'DEBUG']
+      'EMERG',
+      'ALERT',
+      'CRIT',
+      'ERR',
+      'WARNING',
+      'NOTICE',
+      'INFO',
+      'DEBUG']
 
   _OFFSET_PREFIX = [
-      u'-',
-      u'+']
+      '-',
+      '+']
 
   _BODY_CONTENT = (
       r'.*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2})|' \
@@ -110,103 +113,103 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       r'(EMERG|ALERT|CRIT|ERR|WARNING|NOTICE|INFO|DEBUG)' + _BODY_CONTENT)
 
   _PYPARSING_COMPONENTS = {
-      u'year': text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName(
-          u'year'),
-      u'two_digit_month': (
+      'year': text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName(
+          'year'),
+      'two_digit_month': (
           text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
-              u'two_digit_month')),
-      u'month': text_parser.PyparsingConstants.MONTH.setResultsName(u'month'),
-      u'day': text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
-          u'day'),
-      u'hour': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
-          u'hour'),
-      u'minute': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
-          u'minute'),
-      u'second': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
-          u'second'),
-      u'fractional_seconds': pyparsing.Word(pyparsing.nums).setResultsName(
-          u'fractional_seconds'),
-      u'hostname': pyparsing.Word(pyparsing.printables).setResultsName(
-          u'hostname'),
-      u'reporter': pyparsing.Word(_REPORTER_CHARACTERS).setResultsName(
-          u'reporter'),
-      u'pid': text_parser.PyparsingConstants.PID.setResultsName(u'pid'),
-      u'facility': pyparsing.Word(_FACILITY_CHARACTERS).setResultsName(
-          u'facility'),
-      u'severity': pyparsing.oneOf(_SYSLOG_SEVERITY).setResultsName(
-          u'severity'),
-      u'body': pyparsing.Regex(_BODY_CONTENT, re.DOTALL).setResultsName(
-          u'body'),
-      u'comment_body': pyparsing.SkipTo(u' ---').setResultsName(
-          u'body'),
-      u'iso_8601_offset': (
+              'two_digit_month')),
+      'month': text_parser.PyparsingConstants.MONTH.setResultsName('month'),
+      'day': text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
+          'day'),
+      'hour': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          'hour'),
+      'minute': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          'minute'),
+      'second': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          'second'),
+      'fractional_seconds': pyparsing.Word(pyparsing.nums).setResultsName(
+          'fractional_seconds'),
+      'hostname': pyparsing.Word(pyparsing.printables).setResultsName(
+          'hostname'),
+      'reporter': pyparsing.Word(_REPORTER_CHARACTERS).setResultsName(
+          'reporter'),
+      'pid': text_parser.PyparsingConstants.PID.setResultsName('pid'),
+      'facility': pyparsing.Word(_FACILITY_CHARACTERS).setResultsName(
+          'facility'),
+      'severity': pyparsing.oneOf(_SYSLOG_SEVERITY).setResultsName(
+          'severity'),
+      'body': pyparsing.Regex(_BODY_CONTENT, re.DOTALL).setResultsName(
+          'body'),
+      'comment_body': pyparsing.SkipTo(' ---').setResultsName(
+          'body'),
+      'iso_8601_offset': (
           pyparsing.oneOf(_OFFSET_PREFIX) +
           text_parser.PyparsingConstants.TWO_DIGITS +
           pyparsing.Optional(
-              pyparsing.Literal(u':') +
+              pyparsing.Literal(':') +
               text_parser.PyparsingConstants.TWO_DIGITS))
   }
 
-  _PYPARSING_COMPONENTS[u'date'] = (
-      _PYPARSING_COMPONENTS[u'month'] +
-      _PYPARSING_COMPONENTS[u'day'] +
-      _PYPARSING_COMPONENTS[u'hour'] + pyparsing.Suppress(u':') +
-      _PYPARSING_COMPONENTS[u'minute'] + pyparsing.Suppress(u':') +
-      _PYPARSING_COMPONENTS[u'second'] + pyparsing.Optional(
-          pyparsing.Suppress(u'.') +
-          _PYPARSING_COMPONENTS[u'fractional_seconds']))
+  _PYPARSING_COMPONENTS['date'] = (
+      _PYPARSING_COMPONENTS['month'] +
+      _PYPARSING_COMPONENTS['day'] +
+      _PYPARSING_COMPONENTS['hour'] + pyparsing.Suppress(':') +
+      _PYPARSING_COMPONENTS['minute'] + pyparsing.Suppress(':') +
+      _PYPARSING_COMPONENTS['second'] + pyparsing.Optional(
+          pyparsing.Suppress('.') +
+          _PYPARSING_COMPONENTS['fractional_seconds']))
 
-  _PYPARSING_COMPONENTS[u'iso_8601_date'] = pyparsing.Combine(
-      _PYPARSING_COMPONENTS[u'year'] + pyparsing.Literal(u'-') +
-      _PYPARSING_COMPONENTS[u'two_digit_month'] + pyparsing.Literal(u'-') +
-      _PYPARSING_COMPONENTS[u'day'] + pyparsing.Literal(u'T') +
-      _PYPARSING_COMPONENTS[u'hour'] + pyparsing.Literal(u':') +
-      _PYPARSING_COMPONENTS[u'minute'] + pyparsing.Literal(u':') +
-      _PYPARSING_COMPONENTS[u'second'] + pyparsing.Literal(u'.') +
-      _PYPARSING_COMPONENTS[u'fractional_seconds'] +
-      _PYPARSING_COMPONENTS[u'iso_8601_offset'],
-      joinString=u'', adjacent=True).setResultsName(u'iso_8601_date')
+  _PYPARSING_COMPONENTS['iso_8601_date'] = pyparsing.Combine(
+      _PYPARSING_COMPONENTS['year'] + pyparsing.Literal('-') +
+      _PYPARSING_COMPONENTS['two_digit_month'] + pyparsing.Literal('-') +
+      _PYPARSING_COMPONENTS['day'] + pyparsing.Literal('T') +
+      _PYPARSING_COMPONENTS['hour'] + pyparsing.Literal(':') +
+      _PYPARSING_COMPONENTS['minute'] + pyparsing.Literal(':') +
+      _PYPARSING_COMPONENTS['second'] + pyparsing.Literal('.') +
+      _PYPARSING_COMPONENTS['fractional_seconds'] +
+      _PYPARSING_COMPONENTS['iso_8601_offset'],
+      joinString='', adjacent=True).setResultsName('iso_8601_date')
 
   _CHROMEOS_SYSLOG_LINE = (
-      _PYPARSING_COMPONENTS[u'iso_8601_date'] +
-      _PYPARSING_COMPONENTS[u'severity'] +
-      _PYPARSING_COMPONENTS[u'reporter'] +
-      pyparsing.Optional(pyparsing.Suppress(u':')) +
+      _PYPARSING_COMPONENTS['iso_8601_date'] +
+      _PYPARSING_COMPONENTS['severity'] +
+      _PYPARSING_COMPONENTS['reporter'] +
+      pyparsing.Optional(pyparsing.Suppress(':')) +
       pyparsing.Optional(
-          pyparsing.Suppress(u'[') + _PYPARSING_COMPONENTS[u'pid'] +
-          pyparsing.Suppress(u']')) +
-      pyparsing.Optional(pyparsing.Suppress(u':')) +
-      _PYPARSING_COMPONENTS[u'body'] + pyparsing.lineEnd())
+          pyparsing.Suppress('[') + _PYPARSING_COMPONENTS['pid'] +
+          pyparsing.Suppress(']')) +
+      pyparsing.Optional(pyparsing.Suppress(':')) +
+      _PYPARSING_COMPONENTS['body'] + pyparsing.lineEnd())
 
   _SYSLOG_LINE = (
-      _PYPARSING_COMPONENTS[u'date'] +
-      _PYPARSING_COMPONENTS[u'hostname'] +
-      _PYPARSING_COMPONENTS[u'reporter'] +
+      _PYPARSING_COMPONENTS['date'] +
+      _PYPARSING_COMPONENTS['hostname'] +
+      _PYPARSING_COMPONENTS['reporter'] +
       pyparsing.Optional(
-          pyparsing.Suppress(u'[') + _PYPARSING_COMPONENTS[u'pid'] +
-          pyparsing.Suppress(u']')) +
+          pyparsing.Suppress('[') + _PYPARSING_COMPONENTS['pid'] +
+          pyparsing.Suppress(']')) +
       pyparsing.Optional(
-          pyparsing.Suppress(u'<') + _PYPARSING_COMPONENTS[u'facility'] +
-          pyparsing.Suppress(u'>')) +
-      pyparsing.Optional(pyparsing.Suppress(u':')) +
-      _PYPARSING_COMPONENTS[u'body'] + pyparsing.lineEnd())
+          pyparsing.Suppress('<') + _PYPARSING_COMPONENTS['facility'] +
+          pyparsing.Suppress('>')) +
+      pyparsing.Optional(pyparsing.Suppress(':')) +
+      _PYPARSING_COMPONENTS['body'] + pyparsing.lineEnd())
 
   _SYSLOG_COMMENT = (
-      _PYPARSING_COMPONENTS[u'date'] + pyparsing.Suppress(u':') +
-      pyparsing.Suppress(u'---') + _PYPARSING_COMPONENTS[u'comment_body'] +
-      pyparsing.Suppress(u'---') + pyparsing.LineEnd())
+      _PYPARSING_COMPONENTS['date'] + pyparsing.Suppress(':') +
+      pyparsing.Suppress('---') + _PYPARSING_COMPONENTS['comment_body'] +
+      pyparsing.Suppress('---') + pyparsing.LineEnd())
 
   _KERNEL_SYSLOG_LINE = (
-      _PYPARSING_COMPONENTS[u'date'] +
-      pyparsing.Literal(u'kernel').setResultsName(u'reporter') +
-      pyparsing.Suppress(u':') + _PYPARSING_COMPONENTS[u'body'] +
+      _PYPARSING_COMPONENTS['date'] +
+      pyparsing.Literal('kernel').setResultsName('reporter') +
+      pyparsing.Suppress(':') + _PYPARSING_COMPONENTS['body'] +
       pyparsing.lineEnd())
 
   LINE_STRUCTURES = [
-      (u'syslog_line', _SYSLOG_LINE),
-      (u'syslog_line', _KERNEL_SYSLOG_LINE),
-      (u'syslog_comment', _SYSLOG_COMMENT),
-      (u'chromeos_syslog_line', _CHROMEOS_SYSLOG_LINE)]
+      ('syslog_line', _SYSLOG_LINE),
+      ('syslog_line', _KERNEL_SYSLOG_LINE),
+      ('syslog_comment', _SYSLOG_COMMENT),
+      ('chromeos_syslog_line', _CHROMEOS_SYSLOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
@@ -257,12 +260,12 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     for plugin in self._plugins:
       self._plugin_by_reporter[plugin.REPORTER] = plugin
 
-  def ParseRecord(self, mediator, key, structure):
+  def ParseRecord(self, parser_mediator, key, structure):
     """Parses a matching entry.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): elements parsed from the file.
 
@@ -271,24 +274,25 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     """
     if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    if key == u'chromeos_syslog_line':
+    if key == 'chromeos_syslog_line':
       timestamp = timelib.Timestamp.FromTimeString(structure.iso_8601_date[0])
     else:
       month = timelib.MONTH_DICT.get(structure.month.lower(), None)
       if not month:
-        mediator.ProduceParserError(u'Invalid month value: {0:s}'.format(month))
+        parser_mediator.ProduceParserError(
+            'Invalid month value: {0:s}'.format(month))
         return
 
-      self._UpdateYear(mediator, month)
+      self._UpdateYear(parser_mediator, month)
       timestamp = timelib.Timestamp.FromTimeParts(
           year=self._year_use, month=month, day=structure.day,
           hour=structure.hour, minutes=structure.minute,
-          seconds=structure.second, timezone=mediator.timezone)
+          seconds=structure.second, timezone=parser_mediator.timezone)
 
     plugin = None
-    if key == u'syslog_comment':
+    if key == 'syslog_comment':
       event_data = SyslogCommentEventData()
       event_data.body = structure.body
       # TODO: pass line number to offset or remove.
@@ -307,15 +311,15 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       plugin = self._plugin_by_reporter.get(structure.reporter, None)
       if plugin:
         attributes = {
-            u'hostname': structure.hostname,
-            u'severity': structure.severity,
-            u'reporter': structure.reporter,
-            u'pid': structure.pid,
-            u'body': structure.body}
+            'hostname': structure.hostname,
+            'severity': structure.severity,
+            'reporter': structure.reporter,
+            'pid': structure.pid,
+            'body': structure.body}
 
         try:
           # TODO: pass event_data instead of attributes.
-          plugin.Process(mediator, timestamp, attributes)
+          plugin.Process(parser_mediator, timestamp, attributes)
 
         except errors.WrongPlugin:
           plugin = None
@@ -323,21 +327,21 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     if not plugin:
       event = time_events.TimestampEvent(
           timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
-      mediator.ProduceEventWithEventData(event, event_data)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def VerifyStructure(self, unused_mediator, line):
+  def VerifyStructure(self, unused_parser_mediator, lines):
     """Verifies that this is a syslog-formatted file.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
-      line (str): single line from the text file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      lines (str): one or more lines from the text file.
 
     Returns:
-      bool: whether the line appears to contain syslog content.
+      bool: True if this is the correct parser, False otherwise.
     """
-    return (re.match(self._VERIFICATION_REGEX, line) or
-            re.match(self._CHROMEOS_VERIFICATION_REGEX, line)) is not None
+    return (re.match(self._VERIFICATION_REGEX, lines) or
+            re.match(self._CHROMEOS_VERIFICATION_REGEX, lines)) is not None
 
 
 manager.ParsersManager.RegisterParser(SyslogParser)

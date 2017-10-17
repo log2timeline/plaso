@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """Parser for PCAP files."""
 
+from __future__ import unicode_literals
+
 import binascii
 import operator
 import socket
 
-import dpkt
+import dpkt  # pylint: disable=import-error
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -18,6 +20,9 @@ from plaso.parsers import manager
 
 
 __author__ = 'Dominique Kilman (lexistar97@gmail.com)'
+
+
+# pylint: disable=no-member
 
 
 def ParseDNS(dns_packet_data):
@@ -36,40 +41,40 @@ def ParseDNS(dns_packet_data):
     if dns.rcode is dpkt.dns.DNS_RCODE_NOERR:
       if dns.qr == 1:
         if not dns.an:
-          dns_data.append(u'DNS Response: No answer for ')
+          dns_data.append('DNS Response: No answer for ')
           dns_data.append(dns.qd[0].name)
         else:
           # Type of DNS answer.
           for answer in dns.an:
             if answer.type == 5:
-              dns_data.append(u'DNS-CNAME request ')
+              dns_data.append('DNS-CNAME request ')
               dns_data.append(answer.name)
-              dns_data.append(u' response: ')
+              dns_data.append(' response: ')
               dns_data.append(answer.cname)
             elif answer.type == 1:
-              dns_data.append(u'DNS-A request ')
+              dns_data.append('DNS-A request ')
               dns_data.append(answer.name)
-              dns_data.append(u' response: ')
+              dns_data.append(' response: ')
               dns_data.append(socket.inet_ntoa(answer.rdata))
             elif answer.type == 12:
-              dns_data.append(u'DNS-PTR request ')
+              dns_data.append('DNS-PTR request ')
               dns_data.append(answer.name)
-              dns_data.append(u' response: ')
+              dns_data.append(' response: ')
               dns_data.append(answer.ptrname)
       elif not dns.qr:
-        dns_data.append(u'DNS Query for ')
+        dns_data.append('DNS Query for ')
         dns_data.append(dns.qd[0].name)
     else:
-      dns_data.append(u'DNS error code ')
+      dns_data.append('DNS error code ')
       dns_data.append(str(dns.rcode))
 
   except dpkt.UnpackError as exception:
-    dns_data.append(u'DNS Unpack Error: {0:s}. First 20 of data {1:s}'.format(
+    dns_data.append('DNS Unpack Error: {0:s}. First 20 of data {1:s}'.format(
         exception, repr(dns_packet_data[:20])))
   except IndexError as exception:
-    dns_data.append(u'DNS Index Error: {0:s}'.format(exception))
+    dns_data.append('DNS Index Error: {0:s}'.format(exception))
 
-  return u' '.join(dns_data)
+  return ' '.join(dns_data)
 
 
 def ParseNetBios(netbios_packet):
@@ -83,16 +88,16 @@ def ParseNetBios(netbios_packet):
   """
   netbios_data = []
   for query in netbios_packet.qd:
-    netbios_data.append(u'NETBIOS qd:')
+    netbios_data.append('NETBIOS qd:')
     netbios_data.append(repr(dpkt.netbios.decode_name(query.name)))
   for answer in netbios_packet.an:
-    netbios_data.append(u'NETBIOS an:')
+    netbios_data.append('NETBIOS an:')
     netbios_data.append(repr(dpkt.netbios.decode_name(answer.name)))
   for name in netbios_packet.ns:
-    netbios_data.append(u'NETBIOS ns:')
+    netbios_data.append('NETBIOS ns:')
     netbios_data.append(repr(dpkt.netbios.decode_name(name.name)))
 
-  return u' '.join(netbios_data)
+  return ' '.join(netbios_data)
 
 
 def TCPFlags(flag):
@@ -106,23 +111,23 @@ def TCPFlags(flag):
   """
   res = []
   if flag & dpkt.tcp.TH_FIN:
-    res.append(u'FIN')
+    res.append('FIN')
   if flag & dpkt.tcp.TH_SYN:
-    res.append(u'SYN')
+    res.append('SYN')
   if flag & dpkt.tcp.TH_RST:
-    res.append(u'RST')
+    res.append('RST')
   if flag & dpkt.tcp.TH_PUSH:
-    res.append(u'PUSH')
+    res.append('PUSH')
   if flag & dpkt.tcp.TH_ACK:
-    res.append(u'ACK')
+    res.append('ACK')
   if flag & dpkt.tcp.TH_URG:
-    res.append(u'URG')
+    res.append('URG')
   if flag & dpkt.tcp.TH_ECE:
-    res.append(u'ECN')
+    res.append('ECN')
   if flag & dpkt.tcp.TH_CWR:
-    res.append(u'CWR')
+    res.append('CWR')
 
-  return u'|'.join(res)
+  return '|'.join(res)
 
 
 def ICMPTypes(packet):
@@ -137,135 +142,135 @@ def ICMPTypes(packet):
   icmp_type = packet.type
   icmp_code = packet.code
   icmp_data = []
-  icmp_data.append(u'ICMP')
+  icmp_data.append('ICMP')
 
   # TODO: Make the below code more readable.
   # Possible to use lookup dict? Or method
   # calls?
   if icmp_type is dpkt.icmp.ICMP_CODE_NONE:
-    icmp_data.append(u'ICMP without codes')
+    icmp_data.append('ICMP without codes')
   elif icmp_type is dpkt.icmp.ICMP_ECHOREPLY:
-    icmp_data.append(u'echo reply')
+    icmp_data.append('echo reply')
   elif icmp_type is dpkt.icmp.ICMP_UNREACH:
-    icmp_data.append(u'ICMP dest unreachable')
+    icmp_data.append('ICMP dest unreachable')
     if icmp_code is dpkt.icmp.ICMP_UNREACH_NET:
-      icmp_data.append(u': bad net')
+      icmp_data.append(': bad net')
     elif icmp_code is dpkt.icmp.ICMP_UNREACH_HOST:
-      icmp_data.append(u': host unreachable')
+      icmp_data.append(': host unreachable')
     elif icmp_code is dpkt.icmp.ICMP_UNREACH_PROTO:
-      icmp_data.append(u': bad protocol')
+      icmp_data.append(': bad protocol')
     elif icmp_code is dpkt.icmp.ICMP_UNREACH_PORT:
-      icmp_data.append(u': port unreachable')
+      icmp_data.append(': port unreachable')
     elif icmp_code is dpkt.icmp.ICMP_UNREACH_NEEDFRAG:
-      icmp_data.append(u': IP_DF caused drop')
+      icmp_data.append(': IP_DF caused drop')
     elif icmp_code is dpkt.icmp.ICMP_UNREACH_SRCFAIL:
-      icmp_data.append(u': src route failed')
+      icmp_data.append(': src route failed')
     elif icmp_code is dpkt.icmp.ICMP_UNREACH_NET_UNKNOWN:
-      icmp_data.append(u': unknown net')
+      icmp_data.append(': unknown net')
     elif icmp_code is dpkt.icmp.ICMP_UNREACH_HOST_UNKNOWN:
-      icmp_data.append(u': unknown host')
+      icmp_data.append(': unknown host')
     elif icmp_code is dpkt.icmp.ICMP_UNREACH_ISOLATED:
-      icmp_data.append(u': src host isolated')
+      icmp_data.append(': src host isolated')
     elif icmp_code is dpkt.icmp.ICMP_UNREACH_NET_PROHIB:
-      icmp_data.append(u': for crypto devs')
+      icmp_data.append(': for crypto devs')
     elif icmp_code is dpkt.icmp.ICMP_UNREACH_HOST_PROHIB:
-      icmp_data.append(u': for cypto devs')
+      icmp_data.append(': for cypto devs')
     elif icmp_code is dpkt.icmp.ICMP_UNREACH_TOSNET:
-      icmp_data.append(u': bad tos for net')
+      icmp_data.append(': bad tos for net')
     elif icmp_code is dpkt.icmp.ICMP_UNREACH_TOSHOST:
-      icmp_data.append(u': bad tos for host')
+      icmp_data.append(': bad tos for host')
     elif icmp_code is dpkt.icmp.ICMP_UNREACH_FILTER_PROHIB:
-      icmp_data.append(u': prohibited access')
+      icmp_data.append(': prohibited access')
     elif icmp_code is dpkt.icmp.ICMP_UNREACH_HOST_PRECEDENCE:
-      icmp_data.append(u': precedence error')
+      icmp_data.append(': precedence error')
     elif icmp_code is dpkt.icmp.ICMP_UNREACH_PRECEDENCE_CUTOFF:
-      icmp_data.append(u': precedence cutoff')
+      icmp_data.append(': precedence cutoff')
   elif icmp_type is dpkt.icmp.ICMP_SRCQUENCH:
-    icmp_data.append(u'ICMP source quench')
+    icmp_data.append('ICMP source quench')
   elif icmp_type is dpkt.icmp.ICMP_REDIRECT:
-    icmp_data.append(u'ICMP Redirect')
+    icmp_data.append('ICMP Redirect')
     if icmp_code is dpkt.icmp.ICMP_REDIRECT_NET:
-      icmp_data.append(u' for network')
+      icmp_data.append(' for network')
     elif icmp_code is dpkt.icmp.ICMP_REDIRECT_HOST:
-      icmp_data.append(u' for host')
+      icmp_data.append(' for host')
     elif icmp_code is dpkt.icmp.ICMP_REDIRECT_TOSNET:
-      icmp_data.append(u' for tos and net')
+      icmp_data.append(' for tos and net')
     elif icmp_code is dpkt.icmp.ICMP_REDIRECT_TOSHOST:
-      icmp_data.append(u' for tos and host')
+      icmp_data.append(' for tos and host')
   elif icmp_type is dpkt.icmp.ICMP_ALTHOSTADDR:
-    icmp_data.append(u'ICMP alternate host address')
+    icmp_data.append('ICMP alternate host address')
   elif icmp_type is dpkt.icmp.ICMP_ECHO:
-    icmp_data.append(u'ICMP echo')
+    icmp_data.append('ICMP echo')
   elif icmp_type is dpkt.icmp.ICMP_RTRADVERT:
-    icmp_data.append(u'ICMP Route advertisement')
+    icmp_data.append('ICMP Route advertisement')
     if icmp_code is dpkt.icmp.ICMP_RTRADVERT_NORMAL:
-      icmp_data.append(u': normal')
+      icmp_data.append(': normal')
     elif icmp_code is dpkt.icmp.ICMP_RTRADVERT_NOROUTE_COMMON:
-      icmp_data.append(u': selective routing')
+      icmp_data.append(': selective routing')
   elif icmp_type is dpkt.icmp.ICMP_RTRSOLICIT:
-    icmp_data.append(u'ICMP Router solicitation')
+    icmp_data.append('ICMP Router solicitation')
   elif icmp_type is dpkt.icmp.ICMP_TIMEXCEED:
-    icmp_data.append(u'ICMP time exceeded, code:')
+    icmp_data.append('ICMP time exceeded, code:')
     if icmp_code is dpkt.icmp.ICMP_TIMEXCEED_INTRANS:
-      icmp_data.append(u' ttl==0 in transit')
+      icmp_data.append(' ttl==0 in transit')
     elif icmp_code is dpkt.icmp.ICMP_TIMEXCEED_REASS:
-      icmp_data.append(u'ttl==0 in reass')
+      icmp_data.append('ttl==0 in reass')
   elif icmp_type is dpkt.icmp.ICMP_PARAMPROB:
-    icmp_data.append(u'ICMP ip header bad')
+    icmp_data.append('ICMP ip header bad')
     if icmp_code is dpkt.icmp.ICMP_PARAMPROB_ERRATPTR:
-      icmp_data.append(u':req. opt. absent')
+      icmp_data.append(':req. opt. absent')
     elif icmp_code is dpkt.icmp.ICMP_PARAMPROB_OPTABSENT:
-      icmp_data.append(u': req. opt. absent')
+      icmp_data.append(': req. opt. absent')
     elif icmp_code is dpkt.icmp.ICMP_PARAMPROB_LENGTH:
-      icmp_data.append(u': length')
+      icmp_data.append(': length')
   elif icmp_type is dpkt.icmp.ICMP_TSTAMP:
-    icmp_data.append(u'ICMP timestamp request')
+    icmp_data.append('ICMP timestamp request')
   elif icmp_type is dpkt.icmp.ICMP_TSTAMPREPLY:
-    icmp_data.append(u'ICMP timestamp reply')
+    icmp_data.append('ICMP timestamp reply')
   elif icmp_type is dpkt.icmp.ICMP_INFO:
-    icmp_data.append(u'ICMP information request')
+    icmp_data.append('ICMP information request')
   elif icmp_type is dpkt.icmp.ICMP_INFOREPLY:
-    icmp_data.append(u'ICMP information reply')
+    icmp_data.append('ICMP information reply')
   elif icmp_type is dpkt.icmp.ICMP_MASK:
-    icmp_data.append(u'ICMP address mask request')
+    icmp_data.append('ICMP address mask request')
   elif icmp_type is dpkt.icmp.ICMP_MASKREPLY:
-    icmp_data.append(u'ICMP address mask reply')
+    icmp_data.append('ICMP address mask reply')
   elif icmp_type is dpkt.icmp.ICMP_TRACEROUTE:
-    icmp_data.append(u'ICMP traceroute')
+    icmp_data.append('ICMP traceroute')
   elif icmp_type is dpkt.icmp.ICMP_DATACONVERR:
-    icmp_data.append(u'ICMP data conversion error')
+    icmp_data.append('ICMP data conversion error')
   elif icmp_type is dpkt.icmp.ICMP_MOBILE_REDIRECT:
-    icmp_data.append(u'ICMP mobile host redirect')
+    icmp_data.append('ICMP mobile host redirect')
   elif icmp_type is dpkt.icmp.ICMP_IP6_WHEREAREYOU:
-    icmp_data.append(u'ICMP IPv6 where-are-you')
+    icmp_data.append('ICMP IPv6 where-are-yo')
   elif icmp_type is dpkt.icmp.ICMP_IP6_IAMHERE:
-    icmp_data.append(u'ICMP IPv6 i-am-here')
+    icmp_data.append('ICMP IPv6 i-am-here')
   elif icmp_type is dpkt.icmp.ICMP_MOBILE_REG:
-    icmp_data.append(u'ICMP mobile registration req')
+    icmp_data.append('ICMP mobile registration req')
   elif icmp_type is dpkt.icmp.ICMP_MOBILE_REGREPLY:
-    icmp_data.append(u'ICMP mobile registration reply')
+    icmp_data.append('ICMP mobile registration reply')
   elif icmp_type is dpkt.icmp.ICMP_DNS:
-    icmp_data.append(u'ICMP domain name request')
+    icmp_data.append('ICMP domain name request')
   elif icmp_type is dpkt.icmp.ICMP_DNSREPLY:
-    icmp_data.append(u'ICMP domain name reply')
+    icmp_data.append('ICMP domain name reply')
   elif icmp_type is dpkt.icmp.ICMP_PHOTURIS:
-    icmp_data.append(u'ICMP Photuris')
+    icmp_data.append('ICMP Photuris')
     if icmp_code is dpkt.icmp.ICMP_PHOTURIS_UNKNOWN_INDEX:
-      icmp_data.append(u': unknown sec index')
+      icmp_data.append(': unknown sec index')
     elif icmp_code is dpkt.icmp.ICMP_PHOTURIS_AUTH_FAILED:
-      icmp_data.append(u': auth failed')
+      icmp_data.append(': auth failed')
     elif icmp_code is dpkt.icmp.ICMP_PHOTURIS_DECOMPRESS_FAILED:
-      icmp_data.append(u': decompress failed')
+      icmp_data.append(': decompress failed')
     elif icmp_code is dpkt.icmp.ICMP_PHOTURIS_DECRYPT_FAILED:
-      icmp_data.append(u': decrypt failed')
+      icmp_data.append(': decrypt failed')
     elif icmp_code is dpkt.icmp.ICMP_PHOTURIS_NEED_AUTHN:
-      icmp_data.append(u': no authentication')
+      icmp_data.append(': no authentication')
     elif icmp_code is dpkt.icmp.ICMP_PHOTURIS_NEED_AUTHZ:
-      icmp_data.append(u': no authorization')
+      icmp_data.append(': no authorization')
   elif icmp_type is dpkt.icmp.ICMP_TYPE_MAX:
-    icmp_data.append(u'ICMP Type Max')
+    icmp_data.append('ICMP Type Max')
 
-  return u' '.join(icmp_data)
+  return ' '.join(icmp_data)
 
 
 class Stream(object):
@@ -287,19 +292,19 @@ class Stream(object):
     self.dest_ip = dest_ip
     self.packet_id = [packet[1]]
     self.protocol = prot
-    self.protocol_data = u''
+    self.protocol_data = ''
     self.size = packet[3]
     self.source_ip = source_ip
     self.start_time = packet[0]
     self.stream_data = b''
     self.timestamps = [packet[0]]
 
-    if prot in (u'TCP', u'UDP'):
+    if prot in ('TCP', 'UDP'):
       self.dest_port = prot_data.dport
       self.source_port = prot_data.sport
     else:
-      self.dest_port = u''
-      self.source_port = u''
+      self.dest_port = ''
+      self.source_port = ''
 
   def AddPacket(self, packet, prot_data):
     """Add another packet to an existing stream.
@@ -328,38 +333,38 @@ class Stream(object):
     if self.stream_data[:4] == b'HTTP':
       try:
         http = dpkt.http.Response(self.stream_data)
-        packet_details.append(u'HTTP Response: status: ')
+        packet_details.append('HTTP Response: status: ')
         packet_details.append(http.status)
-        packet_details.append(u' reason: ')
+        packet_details.append(' reason: ')
         packet_details.append(http.reason)
-        packet_details.append(u' version: ')
+        packet_details.append(' version: ')
         packet_details.append(http.version)
-        return u'HTTP Response', u' '.join(packet_details)
+        return 'HTTP Response', ' '.join(packet_details)
 
       except dpkt.UnpackError as exception:
         packet_details = (
-            u'HTTP Response Unpack Error: {0:s}. '
-            u'First 20 of data {1:s}').format(
+            'HTTP Response Unpack Error: {0:s}. '
+            'First 20 of data {1:s}').format(
                 exception, repr(self.stream_data[:20]))
-        return u'HTTP Response', packet_details
+        return 'HTTP Response', packet_details
 
       except IndexError as exception:
         packet_details = (
-            u'HTTP Response Index Error: {0:s}. First 20 of data {1:s}').format(
+            'HTTP Response Index Error: {0:s}. First 20 of data {1:s}').format(
                 exception, repr(self.stream_data[:20]))
-        return u'HTTP Response', packet_details
+        return 'HTTP Response', packet_details
 
       except ValueError as exception:
         packet_details = (
-            u'HTTP Response parsing error: {0:s}. '
-            u'First 20 of data {1:s}').format(
+            'HTTP Response parsing error: {0:s}. '
+            'First 20 of data {1:s}').format(
                 exception, repr(self.stream_data[:20]))
-        return u'HTTP Response', packet_details
+        return 'HTTP Response', packet_details
 
     elif self.stream_data[:3] == b'GET' or self.stream_data[:4] == b'POST':
       try:
         http = dpkt.http.Request(self.stream_data)
-        packet_details.append(u'HTTP Request: method: ')
+        packet_details.append('HTTP Request: method: ')
         packet_details.append(http.method)
         packet_details.append(' uri: ')
         packet_details.append(http.uri)
@@ -367,70 +372,70 @@ class Stream(object):
         packet_details.append(http.version)
         packet_details.append(' headers: ')
         packet_details.append(repr(http.headers))
-        return u'HTTP Request', u' '.join(packet_details)
+        return 'HTTP Request', ' '.join(packet_details)
 
       except dpkt.UnpackError as exception:
         packet_details = (
-            u'HTTP Request unpack error: {0:s}. First 20 of data {1:s}').format(
+            'HTTP Request unpack error: {0:s}. First 20 of data {1:s}').format(
                 exception, repr(self.stream_data[:20]))
-        return u'HTTP Request', packet_details
+        return 'HTTP Request', packet_details
 
       except ValueError as exception:
         packet_details = (
-            u'HTTP Request parsing error: {0:s}. '
-            u'First 20 of data {1:s}').format(
+            'HTTP Request parsing error: {0:s}. '
+            'First 20 of data {1:s}').format(
                 exception, repr(self.stream_data[:20]))
-        return u'HTTP Request', packet_details
+        return 'HTTP Request', packet_details
 
-    elif self.protocol == u'UDP' and (
+    elif self.protocol == 'UDP' and (
         self.source_port == 53 or self.dest_port == 53):
       # DNS request/replies.
       # Check to see if the lengths are valid.
       for packet in self.all_data:
         if not packet.ulen == len(packet):
-          packet_details.append(u'Truncated DNS packets - unable to parse: ')
+          packet_details.append('Truncated DNS packets - unable to parse: ')
           packet_details.append(repr(self.stream_data[15:40]))
-          return u'DNS', u' '.join(packet_details)
+          return 'DNS', ' '.join(packet_details)
 
-      return u'DNS', ParseDNS(self.stream_data)
+      return 'DNS', ParseDNS(self.stream_data)
 
-    elif self.protocol == u'UDP' and (
+    elif self.protocol == 'UDP' and (
         self.source_port == 137 or self.dest_port == 137):
-      return u'NetBIOS', ParseNetBios(dpkt.netbios.NS(self.stream_data))
+      return 'NetBIOS', ParseNetBios(dpkt.netbios.NS(self.stream_data))
 
-    elif self.protocol == u'ICMP':
+    elif self.protocol == 'ICMP':
       # ICMP packets all end up as 1 stream, so they need to be
       #  processed 1 by 1.
-      return u'ICMP', ICMPTypes(self.all_data[0])
+      return 'ICMP', ICMPTypes(self.all_data[0])
 
     elif b'\x03\x01' in self.stream_data[1:3]:
       # Some form of ssl3 data.
       try:
         ssl = dpkt.ssl.SSL2(self.stream_data)
-        packet_details.append(u'SSL data. Length: ')
+        packet_details.append('SSL data. Length: ')
         packet_details.append(str(ssl.len))
-        return u'SSL', u' '.join(packet_details)
+        return 'SSL', ' '.join(packet_details)
       except dpkt.UnpackError as exception:
         packet_details = (
-            u'SSL unpack error: {0:s}. First 20 of data {1:s}').format(
+            'SSL unpack error: {0:s}. First 20 of data {1:s}').format(
                 exception, repr(self.stream_data[:20]))
-        return u'SSL', packet_details
+        return 'SSL', packet_details
 
     elif b'\x03\x00' in self.stream_data[1:3]:
        # Some form of ssl3 data.
       try:
         ssl = dpkt.ssl.SSL2(self.stream_data)
-        packet_details.append(u'SSL data. Length: ')
+        packet_details.append('SSL data. Length: ')
         packet_details.append(str(ssl.len))
-        return u'SSL', u' '.join(packet_details)
+        return 'SSL', ' '.join(packet_details)
 
       except dpkt.UnpackError as exception:
         packet_details = (
-            u'SSL unpack error: {0:s}. First 20 of data {1:s}').format(
+            'SSL unpack error: {0:s}. First 20 of data {1:s}').format(
                 exception, repr(self.stream_data[:20]))
-        return u'SSL', packet_details
+        return 'SSL', packet_details
 
-    return u'other', self.protocol_data
+    return 'other', self.protocol_data
 
   def Clean(self):
     """Clean up stream data."""
@@ -463,7 +468,7 @@ class PcapEventData(events.EventData):
     stream_type (str): stream type.
   """
 
-  DATA_TYPE = u'metadata:pcap'
+  DATA_TYPE = 'metadata:pcap'
 
   def __init__(self):
     """Initializes event data."""
@@ -485,8 +490,8 @@ class PcapEventData(events.EventData):
 class PcapParser(interface.FileObjectParser):
   """Parses PCAP files."""
 
-  NAME = u'pcap'
-  DESCRIPTION = u'Parser for PCAP files.'
+  NAME = 'pcap'
+  DESCRIPTION = 'Parser for PCAP files.'
 
   def _ParseIPPacket(
       self, connections, trunc_list, packet_number, timestamp,
@@ -519,7 +524,7 @@ class PcapParser(interface.FileObjectParser):
       else:
         tcp = ip_packet.data
 
-      stream_key = u'tcp: {0:s}:{1:d} > {2:s}:{3:d}'.format(
+      stream_key = 'tcp: {0:s}:{1:d} > {2:s}:{3:d}'.format(
           source_ip_address, tcp.sport, destination_ip_address, tcp.dport)
 
       if stream_key in connections:
@@ -527,7 +532,7 @@ class PcapParser(interface.FileObjectParser):
       else:
         connections[stream_key] = Stream(
             packet_values, tcp, source_ip_address, destination_ip_address,
-            u'TCP')
+            'TCP')
 
     elif ip_packet.p == dpkt.ip.IP_PROTO_UDP:
       # Later versions of dpkt seem to return a string instead of an UDP object.
@@ -541,7 +546,7 @@ class PcapParser(interface.FileObjectParser):
       else:
         udp = ip_packet.data
 
-      stream_key = u'udp: {0:s}:{1:d} > {2:s}:{3:d}'.format(
+      stream_key = 'udp: {0:s}:{1:d} > {2:s}:{3:d}'.format(
           source_ip_address, udp.sport, destination_ip_address, udp.dport)
 
       if stream_key in connections:
@@ -549,7 +554,7 @@ class PcapParser(interface.FileObjectParser):
       else:
         connections[stream_key] = Stream(
             packet_values, udp, source_ip_address, destination_ip_address,
-            u'UDP')
+            'UDP')
 
     elif ip_packet.p == dpkt.ip.IP_PROTO_ICMP:
       # Later versions of dpkt seem to return a string instead of
@@ -559,7 +564,7 @@ class PcapParser(interface.FileObjectParser):
       else:
         icmp = ip_packet.data
 
-      stream_key = u'icmp: {0:d} {1:s} > {2:s}'.format(
+      stream_key = 'icmp: {0:d} {1:s} > {2:s}'.format(
           timestamp, source_ip_address, destination_ip_address)
 
       if stream_key in connections:
@@ -567,7 +572,7 @@ class PcapParser(interface.FileObjectParser):
       else:
         connections[stream_key] = Stream(
             packet_values, icmp, source_ip_address, destination_ip_address,
-            u'ICMP')
+            'ICMP')
 
   def _ParseOtherPacket(self, packet_values):
     """Parses a non-IP packet.
@@ -587,104 +592,104 @@ class PcapParser(interface.FileObjectParser):
       arp_data = []
       stream_object = Stream(
           packet_values, arp, binascii.hexlify(ether.src),
-          binascii.hexlify(ether.dst), u'ARP')
+          binascii.hexlify(ether.dst), 'ARP')
 
       if arp.op == dpkt.arp.ARP_OP_REQUEST:
-        arp_data.append(u'arp request: target IP = ')
+        arp_data.append('arp request: target IP = ')
         arp_data.append(socket.inet_ntoa(arp.tpa))
-        stream_object.protocol_data = u' '.join(arp_data)
+        stream_object.protocol_data = ' '.join(arp_data)
 
       elif arp.op == dpkt.arp.ARP_OP_REPLY:
-        arp_data.append(u'arp reply: target IP = ')
+        arp_data.append('arp reply: target IP = ')
         arp_data.append(socket.inet_ntoa(arp.tpa))
-        arp_data.append(u' target MAC = ')
+        arp_data.append(' target MAC = ')
         arp_data.append(binascii.hexlify(arp.tha))
-        stream_object.protocol_data = u' '.join(arp_data)
+        stream_object.protocol_data = ' '.join(arp_data)
 
       elif arp.op == dpkt.arp.ARP_OP_REVREQUEST:
-        arp_data.append(u'arp protocol address request: target IP = ')
+        arp_data.append('arp protocol address request: target IP = ')
         arp_data.append(socket.inet_ntoa(arp.tpa))
-        stream_object.protocol_data = u' '.join(arp_data)
+        stream_object.protocol_data = ' '.join(arp_data)
 
       elif arp.op == dpkt.arp.ARP_OP_REVREPLY:
-        arp_data.append(u'arp protocol address reply: target IP = ')
+        arp_data.append('arp protocol address reply: target IP = ')
         arp_data.append(socket.inet_ntoa(arp.tpa))
-        arp_data.append(u' target MAC = ')
+        arp_data.append(' target MAC = ')
         arp_data.append(binascii.hexlify(arp.tha))
-        stream_object.protocol_data = u' '.join(arp_data)
+        stream_object.protocol_data = ' '.join(arp_data)
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_IP6:
       ip6 = ether.data
       stream_object = Stream(
           packet_values, ether.data, binascii.hexlify(ip6.src),
-          binascii.hexlify(ip6.dst), u'IPv6')
-      stream_object.protocol_data = u'IPv6'
+          binascii.hexlify(ip6.dst), 'IPv6')
+      stream_object.protocol_data = 'IPv6'
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_CDP:
       stream_object = Stream(
           packet_values, ether.data, binascii.hexlify(ether.src),
-          binascii.hexlify(ether.dst), u'CDP')
-      stream_object.protocol_data = u'CDP'
+          binascii.hexlify(ether.dst), 'CDP')
+      stream_object.protocol_data = 'CDP'
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_DTP:
       stream_object = Stream(
           packet_values, ether.data, binascii.hexlify(ether.src),
-          binascii.hexlify(ether.dst), u'DTP')
-      stream_object.protocol_data = u'DTP'
+          binascii.hexlify(ether.dst), 'DTP')
+      stream_object.protocol_data = 'DTP'
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_REVARP:
       stream_object = Stream(
           packet_values, ether.data, binascii.hexlify(ether.src),
-          binascii.hexlify(ether.dst), u'RARP')
-      stream_object.protocol_data = u'Reverse ARP'
+          binascii.hexlify(ether.dst), 'RARP')
+      stream_object.protocol_data = 'Reverse ARP'
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_8021Q:
       stream_object = Stream(
           packet_values, ether.data, binascii.hexlify(ether.src),
-          binascii.hexlify(ether.dst), u'8021Q packet')
-      stream_object.protocol_data = u'8021Q packet'
+          binascii.hexlify(ether.dst), '8021Q packet')
+      stream_object.protocol_data = '8021Q packet'
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_IPX:
       stream_object = Stream(
           packet_values, ether.data, binascii.hexlify(ether.src),
-          binascii.hexlify(ether.dst), u'IPX')
-      stream_object.protocol_data = u'IPX'
+          binascii.hexlify(ether.dst), 'IPX')
+      stream_object.protocol_data = 'IPX'
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_PPP:
       stream_object = Stream(
           packet_values, ether.data, binascii.hexlify(ether.src),
-          binascii.hexlify(ether.dst), u'PPP')
-      stream_object.protocol_data = u'PPP'
+          binascii.hexlify(ether.dst), 'PPP')
+      stream_object.protocol_data = 'PPP'
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_MPLS:
       stream_object = Stream(
           packet_values, ether.data, binascii.hexlify(ether.src),
-          binascii.hexlify(ether.dst), u'MPLS')
-      stream_object.protocol_data = u'MPLS'
+          binascii.hexlify(ether.dst), 'MPLS')
+      stream_object.protocol_data = 'MPLS'
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_MPLS_MCAST:
       stream_object = Stream(
           packet_values, ether.data, binascii.hexlify(ether.src),
-          binascii.hexlify(ether.dst), u'MPLS')
-      stream_object.protocol_data = u'MPLS MCAST'
+          binascii.hexlify(ether.dst), 'MPLS')
+      stream_object.protocol_data = 'MPLS MCAST'
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_PPPoE_DISC:
       stream_object = Stream(
           packet_values, ether.data, binascii.hexlify(ether.src),
-          binascii.hexlify(ether.dst), u'PPOE')
-      stream_object.protocol_data = u'PPoE Disc packet'
+          binascii.hexlify(ether.dst), 'PPOE')
+      stream_object.protocol_data = 'PPoE Disc packet'
 
     elif ether.type == dpkt.ethernet.ETH_TYPE_PPPoE:
       stream_object = Stream(
           packet_values, ether.data, binascii.hexlify(ether.src),
-          binascii.hexlify(ether.dst), u'PPPoE')
-      stream_object.protocol_data = u'PPPoE'
+          binascii.hexlify(ether.dst), 'PPPoE')
+      stream_object.protocol_data = 'PPPoE'
 
     elif ether.type == 0x2452:
       stream_object = Stream(
           packet_values, ether.data, binascii.hexlify(ether.src),
-          binascii.hexlify(ether.dst), u'802.11')
-      stream_object.protocol_data = u'802.11'
+          binascii.hexlify(ether.dst), '802.11')
+      stream_object.protocol_data = '802.11'
 
     return stream_object
 
@@ -716,8 +721,8 @@ class PcapParser(interface.FileObjectParser):
       destination_ip_address = socket.inet_ntoa(ip_packet.dst)
       stream_object = Stream(
           packet_values, ip_packet.data, source_ip_address,
-          destination_ip_address, u'BAD')
-      stream_object.protocol_data = u'Bad truncated IP packet'
+          destination_ip_address, 'BAD')
+      stream_object.protocol_data = 'Bad truncated IP packet'
       other_streams.append(stream_object)
 
     return other_streams
@@ -740,7 +745,7 @@ class PcapParser(interface.FileObjectParser):
 
     except (dpkt.NeedData, dpkt.UnpackError) as exception:
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+          '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
               self.NAME, parser_mediator.GetDisplayName(), exception))
 
     if file_header.magic == dpkt.pcap.PMUDPCT_MAGIC:
@@ -750,11 +755,11 @@ class PcapParser(interface.FileObjectParser):
 
       except (dpkt.NeedData, dpkt.UnpackError) as exception:
         raise errors.UnableToParseFile(
-            u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+            '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
                 self.NAME, parser_mediator.GetDisplayName(), exception))
 
     elif file_header.magic != dpkt.pcap.TCPDUMP_MAGIC:
-      raise errors.UnableToParseFile(u'Unsupported file signature')
+      raise errors.UnableToParseFile('Unsupported file signature')
 
     packet_number = 1
     connections = {}
@@ -785,9 +790,9 @@ class PcapParser(interface.FileObjectParser):
     other_streams = self._ParseOtherStreams(other_list, trunc_list)
 
     for stream_object in sorted(
-        connections.values(), key=operator.attrgetter(u'start_time')):
+        connections.values(), key=operator.attrgetter('start_time')):
 
-      if not stream_object.protocol == u'ICMP':
+      if not stream_object.protocol == 'ICMP':
         stream_object.Clean()
 
       event_data = PcapEventData()

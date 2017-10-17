@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for NTFS metadata files."""
 
+from __future__ import unicode_literals
+
 import uuid
 
 import construct
@@ -34,7 +36,7 @@ class NTFSFileStatEventData(events.EventData):
     parent_file_reference (int): NTFS file reference of the parent.
   """
 
-  DATA_TYPE = u'fs:stat:ntfs'
+  DATA_TYPE = 'fs:stat:ntfs'
 
   def __init__(self):
     """Initializes event data."""
@@ -42,7 +44,7 @@ class NTFSFileStatEventData(events.EventData):
     self.attribute_type = None
     self.file_attribute_flags = None
     self.file_reference = None
-    self.file_system_type = u'NTFS'
+    self.file_system_type = 'NTFS'
     self.is_allocated = None
     self.name = None
     self.parent_file_reference = None
@@ -62,7 +64,7 @@ class NTFSUSNChangeEventData(events.EventData):
     update_source_flags (int): update source flags.
   """
 
-  DATA_TYPE = u'fs:ntfs:usn_change'
+  DATA_TYPE = 'fs:ntfs:usn_change'
 
   def __init__(self):
     """Initializes event data."""
@@ -81,8 +83,8 @@ class NTFSMFTParser(interface.FileObjectParser):
 
   _INITIAL_FILE_OFFSET = None
 
-  NAME = u'mft'
-  DESCRIPTION = u'Parser for NTFS $MFT metadata files.'
+  NAME = 'mft'
+  DESCRIPTION = 'Parser for NTFS $MFT metadata files.'
 
   _MFT_ATTRIBUTE_STANDARD_INFORMATION = 0x00000010
   _MFT_ATTRIBUTE_FILE_NAME = 0x00000030
@@ -110,7 +112,7 @@ class NTFSMFTParser(interface.FileObjectParser):
       dfdatetime.DateTimeValues: date and time.
     """
     if filetime == 0:
-      return dfdatetime_semantic_time.SemanticTime(u'Not set')
+      return dfdatetime_semantic_time.SemanticTime('Not set')
 
     return dfdatetime_filetime.Filetime(timestamp=filetime)
 
@@ -151,10 +153,10 @@ class NTFSMFTParser(interface.FileObjectParser):
         self._MFT_ATTRIBUTE_FILE_NAME]:
 
       file_attribute_flags = getattr(
-          mft_attribute, u'file_attribute_flags', None)
-      name = getattr(mft_attribute, u'name', None)
+          mft_attribute, 'file_attribute_flags', None)
+      name = getattr(mft_attribute, 'name', None)
       parent_file_reference = getattr(
-          mft_attribute, u'parent_file_reference', None)
+          mft_attribute, 'parent_file_reference', None)
 
       event_data = NTFSFileStatEventData()
       event_data.attribute_type = mft_attribute.attribute_type
@@ -168,8 +170,8 @@ class NTFSMFTParser(interface.FileObjectParser):
         creation_time = mft_attribute.get_creation_time_as_integer()
       except OverflowError as exception:
         parser_mediator.ProduceExtractionError((
-            u'unable to read the creation timestamp from MFT attribute: '
-            u'0x{0:08x} with error: {1:s}').format(
+            'unable to read the creation timestamp from MFT attribute: '
+            '0x{0:08x} with error: {1:s}').format(
                 mft_attribute.attribute_type, exception))
         creation_time = None
 
@@ -183,8 +185,8 @@ class NTFSMFTParser(interface.FileObjectParser):
         modification_time = mft_attribute.get_modification_time_as_integer()
       except OverflowError as exception:
         parser_mediator.ProduceExtractionError((
-            u'unable to read the modification timestamp from MFT attribute: '
-            u'0x{0:08x} with error: {1:s}').format(
+            'unable to read the modification timestamp from MFT attribute: '
+            '0x{0:08x} with error: {1:s}').format(
                 mft_attribute.attribute_type, exception))
         modification_time = None
 
@@ -198,8 +200,8 @@ class NTFSMFTParser(interface.FileObjectParser):
         access_time = mft_attribute.get_access_time_as_integer()
       except OverflowError as exception:
         parser_mediator.ProduceExtractionError((
-            u'unable to read the access timestamp from MFT attribute: '
-            u'0x{0:08x} with error: {1:s}').format(
+            'unable to read the access timestamp from MFT attribute: '
+            '0x{0:08x} with error: {1:s}').format(
                 exception, mft_attribute.attribute_type))
         access_time = None
 
@@ -214,8 +216,8 @@ class NTFSMFTParser(interface.FileObjectParser):
             mft_attribute.get_entry_modification_time_as_integer())
       except OverflowError as exception:
         parser_mediator.ProduceExtractionError((
-            u'unable to read the entry modification timestamp from MFT '
-            u'attribute: 0x{0:08x} with error: {1:s}').format(
+            'unable to read the entry modification timestamp from MFT '
+            'attribute: 0x{0:08x} with error: {1:s}').format(
                 mft_attribute.attribute_type, exception))
         entry_modification_time = None
 
@@ -226,7 +228,7 @@ class NTFSMFTParser(interface.FileObjectParser):
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
     elif mft_attribute.attribute_type == self._MFT_ATTRIBUTE_OBJECT_ID:
-      display_name = u'$MFT: {0:d}-{1:d}'.format(
+      display_name = '$MFT: {0:d}-{1:d}'.format(
           mft_entry.file_reference & 0xffffffffffff,
           mft_entry.file_reference >> 48)
 
@@ -238,8 +240,8 @@ class NTFSMFTParser(interface.FileObjectParser):
 
         except (TypeError, ValueError) as exception:
           parser_mediator.ProduceExtractionError((
-              u'unable to read droid file identifier from attribute: 0x{0:08x} '
-              u'with error: {1:s}').format(
+              'unable to read droid file identifier from attribute: 0x{0:08x} '
+              'with error: {1:s}').format(
                   mft_attribute.attribute_type, exception))
 
       if mft_attribute.birth_droid_file_identifier:
@@ -250,8 +252,8 @@ class NTFSMFTParser(interface.FileObjectParser):
 
         except (TypeError, ValueError) as exception:
           parser_mediator.ProduceExtractionError((
-              u'unable to read birth droid file identifier from attribute: '
-              u'0x{0:08x} with error: {1:s}').format(
+              'unable to read birth droid file identifier from attribute: '
+              '0x{0:08x} with error: {1:s}').format(
                   mft_attribute.attribute_type, exception))
 
   def _ParseMFTEntry(self, parser_mediator, mft_entry):
@@ -269,7 +271,7 @@ class NTFSMFTParser(interface.FileObjectParser):
 
       except IOError as exception:
         parser_mediator.ProduceExtractionError((
-            u'unable to parse MFT attribute: {0:d} with error: {1:s}').format(
+            'unable to parse MFT attribute: {0:d} with error: {1:s}').format(
                 attribute_index, exception))
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
@@ -286,7 +288,7 @@ class NTFSMFTParser(interface.FileObjectParser):
       mft_metadata_file.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to open file with error: {0:s}'.format(exception))
+          'unable to open file with error: {0:s}'.format(exception))
 
     for entry_index in range(0, mft_metadata_file.number_of_file_entries):
       try:
@@ -295,7 +297,7 @@ class NTFSMFTParser(interface.FileObjectParser):
 
       except IOError as exception:
         parser_mediator.ProduceExtractionError((
-            u'unable to parse MFT entry: {0:d} with error: {1:s}').format(
+            'unable to parse MFT entry: {0:d} with error: {1:s}').format(
                 entry_index, exception))
 
     mft_metadata_file.close()
@@ -306,25 +308,25 @@ class NTFSUsnJrnlParser(interface.FileObjectParser):
 
   _INITIAL_FILE_OFFSET = None
 
-  NAME = u'usnjrnl'
-  DESCRIPTION = u'Parser for NTFS USN change journal ($UsnJrnl).'
+  NAME = 'usnjrnl'
+  DESCRIPTION = 'Parser for NTFS USN change journal ($UsnJrnl).'
 
   _USN_RECORD_V2 = construct.Struct(
-      u'usn_record_v2',
-      construct.ULInt32(u'size'),
-      construct.ULInt16(u'major_version'),
-      construct.ULInt16(u'minor_version'),
-      construct.ULInt64(u'file_reference'),
-      construct.ULInt64(u'parent_file_reference'),
-      construct.ULInt64(u'update_sequence_number'),
-      construct.ULInt64(u'update_date_time'),
-      construct.ULInt32(u'update_reason_flags'),
-      construct.ULInt32(u'update_source_flags'),
-      construct.ULInt32(u'security_descriptor_identifier'),
-      construct.ULInt32(u'file_attribute_flags'),
-      construct.ULInt16(u'name_size'),
-      construct.ULInt16(u'name_offset'),
-      construct.String(u'name', lambda ctx: ctx.size - 60))
+      'usn_record_v2',
+      construct.ULInt32('size'),
+      construct.ULInt16('major_version'),
+      construct.ULInt16('minor_version'),
+      construct.ULInt64('file_reference'),
+      construct.ULInt64('parent_file_reference'),
+      construct.ULInt64('update_sequence_number'),
+      construct.ULInt64('update_date_time'),
+      construct.ULInt32('update_reason_flags'),
+      construct.ULInt32('update_source_flags'),
+      construct.ULInt32('security_descriptor_identifier'),
+      construct.ULInt32('file_attribute_flags'),
+      construct.ULInt16('name_size'),
+      construct.ULInt16('name_offset'),
+      construct.String('name', lambda ctx: ctx.size - 60))
 
   # TODO: add support for USN_RECORD_V3 when actually seen to be used.
 
@@ -347,8 +349,8 @@ class NTFSUsnJrnlParser(interface.FileObjectParser):
         usn_record_struct = self._USN_RECORD_V2.parse(usn_record_data)
       except (IOError, construct.FieldError) as exception:
         parser_mediator.ProduceExtractionError((
-            u'unable to parse USN record at offset: 0x{0:08x} '
-            u'with error: {1:s}').format(current_offset, exception))
+            'unable to parse USN record at offset: 0x{0:08x} '
+            'with error: {1:s}').format(current_offset, exception))
         continue
 
       name_offset = usn_record_struct.name_offset - 60
@@ -356,13 +358,13 @@ class NTFSUsnJrnlParser(interface.FileObjectParser):
           name_offset:usn_record_struct.name_size]
 
       try:
-        name_string = utf16_stream.decode(u'utf-16-le')
+        name_string = utf16_stream.decode('utf-16-le')
       except (UnicodeDecodeError, UnicodeEncodeError) as exception:
-        name_string = utf16_stream.decode(u'utf-16-le', errors=u'replace')
+        name_string = utf16_stream.decode('utf-16-le', errors='replace')
         parser_mediator.ProduceExtractionError((
-            u'unable to decode USN record name string with error: '
-            u'{0:s}. Characters that cannot be decoded will be replaced '
-            u'with "?" or "\\ufffd".').format(exception))
+            'unable to decode USN record name string with error: '
+            '{0:s}. Characters that cannot be decoded will be replaced '
+            'with "?" or "\\ufffd".').format(exception))
 
       event_data = NTFSUSNChangeEventData()
       event_data.file_attribute_flags = usn_record_struct.file_attribute_flags
@@ -376,7 +378,7 @@ class NTFSUsnJrnlParser(interface.FileObjectParser):
       event_data.update_source_flags = usn_record_struct.update_source_flags
 
       if not usn_record_struct.update_date_time:
-        date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+        date_time = dfdatetime_semantic_time.SemanticTime('Not set')
       else:
         date_time = dfdatetime_filetime.Filetime(
             timestamp=usn_record_struct.update_date_time)
@@ -400,7 +402,7 @@ class NTFSUsnJrnlParser(interface.FileObjectParser):
       volume.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to open NTFS volume with error: {0:s}'.format(exception))
+          'unable to open NTFS volume with error: {0:s}'.format(exception))
 
     try:
       usn_change_journal = volume.get_usn_change_journal()

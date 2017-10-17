@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """SQLite parser."""
 
+from __future__ import unicode_literals
+
 import logging
 import os
 import tempfile
@@ -92,10 +94,10 @@ class SQLiteDatabase(object):
   _READ_BUFFER_SIZE = 65536
 
   SCHEMA_QUERY = (
-      u'SELECT tbl_name, sql '
-      u'FROM sqlite_master '
-      u'WHERE type = "table" AND tbl_name != "xp_proc" '
-      u'AND tbl_name != "sqlite_sequence"')
+      'SELECT tbl_name, sql '
+      'FROM sqlite_master '
+      'WHERE type = "table" AND tbl_name != "xp_proc" '
+      'AND tbl_name != "sqlite_sequence"')
 
   def __init__(self, filename, temporary_directory=None):
     """Initializes the database object.
@@ -108,9 +110,9 @@ class SQLiteDatabase(object):
     self._database = None
     self._filename = filename
     self._is_open = False
-    self._temp_db_file_path = u''
+    self._temp_db_file_path = ''
     self._temporary_directory = temporary_directory
-    self._temp_wal_file_path = u''
+    self._temp_wal_file_path = ''
 
     self.schema = {}
 
@@ -146,22 +148,22 @@ class SQLiteDatabase(object):
         os.remove(self._temp_db_file_path)
       except (OSError, IOError) as exception:
         logging.warning((
-            u'Unable to remove temporary copy: {0:s} of SQLite database: '
-            u'{1:s} with error: {2:s}').format(
+            'Unable to remove temporary copy: {0:s} of SQLite database: '
+            '{1:s} with error: {2:s}').format(
                 self._temp_db_file_path, self._filename, exception))
 
-    self._temp_db_file_path = u''
+    self._temp_db_file_path = ''
 
     if os.path.exists(self._temp_wal_file_path):
       try:
         os.remove(self._temp_wal_file_path)
       except (OSError, IOError) as exception:
         logging.warning((
-            u'Unable to remove temporary copy: {0:s} of SQLite database: '
-            u'{1:s} with error: {2:s}').format(
+            'Unable to remove temporary copy: {0:s} of SQLite database: '
+            '{1:s} with error: {2:s}').format(
                 self._temp_wal_file_path, self._filename, exception))
 
-    self._temp_wal_file_path = u''
+    self._temp_wal_file_path = ''
 
     self._is_open = False
 
@@ -184,7 +186,7 @@ class SQLiteDatabase(object):
       ValueError: if the file-like object is missing.
     """
     if not file_object:
-      raise ValueError(u'Missing file object.')
+      raise ValueError('Missing file object.')
 
     # TODO: Current design copies the entire file into a buffer
     # that is parsed by each SQLite parser. This is not very efficient,
@@ -216,7 +218,7 @@ class SQLiteDatabase(object):
     if wal_file_object:
       # Create WAL file using same filename so it is available for
       # sqlite3.connect()
-      temporary_filename = u'{0:s}-wal'.format(self._temp_db_file_path)
+      temporary_filename = '{0:s}-wal'.format(self._temp_db_file_path)
       temporary_file = open(temporary_filename, 'wb')
       try:
         self._CopyFileObjectToTemporaryFile(wal_file_object, temporary_file)
@@ -237,7 +239,7 @@ class SQLiteDatabase(object):
       sql_results = cursor.execute(self.SCHEMA_QUERY)
 
       self.schema = {
-          table_name: u' '.join(query.split())
+          table_name: ' '.join(query.split())
           for table_name, query in sql_results}
 
     except sqlite3.DatabaseError as exception:
@@ -245,13 +247,13 @@ class SQLiteDatabase(object):
       self._database = None
 
       os.remove(self._temp_db_file_path)
-      self._temp_db_file_path = u''
+      self._temp_db_file_path = ''
       if self._temp_wal_file_path:
         os.remove(self._temp_wal_file_path)
-        self._temp_wal_file_path = u''
+        self._temp_wal_file_path = ''
 
       logging.debug(
-          u'Unable to parse SQLite database: {0:s} with error: {1:s}'.format(
+          'Unable to parse SQLite database: {0:s} with error: {1:s}'.format(
               self._filename, exception))
       raise
 
@@ -277,8 +279,8 @@ class SQLiteDatabase(object):
 class SQLiteParser(interface.FileEntryParser):
   """Parses SQLite database files."""
 
-  NAME = u'sqlite'
-  DESCRIPTION = u'Parser for SQLite database files.'
+  NAME = 'sqlite'
+  DESCRIPTION = 'Parser for SQLite database files.'
 
   _plugin_classes = {}
 
@@ -300,11 +302,11 @@ class SQLiteParser(interface.FileEntryParser):
         dfvfs.FileEntry: a file entry object of WAL file or None
     """
     path_spec = database_file_entry.path_spec
-    location = getattr(path_spec, u'location', None)
+    location = getattr(path_spec, 'location', None)
     if not path_spec or not location:
       return None, None
 
-    location_wal = u'{0:s}-wal'.format(location)
+    location_wal = '{0:s}-wal'.format(location)
     file_system = database_file_entry.GetFileSystem()
     wal_path_spec = dfvfs_factory.Factory.NewPathSpec(
         file_system.type_indicator, parent=path_spec.parent,
@@ -326,8 +328,8 @@ class SQLiteParser(interface.FileEntryParser):
 
     except (IOError, ValueError, sqlite3.DatabaseError) as exception:
       parser_mediator.ProduceExtractionError((
-          u'unable to open SQLite database and WAL with error: '
-          u'{0:s}').format(exception))
+          'unable to open SQLite database and WAL with error: '
+          '{0:s}').format(exception))
 
       return None, None
 
@@ -363,7 +365,7 @@ class SQLiteParser(interface.FileEntryParser):
 
     except (IOError, ValueError, sqlite3.DatabaseError) as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to open SQLite database with error: {0:s}'.format(exception))
+          'unable to open SQLite database with error: {0:s}'.format(exception))
       file_object.close()
       return
 
@@ -388,8 +390,8 @@ class SQLiteParser(interface.FileEntryParser):
 
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionError((
-              u'plugin: {0:s} unable to parse SQLite database with error: '
-              u'{1:s}').format(plugin.NAME, exception))
+              'plugin: {0:s} unable to parse SQLite database with error: '
+              '{1:s}').format(plugin.NAME, exception))
 
     finally:
       database.Close()

@@ -5,6 +5,8 @@ The format specifications can be read here:
   http://wiki.sleuthkit.org/index.php?title=Body_file
 """
 
+from __future__ import unicode_literals
+
 import re
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -32,7 +34,7 @@ class MactimeEventData(events.EventData):
     user_sid (str): user security identifier (SID).
   """
 
-  DATA_TYPE = u'fs:mactime:line'
+  DATA_TYPE = 'fs:mactime:line'
 
   def __init__(self):
     """Initializes event data."""
@@ -50,12 +52,12 @@ class MactimeEventData(events.EventData):
 class MactimeParser(text_parser.TextCSVParser):
   """Parses SleuthKit's mactime bodyfiles."""
 
-  NAME = u'mactime'
-  DESCRIPTION = u'Parser for SleuthKit\'s mactime bodyfiles.'
+  NAME = 'mactime'
+  DESCRIPTION = 'Parser for SleuthKit\'s mactime bodyfiles.'
 
   COLUMNS = [
-      u'md5', u'name', u'inode', u'mode_as_string', u'uid', u'gid', u'size',
-      u'atime', u'mtime', u'ctime', u'btime']
+      'md5', 'name', 'inode', 'mode_as_string', 'uid', 'gid', 'size',
+      'atime', 'mtime', 'ctime', 'btime']
   VALUE_SEPARATOR = b'|'
 
   _MD5_RE = re.compile(r'^[0-9a-fA-F]{32}$')
@@ -63,10 +65,10 @@ class MactimeParser(text_parser.TextCSVParser):
   # Mapping according to:
   # http://wiki.sleuthkit.org/index.php?title=Mactime_output
   _TIMESTAMP_DESC_MAP = {
-      u'atime': definitions.TIME_DESCRIPTION_LAST_ACCESS,
-      u'btime': definitions.TIME_DESCRIPTION_CREATION,
-      u'ctime': definitions.TIME_DESCRIPTION_CHANGE,
-      u'mtime': definitions.TIME_DESCRIPTION_MODIFICATION,
+      'atime': definitions.TIME_DESCRIPTION_LAST_ACCESS,
+      'btime': definitions.TIME_DESCRIPTION_CREATION,
+      'ctime': definitions.TIME_DESCRIPTION_CHANGE,
+      'mtime': definitions.TIME_DESCRIPTION_MODIFICATION,
   }
 
   def _GetIntegerValue(self, row, value_name):
@@ -94,22 +96,22 @@ class MactimeParser(text_parser.TextCSVParser):
       row_offset (int): number of the corresponding line.
       row (dict[str, str]): fields of a single row, as denoted in COLUMNS.
     """
-    filename = row.get(u'name', None)
-    md5_hash = row.get(u'md5', None)
-    mode = row.get(u'mode_as_string', None)
+    filename = row.get('name', None)
+    md5_hash = row.get('md5', None)
+    mode = row.get('mode_as_string', None)
 
-    inode_number = row.get(u'inode', None)
-    if u'-' in inode_number:
-      inode_number, _, _ = inode_number.partition(u'-')
+    inode_number = row.get('inode', None)
+    if '-' in inode_number:
+      inode_number, _, _ = inode_number.partition('-')
 
     try:
       inode_number = int(inode_number, 10)
     except (TypeError, ValueError):
       inode_number = None
 
-    data_size = self._GetIntegerValue(row, u'size')
-    user_uid = self._GetIntegerValue(row, u'uid')
-    user_gid = self._GetIntegerValue(row, u'gid')
+    data_size = self._GetIntegerValue(row, 'size')
+    user_uid = self._GetIntegerValue(row, 'uid')
+    user_gid = self._GetIntegerValue(row, 'gid')
 
     event_data = MactimeEventData()
     event_data.filename = filename
@@ -124,7 +126,7 @@ class MactimeParser(text_parser.TextCSVParser):
       event_data.user_sid = None
     else:
       # Note that the user_sid value is expected to be a string.
-      event_data.user_sid = u'{0:d}'.format(user_uid)
+      event_data.user_sid = '{0:d}'.format(user_uid)
 
     for value_name, timestamp_description in iter(
         self._TIMESTAMP_DESC_MAP.items()):
@@ -149,7 +151,7 @@ class MactimeParser(text_parser.TextCSVParser):
       bool: True if the row is valid.
     """
     # The md5 value is '0' if not set.
-    if row[u'md5'] != b'0' and not self._MD5_RE.match(row[u'md5']):
+    if row['md5'] != b'0' and not self._MD5_RE.match(row['md5']):
       return False
 
     try:
@@ -157,7 +159,7 @@ class MactimeParser(text_parser.TextCSVParser):
       # and then back to string so it can be compared, if the value is
       # not a string representation of an integer, e.g. '12a' then this
       # conversion will fail and we return a False value.
-      if str(int(row.get(u'size', b'0'), 10)) != row.get(u'size', None):
+      if str(int(row.get('size', b'0'), 10)) != row.get('size', None):
         return False
     except ValueError:
       return False

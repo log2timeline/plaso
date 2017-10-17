@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Java Cache IDX files."""
 
+from __future__ import unicode_literals
+
 # TODO:
 #  * 6.02 files did not retain IP addresses. However, the
 #    deploy_resource_codebase header field may contain the host IP.
@@ -31,7 +33,7 @@ class JavaIDXEventData(events.EventData):
     url (str): URL of the downloaded file.
   """
 
-  DATA_TYPE = u'java:download:idx'
+  DATA_TYPE = 'java:download:idx'
 
   def __init__(self):
     """Initializes event data."""
@@ -56,59 +58,59 @@ class JavaIDXParser(interface.FileObjectParser):
 
   _INITIAL_FILE_OFFSET = None
 
-  NAME = u'java_idx'
-  DESCRIPTION = u'Parser for Java WebStart Cache IDX files.'
+  NAME = 'java_idx'
+  DESCRIPTION = 'Parser for Java WebStart Cache IDX files.'
 
   IDX_SHORT_STRUCT = construct.Struct(
-      u'magic',
-      construct.UBInt8(u'busy'),
-      construct.UBInt8(u'incomplete'),
-      construct.UBInt32(u'idx_version'))
+      'magic',
+      construct.UBInt8('busy'),
+      construct.UBInt8('incomplete'),
+      construct.UBInt32('idx_version'))
 
   IDX_602_STRUCT = construct.Struct(
-      u'IDX_602_Full',
-      construct.UBInt16(u'null_space'),
-      construct.UBInt8(u'shortcut'),
-      construct.UBInt32(u'content_length'),
-      construct.UBInt64(u'last_modified_date'),
-      construct.UBInt64(u'expiration_date'),
+      'IDX_602_Full',
+      construct.UBInt16('null_space'),
+      construct.UBInt8('shortcut'),
+      construct.UBInt32('content_length'),
+      construct.UBInt64('last_modified_date'),
+      construct.UBInt64('expiration_date'),
       construct.PascalString(
-          u'version_string', length_field=construct.UBInt16(u'length')),
+          'version_string', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          u'url', length_field=construct.UBInt16(u'length')),
+          'url', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          u'namespace', length_field=construct.UBInt16(u'length')),
-      construct.UBInt32(u'FieldCount'))
+          'namespace', length_field=construct.UBInt16('length')),
+      construct.UBInt32('FieldCount'))
 
   IDX_605_SECTION_ONE_STRUCT = construct.Struct(
-      u'IDX_605_Section1',
-      construct.UBInt8(u'shortcut'),
-      construct.UBInt32(u'content_length'),
-      construct.UBInt64(u'last_modified_date'),
-      construct.UBInt64(u'expiration_date'),
-      construct.UBInt64(u'validation_date'),
-      construct.UBInt8(u'signed'),
-      construct.UBInt32(u'sec2len'),
-      construct.UBInt32(u'sec3len'),
-      construct.UBInt32(u'sec4len'))
+      'IDX_605_Section1',
+      construct.UBInt8('shortcut'),
+      construct.UBInt32('content_length'),
+      construct.UBInt64('last_modified_date'),
+      construct.UBInt64('expiration_date'),
+      construct.UBInt64('validation_date'),
+      construct.UBInt8('signed'),
+      construct.UBInt32('sec2len'),
+      construct.UBInt32('sec3len'),
+      construct.UBInt32('sec4len'))
 
   IDX_605_SECTION_TWO_STRUCT = construct.Struct(
-      u'IDX_605_Section2',
+      'IDX_605_Section2',
       construct.PascalString(
-          u'version', length_field=construct.UBInt16(u'length')),
+          'version', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          u'url', length_field=construct.UBInt16(u'length')),
+          'url', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          u'namespec', length_field=construct.UBInt16(u'length')),
+          'namespec', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          u'ip_address', length_field=construct.UBInt16(u'length')),
-      construct.UBInt32(u'FieldCount'))
+          'ip_address', length_field=construct.UBInt16('length')),
+      construct.UBInt32('FieldCount'))
 
   # Java uses Pascal-style strings, but with a 2-byte length field.
   JAVA_READUTF_STRING = construct.Struct(
-      u'Java.ReadUTF',
+      'Java.ReadUTF',
       construct.PascalString(
-          u'string', length_field=construct.UBInt16(u'length')))
+          'string', length_field=construct.UBInt16('length')))
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Java WebStart Cache IDX file-like object.
@@ -125,7 +127,7 @@ class JavaIDXParser(interface.FileObjectParser):
       magic = self.IDX_SHORT_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          u'Unable to parse Java IDX file with error: {0:s}.'.format(exception))
+          'Unable to parse Java IDX file with error: {0:s}.'.format(exception))
 
     # Fields magic.busy and magic.incomplete are normally 0x00. They
     # are set to 0x01 if the file is currently being downloaded. Logic
@@ -134,10 +136,10 @@ class JavaIDXParser(interface.FileObjectParser):
     # Field magic.idx_version is the file version, of which only
     # certain versions are supported.
     if magic.busy > 1 or magic.incomplete > 1:
-      raise errors.UnableToParseFile(u'Not a valid Java IDX file')
+      raise errors.UnableToParseFile('Not a valid Java IDX file')
 
     if not magic.idx_version in [602, 603, 604, 605]:
-      raise errors.UnableToParseFile(u'Not a valid Java IDX file')
+      raise errors.UnableToParseFile('Not a valid Java IDX file')
 
     # Obtain the relevant values from the file. The last modified date
     # denotes when the file was last modified on the HOST. For example,
@@ -146,7 +148,7 @@ class JavaIDXParser(interface.FileObjectParser):
       section_one = self.IDX_602_STRUCT.parse_stream(file_object)
       last_modified_date = section_one.last_modified_date
       url = section_one.url
-      ip_address = u'Unknown'
+      ip_address = 'Unknown'
       http_header_count = section_one.FieldCount
     elif magic.idx_version in [603, 604, 605]:
 
@@ -165,8 +167,8 @@ class JavaIDXParser(interface.FileObjectParser):
         ip_address = section_two.ip_address
         http_header_count = section_two.FieldCount
       else:
-        url = u'Unknown'
-        ip_address = u'Unknown'
+        url = 'Unknown'
+        ip_address = 'Unknown'
         http_header_count = 0
 
     # File offset is now just prior to HTTP headers. Make sure there
@@ -175,7 +177,7 @@ class JavaIDXParser(interface.FileObjectParser):
     for field in range(0, http_header_count):
       field = self.JAVA_READUTF_STRING.parse_stream(file_object)
       value = self.JAVA_READUTF_STRING.parse_stream(file_object)
-      if field.string == u'date':
+      if field.string == 'date':
         # Time string "should" be in UTC or have an associated time zone
         # information in the string itself. If that is not the case then
         # there is no reliable method for plaso to determine the proper
@@ -186,11 +188,11 @@ class JavaIDXParser(interface.FileObjectParser):
         except errors.TimestampError:
           download_date = None
           parser_mediator.ProduceExtractionError(
-              u'Unable to parse time value: {0:s}'.format(value.string))
+              'Unable to parse time value: {0:s}'.format(value.string))
 
     if not url or not ip_address:
       raise errors.UnableToParseFile(
-          u'Unexpected Error: URL or IP address not found in file.')
+          'Unexpected Error: URL or IP address not found in file.')
 
     event_data = JavaIDXEventData()
     event_data.idx_version = magic.idx_version
@@ -199,11 +201,11 @@ class JavaIDXParser(interface.FileObjectParser):
 
     date_time = dfdatetime_java_time.JavaTime(timestamp=last_modified_date)
     # TODO: Move the timestamp description into eventdata.
-    event = time_events.DateTimeValuesEvent(date_time, u'File Hosted Date')
+    event = time_events.DateTimeValuesEvent(date_time, 'File Hosted Date')
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if section_one:
-      expiration_date = section_one.get(u'expiration_date', None)
+      expiration_date = section_one.get('expiration_date', None)
       if expiration_date:
         date_time = dfdatetime_java_time.JavaTime(
             timestamp=expiration_date)

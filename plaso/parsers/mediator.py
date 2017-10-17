@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The parser mediator object."""
+"""The parser mediator."""
 
 from __future__ import unicode_literals
 

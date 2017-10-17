@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for .customDestinations-ms files."""
 
+from __future__ import unicode_literals
+
 import logging
 import os
 
@@ -21,8 +23,8 @@ class CustomDestinationsParser(interface.FileObjectParser):
 
   _INITIAL_FILE_OFFSET = None
 
-  NAME = u'custom_destinations'
-  DESCRIPTION = u'Parser for *.customDestinations-ms files.'
+  NAME = 'custom_destinations'
+  DESCRIPTION = 'Parser for *.customDestinations-ms files.'
 
   # We cannot use the parser registry here since winlnk could be disabled.
   # TODO: see if there is a more elegant solution for this.
@@ -34,29 +36,29 @@ class CustomDestinationsParser(interface.FileObjectParser):
   _FOOTER_SIGNATURE = 0xbabffbab
 
   _FILE_HEADER = construct.Struct(
-      u'file_header',
-      construct.ULInt32(u'unknown1'),
-      construct.ULInt32(u'unknown2'),
-      construct.ULInt32(u'unknown3'),
-      construct.ULInt32(u'header_values_type'))
+      'file_header',
+      construct.ULInt32('unknown1'),
+      construct.ULInt32('unknown2'),
+      construct.ULInt32('unknown3'),
+      construct.ULInt32('header_values_type'))
 
   _HEADER_VALUE_TYPE_0 = construct.Struct(
-      u'header_value_type_0',
-      construct.ULInt32(u'number_of_characters'),
-      construct.String(u'string', lambda ctx: ctx.number_of_characters * 2),
-      construct.ULInt32(u'unknown1'))
+      'header_value_type_0',
+      construct.ULInt32('number_of_characters'),
+      construct.String('string', lambda ctx: ctx.number_of_characters * 2),
+      construct.ULInt32('unknown1'))
 
   _HEADER_VALUE_TYPE_1_OR_2 = construct.Struct(
-      u'header_value_type_1_or_2',
-      construct.ULInt32(u'unknown1'))
+      'header_value_type_1_or_2',
+      construct.ULInt32('unknown1'))
 
   _ENTRY_HEADER = construct.Struct(
-      u'entry_header',
-      construct.String(u'guid', 16))
+      'entry_header',
+      construct.String('guid', 16))
 
   _FILE_FOOTER = construct.Struct(
-      u'file_footer',
-      construct.ULInt32(u'signature'))
+      'file_footer',
+      construct.ULInt32('signature'))
 
   def _ParseLNKFile(
       self, parser_mediator, file_entry, file_offset, remaining_file_size):
@@ -77,13 +79,13 @@ class CustomDestinationsParser(interface.FileObjectParser):
         definitions.TYPE_INDICATOR_DATA_RANGE, range_offset=file_offset,
         range_size=remaining_file_size, parent=file_entry.path_spec)
 
-    display_name = u'{0:s} # 0x{1:08x}'.format(file_entry.name, file_offset)
+    display_name = '{0:s} # 0x{1:08x}'.format(file_entry.name, file_offset)
 
     try:
       lnk_file_object = resolver.Resolver.OpenFileObject(path_spec)
     except (dfvfs_errors.BackEndError, RuntimeError) as exception:
       message = (
-          u'Unable to open LNK file: {0:s} with error {1:s}').format(
+          'Unable to open LNK file: {0:s} with error {1:s}').format(
               display_name, exception)
       parser_mediator.ProduceExtractionError(message)
       return 0
@@ -118,18 +120,18 @@ class CustomDestinationsParser(interface.FileObjectParser):
       file_header = self._FILE_HEADER.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile((
-          u'Invalid Custom Destination: {0:s} - unable to parse '
-          u'file header with error: {1:s}').format(display_name, exception))
+          'Invalid Custom Destination: {0:s} - unable to parse '
+          'file header with error: {1:s}').format(display_name, exception))
 
     if file_header.unknown1 != 2:
       raise errors.UnableToParseFile((
-          u'Unsupported Custom Destination file: {0:s} - invalid unknown1: '
-          u'{1:d}.').format(display_name, file_header.unknown1))
+          'Unsupported Custom Destination file: {0:s} - invalid unknown1: '
+          '{1:d}.').format(display_name, file_header.unknown1))
 
     if file_header.header_values_type > 2:
       raise errors.UnableToParseFile((
-          u'Unsupported Custom Destination file: {0:s} - invalid header value '
-          u'type: {1:d}.').format(display_name, file_header.header_values_type))
+          'Unsupported Custom Destination file: {0:s} - invalid header value '
+          'type: {1:d}.').format(display_name, file_header.header_values_type))
 
     if file_header.header_values_type == 0:
       data_structure = self._HEADER_VALUE_TYPE_0
@@ -140,8 +142,8 @@ class CustomDestinationsParser(interface.FileObjectParser):
       _ = data_structure.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile((
-          u'Invalid Custom Destination file: {0:s} - unable to parse '
-          u'header value with error: {1:s}').format(
+          'Invalid Custom Destination file: {0:s} - unable to parse '
+          'header value with error: {1:s}').format(
               display_name, exception))
 
     file_size = file_object.get_size()
@@ -157,8 +159,8 @@ class CustomDestinationsParser(interface.FileObjectParser):
         entry_header = self._ENTRY_HEADER.parse_stream(file_object)
       except (IOError, construct.FieldError) as exception:
         error_message = (
-            u'Invalid Custom Destination file: {0:s} - unable to parse '
-            u'entry header with error: {1:s}').format(
+            'Invalid Custom Destination file: {0:s} - unable to parse '
+            'entry header with error: {1:s}').format(
                 display_name, exception)
 
         if not first_guid_checked:
@@ -169,8 +171,8 @@ class CustomDestinationsParser(interface.FileObjectParser):
 
       if entry_header.guid != self._LNK_GUID:
         error_message = (
-            u'Unsupported Custom Destination file: {0:s} - invalid entry '
-            u'header.').format(display_name)
+            'Unsupported Custom Destination file: {0:s} - invalid entry '
+            'header.').format(display_name)
 
         if not first_guid_checked:
           raise errors.UnableToParseFile(error_message)
@@ -180,8 +182,8 @@ class CustomDestinationsParser(interface.FileObjectParser):
           file_footer = self._FILE_FOOTER.parse_stream(file_object)
         except (IOError, construct.FieldError) as exception:
           raise IOError((
-              u'Unable to parse file footer at offset: 0x{0:08x} '
-              u'with error: {1:s}').format(file_offset, exception))
+              'Unable to parse file footer at offset: 0x{0:08x} '
+              'with error: {1:s}').format(file_offset, exception))
 
         if file_footer.signature != self._FOOTER_SIGNATURE:
           logging.warning(error_message)
@@ -207,13 +209,13 @@ class CustomDestinationsParser(interface.FileObjectParser):
       file_footer = self._FILE_FOOTER.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       logging.warning((
-          u'Invalid Custom Destination file: {0:s} - unable to parse '
-          u'footer with error: {1:s}').format(display_name, exception))
+          'Invalid Custom Destination file: {0:s} - unable to parse '
+          'footer with error: {1:s}').format(display_name, exception))
 
     if file_footer.signature != self._FOOTER_SIGNATURE:
       logging.warning((
-          u'Unsupported Custom Destination file: {0:s} - invalid footer '
-          u'signature.').format(display_name))
+          'Unsupported Custom Destination file: {0:s} - invalid footer '
+          'signature.').format(display_name))
 
 
 manager.ParsersManager.RegisterParser(CustomDestinationsParser)

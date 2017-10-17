@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Google Chrome and Chromium Cache files."""
 
+from __future__ import unicode_literals
+
 import os
 
 import construct
@@ -55,19 +57,19 @@ class CacheAddress(object):
     self.value = cache_address
 
     if cache_address & 0x80000000:
-      self.is_initialized = u'True'
+      self.is_initialized = 'True'
     else:
-      self.is_initialized = u'False'
+      self.is_initialized = 'False'
 
     self.file_type = (cache_address & 0x70000000) >> 28
     if not cache_address == 0x00000000:
       if self.file_type == self.FILE_TYPE_SEPARATE:
         file_selector = cache_address & 0x0fffffff
-        self.filename = u'f_{0:06x}'.format(file_selector)
+        self.filename = 'f_{0:06x}'.format(file_selector)
 
       elif self.file_type in self._BLOCK_DATA_FILE_TYPES:
         file_selector = (cache_address & 0x00ff0000) >> 16
-        self.filename = u'data_{0:d}'.format(file_selector)
+        self.filename = 'data_{0:d}'.format(file_selector)
 
         file_block_size = self._FILE_TYPE_BLOCK_SIZES[self.file_type]
         self.block_number = cache_address & 0x0000ffff
@@ -104,19 +106,19 @@ class IndexFile(object):
   SIGNATURE = 0xc103cac3
 
   _FILE_HEADER = construct.Struct(
-      u'chrome_cache_index_file_header',
-      construct.ULInt32(u'signature'),
-      construct.ULInt16(u'minor_version'),
-      construct.ULInt16(u'major_version'),
-      construct.ULInt32(u'number_of_entries'),
-      construct.ULInt32(u'stored_data_size'),
-      construct.ULInt32(u'last_created_file_number'),
-      construct.ULInt32(u'unknown1'),
-      construct.ULInt32(u'unknown2'),
-      construct.ULInt32(u'table_size'),
-      construct.ULInt32(u'unknown3'),
-      construct.ULInt32(u'unknown4'),
-      construct.ULInt64(u'creation_time'),
+      'chrome_cache_index_file_header',
+      construct.ULInt32('signature'),
+      construct.ULInt16('minor_version'),
+      construct.ULInt16('major_version'),
+      construct.ULInt32('number_of_entries'),
+      construct.ULInt32('stored_data_size'),
+      construct.ULInt32('last_created_file_number'),
+      construct.ULInt32('unknown1'),
+      construct.ULInt32('unknown2'),
+      construct.ULInt32('table_size'),
+      construct.ULInt32('unknown3'),
+      construct.ULInt32('unknown4'),
+      construct.ULInt64('creation_time'),
       construct.Padding(208))
 
   def __init__(self):
@@ -138,30 +140,30 @@ class IndexFile(object):
     try:
       file_header = self._FILE_HEADER.parse_stream(self._file_object)
     except construct.FieldError as exception:
-      raise IOError(u'Unable to parse file header with error: {0:s}'.format(
+      raise IOError('Unable to parse file header with error: {0:s}'.format(
           exception))
 
-    signature = file_header.get(u'signature')
+    signature = file_header.get('signature')
 
     if signature != self.SIGNATURE:
-      raise IOError(u'Unsupported index file signature')
+      raise IOError('Unsupported index file signature')
 
-    self.version = u'{0:d}.{1:d}'.format(
-        file_header.get(u'major_version'),
-        file_header.get(u'minor_version'))
+    self.version = '{0:d}.{1:d}'.format(
+        file_header.get('major_version'),
+        file_header.get('minor_version'))
 
-    if self.version not in [u'2.0', u'2.1']:
-      raise IOError(u'Unsupported index file version: {0:s}'.format(
+    if self.version not in ['2.0', '2.1']:
+      raise IOError('Unsupported index file version: {0:s}'.format(
           self.version))
 
-    self.creation_time = file_header.get(u'creation_time')
+    self.creation_time = file_header.get('creation_time')
 
   def _ReadIndexTable(self):
     """Reads the index table."""
     cache_address_data = self._file_object.read(4)
 
     while len(cache_address_data) == 4:
-      value = construct.ULInt32(u'cache_address').parse(cache_address_data)
+      value = construct.ULInt32('cache_address').parse(cache_address_data)
 
       if value:
         cache_address = CacheAddress(value)
@@ -194,37 +196,37 @@ class DataBlockFile(object):
   SIGNATURE = 0xc104cac3
 
   _FILE_HEADER = construct.Struct(
-      u'chrome_cache_data_file_header',
-      construct.ULInt32(u'signature'),
-      construct.ULInt16(u'minor_version'),
-      construct.ULInt16(u'major_version'),
-      construct.ULInt16(u'file_number'),
-      construct.ULInt16(u'next_file_number'),
-      construct.ULInt32(u'block_size'),
-      construct.ULInt32(u'number_of_entries'),
-      construct.ULInt32(u'maximum_number_of_entries'),
-      construct.Array(4, construct.ULInt32(u'emtpy')),
-      construct.Array(4, construct.ULInt32(u'hints')),
-      construct.ULInt32(u'updating'),
-      construct.Array(5, construct.ULInt32(u'user')))
+      'chrome_cache_data_file_header',
+      construct.ULInt32('signature'),
+      construct.ULInt16('minor_version'),
+      construct.ULInt16('major_version'),
+      construct.ULInt16('file_number'),
+      construct.ULInt16('next_file_number'),
+      construct.ULInt32('block_size'),
+      construct.ULInt32('number_of_entries'),
+      construct.ULInt32('maximum_number_of_entries'),
+      construct.Array(4, construct.ULInt32('emtpy')),
+      construct.Array(4, construct.ULInt32('hints')),
+      construct.ULInt32('updating'),
+      construct.Array(5, construct.ULInt32('user')))
 
   _CACHE_ENTRY = construct.Struct(
-      u'chrome_cache_entry',
-      construct.ULInt32(u'hash'),
-      construct.ULInt32(u'next_address'),
-      construct.ULInt32(u'rankings_node_address'),
-      construct.ULInt32(u'reuse_count'),
-      construct.ULInt32(u'refetch_count'),
-      construct.ULInt32(u'state'),
-      construct.ULInt64(u'creation_time'),
-      construct.ULInt32(u'key_size'),
-      construct.ULInt32(u'long_key_address'),
-      construct.Array(4, construct.ULInt32(u'data_stream_sizes')),
-      construct.Array(4, construct.ULInt32(u'data_stream_addresses')),
-      construct.ULInt32(u'flags'),
+      'chrome_cache_entry',
+      construct.ULInt32('hash'),
+      construct.ULInt32('next_address'),
+      construct.ULInt32('rankings_node_address'),
+      construct.ULInt32('reuse_count'),
+      construct.ULInt32('refetch_count'),
+      construct.ULInt32('state'),
+      construct.ULInt64('creation_time'),
+      construct.ULInt32('key_size'),
+      construct.ULInt32('long_key_address'),
+      construct.Array(4, construct.ULInt32('data_stream_sizes')),
+      construct.Array(4, construct.ULInt32('data_stream_addresses')),
+      construct.ULInt32('flags'),
       construct.Padding(16),
-      construct.ULInt32(u'self_hash'),
-      construct.Array(160, construct.UBInt8(u'key')))
+      construct.ULInt32('self_hash'),
+      construct.Array(160, construct.UBInt8('key')))
 
   def __init__(self):
     """Initializes a data block file."""
@@ -246,24 +248,24 @@ class DataBlockFile(object):
     try:
       file_header = self._FILE_HEADER.parse_stream(self._file_object)
     except construct.FieldError as exception:
-      raise IOError(u'Unable to parse file header with error: {0:s}'.format(
+      raise IOError('Unable to parse file header with error: {0:s}'.format(
           exception))
 
-    signature = file_header.get(u'signature')
+    signature = file_header.get('signature')
 
     if signature != self.SIGNATURE:
-      raise IOError(u'Unsupported data block file signature')
+      raise IOError('Unsupported data block file signature')
 
-    self.version = u'{0:d}.{1:d}'.format(
-        file_header.get(u'major_version'),
-        file_header.get(u'minor_version'))
+    self.version = '{0:d}.{1:d}'.format(
+        file_header.get('major_version'),
+        file_header.get('minor_version'))
 
-    if self.version not in [u'2.0', u'2.1']:
-      raise IOError(u'Unsupported data block file version: {0:s}'.format(
+    if self.version not in ['2.0', '2.1']:
+      raise IOError('Unsupported data block file version: {0:s}'.format(
           self.version))
 
-    self.block_size = file_header.get(u'block_size')
-    self.number_of_entries = file_header.get(u'number_of_entries')
+    self.block_size = file_header.get('block_size')
+    self.number_of_entries = file_header.get('number_of_entries')
 
   def ReadCacheEntry(self, block_offset):
     """Reads a cache entry.
@@ -279,20 +281,20 @@ class DataBlockFile(object):
     try:
       cache_entry_struct = self._CACHE_ENTRY.parse_stream(self._file_object)
     except construct.FieldError as exception:
-      raise IOError(u'Unable to parse cache entry with error: {0:s}'.format(
+      raise IOError('Unable to parse cache entry with error: {0:s}'.format(
           exception))
 
     cache_entry = CacheEntry()
 
-    cache_entry.hash = cache_entry_struct.get(u'hash')
+    cache_entry.hash = cache_entry_struct.get('hash')
 
-    cache_entry.next = CacheAddress(cache_entry_struct.get(u'next_address'))
+    cache_entry.next = CacheAddress(cache_entry_struct.get('next_address'))
     cache_entry.rankings_node = CacheAddress(cache_entry_struct.get(
-        u'rankings_node_address'))
+        'rankings_node_address'))
 
-    cache_entry.creation_time = cache_entry_struct.get(u'creation_time')
+    cache_entry.creation_time = cache_entry_struct.get('creation_time')
 
-    byte_array = cache_entry_struct.get(u'key')
+    byte_array = cache_entry_struct.get('key')
     byte_string = b''.join(map(chr, byte_array))
     cache_entry.key, _, _ = byte_string.partition(b'\x00')
 
@@ -321,7 +323,7 @@ class ChromeCacheEntryEventData(events.EventData):
     original_url (str): original URL.
   """
 
-  DATA_TYPE = u'chrome:cache:entry'
+  DATA_TYPE = 'chrome:cache:entry'
 
   def __init__(self):
     """Initializes event data."""
@@ -332,8 +334,8 @@ class ChromeCacheEntryEventData(events.EventData):
 class ChromeCacheParser(interface.FileEntryParser):
   """Parses Chrome Cache files."""
 
-  NAME = u'chrome_cache'
-  DESCRIPTION = u'Parser for Chrome Cache files.'
+  NAME = 'chrome_cache'
+  DESCRIPTION = 'Parser for Chrome Cache files.'
 
   def _ParseCacheEntries(self, parser_mediator, index_file, data_block_files):
     """Parses Chrome Cache file entries.
@@ -351,12 +353,12 @@ class ChromeCacheParser(interface.FileEntryParser):
       while cache_address.value != 0x00000000:
         if cache_address_chain_length >= 64:
           parser_mediator.ProduceExtractionError(
-              u'Maximum allowed cache address chain length reached.')
+              'Maximum allowed cache address chain length reached.')
           break
 
         data_file = data_block_files.get(cache_address.filename, None)
         if not data_file:
-          message = u'Cache address: 0x{0:08x} missing data file.'.format(
+          message = 'Cache address: 0x{0:08x} missing data file.'.format(
               cache_address.value)
           parser_mediator.ProduceExtractionError(message)
           break
@@ -365,18 +367,18 @@ class ChromeCacheParser(interface.FileEntryParser):
           cache_entry = data_file.ReadCacheEntry(cache_address.block_offset)
         except (IOError, UnicodeDecodeError) as exception:
           parser_mediator.ProduceExtractionError(
-              u'Unable to parse cache entry with error: {0:s}'.format(
+              'Unable to parse cache entry with error: {0:s}'.format(
                   exception))
           break
 
         try:
-          original_url = cache_entry.key.decode(u'ascii')
+          original_url = cache_entry.key.decode('ascii')
         except UnicodeDecodeError:
-          original_url = cache_entry.key.decode(u'ascii', errors=u'replace')
+          original_url = cache_entry.key.decode('ascii', errors='replace')
           parser_mediator.ProduceExtractionError((
-              u'unable to decode cache entry key at cache address: '
-              u'0x{0:08x}. Characters that cannot be decoded will be '
-              u'replaced with "?" or "\\ufffd".').format(cache_address.value))
+              'unable to decode cache entry key at cache address: '
+              '0x{0:08x}. Characters that cannot be decoded will be '
+              'replaced with "?" or "\\ufffd".').format(cache_address.value))
 
         event_data = ChromeCacheEntryEventData()
         event_data.original_url = original_url
@@ -410,7 +412,7 @@ class ChromeCacheParser(interface.FileEntryParser):
 
       display_name = parser_mediator.GetDisplayName()
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse index file {1:s} with error: {2:s}'.format(
+          '[{0:s}] unable to parse index file {1:s} with error: {2:s}'.format(
               self.NAME, display_name, exception))
 
     try:
@@ -446,8 +448,8 @@ class ChromeCacheParser(interface.FileEntryParser):
         # factory otherwise it will raise.
         kwargs = {}
         if file_entry.path_spec.parent:
-          kwargs[u'parent'] = file_entry.path_spec.parent
-        kwargs[u'location'] = file_system.JoinPath(path_segments)
+          kwargs['parent'] = file_entry.path_spec.parent
+        kwargs['location'] = file_system.JoinPath(path_segments)
 
         data_block_file_path_spec = path_spec_factory.Factory.NewPathSpec(
             file_entry.path_spec.TYPE_INDICATOR, **kwargs)
@@ -457,13 +459,13 @@ class ChromeCacheParser(interface.FileEntryParser):
               data_block_file_path_spec)
         except RuntimeError as exception:
           message = (
-              u'Unable to open data block file: {0:s} with error: '
-              u'{1:s}'.format(kwargs[u'location'], exception))
+              'Unable to open data block file: {0:s} with error: '
+              '{1:s}'.format(kwargs['location'], exception))
           parser_mediator.ProduceExtractionError(message)
           data_block_file_entry = None
 
         if not data_block_file_entry:
-          message = u'Missing data block file: {0:s}'.format(
+          message = 'Missing data block file: {0:s}'.format(
               cache_address.filename)
           parser_mediator.ProduceExtractionError(message)
           data_block_file = None
@@ -476,8 +478,8 @@ class ChromeCacheParser(interface.FileEntryParser):
             data_block_file.Open(data_block_file_object)
           except IOError as exception:
             message = (
-                u'Unable to open data block file: {0:s} with error: '
-                u'{1:s}').format(cache_address.filename, exception)
+                'Unable to open data block file: {0:s} with error: '
+                '{1:s}').format(cache_address.filename, exception)
             parser_mediator.ProduceExtractionError(message)
             data_block_file = None
 
