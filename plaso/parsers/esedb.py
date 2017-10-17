@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Extensible Storage Engine (ESE) database files (EDB)."""
 
+from __future__ import unicode_literals
+
 import pyesedb
 
 from plaso.lib import specification
@@ -27,8 +29,8 @@ class ESEDBParser(interface.FileObjectParser):
 
   _INITIAL_FILE_OFFSET = None
 
-  NAME = u'esedb'
-  DESCRIPTION = u'Parser for Extensible Storage Engine (ESE) database files.'
+  NAME = 'esedb'
+  DESCRIPTION = 'Parser for Extensible Storage Engine (ESE) database files.'
 
   _plugin_classes = {}
 
@@ -72,7 +74,7 @@ class ESEDBParser(interface.FileObjectParser):
       esedb_file.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to open file with error: {0:s}'.format(exception))
+          'unable to open file with error: {0:s}'.format(exception))
       return
 
     # Compare the list of available plugin objects.
@@ -93,8 +95,8 @@ class ESEDBParser(interface.FileObjectParser):
 
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionError((
-              u'plugin: {0:s} unable to parse ESE database with error: '
-              u'{1:s}').format(plugin.NAME, exception))
+              'plugin: {0:s} unable to parse ESE database with error: '
+              '{1:s}').format(plugin.NAME, exception))
 
     finally:
       # TODO: explicitly clean up cache.

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for PL/SQL Developer Recall files."""
 
+from __future__ import unicode_literals
+
 import os
 
 import construct
@@ -27,7 +29,7 @@ class PlsRecallEventData(events.EventData):
     username (str): username used to query.
   """
 
-  DATA_TYPE = u'PLSRecall:event'
+  DATA_TYPE = 'PLSRecall:event'
 
   def __init__(self):
     """Initializes event data."""
@@ -57,23 +59,23 @@ class PlsRecallParser(interface.FileObjectParser):
 
   _INITIAL_FILE_OFFSET = None
   _PLS_KEYWORD = frozenset([
-      u'begin', u'commit', u'create', u'declare', u'drop', u'end', u'exception',
-      u'execute', u'insert', u'replace', u'rollback', u'select', u'set',
-      u'update'])
+      'begin', 'commit', 'create', 'declare', 'drop', 'end', 'exception',
+      'execute', 'insert', 'replace', 'rollback', 'select', 'set',
+      'update'])
 
   # 6 * 365 * 24 * 60 * 60 * 1000000.
   _SIX_YEARS_IN_MICRO_SECONDS = 189216000000000
 
-  NAME = u'pls_recall'
-  DESCRIPTION = u'Parser for PL/SQL Recall files.'
+  NAME = 'pls_recall'
+  DESCRIPTION = 'Parser for PL/SQL Recall files.'
 
   _PLS_RECALL_RECORD = construct.Struct(
-      u'PL/SQL_Recall',
-      construct.ULInt32(u'Sequence'),
-      construct.LFloat64(u'TimeStamp'),
-      construct.String(u'Username', 31, None, b'\x00'),
-      construct.String(u'Database', 81, None, b'\x00'),
-      construct.String(u'Query', 4001, None, b'\x00'))
+      'PL/SQL_Recall',
+      construct.ULInt32('Sequence'),
+      construct.LFloat64('TimeStamp'),
+      construct.String('Username', 31, None, b'\x00'),
+      construct.String('Database', 81, None, b'\x00'),
+      construct.String('Query', 4001, None, b'\x00'))
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a PLSRecall.dat file-like object.
@@ -90,12 +92,12 @@ class PlsRecallParser(interface.FileObjectParser):
       is_pls = self.VerifyFile(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile((
-          u'Not a PLSrecall File, unable to parse.'
-          u'with error: {0:s}').format(exception))
+          'Not a PLSrecall File, unable to parse.'
+          'with error: {0:s}').format(exception))
 
     if not is_pls:
       raise errors.UnableToParseFile(
-          u'Not a PLSRecall File, unable to parse.')
+          'Not a PLSRecall File, unable to parse.')
 
     file_object.seek(0, os.SEEK_SET)
     pls_record = self._PLS_RECALL_RECORD.parse_stream(file_object)

@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for bash history files."""
+
+from __future__ import unicode_literals
+
 import re
 
 import pyparsing
@@ -21,7 +24,7 @@ class BashHistoryEventData(events.EventData):
     command (str): command that was executed.
   """
 
-  DATA_TYPE = u'bash:history:command'
+  DATA_TYPE = 'bash:history:command'
 
   def __init__(self):
     """Initializes event data."""
@@ -32,18 +35,18 @@ class BashHistoryEventData(events.EventData):
 class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
   """Parses events from Bash history files."""
 
-  NAME = u'bash'
+  NAME = 'bash'
 
-  DESCRIPTION = u'Parser for Bash history files'
+  DESCRIPTION = 'Parser for Bash history files'
 
-  _ENCODING = u'utf-8'
+  _ENCODING = 'utf-8'
 
-  _TIMESTAMP = pyparsing.Suppress(u'#') + pyparsing.Word(
+  _TIMESTAMP = pyparsing.Suppress('#') + pyparsing.Word(
       pyparsing.nums, min=9, max=10).setParseAction(
-          text_parser.PyParseIntCast).setResultsName(u'timestamp')
+          text_parser.PyParseIntCast).setResultsName('timestamp')
 
   _COMMAND = pyparsing.Regex(
-      r'.*?(?=($|\n#\d{10}))', re.DOTALL).setResultsName(u'command')
+      r'.*?(?=($|\n#\d{10}))', re.DOTALL).setResultsName('command')
 
   _LINE_GRAMMAR = _TIMESTAMP + _COMMAND + pyparsing.lineEnd()
 
@@ -51,7 +54,7 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.Regex(r'^\s?[^#].*?$', re.MULTILINE) + _TIMESTAMP +
       pyparsing.NotAny(pyparsing.pythonStyleComment))
 
-  LINE_STRUCTURES = [(u'log_entry', _LINE_GRAMMAR)]
+  LINE_STRUCTURES = [('log_entry', _LINE_GRAMMAR)]
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a record and produces a Bash history event.
@@ -65,9 +68,9 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key != u'log_entry':
+    if key != 'log_entry':
       raise errors.ParseError(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+          'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     event_data = BashHistoryEventData()
     event_data.command = structure.command
@@ -77,18 +80,18 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
         date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def VerifyStructure(self, unused_parser_mediator, line):
+  def VerifyStructure(self, unused_parser_mediator, lines):
     """Verifies that this is a bash history file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      line (str): single line from the text file.
+      lines (str): one or more lines from the text file.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    match_generator = self._VERIFICATION_GRAMMAR.scanString(line, maxMatches=1)
+    match_generator = self._VERIFICATION_GRAMMAR.scanString(lines, maxMatches=1)
     return bool(list(match_generator))
 
 

@@ -5,6 +5,8 @@ Plaso's engine calls BencodeParser when it encounters bencoded files to be
 processed, typically seen for BitTorrent data.
 """
 
+from __future__ import unicode_literals
+
 import logging
 import re
 import os
@@ -35,8 +37,8 @@ class BencodeParser(interface.FileObjectParser):
   # Regex match for a bencode dictionary followed by a field size.
   BENCODE_RE = re.compile(r'd[0-9]')
 
-  NAME = u'bencode'
-  DESCRIPTION = u'Parser for bencoded files.'
+  NAME = 'bencode'
+  DESCRIPTION = 'Parser for bencoded files.'
 
   _plugin_classes = {}
 
@@ -54,7 +56,7 @@ class BencodeParser(interface.FileObjectParser):
     file_object.seek(0, os.SEEK_SET)
     header = file_object.read(2)
     if not self.BENCODE_RE.match(header):
-      raise errors.UnableToParseFile(u'Not a valid Bencoded file.')
+      raise errors.UnableToParseFile('Not a valid Bencoded file.')
 
     file_object.seek(0, os.SEEK_SET)
     try:
@@ -62,19 +64,19 @@ class BencodeParser(interface.FileObjectParser):
 
     except (IOError, bencode.BTFailure) as exception:
       raise errors.UnableToParseFile(
-          u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+          '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
               self.NAME, parser_mediator.GetDisplayName(), exception))
 
     if not data_object:
       raise errors.UnableToParseFile(
-          u'[{0:s}] missing decoded data for file: {1:s}'.format(
+          '[{0:s}] missing decoded data for file: {1:s}'.format(
               self.NAME, parser_mediator.GetDisplayName()))
 
     for plugin in self._plugins:
       try:
         plugin.UpdateChainAndProcess(parser_mediator, data=data_object)
       except errors.WrongBencodePlugin as exception:
-        logging.debug(u'[{0:s}] wrong plugin: {1:s}'.format(
+        logging.debug('[{0:s}] wrong plugin: {1:s}'.format(
             self.NAME, exception))
 
 

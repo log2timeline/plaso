@@ -16,7 +16,12 @@ from plaso.parsers import dpkg
 from plaso.parsers import esedb
 from plaso.parsers import filestat
 from plaso.parsers import firefox_cache
-from plaso.parsers import hachoir
+
+try:
+  from plaso.parsers import hachoir
+except ImportError:
+  pass
+
 from plaso.parsers import iis
 from plaso.parsers import java_idx
 from plaso.parsers import mac_appfirewall

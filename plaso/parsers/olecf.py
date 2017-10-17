@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for OLE Compound Files (OLECF)."""
 
+from __future__ import unicode_literals
+
 import pyolecf
 
 from plaso.lib import specification
@@ -15,8 +17,8 @@ class OLECFParser(interface.FileObjectParser):
 
   _INITIAL_FILE_OFFSET = None
 
-  NAME = u'olecf'
-  DESCRIPTION = u'Parser for OLE Compound Files (OLECF).'
+  NAME = 'olecf'
+  DESCRIPTION = 'Parser for OLE Compound Files (OLECF).'
 
   _plugin_classes = {}
 
@@ -54,7 +56,7 @@ class OLECFParser(interface.FileObjectParser):
       olecf_file.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to open file with error: {0:s}'.format(exception))
+          'unable to open file with error: {0:s}'.format(exception))
       return
 
     root_item = olecf_file.root_item
@@ -84,8 +86,8 @@ class OLECFParser(interface.FileObjectParser):
 
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionError((
-              u'plugin: {0:s} unable to parse OLECF file with error: '
-              u'{1:s}').format(plugin.NAME, exception))
+              'plugin: {0:s} unable to parse OLECF file with error: '
+              '{1:s}').format(plugin.NAME, exception))
 
       if self._default_plugin and not parser_mediator.abort:
         try:
@@ -94,8 +96,8 @@ class OLECFParser(interface.FileObjectParser):
 
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionError((
-              u'plugin: {0:s} unable to parse OLECF file with error: '
-              u'{1:s}').format(self._default_plugin.NAME, exception))
+              'plugin: {0:s} unable to parse OLECF file with error: '
+              '{1:s}').format(self._default_plugin.NAME, exception))
 
     finally:
       olecf_file.close()

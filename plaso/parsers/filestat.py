@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """File system stat object parser."""
 
+from __future__ import unicode_literals
+
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.containers import time_events
@@ -21,7 +23,7 @@ class FileStatEvent(time_events.TimestampEvent):
     offset (int): the offset of the stat data in bytes.
   """
 
-  DATA_TYPE = u'fs:stat'
+  DATA_TYPE = 'fs:stat'
 
   def __init__(
       self, timestamp, timestamp_description, is_allocated, file_size,
@@ -48,16 +50,16 @@ class FileStatEvent(time_events.TimestampEvent):
 class FileStatParser(interface.FileEntryParser):
   """Parses file system stat object."""
 
-  NAME = u'filestat'
-  DESCRIPTION = u'Parser for file system stat information.'
+  NAME = 'filestat'
+  DESCRIPTION = 'Parser for file system stat information.'
 
   _TIMESTAMP_DESCRIPTIONS = {
-      u'atime': definitions.TIME_DESCRIPTION_LAST_ACCESS,
-      u'bkup_time': definitions.TIME_DESCRIPTION_BACKUP,
-      u'ctime': definitions.TIME_DESCRIPTION_CHANGE,
-      u'crtime': definitions.TIME_DESCRIPTION_CREATION,
-      u'dtime': definitions.TIME_DESCRIPTION_DELETED,
-      u'mtime': definitions.TIME_DESCRIPTION_MODIFICATION,
+      'atime': definitions.TIME_DESCRIPTION_LAST_ACCESS,
+      'bkup_time': definitions.TIME_DESCRIPTION_BACKUP,
+      'ctime': definitions.TIME_DESCRIPTION_CHANGE,
+      'crtime': definitions.TIME_DESCRIPTION_CREATION,
+      'dtime': definitions.TIME_DESCRIPTION_DELETED,
+      'mtime': definitions.TIME_DESCRIPTION_MODIFICATION,
   }
 
   def _GetFileSystemTypeFromFileEntry(self, file_entry):
@@ -77,10 +79,10 @@ class FileStatParser(interface.FileEntryParser):
     file_system = file_entry.GetFileSystem()
     fs_info = file_system.GetFsInfo()
     if fs_info.info:
-      type_string = u'{0:s}'.format(fs_info.info.ftype)
-      if type_string.startswith(u'TSK_FS_TYPE'):
+      type_string = '{0:s}'.format(fs_info.info.ftype)
+      if type_string.startswith('TSK_FS_TYPE'):
         type_string = type_string[12:]
-      if type_string.endswith(u'_DETECT'):
+      if type_string.endswith('_DETECT'):
         type_string = type_string[:-7]
 
   def ParseFileEntry(self, parser_mediator, file_entry, **kwargs):
@@ -97,15 +99,15 @@ class FileStatParser(interface.FileEntryParser):
 
     file_system_type = self._GetFileSystemTypeFromFileEntry(file_entry)
 
-    is_allocated = getattr(stat_object, u'allocated', True)
-    file_size = getattr(stat_object, u'size', None)
+    is_allocated = getattr(stat_object, 'allocated', True)
+    file_size = getattr(stat_object, 'size', None)
 
     for time_attribute, usage in self._TIMESTAMP_DESCRIPTIONS.items():
       posix_time = getattr(stat_object, time_attribute, None)
       if posix_time is None:
         continue
 
-      nano_time_attribute = u'{0:s}_nano'.format(time_attribute)
+      nano_time_attribute = '{0:s}_nano'.format(time_attribute)
       nano_time_attribute = getattr(stat_object, nano_time_attribute, None)
 
       timestamp = timelib.Timestamp.FromPosixTime(posix_time)

@@ -2,6 +2,7 @@
 """File containing a Windows Registry plugin to parse the Amcache Hive."""
 
 from __future__ import unicode_literals
+
 import pyregf
 
 from dfdatetime import filetime

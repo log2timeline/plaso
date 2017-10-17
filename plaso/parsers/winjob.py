@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Scheduled Task job files."""
 
+from __future__ import unicode_literals
+
 import construct
 
 from dfdatetime import definitions as dfdatetime_definitions
@@ -31,7 +33,7 @@ class WinJobEventData(events.EventData):
     working_directory (str): working directory of the scheduled task.
   """
 
-  DATA_TYPE = u'windows:tasks:job'
+  DATA_TYPE = 'windows:tasks:job'
 
   def __init__(self):
     """Initializes event data."""
@@ -47,107 +49,107 @@ class WinJobEventData(events.EventData):
 class WinJobParser(interface.FileObjectParser):
   """Parse Windows Scheduled Task files for job events."""
 
-  NAME = u'winjob'
-  DESCRIPTION = u'Parser for Windows Scheduled Task job (or At-job) files.'
+  NAME = 'winjob'
+  DESCRIPTION = 'Parser for Windows Scheduled Task job (or At-job) files.'
 
   _EMPTY_SYSTEM_TIME_TUPLE = (0, 0, 0, 0, 0, 0, 0, 0)
 
   _PRODUCT_VERSIONS = {
-      0x0400: u'Windows NT 4.0',
-      0x0500: u'Windows 2000',
-      0x0501: u'Windows XP',
-      0x0600: u'Windows Vista',
-      0x0601: u'Windows 7',
-      0x0602: u'Windows 8',
-      0x0603: u'Windows 8.1',
-      0x0a00: u'Windows 10',
+      0x0400: 'Windows NT 4.0',
+      0x0500: 'Windows 2000',
+      0x0501: 'Windows XP',
+      0x0600: 'Windows Vista',
+      0x0601: 'Windows 7',
+      0x0602: 'Windows 8',
+      0x0603: 'Windows 8.1',
+      0x0a00: 'Windows 10',
   }
 
   _JOB_FIXED_LENGTH_SECTION_STRUCT = construct.Struct(
-      u'job_fixed_length_section',
-      construct.ULInt16(u'product_version'),
-      construct.ULInt16(u'format_version'),
-      construct.Bytes(u'job_uuid', 16),
-      construct.ULInt16(u'application_length_offset'),
-      construct.ULInt16(u'trigger_offset'),
-      construct.ULInt16(u'error_retry_count'),
-      construct.ULInt16(u'error_retry_interval'),
-      construct.ULInt16(u'idle_deadline'),
-      construct.ULInt16(u'idle_wait'),
-      construct.ULInt32(u'priority'),
-      construct.ULInt32(u'max_run_time'),
-      construct.ULInt32(u'exit_code'),
-      construct.ULInt32(u'status'),
-      construct.ULInt32(u'flags'),
+      'job_fixed_length_section',
+      construct.ULInt16('product_version'),
+      construct.ULInt16('format_version'),
+      construct.Bytes('job_uuid', 16),
+      construct.ULInt16('application_length_offset'),
+      construct.ULInt16('trigger_offset'),
+      construct.ULInt16('error_retry_count'),
+      construct.ULInt16('error_retry_interval'),
+      construct.ULInt16('idle_deadline'),
+      construct.ULInt16('idle_wait'),
+      construct.ULInt32('priority'),
+      construct.ULInt32('max_run_time'),
+      construct.ULInt32('exit_code'),
+      construct.ULInt32('status'),
+      construct.ULInt32('flags'),
       construct.Struct(
-          u'last_run_time',
-          construct.ULInt16(u'year'),
-          construct.ULInt16(u'month'),
-          construct.ULInt16(u'weekday'),
-          construct.ULInt16(u'day'),
-          construct.ULInt16(u'hours'),
-          construct.ULInt16(u'minutes'),
-          construct.ULInt16(u'seconds'),
-          construct.ULInt16(u'milliseconds')))
+          'last_run_time',
+          construct.ULInt16('year'),
+          construct.ULInt16('month'),
+          construct.ULInt16('weekday'),
+          construct.ULInt16('day'),
+          construct.ULInt16('hours'),
+          construct.ULInt16('minutes'),
+          construct.ULInt16('seconds'),
+          construct.ULInt16('milliseconds')))
 
   # Using Construct's utf-16 encoding here will create strings with their
   # null terminators exposed. Instead, we'll read these variables raw and
   # convert them using Plaso's ReadUTF16() for proper formatting.
   _JOB_VARIABLE_STRUCT = construct.Struct(
-      u'job_variable_length_section',
-      construct.ULInt16(u'running_instance_count'),
-      construct.ULInt16(u'application_length'),
+      'job_variable_length_section',
+      construct.ULInt16('running_instance_count'),
+      construct.ULInt16('application_length'),
       construct.String(
-          u'application',
+          'application',
           lambda ctx: ctx.application_length * 2),
-      construct.ULInt16(u'parameter_length'),
+      construct.ULInt16('parameter_length'),
       construct.String(
-          u'parameter',
+          'parameter',
           lambda ctx: ctx.parameter_length * 2),
-      construct.ULInt16(u'working_directory_length'),
+      construct.ULInt16('working_directory_length'),
       construct.String(
-          u'working_directory',
+          'working_directory',
           lambda ctx: ctx.working_directory_length * 2),
-      construct.ULInt16(u'username_length'),
+      construct.ULInt16('username_length'),
       construct.String(
-          u'username',
+          'username',
           lambda ctx: ctx.username_length * 2),
-      construct.ULInt16(u'comment_length'),
+      construct.ULInt16('comment_length'),
       construct.String(
-          u'comment',
+          'comment',
           lambda ctx: ctx.comment_length * 2),
-      construct.ULInt16(u'userdata_length'),
+      construct.ULInt16('userdata_length'),
       construct.String(
-          u'userdata',
+          'userdata',
           lambda ctx: ctx.userdata_length),
-      construct.ULInt16(u'reserved_length'),
+      construct.ULInt16('reserved_length'),
       construct.String(
-          u'reserved',
+          'reserved',
           lambda ctx: ctx.reserved_length),
-      construct.ULInt16(u'number_of_triggers'))
+      construct.ULInt16('number_of_triggers'))
 
   _TRIGGER_STRUCT = construct.Struct(
-      u'trigger',
-      construct.ULInt16(u'size'),
-      construct.ULInt16(u'reserved1'),
-      construct.ULInt16(u'start_year'),
-      construct.ULInt16(u'start_month'),
-      construct.ULInt16(u'start_day'),
-      construct.ULInt16(u'end_year'),
-      construct.ULInt16(u'end_month'),
-      construct.ULInt16(u'end_day'),
-      construct.ULInt16(u'start_hour'),
-      construct.ULInt16(u'start_minute'),
-      construct.ULInt32(u'duration'),
-      construct.ULInt32(u'interval'),
-      construct.ULInt32(u'trigger_flags'),
-      construct.ULInt32(u'trigger_type'),
-      construct.ULInt16(u'trigger_arg0'),
-      construct.ULInt16(u'trigger_arg1'),
-      construct.ULInt16(u'trigger_arg2'),
-      construct.ULInt16(u'trigger_padding'),
-      construct.ULInt16(u'trigger_reserved2'),
-      construct.ULInt16(u'trigger_reserved3'))
+      'trigger',
+      construct.ULInt16('size'),
+      construct.ULInt16('reserved1'),
+      construct.ULInt16('start_year'),
+      construct.ULInt16('start_month'),
+      construct.ULInt16('start_day'),
+      construct.ULInt16('end_year'),
+      construct.ULInt16('end_month'),
+      construct.ULInt16('end_day'),
+      construct.ULInt16('start_hour'),
+      construct.ULInt16('start_minute'),
+      construct.ULInt32('duration'),
+      construct.ULInt32('interval'),
+      construct.ULInt32('trigger_flags'),
+      construct.ULInt32('trigger_type'),
+      construct.ULInt16('trigger_arg0'),
+      construct.ULInt16('trigger_arg1'),
+      construct.ULInt16('trigger_arg2'),
+      construct.ULInt16('trigger_padding'),
+      construct.ULInt16('trigger_reserved2'),
+      construct.ULInt16('trigger_reserved3'))
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows job file-like object.
@@ -165,24 +167,24 @@ class WinJobParser(interface.FileObjectParser):
           file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          u'Unable to parse fixed-length section with error: {0:s}'.format(
+          'Unable to parse fixed-length section with error: {0:s}'.format(
               exception))
 
     if not header_struct.product_version in self._PRODUCT_VERSIONS:
       raise errors.UnableToParseFile(
-          u'Unsupported product version in: 0x{0:04x}'.format(
+          'Unsupported product version in: 0x{0:04x}'.format(
               header_struct.product_version))
 
     if not header_struct.format_version == 1:
       raise errors.UnableToParseFile(
-          u'Unsupported format version in: {0:d}'.format(
+          'Unsupported format version in: {0:d}'.format(
               header_struct.format_version))
 
     try:
       job_variable_struct = self._JOB_VARIABLE_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          u'Unable to parse variable-length section with error: {0:s}'.format(
+          'Unable to parse variable-length section with error: {0:s}'.format(
               exception))
 
     event_data = WinJobEventData()
@@ -207,7 +209,7 @@ class WinJobParser(interface.FileObjectParser):
             system_time_tuple=system_time_tuple)
       except ValueError:
         parser_mediator.ProduceExtractionError(
-            u'invalid last run time: {0!s}'.format(system_time_tuple))
+            'invalid last run time: {0!s}'.format(system_time_tuple))
 
     if date_time:
       event = time_events.DateTimeValuesEvent(
@@ -219,7 +221,7 @@ class WinJobParser(interface.FileObjectParser):
         trigger_struct = self._TRIGGER_STRUCT.parse_stream(file_object)
       except (IOError, construct.FieldError) as exception:
         parser_mediator.ProduceExtractionError(
-            u'unable to parse trigger: {0:d} with error: {1:s}'.format(
+            'unable to parse trigger: {0:d} with error: {1:s}'.format(
                 index, exception))
         return
 
@@ -239,11 +241,11 @@ class WinJobParser(interface.FileObjectParser):
         except ValueError:
           date_time = None
           parser_mediator.ProduceExtractionError(
-              u'invalid trigger start time: {0!s}'.format(time_elements_tuple))
+              'invalid trigger start time: {0!s}'.format(time_elements_tuple))
 
         if date_time:
           event = time_events.DateTimeValuesEvent(
-              date_time, u'Scheduled to start',
+              date_time, 'Scheduled to start',
               time_zone=parser_mediator.timezone)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
@@ -260,11 +262,11 @@ class WinJobParser(interface.FileObjectParser):
         except ValueError:
           date_time = None
           parser_mediator.ProduceExtractionError(
-              u'invalid trigger end time: {0!s}'.format(time_elements_tuple))
+              'invalid trigger end time: {0!s}'.format(time_elements_tuple))
 
         if date_time:
           event = time_events.DateTimeValuesEvent(
-              date_time, u'Scheduled to end',
+              date_time, 'Scheduled to end',
               time_zone=parser_mediator.timezone)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 

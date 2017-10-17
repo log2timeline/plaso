@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Mac OS X Keychain files."""
 
+from __future__ import unicode_literals
+
 # INFO: Only supports internet and application passwords,
 #       because it is the only data that contains timestamp events.
 #       Keychain can also store "secret notes". These notes are stored
@@ -46,7 +48,7 @@ class KeychainInternetRecordEventData(events.EventData):
     where (str): domain name or IP where the password is used.
   """
 
-  DATA_TYPE = u'mac:keychain:internet'
+  DATA_TYPE = 'mac:keychain:internet'
 
   def __init__(self):
     """Initializes event data."""
@@ -74,7 +76,7 @@ class KeychainApplicationRecordEventData(events.EventData):
     text_description (str): description.
   """
 
-  DATA_TYPE = u'mac:keychain:application'
+  DATA_TYPE = 'mac:keychain:application'
 
   def __init__(self):
     """Initializes event data."""
@@ -90,8 +92,8 @@ class KeychainApplicationRecordEventData(events.EventData):
 class KeychainParser(interface.FileObjectParser):
   """Parser for Keychain files."""
 
-  NAME = u'mac_keychain'
-  DESCRIPTION = u'Parser for Mac OS X Keychain files.'
+  NAME = 'mac_keychain'
+  DESCRIPTION = 'Parser for Mac OS X Keychain files.'
 
   KEYCHAIN_SIGNATURE = b'kych'
   KEYCHAIN_MAJOR_VERSION = 1
@@ -102,86 +104,86 @@ class KeychainParser(interface.FileObjectParser):
 
   # DB HEADER.
   KEYCHAIN_DB_HEADER = construct.Struct(
-      u'db_header',
-      construct.Bytes(u'signature', 4),
-      construct.UBInt16(u'major_version'),
-      construct.UBInt16(u'minor_version'),
-      construct.UBInt32(u'header_size'),
-      construct.UBInt32(u'schema_offset'),
+      'db_header',
+      construct.Bytes('signature', 4),
+      construct.UBInt16('major_version'),
+      construct.UBInt16('minor_version'),
+      construct.UBInt32('header_size'),
+      construct.UBInt32('schema_offset'),
       construct.Padding(4))
 
   # DB SCHEMA.
   KEYCHAIN_DB_SCHEMA = construct.Struct(
-      u'db_schema',
-      construct.UBInt32(u'size'),
-      construct.UBInt32(u'number_of_tables'))
+      'db_schema',
+      construct.UBInt32('size'),
+      construct.UBInt32('number_of_tables'))
 
   # For each number_of_tables, the schema has a TABLE_OFFSET with the
   # offset starting in the DB_SCHEMA.
-  TABLE_OFFSET = construct.UBInt32(u'table_offset')
+  TABLE_OFFSET = construct.UBInt32('table_offset')
 
   TABLE_HEADER = construct.Struct(
-      u'table_header',
-      construct.UBInt32(u'table_size'),
-      construct.UBInt32(u'record_type'),
-      construct.UBInt32(u'number_of_records'),
-      construct.UBInt32(u'first_record'),
-      construct.UBInt32(u'index_offset'),
+      'table_header',
+      construct.UBInt32('table_size'),
+      construct.UBInt32('record_type'),
+      construct.UBInt32('number_of_records'),
+      construct.UBInt32('first_record'),
+      construct.UBInt32('index_offset'),
       construct.Padding(4),
-      construct.UBInt32(u'recordnumbercount'))
+      construct.UBInt32('recordnumbercount'))
 
   RECORD_HEADER = construct.Struct(
-      u'record_header',
-      construct.UBInt32(u'entry_length'),
+      'record_header',
+      construct.UBInt32('entry_length'),
       construct.Padding(12),
-      construct.UBInt32(u'ssgp_length'),
+      construct.UBInt32('ssgp_length'),
       construct.Padding(4),
-      construct.UBInt32(u'creation_time'),
-      construct.UBInt32(u'last_modification_time'),
-      construct.UBInt32(u'text_description'),
+      construct.UBInt32('creation_time'),
+      construct.UBInt32('last_modification_time'),
+      construct.UBInt32('text_description'),
       construct.Padding(4),
-      construct.UBInt32(u'comments'),
+      construct.UBInt32('comments'),
       construct.Padding(8),
-      construct.UBInt32(u'entry_name'),
+      construct.UBInt32('entry_name'),
       construct.Padding(20),
-      construct.UBInt32(u'account_name'),
+      construct.UBInt32('account_name'),
       construct.Padding(4))
 
   RECORD_HEADER_APP = construct.Struct(
-      u'record_entry_app',
+      'record_entry_app',
       RECORD_HEADER,
       construct.Padding(4))
 
   RECORD_HEADER_INET = construct.Struct(
-      u'record_entry_inet',
+      'record_entry_inet',
       RECORD_HEADER,
-      construct.UBInt32(u'where'),
-      construct.UBInt32(u'protocol'),
-      construct.UBInt32(u'type'),
+      construct.UBInt32('where'),
+      construct.UBInt32('protocol'),
+      construct.UBInt32('type'),
       construct.Padding(4),
-      construct.UBInt32(u'url'))
+      construct.UBInt32('url'))
 
   TEXT = construct.PascalString(
-      u'text', length_field=construct.UBInt32(u'length'))
+      'text', length_field=construct.UBInt32('length'))
 
   TIME = construct.Struct(
-      u'timestamp',
-      construct.String(u'year', 4),
-      construct.String(u'month', 2),
-      construct.String(u'day', 2),
-      construct.String(u'hour', 2),
-      construct.String(u'minute', 2),
-      construct.String(u'second', 2),
+      'timestamp',
+      construct.String('year', 4),
+      construct.String('month', 2),
+      construct.String('day', 2),
+      construct.String('hour', 2),
+      construct.String('minute', 2),
+      construct.String('second', 2),
       construct.Padding(2))
 
-  TYPE_TEXT = construct.String(u'type', 4)
+  TYPE_TEXT = construct.String('type', 4)
 
   # TODO: add more protocols.
   _PROTOCOL_TRANSLATION_DICT = {
-      u'htps': u'https',
-      u'smtp': u'smtp',
-      u'imap': u'imap',
-      u'http': u'http'}
+      'htps': 'https',
+      'smtp': 'smtp',
+      'imap': 'imap',
+      'http': 'http'}
 
   def _ReadEntryApplication(self, parser_mediator, file_object):
     """Extracts the information from an application password entry.
@@ -196,7 +198,7 @@ class KeychainParser(interface.FileObjectParser):
       record_struct = self.RECORD_HEADER_APP.parse_stream(file_object)
     except (IOError, construct.FieldError):
       parser_mediator.ProduceExtractionError(
-          u'unable to parse record structure at offset: 0x{0:08x}'.format(
+          'unable to parse record structure at offset: 0x{0:08x}'.format(
               record_offset))
       return
 
@@ -267,7 +269,7 @@ class KeychainParser(interface.FileObjectParser):
     except construct.FieldError as exception:
       time_structure = None
       parser_mediator.ProduceExtractionError(
-          u'unable to parse creation time with error: {0:s}'.format(exception))
+          'unable to parse creation time with error: {0:s}'.format(exception))
 
     if time_structure:
       time_elements_tuple = (
@@ -281,7 +283,7 @@ class KeychainParser(interface.FileObjectParser):
       except ValueError:
         creation_time = None
         parser_mediator.ProduceExtractionError(
-            u'invalid creation time value: {0!s}'.format(time_elements_tuple))
+            'invalid creation time value: {0!s}'.format(time_elements_tuple))
 
     last_modification_time = None
 
@@ -293,7 +295,7 @@ class KeychainParser(interface.FileObjectParser):
     except construct.FieldError as exception:
       time_structure = None
       parser_mediator.ProduceExtractionError(
-          u'unable to parse last modification time with error: {0:s}'.format(
+          'unable to parse last modification time with error: {0:s}'.format(
               exception))
 
     if time_structure:
@@ -308,10 +310,10 @@ class KeychainParser(interface.FileObjectParser):
       except ValueError:
         last_modification_time = None
         parser_mediator.ProduceExtractionError(
-            u'invalid last modification time value: {0!s}'.format(
+            'invalid last modification time value: {0!s}'.format(
                 time_elements_tuple))
 
-    text_description = u'N/A'
+    text_description = 'N/A'
     if record.text_description:
       structure_offset = record_offset + record.text_description - 1
       file_object.seek(structure_offset, os.SEEK_SET)
@@ -320,10 +322,10 @@ class KeychainParser(interface.FileObjectParser):
         text_description = self.TEXT.parse_stream(file_object)
       except construct.FieldError as exception:
         parser_mediator.ProduceExtractionError(
-            u'unable to parse text description with error: {0:s}'.format(
+            'unable to parse text description with error: {0:s}'.format(
                 exception))
 
-    comments = u'N/A'
+    comments = 'N/A'
     if record.comments:
       structure_offset = record_offset + record.comments - 1
       file_object.seek(structure_offset, os.SEEK_SET)
@@ -332,7 +334,7 @@ class KeychainParser(interface.FileObjectParser):
         comments = self.TEXT.parse_stream(file_object)
       except construct.FieldError as exception:
         parser_mediator.ProduceExtractionError(
-            u'unable to parse comments with error: {0:s}'.format(exception))
+            'unable to parse comments with error: {0:s}'.format(exception))
 
     structure_offset = record_offset + record.entry_name - 1
     file_object.seek(structure_offset, os.SEEK_SET)
@@ -340,9 +342,9 @@ class KeychainParser(interface.FileObjectParser):
     try:
       entry_name = self.TEXT.parse_stream(file_object)
     except construct.FieldError as exception:
-      entry_name = u'N/A'
+      entry_name = 'N/A'
       parser_mediator.ProduceExtractionError(
-          u'unable to parse entry name with error: {0:s}'.format(exception))
+          'unable to parse entry name with error: {0:s}'.format(exception))
 
     structure_offset = record_offset + record.account_name - 1
     file_object.seek(structure_offset, os.SEEK_SET)
@@ -350,9 +352,9 @@ class KeychainParser(interface.FileObjectParser):
     try:
       account_name = self.TEXT.parse_stream(file_object)
     except construct.FieldError as exception:
-      account_name = u'N/A'
+      account_name = 'N/A'
       parser_mediator.ProduceExtractionError(
-          u'unable to parse account name with error: {0:s}'.format(exception))
+          'unable to parse account name with error: {0:s}'.format(exception))
 
     return (
         ssgp_hash, creation_time, last_modification_time,
@@ -371,8 +373,8 @@ class KeychainParser(interface.FileObjectParser):
       record_header_struct = self.RECORD_HEADER_INET.parse_stream(file_object)
     except (IOError, construct.FieldError):
       parser_mediator.ProduceExtractionError((
-          u'unable to parse record header structure at offset: '
-          u'0x{0:08x}').format(record_offset))
+          'unable to parse record header structure at offset: '
+          '0x{0:08x}').format(record_offset))
       return
 
     (ssgp_hash, creation_time, last_modification_time, text_description,
@@ -381,9 +383,9 @@ class KeychainParser(interface.FileObjectParser):
          record_offset)
 
     if not record_header_struct.where:
-      where = u'N/A'
-      protocol = u'N/A'
-      type_protocol = u'N/A'
+      where = 'N/A'
+      protocol = 'N/A'
+      type_protocol = 'N/A'
 
     else:
       offset = record_offset + record_header_struct.where - 1
@@ -404,7 +406,7 @@ class KeychainParser(interface.FileObjectParser):
         offset = record_offset + record_header_struct.url - 1
         file_object.seek(offset, os.SEEK_SET)
         url = self.TEXT.parse_stream(file_object)
-        where = u'{0:s}{1:s}'.format(where, url)
+        where = '{0:s}{1:s}'.format(where, url)
 
     # Move to the end of the record.
     next_record_offset = (
@@ -454,7 +456,7 @@ class KeychainParser(interface.FileObjectParser):
       db_schema_struct = self.KEYCHAIN_DB_SCHEMA.parse_stream(file_object)
     except (IOError, construct.FieldError):
       parser_mediator.ProduceExtractionError(
-          u'unable to parse database schema structure')
+          'unable to parse database schema structure')
       return []
 
     for index in range(db_schema_struct.number_of_tables):
@@ -462,7 +464,7 @@ class KeychainParser(interface.FileObjectParser):
         table_offset = self.TABLE_OFFSET.parse_stream(file_object)
       except (IOError, construct.FieldError):
         parser_mediator.ProduceExtractionError(
-            u'unable to parse table offsets: {0:d}'.format(index))
+            'unable to parse table offsets: {0:d}'.format(index))
         return
 
       table_offsets.append(table_offset + self.KEYCHAIN_DB_HEADER.sizeof())
@@ -495,15 +497,15 @@ class KeychainParser(interface.FileObjectParser):
     try:
       db_header = self.KEYCHAIN_DB_HEADER.parse_stream(file_object)
     except (IOError, construct.FieldError):
-      raise errors.UnableToParseFile(u'Unable to parse file header.')
+      raise errors.UnableToParseFile('Unable to parse file header.')
 
     if db_header.signature != self.KEYCHAIN_SIGNATURE:
-      raise errors.UnableToParseFile(u'Not a Mac OS X keychain file.')
+      raise errors.UnableToParseFile('Not a Mac OS X keychain file.')
 
     if (db_header.major_version != self.KEYCHAIN_MAJOR_VERSION or
         db_header.minor_version != self.KEYCHAIN_MINOR_VERSION):
       parser_mediator.ProduceExtractionError(
-          u'unsupported format version: {0:s}.{1:s}'.format(
+          'unsupported format version: {0:s}.{1:s}'.format(
               db_header.major_version, db_header.minor_version))
       return
 
@@ -517,7 +519,7 @@ class KeychainParser(interface.FileObjectParser):
         table = self.TABLE_HEADER.parse_stream(file_object)
       except (IOError, construct.FieldError):
         parser_mediator.ProduceExtractionError(
-            u'unable to parse table structure at offset: 0x{0:08x}'.format(
+            'unable to parse table structure at offset: 0x{0:08x}'.format(
                 table_offset))
         continue
 
