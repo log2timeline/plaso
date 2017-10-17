@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the syslog cron event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import cron
@@ -22,7 +24,7 @@ class CronEventFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = cron.CronTaskRunEventFormatter()
 
     expected_attribute_names = [
-        u'command', u'username', u'pid']
+        'command', 'username', 'pid']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

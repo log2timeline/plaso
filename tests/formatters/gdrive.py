@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Google Drive snapshots event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import gdrive
@@ -22,7 +24,7 @@ class GDriveCloudEntryFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = gdrive.GDriveCloudEntryFormatter()
 
     expected_attribute_names = [
-        u'path', u'shared', u'size', u'url', u'document_type']
+        'path', 'shared', 'size', 'url', 'document_type']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -42,7 +44,7 @@ class GDriveLocalEntryFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = gdrive.GDriveLocalEntryFormatter()
 
-    expected_attribute_names = [u'path', u'size']
+    expected_attribute_names = ['path', 'size']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

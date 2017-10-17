@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the PCAP event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import pcap
@@ -22,18 +24,18 @@ class PCAPFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = pcap.PCAPFormatter()
 
     expected_attribute_names = [
-        u'source_ip',
-        u'dest_ip',
-        u'source_port',
-        u'dest_port',
-        u'protocol',
-        u'stream_type',
-        u'size',
-        u'protocol_data',
-        u'stream_data',
-        u'first_packet_id',
-        u'last_packet_id',
-        u'packet_count']
+        'source_ip',
+        'dest_ip',
+        'source_port',
+        'dest_port',
+        'protocol',
+        'stream_type',
+        'size',
+        'protocol_data',
+        'stream_data',
+        'first_packet_id',
+        'last_packet_id',
+        'packet_count']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Microsoft Office MRU Windows Registry event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import officemru
@@ -23,8 +25,8 @@ class OfficeMRUWindowsRegistryEventFormatter(
     event_formatter = officemru.OfficeMRUWindowsRegistryEventFormatter()
 
     expected_attribute_names = [
-        u'key_path',
-        u'value_string']
+        'key_path',
+        'value_string']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

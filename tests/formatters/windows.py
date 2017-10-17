@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import windows
@@ -23,9 +25,9 @@ class WindowsVolumeCreationEventFormatterTest(
     event_formatter = windows.WindowsVolumeCreationEventFormatter()
 
     expected_attribute_names = [
-        u'device_path',
-        u'serial_number',
-        u'origin']
+        'device_path',
+        'serial_number',
+        'origin']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

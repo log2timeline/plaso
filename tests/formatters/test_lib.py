@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
 """Event formatter related functions and classes for testing."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import interface
 
 
 class TestEventFormatter(interface.EventFormatter):
-  """Class to define a formatter for a test event."""
-  DATA_TYPE = u'test:event'
-  FORMAT_STRING = u'{text}'
+  """Test event formatter."""
 
-  SOURCE_SHORT = u'FILE'
-  SOURCE_LONG = u'Weird Log File'
+  DATA_TYPE = 'test:event'
+  FORMAT_STRING = '{text}'
+
+  SOURCE_SHORT = 'FILE'
+  SOURCE_LONG = 'Weird Log File'
 
 
 class EventFormatterTestCase(unittest.TestCase):

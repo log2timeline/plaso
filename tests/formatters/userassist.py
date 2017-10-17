@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the UserAssist Windows Registry event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import userassist
@@ -23,12 +25,12 @@ class UserAssistWindowsRegistryEventFormatterTest(
     event_formatter = userassist.UserAssistWindowsRegistryEventFormatter()
 
     expected_attribute_names = [
-        u'key_path',
-        u'entry_index',
-        u'value_name',
-        u'number_of_executions',
-        u'application_focus_count',
-        u'application_focus_duration']
+        'key_path',
+        'entry_index',
+        'value_name',
+        'number_of_executions',
+        'application_focus_count',
+        'application_focus_duration']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

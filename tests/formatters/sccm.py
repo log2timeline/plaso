@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the SCCM log event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import sccm
@@ -21,8 +23,8 @@ class SCCMFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = sccm.SCCMEventFormatter()
 
     expected_attribute_names = [
-        u'text',
-        u'component']
+        'text',
+        'component']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

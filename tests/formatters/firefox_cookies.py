@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Firefox cookie entry event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import firefox_cookies
@@ -22,7 +24,7 @@ class FirefoxCookieFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = firefox_cookies.FirefoxCookieFormatter()
 
     expected_attribute_names = [
-        u'url', u'cookie_name', u'httponly', u'ga_data']
+        'url', 'cookie_name', 'httponly', 'ga_data']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

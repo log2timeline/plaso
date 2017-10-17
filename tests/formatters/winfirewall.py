@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows firewall log file event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import winfirewall
@@ -22,21 +24,21 @@ class WinFirewallFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = winfirewall.WinFirewallFormatter()
 
     expected_attribute_names = [
-        u'action',
-        u'protocol',
-        u'path',
-        u'source_ip',
-        u'source_port',
-        u'dest_ip',
-        u'dest_port',
-        u'size',
-        u'flags',
-        u'tcp_seq',
-        u'tcp_ack',
-        u'tcp_win',
-        u'icmp_type',
-        u'icmp_code',
-        u'info']
+        'action',
+        'protocol',
+        'path',
+        'source_ip',
+        'source_port',
+        'dest_ip',
+        'dest_port',
+        'size',
+        'flags',
+        'tcp_seq',
+        'tcp_ack',
+        'tcp_win',
+        'icmp_type',
+        'icmp_code',
+        'info']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for Twitter on iOS 8+ database event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import twitter_ios
@@ -21,15 +23,15 @@ class TwitterIOSContactFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = twitter_ios.TwitterIOSContactFormatter()
 
     expected_attribute_names = [
-        u'screen_name',
-        u'profile_url',
-        u'name',
-        u'location',
-        u'description',
-        u'url',
-        u'following',
-        u'followers_count',
-        u'following_count',
+        'screen_name',
+        'profile_url',
+        'name',
+        'location',
+        'description',
+        'url',
+        'following',
+        'followers_count',
+        'following_count',
     ]
 
     self._TestGetFormatStringAttributeNames(
@@ -49,12 +51,12 @@ class TwitterIOSStatusFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = twitter_ios.TwitterIOSStatusFormatter()
 
     expected_attribute_names = [
-        u'text',
-        u'user_id',
-        u'name',
-        u'retweet_count',
-        u'favorite_count',
-        u'favorited',
+        'text',
+        'user_id',
+        'name',
+        'retweet_count',
+        'favorite_count',
+        'favorited',
     ]
 
     self._TestGetFormatStringAttributeNames(

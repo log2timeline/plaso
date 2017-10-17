@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Apple System Log (ASL) event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import asl
@@ -22,9 +24,9 @@ class ASLFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = asl.ASLFormatter()
 
     expected_attribute_names = [
-        u'message_id', u'level', u'user_sid', u'group_id', u'read_uid',
-        u'read_gid', u'computer_name', u'sender', u'facility', u'message',
-        u'extra_information']
+        'message_id', 'level', 'user_sid', 'group_id', 'read_uid',
+        'read_gid', 'computer_name', 'sender', 'facility', 'message',
+        'extra_information']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

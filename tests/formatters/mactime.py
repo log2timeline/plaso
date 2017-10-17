@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Sleuthkit (TSK) bodyfile (or mactime) event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import mactime
@@ -21,7 +23,7 @@ class MactimeFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetFormatStringAttributeNames function."""
     event_formatter = mactime.MactimeFormatter()
 
-    expected_attribute_names = [u'filename']
+    expected_attribute_names = ['filename']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

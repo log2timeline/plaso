@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Firefox cache record event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import firefox_cache
@@ -22,7 +24,7 @@ class FirefoxCacheFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = firefox_cache.FirefoxCacheFormatter()
 
     expected_attribute_names = [
-        u'fetch_count', u'response_code', u'request_method', u'url']
+        'fetch_count', 'response_code', 'request_method', 'url']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Popularity Contest event formatters."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import popcontest
@@ -22,10 +24,10 @@ class PopularityContestSessionFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = popcontest.PopularityContestSessionFormatter()
 
     expected_attribute_names = [
-        u'session',
-        u'status',
-        u'hostid',
-        u'details']
+        'session',
+        'status',
+        'hostid',
+        'details']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -46,9 +48,9 @@ class PopularityContestLogFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = popcontest.PopularityContestLogFormatter()
 
     expected_attribute_names = [
-        u'mru',
-        u'package',
-        u'record_tag']
+        'mru',
+        'package',
+        'record_tag']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

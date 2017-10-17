@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Symantec AV log file event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import symantec
@@ -22,18 +24,18 @@ class SymantecAVFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = symantec.SymantecAVFormatter()
 
     expected_attribute_names = [
-        u'event_map',
-        u'category_map',
-        u'virus',
-        u'file',
-        u'action0_map',
-        u'action1_map',
-        u'action2_map',
-        u'description',
-        u'scanid',
-        u'event_data',
-        u'remote_machine',
-        u'remote_machine_ip']
+        'event_map',
+        'category_map',
+        'virus',
+        'file',
+        'action0_map',
+        'action1_map',
+        'action2_map',
+        'description',
+        'scanid',
+        'event_data',
+        'remote_machine',
+        'remote_machine_ip']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

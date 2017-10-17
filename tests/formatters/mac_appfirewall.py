@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Mac OS X appfirewall.log file event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import mac_appfirewall
@@ -22,11 +24,11 @@ class MacAppFirewallLogFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = mac_appfirewall.MacAppFirewallLogFormatter()
 
     expected_attribute_names = [
-        u'computer_name',
-        u'agent',
-        u'status',
-        u'process_name',
-        u'action']
+        'computer_name',
+        'agent',
+        'status',
+        'process_name',
+        'action']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

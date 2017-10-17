@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the MSIECF event formatters."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import msiecf
@@ -22,9 +24,9 @@ class MsiecfLeakFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = msiecf.MsiecfLeakFormatter()
 
     expected_attribute_names = [
-        u'cached_file_path',
-        u'cached_file_size',
-        u'recovered_string']
+        'cached_file_path',
+        'cached_file_size',
+        'recovered_string']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -45,8 +47,8 @@ class MsiecfRedirectedFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = msiecf.MsiecfRedirectedFormatter()
 
     expected_attribute_names = [
-        u'url',
-        u'recovered_string']
+        'url',
+        'recovered_string']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -67,12 +69,12 @@ class MsiecfUrlFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = msiecf.MsiecfUrlFormatter()
 
     expected_attribute_names = [
-        u'url',
-        u'number_of_hits',
-        u'cached_file_path',
-        u'cached_file_size',
-        u'http_headers',
-        u'recovered_string']
+        'url',
+        'number_of_hits',
+        'cached_file_path',
+        'cached_file_size',
+        'http_headers',
+        'recovered_string']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

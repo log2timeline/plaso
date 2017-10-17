@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Android mmssms.db database event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import android_sms
@@ -22,7 +24,7 @@ class AndroidSmsFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = android_sms.AndroidSmsFormatter()
 
     expected_attribute_names = [
-        u'sms_type', u'address', u'sms_read', u'body']
+        'sms_type', 'address', 'sms_read', 'body']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

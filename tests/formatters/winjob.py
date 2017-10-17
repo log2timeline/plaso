@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows Scheduled Task (job) event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import winjob
@@ -22,11 +24,11 @@ class WinJobFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = winjob.WinJobFormatter()
 
     expected_attribute_names = [
-        u'application',
-        u'parameters',
-        u'trigger_type',
-        u'username',
-        u'working_directory']
+        'application',
+        'parameters',
+        'trigger_type',
+        'username',
+        'working_directory']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the event filters manager."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.filters import manager

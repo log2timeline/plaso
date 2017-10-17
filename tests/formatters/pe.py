@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the PE event formatters."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import pe
@@ -22,8 +24,8 @@ class PECompilationTimeFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = pe.PECompilationFormatter()
 
     expected_attribute_names = [
-        u'pe_type',
-        u'imphash',]
+        'pe_type',
+        'imphash',]
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -44,9 +46,9 @@ class PEImportTimeFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = pe.PEImportFormatter()
 
     expected_attribute_names = [
-        u'dll_name',
-        u'pe_type',
-        u'imphash',]
+        'dll_name',
+        'pe_type',
+        'imphash',]
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -67,9 +69,9 @@ class PEDelayImportFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = pe.PEDelayImportFormatter()
 
     expected_attribute_names = [
-        u'dll_name',
-        u'pe_type',
-        u'imphash',]
+        'dll_name',
+        'pe_type',
+        'imphash',]
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -90,8 +92,8 @@ class PEResourceCreationFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = pe.PEResourceCreationFormatter()
 
     expected_attribute_names = [
-        u'pe_type',
-        u'imphash',]
+        'pe_type',
+        'imphash',]
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -112,8 +114,8 @@ class PELoadConfigModificationEventTest(test_lib.EventFormatterTestCase):
     event_formatter = pe.PELoadConfigModificationEvent()
 
     expected_attribute_names = [
-        u'pe_type',
-        u'imphash',]
+        'pe_type',
+        'imphash',]
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

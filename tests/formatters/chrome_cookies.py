@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Google Chrome cookies database event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import chrome_cookies
@@ -22,7 +24,7 @@ class ChromeCookieFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = chrome_cookies.ChromeCookieFormatter()
 
     expected_attribute_names = [
-        u'url', u'cookie_name', u'httponly', u'persistent']
+        'url', 'cookie_name', 'httponly', 'persistent']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the UTMP binary file event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import utmpx
@@ -22,10 +24,10 @@ class UtmpxSessionFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = utmpx.UtmpxSessionFormatter()
 
     expected_attribute_names = [
-        u'user',
-        u'status',
-        u'computer_name',
-        u'terminal']
+        'user',
+        'status',
+        'computer_name',
+        'terminal']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

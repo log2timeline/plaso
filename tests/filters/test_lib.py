@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """The filters shared test library."""
 
+from __future__ import unicode_literals
+
 from plaso.filters import interface
 
 from tests import test_lib as shared_test_lib
 
 
 class TestEventFilter(interface.FilterObject):
-  """Class to define a filter for a test event."""
+  """Test event filter."""
 
   def CompileFilter(self, unused_filter_expression):
     """Compiles the filter expression.

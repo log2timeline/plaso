@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the file history ESE database event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import file_history
@@ -25,8 +27,8 @@ class FileHistoryNamespaceEventFormatterTest(
         file_history.FileHistoryNamespaceEventFormatter())
 
     expected_attribute_names = [
-        u'original_filename', u'identifier', u'parent_identifier',
-        u'file_attribute', u'usn_number']
+        'original_filename', 'identifier', 'parent_identifier',
+        'file_attribute', 'usn_number']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

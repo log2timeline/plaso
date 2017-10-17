@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Mac OS X wifi.log file event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -28,10 +30,10 @@ class MacWifiLogFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetFormatStringAttributeNames function."""
 
     expected_attribute_names = [
-        u'function',
-        u'action',
-        u'agent',
-        u'text']
+        'function',
+        'action',
+        'agent',
+        'text']
 
     self._TestGetFormatStringAttributeNames(
         self._formatter, expected_attribute_names)
@@ -39,37 +41,37 @@ class MacWifiLogFormatterTest(test_lib.EventFormatterTestCase):
   def testGetMessages(self):
     """Tests the GetMessages method."""
     date_time = dfdatetime_time_elements.TimeElements()
-    date_time.CopyFromString(u'2016-11-14 20:36:37.222')
+    date_time.CopyFromString('2016-11-14 20:36:37.222')
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-    event.data_type = u'mac:wifilog:line'
-    event.action = u'Interface en0 turn up.'
-    event.agent = u'airportd[88]'
-    event.function = u'airportdProcessDLILEvent'
-    event.text = u'en0 attached (up)'
+    event.data_type = 'mac:wifilog:line'
+    event.action = 'Interface en0 turn up.'
+    event.agent = 'airportd[88]'
+    event.function = 'airportdProcessDLILEvent'
+    event.text = 'en0 attached (up)'
 
     expected_messages = (
-        u'Action: Interface en0 turn up. '
-        u'Agent: airportd[88] '
-        u'(airportdProcessDLILEvent) '
-        u'Log: en0 attached (up)',
-        u'Action: Interface en0 turn up.')
+        'Action: Interface en0 turn up. '
+        'Agent: airportd[88] '
+        '(airportdProcessDLILEvent) '
+        'Log: en0 attached (up)',
+        'Action: Interface en0 turn up.')
 
     messages = self._formatter.GetMessages(None, event)
     self.assertEqual(messages, expected_messages)
 
     date_time = dfdatetime_time_elements.TimeElements()
-    date_time.CopyFromString(u'2017-01-02 00:10:15')
+    date_time.CopyFromString('2017-01-02 00:10:15')
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-    event.data_type = u'mac:wifilog:line'
-    event.text = u'test-macbookpro newsyslog[50498]: logfile turned over'
+    event.data_type = 'mac:wifilog:line'
+    event.text = 'test-macbookpro newsyslog[50498]: logfile turned over'
 
     expected_messages = (
-        u'Log: test-macbookpro newsyslog[50498]: logfile turned over',
-        u'Log: test-macbookpro newsyslog[50498]: logfile turned over')
+        'Log: test-macbookpro newsyslog[50498]: logfile turned over',
+        'Log: test-macbookpro newsyslog[50498]: logfile turned over')
 
     messages = self._formatter.GetMessages(None, event)
     self.assertEqual(messages, expected_messages)

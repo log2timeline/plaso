@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Google Chrome extension activity database event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import chrome_extension_activity
@@ -25,14 +27,14 @@ class ChromeExtensionActivityEventFormatterTest(
         chrome_extension_activity.ChromeExtensionActivityEventFormatter())
 
     expected_attribute_names = [
-        u'extension_id',
-        u'action_type',
-        u'activity_id',
-        u'page_url',
-        u'page_title',
-        u'api_name',
-        u'args',
-        u'other']
+        'extension_id',
+        'action_type',
+        'activity_id',
+        'page_url',
+        'page_title',
+        'api_name',
+        'args',
+        'other']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

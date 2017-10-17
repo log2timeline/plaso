@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Google Chrome Preferences file event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import chrome_preferences
@@ -25,7 +27,7 @@ class ChromeExtensionInstallationEventFormatterTest(
         chrome_preferences.ChromeExtensionInstallationEventFormatter())
 
     expected_attribute_names = [
-        u'extension_id', u'extension_name', u'path']
+        'extension_id', 'extension_name', 'path']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

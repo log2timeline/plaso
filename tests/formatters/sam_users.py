@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the SAM users Windows Registry event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import sam_users
@@ -23,12 +25,12 @@ class SAMUsersWindowsRegistryEventFormatterTest(
     event_formatter = sam_users.SAMUsersWindowsRegistryEventFormatter()
 
     expected_attribute_names = [
-        u'account_rid',
-        u'comments',
-        u'fullname',
-        u'key_path',
-        u'login_count',
-        u'username']
+        'account_rid',
+        'comments',
+        'fullname',
+        'key_path',
+        'login_count',
+        'username']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

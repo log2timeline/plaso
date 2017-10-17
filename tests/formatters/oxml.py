@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the OpenXML event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import oxml
@@ -22,35 +24,35 @@ class OpenXMLParserFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = oxml.OpenXMLParserFormatter()
 
     expected_attribute_names = [
-        u'creating_app',
-        u'app_version',
-        u'title',
-        u'subject',
-        u'last_saved_by',
-        u'author',
-        u'total_edit_time',
-        u'keywords',
-        u'comments',
-        u'revision_number',
-        u'template',
-        u'number_of_pages',
-        u'number_of_words',
-        u'number_of_characters',
-        u'number_of_characters_with_spaces',
-        u'number_of_lines',
-        u'company',
-        u'manager',
-        u'shared',
-        u'security',
-        u'hyperlinks_changed',
-        u'links_up_to_date',
-        u'scale_crop',
-        u'dig_sig',
-        u'slides',
-        u'hidden_slides',
-        u'presentation_format',
-        u'mm_clips',
-        u'notes']
+        'creating_app',
+        'app_version',
+        'title',
+        'subject',
+        'last_saved_by',
+        'author',
+        'total_edit_time',
+        'keywords',
+        'comments',
+        'revision_number',
+        'template',
+        'number_of_pages',
+        'number_of_words',
+        'number_of_characters',
+        'number_of_characters_with_spaces',
+        'number_of_lines',
+        'company',
+        'manager',
+        'shared',
+        'security',
+        'hyperlinks_changed',
+        'links_up_to_date',
+        'scale_crop',
+        'dig_sig',
+        'slides',
+        'hidden_slides',
+        'presentation_format',
+        'mm_clips',
+        'notes']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

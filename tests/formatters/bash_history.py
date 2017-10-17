@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Zsh extended_history formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -22,7 +24,7 @@ class BashHistoryFormatterTest(test_lib.EventFormatterTestCase):
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    expected_attribute_names = [u'command']
+    expected_attribute_names = ['command']
 
     self._TestGetFormatStringAttributeNames(
         self._formatter, expected_attribute_names)
@@ -32,10 +34,10 @@ class BashHistoryFormatterTest(test_lib.EventFormatterTestCase):
     date_time = dfdatetime_posix_time.PosixTime(timestamp=1457771210)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-    event.data_type = u'bash:history:command'
-    event.command = u'cd plaso'
+    event.data_type = 'bash:history:command'
+    event.command = 'cd plaso'
 
-    expected_messages = (u'Command executed: cd plaso', u'cd plaso')
+    expected_messages = ('Command executed: cd plaso', 'cd plaso')
     messages = self._formatter.GetMessages(None, event)
     self.assertEqual(messages, expected_messages)
 

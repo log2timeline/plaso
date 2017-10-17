@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the dpkg.log formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -22,7 +24,7 @@ class DpkgFormatterTest(test_lib.EventFormatterTestCase):
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
     expected_attribute_names = [
-        u'body']
+        'body']
 
     self._TestGetFormatStringAttributeNames(
         self._formatter, expected_attribute_names)
@@ -30,16 +32,16 @@ class DpkgFormatterTest(test_lib.EventFormatterTestCase):
   def testGetMessages(self):
     """Tests the GetMessages method."""
     date_time = dfdatetime_posix_time.PosixTime()
-    date_time.CopyFromString(u'2016-08-09 04:57:14')
+    date_time.CopyFromString('2016-08-09 04:57:14')
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-    event.data_type = u'dpkg:line'
-    event.body = u'status half-installed base-passwd:amd64 3.5.33'
+    event.data_type = 'dpkg:line'
+    event.body = 'status half-installed base-passwd:amd64 3.5.33'
 
     expected_messages = (
-        u'status half-installed base-passwd:amd64 3.5.33',
-        u'status half-installed base-passwd:amd64 3.5.33')
+        'status half-installed base-passwd:amd64 3.5.33',
+        'status half-installed base-passwd:amd64 3.5.33')
     messages = self._formatter.GetMessages(None, event)
     self.assertEqual(messages, expected_messages)
 

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the plist event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import plist
@@ -22,9 +24,9 @@ class PlistFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = plist.PlistFormatter()
 
     expected_attribute_names = [
-        u'root',
-        u'key',
-        u'desc']
+        'root',
+        'key',
+        'desc']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

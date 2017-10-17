@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Safari history event formatter."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import safari
@@ -22,10 +24,10 @@ class SafariHistoryFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = safari.SafariHistoryFormatter()
 
     expected_attribute_names = [
-        u'url',
-        u'title',
-        u'display_title',
-        u'visit_count']
+        'url',
+        'title',
+        'display_title',
+        'visit_count']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
