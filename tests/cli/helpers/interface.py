@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the CLI argument helper interface."""
 
+from __future__ import unicode_literals
+
 import locale
 import sys
 import unittest
@@ -25,23 +27,23 @@ class HelperManagerTest(unittest.TestCase):
     options = cli_test_lib.TestOptions()
     options.test = expected_integer
 
-    integer = test_helper._ParseNumericOption(options, u'test')
+    integer = test_helper._ParseNumericOption(options, 'test')
     self.assertEqual(integer, expected_integer)
 
     options = cli_test_lib.TestOptions()
 
-    integer = test_helper._ParseNumericOption(options, u'test')
+    integer = test_helper._ParseNumericOption(options, 'test')
     self.assertIsNone(integer)
 
     integer = test_helper._ParseNumericOption(
-        options, u'test', default_value=expected_integer)
+        options, 'test', default_value=expected_integer)
     self.assertEqual(integer, expected_integer)
 
     options = cli_test_lib.TestOptions()
     options.test = b'abc'
 
     with self.assertRaises(errors.BadConfigOption):
-      test_helper._ParseNumericOption(options, u'test')
+      test_helper._ParseNumericOption(options, 'test')
 
   def testParseStringOption(self):
     """Tests the _ParseStringOption function."""
@@ -53,35 +55,35 @@ class HelperManagerTest(unittest.TestCase):
 
     test_helper = test_lib.TestHelper()
 
-    expected_string = u'Test Unicode string'
+    expected_string = 'Test Unicode string'
     options = cli_test_lib.TestOptions()
     options.test = expected_string
 
-    string = test_helper._ParseStringOption(options, u'test')
+    string = test_helper._ParseStringOption(options, 'test')
     self.assertEqual(string, expected_string)
 
     options = cli_test_lib.TestOptions()
 
-    string = test_helper._ParseStringOption(options, u'test')
+    string = test_helper._ParseStringOption(options, 'test')
     self.assertIsNone(string)
 
     string = test_helper._ParseStringOption(
-        options, u'test', default_value=expected_string)
+        options, 'test', default_value=expected_string)
     self.assertEqual(string, expected_string)
 
     options = cli_test_lib.TestOptions()
     options.test = expected_string.encode(encoding)
 
-    string = test_helper._ParseStringOption(options, u'test')
+    string = test_helper._ParseStringOption(options, 'test')
     self.assertEqual(string, expected_string)
 
-    if encoding and encoding == u'UTF-8':
+    if encoding and encoding == 'UTF-8':
       options = cli_test_lib.TestOptions()
       options.test = (
           b'\xad\xfd\xab\x73\x99\xc7\xb4\x78\xd0\x8c\x8a\xee\x6d\x6a\xcb\x90')
 
       with self.assertRaises(errors.BadConfigOption):
-        test_helper._ParseStringOption(options, u'test')
+        test_helper._ParseStringOption(options, 'test')
 
 
 if __name__ == '__main__':

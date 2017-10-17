@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the YARA rules CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -18,21 +20,21 @@ class YaraRulesArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--yara_rules PATH]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --yara_rules PATH, --yara-rules PATH',
-      (u'                        Path to a file containing Yara rules '
-       u'definitions.'),
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [--yara_rules PATH]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --yara_rules PATH, --yara-rules PATH',
+      ('                        Path to a file containing Yara rules '
+       'definitions.'),
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py', description=u'Test argument parser.',
+        prog='cli_helper.py', description='Test argument parser.',
         add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
@@ -41,15 +43,16 @@ class YaraRulesArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'yara.rules'])
+  @shared_test_lib.skipUnlessHasTestFile(['yara.rules'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
-    options.yara_rules_path = self._GetTestFilePath([u'yara.rules'])
+    options.yara_rules_path = self._GetTestFilePath(['yara.rules'])
 
     test_tool = tools.CLITool()
     yara_rules.YaraRulesArgumentsHelper.ParseOptions(options, test_tool)
 
+    # pylint: disable=no-member
     self.assertIsNotNone(test_tool._yara_rules_string)
 
     with self.assertRaises(errors.BadConfigObject):

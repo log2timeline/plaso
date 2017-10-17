@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the storage format CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -17,22 +19,22 @@ class StorageFormatArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--storage_format FORMAT]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --storage_format FORMAT, --storage-format FORMAT',
-      (u'                        Format of the storage file, the default '
-       u'is: zip.'),
-      u'                        Supported options: sqlite, zip',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [--storage_format FORMAT]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --storage_format FORMAT, --storage-format FORMAT',
+      ('                        Format of the storage file, the default '
+       'is: zip.'),
+      '                        Supported options: sqlite, zip',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py', description=u'Test argument parser.',
+        prog='cli_helper.py', description='Test argument parser.',
         add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
@@ -44,18 +46,19 @@ class StorageFormatArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
-    options.storage_format = u'sqlite'
+    options.storage_format = 'sqlite'
 
     test_tool = tools.CLITool()
     storage_format.StorageFormatArgumentsHelper.ParseOptions(options, test_tool)
 
+    # pylint: disable=no-member
     self.assertEqual(test_tool._storage_format, options.storage_format)
 
     with self.assertRaises(errors.BadConfigObject):
       storage_format.StorageFormatArgumentsHelper.ParseOptions(options, None)
 
     with self.assertRaises(errors.BadConfigOption):
-      options.storage_format = u'bogus'
+      options.storage_format = 'bogus'
       storage_format.StorageFormatArgumentsHelper.ParseOptions(
           options, test_tool)
 

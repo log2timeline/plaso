@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the 4n6time SQLite database output module CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -17,36 +19,36 @@ class SQLite4n6TimeOutputArgumentsHelperTEst(
     test_lib.OutputModuleArgumentsHelperTest):
   """Tests the 4n6time SQLite database output module CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      (u'usage: cli_helper.py [--append] [--evidence EVIDENCE] '
-       u'[--fields FIELDS]'),
-      u'                     [--additional_fields ADDITIONAL_FIELDS]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --additional_fields ADDITIONAL_FIELDS',
-      (u'                        Defines extra fields to be included in the '
-       u'output, in'),
-      u'                        addition to the default fields, which are',
-      u'                        datetime,host,source,sourcetype,user,type.',
-      (u'  --append              Defines whether the intention is to append '
-       u'to an'),
-      (u'                        already existing database or overwrite it. '
-       u'Defaults to'),
-      u'                        overwrite.',
-      (u'  --evidence EVIDENCE   Set the evidence field to a specific value, '
-       u'defaults'),
-      u'                        to empty.',
-      (u'  --fields FIELDS       Defines which fields should be indexed in '
-       u'the'), u'                        database.',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      ('usage: cli_helper.py [--append] [--evidence EVIDENCE] '
+       '[--fields FIELDS]'),
+      '                     [--additional_fields ADDITIONAL_FIELDS]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --additional_fields ADDITIONAL_FIELDS',
+      ('                        Defines extra fields to be included in the '
+       'output, in'),
+      '                        addition to the default fields, which are',
+      '                        datetime,host,source,sourcetype,user,type.',
+      ('  --append              Defines whether the intention is to append '
+       'to an'),
+      ('                        already existing database or overwrite it. '
+       'Defaults to'),
+      '                        overwrite.',
+      ('  --evidence EVIDENCE   Set the evidence field to a specific value, '
+       'defaults'),
+      '                        to empty.',
+      ('  --fields FIELDS       Defines which fields should be indexed in '
+       'the'), '                        database.',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py',
-        description=u'Test argument parser.', add_help=False,
+        prog='cli_helper.py',
+        description='Test argument parser.', add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     sqlite_4n6time_output.SQLite4n6TimeOutputArgumentsHelper.AddArguments(
@@ -65,7 +67,7 @@ class SQLite4n6TimeOutputArgumentsHelperTEst(
       sqlite_4n6time_output.SQLite4n6TimeOutputArgumentsHelper.ParseOptions(
           options, output_module)
 
-    options.write = u'4n6time.sqlite'
+    options.write = '4n6time.sqlite'
     sqlite_4n6time_output.SQLite4n6TimeOutputArgumentsHelper.ParseOptions(
         options, output_module)
 

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the dynamic output module CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -17,27 +19,27 @@ class DynamicOutputArgumentsHelperTest(
     test_lib.OutputModuleArgumentsHelperTest):
   """Tests the dynamic output module CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      (u'usage: cli_helper.py [--fields FIELDS] '
-       u'[--additional_fields ADDITIONAL_FIELDS]'),
-      u'', u'Test argument parser.', u'', u'optional arguments:',
-      u'  --additional_fields ADDITIONAL_FIELDS',
-      (u'                        Defines extra fields to be included in the '
-       u'output, in'),
-      (u'                        addition to the default fields, which are '
-       u'datetime,'),
-      (u'                        timestamp_desc, source, source_long, message, '
-       u'parser,'),
-      u'                        display_name, tag.',
-      (u'  --fields FIELDS       Defines which fields should be included in the'
-       u' output.'),
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      ('usage: cli_helper.py [--fields FIELDS] '
+       '[--additional_fields ADDITIONAL_FIELDS]'),
+      '', 'Test argument parser.', '', 'optional arguments:',
+      '  --additional_fields ADDITIONAL_FIELDS',
+      ('                        Defines extra fields to be included in the '
+       'output, in'),
+      ('                        addition to the default fields, which are '
+       'datetime,'),
+      ('                        timestamp_desc, source, source_long, message, '
+       'parser,'),
+      '                        display_name, tag.',
+      ('  --fields FIELDS       Defines which fields should be included in the'
+       ' output.'),
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py',
-        description=u'Test argument parser.', add_help=False,
+        prog='cli_helper.py',
+        description='Test argument parser.', add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     dynamic_output.DynamicOutputArgumentsHelper.AddArguments(argument_parser)

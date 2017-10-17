@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the log2timeline CLI tool."""
 
+from __future__ import unicode_literals
+
 import argparse
 import os
 import unittest
@@ -20,38 +22,38 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _BDE_PASSWORD = u'bde-TEST'
+  _BDE_PASSWORD = 'bde-TEST'
 
-  _EXPECTED_PROCESSING_OPTIONS = u'\n'.join([
-      u'usage: log2timeline_test.py [--disable_zeromq] [--single_process]',
-      u'                            [--temporary_directory DIRECTORY]',
-      (u'                            [--worker-memory-limit SIZE] '
-       u'[--workers WORKERS]'),
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --disable_zeromq, --disable-zeromq',
-      (u'                        Disable queueing using ZeroMQ. A '
-       u'Multiprocessing queue'),
-      u'                        will be used instead.',
-      u'  --single_process, --single-process',
-      (u'                        Indicate that the tool should run in a '
-       u'single process.'),
-      u'  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
-      (u'                        Path to the directory that should be used to '
-       u'store'),
-      u'                        temporary files created during processing.',
-      u'  --worker-memory-limit SIZE, --worker_memory_limit SIZE',
-      (u'                        Maximum amount of memory a worker process is '
-       u'allowed'),
-      (u'                        to consume, where 0 represents no limit '
-       u'[defaults to 2'),
-      u'                        GiB].',
-      (u'  --workers WORKERS     The number of worker processes [defaults to '
-       u'available'),
-      u'                        system CPUs minus one].',
-      u''])
+  _EXPECTED_PROCESSING_OPTIONS = '\n'.join([
+      'usage: log2timeline_test.py [--disable_zeromq] [--single_process]',
+      '                            [--temporary_directory DIRECTORY]',
+      ('                            [--worker-memory-limit SIZE] '
+       '[--workers WORKERS]'),
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --disable_zeromq, --disable-zeromq',
+      ('                        Disable queueing using ZeroMQ. A '
+       'Multiprocessing queue'),
+      '                        will be used instead.',
+      '  --single_process, --single-process',
+      ('                        Indicate that the tool should run in a '
+       'single process.'),
+      '  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
+      ('                        Path to the directory that should be used to '
+       'store'),
+      '                        temporary files created during processing.',
+      '  --worker-memory-limit SIZE, --worker_memory_limit SIZE',
+      ('                        Maximum amount of memory a worker process is '
+       'allowed'),
+      ('                        to consume, where 0 represents no limit '
+       '[defaults to 2'),
+      '                        GiB].',
+      ('  --workers WORKERS     The number of worker processes [defaults to '
+       'available'),
+      '                        system CPUs minus one].',
+      ''])
 
   # TODO: add tests for _CheckStorageFile
   # TODO: add tests for _CreateProcessingConfiguration
@@ -61,17 +63,17 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     test_tool = log2timeline_tool.Log2TimelineTool()
     plugin_info = test_tool._GetPluginData()
 
-    self.assertIn(u'Hashers', plugin_info)
+    self.assertIn('Hashers', plugin_info)
 
-    available_hasher_names = [name for name, _ in plugin_info[u'Hashers']]
-    self.assertIn(u'sha256', available_hasher_names)
-    self.assertIn(u'sha1', available_hasher_names)
+    available_hasher_names = [name for name, _ in plugin_info['Hashers']]
+    self.assertIn('sha256', available_hasher_names)
+    self.assertIn('sha1', available_hasher_names)
 
-    self.assertIn(u'Parsers', plugin_info)
-    self.assertIsNotNone(plugin_info[u'Parsers'])
+    self.assertIn('Parsers', plugin_info)
+    self.assertIsNotNone(plugin_info['Parsers'])
 
-    self.assertIn(u'Parser Plugins', plugin_info)
-    self.assertIsNotNone(plugin_info[u'Parser Plugins'])
+    self.assertIn('Parser Plugins', plugin_info)
+    self.assertIsNotNone(plugin_info['Parser Plugins'])
 
   def testParseProcessingOptions(self):
     """Tests the _ParseProcessingOptions function."""
@@ -86,8 +88,8 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
   def testAddProcessingOptions(self):
     """Tests the AddProcessingOptions function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'log2timeline_test.py',
-        description=u'Test argument parser.', add_help=False,
+        prog='log2timeline_test.py',
+        description='Test argument parser.', add_help=False,
         formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = log2timeline_tool.Log2TimelineTool()
@@ -98,7 +100,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
   def testParseArguments(self):
     """Tests the ParseArguments function."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     result = test_tool.ParseArguments()
@@ -107,30 +109,30 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     # TODO: check output.
     # TODO: improve test coverage.
 
-  @shared_test_lib.skipUnlessHasTestFile([u'testdir'])
+  @shared_test_lib.skipUnlessHasTestFile(['testdir'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
-    options.source = self._GetTestFilePath([u'testdir'])
-    options.storage_file = u'storage.plaso'
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.source = self._GetTestFilePath(['testdir'])
+    options.storage_file = 'storage.plaso'
     options.storage_format = definitions.STORAGE_FORMAT_ZIP
 
     test_tool.ParseOptions(options)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
 
     # ParseOptions will raise if source is not set.
     with self.assertRaises(errors.BadConfigOption):
       test_tool.ParseOptions(options)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
-    options.source = self._GetTestFilePath([u'testdir'])
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.source = self._GetTestFilePath(['testdir'])
 
     with self.assertRaises(errors.BadConfigOption):
       test_tool.ParseOptions(options)
@@ -139,18 +141,18 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
   def testExtractEventsFromSourcesOnDirectory(self):
     """Tests the ExtractEventsFromSources function on a directory."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
     options.quiet = True
     options.single_process = True
-    options.status_view_mode = u'none'
-    options.source = self._GetTestFilePath([u'testdir'])
+    options.status_view_mode = 'none'
+    options.source = self._GetTestFilePath(['testdir'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.storage_file = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_file = os.path.join(temp_directory, 'storage.plaso')
       options.storage_format = definitions.STORAGE_FORMAT_ZIP
 
       test_tool.ParseOptions(options)
@@ -159,7 +161,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           b'',
-          b'Source path\t: {0:s}'.format(options.source.encode(u'utf-8')),
+          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: directory',
           b'',
           b'Processing started.',
@@ -172,19 +174,19 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
   def testExtractEventsFromSourcesOnBDEImage(self):
     """Tests the ExtractEventsFromSources function on BDE image."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
-    options.credentials = [u'password:{0:s}'.format(self._BDE_PASSWORD)]
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.credentials = ['password:{0:s}'.format(self._BDE_PASSWORD)]
     options.quiet = True
     options.single_process = True
-    options.status_view_mode = u'none'
-    options.source = self._GetTestFilePath([u'bdetogo.raw'])
+    options.status_view_mode = 'none'
+    options.source = self._GetTestFilePath(['bdetogo.raw'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.storage_file = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_file = os.path.join(temp_directory, 'storage.plaso')
       options.storage_format = definitions.STORAGE_FORMAT_ZIP
 
       test_tool.ParseOptions(options)
@@ -193,7 +195,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           b'',
-          b'Source path\t: {0:s}'.format(options.source.encode(u'utf-8')),
+          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: storage media image',
           b'',
           b'Processing started.',
@@ -206,18 +208,18 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
   def testExtractEventsFromSourcesImage(self):
     """Tests the ExtractEventsFromSources function on single partition image."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
     options.quiet = True
     options.single_process = True
-    options.status_view_mode = u'none'
-    options.source = self._GetTestFilePath([u'ímynd.dd'])
+    options.status_view_mode = 'none'
+    options.source = self._GetTestFilePath(['ímynd.dd'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.storage_file = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_file = os.path.join(temp_directory, 'storage.plaso')
       options.storage_format = definitions.STORAGE_FORMAT_ZIP
 
       test_tool.ParseOptions(options)
@@ -226,7 +228,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           b'',
-          b'Source path\t: {0:s}'.format(options.source.encode(u'utf-8')),
+          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: storage media image',
           b'',
           b'Processing started.',
@@ -239,20 +241,20 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
   def testExtractEventsFromSourcesPartitionedImage(self):
     """Tests the ExtractEventsFromSources function on multi partition image."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
-    options.partitions = u'all'
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.partitions = 'all'
     options.quiet = True
     options.single_process = True
-    options.status_view_mode = u'none'
+    options.status_view_mode = 'none'
     # Note that the source file is a RAW (VMDK flat) image.
-    options.source = self._GetTestFilePath([u'multi_partition_image.vmdk'])
+    options.source = self._GetTestFilePath(['multi_partition_image.vmdk'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.storage_file = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_file = os.path.join(temp_directory, 'storage.plaso')
       options.storage_format = definitions.STORAGE_FORMAT_ZIP
 
       test_tool.ParseOptions(options)
@@ -261,7 +263,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           b'',
-          b'Source path\t: {0:s}'.format(options.source.encode(u'utf-8')),
+          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: storage media image',
           b'',
           b'Processing started.',
@@ -274,19 +276,19 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
   def testExtractEventsFromSourcesOnVSSImage(self):
     """Tests the ExtractEventsFromSources function on VSS image."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
     options.quiet = True
     options.single_process = True
-    options.status_view_mode = u'none'
-    options.source = self._GetTestFilePath([u'vsstest.qcow2'])
-    options.vss_stores = u'all'
+    options.status_view_mode = 'none'
+    options.source = self._GetTestFilePath(['vsstest.qcow2'])
+    options.vss_stores = 'all'
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.storage_file = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_file = os.path.join(temp_directory, 'storage.plaso')
       options.storage_format = definitions.STORAGE_FORMAT_ZIP
 
       test_tool.ParseOptions(options)
@@ -295,7 +297,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           b'',
-          b'Source path\t: {0:s}'.format(options.source.encode(u'utf-8')),
+          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: storage media image',
           b'',
           b'Processing started.',
@@ -312,18 +314,18 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
   def testExtractEventsFromSourcesOnFile(self):
     """Tests the ExtractEventsFromSources function on a file."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
     options.quiet = True
     options.single_process = True
-    options.status_view_mode = u'none'
-    options.source = self._GetTestFilePath([u'System.evtx'])
+    options.status_view_mode = 'none'
+    options.source = self._GetTestFilePath(['System.evtx'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.storage_file = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_file = os.path.join(temp_directory, 'storage.plaso')
       options.storage_format = definitions.STORAGE_FORMAT_ZIP
 
       test_tool.ParseOptions(options)
@@ -332,7 +334,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           b'',
-          b'Source path\t: {0:s}'.format(options.source.encode(u'utf-8')),
+          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: single file',
           b'',
           b'Processing started.',
@@ -345,19 +347,19 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
   def testExtractEventsFromSourcesWithFilestat(self):
     """Tests the ExtractEventsFromSources function with filestat parser."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
     options.quiet = True
-    options.parsers = u'filestat,pe'
+    options.parsers = 'filestat,pe'
     options.single_process = True
-    options.status_view_mode = u'none'
-    options.source = self._GetTestFilePath([u'test_pe.exe'])
+    options.status_view_mode = 'none'
+    options.source = self._GetTestFilePath(['test_pe.exe'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.storage_file = os.path.join(temp_directory, u'storage.plaso')
+      options.storage_file = os.path.join(temp_directory, 'storage.plaso')
       options.storage_format = definitions.STORAGE_FORMAT_ZIP
 
       test_tool.ParseOptions(options)
@@ -369,8 +371,8 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
         storage_file.Open(path=options.storage_file, read_only=True)
       except IOError as exception:
         self.fail((
-            u'Unable to open storage file after processing with error: '
-            u'{0:s}.').format(exception))
+            'Unable to open storage file after processing with error: '
+            '{0:s}.').format(exception))
 
       # There should be 3 filestat and 3 pe parser generated events.
       events = list(storage_file.GetSortedEvents())
@@ -378,11 +380,11 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
   def testShowInfo(self):
     """Tests the output of the tool in info mode."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
     options.show_info = True
 
     test_tool.ParseOptions(options)
@@ -391,12 +393,12 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     output = output_writer.ReadOutput()
 
     section_headings = [
-        u'Hashers', u'Parsers', u'Parser Plugins', u'Parser Presets',
-        u'Versions']
+        'Hashers', 'Parsers', 'Parser Plugins', 'Parser Presets',
+        'Versions']
     for heading in section_headings:
       self.assertIn(heading, output)
 
-    self.assertNotIn(u'<class', output)
+    self.assertNotIn('<class', output)
 
 
 if __name__ == '__main__':

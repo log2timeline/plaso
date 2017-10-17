@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the view classes."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.cli import views
@@ -28,27 +30,27 @@ class BaseTableViewTests(shared_test_lib.BaseTestCase):
   def testAddRow(self):
     """Tests the AddRow function."""
     table_view = TestBaseTableView(
-        column_names=[u'one', u'two', u'three'])
+        column_names=['one', 'two', 'three'])
 
     # Adding rows with the same number of values as columns is permitted.
-    table_view.AddRow([u'1', u'2', u'3'])
+    table_view.AddRow(['1', '2', '3'])
 
     # Adding rows with a different number of values as columns is not permitted.
     with self.assertRaises(ValueError):
-      table_view.AddRow([u'4', u'5'])
+      table_view.AddRow(['4', '5'])
 
-    table_view.AddRow([u'4', u'5', u'6'])
+    table_view.AddRow(['4', '5', '6'])
 
     table_view = TestBaseTableView()
 
-    table_view.AddRow([u'1', u'2', u'3'])
+    table_view.AddRow(['1', '2', '3'])
 
     # Adding rows with the same number of values is permitted.
-    table_view.AddRow([u'4', u'5', u'6'])
+    table_view.AddRow(['4', '5', '6'])
 
     # Adding rows with a different number of values is not permitted.
     with self.assertRaises(ValueError):
-      table_view.AddRow([u'7', u'8'])
+      table_view.AddRow(['7', '8'])
 
 
 class CLITableViewTests(shared_test_lib.BaseTestCase):
@@ -60,9 +62,9 @@ class CLITableViewTests(shared_test_lib.BaseTestCase):
 
     # Table with columns.
     table_view = views.CLITableView(
-        column_names=[u'Name', u'Description'], title=u'Title')
-    table_view.AddRow([u'First name', u'The first name in the table'])
-    table_view.AddRow([u'Second name', u'The second name in the table'])
+        column_names=['Name', 'Description'], title='Title')
+    table_view.AddRow(['First name', 'The first name in the table'])
+    table_view.AddRow(['Second name', 'The second name in the table'])
 
     table_view.Write(output_writer)
     string = output_writer.ReadOutput()
@@ -83,9 +85,9 @@ class CLITableViewTests(shared_test_lib.BaseTestCase):
     self.assertEqual(string.split(b'\n'), expected_string.split(b'\n'))
 
     # Table without columns.
-    table_view = views.CLITableView(title=u'Title')
-    table_view.AddRow([u'Name', u'The name in the table'])
-    table_view.AddRow([u'Description', u'The description in the table'])
+    table_view = views.CLITableView(title='Title')
+    table_view.AddRow(['Name', 'The name in the table'])
+    table_view.AddRow(['Description', 'The description in the table'])
 
     table_view.Write(output_writer)
     string = output_writer.ReadOutput()
@@ -107,13 +109,13 @@ class CLITableViewTests(shared_test_lib.BaseTestCase):
     # Table with a too large title.
     # TODO: determine if this is the desired behavior.
     title = (
-        u'In computer programming, a string is traditionally a sequence '
-        u'of characters, either as a literal constant or as some kind of '
-        u'variable.')
+        'In computer programming, a string is traditionally a sequence '
+        'of characters, either as a literal constant or as some kind of '
+        'variable.')
     table_view = views.CLITableView(
-        column_names=[u'Name', u'Description'], title=title)
-    table_view.AddRow([u'First name', u'The first name in the table'])
-    table_view.AddRow([u'Second name', u'The second name in the table'])
+        column_names=['Name', 'Description'], title=title)
+    table_view.AddRow(['First name', 'The first name in the table'])
+    table_view.AddRow(['Second name', 'The second name in the table'])
 
     with self.assertRaises(RuntimeError):
       table_view.Write(output_writer)
@@ -128,9 +130,9 @@ class MarkdownTableViewTests(shared_test_lib.BaseTestCase):
 
     # Table with columns.
     table_view = views.MarkdownTableView(
-        column_names=[u'Name', u'Description'], title=u'Title')
-    table_view.AddRow([u'First name', u'The first name in the table'])
-    table_view.AddRow([u'Second name', u'The second name in the table'])
+        column_names=['Name', 'Description'], title='Title')
+    table_view.AddRow(['First name', 'The first name in the table'])
+    table_view.AddRow(['Second name', 'The second name in the table'])
 
     table_view.Write(output_writer)
     string = output_writer.ReadOutput()
@@ -147,9 +149,9 @@ class MarkdownTableViewTests(shared_test_lib.BaseTestCase):
     self.assertEqual(string.split(b'\n'), expected_string.split(b'\n'))
 
     # Table without columns.
-    table_view = views.MarkdownTableView(title=u'Title')
-    table_view.AddRow([u'Name', u'The name in the table'])
-    table_view.AddRow([u'Description', u'The description in the table'])
+    table_view = views.MarkdownTableView(title='Title')
+    table_view.AddRow(['Name', 'The name in the table'])
+    table_view.AddRow(['Description', 'The description in the table'])
 
     table_view.Write(output_writer)
     string = output_writer.ReadOutput()

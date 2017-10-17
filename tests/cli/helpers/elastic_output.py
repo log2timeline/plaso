@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Elastic Search output module CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -17,38 +19,38 @@ class ElasticSearchOutputArgumentsHelperTest(
     test_lib.OutputModuleArgumentsHelperTest):
   """Tests the Elastic Search output module CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--index_name INDEX_NAME] [--doc_type DOC_TYPE]',
-      u'                     [--flush_interval FLUSH_INTERVAL] [--raw_fields]',
-      u'                     [--elastic_user ELASTIC_USER] [--server HOSTNAME]',
-      u'                     [--port PORT]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --doc_type DOC_TYPE   Name of the document type that will be used in',
-      u'                        ElasticSearch.',
-      u'  --elastic_user ELASTIC_USER',
-      (u'                        Username to use for Elasticsearch '
-       u'authentication.'),
-      u'  --flush_interval FLUSH_INTERVAL',
-      u'                        Events to queue up before bulk insert to',
-      u'                        ElasticSearch.',
-      u'  --index_name INDEX_NAME',
-      u'                        Name of the index in ElasticSearch.',
-      u'  --port PORT           The port number of the server.',
-      (u'  --raw_fields          Export string fields that will not be '
-       u'analyzed by'),
-      u'                        Lucene.',
-      (u'  --server HOSTNAME     The hostname or server IP address of the '
-       u'server.'),
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [--index_name INDEX_NAME] [--doc_type DOC_TYPE]',
+      '                     [--flush_interval FLUSH_INTERVAL] [--raw_fields]',
+      '                     [--elastic_user ELASTIC_USER] [--server HOSTNAME]',
+      '                     [--port PORT]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --doc_type DOC_TYPE   Name of the document type that will be used in',
+      '                        ElasticSearch.',
+      '  --elastic_user ELASTIC_USER',
+      ('                        Username to use for Elasticsearch '
+       'authentication.'),
+      '  --flush_interval FLUSH_INTERVAL',
+      '                        Events to queue up before bulk insert to',
+      '                        ElasticSearch.',
+      '  --index_name INDEX_NAME',
+      '                        Name of the index in ElasticSearch.',
+      '  --port PORT           The port number of the server.',
+      ('  --raw_fields          Export string fields that will not be '
+       'analyzed by'),
+      '                        Lucene.',
+      ('  --server HOSTNAME     The hostname or server IP address of the '
+       'server.'),
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py',
-        description=u'Test argument parser.', add_help=False,
+        prog='cli_helper.py',
+        description='Test argument parser.', add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     elastic_output.ElasticSearchOutputArgumentsHelper.AddArguments(

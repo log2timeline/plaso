@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the nsrlsvr analysis plugin CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -17,36 +19,36 @@ class NsrlsvrAnalysisArgumentsHelperTest(
     test_lib.AnalysisPluginArgumentsHelperTest):
   """Tests the nsrlsvr analysis plugin CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--nsrlsvr-hash HASH] [--nsrlsvr-host HOST]',
-      u'                     [--nsrlsvr-label LABEL] [--nsrlsvr-port PORT]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --nsrlsvr-hash HASH, --nsrlsvr_hash HASH',
-      (u'                        Type of hash to use to query nsrlsvr '
-       u'instance, the'),
-      (u'                        default is: md5. Supported options: md5, '
-       u'sha1'),
-      u'  --nsrlsvr-host HOST, --nsrlsvr_host HOST',
-      (u'                        Hostname or IP address of the nsrlsvr '
-       u'instance to'),
-      u'                        query, the default is: localhost',
-      u'  --nsrlsvr-label LABEL, --nsrlsvr_label LABEL',
-      u'                        Label to apply to events, the default is:',
-      u'                        nsrl_present.',
-      u'  --nsrlsvr-port PORT, --nsrlsvr_port PORT',
-      (u'                        Port number of the nsrlsvr instance to '
-       u'query, the'),
-      u'                        default is: 9120.',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [--nsrlsvr-hash HASH] [--nsrlsvr-host HOST]',
+      '                     [--nsrlsvr-label LABEL] [--nsrlsvr-port PORT]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --nsrlsvr-hash HASH, --nsrlsvr_hash HASH',
+      ('                        Type of hash to use to query nsrlsvr '
+       'instance, the'),
+      ('                        default is: md5. Supported options: md5, '
+       'sha1'),
+      '  --nsrlsvr-host HOST, --nsrlsvr_host HOST',
+      ('                        Hostname or IP address of the nsrlsvr '
+       'instance to'),
+      '                        query, the default is: localhost',
+      '  --nsrlsvr-label LABEL, --nsrlsvr_label LABEL',
+      '                        Label to apply to events, the default is:',
+      '                        nsrl_present.',
+      '  --nsrlsvr-port PORT, --nsrlsvr_port PORT',
+      ('                        Port number of the nsrlsvr instance to '
+       'query, the'),
+      '                        default is: 9120.',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py',
-        description=u'Test argument parser.', add_help=False,
+        prog='cli_helper.py',
+        description='Test argument parser.', add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     nsrlsvr_analysis.NsrlsvrAnalysisArgumentsHelper.AddArguments(

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the status view."""
 
+from __future__ import unicode_literals
+
 import unittest
 import sys
 
@@ -32,14 +34,14 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     """Tests the PrintExtractionStatusUpdateLinear function."""
     output_writer = test_lib.TestOutputWriter()
 
-    test_view = status_view.StatusView(output_writer, u'test_tool')
+    test_view = status_view.StatusView(output_writer, 'test_tool')
     test_view.SetSourceInformation(
-        u'/test/source/path', dfvfs_definitions.SOURCE_TYPE_DIRECTORY)
+        '/test/source/path', dfvfs_definitions.SOURCE_TYPE_DIRECTORY)
 
     process_status = processing_status.ProcessingStatus()
     process_status.UpdateForemanStatus(
-        u'f_identifier', u'f_status', 123, 0,
-        u'f_test_file', 1, 29, 3, 456, 5, 6, 7,
+        'f_identifier', 'f_status', 123, 0,
+        'f_test_file', 1, 29, 3, 456, 5, 6, 7,
         8, 9, 10)
     test_view._PrintExtractionStatusUpdateLinear(process_status)
 
@@ -49,29 +51,29 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     self.assertEqual(string.split(b'\n'), expected_lines)
 
     process_status.UpdateWorkerStatus(
-        u'w_identifier', u'w_status', 123, 0,
-        u'w_test_file', 1, 2, 3, 4, 5, 6, 7, 8, 9,
+        'w_identifier', 'w_status', 123, 0,
+        'w_test_file', 1, 2, 3, 4, 5, 6, 7, 8, 9,
         10)
     test_view._PrintExtractionStatusUpdateLinear(process_status)
     string = output_writer.ReadOutput()
 
     expected_string = (
-        u'w_identifier (PID: 123) - events produced: 4 - '
-        u'file: w_test_file - running: True\n')
+        'w_identifier (PID: 123) - events produced: 4 - '
+        'file: w_test_file - running: True\n')
     self.assertEqual(string, expected_string)
 
   def testPrintExtractionStatusUpdateWindow(self):
     """Tests the _PrintExtractionStatusUpdateWindow function."""
     output_writer = test_lib.TestOutputWriter()
 
-    test_view = status_view.StatusView(output_writer, u'test_tool')
+    test_view = status_view.StatusView(output_writer, 'test_tool')
     test_view.SetSourceInformation(
-        u'/test/source/path', dfvfs_definitions.SOURCE_TYPE_DIRECTORY)
+        '/test/source/path', dfvfs_definitions.SOURCE_TYPE_DIRECTORY)
 
     process_status = processing_status.ProcessingStatus()
     process_status.UpdateForemanStatus(
-        u'f_identifier', u'f_status', 123, 0,
-        u'f_test_file', 1, 29, 3, 456, 5, 6, 7,
+        'f_identifier', 'f_status', 123, 0,
+        'f_test_file', 1, 29, 3, 456, 5, 6, 7,
         8, 9, 10)
     test_view._PrintExtractionStatusUpdateWindow(process_status)
 
@@ -86,7 +88,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
         b'Events          '
         b'File')
 
-    if not sys.platform.startswith(u'win'):
+    if not sys.platform.startswith('win'):
       table_header = b'\x1b[1m{0:s}\x1b[0m'.format(table_header)
 
     expected_lines = [
@@ -108,8 +110,8 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     self.assertEqual(string.split(b'\n'), expected_lines)
 
     process_status.UpdateWorkerStatus(
-        u'w_identifier', u'w_status', 123, 0,
-        u'w_test_file', 1, 2, 3, 4, 5, 6, 7, 8, 9,
+        'w_identifier', 'w_status', 123, 0,
+        'w_test_file', 1, 2, 3, 4, 5, 6, 7, 8, 9,
         10)
     test_view._PrintExtractionStatusUpdateWindow(process_status)
     string = output_writer.ReadOutput()
@@ -147,9 +149,9 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     """Tests the PrintExtractionStatusHeader function."""
     output_writer = test_lib.TestOutputWriter()
 
-    test_view = status_view.StatusView(output_writer, u'test_tool')
+    test_view = status_view.StatusView(output_writer, 'test_tool')
     test_view.SetSourceInformation(
-        u'/test/source/path', dfvfs_definitions.SOURCE_TYPE_DIRECTORY)
+        '/test/source/path', dfvfs_definitions.SOURCE_TYPE_DIRECTORY)
 
     test_view.PrintExtractionStatusHeader(None)
 
