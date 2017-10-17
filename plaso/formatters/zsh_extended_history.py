@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """The Zsh extended_history formatter."""
+
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 
@@ -7,18 +10,18 @@ from plaso.formatters import manager
 class ZshExtendedHistoryEventFormatter(interface.ConditionalEventFormatter):
   """Class for the Zsh event formatter."""
 
-  DATA_TYPE = u'shell:zsh:history'
+  DATA_TYPE = 'shell:zsh:history'
 
-  FORMAT_STRING_SEPARATOR = u' '
+  FORMAT_STRING_SEPARATOR = ' '
 
   FORMAT_STRING_PIECES = [
-      u'{command}',
-      u'Time elapsed: {elapsed_seconds} seconds']
+      '{command}',
+      'Time elapsed: {elapsed_seconds} seconds']
 
-  FORMAT_STRING_SHORT_PIECES = [u'{command}']
+  FORMAT_STRING_SHORT_PIECES = ['{command}']
 
-  SOURCE_LONG = u'Zsh Extended History'
-  SOURCE_SHORT = u'HIST'
+  SOURCE_LONG = 'Zsh Extended History'
+  SOURCE_SHORT = 'HIST'
 
 
 manager.FormattersManager.RegisterFormatter(ZshExtendedHistoryEventFormatter)

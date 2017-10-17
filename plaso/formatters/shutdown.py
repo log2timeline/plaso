@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The shutdown Windows Registry event formatter."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 from plaso.lib import errors
@@ -10,17 +12,17 @@ class ShutdownWindowsRegistryEventFormatter(
     interface.ConditionalEventFormatter):
   """Formatter for a shutdown Windows Registry event."""
 
-  DATA_TYPE = u'windows:registry:shutdown'
+  DATA_TYPE = 'windows:registry:shutdown'
 
   FORMAT_STRING_PIECES = [
-      u'[{key_path}]',
-      u'Description: {value_name}']
+      '[{key_path}]',
+      'Description: {value_name}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'{value_name}']
+      '{value_name}']
 
-  SOURCE_LONG = u'Registry Key Shutdown Entry'
-  SOURCE_SHORT = u'REG'
+  SOURCE_LONG = 'Registry Key Shutdown Entry'
+  SOURCE_SHORT = 'REG'
 
   def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
@@ -38,16 +40,16 @@ class ShutdownWindowsRegistryEventFormatter(
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event.data_type:
-      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
           event.data_type))
 
     event_values = event.CopyToDict()
 
-    regvalue = event_values.get(u'regvalue', {})
+    regvalue = event_values.get('regvalue', {})
     string_parts = []
     for key, value in sorted(regvalue.items()):
-      string_parts.append(u'{0:s}: {1!s}'.format(key, value))
-    event_values[u'text'] = u' '.join(string_parts)
+      string_parts.append('{0:s}: {1!s}'.format(key, value))
+    event_values['text'] = ' '.join(string_parts)
 
     return self._ConditionalFormatMessages(event_values)
 

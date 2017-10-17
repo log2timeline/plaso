@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The selinux event formatter."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 
@@ -8,19 +10,19 @@ from plaso.formatters import manager
 class SELinuxFormatter(interface.ConditionalEventFormatter):
   """Formatter for a selinux log file event."""
 
-  DATA_TYPE = u'selinux:line'
+  DATA_TYPE = 'selinux:line'
 
-  FORMAT_STRING_SEPARATOR = u''
+  FORMAT_STRING_SEPARATOR = ''
 
   FORMAT_STRING_PIECES = [
-      u'[',
-      u'audit_type: {audit_type}',
-      u', pid: {pid}',
-      u']',
-      u' {body}']
+      '[',
+      'audit_type: {audit_type}',
+      ', pid: {pid}',
+      ']',
+      ' {body}']
 
-  SOURCE_LONG = u'Audit log File'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'Audit log File'
+  SOURCE_SHORT = 'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(SELinuxFormatter)

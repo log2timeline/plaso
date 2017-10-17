@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The Docker event formatter."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 
@@ -8,62 +10,62 @@ from plaso.formatters import manager
 class DockerBaseEventFormatter(interface.ConditionalEventFormatter):
   """Class that contains common Docker event formatter functionality."""
 
-  DATA_TYPE = u'docker:json'
+  DATA_TYPE = 'docker:json'
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'{id}']
+      '{id}']
 
-  SOURCE_SHORT = u'DOCKER'
+  SOURCE_SHORT = 'DOCKER'
 
 
 class DockerContainerLogEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Docker container log event"""
 
-  DATA_TYPE = u'docker:json:container:log'
+  DATA_TYPE = 'docker:json:container:log'
 
-  FORMAT_STRING_SEPARATOR = u', '
+  FORMAT_STRING_SEPARATOR = ', '
 
   FORMAT_STRING_PIECES = (
-      u'Text: {log_line}',
-      u'Container ID: {container_id}',
-      u'Source: {log_source}',
+      'Text: {log_line}',
+      'Container ID: {container_id}',
+      'Source: {log_source}',
   )
 
-  SOURCE_LONG = u'Docker Container Logs'
-  SOURCE_SHORT = u'DOCKER'
+  SOURCE_LONG = 'Docker Container Logs'
+  SOURCE_SHORT = 'DOCKER'
 
 
 class DockerLayerEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Docker layer event."""
 
-  DATA_TYPE = u'docker:json:layer'
+  DATA_TYPE = 'docker:json:layer'
 
-  FORMAT_STRING_SEPARATOR = u', '
+  FORMAT_STRING_SEPARATOR = ', '
 
   FORMAT_STRING_PIECES = (
-      u'Command: {command}',
-      u'Layer ID: {layer_id}',
+      'Command: {command}',
+      'Layer ID: {layer_id}',
   )
 
-  SOURCE_LONG = u'Docker Layer'
-  SOURCE_SHORT = u'DOCKER'
+  SOURCE_LONG = 'Docker Layer'
+  SOURCE_SHORT = 'DOCKER'
 
 
 class DockerContainerEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Docker event."""
 
-  DATA_TYPE = u'docker:json:container'
+  DATA_TYPE = 'docker:json:container'
 
-  FORMAT_STRING_SEPARATOR = u', '
+  FORMAT_STRING_SEPARATOR = ', '
 
   FORMAT_STRING_PIECES = [
-      u'Action: {action}',
-      u'Container Name: {container_name}',
-      u'Container ID: {container_id}',
+      'Action: {action}',
+      'Container Name: {container_name}',
+      'Container ID: {container_id}',
   ]
 
-  SOURCE_LONG = u'Docker Container'
-  SOURCE_SHORT = u'DOCKER'
+  SOURCE_LONG = 'Docker Container'
+  SOURCE_SHORT = 'DOCKER'
 
 
 manager.FormattersManager.RegisterFormatters([

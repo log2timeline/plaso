@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The Mac OS X appfirewall.log file event formatter."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 
@@ -8,21 +10,21 @@ from plaso.formatters import manager
 class MacAppFirewallLogFormatter(interface.ConditionalEventFormatter):
   """Formatter for Mac OS X appfirewall.log file event."""
 
-  DATA_TYPE = u'mac:appfirewall:line'
+  DATA_TYPE = 'mac:appfirewall:line'
 
   FORMAT_STRING_PIECES = [
-      u'Computer: {computer_name}',
-      u'Agent: {agent}',
-      u'Status: {status}',
-      u'Process name: {process_name}',
-      u'Log: {action}']
+      'Computer: {computer_name}',
+      'Agent: {agent}',
+      'Status: {status}',
+      'Process name: {process_name}',
+      'Log: {action}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'Process name: {process_name}',
-      u'Status: {status}']
+      'Process name: {process_name}',
+      'Status: {status}']
 
-  SOURCE_LONG = u'Mac AppFirewall Log'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'Mac AppFirewall Log'
+  SOURCE_SHORT = 'LOG'
 
 
 manager.FormattersManager.RegisterFormatter(MacAppFirewallLogFormatter)

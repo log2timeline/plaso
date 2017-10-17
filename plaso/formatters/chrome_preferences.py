@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The Google Chrome Preferences file event formatter."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 from plaso.lib import errors
@@ -10,64 +12,64 @@ class ChromePreferencesClearHistoryEventFormatter(
     interface.ConditionalEventFormatter):
   """Formatter for Chrome history clearing events."""
 
-  DATA_TYPE = u'chrome:preferences:clear_history'
+  DATA_TYPE = 'chrome:preferences:clear_history'
 
-  FORMAT_STRING_PIECES = [u'{message}']
+  FORMAT_STRING_PIECES = ['{message}']
 
-  FORMAT_STRING_SHORT_PIECES = [u'{message}']
+  FORMAT_STRING_SHORT_PIECES = ['{message}']
 
-  SOURCE_LONG = u'Chrome History Deletion'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'Chrome History Deletion'
+  SOURCE_SHORT = 'LOG'
 
 
 class ChromeExtensionsAutoupdaterEvent(interface.ConditionalEventFormatter):
   """Formatter for Chrome Extensions Autoupdater events."""
 
-  DATA_TYPE = u'chrome:preferences:extensions_autoupdater'
+  DATA_TYPE = 'chrome:preferences:extensions_autoupdater'
 
-  FORMAT_STRING_PIECES = [u'{message}']
+  FORMAT_STRING_PIECES = ['{message}']
 
-  FORMAT_STRING_SHORT_PIECES = [u'{message}']
+  FORMAT_STRING_SHORT_PIECES = ['{message}']
 
-  SOURCE_LONG = u'Chrome Extensions Autoupdater'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'Chrome Extensions Autoupdater'
+  SOURCE_SHORT = 'LOG'
 
 
 class ChromeExtensionInstallationEventFormatter(
     interface.ConditionalEventFormatter):
   """Formatter for a Chrome extension installation event."""
 
-  DATA_TYPE = u'chrome:preferences:extension_installation'
+  DATA_TYPE = 'chrome:preferences:extension_installation'
 
   FORMAT_STRING_PIECES = [
-      u'CRX ID: {extension_id}',
-      u'CRX Name: {extension_name}',
-      u'Path: {path}']
+      'CRX ID: {extension_id}',
+      'CRX Name: {extension_name}',
+      'Path: {path}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'{extension_id}',
-      u'{path}']
+      '{extension_id}',
+      '{path}']
 
-  SOURCE_LONG = u'Chrome Extension Installation'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'Chrome Extension Installation'
+  SOURCE_SHORT = 'LOG'
 
 
 class ChromeContentSettingsExceptionsFormatter(
     interface.ConditionalEventFormatter):
   """Formatter for a Chrome content_settings exceptions event."""
 
-  DATA_TYPE = u'chrome:preferences:content_settings:exceptions'
+  DATA_TYPE = 'chrome:preferences:content_settings:exceptions'
 
   FORMAT_STRING_PIECES = [
-      u'Permission {permission}',
-      u'used by {subject}']
+      'Permission {permission}',
+      'used by {subject}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'Permission {permission}',
-      u'used by {subject}']
+      'Permission {permission}',
+      'used by {subject}']
 
-  SOURCE_LONG = u'Chrome Permission Event'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'Chrome Permission Event'
+  SOURCE_SHORT = 'LOG'
 
   def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
@@ -85,13 +87,13 @@ class ChromeContentSettingsExceptionsFormatter(
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event.data_type:
-      raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
+      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
           event.data_type))
 
     event_values = event.CopyToDict()
 
-    primary_url = event_values[u'primary_url']
-    secondary_url = event_values[u'secondary_url']
+    primary_url = event_values['primary_url']
+    secondary_url = event_values['secondary_url']
 
     # There is apparently a bug, either in GURL.cc or
     # content_settings_pattern.cc where URLs with file:// scheme are stored in
@@ -102,19 +104,19 @@ class ChromeContentSettingsExceptionsFormatter(
     # content_settings_pref.cc(295)] Invalid pattern strings: ,*
     # More research needed, could be related to https://crbug.com/132659
 
-    if primary_url == u'':
-      subject = u'local file'
+    if primary_url == '':
+      subject = 'local file'
 
-    elif primary_url == secondary_url or secondary_url == u'*':
+    elif primary_url == secondary_url or secondary_url == '*':
       subject = primary_url
 
-    elif secondary_url == u'':
-      subject = u'{0:s} embedded in local file'.format(primary_url)
+    elif secondary_url == '':
+      subject = '{0:s} embedded in local file'.format(primary_url)
 
     else:
-      subject = u'{0:s} embedded in {1:s}'.format(primary_url, secondary_url)
+      subject = '{0:s} embedded in {1:s}'.format(primary_url, secondary_url)
 
-    event_values[u'subject'] = subject
+    event_values['subject'] = subject
 
     return self._ConditionalFormatMessages(event_values)
 

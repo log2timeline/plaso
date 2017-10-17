@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The SkyDrive log event formatter."""
 
+from __future__ import unicode_literals
+
 from plaso.formatters import interface
 from plaso.formatters import manager
 
@@ -8,34 +10,34 @@ from plaso.formatters import manager
 class SkyDriveLogFormatter(interface.ConditionalEventFormatter):
   """Formatter for a SkyDrive log file event."""
 
-  DATA_TYPE = u'skydrive:log:line'
+  DATA_TYPE = 'skydrive:log:line'
 
   FORMAT_STRING_PIECES = [
-      u'[{module}',
-      u'{source_code}',
-      u'{log_level}]',
-      u'{detail}']
+      '[{module}',
+      '{source_code}',
+      '{log_level}]',
+      '{detail}']
 
-  FORMAT_STRING_SHORT_PIECES = [u'{detail}']
+  FORMAT_STRING_SHORT_PIECES = ['{detail}']
 
-  SOURCE_LONG = u'SkyDrive Log File'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'SkyDrive Log File'
+  SOURCE_SHORT = 'LOG'
 
 
 class SkyDriveOldLogFormatter(interface.ConditionalEventFormatter):
   """Formatter for a SkyDrive old log file event."""
 
-  DATA_TYPE = u'skydrive:log:old:line'
+  DATA_TYPE = 'skydrive:log:old:line'
 
   FORMAT_STRING_PIECES = [
-      u'[{source_code}]',
-      u'({log_level})',
-      u'{text}']
+      '[{source_code}]',
+      '({log_level})',
+      '{text}']
 
-  FORMAT_STRING_SHORT_PIECES = [u'{text}']
+  FORMAT_STRING_SHORT_PIECES = ['{text}']
 
-  SOURCE_LONG = u'SkyDrive Log File'
-  SOURCE_SHORT = u'LOG'
+  SOURCE_LONG = 'SkyDrive Log File'
+  SOURCE_SHORT = 'LOG'
 
 
 manager.FormattersManager.RegisterFormatters([
