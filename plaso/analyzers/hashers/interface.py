@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """The hasher interface."""
 
+from __future__ import unicode_literals
+
 import abc
 
 
 class BaseHasher(object):
   """Base class for objects that calculate hashes."""
 
-  NAME = u'base_hasher'
-  DESCRIPTION = u'Calculates a digest hash over input data.'
+  NAME = 'base_hasher'
+  DESCRIPTION = 'Calculates a digest hash over input data.'
 
   @abc.abstractmethod
   def GetBinaryDigest(self):

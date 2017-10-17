@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """A plugin to tag events according to rules in a tag file."""
 
+from __future__ import unicode_literals
+
 import logging
 import re
 import os
@@ -18,15 +20,15 @@ from plaso.containers import reports
 class TaggingAnalysisPlugin(interface.AnalysisPlugin):
   """Analysis plugin that tags events according to rules in a tag file."""
 
-  NAME = u'tagging'
+  NAME = 'tagging'
 
   ENABLE_IN_EXTRACTION = True
 
-  _EVENT_TAG_COMMENT = u'Tag applied by tagging analysis plugin.'
+  _EVENT_TAG_COMMENT = 'Tag applied by tagging analysis plugin.'
 
   _OS_TAG_FILES = {
-      u'macosx': u'tag_macosx.txt',
-      u'windows': u'tag_windows.txt'}
+      'macosx': 'tag_macosx.txt',
+      'windows': 'tag_windows.txt'}
 
   # A line with no indent is a tag name.
   _TAG_LABEL_LINE = re.compile(r'^(\w+)')
@@ -62,7 +64,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     if not filename:
       return False
 
-    logging.info(u'Using auto detected tag file: {0:s}'.format(filename))
+    logging.info('Using auto detected tag file: {0:s}'.format(filename))
     tag_file_path = os.path.join(analysis_mediator.data_location, filename)
     self.SetAndLoadTagFile(tag_file_path)
     return True
@@ -81,7 +83,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     """
     queries = None
     tag = None
-    with open(tag_file_path, u'r') as tag_file:
+    with open(tag_file_path, 'r') as tag_file:
       for line in tag_file.readlines():
         label_match = self._TAG_LABEL_LINE.match(line)
         if label_match:
@@ -119,9 +121,9 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
       efilter.query.Query: efilter query of the rule or None.
     """
     if self._OBJECTFILTER_WORDS.search(rule):
-      syntax = u'objectfilter'
+      syntax = 'objectfilter'
     else:
-      syntax = u'dottysql'
+      syntax = 'dottysql'
 
     try:
       return efilter_query.Query(rule, syntax=syntax)
@@ -129,7 +131,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     except efilter_errors.EfilterParseError as exception:
       stripped_rule = rule.rstrip()
       logging.warning(
-          u'Unable to build query from rule: "{0:s}" with error: {1:s}'.format(
+          'Unable to build query from rule: "{0:s}" with error: {1:s}'.format(
               stripped_rule, exception.message))
 
   def _ParseTaggingFile(self, tag_file_path):
@@ -145,7 +147,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     tags = []
     for label_name, rules in self._ParseDefinitions(tag_file_path):
       if not rules:
-        logging.warning(u'All rules for label "{0:s}" are invalid.'.format(
+        logging.warning('All rules for label "{0:s}" are invalid.'.format(
             label_name))
         continue
 
@@ -171,7 +173,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     Returns:
       AnalysisReport: analysis report.
     """
-    report_text = u'Tagging plugin produced {0:d} tags.\n'.format(
+    report_text = 'Tagging plugin produced {0:d} tags.\n'.format(
         self._number_of_event_tags)
     self._number_of_event_tags = 0
     return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
@@ -191,15 +193,15 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
         return
       if not self._AttemptAutoDetectTagFile(mediator):
         logging.info(
-            u'No tag definition file specified, and plaso was not able to '
-            u'autoselect a tagging file. As no definitions were specified, '
-            u'no events will be tagged.')
+            'No tag definition file specified, and plaso was not able to '
+            'autoselect a tagging file. As no definitions were specified, '
+            'no events will be tagged.')
         return
 
     try:
       matched_labels = efilter_api.apply(self._tag_rules, vars=event)
     except efilter_errors.EfilterTypeError as exception:
-      logging.warning(u'Unable to apply efilter query with error: {0:s}'.format(
+      logging.warning('Unable to apply efilter query with error: {0:s}'.format(
           exception))
       matched_labels = None
 

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The hashing analyzer implementation."""
 
+from __future__ import unicode_literals
+
 import logging
 
 from plaso.analyzers import interface
@@ -13,8 +15,8 @@ from plaso.lib import definitions
 class HashingAnalyzer(interface.BaseAnalyzer):
   """This class contains code for calculating file hashes of input files."""
 
-  NAME = u'hashing'
-  DESCRIPTION = u'Calculates hashes of file content.'
+  NAME = 'hashing'
+  DESCRIPTION = 'Calculates hashes of file content.'
 
   PROCESSING_STATUS_HINT = definitions.PROCESSING_STATUS_HASHING
 
@@ -23,7 +25,7 @@ class HashingAnalyzer(interface.BaseAnalyzer):
   def __init__(self):
     """Initializes a hashing analyzer."""
     super(HashingAnalyzer, self).__init__()
-    self._hasher_names_string = u''
+    self._hasher_names_string = ''
     self._hashers = []
 
   def Analyze(self, data):
@@ -46,10 +48,10 @@ class HashingAnalyzer(interface.BaseAnalyzer):
     """
     results = []
     for hasher in self._hashers:
-      logging.debug(u'Processing results for hasher {0:s}'.format(hasher.NAME))
+      logging.debug('Processing results for hasher {0:s}'.format(hasher.NAME))
       result = analyzer_result.AnalyzerResult()
       result.analyzer_name = self.NAME
-      result.attribute_name = u'{0:s}_hash'.format(hasher.NAME)
+      result.attribute_name = '{0:s}_hash'.format(hasher.NAME)
       result.attribute_value = hasher.GetStringDigest()
       results.append(result)
     return results
@@ -69,8 +71,8 @@ class HashingAnalyzer(interface.BaseAnalyzer):
     hasher_names = hashers_manager.HashersManager.GetHasherNamesFromString(
         hasher_names_string)
 
-    debug_hasher_names = u', '.join(hasher_names)
-    logging.debug(u'Got hasher names: {0:s}'.format(debug_hasher_names))
+    debug_hasher_names = ', '.join(hasher_names)
+    logging.debug('Got hasher names: {0:s}'.format(debug_hasher_names))
 
     self._hashers = hashers_manager.HashersManager.GetHashers(hasher_names)
     self._hasher_names_string = hasher_names_string

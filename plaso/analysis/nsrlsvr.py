@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Analysis plugin to look up files in nsrlsvr and tag events."""
 
+from __future__ import unicode_literals
+
 import logging
 import socket
 
@@ -23,7 +25,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
   _RECEIVE_BUFFER_SIZE = 4096
   _SOCKET_TIMEOUT = 3
 
-  SUPPORTED_HASHES = [u'md5', u'sha1']
+  SUPPORTED_HASHES = ['md5', 'sha1']
 
   def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
     """Initializes an nsrlsvr analyzer thread.
@@ -52,7 +54,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
 
     except socket.error as exception:
       logging.error(
-          u'Unable to connect to nsrlsvr with error: {0:s}.'.format(exception))
+          'Unable to connect to nsrlsvr with error: {0:s}.'.format(exception))
 
   def _QueryHash(self, nsrl_socket, digest):
     """Queries nsrlsvr for a specfic hash.
@@ -64,7 +66,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     Returns:
       bool: True if the hash was found, False if not or None on error.
     """
-    query = u'QUERY {0:s}\n'.format(digest)
+    query = 'QUERY {0:s}\n'.format(digest)
     response = None
 
     try:
@@ -73,7 +75,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
 
     except socket.error as exception:
       logging.error(
-          u'Unable to query nsrlsvr with error: {0:s}.'.format(exception))
+          'Unable to query nsrlsvr with error: {0:s}.'.format(exception))
 
     if not response:
       return False
@@ -94,7 +96,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
       list[HashAnalysis]: analysis results, or an empty list on error.
     """
     logging.debug(
-        u'Opening connection to {0:s}:{1:d}'.format(self._host, self._port))
+        'Opening connection to {0:s}:{1:d}'.format(self._host, self._port))
 
     nsrl_socket = self._GetSocket()
     if not nsrl_socket:
@@ -113,7 +115,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     nsrl_socket.close()
 
     logging.debug(
-        u'Closed connection to {0:s}:{1:d}'.format(self._host, self._port))
+        'Closed connection to {0:s}:{1:d}'.format(self._host, self._port))
 
     return hash_analyses
 
@@ -147,7 +149,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     nsrl_socket = self._GetSocket()
     if nsrl_socket:
       response = self._QueryHash(
-          nsrl_socket, u'd41d8cd98f00b204e9800998ecf8427e')
+          nsrl_socket, 'd41d8cd98f00b204e9800998ecf8427e')
       nsrl_socket.close()
 
     return response is not None
@@ -158,11 +160,11 @@ class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
 
   # The NSRL contains files of all different types, and can handle a high load
   # so look up all files.
-  DATA_TYPES = [u'fs:stat', u'fs:stat:ntfs']
+  DATA_TYPES = ['fs:stat', 'fs:stat:ntfs']
 
-  URLS = [u'https://rjhansen.github.io/nsrlsvr/']
+  URLS = ['https://rjhansen.github.io/nsrlsvr/']
 
-  NAME = u'nsrlsvr'
+  NAME = 'nsrlsvr'
 
   def __init__(self):
     """Initializes an nsrlsvr analysis plugin."""
@@ -183,7 +185,7 @@ class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     if hash_information:
       return [self._label]
     # TODO: Renable when tagging is removed from the analysis report.
-    # return [u'nsrl_not_present']
+    # return ['nsrl_not_present']
     return []
 
   def SetLabel(self, label):

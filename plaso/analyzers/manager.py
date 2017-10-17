@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains a class for managing digest analyzers for Plaso."""
 
+from __future__ import unicode_literals
+
 
 class AnalyzersManager(object):
   """Class that implements the analyzers manager."""
@@ -21,7 +23,7 @@ class AnalyzersManager(object):
     """
     analyzer_name = analyzer_class.NAME.lower()
     if analyzer_name not in cls._analyzer_classes:
-      raise KeyError(u'analyzer class not set for name: {0:s}'.format(
+      raise KeyError('analyzer class not set for name: {0:s}'.format(
           analyzer_class.NAME))
 
     del cls._analyzer_classes[analyzer_name]
@@ -38,7 +40,7 @@ class AnalyzersManager(object):
     """
     analyzer_information = []
     for _, analyzer_class in cls.GetAnalyzers():
-      description = getattr(analyzer_class, u'DESCRIPTION', u'')
+      description = getattr(analyzer_class, 'DESCRIPTION', '')
       analyzer_information.append((analyzer_class.NAME, description))
 
     return analyzer_information
@@ -59,7 +61,7 @@ class AnalyzersManager(object):
     analyzer_name = analyzer_name.lower()
     if analyzer_name not in cls._analyzer_classes:
       raise KeyError(
-          u'analyzer class not set for name: {0:s}.'.format(analyzer_name))
+          'analyzer class not set for name: {0:s}.'.format(analyzer_name))
 
     analyzer_class = cls._analyzer_classes[analyzer_name]
     return analyzer_class()
@@ -117,7 +119,7 @@ class AnalyzersManager(object):
     """
     analyzer_name = analyzer_class.NAME.lower()
     if analyzer_name in cls._analyzer_classes:
-      raise KeyError(u'analyzer class already set for name: {0:s}.'.format(
+      raise KeyError('analyzer class already set for name: {0:s}.'.format(
           analyzer_class.NAME))
 
     cls._analyzer_classes[analyzer_name] = analyzer_class

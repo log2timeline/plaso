@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Analysis plugin to look up files in Viper and tag events."""
 
+from __future__ import unicode_literals
+
 import logging
 
 from plaso.analysis import interface
@@ -16,8 +18,8 @@ class ViperAnalyzer(interface.HTTPHashAnalyzer):
     https://viper-framework.readthedocs.org/en/latest/usage/web.html#api
   """
 
-  SUPPORTED_HASHES = [u'md5', u'sha256']
-  SUPPORTED_PROTOCOLS = [u'http', u'https']
+  SUPPORTED_HASHES = ['md5', 'sha256']
+  SUPPORTED_PROTOCOLS = ['http', 'https']
 
   def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
     """Initializes a Viper hash analyzer.
@@ -45,18 +47,18 @@ class ViperAnalyzer(interface.HTTPHashAnalyzer):
       dict[str, object]: JSON response or None on error.
     """
     if not self._url:
-      self._url = u'{0:s}://{1:s}:{2:d}/file/find'.format(
+      self._url = '{0:s}://{1:s}:{2:d}/file/find'.format(
           self._protocol, self._host, self._port)
 
     request_data = {self.lookup_hash: digest}
 
     try:
       json_response = self.MakeRequestAndDecodeJSON(
-          self._url, u'POST', data=request_data)
+          self._url, 'POST', data=request_data)
 
     except errors.ConnectionError as exception:
       json_response = None
-      logging.error(u'Unable to query Viper with error: {0:s}.'.format(
+      logging.error('Unable to query Viper with error: {0:s}.'.format(
           exception))
 
     return json_response
@@ -107,7 +109,7 @@ class ViperAnalyzer(interface.HTTPHashAnalyzer):
       ValueError: if the protocol is not supported.
     """
     if protocol not in self.SUPPORTED_PROTOCOLS:
-      raise ValueError(u'Unsupported protocol: {0!s}'.format(protocol))
+      raise ValueError('Unsupported protocol: {0!s}'.format(protocol))
 
     self._protocol = protocol
 
@@ -117,11 +119,11 @@ class ViperAnalyzer(interface.HTTPHashAnalyzer):
     Returns:
       bool: True if the Viper server instance is reachable.
     """
-    url = u'{0:s}://{1:s}:{2:d}/test'.format(
+    url = '{0:s}://{1:s}:{2:d}/test'.format(
         self._protocol, self._host, self._port)
 
     try:
-      json_response = self.MakeRequestAndDecodeJSON(url, u'GET')
+      json_response = self.MakeRequestAndDecodeJSON(url, 'GET')
     except errors.ConnectionError:
       json_response = None
 
@@ -132,11 +134,11 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
   """An analysis plugin for looking up SHA256 hashes in Viper."""
 
   # TODO: Check if there are other file types worth checking Viper for.
-  DATA_TYPES = [u'pe:compilation:compilation_time']
+  DATA_TYPES = ['pe:compilation:compilation_time']
 
-  URLS = [u'https://viper.li']
+  URLS = ['https://viper.li']
 
-  NAME = u'viper'
+  NAME = 'viper'
 
   def __init__(self):
     """Initializes a Viper analysis plugin."""
@@ -153,7 +155,7 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
       list[str]: list of labels to apply to events.
     """
     if not hash_information:
-      return [u'viper_not_present']
+      return ['viper_not_present']
 
     projects = []
     tags = []
@@ -164,20 +166,20 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
       projects.append(project)
 
       for entry in entries:
-        if entry[u'tags']:
-          tags.extend(entry[u'tags'])
+        if entry['tags']:
+          tags.extend(entry['tags'])
 
     if not projects:
-      return [u'viper_not_present']
-    strings = [u'viper_present']
+      return ['viper_not_present']
+    strings = ['viper_present']
 
     for project_name in projects:
       label = events.EventTag.CopyTextToLabel(
-          project_name, prefix=u'viper_project_')
+          project_name, prefix='viper_project_')
       strings.append(label)
 
     for tag_name in tags:
-      label = events.EventTag.CopyTextToLabel(tag_name, prefix=u'viper_tag_')
+      label = events.EventTag.CopyTextToLabel(tag_name, prefix='viper_tag_')
       strings.append(label)
 
     return strings
@@ -208,8 +210,8 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
       ValueError: If an invalid protocol is selected.
     """
     protocol = protocol.lower().strip()
-    if protocol not in [u'http', u'https']:
-      raise ValueError(u'Invalid protocol specified for Viper lookup')
+    if protocol not in ['http', 'https']:
+      raise ValueError('Invalid protocol specified for Viper lookup')
     self._analyzer.SetProtocol(protocol)
 
   def TestConnection(self):

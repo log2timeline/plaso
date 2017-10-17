@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """A plugin to generate a list of domains visited."""
 
-import sys
+from __future__ import unicode_literals
 
-if sys.version_info[0] < 3:
+try:
   import urlparse
-else:
-  from urllib import parse as urlparse  # pylint: disable=no-name-in-module
+except ImportError:
+  from urllib import parse as urlparse
 
+# pylint: disable=wrong-import-position
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.containers import reports
@@ -21,16 +22,16 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
   a visit to a site of interest, for example, a known phishing site.
   """
 
-  NAME = u'unique_domains_visited'
+  NAME = 'unique_domains_visited'
 
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
 
   _DATATYPES = frozenset([
-      u'chrome:history:file_downloaded', u'chrome:history:page_visited',
-      u'firefox:places:page_visited', u'firefox:downloads:download',
-      u'macosx:lsquarantine', u'msiecf:redirected', u'msiecf:url',
-      u'msie:webcache:container', u'opera:history', u'safari:history:visit'])
+      'chrome:history:file_downloaded', 'chrome:history:page_visited',
+      'firefox:places:page_visited', 'firefox:downloads:download',
+      'macosx:lsquarantine', 'msiecf:redirected', 'msiecf:url',
+      'msie:webcache:container', 'opera:history', 'safari:history:visit'])
 
   def __init__(self):
     """Initializes the domains visited plugin."""
@@ -51,11 +52,11 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
     if event.data_type not in self._DATATYPES:
       return
 
-    url = getattr(event, u'url', None)
+    url = getattr(event, 'url', None)
     if url is None:
       return
     parsed_url = urlparse.urlparse(url)
-    domain = getattr(parsed_url, u'netloc', None)
+    domain = getattr(parsed_url, 'netloc', None)
     if domain in self._domains:
       # We've already found an event containing this domain.
       return
@@ -71,12 +72,12 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
     Returns:
       The analysis report (instance of AnalysisReport).
     """
-    lines_of_text = [u'Listing domains visited by all users']
+    lines_of_text = ['Listing domains visited by all users']
     for domain in sorted(self._domains):
       lines_of_text.append(domain)
 
-    lines_of_text.append(u'')
-    report_text = u'\n'.join(lines_of_text)
+    lines_of_text.append('')
+    report_text = '\n'.join(lines_of_text)
     return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
 
 
