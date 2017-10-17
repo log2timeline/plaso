@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the database configuration CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -74,28 +76,28 @@ class MockOutputModule(MockPartialOutputModule):
 class DatabaseArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests the database configuration CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--user USERNAME] [--password PASSWORD]',
-      (u'                     [--db_name DB_NAME] [--server HOSTNAME] '
-       u'[--port PORT]'),
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --db_name DB_NAME, --db-name DB_NAME',
-      u'                        The name of the database to connect to.',
-      u'  --password PASSWORD   The password for the database user.',
-      u'  --port PORT           The port number of the server.',
-      (u'  --server HOSTNAME     The hostname or server IP address of the '
-       u'server.'),
-      u'  --user USERNAME       The username used to connect to the database.',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [--user USERNAME] [--password PASSWORD]',
+      ('                     [--db_name DB_NAME] [--server HOSTNAME] '
+       '[--port PORT]'),
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --db_name DB_NAME, --db-name DB_NAME',
+      '                        The name of the database to connect to.',
+      '  --password PASSWORD   The password for the database user.',
+      '  --port PORT           The port number of the server.',
+      ('  --server HOSTNAME     The hostname or server IP address of the '
+       'server.'),
+      '  --user USERNAME       The username used to connect to the database.',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py',
-        description=u'Test argument parser.', add_help=False,
+        prog='cli_helper.py',
+        description='Test argument parser.', add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     database_config.DatabaseArgumentsHelper.AddArguments(argument_parser)

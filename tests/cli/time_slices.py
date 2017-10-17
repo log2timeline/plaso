@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the time slice."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.cli import time_slices

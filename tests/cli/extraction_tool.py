@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the extraction tool object."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -15,21 +17,21 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_PERFORMANCE_OPTIONS = u'\n'.join([
-      u'usage: extraction_tool_test.py [--buffer_size BUFFER_SIZE]',
-      u'                               [--queue_size QUEUE_SIZE]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      (u'  --buffer_size BUFFER_SIZE, --buffer-size BUFFER_SIZE, '
-       u'--bs BUFFER_SIZE'),
-      (u'                        The buffer size for the output (defaults to '
-       u'196MiB).'),
-      u'  --queue_size QUEUE_SIZE, --queue-size QUEUE_SIZE',
-      u'                        The maximum number of queued items per worker',
-      u'                        (defaults to 125000)',
-      u''])
+  _EXPECTED_PERFORMANCE_OPTIONS = '\n'.join([
+      'usage: extraction_tool_test.py [--buffer_size BUFFER_SIZE]',
+      '                               [--queue_size QUEUE_SIZE]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      ('  --buffer_size BUFFER_SIZE, --buffer-size BUFFER_SIZE, '
+       '--bs BUFFER_SIZE'),
+      ('                        The buffer size for the output (defaults to '
+       '196MiB).'),
+      '  --queue_size QUEUE_SIZE, --queue-size QUEUE_SIZE',
+      '                        The maximum number of queued items per worker',
+      '                        (defaults to 125000)',
+      ''])
 
   def testParsePerformanceOptions(self):
     """Tests the _ParsePerformanceOptions function."""
@@ -42,7 +44,7 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
   def testAddPerformanceOptions(self):
     """Tests the AddPerformanceOptions function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'extraction_tool_test.py', description=u'Test argument parser.',
+        prog='extraction_tool_test.py', description='Test argument parser.',
         add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = extraction_tool.ExtractionTool()

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the storage file CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -17,19 +19,19 @@ class StorageFileArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [STORAGE_FILE]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'positional arguments:',
-      u'  STORAGE_FILE  The path of the storage file.',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [STORAGE_FILE]',
+      '',
+      'Test argument parser.',
+      '',
+      'positional arguments:',
+      '  STORAGE_FILE  The path of the storage file.',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py', description=u'Test argument parser.',
+        prog='cli_helper.py', description='Test argument parser.',
         add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
@@ -41,11 +43,12 @@ class StorageFileArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
-    options.storage_file = self._GetTestFilePath([u'test.plaso'])
+    options.storage_file = self._GetTestFilePath(['test.plaso'])
 
     test_tool = tools.CLITool()
     storage_file.StorageFileArgumentsHelper.ParseOptions(options, test_tool)
 
+    # pylint: disable=no-member
     self.assertEqual(test_tool._storage_file_path, options.storage_file)
 
     with self.assertRaises(errors.BadConfigObject):

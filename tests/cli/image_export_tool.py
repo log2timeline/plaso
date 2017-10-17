@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the image export CLI tool."""
 
+from __future__ import unicode_literals
+
 import os
 import unittest
 
@@ -58,68 +60,68 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
     return results
 
-  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
+  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testCalculateDigestHash(self):
     """Tests the _CalculateDigestHash function."""
     test_tool = image_export_tool.ImageExportTool()
 
-    test_path = self._GetTestFilePath([u'ímynd.dd'])
+    test_path = self._GetTestFilePath(['ímynd.dd'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
-        location=u'/a_directory/another_file', parent=os_path_spec)
+        location='/a_directory/another_file', parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
-    digest_hash = test_tool._CalculateDigestHash(file_entry, u'')
+    digest_hash = test_tool._CalculateDigestHash(file_entry, '')
     expected_digest_hash = (
-        u'c7fbc0e821c0871805a99584c6a384533909f68a6bbe9a2a687d28d9f3b10c16')
+        'c7fbc0e821c0871805a99584c6a384533909f68a6bbe9a2a687d28d9f3b10c16')
     self.assertEqual(digest_hash, expected_digest_hash)
 
-    test_path = self._GetTestFilePath([u'ímynd.dd'])
+    test_path = self._GetTestFilePath(['ímynd.dd'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=12,
-        location=u'/a_directory', parent=os_path_spec)
+        location='/a_directory', parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
     with self.assertRaises(IOError):
-      test_tool._CalculateDigestHash(file_entry, u'')
+      test_tool._CalculateDigestHash(file_entry, '')
 
   # TODO: add tests for _CreateSanitizedDestination.
   # TODO: add tests for _Extract.
 
-  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
+  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testExtractDataStream(self):
     """Tests the _ExtractDataStream function."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool()
 
-    test_path = self._GetTestFilePath([u'ímynd.dd'])
+    test_path = self._GetTestFilePath(['ímynd.dd'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
-        location=u'/a_directory/another_file', parent=os_path_spec)
+        location='/a_directory/another_file', parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
     with shared_test_lib.TempDirectory() as temp_directory:
       test_tool._ExtractDataStream(
-          file_entry, u'', temp_directory, output_writer)
+          file_entry, '', temp_directory, output_writer)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
+  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testExtractFileEntry(self):
     """Tests the _ExtractFileEntry function."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool()
 
-    test_path = self._GetTestFilePath([u'ímynd.dd'])
+    test_path = self._GetTestFilePath(['ímynd.dd'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
-        location=u'/a_directory/another_file', parent=os_path_spec)
+        location='/a_directory/another_file', parent=os_path_spec)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       test_tool._ExtractFileEntry(
@@ -132,7 +134,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     """Tests the _ParseExtensionsString function."""
     test_tool = image_export_tool.ImageExportTool()
 
-    test_tool._ParseExtensionsString(u'txt')
+    test_tool._ParseExtensionsString('txt')
 
   # TODO: add tests for _ParseFilterOptions.
 
@@ -140,46 +142,46 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     """Tests the _ParseNamesString function."""
     test_tool = image_export_tool.ImageExportTool()
 
-    test_tool._ParseNamesString(u'another_file')
+    test_tool._ParseNamesString('another_file')
 
   def testParseSignatureIdentifiers(self):
     """Tests the _ParseSignatureIdentifiers function."""
     test_tool = image_export_tool.ImageExportTool()
 
-    test_tool._ParseSignatureIdentifiers(self._DATA_PATH, u'gzip')
+    test_tool._ParseSignatureIdentifiers(self._DATA_PATH, 'gzip')
 
     with self.assertRaises(ValueError):
-      test_tool._ParseSignatureIdentifiers(None, u'gzip')
+      test_tool._ParseSignatureIdentifiers(None, 'gzip')
 
     with self.assertRaises(IOError):
-      test_path = os.path.join(os.sep, u'bogus')
-      test_tool._ParseSignatureIdentifiers(test_path, u'gzip')
+      test_path = os.path.join(os.sep, 'bogus')
+      test_tool._ParseSignatureIdentifiers(test_path, 'gzip')
 
   # TODO: add tests for _Preprocess.
   # TODO: add tests for _ReadSpecificationFile.
 
-  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
+  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testWriteFileEntry(self):
     """Tests the _WriteFileEntry function."""
     test_tool = image_export_tool.ImageExportTool()
 
-    test_path = self._GetTestFilePath([u'ímynd.dd'])
+    test_path = self._GetTestFilePath(['ímynd.dd'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
-        location=u'/a_directory/another_file', parent=os_path_spec)
+        location='/a_directory/another_file', parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
     with shared_test_lib.TempDirectory() as temp_directory:
-      destination_path = os.path.join(temp_directory, u'another_file')
-      test_tool._WriteFileEntry(file_entry, u'', destination_path)
+      destination_path = os.path.join(temp_directory, 'another_file')
+      test_tool._WriteFileEntry(file_entry, '', destination_path)
 
   # TODO: add tests for AddFilterOptions.
 
   def testListSignatureIdentifiers(self):
     """Tests the ListSignatureIdentifiers function."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     test_tool._data_location = self._TEST_DATA_PATH
@@ -201,14 +203,14 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     # differences.
     self.assertEqual(output.split(b'\n'), expected_output.split(b'\n'))
 
-    test_tool._data_location = self._GetTestFilePath([u'tmp'])
+    test_tool._data_location = self._GetTestFilePath(['tmp'])
 
     with self.assertRaises(errors.BadConfigOption):
       test_tool.ListSignatureIdentifiers()
 
   def testParseArguments(self):
     """Tests the ParseArguments function."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     result = test_tool.ParseArguments()
@@ -219,12 +221,12 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
-    options.image = self._GetTestFilePath([u'image.qcow2'])
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.image = self._GetTestFilePath(['image.qcow2'])
 
     test_tool.ParseOptions(options)
 
@@ -235,16 +237,16 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
     # TODO: improve test coverage.
 
-  @shared_test_lib.skipUnlessHasTestFile([u'image.qcow2'])
+  @shared_test_lib.skipUnlessHasTestFile(['image.qcow2'])
   def testPrintFilterCollection(self):
     """Tests the PrintFilterCollection function."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
-    options.date_filters = [u'ctime,2012-05-25 15:59:00,2012-05-25 15:59:20']
-    options.image = self._GetTestFilePath([u'image.qcow2'])
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.date_filters = ['ctime,2012-05-25 15:59:00,2012-05-25 15:59:20']
+    options.image = self._GetTestFilePath(['image.qcow2'])
     options.quiet = True
 
     test_tool.ParseOptions(options)
@@ -261,12 +263,12 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
   def testProcessSourcesWithImage(self):
     """Tests the ProcessSources function on a single partition image."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
-    options.image = self._GetTestFilePath([u'ímynd.dd'])
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.image = self._GetTestFilePath(['ímynd.dd'])
     options.quiet = True
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -286,16 +288,16 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output, expected_output)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'image.qcow2'])
+  @shared_test_lib.skipUnlessHasTestFile(['image.qcow2'])
   def testProcessSourcesExtractWithDateTimeFilter(self):
     """Tests the ProcessSources function with a date time filter."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
-    options.date_filters = [u'ctime,2012-05-25 15:59:00,2012-05-25 15:59:20']
-    options.image = self._GetTestFilePath([u'image.qcow2'])
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.date_filters = ['ctime,2012-05-25 15:59:00,2012-05-25 15:59:20']
+    options.image = self._GetTestFilePath(['image.qcow2'])
     options.quiet = True
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -306,22 +308,22 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       test_tool.ProcessSources()
 
       expected_extracted_files = sorted([
-          os.path.join(temp_directory, u'a_directory'),
-          os.path.join(temp_directory, u'a_directory', u'a_file')])
+          os.path.join(temp_directory, 'a_directory'),
+          os.path.join(temp_directory, 'a_directory', 'a_file')])
 
       extracted_files = self._RecursiveList(temp_directory)
       self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'image.qcow2'])
+  @shared_test_lib.skipUnlessHasTestFile(['image.qcow2'])
   def testProcessSourcesExtractWithExtensionsFilter(self):
     """Tests the ProcessSources function with an extensions filter."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
-    options.extensions_string = u'txt'
-    options.image = self._GetTestFilePath([u'image.qcow2'])
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.extensions_string = 'txt'
+    options.image = self._GetTestFilePath(['image.qcow2'])
     options.quiet = True
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -332,21 +334,21 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       test_tool.ProcessSources()
 
       expected_extracted_files = sorted([
-          os.path.join(temp_directory, u'passwords.txt')])
+          os.path.join(temp_directory, 'passwords.txt')])
 
       extracted_files = self._RecursiveList(temp_directory)
       self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'image.qcow2'])
+  @shared_test_lib.skipUnlessHasTestFile(['image.qcow2'])
   def testProcessSourcesExtractWithNamesFilter(self):
     """Tests the ProcessSources function with a names filter."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
-    options.image = self._GetTestFilePath([u'image.qcow2'])
-    options.names_string = u'another_file'
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.image = self._GetTestFilePath(['image.qcow2'])
+    options.names_string = 'another_file'
     options.quiet = True
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -357,25 +359,25 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       test_tool.ProcessSources()
 
       expected_extracted_files = sorted([
-          os.path.join(temp_directory, u'a_directory'),
-          os.path.join(temp_directory, u'a_directory', u'another_file')])
+          os.path.join(temp_directory, 'a_directory'),
+          os.path.join(temp_directory, 'a_directory', 'another_file')])
 
       extracted_files = self._RecursiveList(temp_directory)
       self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'image.qcow2'])
+  @shared_test_lib.skipUnlessHasTestFile(['image.qcow2'])
   def testProcessSourcesExtractWithFilter(self):
     """Tests the ProcessSources function with a filter file."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
-    options.image = self._GetTestFilePath([u'image.qcow2'])
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.image = self._GetTestFilePath(['image.qcow2'])
     options.quiet = True
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      filter_file = os.path.join(temp_directory, u'filter.txt')
+      filter_file = os.path.join(temp_directory, 'filter.txt')
       with open(filter_file, 'wb') as file_object:
         file_object.write(b'/a_directory/.+_file\n')
 
@@ -387,26 +389,26 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       test_tool.ProcessSources()
 
       expected_extracted_files = sorted([
-          os.path.join(temp_directory, u'filter.txt'),
-          os.path.join(temp_directory, u'a_directory'),
-          os.path.join(temp_directory, u'a_directory', u'another_file'),
-          os.path.join(temp_directory, u'a_directory', u'a_file')])
+          os.path.join(temp_directory, 'filter.txt'),
+          os.path.join(temp_directory, 'a_directory'),
+          os.path.join(temp_directory, 'a_directory', 'another_file'),
+          os.path.join(temp_directory, 'a_directory', 'a_file')])
 
       extracted_files = self._RecursiveList(temp_directory)
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'syslog_image.dd'])
+  @shared_test_lib.skipUnlessHasTestFile(['syslog_image.dd'])
   def testProcessSourcesExtractWithSignaturesFilter(self):
     """Tests the ProcessSources function with a signatures filter."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath([u'artifacts'])
-    options.image = self._GetTestFilePath([u'syslog_image.dd'])
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.image = self._GetTestFilePath(['syslog_image.dd'])
     options.quiet = True
-    options.signature_identifiers = u'gzip'
+    options.signature_identifiers = 'gzip'
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.path = temp_directory
@@ -416,8 +418,8 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       test_tool.ProcessSources()
 
       expected_extracted_files = sorted([
-          os.path.join(temp_directory, u'logs'),
-          os.path.join(temp_directory, u'logs', u'sys.tgz')])
+          os.path.join(temp_directory, 'logs'),
+          os.path.join(temp_directory, 'logs', 'sys.tgz')])
 
       extracted_files = self._RecursiveList(temp_directory)
       self.assertEqual(sorted(extracted_files), expected_extracted_files)

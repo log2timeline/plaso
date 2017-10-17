@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the data location CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -17,19 +19,19 @@ class DataLocationArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--data PATH]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --data PATH  the location of the data files.',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [--data PATH]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --data PATH  the location of the data files.',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py', description=u'Test argument parser.',
+        prog='cli_helper.py', description='Test argument parser.',
         add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
@@ -41,7 +43,7 @@ class DataLocationArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
-    options.data_location = self._GetTestFilePath([u'testdir'])
+    options.data_location = self._GetTestFilePath(['testdir'])
 
     test_tool = tools.CLITool()
     data_location.DataLocationArgumentsHelper.ParseOptions(options, test_tool)

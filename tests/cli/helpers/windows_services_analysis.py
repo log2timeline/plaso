@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows Services analysis plugin CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -17,23 +19,23 @@ class WindowsServicesAnalysisArgumentsHelperTest(
     test_lib.AnalysisPluginArgumentsHelperTest):
   """Tests the Windows Services analysis plugin CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--windows-services-output {text,yaml}]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --windows-services-output {text,yaml}',
-      (u'                        Specify how the results should be displayed. '
-       u'Options'),
-      u'                        are text and yaml.',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [--windows-services-output {text,yaml}]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --windows-services-output {text,yaml}',
+      ('                        Specify how the results should be displayed. '
+       'Options'),
+      '                        are text and yaml.',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py',
-        description=u'Test argument parser.', add_help=False,
+        prog='cli_helper.py',
+        description='Test argument parser.', add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     arguments_helper.WindowsServicesAnalysisArgumentsHelper.AddArguments(

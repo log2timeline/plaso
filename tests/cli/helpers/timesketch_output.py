@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Timesketch output module CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -33,40 +35,40 @@ class TimesketchOutputArgumentsHelperTest(
     test_lib.OutputModuleArgumentsHelperTest):
   """Tests the Timesketch output module CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--name TIMELINE_NAME] [--index INDEX]',
-      (u'                     [--flush_interval FLUSH_INTERVAL] '
-       u'[--doc_type DOC_TYPE]'),
-      u'                     [--username USERNAME]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --doc_type DOC_TYPE   Name of the document type that will be used in',
-      u'                        ElasticSearch.',
-      u'  --flush_interval FLUSH_INTERVAL, --flush-interval FLUSH_INTERVAL',
-      (u'                        The number of events to queue up before sent '
-       u'in bulk'),
-      u'                        to Elasticsearch.',
-      (u'  --index INDEX         The name of the Elasticsearch index. Default: '
-       u'Generate'),
-      u'                        a random UUID',
-      (u'  --name TIMELINE_NAME, --timeline_name TIMELINE_NAME, '
-       u'--timeline-name TIMELINE_NAME'),
-      (u'                        The name of the timeline in Timesketch. '
-       u'Default:'),
-      u'                        hostname if present in the storage file. If no',
-      u'                        hostname is found then manual input is used.',
-      (u'  --username USERNAME   Username of a Timesketch user that will own '
-       u'the'),
-      u'                        timeline.',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [--name TIMELINE_NAME] [--index INDEX]',
+      ('                     [--flush_interval FLUSH_INTERVAL] '
+       '[--doc_type DOC_TYPE]'),
+      '                     [--username USERNAME]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --doc_type DOC_TYPE   Name of the document type that will be used in',
+      '                        ElasticSearch.',
+      '  --flush_interval FLUSH_INTERVAL, --flush-interval FLUSH_INTERVAL',
+      ('                        The number of events to queue up before sent '
+       'in bulk'),
+      '                        to Elasticsearch.',
+      ('  --index INDEX         The name of the Elasticsearch index. Default: '
+       'Generate'),
+      '                        a random UUID',
+      ('  --name TIMELINE_NAME, --timeline_name TIMELINE_NAME, '
+       '--timeline-name TIMELINE_NAME'),
+      ('                        The name of the timeline in Timesketch. '
+       'Default:'),
+      '                        hostname if present in the storage file. If no',
+      '                        hostname is found then manual input is used.',
+      ('  --username USERNAME   Username of a Timesketch user that will own '
+       'the'),
+      '                        timeline.',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py',
-        description=u'Test argument parser.', add_help=False,
+        prog='cli_helper.py',
+        description='Test argument parser.', add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     timesketch_output.TimesketchOutputArgumentsHelper.AddArguments(

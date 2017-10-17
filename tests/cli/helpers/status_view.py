@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the status view CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -18,22 +20,22 @@ class StatusViewArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--status_view TYPE]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --status_view TYPE, --status-view TYPE',
-      (u'                        The processing status view mode: "linear", '
-       u'"none" or'),
-      u'                        "window".',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [--status_view TYPE]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --status_view TYPE, --status-view TYPE',
+      ('                        The processing status view mode: "linear", '
+       '"none" or'),
+      '                        "window".',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py', description=u'Test argument parser.',
+        prog='cli_helper.py', description='Test argument parser.',
         add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
@@ -50,6 +52,7 @@ class StatusViewArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     test_tool = tools.CLITool()
     status_view.StatusViewArgumentsHelper.ParseOptions(options, test_tool)
 
+    # pylint: disable=no-member
     self.assertEqual(test_tool._status_view_mode, options.status_view_mode)
 
     with self.assertRaises(errors.BadConfigObject):

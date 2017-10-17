@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Viper analysis plugin CLI arguments helper."""
 
+from __future__ import unicode_literals
+
 import argparse
 import unittest
 
@@ -17,37 +19,37 @@ class ViperAnalysisArgumentsHelperTest(
     test_lib.AnalysisPluginArgumentsHelperTest):
   """Tests the Viper analysis plugin CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--viper-hash HASH] [--viper-host HOST]',
-      u'                     [--viper-port PORT] [--viper-protocol PROTOCOL]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --viper-hash HASH, --viper_hash HASH',
-      (u'                        Type of hash to use to query the Viper '
-       u'server, the'),
-      (u'                        default is: sha256. Supported options: md5, '
-       u'sha256'),
-      u'  --viper-host HOST, --viper_host HOST',
-      (u'                        Hostname of the Viper server to query, the '
-       u'default is:'),
-      u'                        localhost',
-      u'  --viper-port PORT, --viper_port PORT',
-      (u'                        Port of the Viper server to query, the '
-       u'default is:'),
-      u'                        8080.',
-      u'  --viper-protocol PROTOCOL, --viper_protocol PROTOCOL',
-      (u'                        Protocol to use to query Viper, the '
-       u'default is: http.'),
-      u'                        Supported options: http, https',
-      u''])
+  _EXPECTED_OUTPUT = '\n'.join([
+      'usage: cli_helper.py [--viper-hash HASH] [--viper-host HOST]',
+      '                     [--viper-port PORT] [--viper-protocol PROTOCOL]',
+      '',
+      'Test argument parser.',
+      '',
+      'optional arguments:',
+      '  --viper-hash HASH, --viper_hash HASH',
+      ('                        Type of hash to use to query the Viper '
+       'server, the'),
+      ('                        default is: sha256. Supported options: md5, '
+       'sha256'),
+      '  --viper-host HOST, --viper_host HOST',
+      ('                        Hostname of the Viper server to query, the '
+       'default is:'),
+      '                        localhost',
+      '  --viper-port PORT, --viper_port PORT',
+      ('                        Port of the Viper server to query, the '
+       'default is:'),
+      '                        8080.',
+      '  --viper-protocol PROTOCOL, --viper_protocol PROTOCOL',
+      ('                        Protocol to use to query Viper, the '
+       'default is: http.'),
+      '                        Supported options: http, https',
+      ''])
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
     argument_parser = argparse.ArgumentParser(
-        prog=u'cli_helper.py',
-        description=u'Test argument parser.', add_help=False,
+        prog='cli_helper.py',
+        description='Test argument parser.', add_help=False,
         formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     viper_analysis.ViperAnalysisArgumentsHelper.AddArguments(

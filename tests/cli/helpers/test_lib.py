@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """CLI arguments helper related functions and classes for testing."""
 
+from __future__ import unicode_literals
+
 from plaso.cli.helpers import interface
 from plaso.engine import knowledge_base
 from plaso.formatters import mediator as formatters_mediator
@@ -15,20 +17,20 @@ class TestHelper(interface.ArgumentsHelper):
   """Test CLI argument helper."""
 
   NAME = 'test_helper'
-  DESCRIPTION = u'Test helper that does nothing.'
+  DESCRIPTION = 'Test helper that does nothing.'
 
   @classmethod
   def AddArguments(cls, argument_group):
     """Add command line arguments to an argument group."""
     argument_group.add_argument(
-        u'-d', u'--dynamic', action='store', default=u'', type=str,
-        help=u'Stuff to insert into the arguments.', dest=u'dynamic')
+        '-d', '--dynamic', action='store', default='', type=str,
+        help='Stuff to insert into the arguments.', dest='dynamic')
 
   @classmethod
   def ParseOptions(cls, options, unused_config_object):
     """Parse and validate the configuration options."""
-    if not getattr(options, 'dynamic', u''):
-      raise errors.BadConfigOption(u'Always set this.')
+    if not getattr(options, 'dynamic', ''):
+      raise errors.BadConfigOption('Always set this.')
 
 
 class AnalysisPluginArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
