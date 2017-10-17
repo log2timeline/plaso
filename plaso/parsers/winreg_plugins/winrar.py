@@ -18,7 +18,7 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class WinRarHistoryPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing WinRAR History keys."""
 
-  NAME = 'winrar_mr'
+  NAME = 'winrar_mru'
   DESCRIPTION = 'Parser for WinRAR History Registry data.'
 
   FILTERS = frozenset([

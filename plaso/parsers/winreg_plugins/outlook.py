@@ -16,7 +16,7 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin parsing Outlook Search MRU keys."""
 
-  NAME = 'microsoft_outlook_mr'
+  NAME = 'microsoft_outlook_mru'
   DESCRIPTION = 'Parser for Microsoft Outlook search MRU Registry data.'
 
   FILTERS = frozenset([

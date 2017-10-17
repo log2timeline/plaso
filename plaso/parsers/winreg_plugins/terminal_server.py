@@ -75,7 +75,7 @@ class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
 class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for Terminal Server Client Connection MRUs keys."""
 
-  NAME = 'mstsc_rdp_mr'
+  NAME = 'mstsc_rdp_mru'
   DESCRIPTION = 'Parser for Terminal Server Client MRU Registry data.'
 
   FILTERS = frozenset([
