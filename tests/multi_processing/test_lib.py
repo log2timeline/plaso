@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Multi-processing related functions and classes for testing."""
 
+from __future__ import unicode_literals
+
 from plaso.engine import knowledge_base
 from plaso.parsers import mediator as parsers_mediator
 from plaso.storage import fake_storage
@@ -11,7 +13,7 @@ from tests import test_lib as shared_test_lib
 class MultiProcessingTestCase(shared_test_lib.BaseTestCase):
   """Multi-processing test case."""
 
-  def _CreateKnowledgeBase(self, knowledge_base_values=None, timezone=u'UTC'):
+  def _CreateKnowledgeBase(self, knowledge_base_values=None, timezone='UTC'):
     """Creates a knowledge base.
 
     Args:

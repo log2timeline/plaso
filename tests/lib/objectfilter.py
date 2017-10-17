@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the object filter functions."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.lib import errors
@@ -92,7 +94,7 @@ class DummyFile(object):
     return [self.imported_dll1, self.imported_dll2]
 
   def Callable(self):
-    raise RuntimeError(u'This can not be called.')
+    raise RuntimeError('This can not be called.')
 
   @property
   def float(self):
@@ -321,7 +323,7 @@ class ObjectFilterTest(unittest.TestCase):
     self.assertEqual(True, context.Matches(self.file))
 
     # Now test the context with a straight query.
-    query = u'\n'.join([
+    query = '\n'.join([
         '@imported_dlls',
         '(',
         '  imported_functions contains "RegQueryValueEx"',
@@ -432,7 +434,7 @@ class ObjectFilterTest(unittest.TestCase):
     # Can nest context operators and mix braces without it messing up.
     query = '@imported_dlls( @imported_function( name is \'OpenFileA\'))'
     parser = objectfilter.Parser(query).Parse()
-    query = u'\n'.join([
+    query = '\n'.join([
         '@imported_dlls',
         '(',
         '  @imported_function',
@@ -443,7 +445,7 @@ class ObjectFilterTest(unittest.TestCase):
 
     parser = objectfilter.Parser(query).Parse()
     # Mix context and binary operators.
-    query = u'\n'.join([
+    query = '\n'.join([
         '@imported_dlls',
         '(',
         '  @imported_function',
@@ -454,7 +456,7 @@ class ObjectFilterTest(unittest.TestCase):
 
     parser = objectfilter.Parser(query).Parse()
     # Also on the right.
-    query = u'\n'.join([
+    query = '\n'.join([
         '@imported_dlls',
         '(',
         '  num_functions == 2 AND',
@@ -468,7 +470,7 @@ class ObjectFilterTest(unittest.TestCase):
   # There's an imported dll that imports OpenFileA AND
   # an imported DLL matching advapi32.dll that imports RegQueryValueExA AND
   # and it exports a symbol called 'inject'.
-  query = u'\n'.join([
+  query = '\n'.join([
       '@imported_dlls( @imported_function ( name is "OpenFileA" ) )',
       'AND',
       '@imported_dlls (',

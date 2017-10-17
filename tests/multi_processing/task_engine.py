@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests the multi-process processing engine."""
 
+from __future__ import unicode_literals
+
 import os
 import unittest
 
@@ -21,22 +23,22 @@ from tests import test_lib as shared_test_lib
 class TaskMultiProcessEngineTest(shared_test_lib.BaseTestCase):
   """Tests for the task multi-process engine."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
+  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testProcessSources(self):
     """Tests the PreprocessSources and ProcessSources function."""
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
-    path = shared_test_lib.GetTestFilePath([u'artifacts'])
+    path = shared_test_lib.GetTestFilePath(['artifacts'])
     registry.ReadFromDirectory(reader, path)
 
     test_engine = task_engine.TaskMultiProcessEngine(
         maximum_number_of_tasks=100)
 
-    source_path = self._GetTestFilePath([u'ímynd.dd'])
+    source_path = self._GetTestFilePath(['ímynd.dd'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=os_path_spec)
 
     test_engine.PreprocessSources(registry, [source_path_spec])
@@ -44,10 +46,10 @@ class TaskMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     session = sessions.Session()
 
     configuration = configurations.ProcessingConfiguration()
-    configuration.parser_filter_expression = u'filestat'
+    configuration.parser_filter_expression = 'filestat'
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_writer = storage_zip_file.ZIPStorageFileWriter(
           session, temp_file)
 

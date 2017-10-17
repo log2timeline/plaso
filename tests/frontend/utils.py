@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the util functions."""
 
+from __future__ import unicode_literals
+
 import logging
 import os
 import tempfile
@@ -21,12 +23,12 @@ from tests import test_lib as shared_test_lib
 class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
   """Tests for the BuildFindSpecsFromFile function."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'System.evtx'])
-  @shared_test_lib.skipUnlessHasTestFile([u'testdir', u'filter_1.txt'])
-  @shared_test_lib.skipUnlessHasTestFile([u'testdir', u'filter_3.txt'])
+  @shared_test_lib.skipUnlessHasTestFile(['System.evtx'])
+  @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_1.txt'])
+  @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_3.txt'])
   def testBuildFindSpecsFromFile(self):
     """Tests the BuildFindSpecsFromFile function."""
-    filter_file_path = u''
+    filter_file_path = ''
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
       filter_file_path = temp_file.name
       # 2 hits.
@@ -44,7 +46,7 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
       temp_file.write(b'bad re (no close on that parenthesis/file\n')
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
-        case_sensitive=False, name=u'SystemRoot', value=u'C:\\Windows')
+        case_sensitive=False, name='SystemRoot', value='C:\\Windows')
 
     find_specs = utils.BuildFindSpecsFromFile(
         filter_file_path, environment_variables=[environment_variable])
@@ -53,13 +55,13 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
       os.remove(filter_file_path)
     except (OSError, IOError) as exception:
       logging.warning(
-          u'Unable to remove filter file: {0:s} with error: {1:s}'.format(
+          'Unable to remove filter file: {0:s} with error: {1:s}'.format(
               filter_file_path, exception))
 
     self.assertEqual(len(find_specs), 5)
 
     path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=u'.')
+        dfvfs_definitions.TYPE_INDICATOR_OS, location='.')
     file_system = path_spec_resolver.Resolver.OpenFileSystem(path_spec)
     searcher = file_system_searcher.FileSystemSearcher(
         file_system, path_spec)

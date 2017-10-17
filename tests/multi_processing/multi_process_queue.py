@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests the multi-processing queue."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.engine import plaso_queue
@@ -54,7 +56,7 @@ class TestQueueConsumer(object):
 class MultiProcessingQueueTest(shared_test_lib.BaseTestCase):
   """Tests the multi-processing queue object."""
 
-  _ITEMS = frozenset([u'item1', u'item2', u'item3', u'item4'])
+  _ITEMS = frozenset(['item1', 'item2', 'item3', 'item4'])
 
   def testPushPopItem(self):
     """Tests the PushItem and PopItem functions."""

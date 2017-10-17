@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the multi-processing analysis process."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.analysis import interface as analysis_interface
@@ -33,6 +35,7 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
     """
     return
 
+  # pylint: disable=arguments-differ
   def ExamineEvent(self, unused_mediator, unused_event, **unused_kwargs):
     """Analyzes an event.
 
@@ -52,17 +55,17 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     test_process = analysis_process.AnalysisProcess(
-        None, None, None, None, name=u'TestAnalysis')
+        None, None, None, None, name='TestAnalysis')
     self.assertIsNotNone(test_process)
 
   def testGetStatus(self):
     """Tests the _GetStatus function."""
     test_process = analysis_process.AnalysisProcess(
-        None, None, None, None, name=u'TestAnalysis')
+        None, None, None, None, name='TestAnalysis')
     status_attributes = test_process._GetStatus()
 
     self.assertIsNotNone(status_attributes)
-    self.assertEqual(status_attributes[u'identifier'], u'TestAnalysis')
+    self.assertEqual(status_attributes['identifier'], 'TestAnalysis')
     self.assertIsNone(status_attributes['number_of_produced_reports'])
 
     # TODO: add test with analysis mediator.
@@ -77,7 +80,7 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
 
     test_process = analysis_process.AnalysisProcess(
         event_queue, storage_writer, None, analysis_plugin,
-        name=u'TestAnalysis')
+        name='TestAnalysis')
     test_process._abort = True
     test_process._FOREMAN_STATUS_WAIT = 1
     test_process._pid = 0
@@ -89,7 +92,7 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
   def testSignalAbort(self):
     """Tests the SignalAbort function."""
     test_process = analysis_process.AnalysisProcess(
-        None, None, None, None, name=u'TestAnalysis')
+        None, None, None, None, name='TestAnalysis')
     test_process.SignalAbort()
 
 

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the shared library utils."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.lib import utils
@@ -15,7 +17,7 @@ class UtilsTestCase(unittest.TestCase):
     bytes_in = b'this is My Weird ASCII and non whatever string.'
     self.assertTrue(utils.IsText(bytes_in))
 
-    bytes_in = u'Plaso Síar Og Raðar Þessu'
+    bytes_in = 'Plaso Síar Og Raðar Þessu'
     self.assertTrue(utils.IsText(bytes_in))
 
     bytes_in = b'\x01\\62LSO\xFF'
