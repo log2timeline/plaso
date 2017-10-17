@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The MD5 hasher implementation."""
 
+from __future__ import unicode_literals
+
 import hashlib
 
 from plaso.analyzers.hashers import interface
@@ -10,8 +12,8 @@ from plaso.analyzers.hashers import manager
 class MD5Hasher(interface.BaseHasher):
   """This class provides MD5 hashing functionality."""
 
-  NAME = u'md5'
-  DESCRIPTION = u'Calculates an MD5 digest hash over input data.'
+  NAME = 'md5'
+  DESCRIPTION = 'Calculates an MD5 digest hash over input data.'
 
   def __init__(self):
     """Initializes the MD5 hasher."""
@@ -34,7 +36,7 @@ class MD5Hasher(interface.BaseHasher):
       str: string hash digest calculated over the data blocks passed to
           Update(). The string consists of printable Unicode characters.
     """
-    return u'{0:s}'.format(self._md5_context.hexdigest())
+    return '{0:s}'.format(self._md5_context.hexdigest())
 
   def Update(self, data):
     """Updates the current state of the hasher with a new block of data.

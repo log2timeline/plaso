@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Definitions to provide a whole-file processing framework."""
 
+from __future__ import unicode_literals
+
 import abc
 
 from plaso.lib import definitions
@@ -9,8 +11,8 @@ from plaso.lib import definitions
 class BaseAnalyzer(object):
   """Class that provides the interface for whole-file analysis."""
 
-  NAME = u'base_analyzer'
-  DESCRIPTION = u''
+  NAME = 'base_analyzer'
+  DESCRIPTION = ''
 
   # Processing status hint used by the worker.
   PROCESSING_STATUS_HINT = definitions.PROCESSING_STATUS_ANALYZING

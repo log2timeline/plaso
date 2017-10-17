@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """A plugin to enable quick triage of Windows Services."""
 
+from __future__ import unicode_literals
+
 import yaml
 
 from plaso.analysis import interface
@@ -26,12 +28,12 @@ class WindowsService(yaml.YAMLObject):
     """
   # This is used for comparison operations and defines attributes that should
   # not be used during evaluation of whether two services are the same.
-  COMPARE_EXCLUDE = frozenset([u'sources'])
+  COMPARE_EXCLUDE = frozenset(['sources'])
 
-  _REGISTRY_KEY_PATH_SEPARATOR = u'\\'
+  _REGISTRY_KEY_PATH_SEPARATOR = '\\'
 
   # YAML attributes
-  yaml_tag = u'!WindowsService'
+  yaml_tag = '!WindowsService'
   yaml_loader = yaml.SafeLoader
   yaml_dumper = yaml.SafeDumper
 
@@ -66,12 +68,12 @@ class WindowsService(yaml.YAMLObject):
 
     if isinstance(source, tuple):
       if len(source) != 2:
-        raise TypeError(u'Source arguments must be tuple of length 2.')
+        raise TypeError('Source arguments must be tuple of length 2.')
       # A service may be found in multiple Control Sets or Registry hives,
       # hence the list.
       self.sources = [source]
     else:
-      raise TypeError(u'Source argument must be a tuple.')
+      raise TypeError('Source argument must be a tuple.')
 
   def __eq__(self, other_service):
     """Custom equality method so that we match near-duplicates.
@@ -120,16 +122,16 @@ class WindowsService(yaml.YAMLObject):
     """
     _, _, name = service_event.key_path.rpartition(
         WindowsService._REGISTRY_KEY_PATH_SEPARATOR)
-    service_type = service_event.regvalue.get(u'Type')
-    image_path = service_event.regvalue.get(u'ImagePath')
-    start_type = service_event.regvalue.get(u'Start')
-    service_dll = service_event.regvalue.get(u'ServiceDll', u'')
-    object_name = service_event.regvalue.get(u'ObjectName', u'')
+    service_type = service_event.regvalue.get('Type')
+    image_path = service_event.regvalue.get('ImagePath')
+    start_type = service_event.regvalue.get('Start')
+    service_dll = service_event.regvalue.get('ServiceDll', '')
+    object_name = service_event.regvalue.get('ObjectName', '')
 
     if service_event.pathspec:
       source = (service_event.pathspec.location, service_event.key_path)
     else:
-      source = (u'Unknown', u'Unknown')
+      source = ('Unknown', 'Unknown')
     return cls(
         name=name, service_type=service_type, image_path=image_path,
         start_type=start_type, object_name=object_name,
@@ -143,8 +145,8 @@ class WindowsService(yaml.YAMLObject):
     """
     if isinstance(self.service_type, py2to3.STRING_TYPES):
       return self.service_type
-    return human_readable_service_enums.SERVICE_ENUMS[u'Type'].get(
-        self.service_type, u'{0:d}'.format(self.service_type))
+    return human_readable_service_enums.SERVICE_ENUMS['Type'].get(
+        self.service_type, '{0:d}'.format(self.service_type))
 
   def HumanReadableStartType(self):
     """Return a human readable string describing the start type value.
@@ -154,8 +156,8 @@ class WindowsService(yaml.YAMLObject):
     """
     if isinstance(self.start_type, py2to3.STRING_TYPES):
       return self.start_type
-    return human_readable_service_enums.SERVICE_ENUMS[u'Start'].get(
-        self.start_type, u'{0:d}'.format(self.start_type))
+    return human_readable_service_enums.SERVICE_ENUMS['Start'].get(
+        self.start_type, '{0:d}'.format(self.start_type))
 
 
 class WindowsServiceCollection(object):
@@ -192,7 +194,7 @@ class WindowsServiceCollection(object):
 class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
   """Provides a single list of for Windows services found in the Registry."""
 
-  NAME = u'windows_services'
+  NAME = 'windows_services'
 
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
@@ -200,7 +202,7 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
   def __init__(self):
     """Initializes the Windows Services plugin."""
     super(WindowsServicesAnalysisPlugin, self).__init__()
-    self._output_format = u'text'
+    self._output_format = 'text'
     self._service_collection = WindowsServiceCollection()
 
   def _FormatServiceText(self, service):
@@ -214,16 +216,16 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
     """
     string_segments = [
         service.name,
-        u'\tImage Path    = {0:s}'.format(service.image_path),
-        u'\tService Type  = {0:s}'.format(service.HumanReadableType()),
-        u'\tStart Type    = {0:s}'.format(service.HumanReadableStartType()),
-        u'\tService Dll   = {0:s}'.format(service.service_dll),
-        u'\tObject Name   = {0:s}'.format(service.object_name),
-        u'\tSources:']
+        '\tImage Path    = {0:s}'.format(service.image_path),
+        '\tService Type  = {0:s}'.format(service.HumanReadableType()),
+        '\tStart Type    = {0:s}'.format(service.HumanReadableStartType()),
+        '\tService Dll   = {0:s}'.format(service.service_dll),
+        '\tObject Name   = {0:s}'.format(service.object_name),
+        '\tSources:']
 
     for source in service.sources:
-      string_segments.append(u'\t\t{0:s}:{1:s}'.format(source[0], source[1]))
-    return u'\n'.join(string_segments)
+      string_segments.append('\t\t{0:s}:{1:s}'.format(source[0], source[1]))
+    return '\n'.join(string_segments)
 
   def CompileReport(self, mediator):
     """Compiles an analysis report.
@@ -237,17 +239,17 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
     """
     # TODO: move YAML representation out of plugin and into serialization.
     lines_of_text = []
-    if self._output_format == u'yaml':
+    if self._output_format == 'yaml':
       lines_of_text.append(
           yaml.safe_dump_all(self._service_collection.services))
     else:
-      lines_of_text.append(u'Listing Windows Services')
+      lines_of_text.append('Listing Windows Services')
       for service in self._service_collection.services:
         lines_of_text.append(self._FormatServiceText(service))
-        lines_of_text.append(u'')
+        lines_of_text.append('')
 
-    lines_of_text.append(u'')
-    report_text = u'\n'.join(lines_of_text)
+    lines_of_text.append('')
+    report_text = '\n'.join(lines_of_text)
     return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
 
   def ExamineEvent(self, mediator, event):
@@ -261,7 +263,7 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
       event (EventObject): event to examine.
     """
     # TODO: Handle event log entries here also (ie, event id 4697).
-    if getattr(event, u'data_type', None) != u'windows:registry:service':
+    if getattr(event, 'data_type', None) != 'windows:registry:service':
       return
     else:
       # Create and store the service.

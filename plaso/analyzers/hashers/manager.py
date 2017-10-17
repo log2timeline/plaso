@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains a class for managing digest hashers for Plaso."""
 
+from __future__ import unicode_literals
+
 
 class HashersManager(object):
   """Class that implements the hashers manager."""
@@ -22,7 +24,7 @@ class HashersManager(object):
     hasher_name = hasher_class.NAME.lower()
     if hasher_name not in cls._hasher_classes:
       raise KeyError(
-          u'hasher class not set for name: {0:s}.'.format(
+          'hasher class not set for name: {0:s}.'.format(
               hasher_class.NAME))
 
     del cls._hasher_classes[hasher_name]
@@ -45,13 +47,13 @@ class HashersManager(object):
     """
     hasher_names = []
 
-    if not hasher_names_string or hasher_names_string.strip() == u'none':
+    if not hasher_names_string or hasher_names_string.strip() == 'none':
       return hasher_names
 
-    if hasher_names_string.strip() == u'all':
+    if hasher_names_string.strip() == 'all':
       return cls.GetHasherNames()
 
-    for hasher_name in hasher_names_string.split(u','):
+    for hasher_name in hasher_names_string.split(','):
       hasher_name = hasher_name.strip()
       if not hasher_name:
         continue
@@ -83,7 +85,7 @@ class HashersManager(object):
     """
     hashers_information = []
     for _, hasher_class in cls.GetHasherClasses():
-      description = getattr(hasher_class, u'DESCRIPTION', u'')
+      description = getattr(hasher_class, 'DESCRIPTION', '')
       hashers_information.append((hasher_class.NAME, description))
 
     return hashers_information
@@ -104,7 +106,7 @@ class HashersManager(object):
     hasher_name = hasher_name.lower()
     if hasher_name not in cls._hasher_classes:
       raise KeyError(
-          u'hasher class not set for name: {0:s}.'.format(hasher_name))
+          'hasher class not set for name: {0:s}.'.format(hasher_name))
 
     hasher_class = cls._hasher_classes[hasher_name]
     return hasher_class()
@@ -158,7 +160,7 @@ class HashersManager(object):
     hasher_name = hasher_class.NAME.lower()
     if hasher_name in cls._hasher_classes:
       raise KeyError((
-          u'hasher class already set for name: {0:s}.').format(
+          'hasher class already set for name: {0:s}.').format(
               hasher_class.NAME))
 
     cls._hasher_classes[hasher_name] = hasher_class

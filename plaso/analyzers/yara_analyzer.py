@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""The Yara analyzer implementation"""
+"""Analyzer that matches Yara rules."""
+
+from __future__ import unicode_literals
 
 import logging
 
@@ -12,16 +14,18 @@ from plaso.lib import definitions
 
 
 class YaraAnalyzer(interface.BaseAnalyzer):
-  """This class provides Yara matching functionality."""
+  """Analyzer that matches Yara rules."""
 
-  NAME = u'yara'
-  DESCRIPTION = u'Matches Yara rules over input data.'
+  # pylint: disable=no-member
+
+  NAME = 'yara'
+  DESCRIPTION = 'Matches Yara rules over input data.'
 
   PROCESSING_STATUS_HINT = definitions.PROCESSING_STATUS_YARA_SCAN
 
   INCREMENTAL_ANALYZER = False
 
-  _ATTRIBUTE_NAME = u'yara_match'
+  _ATTRIBUTE_NAME = 'yara_match'
   _MATCH_TIMEOUT = 60
 
   def __init__(self):
@@ -41,10 +45,10 @@ class YaraAnalyzer(interface.BaseAnalyzer):
     try:
       self._matches = self._rules.match(data=data, timeout=self._MATCH_TIMEOUT)
     except yara.YaraTimeoutError:
-      logging.error(u'Could not process file within timeout: {0:d}'.format(
+      logging.error('Could not process file within timeout: {0:d}'.format(
           self._MATCH_TIMEOUT))
     except yara.YaraError as exception:
-      logging.error(u'Error processing file with Yara: {0!s}.'.format(
+      logging.error('Error processing file with Yara: {0!s}.'.format(
           exception))
 
   def GetResults(self):
@@ -57,7 +61,7 @@ class YaraAnalyzer(interface.BaseAnalyzer):
     result.analyzer_name = self.NAME
     result.attribute_name = self._ATTRIBUTE_NAME
     rule_names = [match.rule for match in self._matches]
-    result.attribute_value = u','.join(rule_names)
+    result.attribute_value = ','.join(rule_names)
     return [result]
 
   def Reset(self):

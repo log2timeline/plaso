@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """A plugin to generate a list of unique hashes and paths."""
 
+from __future__ import unicode_literals
+
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.containers import reports
@@ -9,7 +11,7 @@ from plaso.containers import reports
 class FileHashesPlugin(interface.AnalysisPlugin):
   """A plugin for generating a list of file paths and corresponding hashes."""
 
-  NAME = u'file_hashes'
+  NAME = 'file_hashes'
 
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
@@ -27,7 +29,7 @@ class FileHashesPlugin(interface.AnalysisPlugin):
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event to examine.
     """
-    pathspec = getattr(event, u'pathspec', None)
+    pathspec = getattr(event, 'pathspec', None)
     if pathspec is None:
       return
     if self._paths_with_hashes.get(pathspec, None):
@@ -36,7 +38,7 @@ class FileHashesPlugin(interface.AnalysisPlugin):
       return
     hash_attributes = {}
     for attribute_name, attribute_value in event.GetAttributes():
-      if attribute_name.endswith(u'_hash'):
+      if attribute_name.endswith('_hash'):
         hash_attributes[attribute_name] = attribute_value
     self._paths_with_hashes[pathspec] = hash_attributes
 
@@ -56,9 +58,9 @@ class FileHashesPlugin(interface.AnalysisPlugin):
           "OS:/path/spec: test_hash=4 other_hash=5".
     """
     display_name = mediator.GetDisplayNameForPathSpec(pathspec)
-    path_string = u'{0:s}:'.format(display_name)
+    path_string = '{0:s}:'.format(display_name)
     for hash_name, hash_value in sorted(hashes.items()):
-      path_string = u'{0:s} {1:s}={2:s}'.format(
+      path_string = '{0:s} {1:s}={2:s}'.format(
           path_string, hash_name, hash_value)
     return path_string
 
@@ -72,7 +74,7 @@ class FileHashesPlugin(interface.AnalysisPlugin):
     Returns:
       AnalysisReport: report.
     """
-    lines_of_text = [u'Listing file paths and hashes']
+    lines_of_text = ['Listing file paths and hashes']
     for pathspec, hashes in sorted(
         self._paths_with_hashes.items(),
         key=lambda tuple: tuple[0].comparable):
@@ -80,8 +82,8 @@ class FileHashesPlugin(interface.AnalysisPlugin):
       path_string = self._GeneratePathString(mediator, pathspec, hashes)
       lines_of_text.append(path_string)
 
-    lines_of_text.append(u'')
-    report_text = u'\n'.join(lines_of_text)
+    lines_of_text.append('')
+    report_text = '\n'.join(lines_of_text)
     return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
 
 

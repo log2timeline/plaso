@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The SHA-256 Hasher implementation"""
 
+from __future__ import unicode_literals
+
 import hashlib
 
 from plaso.analyzers.hashers import interface
@@ -10,8 +12,8 @@ from plaso.analyzers.hashers import manager
 class SHA256Hasher(interface.BaseHasher):
   """This class provides SHA-256 hashing functionality."""
 
-  NAME = u'sha256'
-  DESCRIPTION = u'Calculates a SHA-256 digest hash over input data.'
+  NAME = 'sha256'
+  DESCRIPTION = 'Calculates a SHA-256 digest hash over input data.'
 
   def __init__(self):
     """Initializes the SHA-256 hasher."""
@@ -34,7 +36,7 @@ class SHA256Hasher(interface.BaseHasher):
       str: string hash digest calculated over the data blocks passed to
           Update(). The string consists of printable Unicode characters.
     """
-    return u'{0:s}'.format(self._sha256_context.hexdigest())
+    return '{0:s}'.format(self._sha256_context.hexdigest())
 
   def Update(self, data):
     """Updates the current state of the hasher with a new block of data.
