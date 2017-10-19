@@ -28,11 +28,11 @@ class SerializedAttributeContainerListTets(unittest.TestCase):
   # TODO: add tests for PushAttributeContainer function
 
 
-# TODO: add tests for BaseFileStorage
-# TODO: add tests for FileStorageMergeReader
-# TODO: add tests for FileStorageReader
+# TODO: add tests for BaseStorageFile
+# TODO: add tests for StorageFileMergeReader
+# TODO: add tests for StorageFileReader
 # TODO: add tests for StorageWriter
-# TODO: add tests for FileStorageWriter
+# TODO: add tests for StorageFileWriter
 
 
 if __name__ == '__main__':

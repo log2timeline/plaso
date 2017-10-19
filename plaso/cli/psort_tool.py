@@ -256,7 +256,7 @@ class PsortTool(
     """Prints the details of the analysis reports.
 
     Args:
-      storage (BaseStorage): storage writer.
+      storage (BaseStore): storage writer.
     """
     for index, analysis_report in enumerate(storage.GetAnalysisReports()):
       if index + 1 <= self._number_of_analysis_reports:

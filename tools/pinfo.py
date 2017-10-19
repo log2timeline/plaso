@@ -22,7 +22,7 @@ def Main():
   result = True
   try:
     if tool.compare_storage_information:
-      result = tool.CompareStorages()
+      result = tool.CompareStores()
     else:
       tool.PrintStorageInformation()
 

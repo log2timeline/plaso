@@ -203,7 +203,7 @@ class PstealTool(
     """Prints the details of the analysis reports.
 
     Args:
-      storage (BaseStorage): storage writer.
+      storage (BaseStore): storage writer.
       number_of_analysis_reports (int): number of analysis reports.
     """
     for index, analysis_report in enumerate(storage.GetAnalysisReports()):

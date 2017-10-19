@@ -17,7 +17,7 @@ from plaso.storage import identifiers
 from plaso.storage import interface
 
 
-class GZIPStorageFile(interface.BaseFileStorage):
+class GZIPStorageFile(interface.BaseStorageFile):
   """gzip-based storage file."""
 
   # pylint: disable=abstract-method
@@ -27,7 +27,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
   _DATA_BUFFER_SIZE = 1 * 1024 * 1024
 
   def __init__(self, storage_type=definitions.STORAGE_TYPE_TASK):
-    """Initializes a storage.
+    """Initializes a store.
 
     Args:
       storage_type (Optional[str]): storage type.
@@ -305,26 +305,26 @@ class GZIPStorageFile(interface.BaseFileStorage):
     return iter(event_heap.PopEvents())
 
   def HasAnalysisReports(self):
-    """Determines if a storage contains analysis reports.
+    """Determines if a store contains analysis reports.
 
     Returns:
-      bool: True if the storage contains analysis reports.
+      bool: True if the store contains analysis reports.
     """
     return len(self._GetAttributeContainerList('analysis_report')) > 0
 
   def HasErrors(self):
-    """Determines if a storage contains extraction errors.
+    """Determines if a store contains extraction errors.
 
     Returns:
-      bool: True if the storage contains extraction errors.
+      bool: True if the store contains extraction errors.
     """
     return len(self._GetAttributeContainerList('extraction_error')) > 0
 
   def HasEventTags(self):
-    """Determines if a storage contains event tags.
+    """Determines if a store contains event tags.
 
     Returns:
-      bool: True if the storage contains event tags.
+      bool: True if the store contains event tags.
     """
     return len(self._GetAttributeContainerList('event_tags')) > 0
 
@@ -406,7 +406,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     self._WriteAttributeContainer(task_start)
 
 
-class GZIPStorageMergeReader(interface.FileStorageMergeReader):
+class GZIPStorageMergeReader(interface.StorageFileMergeReader):
   """Class that implements a gzip-based storage file reader for merging."""
 
   _DATA_BUFFER_SIZE = 1 * 1024 * 1024
@@ -567,7 +567,7 @@ class GZIPStorageMergeReader(interface.FileStorageMergeReader):
     return True
 
 
-class GZIPStorageFileReader(interface.FileStorageReader):
+class GZIPStorageFileReader(interface.StorageFileReader):
   """Class that implements a gzip-based storage file reader."""
 
   def __init__(self, path):

@@ -56,7 +56,7 @@ class PinfoTool(
     """Calculates the counters of the entire storage.
 
     Args:
-      storage (BaseStorage): storage.
+      storage (BaseStore): storage.
 
     Returns:
       dict[str,collections.Counter]: storage counters.
@@ -108,15 +108,15 @@ class PinfoTool(
 
     return storage_counters
 
-  def _CompareStorages(self, storage, compare_storage):
-    """Compares the contents of two storages.
+  def _CompareStores(self, storage, compare_storage):
+    """Compares the contents of two stores.
 
     Args:
-      storage (BaseStorage): storage.
-      compare_storage (BaseStorage): storage to compare against.
+      storage (BaseStore): storage.
+      compare_storage (BaseStore): storage to compare against.
 
     Returns:
-      bool: True if the content of the storages is identical.
+      bool: True if the content of the stores is identical.
     """
     storage_counters = self._CalculateStorageCounters(storage)
     compare_storage_counters = self._CalculateStorageCounters(compare_storage)
@@ -163,7 +163,7 @@ class PinfoTool(
     """Prints the details of the analysis reports.
 
     Args:
-      storage (BaseStorage): storage.
+      storage (BaseStore): storage.
     """
     if not storage.HasAnalysisReports():
       self._output_writer.Write('No analysis reports stored.\n\n')
@@ -182,7 +182,7 @@ class PinfoTool(
     """Prints the details of the errors.
 
     Args:
-      storage (BaseStorage): storage.
+      storage (BaseStore): storage.
     """
     if not storage.HasErrors():
       self._output_writer.Write('No errors stored.\n\n')
@@ -275,7 +275,7 @@ class PinfoTool(
     """Prints the details of the preprocessing information.
 
     Args:
-      storage (BaseStorage): storage.
+      storage (BaseStore): storage.
       session_number (Optional[int]): session number.
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
@@ -330,7 +330,7 @@ class PinfoTool(
     """Prints the details of the sessions.
 
     Args:
-      storage (BaseStorage): storage.
+      storage (BaseStore): storage.
     """
     for session_number, session in enumerate(storage.GetSessions()):
       session_identifier = uuid.UUID(hex=session.identifier)
@@ -388,7 +388,7 @@ class PinfoTool(
     """Prints a sessions overview.
 
     Args:
-      storage (BaseStorage): storage.
+      storage (BaseStore): storage.
     """
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title='Sessions')
@@ -402,10 +402,10 @@ class PinfoTool(
     table_view.Write(self._output_writer)
 
   def _PrintStorageInformationAsText(self, storage):
-    """Prints information about the storage as human-readable text.
+    """Prints information about the store as human-readable text.
 
     Args:
-      storage (BaseStorage): storage.
+      storage (BaseStore): storage.
     """
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title='Plaso Storage Information')
@@ -448,7 +448,7 @@ class PinfoTool(
     """Writes a summary of sessions as machine-readable JSON.
 
     Args:
-      storage (BaseStorage): storage.
+      storage (BaseStore): storage.
     """
     serializer = json_serializer.JSONAttributeContainerSerializer
     self._output_writer.Write('{')
@@ -464,7 +464,7 @@ class PinfoTool(
     """Prints information about the tasks.
 
     Args:
-      storage (BaseStorage): storage.
+      storage (BaseStore): storage.
     """
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title='Tasks')
@@ -477,11 +477,11 @@ class PinfoTool(
 
     table_view.Write(self._output_writer)
 
-  def CompareStorages(self):
-    """Compares the contents of two storages.
+  def CompareStores(self):
+    """Compares the contents of two stores.
 
     Returns:
-      bool: True if the content of the storages is identical.
+      bool: True if the content of the stores is identical.
     """
     storage_file = storage_factory.StorageFactory.CreateStorageFileForFile(
         self._storage_file_path)
@@ -519,7 +519,7 @@ class PinfoTool(
       return
 
     try:
-      result = self._CompareStorages(storage_file, compare_storage_file)
+      result = self._CompareStores(storage_file, compare_storage_file)
 
     finally:
       compare_storage_file.Close()

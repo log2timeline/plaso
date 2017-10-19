@@ -38,7 +38,7 @@ class EventObject(interface.AttributeContainer):
 
   The framework is designed to parse files and create events
   from individual records, log lines or keys extracted from files.
-  The event object provides an extensible data storage for event
+  The event object provides an extensible data store for event
   attributes.
 
   Attributes:
