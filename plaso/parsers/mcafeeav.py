@@ -140,7 +140,7 @@ class McafeeAccessProtectionParser(csv_parser.CSVParser):
     # TODO: Find out all the code pages this can have.  Asked McAfee 10/31.
     if row['date'][0:3] == b'\xef\xbb\xbf':
       row['date'] = row['date'][3:]
-      self.encoding = 'utf-8'
+      self._encoding = 'utf-8'
 
     # Check the date format!
     # If it doesn't parse, then this isn't a McAfee AV Access Protection Log

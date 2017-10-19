@@ -158,6 +158,8 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
 class CSVParserTest(test_lib.ParserTestCase):
   """Tests the comma seperated values (CSV) parser."""
 
+  # pylint: disable=protected-access
+
   def testConvertRowToUnicode(self):
     """Tests the _ConvertRowToUnicode function."""
     binary_row = {
