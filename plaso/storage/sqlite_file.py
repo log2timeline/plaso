@@ -14,7 +14,7 @@ from plaso.storage import identifiers
 from plaso.storage import interface
 
 
-class SQLiteStorageFile(interface.BaseFileStorage):
+class SQLiteStorageFile(interface.BaseStorageFile):
   """SQLite-based storage file.
 
   Attributes:
@@ -59,7 +59,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
   def __init__(
       self, maximum_buffer_size=0,
       storage_type=definitions.STORAGE_TYPE_SESSION):
-    """Initializes a storage.
+    """Initializes a store.
 
     Args:
       maximum_buffer_size (Optional[int]):
@@ -459,7 +459,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
 
   @classmethod
   def CheckSupportedFormat(cls, path):
-    """Checks is the storage file format is supported.
+    """Checks if the storage file format is supported.
 
     Args:
       path (str): path to the storage file.
@@ -706,10 +706,10 @@ class SQLiteStorageFile(interface.BaseFileStorage):
       yield event
 
   def HasAnalysisReports(self):
-    """Determines if a storage contains analysis reports.
+    """Determines if a store contains analysis reports.
 
     Returns:
-      bool: True if the storage contains analysis reports.
+      bool: True if the store contains analysis reports.
     """
     query = 'SELECT COUNT(*) FROM analysis_report'
     self._cursor.execute(query)
@@ -718,10 +718,10 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     return row and row[0] != 0
 
   def HasErrors(self):
-    """Determines if a storage contains extraction errors.
+    """Determines if a store contains extraction errors.
 
     Returns:
-      bool: True if the storage contains extraction errors.
+      bool: True if the store contains extraction errors.
     """
     query = 'SELECT COUNT(*) FROM extraction_error'
     self._cursor.execute(query)
@@ -730,10 +730,10 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     return row and row[0] != 0
 
   def HasEventTags(self):
-    """Determines if a storage contains event tags.
+    """Determines if a store contains event tags.
 
     Returns:
-      bool: True if the storage contains event tags.
+      bool: True if the store contains event tags.
     """
     query = 'SELECT COUNT(*) FROM event_tags'
     self._cursor.execute(query)
@@ -910,7 +910,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     self._WriteAttributeContainer(task_start)
 
 
-class SQLiteStorageMergeReader(interface.FileStorageMergeReader):
+class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
   """SQLite-based storage file reader for merging."""
 
   _CONTAINER_TYPES = (
@@ -1067,7 +1067,7 @@ class SQLiteStorageMergeReader(interface.FileStorageMergeReader):
     return True
 
 
-class SQLiteStorageFileReader(interface.FileStorageReader):
+class SQLiteStorageFileReader(interface.StorageFileReader):
   """SQLite-based storage file reader."""
 
   def __init__(self, path):
@@ -1081,7 +1081,7 @@ class SQLiteStorageFileReader(interface.FileStorageReader):
     self._storage_file.Open(path=path)
 
 
-class SQLiteStorageFileWriter(interface.FileStorageWriter):
+class SQLiteStorageFileWriter(interface.StorageFileWriter):
   """SQLite-based storage file writer."""
 
   def _CreateStorageFile(self):

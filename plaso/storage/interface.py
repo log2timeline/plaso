@@ -89,7 +89,7 @@ class SerializedAttributeContainerList(object):
     self.next_sequence_number += 1
 
 
-class BaseStorage(object):
+class BaseStore(object):
   """Storage interface."""
 
   @abc.abstractmethod
@@ -220,26 +220,26 @@ class BaseStorage(object):
 
   @abc.abstractmethod
   def HasAnalysisReports(self):
-    """Determines if a storage contains analysis reports.
+    """Determines if a store contains analysis reports.
 
     Returns:
-      bool: True if the storage contains analysis reports.
+      bool: True if the store contains analysis reports.
     """
 
   @abc.abstractmethod
   def HasErrors(self):
-    """Determines if a storage contains extraction errors.
+    """Determines if a store contains extraction errors.
 
     Returns:
-      bool: True if the storage contains extraction errors.
+      bool: True if the store contains extraction errors.
     """
 
   @abc.abstractmethod
   def HasEventTags(self):
-    """Determines if a storage contains event tags.
+    """Determines if a store contains event tags.
 
     Returns:
-      bool: True if the storage contains event tags.
+      bool: True if the store contains event tags.
     """
 
   @abc.abstractmethod
@@ -300,14 +300,14 @@ class BaseStorage(object):
     """
 
 
-class BaseFileStorage(BaseStorage):
-  """File-based storage interface."""
+class BaseStorageFile(BaseStore):
+  """Interface for file-based stores."""
 
   # pylint: disable=abstract-method
 
   def __init__(self):
-    """Initializes a file-based storage."""
-    super(BaseFileStorage, self).__init__()
+    """Initializes a file-based store."""
+    super(BaseStorageFile, self).__init__()
     self._is_open = False
     self._read_only = True
     self._serialized_attribute_containers = {}
@@ -456,8 +456,8 @@ class StorageMergeReader(object):
     """
 
 
-class FileStorageMergeReader(StorageMergeReader):
-  """File-based storage reader interface for merging."""
+class StorageFileMergeReader(StorageMergeReader):
+  """Storage reader interface for file-based stores merging."""
 
   # pylint: disable=abstract-method
 
@@ -467,7 +467,7 @@ class FileStorageMergeReader(StorageMergeReader):
     Args:
       storage_writer (StorageWriter): storage writer.
     """
-    super(FileStorageMergeReader, self).__init__(storage_writer)
+    super(StorageFileMergeReader, self).__init__(storage_writer)
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
 
@@ -640,7 +640,7 @@ class StorageReader(object):
     """
 
 
-class FileStorageReader(StorageReader):
+class StorageFileReader(StorageReader):
   """File-based storage reader interface."""
 
   def __init__(self, path):
@@ -649,7 +649,7 @@ class FileStorageReader(StorageReader):
     Args:
       path (str): path to the input file.
     """
-    super(FileStorageReader, self).__init__()
+    super(StorageFileReader, self).__init__()
     self._path = path
     self._storage_file = None
 
@@ -956,8 +956,8 @@ class StorageWriter(object):
     """Writes task start information."""
 
 
-class FileStorageWriter(StorageWriter):
-  """Defines an interface for a file-based storage writer."""
+class StorageFileWriter(StorageWriter):
+  """Defines an interface for a file-backed storage writer."""
 
   def __init__(
       self, session, output_file,
@@ -970,7 +970,7 @@ class FileStorageWriter(StorageWriter):
       storage_type (Optional[str]): storage type.
       task(Optional[Task]): task.
     """
-    super(FileStorageWriter, self).__init__(
+    super(StorageFileWriter, self).__init__(
         session, storage_type=storage_type, task=task)
     self._merge_task_storage_path = ''
     self._output_file = output_file
@@ -983,7 +983,7 @@ class FileStorageWriter(StorageWriter):
     """Creates a storage file.
 
     Returns:
-      BaseFileStorage: storage file.
+      BaseStorageFile: storage file.
     """
 
   @abc.abstractmethod

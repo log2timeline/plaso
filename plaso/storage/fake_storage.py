@@ -16,7 +16,6 @@ class FakeStorageWriter(interface.StorageWriter):
 
   Attributes:
     analysis_reports (list[AnalysisReport]): analysis reports.
-    errors (list[ExtractionError]): extraction errors.
     session_completion (SessionCompletion): session completion attribute
         container.
     session_start (SessionStart): session start attribute container.

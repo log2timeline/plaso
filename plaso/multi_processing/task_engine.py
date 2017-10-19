@@ -187,7 +187,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   def _MergeTaskStorage(self, storage_writer):
     """Merges a task storage with the session storage.
 
-    This function checks all task storages that are ready to merge and updates
+    This function checks all task stores that are ready to merge and updates
     the scheduled tasks. Note that to prevent this function holding up
     the task scheduling loop only the first available task storage is merged.
 

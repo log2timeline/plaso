@@ -695,7 +695,7 @@ class _StorageMetadataReader(object):
     return storage_metadata
 
 
-class ZIPStorageFile(interface.BaseFileStorage):
+class ZIPStorageFile(interface.BaseStorageFile):
   """ZIP-based storage file.
 
   Attributes:
@@ -1842,7 +1842,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     """Reads the storage metadata.
 
     Returns:
-      bool: True if the storage metadata was read.
+      bool: True if the store metadata was read.
 
     Raises:
       IOError: if the format version or the serializer format is not supported.
@@ -2594,7 +2594,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     """Determines if a storage contains analysis reports.
 
     Returns:
-      bool: True if the storage contains analysis reports.
+      bool: True if the store contains analysis reports.
     """
     for name in self._GetStreamNames():
       if name.startswith('analysis_report_data.'):
@@ -2603,10 +2603,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
     return False
 
   def HasErrors(self):
-    """Determines if a storage contains extraction errors.
+    """Determines if a store contains extraction errors.
 
     Returns:
-      bool: True if the storage contains extraction errors.
+      bool: True if the store contains extraction errors.
     """
     for name in self._GetStreamNames():
       if name.startswith('error_data.'):
@@ -2615,10 +2615,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
     return False
 
   def HasEventTags(self):
-    """Determines if a storage contains event tags.
+    """Determines if a store contains event tags.
 
     Returns:
-      bool: True if the storage contains event tags.
+      bool: True if the store contains event tags.
     """
     for name in self._GetStreamNames():
       if name.startswith('event_tag_data.'):
@@ -2766,7 +2766,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self._WriteTaskStart(task_start)
 
 
-class ZIPStorageFileReader(interface.FileStorageReader):
+class ZIPStorageFileReader(interface.StorageFileReader):
   """ZIP-based storage file reader."""
 
   def __init__(self, path):
@@ -2780,7 +2780,7 @@ class ZIPStorageFileReader(interface.FileStorageReader):
     self._storage_file.Open(path=path)
 
 
-class ZIPStorageFileWriter(interface.FileStorageWriter):
+class ZIPStorageFileWriter(interface.StorageFileWriter):
   """ZIP-based storage file writer."""
 
   def __init__(
@@ -2803,7 +2803,7 @@ class ZIPStorageFileWriter(interface.FileStorageWriter):
     """Creates a storage file.
 
     Returns:
-      BaseFileStorage: storage file.
+      BaseStorageFile: storage file.
     """
     if self._storage_type == definitions.STORAGE_TYPE_TASK:
       return gzip_file.GZIPStorageFile(storage_type=self._storage_type)

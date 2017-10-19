@@ -19,7 +19,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
   """Tests for the pinfo CLI tool."""
 
   # TODO: add test for _CalculateStorageCounters.
-  # TODO: add test for _CompareStorages.
+  # TODO: add test for _CompareStores.
   # TODO: add test for _PrintAnalysisReportCounter.
   # TODO: add test for _PrintAnalysisReportsDetails.
   # TODO: add test for _PrintErrorsDetails.
@@ -31,8 +31,8 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
   # TODO: add test for _PrintTasksInformation.
   # TODO: add test for _PrintStorageInformationAsText.
 
-  def testCompareStorages(self):
-    """Tests the CompareStorages function."""
+  def testCompareStores(self):
+    """Tests the CompareStores function."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
@@ -45,7 +45,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 
     test_tool.ParseOptions(options)
 
-    self.assertTrue(test_tool.CompareStorages())
+    self.assertTrue(test_tool.CompareStores())
 
     output = output_writer.ReadOutput()
     self.assertEqual(output, b'Storage files are identical.\n')
@@ -56,7 +56,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 
     test_tool.ParseOptions(options)
 
-    self.assertFalse(test_tool.CompareStorages())
+    self.assertFalse(test_tool.CompareStores())
 
     output = output_writer.ReadOutput()
     self.assertEqual(output, b'Storage files are different.\n')
