@@ -9,14 +9,12 @@ parser.
 from __future__ import unicode_literals
 
 import abc
-import csv
 import logging
 
 import pyparsing
 
 from dfvfs.helpers import text_file
 
-from plaso.containers import events
 from plaso.lib import errors
 from plaso.lib import utils
 from plaso.parsers import interface
@@ -25,165 +23,6 @@ from plaso.parsers import interface
 # Pylint complains about some functions not being implemented that shouldn't
 # be since they need to be implemented by children.
 # pylint: disable=abstract-method
-
-class TextCSVParser(interface.FileObjectParser):
-  """An implementation of a simple CSV line-per-entry log files.
-
-  Attributes:
-    encoding (str): encoding used in the CSV file, or None if the encoding is
-        unknown.
-  """
-
-  # A list that contains the names of all the fields in the log file.
-  COLUMNS = []
-
-  # A CSV file is comma separated, but this can be overwritten to include
-  # tab, pipe or other character separation. Note this must be a byte string
-  # otherwise TypeError: "delimiter" must be an 1-character string is raised.
-  VALUE_SEPARATOR = b','
-
-  # If there is a header before the lines start it can be defined here, and
-  # the number of header lines that need to be skipped before the parsing
-  # starts.
-  NUMBER_OF_HEADER_LINES = 0
-
-  # If there is a special quote character used inside the structured text
-  # it can be defined here.
-  QUOTE_CHAR = b'"'
-
-  # Value that should not appear inside the file, made to test the actual
-  # file to see if it confirms to standards.
-  MAGIC_TEST_STRING = b'RegnThvotturMeistarans'
-
-  def __init__(self, encoding=None):
-    """Initializes a parser object.
-
-    Args:
-      encoding (Optional[str]): encoding used in the CSV file, where None
-          indicates the codepage of the parser mediator should be used.
-    """
-    super(TextCSVParser, self).__init__()
-    self.encoding = encoding
-
-  def _ConvertRowToUnicode(self, parser_mediator, row):
-    """Converts all strings in a CSV row dict to Unicode.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      row (dict[str, bytes]): a row from a CSV file, where the dictionary
-          key contains the column name and the value a binary string.
-
-    Returns:
-      dict[str, str]: a row from the CSV file, where the dictionary key
-          contains the column name and the value a Unicode string.
-    """
-    if not self.encoding:
-      # If no encoding is set, we default to the system codepage.
-      self.encoding = parser_mediator.codepage
-
-    for key, value in iter(row.items()):
-      try:
-        row[key] = value.decode(self.encoding)
-      except UnicodeDecodeError:
-        replaced_value = value.decode(self.encoding, errors='replace')
-        parser_mediator.ProduceExtractionError(
-            'error decoding string as {0:s}, characters have been '
-            'replaced in {1:s}'.format(self.encoding, replaced_value))
-        row[key] = replaced_value
-    return row
-
-  def ParseRow(self, parser_mediator, row_offset, row):
-    """Parse a line of the log file and extract event objects.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      row_offset: the offset of the row.
-      row: a dictionary containing all the fields as denoted in the
-           COLUMNS class list. Strings in this dict are Unicode strings.
-    """
-    # TODO: replace EventObject with a CSV specific event object.
-    event_object = events.EventObject()
-    if row_offset is not None:
-      event_object.offset = row_offset
-    event_object.row_dict = row
-    parser_mediator.ProduceEvent(event_object)
-
-  def ParseFileObject(self, parser_mediator, file_object, **unused_kwargs):
-    """Parses a CSV text file-like object.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): file-like object.
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
-    """
-    file_entry = parser_mediator.GetFileEntry()
-    path_spec_printable = file_entry.path_spec.comparable.replace('\n', ';')
-
-    text_file_object = text_file.TextFile(file_object)
-
-    # If we specifically define a number of lines we should skip, do that here.
-    for _ in range(0, self.NUMBER_OF_HEADER_LINES):
-      _ = text_file_object.readline()
-
-    reader = csv.DictReader(
-        text_file_object, fieldnames=self.COLUMNS,
-        restkey=self.MAGIC_TEST_STRING, restval=self.MAGIC_TEST_STRING,
-        delimiter=self.VALUE_SEPARATOR, quotechar=self.QUOTE_CHAR)
-
-    try:
-      row = next(reader)
-    except (csv.Error, StopIteration):
-      raise errors.UnableToParseFile(
-          '[{0:s}] Unable to parse CSV file: {1:s}.'.format(
-              self.NAME, path_spec_printable))
-
-    number_of_columns = len(self.COLUMNS)
-    number_of_records = len(row)
-
-    if number_of_records != number_of_columns:
-      raise errors.UnableToParseFile((
-          '[{0:s}] Unable to parse CSV file: {1:s}. Wrong number of '
-          'records (expected: {2:d}, got: {3:d})').format(
-              self.NAME, path_spec_printable, number_of_columns,
-              number_of_records))
-
-    for key, value in row.items():
-      if key == self.MAGIC_TEST_STRING or value == self.MAGIC_TEST_STRING:
-        raise errors.UnableToParseFile((
-            '[{0:s}] Unable to parse CSV file: {1:s}. Signature '
-            'mismatch.').format(self.NAME, path_spec_printable))
-
-    if not self.VerifyRow(parser_mediator, row):
-      raise errors.UnableToParseFile((
-          '[{0:s}] Unable to parse CSV file: {1:s}. Verification '
-          'failed.').format(self.NAME, path_spec_printable))
-
-    row = self._ConvertRowToUnicode(parser_mediator, row)
-    self.ParseRow(parser_mediator, text_file_object.tell(), row)
-
-    for row in reader:
-      if parser_mediator.abort:
-        break
-      row = self._ConvertRowToUnicode(parser_mediator, row)
-      self.ParseRow(parser_mediator, text_file_object.tell(), row)
-
-  def VerifyRow(self, unused_parser_mediator, unused_row):
-    """Return a bool indicating whether or not this is the correct parser.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      row (dict[str, bytes]): a single row from the CSV file.
-
-    Returns:
-      bool: True if this is the correct parser, False otherwise.
-    """
-    pass
 
 
 # TODO: determine if this method should be merged with PyParseIntCast.
