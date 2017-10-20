@@ -57,7 +57,8 @@ class BinaryLineReader(object):
 
     Args:
       maximum_size (Optional[int]): maximum number of bytes to read from
-         the file-like object, where None represents all remaining data.
+         the file-like object, where None represents all remaining data
+         up to the maximum (as defined by _MAXIMUM_READ_BUFFER_SIZE).
 
     Returns:
       bytes: lines data.
@@ -126,16 +127,15 @@ class BinaryLineReader(object):
   def readline(self, size=None):
     """Reads a single line of text.
 
-    The functions reads one entire line from the file-like object.
-    A trailing end-of-line indicator (newline by default) is kept in the
-    string (but may be absent when a file ends with an incomplete line).
-    If the size argument is present and non-negative, it is a maximum byte
-    count (including the trailing end-of-line) and an incomplete line may
-    be returned. An empty string is returned only when end-of-file is
-    encountered immediately.
+    The functions reads one entire line from the file-like object. A trailing
+    end-of-line indicator (newline by default) is kept in the string (but may
+    be absent when a file ends with an incomplete line). An empty string is
+    returned only when end-of-file is encountered immediately.
 
     Args:
-      size (Optional[int]): maximum string size to read.
+      size (Optional[int]): maximum string size to read. If present and
+      non-negative, it is a maximum byte count (including the trailing
+      end-of-line) and an incomplete line may be returned.
 
     Returns:
       bytes: line of text.
@@ -156,16 +156,31 @@ class BinaryLineReader(object):
           (size is None or self._lines_buffer_size < size)):
       lines_data = self._ReadLinesData(size)
 
-      result, separator, lines_data = lines_data.partition(self._end_of_line)
+      split_lines = lines_data.split(self._end_of_line)
+      result = split_lines.pop(0)
 
-      if lines_data:
+      if len(result) < len(lines_data):
+        separator = self._end_of_line
+      else:
+        separator = ''
+
+      if split_lines:
+        lines_data = self._end_of_line.join(split_lines)
         self._lines_buffer = b''.join([lines_data, self._lines_buffer])
         self._lines_buffer_size = len(self._lines_buffer)
 
     else:
-      result, separator, self._lines_buffer = self._lines_buffer.partition(
-          self._end_of_line)
-      self._lines_buffer_size -= len(result + separator)
+      split_lines = self._lines_buffer.split(self._end_of_line)
+      result = split_lines.pop(0)
+      result_length = len(result)
+
+      if result_length < self._lines_buffer_size:
+        separator = self._end_of_line
+      else:
+        separator = ''
+
+      self._lines_buffer = self._end_of_line.join(split_lines)
+      self._lines_buffer_size -= result_length + len(separator)
 
     line = b''.join([result, separator])
     self._current_offset += len(line)
@@ -175,14 +190,12 @@ class BinaryLineReader(object):
   def readlines(self, sizehint=None):
     """Reads lines of text.
 
-    The function reads until EOF using readline() and return a list
-    containing the lines read. If the optional sizehint argument is
-    present, instead of reading up to EOF, whole lines totalling
-    approximately sizehint bytes (possibly after rounding up to
-    an internal buffer size) are read.
+    The function reads until EOF using readline() and return a list containing
+    the lines read.
 
     Args:
-      sizehint (Optional[int]): maximum byte size to read.
+      sizehint (Optional[int]): maximum byte size to read. If present, instead
+      of reading up to EOF, whole lines totalling sizehint bytes are read.
 
     Returns:
       list[bytes]: lines of text.
