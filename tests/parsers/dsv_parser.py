@@ -6,13 +6,13 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.parsers import csv_parser
+from plaso.parsers import dsv_parser
 
 from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
-class TestDSVParser(csv_parser.DSVParser):
+class TestDSVParser(dsv_parser.DSVParser):
   """Delimiter seperated values (DSV) parser parser for testing.
 
   Attribute:
@@ -69,7 +69,7 @@ class DSVParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
-    parser = csv_parser.DSVParser(encoding='utf-8')
+    parser = dsv_parser.DSVParser(encoding='utf-8')
 
     unicode_row = parser._ConvertRowToUnicode(parser_mediator, binary_row)
     self.assertEqual(unicode_row['password'], 'superrích')
@@ -83,7 +83,7 @@ class DSVParserTest(test_lib.ParserTestCase):
         storage_writer, knowledge_base_values=knowledge_base_values)
     self.assertEqual(parser_mediator.codepage, 'ascii')
 
-    parser = csv_parser.DSVParser()
+    parser = dsv_parser.DSVParser()
 
     unicode_row = parser._ConvertRowToUnicode(parser_mediator, binary_row)
     self.assertEqual(unicode_row['password'], 'superr\xedch')
