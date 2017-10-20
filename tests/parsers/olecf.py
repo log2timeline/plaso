@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the OLE Compound Files (OLECF) parser."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.lib import definitions
@@ -16,11 +18,11 @@ from tests.parsers import test_lib
 class OLECFParserTest(test_lib.ParserTestCase):
   """Tests for the OLE Compound Files (OLECF) parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'Document.doc'])
+  @shared_test_lib.skipUnlessHasTestFile(['Document.doc'])
   def testParse(self):
     """Tests the Parse function."""
     parser = olecf.OLECFParser()
-    storage_writer = self._ParseFile([u'Document.doc'], parser)
+    storage_writer = self._ParseFile(['Document.doc'], parser)
 
     # OLE Compound File information:
     #     Version             : 3.62
@@ -35,13 +37,13 @@ class OLECFParserTest(test_lib.ParserTestCase):
     event = events[8]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-05-16 02:29:49.785')
+        '2013-05-16 02:29:49.785')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
         event.timestamp_desc,
         definitions.TIME_DESCRIPTION_MODIFICATION)
 
-    self.assertEqual(event.data_type, u'olecf:item')
+    self.assertEqual(event.data_type, 'olecf:item')
     self.assertEqual(event.offset, 0)
 
     storage_writer = self._CreateStorageWriter()
@@ -58,7 +60,7 @@ class OLECFParserTest(test_lib.ParserTestCase):
     self.assertIsNotNone(error)
 
     self.assertTrue(error.message.startswith(
-        u'unable to open file with error: pyolecf_file_open_file_object: '))
+        'unable to open file with error: pyolecf_file_open_file_object: '))
 
 
 if __name__ == '__main__':

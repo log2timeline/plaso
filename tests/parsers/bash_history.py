@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*- #
 """Tests for the bash history parser."""
+
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.lib import timelib
@@ -23,24 +26,24 @@ class BashHistoryTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-10-01 12:36:17')
-    expected_command = u'/usr/lib/plaso'
+        '2013-10-01 12:36:17')
+    expected_command = '/usr/lib/plaso'
     self.assertEqual(events[0].timestamp, expected_timestamp)
     self.assertEqual(events[0].command, expected_command)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-10-01 12:36:18')
-    expected_command = u'/bin/bash'
+        '2013-10-01 12:36:18')
+    expected_command = '/bin/bash'
     self.assertEqual(events[1].timestamp, expected_timestamp)
     self.assertEqual(events[1].command, expected_command)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-10-01 12:36:19')
-    expected_command = u'/usr/local/bin/splunk -p 8080'
+        '2013-10-01 12:36:19')
+    expected_command = '/usr/local/bin/splunk -p 8080'
     self.assertEqual(events[2].timestamp, expected_timestamp)
     self.assertEqual(events[2].command, expected_command)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'bash_history_desync'])
+  @shared_test_lib.skipUnlessHasTestFile(['bash_history_desync'])
   def testParsingExtractionDesync(self):
     """Tests that the parser correctly handles a desynchronized file.
 
@@ -48,17 +51,17 @@ class BashHistoryTest(test_lib.ParserTestCase):
     starts with a command line instead of a timestamp.
     """
     parser = bash_history.BashHistoryParser()
-    storage_writer = self._ParseFile([u'bash_history_desync'], parser)
+    storage_writer = self._ParseFile(['bash_history_desync'], parser)
     self._TestEventsFromFile(storage_writer)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'bash_history'])
+  @shared_test_lib.skipUnlessHasTestFile(['bash_history'])
   def testParsingExtractionSync(self):
     """Tests that the parser correctly handles a synchronized file.
 
     A synchronized file is one that starts with a timestamp line.
     """
     parser = bash_history.BashHistoryParser()
-    storage_writer = self._ParseFile([u'bash_history'], parser)
+    storage_writer = self._ParseFile(['bash_history'], parser)
     self._TestEventsFromFile(storage_writer)
 
 

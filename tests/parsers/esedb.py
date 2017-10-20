@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Extensible Storage Engine (ESE) database files (EDB) parser."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.parsers import esedb
@@ -14,11 +16,11 @@ from tests.parsers import test_lib
 class ESEDBParserTest(test_lib.ParserTestCase):
   """Tests for the Extensible Storage Engine database (ESEDB) file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'Windows.edb'])
+  @shared_test_lib.skipUnlessHasTestFile(['Windows.edb'])
   def testParse(self):
     """Tests the Parse function."""
     parser = esedb.ESEDBParser()
-    storage_writer = self._ParseFile([u'Windows.edb'], parser)
+    storage_writer = self._ParseFile(['Windows.edb'], parser)
 
     # Extensible Storage Engine Database information:
     #     File type:              Database
@@ -43,7 +45,7 @@ class ESEDBParserTest(test_lib.ParserTestCase):
     self.assertIsNotNone(error)
 
     self.assertTrue(error.message.startswith(
-        u'unable to open file with error: pyesedb_file_open_file_object: '))
+        'unable to open file with error: pyesedb_file_open_file_object: '))
 
 
 if __name__ == '__main__':

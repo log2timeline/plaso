@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 """Tests for Basic Security Module (BSM) file parser."""
 
+from __future__ import unicode_literals
+
 import unittest
 
-from plaso.formatters import bsm  # pylint: disable=unused-import
+from plaso.formatters import bsm as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import bsm
 
@@ -15,13 +17,13 @@ from tests.parsers import test_lib
 class MacOSXBSMParserTest(test_lib.ParserTestCase):
   """Tests for Basic Security Module (BSM) file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'apple.bsm'])
+  @shared_test_lib.skipUnlessHasTestFile(['apple.bsm'])
   def testParse(self):
     """Tests the Parse function on a Mac OS X BSM file."""
     parser = bsm.BSMParser()
-    knowledge_base_values = {u'guessed_os': u'MacOSX'}
+    knowledge_base_values = {'guessed_os': 'MacOSX'}
     storage_writer = self._ParseFile(
-        [u'apple.bsm'], parser,
+        ['apple.bsm'], parser,
         knowledge_base_values=knowledge_base_values)
 
     self.assertEqual(storage_writer.number_of_events, 54)
@@ -30,144 +32,145 @@ class MacOSXBSMParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    self.assertEqual(event.data_type, u'mac:bsm:event')
+    self.assertEqual(event.data_type, 'mac:bsm:event')
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-11-04 18:36:20.000381')
+        '2013-11-04 18:36:20.000381')
     self.assertEqual(event.timestamp, expected_timestamp)
-    self.assertEqual(event.event_type, u'audit crash recovery (45029)')
+    self.assertEqual(event.event_type, 'audit crash recovery (45029)')
 
     expected_extra_tokens = {
-        u'BSM_TOKEN_PATH': u'/var/audit/20131104171720.crash_recovery',
-        u'BSM_TOKEN_RETURN32': {
-            u'call_status': 0,
-            u'error': u'Success',
-            u'token_status': 0},
-        u'BSM_TOKEN_TEXT': u'launchctl::Audit recovery',
-        u'BSM_TOKEN_TRAILER': 104
+        'BSM_TOKEN_PATH': '/var/audit/20131104171720.crash_recovery',
+        'BSM_TOKEN_RETURN32': {
+            'call_status': 0,
+            'error': 'Success',
+            'token_status': 0},
+        'BSM_TOKEN_TEXT': 'launchctl::Audit recovery',
+        'BSM_TOKEN_TRAILER': 104
     }
 
     self.assertEqual(event.extra_tokens, expected_extra_tokens)
 
     expected_return_value = {
-        u'call_status': 0,
-        u'error': u'Success',
-        u'token_status': 0
+        'call_status': 0,
+        'error': 'Success',
+        'token_status': 0
     }
     self.assertEqual(event.return_value, expected_return_value)
 
     event = events[15]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-11-04 18:36:26.000171')
+        '2013-11-04 18:36:26.000171')
     self.assertEqual(event.timestamp, expected_timestamp)
-    self.assertEqual(event.event_type, u'user authentication (45023)')
+    self.assertEqual(event.event_type, 'user authentication (45023)')
 
     expected_extra_tokens = {
-        u'BSM_TOKEN_RETURN32': {
-            u'call_status': 5000,
-            u'error': u'Unknown',
-            u'token_status': 255},
+        'BSM_TOKEN_RETURN32': {
+            'call_status': 5000,
+            'error': 'Unknown',
+            'token_status': 255},
 
-        u'BSM_TOKEN_SUBJECT32': {
-            u'aid': 4294967295,
-            u'egid': 92,
-            u'euid': 92,
-            u'gid': 92,
-            u'pid': 143,
-            u'session_id': 100004,
-            u'terminal_ip': '0.0.0.0',
-            u'terminal_port': 143,
-            u'uid': 92},
+        'BSM_TOKEN_SUBJECT32': {
+            'aid': 4294967295,
+            'egid': 92,
+            'euid': 92,
+            'gid': 92,
+            'pid': 143,
+            'session_id': 100004,
+            'terminal_ip': '0.0.0.0',
+            'terminal_port': 143,
+            'uid': 92},
 
-        u'BSM_TOKEN_TEXT': (u'Verify password for record type Users '
-                            u'\'moxilo\' node \'/Local/Default\''),
+        'BSM_TOKEN_TEXT': (
+            'Verify password for record type Users \'moxilo\' node '
+            '\'/Local/Default\''),
 
-        u'BSM_TOKEN_TRAILER': 140
+        'BSM_TOKEN_TRAILER': 140
     }
 
     self.assertEqual(event.extra_tokens, expected_extra_tokens)
 
     expected_return_value = {
-        u'call_status': 5000,
-        u'error': u'Unknown',
-        u'token_status': 255
+        'call_status': 5000,
+        'error': 'Unknown',
+        'token_status': 255
     }
     self.assertEqual(event.return_value, expected_return_value)
 
     event = events[31]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-11-04 18:36:26.000530')
+        '2013-11-04 18:36:26.000530')
     self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event.event_type, u'SecSrvr AuthEngine (45025)')
+    self.assertEqual(event.event_type, 'SecSrvr AuthEngine (45025)')
     expected_extra_tokens = {
-        u'BSM_TOKEN_RETURN32': {
-            u'call_status': 0,
-            u'error': u'Success',
-            u'token_status': 0},
-        u'BSM_TOKEN_SUBJECT32': {
-            u'aid': 4294967295,
-            u'egid': 0,
-            u'euid': 0,
-            u'gid': 0,
-            u'pid': 67,
-            u'session_id': 100004,
-            u'terminal_ip': '0.0.0.0',
-            u'terminal_port': 67,
-            u'uid': 0},
-        u'BSM_TOKEN_TEXT': u'system.login.done',
-        u'BSM_TOKEN_TRAILER': 110
+        'BSM_TOKEN_RETURN32': {
+            'call_status': 0,
+            'error': 'Success',
+            'token_status': 0},
+        'BSM_TOKEN_SUBJECT32': {
+            'aid': 4294967295,
+            'egid': 0,
+            'euid': 0,
+            'gid': 0,
+            'pid': 67,
+            'session_id': 100004,
+            'terminal_ip': '0.0.0.0',
+            'terminal_port': 67,
+            'uid': 0},
+        'BSM_TOKEN_TEXT': 'system.login.done',
+        'BSM_TOKEN_TRAILER': 110
     }
     self.assertEqual(event.extra_tokens, expected_extra_tokens)
 
     expected_return_value = {
-        u'call_status': 0,
-        u'error': u'Success',
-        u'token_status': 0
+        'call_status': 0,
+        'error': 'Success',
+        'token_status': 0
     }
     self.assertEqual(event.return_value, expected_return_value)
 
     event = events[50]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-11-04 18:37:36.000399')
+        '2013-11-04 18:37:36.000399')
     self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event.event_type, u'session end (44903)')
+    self.assertEqual(event.event_type, 'session end (44903)')
 
     expected_extra_tokens = {
-        u'BSM_TOKEN_ARGUMENT32': {
-            u'is': 12288,
-            u'num_arg': 3,
-            u'string': u'am_failure'},
-        u'BSM_TOKEN_ARGUMENT64': {
-            u'is': 0,
-            u'num_arg': 1,
-            u'string': u'sflags'},
-        u'BSM_TOKEN_RETURN32': {
-            u'call_status': 0,
-            u'error': u'Success',
-            u'token_status': 0},
-        u'BSM_TOKEN_SUBJECT32': {
-            u'aid': 4294967295,
-            u'egid': 0,
-            u'euid': 0,
-            u'gid': 0,
-            u'pid': 0,
-            u'session_id': 100015,
-            u'terminal_ip': '0.0.0.0',
-            u'terminal_port': 0,
-            u'uid': 0},
-        u'BSM_TOKEN_TRAILER': 125
+        'BSM_TOKEN_ARGUMENT32': {
+            'is': 12288,
+            'num_arg': 3,
+            'string': 'am_failure'},
+        'BSM_TOKEN_ARGUMENT64': {
+            'is': 0,
+            'num_arg': 1,
+            'string': 'sflags'},
+        'BSM_TOKEN_RETURN32': {
+            'call_status': 0,
+            'error': 'Success',
+            'token_status': 0},
+        'BSM_TOKEN_SUBJECT32': {
+            'aid': 4294967295,
+            'egid': 0,
+            'euid': 0,
+            'gid': 0,
+            'pid': 0,
+            'session_id': 100015,
+            'terminal_ip': '0.0.0.0',
+            'terminal_port': 0,
+            'uid': 0},
+        'BSM_TOKEN_TRAILER': 125
     }
     self.assertEqual(event.extra_tokens, expected_extra_tokens)
 
     expected_return_value = {
-        u'call_status': 0,
-        u'error': u'Success',
-        u'token_status': 0
+        'call_status': 0,
+        'error': 'Success',
+        'token_status': 0
     }
     self.assertEqual(event.return_value, expected_return_value)
 
@@ -175,13 +178,13 @@ class MacOSXBSMParserTest(test_lib.ParserTestCase):
 class OpenBSMParserTest(test_lib.ParserTestCase):
   """Tests for Basic Security Module (BSM) file parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'openbsm.bsm'])
+  @shared_test_lib.skipUnlessHasTestFile(['openbsm.bsm'])
   def testParse(self):
     """Tests the Parse function on a "generic" BSM file."""
     parser = bsm.BSMParser()
-    knowledge_base_values = {u'guessed_os': u'openbsm'}
+    knowledge_base_values = {'guessed_os': 'openbsm'}
     storage_writer = self._ParseFile(
-        [u'openbsm.bsm'],
+        ['openbsm.bsm'],
         parser,
         knowledge_base_values=knowledge_base_values)
 
@@ -190,106 +193,106 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_extra_tokens = [
-        {u'BSM_TOKEN_ARGUMENT32': {
-            u'is': 2882400000,
-            u'num_arg': 3,
-            u'string': u'test_arg32_token'},
-         u'BSM_TOKEN_TRAILER': 50},
-        {u'BSM_TOKEN_DATA':{
-            u'data': u'SomeData',
-            u'format': u'String'},
-         u'BSM_TOKEN_TRAILER': 39},
-        {u'BSM_TOKEN_FILE': {
-            u'string': u'test',
-            u'timestamp': '1970-01-01 20:42:45'},
-         u'BSM_TOKEN_TRAILER': 41},
-        {u'BSM_TOKEN_ADDR': '192.168.100.15',
-         u'BSM_TOKEN_TRAILER': 30},
-        {u'BSM_TOKEN_TRAILER': 46,
-         u'IPv4_Header': u'0x400000145478000040010000c0a8649bc0a86e30]'},
-        {u'BSM_TOKEN_IPC': {
-            u'object_id': 305419896,
-            u'object_type': 1},
-         u'BSM_TOKEN_TRAILER': 31},
-        {u'BSM_TOKEN_PORT': 20480,
-         u'BSM_TOKEN_TRAILER': 28},
-        {u'BSM_TOKEN_OPAQUE': u'aabbccdd',
-         u'BSM_TOKEN_TRAILER': 32},
-        {u'BSM_TOKEN_PATH': u'/test/this/is/a/test',
-         u'BSM_TOKEN_TRAILER': 49},
-        {u'BSM_TOKEN_PROCESS32': {
-            u'aid': 305419896,
-            u'egid': 591751049,
-            u'euid': 19088743,
-            u'gid': 159868227,
-            u'pid': 321140038,
-            u'session_id': 2542171492,
-            u'terminal_ip': '127.0.0.1',
-            u'terminal_port': 374945606,
-            u'uid': 2557891634},
-         u'BSM_TOKEN_TRAILER': 62},
-        {u'BSM_TOKEN_PROCESS64': {
-            u'aid': 305419896,
-            u'egid': 591751049,
-            u'euid': 19088743,
-            u'gid': 159868227,
-            u'pid': 321140038,
-            u'session_id': 2542171492,
-            u'terminal_ip': '127.0.0.1',
-            u'terminal_port': 374945606,
-            u'uid': 2557891634},
-         u'BSM_TOKEN_TRAILER': 66},
-        {u'BSM_TOKEN_RETURN32': {
-            u'call_status': 305419896,
-            u'error': u'Invalid argument',
-            u'token_status': 22},
-         u'BSM_TOKEN_TRAILER': 31},
-        {u'BSM_TOKEN_SEQUENCE': 305419896,
-         u'BSM_TOKEN_TRAILER': 30},
-        {u'BSM_TOKEN_AUT_SOCKINET32_EX':{
-            u'from': '127.0.0.1',
-            u'from_port': 0,
-            u'to': '127.0.0.1',
-            u'to_port': 0},
-         u'BSM_TOKEN_TRAILER': 44},
-        {u'BSM_TOKEN_SUBJECT32': {
-            u'aid': 305419896,
-            u'egid': 591751049,
-            u'euid': 19088743,
-            u'gid': 159868227,
-            u'pid': 321140038,
-            u'session_id': 2542171492,
-            u'terminal_ip': '127.0.0.1',
-            u'terminal_port': 374945606,
-            u'uid': 2557891634},
-         u'BSM_TOKEN_TRAILER': 62},
-        {u'BSM_TOKEN_SUBJECT32_EX': {
-            u'aid': 305419896,
-            u'egid': 591751049,
-            u'euid': 19088743,
-            u'gid': 159868227,
-            u'pid': 321140038,
-            u'session_id': 2542171492,
-            u'terminal_ip': 'fe80::1',
-            u'terminal_port': 374945606,
-            u'uid': 2557891634},
-         u'BSM_TOKEN_TRAILER': 78},
-        {u'BSM_TOKEN_TEXT': u'This is a test.',
-         u'BSM_TOKEN_TRAILER': 44},
-        {u'BSM_TOKEN_TRAILER': 37,
-         u'BSM_TOKEN_ZONENAME': u'testzone'},
-        {u'BSM_TOKEN_RETURN32': {
-            u'call_status': 4294967295,
-            u'error':
-            u'Argument list too long',
-            u'token_status': 7},
-         u'BSM_TOKEN_TRAILER': 31}
+        {'BSM_TOKEN_ARGUMENT32': {
+            'is': 2882400000,
+            'num_arg': 3,
+            'string': 'test_arg32_token'},
+         'BSM_TOKEN_TRAILER': 50},
+        {'BSM_TOKEN_DATA':{
+            'data': 'SomeData',
+            'format': 'String'},
+         'BSM_TOKEN_TRAILER': 39},
+        {'BSM_TOKEN_FILE': {
+            'string': 'test',
+            'timestamp': '1970-01-01 20:42:45'},
+         'BSM_TOKEN_TRAILER': 41},
+        {'BSM_TOKEN_ADDR': '192.168.100.15',
+         'BSM_TOKEN_TRAILER': 30},
+        {'BSM_TOKEN_TRAILER': 46,
+         'IPv4_Header': '0x400000145478000040010000c0a8649bc0a86e30]'},
+        {'BSM_TOKEN_IPC': {
+            'object_id': 305419896,
+            'object_type': 1},
+         'BSM_TOKEN_TRAILER': 31},
+        {'BSM_TOKEN_PORT': 20480,
+         'BSM_TOKEN_TRAILER': 28},
+        {'BSM_TOKEN_OPAQUE': 'aabbccdd',
+         'BSM_TOKEN_TRAILER': 32},
+        {'BSM_TOKEN_PATH': '/test/this/is/a/test',
+         'BSM_TOKEN_TRAILER': 49},
+        {'BSM_TOKEN_PROCESS32': {
+            'aid': 305419896,
+            'egid': 591751049,
+            'euid': 19088743,
+            'gid': 159868227,
+            'pid': 321140038,
+            'session_id': 2542171492,
+            'terminal_ip': '127.0.0.1',
+            'terminal_port': 374945606,
+            'uid': 2557891634},
+         'BSM_TOKEN_TRAILER': 62},
+        {'BSM_TOKEN_PROCESS64': {
+            'aid': 305419896,
+            'egid': 591751049,
+            'euid': 19088743,
+            'gid': 159868227,
+            'pid': 321140038,
+            'session_id': 2542171492,
+            'terminal_ip': '127.0.0.1',
+            'terminal_port': 374945606,
+            'uid': 2557891634},
+         'BSM_TOKEN_TRAILER': 66},
+        {'BSM_TOKEN_RETURN32': {
+            'call_status': 305419896,
+            'error': 'Invalid argument',
+            'token_status': 22},
+         'BSM_TOKEN_TRAILER': 31},
+        {'BSM_TOKEN_SEQUENCE': 305419896,
+         'BSM_TOKEN_TRAILER': 30},
+        {'BSM_TOKEN_AUT_SOCKINET32_EX':{
+            'from': '127.0.0.1',
+            'from_port': 0,
+            'to': '127.0.0.1',
+            'to_port': 0},
+         'BSM_TOKEN_TRAILER': 44},
+        {'BSM_TOKEN_SUBJECT32': {
+            'aid': 305419896,
+            'egid': 591751049,
+            'euid': 19088743,
+            'gid': 159868227,
+            'pid': 321140038,
+            'session_id': 2542171492,
+            'terminal_ip': '127.0.0.1',
+            'terminal_port': 374945606,
+            'uid': 2557891634},
+         'BSM_TOKEN_TRAILER': 62},
+        {'BSM_TOKEN_SUBJECT32_EX': {
+            'aid': 305419896,
+            'egid': 591751049,
+            'euid': 19088743,
+            'gid': 159868227,
+            'pid': 321140038,
+            'session_id': 2542171492,
+            'terminal_ip': 'fe80::1',
+            'terminal_port': 374945606,
+            'uid': 2557891634},
+         'BSM_TOKEN_TRAILER': 78},
+        {'BSM_TOKEN_TEXT': 'This is a test.',
+         'BSM_TOKEN_TRAILER': 44},
+        {'BSM_TOKEN_TRAILER': 37,
+         'BSM_TOKEN_ZONENAME': 'testzone'},
+        {'BSM_TOKEN_RETURN32': {
+            'call_status': 4294967295,
+            'error':
+            'Argument list too long',
+            'token_status': 7},
+         'BSM_TOKEN_TRAILER': 31}
     ]
 
     for event_index in range(0, 19):
       event = events[event_index]
       expected_extra_tokens_dict = expected_extra_tokens[event_index]
-      extra_tokens_dict = getattr(event, u'extra_tokens', {})
+      extra_tokens_dict = getattr(event, 'extra_tokens', {})
       self.assertDictContains(extra_tokens_dict, expected_extra_tokens_dict)
 
 

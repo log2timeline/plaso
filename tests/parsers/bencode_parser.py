@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Bencode file parser."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.parsers import bencode_parser
@@ -19,7 +21,7 @@ class BencodeTest(test_lib.ParserTestCase):
   def testEnablePlugins(self):
     """Tests the EnablePlugins function."""
     parser = bencode_parser.BencodeParser()
-    parser.EnablePlugins([u'bencode_transmission'])
+    parser.EnablePlugins(['bencode_transmission'])
 
     self.assertIsNotNone(parser)
     self.assertIsNone(parser._default_plugin)

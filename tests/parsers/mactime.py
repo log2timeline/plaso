@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 """Tests the for mactime parser."""
 
+from __future__ import unicode_literals
+
 import unittest
 
-from plaso.formatters import mactime  # pylint: disable=unused-import
+from plaso.formatters import mactime as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import mactime
@@ -16,11 +18,11 @@ from tests.parsers import test_lib
 class MactimeTest(test_lib.ParserTestCase):
   """Tests the for mactime parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'mactime.body'])
+  @shared_test_lib.skipUnlessHasTestFile(['mactime.body'])
   def testParse(self):
     """Tests the Parse function."""
     parser = mactime.MactimeParser()
-    storage_writer = self._ParseFile([u'mactime.body'], parser)
+    storage_writer = self._ParseFile(['mactime.body'], parser)
 
     # The file contains 13 lines x 4 timestamps per line, which should be
     # 52 events in total. However several of these events have an empty
@@ -39,7 +41,7 @@ class MactimeTest(test_lib.ParserTestCase):
     event = events[21]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-05-25 15:59:43')
+        '2012-05-25 15:59:43')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
@@ -48,7 +50,7 @@ class MactimeTest(test_lib.ParserTestCase):
     event = events[22]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-05-25 15:59:44')
+        '2012-05-25 15:59:44')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
@@ -56,13 +58,13 @@ class MactimeTest(test_lib.ParserTestCase):
     event = events[23]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-05-25 15:59:45')
+        '2012-05-25 15:59:45')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_CHANGE)
 
-    expected_filename = u'/a_directory/another_file'
+    expected_filename = '/a_directory/another_file'
     self.assertEqual(event.filename, expected_filename)
-    self.assertEqual(event.mode_as_string, u'r/rrw-------')
+    self.assertEqual(event.mode_as_string, 'r/rrw-------')
 
     self._TestGetMessageStrings(event, expected_filename, expected_filename)
 

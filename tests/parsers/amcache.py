@@ -3,6 +3,7 @@
 """Tests for the Amcache Registry plugin."""
 
 from __future__ import unicode_literals
+
 import unittest
 
 from plaso.lib import timelib
@@ -11,6 +12,7 @@ from tests.parsers import test_lib
 from plaso.parsers import amcache
 
 __author__ = 'Ramses de Beer, rbdebeer@google.com'
+
 
 class AmcacheParserTest(test_lib.ParserTestCase):
   """Tests for the Amcache Registry plugin."""
@@ -52,6 +54,7 @@ class AmcacheParserTest(test_lib.ParserTestCase):
 
     expected_publisher = ('McAfee Inc.')
     self.assertEqual(event.publisher, expected_publisher)
+
 
 if __name__ == '__main__':
   unittest.main()
