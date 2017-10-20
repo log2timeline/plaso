@@ -75,7 +75,7 @@ class MactimeParser(csv_parser.CSVParser):
     """Converts a specific value of the row to an integer.
 
     Args:
-      row (dict[str, str]): fields of a single row, as denoted in COLUMNS.
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
       value_name (str): name of the value within the row.
 
     Retruns:
@@ -88,13 +88,13 @@ class MactimeParser(csv_parser.CSVParser):
       return
 
   def ParseRow(self, parser_mediator, row_offset, row):
-    """Parses a row and extract events.
+    """Parses a line of the log file and produces events.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       row_offset (int): number of the corresponding line.
-      row (dict[str, str]): fields of a single row, as denoted in COLUMNS.
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
     filename = row.get('name', None)
     md5_hash = row.get('md5', None)
@@ -140,12 +140,12 @@ class MactimeParser(csv_parser.CSVParser):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyRow(self, unused_parser_mediator, row):
-    """Verifies if a line of the file corresponds with the expected format.
+    """Verifies if a line of the file is in the expected format.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      row (dict[str, str]): fields of a single row, as denoted in COLUMNS.
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
@@ -154,7 +154,6 @@ class MactimeParser(csv_parser.CSVParser):
     # MD5|name|inode|mode_as_string|UID|GID|size|atime|mtime|ctime|crtime
     # 0|/lost+found|11|d/drwx------|0|0|12288|1337961350|1337961350|1337961350|0
 
-    # Check if the md5 a valid MD5 or '0' if not set.
     if row['md5'] != b'0' and not self._MD5_RE.match(row['md5']):
       return False
 

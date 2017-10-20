@@ -210,13 +210,13 @@ class SymantecParser(csv_parser.CSVParser):
         year + 1970, month + 1, day, hours, minutes, seconds, timezone=timezone)
 
   def ParseRow(self, parser_mediator, row_offset, row):
-    """Parses a row and extract event objects.
+    """Parses a line of the log file and produces events.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       row_offset (int): line number of the row.
-      row (dict[str, str]): fields of a single row, as denoted in COLUMNS.
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
     try:
       timestamp = self._ConvertToTimestamp(
@@ -296,12 +296,12 @@ class SymantecParser(csv_parser.CSVParser):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyRow(self, parser_mediator, row):
-    """Verifies if a line of the file corresponds with the expected format.
+    """Verifies if a line of the file is in the expected format.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      row (dict[str, str]): fields of a single row, as denoted in COLUMNS.
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
