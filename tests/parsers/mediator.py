@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the parsers mediator."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -51,8 +53,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
   # TODO: add tests for ClearEventAttributes.
   # TODO: add tests for ClearParserChain.
 
-  @shared_test_lib.skipUnlessHasTestFile([u'syslog.gz'])
-  @shared_test_lib.skipUnlessHasTestFile([u'vsstest.qcow2'])
+  @shared_test_lib.skipUnlessHasTestFile(['syslog.gz'])
+  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testGetDisplayName(self):
     """Tests the GetDisplayName function."""
     session = sessions.Session()
@@ -62,14 +64,14 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     with self.assertRaises(ValueError):
       parsers_mediator.GetDisplayName(file_entry=None)
 
-    test_path = self._GetTestFilePath([u'syslog.gz'])
+    test_path = self._GetTestFilePath(['syslog.gz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
 
     display_name = parsers_mediator.GetDisplayName(file_entry=file_entry)
 
-    expected_display_name = u'OS:{0:s}'.format(test_path)
+    expected_display_name = 'OS:{0:s}'.format(test_path)
     self.assertEqual(display_name, expected_display_name)
 
     gzip_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -78,34 +80,34 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
     display_name = parsers_mediator.GetDisplayName(file_entry=file_entry)
 
-    expected_display_name = u'GZIP:{0:s}'.format(test_path)
+    expected_display_name = 'GZIP:{0:s}'.format(test_path)
     self.assertEqual(display_name, expected_display_name)
 
-    test_path = self._GetTestFilePath([u'vsstest.qcow2'])
+    test_path = self._GetTestFilePath(['vsstest.qcow2'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
     qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=os_path_spec)
     vshadow_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_VSHADOW, location=u'/vss2',
+        dfvfs_definitions.TYPE_INDICATOR_VSHADOW, location='/vss2',
         store_index=1, parent=qcow_path_spec)
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=35, location=u'/syslog.gz',
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=35, location='/syslog.gz',
         parent=vshadow_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
 
     display_name = parsers_mediator.GetDisplayName(file_entry=file_entry)
 
-    expected_display_name = u'VSS2:TSK:/syslog.gz'
+    expected_display_name = 'VSS2:TSK:/syslog.gz'
     self.assertEqual(display_name, expected_display_name)
 
     configuration = configurations.EventExtractionConfiguration()
-    configuration.text_prepend = u'C:'
+    configuration.text_prepend = 'C:'
 
     parsers_mediator.SetEventExtractionConfiguration(configuration)
     display_name = parsers_mediator.GetDisplayName(file_entry=file_entry)
-    expected_display_name = u'VSS2:TSK:C:/syslog.gz'
+    expected_display_name = 'VSS2:TSK:C:/syslog.gz'
     self.assertEqual(display_name, expected_display_name)
 
     # TODO: add test with relative path.
@@ -116,11 +118,11 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_storage.FakeStorageWriter(session)
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
-    test_path = self._GetTestFilePath([u'syslog.gz'])
+    test_path = self._GetTestFilePath(['syslog.gz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
 
-    expected_display_name = u'OS:{0:s}'.format(test_path)
+    expected_display_name = 'OS:{0:s}'.format(test_path)
     display_name = parsers_mediator.GetDisplayNameForPathSpec(os_path_spec)
     self.assertEqual(display_name, expected_display_name)
 

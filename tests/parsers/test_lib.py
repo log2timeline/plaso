@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser related functions and classes for testing."""
 
+from __future__ import unicode_literals
+
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -21,7 +23,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
   def _CreateParserMediator(
       self, storage_writer, file_entry=None, knowledge_base_values=None,
-      parser_chain=None, timezone=u'UTC'):
+      parser_chain=None, timezone='UTC'):
     """Creates a parser mediator.
 
     Args:
@@ -74,13 +76,13 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
            be shortened to it's first 77 characters followed by a "...".
     """
     if len(message_string) > 80:
-      return u'{0:s}...'.format(message_string[:77])
+      return '{0:s}...'.format(message_string[:77])
 
     return message_string
 
   def _ParseFile(
       self, path_segments, parser, knowledge_base_values=None,
-      timezone=u'UTC'):
+      timezone='UTC'):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:
@@ -100,7 +102,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         timezone=timezone)
 
   def _ParseFileByPathSpec(
-      self, path_spec, parser, knowledge_base_values=None, timezone=u'UTC'):
+      self, path_spec, parser, knowledge_base_values=None, timezone='UTC'):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:
@@ -131,7 +133,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         file_object.close()
 
     else:
-      self.fail(u'Got unsupported parser type: {0:s}'.format(type(parser)))
+      self.fail('Got unsupported parser type: {0:s}'.format(type(parser)))
 
     return storage_writer
 

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the tests for the generic text parser."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 import pyparsing
@@ -17,67 +19,67 @@ class PyparsingConstantsTest(test_lib.ParserTestCase):
   def testConstants(self):
     """Tests parsing with constants."""
     with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.MONTH.parseString(u'MMo')
+      text_parser.PyparsingConstants.MONTH.parseString('MMo')
     with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.MONTH.parseString(u'M')
+      text_parser.PyparsingConstants.MONTH.parseString('M')
     with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.MONTH.parseString(u'March', parseAll=True)
+      text_parser.PyparsingConstants.MONTH.parseString('March', parseAll=True)
 
-    self.assertTrue(text_parser.PyparsingConstants.MONTH.parseString(u'Jan'))
+    self.assertTrue(text_parser.PyparsingConstants.MONTH.parseString('Jan'))
 
-    line = u'# This is a comment.'
+    line = '# This is a comment.'
     parsed_line = text_parser.PyparsingConstants.COMMENT_LINE_HASH.parseString(
         line)
-    self.assertEqual(parsed_line[-1], u'This is a comment.')
+    self.assertEqual(parsed_line[-1], 'This is a comment.')
     self.assertEqual(len(parsed_line), 2)
 
   def testConstantIPv4(self):
     """Tests parsing with the IPV4_ADDRESS constant."""
     self.assertTrue(
         text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(
-            u'123.51.234.52'))
+            '123.51.234.52'))
     self.assertTrue(
         text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(
-            u'255.254.23.1'))
+            '255.254.23.1'))
     self.assertTrue(
-        text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(u'1.1.34.2'))
+        text_parser.PyparsingConstants.IPV4_ADDRESS.parseString('1.1.34.2'))
 
     with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(u'1.1.34.258')
+      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString('1.1.34.258')
 
     with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(u'a.1.34.258')
+      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString('a.1.34.258')
 
     with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(u'.34.258')
+      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString('.34.258')
 
     with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(u'34.258')
+      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString('34.258')
 
     with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString(u'10.52.34.258')
+      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString('10.52.34.258')
 
   def testConstantOctet(self):
     """Tests parsing with the IPV4_OCTET constant."""
     self.assertTrue(
-        text_parser.PyparsingConstants.IPV4_OCTET.parseString(u'0'))
+        text_parser.PyparsingConstants.IPV4_OCTET.parseString('0'))
 
     self.assertTrue(
-        text_parser.PyparsingConstants.IPV4_OCTET.parseString(u'123'))
+        text_parser.PyparsingConstants.IPV4_OCTET.parseString('123'))
 
     self.assertTrue(
-        text_parser.PyparsingConstants.IPV4_OCTET.parseString(u'255'))
+        text_parser.PyparsingConstants.IPV4_OCTET.parseString('255'))
 
     with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_OCTET.parseString(u'526')
+      text_parser.PyparsingConstants.IPV4_OCTET.parseString('526')
 
     with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_OCTET.parseString(u'1026')
+      text_parser.PyparsingConstants.IPV4_OCTET.parseString('1026')
 
     with self.assertRaises(pyparsing.ParseException):
       text_parser.PyparsingConstants.IPV4_OCTET.parseString(
-          u'a9', parseAll=True)
+          'a9', parseAll=True)
 
 
-if __name__ == u'__main__':
+if __name__ == '__main__':
   unittest.main()

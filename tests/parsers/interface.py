@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the parsers and plugins interface classes."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.parsers import interface

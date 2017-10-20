@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows XML EventLog (EVTX) parser."""
 
+from __future__ import unicode_literals
+
 import unittest
 
-from plaso.formatters import winevtx  # pylint: disable=unused-import
+from plaso.formatters import winevtx as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import winevtx
@@ -16,11 +18,11 @@ from tests.parsers import test_lib
 class WinEvtxParserTest(test_lib.ParserTestCase):
   """Tests for the Windows XML EventLog (EVTX) parser."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'System.evtx'])
+  @shared_test_lib.skipUnlessHasTestFile(['System.evtx'])
   def testParse(self):
     """Tests the Parse function."""
     parser = winevtx.WinEvtxParser()
-    storage_writer = self._ParseFile([u'System.evtx'], parser)
+    storage_writer = self._ParseFile(['System.evtx'], parser)
 
     # Windows Event Viewer Log (EVTX) information:
     #   Version                     : 3.1
@@ -47,85 +49,85 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     event = events[0]
 
     self.assertEqual(event.record_number, 12049)
-    expected_computer_name = u'WKS-WIN764BITB.shieldbase.local'
+    expected_computer_name = 'WKS-WIN764BITB.shieldbase.local'
     self.assertEqual(event.computer_name, expected_computer_name)
-    self.assertEqual(event.source_name, u'Microsoft-Windows-Eventlog')
+    self.assertEqual(event.source_name, 'Microsoft-Windows-Eventlog')
     self.assertEqual(event.event_level, 4)
     self.assertEqual(event.event_identifier, 105)
 
-    self.assertEqual(event.strings[0], u'System')
+    self.assertEqual(event.strings[0], 'System')
 
     expected_string = (
-        u'C:\\Windows\\System32\\Winevt\\Logs\\'
-        u'Archive-System-2012-03-14-04-17-39-932.evtx')
+        'C:\\Windows\\System32\\Winevt\\Logs\\'
+        'Archive-System-2012-03-14-04-17-39-932.evtx')
 
     self.assertEqual(event.strings[1], expected_string)
 
     event = events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-03-14 04:17:38.276340')
+        '2012-03-14 04:17:38.276340')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
     expected_xml_string = (
-        u'<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/'
-        u'event">\n'
-        u'  <System>\n'
-        u'    <Provider Name="Service Control Manager" '
-        u'Guid="{555908d1-a6d7-4695-8e1e-26931d2012f4}" '
-        u'EventSourceName="Service Control Manager"/>\n'
-        u'    <EventID Qualifiers="16384">7036</EventID>\n'
-        u'    <Version>0</Version>\n'
-        u'    <Level>4</Level>\n'
-        u'    <Task>0</Task>\n'
-        u'    <Opcode>0</Opcode>\n'
-        u'    <Keywords>0x8080000000000000</Keywords>\n'
-        u'    <TimeCreated SystemTime="2012-03-14T04:17:38.276340200Z"/>\n'
-        u'    <EventRecordID>12050</EventRecordID>\n'
-        u'    <Correlation/>\n'
-        u'    <Execution ProcessID="548" ThreadID="1340"/>\n'
-        u'    <Channel>System</Channel>\n'
-        u'    <Computer>WKS-WIN764BITB.shieldbase.local</Computer>\n'
-        u'    <Security/>\n'
-        u'  </System>\n'
-        u'  <EventData>\n'
-        u'    <Data Name="param1">Windows Modules Installer</Data>\n'
-        u'    <Data Name="param2">stopped</Data>\n'
-        u'    <Binary>540072007500730074006500640049006E007300740061006C006C00'
-        u'650072002F0031000000</Binary>\n'
-        u'  </EventData>\n'
-        u'</Event>\n')
+        '<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/'
+        'event">\n'
+        '  <System>\n'
+        '    <Provider Name="Service Control Manager" '
+        'Guid="{555908d1-a6d7-4695-8e1e-26931d2012f4}" '
+        'EventSourceName="Service Control Manager"/>\n'
+        '    <EventID Qualifiers="16384">7036</EventID>\n'
+        '    <Version>0</Version>\n'
+        '    <Level>4</Level>\n'
+        '    <Task>0</Task>\n'
+        '    <Opcode>0</Opcode>\n'
+        '    <Keywords>0x8080000000000000</Keywords>\n'
+        '    <TimeCreated SystemTime="2012-03-14T04:17:38.276340200Z"/>\n'
+        '    <EventRecordID>12050</EventRecordID>\n'
+        '    <Correlation/>\n'
+        '    <Execution ProcessID="548" ThreadID="1340"/>\n'
+        '    <Channel>System</Channel>\n'
+        '    <Computer>WKS-WIN764BITB.shieldbase.local</Computer>\n'
+        '    <Security/>\n'
+        '  </System>\n'
+        '  <EventData>\n'
+        '    <Data Name="param1">Windows Modules Installer</Data>\n'
+        '    <Data Name="param2">stopped</Data>\n'
+        '    <Binary>540072007500730074006500640049006E007300740061006C006C00'
+        '650072002F0031000000</Binary>\n'
+        '  </EventData>\n'
+        '</Event>\n')
 
     self.assertEqual(event.xml_string, expected_xml_string)
 
     expected_message = (
-        u'[7036 / 0x1b7c] '
-        u'Record Number: 12050 '
-        u'Event Level: 4 '
-        u'Source Name: Service Control Manager '
-        u'Computer Name: WKS-WIN764BITB.shieldbase.local '
-        u'Message string: The Windows Modules Installer service entered '
-        u'the stopped state. '
-        u'Strings: [\'Windows Modules Installer\', \'stopped\', '
-        u'\'540072007500730074006500640049006E00'
-        u'7300740061006C006C00650072002F0031000000\']')
+        '[7036 / 0x1b7c] '
+        'Record Number: 12050 '
+        'Event Level: 4 '
+        'Source Name: Service Control Manager '
+        'Computer Name: WKS-WIN764BITB.shieldbase.local '
+        'Message string: The Windows Modules Installer service entered '
+        'the stopped state. '
+        'Strings: [\'Windows Modules Installer\', \'stopped\', '
+        '\'540072007500730074006500640049006E00'
+        '7300740061006C006C00650072002F0031000000\']')
 
     expected_short_message = (
-        u'[7036 / 0x1b7c] '
-        u'Strings: [\'Windows Modules Installer\', \'stopped\', '
-        u'\'5400720075...')
+        '[7036 / 0x1b7c] '
+        'Strings: [\'Windows Modules Installer\', \'stopped\', '
+        '\'5400720075...')
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'System2.evtx'])
+  @shared_test_lib.skipUnlessHasTestFile(['System2.evtx'])
   def testParseTruncated(self):
     """Tests the Parse function on a truncated file."""
     parser = winevtx.WinEvtxParser()
     # Be aware of System2.evtx file, it was manually shortened so it probably
     # contains invalid log at the end.
-    storage_writer = self._ParseFile([u'System2.evtx'], parser)
+    storage_writer = self._ParseFile(['System2.evtx'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 194)
 
@@ -134,12 +136,12 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     event = events[178]
 
     expected_strings_parsed = [
-        (u'source_user_id', u'S-1-5-18'),
-        (u'source_user_name', u'GREENDALEGOLD$'),
-        (u'target_machine_ip', u'-'),
-        (u'target_machine_name', None),
-        (u'target_user_id', u'S-1-5-18'),
-        (u'target_user_name', u'SYSTEM')]
+        ('source_user_id', 'S-1-5-18'),
+        ('source_user_name', 'GREENDALEGOLD$'),
+        ('target_machine_ip', '-'),
+        ('target_machine_name', None),
+        ('target_user_id', 'S-1-5-18'),
+        ('target_user_name', 'SYSTEM')]
 
     strings_parsed = sorted(event.strings_parsed.items())
     self.assertEqual(strings_parsed, expected_strings_parsed)
@@ -149,11 +151,11 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     event = events[180]
 
     expected_strings_parsed = [
-        (u'source_user_id', u'S-1-5-21-1539974973-2753941131-3212641383-1000'),
-        (u'source_user_name', u'gold_administrator'),
-        (u'target_machine_ip', u'-'),
-        (u'target_machine_name', u'DC1.internal.greendale.edu'),
-        (u'target_user_name', u'administrator')]
+        ('source_user_id', 'S-1-5-21-1539974973-2753941131-3212641383-1000'),
+        ('source_user_name', 'gold_administrator'),
+        ('target_machine_ip', '-'),
+        ('target_machine_name', 'DC1.internal.greendale.edu'),
+        ('target_user_name', 'administrator')]
 
     strings_parsed = sorted(event.strings_parsed.items())
     self.assertEqual(strings_parsed, expected_strings_parsed)
