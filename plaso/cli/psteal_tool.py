@@ -54,8 +54,6 @@ class PstealTool(
   Attributes:
     dependencies_check (bool): True if the availability and versions of
         dependencies should be checked.
-    list_analysis_plugins (bool): True if information about the analysis
-        plugins should be shown.
     list_hashers (bool): True if the hashers should be listed.
     list_language_identifiers (bool): True if information about the language
         identifiers should be shown.
@@ -114,7 +112,6 @@ class PstealTool(
     super(PstealTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._artifacts_registry = None
-    self._analysis_plugins = None
     self._command_line_arguments = None
     self._deduplicate_events = True
     self._enable_sigsegv_handler = False
@@ -136,7 +133,6 @@ class PstealTool(
     self._use_time_slicer = False
     self._use_zeromq = True
     self._yara_rules_string = None
-    self.list_analysis_plugins = False
     self.list_hashers = False
     self.list_language_identifiers = False
     self.list_output_modules = False
@@ -510,16 +506,15 @@ class PstealTool(
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
-    self.list_analysis_plugins = self._analysis_plugins == 'list'
     self.list_hashers = self._hasher_names_string == 'list'
     self.list_language_identifiers = self._preferred_language == 'list'
     self.list_output_modules = self._output_format == 'list'
     self.list_parsers_and_plugins = self._parser_filter_expression == 'list'
 
     # Check the list options first otherwise required options will raise.
-    if (self.list_analysis_plugins or self.list_hashers or
-        self.list_language_identifiers or self.list_output_modules or
-        self.list_parsers_and_plugins or self.list_timezones):
+    if (self.list_hashers or self.list_language_identifiers or
+        self.list_output_modules or self.list_parsers_and_plugins or
+        self.list_timezones):
       return
 
     # Check output modules after the other listable options, as otherwise
@@ -560,5 +555,4 @@ class PstealTool(
       raise errors.BadConfigOption(
           'Output file already exists: {0:s}.'.format(self._output_filename))
 
-    self._analysis_plugins = self._CreateAnalysisPlugins(options)
     self._output_module = self._CreateOutputModule(options)
