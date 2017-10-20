@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Comma separated values (CSV) parser interface."""
+"""Delimiter separated values (DSV) parser interface."""
 
 from __future__ import unicode_literals
 
@@ -18,14 +18,14 @@ from plaso.parsers import interface
 # of dfvfs.FileIO objects.
 
 
-class CSVParser(interface.FileObjectParser):
-  """Comma separated values (CSV) parser interface."""
+class DSVParser(interface.FileObjectParser):
+  """Delimiter separated values (DSV) parser interface."""
 
   # A list that contains the names of all the fields in the log file. This
-  # needs to be defined by each CSV parser.
+  # needs to be defined by each DSV parser.
   COLUMNS = []
 
-  # A CSV file is comma separated, but this can be overwritten to include
+  # A DSV file is delimiter separated, but this can be overwritten to include
   # tab, pipe or other character separation. Note this must be a byte string
   # otherwise TypeError: "delimiter" must be an 1-character string is raised.
   VALUE_SEPARATOR = b','
@@ -44,26 +44,26 @@ class CSVParser(interface.FileObjectParser):
   _MAGIC_TEST_STRING = b'RegnThvotturMeistarans'
 
   def __init__(self, encoding=None):
-    """Initializes a CSV parser.
+    """Initializes a delimiter separated values (DSV) parser.
 
     Args:
-      encoding (Optional[str]): encoding used in the CSV file, where None
+      encoding (Optional[str]): encoding used in the DSV file, where None
           indicates the codepage of the parser mediator should be used.
     """
-    super(CSVParser, self).__init__()
+    super(DSVParser, self).__init__()
     self._encoding = encoding
 
   def _ConvertRowToUnicode(self, parser_mediator, row):
-    """Converts all strings in a CSV row dict to Unicode.
+    """Converts all strings in a DSV row dict to Unicode.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      row (dict[str, bytes]): a row from a CSV file, where the dictionary
+      row (dict[str, bytes]): a row from a DSV file, where the dictionary
           key contains the column name and the value a binary string.
 
     Returns:
-      dict[str, str]: a row from the CSV file, where the dictionary key
+      dict[str, str]: a row from the DSV file, where the dictionary key
           contains the column name and the value a Unicode string.
     """
     encoding = self._encoding or parser_mediator.codepage
@@ -77,14 +77,14 @@ class CSVParser(interface.FileObjectParser):
       except UnicodeDecodeError:
         replaced_value = value.decode(encoding, errors='replace')
         parser_mediator.ProduceExtractionError(
-            'error decoding CSV value: {0:s} as {1:s}, characters have been '
+            'error decoding DSV value: {0:s} as {1:s}, characters have been '
             'replaced in {2:s}'.format(key, encoding, replaced_value))
         row[key] = replaced_value
 
     return row
 
   def ParseFileObject(self, parser_mediator, file_object, **unused_kwargs):
-    """Parses a CSV text file-like object.
+    """Parses a DSV text file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -111,7 +111,7 @@ class CSVParser(interface.FileObjectParser):
     except (StopIteration, csv.Error) as exception:
       display_name = parser_mediator.GetDisplayName()
       raise errors.UnableToParseFile(
-          '[{0:s}] Unable to parse CSV file: {1:s} with error: {2!s}.'.format(
+          '[{0:s}] Unable to parse DSV file: {1:s} with error: {2!s}.'.format(
               self.NAME, display_name, exception))
 
     number_of_columns = len(self.COLUMNS)
@@ -120,7 +120,7 @@ class CSVParser(interface.FileObjectParser):
     if number_of_records != number_of_columns:
       display_name = parser_mediator.GetDisplayName()
       raise errors.UnableToParseFile((
-          '[{0:s}] Unable to parse CSV file: {1:s}. Wrong number of '
+          '[{0:s}] Unable to parse DSV file: {1:s}. Wrong number of '
           'records (expected: {2:d}, got: {3:d})').format(
               self.NAME, display_name, number_of_columns,
               number_of_records))
@@ -129,13 +129,13 @@ class CSVParser(interface.FileObjectParser):
       if self._MAGIC_TEST_STRING in (key, value):
         display_name = parser_mediator.GetDisplayName()
         raise errors.UnableToParseFile((
-            '[{0:s}] Unable to parse CSV file: {1:s}. Signature '
+            '[{0:s}] Unable to parse DSV file: {1:s}. Signature '
             'mismatch.').format(self.NAME, display_name))
 
     if not self.VerifyRow(parser_mediator, row):
       display_name = parser_mediator.GetDisplayName()
       raise errors.UnableToParseFile((
-          '[{0:s}] Unable to parse CSV file: {1:s}. Verification '
+          '[{0:s}] Unable to parse DSV file: {1:s}. Verification '
           'failed.').format(self.NAME, display_name))
 
     row = self._ConvertRowToUnicode(parser_mediator, row)

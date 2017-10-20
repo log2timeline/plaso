@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the comma separated values (CSV) parser."""
+"""Tests for the delimiter separated values (DSV) parser."""
 
 from __future__ import unicode_literals
 
@@ -12,20 +12,20 @@ from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
-class TestCSVParser(csv_parser.CSVParser):
-  """CSV parser for testing.
+class TestDSVParser(csv_parser.DSVParser):
+  """Delimiter seperated values (DSV) parser parser for testing.
 
   Attribute:
-    row_offsets[list[int]: offsets of the rows extracted by the CSV parser.
-    row[list[dict[str, str]]]: rows extracted by the CSV parser.
+    row_offsets[list[int]: offsets of the rows extracted by the DSV parser.
+    row[list[dict[str, str]]]: rows extracted by the DSV parser.
   """
 
   COLUMNS = ['place', 'user', 'password']
   NUMBER_OF_HEADER_LINES = 1
 
   def __init__(self):
-    """Initializes a CSV parser."""
-    super(TestCSVParser, self).__init__()
+    """Initializes a DSV parser."""
+    super(TestDSVParser, self).__init__()
     self.row_offsets = []
     self.rows = []
 
@@ -55,8 +55,8 @@ class TestCSVParser(csv_parser.CSVParser):
     return True
 
 
-class CSVParserTest(test_lib.ParserTestCase):
-  """Tests the comma seperated values (CSV) parser."""
+class DSVParserTest(test_lib.ParserTestCase):
+  """Tests the delimiter seperated values (DSV) parser."""
 
   # pylint: disable=protected-access
 
@@ -69,7 +69,7 @@ class CSVParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
-    parser = csv_parser.CSVParser(encoding='utf-8')
+    parser = csv_parser.DSVParser(encoding='utf-8')
 
     unicode_row = parser._ConvertRowToUnicode(parser_mediator, binary_row)
     self.assertEqual(unicode_row['password'], 'superrích')
@@ -83,7 +83,7 @@ class CSVParserTest(test_lib.ParserTestCase):
         storage_writer, knowledge_base_values=knowledge_base_values)
     self.assertEqual(parser_mediator.codepage, 'ascii')
 
-    parser = csv_parser.CSVParser()
+    parser = csv_parser.DSVParser()
 
     unicode_row = parser._ConvertRowToUnicode(parser_mediator, binary_row)
     self.assertEqual(unicode_row['password'], 'superr\xedch')
@@ -91,7 +91,7 @@ class CSVParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['password.csv'])
   def testParseFileObject(self):
     """Tests the ParseFileObject function."""
-    parser = TestCSVParser()
+    parser = TestDSVParser()
 
     self._ParseFile(['password.csv'], parser)
 

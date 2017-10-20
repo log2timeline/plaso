@@ -8,7 +8,7 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.lib import timelib
-from plaso.parsers import csv_parser
+from plaso.parsers import dsv_parser
 from plaso.parsers import manager
 
 import pytz  # pylint: disable=wrong-import-order
@@ -152,7 +152,7 @@ class SymantecEventData(events.EventData):
     self.virustype = None
 
 
-class SymantecParser(csv_parser.CSVParser):
+class SymantecParser(dsv_parser.DSVParser):
   """Parse Symantec AV Corporate Edition and Endpoint Protection log files."""
 
   NAME = 'symantec_scanlog'

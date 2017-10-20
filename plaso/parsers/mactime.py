@@ -14,7 +14,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.parsers import csv_parser
+from plaso.parsers import dsv_parser
 from plaso.parsers import manager
 
 
@@ -49,7 +49,7 @@ class MactimeEventData(events.EventData):
     self.user_sid = None
 
 
-class MactimeParser(csv_parser.CSVParser):
+class MactimeParser(dsv_parser.DSVParser):
   """SleuthKit bodyfile parser."""
 
   NAME = 'mactime'

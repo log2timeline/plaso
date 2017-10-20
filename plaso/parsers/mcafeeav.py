@@ -11,7 +11,7 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.lib import timelib
-from plaso.parsers import csv_parser
+from plaso.parsers import dsv_parser
 from plaso.parsers import manager
 
 
@@ -40,7 +40,7 @@ class McafeeAVEventData(events.EventData):
     self.username = None
 
 
-class McafeeAccessProtectionParser(csv_parser.CSVParser):
+class McafeeAccessProtectionParser(dsv_parser.DSVParser):
   """Parses the McAfee AV Access Protection Log."""
 
   NAME = 'mcafee_protection'
