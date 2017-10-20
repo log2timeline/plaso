@@ -31,7 +31,7 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[0]
+    event = events[10]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-09-27 14:42:26')
@@ -47,7 +47,7 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     # Protection:Prevent termination of McAfee processes  Action blocked :
     # Terminate
 
-    event = events[1]
+    event = events[11]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-09-27 14:42:39')
