@@ -59,18 +59,17 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
     be either 1 or 2 characters long, e.g.: 7/30/2013\\t10:22:48 AM
 
     Args:
-      date: a string representing the date.
-      time: a string representing the time.
-      timezone: a timezone (instance of pytz.timezone) that the date and
-                time values represent.
+      date (str): date.
+      time (str): time.
+      timezone (pytz.timezone): timezone of the date and time.
 
     Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC.
+      int: a timestamp integer containing the number of micro seconds since
+          January 1, 1970, 00:00:00 UTC.
 
     Raises:
       TimestampError: if the timestamp is badly formed or unable to transfer
-                      the supplied date and time into a timestamp.
+          the supplied date and time into a timestamp.
     """
     # TODO: check if this is correct, likely not date or not time
     # is more accurate.

@@ -162,7 +162,7 @@ class BinaryLineReader(object):
       if len(result) < len(lines_data):
         separator = self._end_of_line
       else:
-        separator = ''
+        separator = b''
 
       if split_lines:
         lines_data = self._end_of_line.join(split_lines)
@@ -177,7 +177,7 @@ class BinaryLineReader(object):
       if result_length < self._lines_buffer_size:
         separator = self._end_of_line
       else:
-        separator = ''
+        separator = b''
 
       self._lines_buffer = self._end_of_line.join(split_lines)
       self._lines_buffer_size -= result_length + len(separator)
