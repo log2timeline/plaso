@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the plist plugin interface."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -18,12 +20,13 @@ from tests.parsers.plist_plugins import test_lib
 class MockPlugin(interface.PlistPlugin):
   """Mock plugin."""
 
-  NAME = u'mock_plist_plugin'
-  DESCRIPTION = u'Parser for testing parsing plist files.'
+  NAME = 'mock_plist_plugin'
+  DESCRIPTION = 'Parser for testing parsing plist files.'
 
-  PLIST_PATH = u'plist_binary'
-  PLIST_KEYS = frozenset([u'DeviceCache', u'PairedDevices'])
+  PLIST_PATH = 'plist_binary'
+  PLIST_KEYS = frozenset(['DeviceCache', 'PairedDevices'])
 
+  # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, **unused_kwargs):
     """Extracts entries for testing.
 
@@ -32,8 +35,8 @@ class MockPlugin(interface.PlistPlugin):
           and other components, such as storage and dfvfs.
     """
     event_data = plist_event.PlistTimeEventData()
-    event_data.key = u'LastInquiryUpdate'
-    event_data.root = u'/DeviceCache/44-00-00-00-00-00'
+    event_data.key = 'LastInquiryUpdate'
+    event_data.root = '/DeviceCache/44-00-00-00-00-00'
 
     date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
         timestamp=1351827808261762)
@@ -50,13 +53,13 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
   def setUp(self):
     """Makes preparations before running an individual test."""
     self._top_level_dict = {
-        u'DeviceCache': {
-            u'44-00-00-00-00-04': {
-                u'Name': u'Apple Magic Trackpad 2', u'LMPSubversion': 796,
-                u'Services': u'', u'BatteryPercent': 0.61},
-            u'44-00-00-00-00-02': {
-                u'Name': u'test-macpro', u'ClockOffset': 28180,
-                u'PageScanPeriod': 2, u'PageScanRepetitionMode': 1}}}
+        'DeviceCache': {
+            '44-00-00-00-00-04': {
+                'Name': 'Apple Magic Trackpad 2', 'LMPSubversion': 796,
+                'Services': '', 'BatteryPercent': 0.61},
+            '44-00-00-00-00-02': {
+                'Name': 'test-macpro', 'ClockOffset': 28180,
+                'PageScanPeriod': 2, 'PageScanRepetitionMode': 1}}}
 
   def testGetKeys(self):
     """Tests the _GetKeys function."""
@@ -64,18 +67,18 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
     plugin = MockPlugin()
 
     # Match DeviceCache from the root level.
-    key = [u'DeviceCache']
+    key = ['DeviceCache']
     result = plugin._GetKeys(self._top_level_dict, key)
     self.assertEqual(len(result), 1)
 
     # Look for a key nested a layer beneath DeviceCache from root level.
     # Note: overriding the default depth to look deeper.
-    key = [u'44-00-00-00-00-02']
+    key = ['44-00-00-00-00-02']
     result = plugin._GetKeys(self._top_level_dict, key, depth=2)
     self.assertEqual(len(result), 1)
 
     # Check the value of the result was extracted as expected.
-    self.assertEqual(result[key[0]][u'Name'], u'test-macpro')
+    self.assertEqual(result[key[0]]['Name'], 'test-macpro')
 
   def testProcess(self):
     """Tests the Process function."""
@@ -83,30 +86,30 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
     plugin = MockPlugin()
 
     # Test correct filename and keys.
-    top_level = {u'DeviceCache': 1, u'PairedDevices': 1}
+    top_level = {'DeviceCache': 1, 'PairedDevices': 1}
     storage_writer = self._ParsePlistWithPlugin(
-        plugin, u'plist_binary', top_level)
+        plugin, 'plist_binary', top_level)
 
     self.assertEqual(storage_writer.number_of_events, 1)
 
     # Correct filename with odd filename cAsinG. Adding an extra useless key.
-    top_level = {u'DeviceCache': 1, u'PairedDevices': 1, u'R@ndomExtraKey': 1}
+    top_level = {'DeviceCache': 1, 'PairedDevices': 1, 'R@ndomExtraKey': 1}
     storage_writer = self._ParsePlistWithPlugin(
-        plugin, u'pLiSt_BinAry', top_level)
+        plugin, 'pLiSt_BinAry', top_level)
 
     self.assertEqual(storage_writer.number_of_events, 1)
 
     # Test wrong filename.
-    top_level = {u'DeviceCache': 1, u'PairedDevices': 1}
+    top_level = {'DeviceCache': 1, 'PairedDevices': 1}
     with self.assertRaises(errors.WrongPlistPlugin):
       _ = self._ParsePlistWithPlugin(
-          plugin, u'wrong_file.plist', top_level)
+          plugin, 'wrong_file.plist', top_level)
 
     # Test not enough required keys.
-    top_level = {u'Useless_Key': 0, u'PairedDevices': 1}
+    top_level = {'Useless_Key': 0, 'PairedDevices': 1}
     with self.assertRaises(errors.WrongPlistPlugin):
       _ = self._ParsePlistWithPlugin(
-          plugin, u'plist_binary.plist', top_level)
+          plugin, 'plist_binary.plist', top_level)
 
   def testRecurseKey(self):
     """Tests the RecurseKey function."""
@@ -122,7 +125,7 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
     my_keys = []
     for unused_root, key, unused_value in result:
       my_keys.append(key)
-    expected = {u'DeviceCache', u'44-00-00-00-00-04', u'44-00-00-00-00-02'}
+    expected = {'DeviceCache', '44-00-00-00-00-04', '44-00-00-00-00-02'}
     self.assertTrue(expected == set(my_keys))
 
 

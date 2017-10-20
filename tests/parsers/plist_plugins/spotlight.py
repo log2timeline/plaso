@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the spotlight plist plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import plist  # pylint: disable=unused-import
@@ -14,10 +16,10 @@ from tests.parsers.plist_plugins import test_lib
 class SpotlightPluginTest(test_lib.PlistPluginTestCase):
   """Tests for the spotlight plist plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'com.apple.spotlight.plist'])
+  @shared_test_lib.skipUnlessHasTestFile(['com.apple.spotlight.plist'])
   def testProcess(self):
     """Tests the Process function."""
-    plist_name = u'com.apple.spotlight.plist'
+    plist_name = 'com.apple.spotlight.plist'
 
     plugin = spotlight.SpotlightPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
@@ -38,16 +40,16 @@ class SpotlightPluginTest(test_lib.PlistPluginTestCase):
     self.assertEqual(timestamps, expected_timestamps)
 
     event = events[6]
-    self.assertEqual(event.key, u'gr')
-    self.assertEqual(event.root, u'/UserShortcuts')
+    self.assertEqual(event.key, 'gr')
+    self.assertEqual(event.root, '/UserShortcuts')
 
     expected_description = (
-        u'Spotlight term searched "gr" associate to Grab '
-        u'(/Applications/Utilities/Grab.app)')
+        'Spotlight term searched "gr" associate to Grab '
+        '(/Applications/Utilities/Grab.app)')
     self.assertEqual(event.desc, expected_description)
 
-    expected_message = u'/UserShortcuts/gr {0:s}'.format(expected_description)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+    expected_message = '/UserShortcuts/gr {0:s}'.format(expected_description)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 

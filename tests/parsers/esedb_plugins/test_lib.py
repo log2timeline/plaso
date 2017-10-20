@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """ESEDB plugin related functions and classes for testing."""
 
+from __future__ import unicode_literals
+
 import pyesedb
 
 from plaso.containers import sessions
@@ -11,21 +13,20 @@ from tests.parsers import test_lib
 
 
 class ESEDBPluginTestCase(test_lib.ParserTestCase):
-  """The unit test case for ESE database based plugins."""
+  """ESE database-based plugin test case."""
 
   def _ParseESEDBFileWithPlugin(
       self, path_segments, plugin, knowledge_base_values=None):
     """Parses a file as an ESE database file and returns an event generator.
 
     Args:
-      path_segments: a list of strings containinge the path segments inside
-                     the test data directory.
-      plugin: an ESE database plugin object (instance of ESEDBPlugin).
-      knowledge_base_values: optional dictionary containing the knowledge base
-                             values.
+      path_segments (list[str]): path segments inside the test data directory.
+      plugin (ESEDBPlugin): ESE database plugin.
+      knowledge_base_values (Optional[dict[str, object]]): knowledge base
+          values.
 
     Returns:
-      A storage writer object (instance of FakeStorageWriter).
+      FakeStorageWriter: storage writer.
     """
     session = sessions.Session()
     storage_writer = fake_storage.FakeStorageWriter(session)

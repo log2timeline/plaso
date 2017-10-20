@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Spotlight Volume configuration plist plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import plist  # pylint: disable=unused-import
@@ -14,10 +16,10 @@ from tests.parsers.plist_plugins import test_lib
 class SpotlightVolumePluginTest(test_lib.PlistPluginTestCase):
   """Tests for the Spotlight Volume configuration plist plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'VolumeConfiguration.plist'])
+  @shared_test_lib.skipUnlessHasTestFile(['VolumeConfiguration.plist'])
   def testProcess(self):
     """Tests the Process function."""
-    plist_name = u'VolumeConfiguration.plist'
+    plist_name = 'VolumeConfiguration.plist'
 
     plugin = spotlight_volume.SpotlightVolumePlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
@@ -36,16 +38,16 @@ class SpotlightVolumePluginTest(test_lib.PlistPluginTestCase):
 
     event = events[1]
 
-    self.assertEqual(event.key, u'')
-    self.assertEqual(event.root, u'/Stores')
+    self.assertEqual(event.key, '')
+    self.assertEqual(event.root, '/Stores')
 
     expected_description = (
-        u'Spotlight Volume 4D4BFEB5-7FE6-4033-AAAA-AAAABBBBCCCCDDDD '
-        u'(/.MobileBackups) activated.')
+        'Spotlight Volume 4D4BFEB5-7FE6-4033-AAAA-AAAABBBBCCCCDDDD '
+        '(/.MobileBackups) activated.')
     self.assertEqual(event.desc, expected_description)
 
-    expected_message = u'/Stores/ {0:s}'.format(expected_description)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+    expected_message = '/Stores/ {0:s}'.format(expected_description)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
