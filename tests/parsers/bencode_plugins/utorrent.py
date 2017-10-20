@@ -2,9 +2,12 @@
 # -*- coding: utf-8 -*-
 """Tests for the bencode parser plugin for uTorrent files."""
 
+from __future__ import unicode_literals
+
 import unittest
 
-from plaso.formatters import bencode_parser  # pylint: disable=unused-import
+# pylint: disable=unused-import
+from plaso.formatters import bencode_parser as _
 from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import bencode_parser
@@ -16,11 +19,11 @@ from tests.parsers.bencode_plugins import test_lib
 class UTorrentPluginTest(test_lib.BencodePluginTestCase):
   """Tests for bencode parser plugin for uTorrent files."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'bencode_utorrent'])
+  @shared_test_lib.skipUnlessHasTestFile(['bencode_utorrent'])
   def testProcess(self):
     """Tests the Process function."""
     parser = bencode_parser.BencodeParser()
-    storage_writer = self._ParseFile([u'bencode_utorrent'], parser)
+    storage_writer = self._ParseFile(['bencode_utorrent'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 4)
 
@@ -28,8 +31,8 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
-    expected_caption = u'plaso test'
-    expected_path = u'e:\\torrent\\files\\plaso test'
+    expected_caption = 'plaso test'
+    expected_path = 'e:\\torrent\\files\\plaso test'
 
     # First test on when the torrent was added to the client.
     event = events[0]
@@ -42,7 +45,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     self.assertEqual(event.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-08-03 14:52:12')
+        '2013-08-03 14:52:12')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     # Second test on when the torrent file was completely downloaded.
@@ -56,7 +59,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     self.assertEqual(event.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-08-03 18:11:35')
+        '2013-08-03 18:11:35')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     # Third test on when the torrent was first modified.
@@ -70,7 +73,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     self.assertEqual(event.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-08-03 18:11:34')
+        '2013-08-03 18:11:34')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     # Fourth test on when the torrent was again modified.
@@ -84,7 +87,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     self.assertEqual(event.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-08-03 16:27:59')
+        '2013-08-03 16:27:59')
     self.assertEqual(event.timestamp, expected_timestamp)
 
 

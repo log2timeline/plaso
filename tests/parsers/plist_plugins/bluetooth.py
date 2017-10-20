@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Bluetooth plist plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import plist  # pylint: disable=unused-import
@@ -14,11 +16,11 @@ from tests.parsers.plist_plugins import test_lib
 class TestBtPlugin(test_lib.PlistPluginTestCase):
   """Tests for the Bluetooth plist plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'plist_binary'])
+  @shared_test_lib.skipUnlessHasTestFile(['plist_binary'])
   def testProcess(self):
     """Tests the Process function."""
-    test_file_name = u'plist_binary'
-    plist_name = u'com.apple.bluetooth.plist'
+    test_file_name = 'plist_binary'
+    plist_name = 'com.apple.bluetooth.plist'
 
     plugin = bluetooth.BluetoothPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
@@ -34,7 +36,7 @@ class TestBtPlugin(test_lib.PlistPluginTestCase):
     timestamps = []
     for event in events:
       timestamps.append(event.timestamp)
-      if event.desc.startswith(u'Paired'):
+      if event.desc.startswith('Paired'):
         paired_events.append(event)
 
     # Ensure all 14 events and times from the plist are parsed correctly.
@@ -53,16 +55,17 @@ class TestBtPlugin(test_lib.PlistPluginTestCase):
 
     # One of the paired event descriptions should contain the string:
     # Paired:True Name:Apple Magic Trackpad 2.
-    paired_descriptions = [
-        event.desc for event in paired_events]
+    paired_descriptions = [event.desc for event in paired_events]
 
     self.assertTrue(
-        u'Paired:True Name:Apple Magic Trackpad 2' in paired_descriptions)
+        'Paired:True Name:Apple Magic Trackpad 2' in paired_descriptions)
+
+    event = events[10]
 
     expected_string = (
-        u'/DeviceCache/44-00-00-00-00-04 '
-        u'Paired:True '
-        u'Name:Apple Magic Trackpad 2')
+        '/DeviceCache/44-00-00-00-00-04 '
+        'Paired:True '
+        'Name:Apple Magic Trackpad 2')
 
     self._TestGetMessageStrings(event, expected_string, expected_string)
 

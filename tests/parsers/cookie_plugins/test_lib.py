@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Browser cookie plugin related functions and classes for testing."""
 
+from __future__ import unicode_literals
+
 from tests.parsers import test_lib
 
 

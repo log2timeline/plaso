@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the OLE Compound File (OLECF) default plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import olecf  # pylint: disable=unused-import
@@ -16,12 +18,12 @@ from tests.parsers.olecf_plugins import test_lib
 class TestDefaultPluginOLECF(test_lib.OLECFPluginTestCase):
   """Tests for the OLECF default plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'Document.doc'])
+  @shared_test_lib.skipUnlessHasTestFile(['Document.doc'])
   def testProcess(self):
     """Tests the Process function."""
     plugin = default.DefaultOLECFPlugin()
     storage_writer = self._ParseOLECFFileWithPlugin(
-        [u'Document.doc'], plugin)
+        ['Document.doc'], plugin)
 
     self.assertEqual(storage_writer.number_of_events, 5)
 
@@ -30,28 +32,28 @@ class TestDefaultPluginOLECF(test_lib.OLECFPluginTestCase):
     # Check the Root Entry event.
     event = events[0]
 
-    self.assertEqual(event.name, u'Root Entry')
+    self.assertEqual(event.name, 'Root Entry')
 
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-05-16 02:29:49.795')
+        '2013-05-16 02:29:49.795')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_string = (
-        u'Name: Root Entry')
+        'Name: Root Entry')
 
     self._TestGetMessageStrings(event, expected_string, expected_string)
 
     # Check one other entry.
     event = events[1]
 
-    expected_string = u'Name: MsoDataStore'
+    expected_string = 'Name: MsoDataStore'
     self._TestGetMessageStrings(event, expected_string, expected_string)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-05-16 02:29:49.704')
+        '2013-05-16 02:29:49.704')
     self.assertEqual(event.timestamp, expected_timestamp)
 
 

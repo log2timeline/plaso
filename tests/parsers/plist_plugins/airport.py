@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the airport plist plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import plist  # pylint: disable=unused-import
@@ -15,10 +17,10 @@ class AirportPluginTest(test_lib.PlistPluginTestCase):
   """Tests for the airport plist plugin."""
 
   @shared_test_lib.skipUnlessHasTestFile([
-      u'com.apple.airport.preferences.plist'])
+      'com.apple.airport.preferences.plist'])
   def testProcess(self):
     """Tests the Process function."""
-    plist_name = u'com.apple.airport.preferences.plist'
+    plist_name = 'com.apple.airport.preferences.plist'
 
     plugin = airport.AirportPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
@@ -36,17 +38,17 @@ class AirportPluginTest(test_lib.PlistPluginTestCase):
     self.assertEqual(timestamps, expected_timestamps)
 
     event = events[0]
-    self.assertEqual(event.key, u'item')
-    self.assertEqual(event.root, u'/RememberedNetworks')
+    self.assertEqual(event.key, 'item')
+    self.assertEqual(event.root, '/RememberedNetworks')
 
     expecte_description = (
-        u'[WiFi] Connected to network: <europa> using security '
-        u'WPA/WPA2 Personal')
+        '[WiFi] Connected to network: <europa> using security '
+        'WPA/WPA2 Personal')
     self.assertEqual(event.desc, expecte_description)
 
-    expected_message = u'/RememberedNetworks/item {0:s}'.format(
+    expected_message = '/RememberedNetworks/item {0:s}'.format(
         expecte_description)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
