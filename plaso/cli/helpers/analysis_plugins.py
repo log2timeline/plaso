@@ -66,21 +66,19 @@ class AnalysisPluginsArgumentsHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           'Configuration object is not an instance of CLITool')
 
-    plugin_names_argument = cls._ParseStringOption(options, 'analysis_plugins')
+    analysis_plugins = cls._ParseStringOption(options, 'analysis_plugins')
 
-    if plugin_names_argument and plugin_names_argument != 'list':
-      available_plugin_names = (
-          analysis_manager.AnalysisPluginManager.GetPluginNames())
-      plugin_names_argument = [
-          name.strip() for name in plugin_names_argument.split(',')]
+    if analysis_plugins and analysis_plugins != 'list':
+      plugin_names = analysis_manager.AnalysisPluginManager.GetPluginNames()
+      analysis_plugins = [name.strip() for name in analysis_plugins.split(',')]
 
-      difference = set(plugin_names_argument).difference(available_plugin_names)
+      difference = set(analysis_plugins).difference(plugin_names)
       if difference:
         raise errors.BadConfigOption(
             'Non-existent analysis plugins specified: {0:s}'.format(
                 ' '.join(difference)))
 
-    setattr(configuration_object, '_analysis_plugins', plugin_names_argument)
+    setattr(configuration_object, '_analysis_plugins', analysis_plugins)
 
 
 manager.ArgumentHelperManager.RegisterHelper(AnalysisPluginsArgumentsHelper)

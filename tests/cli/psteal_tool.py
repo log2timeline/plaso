@@ -31,14 +31,6 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
   _STORAGE_FILENAME_TEMPLATE = r'\d{{8}}T\d{{6}}-{filename}.plaso'
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self.curdir = os.path.realpath(os.path.curdir)
-
-  def tearDown(self):
-    """Cleans up after running an individual test."""
-    os.chdir(self.curdir)
-
   def testGenerateStorageFileName(self):
     """Tests the _GenerateStorageFileName function."""
     test_tool = psteal_tool.PstealTool()
@@ -89,7 +81,6 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = 'unused_source'
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      os.chdir(temp_directory)
       options.write = os.path.join(temp_directory, 'output.txt')
 
       with open(options.write, 'w') as file_object:
@@ -112,7 +103,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options = test_lib.TestOptions()
     options.source = 'source'
     # Test when the output file is missing.
-    expected_error = ('Output format: dynamic requires an output file')
+    expected_error = 'Output format: dynamic requires an output file'
     # pylint: disable=deprecated-method
     with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
       test_tool.ParseOptions(options)
@@ -120,7 +111,8 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options = test_lib.TestOptions()
     options.write = 'output.csv'
     # Test when the source is missing.
-    expected_error = ('Missing source path.')
+    expected_error = 'Missing source path.'
+
     # pylint: disable=deprecated-method
     with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
       test_tool.ParseOptions(options)
@@ -131,6 +123,25 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
       test_tool.ParseOptions(options)
 
+    with shared_test_lib.TempDirectory() as temp_directory:
+      options.source = self._GetTestFilePath([u'testdir'])
+      options.write = os.path.join(temp_directory, u'dynamic.out')
+
+      # Test when both source and output are specified.
+      test_tool.ParseOptions(options)
+
+      with open(options.write, 'w') as file_object:
+        file_object.write(u'bogus')
+
+      # Test when output file already exists.
+      # Escape \ otherwise assertRaisesRegexp can error with:
+      # error: bogus escape: u'\\1'
+      expected_error = u'Output file already exists: {0:s}.'.format(
+          options.write.replace(u'\\', u'\\\\'))
+      # pylint: disable=deprecated-method
+      with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
+        test_tool.ParseOptions(options)
+
   def testParseArguments(self):
     """Tests the ParseArguments function"""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
@@ -140,7 +151,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     result = test_tool.ParseArguments()
     self.assertFalse(result)
     output = output_writer.ReadOutput()
-    expected_error = 'Output format: dynamic requires an output file'
+    expected_error = u'ERROR: Output format: dynamic requires an output file'
     self.assertIn(expected_error, output)
 
   def testExtractEventsFromSourceDirectory(self):
@@ -155,7 +166,6 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath(['testdir'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      os.chdir(temp_directory)
       options.write = os.path.join(temp_directory, 'unused_output.txt')
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
 
@@ -192,7 +202,6 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.status_view_mode = 'none'
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      os.chdir(temp_directory)
       options.write = os.path.join(temp_directory, 'unused_output.txt')
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
 
@@ -225,7 +234,6 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath(['ímynd.dd'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      os.chdir(temp_directory)
       options.write = os.path.join(temp_directory, 'unused_output.txt')
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
 
@@ -261,7 +269,6 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath(['multi_partition_image.vmdk'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      os.chdir(temp_directory)
       options.write = os.path.join(temp_directory, 'unused_output.txt')
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
 
@@ -296,7 +303,6 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.vss_stores = 'all'
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      os.chdir(temp_directory)
       options.write = os.path.join(temp_directory, 'unused_output.txt')
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
 
@@ -333,7 +339,6 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath(['System.evtx'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      os.chdir(temp_directory)
       options.write = os.path.join(temp_directory, 'unused_output.txt')
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
 
@@ -365,7 +370,6 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = 'unused_source'
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      os.chdir(temp_directory)
       options.write = os.path.join(temp_directory, 'output.txt')
 
       test_tool.ParseOptions(options)
