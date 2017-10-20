@@ -508,22 +508,20 @@ class PstealTool(
 
     self.list_hashers = self._hasher_names_string == 'list'
     self.list_language_identifiers = self._preferred_language == 'list'
-    self.list_output_modules = self._output_format == 'list'
     self.list_parsers_and_plugins = self._parser_filter_expression == 'list'
 
     # Check the list options first otherwise required options will raise.
     if (self.list_hashers or self.list_language_identifiers or
-        self.list_output_modules or self.list_parsers_and_plugins or
-        self.list_timezones):
+        self.list_parsers_and_plugins or self.list_timezones):
       return
 
-    # Check output modules after the other listable options, as otherwise
-    # a required argument will raise.
+    # Check output modules after the other listable options, otherwise
+    # it could raise with "requires an output file".
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['output_modules'])
 
-    if self._output_format == 'list':
-      self.list_output_modules = True
+    self.list_output_modules = self._output_format == 'list'
+    if self.list_output_modules:
       return
 
     self._ParseInformationalOptions(options)
