@@ -27,7 +27,7 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     # The file contains 14 lines which results in 14 events.
     self.assertEqual(storage_writer.number_of_events, 14)
 
-    # The order in which CSVParser generates events is nondeterministic
+    # The order in which DSVParser generates events is nondeterministic
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 

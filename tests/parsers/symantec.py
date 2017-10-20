@@ -45,7 +45,7 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
     # The file contains 8 lines which should result in 8 events.
     self.assertEqual(storage_writer.number_of_events, 8)
 
-    # The order in which CSVParser generates events is nondeterministic
+    # The order in which DSVParser generates events is nondeterministic
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
