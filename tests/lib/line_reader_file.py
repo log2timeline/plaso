@@ -35,9 +35,19 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
     file_object.open(self._os_path_spec1)
     line_reader = line_reader_file.BinaryLineReader(file_object)
 
-    self.assertEqual(line_reader.readline(), b'This is another file.\n')
+    line = line_reader.readline()
+    self.assertEqual(line, b'This is another file.\n')
 
-    self.assertEqual(line_reader.tell(), 22)
+    offset = line_reader.tell()
+    self.assertEqual(offset, 22)
+
+    line_reader = line_reader_file.BinaryLineReader(file_object)
+
+    line = line_reader.readline(size=11)
+    self.assertEqual(line, b'This is ano')
+
+    offset = line_reader.tell()
+    self.assertEqual(offset, 11)
 
     file_object.close()
 

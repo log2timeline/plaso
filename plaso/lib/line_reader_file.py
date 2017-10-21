@@ -76,14 +76,15 @@ class BinaryLineReader(object):
     if size > self._MAXIMUM_READ_BUFFER_SIZE:
       raise ValueError('Invalid size value exceeds maximum.')
 
-    if not size:
-      size = self._MAXIMUM_READ_BUFFER_SIZE
-
     if not self._lines:
       if self._lines_buffer_offset >= self._file_object_size:
         return b''
 
-      if self._lines_buffer_offset + size > self._file_object_size:
+      read_size = size
+      if not read_size:
+        read_size = self._MAXIMUM_READ_BUFFER_SIZE
+
+      if self._lines_buffer_offset + read_size > self._file_object_size:
         size = self._file_object_size - self._lines_buffer_offset
 
       self._file_object.seek(self._lines_buffer_offset, os.SEEK_SET)
@@ -107,7 +108,12 @@ class BinaryLineReader(object):
         self._lines.append(self._lines_buffer)
         self._lines_buffer = b''
 
-    line = self._lines.pop(0)
+    if self._lines:
+      line = self._lines.pop(0)
+    else:
+      line = self._lines_buffer
+      self._lines_buffer = b''
+
     self._current_offset += len(line)
 
     return line
