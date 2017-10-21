@@ -63,7 +63,7 @@ class BinaryLineReader(object):
     string is returned only when end-of-file is encountered immediately.
 
     Args:
-      size (Optional[int]): maximum byte string size to read. If present and
+      size (Optional[int]): maximum byte size to read. If present and
           non-negative, it is a maximum byte count (including the trailing
           end-of-line) and an incomplete line may be returned.
 
