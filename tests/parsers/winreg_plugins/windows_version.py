@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the WinVer Windows Registry plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -33,36 +35,36 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        u'CurrentVersion', key_path=key_path,
+        'CurrentVersion', key_path=key_path,
         last_written_time=filetime.timestamp, offset=153)
 
-    value_data = u'Service Pack 1'.encode(u'utf_16_le')
+    value_data = 'Service Pack 1'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'CSDVersion', data=value_data,
+        'CSDVersion', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ, offset=1892)
     registry_key.AddValue(registry_value)
 
-    value_data = u'5.1'.encode(u'utf_16_le')
+    value_data = '5.1'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'CurrentVersion', data=value_data,
+        'CurrentVersion', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ, offset=1121)
     registry_key.AddValue(registry_value)
 
     value_data = b'\x13\x1aAP'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'InstallDate', data=value_data,
+        'InstallDate', data=value_data,
         data_type=dfwinreg_definitions.REG_DWORD_LITTLE_ENDIAN, offset=1001)
     registry_key.AddValue(registry_value)
 
-    value_data = u'MyTestOS'.encode(u'utf_16_le')
+    value_data = 'MyTestOS'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'ProductName', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        'ProductName', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=123)
     registry_key.AddValue(registry_value)
 
-    value_data = u'A Concerned Citizen'.encode(u'utf_16_le')
+    value_data = 'A Concerned Citizen'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'RegisteredOwner', data=value_data,
+        'RegisteredOwner', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ, offset=612)
     registry_key.AddValue(registry_value)
 
@@ -71,8 +73,8 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     key_path = (
-        u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
-    time_string = u'2012-08-31 20:09:55.123521'
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
+    time_string = '2012-08-31 20:09:55.123521'
     registry_key = self._CreateTestKey(key_path, time_string)
 
     plugin = windows_version.WindowsVersionPlugin()
@@ -91,16 +93,16 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_data_type = u'windows:registry:key_value'
+    expected_data_type = 'windows:registry:key_value'
     self.assertEqual(event.data_type, expected_data_type)
 
     expected_message = (
-        u'[{0:s}] '
-        u'Owner: A Concerned Citizen '
-        u'Product name: MyTestOS '
-        u'Service pack: Service Pack 1 '
-        u'Windows Version Information: 5.1').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+        '[{0:s}] '
+        'Owner: A Concerned Citizen '
+        'Product name: MyTestOS '
+        'Service pack: Service Pack 1 '
+        'Windows Version Information: 5.1').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
@@ -108,29 +110,29 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_INSTALLATION)
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-08-31 20:09:55')
+        '2012-08-31 20:09:55')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(event.data_type, 'windows:registry:installation')
 
-    expected_data_type = u'windows:registry:installation'
+    expected_data_type = 'windows:registry:installation'
     self.assertEqual(event.data_type, expected_data_type)
 
     expected_message = (
-        u'MyTestOS 5.1 Service Pack 1 '
-        u'Owner: owner '
-        u'Origin: {0:s}').format(key_path)
+        'MyTestOS 5.1 Service Pack 1 '
+        'Owner: owner '
+        'Origin: {0:s}').format(key_path)
     expected_short_message = (
-        u'MyTestOS 5.1 Service Pack 1 '
-        u'Origin: HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Win...')
+        'MyTestOS 5.1 Service Pack 1 '
+        'Origin: HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Win...')
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE-RunTests'])
+  @shared_test_lib.skipUnlessHasTestFile(['SOFTWARE-RunTests'])
   def testProcessFile(self):
     """Tests the Process function on a Windows Registry file."""
-    test_file_entry = self._GetTestFileEntry([u'SOFTWARE-RunTests'])
+    test_file_entry = self._GetTestFileEntry(['SOFTWARE-RunTests'])
     key_path = (
-        u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
@@ -150,17 +152,17 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.parser, plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-03-15 07:09:20.671875')
+        '2012-03-15 07:09:20.671875')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(event.data_type, 'windows:registry:key_value')
 
     expected_message = (
-        u'[{0:s}] '
-        u'Owner: Windows User '
-        u'Product name: Windows 7 Ultimate '
-        u'Service pack: Service Pack 1 '
-        u'Windows Version Information: 6.1').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+        '[{0:s}] '
+        'Owner: Windows User '
+        'Product name: Windows 7 Ultimate '
+        'Service pack: Service Pack 1 '
+        'Windows Version Information: 6.1').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 

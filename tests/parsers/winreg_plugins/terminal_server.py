@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Terminal Server Windows Registry plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -31,15 +33,15 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        u'Servers', key_path=key_path, last_written_time=filetime.timestamp,
+        'Servers', key_path=key_path, last_written_time=filetime.timestamp,
         offset=865)
 
     server_subkey = dfwinreg_fake.FakeWinRegistryKey(
-        u'myserver.com', last_written_time=filetime.timestamp, offset=1456)
+        'myserver.com', last_written_time=filetime.timestamp, offset=1456)
 
-    value_data = u'DOMAIN\\username'.encode(u'utf_16_le')
+    value_data = 'DOMAIN\\username'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'UsernameHint', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        'UsernameHint', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=1892)
     server_subkey.AddValue(registry_value)
 
@@ -50,9 +52,9 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     key_path = (
-        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
-        u'Servers')
-    time_string = u'2012-08-28 09:23:49.002031'
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
+        'Servers')
+    time_string = '2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
     plugin = terminal_server.TerminalServerClientPlugin()
@@ -72,18 +74,18 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
-        u'[{0:s}\\myserver.com] '
-        u'Username hint: DOMAIN\\username').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+        '[{0:s}\\myserver.com] '
+        'Username hint: DOMAIN\\username').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[1]
 
     expected_message = (
-        u'[{0:s}] '
-        u'myserver.com: DOMAIN\\username').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+        '[{0:s}] '
+        'myserver.com: DOMAIN\\username').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
@@ -104,18 +106,18 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        u'Default', key_path=key_path, last_written_time=filetime.timestamp,
+        'Default', key_path=key_path, last_written_time=filetime.timestamp,
         offset=1456)
 
-    value_data = u'192.168.16.60'.encode(u'utf_16_le')
+    value_data = '192.168.16.60'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'MRU0', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        'MRU0', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=1892)
     registry_key.AddValue(registry_value)
 
-    value_data = u'computer.domain.com'.encode(u'utf_16_le')
+    value_data = 'computer.domain.com'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'MRU1', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        'MRU1', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=612)
     registry_key.AddValue(registry_value)
 
@@ -124,9 +126,9 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     key_path = (
-        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
-        u'Default')
-    time_string = u'2012-08-28 09:23:49.002031'
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
+        'Default')
+    time_string = '2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
     plugin = terminal_server.TerminalServerClientMRUPlugin()
@@ -146,10 +148,10 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
-        u'[{0:s}] '
-        u'MRU0: 192.168.16.60 '
-        u'MRU1: computer.domain.com').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+        '[{0:s}] '
+        'MRU0: 192.168.16.60 '
+        'MRU1: computer.domain.com').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 

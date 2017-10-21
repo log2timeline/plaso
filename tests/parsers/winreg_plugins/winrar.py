@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the WinRAR Windows Registry plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -31,19 +33,19 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        u'ArcHistory', key_path=key_path, last_written_time=filetime.timestamp,
+        'ArcHistory', key_path=key_path, last_written_time=filetime.timestamp,
         offset=1456)
 
-    value_data = u'C:\\Downloads\\The Sleeping Dragon CD1.iso'.encode(
-        u'utf_16_le')
+    value_data = 'C:\\Downloads\\The Sleeping Dragon CD1.iso'.encode(
+        'utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'0', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        '0', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=1892)
     registry_key.AddValue(registry_value)
 
-    value_data = u'C:\\Downloads\\plaso-static.rar'.encode(u'utf_16_le')
+    value_data = 'C:\\Downloads\\plaso-static.rar'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'1', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        '1', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=612)
     registry_key.AddValue(registry_value)
 
@@ -51,8 +53,8 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = u'HKEY_CURRENT_USER\\Software\\WinRAR\\ArcHistory'
-    time_string = u'2012-08-28 09:23:49.002031'
+    key_path = 'HKEY_CURRENT_USER\\Software\\WinRAR\\ArcHistory'
+    time_string = '2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
     plugin = winrar.WinRarHistoryPlugin()
@@ -72,10 +74,10 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
-        u'[{0:s}] '
-        u'0: C:\\Downloads\\The Sleeping Dragon CD1.iso '
-        u'1: C:\\Downloads\\plaso-static.rar').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+        '[{0:s}] '
+        '0: C:\\Downloads\\The Sleeping Dragon CD1.iso '
+        '1: C:\\Downloads\\plaso-static.rar').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 

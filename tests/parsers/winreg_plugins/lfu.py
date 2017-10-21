@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Less Frequently Used (LFU) Windows Registry plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -31,60 +33,60 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        u'Session Manager', key_path=key_path,
+        'Session Manager', key_path=key_path,
         last_written_time=filetime.timestamp, offset=153)
 
-    value_data = u'autocheck autochk *\x00'.encode(u'utf_16_le')
+    value_data = 'autocheck autochk *\x00'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'BootExecute', data=value_data,
+        'BootExecute', data=value_data,
         data_type=dfwinreg_definitions.REG_MULTI_SZ, offset=123)
     registry_key.AddValue(registry_value)
 
-    value_data = u'2592000'.encode(u'utf_16_le')
+    value_data = '2592000'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'CriticalSectionTimeout', data=value_data,
+        'CriticalSectionTimeout', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ, offset=153)
     registry_key.AddValue(registry_value)
 
-    value_data = u'\x00'.encode(u'utf_16_le')
+    value_data = '\x00'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'ExcludeFromKnownDlls', data=value_data,
+        'ExcludeFromKnownDlls', data=value_data,
         data_type=dfwinreg_definitions.REG_MULTI_SZ, offset=163)
     registry_key.AddValue(registry_value)
 
-    value_data = u'0'.encode(u'utf_16_le')
+    value_data = '0'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'GlobalFlag', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        'GlobalFlag', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=173)
     registry_key.AddValue(registry_value)
 
-    value_data = u'0'.encode(u'utf_16_le')
+    value_data = '0'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'HeapDeCommitFreeBlockThreshold', data=value_data,
+        'HeapDeCommitFreeBlockThreshold', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ, offset=183)
     registry_key.AddValue(registry_value)
 
-    value_data = u'0'.encode(u'utf_16_le')
+    value_data = '0'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'HeapDeCommitTotalFreeThreshold', data=value_data,
+        'HeapDeCommitTotalFreeThreshold', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ, offset=203)
     registry_key.AddValue(registry_value)
 
-    value_data = u'0'.encode(u'utf_16_le')
+    value_data = '0'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'HeapSegmentCommit', data=value_data,
+        'HeapSegmentCommit', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ, offset=213)
     registry_key.AddValue(registry_value)
 
-    value_data = u'0'.encode(u'utf_16_le')
+    value_data = '0'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'HeapSegmentReserve', data=value_data,
+        'HeapSegmentReserve', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ, offset=223)
     registry_key.AddValue(registry_value)
 
-    value_data = u'2'.encode(u'utf_16_le')
+    value_data = '2'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'NumberOfInitialSessions', data=value_data,
+        'NumberOfInitialSessions', data=value_data,
         data_type=dfwinreg_definitions.REG_SZ, offset=243)
     registry_key.AddValue(registry_value)
 
@@ -93,8 +95,8 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     key_path = (
-        u'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Session Manager')
-    time_string = u'2012-08-31 20:45:29'
+        'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Session Manager')
+    time_string = '2012-08-31 20:45:29'
     registry_key = self._CreateTestKey(key_path, time_string)
 
     plugin = lfu.BootExecutePlugin()
@@ -114,24 +116,24 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
-        u'[{0:s}] BootExecute: autocheck autochk *').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+        '[{0:s}] BootExecute: autocheck autochk *').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[1]
 
     expected_message = (
-        u'[{0:s}] '
-        u'CriticalSectionTimeout: 2592000 '
-        u'ExcludeFromKnownDlls: [] '
-        u'GlobalFlag: 0 '
-        u'HeapDeCommitFreeBlockThreshold: 0 '
-        u'HeapDeCommitTotalFreeThreshold: 0 '
-        u'HeapSegmentCommit: 0 '
-        u'HeapSegmentReserve: 0 '
-        u'NumberOfInitialSessions: 2').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+        '[{0:s}] '
+        'CriticalSectionTimeout: 2592000 '
+        'ExcludeFromKnownDlls: [] '
+        'GlobalFlag: 0 '
+        'HeapDeCommitFreeBlockThreshold: 0 '
+        'HeapDeCommitTotalFreeThreshold: 0 '
+        'HeapSegmentCommit: 0 '
+        'HeapSegmentReserve: 0 '
+        'NumberOfInitialSessions: 2').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
@@ -152,13 +154,13 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        u'BootVerificationProgram', key_path=key_path,
+        'BootVerificationProgram', key_path=key_path,
         last_written_time=filetime.timestamp, offset=153)
 
-    value_data = u'C:\\WINDOWS\\system32\\googleupdater.exe'.encode(
-        u'utf_16_le')
+    value_data = 'C:\\WINDOWS\\system32\\googleupdater.exe'.encode(
+        'utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'ImagePath', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        'ImagePath', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=123)
     registry_key.AddValue(registry_value)
 
@@ -166,8 +168,8 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    key_path = u'\\ControlSet001\\Control\\BootVerificationProgram'
-    time_string = u'2012-08-31 20:45:29'
+    key_path = '\\ControlSet001\\Control\\BootVerificationProgram'
+    time_string = '2012-08-31 20:45:29'
     registry_key = self._CreateTestKey(key_path, time_string)
 
     plugin = lfu.BootVerificationPlugin()
@@ -187,10 +189,10 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
-        u'[{0:s}] '
-        u'ImagePath: C:\\WINDOWS\\system32\\googleupdater.exe').format(
+        '[{0:s}] '
+        'ImagePath: C:\\WINDOWS\\system32\\googleupdater.exe').format(
             key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
