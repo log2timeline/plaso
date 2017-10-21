@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the Run Windows Registry plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
@@ -15,13 +17,13 @@ from tests.parsers.winreg_plugins import test_lib
 class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the auto rus Windows Registry plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER-RunTests.DAT'])
+  @shared_test_lib.skipUnlessHasTestFile(['NTUSER-RunTests.DAT'])
   def testProcessNtuserRun(self):
     """Tests the Process function on a Run key."""
-    test_file_entry = self._GetTestFileEntry([u'NTUSER-RunTests.DAT'])
+    test_file_entry = self._GetTestFileEntry(['NTUSER-RunTests.DAT'])
     key_path = (
-        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        u'Run')
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Run')
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
@@ -45,19 +47,19 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.timestamp, 1333645433992061)
 
     expected_message = (
-        u'[{0:s}] Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe '
-        u'/autoRun').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+        '[{0:s}] Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe '
+        '/autoRun').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER-RunTests.DAT'])
+  @shared_test_lib.skipUnlessHasTestFile(['NTUSER-RunTests.DAT'])
   def testProcessNtuserRunOnce(self):
     """Tests the Process function on a Run key."""
-    test_file_entry = self._GetTestFileEntry([u'NTUSER-RunTests.DAT'])
+    test_file_entry = self._GetTestFileEntry(['NTUSER-RunTests.DAT'])
     key_path = (
-        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        u'RunOnce')
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'RunOnce')
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
@@ -78,23 +80,23 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.parser, plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-04-05 17:03:53.992061')
+        '2012-04-05 17:03:53.992061')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
-        u'[{0:s}] mctadmin: C:\\Windows\\System32\\mctadmin.exe').format(
+        '[{0:s}] mctadmin: C:\\Windows\\System32\\mctadmin.exe').format(
             key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE-RunTests'])
+  @shared_test_lib.skipUnlessHasTestFile(['SOFTWARE-RunTests'])
   def testProcessSoftwareRun(self):
     """Tests the Process function on a Run key."""
-    test_file_entry = self._GetTestFileEntry([u'SOFTWARE-RunTests'])
+    test_file_entry = self._GetTestFileEntry(['SOFTWARE-RunTests'])
     key_path = (
-        u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        u'Run')
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Run')
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
@@ -115,28 +117,28 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.parser, plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2011-09-16 20:57:09.067575')
+        '2011-09-16 20:57:09.067575')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
-        u'[{0:s}] '
-        u'McAfee Host Intrusion Prevention Tray: "C:\\Program Files\\McAfee\\'
-        u'Host Intrusion Prevention\\FireTray.exe" '
-        u'VMware Tools: "C:\\Program Files\\VMware\\VMware Tools\\'
-        u'VMwareTray.exe" '
-        u'VMware User Process: "C:\\Program Files\\VMware\\VMware Tools\\'
-        u'VMwareUser.exe"').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+        '[{0:s}] '
+        'McAfee Host Intrusion Prevention Tray: "C:\\Program Files\\McAfee\\'
+        'Host Intrusion Prevention\\FireTray.exe" '
+        'VMware Tools: "C:\\Program Files\\VMware\\VMware Tools\\'
+        'VMwareTray.exe" '
+        'VMware User Process: "C:\\Program Files\\VMware\\VMware Tools\\'
+        'VMwareUser.exe"').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE-RunTests'])
+  @shared_test_lib.skipUnlessHasTestFile(['SOFTWARE-RunTests'])
   def testProcessSoftwareRunOnce(self):
     """Tests the Process function on a RunOnce key."""
-    test_file_entry = self._GetTestFileEntry([u'SOFTWARE-RunTests'])
+    test_file_entry = self._GetTestFileEntry(['SOFTWARE-RunTests'])
     key_path = (
-        u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        u'RunOnce')
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'RunOnce')
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
@@ -157,13 +159,13 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.parser, plugin.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-04-06 14:07:27.750000')
+        '2012-04-06 14:07:27.750000')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
-        u'[{0:s}] *WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe '
-        u'-k -rq').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+        '[{0:s}] *WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe '
+        '-k -rq').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 

@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 """Tests for the LastShutdown value plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
-from plaso.formatters import shutdown  # pylint: disable=unused-import
+from plaso.formatters import shutdown as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import shutdown
@@ -19,11 +21,11 @@ __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
 class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the LastShutdown value plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
+  @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntry([u'SYSTEM'])
-    key_path = u'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Windows'
+    test_file_entry = self._GetTestFileEntry(['SYSTEM'])
+    key_path = 'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Windows'
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
@@ -43,19 +45,19 @@ class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    self.assertEqual(event.value_name, u'ShutdownTime')
+    self.assertEqual(event.value_name, 'ShutdownTime')
 
     # Match UTC timestamp.
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-04-04 01:58:40.839249')
+        '2012-04-04 01:58:40.839249')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_SHUTDOWN)
 
     expected_message = (
-        u'[{0:s}] '
-        u'Description: ShutdownTime').format(key_path)
-    expected_short_message = u'ShutdownTime'
+        '[{0:s}] '
+        'Description: ShutdownTime').format(key_path)
+    expected_short_message = 'ShutdownTime'
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 

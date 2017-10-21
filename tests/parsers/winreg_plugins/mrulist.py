@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the MRUList Windows Registry plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -31,30 +33,30 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        u'MRU', key_path=key_path, last_written_time=filetime.timestamp,
+        'MRU', key_path=key_path, last_written_time=filetime.timestamp,
         offset=1456)
 
-    value_data = u'acb'.encode(u'utf_16_le')
+    value_data = 'acb'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'MRUList', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        'MRUList', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=123)
     registry_key.AddValue(registry_value)
 
-    value_data = u'Some random text here'.encode(u'utf_16_le')
+    value_data = 'Some random text here'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'a', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        'a', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=1892)
     registry_key.AddValue(registry_value)
 
-    value_data = u'c:/evil.exe'.encode(u'utf_16_le')
+    value_data = 'c:/evil.exe'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'b', data=value_data, data_type=dfwinreg_definitions.REG_BINARY,
+        'b', data=value_data, data_type=dfwinreg_definitions.REG_BINARY,
         offset=612)
     registry_key.AddValue(registry_value)
 
-    value_data = u'C:/looks_legit.exe'.encode(u'utf_16_le')
+    value_data = 'C:/looks_legit.exe'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'c', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        'c', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=1001)
     registry_key.AddValue(registry_value)
 
@@ -63,9 +65,9 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     key_path = (
-        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\'
-        u'InterestingApp\\MRU')
-    time_string = u'2012-08-28 09:23:49.002031'
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\'
+        'InterestingApp\\MRU')
+    time_string = '2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
     plugin = mrulist.MRUListStringPlugin()
@@ -85,11 +87,11 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
-        u'[{0:s}] '
-        u'Index: 1 [MRU Value a]: Some random text here '
-        u'Index: 2 [MRU Value c]: C:/looks_legit.exe '
-        u'Index: 3 [MRU Value b]: c:/evil.exe').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+        '[{0:s}] '
+        'Index: 1 [MRU Value a]: Some random text here '
+        'Index: 2 [MRU Value c]: C:/looks_legit.exe '
+        'Index: 3 [MRU Value b]: c:/evil.exe').format(key_path)
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
@@ -110,12 +112,12 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        u'DesktopStreamMRU', key_path=key_path,
+        'DesktopStreamMRU', key_path=key_path,
         last_written_time=filetime.timestamp, offset=1456)
 
-    value_data = u'a'.encode(u'utf_16_le')
+    value_data = 'a'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'MRUList', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
+        'MRUList', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=123)
     registry_key.AddValue(registry_value)
 
@@ -135,7 +137,7 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
         0x6b, 0x74, 0x6f, 0x70, 0x00, 0x00, 0x00, 0x00]))
 
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        u'a', data=value_data, data_type=dfwinreg_definitions.REG_BINARY,
+        'a', data=value_data, data_type=dfwinreg_definitions.REG_BINARY,
         offset=612)
     registry_key.AddValue(registry_value)
 
@@ -144,9 +146,9 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     key_path = (
-        u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-        u'Explorer\\DesktopStreamMRU')
-    time_string = u'2012-08-28 09:23:49.002031'
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Explorer\\DesktopStreamMRU')
+    time_string = '2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
     plugin = mrulist.MRUListShellItemListPlugin()
@@ -167,11 +169,11 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
-        u'[{0:s}] '
-        u'Index: 1 [MRU Value a]: Shell item path: '
-        u'<My Computer> C:\\Winnt\\Profiles\\Administrator\\Desktop').format(
+        '[{0:s}] '
+        'Index: 1 [MRU Value a]: Shell item path: '
+        '<My Computer> C:\\Winnt\\Profiles\\Administrator\\Desktop').format(
             key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
@@ -179,17 +181,17 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
     event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2011-01-14 12:03:52')
+        '2011-01-14 12:03:52')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
-        u'Name: Winnt '
-        u'Shell item path: <My Computer> C:\\Winnt '
-        u'Origin: {0:s}').format(key_path)
+        'Name: Winnt '
+        'Shell item path: <My Computer> C:\\Winnt '
+        'Origin: {0:s}').format(key_path)
     expected_short_message = (
-        u'Name: Winnt '
-        u'Origin: HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\'
-        u'CurrentVersi...')
+        'Name: Winnt '
+        'Origin: HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\'
+        'CurrentVersi...')
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
