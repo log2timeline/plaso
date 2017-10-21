@@ -37,7 +37,7 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(line_reader.readline(), b'This is another file.\n')
 
-    self.assertEqual(line_reader.get_offset(), 22)
+    self.assertEqual(line_reader.tell(), 22)
 
     file_object.close()
 

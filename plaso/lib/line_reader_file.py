@@ -20,15 +20,16 @@ class BinaryLineReader(object):
 
     Args:
       file_object (FileIO): a file-like object to read from.
-      end_of_line (Optional[str]): end of line indicator.
+      end_of_line (Optional[bytes]): end of line indicator.
     """
     super(BinaryLineReader, self).__init__()
     self._file_object = file_object
     self._file_object_size = file_object.get_size()
     self._end_of_line = end_of_line
+    self._end_of_line_length = len(self._end_of_line)
+    self._lines = []
     self._lines_buffer = b''
     self._lines_buffer_offset = 0
-    self._lines_buffer_size = 0
     self._current_offset = 0
 
   def __enter__(self):
@@ -50,77 +51,6 @@ class BinaryLineReader(object):
       yield line
       line = self.readline()
 
-  def _ReadLinesData(self, maximum_size=None):
-    """Reads the lines data.
-
-    The number of reads are minimized by using a lines buffer.
-
-    Args:
-      maximum_size (Optional[int]): maximum number of bytes to read from
-         the file-like object, where None represents all remaining data
-         up to the maximum (as defined by _MAXIMUM_READ_BUFFER_SIZE).
-
-    Returns:
-      bytes: lines data.
-
-    Raises:
-      ValueError: if the maximum size is smaller than zero or exceeds the
-          maximum (as defined by _MAXIMUM_READ_BUFFER_SIZE).
-    """
-    if maximum_size is not None and maximum_size < 0:
-      raise ValueError('Invalid maximum size value smaller than zero.')
-
-    if (maximum_size is not None and
-        maximum_size > self._MAXIMUM_READ_BUFFER_SIZE):
-      raise ValueError('Invalid maximum size value exceeds maximum.')
-
-    if self._lines_buffer_offset >= self._file_object_size:
-      return b''
-
-    if maximum_size is None:
-      read_size = self._MAXIMUM_READ_BUFFER_SIZE
-    else:
-      read_size = maximum_size
-
-    if self._lines_buffer_offset + read_size > self._file_object_size:
-      read_size = self._file_object_size - self._lines_buffer_offset
-
-    if read_size > self._lines_buffer_size:
-      data = self._lines_buffer
-      self._lines_buffer = b''
-
-      # Read the remaining requested data and a full lines buffer at once.
-      read_size -= self._lines_buffer_size
-      remaining_size = read_size
-      read_size += self._LINES_BUFFER_SIZE
-
-      if self._lines_buffer_offset + read_size > self._file_object_size:
-        read_size = self._file_object_size - self._lines_buffer_offset
-
-      self._file_object.seek(self._lines_buffer_offset, os.SEEK_SET)
-      read_buffer = self._file_object.read(read_size)
-
-      read_count = len(read_buffer)
-
-      if remaining_size > read_count:
-        remaining_size = read_count
-
-      data += read_buffer[:remaining_size]
-
-      if remaining_size < read_count:
-        self._lines_buffer = read_buffer[remaining_size:]
-        self._lines_buffer_size = read_count - remaining_size
-
-      self._lines_buffer_offset += read_count
-
-    else:
-      data = self._lines_buffer[:read_size]
-
-      self._lines_buffer = self._lines_buffer[read_size:]
-      self._lines_buffer_size -= read_size
-
-    return data
-
   # Note: that the following functions do not follow the style guide
   # because they are part of the readline file-like object interface.
 
@@ -128,61 +58,56 @@ class BinaryLineReader(object):
     """Reads a single line of text.
 
     The functions reads one entire line from the file-like object. A trailing
-    end-of-line indicator (newline by default) is kept in the string (but may
-    be absent when a file ends with an incomplete line). An empty string is
-    returned only when end-of-file is encountered immediately.
+    end-of-line indicator (newline by default) is kept in the byte string (but
+    may be absent when a file ends with an incomplete line). An empty byte
+    string is returned only when end-of-file is encountered immediately.
 
     Args:
-      size (Optional[int]): maximum string size to read. If present and
-      non-negative, it is a maximum byte count (including the trailing
-      end-of-line) and an incomplete line may be returned.
+      size (Optional[int]): maximum byte string size to read. If present and
+          non-negative, it is a maximum byte count (including the trailing
+          end-of-line) and an incomplete line may be returned.
 
     Returns:
       bytes: line of text.
     """
-    if size is None or size <= 0:
-      size = None
+    if size is not None and size < 0:
+      raise ValueError('Invalid size value smaller than zero.')
 
-    next_offset = self._current_offset + self._lines_buffer_size
+    if size > self._MAXIMUM_READ_BUFFER_SIZE:
+      raise ValueError('Invalid size value exceeds maximum.')
 
-    if (self._end_of_line not in self._lines_buffer and
-        next_offset == self._file_object_size):
-      line = self._lines_buffer
-      self._lines_buffer_size = 0
-      self._lines_buffer = b''
+    if size is None:
+      size = self._MAXIMUM_READ_BUFFER_SIZE
 
-      return line
-    elif (self._end_of_line not in self._lines_buffer and
-          (size is None or self._lines_buffer_size < size)):
-      lines_data = self._ReadLinesData(size)
+    if not self._lines:
+      if self._lines_buffer_offset >= self._file_object_size:
+        return b''
 
-      split_lines = lines_data.split(self._end_of_line)
-      result = split_lines.pop(0)
+      if self._lines_buffer_offset + size > self._file_object_size:
+        size = self._file_object_size - self._lines_buffer_offset
 
-      if len(result) < len(lines_data):
-        separator = self._end_of_line
-      else:
-        separator = b''
+      self._file_object.seek(self._lines_buffer_offset, os.SEEK_SET)
+      read_buffer = self._file_object.read(size)
 
-      if split_lines:
-        lines_data = self._end_of_line.join(split_lines)
-        self._lines_buffer = b''.join([lines_data, self._lines_buffer])
-        self._lines_buffer_size = len(self._lines_buffer)
+      self._lines_buffer_offset += len(read_buffer)
 
-    else:
-      split_lines = self._lines_buffer.split(self._end_of_line)
-      result = split_lines.pop(0)
-      result_length = len(result)
+      self._lines = read_buffer.split(self._end_of_line)
+      if self._lines_buffer:
+        self._lines[0] = b''.join([self._lines_buffer, self._lines[0]])
+        self._lines_buffer = b''
 
-      if result_length < self._lines_buffer_size:
-        separator = self._end_of_line
-      else:
-        separator = b''
+      if read_buffer[self._end_of_line_length:] != self._end_of_line:
+        self._lines_buffer = self._lines.pop()
 
-      self._lines_buffer = self._end_of_line.join(split_lines)
-      self._lines_buffer_size -= result_length + len(separator)
+      for index, line in enumerate(self._lines):
+        self._lines[index] = b''.join([line, self._end_of_line])
 
-    line = b''.join([result, separator])
+      if (self._lines_buffer and
+          self._lines_buffer_offset >= self._file_object_size):
+        self._lines.append(self._lines_buffer)
+        self._lines_buffer = b''
+
+    line = self._lines.pop(0)
     self._current_offset += len(line)
 
     return line
@@ -195,7 +120,7 @@ class BinaryLineReader(object):
 
     Args:
       sizehint (Optional[int]): maximum byte size to read. If present, instead
-      of reading up to EOF, whole lines totalling sizehint bytes are read.
+          of reading up to EOF, whole lines totalling sizehint bytes are read.
 
     Returns:
       list[bytes]: lines of text.
@@ -220,16 +145,6 @@ class BinaryLineReader(object):
 
     return lines
 
-  # get_offset() is preferred above tell() by the libbfio layer used in libyal.
-  def get_offset(self):
-    """Retrieves the current offset into the file-like object.
-
-    Returns:
-      int: cuffent offset into the file-like object.
-    """
-    return self._current_offset
-
-  # Pythonesque alias for get_offset().
   def tell(self):
     """Retrieves the current offset into the file-like object.
 
