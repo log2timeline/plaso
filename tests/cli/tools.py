@@ -13,7 +13,6 @@ import unittest
 from plaso.cli import tools
 from plaso.lib import errors
 
-from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
@@ -41,35 +40,6 @@ optional arguments:
   -d, --debug  Enable debug output.
   -q, --quiet  Disable informational output.
 """
-
-  _EXPECTED_PROFILING_OPTIONS = '\n'.join([
-      'usage: tool_test.py [--profilers PROFILERS_LIST]',
-      '                    [--profiling_directory DIRECTORY]',
-      '                    [--profiling_sample_rate SAMPLE_RATE]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --profilers PROFILERS_LIST',
-      ('                        Define a list of profilers to use by the '
-       'tool. This is'),
-      ('                        a comma separated list where each entry is '
-       'the name of'),
-      ('                        a profiler. Use "--profilers list" to list '
-       'the'),
-      '                        available profilers.',
-      '  --profiling_directory DIRECTORY, --profiling-directory DIRECTORY',
-      ('                        Path to the directory that should be used '
-       'to store the'),
-      ('                        profiling sample files. By default the '
-       'sample files'),
-      '                        are stored in the current working directory.',
-      ('  --profiling_sample_rate SAMPLE_RATE, '
-       '--profiling-sample-rate SAMPLE_RATE'),
-      ('                        The profiling sample rate (defaults to a '
-       'sample every'),
-      '                        1000 files).',
-      ''])
 
   _EXPECTED_TIMEZONE_OPTION = """\
 usage: tool_test.py [-z TIMEZONE]
@@ -105,41 +75,6 @@ optional arguments:
     options.log_file = 'file.log'
 
     test_tool._ParseLogFileOptions(options)
-
-  def testParseProfilingOptions(self):
-    """Tests the _ParseProfilingOptions function."""
-    test_tool = tools.CLITool()
-
-    options = test_lib.TestOptions()
-    options.profiling_sample_rate = '100'
-
-    test_tool._ParseProfilingOptions(options)
-    self.assertEqual(test_tool._profilers, set([]))
-
-    options.profilers = 'list'
-    test_tool._ParseProfilingOptions(options)
-    self.assertEqual(test_tool._profilers, set([]))
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      options.profilers = 'processing'
-      options.profiling_directory = temp_directory
-      test_tool._ParseProfilingOptions(options)
-      self.assertEqual(test_tool._profilers, set(['processing']))
-      self.assertEqual(test_tool._profiling_directory, temp_directory)
-      self.assertEqual(test_tool._profiling_sample_rate, 100)
-
-    with self.assertRaises(errors.BadConfigOption):
-      options.profiling_sample_rate = 'a'
-      test_tool._ParseProfilingOptions(options)
-
-    with self.assertRaises(errors.BadConfigOption):
-      options.profiling_sample_rate = 100
-      test_tool._ParseProfilingOptions(options)
-
-    with self.assertRaises(errors.BadConfigOption):
-      options.profiling_sample_rate = '/bogus'
-      options.profiling_sample_rate = 100
-      test_tool._ParseProfilingOptions(options)
 
   def testParseTimezoneOption(self):
     """Tests the _ParseTimezoneOption function."""
@@ -186,18 +121,6 @@ optional arguments:
 
   # TODO: add test for AddLogFileOptions
 
-  def testAddProfilingOptions(self):
-    """Tests the AddProfilingOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog='tool_test.py', description='Test argument parser.',
-        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
-
-    test_tool = tools.CLITool()
-    test_tool.AddProfilingOptions(argument_parser)
-
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_PROFILING_OPTIONS)
-
   def testAddTimeZoneOption(self):
     """Tests the AddTimeZoneOption function."""
     argument_parser = argparse.ArgumentParser(
@@ -217,23 +140,6 @@ optional arguments:
 
     command_line_arguments = cli_tool.GetCommandLineArguments()
     self.assertIsNotNone(command_line_arguments)
-
-  def testListProfilers(self):
-    """Tests the ListProfilers function."""
-    output_writer = test_lib.TestOutputWriter()
-    cli_tool = tools.CLITool(output_writer=output_writer)
-
-    cli_tool.ListProfilers()
-
-    string = output_writer.ReadOutput()
-    expected_string = (
-        b'\n'
-        b'********************************** Profilers '
-        b'***********************************\n'
-        b'       Name : Description\n'
-        b'----------------------------------------'
-        b'----------------------------------------\n')
-    self.assertTrue(string.startswith(expected_string))
 
   def testListTimeZones(self):
     """Tests the ListTimeZones function."""

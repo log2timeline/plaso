@@ -214,6 +214,34 @@ class ParsersOptionsTest(test_lib.CLIToolTestCase):
     self.assertIn(expected_line, lines)
 
 
+class TestToolWithProfilingOptions(
+    tools.CLITool, tool_options.ProfilingOptions):
+  """Tool to test the profiling options."""
+
+
+class ProfilingOptionsTest(test_lib.CLIToolTestCase):
+  """Tests for the profiling options."""
+
+  # pylint: disable=protected-access
+
+  def testListProfilers(self):
+    """Tests the ListProfilers function."""
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = TestToolWithProfilingOptions(output_writer=output_writer)
+
+    test_tool.ListProfilers()
+
+    string = output_writer.ReadOutput()
+    expected_string = (
+        b'\n'
+        b'********************************** Profilers '
+        b'***********************************\n'
+        b'       Name : Description\n'
+        b'----------------------------------------'
+        b'----------------------------------------\n')
+    self.assertTrue(string.startswith(expected_string))
+
+
 class TestToolWithStorageFileOptions(
     tools.CLITool, tool_options.StorageFileOptions):
   """Tool to test the storage file options."""
