@@ -108,11 +108,17 @@ class BinaryLineReader(object):
         self._lines.append(self._lines_buffer)
         self._lines_buffer = b''
 
-    if self._lines:
-      line = self._lines.pop(0)
-    else:
+    if not self._lines:
       line = self._lines_buffer
       self._lines_buffer = b''
+
+    elif not size or size >= len(self._lines[0]):
+      line = self._lines.pop(0)
+
+    else:
+      line = self._lines[0]
+      self._lines[0] = line[size:]
+      line = line[:size]
 
     self._current_offset += len(line)
 
