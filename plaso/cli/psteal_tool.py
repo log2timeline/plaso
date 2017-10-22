@@ -304,7 +304,7 @@ class PstealTool(
     """
     self._CheckStorageFile(self._storage_file_path, warn_about_existing=True)
 
-    scan_context = self.ScanSource()
+    scan_context = self.ScanSource(self._source_path)
     source_type = scan_context.source_type
 
     self._status_view.SetMode(self._status_view_mode)

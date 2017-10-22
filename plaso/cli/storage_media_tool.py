@@ -1058,11 +1058,14 @@ class StorageMediaTool(tools.CLITool):
             '"1,3..5". The first store is 1. All stores can be defined as: '
             '"all".'))
 
-  def ScanSource(self):
+  def ScanSource(self, source_path):
     """Scans the source path for volume and file systems.
 
     This function sets the internal source path specification and source
     type values.
+
+    Args:
+      source_path (str): path to the source.
 
     Returns:
       dfvfs.SourceScannerContext: source scanner context.
@@ -1071,14 +1074,18 @@ class StorageMediaTool(tools.CLITool):
       SourceScannerError: if the format of or within the source is
           not supported.
     """
-    if (not self._source_path.startswith('\\\\.\\') and
-        not os.path.exists(self._source_path)):
+    # Symbolic links are resolved here and not earlier to preserve the user
+    # specified source path in storage and reporting.
+    if os.path.islink(source_path):
+      source_path = os.path.realpath(source_path)
+
+    if (not source_path.startswith('\\\\.\\') and
+        not os.path.exists(source_path)):
       raise errors.SourceScannerError(
-          'No such device, file or directory: {0:s}.'.format(
-              self._source_path))
+          'No such device, file or directory: {0:s}.'.format(source_path))
 
     scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(self._source_path)
+    scan_context.OpenSourcePath(source_path)
 
     try:
       self._source_scanner.Scan(scan_context)
