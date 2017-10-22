@@ -19,32 +19,31 @@ class ElasticSearchOutputArgumentsHelperTest(
     test_lib.OutputModuleArgumentsHelperTest):
   """Tests the Elastic Search output module CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [--index_name INDEX_NAME] [--doc_type DOC_TYPE]',
-      '                     [--flush_interval FLUSH_INTERVAL] [--raw_fields]',
-      '                     [--elastic_user ELASTIC_USER] [--server HOSTNAME]',
-      '                     [--port PORT]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --doc_type DOC_TYPE   Name of the document type that will be used in',
-      '                        ElasticSearch.',
-      '  --elastic_user ELASTIC_USER',
-      ('                        Username to use for Elasticsearch '
-       'authentication.'),
-      '  --flush_interval FLUSH_INTERVAL',
-      '                        Events to queue up before bulk insert to',
-      '                        ElasticSearch.',
-      '  --index_name INDEX_NAME',
-      '                        Name of the index in ElasticSearch.',
-      '  --port PORT           The port number of the server.',
-      ('  --raw_fields          Export string fields that will not be '
-       'analyzed by'),
-      '                        Lucene.',
-      ('  --server HOSTNAME     The hostname or server IP address of the '
-       'server.'),
-      ''])
+  # pylint: disable=no-member,protected-access
+
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--index_name INDEX_NAME] [--doc_type DOC_TYPE]
+                     [--flush_interval FLUSH_INTERVAL] [--raw_fields]
+                     [--elastic_user ELASTIC_USER] [--server HOSTNAME]
+                     [--port PORT]
+
+Test argument parser.
+
+optional arguments:
+  --doc_type DOC_TYPE   Name of the document type that will be used in
+                        ElasticSearch.
+  --elastic_user ELASTIC_USER
+                        Username to use for Elasticsearch authentication.
+  --flush_interval FLUSH_INTERVAL
+                        Events to queue up before bulk insert to
+                        ElasticSearch.
+  --index_name INDEX_NAME
+                        Name of the index in ElasticSearch.
+  --port PORT           The port number of the server.
+  --raw_fields          Export string fields that will not be analyzed by
+                        Lucene.
+  --server HOSTNAME     The hostname or server IP address of the server.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

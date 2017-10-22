@@ -35,7 +35,8 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         '--data', action='store', dest='data_location', type=str,
-        metavar='PATH', default=None, help='the location of the data files.')
+        metavar='PATH', default=None, help=(
+            'Path to a directory containing the data files.'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):

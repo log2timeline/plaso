@@ -252,11 +252,11 @@ class CLITool(object):
     # We want a custom help message and not the default argparse one.
     argument_group.add_argument(
         '-h', '--help', action='help',
-        help='show this help message and exit.')
+        help='Show this help message and exit.')
 
     argument_group.add_argument(
         '-V', '--version', dest='version', action='version',
-        version=version_string, help='show the version information.')
+        version=version_string, help='Show the version information.')
 
   def AddInformationalOptions(self, argument_group):
     """Adds the informational options to the argument group.
@@ -266,11 +266,11 @@ class CLITool(object):
     """
     argument_group.add_argument(
         '-d', '--debug', dest='debug', action='store_true', default=False,
-        help='enable debug output.')
+        help='Enable debug output.')
 
     argument_group.add_argument(
         '-q', '--quiet', dest='quiet', action='store_true', default=False,
-        help='disable informational output.')
+        help='Disable informational output.')
 
   def AddLogFileOptions(self, argument_group):
     """Adds the log file option to the argument group.

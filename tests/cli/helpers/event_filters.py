@@ -17,57 +17,39 @@ from tests.cli import test_lib as cli_test_lib
 class EventFiltersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests for the event filters CLI arguments helper."""
 
-  # pylint: disable=protected-access
+  # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      ('usage: cli_helper.py [--slice DATE] [--slice_size SLICE_SIZE] '
-       '[--slicer]'),
-      '                     [FILTER]',
-      '',
-      'Test argument parser.',
-      '',
-      'positional arguments:',
-      ('  FILTER                A filter that can be used to filter the '
-       'dataset before'),
-      ('                        it is written into storage. More information '
-       'about the'),
-      ('                        filters and how to use them can be found '
-       'here:'),
-      ('                        '
-       'https://github.com/log2timeline/plaso/wiki/Filters'),
-      '',
-      'optional arguments:',
-      ('  --slice DATE          Create a time slice around a certain date. '
-       'This'),
-      ('                        parameter, if defined will display all '
-       'events that'),
-      ('                        happened X minutes before and after the '
-       'defined date.'),
-      ('                        X is controlled by the parameter '
-       '--slice_size but'),
-      '                        defaults to 5 minutes.',
-      '  --slice_size SLICE_SIZE, --slice-size SLICE_SIZE',
-      ('                        Defines the slice size. In the case of a '
-       'regular time'),
-      ('                        slice it defines the number of minutes the '
-       'slice size'),
-      ('                        should be. In the case of the --slicer it '
-       'determines'),
-      ('                        the number of events before and after a '
-       'filter match'),
-      ('                        has been made that will be included in the '
-       'result set.'),
-      ('                        The default value is 5]. See --slice or '
-       '--slicer for'),
-      '                        more details about this option.',
-      ('  --slicer              Create a time slice around every filter '
-       'match. This'),
-      ('                        parameter, if defined will save all X '
-       'events before'),
-      ('                        and after a filter match has been made. X '
-       'is defined'),
-      '                        by the --slice_size parameter.',
-      ''])
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--slice DATE] [--slice_size SLICE_SIZE] [--slicer]
+                     [FILTER]
+
+Test argument parser.
+
+positional arguments:
+  FILTER                A filter that can be used to filter the dataset before
+                        it is written into storage. More information about the
+                        filters and how to use them can be found here:
+                        https://github.com/log2timeline/plaso/wiki/Filters
+
+optional arguments:
+  --slice DATE          Create a time slice around a certain date. This
+                        parameter, if defined will display all events that
+                        happened X minutes before and after the defined date.
+                        X is controlled by the parameter --slice_size but
+                        defaults to 5 minutes.
+  --slice_size SLICE_SIZE, --slice-size SLICE_SIZE
+                        Defines the slice size. In the case of a regular time
+                        slice it defines the number of minutes the slice size
+                        should be. In the case of the --slicer it determines
+                        the number of events before and after a filter match
+                        has been made that will be included in the result set.
+                        The default value is 5]. See --slice or --slicer for
+                        more details about this option.
+  --slicer              Create a time slice around every filter match. This
+                        parameter, if defined will save all X events before
+                        and after a filter match has been made. X is defined
+                        by the --slice_size parameter.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
@@ -89,7 +71,6 @@ class EventFiltersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     test_tool = tools.CLITool()
     event_filters.EventFiltersArgumentsHelper.ParseOptions(options, test_tool)
 
-    # pylint: disable=no-member
     self.assertEqual(test_tool._event_filter_expression, options.filter)
     self.assertIsNotNone(test_tool._event_filter)
 

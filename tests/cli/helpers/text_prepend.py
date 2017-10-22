@@ -17,21 +17,18 @@ from tests.cli import test_lib as cli_test_lib
 class TextPrependArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests for the text prepend CLI arguments helper."""
 
-  # pylint: disable=protected-access
+  # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [-t TEXT]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      ('  -t TEXT, --text TEXT  Define a free form text string that is '
-       'prepended to'),
-      ('                        each path to make it easier to distinguish '
-       'one record'),
-      ('                        from another in a timeline (like c:\\, or '
-       'host_w_c:\\)'),
-      ''])
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [-t TEXT]
+
+Test argument parser.
+
+optional arguments:
+  -t TEXT, --text TEXT  Define a free form text string that is prepended to
+                        each path to make it easier to distinguish one record
+                        from another in a timeline (like c:\\, or host_w_c:\\)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
@@ -53,7 +50,6 @@ class TextPrependArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     test_tool = tools.CLITool()
     text_prepend.TextPrependArgumentsHelper.ParseOptions(options, test_tool)
 
-    # pylint: disable=no-member
     self.assertEqual(test_tool._text_prepend, options.text_prepend)
 
     with self.assertRaises(errors.BadConfigObject):

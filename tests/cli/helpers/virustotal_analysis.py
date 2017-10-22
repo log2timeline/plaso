@@ -31,27 +31,25 @@ class VirusTotalAnalysisArgumentsHelperTest(
     test_lib.AnalysisPluginArgumentsHelperTest):
   """Tests the VirusTotal analysis plugin CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [--virustotal-api-key API_KEY]',
-      ('                     [--virustotal-free-rate-limit] '
-       '[--virustotal-hash HASH]'),
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --virustotal-api-key API_KEY, --virustotal_api_key API_KEY',
-      '                        Specify the API key for use with VirusTotal.',
-      '  --virustotal-free-rate-limit, --virustotal_free_rate_limit',
-      ('                        Limit Virustotal requests to the default '
-       'free API key'),
-      ('                        rate of 4 requests per minute. Set this to '
-       'false if'),
-      '                        you have an key for the private API.',
-      '  --virustotal-hash HASH, --virustotal_hash HASH',
-      ('                        Type of hash to query VirusTotal, the '
-       'default is:'),
-      '                        sha256',
-      ''])
+  # pylint: disable=no-member,protected-access
+
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--virustotal-api-key API_KEY]
+                     [--virustotal-free-rate-limit] [--virustotal-hash HASH]
+
+Test argument parser.
+
+optional arguments:
+  --virustotal-api-key API_KEY, --virustotal_api_key API_KEY
+                        Specify the API key for use with VirusTotal.
+  --virustotal-free-rate-limit, --virustotal_free_rate_limit
+                        Limit Virustotal requests to the default free API key
+                        rate of 4 requests per minute. Set this to false if
+                        you have an key for the private API.
+  --virustotal-hash HASH, --virustotal_hash HASH
+                        Type of hash to query VirusTotal, the default is:
+                        sha256
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

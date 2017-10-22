@@ -24,36 +24,29 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
   _BDE_PASSWORD = 'bde-TEST'
 
-  _EXPECTED_PROCESSING_OPTIONS = '\n'.join([
-      'usage: log2timeline_test.py [--disable_zeromq] [--single_process]',
-      '                            [--temporary_directory DIRECTORY]',
-      ('                            [--worker-memory-limit SIZE] '
-       '[--workers WORKERS]'),
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --disable_zeromq, --disable-zeromq',
-      ('                        Disable queueing using ZeroMQ. A '
-       'Multiprocessing queue'),
-      '                        will be used instead.',
-      '  --single_process, --single-process',
-      ('                        Indicate that the tool should run in a '
-       'single process.'),
-      '  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
-      ('                        Path to the directory that should be used to '
-       'store'),
-      '                        temporary files created during processing.',
-      '  --worker-memory-limit SIZE, --worker_memory_limit SIZE',
-      ('                        Maximum amount of memory a worker process is '
-       'allowed'),
-      ('                        to consume, where 0 represents no limit '
-       '[defaults to 2'),
-      '                        GiB].',
-      ('  --workers WORKERS     The number of worker processes [defaults to '
-       'available'),
-      '                        system CPUs minus one].',
-      ''])
+  _EXPECTED_PROCESSING_OPTIONS = ("""\
+usage: log2timeline_test.py [--disable_zeromq] [--single_process]
+                            [--temporary_directory DIRECTORY]
+                            [--worker-memory-limit SIZE] [--workers WORKERS]
+
+Test argument parser.
+
+optional arguments:
+  --disable_zeromq, --disable-zeromq
+                        Disable queueing using ZeroMQ. A Multiprocessing queue
+                        will be used instead.
+  --single_process, --single-process
+                        Indicate that the tool should run in a single process.
+  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
+                        Path to the directory that should be used to store
+                        temporary files created during processing.
+  --worker-memory-limit SIZE, --worker_memory_limit SIZE
+                        Maximum amount of memory a worker process is allowed
+                        to consume, where 0 represents no limit [defaults to 2
+                        GiB].
+  --workers WORKERS     The number of worker processes [defaults to available
+                        system CPUs minus one].
+""")
 
   # TODO: add tests for _CheckStorageFile
   # TODO: add tests for _CreateProcessingConfiguration

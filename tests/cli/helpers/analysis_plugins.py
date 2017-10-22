@@ -17,21 +17,19 @@ from tests.cli import test_lib as cli_test_lib
 class AnalysisPluginsArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests for the analysis plugins CLI arguments helper."""
 
-  # pylint: disable=protected-access
+  # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [--analysis PLUGIN_LIST]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --analysis PLUGIN_LIST',
-      ('                        A comma separated list of analysis plugin '
-       'names to be'),
-      ('                        loaded or "--analysis list" to see a list '
-       'of available'),
-      '                        plugins.',
-      ''])
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--analysis PLUGIN_LIST]
+
+Test argument parser.
+
+optional arguments:
+  --analysis PLUGIN_LIST
+                        A comma separated list of analysis plugin names to be
+                        loaded or "--analysis list" to see a list of available
+                        plugins.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
@@ -55,7 +53,6 @@ class AnalysisPluginsArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     analysis_plugins.AnalysisPluginsArgumentsHelper.ParseOptions(
         options, test_tool)
 
-    # pylint: disable=no-member
     self.assertEqual(test_tool._analysis_plugins, ['tagging'])
 
     with self.assertRaises(errors.BadConfigObject):

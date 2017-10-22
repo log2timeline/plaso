@@ -17,41 +17,29 @@ from tests.cli import test_lib as cli_test_lib
 class ParsersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests for the parsers CLI arguments helper."""
 
-  # pylint: disable=protected-access
+  # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [--parsers PARSER_LIST]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --parsers PARSER_LIST',
-      ('                        Define a list of parsers to use by the tool. '
-       'This is a'),
-      ('                        comma separated list where each entry can be '
-       'either a'),
-      ('                        name of a parser or a parser list. Each entry '
-       'can be'),
-      ('                        prepended with an exclamation mark to negate '
-       'the'),
-      ('                        selection (exclude it). The list match is an '
-       'exact'),
-      ('                        match while an individual parser matching is '
-       'a case'),
-      ('                        insensitive substring match, with support for '
-       'glob'),
-      ('                        patterns. Examples would be: "reg" that '
-       'matches the'),
-      ('                        substring "reg" in all parser names or the '
-       'glob'),
-      ('                        pattern "sky[pd]" that would match all '
-       'parsers that'),
-      ('                        have the string "skyp" or "skyd" in its '
-       'name. All'),
-      ('                        matching is case insensitive. Use "--parsers '
-       'list" or'),
-      '                        "--info" to list the available parsers.',
-      ''])
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--parsers PARSER_LIST]
+
+Test argument parser.
+
+optional arguments:
+  --parsers PARSER_LIST
+                        Define a list of parsers to use by the tool. This is a
+                        comma separated list where each entry can be either a
+                        name of a parser or a parser list. Each entry can be
+                        prepended with an exclamation mark to negate the
+                        selection (exclude it). The list match is an exact
+                        match while an individual parser matching is a case
+                        insensitive substring match, with support for glob
+                        patterns. Examples would be: "reg" that matches the
+                        substring "reg" in all parser names or the glob
+                        pattern "sky[pd]" that would match all parsers that
+                        have the string "skyp" or "skyd" in its name. All
+                        matching is case insensitive. Use "--parsers list" or
+                        "--info" to list the available parsers.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
@@ -73,7 +61,6 @@ class ParsersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     test_tool = tools.CLITool()
     parsers.ParsersArgumentsHelper.ParseOptions(options, test_tool)
 
-    # pylint: disable=no-member
     self.assertEqual(test_tool._parser_filter_expression, options.parsers)
 
     with self.assertRaises(errors.BadConfigObject):

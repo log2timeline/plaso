@@ -19,30 +19,28 @@ class NsrlsvrAnalysisArgumentsHelperTest(
     test_lib.AnalysisPluginArgumentsHelperTest):
   """Tests the nsrlsvr analysis plugin CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [--nsrlsvr-hash HASH] [--nsrlsvr-host HOST]',
-      '                     [--nsrlsvr-label LABEL] [--nsrlsvr-port PORT]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --nsrlsvr-hash HASH, --nsrlsvr_hash HASH',
-      ('                        Type of hash to use to query nsrlsvr '
-       'instance, the'),
-      ('                        default is: md5. Supported options: md5, '
-       'sha1'),
-      '  --nsrlsvr-host HOST, --nsrlsvr_host HOST',
-      ('                        Hostname or IP address of the nsrlsvr '
-       'instance to'),
-      '                        query, the default is: localhost',
-      '  --nsrlsvr-label LABEL, --nsrlsvr_label LABEL',
-      '                        Label to apply to events, the default is:',
-      '                        nsrl_present.',
-      '  --nsrlsvr-port PORT, --nsrlsvr_port PORT',
-      ('                        Port number of the nsrlsvr instance to '
-       'query, the'),
-      '                        default is: 9120.',
-      ''])
+  # pylint: disable=no-member,protected-access
+
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--nsrlsvr-hash HASH] [--nsrlsvr-host HOST]
+                     [--nsrlsvr-label LABEL] [--nsrlsvr-port PORT]
+
+Test argument parser.
+
+optional arguments:
+  --nsrlsvr-hash HASH, --nsrlsvr_hash HASH
+                        Type of hash to use to query nsrlsvr instance, the
+                        default is: md5. Supported options: md5, sha1
+  --nsrlsvr-host HOST, --nsrlsvr_host HOST
+                        Hostname or IP address of the nsrlsvr instance to
+                        query, the default is: localhost
+  --nsrlsvr-label LABEL, --nsrlsvr_label LABEL
+                        Label to apply to events, the default is:
+                        nsrl_present.
+  --nsrlsvr-port PORT, --nsrlsvr_port PORT
+                        Port number of the nsrlsvr instance to query, the
+                        default is: 9120.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

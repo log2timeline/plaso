@@ -19,40 +19,35 @@ class MySQL4n6TimeOutputArgumentsHelperTest(
     test_lib.OutputModuleArgumentsHelperTest):
   """Tests the 4n6time MySQL database output module CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      ('usage: cli_helper.py [--append] [--evidence EVIDENCE] '
-       '[--fields FIELDS]'),
-      ('                     [--additional_fields ADDITIONAL_FIELDS] '
-       '[--user USERNAME]'),
-      '                     [--password PASSWORD] [--db_name DB_NAME]',
-      '                     [--server HOSTNAME] [--port PORT]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --additional_fields ADDITIONAL_FIELDS',
-      ('                        Defines extra fields to be included in the '
-       'output, in'),
-      '                        addition to the default fields, which are',
-      '                        datetime,host,source,sourcetype,user,type.',
-      ('  --append              Defines whether the intention is to append '
-       'to an'),
-      ('                        already existing database or overwrite it. '
-       'Defaults to'),
-      '                        overwrite.',
-      '  --db_name DB_NAME, --db-name DB_NAME',
-      '                        The name of the database to connect to.',
-      ('  --evidence EVIDENCE   Set the evidence field to a specific value, '
-       'defaults'),
-      '                        to empty.',
-      ('  --fields FIELDS       Defines which fields should be indexed in '
-       'the'), '                        database.',
-      '  --password PASSWORD   The password for the database user.',
-      '  --port PORT           The port number of the server.',
-      ('  --server HOSTNAME     The hostname or server IP address of the '
-       'server.'),
-      '  --user USERNAME       The username used to connect to the database.',
-      ''])
+  # pylint: disable=no-member,protected-access
+
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--append] [--evidence EVIDENCE] [--fields FIELDS]
+                     [--additional_fields ADDITIONAL_FIELDS] [--user USERNAME]
+                     [--password PASSWORD] [--db_name DB_NAME]
+                     [--server HOSTNAME] [--port PORT]
+
+Test argument parser.
+
+optional arguments:
+  --additional_fields ADDITIONAL_FIELDS
+                        Defines extra fields to be included in the output, in
+                        addition to the default fields, which are
+                        datetime,host,source,sourcetype,user,type.
+  --append              Defines whether the intention is to append to an
+                        already existing database or overwrite it. Defaults to
+                        overwrite.
+  --db_name DB_NAME, --db-name DB_NAME
+                        The name of the database to connect to.
+  --evidence EVIDENCE   Set the evidence field to a specific value, defaults
+                        to empty.
+  --fields FIELDS       Defines which fields should be indexed in the
+                        database.
+  --password PASSWORD   The password for the database user.
+  --port PORT           The port number of the server.
+  --server HOSTNAME     The hostname or server IP address of the server.
+  --user USERNAME       The username used to connect to the database.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

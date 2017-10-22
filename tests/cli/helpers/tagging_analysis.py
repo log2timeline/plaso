@@ -19,15 +19,17 @@ class TaggingAnalysisArgumentsHelperTest(
     test_lib.AnalysisPluginArgumentsHelperTest):
   """Tests the tagging analysis plugin CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [--tagging-file TAGGING_FILE]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --tagging-file TAGGING_FILE, --tagging_file TAGGING_FILE',
-      '                        Specify a file to read tagging criteria from.',
-      ''])
+  # pylint: disable=no-member,protected-access
+
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--tagging-file TAGGING_FILE]
+
+Test argument parser.
+
+optional arguments:
+  --tagging-file TAGGING_FILE, --tagging_file TAGGING_FILE
+                        Specify a file to read tagging criteria from.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

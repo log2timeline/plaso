@@ -40,9 +40,10 @@ class AnotherTestHelper(interface.ArgumentsHelper):
 class HelperManagerTest(unittest.TestCase):
   """Tests the parsers manager."""
 
+  # pylint: disable=protected-access
+
   def testHelperRegistration(self):
     """Tests the RegisterHelper and DeregisterHelper functions."""
-    # pylint: disable=protected-access
     number_of_helpers = len(manager.ArgumentHelperManager._helper_classes)
 
     manager.ArgumentHelperManager.RegisterHelper(test_lib.TestHelper)
