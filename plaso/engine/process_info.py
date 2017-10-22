@@ -26,7 +26,7 @@ class ProcessInfo(object):
 
     version = getattr(psutil, 'version_info', (0, 0, 0))
     if version < (2, 0, 0):
-      self._memory_info_function = self._process.get_ext_memory_info
+      self._memory_info_function = self._process.get_ext_memory_info  # pylint: disable=no-member
     else:
       self._memory_info_function = self._process.memory_info_ex
 
