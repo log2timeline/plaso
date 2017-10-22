@@ -28,8 +28,6 @@ class EventExtractor(object):
   An event extractor extracts events from event sources.
   """
 
-  # pylint: disable=redefined-argument-from-local
-
   def __init__(self, parser_filter_expression=None):
     """Initializes an event extractor.
 
@@ -457,11 +455,11 @@ class PathSpecExtractor(object):
       yield path_spec
 
     else:
-      for path_spec in self._ExtractPathSpecsFromFileSystem(
+      for extracted_path_spec in self._ExtractPathSpecsFromFileSystem(
           path_spec, find_specs=find_specs,
           recurse_file_system=recurse_file_system,
           resolver_context=resolver_context):
-        yield path_spec
+        yield extracted_path_spec
 
   def _ExtractPathSpecsFromDirectory(self, file_entry, depth=0):
     """Extracts path specification from a directory.
@@ -586,14 +584,15 @@ class PathSpecExtractor(object):
       if find_specs:
         searcher = file_system_searcher.FileSystemSearcher(
             file_system, path_spec)
-        for path_spec in searcher.Find(find_specs=find_specs):
-          yield path_spec
+        for extracted_path_spec in searcher.Find(find_specs=find_specs):
+          yield extracted_path_spec
 
       elif recurse_file_system:
         file_entry = file_system.GetFileEntryByPathSpec(path_spec)
         if file_entry:
-          for path_spec in self._ExtractPathSpecsFromDirectory(file_entry):
-            yield path_spec
+          for extracted_path_spec in self._ExtractPathSpecsFromDirectory(
+              file_entry):
+            yield extracted_path_spec
 
       else:
         yield path_spec
