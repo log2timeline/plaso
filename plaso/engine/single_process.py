@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The single process processing engine."""
 
+from __future__ import unicode_literals
+
 import logging
 import os
 import pdb
@@ -24,10 +26,10 @@ class SingleProcessEngine(engine.BaseEngine):
   def __init__(self):
     """Initializes a single process engine."""
     super(SingleProcessEngine, self).__init__()
-    self._current_display_name = u''
+    self._current_display_name = ''
     self._guppy_memory_profiler = None
     self._last_status_update_timestamp = 0.0
-    self._name = u'Main'
+    self._name = 'Main'
     self._parsers_profiler = None
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._pid = os.getpid()
@@ -64,19 +66,19 @@ class SingleProcessEngine(engine.BaseEngine):
       # TODO: signal engine of failure.
       self._abort = True
       logging.error((
-          u'ABORT: detected cache full error while processing '
-          u'path spec: {0:s}').format(self._current_display_name))
+          'ABORT: detected cache full error while processing '
+          'path spec: {0:s}').format(self._current_display_name))
 
     # All exceptions need to be caught here to prevent the worker
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
       parser_mediator.ProduceExtractionError((
-          u'unable to process path specification with error: '
-          u'{0:s}').format(exception), path_spec=path_spec)
+          'unable to process path specification with error: '
+          '{0:s}').format(exception), path_spec=path_spec)
 
-      if getattr(self._processing_configuration, u'debug_output', False):
+      if getattr(self._processing_configuration, 'debug_output', False):
         logging.warning(
-            u'Unhandled exception while processing path spec: {0:s}.'.format(
+            'Unhandled exception while processing path spec: {0:s}.'.format(
                 self._current_display_name))
         logging.exception(exception)
 
@@ -97,15 +99,15 @@ class SingleProcessEngine(engine.BaseEngine):
           used in path specification extraction.
     """
     if self._processing_profiler:
-      self._processing_profiler.StartTiming(u'process_sources')
+      self._processing_profiler.StartTiming('process_sources')
 
     number_of_consumed_sources = 0
 
     self._UpdateStatus(
-        definitions.PROCESSING_STATUS_COLLECTING, u'',
+        definitions.PROCESSING_STATUS_COLLECTING, '',
         number_of_consumed_sources, storage_writer)
 
-    display_name = u''
+    display_name = ''
     path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
         source_path_specs, find_specs=filter_find_specs,
         recurse_file_system=False,
@@ -132,12 +134,12 @@ class SingleProcessEngine(engine.BaseEngine):
         number_of_consumed_sources, storage_writer, force=True)
 
     if self._processing_profiler:
-      self._processing_profiler.StartTiming(u'get_event_source')
+      self._processing_profiler.StartTiming('get_event_source')
 
     event_source = storage_writer.GetFirstWrittenEventSource()
 
     if self._processing_profiler:
-      self._processing_profiler.StopTiming(u'get_event_source')
+      self._processing_profiler.StopTiming('get_event_source')
 
     while event_source:
       if self._abort:
@@ -155,12 +157,12 @@ class SingleProcessEngine(engine.BaseEngine):
           number_of_consumed_sources, storage_writer)
 
       if self._processing_profiler:
-        self._processing_profiler.StartTiming(u'get_event_source')
+        self._processing_profiler.StartTiming('get_event_source')
 
       event_source = storage_writer.GetNextWrittenEventSource()
 
       if self._processing_profiler:
-        self._processing_profiler.StopTiming(u'get_event_source')
+        self._processing_profiler.StopTiming('get_event_source')
 
     if self._abort:
       status = definitions.PROCESSING_STATUS_ABORTED
@@ -170,10 +172,10 @@ class SingleProcessEngine(engine.BaseEngine):
     # Force the status update here to make sure the status is up to date
     # on exit.
     self._UpdateStatus(
-        status, u'', number_of_consumed_sources, storage_writer, force=True)
+        status, '', number_of_consumed_sources, storage_writer, force=True)
 
     if self._processing_profiler:
-      self._processing_profiler.StopTiming(u'process_sources')
+      self._processing_profiler.StopTiming('process_sources')
 
   def _StartProfiling(self, extraction_worker):
     """Starts profiling.
@@ -185,7 +187,7 @@ class SingleProcessEngine(engine.BaseEngine):
       return
 
     if self._processing_configuration.profiling.HaveProfileMemoryGuppy():
-      identifier = u'{0:s}-memory'.format(self._name)
+      identifier = '{0:s}-memory'.format(self._name)
       self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
           identifier, path=self._processing_configuration.profiling.directory,
           profiling_sample_rate=(
@@ -193,19 +195,19 @@ class SingleProcessEngine(engine.BaseEngine):
       self._guppy_memory_profiler.Start()
 
     if self._processing_configuration.profiling.HaveProfileParsers():
-      identifier = u'{0:s}-parsers'.format(self._name)
+      identifier = '{0:s}-parsers'.format(self._name)
       self._parsers_profiler = profiler.ParsersProfiler(
           identifier, path=self._processing_configuration.profiling.directory)
       extraction_worker.SetParsersProfiler(self._parsers_profiler)
 
     if self._processing_configuration.profiling.HaveProfileProcessing():
-      identifier = u'{0:s}-processing'.format(self._name)
+      identifier = '{0:s}-processing'.format(self._name)
       self._processing_profiler = profiler.ProcessingProfiler(
           identifier, path=self._processing_configuration.profiling.directory)
       extraction_worker.SetProcessingProfiler(self._processing_profiler)
 
     if self._processing_configuration.profiling.HaveProfileSerializers():
-      identifier = u'{0:s}-serializers'.format(self._name)
+      identifier = '{0:s}-serializers'.format(self._name)
       self._serializers_profiler = profiler.SerializersProfiler(
           identifier, path=self._processing_configuration.profiling.directory)
 
@@ -313,7 +315,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._processing_configuration = processing_configuration
     self._status_update_callback = status_update_callback
 
-    logging.debug(u'Processing started.')
+    logging.debug('Processing started.')
 
     self._StartProfiling(extraction_worker)
 
@@ -341,10 +343,10 @@ class SingleProcessEngine(engine.BaseEngine):
       self._StopProfiling(extraction_worker)
 
     if self._abort:
-      logging.debug(u'Processing aborted.')
+      logging.debug('Processing aborted.')
       self._processing_status.aborted = True
     else:
-      logging.debug(u'Processing completed.')
+      logging.debug('Processing completed.')
 
     self._processing_configuration = None
     self._status_update_callback = None

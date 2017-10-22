@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Processing configuration classes."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import interface
 
 
@@ -12,7 +14,7 @@ class CredentialConfiguration(interface.AttributeContainer):
     credential_type (str): credential type.
     path_spec (dfvfs.PathSpec): path specification.
   """
-  CONTAINER_TYPE = u'credential_configuration'
+  CONTAINER_TYPE = 'credential_configuration'
 
   def __init__(
       self, credential_data=None, credential_type=None, path_spec=None):
@@ -39,7 +41,7 @@ class EventExtractionConfiguration(interface.AttributeContainer):
         events to include.
     text_prepend (str): text to prepend to every event.
   """
-  CONTAINER_TYPE = u'event_extraction_configuration'
+  CONTAINER_TYPE = 'event_extraction_configuration'
 
   def __init__(self):
     """Initializes an event extraction configuration object."""
@@ -64,7 +66,7 @@ class ExtractionConfiguration(interface.AttributeContainer):
         compressed streams should be processed.
     yara_rules_string (str): Yara rule definitions.
   """
-  CONTAINER_TYPE = u'extraction_configuration'
+  CONTAINER_TYPE = 'extraction_configuration'
 
   def __init__(self):
     """Initializes an extraction configuration object."""
@@ -82,7 +84,7 @@ class InputSourceConfiguration(interface.AttributeContainer):
   Attributes:
     mount_path (str): path of a "mounted" directory input source.
   """
-  CONTAINER_TYPE = u'input_source'
+  CONTAINER_TYPE = 'input_source'
 
   def __init__(self):
     """Initializes an input source configuration object."""
@@ -109,7 +111,7 @@ class ProfilingConfiguration(interface.AttributeContainer):
     sample_rate (int): the profiling sample rate. Contains the number of event
         sources processed.
   """
-  CONTAINER_TYPE = u'profiling_configuration'
+  CONTAINER_TYPE = 'profiling_configuration'
 
   def __init__(self):
     """Initializes a profiling configuration object."""
@@ -124,7 +126,7 @@ class ProfilingConfiguration(interface.AttributeContainer):
     Returns:
       bool: True if memory profiling with guppy is configured.
     """
-    return u'guppy' in self.profilers
+    return 'guppy' in self.profilers
 
   def HaveProfileMemory(self):
     """Determines if memory profiling is configured.
@@ -132,7 +134,7 @@ class ProfilingConfiguration(interface.AttributeContainer):
     Returns:
       bool: True if memory profiling is configured.
     """
-    return u'memory' in self.profilers
+    return 'memory' in self.profilers
 
   def HaveProfileParsers(self):
     """Determines if parsers profiling is configured.
@@ -140,7 +142,7 @@ class ProfilingConfiguration(interface.AttributeContainer):
     Returns:
       bool: True if parsers profiling is configured.
     """
-    return u'parsers' in self.profilers
+    return 'parsers' in self.profilers
 
   def HaveProfileProcessing(self):
     """Determines if processing profiling is configured.
@@ -148,7 +150,7 @@ class ProfilingConfiguration(interface.AttributeContainer):
     Returns:
       bool: True if processing profiling is configured.
     """
-    return u'processing' in self.profilers
+    return 'processing' in self.profilers
 
   def HaveProfileSerializers(self):
     """Determines if serializers profiling is configured.
@@ -156,7 +158,7 @@ class ProfilingConfiguration(interface.AttributeContainer):
     Returns:
       bool: True if serializers profiling is configured.
     """
-    return u'serializers' in self.profilers
+    return 'serializers' in self.profilers
 
 
 class ProcessingConfiguration(interface.AttributeContainer):
@@ -178,7 +180,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
     profiling (ProfilingConfiguration): profiling configuration.
     temporary_directory (str): path of the directory for temporary files.
   """
-  CONTAINER_TYPE = u'processing_configuration'
+  CONTAINER_TYPE = 'processing_configuration'
 
   def __init__(self):
     """Initializes a process configuration object."""
