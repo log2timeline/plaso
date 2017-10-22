@@ -28,6 +28,8 @@ class EventExtractor(object):
   An event extractor extracts events from event sources.
   """
 
+  # pylint: disable=redefined-argument-from-local
+
   def __init__(self, parser_filter_expression=None):
     """Initializes an event extractor.
 
