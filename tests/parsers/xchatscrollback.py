@@ -6,8 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import xchatscrollback as _
+from plaso.formatters import xchatscrollback as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import xchatscrollback
 
@@ -33,8 +32,7 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-01-16 02:56:19')
+    expected_timestamp = timelib.Timestamp.CopyFromString('2009-01-16 02:56:19')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = '[] * Speaking now on ##plaso##'
@@ -42,8 +40,7 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
 
     event = events[1]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-01-16 02:56:27')
+    expected_timestamp = timelib.Timestamp.CopyFromString('2009-01-16 02:56:27')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = '[] * Joachim \xe8 uscito (Client exited)'
@@ -51,8 +48,7 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
 
     event = events[2]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-01-18 21:58:36')
+    expected_timestamp = timelib.Timestamp.CopyFromString('2009-01-18 21:58:36')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = '[] Tcl interface unloaded'
@@ -60,8 +56,7 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
 
     event = events[3]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-01-18 21:58:36')
+    expected_timestamp = timelib.Timestamp.CopyFromString('2009-01-18 21:58:36')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = '[] Python interface unloaded'
@@ -75,8 +70,7 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
 
     event = events[6]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-01-26 08:50:56')
+    expected_timestamp = timelib.Timestamp.CopyFromString('2009-01-26 08:50:56')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = '[] * Topic of #plasify \xe8: .'
@@ -84,14 +78,12 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
 
     event = events[7]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-01-26 08:51:02')
+    expected_timestamp = timelib.Timestamp.CopyFromString('2009-01-26 08:51:02')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     event = events[8]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-01-26 08:52:12')
+    expected_timestamp = timelib.Timestamp.CopyFromString('2009-01-26 08:52:12')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = '[nickname: fpi] Hi Kristinn!'
@@ -99,8 +91,7 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
 
     event = events[9]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-01-26 08:53:13')
+    expected_timestamp = timelib.Timestamp.CopyFromString('2009-01-26 08:53:13')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = '[nickname: Kristinn] GO AND WRITE PARSERS!!! O_o'

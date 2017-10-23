@@ -262,7 +262,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
   NAME = 'skydrive_log_old'
   DESCRIPTION = 'Parser for OneDrive (or SkyDrive) old log files.'
 
-  _ENCODING = 'UTF-8-SIG'
+  _ENCODING = 'utf-8'
 
   _FOUR_DIGITS = text_parser.PyparsingConstants.FOUR_DIGITS
   _TWO_DIGITS = text_parser.PyparsingConstants.TWO_DIGITS
@@ -409,7 +409,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      line (bytes): line from a text file.
+      line (str): line from a text file.
 
     Returns:
       bool: True if the line is in the expected format, False if not.

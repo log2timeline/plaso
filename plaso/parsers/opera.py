@@ -139,6 +139,8 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
   NAME = 'opera_global'
   DESCRIPTION = 'Parser for Opera global_history.dat files.'
 
+  _ENCODING = 'utf-8'
+
   _MAXIMUM_LINE_SIZE = 512
 
   _SUPPORTED_URL_SCHEMES = frozenset(['file', 'http', 'https', 'ftp'])
@@ -163,37 +165,46 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
     Returns:
       bool: True if the record was successfully parsed.
     """
-    title = text_file_object.readline()
+    try:
+      title = text_file_object.readline()
+    except UnicodeDecodeError:
+      parser_mediator.ProduceExtractionError(
+          'unable to read and decode title')
+      return False
+
     if not title:
       return False
 
-    url = text_file_object.readline()
-    timestamp = text_file_object.readline()
-    popularity_index = text_file_object.readline()
+    try:
+      url = text_file_object.readline()
+    except UnicodeDecodeError:
+      parser_mediator.ProduceExtractionError(
+          'unable to read and decode url')
+      return False
 
-    title = title.strip()
-    url = url.strip()
-    timestamp = timestamp.strip()
-    popularity_index = popularity_index.strip()
+    try:
+      timestamp = text_file_object.readline()
+    except UnicodeDecodeError:
+      parser_mediator.ProduceExtractionError(
+          'unable to read and decode timestamp')
+      return False
+
+    try:
+      popularity_index = text_file_object.readline()
+    except UnicodeDecodeError:
+      parser_mediator.ProduceExtractionError(
+          'unable to read and decode popularity index')
+      return False
 
     event_data = OperaGlobalHistoryEventData()
 
-    try:
-      title = title.decode('utf-8')
-    except UnicodeDecodeError:
-      title = title.decode('utf-8', errors='replace')
-      message = (
-          'unable to properly determine string due to encoding error. '
-          'Switching to error tolerant encoding which can result in '
-          'non Basic Latin (C0) characters to be replaced with "?" or '
-          '"\\ufffd". Title: {0:s}').format(title)
-      parser_mediator.ProduceExtractionError(message)
+    event_data.url = url.strip()
 
-    event_data.url = url.decode('utf-8')
-
+    title = title.strip()
     if title != event_data.url:
       event_data.title = title
 
+    popularity_index = popularity_index.strip()
     try:
       event_data.popularity_index = int(popularity_index, 10)
     except ValueError:
@@ -205,6 +216,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
     else:
       event_data.description = 'Last Visit'
 
+    timestamp = timestamp.strip()
     try:
       timestamp = int(timestamp, 10)
     except ValueError:
@@ -234,22 +246,25 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
     Returns:
       bool: True if the record was successfully parsed.
     """
-    title = text_file_object.readline(self._MAXIMUM_LINE_SIZE)
-    if len(title) == self._MAXIMUM_LINE_SIZE and not title.endswith(b'\n'):
+    try:
+      title = text_file_object.readline(size=self._MAXIMUM_LINE_SIZE)
+      url = text_file_object.readline(size=self._MAXIMUM_LINE_SIZE)
+      timestamp = text_file_object.readline(size=self._MAXIMUM_LINE_SIZE)
+      popularity_index = text_file_object.readline(size=self._MAXIMUM_LINE_SIZE)
+    except UnicodeDecodeError:
       return False
 
-    url = text_file_object.readline(self._MAXIMUM_LINE_SIZE)
-    if len(url) == self._MAXIMUM_LINE_SIZE and not url.endswith(b'\n'):
+    if len(title) == self._MAXIMUM_LINE_SIZE and title[-1] != '\n':
       return False
 
-    timestamp = text_file_object.readline(self._MAXIMUM_LINE_SIZE)
-    if (len(timestamp) == self._MAXIMUM_LINE_SIZE and
-        not timestamp.endswith(b'\n')):
+    if len(url) == self._MAXIMUM_LINE_SIZE and url[-1] != '\n':
       return False
 
-    popularity_index = text_file_object.readline(self._MAXIMUM_LINE_SIZE)
+    if len(timestamp) == self._MAXIMUM_LINE_SIZE and timestamp[-1] != '\n':
+      return False
+
     if (len(popularity_index) == self._MAXIMUM_LINE_SIZE and
-        not popularity_index.endswith(b'\n')):
+        popularity_index[-1] != '\n'):
       return False
 
     title = title.strip()
@@ -261,12 +276,6 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
       return False
 
     event_data = OperaGlobalHistoryEventData()
-
-    try:
-      title = title.decode('utf-8')
-      url = url.decode('utf-8')
-    except UnicodeDecodeError:
-      return False
 
     if not self._IsValidUrl(url):
       return False
@@ -304,7 +313,8 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    text_file_object = text_file.TextFile(file_object)
+    encoding = self._ENCODING or parser_mediator.codepage
+    text_file_object = text_file.TextFile(file_object, encoding=encoding)
     if not self._ParseAndValidateRecord(parser_mediator, text_file_object):
       raise errors.UnableToParseFile(
           'Unable to parse as Opera global_history.dat.')

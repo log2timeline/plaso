@@ -253,7 +253,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      line (str): single line from the text file.
+      line (str): line from a text file.
 
     Returns:
       bool: True if the line was successfully parsed.

@@ -95,7 +95,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
   NAME = 'xchatlog'
   DESCRIPTION = 'Parser for XChat log files.'
 
-  _ENCODING = 'UTF-8'
+  _ENCODING = 'utf-8'
 
   # Common (header/footer/body) pyparsing structures.
   # TODO: Only English ASCII timestamp supported ATM, add support for others.
@@ -105,7 +105,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Keyword('Mon') |
       pyparsing.Keyword('Tue') |
       pyparsing.Keyword('Wed') |
-      pyparsing.Keyword('Th') |
+      pyparsing.Keyword('Thu') |
       pyparsing.Keyword('Fri') |
       pyparsing.Keyword('Sat'))
 
@@ -302,7 +302,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      line (bytes): line from a text file.
+      line (str): line from a text file.
 
     Returns:
       bool: True if the line is in the expected format, False if not.
@@ -323,9 +323,8 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      logging.debug(
-          'Not a XChat log file, invalid date and time: {0!s}'.format(
-              structure.date_time))
+      logging.debug('Not a XChat log file, invalid date and time: {0!s}'.format(
+          structure.date_time))
       return False
 
     return True
