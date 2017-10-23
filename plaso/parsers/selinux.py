@@ -65,6 +65,8 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
   NAME = 'selinux'
   DESCRIPTION = 'Parser for SELinux audit.log files.'
 
+  _ENCODING = 'utf-8'
+
   _SELINUX_KEY_VALUE_GROUP = pyparsing.Group(
       pyparsing.Word(pyparsing.alphanums).setResultsName('key') +
       pyparsing.Suppress('=') + (
@@ -174,7 +176,7 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      line (bytes): line from a text file.
+      line (str): line from a text file.
 
     Returns:
       bool: True if the line is in the expected format, False if not.

@@ -66,6 +66,8 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
   NAME = 'winfirewall'
   DESCRIPTION = 'Parser for Windows Firewall Log files.'
 
+  _ENCODING = 'ascii'
+
   # TODO: Add support for custom field names. Currently this parser only
   # supports the default fields, which are:
   #   date time action protocol src-ip dst-ip src-port dst-port size
@@ -226,14 +228,14 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      line (bytes): line from a text file.
+      line (str): line from a text file.
 
     Returns:
       bool: True if the line is in the expected format, False if not.
     """
     # TODO: Examine other versions of the file format and if this parser should
     # support them.
-    return line == b'#Version: 1.5'
+    return line == '#Version: 1.5'
 
 
 manager.ParsersManager.RegisterParser(WinFirewallParser)

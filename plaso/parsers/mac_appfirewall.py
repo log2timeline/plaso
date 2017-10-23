@@ -50,7 +50,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
   NAME = 'mac_appfirewall_log'
   DESCRIPTION = 'Parser for appfirewall.log files.'
 
-  ENCODING = 'utf-8'
+  _ENCODING = 'utf-8'
 
   # Define how a log line should look like.
   # Example: 'Nov  2 04:07:35 DarkTemplar-2.local socketfilterfw[112] '
@@ -196,7 +196,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      line (bytes): line from a text file.
+      line (str): line from a text file.
 
     Returns:
       bool: True if the line is in the expected format, False if not.

@@ -219,7 +219,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      line (bytes): line from a text file.
+      line (str): line from a text file.
 
     Returns:
       bool: True if the line is in the expected format, False if not.

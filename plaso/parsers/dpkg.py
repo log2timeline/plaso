@@ -61,6 +61,8 @@ class DpkgParser(text_parser.PyparsingSingleLineTextParser):
   NAME = 'dpkg'
   DESCRIPTION = 'Parser for Debian dpkg.log files.'
 
+  _ENCODING = 'utf-8'
+
   _DPKG_STARTUP = 'startup'
   _DPKG_STATUS = 'status'
   _DPKG_CONFFILE = 'conffile'
@@ -168,7 +170,7 @@ class DpkgParser(text_parser.PyparsingSingleLineTextParser):
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
-      line (bytes): line from a text file.
+      line (str): line from a text file.
 
     Returns:
       bool: True if the line is in the expected format, False if not.
@@ -181,8 +183,7 @@ class DpkgParser(text_parser.PyparsingSingleLineTextParser):
               exception))
       return False
 
-    return (
-        'date_time' in structure and 'body' in structure)
+    return 'date_time' in structure and 'body' in structure
 
 
 manager.ParsersManager.RegisterParser(DpkgParser)

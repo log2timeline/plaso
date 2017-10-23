@@ -43,6 +43,8 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
   NAME = 'zsh_extended_history'
   DESCRIPTION = 'Parser for ZSH extended history files'
 
+  _ENCODING = 'utf-8'
+
   _VERIFICATION_REGEX = re.compile(r'^:\s\d+:\d+;')
 
   _PYPARSING_COMPONENTS = {
