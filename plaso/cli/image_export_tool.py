@@ -745,7 +745,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           file system.
       UserAbort: if the user initiated an abort.
     """
-    self.ScanSource()
+    self.ScanSource(self._source_path)
 
     self._output_writer.Write('Export started.\n')
 

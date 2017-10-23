@@ -345,6 +345,72 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
+  def testExtractEventsFromSourcesOnLinkToDirectory(self):
+    """Tests the ExtractEventsFromSources function on a symlink to directory."""
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
+
+    options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.quiet = True
+    options.single_process = True
+    options.status_view_mode = 'none'
+    options.source = self._GetTestFilePath(['link_to_testdir'])
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      options.storage_file = os.path.join(temp_directory, 'storage.plaso')
+      options.storage_format = definitions.STORAGE_FORMAT_ZIP
+
+      test_tool.ParseOptions(options)
+
+      test_tool.ExtractEventsFromSources()
+
+      expected_output = [
+          b'',
+          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
+          b'Source type\t: directory',
+          b'',
+          b'Processing started.',
+          b'Processing completed.',
+          b'',
+          b'']
+
+      output = output_writer.ReadOutput()
+      self.assertEqual(output.split(b'\n'), expected_output)
+
+  def testExtractEventsFromSourcesOnLinkToFile(self):
+    """Tests the ExtractEventsFromSources function on a symlink to file."""
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
+
+    options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.quiet = True
+    options.single_process = True
+    options.status_view_mode = 'none'
+    options.source = self._GetTestFilePath(['link_to_System.evtx'])
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      options.storage_file = os.path.join(temp_directory, 'storage.plaso')
+      options.storage_format = definitions.STORAGE_FORMAT_ZIP
+
+      test_tool.ParseOptions(options)
+
+      test_tool.ExtractEventsFromSources()
+
+      expected_output = [
+          b'',
+          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
+          b'Source type\t: single file',
+          b'',
+          b'Processing started.',
+          b'Processing completed.',
+          b'',
+          b'']
+
+      output = output_writer.ReadOutput()
+      self.assertEqual(output.split(b'\n'), expected_output)
+
   def testExtractEventsFromSourcesWithFilestat(self):
     """Tests the ExtractEventsFromSources function with filestat parser."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
