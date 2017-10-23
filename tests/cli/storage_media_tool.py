@@ -163,7 +163,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     test_tool._ParseCredentialOptions(options)
     test_tool._ParseSourcePathOption(options)
 
-    scan_context = test_tool.ScanSource()
+    scan_context = test_tool.ScanSource(source_path)
     self.assertIsNotNone(scan_context)
 
     scan_node = scan_context.GetRootScanNode()
@@ -190,7 +190,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     test_tool._ParseCredentialOptions(options)
     test_tool._ParseSourcePathOption(options)
 
-    scan_context = test_tool.ScanSource()
+    scan_context = test_tool.ScanSource(source_path)
     self.assertIsNotNone(scan_context)
 
     scan_node = self._GetTestScanNode(scan_context)
@@ -215,7 +215,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     test_tool._ParseCredentialOptions(options)
     test_tool._ParseSourcePathOption(options)
 
-    scan_context = test_tool.ScanSource()
+    scan_context = test_tool.ScanSource(source_path)
     self.assertIsNotNone(scan_context)
 
     scan_node = self._GetTestScanNode(scan_context)
@@ -260,7 +260,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     test_tool._ParseCredentialOptions(options)
     test_tool._ParseSourcePathOption(options)
 
-    scan_context = test_tool.ScanSource()
+    scan_context = test_tool.ScanSource(source_path)
     self.assertIsNotNone(scan_context)
 
     scan_node = self._GetTestScanNode(scan_context)

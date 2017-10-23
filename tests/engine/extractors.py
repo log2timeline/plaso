@@ -114,9 +114,10 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
         [source_path_spec], find_specs=find_specs,
         resolver_context=resolver_context))
 
-    # Two files with test_data/testdir/filter_*.txt, AUTHORS
-    # and test_data/System.evtx and test_data/System2.evtx.
-    self.assertEqual(len(path_specs), 5)
+    # Two files with test_data/testdir/filter_*.txt, AUTHORS,
+    # test_data/System.evtx and test_data/System2.evtx and
+    # a symbolic link test_data/link_to_System.evtx.
+    self.assertEqual(len(path_specs), 6)
 
     paths = self._GetFilePaths(path_specs)
 
