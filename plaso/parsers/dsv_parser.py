@@ -27,7 +27,7 @@ class DSVParser(interface.FileObjectParser):
 
   # The default delimiter is a comma, but a tab, pipe or other character are
   # known to be used. Note the delimiter must be a byte string otherwise csv
-  # module can raise a TypeError indicating that "delimiter" must be a single 
+  # module can raise a TypeError indicating that "delimiter" must be a single
   # character string.
   DELIMITER = b','
 

@@ -46,7 +46,7 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
   NAME = 'mcafee_protection'
   DESCRIPTION = 'Parser for McAfee AV Access Protection log files.'
 
-  VALUE_SEPARATOR = b'\t'
+  DELIMITER = b'\t'
   COLUMNS = [
       'date', 'time', 'status', 'username', 'filename',
       'trigger_location', 'rule', 'action']

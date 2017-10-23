@@ -58,7 +58,7 @@ class MactimeParser(dsv_parser.DSVParser):
   COLUMNS = [
       'md5', 'name', 'inode', 'mode_as_string', 'uid', 'gid', 'size',
       'atime', 'mtime', 'ctime', 'btime']
-  VALUE_SEPARATOR = b'|'
+  DELIMITER = b'|'
 
   _MD5_RE = re.compile(r'^[0-9a-fA-F]{32}$')
 
