@@ -11,8 +11,8 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.lib import timelib
+from plaso.parsers import dsv_parser
 from plaso.parsers import manager
-from plaso.parsers import text_parser
 
 
 class McafeeAVEventData(events.EventData):
@@ -40,13 +40,13 @@ class McafeeAVEventData(events.EventData):
     self.username = None
 
 
-class McafeeAccessProtectionParser(text_parser.TextCSVParser):
+class McafeeAccessProtectionParser(dsv_parser.DSVParser):
   """Parses the McAfee AV Access Protection Log."""
 
   NAME = 'mcafee_protection'
   DESCRIPTION = 'Parser for McAfee AV Access Protection log files.'
 
-  VALUE_SEPARATOR = b'\t'
+  DELIMITER = b'\t'
   COLUMNS = [
       'date', 'time', 'status', 'username', 'filename',
       'trigger_location', 'rule', 'action']
@@ -59,18 +59,17 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     be either 1 or 2 characters long, e.g.: 7/30/2013\\t10:22:48 AM
 
     Args:
-      date: a string representing the date.
-      time: a string representing the time.
-      timezone: a timezone (instance of pytz.timezone) that the date and
-                time values represent.
+      date (str): date.
+      time (str): time.
+      timezone (pytz.timezone): timezone of the date and time.
 
     Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC.
+      int: a timestamp integer containing the number of micro seconds since
+          January 1, 1970, 00:00:00 UTC.
 
     Raises:
       TimestampError: if the timestamp is badly formed or unable to transfer
-                      the supplied date and time into a timestamp.
+          the supplied date and time into a timestamp.
     """
     # TODO: check if this is correct, likely not date or not time
     # is more accurate.
@@ -88,13 +87,13 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     return timelib.Timestamp.FromTimeString(time_string, timezone=timezone)
 
   def ParseRow(self, parser_mediator, row_offset, row):
-    """Parses a row and extract event objects.
+    """Parses a line of the log file and produces events.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       row_offset (int): line number of the row.
-      row (dict[str, str]): row of the fields specified in COLUMNS.
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
     try:
       timestamp = self._ConvertToTimestamp(
@@ -122,15 +121,15 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyRow(self, parser_mediator, row):
-    """Verify that this is a McAfee AV Access Protection Log file.
+    """Verifies if a line of the file is in the expected format.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      row (dict[str, str]): row of the fields specified in COLUMNS.
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
 
     Returns:
-      bool: True if the row is in the expected format, False if not.
+      bool: True if this is the correct parser, False otherwise.
     """
     if len(row) != 8:
       return False
@@ -140,7 +139,7 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     # TODO: Find out all the code pages this can have.  Asked McAfee 10/31.
     if row['date'][0:3] == b'\xef\xbb\xbf':
       row['date'] = row['date'][3:]
-      self.encoding = 'utf-8'
+      self._encoding = 'utf-8'
 
     # Check the date format!
     # If it doesn't parse, then this isn't a McAfee AV Access Protection Log

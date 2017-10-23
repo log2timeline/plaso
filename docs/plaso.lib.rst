@@ -44,6 +44,14 @@ plaso.lib.lexer module
     :undoc-members:
     :show-inheritance:
 
+plaso.lib.line_reader_file module
+---------------------------------
+
+.. automodule:: plaso.lib.line_reader_file
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.lib.objectfilter module
 -----------------------------
 
