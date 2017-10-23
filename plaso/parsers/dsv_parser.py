@@ -25,10 +25,11 @@ class DSVParser(interface.FileObjectParser):
   # needs to be defined by each DSV parser.
   COLUMNS = []
 
-  # A DSV file is delimiter separated, but this can be overwritten to include
-  # tab, pipe or other character separation. Note this must be a byte string
-  # otherwise TypeError: "delimiter" must be an 1-character string is raised.
-  VALUE_SEPARATOR = b','
+  # The default delimiter is a comma, but a tab, pipe or other character are
+  # known to be used. Note the delimiter must be a byte string otherwise csv
+  # module can raise a TypeError indicating that "delimiter" must be a single 
+  # character string.
+  DELIMITER = b','
 
   # If there is a header before the lines start it can be defined here, and
   # the number of header lines that need to be skipped before the parsing
@@ -101,9 +102,9 @@ class DSVParser(interface.FileObjectParser):
       line_reader.readline()
 
     reader = csv.DictReader(
-        line_reader, delimiter=self.VALUE_SEPARATOR,
-        fieldnames=self.COLUMNS, quotechar=self.QUOTE_CHAR,
-        restkey=self._MAGIC_TEST_STRING, restval=self._MAGIC_TEST_STRING)
+        line_reader, delimiter=self.DELIMITER, fieldnames=self.COLUMNS,
+        quotechar=self.QUOTE_CHAR, restkey=self._MAGIC_TEST_STRING,
+        restval=self._MAGIC_TEST_STRING)
 
     row_offset = line_reader.tell()
     try:
