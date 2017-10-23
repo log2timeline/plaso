@@ -20,7 +20,7 @@ class ProfilingArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_OUTPUT = ("""\
+  _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--profilers PROFILERS_LIST]
                      [--profiling_directory DIRECTORY]
                      [--profiling_sample_rate SAMPLE_RATE]
@@ -40,7 +40,7 @@ optional arguments:
   --profiling_sample_rate SAMPLE_RATE, --profiling-sample-rate SAMPLE_RATE
                         Profiling sample rate (defaults to a sample every 1000
                         files).
-""")
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
