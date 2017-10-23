@@ -147,7 +147,7 @@ def PyParseJoinList(unused_string, unused_location, tokens):
 
 
 class PyparsingConstants(object):
-  """A class that maintains constants for pyparsing."""
+  """Constants for pyparsing-based parsers."""
 
   # Numbers.
   INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(PyParseIntCast)
@@ -164,7 +164,7 @@ class PyparsingConstants(object):
   IP_ADDRESS = (IPV4_ADDRESS | IPV6_ADDRESS)
 
   # TODO: deprecate and remove, use THREE_LETTERS instead.
-  # TODO: fix Python 3 compatibility of ".uppercase" and ".lowercase".
+  # TODO: fix Python 3 compatibility of .uppercase and .lowercase.
   # pylint: disable=no-member
   MONTH = pyparsing.Word(
       pyparsing.string.uppercase, pyparsing.string.lowercase, exact=3)
@@ -213,7 +213,7 @@ class PyparsingConstants(object):
 
 
 class PyparsingSingleLineTextParser(interface.FileObjectParser):
-  """Single line text parser based on the pyparsing library."""
+  """Single line text parser interface based on pyparsing."""
 
   # The actual structure, this needs to be defined by each parser.
   # This is defined as a list of tuples so that more then a single line
@@ -234,69 +234,47 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
   # longer line than 400 bytes.
   MAX_LINE_LENGTH = 400
 
-  # Define an encoding. If a file is encoded using specific encoding it is
-  # advised to include it here. If this class constant is set all lines wil be
-  # decoded prior to being sent to parsing by pyparsing, if not properly set it
-  # could negatively affect parsing of the file.
-  # If this value needs to be calculated on the fly (not a fixed constant for
-  # this particular file type) it can be done by modifying the self.encoding
-  # attribute.
-  _ENCODING = 'ascii'
+  _ENCODING = None
 
   _EMPTY_LINES = frozenset([b'\n', b'\r', b'\r\n'])
 
+  # Allow for a maximum of 40 empty lines before we bail out.
+  _MAXIMUM_DEPTH = 40
+
   def __init__(self):
-    """Initializes a parser object."""
+    """Initializes a parser."""
     super(PyparsingSingleLineTextParser, self).__init__()
     self._current_offset = 0
     # TODO: self._line_structures is a work-around and this needs
     # a structural fix.
     self._line_structures = self.LINE_STRUCTURES
-    self.encoding = self._ENCODING
 
-  def _ReadLine(
-      self, parser_mediator, text_file_object, max_len=0, quiet=False, depth=0):
+  def _ReadLine(self, text_file_object, max_len=0, depth=0):
     """Reads a line from a text file.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
       text_file_object (dfvfs.TextFile): text file.
       max_len (Optional[int]): maximum number of bytes a single line can take.
-      quiet (Optional[bool]): True if parse warnings should not be displayed.
-      depth (Optional[int]): number of new lines the parser can encounter
-          before bailing out.
+      depth (Optional[int]): number of new lines the parser encountered.
 
     Returns:
       str: single line read from the file-like object, or the maximum number of
           characters, if max_len defined and line longer than the defined size.
+
+    Raises:
+      UnicodeDecodeError: if the text cannot be decoded using the specified
+          encoding.
     """
-    if max_len:
-      line = text_file_object.readline(max_len)
-    else:
-      line = text_file_object.readline()
+    line = text_file_object.readline(size=max_len)
 
     if not line:
-      return
+      return ''
 
     if line in self._EMPTY_LINES:
-      # Max 40 new lines in a row before we bail out.
-      if depth == 40:
+      if depth == self._MAXIMUM_DEPTH:
         return ''
 
-      return self._ReadLine(
-          parser_mediator, text_file_object, max_len=max_len, depth=depth + 1)
-
-    if not self.encoding:
-      return line.strip()
-
-    try:
-      line = line.decode(self.encoding)
-    except UnicodeDecodeError:
-      if not quiet:
-        parser_mediator.ProduceExtractionError(
-            'unable to decode line: "{0:s}..." with encoding: {1:s}'.format(
-                repr(line[:30]), self.encoding))
+      return self._ReadLine(text_file_object, max_len=max_len, depth=depth + 1)
 
     return line.strip()
 
@@ -317,11 +295,15 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       raise errors.UnableToParseFile(
           'Line structure undeclared, unable to proceed.')
 
-    text_file_object = text_file.TextFile(file_object)
+    encoding = self._ENCODING or parser_mediator.codepage
+    text_file_object = text_file.TextFile(file_object, encoding=encoding)
 
-    line = self._ReadLine(
-        parser_mediator, text_file_object, max_len=self.MAX_LINE_LENGTH,
-        quiet=True)
+    try:
+      line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
+    except UnicodeDecodeError:
+      raise errors.UnableToParseFile(
+          'Not a text file or encoding not supported.')
+
     if not line:
       raise errors.UnableToParseFile('Not a text file.')
 
@@ -371,7 +353,14 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
                 repr(line), self._current_offset))
 
       self._current_offset = text_file_object.get_offset()
-      line = self._ReadLine(parser_mediator, text_file_object)
+
+      try:
+        line = self._ReadLine(text_file_object)
+      except UnicodeDecodeError:
+        parser_mediator.ProduceExtractionError(
+            'unable to read and decode log line at offset {0:d}'.format(
+                self._current_offset))
+        break
 
   @abc.abstractmethod
   def ParseRecord(self, parser_mediator, key, structure):
@@ -408,7 +397,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
 
 class EncodedTextReader(object):
-  """Class to read simple encoded text."""
+  """Encoded text reader."""
 
   def __init__(self, buffer_size=2048, encoding=None):
     """Initializes the encoded test reader object.
@@ -536,7 +525,7 @@ class EncodedTextReader(object):
 
 
 class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
-  """Multi line text parser based on the pyparsing library."""
+  """Multi line text parser interface based on pyparsing."""
 
   BUFFER_SIZE = 2048
 

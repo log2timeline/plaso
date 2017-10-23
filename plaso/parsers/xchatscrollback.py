@@ -77,7 +77,7 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   NAME = 'xchatscrollback'
   DESCRIPTION = 'Parser for XChat scrollback log files.'
 
-  _ENCODING = 'UTF-8'
+  _ENCODING = 'utf-8'
 
   # Define how a log line should look like.
   LOG_LINE = (
@@ -178,7 +178,7 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      line (str): single line from the text file.
+      line (str): line from a text file.
 
     Returns:
       bool: True if the line was successfully parsed.
@@ -194,8 +194,7 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
     try:
       timestamp = int(parsed_structure.timestamp)
     except ValueError:
-      logging.debug(
-          'Not a XChat scrollback log file, invalid timestamp string')
+      logging.debug('Not a XChat scrollback log file, invalid timestamp string')
       return False
 
     if not timelib.Timestamp.FromPosixTime(timestamp):
