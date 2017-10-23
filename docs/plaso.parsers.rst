@@ -115,6 +115,14 @@ plaso.parsers.dpkg module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.dsv_parser module
+-------------------------------
+
+.. automodule:: plaso.parsers.dsv_parser
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.esedb module
 --------------------------
 

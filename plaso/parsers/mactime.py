@@ -14,8 +14,8 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.parsers import dsv_parser
 from plaso.parsers import manager
-from plaso.parsers import text_parser
 
 
 # TODO: refactor to pass user_sid as an int.
@@ -49,16 +49,16 @@ class MactimeEventData(events.EventData):
     self.user_sid = None
 
 
-class MactimeParser(text_parser.TextCSVParser):
-  """Parses SleuthKit's mactime bodyfiles."""
+class MactimeParser(dsv_parser.DSVParser):
+  """SleuthKit bodyfile parser."""
 
   NAME = 'mactime'
-  DESCRIPTION = 'Parser for SleuthKit\'s mactime bodyfiles.'
+  DESCRIPTION = 'Parser for SleuthKit version 3 bodyfiles.'
 
   COLUMNS = [
       'md5', 'name', 'inode', 'mode_as_string', 'uid', 'gid', 'size',
       'atime', 'mtime', 'ctime', 'btime']
-  VALUE_SEPARATOR = b'|'
+  DELIMITER = b'|'
 
   _MD5_RE = re.compile(r'^[0-9a-fA-F]{32}$')
 
@@ -75,7 +75,7 @@ class MactimeParser(text_parser.TextCSVParser):
     """Converts a specific value of the row to an integer.
 
     Args:
-      row (dict[str, str]): fields of a single row, as denoted in COLUMNS.
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
       value_name (str): name of the value within the row.
 
     Retruns:
@@ -88,13 +88,13 @@ class MactimeParser(text_parser.TextCSVParser):
       return
 
   def ParseRow(self, parser_mediator, row_offset, row):
-    """Parses a row and extract events.
+    """Parses a line of the log file and produces events.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       row_offset (int): number of the corresponding line.
-      row (dict[str, str]): fields of a single row, as denoted in COLUMNS.
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
     filename = row.get('name', None)
     md5_hash = row.get('md5', None)
@@ -140,31 +140,35 @@ class MactimeParser(text_parser.TextCSVParser):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyRow(self, unused_parser_mediator, row):
-    """Verify we are dealing with a mactime bodyfile.
+    """Verifies if a line of the file is in the expected format.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      row (dict[str, str]): fields of a single row, as denoted in COLUMNS.
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
 
     Returns:
-      bool: True if the row is valid.
+      bool: True if this is the correct parser, False otherwise.
     """
-    # The md5 value is '0' if not set.
+    # Sleuthkit version 3 format:
+    # MD5|name|inode|mode_as_string|UID|GID|size|atime|mtime|ctime|crtime
+    # 0|/lost+found|11|d/drwx------|0|0|12288|1337961350|1337961350|1337961350|0
+
     if row['md5'] != b'0' and not self._MD5_RE.match(row['md5']):
       return False
 
-    try:
-      # Verify that the "size" field is an integer, thus cast it to int
-      # and then back to string so it can be compared, if the value is
-      # not a string representation of an integer, e.g. '12a' then this
-      # conversion will fail and we return a False value.
-      if str(int(row.get('size', b'0'), 10)) != row.get('size', None):
-        return False
-    except ValueError:
-      return False
+    # Check if the folowing columns contain a base 10 integer value if set.
+    for column_name in (
+        'uid', 'gid', 'size', 'atime', 'mtime', 'ctime', 'crtime'):
+      column_value = row.get(column_name, None)
+      if not column_value:
+        continue
 
-    # TODO: Add additional verification.
+      try:
+        int(column_value, 10)
+      except (TypeError, ValueError):
+        return False
+
     return True
 
 

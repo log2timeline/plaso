@@ -39,7 +39,10 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
       for identifier, value in iter(knowledge_base_values.items()):
-        knowledge_base_object.SetValue(identifier, value)
+        if identifier == 'codepage':
+          knowledge_base_object.SetCodepage(value)
+        else:
+          knowledge_base_object.SetValue(identifier, value)
 
     knowledge_base_object.SetTimeZone(timezone)
 
@@ -117,8 +120,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     storage_writer = self._CreateStorageWriter()
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     parser_mediator = self._CreateParserMediator(
-        storage_writer,
-        file_entry=file_entry,
+        storage_writer, file_entry=file_entry,
         knowledge_base_values=knowledge_base_values,
         timezone=timezone)
 

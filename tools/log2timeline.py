@@ -33,10 +33,6 @@ def Main():
     tool.ListParsersAndPlugins()
     have_list_option = True
 
-  if tool.list_output_modules:
-    tool.ListOutputModules()
-    have_list_option = True
-
   if tool.list_profilers:
     tool.ListProfilers()
     have_list_option = True

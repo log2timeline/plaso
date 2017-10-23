@@ -8,8 +8,8 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.lib import timelib
+from plaso.parsers import dsv_parser
 from plaso.parsers import manager
-from plaso.parsers import text_parser
 
 import pytz  # pylint: disable=wrong-import-order
 
@@ -152,7 +152,7 @@ class SymantecEventData(events.EventData):
     self.virustype = None
 
 
-class SymantecParser(text_parser.TextCSVParser):
+class SymantecParser(dsv_parser.DSVParser):
   """Parse Symantec AV Corporate Edition and Endpoint Protection log files."""
 
   NAME = 'symantec_scanlog'
@@ -210,13 +210,13 @@ class SymantecParser(text_parser.TextCSVParser):
         year + 1970, month + 1, day, hours, minutes, seconds, timezone=timezone)
 
   def ParseRow(self, parser_mediator, row_offset, row):
-    """Parses a row and extract event objects.
+    """Parses a line of the log file and produces events.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       row_offset (int): line number of the row.
-      row (dict[str, str]): row of the fields specified in COLUMNS.
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
     try:
       timestamp = self._ConvertToTimestamp(
@@ -296,15 +296,15 @@ class SymantecParser(text_parser.TextCSVParser):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyRow(self, parser_mediator, row):
-    """Verify a single line of a Symantec log file.
+    """Verifies if a line of the file is in the expected format.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      row (dict[str, str]): row of the fields specified in COLUMNS.
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
 
     Returns:
-      bool: True if the row is in the expected format, False if not.
+      bool: True if this is the correct parser, False otherwise.
     """
     try:
       timestamp = self._ConvertToTimestamp(
