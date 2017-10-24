@@ -345,6 +345,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
+  @unittest.skipIf(platform.system() != 'Windows', 'not supported on Windows')
   def testExtractEventsFromSourcesOnLinkToDirectory(self):
     """Tests the ExtractEventsFromSources function on a symlink to directory."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
@@ -378,6 +379,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
+  @unittest.skipIf(platform.system() != 'Windows', 'not supported on Windows')
   def testExtractEventsFromSourcesOnLinkToFile(self):
     """Tests the ExtractEventsFromSources function on a symlink to file."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
