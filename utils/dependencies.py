@@ -102,7 +102,11 @@ class DependencyDefinitionReader(object):
 
 
 class DependencyHelper(object):
-  """Dependency helper."""
+  """Dependency helper.
+
+  Attributes:
+    list[DependencyDefinition]: dependencies.
+  """
 
   _VERSION_NUMBERS_REGEX = re.compile(r'[0-9.]+')
   _VERSION_SPLIT_REGEX = re.compile(r'\.|\-')
@@ -115,14 +119,14 @@ class DependencyHelper(object):
           configuration file.
     """
     super(DependencyHelper, self).__init__()
-    self._dependencies = {}
     self._test_dependencies = {}
+    self.dependencies = {}
 
     dependency_reader = DependencyDefinitionReader()
 
     with open(configuration_file, 'r') as file_object:
       for dependency in dependency_reader.Read(file_object):
-        self._dependencies[dependency.name] = dependency
+        self.dependencies[dependency.name] = dependency
 
     dependency = DependencyDefinition('mock')
     dependency.minimum_version = '0.7.1'
@@ -324,7 +328,7 @@ class DependencyHelper(object):
     print('Checking availability and versions of dependencies.')
     check_result = True
 
-    for module_name, dependency in sorted(self._dependencies.items()):
+    for module_name, dependency in sorted(self.dependencies.items()):
       if module_name == 'sqlite3':
         result, status_message = self._CheckSQLite3()
       else:
