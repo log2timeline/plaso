@@ -2,6 +2,8 @@
 """Functionality to check for the availability and version of dependencies."""
 
 from __future__ import print_function
+from __future__ import unicode_literals
+
 import re
 
 
@@ -13,58 +15,58 @@ import re
 # Where version_attribute_name is either a name of an attribute,
 # property or method.
 PYTHON_DEPENDENCIES = {
-    u'artifacts': (u'__version__', u'20161022', None, True),
+    'artifacts': ('__version__', '20161022', None, True),
     # The bencode module does not appear to have version information.
-    u'bencode': (u'', u'', None, True),
-    u'binplist': (u'__version__', u'0.1.4', None, True),
-    u'construct': (u'__version__', u'2.5.2', u'2.5.3', True),
-    u'Crypto': (u'__version__', u'2.6.0', None, True),
-    u'dateutil': (u'__version__', u'1.5', None, True),
-    u'dfdatetime': (u'__version__', u'20170103', None, True),
-    u'dfvfs': (u'__version__', u'20160803', None, True),
-    u'dfwinreg': (u'__version__', u'20160320', None, True),
-    u'dpkt': (u'__version__', u'1.8', None, True),
+    'bencode': ('', '', None, True),
+    'binplist': ('__version__', '0.1.4', None, True),
+    'construct': ('__version__', '2.5.2', '2.5.3', True),
+    'Crypto': ('__version__', '2.6.0', None, True),
+    'dateutil': ('__version__', '1.5', None, True),
+    'dfdatetime': ('__version__', '20170103', None, True),
+    'dfvfs': ('__version__', '20160803', None, True),
+    'dfwinreg': ('__version__', '20160320', None, True),
+    'dpkt': ('__version__', '1.8', None, True),
     # TODO: determine the version of Efilter.
-    u'efilter': (u'', u'1.5', None, True),
-    u'hachoir_core': (u'__version__', u'1.3.3', None, True),
-    u'hachoir_metadata': (u'__version__', u'1.3.3', None, True),
-    u'hachoir_parser': (u'__version__', u'1.3.4', None, True),
-    u'lzma': (u'__version__', u'0.5.3', None, False),
-    u'pefile': (u'__version__', u'1.2.10-139', None, True),
-    u'psutil': (u'__version__', u'1.2.1', None, True),
-    u'pybde': (u'get_version()', u'20140531', None, True),
-    u'pyesedb': (u'get_version()', u'20150409', None, True),
-    u'pyevt': (u'get_version()', u'20120410', None, True),
-    u'pyevtx': (u'get_version()', u'20141112', None, True),
-    u'pyewf': (u'get_version()', u'20131210', None, True),
-    u'pyfsntfs': (u'get_version()', u'20151130', None, True),
-    u'pyfvde': (u'get_version()', u'20160719', None, True),
-    u'pyfwnt': (u'get_version()', u'20160418', None, True),
-    u'pyfwsi': (u'get_version()', u'20150606', None, True),
-    u'pylnk': (u'get_version()', u'20150830', None, True),
-    u'pymsiecf': (u'get_version()', u'20150314', None, True),
-    u'pyolecf': (u'get_version()', u'20161117', None, True),
-    u'pyparsing': (u'__version__', u'2.0.3', None, True),
-    u'pyqcow': (u'get_version()', u'20131204', None, True),
-    u'pyregf': (u'get_version()', u'20150315', None, True),
-    u'pyscca': (u'get_version()', u'20161031', None, True),
-    u'pysigscan': (u'get_version()', u'20150627', None, True),
-    u'pysmdev': (u'get_version()', u'20140529', None, True),
-    u'pysmraw': (u'get_version()', u'20140612', None, True),
-    u'pytsk3': (u'get_version()', u'20160721', None, True),
+    'efilter': ('', '1.5', None, True),
+    'hachoir_core': ('__version__', '1.3.3', None, True),
+    'hachoir_metadata': ('__version__', '1.3.3', None, True),
+    'hachoir_parser': ('__version__', '1.3.4', None, True),
+    'lzma': ('__version__', '0.5.3', None, False),
+    'pefile': ('__version__', '1.2.10-139', None, True),
+    'psutil': ('__version__', '1.2.1', None, True),
+    'pybde': ('get_version()', '20140531', None, True),
+    'pyesedb': ('get_version()', '20150409', None, True),
+    'pyevt': ('get_version()', '20120410', None, True),
+    'pyevtx': ('get_version()', '20141112', None, True),
+    'pyewf': ('get_version()', '20131210', None, True),
+    'pyfsntfs': ('get_version()', '20151130', None, True),
+    'pyfvde': ('get_version()', '20160719', None, True),
+    'pyfwnt': ('get_version()', '20160418', None, True),
+    'pyfwsi': ('get_version()', '20150606', None, True),
+    'pylnk': ('get_version()', '20150830', None, True),
+    'pymsiecf': ('get_version()', '20150314', None, True),
+    'pyolecf': ('get_version()', '20161117', None, True),
+    'pyparsing': ('__version__', '2.0.3', None, True),
+    'pyqcow': ('get_version()', '20131204', None, True),
+    'pyregf': ('get_version()', '20150315', None, True),
+    'pyscca': ('get_version()', '20161031', None, True),
+    'pysigscan': ('get_version()', '20150627', None, True),
+    'pysmdev': ('get_version()', '20140529', None, True),
+    'pysmraw': ('get_version()', '20140612', None, True),
+    'pytsk3': ('get_version()', '20160721', None, True),
     # TODO: determine the version of pytz.
     # pytz uses __version__ but has a different version indicator e.g. 2012d
-    u'pytz': (u'', u'', None, True),
-    u'pyvhdi': (u'get_version()', u'20131210', None, True),
-    u'pyvmdk': (u'get_version()', u'20140421', None, True),
-    u'pyvshadow': (u'get_version()', u'20160109', None, True),
-    u'pyvslvm': (u'get_version()', u'20160109', None, True),
-    u'requests': (u'__version__', u'2.2.1', None, True),
-    u'six': (u'__version__', u'1.1.0', None, True),
-    u'xlsxwriter': (u'__version__', u'0.9.3', None, True),
-    u'yaml': (u'__version__', u'3.10', None, True),
-    u'yara': (u'YARA_VERSION', u'3.4.0', None, True),
-    u'zmq': (u'__version__', u'2.1.11', None, True)}
+    'pytz': ('', '', None, True),
+    'pyvhdi': ('get_version()', '20131210', None, True),
+    'pyvmdk': ('get_version()', '20140421', None, True),
+    'pyvshadow': ('get_version()', '20160109', None, True),
+    'pyvslvm': ('get_version()', '20160109', None, True),
+    'requests': ('__version__', '2.2.1', None, True),
+    'six': ('__version__', '1.1.0', None, True),
+    'xlsxwriter': ('__version__', '0.9.3', None, True),
+    'yaml': ('__version__', '3.10', None, True),
+    'yara': ('YARA_VERSION', '3.4.0', None, True),
+    'zmq': ('__version__', '2.1.11', None, True)}
 
 _VERSION_SPLIT_REGEX = re.compile(r'\.|\-')
 
@@ -92,19 +94,19 @@ def _CheckPythonModule(
   module_object = _ImportPythonModule(module_name)
   if not module_object:
     if not is_required:
-      print(u'[OPTIONAL]\tmissing: {0:s}.'.format(module_name))
+      print('[OPTIONAL]\tmissing: {0:s}.'.format(module_name))
       return True
 
-    print(u'[FAILURE]\tmissing: {0:s}.'.format(module_name))
+    print('[FAILURE]\tmissing: {0:s}.'.format(module_name))
     return False
 
   if not version_attribute_name or not minimum_version:
     if verbose_output:
-      print(u'[OK]\t\t{0:s}'.format(module_name))
+      print('[OK]\t\t{0:s}'.format(module_name))
     return True
 
   module_version = None
-  if not version_attribute_name.endswith(u'()'):
+  if not version_attribute_name.endswith('()'):
     module_version = getattr(module_object, version_attribute_name, None)
   else:
     version_method = getattr(module_object, version_attribute_name[:-2], None)
@@ -113,12 +115,12 @@ def _CheckPythonModule(
 
   if not module_version:
     print((
-        u'[FAILURE]\tunable to determine version information '
-        u'for: {0:s}').format(module_name))
+        '[FAILURE]\tunable to determine version information '
+        'for: {0:s}').format(module_name))
     return False
 
   # Make sure the module version is a string.
-  module_version = u'{0!s}'.format(module_version)
+  module_version = '{0!s}'.format(module_version)
 
   # Split the version string and convert every digit into an integer.
   # A string compare of both version strings will yield an incorrect result.
@@ -129,8 +131,8 @@ def _CheckPythonModule(
 
   if module_version_map < minimum_version_map:
     print((
-        u'[FAILURE]\t{0:s} version: {1!s} is too old, {2!s} or later '
-        u'required.').format(module_name, module_version, minimum_version))
+        '[FAILURE]\t{0:s} version: {1!s} is too old, {2!s} or later '
+        'required.').format(module_name, module_version, minimum_version))
     return False
 
   if maximum_version:
@@ -138,12 +140,12 @@ def _CheckPythonModule(
         map(int, _VERSION_SPLIT_REGEX.split(maximum_version)))
     if module_version_map > maximum_version_map:
       print((
-          u'[FAILURE]\t{0:s} version: {1!s} is too recent, {2!s} or earlier '
-          u'required.').format(module_name, module_version, maximum_version))
+          '[FAILURE]\t{0:s} version: {1!s} is too recent, {2!s} or earlier '
+          'required.').format(module_name, module_version, maximum_version))
       return False
 
   if verbose_output:
-    print(u'[OK]\t\t{0:s} version: {1!s}'.format(module_name, module_version))
+    print('[OK]\t\t{0:s} version: {1!s}'.format(module_name, module_version))
 
   return True
 
@@ -162,19 +164,19 @@ def _CheckSQLite3(verbose_output=True):
   # pysqlite2.dbapi2 by the pysqlite2 Python module. Typically
   # pysqlite2.dbapi2 would contain a newer version of sqlite3, hence
   # we check for its presence first.
-  module_name = u'pysqlite2.dbapi2'
-  minimum_version = u'3.7.8'
+  module_name = 'pysqlite2.dbapi2'
+  minimum_version = '3.7.8'
 
   module_object = _ImportPythonModule(module_name)
   if not module_object:
-    module_name = u'sqlite3'
+    module_name = 'sqlite3'
 
   module_object = _ImportPythonModule(module_name)
   if not module_object:
-    print(u'[FAILURE]\tmissing: {0:s}.'.format(module_name))
+    print('[FAILURE]\tmissing: {0:s}.'.format(module_name))
     return False
 
-  module_version = getattr(module_object, u'sqlite_version', None)
+  module_version = getattr(module_object, 'sqlite_version', None)
   if not module_version:
     return False
 
@@ -187,12 +189,12 @@ def _CheckSQLite3(verbose_output=True):
 
   if module_version_map < minimum_version_map:
     print((
-        u'[FAILURE]\t{0:s} version: {1!s} is too old, {2!s} or later '
-        u'required.').format(module_name, module_version, minimum_version))
+        '[FAILURE]\t{0:s} version: {1!s} is too old, {2!s} or later '
+        'required.').format(module_name, module_version, minimum_version))
     return False
 
   if verbose_output:
-    print(u'[OK]\t\t{0:s} version: {1!s}'.format(module_name, module_version))
+    print('[OK]\t\t{0:s} version: {1!s}'.format(module_name, module_version))
 
   return True
 
@@ -212,8 +214,8 @@ def _ImportPythonModule(module_name):
     return
 
   # If the module name contains dots get the upper most module object.
-  if u'.' in module_name:
-    for submodule_name in module_name.split(u'.')[1:]:
+  if '.' in module_name:
+    for submodule_name in module_name.split('.')[1:]:
       module_object = getattr(module_object, submodule_name, None)
 
   return module_object
@@ -228,7 +230,7 @@ def CheckDependencies(verbose_output=True):
   Returns:
     bool: True if the dependencies are available, False otherwise.
   """
-  print(u'Checking availability and versions of dependencies.')
+  print('Checking availability and versions of dependencies.')
   check_result = True
 
   for module_name, version_tuple in sorted(PYTHON_DEPENDENCIES.items()):
@@ -242,7 +244,7 @@ def CheckDependencies(verbose_output=True):
     check_result = False
 
   if check_result and not verbose_output:
-    print(u'[OK]')
+    print('[OK]')
 
-  print(u'')
+  print('')
   return check_result
