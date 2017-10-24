@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import argparse
 import os
+import platform
 import unittest
 
 from plaso.cli import log2timeline_tool
