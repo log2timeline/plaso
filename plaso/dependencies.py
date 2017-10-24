@@ -20,7 +20,7 @@ PYTHON_DEPENDENCIES = {
     'binplist': ('__version__', '0.1.4', None, True),
     'certifi': ('__version__', '2016.9.26', None, True),
     'chardet': ('__version__', '2.0.1', None, True),
-    'construct': ('__version__', '2.5.2', 2.5.3, True),
+    'construct': ('__version__', '2.5.2', '2.5.3', True),
     'Crypto': ('__version__', '2.6.0', None, True),
     'dateutil': ('__version__', '1.5', None, True),
     'dfdatetime': ('__version__', '20170529', None, True),
