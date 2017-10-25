@@ -379,6 +379,14 @@ plaso.parsers.skydrivelog module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.sophos_av module
+------------------------------
+
+.. automodule:: plaso.parsers.sophos_av
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.sqlite module
 ---------------------------
 
