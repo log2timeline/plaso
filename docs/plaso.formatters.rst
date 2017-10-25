@@ -556,6 +556,14 @@ plaso.formatters.skype module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.sophos_av module
+---------------------------------
+
+.. automodule:: plaso.formatters.sophos_av
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.ssh module
 ---------------------------
 
