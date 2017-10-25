@@ -42,6 +42,7 @@ class PsortTool(
     tools.CLITool,
     tool_options.AnalysisPluginOptions,
     tool_options.OutputModuleOptions,
+    tool_options.ProfilingOptions,
     tool_options.StorageFileOptions):
   """Psort CLI tool.
 
@@ -52,6 +53,7 @@ class PsortTool(
         identifiers should be shown.
     list_output_modules (bool): True if information about the output modules
         should be shown.
+    list_profilers (bool): True if the profilers should be listed.
   """
 
   NAME = 'psort'
@@ -101,6 +103,7 @@ class PsortTool(
     self.list_analysis_plugins = False
     self.list_language_identifiers = False
     self.list_output_modules = False
+    self.list_profilers = False
 
   def _CheckStorageFile(self, storage_file_path):
     """Checks if the storage file path is valid.
@@ -307,7 +310,6 @@ class PsortTool(
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     self.AddBasicOptions(argument_parser)
-    self.AddProfilingOptions(argument_parser)
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         argument_parser, names=['storage_file'])
@@ -358,6 +360,11 @@ class PsortTool(
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         output_format_group, names=['output_modules'])
 
+    profiling_group = argument_parser.add_argument_group('profiling arguments')
+
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        profiling_group, names=['profiling'])
+
     try:
       # TODO: refactor how arguments is used in a more argparse way.
       options = argument_parser.parse_args()
@@ -404,15 +411,16 @@ class PsortTool(
     # and preferred time zone options.
     self._ParseTimezoneOption(options)
 
-    names = ['analysis_plugins', 'language']
+    names = ['analysis_plugins', 'language', 'profiling']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=names)
 
     self.list_analysis_plugins = self._analysis_plugins == 'list'
     self.list_language_identifiers = self._preferred_language == 'list'
+    self.list_profilers = self._profilers == 'list'
 
     if (self.list_analysis_plugins or self.list_language_identifiers or
-        self.list_timezones):
+        self.list_profilers or self.list_timezones):
       return
 
     # Check output modules after the other listable options, otherwise
@@ -430,8 +438,6 @@ class PsortTool(
         options, self, names=['data_location'])
 
     self._ParseLogFileOptions(options)
-
-    self._ParseProfilingOptions(options)
 
     self._ParseProcessingOptions(options)
 
