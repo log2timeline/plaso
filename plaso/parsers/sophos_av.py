@@ -25,7 +25,7 @@ class SophosAVLogEventData(events.EventData):
   """Sophos Anti-Virus log event data.
 
   Attributes:
-    text (str): text sent by nickname or other text (server, messages, etc.).
+    text (str): Sophos Anti-Virus log message.
   """
 
   DATA_TYPE = 'sophos:av:log'
