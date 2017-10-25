@@ -19,21 +19,21 @@ class DynamicOutputArgumentsHelperTest(
     test_lib.OutputModuleArgumentsHelperTest):
   """Tests the dynamic output module CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      ('usage: cli_helper.py [--fields FIELDS] '
-       '[--additional_fields ADDITIONAL_FIELDS]'),
-      '', 'Test argument parser.', '', 'optional arguments:',
-      '  --additional_fields ADDITIONAL_FIELDS',
-      ('                        Defines extra fields to be included in the '
-       'output, in'),
-      ('                        addition to the default fields, which are '
-       'datetime,'),
-      ('                        timestamp_desc, source, source_long, message, '
-       'parser,'),
-      '                        display_name, tag.',
-      ('  --fields FIELDS       Defines which fields should be included in the'
-       ' output.'),
-      ''])
+  # pylint: disable=no-member,protected-access
+
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--fields FIELDS] [--additional_fields ADDITIONAL_FIELDS]
+
+Test argument parser.
+
+optional arguments:
+  --additional_fields ADDITIONAL_FIELDS
+                        Defines extra fields to be included in the output, in
+                        addition to the default fields, which are datetime,
+                        timestamp_desc, source, source_long, message, parser,
+                        display_name, tag.
+  --fields FIELDS       Defines which fields should be included in the output.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

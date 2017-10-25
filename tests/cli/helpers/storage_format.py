@@ -17,19 +17,18 @@ from tests.cli import test_lib as cli_test_lib
 class StorageFormatArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests for the storage format CLI arguments helper."""
 
-  # pylint: disable=protected-access
+  # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [--storage_format FORMAT]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --storage_format FORMAT, --storage-format FORMAT',
-      ('                        Format of the storage file, the default '
-       'is: zip.'),
-      '                        Supported options: sqlite, zip',
-      ''])
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--storage_format FORMAT]
+
+Test argument parser.
+
+optional arguments:
+  --storage_format FORMAT, --storage-format FORMAT
+                        Format of the storage file, the default is: zip.
+                        Supported options: sqlite, zip
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
@@ -51,7 +50,6 @@ class StorageFormatArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     test_tool = tools.CLITool()
     storage_format.StorageFormatArgumentsHelper.ParseOptions(options, test_tool)
 
-    # pylint: disable=no-member
     self.assertEqual(test_tool._storage_format, options.storage_format)
 
     with self.assertRaises(errors.BadConfigObject):

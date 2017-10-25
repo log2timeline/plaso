@@ -18,19 +18,18 @@ from tests.cli import test_lib as cli_test_lib
 class StatusViewArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests for the status view CLI arguments helper."""
 
-  # pylint: disable=protected-access
+  # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [--status_view TYPE]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --status_view TYPE, --status-view TYPE',
-      ('                        The processing status view mode: "linear", '
-       '"none" or'),
-      '                        "window".',
-      ''])
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--status_view TYPE]
+
+Test argument parser.
+
+optional arguments:
+  --status_view TYPE, --status-view TYPE
+                        The processing status view mode: "linear", "none" or
+                        "window".
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
@@ -52,7 +51,6 @@ class StatusViewArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     test_tool = tools.CLITool()
     status_view.StatusViewArgumentsHelper.ParseOptions(options, test_tool)
 
-    # pylint: disable=no-member
     self.assertEqual(test_tool._status_view_mode, options.status_view_mode)
 
     with self.assertRaises(errors.BadConfigObject):

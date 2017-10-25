@@ -17,32 +17,27 @@ from tests.cli import test_lib as cli_test_lib
 class OutputModulesArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests for the output modules CLI arguments helper."""
 
-  # pylint: disable=protected-access
+  # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [-o FORMAT] [-w OUTPUT_FILE] [--fields FIELDS]',
-      '                     [--additional_fields ADDITIONAL_FIELDS]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --additional_fields ADDITIONAL_FIELDS',
-      ('                        Defines extra fields to be included in the '
-       'output, in'),
-      ('                        addition to the default fields, which are '
-       'datetime,'),
-      ('                        timestamp_desc, source, source_long, message, '
-       'parser,'),
-      '                        display_name, tag.',
-      ('  --fields FIELDS       Defines which fields should be included in '
-       'the output.'),
-      '  -o FORMAT, --output_format FORMAT, --output-format FORMAT',
-      ('                        The output format. Use "-o list" to see a '
-       'list of'),
-      '                        available output formats.',
-      '  -w OUTPUT_FILE, --write OUTPUT_FILE',
-      '                        Output filename.',
-      ''])
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [-o FORMAT] [-w OUTPUT_FILE] [--fields FIELDS]
+                     [--additional_fields ADDITIONAL_FIELDS]
+
+Test argument parser.
+
+optional arguments:
+  --additional_fields ADDITIONAL_FIELDS
+                        Defines extra fields to be included in the output, in
+                        addition to the default fields, which are datetime,
+                        timestamp_desc, source, source_long, message, parser,
+                        display_name, tag.
+  --fields FIELDS       Defines which fields should be included in the output.
+  -o FORMAT, --output_format FORMAT, --output-format FORMAT
+                        The output format. Use "-o list" to see a list of
+                        available output formats.
+  -w OUTPUT_FILE, --write OUTPUT_FILE
+                        Output filename.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
@@ -67,7 +62,6 @@ class OutputModulesArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     output_modules.OutputModulesArgumentsHelper.ParseOptions(
         options, test_tool)
 
-    # pylint: disable=no-member
     self.assertEqual(test_tool._output_format, options.output_format)
     self.assertEqual(test_tool._output_filename, options.write)
 

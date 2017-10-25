@@ -22,25 +22,25 @@ class CLIToolTest(test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
-  _EXPECTED_BASIC_OPTIONS = '\n'.join([
-      'usage: tool_test.py [-h] [-V]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  -V, --version  show the version information.',
-      '  -h, --help     show this help message and exit.',
-      ''])
+  _EXPECTED_BASIC_OPTIONS = """\
+usage: tool_test.py [-h] [-V]
 
-  _EXPECTED_INFORMATIONAL_OPTIONS = '\n'.join([
-      'usage: tool_test.py [-d] [-q]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  -d, --debug  enable debug output.',
-      '  -q, --quiet  disable informational output.',
-      ''])
+Test argument parser.
+
+optional arguments:
+  -V, --version  Show the version information.
+  -h, --help     Show this help message and exit.
+"""
+
+  _EXPECTED_INFORMATIONAL_OPTIONS = """\
+usage: tool_test.py [-d] [-q]
+
+Test argument parser.
+
+optional arguments:
+  -d, --debug  Enable debug output.
+  -q, --quiet  Disable informational output.
+"""
 
   _EXPECTED_PROFILING_OPTIONS = '\n'.join([
       'usage: tool_test.py [--profilers PROFILERS_LIST]',
@@ -71,21 +71,18 @@ class CLIToolTest(test_lib.CLIToolTestCase):
       '                        1000 files).',
       ''])
 
-  _EXPECTED_TIMEZONE_OPTION = '\n'.join([
-      'usage: tool_test.py [-z TIMEZONE]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  -z TIMEZONE, --zone TIMEZONE, --timezone TIMEZONE',
-      ('                        explicitly define the timezone. Typically '
-       'the timezone'),
-      ('                        is determined automatically where possible '
-       'otherwise'),
-      ('                        it will default to UTC. Use "-z list" to see '
-       'a list of'),
-      '                        available timezones.',
-      ''])
+  _EXPECTED_TIMEZONE_OPTION = """\
+usage: tool_test.py [-z TIMEZONE]
+
+Test argument parser.
+
+optional arguments:
+  -z TIMEZONE, --zone TIMEZONE, --timezone TIMEZONE
+                        explicitly define the timezone. Typically the timezone
+                        is determined automatically where possible otherwise
+                        it will default to UTC. Use "-z list" to see a list of
+                        available timezones.
+"""
 
   # TODO: add test for _ConfigureLogging
   # TODO: add test for _EncodeString

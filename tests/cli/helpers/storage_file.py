@@ -17,16 +17,16 @@ from tests.cli import test_lib as cli_test_lib
 class StorageFileArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests for the storage file CLI arguments helper."""
 
-  # pylint: disable=protected-access
+  # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [STORAGE_FILE]',
-      '',
-      'Test argument parser.',
-      '',
-      'positional arguments:',
-      '  STORAGE_FILE  The path of the storage file.',
-      ''])
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [STORAGE_FILE]
+
+Test argument parser.
+
+positional arguments:
+  STORAGE_FILE  Path to a storage file.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
@@ -42,13 +42,12 @@ class StorageFileArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   def testParseOptions(self):
     """Tests the ParseOptions function."""
+    test_tool = tools.CLITool()
+
     options = cli_test_lib.TestOptions()
     options.storage_file = self._GetTestFilePath(['test.plaso'])
 
-    test_tool = tools.CLITool()
     storage_file.StorageFileArgumentsHelper.ParseOptions(options, test_tool)
-
-    # pylint: disable=no-member
     self.assertEqual(test_tool._storage_file_path, options.storage_file)
 
     with self.assertRaises(errors.BadConfigObject):

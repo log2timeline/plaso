@@ -19,17 +19,18 @@ class WindowsServicesAnalysisArgumentsHelperTest(
     test_lib.AnalysisPluginArgumentsHelperTest):
   """Tests the Windows Services analysis plugin CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [--windows-services-output {text,yaml}]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --windows-services-output {text,yaml}',
-      ('                        Specify how the results should be displayed. '
-       'Options'),
-      '                        are text and yaml.',
-      ''])
+  # pylint: disable=no-member,protected-access
+
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--windows-services-output {text,yaml}]
+
+Test argument parser.
+
+optional arguments:
+  --windows-services-output {text,yaml}
+                        Specify how the results should be displayed. Options
+                        are text and yaml.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

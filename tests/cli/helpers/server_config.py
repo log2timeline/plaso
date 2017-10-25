@@ -41,15 +41,17 @@ class MockOutputModule(object):
 class ServerArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests the server configuration CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [--server HOSTNAME] [--port PORT]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --port PORT        The port number of the server.',
-      '  --server HOSTNAME  The hostname or server IP address of the server.',
-      ''])
+  # pylint: disable=no-member,protected-access
+
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--server HOSTNAME] [--port PORT]
+
+Test argument parser.
+
+optional arguments:
+  --port PORT        The port number of the server.
+  --server HOSTNAME  The hostname or server IP address of the server.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

@@ -68,7 +68,7 @@ class AnalysisPluginsArgumentsHelper(interface.ArgumentsHelper):
 
     analysis_plugins = cls._ParseStringOption(options, 'analysis_plugins')
 
-    if analysis_plugins and analysis_plugins != 'list':
+    if analysis_plugins and analysis_plugins.lower() != 'list':
       plugin_names = analysis_manager.AnalysisPluginManager.GetPluginNames()
       analysis_plugins = [name.strip() for name in analysis_plugins.split(',')]
 

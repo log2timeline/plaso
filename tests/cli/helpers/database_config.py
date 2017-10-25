@@ -76,22 +76,22 @@ class MockOutputModule(MockPartialOutputModule):
 class DatabaseArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests the database configuration CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [--user USERNAME] [--password PASSWORD]',
-      ('                     [--db_name DB_NAME] [--server HOSTNAME] '
-       '[--port PORT]'),
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --db_name DB_NAME, --db-name DB_NAME',
-      '                        The name of the database to connect to.',
-      '  --password PASSWORD   The password for the database user.',
-      '  --port PORT           The port number of the server.',
-      ('  --server HOSTNAME     The hostname or server IP address of the '
-       'server.'),
-      '  --user USERNAME       The username used to connect to the database.',
-      ''])
+  # pylint: disable=no-member,protected-access
+
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--user USERNAME] [--password PASSWORD]
+                     [--db_name DB_NAME] [--server HOSTNAME] [--port PORT]
+
+Test argument parser.
+
+optional arguments:
+  --db_name DB_NAME, --db-name DB_NAME
+                        The name of the database to connect to.
+  --password PASSWORD   The password for the database user.
+  --port PORT           The port number of the server.
+  --server HOSTNAME     The hostname or server IP address of the server.
+  --user USERNAME       The username used to connect to the database.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

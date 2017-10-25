@@ -17,25 +17,21 @@ from tests.cli import test_lib as cli_test_lib
 class FilterFileArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests for the filter file CLI arguments helper."""
 
-  # pylint: disable=protected-access
+  # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [-f FILE_FILTER]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  -f FILE_FILTER, --file_filter FILE_FILTER, --file-filter FILE_FILTER',
-      ('                        List of files to include for targeted '
-       'collection of'),
-      ('                        files to parse, one line per file path, '
-       'setup is'),
-      ('                        /path|file - where each element can contain '
-       'either a'),
-      ('                        variable set in the preprocessing stage or '
-       'a regular'),
-      '                        expression.',
-      ''])
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [-f FILE_FILTER]
+
+Test argument parser.
+
+optional arguments:
+  -f FILE_FILTER, --file_filter FILE_FILTER, --file-filter FILE_FILTER
+                        List of files to include for targeted collection of
+                        files to parse, one line per file path, setup is
+                        /path|file - where each element can contain either a
+                        variable set in the preprocessing stage or a regular
+                        expression.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
@@ -57,7 +53,6 @@ class FilterFileArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     test_tool = tools.CLITool()
     filter_file.FilterFileArgumentsHelper.ParseOptions(options, test_tool)
 
-    # pylint: disable=no-member
     self.assertEqual(test_tool._filter_file, options.file_filter)
 
     with self.assertRaises(errors.BadConfigObject):

@@ -28,7 +28,7 @@ class StorageFileArgumentsHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         'storage_file', metavar='STORAGE_FILE', nargs='?', type=str,
-        default=None, help='The path of the storage file.')
+        default=None, help='Path to a storage file.')
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):

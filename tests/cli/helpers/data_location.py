@@ -17,16 +17,16 @@ from tests.cli import test_lib as cli_test_lib
 class DataLocationArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests for the data location CLI arguments helper."""
 
-  # pylint: disable=protected-access
+  # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [--data PATH]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --data PATH  the location of the data files.',
-      ''])
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--data PATH]
+
+Test argument parser.
+
+optional arguments:
+  --data PATH  Path to a directory containing the data files.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
