@@ -148,6 +148,14 @@ plaso.cli.helpers.parsers module
     :undoc-members:
     :show-inheritance:
 
+plaso.cli.helpers.profiling module
+----------------------------------
+
+.. automodule:: plaso.cli.helpers.profiling
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.cli.helpers.server_config module
 --------------------------------------
 

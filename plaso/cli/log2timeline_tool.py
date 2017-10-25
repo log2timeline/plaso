@@ -44,6 +44,7 @@ class Log2TimelineTool(
     extraction_tool.ExtractionTool,
     tool_options.HashersOptions,
     tool_options.ParsersOptions,
+    tool_options.ProfilingOptions,
     tool_options.StorageFileOptions):
   """Log2timeline CLI tool.
 
@@ -53,6 +54,7 @@ class Log2TimelineTool(
     list_hashers (bool): True if the hashers should be listed.
     list_parsers_and_plugins (bool): True if the parsers and plugins should
         be listed.
+    list_profilers (bool): True if the profilers should be listed.
     show_info (bool): True if information about hashers, parsers, plugins,
         etc. should be shown.
   """
@@ -128,6 +130,7 @@ class Log2TimelineTool(
     self.dependencies_check = True
     self.list_hashers = False
     self.list_parsers_and_plugins = False
+    self.list_profilers = False
     self.show_info = False
 
   def _CreateProcessingConfiguration(self):
@@ -292,7 +295,6 @@ class Log2TimelineTool(
         'processing arguments')
 
     self.AddPerformanceOptions(processing_group)
-    self.AddProfilingOptions(processing_group)
     self.AddProcessingOptions(processing_group)
 
     processing_group.add_argument(
@@ -302,6 +304,11 @@ class Log2TimelineTool(
             'experimental and will a deadlock worker process if a real '
             'segfault is caught, but not signal SIGSEGV. This functionality '
             'is therefore primarily intended for debugging purposes'))
+
+    profiling_group = argument_parser.add_argument_group('profiling arguments')
+
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        profiling_group, names=['profiling'])
 
     storage_group = argument_parser.add_argument_group('storage arguments')
 
@@ -368,15 +375,15 @@ class Log2TimelineTool(
         options, self, names=['data_location'])
 
     # Check the list options first otherwise required options will raise.
-    argument_helper_names = ['hashers', 'parsers']
+    argument_helper_names = ['hashers', 'parsers', 'profiling']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
-    self._ParseProfilingOptions(options)
     self._ParseTimezoneOption(options)
 
     self.list_hashers = self._hasher_names_string == 'list'
     self.list_parsers_and_plugins = self._parser_filter_expression == 'list'
+    self.list_profilers = self._profilers == 'list'
 
     self.show_info = getattr(options, 'show_info', False)
 

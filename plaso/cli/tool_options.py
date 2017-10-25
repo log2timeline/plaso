@@ -10,6 +10,7 @@ from plaso.analysis import manager as analysis_manager
 from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
+from plaso.cli.helpers import profiling
 from plaso.formatters import mediator as formatters_mediator
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.lib import errors
@@ -270,6 +271,32 @@ class ParsersOptions(object):
         self._views_format_type, column_names=['Name', 'Parsers and plugins'],
         title='Parser presets')
     for name, description in sorted(presets_information):
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
+
+
+class ProfilingOptions(object):
+  """Profiling options mix-in."""
+
+  # pylint: disable=no-member
+
+  def __init__(self):
+    """Initializes profiling options."""
+    super(ProfilingOptions, self).__init__()
+    self._profilers = set()
+    self._profiling_directory = None
+    self._profiling_sample_rate = (
+        profiling.ProfilingArgumentsHelper.DEFAULT_PROFILING_SAMPLE_RATE)
+
+  def ListProfilers(self):
+    """Lists information about the available profilers."""
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=['Name', 'Description'],
+        title='Profilers')
+
+    profilers_information = sorted(
+        profiling.ProfilingArgumentsHelper.PROFILERS_INFORMATION.items())
+    for name, description in profilers_information:
       table_view.AddRow([name, description])
     table_view.Write(self._output_writer)
 
