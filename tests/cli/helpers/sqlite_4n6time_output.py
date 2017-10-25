@@ -19,30 +19,27 @@ class SQLite4n6TimeOutputArgumentsHelperTEst(
     test_lib.OutputModuleArgumentsHelperTest):
   """Tests the 4n6time SQLite database output module CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      ('usage: cli_helper.py [--append] [--evidence EVIDENCE] '
-       '[--fields FIELDS]'),
-      '                     [--additional_fields ADDITIONAL_FIELDS]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --additional_fields ADDITIONAL_FIELDS',
-      ('                        Defines extra fields to be included in the '
-       'output, in'),
-      '                        addition to the default fields, which are',
-      '                        datetime,host,source,sourcetype,user,type.',
-      ('  --append              Defines whether the intention is to append '
-       'to an'),
-      ('                        already existing database or overwrite it. '
-       'Defaults to'),
-      '                        overwrite.',
-      ('  --evidence EVIDENCE   Set the evidence field to a specific value, '
-       'defaults'),
-      '                        to empty.',
-      ('  --fields FIELDS       Defines which fields should be indexed in '
-       'the'), '                        database.',
-      ''])
+  # pylint: disable=no-member,protected-access
+
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--append] [--evidence EVIDENCE] [--fields FIELDS]
+                     [--additional_fields ADDITIONAL_FIELDS]
+
+Test argument parser.
+
+optional arguments:
+  --additional_fields ADDITIONAL_FIELDS
+                        Defines extra fields to be included in the output, in
+                        addition to the default fields, which are
+                        datetime,host,source,sourcetype,user,type.
+  --append              Defines whether the intention is to append to an
+                        already existing database or overwrite it. Defaults to
+                        overwrite.
+  --evidence EVIDENCE   Set the evidence field to a specific value, defaults
+                        to empty.
+  --fields FIELDS       Defines which fields should be indexed in the
+                        database.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

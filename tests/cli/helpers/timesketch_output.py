@@ -35,34 +35,30 @@ class TimesketchOutputArgumentsHelperTest(
     test_lib.OutputModuleArgumentsHelperTest):
   """Tests the Timesketch output module CLI arguments helper."""
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [--name TIMELINE_NAME] [--index INDEX]',
-      ('                     [--flush_interval FLUSH_INTERVAL] '
-       '[--doc_type DOC_TYPE]'),
-      '                     [--username USERNAME]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --doc_type DOC_TYPE   Name of the document type that will be used in',
-      '                        ElasticSearch.',
-      '  --flush_interval FLUSH_INTERVAL, --flush-interval FLUSH_INTERVAL',
-      ('                        The number of events to queue up before sent '
-       'in bulk'),
-      '                        to Elasticsearch.',
-      ('  --index INDEX         The name of the Elasticsearch index. Default: '
-       'Generate'),
-      '                        a random UUID',
-      ('  --name TIMELINE_NAME, --timeline_name TIMELINE_NAME, '
-       '--timeline-name TIMELINE_NAME'),
-      ('                        The name of the timeline in Timesketch. '
-       'Default:'),
-      '                        hostname if present in the storage file. If no',
-      '                        hostname is found then manual input is used.',
-      ('  --username USERNAME   Username of a Timesketch user that will own '
-       'the'),
-      '                        timeline.',
-      ''])
+  # pylint: disable=no-member,protected-access
+
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--name TIMELINE_NAME] [--index INDEX]
+                     [--flush_interval FLUSH_INTERVAL] [--doc_type DOC_TYPE]
+                     [--username USERNAME]
+
+Test argument parser.
+
+optional arguments:
+  --doc_type DOC_TYPE   Name of the document type that will be used in
+                        ElasticSearch.
+  --flush_interval FLUSH_INTERVAL, --flush-interval FLUSH_INTERVAL
+                        The number of events to queue up before sent in bulk
+                        to Elasticsearch.
+  --index INDEX         The name of the Elasticsearch index. Default: Generate
+                        a random UUID
+  --name TIMELINE_NAME, --timeline_name TIMELINE_NAME, --timeline-name TIMELINE_NAME
+                        The name of the timeline in Timesketch. Default:
+                        hostname if present in the storage file. If no
+                        hostname is found then manual input is used.
+  --username USERNAME   Username of a Timesketch user that will own the
+                        timeline.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

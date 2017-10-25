@@ -18,50 +18,34 @@ from tests.cli import test_lib as cli_test_lib
 class DateFiltersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests for the date filters CLI arguments helper."""
 
-  # pylint: disable=protected-access
+  # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [--date-filter TYPE_START_END]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --date-filter TYPE_START_END, --date_filter TYPE_START_END',
-      ('                        Filter based on file entry date and time '
-       'ranges. This'),
-      '                        parameter is formatted as',
-      ('                        "TIME_VALUE,START_DATE_TIME,END_DATE_TIME" '
-       'where'),
-      ('                        TIME_VALUE defines which file entry '
-       'timestamp the'),
-      ('                        filter applies to e.g. atime, ctime, '
-       'crtime, bkup,'),
-      '                        etc. START_DATE_TIME and END_DATE_TIME define',
-      ('                        respectively the start and end of the date '
-       'time range.'),
-      ('                        A date time range requires at minimum start '
-       'or end to'),
-      ('                        time of the boundary and END defines the '
-       'end time.'),
-      ('                        Both timestamps be set. The date time '
-       'values are'),
-      ('                        formatted as: YYYY-MM-DD hh:mm:ss.######'
-       '[+-]##:##'),
-      ('                        Where # are numeric digits ranging from 0 '
-       'to 9 and the'),
-      ('                        seconds fraction can be either 3 or 6 '
-       'digits. The time'),
-      ('                        of day, seconds fraction and timezone '
-       'offset are'),
-      ('                        optional. The default timezone is UTC. '
-       'E.g. "atime,'),
-      ('                        2013-01-01 23:12:14, 2013-02-23". This '
-       'parameter can'),
-      ('                        be repeated as needed to add additional '
-       'date'),
-      ('                        boundaries, e.g. once for atime, once for '
-       'crtime, etc.'),
-      ''])
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--date-filter TYPE_START_END]
+
+Test argument parser.
+
+optional arguments:
+  --date-filter TYPE_START_END, --date_filter TYPE_START_END
+                        Filter based on file entry date and time ranges. This
+                        parameter is formatted as
+                        "TIME_VALUE,START_DATE_TIME,END_DATE_TIME" where
+                        TIME_VALUE defines which file entry timestamp the
+                        filter applies to e.g. atime, ctime, crtime, bkup,
+                        etc. START_DATE_TIME and END_DATE_TIME define
+                        respectively the start and end of the date time range.
+                        A date time range requires at minimum start or end to
+                        time of the boundary and END defines the end time.
+                        Both timestamps be set. The date time values are
+                        formatted as: YYYY-MM-DD hh:mm:ss.######[+-]##:##
+                        Where # are numeric digits ranging from 0 to 9 and the
+                        seconds fraction can be either 3 or 6 digits. The time
+                        of day, seconds fraction and timezone offset are
+                        optional. The default timezone is UTC. E.g. "atime,
+                        2013-01-01 23:12:14, 2013-02-23". This parameter can
+                        be repeated as needed to add additional date
+                        boundaries, e.g. once for atime, once for crtime, etc.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

@@ -97,7 +97,7 @@ class Log2TimelineTool(
       dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE])
 
   def __init__(self, input_reader=None, output_writer=None):
-    """Initializes the CLI tool object.
+    """Initializes a log2timeline CLI tool.
 
     Args:
       input_reader (Optional[InputReader]): input reader, where None indicates
@@ -237,14 +237,20 @@ class Log2TimelineTool(
     self.AddBasicOptions(argument_parser)
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_parser, names=['storage_file', 'storage_format'])
+        argument_parser, names=['storage_file'])
+
+    data_location_group = argument_parser.add_argument_group(
+        'data location arguments')
+
+    argument_helper_names = ['artifact_definitions', 'data_location']
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        data_location_group, names=argument_helper_names)
 
     extraction_group = argument_parser.add_argument_group(
-        'Extraction Arguments')
+        'extraction arguments')
 
     argument_helper_names = [
-        'artifact_definitions', 'extraction', 'filter_file', 'hashers',
-        'parsers', 'yara_rules']
+        'extraction', 'filter_file', 'hashers', 'parsers', 'yara_rules']
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         extraction_group, names=argument_helper_names)
 
@@ -253,7 +259,7 @@ class Log2TimelineTool(
     self.AddVSSProcessingOptions(extraction_group)
     self.AddCredentialOptions(extraction_group)
 
-    info_group = argument_parser.add_argument_group('Informational Arguments')
+    info_group = argument_parser.add_argument_group('informational arguments')
 
     self.AddInformationalOptions(info_group)
 
@@ -277,16 +283,13 @@ class Log2TimelineTool(
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         info_group, names=['status_view'])
 
-    output_group = argument_parser.add_argument_group('Output Arguments')
+    output_group = argument_parser.add_argument_group('output arguments')
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         output_group, names=['text_prepend'])
 
     processing_group = argument_parser.add_argument_group(
-        'Processing Arguments')
-
-    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        processing_group, names=['data_location'])
+        'processing arguments')
 
     self.AddPerformanceOptions(processing_group)
     self.AddProfilingOptions(processing_group)
@@ -300,11 +303,16 @@ class Log2TimelineTool(
             'segfault is caught, but not signal SIGSEGV. This functionality '
             'is therefore primarily intended for debugging purposes'))
 
+    storage_group = argument_parser.add_argument_group('storage arguments')
+
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        storage_group, names=['storage_format'])
+
     argument_parser.add_argument(
         self._SOURCE_OPTION, action='store', metavar='SOURCE', nargs='?',
         default=None, type=str, help=(
-            'The path to the source device, file or directory. If the source '
-            'is a supported storage media device or image file, archive file '
+            'Path to a source device, file or directory. If the source is '
+            'a supported storage media device or image file, archive file '
             'or a directory, the files within are processed recursively.'))
 
     try:

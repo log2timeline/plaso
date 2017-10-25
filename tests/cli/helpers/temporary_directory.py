@@ -17,19 +17,18 @@ from tests.cli import test_lib as cli_test_lib
 class TemporaryDirectoryArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests for the temporary directory CLI arguments helper."""
 
-  # pylint: disable=protected-access
+  # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [--temporary_directory DIRECTORY]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
-      ('                        Path to the directory that should be used '
-       'to store'),
-      '                        temporary files created during processing.',
-      ''])
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--temporary_directory DIRECTORY]
+
+Test argument parser.
+
+optional arguments:
+  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
+                        Path to the directory that should be used to store
+                        temporary files created during processing.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
@@ -53,7 +52,6 @@ class TemporaryDirectoryArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     temporary_directory.TemporaryDirectoryArgumentsHelper.ParseOptions(
         options, test_tool)
 
-    # pylint: disable=no-member
     self.assertEqual(
         test_tool._temporary_directory, options.temporary_directory)
 

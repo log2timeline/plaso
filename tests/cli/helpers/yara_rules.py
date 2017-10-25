@@ -18,18 +18,17 @@ from tests.cli import test_lib as cli_test_lib
 class YaraRulesArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests for the YARA rules CLI arguments helper."""
 
-  # pylint: disable=protected-access
+  # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [--yara_rules PATH]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --yara_rules PATH, --yara-rules PATH',
-      ('                        Path to a file containing Yara rules '
-       'definitions.'),
-      ''])
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--yara_rules PATH]
+
+Test argument parser.
+
+optional arguments:
+  --yara_rules PATH, --yara-rules PATH
+                        Path to a file containing Yara rules definitions.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
@@ -52,7 +51,6 @@ class YaraRulesArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     test_tool = tools.CLITool()
     yara_rules.YaraRulesArgumentsHelper.ParseOptions(options, test_tool)
 
-    # pylint: disable=no-member
     self.assertIsNotNone(test_tool._yara_rules_string)
 
     with self.assertRaises(errors.BadConfigObject):

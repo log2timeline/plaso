@@ -17,26 +17,21 @@ from tests.cli import test_lib as cli_test_lib
 class LanguagergumentsHelperTest(cli_test_lib.CLIToolTestCase):
   """Tests for the language CLI arguments helper."""
 
-  # pylint: disable=protected-access
+  # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = '\n'.join([
-      'usage: cli_helper.py [--language LANGUAGE]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      ('  --language LANGUAGE  The preferred language identifier for Windows '
-       'Event Log'),
-      ('                       message strings. Use "--language list" to see '
-       'a list of'),
-      ('                       available language identifiers. Note that '
-       'formatting'),
-      ('                       will fall back on en-US (LCID 0x0409) if the '
-       'preferred'),
-      ('                       language is not available in the database of '
-       'message'),
-      '                       string templates.',
-      ''])
+  _EXPECTED_OUTPUT = """\
+usage: cli_helper.py [--language LANGUAGE]
+
+Test argument parser.
+
+optional arguments:
+  --language LANGUAGE  The preferred language identifier for Windows Event Log
+                       message strings. Use "--language list" to see a list of
+                       available language identifiers. Note that formatting
+                       will fall back on en-US (LCID 0x0409) if the preferred
+                       language is not available in the database of message
+                       string templates.
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
@@ -58,7 +53,6 @@ class LanguagergumentsHelperTest(cli_test_lib.CLIToolTestCase):
     test_tool = tools.CLITool()
     language.LanguageArgumentsHelper.ParseOptions(options, test_tool)
 
-    # pylint: disable=no-member
     self.assertEqual(test_tool._preferred_language, options.preferred_language)
 
     with self.assertRaises(errors.BadConfigObject):
