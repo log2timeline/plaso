@@ -29,8 +29,8 @@ class TestSQLitePlugin(interface.SQLitePlugin):
 
   SCHEMAS = [
       {'MyTable': (
-           'CREATE TABLE "MyTable" ( `Field1` TEXT, `Field2` INTEGER, '
-           '`Field3` BLOB )')}]
+          'CREATE TABLE "MyTable" ( `Field1` TEXT, `Field2` INTEGER, '
+          '`Field3` BLOB )')}]
 
   def __init__(self):
     """Initializes a SQLite plugin."""
