@@ -28,12 +28,12 @@ class TestSQLitePlugin(interface.SQLitePlugin):
   REQUIRED_TABLES = frozenset(['MyTable'])
 
   SCHEMAS = [
-      {'MyTable':
-       'CREATE TABLE "MyTable" ( `Field1` TEXT, `Field2` INTEGER, '
-       '`Field3` BLOB )'}]
+      {'MyTable': (
+           'CREATE TABLE "MyTable" ( `Field1` TEXT, `Field2` INTEGER, '
+           '`Field3` BLOB )')}]
 
   def __init__(self):
-    """Initializes SQLite plugin."""
+    """Initializes a SQLite plugin."""
     super(TestSQLitePlugin, self).__init__()
     self.results = []
 
@@ -41,27 +41,40 @@ class TestSQLitePlugin(interface.SQLitePlugin):
     """Parses a MyTable row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
     """
     file_entry = parser_mediator.GetFileEntry()
     path_spec = file_entry.path_spec
     location = path_spec.location
     from_wal = location.endswith('-wal')
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
-    # Also, Field3 needs to be converted to a string if Python 2 is used
+
+    # If Python 2 is used pysqlite does not accept a Unicode string in
+    # row['string'] and will raise "IndexError: Index must be int or string".
+    row_keys = row.keys()
+
+    column_index = row_keys.index('Field1')
+    field1 = row[column_index]
+
+    column_index = row_keys.index('Field2')
+    field2 = row[column_index]
+
+    column_index = row_keys.index('Field3')
+    field3 = row[column_index]
+
+    # If Python 2 is used field3 needs to be converted to a string
     # because it is a read-write buffer.
-    field3 = row['Field3']
     if sys.version_info[0] < 3:
       field3 = str(field3)
-    self.results.append(((row['Field1'], row['Field2'], field3), from_wal))
+
+    self.results.append(((field1, field2, field3), from_wal))
 
     event = time_events.TimestampEvent(
         timelib.Timestamp.NONE_TIMESTAMP,
         definitions.TIME_DESCRIPTION_NOT_A_TIME, data_type='fake')
-    event.field1 = row['Field1']
-    event.field2 = row['Field2']
+    event.field1 = field1
+    event.field2 = field2
     event.field3 = field3
     event.from_wal = location.endswith('-wal')
     parser_mediator.ProduceEvent(event)
