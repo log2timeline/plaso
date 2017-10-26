@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 """Tests for the Android SMS plugin."""
 
+from __future__ import unicode_literals
+
 import unittest
 
-from plaso.formatters import android_sms  # pylint: disable=unused-import
+from plaso.formatters import android_sms as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import android_sms
@@ -16,12 +18,12 @@ from tests.parsers.sqlite_plugins import test_lib
 class AndroidSMSTest(test_lib.SQLitePluginTestCase):
   """Tests for the Android SMS database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'mmssms.db'])
+  @shared_test_lib.skipUnlessHasTestFile(['mmssms.db'])
   def testProcess(self):
     """Test the Process function on an Android SMS mmssms.db file."""
     plugin = android_sms.AndroidSMSPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        [u'mmssms.db'], plugin)
+        ['mmssms.db'], plugin)
 
     # The SMS database file contains 9 events (5 SENT, 4 RECEIVED messages).
     self.assertEqual(storage_writer.number_of_events, 9)
@@ -35,21 +37,21 @@ class AndroidSMSTest(test_lib.SQLitePluginTestCase):
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-10-29 16:56:28.038')
+        '2013-10-29 16:56:28.038')
     self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_address = u'1 555-521-5554'
+    expected_address = '1 555-521-5554'
     self.assertEqual(event.address, expected_address)
 
-    expected_body = u'Yo Fred this is my new number.'
+    expected_body = 'Yo Fred this is my new number.'
     self.assertEqual(event.body, expected_body)
 
     expected_message = (
-        u'Type: SENT '
-        u'Address: 1 555-521-5554 '
-        u'Status: READ '
-        u'Message: Yo Fred this is my new number.')
-    expected_short_message = u'Yo Fred this is my new number.'
+        'Type: SENT '
+        'Address: 1 555-521-5554 '
+        'Status: READ '
+        'Message: Yo Fred this is my new number.')
+    expected_short_message = 'Yo Fred this is my new number.'
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
