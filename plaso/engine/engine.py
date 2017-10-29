@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The processing engine."""
 
+from __future__ import unicode_literals
+
 import logging
 
 from dfvfs.helpers import file_system_searcher
@@ -46,17 +48,17 @@ class BaseEngine(object):
     """
     find_specs = [
         file_system_searcher.FindSpec(
-            location=u'/etc', case_sensitive=False),
+            location='/etc', case_sensitive=False),
         file_system_searcher.FindSpec(
-            location=u'/System/Library', case_sensitive=False),
+            location='/System/Library', case_sensitive=False),
         file_system_searcher.FindSpec(
-            location=u'/Windows/System32', case_sensitive=False),
+            location='/Windows/System32', case_sensitive=False),
         file_system_searcher.FindSpec(
-            location=u'/WINNT/System32', case_sensitive=False),
+            location='/WINNT/System32', case_sensitive=False),
         file_system_searcher.FindSpec(
-            location=u'/WINNT35/System32', case_sensitive=False),
+            location='/WINNT35/System32', case_sensitive=False),
         file_system_searcher.FindSpec(
-            location=u'/WTSRV/System32', case_sensitive=False)]
+            location='/WTSRV/System32', case_sensitive=False)]
 
     locations = []
     for path_spec in searcher.Find(find_specs=find_specs):
@@ -68,17 +70,17 @@ class BaseEngine(object):
     # spec will be OS dependent, as in running the tool on Windows will return
     # Windows paths (backward slash) vs. forward slash on *NIX systems.
     windows_locations = set([
-        u'/windows/system32', u'\\windows\\system32', u'/winnt/system32',
-        u'\\winnt\\system32', u'/winnt35/system32', u'\\winnt35\\system32',
-        u'\\wtsrv\\system32', u'/wtsrv/system32'])
+        '/windows/system32', '\\windows\\system32', '/winnt/system32',
+        '\\winnt\\system32', '/winnt35/system32', '\\winnt35\\system32',
+        '\\wtsrv\\system32', '/wtsrv/system32'])
 
     if windows_locations.intersection(set(locations)):
       return definitions.OPERATING_SYSTEM_WINDOWS
 
-    if u'/system/library' in locations:
+    if '/system/library' in locations:
       return definitions.OPERATING_SYSTEM_MACOSX
 
-    if u'/etc' in locations:
+    if '/etc' in locations:
       return definitions.OPERATING_SYSTEM_LINUX
 
     return definitions.OPERATING_SYSTEM_UNKNOWN
@@ -86,7 +88,7 @@ class BaseEngine(object):
   @classmethod
   def CreateSession(
       cls, command_line_arguments=None, debug_mode=False,
-      filter_file=None, preferred_encoding=u'utf-8',
+      filter_file=None, preferred_encoding='utf-8',
       preferred_time_zone=None, preferred_year=None):
     """Creates a session attribute containiner.
 
@@ -134,7 +136,7 @@ class BaseEngine(object):
       RuntimeError: if source file system path specification is not set.
     """
     if not source_path_spec:
-      raise RuntimeError(u'Missing source path specification.')
+      raise RuntimeError('Missing source path specification.')
 
     file_system = path_spec_resolver.Resolver.OpenFileSystem(
         source_path_spec, resolver_context=resolver_context)
@@ -182,8 +184,8 @@ class BaseEngine(object):
         file_system.Close()
 
     if platforms:
-      logging.info(u'Preprocessing detected platforms: {0:s}'.format(
-          u', '.join(platforms)))
+      logging.info('Preprocessing detected platforms: {0:s}'.format(
+          ', '.join(platforms)))
       self.knowledge_base.platform = platforms[0]
 
   @classmethod

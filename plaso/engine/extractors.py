@@ -4,6 +4,8 @@
 An extractor is a class used to extract information from "raw" data.
 """
 
+from __future__ import unicode_literals
+
 import copy
 import hashlib
 import logging
@@ -21,13 +23,13 @@ from plaso.parsers import manager as parsers_manager
 
 
 class EventExtractor(object):
-  """Class that implements an event extractor object.
+  """Event extractor.
 
   An event extractor extracts events from event sources.
   """
 
   def __init__(self, parser_filter_expression=None):
-    """Initializes an event extractor object.
+    """Initializes an event extractor.
 
     Args:
       parser_filter_expression (Optional[str]): the parser filter expression,
@@ -118,7 +120,7 @@ class EventExtractor(object):
 
     self._non_sigscan_parser_names = []
     for parser_name in non_sigscan_parser_names:
-      if parser_name in (u'filestat', u'usnjrnl'):
+      if parser_name in ('filestat', 'usnjrnl'):
         continue
       self._non_sigscan_parser_names.append(parser_name)
 
@@ -128,15 +130,15 @@ class EventExtractor(object):
     self._parsers = parsers_manager.ParsersManager.GetParserObjects(
         parser_filter_expression=parser_filter_expression)
 
-    self._filestat_parser = self._parsers.get(u'filestat', None)
-    if u'filestat' in self._parsers:
-      del self._parsers[u'filestat']
+    self._filestat_parser = self._parsers.get('filestat', None)
+    if 'filestat' in self._parsers:
+      del self._parsers['filestat']
 
-    self._mft_parser = self._parsers.get(u'mft', None)
+    self._mft_parser = self._parsers.get('mft', None)
 
-    self._usnjrnl_parser = self._parsers.get(u'usnjrnl', None)
-    if u'usnjrnl' in self._parsers:
-      del self._parsers[u'usnjrnl']
+    self._usnjrnl_parser = self._parsers.get('usnjrnl', None)
+    if 'usnjrnl' in self._parsers:
+      del self._parsers['usnjrnl']
 
   def _ParseDataStreamWithParser(
       self, parser_mediator, parser, file_entry, data_stream_name):
@@ -154,7 +156,7 @@ class EventExtractor(object):
     file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
     if not file_object:
       raise RuntimeError(
-          u'Unable to retrieve file-like object from file entry.')
+          'Unable to retrieve file-like object from file entry.')
 
     try:
       self._ParseFileEntryWithParser(
@@ -184,7 +186,7 @@ class EventExtractor(object):
     """
     if not isinstance(parser, (
         parsers_interface.FileEntryParser, parsers_interface.FileObjectParser)):
-      raise TypeError(u'Unsupported parser object type.')
+      raise TypeError('Unsupported parser object type.')
 
     parser_mediator.ClearParserChain()
 
@@ -206,13 +208,13 @@ class EventExtractor(object):
     except (IOError, dfvfs_errors.BackEndError) as exception:
       display_name = parser_mediator.GetDisplayName(file_entry)
       logging.warning(
-          u'{0:s} unable to parse file: {1:s} with error: {2:s}'.format(
+          '{0:s} unable to parse file: {1:s} with error: {2:s}'.format(
               parser.NAME, display_name, exception))
 
     except errors.UnableToParseFile as exception:
       display_name = parser_mediator.GetDisplayName(file_entry)
       logging.debug(
-          u'{0:s} unable to parse file: {1:s} with error: {2:s}'.format(
+          '{0:s} unable to parse file: {1:s} with error: {2:s}'.format(
               parser.NAME, display_name, exception))
       result = False
 
@@ -226,8 +228,8 @@ class EventExtractor(object):
       if reference_count != new_reference_count:
         display_name = parser_mediator.GetDisplayName(file_entry)
         logging.warning((
-            u'[{0:s}] did not explicitly close file-object for file: '
-            u'{1:s}.').format(parser.NAME, display_name))
+            '[{0:s}] did not explicitly close file-object for file: '
+            '{1:s}.').format(parser.NAME, display_name))
 
     return result
 
@@ -254,7 +256,7 @@ class EventExtractor(object):
       parser = self._parsers.get(parser_name, None)
       if not parser:
         raise RuntimeError(
-            u'Parser object missing for parser: {0:s}'.format(parser_name))
+            'Parser object missing for parser: {0:s}'.format(parser_name))
 
       if parser.FILTERS:
         if not self._CheckParserCanProcessFileEntry(parser, file_entry):
@@ -262,8 +264,8 @@ class EventExtractor(object):
 
       display_name = parser_mediator.GetDisplayName(file_entry)
       logging.debug((
-          u'[ParseDataStream] parsing file: {0:s} with parser: '
-          u'{1:s}').format(display_name, parser_name))
+          '[ParseDataStream] parsing file: {0:s} with parser: '
+          '{1:s}').format(display_name, parser_name))
 
       self._ParseFileEntryWithParser(
           parser_mediator, parser, file_entry, file_object=file_object)
@@ -282,7 +284,7 @@ class EventExtractor(object):
     file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
     if not file_object:
       raise RuntimeError(
-          u'Unable to retrieve file-like object from file entry.')
+          'Unable to retrieve file-like object from file entry.')
 
     try:
       parser_names = self._GetSignatureMatchParserNames(file_object)
@@ -320,15 +322,15 @@ class EventExtractor(object):
       file_entry (dfvfs.FileEntry): file entry.
       data_stream_name (str): data stream name.
     """
-    parent_path_spec = getattr(file_entry.path_spec, u'parent', None)
+    parent_path_spec = getattr(file_entry.path_spec, 'parent', None)
     filename_upper = file_entry.name.upper()
     if (self._mft_parser and parent_path_spec and
-        filename_upper in (u'$MFT', u'$MFTMIRR') and not data_stream_name):
+        filename_upper in ('$MFT', '$MFTMIRR') and not data_stream_name):
       self._ParseDataStreamWithParser(
-          parser_mediator, self._mft_parser, file_entry, u'')
+          parser_mediator, self._mft_parser, file_entry, '')
 
     elif (self._usnjrnl_parser and parent_path_spec and
-          filename_upper == u'$USNJRNL' and data_stream_name == u'$J'):
+          filename_upper == '$USNJRNL' and data_stream_name == '$J'):
       # To be able to ignore the sparse data ranges the UsnJrnl parser
       # needs to read directly from the volume.
       volume_file_object = path_spec_resolver.Resolver.OpenFileObject(
@@ -386,29 +388,29 @@ class PathSpecExtractor(object):
     stat_object = file_entry.GetStat()
     ret_hash = hashlib.md5()
 
-    atime = getattr(stat_object, u'atime', None)
+    atime = getattr(stat_object, 'atime', None)
     if not atime:
       atime = 0
     ret_hash.update(b'atime:{0:d}.{1:d}'.format(
-        atime, getattr(stat_object, u'atime_nano', 0)))
+        atime, getattr(stat_object, 'atime_nano', 0)))
 
-    crtime = getattr(stat_object, u'crtime', None)
+    crtime = getattr(stat_object, 'crtime', None)
     if not crtime:
       crtime = 0
     ret_hash.update(b'crtime:{0:d}.{1:d}'.format(
-        crtime, getattr(stat_object, u'crtime_nano', 0)))
+        crtime, getattr(stat_object, 'crtime_nano', 0)))
 
-    mtime = getattr(stat_object, u'mtime', None)
+    mtime = getattr(stat_object, 'mtime', None)
     if not mtime:
       mtime = 0
     ret_hash.update(b'mtime:{0:d}.{1:d}'.format(
-        mtime, getattr(stat_object, u'mtime_nano', 0)))
+        mtime, getattr(stat_object, 'mtime_nano', 0)))
 
-    ctime = getattr(stat_object, u'ctime', None)
+    ctime = getattr(stat_object, 'ctime', None)
     if not ctime:
       ctime = 0
     ret_hash.update(b'ctime:{0:d}.{1:d}'.format(
-        ctime, getattr(stat_object, u'ctime_nano', 0)))
+        ctime, getattr(stat_object, 'ctime_nano', 0)))
 
     return ret_hash.hexdigest()
 
@@ -435,29 +437,29 @@ class PathSpecExtractor(object):
         dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
         dfvfs_errors.PathSpecError) as exception:
       logging.error(
-          u'Unable to open file entry with error: {0:s}'.format(exception))
+          'Unable to open file entry with error: {0:s}'.format(exception))
       return
 
     if not file_entry:
-      logging.warning(u'Unable to open: {0:s}'.format(path_spec.comparable))
+      logging.warning('Unable to open: {0:s}'.format(path_spec.comparable))
       return
 
     if (not file_entry.IsDirectory() and not file_entry.IsFile() and
         not file_entry.IsDevice()):
       logging.warning((
-          u'Source path specification not a device, file or directory.\n'
-          u'{0:s}').format(path_spec.comparable))
+          'Source path specification not a device, file or directory.\n'
+          '{0:s}').format(path_spec.comparable))
       return
 
     if file_entry.IsFile():
       yield path_spec
 
     else:
-      for path_spec in self._ExtractPathSpecsFromFileSystem(
+      for extracted_path_spec in self._ExtractPathSpecsFromFileSystem(
           path_spec, find_specs=find_specs,
           recurse_file_system=recurse_file_system,
           resolver_context=resolver_context):
-        yield path_spec
+        yield extracted_path_spec
 
   def _ExtractPathSpecsFromDirectory(self, file_entry, depth=0):
     """Extracts path specification from a directory.
@@ -471,7 +473,7 @@ class PathSpecExtractor(object):
       dfvfs.PathSpec: path specification of a file entry found in the directory.
     """
     if depth >= self._MAXIMUM_DEPTH:
-      raise errors.MaximumRecursionDepth(u'Maximum recursion depth reached.')
+      raise errors.MaximumRecursionDepth('Maximum recursion depth reached.')
 
     # Need to do a breadth-first search otherwise we'll hit the Python
     # maximum recursion depth.
@@ -483,15 +485,15 @@ class PathSpecExtractor(object):
           continue
       except dfvfs_errors.BackEndError as exception:
         logging.warning(
-            u'Unable to process file: {0:s} with error: {1:s}'.format(
+            'Unable to process file: {0:s} with error: {1:s}'.format(
                 sub_file_entry.path_spec.comparable.replace(
-                    u'\n', u';'), exception))
+                    '\n', ';'), exception))
         continue
 
       # For TSK-based file entries only, ignore the virtual /$OrphanFiles
       # directory.
       if sub_file_entry.type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK:
-        if file_entry.IsRoot() and sub_file_entry.name == u'$OrphanFiles':
+        if file_entry.IsRoot() and sub_file_entry.name == '$OrphanFiles':
           continue
 
       if sub_file_entry.IsDirectory():
@@ -505,7 +507,7 @@ class PathSpecExtractor(object):
         if self._duplicate_file_check:
           hash_value = self._CalculateNTFSTimeHash(sub_file_entry)
 
-          inode = getattr(sub_file_entry.path_spec, u'inode', 0)
+          inode = getattr(sub_file_entry.path_spec, 'inode', 0)
           if inode in self._hashlist:
             if hash_value in self._hashlist[inode]:
               continue
@@ -524,7 +526,7 @@ class PathSpecExtractor(object):
       except (
           IOError, dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
           dfvfs_errors.PathSpecError) as exception:
-        logging.warning(u'{0:s}'.format(exception))
+        logging.warning('{0:s}'.format(exception))
 
   def _ExtractPathSpecsFromFile(self, file_entry):
     """Extracts path specification from a file.
@@ -542,7 +544,7 @@ class PathSpecExtractor(object):
       # altered in the process.
       path_spec = copy.deepcopy(file_entry.path_spec)
       if data_stream.name:
-        setattr(path_spec, u'data_stream', data_stream.name)
+        setattr(path_spec, 'data_stream', data_stream.name)
       yield path_spec
 
       if not data_stream.name:
@@ -575,21 +577,22 @@ class PathSpecExtractor(object):
         dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
         dfvfs_errors.PathSpecError) as exception:
       logging.error(
-          u'Unable to open file system with error: {0:s}'.format(exception))
+          'Unable to open file system with error: {0:s}'.format(exception))
       return
 
     try:
       if find_specs:
         searcher = file_system_searcher.FileSystemSearcher(
             file_system, path_spec)
-        for path_spec in searcher.Find(find_specs=find_specs):
-          yield path_spec
+        for extracted_path_spec in searcher.Find(find_specs=find_specs):
+          yield extracted_path_spec
 
       elif recurse_file_system:
         file_entry = file_system.GetFileEntryByPathSpec(path_spec)
         if file_entry:
-          for path_spec in self._ExtractPathSpecsFromDirectory(file_entry):
-            yield path_spec
+          for extracted_path_spec in self._ExtractPathSpecsFromDirectory(
+              file_entry):
+            yield extracted_path_spec
 
       else:
         yield path_spec
@@ -597,7 +600,7 @@ class PathSpecExtractor(object):
     except (
         dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
         dfvfs_errors.PathSpecError) as exception:
-      logging.warning(u'{0:s}'.format(exception))
+      logging.warning('{0:s}'.format(exception))
 
     finally:
       file_system.Close()

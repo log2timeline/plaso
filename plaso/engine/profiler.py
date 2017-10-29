@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The profiler classes."""
 
+from __future__ import unicode_literals
+
 import abc
 import os
 import time
@@ -50,7 +52,7 @@ class CPUTimeMeasurements(object):
 class CPUTimeProfiler(object):
   """The CPU time profiler."""
 
-  _FILENAME_PREFIX = u'cputime'
+  _FILENAME_PREFIX = 'cputime'
 
   def __init__(self, identifier, path=None):
     """Initializes the CPU time profiler object.
@@ -63,7 +65,7 @@ class CPUTimeProfiler(object):
     super(CPUTimeProfiler, self).__init__()
     self._identifier = identifier
     self._profile_measurements = {}
-    self._sample_file = u'{0:s}-{1!s}.csv'.format(
+    self._sample_file = '{0:s}-{1!s}.csv'.format(
         self._FILENAME_PREFIX, identifier)
 
     if path:
@@ -100,16 +102,16 @@ class CPUTimeProfiler(object):
 
     with open(self._sample_file, 'wb') as file_object:
       line = (
-          u'profile name\tnumber of samples\ttotal CPU time\t'
-          u'total system time\n')
-      file_object.write(line.encode(u'utf-8'))
+          'profile name\tnumber of samples\ttotal CPU time\t'
+          'total system time\n')
+      file_object.write(line.encode('utf-8'))
 
       for name, measurements in iter(self._profile_measurements.items()):
-        line = u'{0:s}\t{1!s}\t{2!s}\t{3!s}\n'.format(
+        line = '{0:s}\t{1!s}\t{2!s}\t{3!s}\n'.format(
             name, measurements.number_of_samples,
             measurements.total_cpu_time, measurements.total_system_time)
 
-        file_object.write(line.encode(u'utf-8'))
+        file_object.write(line.encode('utf-8'))
 
 
 class BaseMemoryProfiler(object):
@@ -175,7 +177,7 @@ class GuppyMemoryProfiler(BaseMemoryProfiler):
     super(GuppyMemoryProfiler, self).__init__(
         identifier, path=path, profiling_sample_rate=profiling_sample_rate)
     self._heapy = None
-    self._sample_file = u'{0!s}.hpy'.format(identifier)
+    self._sample_file = '{0!s}.hpy'.format(identifier)
 
     if self._path:
       self._sample_file = os.path.join(self._path, self._sample_file)
@@ -220,16 +222,16 @@ class GuppyMemoryProfiler(BaseMemoryProfiler):
 class ParsersProfiler(CPUTimeProfiler):
   """The parsers profiler."""
 
-  _FILENAME_PREFIX = u'parsers'
+  _FILENAME_PREFIX = 'parsers'
 
 
 class ProcessingProfiler(CPUTimeProfiler):
   """The processing profiler."""
 
-  _FILENAME_PREFIX = u'processing'
+  _FILENAME_PREFIX = 'processing'
 
 
 class SerializersProfiler(CPUTimeProfiler):
   """The serializers profiler."""
 
-  _FILENAME_PREFIX = u'serializers'
+  _FILENAME_PREFIX = 'serializers'
