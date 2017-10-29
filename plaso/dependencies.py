@@ -18,7 +18,7 @@ PYTHON_DEPENDENCIES = {
     u'bencode': (u'', u'', None, True),
     u'binplist': (u'__version__', u'0.1.4', None, True),
     u'construct': (u'__version__', u'2.5.2', u'2.5.3', True),
-    u'Crypto': (u'__version__', u'2.6.0', None, True),
+    u'Crypto': (u'__version__', u'2.6', None, True),
     u'dateutil': (u'__version__', u'1.5', None, True),
     u'dfdatetime': (u'__version__', u'20170103', None, True),
     u'dfvfs': (u'__version__', u'20160803', None, True),
