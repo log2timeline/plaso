@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The path helper."""
 
+from __future__ import unicode_literals
+
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.lib import py2to3
@@ -34,16 +36,16 @@ class PathHelper(object):
 
         lookup_table[attribute_name] = attribute_value
 
-    path_segments = path.split(u'\\')
+    path_segments = path.split('\\')
     for index, path_segment in enumerate(path_segments):
-      if (len(path_segment) <= 2 or not path_segment.startswith(u'%') or
-          not path_segment.endswith(u'%')):
+      if (len(path_segment) <= 2 or not path_segment.startswith('%') or
+          not path_segment.endswith('%')):
         continue
 
       lookup_key = path_segment.upper()[1:-1]
       path_segments[index] = lookup_table.get(lookup_key, path_segment)
 
-    return u'\\'.join(path_segments)
+    return '\\'.join(path_segments)
 
   @classmethod
   def GetDisplayNameForPathSpec(
@@ -70,7 +72,7 @@ class PathHelper(object):
       return path_spec.type_indicator
 
     if text_prepend:
-      relative_path = u'{0:s}{1:s}'.format(text_prepend, relative_path)
+      relative_path = '{0:s}{1:s}'.format(text_prepend, relative_path)
 
     parent_path_spec = path_spec.parent
     if parent_path_spec and path_spec.type_indicator in [
@@ -80,12 +82,12 @@ class PathHelper(object):
 
     if parent_path_spec and parent_path_spec.type_indicator in [
         dfvfs_definitions.TYPE_INDICATOR_VSHADOW]:
-      store_index = getattr(path_spec.parent, u'store_index', None)
+      store_index = getattr(path_spec.parent, 'store_index', None)
       if store_index is not None:
-        return u'VSS{0:d}:{1:s}:{2:s}'.format(
+        return 'VSS{0:d}:{1:s}:{2:s}'.format(
             store_index + 1, path_spec.type_indicator, relative_path)
 
-    return u'{0:s}:{1:s}'.format(path_spec.type_indicator, relative_path)
+    return '{0:s}:{1:s}'.format(path_spec.type_indicator, relative_path)
 
   @classmethod
   def GetRelativePathForPathSpec(cls, path_spec, mount_path=None):
@@ -110,16 +112,16 @@ class PathHelper(object):
 
     # TODO: Solve this differently, quite possibly inside dfVFS using mount
     # path spec.
-    location = getattr(path_spec, u'location', None)
+    location = getattr(path_spec, 'location', None)
     if not location and path_spec.HasParent():
-      location = getattr(path_spec.parent, u'location', None)
+      location = getattr(path_spec.parent, 'location', None)
 
     if not location:
       return
 
-    data_stream = getattr(path_spec, u'data_stream', None)
+    data_stream = getattr(path_spec, 'data_stream', None)
     if data_stream:
-      location = u'{0:s}:{1:s}'.format(location, data_stream)
+      location = '{0:s}:{1:s}'.format(location, data_stream)
 
     if path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_OS:
       return location

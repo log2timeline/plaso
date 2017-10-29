@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Processing status classes."""
 
+from __future__ import unicode_literals
+
 import time
 
 
@@ -109,7 +111,7 @@ class ProcessStatus(object):
     if number_of_consumed_errors is not None:
       if number_of_consumed_errors < self.number_of_consumed_errors:
         raise ValueError(
-            u'Number of consumed errors smaller than previous update.')
+            'Number of consumed errors smaller than previous update.')
 
       consumed_errors_delta = (
           number_of_consumed_errors - self.number_of_consumed_errors)
@@ -121,7 +123,7 @@ class ProcessStatus(object):
     if number_of_produced_errors is not None:
       if number_of_produced_errors < self.number_of_produced_errors:
         raise ValueError(
-            u'Number of produced errors smaller than previous update.')
+            'Number of produced errors smaller than previous update.')
 
       produced_errors_delta = (
           number_of_produced_errors - self.number_of_produced_errors)
@@ -152,7 +154,7 @@ class ProcessStatus(object):
     if number_of_consumed_event_tags is not None:
       if number_of_consumed_event_tags < self.number_of_consumed_event_tags:
         raise ValueError(
-            u'Number of consumed event tags smaller than previous update.')
+            'Number of consumed event tags smaller than previous update.')
 
       consumed_event_tags_delta = (
           number_of_consumed_event_tags - self.number_of_consumed_event_tags)
@@ -164,7 +166,7 @@ class ProcessStatus(object):
     if number_of_produced_event_tags is not None:
       if number_of_produced_event_tags < self.number_of_produced_event_tags:
         raise ValueError(
-            u'Number of produced event tags smaller than previous update.')
+            'Number of produced event tags smaller than previous update.')
 
       produced_event_tags_delta = (
           number_of_produced_event_tags - self.number_of_produced_event_tags)
@@ -195,7 +197,7 @@ class ProcessStatus(object):
     if number_of_consumed_events is not None:
       if number_of_consumed_events < self.number_of_consumed_events:
         raise ValueError(
-            u'Number of consumed events smaller than previous update.')
+            'Number of consumed events smaller than previous update.')
 
       consumed_events_delta = (
           number_of_consumed_events - self.number_of_consumed_events)
@@ -207,7 +209,7 @@ class ProcessStatus(object):
     if number_of_produced_events is not None:
       if number_of_produced_events < self.number_of_produced_events:
         raise ValueError(
-            u'Number of produced events smaller than previous update.')
+            'Number of produced events smaller than previous update.')
 
       produced_events_delta = (
           number_of_produced_events - self.number_of_produced_events)
@@ -238,7 +240,7 @@ class ProcessStatus(object):
     if number_of_consumed_reports is not None:
       if number_of_consumed_reports < self.number_of_consumed_reports:
         raise ValueError(
-            u'Number of consumed reports smaller than previous update.')
+            'Number of consumed reports smaller than previous update.')
 
       consumed_reports_delta = (
           number_of_consumed_reports - self.number_of_consumed_reports)
@@ -250,7 +252,7 @@ class ProcessStatus(object):
     if number_of_produced_reports is not None:
       if number_of_produced_reports < self.number_of_produced_reports:
         raise ValueError(
-            u'Number of produced reports smaller than previous update.')
+            'Number of produced reports smaller than previous update.')
 
       produced_reports_delta = (
           number_of_produced_reports - self.number_of_produced_reports)
@@ -281,7 +283,7 @@ class ProcessStatus(object):
     if number_of_consumed_sources is not None:
       if number_of_consumed_sources < self.number_of_consumed_sources:
         raise ValueError(
-            u'Number of consumed sources smaller than previous update.')
+            'Number of consumed sources smaller than previous update.')
 
       consumed_sources_delta = (
           number_of_consumed_sources - self.number_of_consumed_sources)
@@ -293,7 +295,7 @@ class ProcessStatus(object):
     if number_of_produced_sources is not None:
       if number_of_produced_sources < self.number_of_produced_sources:
         raise ValueError(
-            u'Number of produced sources smaller than previous update.')
+            'Number of produced sources smaller than previous update.')
 
       produced_sources_delta = (
           number_of_produced_sources - self.number_of_produced_sources)
