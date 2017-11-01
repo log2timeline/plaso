@@ -39,7 +39,7 @@ class OfficeMRUWindowsRegistryEventData(events.EventData):
 class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
   """Plugin that parses Microsoft Office MRU keys."""
 
-  NAME = 'microsoft_office_mr'
+  NAME = 'microsoft_office_mru'
   DESCRIPTION = 'Parser for Microsoft Office MRU Registry data.'
 
   FILTERS = frozenset([

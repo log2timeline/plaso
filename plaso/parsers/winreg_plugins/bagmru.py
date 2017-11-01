@@ -16,7 +16,7 @@ from plaso.parsers.winreg_plugins import interface
 class BagMRUPlugin(interface.WindowsRegistryPlugin):
   """Class that defines a BagMRU Windows Registry plugin."""
 
-  NAME = 'bagmr'
+  NAME = 'bagmru'
   DESCRIPTION = 'Parser for BagMRU Registry data.'
 
   FILTERS = frozenset([
