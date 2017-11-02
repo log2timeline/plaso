@@ -209,7 +209,7 @@ class ParserMediator(object):
     except ValueError as exception:
       logging.error((
           'Unable to determine creation year from file stat '
-          'information with error: {0:s}').format(exception))
+          'information with error: {0!s}').format(exception))
       return
 
   def AddEventAttribute(self, attribute_name, attribute_value):

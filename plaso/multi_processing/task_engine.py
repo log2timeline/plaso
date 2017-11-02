@@ -233,7 +233,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         except IOError as exception:
           logging.error((
               'Unable to merge results of task: {0:s} '
-              'with error: {1:s}').format(task.identifier, exception))
+              'with error: {1!s}').format(task.identifier, exception))
           self._storage_merge_reader = None
 
       if self._storage_merge_reader:
@@ -472,7 +472,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       pid = process.pid
       logging.error((
           'Unable to monitor replacement worker process: {0:s} '
-          '(PID: {1:d}) with error: {2:s}').format(
+          '(PID: {1:d}) with error: {2!s}').format(
               process_name, pid, exception))
 
       self._TerminateProcess(process)
@@ -830,7 +830,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     try:
       storage_writer.StopTaskStorage(abort=task_storage_abort)
     except (IOError, OSError) as exception:
-      logging.error('Unable to stop task storage with error: {0:s}'.format(
+      logging.error('Unable to stop task storage with error: {0!s}'.format(
           exception))
 
     if self._abort:

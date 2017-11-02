@@ -745,7 +745,7 @@ class PcapParser(interface.FileObjectParser):
 
     except (dpkt.NeedData, dpkt.UnpackError) as exception:
       raise errors.UnableToParseFile(
-          '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+          '[{0:s}] unable to parse file: {1:s} with error: {2!s}'.format(
               self.NAME, parser_mediator.GetDisplayName(), exception))
 
     if file_header.magic == dpkt.pcap.PMUDPCT_MAGIC:
@@ -755,7 +755,7 @@ class PcapParser(interface.FileObjectParser):
 
       except (dpkt.NeedData, dpkt.UnpackError) as exception:
         raise errors.UnableToParseFile(
-            '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+            '[{0:s}] unable to parse file: {1:s} with error: {2!s}'.format(
                 self.NAME, parser_mediator.GetDisplayName(), exception))
 
     elif file_header.magic != dpkt.pcap.TCPDUMP_MAGIC:

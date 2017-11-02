@@ -91,7 +91,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       except UnicodeDecodeError as exception:
         decoded_url = decoded_url.decode('utf-8', errors='replace')
         logging.warning(
-            'Unable to decode URL: {0:s} with error: {1:s}'.format(
+            'Unable to decode URL: {0:s} with error: {1!s}'.format(
                 url, exception))
 
     return decoded_url

@@ -149,7 +149,7 @@ class SQLiteDatabase(object):
       except (OSError, IOError) as exception:
         logging.warning((
             'Unable to remove temporary copy: {0:s} of SQLite database: '
-            '{1:s} with error: {2:s}').format(
+            '{1:s} with error: {2!s}').format(
                 self._temp_db_file_path, self._filename, exception))
 
     self._temp_db_file_path = ''
@@ -160,7 +160,7 @@ class SQLiteDatabase(object):
       except (OSError, IOError) as exception:
         logging.warning((
             'Unable to remove temporary copy: {0:s} of SQLite database: '
-            '{1:s} with error: {2:s}').format(
+            '{1:s} with error: {2!s}').format(
                 self._temp_wal_file_path, self._filename, exception))
 
     self._temp_wal_file_path = ''
@@ -253,7 +253,7 @@ class SQLiteDatabase(object):
         self._temp_wal_file_path = ''
 
       logging.debug(
-          'Unable to parse SQLite database: {0:s} with error: {1:s}'.format(
+          'Unable to parse SQLite database: {0:s} with error: {1!s}'.format(
               self._filename, exception))
       raise
 
@@ -365,7 +365,7 @@ class SQLiteParser(interface.FileEntryParser):
 
     except (IOError, ValueError, sqlite3.DatabaseError) as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to open SQLite database with error: {0:s}'.format(exception))
+          'unable to open SQLite database with error: {0!s}'.format(exception))
       file_object.close()
       return
 

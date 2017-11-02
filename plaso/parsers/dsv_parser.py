@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import abc
 import csv
+import sys
 
 from plaso.lib import errors
 from plaso.lib import line_reader_file
@@ -67,19 +68,17 @@ class DSVParser(interface.FileObjectParser):
       dict[str, str]: a row from the DSV file, where the dictionary key
           contains the column name and the value a Unicode string.
     """
-    encoding = self._encoding or parser_mediator.codepage
-
     for key, value in iter(row.items()):
       if isinstance(value, py2to3.UNICODE_TYPE):
         continue
 
       try:
-        row[key] = value.decode(encoding)
+        row[key] = value.decode(self._encoding)
       except UnicodeDecodeError:
-        replaced_value = value.decode(encoding, errors='replace')
+        replaced_value = value.decode(self._encoding, errors='replace')
         parser_mediator.ProduceExtractionError(
             'error decoding DSV value: {0:s} as {1:s}, characters have been '
-            'replaced in {2:s}'.format(key, encoding, replaced_value))
+            'replaced in {2:s}'.format(key, self._encoding, replaced_value))
         row[key] = replaced_value
 
     return row
@@ -95,6 +94,18 @@ class DSVParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
+    if not self._encoding:
+      self._encoding = parser_mediator.codepage
+
+    delimiter = self.DELIMITER
+    quotechar = self.QUOTE_CHAR
+    magic_test_string = self._MAGIC_TEST_STRING
+    # Python 3 csv module requires arguments to constructor to be of type str.
+    if sys.version_info[0] >= 3:
+      delimiter = delimiter.decode(self._encoding)
+      quotechar = quotechar.decode(self._encoding)
+      magic_test_string = magic_test_string.decode(self._encoding)
+
     line_reader = line_reader_file.BinaryLineReader(file_object)
 
     # If we specifically define a number of lines we should skip, do that here.
@@ -102,9 +113,9 @@ class DSVParser(interface.FileObjectParser):
       line_reader.readline()
 
     reader = csv.DictReader(
-        line_reader, delimiter=self.DELIMITER, fieldnames=self.COLUMNS,
-        quotechar=self.QUOTE_CHAR, restkey=self._MAGIC_TEST_STRING,
-        restval=self._MAGIC_TEST_STRING)
+        line_reader, delimiter=delimiter, fieldnames=self.COLUMNS,
+        quotechar=quotechar, restkey=magic_test_string,
+        restval=magic_test_string)
 
     row_offset = line_reader.tell()
     try:

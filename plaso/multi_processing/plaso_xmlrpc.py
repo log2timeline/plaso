@@ -13,7 +13,7 @@ if sys.version_info[0] < 3:
   import SimpleXMLRPCServer
   import SocketServer
 else:
-  from xmlrpc.server import SimpleXMLRPCServer
+  from xmlrpc import server as SimpleXMLRPCServer
   from xmlrpc import client as xmlrpclib
   import socketserver as SocketServer
 

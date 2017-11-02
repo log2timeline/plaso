@@ -52,7 +52,7 @@ class USBPlugin(interface.WindowsRegistryPlugin):
           product_identification = subkey_name_parts[1]
       except ValueError as exception:
         logging.warning(
-            'Unable to split string: {0:s} with error: {1:s}'.format(
+            'Unable to split string: {0:s} with error: {1!s}'.format(
                 subkey.name, exception))
 
       if vendor_identification and product_identification:

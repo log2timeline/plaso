@@ -218,7 +218,7 @@ class MultiProcessEngine(engine.BaseEngine):
       try:
         os.kill(pid, signal.SIGKILL)
       except OSError as exception:
-        logging.error('Unable to kill process {0:d} with error: {1:s}'.format(
+        logging.error('Unable to kill process {0:d} with error: {1!s}'.format(
             pid, exception))
 
   def _RaiseIfNotMonitored(self, pid):
@@ -374,7 +374,9 @@ class MultiProcessEngine(engine.BaseEngine):
 
   def _StopMonitoringProcesses(self):
     """Stops monitoring all processes."""
-    for pid in iter(self._process_information_per_pid.keys()):
+    # We need to make a copy of the list of pids since we are changing
+    # the dict in the loop.
+    for pid in list(self._process_information_per_pid.keys()):
       self._RaiseIfNotRegistered(pid)
       process = self._processes_per_pid[pid]
 

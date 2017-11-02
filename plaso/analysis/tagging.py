@@ -131,8 +131,8 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     except efilter_errors.EfilterParseError as exception:
       stripped_rule = rule.rstrip()
       logging.warning(
-          'Unable to build query from rule: "{0:s}" with error: {1:s}'.format(
-              stripped_rule, exception.message))
+          'Unable to build query from rule: "{0:s}" with error: {1!s}'.format(
+              stripped_rule, exception))
 
   def _ParseTaggingFile(self, tag_file_path):
     """Parses tag definitions from the source.
@@ -201,7 +201,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     try:
       matched_labels = efilter_api.apply(self._tag_rules, vars=event)
     except efilter_errors.EfilterTypeError as exception:
-      logging.warning('Unable to apply efilter query with error: {0:s}'.format(
+      logging.warning('Unable to apply efilter query with error: {0!s}'.format(
           exception))
       matched_labels = None
 

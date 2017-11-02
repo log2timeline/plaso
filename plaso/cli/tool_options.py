@@ -137,7 +137,7 @@ class OutputModuleOptions(object):
 
     except (KeyError, ValueError) as exception:
       raise RuntimeError(
-          'Unable to create output module with error: {0:s}'.format(
+          'Unable to create output module with error: {0!s}'.format(
               exception))
 
     if output_manager.OutputManager.IsLinearOutputModule(self._output_format):

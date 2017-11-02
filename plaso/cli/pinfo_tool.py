@@ -495,7 +495,7 @@ class PinfoTool(
       storage_file.Open(path=self._storage_file_path, read_only=True)
     except IOError as exception:
       logging.error(
-          'Unable to open storage file: {0:s} with error: {1:s}'.format(
+          'Unable to open storage file: {0:s} with error: {1!s}'.format(
               self._storage_file_path, exception))
       return
 
@@ -513,7 +513,7 @@ class PinfoTool(
           path=self._compare_storage_file_path, read_only=True)
     except IOError as exception:
       logging.error(
-          'Unable to open storage file: {0:s} with error: {1:s}'.format(
+          'Unable to open storage file: {0:s} with error: {1!s}'.format(
               self._compare_storage_file_path, exception))
       storage_file.Close()
       return
@@ -654,7 +654,7 @@ class PinfoTool(
       storage_file.Open(path=self._storage_file_path, read_only=True)
     except IOError as exception:
       logging.error(
-          'Unable to open storage file: {0:s} with error: {1:s}'.format(
+          'Unable to open storage file: {0:s} with error: {1!s}'.format(
               self._storage_file_path, exception))
       return
 

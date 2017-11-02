@@ -116,6 +116,12 @@ def _CheckPythonModule(
       module_version = version_method()
 
   if not module_version:
+    if not is_required:
+      print((
+          '[OPTIONAL]\tunable to determine version information '
+          'for: {0:s}').format(module_name))
+      return True
+
     print((
         '[FAILURE]\tunable to determine version information '
         'for: {0:s}').format(module_name))

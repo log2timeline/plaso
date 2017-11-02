@@ -148,7 +148,7 @@ class OpenXMLParser(interface.FileObjectParser):
       rels_xml = zip_container.read('_rels/.rels')
     except zipfile.BadZipfile as exception:
       parser_mediator.ProduceExtractionError(
-          'Unable to parse file with error: {0:s}'.format(exception))
+          'Unable to parse file with error: {0!s}'.format(exception))
       return
 
     rels_root = ElementTree.fromstring(rels_xml)
@@ -162,7 +162,7 @@ class OpenXMLParser(interface.FileObjectParser):
             OverflowError, IndexError, KeyError, ValueError,
             zipfile.BadZipfile) as exception:
           logging.warning(
-              '[{0:s}] unable to read property with error: {1:s}.'.format(
+              '[{0:s}] unable to read property with error: {1!s}.'.format(
                   self.NAME, exception))
           continue
 
@@ -218,7 +218,7 @@ class OpenXMLParser(interface.FileObjectParser):
         parser_mediator.ProduceEventWithEventData(event, event_data)
       except ValueError as exception:
         parser_mediator.ProduceExtractionError(
-            'unsupported created time: {0:s} with error: {1:s}'.format(
+            'unsupported created time: {0:s} with error: {1!s}'.format(
                 time_string, exception))
 
     time_string = timestamps.get('modified', None)
@@ -231,7 +231,7 @@ class OpenXMLParser(interface.FileObjectParser):
         parser_mediator.ProduceEventWithEventData(event, event_data)
       except ValueError as exception:
         parser_mediator.ProduceExtractionError(
-            'unsupported modified time: {0:s} with error: {1:s}'.format(
+            'unsupported modified time: {0:s} with error: {1!s}'.format(
                 time_string, exception))
 
     time_string = timestamps.get('lastPrinted', None)
@@ -244,7 +244,7 @@ class OpenXMLParser(interface.FileObjectParser):
         parser_mediator.ProduceEventWithEventData(event, event_data)
       except ValueError as exception:
         parser_mediator.ProduceExtractionError(
-            'unsupported last printed time: {0:s} with error: {1:s}'.format(
+            'unsupported last printed time: {0:s} with error: {1!s}'.format(
                 time_string, exception))
 
 

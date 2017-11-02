@@ -269,7 +269,7 @@ class KeychainParser(interface.FileObjectParser):
     except construct.FieldError as exception:
       time_structure = None
       parser_mediator.ProduceExtractionError(
-          'unable to parse creation time with error: {0:s}'.format(exception))
+          'unable to parse creation time with error: {0!s}'.format(exception))
 
     if time_structure:
       time_elements_tuple = (
@@ -295,7 +295,7 @@ class KeychainParser(interface.FileObjectParser):
     except construct.FieldError as exception:
       time_structure = None
       parser_mediator.ProduceExtractionError(
-          'unable to parse last modification time with error: {0:s}'.format(
+          'unable to parse last modification time with error: {0!s}'.format(
               exception))
 
     if time_structure:
@@ -322,7 +322,7 @@ class KeychainParser(interface.FileObjectParser):
         text_description = self.TEXT.parse_stream(file_object)
       except construct.FieldError as exception:
         parser_mediator.ProduceExtractionError(
-            'unable to parse text description with error: {0:s}'.format(
+            'unable to parse text description with error: {0!s}'.format(
                 exception))
 
     comments = 'N/A'
@@ -334,7 +334,7 @@ class KeychainParser(interface.FileObjectParser):
         comments = self.TEXT.parse_stream(file_object)
       except construct.FieldError as exception:
         parser_mediator.ProduceExtractionError(
-            'unable to parse comments with error: {0:s}'.format(exception))
+            'unable to parse comments with error: {0!s}'.format(exception))
 
     structure_offset = record_offset + record.entry_name - 1
     file_object.seek(structure_offset, os.SEEK_SET)
@@ -344,7 +344,7 @@ class KeychainParser(interface.FileObjectParser):
     except construct.FieldError as exception:
       entry_name = 'N/A'
       parser_mediator.ProduceExtractionError(
-          'unable to parse entry name with error: {0:s}'.format(exception))
+          'unable to parse entry name with error: {0!s}'.format(exception))
 
     structure_offset = record_offset + record.account_name - 1
     file_object.seek(structure_offset, os.SEEK_SET)
@@ -354,7 +354,7 @@ class KeychainParser(interface.FileObjectParser):
     except construct.FieldError as exception:
       account_name = 'N/A'
       parser_mediator.ProduceExtractionError(
-          'unable to parse account name with error: {0:s}'.format(exception))
+          'unable to parse account name with error: {0!s}'.format(exception))
 
     return (
         ssgp_hash, creation_time, last_modification_time,

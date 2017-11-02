@@ -46,7 +46,7 @@ class ObjectFilterList(interface.FilterObject):
 
       except yaml.ParserError as exception:
         logging.error(
-            'Unable to load rule file with error: {0:s}'.format(exception))
+            'Unable to load rule file with error: {0!s}'.format(exception))
         return
 
   def _ParseEntry(self, entry):
@@ -99,7 +99,7 @@ class ObjectFilterList(interface.FilterObject):
         results = yaml.safe_load(file_object)
       except (yaml.scanner.ScannerError, IOError) as exception:
         raise errors.WrongPlugin(
-            'Unable to parse YAML file with error: {0:s}.'.format(exception))
+            'Unable to parse YAML file with error: {0!s}.'.format(exception))
 
     self.filters = []
     results_type = type(results)

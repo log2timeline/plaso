@@ -162,7 +162,7 @@ class BinaryCookieParser(interface.FileObjectParser):
 
       except Exception as exception:  # pylint: disable=broad-except
         parser_mediator.ProduceExtractionError(
-            'plugin: {0:s} unable to parse cookie with error: {1:s}'.format(
+            'plugin: {0:s} unable to parse cookie with error: {1!s}'.format(
                 plugin.NAME, exception))
 
   def _ParsePage(self, parser_mediator, page_number, page_data):
@@ -216,7 +216,7 @@ class BinaryCookieParser(interface.FileObjectParser):
       file_header = self._FILE_HEADER.parse_stream(file_object)
     except (IOError, construct.ArrayError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to read file header with error: {0:s}.'.format(exception))
+          'unable to read file header with error: {0!s}.'.format(exception))
       raise errors.UnableToParseFile()
 
     if file_header.signature != b'cook':

@@ -54,7 +54,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
 
     except socket.error as exception:
       logging.error(
-          'Unable to connect to nsrlsvr with error: {0:s}.'.format(exception))
+          'Unable to connect to nsrlsvr with error: {0!s}.'.format(exception))
 
   def _QueryHash(self, nsrl_socket, digest):
     """Queries nsrlsvr for a specfic hash.
@@ -75,7 +75,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
 
     except socket.error as exception:
       logging.error(
-          'Unable to query nsrlsvr with error: {0:s}.'.format(exception))
+          'Unable to query nsrlsvr with error: {0!s}.'.format(exception))
 
     if not response:
       return False

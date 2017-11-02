@@ -60,6 +60,18 @@ class Task(interface.AttributeContainer):
     self.start_time = int(time.time() * 1000000)
     self.storage_file_size = None
 
+  # This method is necessary for heap sort.
+  def __lt__(self, other):
+    """Compares if the task attribute container is less than the other.
+
+    Args:
+      other (Task): task attribute container to compare to.
+
+    Returns:
+      bool: True if the task attribute container is less than the other.
+    """
+    return self.identifier < other.identifier
+
   def CreateRetry(self):
     """Creates a new task that's an attempt to retry the original task.
 

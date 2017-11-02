@@ -194,8 +194,8 @@ class CupsIppParser(interface.FileObjectParser):
       u'time-at-processing': definitions.TIME_DESCRIPTION_START,
       u'time-at-completed': definitions.TIME_DESCRIPTION_END}
 
-  _DATE_TIME_VALUE_NAMES = _DATE_TIME_VALUES.keys()
-  _DATE_TIME_VALUE_NAMES.extend(_POSIX_TIME_VALUES.keys())
+  _DATE_TIME_VALUE_NAMES = list(_DATE_TIME_VALUES.keys())
+  _DATE_TIME_VALUE_NAMES.extend(list(_POSIX_TIME_VALUES.keys()))
 
   def _GetStringValue(self, data_dict, name, default_value=None):
     """Retrieves a specific string value from the data dict.
@@ -250,7 +250,7 @@ class CupsIppParser(interface.FileObjectParser):
 
     except (IOError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to parse pair identifier with error: {0:s}'.format(
+          u'unable to parse pair identifier with error: {0!s}'.format(
               exception))
       return None, None
 
@@ -259,7 +259,7 @@ class CupsIppParser(interface.FileObjectParser):
       name = self.PAIR_NAME.parse_stream(file_object).text
     except (IOError, UnicodeDecodeError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to parse pair name with error: {0:s}'.format(exception))
+          u'unable to parse pair name with error: {0!s}'.format(exception))
       return None, None
 
     # Value: can be integer, boolean or text select by Type ID.
@@ -286,7 +286,7 @@ class CupsIppParser(interface.FileObjectParser):
 
     except (IOError, UnicodeDecodeError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to parse pair value with error: {0:s}'.format(exception))
+          u'unable to parse pair value with error: {0!s}'.format(exception))
       return None, None
 
     return name, value
@@ -328,7 +328,7 @@ class CupsIppParser(interface.FileObjectParser):
       header = self.CUPS_IPP_HEADER.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          u'Unable to parse CUPS IPP Header with error: {0:s}'.format(
+          u'Unable to parse CUPS IPP Header with error: {0!s}'.format(
               exception))
 
     if (header.major_version != self.IPP_MAJOR_VERSION or
