@@ -33,11 +33,13 @@ CATEGORIES = {
         'sqlite/zeitgeist', 'zsh_extended_history'],
     'macos': [
         'sqlite/appusage', 'asl_log', 'bash_history', 'bencode', 'bsm_log',
-        'cups_ipp', 'filestat', 'sqlite/google_drive', 'sqlite/imessage',
-        'java_idx', 'sqlite/ls_quarantine', 'mac_appfirewall_log',
-        'sqlite/mac_document_versions', 'mac_keychain', 'mac_securityd',
-        'sqlite/mackeeper_cache', 'macwifi', 'olecf', 'openxml', 'plist',
-        'sqlite/skype', 'syslog', 'utmpx', 'webhist', 'zsh_extended_history'],
+        'cups_ipp', 'filestat', 'fseventsd', 'sqlite/google_drive',
+        'sqlite/imessage', 'java_idx', 'sqlite/ls_quarantine',
+        'mac_appfirewall_log', 'sqlite/mac_document_versions', 'mac_keychain',
+        'mac_securityd', 'sqlite/mackeeper_cache', 'macwifi', 'olecf',
+        'openxml', 'plist', 'sqlite/skype', 'syslog', 'utmpx', 'webhist',
+        'zsh_extended_history'
+    ],
     'android': [
         'android_app_usage', 'filestat', 'chrome_cache',
         'sqlite/android_calls', 'sqlite/android_sms', 'sqlite/android_webview',
