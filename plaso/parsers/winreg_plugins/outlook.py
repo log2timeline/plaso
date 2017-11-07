@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains an Outlook Registry parser."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
@@ -14,16 +16,16 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin parsing Outlook Search MRU keys."""
 
-  NAME = u'microsoft_outlook_mru'
-  DESCRIPTION = u'Parser for Microsoft Outlook search MRU Registry data.'
+  NAME = 'microsoft_outlook_mru'
+  DESCRIPTION = 'Parser for Microsoft Outlook search MRU Registry data.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\Outlook\\'
-          u'Search'),
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\Outlook\\'
+          'Search'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\15.0\\Outlook\\'
-          u'Search')])
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\15.0\\Outlook\\'
+          'Search')])
 
   # TODO: The catalog for Office 2013 (15.0) contains binary values not
   # dword values. Check if Office 2007 and 2010 have the same. Re-enable the
@@ -40,7 +42,7 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
   #     'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\15.0\\Outlook\\'
   #     'Search\\Catalog'
 
-  _SOURCE_APPEND = u': PST Paths'
+  _SOURCE_APPEND = ': PST Paths'
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
@@ -63,7 +65,7 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
       # TODO: change this 32-bit integer into something meaningful, for now
       # the value name is the most interesting part.
       value_integer = registry_value.GetDataAsObject()
-      values_dict[registry_value.name] = u'0x{0:08x}'.format(value_integer)
+      values_dict[registry_value.name] = '0x{0:08x}'.format(value_integer)
 
     event_data = windows_events.WindowsRegistryEventData()
     event_data.key_path = registry_key.path

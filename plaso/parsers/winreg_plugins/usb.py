@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """File containing a Windows Registry plugin to parse the USB Device key."""
 
+from __future__ import unicode_literals
+
 import logging
 
 from plaso.containers import time_events
@@ -16,18 +18,18 @@ __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
 class USBPlugin(interface.WindowsRegistryPlugin):
   """USB Windows Registry plugin for last connection time."""
 
-  NAME = u'windows_usb_devices'
-  DESCRIPTION = u'Parser for USB device Registry entries.'
+  NAME = 'windows_usb_devices'
+  DESCRIPTION = 'Parser for USB device Registry entries.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Enum\\USB')])
+          'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Enum\\USB')])
 
   URLS = [
-      (u'https://msdn.microsoft.com/en-us/library/windows/hardware/'
-       u'jj649944%28v=vs.85%29.aspx')]
+      ('https://msdn.microsoft.com/en-us/library/windows/hardware/'
+       'jj649944%28v=vs.85%29.aspx')]
 
-  _SOURCE_APPEND = u': USB Entries'
+  _SOURCE_APPEND = ': USB Entries'
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
@@ -39,26 +41,26 @@ class USBPlugin(interface.WindowsRegistryPlugin):
     """
     for subkey in registry_key.GetSubkeys():
       values_dict = {}
-      values_dict[u'subkey_name'] = subkey.name
+      values_dict['subkey_name'] = subkey.name
 
       vendor_identification = None
       product_identification = None
       try:
-        subkey_name_parts = subkey.name.split(u'&')
+        subkey_name_parts = subkey.name.split('&')
         if len(subkey_name_parts) >= 2:
           vendor_identification = subkey_name_parts[0]
           product_identification = subkey_name_parts[1]
       except ValueError as exception:
         logging.warning(
-            u'Unable to split string: {0:s} with error: {1:s}'.format(
+            'Unable to split string: {0:s} with error: {1:s}'.format(
                 subkey.name, exception))
 
       if vendor_identification and product_identification:
-        values_dict[u'vendor'] = vendor_identification
-        values_dict[u'product'] = product_identification
+        values_dict['vendor'] = vendor_identification
+        values_dict['product'] = product_identification
 
       for devicekey in subkey.GetSubkeys():
-        values_dict[u'serial'] = devicekey.name
+        values_dict['serial'] = devicekey.name
 
         event_data = windows_events.WindowsRegistryEventData()
         event_data.key_path = registry_key.path

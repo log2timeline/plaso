@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """File containing a Windows Registry plugin to parse the typed URLs key."""
 
+from __future__ import unicode_literals
+
 import re
 
 from plaso.containers import time_events
@@ -16,19 +18,19 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class TypedURLsPlugin(interface.WindowsRegistryPlugin):
   """A Windows Registry plugin for typed URLs history."""
 
-  NAME = u'windows_typed_urls'
-  DESCRIPTION = u'Parser for Explorer typed URLs Registry data.'
+  NAME = 'windows_typed_urls'
+  DESCRIPTION = 'Parser for Explorer typed URLs Registry data.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Internet Explorer\\'
-          u'TypedURLs'),
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Internet Explorer\\'
+          'TypedURLs'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          u'Explorer\\TypedPaths')])
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          'Explorer\\TypedPaths')])
 
   _RE_VALUE_NAME = re.compile(r'^url[0-9]+$', re.I)
-  _SOURCE_APPEND = u': Typed URLs'
+  _SOURCE_APPEND = ': Typed URLs'
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.

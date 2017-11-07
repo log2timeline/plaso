@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """"Windows Registry plugin for the Microsoft Office MRU."""
 
+from __future__ import unicode_literals
+
 import re
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -24,7 +26,7 @@ class OfficeMRUWindowsRegistryEventData(events.EventData):
     key_path (str): Windows Registry key path.
     value_string (str): MRU value.
   """
-  DATA_TYPE = u'windows:registry:office_mru'
+  DATA_TYPE = 'windows:registry:office_mru'
 
   def __init__(self):
     """Initializes event data."""
@@ -37,34 +39,34 @@ class OfficeMRUWindowsRegistryEventData(events.EventData):
 class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
   """Plugin that parses Microsoft Office MRU keys."""
 
-  NAME = u'microsoft_office_mru'
-  DESCRIPTION = u'Parser for Microsoft Office MRU Registry data.'
+  NAME = 'microsoft_office_mru'
+  DESCRIPTION = 'Parser for Microsoft Office MRU Registry data.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
-          u'Access\\File MRU'),
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+          'Access\\File MRU'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
-          u'Access\\Place MRU'),
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+          'Access\\Place MRU'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
-          u'Excel\\File MRU'),
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+          'Excel\\File MRU'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
-          u'Excel\\Place MRU'),
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+          'Excel\\Place MRU'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
-          u'PowerPoint\\File MRU'),
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+          'PowerPoint\\File MRU'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
-          u'PowerPoint\\Place MRU'),
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+          'PowerPoint\\Place MRU'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
-          u'Word\\File MRU'),
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+          'Word\\File MRU'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
-          u'Word\\Place MRU')])
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+          'Word\\Place MRU')])
 
   _RE_VALUE_NAME = re.compile(r'^Item [0-9]+$', re.I)
 
@@ -75,7 +77,7 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
   # [F00000000][T%FILETIME%][O00000000]*%FILENAME%
   _RE_VALUE_DATA = re.compile(r'\[F00000000\]\[T([0-9A-Z]+)\].*\*[\\]?(.*)')
 
-  _SOURCE_APPEND = u': Microsoft Office MRU'
+  _SOURCE_APPEND = ': Microsoft Office MRU'
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
@@ -108,8 +110,8 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
         timestamp = int(values[0][0], 16)
       except ValueError:
         parser_mediator.ProduceExtractionError((
-            u'unable to convert filetime string to an integer for '
-            u'value: {0:s}.').format(registry_value.name))
+            'unable to convert filetime string to an integer for '
+            'value: {0:s}.').format(registry_value.name))
         continue
 
       event_data = OfficeMRUWindowsRegistryEventData()
@@ -121,7 +123,7 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
       values_dict[registry_value.name] = value_string
 
       if not timestamp:
-        date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+        date_time = dfdatetime_semantic_time.SemanticTime('Not set')
       else:
         date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
 

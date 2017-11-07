@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Windows Registry plugin to parse the Application Compatibility Cache key."""
 
+from __future__ import unicode_literals
+
 import logging
 
 import construct
@@ -25,7 +27,7 @@ class AppCompatCacheEventData(events.EventData):
     path (str): full path to the executable.
   """
 
-  DATA_TYPE = u'windows:registry:appcompatcache'
+  DATA_TYPE = 'windows:registry:appcompatcache'
 
   def __init__(self):
     """Initializes event data."""
@@ -64,20 +66,20 @@ class AppCompatCacheCachedEntry(object):
 class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
   """Class that parses the Application Compatibility Cache Registry data."""
 
-  NAME = u'appcompatcache'
-  DESCRIPTION = u'Parser for Application Compatibility Cache Registry data.'
+  NAME = 'appcompatcache'
+  DESCRIPTION = 'Parser for Application Compatibility Cache Registry data.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
-          u'Session Manager\\AppCompatibility'),
+          'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
+          'Session Manager\\AppCompatibility'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
-          u'Session Manager\\AppCompatCache')])
+          'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
+          'Session Manager\\AppCompatCache')])
 
   URLS = [
-      (u'https://github.com/libyal/winreg-kb/blob/master/documentation/'
-       u'Application%20Compatibility%20Cache%20key.asciidoc')]
+      ('https://github.com/libyal/winreg-kb/blob/master/documentation/'
+       'Application%20Compatibility%20Cache%20key.asciidoc')]
 
   _FORMAT_TYPE_2000 = 1
   _FORMAT_TYPE_XP = 2
@@ -92,115 +94,115 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
 
   # AppCompatCache format used in Windows XP.
   _HEADER_XP_32BIT_STRUCT = construct.Struct(
-      u'appcompatcache_header_xp',
-      construct.ULInt32(u'signature'),
-      construct.ULInt32(u'number_of_cached_entries'),
-      construct.ULInt32(u'unknown1'),
-      construct.ULInt32(u'unknown2'),
+      'appcompatcache_header_xp',
+      construct.ULInt32('signature'),
+      construct.ULInt32('number_of_cached_entries'),
+      construct.ULInt32('unknown1'),
+      construct.ULInt32('unknown2'),
       construct.Padding(384))
 
   _CACHED_ENTRY_XP_32BIT_STRUCT = construct.Struct(
-      u'appcompatcache_cached_entry_xp_32bit',
-      construct.Array(528, construct.Byte(u'path')),
-      construct.ULInt64(u'last_modification_time'),
-      construct.ULInt64(u'file_size'),
-      construct.ULInt64(u'last_update_time'))
+      'appcompatcache_cached_entry_xp_32bit',
+      construct.Array(528, construct.Byte('path')),
+      construct.ULInt64('last_modification_time'),
+      construct.ULInt64('file_size'),
+      construct.ULInt64('last_update_time'))
 
   # AppCompatCache format signature used in Windows 2003, Vista and 2008.
   _HEADER_SIGNATURE_2003 = 0xbadc0ffe
 
   # AppCompatCache format used in Windows 2003.
   _HEADER_2003_STRUCT = construct.Struct(
-      u'appcompatcache_header_2003',
-      construct.ULInt32(u'signature'),
-      construct.ULInt32(u'number_of_cached_entries'))
+      'appcompatcache_header_2003',
+      construct.ULInt32('signature'),
+      construct.ULInt32('number_of_cached_entries'))
 
   _CACHED_ENTRY_2003_32BIT_STRUCT = construct.Struct(
-      u'appcompatcache_cached_entry_2003_32bit',
-      construct.ULInt16(u'path_size'),
-      construct.ULInt16(u'maximum_path_size'),
-      construct.ULInt32(u'path_offset'),
-      construct.ULInt64(u'last_modification_time'),
-      construct.ULInt64(u'file_size'))
+      'appcompatcache_cached_entry_2003_32bit',
+      construct.ULInt16('path_size'),
+      construct.ULInt16('maximum_path_size'),
+      construct.ULInt32('path_offset'),
+      construct.ULInt64('last_modification_time'),
+      construct.ULInt64('file_size'))
 
   _CACHED_ENTRY_2003_64BIT_STRUCT = construct.Struct(
-      u'appcompatcache_cached_entry_2003_64bit',
-      construct.ULInt16(u'path_size'),
-      construct.ULInt16(u'maximum_path_size'),
-      construct.ULInt32(u'unknown1'),
-      construct.ULInt64(u'path_offset'),
-      construct.ULInt64(u'last_modification_time'),
-      construct.ULInt64(u'file_size'))
+      'appcompatcache_cached_entry_2003_64bit',
+      construct.ULInt16('path_size'),
+      construct.ULInt16('maximum_path_size'),
+      construct.ULInt32('unknown1'),
+      construct.ULInt64('path_offset'),
+      construct.ULInt64('last_modification_time'),
+      construct.ULInt64('file_size'))
 
   # TODO: fix missing _HEADER_VISTA_STRUCT definition.
 
   # AppCompatCache format used in Windows Vista and 2008.
   _CACHED_ENTRY_VISTA_32BIT_STRUCT = construct.Struct(
-      u'appcompatcache_cached_entry_vista_32bit',
-      construct.ULInt16(u'path_size'),
-      construct.ULInt16(u'maximum_path_size'),
-      construct.ULInt32(u'path_offset'),
-      construct.ULInt64(u'last_modification_time'),
-      construct.ULInt32(u'insertion_flags'),
-      construct.ULInt32(u'shim_flags'))
+      'appcompatcache_cached_entry_vista_32bit',
+      construct.ULInt16('path_size'),
+      construct.ULInt16('maximum_path_size'),
+      construct.ULInt32('path_offset'),
+      construct.ULInt64('last_modification_time'),
+      construct.ULInt32('insertion_flags'),
+      construct.ULInt32('shim_flags'))
 
   _CACHED_ENTRY_VISTA_64BIT_STRUCT = construct.Struct(
-      u'appcompatcache_cached_entry_vista_64bit',
-      construct.ULInt16(u'path_size'),
-      construct.ULInt16(u'maximum_path_size'),
-      construct.ULInt32(u'unknown1'),
-      construct.ULInt64(u'path_offset'),
-      construct.ULInt64(u'last_modification_time'),
-      construct.ULInt32(u'insertion_flags'),
-      construct.ULInt32(u'shim_flags'))
+      'appcompatcache_cached_entry_vista_64bit',
+      construct.ULInt16('path_size'),
+      construct.ULInt16('maximum_path_size'),
+      construct.ULInt32('unknown1'),
+      construct.ULInt64('path_offset'),
+      construct.ULInt64('last_modification_time'),
+      construct.ULInt32('insertion_flags'),
+      construct.ULInt32('shim_flags'))
 
   # AppCompatCache format signature used in Windows 7 and 2008 R2.
   _HEADER_SIGNATURE_7 = 0xbadc0fee
 
   # AppCompatCache format used in Windows 7 and 2008 R2.
   _HEADER_7_STRUCT = construct.Struct(
-      u'appcompatcache_header_7',
-      construct.ULInt32(u'signature'),
-      construct.ULInt32(u'number_of_cached_entries'),
+      'appcompatcache_header_7',
+      construct.ULInt32('signature'),
+      construct.ULInt32('number_of_cached_entries'),
       construct.Padding(120))
 
   _CACHED_ENTRY_7_32BIT_STRUCT = construct.Struct(
-      u'appcompatcache_cached_entry_7_32bit',
-      construct.ULInt16(u'path_size'),
-      construct.ULInt16(u'maximum_path_size'),
-      construct.ULInt32(u'path_offset'),
-      construct.ULInt64(u'last_modification_time'),
-      construct.ULInt32(u'insertion_flags'),
-      construct.ULInt32(u'shim_flags'),
-      construct.ULInt32(u'data_size'),
-      construct.ULInt32(u'data_offset'))
+      'appcompatcache_cached_entry_7_32bit',
+      construct.ULInt16('path_size'),
+      construct.ULInt16('maximum_path_size'),
+      construct.ULInt32('path_offset'),
+      construct.ULInt64('last_modification_time'),
+      construct.ULInt32('insertion_flags'),
+      construct.ULInt32('shim_flags'),
+      construct.ULInt32('data_size'),
+      construct.ULInt32('data_offset'))
 
   _CACHED_ENTRY_7_64BIT_STRUCT = construct.Struct(
-      u'appcompatcache_cached_entry_7_64bit',
-      construct.ULInt16(u'path_size'),
-      construct.ULInt16(u'maximum_path_size'),
-      construct.ULInt32(u'unknown1'),
-      construct.ULInt64(u'path_offset'),
-      construct.ULInt64(u'last_modification_time'),
-      construct.ULInt32(u'insertion_flags'),
-      construct.ULInt32(u'shim_flags'),
-      construct.ULInt64(u'data_size'),
-      construct.ULInt64(u'data_offset'))
+      'appcompatcache_cached_entry_7_64bit',
+      construct.ULInt16('path_size'),
+      construct.ULInt16('maximum_path_size'),
+      construct.ULInt32('unknown1'),
+      construct.ULInt64('path_offset'),
+      construct.ULInt64('last_modification_time'),
+      construct.ULInt32('insertion_flags'),
+      construct.ULInt32('shim_flags'),
+      construct.ULInt64('data_size'),
+      construct.ULInt64('data_offset'))
 
   # AppCompatCache format used in Windows 8.0 and 8.1.
   _HEADER_SIGNATURE_8 = 0x00000080
 
   _HEADER_8_STRUCT = construct.Struct(
-      u'appcompatcache_header_8',
-      construct.ULInt32(u'signature'),
+      'appcompatcache_header_8',
+      construct.ULInt32('signature'),
       construct.Padding(124))
 
   _CACHED_ENTRY_HEADER_8_STRUCT = construct.Struct(
-      u'appcompatcache_cached_entry_header_8',
-      construct.ULInt32(u'signature'),
-      construct.ULInt32(u'unknown1'),
-      construct.ULInt32(u'cached_entry_data_size'),
-      construct.ULInt16(u'path_size'))
+      'appcompatcache_cached_entry_header_8',
+      construct.ULInt32('signature'),
+      construct.ULInt32('unknown1'),
+      construct.ULInt32('cached_entry_data_size'),
+      construct.ULInt16('path_size'))
 
   # AppCompatCache format used in Windows 8.0.
   _CACHED_ENTRY_SIGNATURE_8_0 = b'00ts'
@@ -212,11 +214,11 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
   _HEADER_SIGNATURES_10 = (0x00000030, 0x00000034)
 
   _HEADER_10_STRUCT = construct.Struct(
-      u'appcompatcache_header_10',
-      construct.ULInt32(u'signature'),
-      construct.ULInt32(u'unknown1'),
+      'appcompatcache_header_10',
+      construct.ULInt32('signature'),
+      construct.ULInt32('unknown1'),
       construct.Padding(28),
-      construct.ULInt32(u'number_of_cached_entries'),
+      construct.ULInt32('number_of_cached_entries'),
       construct.Padding(8))
 
   def _CheckSignature(self, value_data):
@@ -228,7 +230,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
     Returns:
       int: format type or None if format could not be determined.
     """
-    signature = construct.ULInt32(u'signature').parse(value_data)
+    signature = construct.ULInt32('signature').parse(value_data)
     if signature == self._HEADER_SIGNATURE_XP:
       return self._FORMAT_TYPE_XP
 
@@ -270,7 +272,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
         self._FORMAT_TYPE_XP, self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA,
         self._FORMAT_TYPE_7, self._FORMAT_TYPE_8, self._FORMAT_TYPE_10):
       raise RuntimeError(
-          u'[{0:s}] Unsupported format type: {1:d}'.format(
+          '[{0:s}] Unsupported format type: {1:d}'.format(
               self.NAME, format_type))
 
     cached_entry_data = value_data[cached_entry_offset:]
@@ -281,23 +283,23 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
 
     elif format_type in (
         self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA, self._FORMAT_TYPE_7):
-      path_size = construct.ULInt16(u'path_size').parse(cached_entry_data[0:2])
-      maximum_path_size = construct.ULInt16(u'maximum_path_size').parse(
+      path_size = construct.ULInt16('path_size').parse(cached_entry_data[0:2])
+      maximum_path_size = construct.ULInt16('maximum_path_size').parse(
           cached_entry_data[2:4])
-      path_offset_32bit = construct.ULInt32(u'path_offset').parse(
+      path_offset_32bit = construct.ULInt32('path_offset').parse(
           cached_entry_data[4:8])
-      path_offset_64bit = construct.ULInt32(u'path_offset').parse(
+      path_offset_64bit = construct.ULInt32('path_offset').parse(
           cached_entry_data[8:16])
 
       if maximum_path_size < path_size:
         logging.error(
-            u'[{0:s}] Path size value out of bounds.'.format(self.NAME))
+            '[{0:s}] Path size value out of bounds.'.format(self.NAME))
         return
 
       path_end_of_string_size = maximum_path_size - path_size
       if path_size == 0 or path_end_of_string_size != 2:
         logging.error(
-            u'[{0:s}] Unsupported path size values.'.format(self.NAME))
+            '[{0:s}] Unsupported path size values.'.format(self.NAME))
         return
 
       # Assume the entry is 64-bit if the 32-bit path offset is 0 and
@@ -340,7 +342,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
         self._FORMAT_TYPE_XP, self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA,
         self._FORMAT_TYPE_7, self._FORMAT_TYPE_8, self._FORMAT_TYPE_10):
       raise RuntimeError(
-          u'[{0:s}] Unsupported format type: {1:d}'.format(
+          '[{0:s}] Unsupported format type: {1:d}'.format(
               self.NAME, format_type))
 
     # TODO: change to collections.namedtuple or use __slots__ if the overhead
@@ -355,9 +357,10 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
       header_struct = self._HEADER_2003_STRUCT.parse(value_data)
       header_object.header_size = self._HEADER_2003_STRUCT.sizeof()
 
-    elif format_type == self._FORMAT_TYPE_VISTA:
-      header_struct = self._HEADER_VISTA_STRUCT.parse(value_data)
-      header_object.header_size = self._HEADER_VISTA_STRUCT.sizeof()
+    # TODO: fix missing _HEADER_VISTA_STRUCT definition.
+    # elif format_type == self._FORMAT_TYPE_VISTA:
+    #   header_struct = self._HEADER_VISTA_STRUCT.parse(value_data)
+    #   header_object.header_size = self._HEADER_VISTA_STRUCT.sizeof()
 
     elif format_type == self._FORMAT_TYPE_7:
       header_struct = self._HEADER_7_STRUCT.parse(value_data)
@@ -375,7 +378,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
         self._FORMAT_TYPE_XP, self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA,
         self._FORMAT_TYPE_7, self._FORMAT_TYPE_10):
       header_object.number_of_cached_entries = header_struct.get(
-          u'number_of_cached_entries')
+          'number_of_cached_entries')
 
     return header_object
 
@@ -400,7 +403,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
         self._FORMAT_TYPE_XP, self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA,
         self._FORMAT_TYPE_7, self._FORMAT_TYPE_8, self._FORMAT_TYPE_10):
       raise RuntimeError(
-          u'[{0:s}] Unsupported format type: {1:d}'.format(
+          '[{0:s}] Unsupported format type: {1:d}'.format(
               self.NAME, format_type))
 
     cached_entry_data = value_data[
@@ -444,15 +447,15 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
       if cached_entry_data[0:4] not in (
           self._CACHED_ENTRY_SIGNATURE_8_0, self._CACHED_ENTRY_SIGNATURE_8_1):
         raise RuntimeError((
-            u'[{0:s}] Unsupported cache entry signature at offset: '
-            u'0x{1:08x}').format(self.NAME, cached_entry_offset))
+            '[{0:s}] Unsupported cache entry signature at offset: '
+            '0x{1:08x}').format(self.NAME, cached_entry_offset))
 
       if cached_entry_size == self._CACHED_ENTRY_HEADER_8_STRUCT.sizeof():
         cached_entry_struct = self._CACHED_ENTRY_HEADER_8_STRUCT.parse(
             cached_entry_data)
 
         cached_entry_data_size = cached_entry_struct.get(
-            u'cached_entry_data_size')
+            'cached_entry_data_size')
         cached_entry_size = 12 + cached_entry_data_size
 
         cached_entry_data = value_data[
@@ -460,7 +463,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
 
     if not cached_entry_struct:
       raise RuntimeError(
-          u'[{0:s}] Unsupported cache entry size: {1:d}'.format(
+          '[{0:s}] Unsupported cache entry size: {1:d}'.format(
               self.NAME, cached_entry_size))
 
     cached_entry_object = AppCompatCacheCachedEntry()
@@ -482,11 +485,11 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
 
     elif format_type in (
         self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA, self._FORMAT_TYPE_7):
-      path_size = cached_entry_struct.get(u'path_size')
-      path_offset = cached_entry_struct.get(u'path_offset')
+      path_size = cached_entry_struct.get('path_size')
+      path_offset = cached_entry_struct.get('path_offset')
 
     elif format_type in (self._FORMAT_TYPE_8, self._FORMAT_TYPE_10):
-      path_size = cached_entry_struct.get(u'path_size')
+      path_size = cached_entry_struct.get('path_size')
 
       cached_entry_data_offset = 14 + path_size
       cached_entry_object.path = binary.UTF16StreamCopyToString(
@@ -496,9 +499,9 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
         remaining_data = cached_entry_data[cached_entry_data_offset:]
 
         cached_entry_object.insertion_flags = construct.ULInt32(
-            u'insertion_flags').parse(remaining_data[0:4])
+            'insertion_flags').parse(remaining_data[0:4])
         cached_entry_object.shim_flags = construct.ULInt32(
-            u'shim_flags').parse(remaining_data[4:8])
+            'shim_flags').parse(remaining_data[4:8])
 
         if cached_entry_data[0:4] == self._CACHED_ENTRY_SIGNATURE_8_0:
           cached_entry_data_offset += 8
@@ -512,31 +515,31 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
         self._FORMAT_TYPE_XP, self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA,
         self._FORMAT_TYPE_7):
       cached_entry_object.last_modification_time = cached_entry_struct.get(
-          u'last_modification_time')
+          'last_modification_time')
 
     elif format_type in (self._FORMAT_TYPE_8, self._FORMAT_TYPE_10):
       cached_entry_object.last_modification_time = construct.ULInt64(
-          u'last_modification_time').parse(remaining_data[0:8])
+          'last_modification_time').parse(remaining_data[0:8])
 
     if format_type in (self._FORMAT_TYPE_XP, self._FORMAT_TYPE_2003):
-      cached_entry_object.file_size = cached_entry_struct.get(u'file_size')
+      cached_entry_object.file_size = cached_entry_struct.get('file_size')
 
     elif format_type in (self._FORMAT_TYPE_VISTA, self._FORMAT_TYPE_7):
       cached_entry_object.insertion_flags = cached_entry_struct.get(
-          u'insertion_flags')
-      cached_entry_object.shim_flags = cached_entry_struct.get(u'shim_flags')
+          'insertion_flags')
+      cached_entry_object.shim_flags = cached_entry_struct.get('shim_flags')
 
     if format_type == self._FORMAT_TYPE_XP:
       cached_entry_object.last_update_time = cached_entry_struct.get(
-          u'last_update_time')
+          'last_update_time')
 
     if format_type == self._FORMAT_TYPE_7:
-      data_offset = cached_entry_struct.get(u'data_offset')
-      data_size = cached_entry_struct.get(u'data_size')
+      data_offset = cached_entry_struct.get('data_offset')
+      data_size = cached_entry_struct.get('data_size')
 
     elif format_type in (self._FORMAT_TYPE_8, self._FORMAT_TYPE_10):
       data_offset = cached_entry_offset + cached_entry_data_offset + 12
-      data_size = construct.ULInt32(u'data_size').parse(remaining_data[8:12])
+      data_size = construct.ULInt32('data_size').parse(remaining_data[8:12])
 
     if path_offset > 0 and path_size > 0:
       path_size += path_offset
@@ -559,7 +562,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
           and other components, such as storage and dfvfs.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
-    value = registry_key.GetValueByName(u'AppCompatCache')
+    value = registry_key.GetValueByName('AppCompatCache')
     if not value:
       return
 
@@ -569,7 +572,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
     format_type = self._CheckSignature(value_data)
     if not format_type:
       parser_mediator.ProduceExtractionError(
-          u'Unsupported signature in AppCompatCache key: {0:s}'.format(
+          'Unsupported signature in AppCompatCache key: {0:s}'.format(
               registry_key.path))
       return
 
@@ -586,8 +589,8 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
 
     if not cached_entry_size:
       parser_mediator.ProduceExtractionError((
-          u'Unsupported cached entry size at offset {0:d} in AppCompatCache '
-          u'key: {1:s}').format(cached_entry_offset, registry_key.path))
+          'Unsupported cached entry size at offset {0:d} in AppCompatCache '
+          'key: {1:s}').format(cached_entry_offset, registry_key.path))
       return
 
     cached_entry_index = 0
@@ -603,19 +606,19 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
 
       if cached_entry_object.last_modification_time is not None:
         if not cached_entry_object.last_modification_time:
-          date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+          date_time = dfdatetime_semantic_time.SemanticTime('Not set')
         else:
           date_time = dfdatetime_filetime.Filetime(
               timestamp=cached_entry_object.last_modification_time)
 
         # TODO: refactor to file modification event.
         event = time_events.DateTimeValuesEvent(
-            date_time, u'File Last Modification Time')
+            date_time, 'File Last Modification Time')
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       if cached_entry_object.last_update_time is not None:
         if not cached_entry_object.last_update_time:
-          date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+          date_time = dfdatetime_semantic_time.SemanticTime('Not set')
         else:
           date_time = dfdatetime_filetime.Filetime(
               timestamp=cached_entry_object.last_update_time)

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Windows Registry plugin for parsing the last shutdown time of a system."""
 
+from __future__ import unicode_literals
+
 import construct
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -24,7 +26,7 @@ class ShutdownWindowsRegistryEventData(events.EventData):
     value_name (str): name of the Windows Registry value.
   """
 
-  DATA_TYPE = u'windows:registry:shutdown'
+  DATA_TYPE = 'windows:registry:shutdown'
 
   def __init__(self):
     """Initializes event data."""
@@ -37,14 +39,14 @@ class ShutdownWindowsRegistryEventData(events.EventData):
 class ShutdownPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing the last shutdown time of a system."""
 
-  NAME = u'windows_shutdown'
-  DESCRIPTION = u'Parser for ShutdownTime Registry value.'
+  NAME = 'windows_shutdown'
+  DESCRIPTION = 'Parser for ShutdownTime Registry value.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Windows')])
+          'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Windows')])
 
-  _UINT64_STRUCT = construct.ULInt64(u'value')
+  _UINT64_STRUCT = construct.ULInt64('value')
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a ShutdownTime Windows Registry value.
@@ -54,7 +56,7 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
           and other components, such as storage and dfvfs.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
-    shutdown_value = registry_key.GetValueByName(u'ShutdownTime')
+    shutdown_value = registry_key.GetValueByName('ShutdownTime')
     if not shutdown_value:
       return
 
@@ -65,11 +67,11 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
     except construct.FieldError as exception:
       timestamp = None
       parser_mediator.ProduceExtractionError(
-          u'unable to determine shutdown timestamp with error: {0:s}'.format(
+          'unable to determine shutdown timestamp with error: {0:s}'.format(
               exception))
 
     if not timestamp:
-      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+      date_time = dfdatetime_semantic_time.SemanticTime('Not set')
     else:
       date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
 

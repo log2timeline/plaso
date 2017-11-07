@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains a Windows Registry plugin for WinRAR Registry key."""
 
+from __future__ import unicode_literals
+
 import re
 
 from plaso.containers import time_events
@@ -16,19 +18,19 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class WinRarHistoryPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing WinRAR History keys."""
 
-  NAME = u'winrar_mru'
-  DESCRIPTION = u'Parser for WinRAR History Registry data.'
+  NAME = 'winrar_mru'
+  DESCRIPTION = 'Parser for WinRAR History Registry data.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\WinRAR\\ArcHistory'),
+          'HKEY_CURRENT_USER\\Software\\WinRAR\\ArcHistory'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\WinRAR\\DialogEditHistory\\ArcName'),
+          'HKEY_CURRENT_USER\\Software\\WinRAR\\DialogEditHistory\\ArcName'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\WinRAR\\DialogEditHistory\\ExtrPath')])
+          'HKEY_CURRENT_USER\\Software\\WinRAR\\DialogEditHistory\\ExtrPath')])
 
   _RE_VALUE_NAME = re.compile(r'^[0-9]+$', re.I)
-  _SOURCE_APPEND = u': WinRAR History'
+  _SOURCE_APPEND = ': WinRAR History'
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
