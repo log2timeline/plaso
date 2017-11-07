@@ -67,7 +67,7 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
     except construct.FieldError as exception:
       timestamp = None
       parser_mediator.ProduceExtractionError(
-          'unable to determine shutdown timestamp with error: {0:s}'.format(
+          'unable to determine shutdown timestamp with error: {0!s}'.format(
               exception))
 
     if not timestamp:

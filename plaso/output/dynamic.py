@@ -65,7 +65,7 @@ class DynamicFieldsHelper(object):
     except OverflowError as exception:
       self._ReportEventError(event, (
           'unable to copy timestamp: {0:d} to a human readable date '
-          'with error: {1:s}. Defaulting to: "0000-00-00"').format(
+          'with error: {1!s}. Defaulting to: "0000-00-00"').format(
               event.timestamp, exception))
 
       return '0000-00-00'
@@ -90,7 +90,7 @@ class DynamicFieldsHelper(object):
     except OverflowError as exception:
       self._ReportEventError(event, (
           'unable to copy timestamp: {0:d} to a human readable date and time '
-          'with error: {1:s}. Defaulting to: "0000-00-00T00:00:00"').format(
+          'with error: {1!s}. Defaulting to: "0000-00-00T00:00:00"').format(
               event.timestamp, exception))
 
       return '0000-00-00T00:00:00'
@@ -251,7 +251,7 @@ class DynamicFieldsHelper(object):
     except OverflowError as exception:
       self._ReportEventError(event, (
           'unable to copy timestamp: {0:d} to a human readable time '
-          'with error: {1:s}. Defaulting to: "00:00:00"').format(
+          'with error: {1!s}. Defaulting to: "00:00:00"').format(
               event.timestamp, exception))
 
       return '00:00:00'

@@ -613,7 +613,7 @@ class StorageMediaTool(tools.CLITool):
             credential_data)
 
       except IOError as exception:
-        logging.debug('Unable to unlock volume with error: {0:s}'.format(
+        logging.debug('Unable to unlock volume with error: {0!s}'.format(
             exception))
         result = False
 
@@ -1091,7 +1091,7 @@ class StorageMediaTool(tools.CLITool):
       self._source_scanner.Scan(scan_context)
     except (dfvfs_errors.BackEndError, ValueError) as exception:
       raise errors.SourceScannerError(
-          'Unable to scan source with error: {0:s}.'.format(exception))
+          'Unable to scan source with error: {0!s}.'.format(exception))
 
     if scan_context.source_type not in (
         scan_context.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,

@@ -55,7 +55,7 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
       os.remove(filter_file_path)
     except (OSError, IOError) as exception:
       logging.warning(
-          'Unable to remove filter file: {0:s} with error: {1:s}'.format(
+          'Unable to remove filter file: {0:s} with error: {1!s}'.format(
               filter_file_path, exception))
 
     self.assertEqual(len(find_specs), 5)

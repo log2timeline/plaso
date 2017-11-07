@@ -112,7 +112,7 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
       except construct.FieldError as exception:
         parser_mediator.ProduceExtractionError((
             'unable to parse Registry value: "F" in subkey: {0:s} '
-            'with error: {1:s}.').format(subkey.name, exception))
+            'with error: {1!s}.').format(subkey.name, exception))
         continue
 
       try:
@@ -120,7 +120,7 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
       except construct.FieldError as exception:
         parser_mediator.ProduceExtractionError((
             'unable to parse Registry value: "V" in subkey: {0:s} '
-            'with error: {1:s}.').format(subkey.name, exception))
+            'with error: {1!s}.').format(subkey.name, exception))
         continue
 
       v_header_values = v_data_struct.values()[0]
@@ -134,7 +134,7 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
       except (UnicodeDecodeError, UnicodeEncodeError) as exception:
         username = utf16_stream.decode('utf-16-le', errors='replace')
         parser_mediator.ProduceExtractionError((
-            'unable to decode username string with error: {0:s}. Characters '
+            'unable to decode username string with error: {0!s}. Characters '
             'that cannot be decoded will be replaced with "?" or '
             '"\\ufffd".').format(exception))
 
@@ -147,7 +147,7 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
       except (UnicodeDecodeError, UnicodeEncodeError) as exception:
         fullname = utf16_stream.decode('utf-16-le', errors='replace')
         parser_mediator.ProduceExtractionError((
-            'unable to decode fullname string with error: {0:s}. Characters '
+            'unable to decode fullname string with error: {0!s}. Characters '
             'that cannot be decoded will be replaced with "?" or '
             '"\\ufffd".').format(exception))
 
@@ -160,7 +160,7 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
       except (UnicodeDecodeError, UnicodeEncodeError) as exception:
         comments = utf16_stream.decode('utf-16-le', errors='replace')
         parser_mediator.ProduceExtractionError((
-            'unable to decode comments string with error: {0:s}. Characters '
+            'unable to decode comments string with error: {0!s}. Characters '
             'that cannot be decoded will be replaced with "?" or '
             '"\\ufffd".').format(exception))
 

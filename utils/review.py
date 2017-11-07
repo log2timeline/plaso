@@ -51,7 +51,7 @@ class CLIHelper(object):
       process = subprocess.Popen(
           arguments, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     except OSError as exception:
-      logging.error(u'Running: "{0:s}" failed with error: {1:s}'.format(
+      logging.error(u'Running: "{0:s}" failed with error: {1!s}'.format(
           command, exception))
       return 1, None, None
 

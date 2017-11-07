@@ -188,7 +188,7 @@ class ASLParser(interface.FileObjectParser):
       header = self._ASL_HEADER_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          'Unable to parse ASL Header with error: {0:s}.'.format(exception))
+          'Unable to parse ASL Header with error: {0!s}.'.format(exception))
 
     if header.signature != self._ASL_SIGNATURE:
       raise errors.UnableToParseFile('Not an ASL Header, unable to parse.')
@@ -234,7 +234,7 @@ class ASLParser(interface.FileObjectParser):
       dynamic_data = file_object.read(offset - dynamic_data_offset)
     except IOError as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to read ASL record dynamic data with error: {0:s}'.format(
+          'unable to read ASL record dynamic data with error: {0!s}'.format(
               exception))
       return None, None
 
@@ -245,7 +245,7 @@ class ASLParser(interface.FileObjectParser):
       record_struct = self._ASL_RECORD_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to parse ASL record with error: {0:s}'.format(exception))
+          'unable to parse ASL record with error: {0!s}'.format(exception))
       return None, None
 
     # Variable tam_fields = is the real length of the dynamic fields.
@@ -288,7 +288,7 @@ class ASLParser(interface.FileObjectParser):
         field_data = file_object.read(8)
       except IOError as exception:
         parser_mediator.ProduceExtractionError(
-            'unable to read ASL field with error: {0:s}'.format(exception))
+            'unable to read ASL field with error: {0!s}'.format(exception))
         return None, None
 
       # Try to read the field data as a string.
@@ -310,7 +310,7 @@ class ASLParser(interface.FileObjectParser):
         pointer_value = self._ASL_POINTER.parse(field_data)
       except ValueError as exception:
         parser_mediator.ProduceExtractionError(
-            'unable to parse ASL field with error: {0:s}'.format(exception))
+            'unable to parse ASL field with error: {0!s}'.format(exception))
         return None, None
 
       if not pointer_value:

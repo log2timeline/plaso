@@ -224,7 +224,7 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Shared4n6TimeOutputModule):
       if self._set_status:
         self._set_status('Created table: l2t_disk')
     except MySQLdb.Error as exception:
-      raise IOError('Unable to insert into database with error: {0:s}'.format(
+      raise IOError('Unable to insert into database with error: {0!s}'.format(
           exception))
 
     self._count = 0
@@ -273,7 +273,7 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Shared4n6TimeOutputModule):
       self._cursor.execute(self._INSERT_QUERY, row)
     except MySQLdb.Error as exception:
       logging.warning(
-          'Unable to insert into database with error: {0:s}.'.format(
+          'Unable to insert into database with error: {0!s}.'.format(
               exception))
 
     self._count += 1

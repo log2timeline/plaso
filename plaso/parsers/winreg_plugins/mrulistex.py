@@ -202,7 +202,7 @@ class MRUListExStringPlugin(BaseMRUListExPlugin):
         value_string = binary.HexifyBuffer(utf16_stream)
         logging.warning((
             '[{0:s}] Unable to decode UTF-16 stream: {1:s} in MRUListEx entry '
-            'value: {2:d} in key: {3:s} with error: {4:s}').format(
+            'value: {2:d} in key: {3:s} with error: {4!s}').format(
                 self.NAME, value_string, entry_number, registry_key.path,
                 exception))
 
@@ -356,7 +356,7 @@ class MRUListExStringAndShellItemPlugin(BaseMRUListExPlugin):
       except UnicodeDecodeError as exception:
         logging.warning((
             '[{0:s}] Unable to decode string MRUListEx entry value: {1:d} '
-            'in key: {2:s} with error: {3:s}').format(
+            'in key: {2:s} with error: {3!s}').format(
                 self.NAME, entry_number, registry_key.path, exception))
         path = ''
 
@@ -457,7 +457,7 @@ class MRUListExStringAndShellItemListPlugin(BaseMRUListExPlugin):
       except UnicodeDecodeError as exception:
         logging.warning((
             '[{0:s}] Unable to decode string MRUListEx entry value: {1:d} '
-            'in key: {2:s} with error: {3:s}').format(
+            'in key: {2:s} with error: {3!s}').format(
                 self.NAME, entry_number, registry_key.path, exception))
         path = ''
 

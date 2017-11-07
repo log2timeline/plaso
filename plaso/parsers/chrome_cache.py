@@ -140,7 +140,7 @@ class IndexFile(object):
     try:
       file_header = self._FILE_HEADER.parse_stream(self._file_object)
     except construct.FieldError as exception:
-      raise IOError('Unable to parse file header with error: {0:s}'.format(
+      raise IOError('Unable to parse file header with error: {0!s}'.format(
           exception))
 
     signature = file_header.get('signature')
@@ -248,7 +248,7 @@ class DataBlockFile(object):
     try:
       file_header = self._FILE_HEADER.parse_stream(self._file_object)
     except construct.FieldError as exception:
-      raise IOError('Unable to parse file header with error: {0:s}'.format(
+      raise IOError('Unable to parse file header with error: {0!s}'.format(
           exception))
 
     signature = file_header.get('signature')
@@ -281,7 +281,7 @@ class DataBlockFile(object):
     try:
       cache_entry_struct = self._CACHE_ENTRY.parse_stream(self._file_object)
     except construct.FieldError as exception:
-      raise IOError('Unable to parse cache entry with error: {0:s}'.format(
+      raise IOError('Unable to parse cache entry with error: {0!s}'.format(
           exception))
 
     cache_entry = CacheEntry()
@@ -367,7 +367,7 @@ class ChromeCacheParser(interface.FileEntryParser):
           cache_entry = data_file.ReadCacheEntry(cache_address.block_offset)
         except (IOError, UnicodeDecodeError) as exception:
           parser_mediator.ProduceExtractionError(
-              'Unable to parse cache entry with error: {0:s}'.format(
+              'Unable to parse cache entry with error: {0!s}'.format(
                   exception))
           break
 
@@ -412,7 +412,7 @@ class ChromeCacheParser(interface.FileEntryParser):
 
       display_name = parser_mediator.GetDisplayName()
       raise errors.UnableToParseFile(
-          '[{0:s}] unable to parse index file {1:s} with error: {2:s}'.format(
+          '[{0:s}] unable to parse index file {1:s} with error: {2!s}'.format(
               self.NAME, display_name, exception))
 
     try:

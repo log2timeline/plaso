@@ -33,6 +33,18 @@ class EventSource(interface.AttributeContainer):
     self.file_entry_type = None
     self.path_spec = path_spec
 
+  # This method is necessary for heap sort.
+  def __lt__(self, other):
+    """Compares if the event source attribute container is less than the other.
+
+    Args:
+      other (EventSource): event source attribute container to compare to.
+
+    Returns:
+      bool: True if the event source attribute container is less than the other.
+    """
+    return self.path_spec.comparable < other.path_spec.comparable
+
 
 class FileEntryEventSource(EventSource):
   """File entry event source.

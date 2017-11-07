@@ -192,7 +192,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       except (IOError, dfvfs_errors.BackEndError) as exception:
         output_writer.Write((
             '[skipping] unable to read content of file entry: {0:s} '
-            'with error: {1:s}\n').format(display_name, exception))
+            'with error: {1!s}\n').format(display_name, exception))
         return
 
       if not digest:
@@ -244,7 +244,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     except (IOError, dfvfs_errors.BackEndError) as exception:
       output_writer.Write((
           '[skipping] unable to export contents of file entry: {0:s} '
-          'with error: {1:s}\n').format(display_name, exception))
+          'with error: {1!s}\n').format(display_name, exception))
 
       try:
         os.remove(target_path)
@@ -472,7 +472,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           self._knowledge_base)
 
     except IOError as exception:
-      logging.error('Unable to preprocess with error: {0:s}'.format(exception))
+      logging.error('Unable to preprocess with error: {0!s}'.format(exception))
 
     logging.debug('Preprocessing done.')
 

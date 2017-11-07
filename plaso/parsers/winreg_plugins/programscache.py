@@ -60,7 +60,7 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
       header_struct = self._HEADER_STRUCT.parse(value_data)
     except construct.FieldError as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to parse header with error: {0:s}'.format(
+          'unable to parse header with error: {0!s}'.format(
               exception))
       return
 
@@ -89,7 +89,7 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
       except construct.FieldError as exception:
         parser_mediator.ProduceExtractionError((
             'unable to parse sentinel at offset: 0x{0:08x} '
-            'with error: {1:s}').format(value_data_offset, exception))
+            'with error: {1!s}').format(value_data_offset, exception))
         return
 
       value_data_offset += self._ENTRY_FOOTER_STRUCT.sizeof()
@@ -104,7 +104,7 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
       except construct.FieldError as exception:
         parser_mediator.ProduceExtractionError((
             'unable to parse entry header at offset: 0x{0:08x} '
-            'with error: {1:s}').format(value_data_offset, exception))
+            'with error: {1!s}').format(value_data_offset, exception))
         break
 
       value_data_offset += self._ENTRY_HEADER_STRUCT.sizeof()
@@ -130,7 +130,7 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
       except construct.FieldError as exception:
         parser_mediator.ProduceExtractionError((
             'unable to parse entry footer at offset: 0x{0:08x} '
-            'with error: {1:s}').format(value_data_offset, exception))
+            'with error: {1!s}').format(value_data_offset, exception))
         break
 
       value_data_offset += self._ENTRY_FOOTER_STRUCT.sizeof()

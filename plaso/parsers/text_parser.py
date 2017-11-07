@@ -167,7 +167,8 @@ class PyparsingConstants(object):
   # TODO: fix Python 3 compatibility of .uppercase and .lowercase.
   # pylint: disable=no-member
   MONTH = pyparsing.Word(
-      pyparsing.string.uppercase, pyparsing.string.lowercase, exact=3)
+      pyparsing.string.ascii_uppercase, pyparsing.string.ascii_lowercase,
+      exact=3)
 
   # Define date structures.
   HYPHEN = pyparsing.Literal('-').suppress()
@@ -556,7 +557,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       self._text_reader.ReadLines(file_object)
     except UnicodeDecodeError as exception:
       raise errors.UnableToParseFile(
-          'Not a text file, with error: {0:s}'.format(exception))
+          'Not a text file, with error: {0!s}'.format(exception))
 
     if not utils.IsText(self._text_reader.lines):
       raise errors.UnableToParseFile('Not a text file, unable to proceed.')
@@ -605,7 +606,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
           self.ParseRecord(parser_mediator, key, tokens)
         except (errors.ParseError, errors.TimestampError) as exception:
           parser_mediator.ProduceExtractionError(
-              'unable parse record: {0:s} with error: {1:s}'.format(
+              'unable parse record: {0:s} with error: {1!s}'.format(
                   key, exception))
 
         self._text_reader.SkipAhead(file_object, end)
@@ -622,7 +623,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
         self._text_reader.ReadLines(file_object)
       except UnicodeDecodeError as exception:
         parser_mediator.ProduceExtractionError(
-            'unable to read lines with error: {0:s}'.format(exception))
+            'unable to read lines with error: {0!s}'.format(exception))
 
   @abc.abstractmethod
   def ParseRecord(self, parser_mediator, key, structure):

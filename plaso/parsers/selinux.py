@@ -185,7 +185,7 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
       structure = self._SELINUX_LOG_LINE.parseString(line)
     except pyparsing.ParseException as exception:
       logging.debug(
-          'Unable to parse SELinux audit.log file with error: {0:s}'.format(
+          'Unable to parse SELinux audit.log file with error: {0!s}'.format(
               exception))
       return False
 

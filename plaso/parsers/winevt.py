@@ -93,14 +93,14 @@ class WinEvtParser(interface.FileObjectParser):
     except OverflowError as exception:
       parser_mediator.ProduceExtractionError((
           'unable to read record identifier from event record: {0:d} '
-          'with error: {1:s}').format(record_index, exception))
+          'with error: {1!s}').format(record_index, exception))
 
     try:
       event_identifier = evt_record.event_identifier
     except OverflowError as exception:
       parser_mediator.ProduceExtractionError((
           'unable to read event identifier from event record: {0:d} '
-          'with error: {1:s}').format(record_index, exception))
+          'with error: {1!s}').format(record_index, exception))
 
       event_identifier = None
 
@@ -147,7 +147,7 @@ class WinEvtParser(interface.FileObjectParser):
     except OverflowError as exception:
       parser_mediator.ProduceExtractionError((
           'unable to read creation time from event record: {0:d} '
-          'with error: {1:s}').format(record_index, exception))
+          'with error: {1!s}').format(record_index, exception))
 
       creation_time = None
 
@@ -162,7 +162,7 @@ class WinEvtParser(interface.FileObjectParser):
     except OverflowError as exception:
       parser_mediator.ProduceExtractionError((
           'unable to read written time from event record: {0:d} '
-          'with error: {1:s}').format(record_index, exception))
+          'with error: {1!s}').format(record_index, exception))
 
       written_time = None
 
@@ -200,7 +200,7 @@ class WinEvtParser(interface.FileObjectParser):
         self._ParseRecord(parser_mediator, record_index, evt_record)
       except IOError as exception:
         parser_mediator.ProduceExtractionError(
-            'unable to parse event record: {0:d} with error: {1:s}'.format(
+            'unable to parse event record: {0:d} with error: {1!s}'.format(
                 record_index, exception))
 
     for record_index in range(evt_file.number_of_recovered_records):
@@ -231,7 +231,7 @@ class WinEvtParser(interface.FileObjectParser):
       evt_file.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to open file with error: {0:s}'.format(exception))
+          'unable to open file with error: {0!s}'.format(exception))
       return
 
     try:

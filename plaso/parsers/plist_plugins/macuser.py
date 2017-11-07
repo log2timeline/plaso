@@ -94,7 +94,7 @@ class MacUserPlugin(interface.PlistPlugin):
       except (ElementTree.ParseError, LookupError) as exception:
         logging.error((
             'Unable to parse XML structure for an user policy, account: '
-            '{0:s} and uid: {1!s}, with error: {2:s}').format(
+            '{0:s} and uid: {1!s}, with error: {2!s}').format(
                 account, uid, exception))
         continue
 

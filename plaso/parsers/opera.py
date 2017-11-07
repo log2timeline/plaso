@@ -124,7 +124,7 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
         date_time.CopyFromStringISO8601(last_typed_time)
       except ValueError as exception:
         parser_mediator.ProduceExtractionError(
-            'unsupported last typed time: {0:s} with error: {1:s}.'.format(
+            'unsupported last typed time: {0:s} with error: {1!s}.'.format(
                 last_typed_time, exception))
         continue
 

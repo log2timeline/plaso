@@ -121,7 +121,7 @@ class CustomDestinationsParser(interface.FileObjectParser):
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile((
           'Invalid Custom Destination: {0:s} - unable to parse '
-          'file header with error: {1:s}').format(display_name, exception))
+          'file header with error: {1!s}').format(display_name, exception))
 
     if file_header.unknown1 != 2:
       raise errors.UnableToParseFile((
@@ -143,7 +143,7 @@ class CustomDestinationsParser(interface.FileObjectParser):
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile((
           'Invalid Custom Destination file: {0:s} - unable to parse '
-          'header value with error: {1:s}').format(
+          'header value with error: {1!s}').format(
               display_name, exception))
 
     file_size = file_object.get_size()
@@ -160,7 +160,7 @@ class CustomDestinationsParser(interface.FileObjectParser):
       except (IOError, construct.FieldError) as exception:
         error_message = (
             'Invalid Custom Destination file: {0:s} - unable to parse '
-            'entry header with error: {1:s}').format(
+            'entry header with error: {1!s}').format(
                 display_name, exception)
 
         if not first_guid_checked:
@@ -183,7 +183,7 @@ class CustomDestinationsParser(interface.FileObjectParser):
         except (IOError, construct.FieldError) as exception:
           raise IOError((
               'Unable to parse file footer at offset: 0x{0:08x} '
-              'with error: {1:s}').format(file_offset, exception))
+              'with error: {1!s}').format(file_offset, exception))
 
         if file_footer.signature != self._FOOTER_SIGNATURE:
           logging.warning(error_message)
@@ -210,7 +210,7 @@ class CustomDestinationsParser(interface.FileObjectParser):
     except (IOError, construct.FieldError) as exception:
       logging.warning((
           'Invalid Custom Destination file: {0:s} - unable to parse '
-          'footer with error: {1:s}').format(display_name, exception))
+          'footer with error: {1!s}').format(display_name, exception))
 
     if file_footer.signature != self._FOOTER_SIGNATURE:
       logging.warning((

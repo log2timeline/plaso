@@ -129,7 +129,7 @@ def UTF16StreamCopyToString(byte_stream, byte_stream_size=None):
   try:
     return utf16_stream.decode('utf-16-le')
   except (UnicodeDecodeError, UnicodeEncodeError) as exception:
-    logging.error('Unable to decode string: {0:s} with error: {1:s}'.format(
+    logging.error('Unable to decode string: {0:s} with error: {1!s}'.format(
         HexifyBuffer(utf16_stream), exception))
 
   return utf16_stream.decode('utf-16-le', errors='ignore')
@@ -223,10 +223,10 @@ def ReadUTF16(string_buffer):
   try:
     return use_buffer.decode('utf-16').replace('\x00', '')
   except SyntaxError as exception:
-    logging.error('Unable to decode string: {0:s} with error: {1:s}.'.format(
+    logging.error('Unable to decode string: {0:s} with error: {1!s}.'.format(
         HexifyBuffer(string_buffer), exception))
   except (UnicodeDecodeError, UnicodeEncodeError) as exception:
-    logging.error('Unable to decode string: {0:s} with error: {1:s}'.format(
+    logging.error('Unable to decode string: {0:s} with error: {1!s}'.format(
         HexifyBuffer(string_buffer), exception))
 
   return use_buffer.decode('utf-16', errors='ignore').replace('\x00', '')

@@ -89,7 +89,7 @@ class UtmpxParser(interface.FileObjectParser):
       entry_struct = self._UTMPX_ENTRY.parse(data)
     except (IOError, construct.FieldError) as exception:
       logging.warning(
-          'Unable to parse Mac OS X UTMPX entry with error: {0:s}'.format(
+          'Unable to parse Mac OS X UTMPX entry with error: {0!s}'.format(
               exception))
       return False
 

@@ -470,7 +470,7 @@ class Timestamp(object):
     except ValueError as exception:
       raise errors.TimestampError((
           'Unable to create timestamp from {0:04d}-{1:02d}-{2:02d} '
-          '{3:02d}:{4:02d}:{5:02d}.{6:06d} with error: {7:s}').format(
+          '{3:02d}:{4:02d}:{5:02d}.{6:06d} with error: {7!s}').format(
               year, month, day, hour, minutes, seconds, microseconds,
               exception))
 
@@ -520,7 +520,7 @@ class Timestamp(object):
     except (TypeError, ValueError) as exception:
       raise errors.TimestampError((
           'Unable to convert time string: {0:s} in to a datetime object '
-          'with error: {1:s}').format(time_string, exception))
+          'with error: {1!s}').format(time_string, exception))
 
     if datetime_object.tzinfo:
       datetime_object = datetime_object.astimezone(pytz.UTC)

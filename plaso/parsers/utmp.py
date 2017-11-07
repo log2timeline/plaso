@@ -211,7 +211,7 @@ class UtmpParser(interface.FileObjectParser):
       structure = self.LINUX_UTMP_ENTRY.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          'Unable to parse UTMP Header with error: {0:s}'.format(exception))
+          'Unable to parse UTMP Header with error: {0!s}'.format(exception))
 
     if structure.type not in self.STATUS_TYPE:
       raise errors.UnableToParseFile((

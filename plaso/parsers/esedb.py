@@ -74,7 +74,7 @@ class ESEDBParser(interface.FileObjectParser):
       esedb_file.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to open file with error: {0:s}'.format(exception))
+          'unable to open file with error: {0!s}'.format(exception))
       return
 
     # Compare the list of available plugin objects.

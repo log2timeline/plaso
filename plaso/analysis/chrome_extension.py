@@ -51,7 +51,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
 
     except (requests.ConnectionError, requests.HTTPError) as exception:
       logging.warning((
-          '[{0:s}] unable to retrieve URL: {1:s} with error: {2:s}').format(
+          '[{0:s}] unable to retrieve URL: {1:s} with error: {2!s}').format(
               self.NAME, web_store_url, exception))
       return
 

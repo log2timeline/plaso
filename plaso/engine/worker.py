@@ -358,7 +358,7 @@ class EventExtractionWorker(object):
 
       error_message = (
           'analyzer failed to determine archive type indicators '
-          'with error: {0:s}').format(exception)
+          'with error: {0!s}').format(exception)
       mediator.ProduceExtractionError(error_message, path_spec=path_spec)
 
     return type_indicators
@@ -383,7 +383,7 @@ class EventExtractionWorker(object):
 
       error_message = (
           'analyzer failed to determine compressed stream type indicators '
-          'with error: {0:s}').format(exception)
+          'with error: {0!s}').format(exception)
       mediator.ProduceExtractionError(error_message, path_spec=path_spec)
 
     return type_indicators
@@ -464,7 +464,7 @@ class EventExtractionWorker(object):
 
         except (IOError, errors.MaximumRecursionDepth) as exception:
           error_message = (
-              'unable to process archive file with error: {0:s}').format(
+              'unable to process archive file with error: {0!s}').format(
                   exception)
           mediator.ProduceExtractionError(
               error_message, path_spec=generated_path_spec)
