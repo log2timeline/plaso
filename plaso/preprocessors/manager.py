@@ -90,7 +90,7 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
       registry_file.Open(file_object)
     except IOError as exception:
       logging.warning(
-          'Unable to open Windows Registry file with error: {0:s}'.format(
+          'Unable to open Windows Registry file with error: {0!s}'.format(
               exception))
       file_object.close()
       return
@@ -148,7 +148,7 @@ class PreprocessPluginsManager(object):
       except (IOError, errors.PreProcessFail) as exception:
         logging.warning((
             'Unable to collect value from artifact definition: {0:s} '
-            'with error: {1:s}').format(
+            'with error: {1!s}').format(
                 preprocess_plugin.ARTIFACT_DEFINITION_NAME, exception))
         continue
 
@@ -177,7 +177,7 @@ class PreprocessPluginsManager(object):
       except (IOError, errors.PreProcessFail) as exception:
         logging.warning((
             'Unable to collect value from artifact definition: {0:s} '
-            'with error: {1:s}').format(
+            'with error: {1!s}').format(
                 preprocess_plugin.ARTIFACT_DEFINITION_NAME, exception))
         continue
 

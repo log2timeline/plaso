@@ -72,7 +72,7 @@ class RestorePointLogParser(interface.FileObjectParser):
       file_header_struct = self._FILE_HEADER_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to parse file header with error: {0:s}'.format(exception))
+          'unable to parse file header with error: {0!s}'.format(exception))
       return
 
     file_object.seek(-8, os.SEEK_END)
@@ -81,7 +81,7 @@ class RestorePointLogParser(interface.FileObjectParser):
       file_footer_struct = self._FILE_FOOTER_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to parse file footer with error: {0:s}'.format(exception))
+          'unable to parse file footer with error: {0!s}'.format(exception))
       return
 
     try:

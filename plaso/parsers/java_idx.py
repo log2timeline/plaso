@@ -127,7 +127,7 @@ class JavaIDXParser(interface.FileObjectParser):
       magic = self.IDX_SHORT_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          'Unable to parse Java IDX file with error: {0:s}.'.format(exception))
+          'Unable to parse Java IDX file with error: {0!s}.'.format(exception))
 
     # Fields magic.busy and magic.incomplete are normally 0x00. They
     # are set to 0x01 if the file is currently being downloaded. Logic

@@ -418,7 +418,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       attribute_container (AttributeContainer): attribute container.
 
     Returns:
-      A JSON string containing the serialized form.
+      str: A JSON string containing the serialized form.
     """
     json_dict = cls.WriteSerializedDict(attribute_container)
     return json.dumps(json_dict)

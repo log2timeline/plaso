@@ -277,7 +277,7 @@ class _SerializedDataStream(object):
 
     except KeyError as exception:
       raise IOError(
-          'Unable to open stream with error: {0:s}'.format(exception))
+          'Unable to open stream with error: {0!s}'.format(exception))
 
     self._stream_file_path = os.path.join(self._temporary_path, self.name)
     self._file_object = open(self._stream_file_path, 'rb')
@@ -301,7 +301,7 @@ class _SerializedDataStream(object):
     try:
       data_entry = self._DATA_ENTRY.parse(data)
     except construct.FieldError as exception:
-      raise IOError('Unable to read data entry with error: {0:s}'.format(
+      raise IOError('Unable to read data entry with error: {0!s}'.format(
           exception))
 
     if data_entry.size > self._maximum_data_size:
@@ -506,7 +506,7 @@ class _SerializedDataOffsetTable(object):
       file_object = self._zip_file.open(self._stream_name, mode='r')
     except KeyError as exception:
       raise IOError(
-          'Unable to open stream with error: {0:s}'.format(exception))
+          'Unable to open stream with error: {0!s}'.format(exception))
 
     try:
       entry_data = file_object.read(self._TABLE_ENTRY_SIZE)
@@ -518,7 +518,7 @@ class _SerializedDataOffsetTable(object):
 
     except construct.FieldError as exception:
       raise IOError(
-          'Unable to read table entry with error: {0:s}'.format(exception))
+          'Unable to read table entry with error: {0!s}'.format(exception))
 
     finally:
       file_object.close()
@@ -595,7 +595,7 @@ class _SerializedDataTimestampTable(object):
       file_object = self._zip_file.open(self._stream_name, mode='r')
     except KeyError as exception:
       raise IOError(
-          'Unable to open stream with error: {0:s}'.format(exception))
+          'Unable to open stream with error: {0!s}'.format(exception))
 
     try:
       entry_data = file_object.read(self._TABLE_ENTRY_SIZE)
@@ -607,7 +607,7 @@ class _SerializedDataTimestampTable(object):
 
     except construct.FieldError as exception:
       raise IOError(
-          'Unable to read table entry with error: {0:s}'.format(exception))
+          'Unable to read table entry with error: {0!s}'.format(exception))
 
     finally:
       file_object.close()
@@ -1125,7 +1125,7 @@ class ZIPStorageFile(interface.BaseStorageFile):
     except IOError as exception:
       logging.error((
           'Unable to retrieve serialized data steam: {0:d} '
-          'with error: {1:s}.').format(stream_number, exception))
+          'with error: {1!s}.').format(stream_number, exception))
       return None, None
 
     if entry_index >= 0:
@@ -1147,7 +1147,7 @@ class ZIPStorageFile(interface.BaseStorageFile):
     except IOError as exception:
       logging.error((
           'Unable to read entry from serialized data stream: {0:d} '
-          'with error: {1:s}.').format(stream_number, exception))
+          'with error: {1!s}.').format(stream_number, exception))
       return None, None
 
     return event_data, event_entry_index
@@ -1309,7 +1309,7 @@ class ZIPStorageFile(interface.BaseStorageFile):
     except IOError as exception:
       logging.error((
           'Unable to retrieve serialized data steam: {0:d} '
-          'with error: {1:s}.').format(stream_number, exception))
+          'with error: {1!s}.').format(stream_number, exception))
       return None, None
 
     if entry_index >= 0:
@@ -1331,7 +1331,7 @@ class ZIPStorageFile(interface.BaseStorageFile):
     except IOError as exception:
       logging.error((
           'Unable to read entry from serialized data steam: {0:d} '
-          'with error: {1:s}.').format(stream_number, exception))
+          'with error: {1!s}.').format(stream_number, exception))
       return None, None
 
     return serialized_data, data_stream_entry_index
@@ -1617,7 +1617,7 @@ class ZIPStorageFile(interface.BaseStorageFile):
           except IOError as exception:
             logging.error((
                 'Unable to read timestamp table from stream: {0:s} '
-                'with error: {1:s}.').format(stream_name, exception))
+                'with error: {1!s}.').format(stream_name, exception))
 
           # If the start timestamp of the time range filter is larger than the
           # last timestamp in the timestamp table skip this stream.
@@ -1775,7 +1775,7 @@ class ZIPStorageFile(interface.BaseStorageFile):
         platform_specific.DisableWindowsFileHandleInheritance(file_handle)
 
     except zipfile.BadZipfile as exception:
-      raise IOError('Unable to open ZIP file: {0:s} with error: {1:s}'.format(
+      raise IOError('Unable to open ZIP file: {0:s} with error: {1!s}'.format(
           zipfile_path, exception))
 
     self._is_open = True
@@ -2066,13 +2066,14 @@ class ZIPStorageFile(interface.BaseStorageFile):
       return
 
     stream_data = (
-        b'[plaso_storage_file]\n'
-        b'format_version: {0:d}\n'
-        b'serialization_format: {1:s}\n'
-        b'storage_type: {2:s}\n'
-        b'\n').format(
+        '[plaso_storage_file]\n'
+        'format_version: {0:d}\n'
+        'serialization_format: {1:s}\n'
+        'storage_type: {2:s}\n'
+        '\n').format(
             self._FORMAT_VERSION, self.serialization_format, self.storage_type)
 
+    stream_data = stream_data.encode('utf-8')
     self._WriteStream(stream_name, stream_data)
 
   def _WriteStream(self, stream_name, stream_data):

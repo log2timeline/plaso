@@ -309,7 +309,7 @@ class SystemdJournalParser(interface.FileObjectParser):
       journal_header = self._JOURNAL_HEADER.parse_stream(file_object)
     except construct.ConstructError as exception:
       raise errors.UnableToParseFile(
-          'Unable to parse journal header with error: {0:s}'.format(exception))
+          'Unable to parse journal header with error: {0!s}'.format(exception))
 
     max_data_hash_table_offset = (
         journal_header.data_hash_table_offset +

@@ -58,7 +58,7 @@ class ViperAnalyzer(interface.HTTPHashAnalyzer):
 
     except errors.ConnectionError as exception:
       json_response = None
-      logging.error('Unable to query Viper with error: {0:s}.'.format(
+      logging.error('Unable to query Viper with error: {0!s}.'.format(
           exception))
 
     return json_response

@@ -157,7 +157,7 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
         value_name = registry_value.name.decode('rot-13')
       except UnicodeEncodeError as exception:
         logging.debug((
-            'Unable to decode UserAssist string: {0:s} with error: {1:s}.\n'
+            'Unable to decode UserAssist string: {0:s} with error: {1!s}.\n'
             'Attempting piecewise decoding.').format(
                 registry_value.name, exception))
 

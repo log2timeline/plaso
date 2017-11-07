@@ -208,13 +208,13 @@ class EventExtractor(object):
     except (IOError, dfvfs_errors.BackEndError) as exception:
       display_name = parser_mediator.GetDisplayName(file_entry)
       logging.warning(
-          '{0:s} unable to parse file: {1:s} with error: {2:s}'.format(
+          '{0:s} unable to parse file: {1:s} with error: {2!s}'.format(
               parser.NAME, display_name, exception))
 
     except errors.UnableToParseFile as exception:
       display_name = parser_mediator.GetDisplayName(file_entry)
       logging.debug(
-          '{0:s} unable to parse file: {1:s} with error: {2:s}'.format(
+          '{0:s} unable to parse file: {1:s} with error: {2!s}'.format(
               parser.NAME, display_name, exception))
       result = False
 
@@ -437,7 +437,7 @@ class PathSpecExtractor(object):
         dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
         dfvfs_errors.PathSpecError) as exception:
       logging.error(
-          'Unable to open file entry with error: {0:s}'.format(exception))
+          'Unable to open file entry with error: {0!s}'.format(exception))
       return
 
     if not file_entry:
@@ -485,7 +485,7 @@ class PathSpecExtractor(object):
           continue
       except dfvfs_errors.BackEndError as exception:
         logging.warning(
-            'Unable to process file: {0:s} with error: {1:s}'.format(
+            'Unable to process file: {0:s} with error: {1!s}'.format(
                 sub_file_entry.path_spec.comparable.replace(
                     '\n', ';'), exception))
         continue
@@ -577,7 +577,7 @@ class PathSpecExtractor(object):
         dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
         dfvfs_errors.PathSpecError) as exception:
       logging.error(
-          'Unable to open file system with error: {0:s}'.format(exception))
+          'Unable to open file system with error: {0!s}'.format(exception))
       return
 
     try:

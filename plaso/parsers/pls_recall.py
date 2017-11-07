@@ -93,7 +93,7 @@ class PlsRecallParser(interface.FileObjectParser):
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile((
           'Not a PLSrecall File, unable to parse.'
-          'with error: {0:s}').format(exception))
+          'with error: {0!s}').format(exception))
 
     if not is_pls:
       raise errors.UnableToParseFile(

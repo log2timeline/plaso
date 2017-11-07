@@ -403,6 +403,8 @@ class BaseStorageFile(BaseStore):
             'Unable to serialize attribute container: {0:s}.'.format(
                 attribute_container.CONTAINER_TYPE))
 
+      attribute_container_data = attribute_container_data.encode('utf-8')
+
     finally:
       if self._serializers_profiler:
         self._serializers_profiler.StopTiming(

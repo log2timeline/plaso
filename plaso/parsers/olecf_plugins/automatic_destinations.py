@@ -174,7 +174,7 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
       header = self._DEST_LIST_STREAM_HEADER.parse_stream(olecf_item)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          'Unable to parse DestList header with error: {0:s}'.format(
+          'Unable to parse DestList header with error: {0!s}'.format(
               exception))
 
     if header.format_version not in (1, 3, 4):
@@ -192,7 +192,7 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
         entry = dest_list_stream_entry.parse_stream(olecf_item)
       except (IOError, construct.FieldError) as exception:
         raise errors.UnableToParseFile(
-            'Unable to parse DestList entry with error: {0:s}'.format(
+            'Unable to parse DestList entry with error: {0!s}'.format(
                 exception))
 
       if not entry:
@@ -207,7 +207,7 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
       except (TypeError, ValueError) as exception:
         droid_volume_identifier = ''
         parser_mediator.ProduceExtractionError(
-            'unable to read droid volume identifier with error: {0:s}'.format(
+            'unable to read droid volume identifier with error: {0!s}'.format(
                 exception))
 
       try:
@@ -217,7 +217,7 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
       except (TypeError, ValueError) as exception:
         droid_file_identifier = ''
         parser_mediator.ProduceExtractionError(
-            'unable to read droid file identifier with error: {0:s}'.format(
+            'unable to read droid file identifier with error: {0!s}'.format(
                 exception))
 
       try:

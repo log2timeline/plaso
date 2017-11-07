@@ -79,7 +79,7 @@ class FileStatParser(interface.FileEntryParser):
     file_system = file_entry.GetFileSystem()
     fs_info = file_system.GetFsInfo()
     if fs_info.info:
-      type_string = '{0:s}'.format(fs_info.info.ftype)
+      type_string = '{0!s}'.format(fs_info.info.ftype)
       if type_string.startswith('TSK_FS_TYPE'):
         type_string = type_string[12:]
       if type_string.endswith('_DETECT'):

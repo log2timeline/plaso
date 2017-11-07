@@ -300,7 +300,7 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
     except IOError as exception:
       raise errors.PreProcessFail((
           'Unable to retrieve Windows Registry key: {0:s} value: {1:s} '
-          'with error: {2:s}').format(
+          'with error: {2!s}').format(
               registry_key.path, value_name, exception))
 
     result = False

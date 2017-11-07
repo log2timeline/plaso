@@ -74,7 +74,7 @@ class SingleProcessEngine(engine.BaseEngine):
     except Exception as exception:  # pylint: disable=broad-except
       parser_mediator.ProduceExtractionError((
           'unable to process path specification with error: '
-          '{0:s}').format(exception), path_spec=path_spec)
+          '{0!s}').format(exception), path_spec=path_spec)
 
       if getattr(self._processing_configuration, 'debug_output', False):
         logging.warning(

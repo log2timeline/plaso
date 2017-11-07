@@ -156,7 +156,7 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
         except construct.ConstructError as exception:
           systemtime_struct = None
           parser_mediator.ProduceExtractionError(
-              'unable to parse date created with error: {0:s}'.format(
+              'unable to parse date created with error: {0!s}'.format(
                   exception))
 
         system_time_tuple = self._EMPTY_SYSTEM_TIME_TUPLE
@@ -189,7 +189,7 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
         except construct.ConstructError as exception:
           systemtime_struct = None
           parser_mediator.ProduceExtractionError(
-              'unable to parse date last connected with error: {0:s}'.format(
+              'unable to parse date last connected with error: {0!s}'.format(
                   exception))
 
         system_time_tuple = self._EMPTY_SYSTEM_TIME_TUPLE

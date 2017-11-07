@@ -167,7 +167,7 @@ class WinJobParser(interface.FileObjectParser):
           file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          'Unable to parse fixed-length section with error: {0:s}'.format(
+          'Unable to parse fixed-length section with error: {0!s}'.format(
               exception))
 
     if not header_struct.product_version in self._PRODUCT_VERSIONS:
@@ -184,7 +184,7 @@ class WinJobParser(interface.FileObjectParser):
       job_variable_struct = self._JOB_VARIABLE_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          'Unable to parse variable-length section with error: {0:s}'.format(
+          'Unable to parse variable-length section with error: {0!s}'.format(
               exception))
 
     event_data = WinJobEventData()
@@ -221,7 +221,7 @@ class WinJobParser(interface.FileObjectParser):
         trigger_struct = self._TRIGGER_STRUCT.parse_stream(file_object)
       except (IOError, construct.FieldError) as exception:
         parser_mediator.ProduceExtractionError(
-            'unable to parse trigger: {0:d} with error: {1:s}'.format(
+            'unable to parse trigger: {0:d} with error: {1!s}'.format(
                 index, exception))
         return
 

@@ -153,7 +153,7 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
       microseconds = int(structure.microsecond, 10)
     except ValueError as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to determine microseconds with error: {0:s}'.format(
+          'unable to determine microseconds with error: {0!s}'.format(
               exception))
       return
 
@@ -169,7 +169,7 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     except errors.TimestampError as exception:
       timestamp = timelib.Timestamp.NONE_TIMESTAMP
       parser_mediator.ProduceExtractionError(
-          'unable to determine timestamp with error: {0:s}'.format(
+          'unable to determine timestamp with error: {0!s}'.format(
               exception))
 
     # If an offset is given for the event, apply the offset to convert to UTC.
@@ -178,7 +178,7 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
         delta_microseconds = int(structure.utc_offset_minutes[1:], 10)
       except (IndexError, ValueError) as exception:
         raise errors.TimestampError(
-            'Unable to parse minute offset from UTC with error: {0:s}.'.format(
+            'Unable to parse minute offset from UTC with error: {0!s}.'.format(
                 exception))
 
       delta_microseconds *= self._MICRO_SECONDS_PER_MINUTE

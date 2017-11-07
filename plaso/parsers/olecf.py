@@ -56,7 +56,7 @@ class OLECFParser(interface.FileObjectParser):
       olecf_file.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to open file with error: {0:s}'.format(exception))
+          'unable to open file with error: {0!s}'.format(exception))
       return
 
     root_item = olecf_file.root_item

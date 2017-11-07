@@ -184,7 +184,7 @@ class MRUListStringPlugin(BaseMRUListPlugin):
         value_string = binary.HexifyBuffer(utf16_stream)
         logging.warning((
             '[{0:s}] Unable to decode UTF-16 stream: {1:s} in MRUList entry '
-            'value: {2:s} in key: {3:s} with error: {4:s}').format(
+            'value: {2:s} in key: {3:s} with error: {4!s}').format(
                 self.NAME, value_string, entry_letter, registry_key.path,
                 exception))
 

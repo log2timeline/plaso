@@ -762,7 +762,7 @@ class BSMParser(interface.FileObjectParser):
             record_end_offset - file_object.tell(), os.SEEK_CUR)
       except (IOError, construct.FieldError) as exception:
         logging.warning(
-            'Unable to jump to next entry with error: {0:s}'.format(exception))
+            'Unable to jump to next entry with error: {0!s}'.format(exception))
         return False
 
     # BSM can be in more than one OS: BSD, Solaris and Mac OS X.
@@ -828,7 +828,7 @@ class BSMParser(interface.FileObjectParser):
       is_bsm = self.VerifyFile(parser_mediator, file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          'Unable to parse BSM file with error: {0:s}'.format(exception))
+          'Unable to parse BSM file with error: {0!s}'.format(exception))
 
     if not is_bsm:
       raise errors.UnableToParseFile('Not a BSM File, unable to parse.')

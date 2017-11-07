@@ -224,7 +224,7 @@ class SymantecParser(dsv_parser.DSVParser):
     except (TypeError, ValueError, errors.TimestampError) as exception:
       timestamp = timelib.Timestamp.NONE_TIMESTAMP
       parser_mediator.ProduceExtractionError(
-          'unable to determine timestamp with error: {0:s}'.format(
+          'unable to determine timestamp with error: {0!s}'.format(
               exception))
 
     # TODO: remove unused attributes.

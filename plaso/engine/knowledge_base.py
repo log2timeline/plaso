@@ -196,7 +196,9 @@ class KnowledgeBase(object):
     system_configuration.time_zone = time_zone
 
     user_accounts = self._user_accounts.get(session_identifier, {})
-    system_configuration.user_accounts = user_accounts.values()
+    # In Python 3 dict.values() returns a type dict_values, which will cause
+    # the JSON serializer to raise a TypeError.
+    system_configuration.user_accounts = list(user_accounts.values())
 
     return system_configuration
 

@@ -305,7 +305,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     try:
       storage_writer.StopTaskStorage(abort=self._abort)
     except (IOError, OSError) as exception:
-      logging.error('Unable to stop task storage with error: {0:s}'.format(
+      logging.error('Unable to stop task storage with error: {0!s}'.format(
           exception))
 
     if self._abort:

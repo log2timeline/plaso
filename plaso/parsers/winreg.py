@@ -201,7 +201,7 @@ class WinRegistryParser(interface.FileObjectParser):
       registry_file = win_registry_reader.Open(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to open Windows Registry file with error: {0:s}'.format(
+          'unable to open Windows Registry file with error: {0!s}'.format(
               exception))
       return
 

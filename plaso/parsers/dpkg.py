@@ -179,7 +179,7 @@ class DpkgParser(text_parser.PyparsingSingleLineTextParser):
       structure = self._DPKG_LOG_LINE.parseString(line)
     except pyparsing.ParseException as exception:
       logging.debug(
-          'Unable to parse Debian dpkg.log file with error: {0:s}'.format(
+          'Unable to parse Debian dpkg.log file with error: {0!s}'.format(
               exception))
       return False
 

@@ -289,7 +289,7 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
     except IOError as exception:
       location = getattr(file_entry.path_spec, 'location', '')
       raise errors.PreProcessFail(
-          'Unable to read plist file: {0:s} with error: {1:s}'.format(
+          'Unable to read plist file: {0:s} with error: {1!s}'.format(
               location, exception))
 
     finally:

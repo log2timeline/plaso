@@ -69,7 +69,7 @@ class PlistParser(interface.FileObjectParser):
 
     except OverflowError as exception:
       raise errors.UnableToParseFile(
-          'Unable to parse: {0:s} with error: {1:s}'.format(
+          'Unable to parse: {0:s} with error: {1!s}'.format(
               file_name, exception))
 
     if not top_level_object:

@@ -333,7 +333,7 @@ class SignaturesFileEntryFilter(FileEntryFilter):
       location = getattr(file_entry.path_spec, 'location', '')
       logging.error((
           '[skipping] unable to scan file: {0:s} for signatures '
-          'with error: {1:s}').format(location, exception))
+          'with error: {1!s}').format(location, exception))
       return False
 
     finally:

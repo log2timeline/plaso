@@ -468,7 +468,7 @@ class Log2TimelineTool(
           resolver_context=self._resolver_context)
 
     except IOError as exception:
-      logging.error('Unable to preprocess with error: {0:s}'.format(exception))
+      logging.error('Unable to preprocess with error: {0!s}'.format(exception))
 
     logging.debug('Preprocessing done.')
 

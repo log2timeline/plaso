@@ -57,9 +57,9 @@ class StatusView(object):
     """Clears the terminal/console screen."""
     if not win32console:
       # ANSI escape sequence to clear screen.
-      self._output_writer.Write(b'\033[2J')
+      self._output_writer.Write('\033[2J')
       # ANSI escape sequence to move cursor to top left.
-      self._output_writer.Write(b'\033[H')
+      self._output_writer.Write('\033[H')
 
     else:
       # Windows cmd.exe does not support ANSI escape codes, thus instead we

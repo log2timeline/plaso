@@ -77,7 +77,7 @@ class WinRecycleBinParser(interface.FileObjectParser):
 
     except (IOError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to parse filename with error: {0:s}'.format(exception))
+          'unable to parse filename with error: {0!s}'.format(exception))
       return
 
     return binary.ReadUTF16(filename_struct.string)
@@ -101,7 +101,7 @@ class WinRecycleBinParser(interface.FileObjectParser):
       header_struct = self._FILE_HEADER_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to parse file header with error: {0:s}'.format(exception))
+          'unable to parse file header with error: {0!s}'.format(exception))
       return
 
     if header_struct.format_version not in (1, 2):
@@ -171,7 +171,7 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
     except (IOError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError((
           'unable to parse recycler ASCII filename at offset: 0x{0:08x} '
-          'with error: {1:s}').format(record_offset, exception))
+          'with error: {1!s}').format(record_offset, exception))
 
     try:
       recycler_record_struct = self._RECYCLER_RECORD_STRUCT.parse(
@@ -179,7 +179,7 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
     except (IOError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError((
           'unable to parse recycler index record at offset: 0x{0:08x} '
-          'with error: {1:s}').format(
+          'with error: {1!s}').format(
               record_offset + self._RECORD_INDEX_OFFSET, exception))
 
     unicode_filename = None
@@ -236,7 +236,7 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
       file_header_struct = self._FILE_HEADER_STRUCT.parse_stream(file_object)
     except (construct.FieldError, IOError) as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to parse file header with error: {0:s}'.format(exception))
+          'unable to parse file header with error: {0!s}'.format(exception))
       return
 
     if file_header_struct.unknown1 != 5:

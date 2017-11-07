@@ -35,7 +35,7 @@ class BencodeParser(interface.FileObjectParser):
   _INITIAL_FILE_OFFSET = None
 
   # Regex match for a bencode dictionary followed by a field size.
-  BENCODE_RE = re.compile(r'd[0-9]')
+  BENCODE_RE = re.compile(b'd[0-9]')
 
   NAME = 'bencode'
   DESCRIPTION = 'Parser for bencoded files.'
@@ -64,7 +64,7 @@ class BencodeParser(interface.FileObjectParser):
 
     except (IOError, bencode.BTFailure) as exception:
       raise errors.UnableToParseFile(
-          '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+          '[{0:s}] unable to parse file: {1:s} with error: {2!s}'.format(
               self.NAME, parser_mediator.GetDisplayName(), exception))
 
     if not data_object:

@@ -50,7 +50,7 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
           self._VIRUSTOTAL_API_REPORT_URL, 'GET', params=url_parameters)
     except errors.ConnectionError as exception:
       json_response = None
-      logging.error(u'Unable to query VirusTotal with error: {0:s}.'.format(
+      logging.error(u'Unable to query VirusTotal with error: {0!s}.'.format(
           exception))
 
     return json_response
