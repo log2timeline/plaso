@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the NetworkList registry plugin."""
 
+from __future__ import unicode_literals
+
 import binascii
 
 import construct
@@ -25,7 +27,7 @@ class WindowsRegistryNetworkEventData(events.EventData):
     ssid (str): SSID of the connection.
   """
 
-  DATA_TYPE = u'windows:registry:network'
+  DATA_TYPE = 'windows:registry:network'
 
   def __init__(self):
     """Initializes event data."""
@@ -41,31 +43,31 @@ class WindowsRegistryNetworkEventData(events.EventData):
 class NetworksPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing the NetworkList key."""
 
-  NAME = u'networks'
-  DESCRIPTION = u'Parser for NetworkList data.'
+  NAME = 'networks'
+  DESCRIPTION = 'Parser for NetworkList data.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion'
-          u'\\NetworkList')])
+          'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion'
+          '\\NetworkList')])
 
   _CONNECTION_TYPE = {
-      0x06: u'Wired',
-      0x17: u'3g',
-      0x47: u'Wireless'}
+      0x06: 'Wired',
+      0x17: '3g',
+      0x47: 'Wireless'}
 
   _EMPTY_SYSTEM_TIME_TUPLE = (0, 0, 0, 0, 0, 0, 0, 0)
 
   _SYSTEMTIME_STRUCT = construct.Struct(
-      u'systemtime',
-      construct.ULInt16(u'year'),
-      construct.ULInt16(u'month'),
-      construct.ULInt16(u'day_of_week'),
-      construct.ULInt16(u'day_of_month'),
-      construct.ULInt16(u'hours'),
-      construct.ULInt16(u'minutes'),
-      construct.ULInt16(u'seconds'),
-      construct.ULInt16(u'milliseconds'))
+      'systemtime',
+      construct.ULInt16('year'),
+      construct.ULInt16('month'),
+      construct.ULInt16('day_of_week'),
+      construct.ULInt16('day_of_month'),
+      construct.ULInt16('hours'),
+      construct.ULInt16('minutes'),
+      construct.ULInt16('seconds'),
+      construct.ULInt16('milliseconds'))
 
   def _GetNetworkInfo(self, signatures_key):
     """Retrieves the network info within the signatures subkey.
@@ -80,22 +82,22 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
     network_info = {}
     for category in signatures_key.GetSubkeys():
       for signature in category.GetSubkeys():
-        profile_guid_value = signature.GetValueByName(u'ProfileGuid')
+        profile_guid_value = signature.GetValueByName('ProfileGuid')
         if profile_guid_value:
           profile_guid = profile_guid_value.GetDataAsObject()
         else:
           continue
 
         default_gateway_mac_value = signature.GetValueByName(
-            u'DefaultGatewayMac')
+            'DefaultGatewayMac')
         if default_gateway_mac_value:
           default_gateway_mac = default_gateway_mac_value.GetDataAsObject()
-          default_gateway_mac = u':'.join(
+          default_gateway_mac = ':'.join(
               map(binascii.hexlify, default_gateway_mac))
         else:
           default_gateway_mac = None
 
-        dns_suffix_value = signature.GetValueByName(u'DnsSuffix')
+        dns_suffix_value = signature.GetValueByName('DnsSuffix')
         if dns_suffix_value:
           dns_suffix = dns_suffix_value.GetDataAsObject()
         else:
@@ -114,11 +116,11 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     network_info = {}
-    signatures = registry_key.GetSubkeyByName(u'Signatures')
+    signatures = registry_key.GetSubkeyByName('Signatures')
     if signatures:
       network_info = self._GetNetworkInfo(signatures)
 
-    profiles = registry_key.GetSubkeyByName(u'Profiles')
+    profiles = registry_key.GetSubkeyByName('Profiles')
     if not profiles:
       return
 
@@ -130,23 +132,23 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
       event_data.default_gateway_mac = default_gateway_mac
       event_data.dns_suffix = dns_suffix
 
-      ssid_value = subkey.GetValueByName(u'ProfileName')
+      ssid_value = subkey.GetValueByName('ProfileName')
       if ssid_value:
         event_data.ssid = ssid_value.GetDataAsObject()
 
-      description_value = subkey.GetValueByName(u'Description')
+      description_value = subkey.GetValueByName('Description')
       if description_value:
         event_data.description = description_value.GetDataAsObject()
 
-      connection_type_value = subkey.GetValueByName(u'NameType')
+      connection_type_value = subkey.GetValueByName('NameType')
       if connection_type_value:
         connection_type = connection_type_value.GetDataAsObject()
         # TODO: move to formatter.
         connection_type = self._CONNECTION_TYPE.get(
-            connection_type, u'unknown')
+            connection_type, 'unknown')
         event_data.connection_type = connection_type
 
-      date_created_value = subkey.GetValueByName(u'DateCreated')
+      date_created_value = subkey.GetValueByName('DateCreated')
       if date_created_value:
         try:
           systemtime_struct = self._SYSTEMTIME_STRUCT.parse(
@@ -154,7 +156,7 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
         except construct.ConstructError as exception:
           systemtime_struct = None
           parser_mediator.ProduceExtractionError(
-              u'unable to parse date created with error: {0:s}'.format(
+              'unable to parse date created with error: {0:s}'.format(
                   exception))
 
         system_time_tuple = self._EMPTY_SYSTEM_TIME_TUPLE
@@ -172,14 +174,14 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
                 system_time_tuple=system_time_tuple)
           except ValueError:
             parser_mediator.ProduceExtractionError(
-                u'invalid system time: {0!s}'.format(system_time_tuple))
+                'invalid system time: {0!s}'.format(system_time_tuple))
 
         if date_time:
           event = time_events.DateTimeValuesEvent(
               date_time, definitions.TIME_DESCRIPTION_CREATION)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
-      date_last_connected_value = subkey.GetValueByName(u'DateLastConnected')
+      date_last_connected_value = subkey.GetValueByName('DateLastConnected')
       if date_last_connected_value:
         try:
           systemtime_struct = self._SYSTEMTIME_STRUCT.parse(
@@ -187,7 +189,7 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
         except construct.ConstructError as exception:
           systemtime_struct = None
           parser_mediator.ProduceExtractionError(
-              u'unable to parse date last connected with error: {0:s}'.format(
+              'unable to parse date last connected with error: {0:s}'.format(
                   exception))
 
         system_time_tuple = self._EMPTY_SYSTEM_TIME_TUPLE
@@ -205,7 +207,7 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
                 system_time_tuple=system_time_tuple)
           except ValueError:
             parser_mediator.ProduceExtractionError(
-                u'invalid system time: {0!s}'.format(system_time_tuple))
+                'invalid system time: {0!s}'.format(system_time_tuple))
 
         if date_time:
           event = time_events.DateTimeValuesEvent(

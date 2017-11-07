@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the MSIE zone settings plugin."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
@@ -19,141 +21,141 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
       Internet Settings\\Lockdown_Zones key
   """
 
-  NAME = u'msie_zone'
-  DESCRIPTION = u'Parser for Internet Explorer zone settings Registry data.'
+  NAME = 'msie_zone'
+  DESCRIPTION = 'Parser for Internet Explorer zone settings Registry data.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          u'Internet Settings\\Lockdown_Zones'),
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          'Internet Settings\\Lockdown_Zones'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          u'Internet Settings\\Zones'),
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          'Internet Settings\\Zones'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          u'Internet Settings\\Lockdown_Zones'),
+          'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          'Internet Settings\\Lockdown_Zones'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          u'Internet Settings\\Zones')])
+          'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          'Internet Settings\\Zones')])
 
-  URLS = [u'http://support.microsoft.com/kb/182569']
+  URLS = ['http://support.microsoft.com/kb/182569']
 
   _ZONE_NAMES = {
-      u'0': u'0 (My Computer)',
-      u'1': u'1 (Local Intranet Zone)',
-      u'2': u'2 (Trusted sites Zone)',
-      u'3': u'3 (Internet Zone)',
-      u'4': u'4 (Restricted Sites Zone)',
-      u'5': u'5 (Custom)'
+      '0': '0 (My Computer)',
+      '1': '1 (Local Intranet Zone)',
+      '2': '2 (Trusted sites Zone)',
+      '3': '3 (Internet Zone)',
+      '4': '4 (Restricted Sites Zone)',
+      '5': '5 (Custom)'
   }
 
   _KNOWN_PERMISSIONS_VALUE_NAMES = [
-      u'1001', u'1004', u'1200', u'1201', u'1400', u'1402', u'1405', u'1406',
-      u'1407', u'1601', u'1604', u'1606', u'1607', u'1608', u'1609', u'1800',
-      u'1802', u'1803', u'1804', u'1809', u'1A04', u'2000', u'2001', u'2004',
-      u'2100', u'2101', u'2102', u'2200', u'2201', u'2300']
+      '1001', '1004', '1200', '1201', '1400', '1402', '1405', '1406',
+      '1407', '1601', '1604', '1606', '1607', '1608', '1609', '1800',
+      '1802', '1803', '1804', '1809', '1A04', '2000', '2001', '2004',
+      '2100', '2101', '2102', '2200', '2201', '2300']
 
   _CONTROL_VALUES_PERMISSIONS = {
-      0x00000000: u'0 (Allow)',
-      0x00000001: u'1 (Prompt User)',
-      0x00000003: u'3 (Not Allowed)',
-      0x00010000: u'0x00010000 (Administrator approved)'
+      0x00000000: '0 (Allow)',
+      0x00000001: '1 (Prompt User)',
+      0x00000003: '3 (Not Allowed)',
+      0x00010000: '0x00010000 (Administrator approved)'
   }
 
   _CONTROL_VALUES_SAFETY = {
-      0x00010000: u'0x00010000 (High safety)',
-      0x00020000: u'0x00020000 (Medium safety)',
-      0x00030000: u'0x00030000 (Low safety)'
+      0x00010000: '0x00010000 (High safety)',
+      0x00020000: '0x00020000 (Medium safety)',
+      0x00030000: '0x00030000 (Low safety)'
   }
 
   _CONTROL_VALUES_1A00 = {
       0x00000000: (
-          u'0x00000000 (Automatic logon with current user name and password)'),
-      0x00010000: u'0x00010000 (Prompt for user name and password)',
-      0x00020000: u'0x00020000 (Automatic logon only in Intranet zone)',
-      0x00030000: u'0x00030000 (Anonymous logon)'
+          '0x00000000 (Automatic logon with current user name and password)'),
+      0x00010000: '0x00010000 (Prompt for user name and password)',
+      0x00020000: '0x00020000 (Automatic logon only in Intranet zone)',
+      0x00030000: '0x00030000 (Anonymous logon)'
   }
 
   _CONTROL_VALUES_1C00 = {
-      0x00000000: u'0x00000000 (Disable Java)',
-      0x00010000: u'0x00010000 (High safety)',
-      0x00020000: u'0x00020000 (Medium safety)',
-      0x00030000: u'0x00030000 (Low safety)',
-      0x00800000: u'0x00800000 (Custom)'
+      0x00000000: '0x00000000 (Disable Java)',
+      0x00010000: '0x00010000 (High safety)',
+      0x00020000: '0x00020000 (Medium safety)',
+      0x00030000: '0x00030000 (Low safety)',
+      0x00800000: '0x00800000 (Custom)'
   }
 
   _FEATURE_CONTROLS = {
-      u'1200': u'Run ActiveX controls and plug-ins',
-      u'1400': u'Active scripting',
-      u'1001': u'Download signed ActiveX controls',
-      u'1004': u'Download unsigned ActiveX controls',
-      u'1201': u'Initialize and script ActiveX controls not marked as safe',
-      u'1206': u'Allow scripting of IE Web browser control',
-      u'1207': u'Reserved',
-      u'1208': (
-          u'Allow previously unused ActiveX controls to run without prompt'),
-      u'1209': u'Allow Scriptlets',
-      u'120A': u'Override Per-Site (domain-based) ActiveX restrictions',
-      u'120B': u'Override Per-Site (domain-based) ActiveX restrictions',
-      u'1402': u'Scripting of Java applets',
-      u'1405': u'Script ActiveX controls marked as safe for scripting',
-      u'1406': u'Access data sources across domains',
-      u'1407': u'Allow Programmatic clipboard access',
-      u'1408': u'Reserved',
-      u'1601': u'Submit non-encrypted form data',
-      u'1604': u'Font download',
-      u'1605': u'Run Java',
-      u'1606': u'Userdata persistence',
-      u'1607': u'Navigate sub-frames across different domains',
-      u'1608': u'Allow META REFRESH',
-      u'1609': u'Display mixed content',
-      u'160A': u'Include local directory path when uploading files to a server',
-      u'1800': u'Installation of desktop items',
-      u'1802': u'Drag and drop or copy and paste files',
-      u'1803': u'File Download',
-      u'1804': u'Launching programs and files in an IFRAME',
-      u'1805': u'Launching programs and files in webview',
-      u'1806': u'Launching applications and unsafe files',
-      u'1807': u'Reserved',
-      u'1808': u'Reserved',
-      u'1809': u'Use Pop-up Blocker',
-      u'180A': u'Reserved',
-      u'180B': u'Reserved',
-      u'180C': u'Reserved',
-      u'180D': u'Reserved',
-      u'1A00': u'User Authentication: Logon',
-      u'1A02': u'Allow persistent cookies that are stored on your computer',
-      u'1A03': u'Allow per-session cookies (not stored)',
-      u'1A04': u'Don\'t prompt for client cert selection when no certs exists',
-      u'1A05': u'Allow 3rd party persistent cookies',
-      u'1A06': u'Allow 3rd party session cookies',
-      u'1A10': u'Privacy Settings',
-      u'1C00': u'Java permissions',
-      u'1E05': u'Software channel permissions',
-      u'1F00': u'Reserved',
-      u'2000': u'Binary and script behaviors',
-      u'2001': u'.NET: Run components signed with Authenticode',
-      u'2004': u'.NET: Run components not signed with Authenticode',
-      u'2100': u'Open files based on content, not file extension',
-      u'2101': u'Web sites in less privileged zone can navigate into this zone',
-      u'2102': (
-          u'Allow script initiated windows without size/position constraints'),
-      u'2103': u'Allow status bar updates via script',
-      u'2104': u'Allow websites to open windows without address or status bars',
-      u'2105': (
-          u'Allow websites to prompt for information using scripted windows'),
-      u'2200': u'Automatic prompting for file downloads',
-      u'2201': u'Automatic prompting for ActiveX controls',
-      u'2300': (
-          u'Allow web pages to use restricted protocols for active content'),
-      u'2301': u'Use Phishing Filter',
-      u'2400': u'.NET: XAML browser applications',
-      u'2401': u'.NET: XPS documents',
-      u'2402': u'.NET: Loose XAML',
-      u'2500': u'Turn on Protected Mode',
-      u'2600': u'Enable .NET Framework setup',
-      u'{AEBA21FA-782A-4A90-978D-B72164C80120}': u'First Party Cookie',
-      u'{A8A88C49-5EB2-4990-A1A2-0876022C854F}': u'Third Party Cookie'
+      '1200': 'Run ActiveX controls and plug-ins',
+      '1400': 'Active scripting',
+      '1001': 'Download signed ActiveX controls',
+      '1004': 'Download unsigned ActiveX controls',
+      '1201': 'Initialize and script ActiveX controls not marked as safe',
+      '1206': 'Allow scripting of IE Web browser control',
+      '1207': 'Reserved',
+      '1208': (
+          'Allow previously unused ActiveX controls to run without prompt'),
+      '1209': 'Allow Scriptlets',
+      '120A': 'Override Per-Site (domain-based) ActiveX restrictions',
+      '120B': 'Override Per-Site (domain-based) ActiveX restrictions',
+      '1402': 'Scripting of Java applets',
+      '1405': 'Script ActiveX controls marked as safe for scripting',
+      '1406': 'Access data sources across domains',
+      '1407': 'Allow Programmatic clipboard access',
+      '1408': 'Reserved',
+      '1601': 'Submit non-encrypted form data',
+      '1604': 'Font download',
+      '1605': 'Run Java',
+      '1606': 'Userdata persistence',
+      '1607': 'Navigate sub-frames across different domains',
+      '1608': 'Allow META REFRESH',
+      '1609': 'Display mixed content',
+      '160A': 'Include local directory path when uploading files to a server',
+      '1800': 'Installation of desktop items',
+      '1802': 'Drag and drop or copy and paste files',
+      '1803': 'File Download',
+      '1804': 'Launching programs and files in an IFRAME',
+      '1805': 'Launching programs and files in webview',
+      '1806': 'Launching applications and unsafe files',
+      '1807': 'Reserved',
+      '1808': 'Reserved',
+      '1809': 'Use Pop-up Blocker',
+      '180A': 'Reserved',
+      '180B': 'Reserved',
+      '180C': 'Reserved',
+      '180D': 'Reserved',
+      '1A00': 'User Authentication: Logon',
+      '1A02': 'Allow persistent cookies that are stored on your computer',
+      '1A03': 'Allow per-session cookies (not stored)',
+      '1A04': 'Don\'t prompt for client cert selection when no certs exists',
+      '1A05': 'Allow 3rd party persistent cookies',
+      '1A06': 'Allow 3rd party session cookies',
+      '1A10': 'Privacy Settings',
+      '1C00': 'Java permissions',
+      '1E05': 'Software channel permissions',
+      '1F00': 'Reserved',
+      '2000': 'Binary and script behaviors',
+      '2001': '.NET: Run components signed with Authenticode',
+      '2004': '.NET: Run components not signed with Authenticode',
+      '2100': 'Open files based on content, not file extension',
+      '2101': 'Web sites in less privileged zone can navigate into this zone',
+      '2102': (
+          'Allow script initiated windows without size/position constraints'),
+      '2103': 'Allow status bar updates via script',
+      '2104': 'Allow websites to open windows without address or status bars',
+      '2105': (
+          'Allow websites to prompt for information using scripted windows'),
+      '2200': 'Automatic prompting for file downloads',
+      '2201': 'Automatic prompting for ActiveX controls',
+      '2300': (
+          'Allow web pages to use restricted protocols for active content'),
+      '2301': 'Use Phishing Filter',
+      '2400': '.NET: XAML browser applications',
+      '2401': '.NET: XPS documents',
+      '2402': '.NET: Loose XAML',
+      '2500': 'Turn on Protected Mode',
+      '2600': 'Enable .NET Framework setup',
+      '{AEBA21FA-782A-4A90-978D-B72164C80120}': 'First Party Cookie',
+      '{A8A88C49-5EB2-4990-A1A2-0876022C854F}': 'Third Party Cookie'
   }
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
@@ -168,23 +170,23 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
 
     if registry_key.number_of_values > 0:
       for registry_value in registry_key.GetValues():
-        value_name = registry_value.name or u'(default)'
+        value_name = registry_value.name or '(default)'
 
         if registry_value.DataIsString():
-          value_string = u'[{0:s}] {1:s}'.format(
+          value_string = '[{0:s}] {1:s}'.format(
               registry_value.data_type_string, registry_value.GetDataAsObject())
 
         elif registry_value.DataIsInteger():
-          value_string = u'[{0:s}] {1:d}'.format(
+          value_string = '[{0:s}] {1:d}'.format(
               registry_value.data_type_string, registry_value.GetDataAsObject())
 
         elif registry_value.DataIsMultiString():
-          value_string = u'[{0:s}] {1:s}'.format(
-              registry_value.data_type_string, u''.join(
+          value_string = '[{0:s}] {1:s}'.format(
+              registry_value.data_type_string, ''.join(
                   registry_value.GetDataAsObject()))
 
         else:
-          value_string = u'[{0:s}]'.format(registry_value.data_type_string)
+          value_string = '[{0:s}]'.format(registry_value.data_type_string)
 
         values_dict[value_name] = value_string
 
@@ -200,7 +202,7 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if registry_key.number_of_subkeys == 0:
-      error_string = u'Key: {0:s} missing subkeys.'.format(registry_key.path)
+      error_string = 'Key: {0:s} missing subkeys.'.format(registry_key.path)
       parser_mediator.ProduceExtractionError(error_string)
       return
 
@@ -208,7 +210,7 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
       # TODO: these values are stored in the Description value of the
       # zone key. This solution will break on zone values that are larger
       # than 5.
-      path = u'{0:s}\\{1:s}'.format(
+      path = '{0:s}\\{1:s}'.format(
           registry_key.path, self._ZONE_NAMES[zone_key.name])
 
       values_dict = {}
@@ -227,32 +229,32 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
           value_integer = value.GetDataAsObject()
           if value.name in self._KNOWN_PERMISSIONS_VALUE_NAMES:
             value_string = self._CONTROL_VALUES_PERMISSIONS.get(
-                value_integer, u'UNKNOWN')
-          elif value.name == u'1A00':
+                value_integer, 'UNKNOWN')
+          elif value.name == '1A00':
             value_string = self._CONTROL_VALUES_1A00.get(
-                value_integer, u'UNKNOWN')
-          elif value.name == u'1C00':
+                value_integer, 'UNKNOWN')
+          elif value.name == '1C00':
             value_string = self._CONTROL_VALUES_1C00.get(
-                value_integer, u'UNKNOWN')
-          elif value.name == u'1E05':
+                value_integer, 'UNKNOWN')
+          elif value.name == '1E05':
             value_string = self._CONTROL_VALUES_SAFETY.get(
-                value_integer, u'UNKNOWN')
+                value_integer, 'UNKNOWN')
           else:
-            value_string = u'{0:d}'.format(value_integer)
+            value_string = '{0:d}'.format(value_integer)
 
         else:
-          value_string = u'[{0:s}]'.format(value.data_type_string)
+          value_string = '[{0:s}]'.format(value.data_type_string)
 
-        if len(value.name) == 4 and value.name != u'Icon':
-          value_description = self._FEATURE_CONTROLS.get(value.name, u'UNKNOWN')
+        if len(value.name) == 4 and value.name != 'Icon':
+          value_description = self._FEATURE_CONTROLS.get(value.name, 'UNKNOWN')
         else:
-          value_description = self._FEATURE_CONTROLS.get(value.name, u'')
+          value_description = self._FEATURE_CONTROLS.get(value.name, '')
 
         if value_description:
-          feature_control = u'[{0:s}] {1:s}'.format(
+          feature_control = '[{0:s}] {1:s}'.format(
               value.name, value_description)
         else:
-          feature_control = u'[{0:s}]'.format(value.name)
+          feature_control = '[{0:s}]'.format(value.name)
 
         values_dict[feature_control] = value_string
 

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the Network registry plugin."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
@@ -11,13 +13,13 @@ from plaso.parsers.winreg_plugins import interface
 class NetworkDrivesPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing the Network key."""
 
-  NAME = u'network_drives'
-  DESCRIPTION = u'Parser for Network Registry data.'
+  NAME = 'network_drives'
+  DESCRIPTION = 'Parser for Network Registry data.'
 
   FILTERS = frozenset([
-      interface.WindowsRegistryKeyPathFilter(u'HKEY_CURRENT_USER\\Network')])
+      interface.WindowsRegistryKeyPathFilter('HKEY_CURRENT_USER\\Network')])
 
-  _SOURCE_APPEND = u': Network Drive'
+  _SOURCE_APPEND = ': Network Drive'
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
@@ -33,19 +35,19 @@ class NetworkDrivesPlugin(interface.WindowsRegistryPlugin):
         continue
 
       values_dict = {
-          u'DriveLetter': drive_letter,
-          u'Type': u'Mapped Drive'}
+          'DriveLetter': drive_letter,
+          'Type': 'Mapped Drive'}
 
       # Get the remote path if it exists.
-      remote_path_value = subkey.GetValueByName(u'RemotePath')
+      remote_path_value = subkey.GetValueByName('RemotePath')
       if remote_path_value:
         remote_path = remote_path_value.GetDataAsObject()
 
-        if remote_path.startswith(u'\\\\'):
-          server_name, _, share_name = remote_path[2:].partition(u'\\')
-          values_dict[u'RemoteServer'] = server_name
-          values_dict[u'ShareName'] = u'\\{0:s}'.format(
-              share_name.replace(u'#', u'\\'))
+        if remote_path.startswith('\\\\'):
+          server_name, _, share_name = remote_path[2:].partition('\\')
+          values_dict['RemoteServer'] = server_name
+          values_dict['ShareName'] = '\\{0:s}'.format(
+              share_name.replace('#', '\\'))
 
       event_data = windows_events.WindowsRegistryEventData()
       event_data.key_path = registry_key.path

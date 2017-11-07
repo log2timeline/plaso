@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Plug-in to collect information about the Windows version."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import time_events
@@ -13,21 +15,21 @@ from plaso.parsers.winreg_plugins import interface
 class WindowsVersionPlugin(interface.WindowsRegistryPlugin):
   """Plug-in to collect information about the Windows version."""
 
-  NAME = u'windows_version'
-  DESCRIPTION = u'Parser for Windows version Registry data.'
+  NAME = 'windows_version'
+  DESCRIPTION = 'Parser for Windows version Registry data.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\'
-          u'CurrentVersion')])
+          'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\'
+          'CurrentVersion')])
 
   _STRING_VALUE_NAME_STRINGS = {
-      u'CSDVersion': u'service_pack',
-      u'CurrentVersion': u'version',
-      u'CurrentBuildNumber': u'build_number',
-      u'ProductName': u'product_name',
-      u'RegisteredOrganization': u'organization',
-      u'RegisteredOwner': u'owner',
+      'CSDVersion': 'service_pack',
+      'CurrentVersion': 'version',
+      'CurrentBuildNumber': 'build_number',
+      'ProductName': 'product_name',
+      'RegisteredOrganization': 'organization',
+      'RegisteredOwner': 'owner',
   }
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
@@ -45,7 +47,7 @@ class WindowsVersionPlugin(interface.WindowsRegistryPlugin):
       if not registry_value.name:
         continue
 
-      if (registry_value.name == u'InstallDate' and
+      if (registry_value.name == 'InstallDate' and
           registry_value.DataIsInteger()):
         installation_value = registry_value
         continue
@@ -62,11 +64,11 @@ class WindowsVersionPlugin(interface.WindowsRegistryPlugin):
       string_values[string_value_name] = registry_value.GetDataAsObject()
 
     values_dict = {}
-    values_dict[u'Owner'] = string_values.get(u'owner', u'')
-    values_dict[u'Product name'] = string_values.get(u'product_name', u'')
-    values_dict[u'Service pack'] = string_values.get(u'service_pack', u'')
-    values_dict[u'Windows Version Information'] = string_values.get(
-        u'version', u'')
+    values_dict['Owner'] = string_values.get('owner', '')
+    values_dict['Product name'] = string_values.get('product_name', '')
+    values_dict['Service pack'] = string_values.get('service_pack', '')
+    values_dict['Windows Version Information'] = string_values.get(
+        'version', '')
 
     event_data = windows_events.WindowsRegistryEventData()
     event_data.key_path = registry_key.path
@@ -83,10 +85,10 @@ class WindowsVersionPlugin(interface.WindowsRegistryPlugin):
       event_data = windows_events.WindowsRegistryInstallationEventData()
       event_data.key_path = registry_key.path
       event_data.offset = registry_key.offset
-      event_data.owner = string_values.get(u'owner', None)
-      event_data.product_name = string_values.get(u'product_name', None)
-      event_data.service_pack = string_values.get(u'service_pack', None)
-      event_data.version = string_values.get(u'version', None)
+      event_data.owner = string_values.get('owner', None)
+      event_data.product_name = string_values.get('product_name', None)
+      event_data.service_pack = string_values.get('service_pack', None)
+      event_data.version = string_values.get('version', None)
 
       installation_time = installation_value.GetDataAsObject()
       date_time = dfdatetime_posix_time.PosixTime(timestamp=installation_time)

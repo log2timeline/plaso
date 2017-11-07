@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the Winlogon Registry plugin."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
@@ -11,22 +13,22 @@ from plaso.parsers.winreg_plugins import interface
 class WinlogonPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing the Winlogon key."""
 
-  NAME = u'winlogon'
-  DESCRIPTION = u'Parser for winlogon Registry data.'
+  NAME = 'winlogon'
+  DESCRIPTION = 'Parser for winlogon Registry data.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion'
-          u'\\Winlogon')])
+          'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion'
+          '\\Winlogon')])
 
   _LOGON_APPLICATIONS = frozenset([
-      u'Shell', u'Userinit', u'AppSetup', u'GinaDLL', u'System', u'VmApplet',
-      u'taskman', u'UIHost'])
+      'Shell', 'Userinit', 'AppSetup', 'GinaDLL', 'System', 'VmApplet',
+      'taskman', 'UIHost'])
 
   _TRIGGERS = frozenset([
-      u'Lock', u'Logoff', u'Logon', u'Shutdown', u'SmartCardLogonNotify',
-      u'StartScreenSaver', u'StartShell', u'Startup', u'StopScreenSaver',
-      u'Unlock'])
+      'Lock', 'Logoff', 'Logon', 'Shutdown', 'SmartCardLogonNotify',
+      'StartScreenSaver', 'StartShell', 'Startup', 'StopScreenSaver',
+      'Unlock'])
 
   def _ParseRegisteredDLLs(self, parser_mediator, registry_key):
     """Parses the registered DLLs that receive event notifications.
@@ -36,7 +38,7 @@ class WinlogonPlugin(interface.WindowsRegistryPlugin):
           and other components, such as storage and dfvfs.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
-    notify_key = registry_key.GetSubkeyByName(u'Notify')
+    notify_key = registry_key.GetSubkeyByName('Notify')
     if not notify_key:
       return
 
@@ -47,19 +49,19 @@ class WinlogonPlugin(interface.WindowsRegistryPlugin):
           continue
 
         values_dict = {
-            u'Application': subkey.name,
-            u'Handler': handler_value.GetDataAsObject(),
-            u'Trigger': trigger}
+            'Application': subkey.name,
+            'Handler': handler_value.GetDataAsObject(),
+            'Trigger': trigger}
 
-        command_value = subkey.GetValueByName(u'DllName')
+        command_value = subkey.GetValueByName('DllName')
         if command_value:
-          values_dict[u'Command'] = command_value.GetDataAsObject()
+          values_dict['Command'] = command_value.GetDataAsObject()
 
         event_data = windows_events.WindowsRegistryEventData()
         event_data.key_path = subkey.path
         event_data.offset = subkey.offset
         event_data.regvalue = values_dict
-        event_data.source_append = u': Winlogon'
+        event_data.source_append = ': Winlogon'
 
         event = time_events.DateTimeValuesEvent(
             subkey.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
@@ -79,15 +81,15 @@ class WinlogonPlugin(interface.WindowsRegistryPlugin):
         continue
 
       values_dict = {
-          u'Application': application,
-          u'Command': command_value.GetDataAsObject(),
-          u'Trigger': u'Logon'}
+          'Application': application,
+          'Command': command_value.GetDataAsObject(),
+          'Trigger': 'Logon'}
 
       event_data = windows_events.WindowsRegistryEventData()
       event_data.key_path = registry_key.path
       event_data.offset = registry_key.offset
       event_data.regvalue = values_dict
-      event_data.source_append = u': Winlogon'
+      event_data.source_append = ': Winlogon'
 
       event = time_events.DateTimeValuesEvent(
           registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)

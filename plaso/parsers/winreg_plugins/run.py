@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains the Run/RunOnce Key plugins for Plaso."""
 
+from __future__ import unicode_literals
+
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
@@ -11,35 +13,35 @@ from plaso.parsers.winreg_plugins import interface
 class AutoRunsPlugin(interface.WindowsRegistryPlugin):
   """Windows Registry plugin for parsing user specific auto runs."""
 
-  NAME = u'windows_run'
-  DESCRIPTION = u'Parser for run and run once Registry data.'
+  NAME = 'windows_run'
+  DESCRIPTION = 'Parser for run and run once Registry data.'
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          u'Run'),
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          'Run'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          u'RunOnce'),
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          'RunOnce'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          u'Run'),
+          'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          'Run'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          u'RunOnce'),
+          'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          'RunOnce'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          u'RunOnce\\Setup'),
+          'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          'RunOnce\\Setup'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          u'RunServices'),
+          'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          'RunServices'),
       interface.WindowsRegistryKeyPathFilter(
-          u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          u'RunServicesOnce')])
+          'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          'RunServicesOnce')])
 
-  URLS = [u'http://msdn.microsoft.com/en-us/library/aa376977(v=vs.85).aspx']
+  URLS = ['http://msdn.microsoft.com/en-us/library/aa376977(v=vs.85).aspx']
 
-  _SOURCE_APPEND = u': Run Key'
+  _SOURCE_APPEND = ': Run Key'
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
