@@ -3,7 +3,7 @@
 
 $PyInstaller = "pyinstaller.exe"
 
-If (-Not (Test-Path ${PyInstaller}))
+If (-Not (Test-Path (Get-Command $PyInstaller).Path))
 {
 	Write-Host "Missing PyInstaller." -foreground Red
 
