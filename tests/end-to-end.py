@@ -39,7 +39,7 @@ class TempDirectory(object):
   def __init__(self):
     """Initializes a temporary directory."""
     super(TempDirectory, self).__init__()
-    self.name = u''
+    self.name = ''
 
   def __enter__(self):
     """Make this work with the 'with' statement."""

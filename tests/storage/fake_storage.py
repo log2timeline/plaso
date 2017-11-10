@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the fake storage."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.containers import errors
@@ -22,7 +24,7 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     """Tests the AddAnalysisReport function."""
     session = sessions.Session()
     analysis_report = reports.AnalysisReport(
-        plugin_name=u'test', text=u'test report')
+        plugin_name='test', text='test report')
 
     storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
@@ -38,7 +40,7 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     """Tests the AddError function."""
     session = sessions.Session()
     extraction_error = errors.ExtractionError(
-        message=u'Test extraction error')
+        message='Test extraction error')
 
     storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()

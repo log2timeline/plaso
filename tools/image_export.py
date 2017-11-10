@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """The image export command line tool."""
 
+from __future__ import unicode_literals
+
 import logging
 import sys
 
@@ -21,7 +23,7 @@ def Main():
     return True
 
   if not tool.has_filters:
-    logging.warning(u'No filter defined exporting all files.')
+    logging.warning('No filter defined exporting all files.')
 
   # TODO: print more status information like PrintOptions.
   tool.PrintFilterCollection()
@@ -30,7 +32,7 @@ def Main():
     tool.ProcessSources()
 
   except (KeyboardInterrupt, errors.UserAbort):
-    logging.warning(u'Aborted by user.')
+    logging.warning('Aborted by user.')
     return False
 
   except errors.BadConfigOption as exception:
@@ -39,9 +41,9 @@ def Main():
 
   except errors.SourceScannerError as exception:
     logging.warning((
-        u'Unable to scan for a supported filesystem with error: {0!s}\n'
-        u'Most likely the image format is not supported by the '
-        u'tool.').format(exception))
+        'Unable to scan for a supported filesystem with error: {0!s}\n'
+        'Most likely the image format is not supported by the '
+        'tool.').format(exception))
     return False
 
   return True

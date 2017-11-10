@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the SQLite-based storage."""
 
+from __future__ import unicode_literals
+
 import os
 import unittest
 
@@ -31,10 +33,10 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
   def testAddAnalysisReport(self):
     """Tests the AddAnalysisReport function."""
     analysis_report = reports.AnalysisReport(
-        plugin_name=u'test', text=u'test report')
+        plugin_name='test', text='test report')
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -45,10 +47,10 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
   def testAddError(self):
     """Tests the AddError function."""
     extraction_error = errors.ExtractionError(
-        message=u'Test extraction error')
+        message='Test extraction error')
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -61,7 +63,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -75,7 +77,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     event_source = event_sources.EventSource()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -88,7 +90,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -106,10 +108,10 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
   def testGetAnalysisReports(self):
     """Tests the GetAnalysisReports function."""
     analysis_report = reports.AnalysisReport(
-        plugin_name=u'test', text=u'test report')
+        plugin_name='test', text='test report')
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -128,10 +130,10 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
   def testGetErrors(self):
     """Tests the GetErrors function."""
     extraction_error = errors.ExtractionError(
-        message=u'Test extraction error')
+        message='Test extraction error')
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -155,7 +157,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -179,7 +181,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     event_source = event_sources.EventSource()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -200,7 +202,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -231,7 +233,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -267,7 +269,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
         identifier=session.identifier)
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile(
           storage_type=definitions.STORAGE_TYPE_TASK)
       storage_file.Open(path=temp_file, read_only=False)
@@ -286,7 +288,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
         session_identifier=session.identifier)
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
       storage_file = sqlite_file.SQLiteStorageFile(
           storage_type=definitions.STORAGE_TYPE_TASK)
       storage_file.Open(path=temp_file, read_only=False)

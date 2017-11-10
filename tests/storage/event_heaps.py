@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the ZIP-based storage."""
 
+from __future__ import unicode_literals
+
 import os
 import unittest
 
@@ -32,7 +34,7 @@ class SerializedStreamEventHeapTest(test_lib.StorageTestCase):
     self.assertEqual(test_event, (None, None))
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -62,7 +64,7 @@ class SerializedStreamEventHeapTest(test_lib.StorageTestCase):
     self.assertEqual(len(test_events), 0)
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -79,7 +81,7 @@ class SerializedStreamEventHeapTest(test_lib.StorageTestCase):
     event_heap = event_heaps.SerializedStreamEventHeap()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -95,7 +97,7 @@ class SerializedStreamEventHeapTest(test_lib.StorageTestCase):
     event_heap = event_heaps.SerializedStreamEventHeap()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 

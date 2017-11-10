@@ -14,9 +14,12 @@
 # Valid options are documented at http://sphinx-doc.org/config.html.
 
 from __future__ import print_function
+from __future__ import unicode_literals
+
 import os
 import sys
 import time
+
 from mock import Mock as MagicMock
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -61,7 +64,7 @@ class Mock(MagicMock):
 
   # We always have the most up to date version of everything.
   def get_version(self):
-    return time.strftime(u'%Y%m%d')
+    return time.strftime('%Y%m%d')
 
   # We're mocking pyparsing, and some parsers use the + method in their init,
   # So mock it.
@@ -76,26 +79,26 @@ modules_to_mock = list(dependencies.PYTHON_DEPENDENCIES.keys())
 # to explicitly mock each submodule.
 # TODO: Find a better way to do this
 ADDITIONAL_MODULES = set([
-    u'artifacts.knowledge_base', u'dateutil.parser', u'dfvfs.analyzer',
-    u'dfvfs.credentials', u'dfvfs.file_io', u'dfvfs.helpers', u'dfvfs.lib',
-    u'dfvfs.path', u'dfvfs.resolver', u'dfvfs.serializer',
-    u'dfvfs.serializer.json_serializer', u'dfvfs.vfs', u'dfvfs.volume',
-    u'dfwinreg.definitions', u'efilter.protocols', u'elasticsearch',
-    u'elasticsearch.exceptions', u'flask', u'hachoir_core',
-    u'hachoir_core.config', u'hachoir_parser', u'hachoir_metadata', u'MySQLdb',
-    u'pyelasticsearch', u'timesketch', u'timesketch.lib',
-    u'timesketch.lib.datastores', u'timesketch.lib.datastores.elastic',
-    u'timesketch.models', u'timesketch.models.sketch',
-    u'timesketch.models.user'])
+    'artifacts.knowledge_base', 'dateutil.parser', 'dfvfs.analyzer',
+    'dfvfs.credentials', 'dfvfs.file_io', 'dfvfs.helpers', 'dfvfs.lib',
+    'dfvfs.path', 'dfvfs.resolver', 'dfvfs.serializer',
+    'dfvfs.serializer.json_serializer', 'dfvfs.vfs', 'dfvfs.volume',
+    'dfwinreg.definitions', 'efilter.protocols', 'elasticsearch',
+    'elasticsearch.exceptions', 'flask', 'hachoir_core',
+    'hachoir_core.config', 'hachoir_parser', 'hachoir_metadata', 'MySQLdb',
+    'pyelasticsearch', 'timesketch', 'timesketch.lib',
+    'timesketch.lib.datastores', 'timesketch.lib.datastores.elastic',
+    'timesketch.models', 'timesketch.models.sketch',
+    'timesketch.models.user'])
 modules_to_mock = set(modules_to_mock).union(ADDITIONAL_MODULES)
 # Readthedocs now has it's own install of requests, so remove it from mocking.
-modules_to_mock.remove(u'requests')
+modules_to_mock.remove('requests')
 
 # There are some modules we install via pip on readthedocs that we don't need
 # to mock.
-PIP_INSTALLED_MODULES = set([u'construct', u'pyparsing', u'six'])
+PIP_INSTALLED_MODULES = set(['construct', 'pyparsing', 'six'])
 modules_to_mock = set(modules_to_mock).difference(PIP_INSTALLED_MODULES)
-print(u'Mocking modules')
+print('Mocking modules')
 for module_name in modules_to_mock:
   print(module_name)
 
@@ -121,10 +124,10 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Plaso'
+project = 'Plaso'
 # This is a built in, but also apparently a sphinx config option.
 # pylint: disable=redefined-builtin
-copyright = u'The Plaso Project Authors'
+copyright = 'The Plaso Project Authors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -275,8 +278,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [(
-  'index', 'Plaso.tex', u'Plaso Documentation',
-  u'The Plaso Project Authors', 'manual'), ]
+  'index', 'Plaso.tex', 'Plaso Documentation',
+  'The Plaso Project Authors', 'manual'), ]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
@@ -304,8 +307,8 @@ latex_documents = [(
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [(
-  'index', 'plaso', u'Plaso Documentation',
-  [u'The Plaso Project Authors'], 1)]
+  'index', 'plaso', 'Plaso Documentation',
+  ['The Plaso Project Authors'], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -317,8 +320,8 @@ man_pages = [(
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [(
-  'index', 'Plaso', u'Plaso Documentation',
-  u'The Plaso Project Authors', 'Plaso', 'One line description of project.',
+  'index', 'Plaso', 'Plaso Documentation',
+  'The Plaso Project Authors', 'Plaso', 'One line description of project.',
   'Miscellaneous'), ]
 
 # Documents to append as an appendix to all manuals.

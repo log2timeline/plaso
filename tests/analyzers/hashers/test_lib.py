@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Hashing related functions and classes for testing."""
 
+from __future__ import unicode_literals
+
 import os
 
 from tests import test_lib as shared_test_lib

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the SHA-1 hasher implementation."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.analyzers.hashers import sha1
@@ -12,30 +14,30 @@ from tests.analyzers.hashers import test_lib
 class SHA1Test(test_lib.HasherTestCase):
   """Tests the SHA-1 hasher."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'empty_file'])
+  @shared_test_lib.skipUnlessHasTestFile(['empty_file'])
   def testFileHashMatchesEmptyFile(self):
     """Tests that hasher matches the hash of an empty file."""
-    expected_sha1 = u'da39a3ee5e6b4b0d3255bfef95601890afd80709'
+    expected_sha1 = 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
 
     hasher = sha1.SHA1Hasher()
     self._AssertTestPathStringDigestMatch(
-        hasher, [u'empty_file'], expected_sha1)
+        hasher, ['empty_file'], expected_sha1)
 
     hasher = sha1.SHA1Hasher()
     self._AssertTestPathBinaryDigestMatch(
-        hasher, [u'empty_file'], expected_sha1.decode(u'hex'))
+        hasher, ['empty_file'], expected_sha1.decode('hex'))
 
-  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
+  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testFileHashMatchesKnownFile(self):
     """Tests that hasher matches the hash of an empty file."""
-    expected_sha1 = u'd9f264323004fd9518c0474967f80421e60e9813'
+    expected_sha1 = 'd9f264323004fd9518c0474967f80421e60e9813'
 
     hasher = sha1.SHA1Hasher()
-    self._AssertTestPathStringDigestMatch(hasher, [u'ímynd.dd'], expected_sha1)
+    self._AssertTestPathStringDigestMatch(hasher, ['ímynd.dd'], expected_sha1)
 
     hasher = sha1.SHA1Hasher()
     self._AssertTestPathBinaryDigestMatch(
-        hasher, [u'ímynd.dd'], expected_sha1.decode(u'hex'))
+        hasher, ['ímynd.dd'], expected_sha1.decode('hex'))
 
 
 if __name__ == '__main__':
