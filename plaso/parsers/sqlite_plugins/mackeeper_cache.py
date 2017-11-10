@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains a parser for the Mac OS X MacKeeper cache database."""
 
+from __future__ import unicode_literals
+
 import codecs
 import json
 

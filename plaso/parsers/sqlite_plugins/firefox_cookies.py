@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for the Firefox Cookie database."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events

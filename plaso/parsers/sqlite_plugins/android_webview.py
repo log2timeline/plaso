@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Android WebView databases."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import java_time as dfdatetime_java_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 

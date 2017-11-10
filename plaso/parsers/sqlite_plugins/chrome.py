@@ -6,6 +6,8 @@ and Archived History. Where the Archived History does not contain
 the downloads table.
 """
 
+from __future__ import unicode_literals
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import webkit_time as dfdatetime_webkit_time
 

@@ -5,6 +5,8 @@ iMessage and SMS data in OSX and iOS are stored in SQLite databases named
 chat.db and sms.db respectively.
 """
 
+from __future__ import unicode_literals
+
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events

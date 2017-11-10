@@ -5,6 +5,8 @@ Zeitgeist is a service which logs the user activities and events, anywhere
 from files opened to websites visited and conversations.
 """
 
+from __future__ import unicode_literals
+
 from dfdatetime import java_time as dfdatetime_java_time
 
 from plaso.containers import events

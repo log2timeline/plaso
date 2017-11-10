@@ -4,6 +4,8 @@
 Android SMS messages are stored in SQLite database files named mmssms.dbs.
 """
 
+from __future__ import unicode_literals
+
 from dfdatetime import java_time as dfdatetime_java_time
 
 from plaso.containers import events

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for the Google Chrome Cookie database."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import webkit_time as dfdatetime_webkit_time
 
 from plaso.containers import events

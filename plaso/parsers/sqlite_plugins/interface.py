@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """The SQLite parser plugin interface."""
 
+from __future__ import unicode_literals
+
 import logging
-import sys
 
 # pylint: disable=wrong-import-order
 try:
@@ -43,12 +44,17 @@ class SQLitePlugin(plugins.BasePlugin):
     """
     hash_value = 0
     for column_value in row:
-      # In Python 2, blobs are "read-write buffer" and will cause a
-      # "writable buffers are not hashable" error if we try to hash it.
-      # Therefore, we will turn it into a string beforehand.
-      if sys.version_info[0] < 3 and isinstance(column_value, buffer):
-        column_value = str(column_value)
-      hash_value ^= hash(column_value)
+      try:
+        column_hash_value = hash(column_value)
+      except TypeError:
+        # In Python 2, blobs are "read-write buffer" and will cause a
+        # "writable buffers are not hashable" TypeError exception if we try
+        # to hash it. Therefore, we will turn it into a string beforehand.
+        # Since Python 3 does not support the buffer type we cannot check
+        # the type of column_value.
+        column_hash_value = hash(str(column_value))
+
+      hash_value ^= column_hash_value
     return hash_value
 
   def _ParseQuery(
@@ -197,6 +203,7 @@ class SQLitePlugin(plugins.BasePlugin):
           parser_mediator.RemoveEventAttribute(u'schema_match')
           parser_mediator.SetFileEntry(file_entry)
 
+  # pylint: disable=arguments-differ
   def Process(
       self, parser_mediator, cache=None, database=None, database_wal=None,
       wal_file_entry=None, **kwargs):

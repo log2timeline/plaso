@@ -5,6 +5,8 @@ The application usage is stored in SQLite database files named
 /var/db/application_usage.sqlite
 """
 
+from __future__ import unicode_literals
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events

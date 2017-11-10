@@ -5,6 +5,8 @@ The Chrome extension activity is stored in SQLite database files named
 Extension Activity.
 """
 
+from __future__ import unicode_literals
+
 from dfdatetime import webkit_time as dfdatetime_webkit_time
 
 from plaso.containers import events
