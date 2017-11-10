@@ -5,9 +5,9 @@ $PyInstaller = "pyinstaller.exe"
 
 If (-Not (Test-Path (Get-Command $PyInstaller).Path))
 {
-	Write-Host "Missing PyInstaller." -foreground Red
+    Write-Host "Missing PyInstaller." -foreground Red
 
-	Exit 1
+    Exit 1
 }
 
 # Remove support for hachoir which is GPLv2 and cannot be distributed
@@ -25,38 +25,43 @@ mv -Force plaso\dependencies.py.patched plaso\dependencies.py
 # Build the binaries for each tool
 If (Test-Path "dist")
 {
-	rm -Force -Recurse "dist"
+    rm -Force -Recurse "dist"
 }
 
 Invoke-Expression "${PyInstaller} --hidden-import artifacts --onedir tools\image_export.py"
 If ( $LastExitCode -ne 0 ) {
-	Exit 1
+    Write-Host "Error running PyInstaller for tools\image_export.py." -foreground Red
+    Exit 1
 }
 
 Invoke-Expression "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\log2timeline.py"
 If ( $LastExitCode -ne 0 ) {
-	Exit 1
+    Write-Host "Error running PyInstaller for tools\log2timeline.py." -foreground Red
+    Exit 1
 }
 
 Invoke-Expression "${PyInstaller} --hidden-import artifacts --onedir tools\pinfo.py"
 If ( $LastExitCode -ne 0 ) {
-	Exit 1
+    Write-Host "Error running PyInstaller for tools\pinfo.py." -foreground Red
+    Exit 1
 }
 
 Invoke-Expression "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psort.py"
 If ( $LastExitCode -ne 0 ) {
-	Exit 1
+    Write-Host "Error running PyInstaller for tools\psort.py." -foreground Red
+    Exit 1
 }
 
 Invoke-Expression "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psteal.py"
 If ( $LastExitCode -ne 0 ) {
-	Exit 1
+    Write-Host "Error running PyInstaller for tools\psteal.py." -foreground Red
+    Exit 1
 }
 
 # Set up distribution package path
 If (Test-Path "dist\plaso")
 {
-	rm -Force -Recurse "dist\plaso"
+    rm -Force -Recurse "dist\plaso"
 }
 mkdir dist\plaso
 mkdir dist\plaso\data
@@ -80,7 +85,7 @@ git.exe clone https://github.com/log2timeline/l2tdevtools dist\l2tdevtools
 
 $dep = Get-Content dist\l2tdevtools\data\presets.ini | Select-String -pattern '\[plaso\]' -context 0,1
 Foreach ($d in $dep.context.DisplayPostContext.split(': ')[2].split(',')) {
-	cp "dist\l2tdevtools\data\licenses\LICENSE.$($d)" dist\plaso\licenses
+    cp "dist\l2tdevtools\data\licenses\LICENSE.$($d)" dist\plaso\licenses
 }
 
 rm -Force dist\plaso\licenses\LICENSE.hachoir-*
