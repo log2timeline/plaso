@@ -31,7 +31,7 @@ class ChromeCookieEventData(events.EventData):
     value (str): value of the cookie.
   """
 
-  DATA_TYPE = u'chrome:cookie:entry'
+  DATA_TYPE = 'chrome:cookie:entry'
 
   def __init__(self):
     """Initializes event data."""
@@ -49,45 +49,45 @@ class ChromeCookieEventData(events.EventData):
 class ChromeCookiePlugin(interface.SQLitePlugin):
   """Parse Chrome Cookies file."""
 
-  NAME = u'chrome_cookies'
-  DESCRIPTION = u'Parser for Chrome cookies SQLite database files.'
+  NAME = 'chrome_cookies'
+  DESCRIPTION = 'Parser for Chrome cookies SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
-      ((u'SELECT creation_utc, host_key, name, value, path, expires_utc, '
-        u'secure, httponly, last_access_utc, has_expires, persistent '
-        u'FROM cookies'), u'ParseCookieRow')]
+      (('SELECT creation_utc, host_key, name, value, path, expires_utc, '
+        'secure, httponly, last_access_utc, has_expires, persistent '
+        'FROM cookies'), 'ParseCookieRow')]
 
   # The required tables common to Archived History and History.
-  REQUIRED_TABLES = frozenset([u'cookies', u'meta'])
+  REQUIRED_TABLES = frozenset(['cookies', 'meta'])
 
   SCHEMAS = [{
-      u'cookies': (
-          u'CREATE TABLE cookies (creation_utc INTEGER NOT NULL UNIQUE PRIMARY '
-          u'KEY, host_key TEXT NOT NULL, name TEXT NOT NULL, value TEXT NOT '
-          u'NULL, path TEXT NOT NULL, expires_utc INTEGER NOT NULL, secure '
-          u'INTEGER NOT NULL, httponly INTEGER NOT NULL, last_access_utc '
-          u'INTEGER NOT NULL, has_expires INTEGER DEFAULT 1, persistent '
-          u'INTEGER DEFAULT 1)'),
-      u'meta': (
-          u'CREATE TABLE meta(key LONGVARCHAR NOT NULL UNIQUE PRIMARY KEY, '
-          u'value LONGVARCHAR)')}]
+      'cookies': (
+          'CREATE TABLE cookies (creation_utc INTEGER NOT NULL UNIQUE PRIMARY '
+          'KEY, host_key TEXT NOT NULL, name TEXT NOT NULL, value TEXT NOT '
+          'NULL, path TEXT NOT NULL, expires_utc INTEGER NOT NULL, secure '
+          'INTEGER NOT NULL, httponly INTEGER NOT NULL, last_access_utc '
+          'INTEGER NOT NULL, has_expires INTEGER DEFAULT 1, persistent '
+          'INTEGER DEFAULT 1)'),
+      'meta': (
+          'CREATE TABLE meta(key LONGVARCHAR NOT NULL UNIQUE PRIMARY KEY, '
+          'value LONGVARCHAR)')}]
 
   # Point to few sources for URL information.
   URLS = [
-      u'http://src.chromium.org/svn/trunk/src/net/cookies/',
-      (u'http://www.dfinews.com/articles/2012/02/'
-       u'google-analytics-cookies-and-forensic-implications')]
+      'http://src.chromium.org/svn/trunk/src/net/cookies/',
+      ('http://www.dfinews.com/articles/2012/02/'
+       'google-analytics-cookies-and-forensic-implications')]
 
   # Google Analytics __utmz variable translation.
   # Taken from:
   #   http://www.dfinews.com/sites/dfinews.com/files/u739/Tab2Cookies020312.jpg
   GA_UTMZ_TRANSLATION = {
-      u'utmcsr': u'Last source used to access.',
-      u'utmccn': u'Ad campaign information.',
-      u'utmcmd': u'Last type of visit.',
-      u'utmctr': u'Keywords used to find site.',
-      u'utmcct': u'Path to the page of referring link.'}
+      'utmcsr': 'Last source used to access.',
+      'utmccn': 'Ad campaign information.',
+      'utmcmd': 'Last type of visit.',
+      'utmctr': 'Keywords used to find site.',
+      'utmcct': 'Path to the page of referring link.'}
 
   def __init__(self):
     """Initializes a plugin."""
@@ -114,11 +114,11 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
       hostname = hostname[1:]
 
     if row['secure']:
-      scheme = u'https'
+      scheme = 'https'
     else:
-      scheme = u'http'
+      scheme = 'http'
 
-    url = u'{0:s}://{1:s}{2:s}'.format(scheme, hostname, row['path'])
+    url = '{0:s}://{1:s}{2:s}'.format(scheme, hostname, row['path'])
 
     event_data = ChromeCookieEventData()
     event_data.cookie_name = cookie_name
@@ -147,7 +147,7 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
       timestamp = row['expires_utc']
       date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
-          date_time, u'Cookie Expires')
+          date_time, 'Cookie Expires')
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     for plugin in self._cookie_plugins:
@@ -161,7 +161,7 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
 
       except Exception as exception:  # pylint: disable=broad-except
         parser_mediator.ProduceExtractionError(
-            u'plugin: {0:s} unable to parse cookie with error: {1!s}'.format(
+            'plugin: {0:s} unable to parse cookie with error: {1!s}'.format(
                 plugin.NAME, exception))
 
 

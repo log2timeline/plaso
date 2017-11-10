@@ -17,8 +17,8 @@ from plaso.parsers import plugins
 class SQLitePlugin(plugins.BasePlugin):
   """SQLite parser plugin."""
 
-  NAME = u'sqlite'
-  DESCRIPTION = u'Parser for SQLite database files.'
+  NAME = 'sqlite'
+  DESCRIPTION = 'Parser for SQLite database files.'
 
   # Queries to be executed.
   # Should be a list of tuples with two entries, SQLCommand and callback
@@ -74,7 +74,7 @@ class SQLitePlugin(plugins.BasePlugin):
 
     except sqlite3.DatabaseError as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to run query: {0:s} on database with error: {1!s}'.format(
+          'unable to run query: {0:s} on database with error: {1!s}'.format(
               query, exception))
       return
 
@@ -91,8 +91,8 @@ class SQLitePlugin(plugins.BasePlugin):
 
       except sqlite3.DatabaseError as exception:
         parser_mediator.ProduceExtractionError((
-            u'unable to parse row: {0:d} of results of query: {1:s} on '
-            u'database with error: {2!s}').format(index, query, exception))
+            'unable to parse row: {0:d} of results of query: {1:s} on '
+            'database with error: {2!s}').format(index, query, exception))
         # TODO: consider removing return.
         return
 
@@ -116,8 +116,8 @@ class SQLitePlugin(plugins.BasePlugin):
 
     except sqlite3.DatabaseError as exception:
       parser_mediator.ProduceExtractionError((
-          u'unable to run query: {0:s} on database with WAL with error: '
-          u'{1!s}').format(query, exception))
+          'unable to run query: {0:s} on database with WAL with error: '
+          '{1!s}').format(query, exception))
       return
 
     for index, row in enumerate(rows):
@@ -135,8 +135,8 @@ class SQLitePlugin(plugins.BasePlugin):
 
       except sqlite3.DatabaseError as exception:
         parser_mediator.ProduceExtractionError((
-            u'unable to parse row: {0:d} of results of query: {1:s} on '
-            u'database with WAL with error: {2!s}').format(
+            'unable to parse row: {0:d} of results of query: {1:s} on '
+            'database with WAL with error: {2!s}').format(
                 index, query, exception))
         # TODO: consider removing return.
         return
@@ -171,7 +171,7 @@ class SQLitePlugin(plugins.BasePlugin):
       callback = getattr(self, callback_method, None)
       if callback is None:
         logging.warning(
-            u'[{0:s}] missing callback method: {1:s} for query: {2:s}'.format(
+            '[{0:s}] missing callback method: {1:s} for query: {2:s}'.format(
                 self.NAME, callback_method, query))
         continue
 
@@ -179,20 +179,20 @@ class SQLitePlugin(plugins.BasePlugin):
 
       if database:
         try:
-          parser_mediator.AddEventAttribute(u'schema_match', schema_match)
+          parser_mediator.AddEventAttribute('schema_match', schema_match)
 
           self._ParseQuery(
               parser_mediator, database, query, callback, row_cache,
               cache=cache)
 
         finally:
-          parser_mediator.RemoveEventAttribute(u'schema_match')
+          parser_mediator.RemoveEventAttribute('schema_match')
 
       if database_wal:
         file_entry = parser_mediator.GetFileEntry()
 
         try:
-          parser_mediator.AddEventAttribute(u'schema_match', wal_schema_match)
+          parser_mediator.AddEventAttribute('schema_match', wal_schema_match)
           parser_mediator.SetFileEntry(wal_file_entry)
 
           self._ParseQueryWithWAL(
@@ -200,7 +200,7 @@ class SQLitePlugin(plugins.BasePlugin):
               cache=cache)
 
         finally:
-          parser_mediator.RemoveEventAttribute(u'schema_match')
+          parser_mediator.RemoveEventAttribute('schema_match')
           parser_mediator.SetFileEntry(file_entry)
 
   # pylint: disable=arguments-differ
@@ -229,7 +229,7 @@ class SQLitePlugin(plugins.BasePlugin):
       ValueError: If the database attribute is not passed in.
     """
     if database is None:
-      raise ValueError(u'Database is not set.')
+      raise ValueError('Database is not set.')
 
     # This will raise if unhandled keyword arguments are passed.
     super(SQLitePlugin, self).Process(parser_mediator)

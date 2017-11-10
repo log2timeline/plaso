@@ -22,7 +22,7 @@ class LsQuarantineEventData(events.EventData):
     user_agent (str): user agent that was used to download the file.
   """
 
-  DATA_TYPE = u'macosx:lsquarantine'
+  DATA_TYPE = 'macosx:lsquarantine'
 
   def __init__(self):
     """Initializes event data."""
@@ -40,28 +40,28 @@ class LsQuarantinePlugin(interface.SQLitePlugin):
        QuarantineEvents.com.apple.LaunchServices
   """
 
-  NAME = u'ls_quarantine'
-  DESCRIPTION = u'Parser for LS quarantine events SQLite database files.'
+  NAME = 'ls_quarantine'
+  DESCRIPTION = 'Parser for LS quarantine events SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
-      ((u'SELECT LSQuarantineTimestamp AS Time, LSQuarantine'
-        u'AgentName AS Agent, LSQuarantineOriginURLString AS URL, '
-        u'LSQuarantineDataURLString AS Data FROM LSQuarantineEvent '
-        u'ORDER BY Time'), u'ParseLSQuarantineRow')]
+      (('SELECT LSQuarantineTimestamp AS Time, LSQuarantine'
+        'AgentName AS Agent, LSQuarantineOriginURLString AS URL, '
+        'LSQuarantineDataURLString AS Data FROM LSQuarantineEvent '
+        'ORDER BY Time'), 'ParseLSQuarantineRow')]
 
   # The required tables.
-  REQUIRED_TABLES = frozenset([u'LSQuarantineEvent'])
+  REQUIRED_TABLES = frozenset(['LSQuarantineEvent'])
 
   SCHEMAS = [{
-      u'LSQuarantineEvent': (
-          u'CREATE TABLE LSQuarantineEvent ( LSQuarantineEventIdentifier TEXT '
-          u'PRIMARY KEY NOT NULL, LSQuarantineTimeStamp REAL, '
-          u'LSQuarantineAgentBundleIdentifier TEXT, LSQuarantineAgentName '
-          u'TEXT, LSQuarantineDataURLString TEXT, LSQuarantineSenderName TEXT, '
-          u'LSQuarantineSenderAddress TEXT, LSQuarantineTypeNumber INTEGER, '
-          u'LSQuarantineOriginTitle TEXT, LSQuarantineOriginURLString TEXT, '
-          u'LSQuarantineOriginAlias BLOB )')}]
+      'LSQuarantineEvent': (
+          'CREATE TABLE LSQuarantineEvent ( LSQuarantineEventIdentifier TEXT '
+          'PRIMARY KEY NOT NULL, LSQuarantineTimeStamp REAL, '
+          'LSQuarantineAgentBundleIdentifier TEXT, LSQuarantineAgentName '
+          'TEXT, LSQuarantineDataURLString TEXT, LSQuarantineSenderName TEXT, '
+          'LSQuarantineSenderAddress TEXT, LSQuarantineTypeNumber INTEGER, '
+          'LSQuarantineOriginTitle TEXT, LSQuarantineOriginURLString TEXT, '
+          'LSQuarantineOriginAlias BLOB )')}]
 
   def ParseLSQuarantineRow(
       self, parser_mediator, row, query=None, **unused_kwargs):

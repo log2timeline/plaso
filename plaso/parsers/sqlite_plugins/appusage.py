@@ -25,7 +25,7 @@ class MacOSXApplicationUsageEventData(events.EventData):
     count (int): TODO: number of times what?
   """
 
-  DATA_TYPE = u'macosx:application_usage'
+  DATA_TYPE = 'macosx:application_usage'
 
   def __init__(self):
     """Initializes event data."""
@@ -52,23 +52,23 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
   Default installation: /var/db/application_usage.sqlite
   """
 
-  NAME = u'appusage'
-  DESCRIPTION = u'Parser for Mac OS X application usage SQLite database files.'
+  NAME = 'appusage'
+  DESCRIPTION = 'Parser for Mac OS X application usage SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [(
-      (u'SELECT last_time, event, bundle_id, app_version, app_path, '
-       u'number_times FROM application_usage ORDER BY last_time'),
-      u'ParseApplicationUsageRow')]
+      ('SELECT last_time, event, bundle_id, app_version, app_path, '
+       'number_times FROM application_usage ORDER BY last_time'),
+      'ParseApplicationUsageRow')]
 
   # The required tables.
-  REQUIRED_TABLES = frozenset([u'application_usage'])
+  REQUIRED_TABLES = frozenset(['application_usage'])
 
   SCHEMAS = [{
-      u'application_usage': (
-          u'CREATE TABLE application_usage (event TEXT, bundle_id TEXT, '
-          u'app_version TEXT, app_path TEXT, last_time INTEGER DEFAULT 0, '
-          u'number_times INTEGER DEFAULT 0, PRIMARY KEY (event, bundle_id))')}]
+      'application_usage': (
+          'CREATE TABLE application_usage (event TEXT, bundle_id TEXT, '
+          'app_version TEXT, app_path TEXT, last_time INTEGER DEFAULT 0, '
+          'number_times INTEGER DEFAULT 0, PRIMARY KEY (event, bundle_id))')}]
 
   def ParseApplicationUsageRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
@@ -85,7 +85,7 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
 
     # TODO: replace usage by definition(s) in eventdata. Not sure which values
     # it will hold here.
-    usage = u'Application {0:s}'.format(row['event'])
+    usage = 'Application {0:s}'.format(row['event'])
 
     event_data = MacOSXApplicationUsageEventData()
     event_data.application = row['app_path']
