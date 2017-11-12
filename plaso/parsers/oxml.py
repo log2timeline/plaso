@@ -117,7 +117,7 @@ class OpenXMLParser(interface.FileObjectParser):
       try:
         # TODO: get encoding form XML metadata.
         property_value = property_value.decode('utf-8')
-      except ValueError as exception:
+      except UnicodeDecodeError:
         parser_mediator.ProduceExtractionError(
             'unable to decode property: {0:s}'.format(property_name))
 
