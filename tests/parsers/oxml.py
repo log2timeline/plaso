@@ -18,6 +18,8 @@ from tests.parsers import test_lib
 class OXMLTest(test_lib.ParserTestCase):
   """Tests for the OXML parser."""
 
+  # pylint: disable=protected-access
+
   _PROPERTIES_XML_DATA = ''.join([
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
       ('<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/'
