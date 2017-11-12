@@ -85,8 +85,15 @@ class PEParser(interface.FileObjectParser):
     if not hasattr(pefile_object, 'DIRECTORY_ENTRY_IMPORT'):
       return import_timestamps
     for importdata in pefile_object.DIRECTORY_ENTRY_IMPORT:
+      dll_name = getattr(importdata, 'dll', '')
+      try:
+        dll_name = dll_name.decode('ascii')
+      except UnicodeDecodeError:
+        dll_name = dll_name.decode('ascii', errors='replace')
+      if not dll_name:
+        dll_name = '<NO DLL NAME>'
+
       timestamp = getattr(importdata.struct, 'TimeDateStamp', 0)
-      dll_name = getattr(importdata, 'dll', '<NO DLL NAME>')
       if timestamp:
         import_timestamps.append([dll_name, timestamp])
     return import_timestamps
@@ -132,14 +139,19 @@ class PEParser(interface.FileObjectParser):
       pefile_object (pefile.PE): pefile object.
 
     Returns:
-      A list two-element lists, where the first element is the name of the DLL
-      being imported, and the second is the timestamp of the entry.
+      tuple[str, int]: name of the DLL being imported and the second is
+          the timestamp of the entry.
     """
     delay_import_timestamps = []
     if not hasattr(pefile_object, 'DIRECTORY_ENTRY_DELAY_IMPORT'):
       return delay_import_timestamps
     for importdata in pefile_object.DIRECTORY_ENTRY_DELAY_IMPORT:
       dll_name = importdata.dll
+      try:
+        dll_name = dll_name.decode('ascii')
+      except UnicodeDecodeError:
+        dll_name = dll_name.decode('ascii', errors='replace')
+
       timestamp = getattr(importdata.struct, 'dwTimeStamp', 0)
       delay_import_timestamps.append([dll_name, timestamp])
     return delay_import_timestamps
