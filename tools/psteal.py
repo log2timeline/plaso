@@ -12,6 +12,8 @@ See additional details here:
   https://github.com/log2timeline/plaso/wiki/Using-psteal
 """
 
+from __future__ import unicode_literals
+
 import multiprocessing
 import logging
 import sys
@@ -62,7 +64,7 @@ def Main():
     tool.AnalyzeEvents()
 
   except (KeyboardInterrupt, errors.UserAbort):
-    logging.warning(u'Aborted by user.')
+    logging.warning('Aborted by user.')
     return False
 
   except errors.SourceScannerError as exception:

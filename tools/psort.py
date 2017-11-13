@@ -9,6 +9,8 @@ See additional details here:
   https://github.com/log2timeline/plaso/wiki/Using-psort
 """
 
+from __future__ import unicode_literals
+
 import multiprocessing
 import logging
 import sys
@@ -52,7 +54,7 @@ def Main():
     tool.ProcessStorage()
 
   except (KeyboardInterrupt, errors.UserAbort):
-    logging.warning(u'Aborted by user.')
+    logging.warning('Aborted by user.')
     return False
 
   except errors.BadConfigOption as exception:

@@ -5,6 +5,8 @@
 pinfo stands for Plaso INniheldurFleiriOrd or plaso contains more words.
 """
 
+from __future__ import unicode_literals
+
 import logging
 import sys
 

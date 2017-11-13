@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """The log2timeline command line tool."""
 
+from __future__ import unicode_literals
+
 import logging
 import multiprocessing
 import sys
@@ -52,7 +54,7 @@ def Main():
     tool.ExtractEventsFromSources()
 
   except (KeyboardInterrupt, errors.UserAbort):
-    logging.warning(u'Aborted by user.')
+    logging.warning('Aborted by user.')
     return False
 
   except (errors.BadConfigOption, errors.SourceScannerError) as exception:

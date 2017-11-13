@@ -591,7 +591,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       return
 
     if self._profiling_configuration.HaveProfileMemoryGuppy():
-      identifier = u'{0:s}-memory'.format(self._name)
+      identifier = '{0:s}-memory'.format(self._name)
       self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
           identifier, path=self._profiling_configuration.directory,
           profiling_sample_rate=(
@@ -599,12 +599,12 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       self._guppy_memory_profiler.Start()
 
     if self._profiling_configuration.HaveProfileProcessing():
-      identifier = u'{0:s}-processing'.format(self._name)
+      identifier = '{0:s}-processing'.format(self._name)
       self._processing_profiler = profiler.ProcessingProfiler(
           identifier, path=self._profiling_configuration.directory)
 
     if self._profiling_configuration.HaveProfileSerializers():
-      identifier = u'{0:s}-serializers'.format(self._name)
+      identifier = '{0:s}-serializers'.format(self._name)
       self._serializers_profiler = profiler.SerializersProfiler(
           identifier, path=self._profiling_configuration.directory)
 

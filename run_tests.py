@@ -6,7 +6,7 @@ import sys
 import unittest
 
 # Change PYTHONPATH to include dependencies.
-sys.path.insert(0, u'.')
+sys.path.insert(0, '.')
 
 import utils.dependencies  # pylint: disable=wrong-import-position
 

@@ -9,6 +9,8 @@ This script requires the pyperclip Python module.
 """
 
 from __future__ import print_function
+from __future__ import unicode_literals
+
 import argparse
 import os
 import sys
@@ -17,7 +19,7 @@ import textwrap
 import pyperclip  # pylint: disable=import-error
 
 # Change PYTHONPATH to include plaso.
-sys.path.insert(0, u'.')
+sys.path.insert(0, '.')
 
 from plaso.parsers import sqlite  # pylint: disable=wrong-import-position
 
@@ -37,10 +39,10 @@ class SQLiteSchemaExtractor(object):
     """
     database = sqlite.SQLiteDatabase('database.db')
 
-    with open(database_path, u'rb') as file_object:
+    with open(database_path, 'rb') as file_object:
       wal_file_object = None
       if wal_path:
-        wal_file_object = open(wal_path, u'rb')
+        wal_file_object = open(wal_path, 'rb')
 
       try:
         database.Open(file_object, wal_file_object=wal_file_object)
@@ -72,43 +74,43 @@ class SQLiteSchemaExtractor(object):
     table_index = 1
     number_of_tables = len(schema)
     for table_name, query in sorted(schema.items()):
-      line = u'      u\'{0:s}\': ('.format(table_name)
+      line = '      \'{0:s}\': ('.format(table_name)
       lines.append(line)
 
-      query = query.replace(u'\'', u'\\\'')
+      query = query.replace('\'', '\\\'')
       query = textwrapper.wrap(query)
-      query = [u'{0:s}u\'{1:s} \''.format(u' ' * 10, line) for line in query]
+      query = ['{0:s}\'{1:s} \''.format(' ' * 10, line) for line in query]
 
       if table_index == number_of_tables:
-        query[-1] = u'{0:s}\')}}]'.format(query[-1][:-2])
+        query[-1] = '{0:s}\')}}]'.format(query[-1][:-2])
       else:
-        query[-1] = u'{0:s}\'),'.format(query[-1][:-2])
+        query[-1] = '{0:s}\'),'.format(query[-1][:-2])
 
       lines.extend(query)
       table_index += 1
 
-    return u'\n'.join(lines)
+    return '\n'.join(lines)
 
 
-if __name__ == u'__main__':
+if __name__ == '__main__':
   argument_parser = argparse.ArgumentParser()
 
   argument_parser.add_argument(
-      u'database_path', type=str,
-      help=u'The path to the database file to extract schema from.')
+      'database_path', type=str,
+      help='The path to the database file to extract schema from.')
 
   argument_parser.add_argument(
-      u'wal_path', type=str, nargs=u'?', default=None,
-      help=u'Optional path to a WAL file to commit into the database.')
+      'wal_path', type=str, nargs='?', default=None,
+      help='Optional path to a WAL file to commit into the database.')
 
   options = argument_parser.parse_args()
 
   if not os.path.exists(options.database_path):
-    print(u'No such database file: {0:s}'.format(options.database_path))
+    print('No such database file: {0:s}'.format(options.database_path))
     sys.exit(1)
 
   if options.wal_path and not os.path.exists(options.wal_path):
-    print(u'No such WAL file: {0:s}'.format(options.wal_path))
+    print('No such WAL file: {0:s}'.format(options.wal_path))
     sys.exit(1)
 
   extractor = SQLiteSchemaExtractor()

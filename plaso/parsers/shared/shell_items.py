@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows NT shell items."""
 
+from __future__ import unicode_literals
+
 import pyfwsi
 
 from dfdatetime import fat_date_time as dfdatetime_fat_date_time
@@ -14,7 +16,7 @@ from plaso.winnt import shell_folder_ids
 class ShellItemsParser(object):
   """Parses for Windows NT shell items."""
 
-  NAME = u'shell_items'
+  NAME = 'shell_items'
 
   def __init__(self, origin):
     """Initializes the parser.
@@ -50,7 +52,7 @@ class ShellItemsParser(object):
           localized_name = extension_block.localized_name
           file_reference = extension_block.file_reference
           if file_reference:
-            file_reference = u'{0:d}-{1:d}'.format(
+            file_reference = '{0:d}-{1:d}'.format(
                 file_reference & 0xffffffffffff, file_reference >> 48)
 
           event_data.file_reference = file_reference
@@ -99,18 +101,18 @@ class ShellItemsParser(object):
       if description:
         path_segment = description
       else:
-        path_segment = u'{{{0:s}}}'.format(shell_item.shell_folder_identifier)
+        path_segment = '{{{0:s}}}'.format(shell_item.shell_folder_identifier)
 
-      path_segment = u'<{0:s}>'.format(path_segment)
+      path_segment = '<{0:s}>'.format(path_segment)
 
     elif isinstance(shell_item, pyfwsi.volume):
       if shell_item.name:
         path_segment = shell_item.name
       elif shell_item.identifier:
-        path_segment = u'{{{0:s}}}'.format(shell_item.identifier)
+        path_segment = '{{{0:s}}}'.format(shell_item.identifier)
 
     elif isinstance(shell_item, pyfwsi.file_entry):
-      long_name = u''
+      long_name = ''
       for extension_block in shell_item.extension_blocks:
         if isinstance(extension_block, pyfwsi.file_entry_extension):
           long_name = extension_block.long_name
@@ -129,7 +131,7 @@ class ShellItemsParser(object):
       pass
 
     if path_segment is None:
-      path_segment = u'<UNKNOWN: 0x{0:02x}>'.format(shell_item.class_type)
+      path_segment = '<UNKNOWN: 0x{0:02x}>'.format(shell_item.class_type)
 
     return path_segment
 
@@ -147,19 +149,19 @@ class ShellItemsParser(object):
     number_of_path_segments -= 1
     for path_segment in self._path_segments[1:]:
       # Remove a trailing \ except for the last path segment.
-      if path_segment.endswith(u'\\') and number_of_path_segments > 1:
+      if path_segment.endswith('\\') and number_of_path_segments > 1:
         path_segment = path_segment[:-1]
 
-      if ((path_segment.startswith(u'<') and path_segment.endswith(u'>')) or
+      if ((path_segment.startswith('<') and path_segment.endswith('>')) or
           len(strings) == 1):
-        strings.append(u' {0:s}'.format(path_segment))
-      elif path_segment.startswith(u'\\'):
-        strings.append(u'{0:s}'.format(path_segment))
+        strings.append(' {0:s}'.format(path_segment))
+      elif path_segment.startswith('\\'):
+        strings.append('{0:s}'.format(path_segment))
       else:
-        strings.append(u'\\{0:s}'.format(path_segment))
+        strings.append('\\{0:s}'.format(path_segment))
       number_of_path_segments -= 1
 
-    return u''.join(strings)
+    return ''.join(strings)
 
   def GetUpperPathSegment(self):
     """Retrieves the upper shell item path segment.
@@ -168,13 +170,13 @@ class ShellItemsParser(object):
       str: shell item path segment or "N/A".
     """
     if not self._path_segments:
-      return u'N/A'
+      return 'N/A'
 
     return self._path_segments[-1]
 
   def ParseByteStream(
       self, parser_mediator, byte_stream, parent_path_segments=None,
-      codepage=u'cp1252'):
+      codepage='cp1252'):
     """Parses the shell items from the byte stream.
 
     Args:

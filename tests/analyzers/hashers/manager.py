@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the hasher manager."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.analyzers.hashers import interface
@@ -12,7 +14,7 @@ from tests import test_lib as shared_test_lib
 class TestHasher(interface.BaseHasher):
   """Test hasher."""
 
-  NAME = u'testhash'
+  NAME = 'testhash'
 
   def GetBinaryDigest(self):
     """Retrieves the digest of the hash function as a binary string.
@@ -34,7 +36,7 @@ class TestHasher(interface.BaseHasher):
     """
     # Chosen by fair dice roll. Guaranteed to be random.
     # Compliant with RFC 1149.4. See http://xkcd.com/221/.
-    return u'4'
+    return '4'
 
   def Update(self, unused_data):
     """Updates the current state of the hasher with a new block of data.
@@ -75,33 +77,33 @@ class HashersManagerTest(shared_test_lib.BaseTestCase):
     self.assertGreaterEqual(len(hashers_information), 3)
 
     available_hasher_names = [name for name, _ in hashers_information]
-    self.assertIn(u'sha1', available_hasher_names)
-    self.assertIn(u'sha256', available_hasher_names)
+    self.assertIn('sha1', available_hasher_names)
+    self.assertIn('sha256', available_hasher_names)
 
   def testGetHasherNamesFromString(self):
     """Tests the GetHasherNamesFromString method."""
-    test_strings = u'md5,sha256,testhash'
+    test_strings = 'md5,sha256,testhash'
     manager.HashersManager.RegisterHasher(TestHasher)
     names = manager.HashersManager.GetHasherNamesFromString(test_strings)
     self.assertEqual(3, len(names))
     manager.HashersManager.DeregisterHasher(TestHasher)
     names = manager.HashersManager.GetHasherNamesFromString(test_strings)
     self.assertEqual(2, len(names))
-    names = manager.HashersManager.GetHasherNamesFromString(u'all')
+    names = manager.HashersManager.GetHasherNamesFromString('all')
     self.assertEqual(len(names), len(manager.HashersManager._hasher_classes))
 
   def testGetHasher(self):
     """Tests the GetHasher function."""
-    hasher_object = manager.HashersManager.GetHasher(u'md5')
+    hasher_object = manager.HashersManager.GetHasher('md5')
     self.assertIsNotNone(hasher_object)
-    self.assertEqual(hasher_object.NAME, u'md5')
+    self.assertEqual(hasher_object.NAME, 'md5')
 
-    hasher_object = manager.HashersManager.GetHasher(u'sha1')
+    hasher_object = manager.HashersManager.GetHasher('sha1')
     self.assertIsNotNone(hasher_object)
-    self.assertEqual(hasher_object.NAME, u'sha1')
+    self.assertEqual(hasher_object.NAME, 'sha1')
 
     with self.assertRaises(KeyError):
-      manager.HashersManager.GetHasher(u'bogus')
+      manager.HashersManager.GetHasher('bogus')
 
   def testGetHashers(self):
     """Tests the GetHashers and GetHasherNames functions."""

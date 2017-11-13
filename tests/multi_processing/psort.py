@@ -403,7 +403,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     data_location = ''
     analysis_plugin = tagging.TaggingAnalysisPlugin()
-    analysis_plugins = {u'tagging': analysis_plugin}
+    analysis_plugins = {'tagging': analysis_plugin}
     # TODO: set tag file.
 
     test_engine = psort.PsortMultiProcessEngine()

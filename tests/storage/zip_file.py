@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the ZIP-based storage."""
 
+from __future__ import unicode_literals
+
 import os
 import unittest
 import zipfile
@@ -29,15 +31,15 @@ class SerializedDataStreamTest(test_lib.StorageTestCase):
 
   # pylint: disable=protected-access
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testReadAndSeek(self):
     """Tests the ReadEntry and SeekEntryAtOffset functions."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     zip_file_object = zipfile.ZipFile(
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      stream_name = u'event_data.000002'
+      stream_name = 'event_data.000002'
       data_stream = zip_file._SerializedDataStream(
           zip_file_object, temp_directory, stream_name)
 
@@ -77,7 +79,7 @@ class SerializedDataStreamTest(test_lib.StorageTestCase):
         data_stream.SeekEntryAtOffset(0, 10)
         data_stream.ReadEntry()
 
-      stream_name = u'event_data.000009'
+      stream_name = 'event_data.000009'
       data_stream = zip_file._SerializedDataStream(
           zip_file_object, temp_directory, stream_name)
 
@@ -89,14 +91,14 @@ class SerializedDataStreamTest(test_lib.StorageTestCase):
   def testWrite(self):
     """Tests the Write function."""
     with shared_test_lib.TempDirectory() as temp_directory:
-      test_file = os.path.join(temp_directory, u'storage.plaso')
+      test_file = os.path.join(temp_directory, 'storage.plaso')
 
       zip_file_object = zipfile.ZipFile(
           test_file, mode='a', compression=zipfile.ZIP_DEFLATED,
           allowZip64=True)
 
       data_stream = zip_file._SerializedDataStream(
-          zip_file_object, temp_directory, u'test_stream', maximum_data_size=32)
+          zip_file_object, temp_directory, 'test_stream', maximum_data_size=32)
 
       data_stream.WriteInitialize()
 
@@ -122,14 +124,14 @@ class SerializedDataStreamTest(test_lib.StorageTestCase):
   def testWriteAbort(self):
     """Tests the Write function with abort."""
     with shared_test_lib.TempDirectory() as temp_directory:
-      test_file = os.path.join(temp_directory, u'storage.plaso')
+      test_file = os.path.join(temp_directory, 'storage.plaso')
 
       zip_file_object = zipfile.ZipFile(
           test_file, mode='a', compression=zipfile.ZIP_DEFLATED,
           allowZip64=True)
 
       data_stream = zip_file._SerializedDataStream(
-          zip_file_object, temp_directory, u'test_stream', maximum_data_size=32)
+          zip_file_object, temp_directory, 'test_stream', maximum_data_size=32)
 
       data_stream.WriteInitialize()
 
@@ -144,14 +146,14 @@ class SerializedDataOffsetTableTest(test_lib.StorageTestCase):
 
   # pylint: disable=protected-access
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetOffset(self):
     """Tests the GetOffset function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     zip_file_object = zipfile.ZipFile(
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
-    stream_name = u'event_index.000002'
+    stream_name = 'event_index.000002'
     offset_table = zip_file._SerializedDataOffsetTable(
         zip_file_object, stream_name)
     offset_table.Read()
@@ -168,19 +170,19 @@ class SerializedDataOffsetTableTest(test_lib.StorageTestCase):
     with self.assertRaises(IndexError):
       offset_table.GetOffset(-99)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testRead(self):
     """Tests the Read function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     zip_file_object = zipfile.ZipFile(
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
-    stream_name = u'event_index.000002'
+    stream_name = 'event_index.000002'
     offset_table = zip_file._SerializedDataOffsetTable(
         zip_file_object, stream_name)
     offset_table.Read()
 
-    stream_name = u'bogus'
+    stream_name = 'bogus'
     offset_table = zip_file._SerializedDataOffsetTable(
         zip_file_object, stream_name)
 
@@ -190,13 +192,13 @@ class SerializedDataOffsetTableTest(test_lib.StorageTestCase):
   def testWrite(self):
     """Tests the Write function."""
     with shared_test_lib.TempDirectory() as temp_directory:
-      test_file = os.path.join(temp_directory, u'storage.plaso')
+      test_file = os.path.join(temp_directory, 'storage.plaso')
 
       zip_file_object = zipfile.ZipFile(
           test_file, mode='a', compression=zipfile.ZIP_DEFLATED,
           allowZip64=True)
 
-      stream_name = u'test_stream'
+      stream_name = 'test_stream'
       offset_table = zip_file._SerializedDataOffsetTable(
           zip_file_object, stream_name)
 
@@ -210,14 +212,14 @@ class SerializedDataTimestampTableTest(test_lib.StorageTestCase):
 
   # pylint: disable=protected-access
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetTimestamp(self):
     """Tests the GetTimestamp function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     zip_file_object = zipfile.ZipFile(
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
-    stream_name = u'event_timestamps.000002'
+    stream_name = 'event_timestamps.000002'
     timestamp_table = zip_file._SerializedDataTimestampTable(
         zip_file_object, stream_name)
     timestamp_table.Read()
@@ -234,19 +236,19 @@ class SerializedDataTimestampTableTest(test_lib.StorageTestCase):
     with self.assertRaises(IndexError):
       timestamp_table.GetTimestamp(-99)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testRead(self):
     """Tests the Read function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     zip_file_object = zipfile.ZipFile(
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
-    stream_name = u'event_timestamps.000002'
+    stream_name = 'event_timestamps.000002'
     timestamp_table = zip_file._SerializedDataTimestampTable(
         zip_file_object, stream_name)
     timestamp_table.Read()
 
-    stream_name = u'bogus'
+    stream_name = 'bogus'
     timestamp_table = zip_file._SerializedDataTimestampTable(
         zip_file_object, stream_name)
 
@@ -256,13 +258,13 @@ class SerializedDataTimestampTableTest(test_lib.StorageTestCase):
   def testWrite(self):
     """Tests the Write function."""
     with shared_test_lib.TempDirectory() as temp_directory:
-      test_file = os.path.join(temp_directory, u'storage.plaso')
+      test_file = os.path.join(temp_directory, 'storage.plaso')
 
       zip_file_object = zipfile.ZipFile(
           test_file, mode='a', compression=zipfile.ZIP_DEFLATED,
           allowZip64=True)
 
-      stream_name = u'test_stream'
+      stream_name = 'test_stream'
       timestamp_table = zip_file._SerializedDataTimestampTable(
           zip_file_object, stream_name)
 
@@ -290,8 +292,8 @@ class StorageMetadataReaderTest(test_lib.StorageTestCase):
     self.assertIsNotNone(storage_metadata)
 
     self.assertEqual(storage_metadata.format_version, 20170121)
-    self.assertEqual(storage_metadata.serialization_format, u'json')
-    self.assertEqual(storage_metadata.storage_type, u'session')
+    self.assertEqual(storage_metadata.serialization_format, 'json')
+    self.assertEqual(storage_metadata.storage_type, 'session')
 
 
 class ZIPStorageFileTest(test_lib.StorageTestCase):
@@ -326,7 +328,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
   def testBuildEventTagIndex(self):
     """Tests the _BuildEventTagIndex function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -338,28 +340,28 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testDeserializeAttributeContainer(self):
     """Tests the _DeserializeAttributeContainer function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       data_stream = zip_file._SerializedDataStream(
-          storage_file._zipfile, temp_directory, u'event_data.000001')
+          storage_file._zipfile, temp_directory, 'event_data.000001')
       entry_data = data_stream.ReadEntry()
 
     attribute_container = storage_file._DeserializeAttributeContainer(
-        u'event', entry_data)
+        'event', entry_data)
     self.assertIsNotNone(attribute_container)
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetEvent(self):
     """Tests the _GetEvent function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -391,10 +393,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetEventObjectSerializedData(self):
     """Tests the _GetEventSerializedData function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -440,10 +442,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetEventSource(self):
     """Tests the _GetEventSource function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -475,7 +477,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
   def testGetEventTagByIdentifier(self):
     """Tests the _GetEventTagByIdentifier function."""
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       self._CreateTestStorageFileWithTags(temp_file)
 
       storage_file = zip_file.ZIPStorageFile()
@@ -484,7 +486,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
       event_identifier = identifiers.SerializedStreamIdentifier(1, 0)
       event_tag = storage_file._GetEventTagByIdentifier(event_identifier)
       self.assertIsNotNone(event_tag)
-      self.assertEqual(event_tag.comment, u'My comment')
+      self.assertEqual(event_tag.comment, 'My comment')
 
       event_identifier = identifiers.SerializedStreamIdentifier(99, 0)
       event_tag = storage_file._GetEventTagByIdentifier(event_identifier)
@@ -492,56 +494,56 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetLastStreamNumber(self):
     """Tests the _GetLastStreamNumber function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    last_stream_number = storage_file._GetLastStreamNumber(u'event_data')
+    last_stream_number = storage_file._GetLastStreamNumber('event_data')
     self.assertEqual(last_stream_number, 3)
 
     last_stream_number = storage_file._GetLastStreamNumber(
-        u'event_source_data')
+        'event_source_data')
     self.assertEqual(last_stream_number, 3)
 
-    last_stream_number = storage_file._GetLastStreamNumber(u'bogus')
+    last_stream_number = storage_file._GetLastStreamNumber('bogus')
     self.assertEqual(last_stream_number, 1)
 
     storage_file.Close()
 
   # TODO: add test for _InitializeEventHeap.
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetEventSourceSerializedData(self):
     """Tests the _GetSerializedAttributeContainerData function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
     # There is 1 event source in the first event data stream.
     for entry_index in range(0, 1):
       data_tuple = storage_file._GetSerializedAttributeContainerData(
-          u'event_source', 1)
+          'event_source', 1)
       self.assertIsNotNone(data_tuple)
       self.assertIsNotNone(data_tuple[0])
       self.assertEqual(data_tuple[1], entry_index)
 
     data_tuple = storage_file._GetSerializedAttributeContainerData(
-        u'event_source', 1)
+        'event_source', 1)
     self.assertIsNotNone(data_tuple)
     self.assertIsNone(data_tuple[0])
     self.assertEqual(data_tuple[1], 1)
 
     data_tuple = storage_file._GetSerializedAttributeContainerData(
-        u'event_source', 1, entry_index=0)
+        'event_source', 1, entry_index=0)
     self.assertIsNotNone(data_tuple)
     self.assertIsNotNone(data_tuple[0])
     self.assertEqual(data_tuple[1], 0)
 
     data_tuple = storage_file._GetSerializedAttributeContainerData(
-        u'event_source', 1, entry_index=2)
+        'event_source', 1, entry_index=2)
     self.assertIsNotNone(data_tuple)
     self.assertIsNone(data_tuple[0])
     # TODO: make the behavior of this method more consistent.
@@ -549,65 +551,65 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     with self.assertRaises(ValueError):
       storage_file._GetSerializedAttributeContainerData(
-          u'event_source', 0)
+          'event_source', 0)
 
     with self.assertRaises(ValueError):
       storage_file._GetSerializedAttributeContainerData(
-          u'event_source', 1, entry_index=-2)
+          'event_source', 1, entry_index=-2)
 
     with self.assertRaises(ValueError):
       storage_file._GetSerializedAttributeContainerData(
-          u'event_source', 3)
+          'event_source', 3)
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetSerializedDataStream(self):
     """Tests the _GetSerializedDataStream function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    data_stream = storage_file._GetSerializedDataStream(u'event', 2)
+    data_stream = storage_file._GetSerializedDataStream('event', 2)
     self.assertIsNotNone(data_stream)
 
     with self.assertRaises(IOError):
-      storage_file._GetSerializedDataStream(u'event', 99)
+      storage_file._GetSerializedDataStream('event', 99)
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetSerializedDataOffsetTable(self):
     """Tests the _GetSerializedDataOffsetTable function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    offset_table = storage_file._GetSerializedDataOffsetTable(u'event', 2)
+    offset_table = storage_file._GetSerializedDataOffsetTable('event', 2)
     self.assertIsNotNone(offset_table)
 
     with self.assertRaises(IOError):
-      storage_file._GetSerializedDataOffsetTable(u'event', 99)
+      storage_file._GetSerializedDataOffsetTable('event', 99)
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetSerializedDataStreamNumbers(self):
     """Tests the _GetSerializedDataStreamNumbers function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
     data_stream_numbers = storage_file._GetSerializedDataStreamNumbers(
-        u'event_data')
+        'event_data')
     self.assertEqual(data_stream_numbers, [1, 2])
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetSerializedEventTimestampTable(self):
     """Tests the _GetSerializedEventTimestampTable function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -616,10 +618,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetStreamNames(self):
     """Tests the _GetStreamNames function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -628,10 +630,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetSortedEvent(self):
     """Tests the _GetSortedEvent function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -643,8 +645,8 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     # Test lower bound time range filter.
     test_time_range = time_range.TimeRange(
-        timelib.Timestamp.CopyFromString(u'2012-04-30 06:41:49'),
-        timelib.Timestamp.CopyFromString(u'2030-12-31 23:59:59'))
+        timelib.Timestamp.CopyFromString('2012-04-30 06:41:49'),
+        timelib.Timestamp.CopyFromString('2030-12-31 23:59:59'))
 
     storage_file.Close()
 
@@ -658,8 +660,8 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     # Test upper bound time range filter.
     test_time_range = time_range.TimeRange(
-        timelib.Timestamp.CopyFromString(u'2000-01-01 00:00:00'),
-        timelib.Timestamp.CopyFromString(u'2012-04-30 06:41:49'))
+        timelib.Timestamp.CopyFromString('2000-01-01 00:00:00'),
+        timelib.Timestamp.CopyFromString('2012-04-30 06:41:49'))
 
     storage_file.Close()
 
@@ -673,37 +675,37 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testHasStream(self):
     """Tests the _HasStream function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    self.assertTrue(storage_file._HasStream(u'event_timestamps.000002'))
-    self.assertFalse(storage_file._HasStream(u'bogus'))
+    self.assertTrue(storage_file._HasStream('event_timestamps.000002'))
+    self.assertFalse(storage_file._HasStream('bogus'))
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testOpenStream(self):
     """Tests the _OpenStream function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    file_object = storage_file._OpenStream(u'event_timestamps.000002')
+    file_object = storage_file._OpenStream('event_timestamps.000002')
     self.assertIsNotNone(file_object)
 
-    file_object = storage_file._OpenStream(u'bogus')
+    file_object = storage_file._OpenStream('bogus')
     self.assertIsNone(file_object)
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testOpenZIPFile(self):
     """Tests the _OpenZIPFile, _OpenRead and _OpenWrite functions."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
 
     storage_file._OpenZIPFile(test_file, True)
@@ -712,7 +714,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file.Close()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file._OpenZIPFile(temp_file, False)
       storage_file._OpenRead()
@@ -723,13 +725,13 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
   def testReadAndWriteAttributeContainerTypes(self):
     """Tests that reading and writing attribute container types works."""
     analysis_report = reports.AnalysisReport(
-        plugin_name=u'test', text=u'test report')
+        plugin_name='test', text='test report')
     event_source = event_sources.EventSource()
-    extraction_error = errors.ExtractionError(message=u'Test extraction error')
+    extraction_error = errors.ExtractionError(message='Test extraction error')
     test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -769,45 +771,45 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testReadAttributeContainerFromStreamEntry(self):
     """Tests the _ReadAttributeContainerFromStreamEntry function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       data_stream = zip_file._SerializedDataStream(
-          storage_file._zipfile, temp_directory, u'event_data.000001')
+          storage_file._zipfile, temp_directory, 'event_data.000001')
 
       attribute_container = storage_file._ReadAttributeContainerFromStreamEntry(
-          data_stream, u'event')
+          data_stream, 'event')
       self.assertIsNotNone(attribute_container)
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testReadAttributeContainersFromStream(self):
     """Tests the _ReadAttributeContainersFromStream function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       data_stream = zip_file._SerializedDataStream(
-          storage_file._zipfile, temp_directory, u'event_data.000001')
+          storage_file._zipfile, temp_directory, 'event_data.000001')
 
       attribute_containers = list(
           storage_file._ReadAttributeContainersFromStream(
-              data_stream, u'event'))
+              data_stream, 'event'))
       self.assertEqual(len(attribute_containers), 19)
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testReadSerializerStream(self):
     """Tests the _ReadSerializerStream function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -819,10 +821,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testReadStorageMetadata(self):
     """Tests the _ReadStorageMetadata function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -830,17 +832,17 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testReadStream(self):
     """Tests the _ReadStream function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    stream_data = storage_file._ReadStream(u'event_timestamps.000002')
+    stream_data = storage_file._ReadStream('event_timestamps.000002')
     self.assertNotEqual(stream_data, b'')
 
-    stream_data = storage_file._ReadStream(u'bogus')
+    stream_data = storage_file._ReadStream('bogus')
     self.assertEqual(stream_data, b'')
 
     storage_file.Close()
@@ -854,13 +856,13 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     event_source = event_sources.EventSource()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
       storage_file.AddEventSource(event_source)
 
-      storage_file._WriteSerializedAttributeContainerList(u'event_source')
+      storage_file._WriteSerializedAttributeContainerList('event_source')
 
       storage_file.Close()
 
@@ -869,7 +871,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -886,7 +888,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
   def testWriteStorageMetadata(self):
     """Tests the _WriteStorageMetadata function."""
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -897,18 +899,18 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
   def testWriteStream(self):
     """Tests the _WriteStream function."""
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      storage_file._WriteStream(u'bogus', b'test')
+      storage_file._WriteStream('bogus', b'test')
 
       storage_file.Close()
 
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file)
 
-      stream_data = storage_file._ReadStream(u'bogus')
+      stream_data = storage_file._ReadStream('bogus')
       self.assertEqual(stream_data, b'test')
 
       storage_file.Close()
@@ -919,10 +921,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
   def testAddAnalysisReport(self):
     """Tests the AddAnalysisReport function."""
     analysis_report = reports.AnalysisReport(
-        plugin_name=u'test', text=u'test report')
+        plugin_name='test', text='test report')
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -933,10 +935,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
   def testAddError(self):
     """Tests the AddError function."""
     extraction_error = errors.ExtractionError(
-        message=u'Test extraction error')
+        message='Test extraction error')
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -951,7 +953,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -967,7 +969,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     event_source = event_sources.EventSource()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -982,7 +984,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -1002,7 +1004,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -1018,11 +1020,11 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
   # TODO: add tests for CheckSupportedFormat
   # TODO: add tests for Flush
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
   def testGetAnalysisReports(self):
     """Tests the GetAnalysisReports function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1031,7 +1033,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
+    test_file = self._GetTestFilePath(['pinfo_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1040,11 +1042,11 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
   def testGetErrors(self):
     """Tests the GetErrors function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1053,7 +1055,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
+    test_file = self._GetTestFilePath(['pinfo_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1062,11 +1064,11 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
   def testGetEvents(self):
     """Tests the GetEvents function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1075,7 +1077,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
+    test_file = self._GetTestFilePath(['pinfo_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1086,10 +1088,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
   # TODO: add tests for GetEventData
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetEventSourceByIndex(self):
     """Tests the GetEventSourceByIndex function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1104,11 +1106,11 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
   def testGetEventSources(self):
     """Tests the GetEventSources function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1117,7 +1119,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
+    test_file = self._GetTestFilePath(['pinfo_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1133,7 +1135,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     tagged_events = []
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       self._CreateTestStorageFileWithTags(temp_file)
 
       storage_file = zip_file.ZIPStorageFile()
@@ -1153,38 +1155,37 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     self.assertEqual(len(tagged_events), 4)
 
     event = tagged_events[0]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2009-04-05 12:27:39')
+    expected_timestamp = timelib.Timestamp.CopyFromString('2009-04-05 12:27:39')
     self.assertEqual(event.timestamp, expected_timestamp)
-    self.assertEqual(event.tag.comment, u'My comment')
+    self.assertEqual(event.tag.comment, 'My comment')
 
     message, _ = formatters_manager.FormattersManager.GetMessageStrings(
         formatter_mediator, event)
-    self.assertEqual(message[0:10], u'This is a ')
+    self.assertEqual(message[0:10], 'This is a ')
 
     event = tagged_events[1]
-    self.assertEqual(event.tag.labels[0], u'Malware')
+    self.assertEqual(event.tag.labels[0], 'Malware')
     message, _ = formatters_manager.FormattersManager.GetMessageStrings(
         formatter_mediator, event)
-    self.assertEqual(message[0:27], u'[HKEY_CURRENT_USER\\Windows\\')
+    self.assertEqual(message[0:27], '[HKEY_CURRENT_USER\\Windows\\')
 
     event = tagged_events[2]
-    self.assertEqual(event.tag.comment, u'This is interesting')
-    self.assertEqual(event.tag.labels[0], u'Malware')
-    self.assertEqual(event.tag.labels[1], u'Benign')
+    self.assertEqual(event.tag.comment, 'This is interesting')
+    self.assertEqual(event.tag.labels[0], 'Malware')
+    self.assertEqual(event.tag.labels[1], 'Benign')
 
-    self.assertEqual(event.parser, u'UNKNOWN')
+    self.assertEqual(event.parser, 'UNKNOWN')
 
     # Test the newly added fourth tag, which should include data from
     # the first version as well.
     event = tagged_events[3]
-    self.assertEqual(event.tag.labels[0], u'Interesting')
-    self.assertEqual(event.tag.labels[1], u'Malware')
+    self.assertEqual(event.tag.labels[0], 'Interesting')
+    self.assertEqual(event.tag.labels[1], 'Malware')
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetNumberOfAnalysisReports(self):
     """Tests the GetNumberOfAnalysisReports function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1193,10 +1194,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetNumberOfEventSources(self):
     """Tests the GetNumberOfEventSources function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1205,10 +1206,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetSessions(self):
     """Tests the GetSessions function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1217,11 +1218,11 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
   def testGetSortedEvents(self):
     """Tests the GetSortedEvents function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1230,7 +1231,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
+    test_file = self._GetTestFilePath(['pinfo_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1241,11 +1242,11 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     # TODO: add test with time range.
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
   def testHasAnalysisReports(self):
     """Tests the HasAnalysisReports function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1254,7 +1255,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
+    test_file = self._GetTestFilePath(['pinfo_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1263,11 +1264,11 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
   def testHasErrors(self):
     """Tests the HasErrors function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1275,7 +1276,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
+    test_file = self._GetTestFilePath(['pinfo_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1283,11 +1284,11 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
   def testHasEventTags(self):
     """Tests the HasEventTags function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1295,7 +1296,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
+    test_file = self._GetTestFilePath(['pinfo_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1303,18 +1304,18 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testOpenClose(self):
     """Tests the Open and Close functions."""
     # Read-only of session storage.
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
     storage_file.Close()
 
     # Write append of session storage.
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
       storage_file.Close()
@@ -1327,7 +1328,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     # Write append of task storage.
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile(
           storage_type=definitions.STORAGE_TYPE_TASK)
       storage_file.Open(path=temp_file, read_only=False)
@@ -1346,7 +1347,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     session_completion = session.CreateSessionCompletion()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -1356,7 +1357,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
       storage_file.Close()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile(
           storage_type=definitions.STORAGE_TYPE_TASK)
       storage_file.Open(path=temp_file, read_only=False)
@@ -1378,7 +1379,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
         session_identifier=session.identifier)
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile(
           storage_type=definitions.STORAGE_TYPE_TASK)
       storage_file.Open(path=temp_file, read_only=False)
@@ -1389,7 +1390,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
       storage_file.Close()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
@@ -1421,10 +1422,10 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
 
   # TODO: add test for GetEventSources.
 
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetSortedEvents(self):
     """Tests the GetSortedEvents function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
 
     timestamps = []
     with zip_file.ZIPStorageFileReader(test_file) as storage_reader:
@@ -1440,8 +1441,8 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
 
     # Test lower bound time range filter.
     test_time_range = time_range.TimeRange(
-        timelib.Timestamp.CopyFromString(u'2012-04-30 06:41:49'),
-        timelib.Timestamp.CopyFromString(u'2030-12-31 23:59:59'))
+        timelib.Timestamp.CopyFromString('2012-04-30 06:41:49'),
+        timelib.Timestamp.CopyFromString('2030-12-31 23:59:59'))
 
     timestamps = []
     with zip_file.ZIPStorageFileReader(test_file) as storage_reader:
@@ -1454,8 +1455,8 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
 
     # Test upper bound time range filter.
     test_time_range = time_range.TimeRange(
-        timelib.Timestamp.CopyFromString(u'2000-01-01 00:00:00'),
-        timelib.Timestamp.CopyFromString(u'2012-04-30 06:41:49'))
+        timelib.Timestamp.CopyFromString('2000-01-01 00:00:00'),
+        timelib.Timestamp.CopyFromString('2012-04-30 06:41:49'))
 
     timestamps = []
     with zip_file.ZIPStorageFileReader(test_file) as storage_reader:
@@ -1474,10 +1475,10 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
     """Tests the AddAnalysisReport function."""
     session = sessions.Session()
     analysis_report = reports.AnalysisReport(
-        plugin_name=u'test', text=u'test report')
+        plugin_name='test', text='test report')
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_writer = zip_file.ZIPStorageFileWriter(session, temp_file)
       storage_writer.Open()
 
@@ -1489,10 +1490,10 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
     """Tests the AddError function."""
     session = sessions.Session()
     extraction_error = errors.ExtractionError(
-        message=u'Test extraction error')
+        message='Test extraction error')
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_writer = zip_file.ZIPStorageFileWriter(session, temp_file)
       storage_writer.Open()
 
@@ -1506,7 +1507,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
     test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_writer = zip_file.ZIPStorageFileWriter(session, temp_file)
       storage_writer.Open()
 
@@ -1521,7 +1522,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
     event_source = event_sources.EventSource()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_writer = zip_file.ZIPStorageFileWriter(session, temp_file)
       storage_writer.Open()
 
@@ -1535,7 +1536,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
     test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_writer = zip_file.ZIPStorageFileWriter(session, temp_file)
       storage_writer.Open()
 
@@ -1552,7 +1553,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
     """Tests the Open and Close functions."""
     session = sessions.Session()
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_writer = zip_file.ZIPStorageFileWriter(session, temp_file)
       storage_writer.Open()
       storage_writer.Close()
@@ -1561,7 +1562,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
       storage_writer.Close()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_writer = zip_file.ZIPStorageFileWriter(
           session, temp_file, storage_type=definitions.STORAGE_TYPE_TASK)
       storage_writer.Open()
@@ -1577,7 +1578,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
     """Tests the WriteSessionStart and WriteSessionCompletion functions."""
     session = sessions.Session()
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_writer = zip_file.ZIPStorageFileWriter(session, temp_file)
       storage_writer.Open()
 
@@ -1587,7 +1588,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
       storage_writer.Close()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_writer = zip_file.ZIPStorageFileWriter(
           session, temp_file, storage_type=definitions.STORAGE_TYPE_TASK)
       storage_writer.Open()
@@ -1606,7 +1607,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
     task = tasks.Task(session_identifier=session.identifier)
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_writer = zip_file.ZIPStorageFileWriter(
           session, temp_file, storage_type=definitions.STORAGE_TYPE_TASK,
           task=task)
@@ -1618,7 +1619,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
       storage_writer.Close()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       storage_writer = zip_file.ZIPStorageFileWriter(session, temp_file)
       storage_writer.Open()
 
@@ -1636,7 +1637,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
     test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      temp_file = os.path.join(temp_directory, 'storage.plaso')
       session_storage_writer = zip_file.ZIPStorageFileWriter(session, temp_file)
       session_storage_writer.Open()
 

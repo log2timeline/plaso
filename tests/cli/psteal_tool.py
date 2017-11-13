@@ -124,20 +124,20 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       test_tool.ParseOptions(options)
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.source = self._GetTestFilePath([u'testdir'])
-      options.write = os.path.join(temp_directory, u'dynamic.out')
+      options.source = self._GetTestFilePath(['testdir'])
+      options.write = os.path.join(temp_directory, 'dynamic.out')
 
       # Test when both source and output are specified.
       test_tool.ParseOptions(options)
 
       with open(options.write, 'w') as file_object:
-        file_object.write(u'bogus')
+        file_object.write('bogus')
 
       # Test when output file already exists.
       # Escape \ otherwise assertRaisesRegexp can error with:
-      # error: bogus escape: u'\\1'
-      expected_error = u'Output file already exists: {0:s}.'.format(
-          options.write.replace(u'\\', u'\\\\'))
+      # error: bogus escape: '\\1'
+      expected_error = 'Output file already exists: {0:s}.'.format(
+          options.write.replace('\\', '\\\\'))
       # pylint: disable=deprecated-method
       with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
         test_tool.ParseOptions(options)
@@ -151,7 +151,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     result = test_tool.ParseArguments()
     self.assertFalse(result)
     output = output_writer.ReadOutput()
-    expected_error = u'ERROR: Output format: dynamic requires an output file'
+    expected_error = 'ERROR: Output format: dynamic requires an output file'
     self.assertIn(expected_error, output)
 
   def testExtractEventsFromSourceDirectory(self):
