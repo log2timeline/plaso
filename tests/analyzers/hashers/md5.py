@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Tests for the MD5 hasher."""
 
+from __future__ import unicode_literals
+
 import unittest
 
 from plaso.analyzers.hashers import md5
@@ -12,29 +14,29 @@ from tests.analyzers.hashers import test_lib
 class MD5Test(test_lib.HasherTestCase):
   """Tests the MD5 hasher."""
 
-  @shared_test_lib.skipUnlessHasTestFile([u'empty_file'])
+  @shared_test_lib.skipUnlessHasTestFile(['empty_file'])
   def testFileHashMatchesEmptyFile(self):
     """Tests that hasher matches the hash of an empty file."""
-    expected_md5 = u'd41d8cd98f00b204e9800998ecf8427e'
+    expected_md5 = 'd41d8cd98f00b204e9800998ecf8427e'
 
     hasher = md5.MD5Hasher()
-    self._AssertTestPathStringDigestMatch(hasher, [u'empty_file'], expected_md5)
+    self._AssertTestPathStringDigestMatch(hasher, ['empty_file'], expected_md5)
 
     hasher = md5.MD5Hasher()
     self._AssertTestPathBinaryDigestMatch(
-        hasher, [u'empty_file'], expected_md5.decode(u'hex'))
+        hasher, ['empty_file'], expected_md5.decode('hex'))
 
-  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
+  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testFileHashMatchesKnownFile(self):
     """Tests that hasher matches the hash of a known file."""
-    expected_md5 = u'd73c51f10c7ee6a681b7b619ccc6f1c4'
+    expected_md5 = 'd73c51f10c7ee6a681b7b619ccc6f1c4'
 
     hasher = md5.MD5Hasher()
-    self._AssertTestPathStringDigestMatch(hasher, [u'ímynd.dd'], expected_md5)
+    self._AssertTestPathStringDigestMatch(hasher, ['ímynd.dd'], expected_md5)
 
     hasher = md5.MD5Hasher()
     self._AssertTestPathBinaryDigestMatch(
-        hasher, [u'ímynd.dd'], expected_md5.decode(u'hex'))
+        hasher, ['ímynd.dd'], expected_md5.decode('hex'))
 
 
 if __name__ == '__main__':

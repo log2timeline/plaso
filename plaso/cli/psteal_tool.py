@@ -538,7 +538,7 @@ class PstealTool(
     # tests consistents with the log2timeline/psort ones.
     self._single_process_mode = getattr(options, 'single_process', False)
 
-    self._storage_file_path = getattr(options, u'storage_file', None)
+    self._storage_file_path = getattr(options, 'storage_file', None)
     if not self._storage_file_path:
       self._storage_file_path = self._GenerateStorageFileName()
 

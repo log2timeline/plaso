@@ -34,7 +34,7 @@ class SophosAVLogParserTest(test_lib.ParserTestCase):
     expected_message = (
         'File "C:\\Documents and Settings\\Administrator\\Desktop\\'
         'sxl_test_50.com" belongs to virus/spyware \'LiveProtectTest\'.')
-    expected_short_message = u'{0:s}...'.format(expected_message[:77])
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
