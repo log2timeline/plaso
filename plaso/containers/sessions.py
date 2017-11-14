@@ -60,7 +60,7 @@ class Session(interface.AttributeContainer):
     self.preferred_time_zone = 'UTC'
     self.preferred_year = None
     self.product_name = 'plaso'
-    self.product_version = plaso.__version__
+    self.product_version = plaso.__version__.decode('ascii')
     self.start_time = int(time.time() * 1000000)
 
   def CopyAttributesFromSessionCompletion(self, session_completion):
