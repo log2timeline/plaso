@@ -134,9 +134,23 @@ class MSIECFParser(interface.FileObjectParser):
       msiecf_file (pymsiecf.file): MSIECF file.
     """
     format_version = msiecf_file.format_version
+
+    decode_error = False
     cache_directories = []
     for cache_directory_name in iter(msiecf_file.cache_directories):
+      try:
+        cache_directory_name = cache_directory_name.decode('ascii')
+      except UnicodeDecodeError:
+        decode_error = True
+        cache_directory_name = cache_directory_name.decode(
+            'ascii', errors='replace')
+
       cache_directories.append(cache_directory_name)
+
+    if decode_error:
+      parser_mediator.ProduceExtractionError((
+          'unable to decode cache directory names. Characters that cannot '
+          'be decoded will be replaced with "?" or "\\ufffd".'))
 
     for item_index in range(0, msiecf_file.number_of_items):
       try:

@@ -1,59 +1,59 @@
-plaso\.filters package
-======================
+plaso.filters package
+=====================
 
 Submodules
 ----------
 
-plaso\.filters\.dynamic\_filter module
---------------------------------------
+plaso.filters.dynamic_filter module
+-----------------------------------
 
 .. automodule:: plaso.filters.dynamic_filter
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso\.filters\.event\_filter module
-------------------------------------
+plaso.filters.event_filter module
+---------------------------------
 
 .. automodule:: plaso.filters.event_filter
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso\.filters\.file\_entry module
-----------------------------------
+plaso.filters.file_entry module
+-------------------------------
 
 .. automodule:: plaso.filters.file_entry
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso\.filters\.filter\_list module
------------------------------------
+plaso.filters.filter_list module
+--------------------------------
 
 .. automodule:: plaso.filters.filter_list
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso\.filters\.interface module
---------------------------------
+plaso.filters.interface module
+------------------------------
 
 .. automodule:: plaso.filters.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso\.filters\.manager module
-------------------------------
+plaso.filters.manager module
+----------------------------
 
 .. automodule:: plaso.filters.manager
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso\.filters\.path\_filter module
------------------------------------
+plaso.filters.path_filter module
+--------------------------------
 
 .. automodule:: plaso.filters.path_filter
     :members:
