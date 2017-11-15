@@ -1,27 +1,27 @@
-plaso\.parsers\.bencode\_plugins package
-========================================
+plaso.parsers.bencode_plugins package
+=====================================
 
 Submodules
 ----------
 
-plaso\.parsers\.bencode\_plugins\.interface module
---------------------------------------------------
+plaso.parsers.bencode_plugins.interface module
+----------------------------------------------
 
 .. automodule:: plaso.parsers.bencode_plugins.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso\.parsers\.bencode\_plugins\.transmission module
------------------------------------------------------
+plaso.parsers.bencode_plugins.transmission module
+-------------------------------------------------
 
 .. automodule:: plaso.parsers.bencode_plugins.transmission
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso\.parsers\.bencode\_plugins\.utorrent module
--------------------------------------------------
+plaso.parsers.bencode_plugins.utorrent module
+---------------------------------------------
 
 .. automodule:: plaso.parsers.bencode_plugins.utorrent
     :members:
