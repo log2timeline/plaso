@@ -106,7 +106,7 @@ class ZeitgeistActivityDatabasePlugin(interface.SQLitePlugin):
 
   def ParseZeitgeistEventRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
-    """Parses zeitgeist event row.
+    """Parses a zeitgeist event row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -114,15 +114,15 @@ class ZeitgeistActivityDatabasePlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     event_data = ZeitgeistActivityEventData()
-    event_data.offset = row['id']
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-    event_data.subject_uri = row['subj_uri']
+    event_data.subject_uri = self._GetRowValue(query_hash, row, 'subj_uri')
 
-    date_time = dfdatetime_java_time.JavaTime(timestamp=row['timestamp'])
+    timestamp = self._GetRowValue(query_hash, row, 'timestamp')
+    date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_UNKNOWN)
     parser_mediator.ProduceEventWithEventData(event, event_data)

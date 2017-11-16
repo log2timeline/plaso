@@ -183,22 +183,24 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row resulting from query.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     event_data = TwitterIOSContactEventData()
-    event_data.description = row['description']
-    event_data.followers_count = row['followersCount']
-    event_data.following = row['following']
-    event_data.following_count = row['followingCount']
-    event_data.location = row['location']
-    event_data.name = row['name']
-    event_data.profile_url = row['profileImageUrl']
+    event_data.description = self._GetRowValue(query_hash, row, 'description')
+    event_data.followers_count = self._GetRowValue(
+        query_hash, row, 'followersCount')
+    event_data.following = self._GetRowValue(query_hash, row, 'following')
+    event_data.following_count = self._GetRowValue(
+        query_hash, row, 'followingCount')
+    event_data.location = self._GetRowValue(query_hash, row, 'location')
+    event_data.name = self._GetRowValue(query_hash, row, 'name')
+    event_data.profile_url = self._GetRowValue(
+        query_hash, row, 'profileImageUrl')
     event_data.query = query
-    event_data.screen_name = row['screenName']
-    event_data.url = row['url']
+    event_data.screen_name = self._GetRowValue(query_hash, row, 'screenName')
+    event_data.url = self._GetRowValue(query_hash, row, 'url')
 
-    timestamp = row['createdDate']
+    timestamp = self._GetRowValue(query_hash, row, 'createdDate')
     if timestamp:
       # Convert the floating point value to an integer.
       timestamp = int(timestamp)
@@ -207,7 +209,7 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = row['updatedAt']
+    timestamp = self._GetRowValue(query_hash, row, 'updatedAt')
     if timestamp:
       # Convert the floating point value to an integer.
       timestamp = int(timestamp)
@@ -225,19 +227,20 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row resulting from query.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     event_data = TwitterIOSStatusEventData()
-    event_data.favorite_count = row['favoriteCount']
-    event_data.favorited = row['favorited']
-    event_data.name = row['name']
+    event_data.favorite_count = self._GetRowValue(
+        query_hash, row, 'favoriteCount')
+    event_data.favorited = self._GetRowValue(query_hash, row, 'favorited')
+    event_data.name = self._GetRowValue(query_hash, row, 'name')
     event_data.query = query
-    event_data.retweet_count = row['retweetCount']
-    event_data.text = row['text']
-    event_data.user_id = row['user_id']
+    event_data.retweet_count = self._GetRowValue(
+        query_hash, row, 'retweetCount')
+    event_data.text = self._GetRowValue(query_hash, row, 'text')
+    event_data.user_id = self._GetRowValue(query_hash, row, 'user_id')
 
-    timestamp = row['date']
+    timestamp = self._GetRowValue(query_hash, row, 'date')
     if timestamp:
       # Convert the floating point value to an integer.
       timestamp = int(timestamp)
@@ -246,7 +249,7 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = row['updatedAt']
+    timestamp = self._GetRowValue(query_hash, row, 'updatedAt')
     if timestamp:
       # Convert the floating point value to an integer.
       timestamp = int(timestamp)

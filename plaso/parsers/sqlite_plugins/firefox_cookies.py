@@ -45,7 +45,7 @@ class FirefoxCookieEventData(events.EventData):
 
 
 class FirefoxCookiePlugin(interface.SQLitePlugin):
-  """Parse Firefox Cookies file."""
+  """Parser for the Firefox Cookie database."""
 
   NAME = 'firefox_cookies'
   DESCRIPTION = 'Parser for Firefox cookies SQLite database files.'
@@ -74,7 +74,7 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
        'cookie/nsCookie.h')]
 
   def __init__(self):
-    """Initializes a plugin object."""
+    """Initializes a Firefox Cookies database SQLite parser plugin."""
     super(FirefoxCookiePlugin, self).__init__()
     self._cookie_plugins = (
         cookie_plugins_manager.CookiePluginsManager.GetPlugins())
@@ -88,37 +88,36 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
-    cookie_data = row['value']
-    cookie_name = row['name']
+    cookie_data = self._GetRowValue(query_hash, row, 'value')
+    cookie_name = self._GetRowValue(query_hash, row, 'name')
 
-    hostname = row['host']
+    hostname = self._GetRowValue(query_hash, row, 'host')
     if hostname.startswith('.'):
       hostname = hostname[1:]
 
-    is_secure = bool(row['isSecure'])
+    is_secure = bool(self._GetRowValue(query_hash, row, 'isSecure'))
     if is_secure:
       url_scheme = 'https'
     else:
       url_scheme = 'http'
 
-    path = row['path']
+    path = self._GetRowValue(query_hash, row, 'path')
     url = '{0:s}://{1:s}{2:s}'.format(url_scheme, hostname, path)
 
     event_data = FirefoxCookieEventData()
     event_data.cookie_name = cookie_name
     event_data.data = cookie_data
     event_data.host = hostname
-    event_data.httponly = bool(row['isHttpOnly'])
-    event_data.offset = row['id']
+    event_data.httponly = bool(self._GetRowValue(query_hash, row, 'isHttpOnly'))
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.path = path
     event_data.query = query
     event_data.secure = is_secure
     event_data.url = url
 
-    timestamp = row['creationTime']
+    timestamp = self._GetRowValue(query_hash, row, 'creationTime')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
@@ -126,7 +125,7 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = row['lastAccessed']
+    timestamp = self._GetRowValue(query_hash, row, 'lastAccessed')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
@@ -134,7 +133,7 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = row['expiry']
+    timestamp = self._GetRowValue(query_hash, row, 'expiry')
     if timestamp:
       # Expiry time (nsCookieService::GetExpiry in
       # netwerk/cookie/nsCookieService.cpp).

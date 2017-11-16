@@ -32,6 +32,34 @@ class SQLitePlugin(plugins.BasePlugin):
   # Should be a list of dictionaries with {table_name: SQLCommand} format.
   SCHEMAS = []
 
+  def __init__(self):
+    """Initializes a SQLite parser plugin."""
+    super(SQLitePlugin, self).__init__()
+    self._keys_per_query = {}
+
+  def _GetRowValue(self, query_hash, row, value_name):
+    """Retrieves a value from the row.
+
+    Args:
+      query_hash (int): hash of the query.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      object: value.
+    """
+    keys_name_to_index_map = self._keys_per_query.get(query_hash, None)
+    if not keys_name_to_index_map:
+      keys_name_to_index_map = {
+          name: index for index, name in enumerate(row.keys())}
+      self._keys_per_query[query_hash] = keys_name_to_index_map
+
+    value_index = keys_name_to_index_map.get(value_name)
+
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+    return row[value_index]
+
   @classmethod
   def _HashRow(cls, row):
     """Hashes the given row.

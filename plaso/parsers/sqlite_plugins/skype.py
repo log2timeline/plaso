@@ -445,51 +445,52 @@ class SkypePlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row with account information.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
-    display_name = row['given_displayname']
-    username = '{0:s} <{1:s}>'.format(row['fullname'], display_name)
+    query_hash = hash(query)
+
+    display_name = self._GetRowValue(query_hash, row, 'given_displayname')
+    fullname = self._GetRowValue(query_hash, row, 'fullname')
+    username = '{0:s} <{1:s}>'.format(fullname, display_name)
 
     event_data = SkypeAccountEventData()
-    event_data.country = row['country']
+    event_data.country = self._GetRowValue(query_hash, row, 'country')
     event_data.display_name = display_name
-    event_data.email = row['emails']
-    event_data.offset = row['id']
+    event_data.email = self._GetRowValue(query_hash, row, 'emails')
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
     event_data.username = username
 
-    timestamp = row['profile_timestamp']
+    timestamp = self._GetRowValue(query_hash, row, 'profile_timestamp')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(date_time, 'Profile Changed')
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = row['authreq_timestamp']
+    timestamp = self._GetRowValue(query_hash, row, 'authreq_timestamp')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, 'Authenticate Request')
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = row['lastonline_timestamp']
+    timestamp = self._GetRowValue(query_hash, row, 'lastonline_timestamp')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(date_time, 'Last Online')
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = row['mood_timestamp']
+    timestamp = self._GetRowValue(query_hash, row, 'mood_timestamp')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(date_time, 'Mood Event')
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = row['sent_authrequest_time']
+    timestamp = self._GetRowValue(query_hash, row, 'sent_authrequest_time')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(date_time, 'Auth Request Sent')
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = row['lastused_timestamp']
+    timestamp = self._GetRowValue(query_hash, row, 'lastused_timestamp')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(date_time, 'Last Used')
@@ -504,30 +505,33 @@ class SkypePlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row resulting from query.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
+
+    participants = self._GetRowValue(query_hash, row, 'participants')
+    author = self._GetRowValue(query_hash, row, 'author')
+    dialog_partner = self._GetRowValue(query_hash, row, 'dialog_partner')
+    from_displayname = self._GetRowValue(query_hash, row, 'from_displayname')
 
     accounts = []
-    participants = row['participants'].split(' ')
+    participants = participants.split(' ')
     for participant in participants:
-      if participant != row['author']:
+      if participant != author:
         accounts.append(participant)
 
     to_account = ', '.join(accounts)
     if not to_account:
-      to_account = row['dialog_partner'] or 'Unknown User'
+      to_account = dialog_partner or 'Unknown User'
 
-    from_account = '{0:s} <{1:s}>'.format(
-        row['from_displayname'], row['author'])
+    from_account = '{0:s} <{1:s}>'.format(from_displayname, author)
 
     event_data = SkypeChatEventData()
     event_data.from_account = from_account
     event_data.query = query
-    event_data.text = row['body_xml']
-    event_data.title = row['title']
+    event_data.text = self._GetRowValue(query_hash, row, 'body_xml')
+    event_data.title = self._GetRowValue(query_hash, row, 'title')
     event_data.to_account = to_account
 
-    timestamp = row['timestamp']
+    timestamp = self._GetRowValue(query_hash, row, 'timestamp')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(date_time, 'Chat from Skype')
@@ -542,19 +546,18 @@ class SkypePlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row resulting from query.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
-    phone_number = row['dstnum_sms']
+    phone_number = self._GetRowValue(query_hash, row, 'dstnum_sms')
     if phone_number:
       phone_number = phone_number.replace(' ', '')
 
     event_data = SkypeSMSEventData()
     event_data.number = phone_number
     event_data.query = query
-    event_data.text = row['msg_sms']
+    event_data.text = self._GetRowValue(query_hash, row, 'msg_sms')
 
-    timestamp = row['time_sms']
+    timestamp = self._GetRowValue(query_hash, row, 'time_sms')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(date_time, 'SMS from Skype')
@@ -569,11 +572,14 @@ class SkypePlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row resulting from query.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
+
+    guid = self._GetRowValue(query_hash, row, 'guid')
+    is_incoming = self._GetRowValue(query_hash, row, 'is_incoming')
+    videostatus = self._GetRowValue(query_hash, row, 'videostatus')
 
     try:
-      aux = row['guid']
+      aux = guid
       if aux:
         aux_list = aux.split('-')
         src_aux = aux_list[0]
@@ -582,14 +588,16 @@ class SkypePlugin(interface.SQLitePlugin):
         src_aux = 'Unknown [no GUID]'
         dst_aux = 'Unknown [no GUID]'
     except IndexError:
-      src_aux = 'Unknown [{0:s}]'.format(row['guid'])
-      dst_aux = 'Unknown [{0:s}]'.format(row['guid'])
+      src_aux = 'Unknown [{0:s}]'.format(guid)
+      dst_aux = 'Unknown [{0:s}]'.format(guid)
 
-    if row['is_incoming'] == '0':
+    if is_incoming == '0':
       user_start_call = True
       source = src_aux
-      if row['ip_address']:
-        destination = '{0:s} <{1:s}>'.format(dst_aux, row['ip_address'])
+
+      ip_address = self._GetRowValue(query_hash, row, 'ip_address')
+      if ip_address:
+        destination = '{0:s} <{1:s}>'.format(dst_aux, ip_address)
       else:
         destination = dst_aux
     else:
@@ -597,7 +605,7 @@ class SkypePlugin(interface.SQLitePlugin):
       source = src_aux
       destination = dst_aux
 
-    call_identifier = row['id']
+    call_identifier = self._GetRowValue(query_hash, row, 'id')
 
     event_data = SkypeCallEventData()
     event_data.dst_call = destination
@@ -605,16 +613,17 @@ class SkypePlugin(interface.SQLitePlugin):
     event_data.query = query
     event_data.src_call = source
     event_data.user_start_call = user_start_call
-    event_data.video_conference = row['videostatus'] == '3'
+    event_data.video_conference = videostatus == '3'
 
-    timestamp = row['try_call']
+    timestamp = self._GetRowValue(query_hash, row, 'try_call')
     event_data.call_type = 'WAITING'
     date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(date_time, 'Call from Skype')
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     try:
-      timestamp = int(row['accept_call'])
+      timestamp = self._GetRowValue(query_hash, row, 'accept_call')
+      timestamp = int(timestamp)
     except ValueError:
       timestamp = None
 
@@ -625,7 +634,8 @@ class SkypePlugin(interface.SQLitePlugin):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
       try:
-        call_duration = int(row['call_duration'])
+        call_duration = self._GetRowValue(query_hash, row, 'call_duration')
+        call_duration = int(call_duration)
       except ValueError:
         parser_mediator.ProduceExtractionError(
             'unable to determine when call: {0:s} was finished.'.format(
@@ -655,8 +665,7 @@ class SkypePlugin(interface.SQLitePlugin):
       database (Optional[SQLiteDatabase]): database.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     source_dict = cache.GetResults('source')
     if not source_dict:
@@ -677,27 +686,29 @@ class SkypePlugin(interface.SQLitePlugin):
     source = 'Unknown'
     destination = 'Unknown'
 
-    if row['parent_id']:
-      destination = '{0:s} <{1:s}>'.format(
-          row['partner_handle'], row['partner_dispname'])
-      skype_id, skype_name = source_dict.get(row['parent_id'], [None, None])
+    parent_id = self._GetRowValue(query_hash, row, 'parent_id')
+    partner_dispname = self._GetRowValue(query_hash, row, 'partner_dispname')
+    partner_handle = self._GetRowValue(query_hash, row, 'partner_handle')
+
+    if parent_id:
+      destination = '{0:s} <{1:s}>'.format(partner_handle, partner_dispname)
+      skype_id, skype_name = source_dict.get(parent_id, [None, None])
       if skype_name:
         source = '{0:s} <{1:s}>'.format(skype_id, skype_name)
     else:
-      source = '{0:s} <{1:s}>'.format(
-          row['partner_handle'], row['partner_dispname'])
+      source = '{0:s} <{1:s}>'.format(partner_handle, partner_dispname)
 
-      if row['pk_id']:
-        skype_id, skype_name = dest_dict.get(row['pk_id'], [None, None])
+      pk_id = self._GetRowValue(query_hash, row, 'pk_id')
+      if pk_id:
+        skype_id, skype_name = dest_dict.get(pk_id, [None, None])
         if skype_name:
           destination = '{0:s} <{1:s}>'.format(skype_id, skype_name)
 
-    filename = row['filename']
-    filesize = row['filesize']
+    filename = self._GetRowValue(query_hash, row, 'filename')
+    filesize = self._GetRowValue(query_hash, row, 'filesize')
 
     try:
-      # TODO: add a conversion base.
-      file_size = int(filesize)
+      file_size = int(filesize, 10)
     except ValueError:
       parser_mediator.ProduceExtractionError(
           'unable to convert file size: {0!s} of file: {1:s}'.format(
@@ -706,43 +717,49 @@ class SkypePlugin(interface.SQLitePlugin):
 
     event_data = SkypeTransferFileEventData()
     event_data.destination = destination
-    event_data.offset = row['id']
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
     event_data.source = source
     event_data.transferred_filename = filename
-    event_data.transferred_filepath = row['filepath']
+    event_data.transferred_filepath = self._GetRowValue(
+        query_hash, row, 'filepath')
     event_data.transferred_filesize = file_size
 
-    if row['status'] == 2:
-      if row['starttime']:
+    status = self._GetRowValue(query_hash, row, 'status')
+    starttime = self._GetRowValue(query_hash, row, 'starttime')
+
+    if status == 2:
+      if starttime:
         event_data.action_type = 'SENDSOLICITUDE'
 
-        date_time = dfdatetime_posix_time.PosixTime(timestamp=row['starttime'])
+        date_time = dfdatetime_posix_time.PosixTime(timestamp=starttime)
         event = time_events.DateTimeValuesEvent(
             date_time, 'File transfer from Skype')
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    elif row['status'] == 8:
-      if row['starttime']:
+    elif status == 8:
+      if starttime:
         event_data.action_type = 'GETSOLICITUDE'
 
-        date_time = dfdatetime_posix_time.PosixTime(timestamp=row['starttime'])
+        date_time = dfdatetime_posix_time.PosixTime(timestamp=starttime)
         event = time_events.DateTimeValuesEvent(
             date_time, 'File transfer from Skype')
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-      if row['accepttime']:
+      accepttime = self._GetRowValue(query_hash, row, 'accepttime')
+      if accepttime:
         event_data.action_type = 'ACCEPTED'
 
-        date_time = dfdatetime_posix_time.PosixTime(timestamp=row['accepttime'])
+        date_time = dfdatetime_posix_time.PosixTime(timestamp=accepttime)
         event = time_events.DateTimeValuesEvent(
             date_time, 'File transfer from Skype')
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-      if row['finishtime']:
+      finishtime = self._GetRowValue(query_hash, row, 'finishtime')
+      if finishtime:
         event_data.action_type = 'FINISHED'
 
-        date_time = dfdatetime_posix_time.PosixTime(timestamp=row['finishtime'])
+        date_time = dfdatetime_posix_time.PosixTime(timestamp=finishtime)
         event = time_events.DateTimeValuesEvent(
             date_time, 'File transfer from Skype')
         parser_mediator.ProduceEventWithEventData(event, event_data)
