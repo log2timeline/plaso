@@ -309,17 +309,16 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     event_data = FirefoxPlacesBookmarkAnnotationEventData()
-    event_data.content = row['content']
-    event_data.offset = row['id']
+    event_data.content = self._GetRowValue(query_hash, row, 'content')
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-    event_data.title = row['title']
-    event_data.url = row['url']
+    event_data.title = self._GetRowValue(query_hash, row, 'title')
+    event_data.url = self._GetRowValue(query_hash, row, 'url')
 
-    timestamp = row['dateAdded']
+    timestamp = self._GetRowValue(query_hash, row, 'dateAdded')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
@@ -327,7 +326,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_ADDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = row['lastModified']
+    timestamp = self._GetRowValue(query_hash, row, 'lastModified')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
@@ -345,15 +344,16 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
+
+    title = self._GetRowValue(query_hash, row, 'title')
 
     event_data = FirefoxPlacesBookmarkFolderEventData()
-    event_data.offset = row['id']
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-    event_data.title = row['title'] or 'N/A'
+    event_data.title = title or 'N/A'
 
-    timestamp = row['dateAdded']
+    timestamp = self._GetRowValue(query_hash, row, 'dateAdded')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
@@ -361,7 +361,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_ADDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = row['lastModified']
+    timestamp = self._GetRowValue(query_hash, row, 'lastModified')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
@@ -379,17 +379,22 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    event_data = FirefoxPlacesBookmarkEventData()
-    event_data.host = row['rev_host'] or 'N/A'
-    event_data.offset = row['id']
-    event_data.places_title = row['places_title']
-    event_data.query = query
-    event_data.title = row['bookmark_title']
-    event_data.type = self._BOOKMARK_TYPES.get(row['type'], 'N/A')
-    event_data.url = row['url']
-    event_data.visit_count = row['visit_count']
+    query_hash = hash(query)
 
-    timestamp = row['dateAdded']
+    rev_host = self._GetRowValue(query_hash, row, 'rev_host')
+    bookmark_type = self._GetRowValue(query_hash, row, 'type')
+
+    event_data = FirefoxPlacesBookmarkEventData()
+    event_data.host = rev_host or 'N/A'
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
+    event_data.places_title = self._GetRowValue(query_hash, row, 'places_title')
+    event_data.query = query
+    event_data.title = self._GetRowValue(query_hash, row, 'bookmark_title')
+    event_data.type = self._BOOKMARK_TYPES.get(bookmark_type, 'N/A')
+    event_data.url = self._GetRowValue(query_hash, row, 'url')
+    event_data.visit_count = self._GetRowValue(query_hash, row, 'visit_count')
+
+    timestamp = self._GetRowValue(query_hash, row, 'dateAdded')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
@@ -397,7 +402,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_ADDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = row['lastModified']
+    timestamp = self._GetRowValue(query_hash, row, 'lastModified')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
@@ -418,36 +423,40 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       database (SQLiteDatabase): database.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
+
+    from_visit = self._GetRowValue(query_hash, row, 'from_visit')
+    hidden = self._GetRowValue(query_hash, row, 'hidden')
+    rev_host = self._GetRowValue(query_hash, row, 'rev_host')
+    typed = self._GetRowValue(query_hash, row, 'typed')
 
     # TODO: make extra conditional formatting.
     extras = []
-    if row['from_visit']:
+    if from_visit:
       extras.append('visited from: {0:s}'.format(
-          self._GetUrl(row['from_visit'], cache, database)))
+          self._GetUrl(from_visit, cache, database)))
 
-    if row['hidden'] == '1':
+    if hidden == '1':
       extras.append('(url hidden)')
 
-    if row['typed'] == '1':
+    if typed == '1':
       extras.append('(directly typed)')
     else:
       extras.append('(URL not typed directly)')
 
     event_data = FirefoxPlacesPageVisitedEventData()
-    event_data.host = self._ReverseHostname(row['rev_host'])
-    event_data.offset = row['id']
+    event_data.host = self._ReverseHostname(rev_host)
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-    event_data.title = row['title']
-    event_data.url = row['url']
-    event_data.visit_count = row['visit_count']
-    event_data.visit_type = row['visit_type']
+    event_data.title = self._GetRowValue(query_hash, row, 'title')
+    event_data.url = self._GetRowValue(query_hash, row, 'url')
+    event_data.visit_count = self._GetRowValue(query_hash, row, 'visit_count')
+    event_data.visit_type = self._GetRowValue(query_hash, row, 'visit_type')
 
     if extras:
       event_data.extra = extras
 
-    timestamp = row['visit_date']
+    timestamp = self._GetRowValue(query_hash, row, 'visit_date')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
@@ -486,8 +495,6 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     if not url_cache_results:
       result_set = database.Query(self.URL_CACHE_QUERY)
 
-      # Note that pysqlite does not accept a Unicode string in row['string'] and
-      # will raise "IndexError: Index must be int or string".
       cache.CacheQueryResults(
           result_set, 'url', 'id', ('url', 'rev_host'))
       url_cache_results = cache.GetResults('url')
@@ -543,22 +550,22 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     event_data = FirefoxDownloadEventData()
-    event_data.full_path = row['target']
-    event_data.mime_type = row['mimeType']
-    event_data.name = row['name']
-    event_data.offset = row['id']
+    event_data.full_path = self._GetRowValue(query_hash, row, 'target')
+    event_data.mime_type = self._GetRowValue(query_hash, row, 'mimeType')
+    event_data.name = self._GetRowValue(query_hash, row, 'name')
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-    event_data.received_bytes = row['currBytes']
-    event_data.referrer = row['referrer']
-    event_data.temporary_location = row['tempPath']
-    event_data.total_bytes = row['maxBytes']
-    event_data.url = row['source']
+    event_data.received_bytes = self._GetRowValue(query_hash, row, 'currBytes')
+    event_data.referrer = self._GetRowValue(query_hash, row, 'referrer')
+    event_data.temporary_location = self._GetRowValue(
+        query_hash, row, 'tempPath')
+    event_data.total_bytes = self._GetRowValue(query_hash, row, 'maxBytes')
+    event_data.url = self._GetRowValue(query_hash, row, 'source')
 
-    timestamp = row['startTime']
+    timestamp = self._GetRowValue(query_hash, row, 'startTime')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
@@ -566,7 +573,7 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_START)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = row['endTime']
+    timestamp = self._GetRowValue(query_hash, row, 'endTime')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
