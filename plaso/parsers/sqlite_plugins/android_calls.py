@@ -166,19 +166,19 @@ class AndroidCallPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
-    call_type = self.CALL_TYPE.get(row['type'], 'UNKNOWN')
-    duration = row['duration']
-    timestamp = row['date']
+    call_type = self._GetRowValue(query_hash, row, 'type')
+    call_type = self.CALL_TYPE.get(call_type, 'UNKNOWN')
+    duration = self._GetRowValue(query_hash, row, 'duration')
+    timestamp = self._GetRowValue(query_hash, row, 'date')
 
     event_data = AndroidCallEventData()
     event_data.call_type = call_type
-    event_data.duration = row['duration']
-    event_data.name = row['name']
-    event_data.number = row['number']
-    event_data.offset = row['id']
+    event_data.duration = self._GetRowValue(query_hash, row, 'duration')
+    event_data.name = self._GetRowValue(query_hash, row, 'name')
+    event_data.number = self._GetRowValue(query_hash, row, 'number')
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
 
     date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)

@@ -73,16 +73,15 @@ class LsQuarantinePlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     event_data = LsQuarantineEventData()
-    event_data.agent = row['Agent']
-    event_data.data = row['Data']
+    event_data.agent = self._GetRowValue(query_hash, row, 'Agent')
+    event_data.data = self._GetRowValue(query_hash, row, 'Data')
     event_data.query = query
-    event_data.url = row['URL']
+    event_data.url = self._GetRowValue(query_hash, row, 'URL')
 
-    timestamp = row['Time']
+    timestamp = self._GetRowValue(query_hash, row, 'Time')
     date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)

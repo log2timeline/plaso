@@ -94,30 +94,33 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     # version_path = "PerUser/UserID/xx/client_id/version_file"
     # where PerUser and UserID are a real directories.
-    paths = row['version_path'].split('/')
+    version_path = self._GetRowValue(query_hash, row, 'version_path')
+    path = self._GetRowValue(query_hash, row, 'path')
+
+    paths = version_path.split('/')
     if len(paths) < 2 or not paths[1].isdigit():
       user_sid = ''
     else:
       user_sid = paths[1]
-    version_path = self.ROOT_VERSION_PATH + row['version_path']
-    path, _, _ = row['path'].rpartition('/')
+    version_path = self.ROOT_VERSION_PATH + version_path
+    path, _, _ = path.rpartition('/')
 
     event_data = MacDocumentVersionsEventData()
     # TODO: shouldn't this be a separate event?
-    event_data.last_time = row['last_time']
-    event_data.name = row['name']
+    event_data.last_time = self._GetRowValue(query_hash, row, 'last_time')
+    event_data.name = self._GetRowValue(query_hash, row, 'name')
     event_data.path = path
     event_data.query = query
     # Note that the user_sid value is expected to be a string.
     event_data.user_sid = '{0!s}'.format(user_sid)
     event_data.version_path = version_path
 
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=row['version_time'])
+    timestamp = self._GetRowValue(query_hash, row, 'version_time')
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_CREATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)

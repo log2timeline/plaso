@@ -60,22 +60,24 @@ class AndroidWebViewCachePlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string']
-    # and will raise "IndexError: Index must be int or string". All indexes are
-    # thus raw strings.
-    event_data = AndroidWebViewCacheEventData()
-    event_data.content_length = row['contentlength']
-    event_data.query = query
-    event_data.url = row['url']
+    query_hash = hash(query)
 
-    if row['expires'] is not None:
-      date_time = dfdatetime_java_time.JavaTime(timestamp=row['expires'])
+    event_data = AndroidWebViewCacheEventData()
+    event_data.content_length = self._GetRowValue(
+        query_hash, row, 'contentlength')
+    event_data.query = query
+    event_data.url = self._GetRowValue(query_hash, row, 'url')
+
+    timestamp = self._GetRowValue(query_hash, row, 'expires')
+    if timestamp is not None:
+      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    if row['lastmodify'] is not None:
-      date_time = dfdatetime_java_time.JavaTime(timestamp=row['lastmodify'])
+    timestamp = self._GetRowValue(query_hash, row, 'lastmodify')
+    if timestamp is not None:
+      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)

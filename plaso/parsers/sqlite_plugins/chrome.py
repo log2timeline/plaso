@@ -224,8 +224,6 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     if not url_cache_results:
       result_set = database.Query(self.URL_CACHE_QUERY)
 
-      # Note that pysqlite does not accept a Unicode string in row['string'] and
-      # will raise "IndexError: Index must be int or string".
       cache.CacheQueryResults(result_set, 'url', 'id', ('url', 'title'))
       url_cache_results = cache.GetResults('url')
 
@@ -254,8 +252,6 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     if not sync_cache_results:
       result_set = database.Query(self.SYNC_CACHE_QUERY)
 
-      # Note that pysqlite does not accept a Unicode string in row['string'] and
-      # will raise "IndexError: Index must be int or string".
       cache.CacheQueryResults(result_set, 'sync', 'id', ('source',))
       sync_cache_results = cache.GetResults('sync')
 
@@ -275,18 +271,18 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     event_data = ChromeHistoryFileDownloadedEventData()
-    event_data.full_path = row['full_path']
-    event_data.offset = row['id']
+    event_data.full_path = self._GetRowValue(query_hash, row, 'full_path')
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-    event_data.received_bytes = row['received_bytes']
-    event_data.total_bytes = row['total_bytes']
-    event_data.url = row['url']
+    event_data.received_bytes = self._GetRowValue(
+        query_hash, row, 'received_bytes')
+    event_data.total_bytes = self._GetRowValue(query_hash, row, 'total_bytes')
+    event_data.url = self._GetRowValue(query_hash, row, 'url')
 
-    timestamp = row['start_time']
+    timestamp = self._GetRowValue(query_hash, row, 'start_time')
     date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
@@ -302,18 +298,18 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     event_data = ChromeHistoryFileDownloadedEventData()
-    event_data.full_path = row['target_path']
-    event_data.offset = row['id']
+    event_data.full_path = self._GetRowValue(query_hash, row, 'target_path')
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-    event_data.received_bytes = row['received_bytes']
-    event_data.total_bytes = row['total_bytes']
-    event_data.url = row['url']
+    event_data.received_bytes = self._GetRowValue(
+        query_hash, row, 'received_bytes')
+    event_data.total_bytes = self._GetRowValue(query_hash, row, 'total_bytes')
+    event_data.url = self._GetRowValue(query_hash, row, 'url')
 
-    timestamp = row['start_time']
+    timestamp = self._GetRowValue(query_hash, row, 'start_time')
     date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
@@ -332,22 +328,24 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
       database (Optional[SQLiteDatabase]): database.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     extras = []
 
-    transition_nr = row['transition'] & self.CORE_MASK
+    hidden = self._GetRowValue(query_hash, row, 'hidden')
+    transition = self._GetRowValue(query_hash, row, 'transition')
+
+    transition_nr = transition & self.CORE_MASK
     page_transition = self.PAGE_TRANSITION.get(transition_nr, '')
     if page_transition:
       extras.append('Type: [{0:s} - {1:s}]'.format(
           page_transition, self.TRANSITION_LONGER.get(transition_nr, '')))
 
-    if row['hidden'] == '1':
+    if hidden == '1':
       extras.append('(url hidden)')
 
     # TODO: move to formatter.
-    count = row['typed_count']
+    count = self._GetRowValue(query_hash, row, 'typed_count')
     if count >= 1:
       if count > 1:
         multi = 's'
@@ -358,21 +356,25 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     else:
       extras.append('(URL not typed directly - no typed count)')
 
-    visit_source = self._GetVisitSource(row['visit_id'], cache, database)
+    visit_id = self._GetRowValue(query_hash, row, 'visit_id')
+    from_visit = self._GetRowValue(query_hash, row, 'from_visit')
+    url = self._GetRowValue(query_hash, row, 'url')
+
+    visit_source = self._GetVisitSource(visit_id, cache, database)
 
     # TODO: replace extras by conditional formatting.
     event_data = ChromeHistoryPageVisitedEventData()
     event_data.extra = ' '.join(extras)
-    event_data.from_visit = self._GetUrl(row['from_visit'], cache, database)
-    event_data.host = self._GetHostname(row['url'])
-    event_data.offset = row['id']
+    event_data.from_visit = self._GetUrl(from_visit, cache, database)
+    event_data.host = self._GetHostname(url)
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-    event_data.title = row['title']
-    event_data.typed_count = row['typed_count']
-    event_data.url = row['url']
+    event_data.title = self._GetRowValue(query_hash, row, 'title')
+    event_data.typed_count = self._GetRowValue(query_hash, row, 'typed_count')
+    event_data.url = self._GetRowValue(query_hash, row, 'url')
     event_data.visit_source = visit_source
 
-    timestamp = row['visit_time']
+    timestamp = self._GetRowValue(query_hash, row, 'visit_time')
     date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)

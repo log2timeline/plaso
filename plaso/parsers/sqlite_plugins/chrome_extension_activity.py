@@ -88,22 +88,21 @@ class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     event_data = ChromeExtensionActivityEventData()
-    event_data.action_type = row['action_type']
-    event_data.activity_id = row['activity_id']
-    event_data.api_name = row['api_name']
-    event_data.arg_url = row['arg_url']
-    event_data.args = row['args']
-    event_data.extension_id = row['extension_id']
-    event_data.other = row['other']
-    event_data.page_title = row['page_title']
-    event_data.page_url = row['page_url']
+    event_data.action_type = self._GetRowValue(query_hash, row, 'action_type')
+    event_data.activity_id = self._GetRowValue(query_hash, row, 'activity_id')
+    event_data.api_name = self._GetRowValue(query_hash, row, 'api_name')
+    event_data.arg_url = self._GetRowValue(query_hash, row, 'arg_url')
+    event_data.args = self._GetRowValue(query_hash, row, 'args')
+    event_data.extension_id = self._GetRowValue(query_hash, row, 'extension_id')
+    event_data.other = self._GetRowValue(query_hash, row, 'other')
+    event_data.page_title = self._GetRowValue(query_hash, row, 'page_title')
+    event_data.page_url = self._GetRowValue(query_hash, row, 'page_url')
     event_data.query = query
 
-    timestamp = row['time']
+    timestamp = self._GetRowValue(query_hash, row, 'time')
     date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_UNKNOWN)

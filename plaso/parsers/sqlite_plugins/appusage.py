@@ -80,21 +80,22 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     # TODO: replace usage by definition(s) in eventdata. Not sure which values
     # it will hold here.
-    usage = 'Application {0:s}'.format(row['event'])
+    application_name = self._GetRowValue(query_hash, row, 'event')
+    usage = 'Application {0:s}'.format(application_name)
 
     event_data = MacOSXApplicationUsageEventData()
-    event_data.application = row['app_path']
-    event_data.app_version = row['app_version']
-    event_data.bundle_id = row['bundle_id']
-    event_data.count = row['number_times']
+    event_data.application = self._GetRowValue(query_hash, row, 'app_path')
+    event_data.app_version = self._GetRowValue(query_hash, row, 'app_version')
+    event_data.bundle_id = self._GetRowValue(query_hash, row, 'bundle_id')
+    event_data.count = self._GetRowValue(query_hash, row, 'number_times')
     event_data.query = query
 
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=row['last_time'])
+    timestamp = self._GetRowValue(query_hash, row, 'last_time')
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(date_time, usage)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 

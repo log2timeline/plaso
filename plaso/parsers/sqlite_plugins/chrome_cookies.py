@@ -103,48 +103,52 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row resulting from the query.
       query (Optional[str]): query string.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
-    cookie_name = row['name']
-    cookie_data = row['value']
+    cookie_name = self._GetRowValue(query_hash, row, 'name')
+    cookie_data = self._GetRowValue(query_hash, row, 'value')
 
-    hostname = row['host_key']
+    hostname = self._GetRowValue(query_hash, row, 'host_key')
     if hostname.startswith('.'):
       hostname = hostname[1:]
 
-    if row['secure']:
+    httponly = self._GetRowValue(query_hash, row, 'httponly')
+    path = self._GetRowValue(query_hash, row, 'path')
+    persistent = self._GetRowValue(query_hash, row, 'persistent')
+    secure = self._GetRowValue(query_hash, row, 'secure')
+
+    if secure:
       scheme = 'https'
     else:
       scheme = 'http'
 
-    url = '{0:s}://{1:s}{2:s}'.format(scheme, hostname, row['path'])
+    url = '{0:s}://{1:s}{2:s}'.format(scheme, hostname, path)
 
     event_data = ChromeCookieEventData()
     event_data.cookie_name = cookie_name
     event_data.data = cookie_data
     event_data.host = hostname
-    event_data.httponly = True if row['httponly'] else False
-    event_data.path = row['path']
-    event_data.persistent = True if row['persistent'] else False
+    event_data.httponly = bool(httponly)
+    event_data.path = path
+    event_data.persistent = bool(persistent)
     event_data.query = query
-    event_data.secure = True if row['secure'] else False
+    event_data.secure = bool(secure)
     event_data.url = url
 
-    timestamp = row['creation_utc']
+    timestamp = self._GetRowValue(query_hash, row, 'creation_utc')
     date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_CREATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = row['last_access_utc']
+    timestamp = self._GetRowValue(query_hash, row, 'last_access_utc')
     date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    if row['has_expires']:
-      timestamp = row['expires_utc']
+    timestamp = self._GetRowValue(query_hash, row, 'has_expires')
+    if timestamp:
       date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, 'Cookie Expires')

@@ -145,8 +145,6 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     if not local_path:
       results = database.Query(self.LOCAL_PATH_CACHE_QUERY)
 
-      # Note that pysqlite does not accept a Unicode string in row['string'] and
-      # will raise "IndexError: Index must be int or string".
       cache.CacheQueryResults(
           results, 'local_path', 'child_inode_number',
           ('parent_inode_number', 'filename'))
@@ -189,8 +187,6 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     if not cloud_path:
       results = database.Query(self.CLOUD_PATH_CACHE_QUERY)
 
-      # Note that pysqlite does not accept a Unicode string in row['string'] and
-      # will raise "IndexError: Index must be int or string".
       cache.CacheQueryResults(
           results, 'cloud_path', 'resource_id', ('filename', 'parent'))
       cloud_path = cache.GetResults('cloud_path')
@@ -227,27 +223,32 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
       database (SQLiteDatabase): database.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
-    cloud_path = self.GetCloudPath(row['parent_resource_id'], cache, database)
-    cloud_filename = '{0:s}{1:s}'.format(cloud_path, row['filename'])
+    parent_resource_id = self._GetRowValue(
+        query_hash, row, 'parent_resource_id')
+    filename = self._GetRowValue(query_hash, row, 'filename')
+
+    cloud_path = self.GetCloudPath(parent_resource_id, cache, database)
+    cloud_filename = '{0:s}{1:s}'.format(cloud_path, filename)
 
     event_data = GoogleDriveSnapshotCloudEntryEventData()
-    event_data.document_type = row['doc_type']
+    event_data.document_type = self._GetRowValue(query_hash, row, 'doc_type')
     event_data.path = cloud_filename
     event_data.query = query
-    event_data.shared = bool(row['shared'])
-    event_data.size = row['size']
-    event_data.url = row['url']
+    event_data.shared = bool(self._GetRowValue(query_hash, row, 'shared'))
+    event_data.size = self._GetRowValue(query_hash, row, 'size')
+    event_data.url = self._GetRowValue(query_hash, row, 'url')
 
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=row['modified'])
+    timestamp = self._GetRowValue(query_hash, row, 'modified')
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    if row['created']:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=row['created'])
+    timestamp = self._GetRowValue(query_hash, row, 'created')
+    if timestamp:
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -265,17 +266,18 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
       database (SQLiteDatabase): database.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
-    local_path = self.GetLocalPath(row['inode_number'], cache, database)
+    inode_number = self._GetRowValue(query_hash, row, 'inode_number')
+    local_path = self.GetLocalPath(inode_number, cache, database)
 
     event_data = GoogleDriveSnapshotLocalEntryEventData()
     event_data.path = local_path
     event_data.query = query
-    event_data.size = row['size']
+    event_data.size = self._GetRowValue(query_hash, row, 'size')
 
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=row['modified'])
+    timestamp = self._GetRowValue(query_hash, row, 'modified')
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)

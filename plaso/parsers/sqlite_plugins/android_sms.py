@@ -138,18 +138,21 @@ class AndroidSMSPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
+
+    sms_read = self._GetRowValue(query_hash, row, 'read')
+    sms_type = self._GetRowValue(query_hash, row, 'type')
 
     event_data = AndroidSMSEventData()
-    event_data.address = row['address']
-    event_data.body = row['body']
-    event_data.offset = row['id']
+    event_data.address = self._GetRowValue(query_hash, row, 'address')
+    event_data.body = self._GetRowValue(query_hash, row, 'body')
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-    event_data.sms_read = self.SMS_READ.get(row['read'], 'UNKNOWN')
-    event_data.sms_type = self.SMS_TYPE.get(row['type'], 'UNKNOWN')
+    event_data.sms_read = self.SMS_READ.get(sms_read, 'UNKNOWN')
+    event_data.sms_type = self.SMS_TYPE.get(sms_type, 'UNKNOWN')
 
-    date_time = dfdatetime_java_time.JavaTime(timestamp=row['date'])
+    timestamp = self._GetRowValue(query_hash, row, 'date')
+    date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_CREATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)

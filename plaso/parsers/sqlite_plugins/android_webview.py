@@ -91,21 +91,20 @@ class WebViewPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string']
-    # and will raise "IndexError: Index must be int or string". All indexes are
-    # thus raw strings.
+    query_hash = hash(query)
 
-    cookie_name = row['name']
-    cookie_value = row['value']
-    path = row['path']
+    cookie_name = self._GetRowValue(query_hash, row, 'name')
+    cookie_value = self._GetRowValue(query_hash, row, 'value')
+    path = self._GetRowValue(query_hash, row, 'path')
 
-    hostname = row['domain']
+    hostname = self._GetRowValue(query_hash, row, 'domain')
     if hostname.startswith('.'):
       hostname = hostname[1:]
 
+    secure = self._GetRowValue(query_hash, row, 'secure')
     # The WebView database stores the secure flag as a integer type,
     # but we represent it as a boolean.
-    secure = row['secure'] != 0
+    secure = secure != 0
 
     if secure:
       scheme = 'https'
@@ -114,21 +113,21 @@ class WebViewPlugin(interface.SQLitePlugin):
 
     url = '{0:s}://{1:s}{2:s}'.format(scheme, hostname, path)
 
-    timestamp = row['expires']
-    if timestamp:
-      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-    else:
-      date_time = dfdatetime_semantic_time.SemanticTime('Infinity')
-
     event_data = WebViewCookieEventData()
     event_data.cookie_name = cookie_name
     event_data.data = cookie_value
     event_data.host = hostname
-    event_data.offset = row['_id']
+    event_data.offset = self._GetRowValue(query_hash, row, '_id')
     event_data.path = path
     event_data.query = query
     event_data.secure = secure
     event_data.url = url
+
+    timestamp = self._GetRowValue(query_hash, row, 'expires')
+    if timestamp:
+      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
+    else:
+      date_time = dfdatetime_semantic_time.SemanticTime('Infinity')
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_EXPIRATION)

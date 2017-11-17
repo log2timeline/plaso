@@ -180,11 +180,10 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     data = {}
-    key_url = row['request_key']
+    key_url = self._GetRowValue(query_hash, row, 'request_key')
 
     data_dict = {}
     description = 'MacKeeper Entry'
@@ -213,7 +212,8 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
     elif key_url.startswith('http://support.') and 'chat' in key_url:
       description = 'Chat '
       try:
-        jquery = codecs.decode(row['data'], 'utf-8')
+        jquery = self._GetRowValue(query_hash, row, 'data')
+        jquery = codecs.decode(jquery, 'utf-8')
       except UnicodeDecodeError:
         jquery = ''
 
@@ -237,7 +237,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
     event_data = MacKeeperCacheEventData()
     event_data.description = description
     event_data.event_type = data.get('event_type', None)
-    event_data.offset = row['id']
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
     event_data.record_id = data.get('id', None)
     event_data.room = data.get('room', None)
@@ -246,7 +246,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
     event_data.user_name = data.get('user', None)
     event_data.user_sid = data.get('sid', None)
 
-    time_value = row['time_string']
+    time_value = self._GetRowValue(query_hash, row, 'time_string')
     if isinstance(time_value, py2to3.INTEGER_TYPES):
       date_time = dfdatetime_java_time.JavaTime(timestamp=time_value)
       event = time_events.DateTimeValuesEvent(

@@ -125,20 +125,20 @@ class KikIOSPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     event_data = KikIOSMessageEventData()
-    event_data.body = row['ZBODY']
-    event_data.displayname = row['ZDISPLAYNAME']
-    event_data.message_status = row['ZSTATE']
-    event_data.message_type = row['ZTYPE']
-    event_data.offset = row['id']
+    event_data.body = self._GetRowValue(query_hash, row, 'ZBODY')
+    event_data.displayname = self._GetRowValue(query_hash, row, 'ZDISPLAYNAME')
+    event_data.message_status = self._GetRowValue(query_hash, row, 'ZSTATE')
+    event_data.message_type = self._GetRowValue(query_hash, row, 'ZTYPE')
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-    event_data.username = row['ZUSERNAME']
+    event_data.username = self._GetRowValue(query_hash, row, 'ZUSERNAME')
 
+    timestamp = self._GetRowValue(query_hash, row, 'ZRECEIVEDTIMESTAMP')
     # Convert the floating point value to an integer.
-    timestamp = int(row['ZRECEIVEDTIMESTAMP'])
+    timestamp = int(timestamp)
     date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_CREATION)

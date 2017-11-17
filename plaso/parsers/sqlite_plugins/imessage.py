@@ -47,8 +47,8 @@ class IMessagePlugin(interface.SQLitePlugin):
   """SQLite plugin for the iMessage and SMS database."""
 
   NAME = 'imessage'
-  DESCRIPTION = 'Parser for the iMessage and SMS SQLite databases on OSX and '\
-                'iOS.'
+  DESCRIPTION = (
+      'Parser for the iMessage and SMS SQLite databases on OSX and iOS.')
 
   # Define the needed queries.
   QUERIES = [
@@ -136,20 +136,20 @@ class IMessagePlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     event_data = IMessageEventData()
-    event_data.attachment_location = row['attachment_location']
-    event_data.imessage_id = row['imessage_id']
-    event_data.message_type = row['message_type']
-    event_data.offset = row['ROWID']
+    event_data.attachment_location = self._GetRowValue(
+        query_hash, row, 'attachment_location')
+    event_data.imessage_id = self._GetRowValue(query_hash, row, 'imessage_id')
+    event_data.message_type = self._GetRowValue(query_hash, row, 'message_type')
+    event_data.offset = self._GetRowValue(query_hash, row, 'ROWID')
     event_data.query = query
-    event_data.read_receipt = row['read_receipt']
-    event_data.service = row['service']
-    event_data.text = row['text']
+    event_data.read_receipt = self._GetRowValue(query_hash, row, 'read_receipt')
+    event_data.service = self._GetRowValue(query_hash, row, 'service')
+    event_data.text = self._GetRowValue(query_hash, row, 'text')
 
-    timestamp = row['date']
+    timestamp = self._GetRowValue(query_hash, row, 'date')
     date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_CREATION)
