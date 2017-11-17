@@ -48,7 +48,8 @@ class SQLiteCache(plugins.BasePluginCache):
 
       all_the_things = {
           'first': ['stuff', 'things'],
-          'second': ['another_stuff', 'another_thing']}
+          'second': ['another_stuff', 'another_thing'],
+          'third': ['single_thing']}
 
     Args:
       sql_results (sqlite3.Cursor): result after executing a SQL command
@@ -75,13 +76,11 @@ class SQLiteCache(plugins.BasePluginCache):
       value_index = keys_name_to_index_map.get(key_name)
       key_value = row[value_index]
 
-      if len(column_names) == 1:
-        attribute_value[key_value] = row[column_names[0]]
-      else:
-        attribute_value[key_value] = []
-        for column_name in column_names:
-          column_value = row[column_name]
-          attribute_value[key_value].append(column_value)
+      attribute_value[key_value] = []
+      for column_name in column_names:
+        value_index = keys_name_to_index_map.get(column_name)
+        column_value = row[value_index]
+        attribute_value[key_value].append(column_value)
 
       row = sql_results.fetchone()
 

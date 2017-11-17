@@ -259,7 +259,7 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     if results is None:
       return
 
-    return self.VISIT_SOURCE.get(results, None)
+    return self.VISIT_SOURCE.get(results[0], None)
 
   def ParseFileDownloadedRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
