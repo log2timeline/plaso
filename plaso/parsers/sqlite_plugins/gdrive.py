@@ -5,6 +5,8 @@ The Google Drive snapshots are stored in SQLite database files named
 snapshot.db.
 """
 
+from __future__ import unicode_literals
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
@@ -28,7 +30,7 @@ class GoogleDriveSnapshotCloudEntryEventData(events.EventData):
     url (str): URL of the file.
   """
 
-  DATA_TYPE = u'gdrive:snapshot:cloud_entry'
+  DATA_TYPE = 'gdrive:snapshot:cloud_entry'
 
   def __init__(self):
     """Initializes event data."""
@@ -49,7 +51,7 @@ class GoogleDriveSnapshotLocalEntryEventData(events.EventData):
     size (int): size of the file.
   """
 
-  DATA_TYPE = u'gdrive:snapshot:local_entry'
+  DATA_TYPE = 'gdrive:snapshot:local_entry'
 
   def __init__(self):
     """Initializes event data."""
@@ -62,71 +64,71 @@ class GoogleDriveSnapshotLocalEntryEventData(events.EventData):
 class GoogleDrivePlugin(interface.SQLitePlugin):
   """SQLite plugin for Google Drive snapshot.db files."""
 
-  NAME = u'google_drive'
-  DESCRIPTION = u'Parser for Google Drive SQLite database files.'
+  NAME = 'google_drive'
+  DESCRIPTION = 'Parser for Google Drive SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
-      ((u'SELECT cloud_entry.resource_id, cloud_entry.filename, '
-        u'cloud_entry.modified, cloud_entry.created, cloud_entry.size, '
-        u'cloud_entry.doc_type, cloud_entry.shared, cloud_entry.checksum, '
-        u'cloud_entry.url, cloud_relations.parent_resource_id '
-        u'FROM cloud_entry, cloud_relations '
-        u'WHERE cloud_relations.child_resource_id = cloud_entry.resource_id '
-        u'AND cloud_entry.modified IS NOT NULL;'),
-       u'ParseCloudEntryRow'),
-      ((u'SELECT inode_number, filename, modified, checksum, size '
-        u'FROM local_entry WHERE modified IS NOT NULL;'),
-       u'ParseLocalEntryRow')]
+      (('SELECT cloud_entry.resource_id, cloud_entry.filename, '
+        'cloud_entry.modified, cloud_entry.created, cloud_entry.size, '
+        'cloud_entry.doc_type, cloud_entry.shared, cloud_entry.checksum, '
+        'cloud_entry.url, cloud_relations.parent_resource_id '
+        'FROM cloud_entry, cloud_relations '
+        'WHERE cloud_relations.child_resource_id = cloud_entry.resource_id '
+        'AND cloud_entry.modified IS NOT NULL;'),
+       'ParseCloudEntryRow'),
+      (('SELECT inode_number, filename, modified, checksum, size '
+        'FROM local_entry WHERE modified IS NOT NULL;'),
+       'ParseLocalEntryRow')]
 
   # The required tables.
   REQUIRED_TABLES = frozenset([
-      u'cloud_entry', u'cloud_relations', u'local_entry', u'local_relations',
-      u'mapping', u'overlay_status'])
+      'cloud_entry', 'cloud_relations', 'local_entry', 'local_relations',
+      'mapping', 'overlay_status'])
 
   SCHEMAS = [{
-      u'cloud_entry': (
-          u'CREATE TABLE cloud_entry (resource_id TEXT, filename TEXT, '
-          u'modified INTEGER, created INTEGER, acl_role INTEGER, doc_type '
-          u'INTEGER, removed INTEGER, url TEXT, size INTEGER, checksum TEXT, '
-          u'shared INTEGER, PRIMARY KEY (resource_id))'),
-      u'cloud_relations': (
-          u'CREATE TABLE cloud_relations (child_resource_id TEXT, '
-          u'parent_resource_id TEXT, UNIQUE (child_resource_id, '
-          u'parent_resource_id), FOREIGN KEY (child_resource_id) REFERENCES '
-          u'cloud_entry(resource_id), FOREIGN KEY (parent_resource_id) '
-          u'REFERENCES cloud_entry(resource_id))'),
-      u'local_entry': (
-          u'CREATE TABLE local_entry (inode_number INTEGER, filename TEXT, '
-          u'modified INTEGER, checksum TEXT, size INTEGER, PRIMARY KEY '
-          u'(inode_number))'),
-      u'local_relations': (
-          u'CREATE TABLE local_relations (child_inode_number INTEGER, '
-          u'parent_inode_number INTEGER, UNIQUE (child_inode_number), FOREIGN '
-          u'KEY (parent_inode_number) REFERENCES local_entry(inode_number), '
-          u'FOREIGN KEY (child_inode_number) REFERENCES '
-          u'local_entry(inode_number))'),
-      u'mapping': (
-          u'CREATE TABLE mapping (inode_number INTEGER, resource_id TEXT, '
-          u'UNIQUE (inode_number), FOREIGN KEY (inode_number) REFERENCES '
-          u'local_entry(inode_number), FOREIGN KEY (resource_id) REFERENCES '
-          u'cloud_entry(resource_id))'),
-      u'overlay_status': (
-          u'CREATE TABLE overlay_status (path TEXT, overlay_status INTEGER, '
-          u'PRIMARY KEY (path))')}]
+      'cloud_entry': (
+          'CREATE TABLE cloud_entry (resource_id TEXT, filename TEXT, '
+          'modified INTEGER, created INTEGER, acl_role INTEGER, doc_type '
+          'INTEGER, removed INTEGER, url TEXT, size INTEGER, checksum TEXT, '
+          'shared INTEGER, PRIMARY KEY (resource_id))'),
+      'cloud_relations': (
+          'CREATE TABLE cloud_relations (child_resource_id TEXT, '
+          'parent_resource_id TEXT, UNIQUE (child_resource_id, '
+          'parent_resource_id), FOREIGN KEY (child_resource_id) REFERENCES '
+          'cloud_entry(resource_id), FOREIGN KEY (parent_resource_id) '
+          'REFERENCES cloud_entry(resource_id))'),
+      'local_entry': (
+          'CREATE TABLE local_entry (inode_number INTEGER, filename TEXT, '
+          'modified INTEGER, checksum TEXT, size INTEGER, PRIMARY KEY '
+          '(inode_number))'),
+      'local_relations': (
+          'CREATE TABLE local_relations (child_inode_number INTEGER, '
+          'parent_inode_number INTEGER, UNIQUE (child_inode_number), FOREIGN '
+          'KEY (parent_inode_number) REFERENCES local_entry(inode_number), '
+          'FOREIGN KEY (child_inode_number) REFERENCES '
+          'local_entry(inode_number))'),
+      'mapping': (
+          'CREATE TABLE mapping (inode_number INTEGER, resource_id TEXT, '
+          'UNIQUE (inode_number), FOREIGN KEY (inode_number) REFERENCES '
+          'local_entry(inode_number), FOREIGN KEY (resource_id) REFERENCES '
+          'cloud_entry(resource_id))'),
+      'overlay_status': (
+          'CREATE TABLE overlay_status (path TEXT, overlay_status INTEGER, '
+          'PRIMARY KEY (path))')}]
 
   # Queries used to build cache.
   LOCAL_PATH_CACHE_QUERY = (
-      u'SELECT local_relations.child_inode_number, '
-      u'local_relations.parent_inode_number, local_entry.filename '
-      u'FROM local_relations, local_entry '
-      u'WHERE local_relations.child_inode_number = local_entry.inode_number')
+      'SELECT local_relations.child_inode_number, '
+      'local_relations.parent_inode_number, local_entry.filename '
+      'FROM local_relations, local_entry '
+      'WHERE local_relations.child_inode_number = local_entry.inode_number')
   CLOUD_PATH_CACHE_QUERY = (
-      u'SELECT cloud_entry.filename, cloud_entry.resource_id, '
-      u'cloud_relations.parent_resource_id AS parent '
-      u'FROM cloud_entry, cloud_relations '
-      u'WHERE cloud_entry.doc_type = 0 '
-      u'AND cloud_entry.resource_id = cloud_relations.child_resource_id')
+      'SELECT cloud_entry.filename, cloud_entry.resource_id, '
+      'cloud_relations.parent_resource_id AS parent '
+      'FROM cloud_entry, cloud_relations '
+      'WHERE cloud_entry.doc_type = 0 '
+      'AND cloud_entry.resource_id = cloud_relations.child_resource_id')
 
   def GetLocalPath(self, inode, cache, database):
     """Return local path for a given inode.
@@ -139,22 +141,20 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     Returns:
       A full path, including the filename of the given inode value.
     """
-    local_path = cache.GetResults(u'local_path')
+    local_path = cache.GetResults('local_path')
     if not local_path:
       results = database.Query(self.LOCAL_PATH_CACHE_QUERY)
 
-      # Note that pysqlite does not accept a Unicode string in row['string'] and
-      # will raise "IndexError: Index must be int or string".
       cache.CacheQueryResults(
           results, 'local_path', 'child_inode_number',
           ('parent_inode_number', 'filename'))
-      local_path = cache.GetResults(u'local_path')
+      local_path = cache.GetResults('local_path')
 
     parent, path = local_path.get(inode, [None, None])
 
     # TODO: Read the local_sync_root from the sync_config.db and use that
     # for a root value.
-    root_value = u'%local_sync_root%/'
+    root_value = '%local_sync_root%/'
 
     if not path:
       return root_value
@@ -170,7 +170,7 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     # Paths are built top level to root so we need to reverse the list to
     # represent them in the traditional order.
     paths.reverse()
-    return root_value + u'/'.join(paths)
+    return root_value + '/'.join(paths)
 
   def GetCloudPath(self, resource_id, cache, database):
     """Return cloud path given a resource id.
@@ -183,34 +183,32 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     Returns:
       A full path to the resource value.
     """
-    cloud_path = cache.GetResults(u'cloud_path')
+    cloud_path = cache.GetResults('cloud_path')
     if not cloud_path:
       results = database.Query(self.CLOUD_PATH_CACHE_QUERY)
 
-      # Note that pysqlite does not accept a Unicode string in row['string'] and
-      # will raise "IndexError: Index must be int or string".
       cache.CacheQueryResults(
           results, 'cloud_path', 'resource_id', ('filename', 'parent'))
-      cloud_path = cache.GetResults(u'cloud_path')
+      cloud_path = cache.GetResults('cloud_path')
 
-    if resource_id == u'folder:root':
-      return u'/'
+    if resource_id == 'folder:root':
+      return '/'
 
     paths = []
-    parent_path, parent_id = cloud_path.get(resource_id, [u'', u''])
+    parent_path, parent_id = cloud_path.get(resource_id, ['', ''])
     while parent_path:
-      if parent_path == u'folder:root':
+      if parent_path == 'folder:root':
         break
       paths.append(parent_path)
-      parent_path, parent_id = cloud_path.get(parent_id, [u'', u''])
+      parent_path, parent_id = cloud_path.get(parent_id, ['', ''])
 
     if not paths:
-      return u'/'
+      return '/'
 
     # Paths are built top level to root so we need to reverse the list to
     # represent them in the traditional order.
     paths.reverse()
-    return u'/{0:s}/'.format(u'/'.join(paths))
+    return '/{0:s}/'.format('/'.join(paths))
 
   def ParseCloudEntryRow(
       self, parser_mediator, row, cache=None, database=None, query=None,
@@ -225,27 +223,32 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
       database (SQLiteDatabase): database.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
-    cloud_path = self.GetCloudPath(row['parent_resource_id'], cache, database)
-    cloud_filename = u'{0:s}{1:s}'.format(cloud_path, row['filename'])
+    parent_resource_id = self._GetRowValue(
+        query_hash, row, 'parent_resource_id')
+    filename = self._GetRowValue(query_hash, row, 'filename')
+
+    cloud_path = self.GetCloudPath(parent_resource_id, cache, database)
+    cloud_filename = '{0:s}{1:s}'.format(cloud_path, filename)
 
     event_data = GoogleDriveSnapshotCloudEntryEventData()
-    event_data.document_type = row['doc_type']
+    event_data.document_type = self._GetRowValue(query_hash, row, 'doc_type')
     event_data.path = cloud_filename
     event_data.query = query
-    event_data.shared = bool(row['shared'])
-    event_data.size = row['size']
-    event_data.url = row['url']
+    event_data.shared = bool(self._GetRowValue(query_hash, row, 'shared'))
+    event_data.size = self._GetRowValue(query_hash, row, 'size')
+    event_data.url = self._GetRowValue(query_hash, row, 'url')
 
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=row['modified'])
+    timestamp = self._GetRowValue(query_hash, row, 'modified')
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    if row['created']:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=row['created'])
+    timestamp = self._GetRowValue(query_hash, row, 'created')
+    if timestamp:
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -263,17 +266,18 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
       database (SQLiteDatabase): database.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
-    local_path = self.GetLocalPath(row['inode_number'], cache, database)
+    inode_number = self._GetRowValue(query_hash, row, 'inode_number')
+    local_path = self.GetLocalPath(inode_number, cache, database)
 
     event_data = GoogleDriveSnapshotLocalEntryEventData()
     event_data.path = local_path
     event_data.query = query
-    event_data.size = row['size']
+    event_data.size = self._GetRowValue(query_hash, row, 'size')
 
-    date_time = dfdatetime_posix_time.PosixTime(timestamp=row['modified'])
+    timestamp = self._GetRowValue(query_hash, row, 'modified')
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)

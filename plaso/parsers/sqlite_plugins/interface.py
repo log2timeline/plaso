@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """The SQLite parser plugin interface."""
 
+from __future__ import unicode_literals
+
 import logging
-import sys
 
 # pylint: disable=wrong-import-order
 try:
@@ -16,8 +17,8 @@ from plaso.parsers import plugins
 class SQLitePlugin(plugins.BasePlugin):
   """SQLite parser plugin."""
 
-  NAME = u'sqlite'
-  DESCRIPTION = u'Parser for SQLite database files.'
+  NAME = 'sqlite'
+  DESCRIPTION = 'Parser for SQLite database files.'
 
   # Queries to be executed.
   # Should be a list of tuples with two entries, SQLCommand and callback
@@ -31,6 +32,35 @@ class SQLitePlugin(plugins.BasePlugin):
   # Should be a list of dictionaries with {table_name: SQLCommand} format.
   SCHEMAS = []
 
+  def __init__(self):
+    """Initializes a SQLite parser plugin."""
+    super(SQLitePlugin, self).__init__()
+    self._keys_per_query = {}
+
+  def _GetRowValue(self, query_hash, row, value_name):
+    """Retrieves a value from the row.
+
+    Args:
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      object: value.
+    """
+    keys_name_to_index_map = self._keys_per_query.get(query_hash, None)
+    if not keys_name_to_index_map:
+      keys_name_to_index_map = {
+          name: index for index, name in enumerate(row.keys())}
+      self._keys_per_query[query_hash] = keys_name_to_index_map
+
+    value_index = keys_name_to_index_map.get(value_name)
+
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+    return row[value_index]
+
   @classmethod
   def _HashRow(cls, row):
     """Hashes the given row.
@@ -43,12 +73,17 @@ class SQLitePlugin(plugins.BasePlugin):
     """
     hash_value = 0
     for column_value in row:
-      # In Python 2, blobs are "read-write buffer" and will cause a
-      # "writable buffers are not hashable" error if we try to hash it.
-      # Therefore, we will turn it into a string beforehand.
-      if sys.version_info[0] < 3 and isinstance(column_value, buffer):
-        column_value = str(column_value)
-      hash_value ^= hash(column_value)
+      try:
+        column_hash_value = hash(column_value)
+      except TypeError:
+        # In Python 2, blobs are "read-write buffer" and will cause a
+        # "writable buffers are not hashable" TypeError exception if we try
+        # to hash it. Therefore, we will turn it into a string beforehand.
+        # Since Python 3 does not support the buffer type we cannot check
+        # the type of column_value.
+        column_hash_value = hash(str(column_value))
+
+      hash_value ^= column_hash_value
     return hash_value
 
   def _ParseQuery(
@@ -68,7 +103,7 @@ class SQLitePlugin(plugins.BasePlugin):
 
     except sqlite3.DatabaseError as exception:
       parser_mediator.ProduceExtractionError(
-          u'unable to run query: {0:s} on database with error: {1!s}'.format(
+          'unable to run query: {0:s} on database with error: {1!s}'.format(
               query, exception))
       return
 
@@ -85,8 +120,8 @@ class SQLitePlugin(plugins.BasePlugin):
 
       except sqlite3.DatabaseError as exception:
         parser_mediator.ProduceExtractionError((
-            u'unable to parse row: {0:d} of results of query: {1:s} on '
-            u'database with error: {2!s}').format(index, query, exception))
+            'unable to parse row: {0:d} of results of query: {1:s} on '
+            'database with error: {2!s}').format(index, query, exception))
         # TODO: consider removing return.
         return
 
@@ -110,8 +145,8 @@ class SQLitePlugin(plugins.BasePlugin):
 
     except sqlite3.DatabaseError as exception:
       parser_mediator.ProduceExtractionError((
-          u'unable to run query: {0:s} on database with WAL with error: '
-          u'{1!s}').format(query, exception))
+          'unable to run query: {0:s} on database with WAL with error: '
+          '{1!s}').format(query, exception))
       return
 
     for index, row in enumerate(rows):
@@ -129,8 +164,8 @@ class SQLitePlugin(plugins.BasePlugin):
 
       except sqlite3.DatabaseError as exception:
         parser_mediator.ProduceExtractionError((
-            u'unable to parse row: {0:d} of results of query: {1:s} on '
-            u'database with WAL with error: {2!s}').format(
+            'unable to parse row: {0:d} of results of query: {1:s} on '
+            'database with WAL with error: {2!s}').format(
                 index, query, exception))
         # TODO: consider removing return.
         return
@@ -165,7 +200,7 @@ class SQLitePlugin(plugins.BasePlugin):
       callback = getattr(self, callback_method, None)
       if callback is None:
         logging.warning(
-            u'[{0:s}] missing callback method: {1:s} for query: {2:s}'.format(
+            '[{0:s}] missing callback method: {1:s} for query: {2:s}'.format(
                 self.NAME, callback_method, query))
         continue
 
@@ -173,20 +208,20 @@ class SQLitePlugin(plugins.BasePlugin):
 
       if database:
         try:
-          parser_mediator.AddEventAttribute(u'schema_match', schema_match)
+          parser_mediator.AddEventAttribute('schema_match', schema_match)
 
           self._ParseQuery(
               parser_mediator, database, query, callback, row_cache,
               cache=cache)
 
         finally:
-          parser_mediator.RemoveEventAttribute(u'schema_match')
+          parser_mediator.RemoveEventAttribute('schema_match')
 
       if database_wal:
         file_entry = parser_mediator.GetFileEntry()
 
         try:
-          parser_mediator.AddEventAttribute(u'schema_match', wal_schema_match)
+          parser_mediator.AddEventAttribute('schema_match', wal_schema_match)
           parser_mediator.SetFileEntry(wal_file_entry)
 
           self._ParseQueryWithWAL(
@@ -194,9 +229,10 @@ class SQLitePlugin(plugins.BasePlugin):
               cache=cache)
 
         finally:
-          parser_mediator.RemoveEventAttribute(u'schema_match')
+          parser_mediator.RemoveEventAttribute('schema_match')
           parser_mediator.SetFileEntry(file_entry)
 
+  # pylint: disable=arguments-differ
   def Process(
       self, parser_mediator, cache=None, database=None, database_wal=None,
       wal_file_entry=None, **kwargs):
@@ -222,7 +258,7 @@ class SQLitePlugin(plugins.BasePlugin):
       ValueError: If the database attribute is not passed in.
     """
     if database is None:
-      raise ValueError(u'Database is not set.')
+      raise ValueError('Database is not set.')
 
     # This will raise if unhandled keyword arguments are passed.
     super(SQLitePlugin, self).Process(parser_mediator)
