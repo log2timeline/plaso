@@ -5,6 +5,8 @@ The Chrome extension activity is stored in SQLite database files named
 Extension Activity.
 """
 
+from __future__ import unicode_literals
+
 from dfdatetime import webkit_time as dfdatetime_webkit_time
 
 from plaso.containers import events
@@ -29,7 +31,7 @@ class ChromeExtensionActivityEventData(events.EventData):
     page_url (str): URL of webpage.
   """
 
-  DATA_TYPE = u'chrome:extension_activity:activity_log'
+  DATA_TYPE = 'chrome:extension_activity:activity_log'
 
   def __init__(self):
     """Initializes event data."""
@@ -49,32 +51,32 @@ class ChromeExtensionActivityEventData(events.EventData):
 class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
   """Plugin to parse Chrome extension activity database files."""
 
-  NAME = u'chrome_extension_activity'
-  DESCRIPTION = u'Parser for Chrome extension activity SQLite database files.'
+  NAME = 'chrome_extension_activity'
+  DESCRIPTION = 'Parser for Chrome extension activity SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
-      ((u'SELECT time, extension_id, action_type, api_name, args, page_url, '
-        u'page_title, arg_url, other, activity_id '
-        u'FROM activitylog_uncompressed ORDER BY time'),
-       u'ParseActivityLogUncompressedRow')]
+      (('SELECT time, extension_id, action_type, api_name, args, page_url, '
+        'page_title, arg_url, other, activity_id '
+        'FROM activitylog_uncompressed ORDER BY time'),
+       'ParseActivityLogUncompressedRow')]
 
   REQUIRED_TABLES = frozenset([
-      u'activitylog_compressed', u'string_ids', u'url_ids'])
+      'activitylog_compressed', 'string_ids', 'url_ids'])
 
   SCHEMAS = [{
-      u'activitylog_compressed': (
-          u'CREATE TABLE activitylog_compressed (count INTEGER NOT NULL '
-          u'DEFAULT 1, extension_id_x INTEGER NOT NULL, time INTEGER, '
-          u'action_type INTEGER, api_name_x INTEGER, args_x INTEGER, '
-          u'page_url_x INTEGER, page_title_x INTEGER, arg_url_x INTEGER, '
-          u'other_x INTEGER)'),
-      u'string_ids': (
-          u'CREATE TABLE string_ids (id INTEGER PRIMARY KEY, value TEXT NOT '
-          u'NULL)'),
-      u'url_ids': (
-          u'CREATE TABLE url_ids (id INTEGER PRIMARY KEY, value TEXT NOT '
-          u'NULL)')}]
+      'activitylog_compressed': (
+          'CREATE TABLE activitylog_compressed (count INTEGER NOT NULL '
+          'DEFAULT 1, extension_id_x INTEGER NOT NULL, time INTEGER, '
+          'action_type INTEGER, api_name_x INTEGER, args_x INTEGER, '
+          'page_url_x INTEGER, page_title_x INTEGER, arg_url_x INTEGER, '
+          'other_x INTEGER)'),
+      'string_ids': (
+          'CREATE TABLE string_ids (id INTEGER PRIMARY KEY, value TEXT NOT '
+          'NULL)'),
+      'url_ids': (
+          'CREATE TABLE url_ids (id INTEGER PRIMARY KEY, value TEXT NOT '
+          'NULL)')}]
 
   def ParseActivityLogUncompressedRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
@@ -86,22 +88,21 @@ class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     event_data = ChromeExtensionActivityEventData()
-    event_data.action_type = row['action_type']
-    event_data.activity_id = row['activity_id']
-    event_data.api_name = row['api_name']
-    event_data.arg_url = row['arg_url']
-    event_data.args = row['args']
-    event_data.extension_id = row['extension_id']
-    event_data.other = row['other']
-    event_data.page_title = row['page_title']
-    event_data.page_url = row['page_url']
+    event_data.action_type = self._GetRowValue(query_hash, row, 'action_type')
+    event_data.activity_id = self._GetRowValue(query_hash, row, 'activity_id')
+    event_data.api_name = self._GetRowValue(query_hash, row, 'api_name')
+    event_data.arg_url = self._GetRowValue(query_hash, row, 'arg_url')
+    event_data.args = self._GetRowValue(query_hash, row, 'args')
+    event_data.extension_id = self._GetRowValue(query_hash, row, 'extension_id')
+    event_data.other = self._GetRowValue(query_hash, row, 'other')
+    event_data.page_title = self._GetRowValue(query_hash, row, 'page_title')
+    event_data.page_url = self._GetRowValue(query_hash, row, 'page_url')
     event_data.query = query
 
-    timestamp = row['time']
+    timestamp = self._GetRowValue(query_hash, row, 'time')
     date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_UNKNOWN)

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Android WebView databases."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import java_time as dfdatetime_java_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
@@ -28,7 +30,7 @@ class WebViewCookieEventData(events.EventData):
     url (str): URL of the cookie.
   """
 
-  DATA_TYPE = u'webview:cookie'
+  DATA_TYPE = 'webview:cookie'
 
   def __init__(self):
     """Initializes event data."""
@@ -44,35 +46,35 @@ class WebViewCookieEventData(events.EventData):
 class WebViewPlugin(interface.SQLitePlugin):
   """Parser for WebView databases."""
 
-  NAME = u'android_webview'
-  DESCRIPTION = u'Parser for Android WebView databases'
+  NAME = 'android_webview'
+  DESCRIPTION = 'Parser for Android WebView databases'
 
-  REQUIRED_TABLES = frozenset([u'android_metadata', u'cookies'])
+  REQUIRED_TABLES = frozenset(['android_metadata', 'cookies'])
 
   QUERIES = frozenset([
-      (u'SELECT _id, name, value, domain, expires, path, secure FROM cookies',
-       u'ParseCookieRow')])
+      ('SELECT _id, name, value, domain, expires, path, secure FROM cookies',
+       'ParseCookieRow')])
 
   SCHEMAS = [{
-      u'android_metadata': (
-          u'CREATE TABLE android_metadata (locale TEXT)'),
-      u'cookies': (
-          u'CREATE TABLE cookies (_id INTEGER PRIMARY KEY, name TEXT, value '
-          u'TEXT, domain TEXT, path TEXT, expires INTEGER, secure INTEGER)'),
-      u'formdata': (
-          u'CREATE TABLE formdata (_id INTEGER PRIMARY KEY, urlid INTEGER, '
-          u'name TEXT, value TEXT, UNIQUE (urlid, name, value) ON CONFLICT '
-          u'IGNORE)'),
-      u'formurl': (
-          u'CREATE TABLE formurl (_id INTEGER PRIMARY KEY, url TEXT)'),
-      u'httpauth': (
-          u'CREATE TABLE httpauth (_id INTEGER PRIMARY KEY, host TEXT, realm '
-          u'TEXT, username TEXT, password TEXT, UNIQUE (host, realm) ON '
-          u'CONFLICT REPLACE)'),
-      u'password': (
-          u'CREATE TABLE password (_id INTEGER PRIMARY KEY, host TEXT, '
-          u'username TEXT, password TEXT, UNIQUE (host, username) ON CONFLICT '
-          u'REPLACE)')}]
+      'android_metadata': (
+          'CREATE TABLE android_metadata (locale TEXT)'),
+      'cookies': (
+          'CREATE TABLE cookies (_id INTEGER PRIMARY KEY, name TEXT, value '
+          'TEXT, domain TEXT, path TEXT, expires INTEGER, secure INTEGER)'),
+      'formdata': (
+          'CREATE TABLE formdata (_id INTEGER PRIMARY KEY, urlid INTEGER, '
+          'name TEXT, value TEXT, UNIQUE (urlid, name, value) ON CONFLICT '
+          'IGNORE)'),
+      'formurl': (
+          'CREATE TABLE formurl (_id INTEGER PRIMARY KEY, url TEXT)'),
+      'httpauth': (
+          'CREATE TABLE httpauth (_id INTEGER PRIMARY KEY, host TEXT, realm '
+          'TEXT, username TEXT, password TEXT, UNIQUE (host, realm) ON '
+          'CONFLICT REPLACE)'),
+      'password': (
+          'CREATE TABLE password (_id INTEGER PRIMARY KEY, host TEXT, '
+          'username TEXT, password TEXT, UNIQUE (host, username) ON CONFLICT '
+          'REPLACE)')}]
 
   def __init__(self):
     """Initializes a plugin object."""
@@ -89,44 +91,43 @@ class WebViewPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string']
-    # and will raise "IndexError: Index must be int or string". All indexes are
-    # thus raw strings.
+    query_hash = hash(query)
 
-    cookie_name = row['name']
-    cookie_value = row['value']
-    path = row['path']
+    cookie_name = self._GetRowValue(query_hash, row, 'name')
+    cookie_value = self._GetRowValue(query_hash, row, 'value')
+    path = self._GetRowValue(query_hash, row, 'path')
 
-    hostname = row['domain']
+    hostname = self._GetRowValue(query_hash, row, 'domain')
     if hostname.startswith('.'):
       hostname = hostname[1:]
 
+    secure = self._GetRowValue(query_hash, row, 'secure')
     # The WebView database stores the secure flag as a integer type,
     # but we represent it as a boolean.
-    secure = row['secure'] != 0
+    secure = secure != 0
 
     if secure:
-      scheme = u'https'
+      scheme = 'https'
     else:
-      scheme = u'http'
+      scheme = 'http'
 
-    url = u'{0:s}://{1:s}{2:s}'.format(scheme, hostname, path)
-
-    timestamp = row['expires']
-    if timestamp:
-      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-    else:
-      date_time = dfdatetime_semantic_time.SemanticTime(u'Infinity')
+    url = '{0:s}://{1:s}{2:s}'.format(scheme, hostname, path)
 
     event_data = WebViewCookieEventData()
     event_data.cookie_name = cookie_name
     event_data.data = cookie_value
     event_data.host = hostname
-    event_data.offset = row['_id']
+    event_data.offset = self._GetRowValue(query_hash, row, '_id')
     event_data.path = path
     event_data.query = query
     event_data.secure = secure
     event_data.url = url
+
+    timestamp = self._GetRowValue(query_hash, row, 'expires')
+    if timestamp:
+      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
+    else:
+      date_time = dfdatetime_semantic_time.SemanticTime('Infinity')
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_EXPIRATION)

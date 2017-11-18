@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains a parser for the Mozilla Firefox history."""
 
+from __future__ import unicode_literals
+
 # pylint: disable=wrong-import-order
 try:
   from pysqlite2 import dbapi2 as sqlite3
@@ -19,7 +21,7 @@ from plaso.parsers.sqlite_plugins import interface
 # Check SQlite version, bail out early if too old.
 if sqlite3.sqlite_version_info < (3, 7, 8):
   raise ImportWarning(
-      u'FirefoxHistoryParser requires at least SQLite version 3.7.8.')
+      'FirefoxHistoryParser requires at least SQLite version 3.7.8.')
 
 
 class FirefoxPlacesBookmarkAnnotationEventData(events.EventData):
@@ -31,7 +33,7 @@ class FirefoxPlacesBookmarkAnnotationEventData(events.EventData):
     url (str): bookmarked URL.
   """
 
-  DATA_TYPE = u'firefox:places:bookmark_annotation'
+  DATA_TYPE = 'firefox:places:bookmark_annotation'
 
   def __init__(self):
     """Initializes event data."""
@@ -49,7 +51,7 @@ class FirefoxPlacesBookmarkFolderEventData(events.EventData):
     title (str): title of the bookmark folder.
   """
 
-  DATA_TYPE = u'firefox:places:bookmark_folder'
+  DATA_TYPE = 'firefox:places:bookmark_folder'
 
   def __init__(self):
     """Initializes event data."""
@@ -70,7 +72,7 @@ class FirefoxPlacesBookmarkEventData(events.EventData):
     visit_count (int): visit count.
   """
 
-  DATA_TYPE = u'firefox:places:bookmark'
+  DATA_TYPE = 'firefox:places:bookmark'
 
   def __init__(self):
     """Initializes event data."""
@@ -97,7 +99,7 @@ class FirefoxPlacesPageVisitedEventData(events.EventData):
     visit_type (str): transition type for the event.
   """
 
-  DATA_TYPE = u'firefox:places:page_visited'
+  DATA_TYPE = 'firefox:places:page_visited'
 
   def __init__(self):
     """Initializes event data."""
@@ -125,7 +127,7 @@ class FirefoxDownloadEventData(events.EventData):
     url (str): source URL of the download.
   """
 
-  DATA_TYPE = u'firefox:downloads:download'
+  DATA_TYPE = 'firefox:downloads:download'
 
   def __init__(self):
     """Initializes event data."""
@@ -149,152 +151,152 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
      places.sqlite.
   """
 
-  NAME = u'firefox_history'
-  DESCRIPTION = u'Parser for Firefox history SQLite database files.'
+  NAME = 'firefox_history'
+  DESCRIPTION = 'Parser for Firefox history SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
-      ((u'SELECT moz_historyvisits.id, moz_places.url, moz_places.title, '
-        u'moz_places.visit_count, moz_historyvisits.visit_date, '
-        u'moz_historyvisits.from_visit, moz_places.rev_host, '
-        u'moz_places.hidden, moz_places.typed, moz_historyvisits.visit_type '
-        u'FROM moz_places, moz_historyvisits '
-        u'WHERE moz_places.id = moz_historyvisits.place_id'),
-       u'ParsePageVisitedRow'),
-      ((u'SELECT moz_bookmarks.type, moz_bookmarks.title AS bookmark_title, '
-        u'moz_bookmarks.dateAdded, moz_bookmarks.lastModified, '
-        u'moz_places.url, moz_places.title AS places_title, '
-        u'moz_places.rev_host, moz_places.visit_count, moz_bookmarks.id '
-        u'FROM moz_places, moz_bookmarks '
-        u'WHERE moz_bookmarks.fk = moz_places.id AND moz_bookmarks.type <> 3'),
-       u'ParseBookmarkRow'),
-      ((u'SELECT moz_items_annos.content, moz_items_annos.dateAdded, '
-        u'moz_items_annos.lastModified, moz_bookmarks.title, '
-        u'moz_places.url, moz_places.rev_host, moz_items_annos.id '
-        u'FROM moz_items_annos, moz_bookmarks, moz_places '
-        u'WHERE moz_items_annos.item_id = moz_bookmarks.id '
-        u'AND moz_bookmarks.fk = moz_places.id'),
-       u'ParseBookmarkAnnotationRow'),
-      ((u'SELECT moz_bookmarks.id, moz_bookmarks.title,'
-        u'moz_bookmarks.dateAdded, moz_bookmarks.lastModified '
-        u'FROM moz_bookmarks WHERE moz_bookmarks.type = 2'),
-       u'ParseBookmarkFolderRow')]
+      (('SELECT moz_historyvisits.id, moz_places.url, moz_places.title, '
+        'moz_places.visit_count, moz_historyvisits.visit_date, '
+        'moz_historyvisits.from_visit, moz_places.rev_host, '
+        'moz_places.hidden, moz_places.typed, moz_historyvisits.visit_type '
+        'FROM moz_places, moz_historyvisits '
+        'WHERE moz_places.id = moz_historyvisits.place_id'),
+       'ParsePageVisitedRow'),
+      (('SELECT moz_bookmarks.type, moz_bookmarks.title AS bookmark_title, '
+        'moz_bookmarks.dateAdded, moz_bookmarks.lastModified, '
+        'moz_places.url, moz_places.title AS places_title, '
+        'moz_places.rev_host, moz_places.visit_count, moz_bookmarks.id '
+        'FROM moz_places, moz_bookmarks '
+        'WHERE moz_bookmarks.fk = moz_places.id AND moz_bookmarks.type <> 3'),
+       'ParseBookmarkRow'),
+      (('SELECT moz_items_annos.content, moz_items_annos.dateAdded, '
+        'moz_items_annos.lastModified, moz_bookmarks.title, '
+        'moz_places.url, moz_places.rev_host, moz_items_annos.id '
+        'FROM moz_items_annos, moz_bookmarks, moz_places '
+        'WHERE moz_items_annos.item_id = moz_bookmarks.id '
+        'AND moz_bookmarks.fk = moz_places.id'),
+       'ParseBookmarkAnnotationRow'),
+      (('SELECT moz_bookmarks.id, moz_bookmarks.title,'
+        'moz_bookmarks.dateAdded, moz_bookmarks.lastModified '
+        'FROM moz_bookmarks WHERE moz_bookmarks.type = 2'),
+       'ParseBookmarkFolderRow')]
 
   # The required tables.
   REQUIRED_TABLES = frozenset([
-      u'moz_places', u'moz_historyvisits', u'moz_bookmarks',
-      u'moz_items_annos'])
+      'moz_places', 'moz_historyvisits', 'moz_bookmarks',
+      'moz_items_annos'])
 
   _SCHEMA_V24 = {
-      u'moz_anno_attributes': (
-          u'CREATE TABLE moz_anno_attributes ( id INTEGER PRIMARY KEY, name '
-          u'VARCHAR(32) UNIQUE NOT NULL)'),
-      u'moz_annos': (
-          u'CREATE TABLE moz_annos ( id INTEGER PRIMARY KEY, place_id INTEGER '
-          u'NOT NULL, anno_attribute_id INTEGER, mime_type VARCHAR(32) DEFAULT '
-          u'NULL, content LONGVARCHAR, flags INTEGER DEFAULT 0, expiration '
-          u'INTEGER DEFAULT 0, type INTEGER DEFAULT 0, dateAdded INTEGER '
-          u'DEFAULT 0, lastModified INTEGER DEFAULT 0)'),
-      u'moz_bookmarks': (
-          u'CREATE TABLE moz_bookmarks ( id INTEGER PRIMARY KEY, type INTEGER, '
-          u'fk INTEGER DEFAULT NULL, parent INTEGER, position INTEGER, title '
-          u'LONGVARCHAR, keyword_id INTEGER, folder_type TEXT, dateAdded '
-          u'INTEGER, lastModified INTEGER)'),
-      u'moz_bookmarks_roots': (
-          u'CREATE TABLE moz_bookmarks_roots ( root_name VARCHAR(16) UNIQUE, '
-          u'folder_id INTEGER)'),
-      u'moz_favicons': (
-          u'CREATE TABLE moz_favicons ( id INTEGER PRIMARY KEY, url '
-          u'LONGVARCHAR UNIQUE, data BLOB, mime_type VARCHAR(32), expiration '
-          u'LONG)'),
-      u'moz_historyvisits': (
-          u'CREATE TABLE moz_historyvisits ( id INTEGER PRIMARY KEY, '
-          u'from_visit INTEGER, place_id INTEGER, visit_date INTEGER, '
-          u'visit_type INTEGER, session INTEGER)'),
-      u'moz_inputhistory': (
-          u'CREATE TABLE moz_inputhistory ( place_id INTEGER NOT NULL, input '
-          u'LONGVARCHAR NOT NULL, use_count INTEGER, PRIMARY KEY (place_id, '
-          u'input))'),
-      u'moz_items_annos': (
-          u'CREATE TABLE moz_items_annos ( id INTEGER PRIMARY KEY, item_id '
-          u'INTEGER NOT NULL, anno_attribute_id INTEGER, mime_type VARCHAR(32) '
-          u'DEFAULT NULL, content LONGVARCHAR, flags INTEGER DEFAULT 0, '
-          u'expiration INTEGER DEFAULT 0, type INTEGER DEFAULT 0, dateAdded '
-          u'INTEGER DEFAULT 0, lastModified INTEGER DEFAULT 0)'),
-      u'moz_keywords': (
-          u'CREATE TABLE moz_keywords ( id INTEGER PRIMARY KEY AUTOINCREMENT, '
-          u'keyword TEXT UNIQUE)'),
-      u'moz_places': (
-          u'CREATE TABLE moz_places ( id INTEGER PRIMARY KEY, url LONGVARCHAR, '
-          u'title LONGVARCHAR, rev_host LONGVARCHAR, visit_count INTEGER '
-          u'DEFAULT 0, hidden INTEGER DEFAULT 0 NOT NULL, typed INTEGER '
-          u'DEFAULT 0 NOT NULL, favicon_id INTEGER, frecency INTEGER DEFAULT '
-          u'-1 NOT NULL, last_visit_date INTEGER )')}
+      'moz_anno_attributes': (
+          'CREATE TABLE moz_anno_attributes ( id INTEGER PRIMARY KEY, name '
+          'VARCHAR(32) UNIQUE NOT NULL)'),
+      'moz_annos': (
+          'CREATE TABLE moz_annos ( id INTEGER PRIMARY KEY, place_id INTEGER '
+          'NOT NULL, anno_attribute_id INTEGER, mime_type VARCHAR(32) DEFAULT '
+          'NULL, content LONGVARCHAR, flags INTEGER DEFAULT 0, expiration '
+          'INTEGER DEFAULT 0, type INTEGER DEFAULT 0, dateAdded INTEGER '
+          'DEFAULT 0, lastModified INTEGER DEFAULT 0)'),
+      'moz_bookmarks': (
+          'CREATE TABLE moz_bookmarks ( id INTEGER PRIMARY KEY, type INTEGER, '
+          'fk INTEGER DEFAULT NULL, parent INTEGER, position INTEGER, title '
+          'LONGVARCHAR, keyword_id INTEGER, folder_type TEXT, dateAdded '
+          'INTEGER, lastModified INTEGER)'),
+      'moz_bookmarks_roots': (
+          'CREATE TABLE moz_bookmarks_roots ( root_name VARCHAR(16) UNIQUE, '
+          'folder_id INTEGER)'),
+      'moz_favicons': (
+          'CREATE TABLE moz_favicons ( id INTEGER PRIMARY KEY, url '
+          'LONGVARCHAR UNIQUE, data BLOB, mime_type VARCHAR(32), expiration '
+          'LONG)'),
+      'moz_historyvisits': (
+          'CREATE TABLE moz_historyvisits ( id INTEGER PRIMARY KEY, '
+          'from_visit INTEGER, place_id INTEGER, visit_date INTEGER, '
+          'visit_type INTEGER, session INTEGER)'),
+      'moz_inputhistory': (
+          'CREATE TABLE moz_inputhistory ( place_id INTEGER NOT NULL, input '
+          'LONGVARCHAR NOT NULL, use_count INTEGER, PRIMARY KEY (place_id, '
+          'input))'),
+      'moz_items_annos': (
+          'CREATE TABLE moz_items_annos ( id INTEGER PRIMARY KEY, item_id '
+          'INTEGER NOT NULL, anno_attribute_id INTEGER, mime_type VARCHAR(32) '
+          'DEFAULT NULL, content LONGVARCHAR, flags INTEGER DEFAULT 0, '
+          'expiration INTEGER DEFAULT 0, type INTEGER DEFAULT 0, dateAdded '
+          'INTEGER DEFAULT 0, lastModified INTEGER DEFAULT 0)'),
+      'moz_keywords': (
+          'CREATE TABLE moz_keywords ( id INTEGER PRIMARY KEY AUTOINCREMENT, '
+          'keyword TEXT UNIQUE)'),
+      'moz_places': (
+          'CREATE TABLE moz_places ( id INTEGER PRIMARY KEY, url LONGVARCHAR, '
+          'title LONGVARCHAR, rev_host LONGVARCHAR, visit_count INTEGER '
+          'DEFAULT 0, hidden INTEGER DEFAULT 0 NOT NULL, typed INTEGER '
+          'DEFAULT 0 NOT NULL, favicon_id INTEGER, frecency INTEGER DEFAULT '
+          '-1 NOT NULL, last_visit_date INTEGER )')}
 
   _SCHEMA_V25 = {
-      u'moz_anno_attributes': (
-          u'CREATE TABLE moz_anno_attributes ( id INTEGER PRIMARY KEY, name '
-          u'VARCHAR(32) UNIQUE NOT NULL)'),
-      u'moz_annos': (
-          u'CREATE TABLE moz_annos ( id INTEGER PRIMARY KEY, place_id INTEGER '
-          u'NOT NULL, anno_attribute_id INTEGER, mime_type VARCHAR(32) DEFAULT '
-          u'NULL, content LONGVARCHAR, flags INTEGER DEFAULT 0, expiration '
-          u'INTEGER DEFAULT 0, type INTEGER DEFAULT 0, dateAdded INTEGER '
-          u'DEFAULT 0, lastModified INTEGER DEFAULT 0)'),
-      u'moz_bookmarks': (
-          u'CREATE TABLE moz_bookmarks ( id INTEGER PRIMARY KEY, type INTEGER, '
-          u'fk INTEGER DEFAULT NULL, parent INTEGER, position INTEGER, title '
-          u'LONGVARCHAR, keyword_id INTEGER, folder_type TEXT, dateAdded '
-          u'INTEGER, lastModified INTEGER, guid TEXT)'),
-      u'moz_bookmarks_roots': (
-          u'CREATE TABLE moz_bookmarks_roots ( root_name VARCHAR(16) UNIQUE, '
-          u'folder_id INTEGER)'),
-      u'moz_favicons': (
-          u'CREATE TABLE moz_favicons ( id INTEGER PRIMARY KEY, url '
-          u'LONGVARCHAR UNIQUE, data BLOB, mime_type VARCHAR(32), expiration '
-          u'LONG, guid TEXT)'),
-      u'moz_historyvisits': (
-          u'CREATE TABLE moz_historyvisits ( id INTEGER PRIMARY KEY, '
-          u'from_visit INTEGER, place_id INTEGER, visit_date INTEGER, '
-          u'visit_type INTEGER, session INTEGER)'),
-      u'moz_hosts': (
-          u'CREATE TABLE moz_hosts ( id INTEGER PRIMARY KEY, host TEXT NOT '
-          u'NULL UNIQUE, frecency INTEGER, typed INTEGER NOT NULL DEFAULT 0, '
-          u'prefix TEXT)'),
-      u'moz_inputhistory': (
-          u'CREATE TABLE moz_inputhistory ( place_id INTEGER NOT NULL, input '
-          u'LONGVARCHAR NOT NULL, use_count INTEGER, PRIMARY KEY (place_id, '
-          u'input))'),
-      u'moz_items_annos': (
-          u'CREATE TABLE moz_items_annos ( id INTEGER PRIMARY KEY, item_id '
-          u'INTEGER NOT NULL, anno_attribute_id INTEGER, mime_type VARCHAR(32) '
-          u'DEFAULT NULL, content LONGVARCHAR, flags INTEGER DEFAULT 0, '
-          u'expiration INTEGER DEFAULT 0, type INTEGER DEFAULT 0, dateAdded '
-          u'INTEGER DEFAULT 0, lastModified INTEGER DEFAULT 0)'),
-      u'moz_keywords': (
-          u'CREATE TABLE moz_keywords ( id INTEGER PRIMARY KEY AUTOINCREMENT, '
-          u'keyword TEXT UNIQUE)'),
-      u'moz_places': (
-          u'CREATE TABLE moz_places ( id INTEGER PRIMARY KEY, url LONGVARCHAR, '
-          u'title LONGVARCHAR, rev_host LONGVARCHAR, visit_count INTEGER '
-          u'DEFAULT 0, hidden INTEGER DEFAULT 0 NOT NULL, typed INTEGER '
-          u'DEFAULT 0 NOT NULL, favicon_id INTEGER, frecency INTEGER DEFAULT '
-          u'-1 NOT NULL, last_visit_date INTEGER , guid TEXT)'),
-      u'sqlite_stat1': (
-          u'CREATE TABLE sqlite_stat1(tbl, idx, stat)')}
+      'moz_anno_attributes': (
+          'CREATE TABLE moz_anno_attributes ( id INTEGER PRIMARY KEY, name '
+          'VARCHAR(32) UNIQUE NOT NULL)'),
+      'moz_annos': (
+          'CREATE TABLE moz_annos ( id INTEGER PRIMARY KEY, place_id INTEGER '
+          'NOT NULL, anno_attribute_id INTEGER, mime_type VARCHAR(32) DEFAULT '
+          'NULL, content LONGVARCHAR, flags INTEGER DEFAULT 0, expiration '
+          'INTEGER DEFAULT 0, type INTEGER DEFAULT 0, dateAdded INTEGER '
+          'DEFAULT 0, lastModified INTEGER DEFAULT 0)'),
+      'moz_bookmarks': (
+          'CREATE TABLE moz_bookmarks ( id INTEGER PRIMARY KEY, type INTEGER, '
+          'fk INTEGER DEFAULT NULL, parent INTEGER, position INTEGER, title '
+          'LONGVARCHAR, keyword_id INTEGER, folder_type TEXT, dateAdded '
+          'INTEGER, lastModified INTEGER, guid TEXT)'),
+      'moz_bookmarks_roots': (
+          'CREATE TABLE moz_bookmarks_roots ( root_name VARCHAR(16) UNIQUE, '
+          'folder_id INTEGER)'),
+      'moz_favicons': (
+          'CREATE TABLE moz_favicons ( id INTEGER PRIMARY KEY, url '
+          'LONGVARCHAR UNIQUE, data BLOB, mime_type VARCHAR(32), expiration '
+          'LONG, guid TEXT)'),
+      'moz_historyvisits': (
+          'CREATE TABLE moz_historyvisits ( id INTEGER PRIMARY KEY, '
+          'from_visit INTEGER, place_id INTEGER, visit_date INTEGER, '
+          'visit_type INTEGER, session INTEGER)'),
+      'moz_hosts': (
+          'CREATE TABLE moz_hosts ( id INTEGER PRIMARY KEY, host TEXT NOT '
+          'NULL UNIQUE, frecency INTEGER, typed INTEGER NOT NULL DEFAULT 0, '
+          'prefix TEXT)'),
+      'moz_inputhistory': (
+          'CREATE TABLE moz_inputhistory ( place_id INTEGER NOT NULL, input '
+          'LONGVARCHAR NOT NULL, use_count INTEGER, PRIMARY KEY (place_id, '
+          'input))'),
+      'moz_items_annos': (
+          'CREATE TABLE moz_items_annos ( id INTEGER PRIMARY KEY, item_id '
+          'INTEGER NOT NULL, anno_attribute_id INTEGER, mime_type VARCHAR(32) '
+          'DEFAULT NULL, content LONGVARCHAR, flags INTEGER DEFAULT 0, '
+          'expiration INTEGER DEFAULT 0, type INTEGER DEFAULT 0, dateAdded '
+          'INTEGER DEFAULT 0, lastModified INTEGER DEFAULT 0)'),
+      'moz_keywords': (
+          'CREATE TABLE moz_keywords ( id INTEGER PRIMARY KEY AUTOINCREMENT, '
+          'keyword TEXT UNIQUE)'),
+      'moz_places': (
+          'CREATE TABLE moz_places ( id INTEGER PRIMARY KEY, url LONGVARCHAR, '
+          'title LONGVARCHAR, rev_host LONGVARCHAR, visit_count INTEGER '
+          'DEFAULT 0, hidden INTEGER DEFAULT 0 NOT NULL, typed INTEGER '
+          'DEFAULT 0 NOT NULL, favicon_id INTEGER, frecency INTEGER DEFAULT '
+          '-1 NOT NULL, last_visit_date INTEGER , guid TEXT)'),
+      'sqlite_stat1': (
+          'CREATE TABLE sqlite_stat1(tbl, idx, stat)')}
 
   SCHEMAS = [_SCHEMA_V24, _SCHEMA_V25]
 
   # Cache queries.
   URL_CACHE_QUERY = (
-      u'SELECT h.id AS id, p.url, p.rev_host FROM moz_places p, '
-      u'moz_historyvisits h WHERE p.id = h.place_id')
+      'SELECT h.id AS id, p.url, p.rev_host FROM moz_places p, '
+      'moz_historyvisits h WHERE p.id = h.place_id')
 
   # TODO: move to formatter.
   _BOOKMARK_TYPES = {
-      1: u'URL',
-      2: u'Folder',
-      3: u'Separator',
+      1: 'URL',
+      2: 'Folder',
+      3: 'Separator',
   }
 
   def ParseBookmarkAnnotationRow(
@@ -307,17 +309,16 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     event_data = FirefoxPlacesBookmarkAnnotationEventData()
-    event_data.content = row['content']
-    event_data.offset = row['id']
+    event_data.content = self._GetRowValue(query_hash, row, 'content')
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-    event_data.title = row['title']
-    event_data.url = row['url']
+    event_data.title = self._GetRowValue(query_hash, row, 'title')
+    event_data.url = self._GetRowValue(query_hash, row, 'url')
 
-    timestamp = row['dateAdded']
+    timestamp = self._GetRowValue(query_hash, row, 'dateAdded')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
@@ -325,7 +326,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_ADDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = row['lastModified']
+    timestamp = self._GetRowValue(query_hash, row, 'lastModified')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
@@ -343,15 +344,16 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
+
+    title = self._GetRowValue(query_hash, row, 'title')
 
     event_data = FirefoxPlacesBookmarkFolderEventData()
-    event_data.offset = row['id']
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-    event_data.title = row['title'] or u'N/A'
+    event_data.title = title or 'N/A'
 
-    timestamp = row['dateAdded']
+    timestamp = self._GetRowValue(query_hash, row, 'dateAdded')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
@@ -359,7 +361,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_ADDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = row['lastModified']
+    timestamp = self._GetRowValue(query_hash, row, 'lastModified')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
@@ -377,17 +379,22 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    event_data = FirefoxPlacesBookmarkEventData()
-    event_data.host = row['rev_host'] or u'N/A'
-    event_data.offset = row['id']
-    event_data.places_title = row['places_title']
-    event_data.query = query
-    event_data.title = row['bookmark_title']
-    event_data.type = self._BOOKMARK_TYPES.get(row['type'], u'N/A')
-    event_data.url = row['url']
-    event_data.visit_count = row['visit_count']
+    query_hash = hash(query)
 
-    timestamp = row['dateAdded']
+    rev_host = self._GetRowValue(query_hash, row, 'rev_host')
+    bookmark_type = self._GetRowValue(query_hash, row, 'type')
+
+    event_data = FirefoxPlacesBookmarkEventData()
+    event_data.host = rev_host or 'N/A'
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
+    event_data.places_title = self._GetRowValue(query_hash, row, 'places_title')
+    event_data.query = query
+    event_data.title = self._GetRowValue(query_hash, row, 'bookmark_title')
+    event_data.type = self._BOOKMARK_TYPES.get(bookmark_type, 'N/A')
+    event_data.url = self._GetRowValue(query_hash, row, 'url')
+    event_data.visit_count = self._GetRowValue(query_hash, row, 'visit_count')
+
+    timestamp = self._GetRowValue(query_hash, row, 'dateAdded')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
@@ -395,7 +402,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_ADDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = row['lastModified']
+    timestamp = self._GetRowValue(query_hash, row, 'lastModified')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
@@ -416,36 +423,40 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       database (SQLiteDatabase): database.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
+
+    from_visit = self._GetRowValue(query_hash, row, 'from_visit')
+    hidden = self._GetRowValue(query_hash, row, 'hidden')
+    rev_host = self._GetRowValue(query_hash, row, 'rev_host')
+    typed = self._GetRowValue(query_hash, row, 'typed')
 
     # TODO: make extra conditional formatting.
     extras = []
-    if row['from_visit']:
-      extras.append(u'visited from: {0:s}'.format(
-          self._GetUrl(row['from_visit'], cache, database)))
+    if from_visit:
+      extras.append('visited from: {0:s}'.format(
+          self._GetUrl(from_visit, cache, database)))
 
-    if row['hidden'] == u'1':
-      extras.append(u'(url hidden)')
+    if hidden == '1':
+      extras.append('(url hidden)')
 
-    if row['typed'] == u'1':
-      extras.append(u'(directly typed)')
+    if typed == '1':
+      extras.append('(directly typed)')
     else:
-      extras.append(u'(URL not typed directly)')
+      extras.append('(URL not typed directly)')
 
     event_data = FirefoxPlacesPageVisitedEventData()
-    event_data.host = self._ReverseHostname(row['rev_host'])
-    event_data.offset = row['id']
+    event_data.host = self._ReverseHostname(rev_host)
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-    event_data.title = row['title']
-    event_data.url = row['url']
-    event_data.visit_count = row['visit_count']
-    event_data.visit_type = row['visit_type']
+    event_data.title = self._GetRowValue(query_hash, row, 'title')
+    event_data.url = self._GetRowValue(query_hash, row, 'url')
+    event_data.visit_count = self._GetRowValue(query_hash, row, 'visit_count')
+    event_data.visit_type = self._GetRowValue(query_hash, row, 'visit_type')
 
     if extras:
       event_data.extra = extras
 
-    timestamp = row['visit_date']
+    timestamp = self._GetRowValue(query_hash, row, 'visit_date')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
@@ -468,7 +479,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       Reversed string without a leading dot.
     """
     if not hostname:
-      return u''
+      return ''
 
     if len(hostname) <= 1:
       return hostname
@@ -480,23 +491,21 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
 
   def _GetUrl(self, url_id, cache, database):
     """Return an URL from a reference to an entry in the from_visit table."""
-    url_cache_results = cache.GetResults(u'url')
+    url_cache_results = cache.GetResults('url')
     if not url_cache_results:
       result_set = database.Query(self.URL_CACHE_QUERY)
 
-      # Note that pysqlite does not accept a Unicode string in row['string'] and
-      # will raise "IndexError: Index must be int or string".
       cache.CacheQueryResults(
           result_set, 'url', 'id', ('url', 'rev_host'))
-      url_cache_results = cache.GetResults(u'url')
+      url_cache_results = cache.GetResults('url')
 
-    url, reverse_host = url_cache_results.get(url_id, [u'', u''])
+    url, reverse_host = url_cache_results.get(url_id, ['', ''])
 
     if not url:
-      return u''
+      return ''
 
     hostname = self._ReverseHostname(reverse_host)
-    return u'{0:s} ({1:s})'.format(url, hostname)
+    return '{0:s} ({1:s})'.format(url, hostname)
 
 
 class FirefoxDownloadsPlugin(interface.SQLitePlugin):
@@ -506,30 +515,30 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
   downloads.sqlite.
   """
 
-  NAME = u'firefox_downloads'
-  DESCRIPTION = u'Parser for Firefox downloads SQLite database files.'
+  NAME = 'firefox_downloads'
+  DESCRIPTION = 'Parser for Firefox downloads SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
-      ((u'SELECT moz_downloads.id, moz_downloads.name, moz_downloads.source, '
-        u'moz_downloads.target, moz_downloads.tempPath, '
-        u'moz_downloads.startTime, moz_downloads.endTime, moz_downloads.state, '
-        u'moz_downloads.referrer, moz_downloads.currBytes, '
-        u'moz_downloads.maxBytes, moz_downloads.mimeType '
-        u'FROM moz_downloads'),
-       u'ParseDownloadsRow')]
+      (('SELECT moz_downloads.id, moz_downloads.name, moz_downloads.source, '
+        'moz_downloads.target, moz_downloads.tempPath, '
+        'moz_downloads.startTime, moz_downloads.endTime, moz_downloads.state, '
+        'moz_downloads.referrer, moz_downloads.currBytes, '
+        'moz_downloads.maxBytes, moz_downloads.mimeType '
+        'FROM moz_downloads'),
+       'ParseDownloadsRow')]
 
   SCHEMAS = [
-      {u'moz_downloads':
-       u'CREATE TABLE moz_downloads (id INTEGER PRIMARY KEY, name TEXT, '
-       u'source TEXT, target TEXT, tempPath TEXT, startTime INTEGER, endTime '
-       u'INTEGER, state INTEGER, referrer TEXT, entityID TEXT, currBytes '
-       u'INTEGER NOT NULL DEFAULT 0, maxBytes INTEGER NOT NULL DEFAULT -1, '
-       u'mimeType TEXT, preferredApplication TEXT, preferredAction INTEGER '
-       u'NOT NULL DEFAULT 0, autoResume INTEGER NOT NULL DEFAULT 0)'}]
+      {'moz_downloads':
+       'CREATE TABLE moz_downloads (id INTEGER PRIMARY KEY, name TEXT, '
+       'source TEXT, target TEXT, tempPath TEXT, startTime INTEGER, endTime '
+       'INTEGER, state INTEGER, referrer TEXT, entityID TEXT, currBytes '
+       'INTEGER NOT NULL DEFAULT 0, maxBytes INTEGER NOT NULL DEFAULT -1, '
+       'mimeType TEXT, preferredApplication TEXT, preferredAction INTEGER '
+       'NOT NULL DEFAULT 0, autoResume INTEGER NOT NULL DEFAULT 0)'}]
 
   # The required tables.
-  REQUIRED_TABLES = frozenset([u'moz_downloads'])
+  REQUIRED_TABLES = frozenset(['moz_downloads'])
 
   def ParseDownloadsRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
@@ -541,22 +550,22 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     event_data = FirefoxDownloadEventData()
-    event_data.full_path = row['target']
-    event_data.mime_type = row['mimeType']
-    event_data.name = row['name']
-    event_data.offset = row['id']
+    event_data.full_path = self._GetRowValue(query_hash, row, 'target')
+    event_data.mime_type = self._GetRowValue(query_hash, row, 'mimeType')
+    event_data.name = self._GetRowValue(query_hash, row, 'name')
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-    event_data.received_bytes = row['currBytes']
-    event_data.referrer = row['referrer']
-    event_data.temporary_location = row['tempPath']
-    event_data.total_bytes = row['maxBytes']
-    event_data.url = row['source']
+    event_data.received_bytes = self._GetRowValue(query_hash, row, 'currBytes')
+    event_data.referrer = self._GetRowValue(query_hash, row, 'referrer')
+    event_data.temporary_location = self._GetRowValue(
+        query_hash, row, 'tempPath')
+    event_data.total_bytes = self._GetRowValue(query_hash, row, 'maxBytes')
+    event_data.url = self._GetRowValue(query_hash, row, 'source')
 
-    timestamp = row['startTime']
+    timestamp = self._GetRowValue(query_hash, row, 'startTime')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
@@ -564,7 +573,7 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_START)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = row['endTime']
+    timestamp = self._GetRowValue(query_hash, row, 'endTime')
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)

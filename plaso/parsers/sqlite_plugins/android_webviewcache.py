@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Android WebviewCache databases."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import java_time as dfdatetime_java_time
 
 from plaso.containers import events
@@ -18,7 +20,7 @@ class AndroidWebViewCacheEventData(events.EventData):
     url (str): URL the content was retrieved from.
   """
 
-  DATA_TYPE = u'android:webviewcache'
+  DATA_TYPE = 'android:webviewcache'
 
   def __init__(self):
     """Initializes event data."""
@@ -30,24 +32,24 @@ class AndroidWebViewCacheEventData(events.EventData):
 class AndroidWebViewCachePlugin(interface.SQLitePlugin):
   """Parser for Android WebViewCache databases."""
 
-  NAME = u'android_webviewcache'
-  DESCRIPTION = u'Parser for Android WebViewCache databases'
+  NAME = 'android_webviewcache'
+  DESCRIPTION = 'Parser for Android WebViewCache databases'
 
-  REQUIRED_TABLES = frozenset([u'android_metadata', u'cache'])
+  REQUIRED_TABLES = frozenset(['android_metadata', 'cache'])
 
   QUERIES = frozenset([
-      (u'SELECT url, contentlength, expires, lastmodify FROM cache',
-       u'ParseRow')])
+      ('SELECT url, contentlength, expires, lastmodify FROM cache',
+       'ParseRow')])
 
   SCHEMAS = [{
-      u'android_metadata': (
-          u'CREATE TABLE android_metadata (locale TEXT)'),
-      u'cache': (
-          u'CREATE TABLE cache (_id INTEGER PRIMARY KEY, url TEXT, filepath '
-          u'TEXT, lastmodify TEXT, etag TEXT, expires INTEGER, expiresstring '
-          u'TEXT, mimetype TEXT, encoding TEXT, httpstatus INTEGER, location '
-          u'TEXT, contentlength INTEGER, contentdisposition TEXT, UNIQUE (url) '
-          u'ON CONFLICT REPLACE)')}]
+      'android_metadata': (
+          'CREATE TABLE android_metadata (locale TEXT)'),
+      'cache': (
+          'CREATE TABLE cache (_id INTEGER PRIMARY KEY, url TEXT, filepath '
+          'TEXT, lastmodify TEXT, etag TEXT, expires INTEGER, expiresstring '
+          'TEXT, mimetype TEXT, encoding TEXT, httpstatus INTEGER, location '
+          'TEXT, contentlength INTEGER, contentdisposition TEXT, UNIQUE (url) '
+          'ON CONFLICT REPLACE)')}]
 
   def ParseRow(self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a row from the database.
@@ -58,22 +60,24 @@ class AndroidWebViewCachePlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string']
-    # and will raise "IndexError: Index must be int or string". All indexes are
-    # thus raw strings.
-    event_data = AndroidWebViewCacheEventData()
-    event_data.content_length = row['contentlength']
-    event_data.query = query
-    event_data.url = row['url']
+    query_hash = hash(query)
 
-    if row['expires'] is not None:
-      date_time = dfdatetime_java_time.JavaTime(timestamp=row['expires'])
+    event_data = AndroidWebViewCacheEventData()
+    event_data.content_length = self._GetRowValue(
+        query_hash, row, 'contentlength')
+    event_data.query = query
+    event_data.url = self._GetRowValue(query_hash, row, 'url')
+
+    timestamp = self._GetRowValue(query_hash, row, 'expires')
+    if timestamp is not None:
+      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    if row['lastmodify'] is not None:
-      date_time = dfdatetime_java_time.JavaTime(timestamp=row['lastmodify'])
+    timestamp = self._GetRowValue(query_hash, row, 'lastmodify')
+    if timestamp is not None:
+      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)

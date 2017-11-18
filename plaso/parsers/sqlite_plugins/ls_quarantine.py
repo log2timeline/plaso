@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Plugin for the Mac OS X launch services quarantine events."""
 
+from __future__ import unicode_literals
+
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
@@ -20,7 +22,7 @@ class LsQuarantineEventData(events.EventData):
     user_agent (str): user agent that was used to download the file.
   """
 
-  DATA_TYPE = u'macosx:lsquarantine'
+  DATA_TYPE = 'macosx:lsquarantine'
 
   def __init__(self):
     """Initializes event data."""
@@ -38,28 +40,28 @@ class LsQuarantinePlugin(interface.SQLitePlugin):
        QuarantineEvents.com.apple.LaunchServices
   """
 
-  NAME = u'ls_quarantine'
-  DESCRIPTION = u'Parser for LS quarantine events SQLite database files.'
+  NAME = 'ls_quarantine'
+  DESCRIPTION = 'Parser for LS quarantine events SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
-      ((u'SELECT LSQuarantineTimestamp AS Time, LSQuarantine'
-        u'AgentName AS Agent, LSQuarantineOriginURLString AS URL, '
-        u'LSQuarantineDataURLString AS Data FROM LSQuarantineEvent '
-        u'ORDER BY Time'), u'ParseLSQuarantineRow')]
+      (('SELECT LSQuarantineTimestamp AS Time, LSQuarantine'
+        'AgentName AS Agent, LSQuarantineOriginURLString AS URL, '
+        'LSQuarantineDataURLString AS Data FROM LSQuarantineEvent '
+        'ORDER BY Time'), 'ParseLSQuarantineRow')]
 
   # The required tables.
-  REQUIRED_TABLES = frozenset([u'LSQuarantineEvent'])
+  REQUIRED_TABLES = frozenset(['LSQuarantineEvent'])
 
   SCHEMAS = [{
-      u'LSQuarantineEvent': (
-          u'CREATE TABLE LSQuarantineEvent ( LSQuarantineEventIdentifier TEXT '
-          u'PRIMARY KEY NOT NULL, LSQuarantineTimeStamp REAL, '
-          u'LSQuarantineAgentBundleIdentifier TEXT, LSQuarantineAgentName '
-          u'TEXT, LSQuarantineDataURLString TEXT, LSQuarantineSenderName TEXT, '
-          u'LSQuarantineSenderAddress TEXT, LSQuarantineTypeNumber INTEGER, '
-          u'LSQuarantineOriginTitle TEXT, LSQuarantineOriginURLString TEXT, '
-          u'LSQuarantineOriginAlias BLOB )')}]
+      'LSQuarantineEvent': (
+          'CREATE TABLE LSQuarantineEvent ( LSQuarantineEventIdentifier TEXT '
+          'PRIMARY KEY NOT NULL, LSQuarantineTimeStamp REAL, '
+          'LSQuarantineAgentBundleIdentifier TEXT, LSQuarantineAgentName '
+          'TEXT, LSQuarantineDataURLString TEXT, LSQuarantineSenderName TEXT, '
+          'LSQuarantineSenderAddress TEXT, LSQuarantineTypeNumber INTEGER, '
+          'LSQuarantineOriginTitle TEXT, LSQuarantineOriginURLString TEXT, '
+          'LSQuarantineOriginAlias BLOB )')}]
 
   def ParseLSQuarantineRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
@@ -71,16 +73,15 @@ class LsQuarantinePlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
+    query_hash = hash(query)
 
     event_data = LsQuarantineEventData()
-    event_data.agent = row['Agent']
-    event_data.data = row['Data']
+    event_data.agent = self._GetRowValue(query_hash, row, 'Agent')
+    event_data.data = self._GetRowValue(query_hash, row, 'Data')
     event_data.query = query
-    event_data.url = row['URL']
+    event_data.url = self._GetRowValue(query_hash, row, 'URL')
 
-    timestamp = row['Time']
+    timestamp = self._GetRowValue(query_hash, row, 'Time')
     date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)

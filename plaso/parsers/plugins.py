@@ -93,19 +93,15 @@ class BasePlugin(object):
 
 
 class BasePluginCache(object):
-  """A generic cache object for plugins.
-
-  This cache object can be used to store various information that needs
-  to be cached to speed up code execution.
-  """
+  """A generic cache for parser plugins."""
 
   def GetResults(self, attribute):
     """Retrieves a cached attribute.
 
     Args:
-      attribute: the name of the cached attribute.
+      attribute (str): name of the cached attribute.
 
     Returns:
-      The value of the cached attribute or None if no such attribute exists.
+      object: value of the cached attribute or None if no such attribute exists.
     """
     return getattr(self, attribute, None)
