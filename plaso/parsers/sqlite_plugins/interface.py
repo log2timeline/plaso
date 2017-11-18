@@ -41,7 +41,8 @@ class SQLitePlugin(plugins.BasePlugin):
     """Retrieves a value from the row.
 
     Args:
-      query_hash (int): hash of the query.
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
       row (sqlite3.Row): row.
       value_name (str): name of the value.
 
