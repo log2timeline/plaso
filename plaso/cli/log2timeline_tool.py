@@ -30,8 +30,8 @@ from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import configurations
 from plaso.engine import engine
+from plaso.engine import filter_file
 from plaso.engine import single_process as single_process_engine
-from plaso.frontend import utils as frontend_utils
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import task_engine as multi_process_engine
@@ -572,7 +572,7 @@ class Log2TimelineTool(
     if configuration.filter_file:
       environment_variables = (
           extraction_engine.knowledge_base.GetEnvironmentVariables())
-      filter_find_specs = frontend_utils.BuildFindSpecsFromFile(
+      filter_find_specs = filter_file.BuildFindSpecsFromFile(
           configuration.filter_file,
           environment_variables=environment_variables)
 

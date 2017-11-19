@@ -15,7 +15,7 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import artifacts
-from plaso.frontend import utils
+from plaso.engine import filter_file
 
 from tests import test_lib as shared_test_lib
 
@@ -48,7 +48,7 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='SystemRoot', value='C:\\Windows')
 
-    find_specs = utils.BuildFindSpecsFromFile(
+    find_specs = filter_file.BuildFindSpecsFromFile(
         filter_file_path, environment_variables=[environment_variable])
 
     try:
@@ -75,7 +75,7 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(path_specs), 6)
 
     with self.assertRaises(IOError):
-      utils.BuildFindSpecsFromFile('thisfiledoesnotexist')
+      filter_file.BuildFindSpecsFromFile('thisfiledoesnotexist')
 
     file_system.Close()
 
