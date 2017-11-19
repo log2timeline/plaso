@@ -906,23 +906,3 @@ class BaseFilterImplementation(object):
       'OrFilter': OrFilter,
       'IdentityFilter': IdentityFilter,
       'Context': Context}
-
-
-class LowercaseAttributeFilterImplementation(BaseFilterImplementation):
-  """Does field name access on the lowercase version of names.
-
-  Useful to only access attributes and properties with Google's python naming
-  style.
-  """
-
-  FILTERS = {}
-  FILTERS.update(BaseFilterImplementation.FILTERS)
-  FILTERS.update({'ValueExpander': LowercaseAttributeValueExpander})
-
-
-class DictFilterImplementation(BaseFilterImplementation):
-  """Does value fetching by dictionary access on the object."""
-
-  FILTERS = {}
-  FILTERS.update(BaseFilterImplementation.FILTERS)
-  FILTERS.update({'ValueExpander': DictValueExpander})

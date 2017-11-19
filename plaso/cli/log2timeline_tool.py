@@ -14,9 +14,6 @@ from dfvfs.resolver import context as dfvfs_context
 
 import plaso
 
-# The following import makes sure the filters are registered.
-from plaso import filters  # pylint: disable=unused-import
-
 # The following import makes sure the output modules are registered.
 from plaso import output  # pylint: disable=unused-import
 

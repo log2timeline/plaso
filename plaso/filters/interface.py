@@ -41,7 +41,7 @@ class FilterObject(object):
 
   @property
   def separator(self):
-    """The output field separator value."""
+    """str: output field separator."""
     return ','
 
   def _GetMatcher(self, filter_expression):

@@ -101,12 +101,26 @@ class DummyFile(object):
     return 123.9823
 
 
+class LowercaseAttributeFilterImplementation(
+    objectfilter.BaseFilterImplementation):
+  """Does field name access on the lowercase version of names.
+
+  Useful to only access attributes and properties with Google's python naming
+  style.
+  """
+
+  FILTERS = {}
+  FILTERS.update(objectfilter.BaseFilterImplementation.FILTERS)
+  FILTERS.update({
+      'ValueExpander': objectfilter.LowercaseAttributeValueExpander})
+
+
 class ObjectFilterTest(unittest.TestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
     self.file = DummyFile()
-    self.filter_imp = objectfilter.LowercaseAttributeFilterImplementation
+    self.filter_imp = LowercaseAttributeFilterImplementation
     self.value_expander = self.filter_imp.FILTERS['ValueExpander']
 
   operator_tests = {
