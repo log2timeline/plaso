@@ -1053,12 +1053,12 @@ class BSMParser(interface.FileObjectParser):
       return {bsm_type: token.record_length}
 
     elif bsm_type == 'BSM_TOKEN_FILE':
-      # TODO: if this timestamp is usefull it must be extracted as a separate
-      #       event object.
-      timestamp = timelib.Timestamp.FromPosixTimeWithMicrosecond(
-          token.timestamp, token.microseconds)
-      date_time = timelib.Timestamp.CopyToDatetime(timestamp, pytz.UTC)
-      date_time_string = date_time.strftime('%Y-%m-%d %H:%M:%S')
+      # TODO: if this timestamp is usefull, it must be extracted as a separate
+      # event object.
+      timestamp = (token.timestamp * 1000000) + token.microseconds
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=timestamp)
+      date_time_string = date_time.CopyToDateTimeString()
 
       string = self._CopyUtf8ByteArrayToString(token.text)
       return {bsm_type: {'string': string, 'timestamp': date_time_string}}
