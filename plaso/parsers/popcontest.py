@@ -277,7 +277,7 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
       bool: True if the line was successfully parsed.
     """
     try:
-      header_struct = self.HEADER.parseString(line)
+      self.HEADER.parseString(line)
     except pyparsing.ParseException:
       logging.debug('Not a Popularity Contest log file, invalid header')
       return False
