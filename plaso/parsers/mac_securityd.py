@@ -102,24 +102,6 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     self._previous_structure = None
     self._year_use = 0
 
-  def _ConvertToTimestamp(self, day, month, year, time):
-    """Converts date and time values into a timestamp.
-
-    Args:
-      day: an integer representing the day.
-      month: an integer representing the month.
-      year: an integer representing the year.
-      time: a list containing integers with the number of
-            hours, minutes and seconds.
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC.
-    """
-    hours, minutes, seconds = time
-    return timelib.Timestamp.FromTimeParts(
-        year, month, day, hours, minutes, seconds)
-
   def _GetTimeElementsTuple(self, structure):
     """Retrieves a time elements tuple from the structure.
 

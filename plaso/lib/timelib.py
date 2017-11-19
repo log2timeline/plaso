@@ -63,9 +63,6 @@ class Timestamp(object):
   # TODO: replace this with a real None implementation.
   NONE_TIMESTAMP = 0
 
-  # The days per month of a non leap year
-  DAYS_PER_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-
   # The number of micro seconds per second
   MICRO_SECONDS_PER_SECOND = 1000000
 
@@ -290,64 +287,6 @@ class Timestamp(object):
     return timestamp // cls.MICRO_SECONDS_PER_SECOND
 
   @classmethod
-  def DaysInMonth(cls, month, year):
-    """Determines the days in a month for a specific year.
-
-    Args:
-      month: The month where 0 represents January.
-      year: The year as in 1970.
-
-    Returns:
-      An integer containing the number of days in the month.
-
-    Raises:
-      ValueError: if the month value is invalid.
-    """
-    if month not in range(0, 12):
-      raise ValueError('Invalid month value')
-
-    days_per_month = cls.DAYS_PER_MONTH[month]
-
-    if month == 1 and cls.IsLeapYear(year):
-      days_per_month += 1
-
-    return days_per_month
-
-  @classmethod
-  def DaysInYear(cls, year):
-    """Determines the days in a year.
-
-    Args:
-      year: The year as in 1970.
-
-    Returns:
-      An integer containing the number of days in the year.
-    """
-    days_in_year = 365
-    if cls.IsLeapYear(year):
-      return days_in_year + 1
-    return days_in_year
-
-  @classmethod
-  def DayOfYear(cls, day, month, year):
-    """Determines the day of the year for a specific day of a month in a year.
-
-    Args:
-      day: The day of the month where 0 represents the first day.
-      month: The month where 0 represents January.
-      year: The year as in 1970.
-
-    Returns:
-      An integer containing the day of year.
-    """
-    day_of_year = day
-
-    for past_month in range(0, month):
-      day_of_year += cls.DaysInMonth(past_month, year)
-
-    return day_of_year
-
-  @classmethod
   def FromPosixTime(cls, posix_time):
     """Converts a POSIX timestamp into a timestamp.
 
@@ -402,43 +341,6 @@ class Timestamp(object):
 
     posix_time = int(calendar.timegm(datetime_object.utctimetuple()))
     return cls.FromPosixTime(posix_time) + datetime_object.microsecond
-
-  @classmethod
-  def FromRFC2579Datetime(
-      cls, year, month, day, hour, minutes, seconds, deciseconds,
-      direction_from_utc, hours_from_utc, minutes_from_utc):
-    """Converts values from an RFC2579 time to a timestamp.
-
-    See https://tools.ietf.org/html/rfc2579.
-
-    Args:
-      year: An integer representing the year.
-      month: An integer between 1 and 12.
-      day: An integer representing the number of day in the month.
-      hour: An integer representing the hour, 0 <= hour < 24.
-      minutes: An integer, 0 <= minute < 60.
-      seconds: An integer, 0 <= second < 60.
-      deciseconds: An integer, 0 <= deciseconds < 10
-      direction_from_utc: An ascii character, either '+' or '-'.
-      hours_from_utc: An integer representing the number of hours the time is
-                      offset from UTC.
-      minutes_from_utc: An integer representing the number of seconds the time
-                        is offset from UTC.
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
-
-    Raises:
-      TimestampError: if the timestamp cannot be created from the time parts.
-    """
-    microseconds = deciseconds * 100000
-    utc_offset_minutes = (hours_from_utc * 60) + minutes_from_utc
-    if direction_from_utc == '-':
-      utc_offset_minutes = -utc_offset_minutes
-    timezone = pytz.FixedOffset(utc_offset_minutes)
-    return cls.FromTimeParts(
-        year, month, day, hour, minutes, seconds, microseconds, timezone)
 
   @classmethod
   def FromTimeParts(
@@ -539,21 +441,6 @@ class Timestamp(object):
     """
     time_elements = time.gmtime()
     return calendar.timegm(time_elements) * 1000000
-
-  @classmethod
-  def IsLeapYear(cls, year):
-    """Determines if a year is a leap year.
-
-       A leap year is divisible by 4 and not by 100 or by 400.
-
-    Args:
-      year: The year as in 1970.
-
-    Returns:
-      A boolean value indicating the year is a leap year.
-    """
-    # pylint: disable=consider-using-ternary
-    return (year % 4 == 0 and year % 100 != 0) or year % 400 == 0
 
   @classmethod
   def LocaltimeToUTC(cls, timestamp, timezone, is_dst=False):
