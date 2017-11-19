@@ -572,8 +572,8 @@ class Log2TimelineTool(
     if configuration.filter_file:
       environment_variables = (
           extraction_engine.knowledge_base.GetEnvironmentVariables())
-      filter_find_specs = filter_file.BuildFindSpecsFromFile(
-          configuration.filter_file,
+      filter_file_object = filter_file.FilterFile(configuration.filter_file)
+      filter_find_specs = filter_file_object.BuildFindSpecs(
           environment_variables=environment_variables)
 
     processing_status = None
