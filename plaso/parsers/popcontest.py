@@ -282,13 +282,6 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
       logging.debug('Not a Popularity Contest log file, invalid header')
       return False
 
-    try:
-      int(header_struct.timestamp, 10)
-    except ValueError:
-      logging.debug(
-          'Not a Popularity Contest log file, invalid header timestamp')
-      return False
-
     return True
 
 
