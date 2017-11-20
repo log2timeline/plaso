@@ -1,11 +1,11 @@
-plaso\.parsers\.shared package
-==============================
+plaso.parsers.shared package
+============================
 
 Submodules
 ----------
 
-plaso\.parsers\.shared\.shell\_items module
--------------------------------------------
+plaso.parsers.shared.shell_items module
+---------------------------------------
 
 .. automodule:: plaso.parsers.shared.shell_items
     :members:

@@ -1,27 +1,27 @@
-plaso\.parsers\.syslog\_plugins package
-=======================================
+plaso.parsers.syslog_plugins package
+====================================
 
 Submodules
 ----------
 
-plaso\.parsers\.syslog\_plugins\.cron module
---------------------------------------------
+plaso.parsers.syslog_plugins.cron module
+----------------------------------------
 
 .. automodule:: plaso.parsers.syslog_plugins.cron
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso\.parsers\.syslog\_plugins\.interface module
--------------------------------------------------
+plaso.parsers.syslog_plugins.interface module
+---------------------------------------------
 
 .. automodule:: plaso.parsers.syslog_plugins.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso\.parsers\.syslog\_plugins\.ssh module
--------------------------------------------
+plaso.parsers.syslog_plugins.ssh module
+---------------------------------------
 
 .. automodule:: plaso.parsers.syslog_plugins.ssh
     :members:
