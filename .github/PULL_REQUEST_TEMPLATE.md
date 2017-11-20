@@ -13,7 +13,7 @@ review](https://github.com/log2timeline/plaso/wiki/Codereview). This makes sure
 that the code has appropriate test coverage and conforms to the Plaso [style
 guide](https://github.com/log2timeline/plaso/wiki/Style-guide).
 
-A reviewer will examine your code, and may request changes.
+One of the maintainers will examine your code, and may request changes.
 
 ## Checklist:
   - [ ] Local tests pass
