@@ -5,15 +5,15 @@ $PyInstaller = "pyinstaller.exe"
 
 If (-Not (Test-Path (Get-Command $PyInstaller).Path))
 {
-    Write-Host "Missing PyInstaller." -foreground Red
+	Write-Host "Missing PyInstaller." -foreground Red
 
-    Exit 1
+	Exit 1
 }
 
 # Remove support for hachoir which is GPLv2 and cannot be distributed
 # in binary form. Leave the formatter because it does not link in the
 # hachoir code.
-Get-Content "plaso\parsers\__init__.py" | %{$_ -replace "from plaso.parsers import hachoir", "pass"} | Set-Content "plaso\parsers\__init__.py.patched"
+Get-Content "plaso\parsers\__init__.py" | %{$_ -replace "from plaso.parsers import hachoir", ""} | Set-Content "plaso\parsers\__init__.py.patched"
 mv -Force plaso\parsers\__init__.py.patched plaso\parsers\__init__.py
 
 Get-Content "plaso\parsers\presets.py" | %{$_ -replace "'hachoir', ", ""} | Set-Content "plaso\parsers\presets.py.patched"
@@ -25,43 +25,23 @@ mv -Force plaso\dependencies.py.patched plaso\dependencies.py
 # Build the binaries for each tool
 If (Test-Path "dist")
 {
-    rm -Force -Recurse "dist"
+	rm -Force -Recurse "dist"
 }
 
 Invoke-Expression "${PyInstaller} --hidden-import artifacts --onedir tools\image_export.py"
-If ( $LastExitCode -ne 0 ) {
-    Write-Host "Error running PyInstaller for tools\image_export.py." -foreground Red
-    Exit 1
-}
 
 Invoke-Expression "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\log2timeline.py"
-If ( $LastExitCode -ne 0 ) {
-    Write-Host "Error running PyInstaller for tools\log2timeline.py." -foreground Red
-    Exit 1
-}
 
 Invoke-Expression "${PyInstaller} --hidden-import artifacts --onedir tools\pinfo.py"
-If ( $LastExitCode -ne 0 ) {
-    Write-Host "Error running PyInstaller for tools\pinfo.py." -foreground Red
-    Exit 1
-}
 
 Invoke-Expression "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psort.py"
-If ( $LastExitCode -ne 0 ) {
-    Write-Host "Error running PyInstaller for tools\psort.py." -foreground Red
-    Exit 1
-}
 
 Invoke-Expression "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psteal.py"
-If ( $LastExitCode -ne 0 ) {
-    Write-Host "Error running PyInstaller for tools\psteal.py." -foreground Red
-    Exit 1
-}
 
 # Set up distribution package path
 If (Test-Path "dist\plaso")
 {
-    rm -Force -Recurse "dist\plaso"
+	rm -Force -Recurse "dist\plaso"
 }
 mkdir dist\plaso
 mkdir dist\plaso\data
@@ -85,7 +65,7 @@ git.exe clone https://github.com/log2timeline/l2tdevtools dist\l2tdevtools
 
 $dep = Get-Content dist\l2tdevtools\data\presets.ini | Select-String -pattern '\[plaso\]' -context 0,1
 Foreach ($d in $dep.context.DisplayPostContext.split(': ')[2].split(',')) {
-    cp "dist\l2tdevtools\data\licenses\LICENSE.$($d)" dist\plaso\licenses
+	cp "dist\l2tdevtools\data\licenses\LICENSE.$($d)" dist\plaso\licenses
 }
 
 rm -Force dist\plaso\licenses\LICENSE.hachoir-*
