@@ -93,7 +93,6 @@ from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import py2to3
-from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -278,14 +277,9 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
       bool: True if the line was successfully parsed.
     """
     try:
-      header_struct = self.HEADER.parseString(line)
+      self.HEADER.parseString(line)
     except pyparsing.ParseException:
       logging.debug('Not a Popularity Contest log file, invalid header')
-      return False
-
-    if not timelib.Timestamp.FromPosixTime(header_struct.timestamp):
-      logging.debug(
-          'Not a Popularity Contest log file, invalid header timestamp')
       return False
 
     return True

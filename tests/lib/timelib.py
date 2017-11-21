@@ -121,50 +121,6 @@ class TimeLibTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       _ = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01Z')
 
-  def testTimestampIsLeapYear(self):
-    """Tests the is leap year check."""
-    self.assertEqual(timelib.Timestamp.IsLeapYear(2012), True)
-    self.assertEqual(timelib.Timestamp.IsLeapYear(2013), False)
-    self.assertEqual(timelib.Timestamp.IsLeapYear(2000), True)
-    self.assertEqual(timelib.Timestamp.IsLeapYear(1900), False)
-
-  def testTimestampDaysInMonth(self):
-    """Tests the days in month function."""
-    self.assertEqual(timelib.Timestamp.DaysInMonth(0, 2013), 31)
-    self.assertEqual(timelib.Timestamp.DaysInMonth(1, 2013), 28)
-    self.assertEqual(timelib.Timestamp.DaysInMonth(1, 2012), 29)
-    self.assertEqual(timelib.Timestamp.DaysInMonth(2, 2013), 31)
-    self.assertEqual(timelib.Timestamp.DaysInMonth(3, 2013), 30)
-    self.assertEqual(timelib.Timestamp.DaysInMonth(4, 2013), 31)
-    self.assertEqual(timelib.Timestamp.DaysInMonth(5, 2013), 30)
-    self.assertEqual(timelib.Timestamp.DaysInMonth(6, 2013), 31)
-    self.assertEqual(timelib.Timestamp.DaysInMonth(7, 2013), 31)
-    self.assertEqual(timelib.Timestamp.DaysInMonth(8, 2013), 30)
-    self.assertEqual(timelib.Timestamp.DaysInMonth(9, 2013), 31)
-    self.assertEqual(timelib.Timestamp.DaysInMonth(10, 2013), 30)
-    self.assertEqual(timelib.Timestamp.DaysInMonth(11, 2013), 31)
-
-    with self.assertRaises(ValueError):
-      timelib.Timestamp.DaysInMonth(-1, 2013)
-
-    with self.assertRaises(ValueError):
-      timelib.Timestamp.DaysInMonth(12, 2013)
-
-  def testTimestampDaysInYear(self):
-    """Test the days in year function."""
-    self.assertEqual(timelib.Timestamp.DaysInYear(2013), 365)
-    self.assertEqual(timelib.Timestamp.DaysInYear(2012), 366)
-
-  def testTimestampDayOfYear(self):
-    """Test the day of year function."""
-    self.assertEqual(timelib.Timestamp.DayOfYear(0, 0, 2013), 0)
-    self.assertEqual(timelib.Timestamp.DayOfYear(0, 2, 2013), 31 + 28)
-    self.assertEqual(timelib.Timestamp.DayOfYear(0, 2, 2012), 31 + 29)
-
-    expected_day_of_year = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30
-    self.assertEqual(
-        timelib.Timestamp.DayOfYear(0, 11, 2013), expected_day_of_year)
-
   def testTimestampFromPosixTime(self):
     """Test the POSIX time conversion."""
     timestamp = timelib.Timestamp.FromPosixTime(1281647191)
