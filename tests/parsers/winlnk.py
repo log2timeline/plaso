@@ -89,7 +89,8 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         'Icon location: %windir%\\system32\\migwiz\\migwiz.exe')
 
     expected_short_message = (
-        '[@%windir%\\system32\\migwiz\\wet.dll,-590]')
+        '[@%windir%\\system32\\migwiz\\wet.dll,-590] '
+        '%windir%\\system32\\migwiz\\.\\migwiz\\mi...')
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 

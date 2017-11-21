@@ -46,7 +46,6 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -192,13 +191,9 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
       return False
 
     try:
-      timestamp = int(parsed_structure.timestamp)
+      int(parsed_structure.timestamp, 10)
     except ValueError:
       logging.debug('Not a XChat scrollback log file, invalid timestamp string')
-      return False
-
-    if not timelib.Timestamp.FromPosixTime(timestamp):
-      logging.debug('Not a XChat scrollback log file, invalid timestamp')
       return False
 
     return True
