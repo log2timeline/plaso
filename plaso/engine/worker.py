@@ -87,7 +87,7 @@ class EventExtractionWorker(object):
           can have the value of:
 
           * An exact match of a list of parsers, or a preset (see
-            plaso/frontend/presets.py for a full list of available presets).
+            plaso/parsers/presets.py for a full list of available presets).
           * A name of a single parser (case insensitive), e.g. msiecf.
           * A glob name for a single parser, e.g. '*msie*' (case insensitive).
     """

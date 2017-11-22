@@ -290,7 +290,7 @@ class ParsersManager(object):
      * name of a parser: this would be the exact name of a single parser to
        include (or exclude), e.g. foo;
      * name of a preset, e.g. win7: the presets are defined in
-       plaso.frontend.presets;
+       plaso/parsers/presets.py;
      * name of a plugin: if a plugin name is included the parent parser will be
        included in the list of registered parsers;
 
@@ -350,7 +350,7 @@ class ParsersManager(object):
     # that is not correct we default to Windows 7. Same thing with other
     # OS's, no assumption or checks are really made there.
     # Also this is done by default, and no way for the user to turn off
-    # this behavior, need to add a parameter to the frontend that takes
+    # this behavior, need to add a parameter to the CLI tools that takes
     # care of overwriting this behavior.
 
     if operating_system == definitions.OPERATING_SYSTEM_LINUX:
