@@ -17,9 +17,43 @@ class TestToolWithAnalysisPluginOptions(
     tools.CLITool, tool_options.AnalysisPluginOptions):
   """Tool to test the analysis plugin options."""
 
+  def __init__(self, input_reader=None, output_writer=None):
+    """Initializes the CLI tool object.
+
+    Args:
+      input_reader (Optional[InputReader]): input reader, where None indicates
+          that the stdin input reader should be used.
+      output_writer (Optional[OutputWriter]): output writer, where None
+          indicates that the stdout output writer should be used.
+    """
+    super(TestToolWithAnalysisPluginOptions, self).__init__(
+        input_reader=input_reader, output_writer=output_writer)
+    self._analysis_plugins = None
+
 
 class AnalysisPluginOptionsTest(test_lib.CLIToolTestCase):
   """Tests for the analysis plugin options."""
+
+  # pylint: disable=protected-access
+
+  def testCreateAnalysisPlugins(self):
+    """Tests the _CreateAnalysisPlugins function."""
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = TestToolWithAnalysisPluginOptions(output_writer=output_writer)
+
+    options = test_lib.TestOptions()
+
+    test_tool._analysis_plugins = 'tagging'
+    plugins = test_tool._CreateAnalysisPlugins(options)
+    self.assertIn('tagging', plugins.keys())
+
+    test_tool._analysis_plugins = 'bogus'
+    plugins = test_tool._CreateAnalysisPlugins(options)
+    self.assertEqual(plugins, {})
+
+    test_tool._analysis_plugins = ''
+    plugins = test_tool._CreateAnalysisPlugins(options)
+    self.assertEqual(plugins, {})
 
   def testListAnalysisPlugins(self):
     """Tests the ListAnalysisPlugins function."""

@@ -37,16 +37,16 @@ class AnalysisPluginOptions(object):
       options (argparse.Namespace): command line arguments.
 
     Returns:
-      list[AnalysisPlugin]: analysis plugins.
+      dict[str, AnalysisPlugin]: analysis plugins and their names.
     """
     if not self._analysis_plugins:
-      return
+      return {}
 
     analysis_plugins = (
         analysis_manager.AnalysisPluginManager.GetPluginObjects(
             self._analysis_plugins))
 
-    for analysis_plugin in analysis_plugins:
+    for analysis_plugin in analysis_plugins.values():
       helpers_manager.ArgumentHelperManager.ParseOptions(
           options, analysis_plugin)
 

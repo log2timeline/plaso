@@ -7,7 +7,7 @@ from plaso.analysis import definitions
 
 
 class AnalysisPluginManager(object):
-  """Class that implements the analysis plugin manager."""
+  """Analysis plugin manager."""
 
   _plugin_classes = {}
 
@@ -34,7 +34,7 @@ class AnalysisPluginManager(object):
 
     Raises:
       KeyError: if an analysis plugin class is not set for the corresponding
-                name.
+          name.
     """
     plugin_name = plugin_class.NAME.lower()
     if plugin_name not in cls._plugin_classes:
@@ -49,12 +49,12 @@ class AnalysisPluginManager(object):
     """Retrieves a list of the registered analysis plugins.
 
     Args:
-      show_all: optional boolean value to indicate to list all the analysis
-                plugin names.
+      show_all (Optional[bool]): True if all analysis plugin names should
+          be listed.
 
     Returns:
-      A sorted list of tuples containing the name, docstring and type string
-      of each analysis plugin.
+      list[tuple[str, str, str]]: the name, docstring and type string of each
+          analysis plugin in alphabetical order.
     """
     results = []
     for plugin_class in iter(cls._plugin_classes.values()):
@@ -122,7 +122,7 @@ class AnalysisPluginManager(object):
 
     Raises:
       KeyError: if an analysis plugin class is already set for the corresponding
-                name.
+          name.
     """
     plugin_name = plugin_class.NAME.lower()
     if plugin_name in cls._plugin_classes:
@@ -142,7 +142,7 @@ class AnalysisPluginManager(object):
 
     Raises:
       KeyError: if an analysis plugin class is already set for the corresponding
-                name.
+          name.
     """
     for plugin_class in plugin_classes:
       cls.RegisterPlugin(plugin_class)
