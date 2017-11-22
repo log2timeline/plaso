@@ -13,7 +13,6 @@ Subpackages
     plaso.engine
     plaso.filters
     plaso.formatters
-    plaso.frontend
     plaso.lib
     plaso.multi_processing
     plaso.output

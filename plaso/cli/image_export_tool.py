@@ -18,10 +18,10 @@ from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.cli import storage_media_tool
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import extractors
+from plaso.engine import filter_file
 from plaso.engine import knowledge_base
 from plaso.engine import path_helper
 from plaso.filters import file_entry as file_entry_filters
-from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
 from plaso.lib import specification
 from plaso.preprocessors import manager as preprocess_manager
@@ -313,7 +313,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           'Extracting file entries from: {0:s}\n'.format(display_name))
 
       environment_variables = self._knowledge_base.GetEnvironmentVariables()
-      find_specs = frontend_utils.BuildFindSpecsFromFile(
+      find_specs = filter_file.BuildFindSpecsFromFile(
           filter_file_path, environment_variables=environment_variables)
 
       searcher = file_system_searcher.FileSystemSearcher(
