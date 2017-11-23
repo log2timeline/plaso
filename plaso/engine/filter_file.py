@@ -13,7 +13,7 @@ from plaso.lib import py2to3
 class FilterFile(object):
   """Filter file.
 
-  A filter file contains one ore more path filters.
+  A filter file contains one or more path filters.
 
   A path filter may contain path expansion attributes. Such an attribute
   is defined as anything within a curly bracket, for example
@@ -35,6 +35,9 @@ class FilterFile(object):
     """
     super(FilterFile, self).__init__()
     self._path = path
+
+  # TODO: split read and validation from BuildFindSpecs, raise instead of log
+  # TODO: determine how to apply the path filters for exclusion.
 
   def BuildFindSpecs(self, environment_variables=None):
     """Build find specification from a filter file.
