@@ -40,7 +40,7 @@ class DictObject(object):
   the key 'this (my) key\_' inside the dict.
   """
 
-  _STRIP_KEY_RE = re.compile(r'[(){}+_=\-<>[\]]')
+  _STRIP_KEY_RE = re.compile(r'[ (){}+_=\-<>[\]]')
 
   def __init__(self, dict_object):
     """Initialize the object and build a secondary dict."""
@@ -61,7 +61,7 @@ class DictObject(object):
     Returns:
       str: stripped key.
     """
-    return self._STRIP_KEY_RE.sub('', key)
+    return self._STRIP_KEY_RE.sub('', key.lower())
 
   def __getattr__(self, attr):
     """Return back entries from the dictionary."""
