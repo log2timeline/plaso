@@ -260,14 +260,6 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     return iter(self._event_data.values())
 
-  def GetEventData(self):
-    """Retrieves the event data.
-
-    Returns:
-      generator(EventData): event data generator.
-    """
-    return iter(self._event_data.values())
-
   def GetEventSources(self):
     """Retrieves the event sources.
 

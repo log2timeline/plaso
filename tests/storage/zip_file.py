@@ -431,7 +431,20 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  # TODO: add tests for _GetAttributeContainerByIndex
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  def testGetAttributeContainerByIndex(self):
+    """Tests the _GetAttributeContainerByIndex function."""
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(path=test_file)
+
+    event_source = storage_file._GetAttributeContainerByIndex(
+        'event_source', 0)
+    self.assertIsNotNone(event_source)
+
+    storage_file.Close()
+
+  # TODO: add tests for _GetAttributeContainers
 
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetEvent(self):
@@ -584,45 +597,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     self.assertEqual(last_stream_number, 3)
 
     last_stream_number = storage_file._GetLastStreamNumber('bogus')
-    self.assertEqual(last_stream_number, 1)
-
-    storage_file.Close()
-
-  def testGetEventTagByIdentifier(self):
-    """Tests the _GetEventTagByIdentifier function."""
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      self._CreateTestStorageFileWithTags(temp_file)
-
-      storage_file = zip_file.ZIPStorageFile()
-      storage_file.Open(path=temp_file)
-
-      event_identifier = identifiers.SerializedStreamIdentifier(1, 0)
-      event_tag = storage_file._GetEventTagByIdentifier(event_identifier)
-      self.assertIsNotNone(event_tag)
-      self.assertEqual(event_tag.comment, u'My comment')
-
-      event_identifier = identifiers.SerializedStreamIdentifier(99, 0)
-      event_tag = storage_file._GetEventTagByIdentifier(event_identifier)
-      self.assertIsNone(event_tag)
-
-      storage_file.Close()
-
-  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
-  def testGetLastStreamNumber(self):
-    """Tests the _GetLastStreamNumber function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = zip_file.ZIPStorageFile()
-    storage_file.Open(path=test_file)
-
-    last_stream_number = storage_file._GetLastStreamNumber(u'event_data')
-    self.assertEqual(last_stream_number, 3)
-
-    last_stream_number = storage_file._GetLastStreamNumber(
-        u'event_source_data')
-    self.assertEqual(last_stream_number, 3)
-
-    last_stream_number = storage_file._GetLastStreamNumber(u'bogus')
     self.assertEqual(last_stream_number, 1)
 
     storage_file.Close()
@@ -919,6 +893,8 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
       self.assertEqual(len(attribute_containers), 19)
 
     storage_file.Close()
+
+  # TODO: add tests for _ReadEventDataIntoEvent
 
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testReadSerializerStream(self):

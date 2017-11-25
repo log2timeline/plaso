@@ -722,6 +722,9 @@ class ZIPStorageFile(interface.BaseStorageFile):
   # decompressed data.
   _MAXIMUM_NUMBER_OF_DECOMPRESSED_STREAMS = 24
 
+  # The maximum number of cached event data.
+  _MAXIMUM_NUMBER_OF_CACHED_EVENT_DATA = 1024
+
   # The maximum number of cached tables.
   _MAXIMUM_NUMBER_OF_CACHED_TABLES = 16
 
@@ -1867,6 +1870,33 @@ class ZIPStorageFile(interface.BaseStorageFile):
 
       attribute_container = self._ReadAttributeContainerFromStreamEntry(
           data_stream, container_type)
+
+  def _ReadEventDataIntoEvent(self, event):
+    """Reads the event data into the event.
+
+    This function is intended to offer backwards event behavior.
+
+    Args:
+      event (EventObject): event.
+    """
+    if self.storage_type != definitions.STORAGE_TYPE_SESSION:
+      return
+
+    if (hasattr(event, u'event_data_stream_number') and
+        hasattr(event, u'event_data_entry_index')):
+      event_data_identifier = identifiers.SerializedStreamIdentifier(
+          event.event_data_stream_number, event.event_data_entry_index)
+      event.SetEventDataIdentifier(event_data_identifier)
+
+      event_data = self._GetAttributeContainerWithCache(
+          u'event_data', event.event_data_stream_number,
+          entry_index=event.event_data_entry_index)
+
+      for attribute_name, attribute_value in event_data.GetAttributes():
+        setattr(event, attribute_name, attribute_value)
+
+      del event.event_data_stream_number
+      del event.event_data_entry_index
 
   def _ReadSerializerStream(self):
     """Reads the serializer stream.
