@@ -60,9 +60,18 @@ optional arguments:
     options = cli_test_lib.TestOptions()
     analysis_plugin = nsrlsvr.NsrlsvrAnalysisPlugin()
 
+    options.nsrlsvr_hash = 'sha1'
+    options.nsrlsvr_host = '127.0.0.1'
+    options.nsrlsvr_port = 9120
+    options.nsrlsvr_label = 'NSRLSVR'
+
     with self.assertRaises(errors.BadConfigOption):
       nsrlsvr_analysis.NsrlsvrAnalysisArgumentsHelper.ParseOptions(
           options, analysis_plugin)
+
+    self.assertEqual(analysis_plugin._analyzer._host, '127.0.0.1')
+    self.assertEqual(analysis_plugin._analyzer._port, 9120)
+    self.assertEqual(analysis_plugin._label, 'NSRLSVR')
 
     with self.assertRaises(errors.BadConfigObject):
       nsrlsvr_analysis.NsrlsvrAnalysisArgumentsHelper.ParseOptions(
