@@ -31,6 +31,12 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_CURRENT_USER\\Software\\Classes\\Local Settings\\Software\\'
           'Microsoft\\Windows\\ShellNoRoam\\BagMRU')])
+      interface.WindowsRegistryKeyPathFilter(
+          'HKEY_CURRENT_USER\\Local Settings\\Software\\Microsoft\\Windows\\'
+          'Shell\\BagMRU'),
+      interface.WindowsRegistryKeyPathFilter(
+          'HKEY_CURRENT_USER\\Local Settings\\Software\\Microsoft\\Windows\\'
+          'ShellNoRoam\\BagMRU')])
 
   URLS = [
       ('https://github.com/libyal/winreg-kb/blob/master/documentation/'
