@@ -144,7 +144,7 @@ class Filter(object):
             self.value_expander_cls))
       self.value_expander = self.value_expander_cls()
     self.args = arguments or []
-    logging.debug('Adding {0:s}'.format(arguments))
+    logging.debug('Adding {0!s}'.format(arguments))
 
   @abc.abstractmethod
   def Matches(self, obj):
