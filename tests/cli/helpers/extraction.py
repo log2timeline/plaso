@@ -20,7 +20,7 @@ class ExtractionArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   # pylint: disable=no-member,protected-access
 
   _EXPECTED_OUTPUT = """\
-usage: cli_helper.py [--preferred_year YEAR] [-p] [--process_archives]
+usage: cli_helper.py [--preferred_year YEAR] [--process_archives]
                      [--skip_compressed_streams]
 
 Test argument parser.
