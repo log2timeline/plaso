@@ -30,7 +30,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
           'Microsoft\\Windows\\Shell\\BagMRU'),
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_CURRENT_USER\\Software\\Classes\\Local Settings\\Software\\'
-          'Microsoft\\Windows\\ShellNoRoam\\BagMRU')])
+          'Microsoft\\Windows\\ShellNoRoam\\BagMRU'),
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_CURRENT_USER\\Local Settings\\Software\\Microsoft\\Windows\\'
           'Shell\\BagMRU'),
