@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+from dfvfs.resolver import context as dfvfs_context
+
 # The following import makes sure the analyzers are registered.
 from plaso import analyzers  # pylint: disable=unused-import
 
@@ -34,13 +36,13 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         input_reader=input_reader, output_writer=output_writer)
     self._artifacts_registry = None
     self._buffer_size = 0
-    self._force_preprocessing = False
     self._mount_path = None
     self._operating_system = None
     self._preferred_year = None
     self._process_archives = False
     self._process_compressed_streams = True
     self._queue_size = self._DEFAULT_QUEUE_SIZE
+    self._resolver_context = dfvfs_context.Context()
     self._single_process_mode = False
 
   def _ParsePerformanceOptions(self, options):
@@ -68,6 +70,25 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             'Invalid buffer size: {0:s}.'.format(self._buffer_size))
 
     self._queue_size = self.ParseNumericOption(options, 'queue_size')
+
+  def _PreprocessSources(self, extraction_engine):
+    """Preprocesses the sources.
+
+    Args:
+      extraction_engine (BaseEngine): extraction engine to preprocess
+          the sources.
+    """
+    logging.debug('Starting preprocessing.')
+
+    try:
+      extraction_engine.PreprocessSources(
+          self._artifacts_registry, self._source_path_specs,
+          resolver_context=self._resolver_context)
+
+    except IOError as exception:
+      logging.error('Unable to preprocess with error: {0!s}'.format(exception))
+
+    logging.debug('Preprocessing done.')
 
   def AddPerformanceOptions(self, argument_group):
     """Adds the performance options to the argument group.
