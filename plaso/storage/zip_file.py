@@ -788,6 +788,9 @@ class ZIPStorageFile(interface.BaseStorageFile):
     self._zipfile = None
     self._zipfile_path = None
 
+    self._attribute_container_cache = {}
+    self._attribute_container_cache_lfu = {}
+
     self.format_version = self._FORMAT_VERSION
     self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
     self.storage_type = storage_type
@@ -939,6 +942,57 @@ class ZIPStorageFile(interface.BaseStorageFile):
       identifier = identifiers.SerializedStreamIdentifier(
           stream_number, entry_index)
       attribute_container.SetIdentifier(identifier)
+
+    return attribute_container
+
+  def _GetAttributeContainerWithCache(
+      self, container_type, stream_number, entry_index=NEXT_AVAILABLE_ENTRY):
+    """Reads an attribute container from a specific stream.
+
+    Args:
+      container_type (str): attribute container type.
+      stream_number (int): number of the serialized event source stream.
+      entry_index (Optional[int]): number of the serialized event source
+          within the stream, where NEXT_AVAILABLE_ENTRY represents the next
+          available event
+          source.
+
+    Returns:
+      AttributeContainer: attribute container or None if not available.
+    """
+    if container_type not in self._attribute_container_cache:
+      self._attribute_container_cache[container_type] = {}
+
+    if container_type not in self._attribute_container_cache_lfu:
+      self._attribute_container_cache_lfu[container_type] = []
+
+    container_cache = self._attribute_container_cache[container_type]
+    container_cache_lfu = self._attribute_container_cache_lfu[container_type]
+
+    attribute_container = None
+    if entry_index != self.NEXT_AVAILABLE_ENTRY:
+      lookup_key = u'{0:d}.{1:d}'.format(stream_number, entry_index)
+
+      attribute_container = container_cache.get(lookup_key, None)
+
+    if not attribute_container:
+      attribute_container = self._GetAttributeContainer(
+          container_type, stream_number, entry_index=entry_index)
+
+      lookup_key = u'{0:d}.{1:d}'.format(stream_number, entry_index)
+
+      number_of_cached_containers = len(container_cache)
+      if number_of_cached_containers >= 1000:
+        lfu_lookup_key = container_cache_lfu.pop()
+        del container_cache[lfu_lookup_key]
+
+      container_cache[lookup_key] = attribute_container
+
+    if lookup_key in container_cache_lfu:
+      lfu_index = container_cache_lfu.index(lookup_key)
+      container_cache_lfu.pop(lfu_index)
+
+    container_cache_lfu.append(lookup_key)
 
     return attribute_container
 
@@ -2435,7 +2489,7 @@ class ZIPStorageFile(interface.BaseStorageFile):
     Returns:
       EventData: event data or None if not available.
     """
-    return self._GetAttributeContainer(
+    return self._GetAttributeContainerWithCache(
         'event_data', identifier.stream_number,
         entry_index=identifier.entry_index)
 
