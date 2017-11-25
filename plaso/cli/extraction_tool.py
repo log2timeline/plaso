@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+import logging
+
 from dfvfs.resolver import context as dfvfs_context
 
 # The following import makes sure the analyzers are registered.
