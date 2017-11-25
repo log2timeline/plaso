@@ -71,14 +71,14 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
           'number_times INTEGER DEFAULT 0, PRIMARY KEY (event, bundle_id))')}]
 
   def ParseApplicationUsageRow(
-      self, parser_mediator, row, query=None, **unused_kwargs):
+      self, parser_mediator, query, row, **unused_kwargs):
     """Parses an application usage row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 
