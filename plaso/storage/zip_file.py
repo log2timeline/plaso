@@ -722,8 +722,8 @@ class ZIPStorageFile(interface.BaseStorageFile):
   # decompressed data.
   _MAXIMUM_NUMBER_OF_DECOMPRESSED_STREAMS = 24
 
-  # The maximum number of cached event data.
-  _MAXIMUM_NUMBER_OF_CACHED_EVENT_DATA = 1024
+  # The maximum number of cached attribute containers.
+  _MAXIMUM_NUMBER_OF_CACHED_ATTRIBUTE_CONTAINERS = 1024
 
   # The maximum number of cached tables.
   _MAXIMUM_NUMBER_OF_CACHED_TABLES = 16
@@ -985,7 +985,8 @@ class ZIPStorageFile(interface.BaseStorageFile):
       lookup_key = u'{0:d}.{1:d}'.format(stream_number, entry_index)
 
       number_of_cached_containers = len(container_cache)
-      if number_of_cached_containers >= 1000:
+      if (number_of_cached_containers >=
+          self._MAXIMUM_NUMBER_OF_CACHED_ATTRIBUTE_CONTAINERS):
         lfu_lookup_key = container_cache_lfu.pop()
         del container_cache[lfu_lookup_key]
 
