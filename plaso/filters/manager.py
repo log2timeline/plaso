@@ -20,7 +20,7 @@ class FiltersManager(object):
     The filter classes are identified based on their lower case filter name.
 
     Args:
-      filter_class: the class object of the filter.
+      filter_class (type): class object of the filter.
 
     Raises:
       KeyError: if filter class is not set for the corresponding filter name.
@@ -34,35 +34,35 @@ class FiltersManager(object):
     del cls._filter_classes[filter_name]
 
   @classmethod
-  def GetFilterObject(cls, filter_string):
+  def GetFilterObject(cls, filter_expression):
     """Creates instances of specific filters.
 
     Args:
-      filter_string: A filter string for any of the available filters.
+      filter_expression (str): filter expression.
 
     Returns:
-     The first filter found matching the filter string or None if no
-     corresponding filter is available.
+     FilterObject: the first filter found matching the filter string or
+         None if no corresponding filter is available.
     """
-    if not filter_string:
+    if not filter_expression:
       return
 
     # TODO: refactor not to instantiate all filter classes.
     for filter_object in cls.GetFilterObjects():
       try:
-        filter_object.CompileFilter(filter_string)
+        filter_object.CompileFilter(filter_expression)
         return filter_object
 
       except errors.WrongPlugin:
-        logging.debug('Filter string [{0:s}] is not a filter: {1:s}'.format(
-            filter_string, filter_object.filter_name))
+        logging.debug('Filter expression: {0:s} is not a filter: {1:s}'.format(
+            filter_expression, filter_object.filter_name))
 
   @classmethod
   def GetFilterObjects(cls):
     """Creates instances of the available filters.
 
     Returns:
-      A list of filter objects.
+      list[FilterObject]: available filters.
     """
     return [filter_class() for filter_class in cls._filter_classes.values()]
 
@@ -73,11 +73,11 @@ class FiltersManager(object):
     The filter classes are identified based on their lower case filter name.
 
     Args:
-      filter_class: the class object of the filter.
+      filter_class (type): class object of the filter.
 
     Raises:
       KeyError: if filter class is already set for the corresponding
-                filter name.
+          filter name.
     """
     filter_name = filter_class.__name__
     if filter_name in cls._filter_classes:
@@ -94,11 +94,11 @@ class FiltersManager(object):
     The filter classes are identified based on their lower case filter name.
 
     Args:
-      filter_classes: a list of class objects of the filters.
+      filter_classes (list[type]): class objects of the filters.
 
     Raises:
       KeyError: if filter class is already set for the corresponding
-                filter name.
+          filter name.
     """
     for filter_class in filter_classes:
       cls.RegisterFilter(filter_class)
