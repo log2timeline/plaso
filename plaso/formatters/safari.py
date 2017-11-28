@@ -40,4 +40,4 @@ class SafariHistoryFormatterSqlite(interface.ConditionalEventFormatter):
   SOURCE_SHORT = u'WEBHIST'
 
 manager.FormattersManager.RegisterFormatters([
-  SafariHistoryFormatter, SafariHistoryFormatterSqlite])
+    SafariHistoryFormatter, SafariHistoryFormatterSqlite])

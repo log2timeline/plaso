@@ -29,7 +29,7 @@ class SafariHistoryPageVisitedEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(SafariHistoryPageVisitedEventData, self).__init__(
-      data_type=self.DATA_TYPE)
+        data_type=self.DATA_TYPE)
     self.title = None
     self.url = None
     self.visit_count = None
@@ -38,17 +38,17 @@ class SafariHistoryPageVisitedEventData(events.EventData):
     self.visit_redirect_source = None
 
 
-class SafariHistoryPluginSqlite(interface.SQLitePlugin):	
-  """Parse Safari History Files. 
+class SafariHistoryPluginSqlite(interface.SQLitePlugin):
+  """Parse Safari History Files.
   Safari history file is stored in a SQLite database file name History.DB
   """
   NAME = u'safari_history'
   DESCRIPTION = u'Parser for Safari history SQLite database files.'
 
-  #Define the needed queries. 
+  #Define the needed queries.
 
   QUERIES = [
-  			((u'SELECT history_items.id, history_items.url, history_items.visit_count, '
+  			 ((u'SELECT history_items.id, history_items.url, history_items.visit_count, '
           u'history_visits.id AS visit_id, history_visits.history_item,' 
           u'history_visits.visit_time, history_visits.redirect_destination, '
           u'history_visits.title, history_visits.http_non_get, '
