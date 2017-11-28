@@ -144,7 +144,7 @@ class Filter(object):
             self.value_expander_cls))
       self.value_expander = self.value_expander_cls()
     self.args = arguments or []
-    logging.debug('Adding {0:s}'.format(arguments))
+    logging.debug('Adding {0!s}'.format(arguments))
 
   @abc.abstractmethod
   def Matches(self, obj):
@@ -906,23 +906,3 @@ class BaseFilterImplementation(object):
       'OrFilter': OrFilter,
       'IdentityFilter': IdentityFilter,
       'Context': Context}
-
-
-class LowercaseAttributeFilterImplementation(BaseFilterImplementation):
-  """Does field name access on the lowercase version of names.
-
-  Useful to only access attributes and properties with Google's python naming
-  style.
-  """
-
-  FILTERS = {}
-  FILTERS.update(BaseFilterImplementation.FILTERS)
-  FILTERS.update({'ValueExpander': LowercaseAttributeValueExpander})
-
-
-class DictFilterImplementation(BaseFilterImplementation):
-  """Does value fetching by dictionary access on the object."""
-
-  FILTERS = {}
-  FILTERS.update(BaseFilterImplementation.FILTERS)
-  FILTERS.update({'ValueExpander': DictValueExpander})

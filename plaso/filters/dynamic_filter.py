@@ -9,7 +9,6 @@ from plaso.lib import errors
 from plaso.lib import lexer
 
 
-# TODO: move this to lib.lexer ?
 class SelectiveLexer(lexer.Lexer):
   """Selective filter lexer implementation.
 
@@ -42,7 +41,7 @@ class SelectiveLexer(lexer.Lexer):
       lexer.Token('LIMIT_END', r'(.+)$', 'SetLimit', 'END')]
 
   def __init__(self, data=''):
-    """Initializes a selective lexer object.
+    """Initializes a selective lexer.
 
     Args:
       data: optional initial data to be processed by the lexer.
@@ -60,8 +59,7 @@ class SelectiveLexer(lexer.Lexer):
     the SELECT statement.
 
     Args:
-      match: the match object (instance of re.MatchObject) that contains the
-             output field names.
+      match (re.MatchObject): a match that contains the output field names.
     """
     text = match.group(1).lower()
     field_text, _, _ = text.partition(' from ')
@@ -79,8 +77,7 @@ class SelectiveLexer(lexer.Lexer):
     the WHERE statement.
 
     Args:
-      match: the match object (instance of re.MatchObject) that contains the
-             filter query.
+      match (re.MatchObject): a match that contains the filter query.
     """
     filter_match = match.group(1)
     if 'LIMIT' in filter_match:
@@ -94,8 +91,7 @@ class SelectiveLexer(lexer.Lexer):
     """Sets the row limit.
 
     Args:
-      match: the match object (instance of re.MatchObject) that contains the
-             row limit.
+      match (re.MatchObject): a match that contains the row limit.
     """
     try:
       limit = int(match.group(1))
@@ -110,8 +106,8 @@ class SelectiveLexer(lexer.Lexer):
     """Sets the output field separator.
 
     Args:
-      match: the match object (instance of re.MatchObject) that contains the
-             output field separate. Note that only the first character is used.
+      match (re.MatchObject): a match contains the output field separate.
+          Note that only the first character is used.
     """
     separator = match.group(1)
     if separator:
@@ -119,7 +115,7 @@ class SelectiveLexer(lexer.Lexer):
 
 
 class DynamicFilter(event_filter.EventObjectFilter):
-  """Event object filter that supports selective output fields.
+  """Event filter that supports selective output fields.
 
   This filter is essentially the same as the event object filter except it wraps
   it in a selection of which fields should be included by an output module that
@@ -135,7 +131,7 @@ class DynamicFilter(event_filter.EventObjectFilter):
   _STATE_END = 'END'
 
   def __init__(self):
-    """Initializes a filter object."""
+    """Initializes a dynamic filter."""
     super(DynamicFilter, self).__init__()
     self._fields = []
     self._limit = 0
@@ -143,17 +139,17 @@ class DynamicFilter(event_filter.EventObjectFilter):
 
   @property
   def fields(self):
-    """The output fields."""
+    """list[str]: output fields."""
     return self._fields
 
   @property
   def limit(self):
-    """The row limit."""
+    """int: row limit."""
     return self._limit
 
   @property
   def separator(self):
-    """The output field separator value."""
+    """str: output field separator."""
     return self._separator
 
   def CompileFilter(self, filter_expression):
