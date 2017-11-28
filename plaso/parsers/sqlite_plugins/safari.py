@@ -47,15 +47,14 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
 
   #Define the needed queries.
 
-  QUERIES = [
-  			((u'SELECT history_items.id, history_items.url, history_items.visit'
-        u'_count, history_visits.id AS visit_id, history_visits.history_item,'
-        u'history_visits.visit_time, history_visits.redirect_destination, '
-        u'history_visits.title, history_visits.http_non_get, '
-        u'history_visits.redirect_source, history_items.domain_expansion '
-  			u'FROM history_items, history_visits '
-        u'WHERE history_items.id = history_visits.history_item '
-  			u'ORDER BY history_visits.visit_time'), u'ParsePageVisitRow')]
+  QUERIES = [((u'SELECT history_items.id, history_items.url, history_items.visit'
+      u'_count, history_visits.id AS visit_id, history_visits.history_item,'
+      u'history_visits.visit_time, history_visits.redirect_destination, '
+      u'history_visits.title, history_visits.http_non_get, '
+      u'history_visits.redirect_source, history_items.domain_expansion '
+  		u'FROM history_items, history_visits '
+      u'WHERE history_items.id = history_visits.history_item '
+  		u'ORDER BY history_visits.visit_time'), u'ParsePageVisitRow')]
   			
   # The required tables
   REQUIRED_TABLES = frozenset([u'history_items',u'history_visits'])
