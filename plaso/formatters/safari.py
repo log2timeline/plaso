@@ -23,4 +23,20 @@ class SafariHistoryFormatter(interface.ConditionalEventFormatter):
   SOURCE_SHORT = 'WEBHIST'
 
 
-manager.FormattersManager.RegisterFormatter(SafariHistoryFormatter)
+class SafariHistoryFormatterSqlite(interface.ConditionalEventFormatter):
+  """ Formatter for a Safari history event for Sqlite History.db"""
+
+  DATA_TYPE = u'safari:history:visit_sqlite'
+
+  FORMAT_STRING_PIECES = [
+      u'URL: {url}',
+      u'Title: ({title})',
+      u'[count: {visit_count}]',
+      u'Host: {host}',
+      u'http_non_get: {was_http_non_get}']
+
+
+  SOURCE_LONG = u'Safari History'
+  SOURCE_SHORT = u'WEBHIST'
+
+manager.FormattersManager.RegisterFormatters([SafariHistoryFormatter,SafariHistoryFormatterSqlite])
