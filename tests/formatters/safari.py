@@ -34,6 +34,29 @@ class SafariHistoryFormatterTest(test_lib.EventFormatterTestCase):
 
   # TODO: add test for GetMessages.
 
+class SafariHistoryFormatterSqlite(test_lib.EventFormatterTestCase):
+  """Tests for the Safari history event formatter."""
+
+  def testInitialization(self):
+    """Tests the initialization."""
+    event_formatter = safari.SafariHistoryFormatterSqlite()
+    self.assertIsNotNone(event_formatter)
+
+  def testGetFormatStringAttributeNames(self):
+    """Tests the GetFormatStringAttributeNames function."""
+    event_formatter = safari.SafariHistoryFormatterSqlite()
+
+    expected_attribute_names = [
+        u'url',
+        u'title',
+        u'visit_count',
+        u'host',
+        u'was_http_non_get']
+
+    self._TestGetFormatStringAttributeNames(
+        event_formatter, expected_attribute_names)
+
+
 
 if __name__ == '__main__':
   unittest.main()
