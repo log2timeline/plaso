@@ -14,7 +14,7 @@ matrix:
     python: 3.4
     env: TOXENV=py34
   - os: osx
-    osx_image: xcode8.1
+    osx_image: xcode8.3
     language: generic
     env: PYTHONPATH=/Library/Python/2.7/site-packages/
 install:
