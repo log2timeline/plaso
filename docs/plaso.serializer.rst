@@ -1,19 +1,19 @@
-plaso.serializer package
-========================
+plaso\.serializer package
+=========================
 
 Submodules
 ----------
 
-plaso.serializer.interface module
----------------------------------
+plaso\.serializer\.interface module
+-----------------------------------
 
 .. automodule:: plaso.serializer.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.serializer.json_serializer module
----------------------------------------
+plaso\.serializer\.json\_serializer module
+------------------------------------------
 
 .. automodule:: plaso.serializer.json_serializer
     :members:
