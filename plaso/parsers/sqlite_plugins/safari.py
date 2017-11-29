@@ -68,22 +68,22 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
   	       u'weekly_visit_counts BLOB NULL, autocomplete_triggers BLOB NULL, '
   	       u'should_recompute_derived_visit_counts INTEGER NOT NULL, '
           u'visit_count_score INTEGER NOT NULL)'),
-		    u'history_tombstones': (
+		  u'history_tombstones': (
 			     u'CREATE TABLE history_tombstones (id INTEGER PRIMARY KEY AUTOINCREMENT, '
 			     u'start_time REAL NOT NULL, end_time REAL NOT NULL, '
-			     u'url TEXT,generation INTEGER NOT NULL DEFAULT 0)'),
+			    u'url TEXT,generation INTEGER NOT NULL DEFAULT 0)'),
 		  u'metadata': (
 			     u'CREATE TABLE metadata (key TEXT NOT NULL UNIQUE, value)'),
 		  u'history_client_versions': (
 			     u'CREATE TABLE history_client_versions (client_version '
-           u'INTEGER PRIMARY KEY, last_seen REAL NOT NULL)'),
+          u'INTEGER PRIMARY KEY, last_seen REAL NOT NULL)'),
 		  u'history_event_listeners': (
 			     u'CREATE TABLE history_event_listeners (listener_name '
-           u'TEXT PRIMARY KEY, last_seen REAL NOT NULL)'),
+          u'TEXT PRIMARY KEY, last_seen REAL NOT NULL)'),
 		  u'history_events': (
 			     u'CREATE TABLE history_events (id INTEGER PRIMARY KEY '
            u'AUTOINCREMENT, event_type TEXT NOT NULL, '
-			     u'event_time REAL NOT NULL, pending_listeners TEXT NOT NULL, value BLOB)'),
+			   u'event_time REAL NOT NULL, pending_listeners TEXT NOT NULL, value BLOB)'),
 		  u'history_visits': (
 			     u'CREATE TABLE history_visits (id INTEGER PRIMARY KEY AUTOINCREMENT, '
 			     u'history_item INTEGER NOT NULL REFERENCES history_items(id) ON DELETE CASCADE, '
@@ -94,7 +94,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
 			     u'ON DELETE CASCADE, redirect_destination INTEGER NULL UNIQUE '
            u'REFERENCES history_visits(id) ON DELETE CASCADE, '
 			     u'origin INTEGER NOT NULL DEFAULT 0, generation INTEGER NOT NULL DEFAULT 0, '
-			     u'attributes INTEGER NOT NULL DEFAULT 0, score INTEGER NOT NULL DEFAULT 0)')}]
+			   u'attributes INTEGER NOT NULL DEFAULT 0, score INTEGER NOT NULL DEFAULT 0)')}]
 
   def _GetHostname(self, url):
     """Retrieves the hostname from a full URL.
@@ -145,7 +145,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
      
 
     timestamp = row['visit_time']
-    date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
+    date_time = dfdatetime_cocoa_time.CocoaTime(timestamp = timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
