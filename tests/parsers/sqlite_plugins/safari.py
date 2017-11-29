@@ -23,21 +23,22 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
     """Tests the process function on a Safari History.db database file."""
 
     plugin = safari.SafariHistoryPluginSqlite()
-    cache =sqlite.SQLiteCache()
+    cache = sqlite.SQLiteCache()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History.db'], plugin, cache=cache)
 
-    # the History file contains 19 events 
+    # the History file contains 19 events
     self.assertEqual(storage_writer.number_of_events, 25)
 
-    events =list(storage_writer.GetEvents())
-  	
-  	#check the first page visited entry 
-    event =events[1]
+    events = list(storage_writer.GetEvents())
+  	#check the first page visited entry
+    event = events[1]
 
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
+    self.assertEqual(event.timestamp_desc, 
+        definitions.TIME_DESCRIPTION_LAST_VISITED)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString('2017-11-09 21:24:28.829571')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        '2017-11-09 21:24:28.829571')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_url = 'http://facebook.com/'
@@ -46,16 +47,12 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
     expected_title = ''
     self.assertEqual(event.title, expected_title)
 
-    expected_message = ('URL: {0:s} [count: 2] Host: facebook.com http_non_get: False').format(expected_url, expected_title)
+    expected_message = (
+        'URL: {0:s} [count: 2] Host: facebook.com http_non_get: False').format(
+             expected_url)
 
-    self._TestGetMessageStrings(event,expected_message,expected_message)
+    self._TestGetMessageStrings(event, expected_message, expected_message)
 
 
 if __name__ == '_main_':
   unittest.main()
-
-
-
-  	
-
-
