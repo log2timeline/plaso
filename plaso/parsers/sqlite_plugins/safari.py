@@ -68,7 +68,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
   	       u'weekly_visit_counts BLOB NULL, autocomplete_triggers BLOB NULL, '
   	       u'should_recompute_derived_visit_counts INTEGER NOT NULL, '
           u'visit_count_score INTEGER NOT NULL)'),
-		  u'history_tombstones': (
+		    u'history_tombstones': (
 			     u'CREATE TABLE history_tombstones (id INTEGER PRIMARY KEY AUTOINCREMENT, '
 			     u'start_time REAL NOT NULL, end_time REAL NOT NULL, '
 			    u'url TEXT,generation INTEGER NOT NULL DEFAULT 0)'),
