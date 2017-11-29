@@ -3,7 +3,6 @@
 
 The Safari History is stored in SQLite database files named History.db
 """
-from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
@@ -69,7 +68,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
   	       u'should_recompute_derived_visit_counts INTEGER NOT NULL, '
           u'visit_count_score INTEGER NOT NULL)'),
 		    u'history_tombstones': (
-			     u'CREATE TABLE history_tombstones (id INTEGER PRIMARY KEY '
+			                     u'CREATE TABLE history_tombstones (id INTEGER PRIMARY KEY '
            u'AUTOINCREMENT, start_time REAL NOT NULL, end_time REAL NOT NULL, '
 			    u'url TEXT,generation INTEGER NOT NULL DEFAULT 0)'),
 		  u'metadata': (
@@ -94,7 +93,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
 			     u'ON DELETE CASCADE, redirect_destination INTEGER NULL UNIQUE '
            u'REFERENCES history_visits(id) ON DELETE CASCADE, '
 			     u'origin INTEGER NOT NULL DEFAULT 0, generation INTEGER NOT NULL DEFAULT 0, '
-			   u'attributes INTEGER NOT NULL DEFAULT 0, score INTEGER NOT NULL DEFAULT 0)')}]
+			     u'attributes INTEGER NOT NULL DEFAULT 0, score INTEGER NOT NULL DEFAULT 0)')}]
 
   def _GetHostname(self, url):
     """Retrieves the hostname from a full URL.
@@ -116,8 +115,8 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
 
 
 
-  def ParsePageVisitRow(self, parser_mediator, row, cache=None, 
-    database=None, query=None, **unused_kwargs):
+  def ParsePageVisitRow(self, parser_mediator, row,
+    query=None, **unused_kwargs):
 
     """Parses a visited row.
     Args:
@@ -133,7 +132,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
 
       # Todo: Extras 
 
-    event_data=SafariHistoryPageVisitedEventData()
+    event_data = SafariHistoryPageVisitedEventData()
     event_data.offset = row['id']
     event_data.query = query
     event_data.title = row['title']
@@ -141,11 +140,10 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
     event_data.visit_count = row['visit_count']
     event_data.host = self._GetHostname(row['url'])
     event_data.was_http_non_get = bool(row['http_non_get'])
-   
-     
+
 
     timestamp = row['visit_time']
-    date_time = dfdatetime_cocoa_time.CocoaTime(timestamp = timestamp)
+    date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
