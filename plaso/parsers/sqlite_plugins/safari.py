@@ -55,7 +55,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
         u'history_visits.redirect_source, history_items.domain_expansion '
         u'FROM history_items, history_visits '
         u'WHERE history_items.id = history_visits.history_item '
-  		  u'ORDER BY history_visits.visit_time'), u'ParsePageVisitRow')]
+  		    u'ORDER BY history_visits.visit_time'), u'ParsePageVisitRow')]
 
   # The required tables
   REQUIRED_TABLES = frozenset([u'history_items', u'history_visits'])
@@ -67,9 +67,9 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
   	       u'visit_count INTEGER NOT NULL, daily_visit_counts BLOB NOT NULL, '
   	       u'weekly_visit_counts BLOB NULL, autocomplete_triggers BLOB NULL, '
   	       u'should_recompute_derived_visit_counts INTEGER NOT NULL, '
-           u'visit_count_score INTEGER NOT NULL)'),
-		  u'history_tombstones': (
-			     u'CREATE TABLE history_tombstones (id INTEGER PRIMARY KEY AUTOINCREMENT, '
+          u'visit_count_score INTEGER NOT NULL)'),
+		    u'history_tombstones': (
+			                   u'CREATE TABLE history_tombstones (id INTEGER PRIMARY KEY AUTOINCREMENT, '
 			     u'start_time REAL NOT NULL, end_time REAL NOT NULL, '
 			     u'url TEXT,generation INTEGER NOT NULL DEFAULT 0)'),
 		  u'metadata': (
