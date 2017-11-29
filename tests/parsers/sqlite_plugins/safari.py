@@ -49,7 +49,7 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_message = (
         'URL: {0:s} [count: 2] Host: facebook.com http_non_get: False').format(
-             expected_url)
+            expected_url)
 
     self._TestGetMessageStrings(event, expected_message, expected_message)
 
