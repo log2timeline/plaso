@@ -61,39 +61,39 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
 
   SCHEMAS = [{
       u'history_items': (
-  	       u'CREATE TABLE history_items (id INTEGER PRIMARY KEY AUTOINCREMENT, '
-  	       u'url TEXT NOT NULL UNIQUE,domain_expansion TEXT NULL, '
-  	       u'visit_count INTEGER NOT NULL, daily_visit_counts BLOB NOT NULL, '
-  	       u'weekly_visit_counts BLOB NULL, autocomplete_triggers BLOB NULL, '
-  	       u'should_recompute_derived_visit_counts INTEGER NOT NULL, '
+          u'CREATE TABLE history_items (id INTEGER PRIMARY KEY AUTOINCREMENT, '
+  	      u'url TEXT NOT NULL UNIQUE,domain_expansion TEXT NULL, '
+  	      u'visit_count INTEGER NOT NULL, daily_visit_counts BLOB NOT NULL, '
+  	      u'weekly_visit_counts BLOB NULL, autocomplete_triggers BLOB NULL, '
+  	      u'should_recompute_derived_visit_counts INTEGER NOT NULL, '
           u'visit_count_score INTEGER NOT NULL)'),
-		    u'history_tombstones': (
-			                     u'CREATE TABLE history_tombstones (id INTEGER PRIMARY KEY '
-           u'AUTOINCREMENT, start_time REAL NOT NULL, end_time REAL NOT NULL, '
+		  u'history_tombstones': (
+			    u'CREATE TABLE history_tombstones (id INTEGER PRIMARY KEY '
+          u'AUTOINCREMENT, start_time REAL NOT NULL, end_time REAL NOT NULL, '
 			    u'url TEXT,generation INTEGER NOT NULL DEFAULT 0)'),
 		  u'metadata': (
-			     u'CREATE TABLE metadata (key TEXT NOT NULL UNIQUE, value)'),
+			    u'CREATE TABLE metadata (key TEXT NOT NULL UNIQUE, value)'),
 		  u'history_client_versions': (
-			     u'CREATE TABLE history_client_versions (client_version '
+			    u'CREATE TABLE history_client_versions (client_version '
           u'INTEGER PRIMARY KEY, last_seen REAL NOT NULL)'),
 		  u'history_event_listeners': (
-			     u'CREATE TABLE history_event_listeners (listener_name '
+			    u'CREATE TABLE history_event_listeners (listener_name '
           u'TEXT PRIMARY KEY, last_seen REAL NOT NULL)'),
 		  u'history_events': (
-			     u'CREATE TABLE history_events (id INTEGER PRIMARY KEY '
-           u'AUTOINCREMENT, event_type TEXT NOT NULL, '
-			   u'event_time REAL NOT NULL, pending_listeners TEXT NOT NULL, value BLOB)'),
+			    u'CREATE TABLE history_events (id INTEGER PRIMARY KEY '
+          u'AUTOINCREMENT, event_type TEXT NOT NULL, '
+			    u'event_time REAL NOT NULL, pending_listeners TEXT NOT NULL, value BLOB)'),
 		  u'history_visits': (
-			     u'CREATE TABLE history_visits (id INTEGER PRIMARY KEY AUTOINCREMENT, '
-			     u'history_item INTEGER NOT NULL REFERENCES history_items(id) ON DELETE CASCADE, '
-           u'visit_time REAL NOT NULL, title TEXT NULL,load_successful '
-           u'BOOLEAN NOT NULL DEFAULT 1, http_non_get BOOLEAN NOT NULL DEFAULT 0, '
-			     u'synthesized BOOLEAN NOT NULL DEFAULT 0, redirect_source '
-           u'INTEGER NULL UNIQUE REFERENCES history_visits(id) '
-			     u'ON DELETE CASCADE, redirect_destination INTEGER NULL UNIQUE '
-           u'REFERENCES history_visits(id) ON DELETE CASCADE, '
-			     u'origin INTEGER NOT NULL DEFAULT 0, generation INTEGER NOT NULL DEFAULT 0, '
-			     u'attributes INTEGER NOT NULL DEFAULT 0, score INTEGER NOT NULL DEFAULT 0)')}]
+			    u'CREATE TABLE history_visits (id INTEGER PRIMARY KEY AUTOINCREMENT, '
+			    u'history_item INTEGER NOT NULL REFERENCES history_items(id) ON DELETE CASCADE, '
+          u'visit_time REAL NOT NULL, title TEXT NULL,load_successful '
+          u'BOOLEAN NOT NULL DEFAULT 1, http_non_get BOOLEAN NOT NULL DEFAULT 0, '
+			    u'synthesized BOOLEAN NOT NULL DEFAULT 0, redirect_source '
+          u'INTEGER NULL UNIQUE REFERENCES history_visits(id) '
+			    u'ON DELETE CASCADE, redirect_destination INTEGER NULL UNIQUE '
+          u'REFERENCES history_visits(id) ON DELETE CASCADE, '
+			    u'origin INTEGER NOT NULL DEFAULT 0, generation INTEGER NOT NULL DEFAULT 0, '
+			    u'attributes INTEGER NOT NULL DEFAULT 0, score INTEGER NOT NULL DEFAULT 0)')}]
 
   def _GetHostname(self, url):
     """Retrieves the hostname from a full URL.
@@ -116,7 +116,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
 
 
   def ParsePageVisitRow(self, parser_mediator, row,
-    query=None, **unused_kwargs):
+      query=None, **unused_kwargs):
 
     """Parses a visited row.
     Args:
@@ -130,7 +130,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
       # Note that pysqlite does not accept a Unicode string in row['string'] and
       # will raise "IndexError: Index must be int or string".
 
-      # Todo: Extras 
+      # Todo: Extras
 
     event_data = SafariHistoryPageVisitedEventData()
     event_data.offset = row['id']
