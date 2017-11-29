@@ -313,8 +313,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           'Extracting file entries from: {0:s}\n'.format(display_name))
 
       environment_variables = self._knowledge_base.GetEnvironmentVariables()
-      find_specs = filter_file.BuildFindSpecsFromFile(
-          filter_file_path, environment_variables=environment_variables)
+      filter_file_object = filter_file.FilterFile(filter_file_path)
+      find_specs = filter_file_object.BuildFindSpecs(
+          environment_variables=environment_variables)
 
       searcher = file_system_searcher.FileSystemSearcher(
           file_system, mount_point)
