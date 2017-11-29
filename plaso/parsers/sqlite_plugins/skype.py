@@ -436,14 +436,14 @@ class SkypePlugin(interface.SQLitePlugin):
           'INTEGER, xmsg TEXT, extprop_hide_from_history INTEGER)')}]
 
   def ParseAccountInformation(
-      self, parser_mediator, row, query=None, **unused_kwargs):
+      self, parser_mediator, query, row, **unused_kwargs):
     """Parses account information.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row with account information.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 
@@ -496,14 +496,14 @@ class SkypePlugin(interface.SQLitePlugin):
       event = time_events.DateTimeValuesEvent(date_time, 'Last Used')
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def ParseChat(self, parser_mediator, row, query=None, **unused_kwargs):
+  def ParseChat(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a chat message.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row resulting from query.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 
@@ -537,14 +537,14 @@ class SkypePlugin(interface.SQLitePlugin):
       event = time_events.DateTimeValuesEvent(date_time, 'Chat from Skype')
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def ParseSMS(self, parser_mediator, row, query=None, **unused_kwargs):
+  def ParseSMS(self, parser_mediator, query, row, **unused_kwargs):
     """Parses an SMS.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row resulting from query.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 
@@ -563,12 +563,13 @@ class SkypePlugin(interface.SQLitePlugin):
       event = time_events.DateTimeValuesEvent(date_time, 'SMS from Skype')
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def ParseCall(self, parser_mediator, row, query=None, **unused_kwargs):
+  def ParseCall(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a call.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row resulting from query.
       query (Optional[str]): query.
     """
@@ -650,7 +651,7 @@ class SkypePlugin(interface.SQLitePlugin):
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseFileTransfer(
-      self, parser_mediator, row, cache=None, database=None, query=None,
+      self, parser_mediator, query, row, cache=None, database=None,
       **unused_kwargs):
     """Parses a file transfer.
 
@@ -660,10 +661,10 @@ class SkypePlugin(interface.SQLitePlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row resulting from query.
       cache (Optional[SQLiteCache]): cache.
       database (Optional[SQLiteDatabase]): database.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 
