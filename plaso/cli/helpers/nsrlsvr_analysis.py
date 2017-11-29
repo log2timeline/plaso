@@ -49,13 +49,13 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
             'default is: {0:s}').format(cls._DEFAULT_HOST))
 
     argument_group.add_argument(
-        '--nsrlsvr-label', '--nsrlsvr_label', dest='nsrlvr_label', type=str,
+        '--nsrlsvr-label', '--nsrlsvr_label', dest='nsrlsvr_label', type=str,
         action='store', default=cls._DEFAULT_LABEL, metavar='LABEL', help=(
             'Label to apply to events, the default is: '
             '{0:s}.').format(cls._DEFAULT_LABEL))
 
     argument_group.add_argument(
-        '--nsrlsvr-port', '--nsrlsvr_port', dest='nsrlvr_port', type=int,
+        '--nsrlsvr-port', '--nsrlsvr_port', dest='nsrlsvr_port', type=int,
         action='store', default=cls._DEFAULT_PORT, metavar='PORT', help=(
             'Port number of the nsrlsvr instance to query, the default is: '
             '{0:d}.').format(cls._DEFAULT_PORT))

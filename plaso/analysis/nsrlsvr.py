@@ -156,7 +156,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
 
 
 class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
-  """An analysis plugin for looking up hashes in nsrlsvr."""
+  """Analysis plugin for looking up hashes in nsrlsvr."""
 
   # The NSRL contains files of all different types, and can handle a high load
   # so look up all files.
@@ -189,7 +189,7 @@ class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     return []
 
   def SetLabel(self, label):
-    """
+    """Sets the tagging label.
 
     Args:
       label (str): label to apply to events extracted from files that are
