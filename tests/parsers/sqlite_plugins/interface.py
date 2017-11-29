@@ -37,31 +37,25 @@ class TestSQLitePlugin(interface.SQLitePlugin):
     super(TestSQLitePlugin, self).__init__()
     self.results = []
 
-  def ParseMyTableRow(self, parser_mediator, row, **unused_kwargs):
+  def ParseMyTableRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a MyTable row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
     """
+    query_hash = hash(query)
+
     file_entry = parser_mediator.GetFileEntry()
     path_spec = file_entry.path_spec
     location = path_spec.location
     from_wal = location.endswith('-wal')
 
-    # If Python 2 is used pysqlite does not accept a Unicode string in
-    # row['string'] and will raise "IndexError: Index must be int or string".
-    row_keys = row.keys()
-
-    column_index = row_keys.index('Field1')
-    field1 = row[column_index]
-
-    column_index = row_keys.index('Field2')
-    field2 = row[column_index]
-
-    column_index = row_keys.index('Field3')
-    field3 = row[column_index]
+    field1 = self._GetRowValue(query_hash, row, 'Field1')
+    field2 = self._GetRowValue(query_hash, row, 'Field2')
+    field3 = self._GetRowValue(query_hash, row, 'Field3')
 
     # If Python 2 is used field3 needs to be converted to a string
     # because it is a read-write buffer.

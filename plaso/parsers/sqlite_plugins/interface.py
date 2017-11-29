@@ -113,7 +113,7 @@ class SQLitePlugin(plugins.BasePlugin):
 
       try:
         callback(
-            parser_mediator, row, cache=cache, database=database, query=query)
+            parser_mediator, query, row, cache=cache, database=database)
 
         row_hash = self._HashRow(row)
         row_cache.add(row_hash)
@@ -159,8 +159,7 @@ class SQLitePlugin(plugins.BasePlugin):
 
       try:
         callback(
-            parser_mediator, row, cache=cache, database=database_wal,
-            query=query)
+            parser_mediator, query, row, cache=cache, database=database_wal)
 
       except sqlite3.DatabaseError as exception:
         parser_mediator.ProduceExtractionError((

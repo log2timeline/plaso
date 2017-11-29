@@ -95,13 +95,13 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
     self._cookie_plugins = (
         cookie_plugins_manager.CookiePluginsManager.GetPlugins())
 
-  def ParseCookieRow(self, parser_mediator, row, query=None, **unused_kwargs):
+  def ParseCookieRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a cookie row.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
+      query (str): query that created the row.
       row (sqlite3.Row): row resulting from the query.
-      query (Optional[str]): query string.
     """
     query_hash = hash(query)
 

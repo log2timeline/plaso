@@ -262,14 +262,14 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     return self.VISIT_SOURCE.get(results[0], None)
 
   def ParseFileDownloadedRow(
-      self, parser_mediator, row, query=None, **unused_kwargs):
+      self, parser_mediator, query, row, **unused_kwargs):
     """Parses a file downloaded row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 
@@ -289,14 +289,14 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseNewFileDownloadedRow(
-      self, parser_mediator, row, query=None, **unused_kwargs):
+      self, parser_mediator, query, row, **unused_kwargs):
     """Parses a file downloaded row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 
@@ -316,17 +316,17 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseLastVisitedRow(
-      self, parser_mediator, row, cache=None, database=None, query=None,
+      self, parser_mediator, query, row, cache=None, database=None,
       **unused_kwargs):
     """Parses a last visited row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
       cache (Optional[SQLiteCache]): cache.
       database (Optional[SQLiteDatabase]): database.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 

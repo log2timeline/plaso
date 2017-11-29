@@ -174,14 +174,14 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
           'INTEGER, \'businessProfileState\' INTEGER, \'analyticsType\' '
           'INTEGER )')}]
 
-  def ParseContactRow(self, parser_mediator, row, query=None, **unused_kwargs):
+  def ParseContactRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a contact row from the database.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row resulting from query.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 
@@ -218,14 +218,14 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_UPDATE)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def ParseStatusRow(self, parser_mediator, row, query=None, **unused_kwargs):
+  def ParseStatusRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a contact row from the database.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row resulting from query.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 

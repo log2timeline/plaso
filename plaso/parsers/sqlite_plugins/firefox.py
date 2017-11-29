@@ -300,14 +300,14 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
   }
 
   def ParseBookmarkAnnotationRow(
-      self, parser_mediator, row, query=None, **unused_kwargs):
+      self, parser_mediator, query, row, **unused_kwargs):
     """Parses a bookmark annotation row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 
@@ -335,14 +335,14 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseBookmarkFolderRow(
-      self, parser_mediator, row, query=None, **unused_kwargs):
+      self, parser_mediator, query, row, **unused_kwargs):
     """Parses a bookmark folder row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 
@@ -370,14 +370,14 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseBookmarkRow(
-      self, parser_mediator, row, query=None, **unused_kwargs):
+      self, parser_mediator, query, row, **unused_kwargs):
     """Parses a bookmark row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 
@@ -411,17 +411,17 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParsePageVisitedRow(
-      self, parser_mediator, row, cache=None, database=None, query=None,
+      self, parser_mediator, query, row, cache=None, database=None,
       **unused_kwargs):
     """Parses a page visited row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
-      cache (SQLiteCache): cache.
-      database (SQLiteDatabase): database.
-      query (Optional[str]): query.
+      cache (Optional[SQLiteCache]): cache.
+      database (Optional[SQLiteDatabase]): database.
     """
     query_hash = hash(query)
 
@@ -473,10 +473,10 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       www.google.com
 
     Args:
-      hostname: The reversed hostname.
+      hostname (str): reversed hostname.
 
     Returns:
-      Reversed string without a leading dot.
+      str: hostname without a leading dot.
     """
     if not hostname:
       return ''
@@ -490,7 +490,16 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     return hostname[::-1][0:]
 
   def _GetUrl(self, url_id, cache, database):
-    """Return an URL from a reference to an entry in the from_visit table."""
+    """Retrieves an URL from a reference to an entry in the from_visit table.
+
+    Args:
+      url_id (str): identifier of the visited URL.
+      cache (SQLiteCache): cache.
+      database (SQLiteDatabase): database.
+
+    Returns:
+      str: URL and hostname.
+    """
     url_cache_results = cache.GetResults('url')
     if not url_cache_results:
       result_set = database.Query(self.URL_CACHE_QUERY)
@@ -541,14 +550,14 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
   REQUIRED_TABLES = frozenset(['moz_downloads'])
 
   def ParseDownloadsRow(
-      self, parser_mediator, row, query=None, **unused_kwargs):
+      self, parser_mediator, query, row, **unused_kwargs):
     """Parses a downloads row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 

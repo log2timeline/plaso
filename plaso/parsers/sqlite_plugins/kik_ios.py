@@ -116,14 +116,14 @@ class KikIOSPlugin(interface.SQLitePlugin):
           'INTEGER, Z_OPT INTEGER, ZLOCALFLAGS INTEGER, ZUSER INTEGER, '
           'ZPUBLICMESSAGINGKEY BLOB )')}]
 
-  def ParseMessageRow(self, parser_mediator, row, query=None, **unused_kwargs):
+  def ParseMessageRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a message row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 
