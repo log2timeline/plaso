@@ -53,7 +53,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
         u'history_visits.visit_time, history_visits.redirect_destination, '
         u'history_visits.title, history_visits.http_non_get, '
         u'history_visits.redirect_source, history_items.domain_expansion '
-  		  u'FROM history_items, history_visits '
+          u'FROM history_items, history_visits '
         u'WHERE history_items.id = history_visits.history_item '
   		  u'ORDER BY history_visits.visit_time'), u'ParsePageVisitRow')]
 
