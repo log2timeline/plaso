@@ -126,10 +126,12 @@ class PstealTool(
     self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
     self._storage_file_path = None
+    self._temporary_directory = None
     self._time_slice = None
     self._use_time_slicer = False
     self._use_zeromq = True
     self._yara_rules_string = None
+
     self.list_hashers = False
     self.list_language_identifiers = False
     self.list_output_modules = False
@@ -151,6 +153,7 @@ class PstealTool(
     configuration.filter_file = self._filter_file
     configuration.parser_filter_expression = self._parser_filter_expression
     configuration.preferred_year = self._preferred_year
+    configuration.temporary_directory = self._temporary_directory
 
     return configuration
 
@@ -422,7 +425,7 @@ class PstealTool(
     self.AddBasicOptions(argument_parser)
 
     extraction_group = argument_parser.add_argument_group(
-        'Extraction Arguments')
+        'extraction arguments')
 
     argument_helper_names = ['extraction']
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
@@ -436,12 +439,12 @@ class PstealTool(
     self.AddStorageMediaImageOptions(extraction_group)
     self.AddCredentialOptions(extraction_group)
 
-    info_group = argument_parser.add_argument_group('Informational Arguments')
+    info_group = argument_parser.add_argument_group('informational arguments')
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         info_group, names=['status_view'])
 
-    input_group = argument_parser.add_argument_group('Input Arguments')
+    input_group = argument_parser.add_argument_group('input arguments')
     input_group.add_argument(
         '--source', dest='source', action='store',
         type=str, help='The source to process')
@@ -449,7 +452,7 @@ class PstealTool(
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         input_group, names=['data_location'])
 
-    output_group = argument_parser.add_argument_group('Output Arguments')
+    output_group = argument_parser.add_argument_group('output arguments')
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         output_group, names=['language'])
@@ -457,10 +460,16 @@ class PstealTool(
     self.AddTimeZoneOption(output_group)
 
     output_format_group = argument_parser.add_argument_group(
-        'Output Format Arguments')
+        'output format arguments')
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         output_format_group, names=['output_modules'])
+
+    processing_group = argument_parser.add_argument_group(
+        'processing arguments')
+
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        processing_group, names=['temporary_directory'])
 
     try:
       options = argument_parser.parse_args()
@@ -523,7 +532,7 @@ class PstealTool(
 
     self._ParseInformationalOptions(options)
 
-    argument_helper_names = ['extraction', 'status_view']
+    argument_helper_names = ['extraction', 'status_view', 'temporary_directory']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
