@@ -74,9 +74,9 @@ class FakeStorageWriter(interface.StorageWriter):
       raise IOError('Unable to write to closed storage writer.')
 
   def _ReadEventDataIntoEvent(self, event):
-    """Reads the event data into the event.
+    """Reads the data into the event.
 
-    This function is intended to offer backwards event behavior.
+    This function is intended to offer backwards compatible event behavior.
 
     Args:
       event (EventObject): event.
