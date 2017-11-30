@@ -15,6 +15,7 @@ from plaso.parsers.sqlite_plugins import safari
 from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
+
 class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Safari History database plugin ."""
 
@@ -31,11 +32,11 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(storage_writer.number_of_events, 25)
 
     events = list(storage_writer.GetEvents())
-  	#check the first page visited entry
+    #check the first page visited entry
     event = events[1]
 
     self.assertEqual(event.timestamp_desc,
-        definitions.TIME_DESCRIPTION_LAST_VISITED)
+                     definitions.TIME_DESCRIPTION_LAST_VISITED)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         '2017-11-09 21:24:28.829571')
@@ -48,8 +49,8 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event.title, expected_title)
 
     expected_message = (
-        'URL: {0:s} [count: 2] Host: facebook.com http_non_get: False').format(
-            expected_url)
+        'URL: {0:s} [count: 2] Host: facebook.com http_non_get: False'
+    ).format(expected_url)
 
     self._TestGetMessageStrings(event, expected_message, expected_message)
 
