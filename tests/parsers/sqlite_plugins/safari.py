@@ -34,7 +34,7 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
   	#check the first page visited entry
     event = events[1]
 
-    self.assertEqual(event.timestamp_desc, 
+    self.assertEqual(event.timestamp_desc,
         definitions.TIME_DESCRIPTION_LAST_VISITED)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
