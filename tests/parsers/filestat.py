@@ -42,6 +42,7 @@ class FileStatTest(test_lib.ParserTestCase):
     event = events[0]
 
     self.assertEqual(event.file_size, 116)
+    self.assertEqual(event.inode, 15)
 
     expected_message = (
         'TSK:/passwords.txt '
@@ -72,6 +73,7 @@ class FileStatTest(test_lib.ParserTestCase):
     event = events[0]
 
     self.assertEqual(event.file_size, 1247)
+    self.assertIsNone(event.inode)
 
     expected_message = (
         'ZIP:/syslog '
@@ -101,6 +103,7 @@ class FileStatTest(test_lib.ParserTestCase):
     event = events[0]
 
     self.assertEqual(event.file_size, 1247)
+    self.assertIsNone(event.inode)
 
     test_path = os.path.join(os.getcwd(), 'test_data', 'syslog.gz')
     expected_message = (
@@ -132,6 +135,7 @@ class FileStatTest(test_lib.ParserTestCase):
     event = events[0]
 
     self.assertEqual(event.file_size, 1247)
+    self.assertIsNone(event.inode)
 
     expected_message = (
         'TAR:/syslog '
@@ -164,6 +168,7 @@ class FileStatTest(test_lib.ParserTestCase):
     event = events[0]
 
     self.assertEqual(event.file_size, 1247)
+    self.assertIsNone(event.inode)
 
     expected_message = (
         'TAR:/syslog '
@@ -188,6 +193,7 @@ class FileStatTest(test_lib.ParserTestCase):
     event = events[0]
 
     self.assertEqual(event.file_size, 10240)
+    self.assertIsNone(event.inode)
 
     test_path = os.path.join(os.getcwd(), 'test_data', 'syslog.tgz')
     expected_message = (
@@ -222,6 +228,7 @@ class FileStatTest(test_lib.ParserTestCase):
     event = events[0]
 
     self.assertEqual(event.file_size, 1247)
+    self.assertIsNone(event.inode)
 
     expected_message = (
         'ZIP:/syslog '
