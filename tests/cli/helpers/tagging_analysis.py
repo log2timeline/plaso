@@ -68,13 +68,15 @@ optional arguments:
       tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
           options, analysis_plugin)
 
-    options.tagging_file = self._GetTestFilePath(['tagging_file', 'invalid.txt'])
+    options.tagging_file = self._GetTestFilePath([
+        'tagging_file', 'invalid.txt'])
 
     with self.assertRaises(errors.BadConfigOption):
       tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
           options, analysis_plugin)
 
-    options.tagging_file = self._GetTestFilePath(['tagging_file', 'encoding.txt'])
+    options.tagging_file = self._GetTestFilePath([
+        'tagging_file', 'encoding.txt'])
 
     with self.assertRaises(errors.BadConfigOption):
       tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
