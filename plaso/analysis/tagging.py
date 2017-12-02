@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""A plugin to tag events according to rules in a tag file."""
+"""A plugin to tag events according to rules in a tagging file."""
 
 from __future__ import unicode_literals
 

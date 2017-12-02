@@ -8,6 +8,7 @@ import os
 import unittest
 
 from plaso.analysis import tagging
+from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.containers import events
 
@@ -35,7 +36,8 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
 
   # pylint: disable=protected-access
 
-  _INVALID_TEST_TAG_FILE_NAME = os.path.join('tagging_file', 'invalid.txt')
+  _INVALID_TEST_TAG_FILE_NAME = os.path.join(
+      'tagging_file', 'invalid_syntax.txt')
   _TEST_TAG_FILE_NAME = os.path.join('tagging_file', 'valid.txt')
 
   _TEST_EVENTS = [
@@ -127,7 +129,8 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
     # This is from a rule using the "contains" operator
     self.assertIn('text_contains', labels)
 
-  @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'invalid.txt'])
+  @shared_test_lib.skipUnlessHasTestFile([
+      'tagging_file', 'invalid_syntax.txt'])
   @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'valid.txt'])
   def testParseTaggingFile(self):
     """Tests the _ParseTaggingFile function."""
@@ -138,10 +141,11 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(len(tag_expression.children), 5)
 
     plugin = tagging.TaggingAnalysisPlugin()
+
     test_path = self._GetTestFilePath([self._INVALID_TEST_TAG_FILE_NAME])
 
-    tag_expression = plugin._ParseTaggingFile(test_path)
-    self.assertEqual(len(tag_expression.children), 2)
+    with self.assertRaises(errors.TaggingFileError):
+      plugin._ParseTaggingFile(test_path)
 
 
 if __name__ == '__main__':

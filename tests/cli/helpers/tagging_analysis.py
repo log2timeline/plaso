@@ -45,8 +45,9 @@ optional arguments:
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'encoding.txt'])
-  @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'invalid.txt'])
+  @shared_test_lib.skipUnlessHasTestFile([
+      'tagging_file', 'invalid_encoding.txt'])
+  @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'invalid_syntax.txt'])
   @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'valid.txt'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
@@ -69,14 +70,14 @@ optional arguments:
           options, analysis_plugin)
 
     options.tagging_file = self._GetTestFilePath([
-        'tagging_file', 'invalid.txt'])
+        'tagging_file', 'invalid_syntax.txt'])
 
     with self.assertRaises(errors.BadConfigOption):
       tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
           options, analysis_plugin)
 
     options.tagging_file = self._GetTestFilePath([
-        'tagging_file', 'encoding.txt'])
+        'tagging_file', 'invalid_encoding.txt'])
 
     with self.assertRaises(errors.BadConfigOption):
       tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
