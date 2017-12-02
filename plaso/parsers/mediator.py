@@ -406,7 +406,7 @@ class ParserMediator(object):
 
       stat_object = file_entry.GetStat()
       inode_value = getattr(stat_object, 'ino', None)
-      if not hasattr(event, 'inode') and inode_value:
+      if event.inode is None and inode_value is not None:
         event.inode = self._GetInode(inode_value)
 
     if not getattr(event, 'display_name', None) and display_name:
