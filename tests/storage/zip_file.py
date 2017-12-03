@@ -305,10 +305,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     """Creates a storage file with event tags for testing.
 
     Args:
-      path: a string containing the path of the storage file.
+      path (str): path of the storage file.
 
     Returns:
-      A storage file object (instance of StorageFile).
+      StorageFile: storage file.
     """
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=path, read_only=False)
@@ -357,6 +357,94 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     self.assertIsNotNone(attribute_container)
 
     storage_file.Close()
+
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  def testGetAttributeContainer(self):
+    """Tests the _GetAttributeContainer function."""
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(path=test_file)
+
+    # There is 1 event source in the first event data stream.
+    for _ in range(0, 1):
+      event_source = storage_file._GetAttributeContainer(
+          'event_source', 1)
+      self.assertIsNotNone(event_source)
+
+    event_source = storage_file._GetAttributeContainer(
+        'event_source', 1)
+    self.assertIsNone(event_source)
+
+    event_source = storage_file._GetAttributeContainer(
+        'event_source', 1, entry_index=0)
+    self.assertIsNotNone(event_source)
+
+    event_source = storage_file._GetAttributeContainer(
+        'event_source', 1, entry_index=1)
+    self.assertIsNone(event_source)
+
+    with self.assertRaises(ValueError):
+      storage_file._GetAttributeContainer('event_source', 0)
+
+    with self.assertRaises(ValueError):
+      storage_file._GetAttributeContainer('event_source', 1, entry_index=-2)
+
+    with self.assertRaises(ValueError):
+      storage_file._GetAttributeContainer('event_source', 3)
+
+    storage_file.Close()
+
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  def testGetAttributeContainerWithCache(self):
+    """Tests the _GetAttributeContainerWithCache function."""
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(path=test_file)
+
+    # There is 1 event source in the first event data stream.
+    for _ in range(0, 1):
+      event_source = storage_file._GetAttributeContainerWithCache(
+          'event_source', 1)
+      self.assertIsNotNone(event_source)
+
+    event_source = storage_file._GetAttributeContainerWithCache(
+        'event_source', 1)
+    self.assertIsNone(event_source)
+
+    event_source = storage_file._GetAttributeContainerWithCache(
+        'event_source', 1, entry_index=0)
+    self.assertIsNotNone(event_source)
+
+    event_source = storage_file._GetAttributeContainerWithCache(
+        'event_source', 1, entry_index=1)
+    self.assertIsNone(event_source)
+
+    with self.assertRaises(ValueError):
+      storage_file._GetAttributeContainerWithCache('event_source', 0)
+
+    with self.assertRaises(ValueError):
+      storage_file._GetAttributeContainerWithCache(
+          'event_source', 1, entry_index=-2)
+
+    with self.assertRaises(ValueError):
+      storage_file._GetAttributeContainerWithCache('event_source', 3)
+
+    storage_file.Close()
+
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  def testGetAttributeContainerByIndex(self):
+    """Tests the _GetAttributeContainerByIndex function."""
+    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(path=test_file)
+
+    event_source = storage_file._GetAttributeContainerByIndex(
+        'event_source', 0)
+    self.assertIsNotNone(event_source)
+
+    storage_file.Close()
+
+  # TODO: add tests for _GetAttributeContainers
 
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetEvent(self):
@@ -806,6 +894,8 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
+  # TODO: add tests for _ReadEventDataIntoEvent
+
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testReadSerializerStream(self):
     """Tests the _ReadSerializerStream function."""
@@ -1064,6 +1154,8 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
+  # TODO: add tests for GetEventData
+
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
   def testGetEvents(self):
@@ -1085,8 +1177,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     self.assertEqual(len(test_events), 3)
 
     storage_file.Close()
-
-  # TODO: add tests for GetEventData
 
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetEventSourceByIndex(self):
