@@ -73,6 +73,25 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError('Unable to write to closed storage writer.')
 
+  def _ReadEventDataIntoEvent(self, event):
+    """Reads the data into the event.
+
+    This function is intended to offer backwards compatible event behavior.
+
+    Args:
+      event (EventObject): event.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      return
+
+    event_data_identifier = event.GetEventDataIdentifier()
+    if event_data_identifier:
+      lookup_key = event_data_identifier.CopyToString()
+      event_data = self._event_data[lookup_key]
+
+      for attribute_name, attribute_value in event_data.GetAttributes():
+        setattr(event, attribute_name, attribute_value)
+
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
 
@@ -228,7 +247,10 @@ class FakeStorageWriter(interface.StorageWriter):
     Yields:
       EventObject: event.
     """
-    return iter(self._events)
+    for event in self._events:
+      self._ReadEventDataIntoEvent(event)
+
+      yield event
 
   def GetEventData(self):
     """Retrieves the event data.
@@ -319,6 +341,10 @@ class FakeStorageWriter(interface.StorageWriter):
           event.timestamp < time_range.start_timestamp or
           event.timestamp > time_range.end_timestamp)):
         continue
+
+      # Make a copy of the event before adding the event data.
+      event = copy.deepcopy(event)
+      self._ReadEventDataIntoEvent(event)
 
       event_heap.PushEvent(event)
 
