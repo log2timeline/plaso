@@ -43,6 +43,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.file_size, 116)
     self.assertEqual(event.inode, 15)
+    self.assertEqual(event.file_system_type, 'EXT2')
 
     expected_message = (
         'TSK:/passwords.txt '
