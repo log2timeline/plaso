@@ -21,7 +21,6 @@ from plaso.cli import status_view
 from plaso.cli import tool_options
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
-from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.engine import filter_file
 from plaso.engine import knowledge_base
@@ -115,7 +114,6 @@ class PstealTool(
     self._number_of_analysis_reports = 0
     self._number_of_extraction_workers = 0
     self._output_format = None
-    self._parser_filter_expression = None
     self._parsers_manager = parsers_manager.ParsersManager
     self._preferred_language = 'en-US'
     self._preferred_year = None
@@ -123,36 +121,15 @@ class PstealTool(
     self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
     self._storage_file_path = None
-    self._temporary_directory = None
     self._time_slice = None
     self._use_time_slicer = False
     self._use_zeromq = True
-    self._yara_rules_string = None
 
     self.list_hashers = False
     self.list_language_identifiers = False
     self.list_output_modules = False
     self.list_parsers_and_plugins = False
     self.list_timezones = False
-
-  def _CreateProcessingConfiguration(self):
-    """Creates a processing configuration.
-
-    Returns:
-      ProcessingConfiguration: processing configuration.
-    """
-    # TODO: pass preferred_encoding.
-    configuration = configurations.ProcessingConfiguration()
-    configuration.credentials = self._credential_configurations
-    configuration.debug_output = self._debug_mode
-    configuration.extraction.hasher_names_string = self._hasher_names_string
-    configuration.extraction.yara_rules_string = self._yara_rules_string
-    configuration.filter_file = self._filter_file
-    configuration.parser_filter_expression = self._parser_filter_expression
-    configuration.preferred_year = self._preferred_year
-    configuration.temporary_directory = self._temporary_directory
-
-    return configuration
 
   def _GenerateStorageFileName(self):
     """Generates a name for the storage file.
@@ -306,13 +283,10 @@ class PstealTool(
     storage_writer = storage_zip_file.ZIPStorageFileWriter(
         session, self._storage_file_path)
 
-    configuration = self._CreateProcessingConfiguration()
-
     single_process_mode = self._single_process_mode
     if source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
       # No need to multi process a single file source.
       single_process_mode = True
-
 
     if single_process_mode:
       extraction_engine = single_process_engine.SingleProcessEngine()
@@ -325,39 +299,11 @@ class PstealTool(
     if source_type in self._SOURCE_TYPES_TO_PREPROCESS:
       self._PreprocessSources(extraction_engine)
 
-    if not configuration.parser_filter_expression:
-      operating_system = extraction_engine.knowledge_base.GetValue(
-          'operating_system')
-      operating_system_product = extraction_engine.knowledge_base.GetValue(
-          'operating_system_product')
-      operating_system_version = extraction_engine.knowledge_base.GetValue(
-          'operating_system_version')
-      parser_filter_expression = (
-          self._parsers_manager.GetPresetForOperatingSystem(
-              operating_system, operating_system_product,
-              operating_system_version))
+    configuration = self._CreateProcessingConfiguration(
+        extraction_engine.knowledge_base)
 
-      if parser_filter_expression:
-        logging.info('Parser filter expression changed to: {0:s}'.format(
-            parser_filter_expression))
-
-      configuration.parser_filter_expression = parser_filter_expression
-      session.enabled_parser_names = list(
-          self._parsers_manager.GetParserAndPluginNames(
-              parser_filter_expression=configuration.parser_filter_expression))
-      session.parser_filter_expression = configuration.parser_filter_expression
-
-    # Note session.preferred_time_zone will default to UTC but
-    # self._preferred_time_zone is None when not set.
-    if self._preferred_time_zone:
-      try:
-        extraction_engine.knowledge_base.SetTimeZone(self._preferred_time_zone)
-      except ValueError:
-        # pylint: disable=protected-access
-        logging.warning(
-            'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
-                self._preferred_time_zone,
-                extraction_engine.knowledge_base._time_zone.zone))
+    self._SetExtractionParsersAndPlugins(configuration, session)
+    self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
     filter_find_specs = None
     if configuration.filter_file:
