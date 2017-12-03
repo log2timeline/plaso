@@ -70,13 +70,13 @@ class TaggingAnalysisArgumentsHelper(interface.ArgumentsHelper):
       analysis_plugin.SetAndLoadTagFile(tagging_file_path)
 
     except UnicodeDecodeError:
-      raise errors.BadConfigOption((
-          'Invalid tagging file: {0:s} with error: unsupported encoding, '
-          'not UTF-8.').format(tagging_file))
+      raise errors.BadConfigOption(
+          'Invalid tagging file: {0:s} encoding must be UTF-8.'.format(
+              tagging_file))
 
     except errors.TaggingFileError as exception:
       raise errors.BadConfigOption(
-          'Invalid tagging file: {0:s} with error: {1!s}'.format(
+          'Unable to read tagging file: {0:s} with error: {1!s}'.format(
               tagging_file, exception))
 
 

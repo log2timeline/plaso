@@ -85,8 +85,8 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     """
     queries = None
     label_name = None
-    with io.open(tagging_file_path, 'r', encoding='utf-8') as file_object:
-      for line in file_object.readlines():
+    with io.open(tagging_file_path, 'r', encoding='utf-8') as tagging_file:
+      for line in tagging_file.readlines():
         label_match = self._TAG_LABEL_LINE.match(line)
         if label_match:
           if label_name and queries:
@@ -96,51 +96,51 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
           label_name = label_match.group(1)
           continue
 
-        event_filter_expression = self._TAG_RULE_LINE.match(line)
-        if not event_filter_expression:
+        event_tagging_expression = self._TAG_RULE_LINE.match(line)
+        if not event_tagging_expression:
           continue
 
-        query = self._ParseEventFilterExpression(
-            event_filter_expression.group(1))
-        queries.append(query)
+        tagging_rule = self._ParseEventTaggingRule(
+            event_tagging_expression.group(1))
+        queries.append(tagging_rule)
 
       # Yield any remaining tags once we reach the end of the file.
       if label_name and queries:
         yield label_name, queries
 
-  def _ParseEventFilterExpression(self, event_filter_expression):
-    """Parses an event filter expression.
+  def _ParseEventTaggingRule(self, event_tagging_expression):
+    """Parses an event tagging expression.
 
-    This method attempts to detect whether the event filter expersion is valid
+    This method attempts to detect whether the event tagging expression is valid
     objectfilter or dottysql syntax.
 
     Example:
-      _ParseEventFilterExpression('5 + 5')
+      _ParseEventTaggingRule('5 + 5')
       # Returns Sum(Literal(5), Literal(5))
 
     Args:
-      event_filter_expression (str): event filter experssion either in
+      event_tagging_expression (str): event tagging experssion either in
           objectfilter or dottysql syntax.
 
     Returns:
-      efilter.query.Query: efilter query of the event filter expression.
+      efilter.query.Query: efilter query of the event tagging expression.
 
     Raises:
       TaggingFileError: when the tagging file cannot be correctly parsed.
     """
-    if self._OBJECTFILTER_WORDS.search(event_filter_expression):
+    if self._OBJECTFILTER_WORDS.search(event_tagging_expression):
       syntax = 'objectfilter'
     else:
       syntax = 'dottysql'
 
     try:
-      return efilter_query.Query(event_filter_expression, syntax=syntax)
+      return efilter_query.Query(event_tagging_expression, syntax=syntax)
 
     except efilter_errors.EfilterParseError as exception:
       stripped_expression = event_filter_expression.rstrip()
-      raise errors.TaggingFileError(
-          'Unable to parse event filter: "{0:s}" with error: {1!s}'.format(
-              stripped_expression, exception))
+      raise errors.TaggingFileError((
+          'Unable to parse event tagging expressoin: "{0:s}" with error: '
+          '{1!s}').format(stripped_expression, exception))
 
   def _ParseTaggingFile(self, tag_file_path):
     """Parses tag definitions from the source.
