@@ -137,7 +137,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
       return efilter_query.Query(event_tagging_expression, syntax=syntax)
 
     except efilter_errors.EfilterParseError as exception:
-      stripped_expression = event_filter_expression.rstrip()
+      stripped_expression = event_tagging_expression.rstrip()
       raise errors.TaggingFileError((
           'Unable to parse event tagging expressoin: "{0:s}" with error: '
           '{1!s}').format(stripped_expression, exception))
