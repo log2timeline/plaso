@@ -64,10 +64,12 @@ class FileStatParser(interface.FileEntryParser):
     fs_info = file_system.GetFsInfo()
     if fs_info.info:
       type_string = '{0!s}'.format(fs_info.info.ftype)
-      if type_string.startswith('TSK_FS_TYPE'):
+      if type_string.startswith('TSK_FS_TYPE_'):
         type_string = type_string[12:]
       if type_string.endswith('_DETECT'):
         type_string = type_string[:-7]
+
+    return type_string
 
   def ParseFileEntry(self, parser_mediator, file_entry, **kwargs):
     """Parses a file entry.
