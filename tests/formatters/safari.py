@@ -47,11 +47,11 @@ class SafariHistoryFormatterSqlite(test_lib.EventFormatterTestCase):
     event_formatter = safari.SafariHistoryFormatterSqlite()
 
     expected_attribute_names = [
-        u'url',
-        u'title',
-        u'visit_count',
-        u'host',
-        u'was_http_non_get']
+        'url',
+        'title',
+        'visit_count',
+        'host',
+        'was_http_non_get']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

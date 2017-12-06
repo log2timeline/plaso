@@ -3,6 +3,8 @@
 
 The Safari History is stored in SQLite database files named History.db
 """
+from __future__ import unicode_literals
+
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
 from plaso.containers import events
@@ -23,7 +25,7 @@ class SafariHistoryPageVisitedEventData(events.EventData):
      visited using a non-GET HTTP request.
   """
 
-  DATA_TYPE = u'safari:history:visit_sqlite'
+  DATA_TYPE = 'safari:history:visit_sqlite'
 
   def __init__(self):
     """Initializes event data."""
@@ -41,61 +43,61 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
   """Parse Safari History Files.
   Safari history file is stored in a SQLite database file name History.DB
   """
-  NAME = u'safari_history'
-  DESCRIPTION = u'Parser for Safari history SQLite database files.'
+  NAME =  'safari_history'
+  DESCRIPTION = 'Parser for Safari history SQLite database files.'
 
   #Define the needed queries.
 
   QUERIES = [
-      ((u'SELECT history_items.id, history_items.url, history_items.visit'
-        u'_count, history_visits.id AS visit_id, history_visits.history_item,'
-        u'history_visits.visit_time, history_visits.redirect_destination, '
-        u'history_visits.title, history_visits.http_non_get, '
-        u'history_visits.redirect_source, history_items.domain_expansion '
-        u'FROM history_items, history_visits '
-        u'WHERE history_items.id = history_visits.history_item '
-        u'ORDER BY history_visits.visit_time'), u'ParsePageVisitRow')
+      (('SELECT history_items.id, history_items.url, history_items.visit'
+        '_count, history_visits.id AS visit_id, history_visits.history_item,'
+        'history_visits.visit_time, history_visits.redirect_destination, '
+        'history_visits.title, history_visits.http_non_get, '
+        'history_visits.redirect_source, history_items.domain_expansion '
+        'FROM history_items, history_visits '
+        'WHERE history_items.id = history_visits.history_item '
+        'ORDER BY history_visits.visit_time'), 'ParsePageVisitRow')
   ]
 
   # The required tables
-  REQUIRED_TABLES = frozenset([u'history_items', u'history_visits'])
+  REQUIRED_TABLES = frozenset(['history_items', 'history_visits'])
 
   SCHEMAS = [{
-      u'history_items': (
-          u'CREATE TABLE history_items (id INTEGER PRIMARY KEY AUTOINCREMENT, '
-          u'url TEXT NOT NULL UNIQUE,domain_expansion TEXT NULL, '
-          u'visit_count INTEGER NOT NULL, daily_visit_counts BLOB NOT NULL, '
-          u'weekly_visit_counts BLOB NULL, autocomplete_triggers BLOB NULL, '
-          u'should_recompute_derived_visit_counts INTEGER NOT NULL, '
-          u'visit_count_score INTEGER NOT NULL)'),
-      u'history_tombstones': (
-          u'CREATE TABLE history_tombstones (id INTEGER PRIMARY KEY '
-          u'AUTOINCREMENT, start_time REAL NOT NULL, end_time REAL NOT NULL, '
-          u'url TEXT,generation INTEGER NOT NULL DEFAULT 0)'),
-      u'metadata': (u'CREATE TABLE metadata (key TEXT NOT NULL UNIQUE, value)'),
-      u'history_client_versions': (
-          u'CREATE TABLE history_client_versions (client_version '
-          u'INTEGER PRIMARY KEY, last_seen REAL NOT NULL)'),
-      u'history_event_listeners': (
-          u'CREATE TABLE history_event_listeners (listener_name '
-          u'TEXT PRIMARY KEY, last_seen REAL NOT NULL)'),
-      u'history_events': (
-          u'CREATE TABLE history_events (id INTEGER PRIMARY KEY AUTOINCREMENT,'
-          u' event_type TEXT NOT NULL, event_time REAL NOT NULL, '
-          u'pending_listeners TEXT NOT NULL, value BLOB)'
+      'history_items': (
+          'CREATE TABLE history_items (id INTEGER PRIMARY KEY AUTOINCREMENT, '
+          'url TEXT NOT NULL UNIQUE,domain_expansion TEXT NULL, '
+          'visit_count INTEGER NOT NULL, daily_visit_counts BLOB NOT NULL, '
+          'weekly_visit_counts BLOB NULL, autocomplete_triggers BLOB NULL, '
+          'should_recompute_derived_visit_counts INTEGER NOT NULL, '
+          'visit_count_score INTEGER NOT NULL)'),
+      'history_tombstones': (
+          'CREATE TABLE history_tombstones (id INTEGER PRIMARY KEY '
+          'AUTOINCREMENT, start_time REAL NOT NULL, end_time REAL NOT NULL, '
+          'url TEXT,generation INTEGER NOT NULL DEFAULT 0)'),
+      'metadata': ('CREATE TABLE metadata (key TEXT NOT NULL UNIQUE, value)'),
+      'history_client_versions': (
+          'CREATE TABLE history_client_versions (client_version '
+          'INTEGER PRIMARY KEY, last_seen REAL NOT NULL)'),
+      'history_event_listeners': (
+          'CREATE TABLE history_event_listeners (listener_name '
+          'TEXT PRIMARY KEY, last_seen REAL NOT NULL)'),
+      'history_events': (
+          'CREATE TABLE history_events (id INTEGER PRIMARY KEY AUTOINCREMENT,'
+          ' event_type TEXT NOT NULL, event_time REAL NOT NULL, '
+          'pending_listeners TEXT NOT NULL, value BLOB)'
       ),
-      u'history_visits': (
-          u'CREATE TABLE history_visits (id INTEGER PRIMARY KEY AUTOINCREMENT,'
-          u' history_item INTEGER NOT NULL REFERENCES history_items(id) ON '
-          u'DELETE CASCADE, visit_time REAL NOT NULL, title TEXT '
-          u'NULL,load_successful BOOLEAN NOT NULL DEFAULT 1, http_non_get '
-          u'BOOLEAN NOT NULL DEFAULT 0, synthesized BOOLEAN NOT NULL DEFAULT '
-          u'0, redirect_source INTEGER NULL UNIQUE REFERENCES '
-          u'history_visits(id) ON DELETE CASCADE, redirect_destination INTEGER'
-          u' NULL UNIQUE REFERENCES history_visits(id) ON DELETE CASCADE, '
-          u'origin INTEGER NOT NULL DEFAULT 0, generation INTEGER NOT NULL '
-          u'DEFAULT 0, attributes INTEGER NOT NULL DEFAULT 0, score INTEGER '
-          u'NOT NULL DEFAULT 0)'
+      'history_visits': (
+          'CREATE TABLE history_visits (id INTEGER PRIMARY KEY AUTOINCREMENT,'
+          ' history_item INTEGER NOT NULL REFERENCES history_items(id) ON '
+          'DELETE CASCADE, visit_time REAL NOT NULL, title TEXT '
+          'NULL,load_successful BOOLEAN NOT NULL DEFAULT 1, http_non_get '
+          'BOOLEAN NOT NULL DEFAULT 0, synthesized BOOLEAN NOT NULL DEFAULT '
+          '0, redirect_source INTEGER NULL UNIQUE REFERENCES '
+          'history_visits(id) ON DELETE CASCADE, redirect_destination INTEGER'
+          ' NULL UNIQUE REFERENCES history_visits(id) ON DELETE CASCADE, '
+          'origin INTEGER NOT NULL DEFAULT 0, generation INTEGER NOT NULL '
+          'DEFAULT 0, attributes INTEGER NOT NULL DEFAULT 0, score INTEGER '
+          'NOT NULL DEFAULT 0)'
       )
   }]
 
@@ -106,18 +108,18 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
     Returns:
       str: hostname or full URL if not hostname could be retrieved.
     """
-    if url.startswith(u'http') or url.startswith(u'ftp'):
-      _, _, uri = url.partition(u'//')
-      hostname, _, _ = uri.partition(u'/')
+    if url.startswith('http') or url.startswith('ftp'):
+      _, _, uri = url.partition('//')
+      hostname, _, _ = uri.partition('/')
       return hostname
 
-    if url.startswith(u'about'):
-      hostname, _, _ = url.partition(u'/')
+    if url.startswith('about'):
+      hostname, _, _ = url.partition('/')
       return hostname
 
     return url
 
-  def ParsePageVisitRow(self, parser_mediator, row, query=None,
+  def ParsePageVisitRow(self, parser_mediator, query, row, cache=None, database=None,
                         **unused_kwargs):
     """Parses a visited row.
     Args:
@@ -133,16 +135,21 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
 
     # Todo: Extras
 
-    event_data = SafariHistoryPageVisitedEventData()
-    event_data.offset = row['id']
-    event_data.query = query
-    event_data.title = row['title']
-    event_data.url = row['url']
-    event_data.visit_count = row['visit_count']
-    event_data.host = self._GetHostname(row['url'])
-    event_data.was_http_non_get = bool(row['http_non_get'])
+    query_hash = hash(query)
 
-    timestamp = row['visit_time']
+    url = self._GetRowValue(query_hash, row, 'url')
+    was_http_non_get = self._GetRowValue(query_hash, row, 'http_non_get')
+
+    event_data = SafariHistoryPageVisitedEventData()
+    event_data.offset = self._GetRowValue(query_hash, row, 'id')
+    event_data.query = query
+    event_data.title = self._GetRowValue(query_hash, row, 'title')
+    event_data.url = self._GetRowValue(query_hash, row, 'url')
+    event_data.visit_count = self._GetRowValue(query_hash, row, 'visit_count')
+    event_data.host = self._GetHostname(url)
+    event_data.was_http_non_get = bool(was_http_non_get)
+
+    timestamp = self._GetRowValue(query_hash, row, 'visit_time')
     date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
