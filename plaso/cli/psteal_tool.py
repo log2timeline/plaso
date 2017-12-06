@@ -12,13 +12,12 @@ import sys
 import textwrap
 
 from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.resolver import context as dfvfs_context
 
 # The following import makes sure the output modules are registered.
 from plaso import output  # pylint: disable=unused-import
 
+from plaso.cli import extraction_tool
 from plaso.cli import status_view
-from plaso.cli import storage_media_tool
 from plaso.cli import tool_options
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
@@ -35,7 +34,7 @@ from plaso.storage import zip_file as storage_zip_file
 
 
 class PstealTool(
-    storage_media_tool.StorageMediaTool,
+    extraction_tool.ExtractionTool,
     tool_options.HashersOptions,
     tool_options.OutputModuleOptions,
     tool_options.ParsersOptions,
@@ -112,7 +111,6 @@ class PstealTool(
     self._command_line_arguments = None
     self._deduplicate_events = True
     self._enable_sigsegv_handler = False
-    self._force_preprocessing = False
     self._knowledge_base = knowledge_base.KnowledgeBase()
     self._number_of_analysis_reports = 0
     self._number_of_extraction_workers = 0
@@ -121,7 +119,6 @@ class PstealTool(
     self._parsers_manager = parsers_manager.ParsersManager
     self._preferred_language = 'en-US'
     self._preferred_year = None
-    self._resolver_context = dfvfs_context.Context()
     self._single_process_mode = False
     self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
@@ -186,25 +183,6 @@ class PstealTool(
       source_name = 'ROOT'
 
     return '{0:s}-{1:s}.plaso'.format(datetime_string, source_name)
-
-  def _PreprocessSources(self, extraction_engine):
-    """Preprocesses the sources.
-
-    Args:
-      extraction_engine (BaseEngine): extraction engine to preprocess
-          the sources.
-    """
-    logging.debug('Starting preprocessing.')
-
-    try:
-      extraction_engine.PreprocessSources(
-          self._artifacts_registry, self._source_path_specs,
-          resolver_context=self._resolver_context)
-
-    except IOError as exception:
-      logging.error('Unable to preprocess with error: {0!s}'.format(exception))
-
-    logging.debug('Preprocessing done.')
 
   def _PrintAnalysisReportsDetails(self, storage, number_of_analysis_reports):
     """Prints the details of the analysis reports.
@@ -344,8 +322,7 @@ class PstealTool(
 
     # If the source is a directory or a storage media image
     # run pre-processing.
-    if (self._force_preprocessing or
-        source_type in self._SOURCE_TYPES_TO_PREPROCESS):
+    if source_type in self._SOURCE_TYPES_TO_PREPROCESS:
       self._PreprocessSources(extraction_engine)
 
     if not configuration.parser_filter_expression:
