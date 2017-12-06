@@ -11,6 +11,7 @@ import sys
 
 import plaso
 
+from plaso.cli import loggers
 from plaso.cli import views
 from plaso.lib import errors
 from plaso.lib import py2to3
@@ -92,12 +93,22 @@ class CLITool(object):
     if not format_string:
       format_string = '[%(levelname)s] %(message)s'
 
-    if filename:
-      logging.basicConfig(
-          level=log_level, format=format_string, filename=filename,
-          filemode='w')
+    logger = logging.getLogger()
+
+    if filename and filename.endswith('.gz'):
+      handler = loggers.CompressedFileHandler(filename, mode='w')
+    elif filename:
+      handler = logging.FileHandler(filename, mode='w')
     else:
-      logging.basicConfig(level=log_level, format=format_string)
+      handler = logging.StreamHandler()
+
+    formatter = logging.Formatter(format_string)
+    handler.setFormatter(formatter)
+
+    logger.setLevel(log_level)
+    handler.setLevel(log_level)
+
+    logger.addHandler(handler)
 
   def _EncodeString(self, string):
     """Encodes a string in the preferred encoding.

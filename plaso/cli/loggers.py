@@ -18,7 +18,6 @@ class CompressedFileHandler(logging.FileHandler):
       mode (Optional[str]): file access mode.
       encoding (Optional[str]): encoding of the log lines.
     """
-    filename = '{0:s}.gz'.format(filename)
     super(CompressedFileHandler, self).__init__(
         filename, mode=mode, encoding=encoding, delay=True)
 
