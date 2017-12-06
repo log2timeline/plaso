@@ -313,6 +313,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
       self._number_of_produced_sources = storage_writer.number_of_event_sources
 
+      # Update the foreman process status in case we are using a filter file.
+      self._UpdateForemanProcessStatus()
+
+      if self._status_update_callback:
+        self._status_update_callback(self._processing_status)
+
     self._ScheduleTasks(storage_writer)
 
     if self._abort:
@@ -326,6 +332,16 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming('process_sources')
+
+    # Update the foreman process and task status in case we are using
+    # a filter file.
+    self._UpdateForemanProcessStatus()
+
+    tasks_status = self._task_manager.GetStatusInformation()
+    self._processing_status.UpdateTasksStatus(tasks_status)
+
+    if self._status_update_callback:
+      self._status_update_callback(self._processing_status)
 
   def _ProfilingSampleMemory(self):
     """Creates a memory profiling sample."""
@@ -515,18 +531,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       for pid in list(self._process_information_per_pid.keys()):
         self._CheckStatusWorkerProcess(pid)
 
-      used_memory = self._process_information.GetUsedMemory() or 0
-
-      display_name = getattr(self._merge_task, 'identifier', '')
-
-      self._processing_status.UpdateForemanStatus(
-          self._name, self._status, self._pid, used_memory, display_name,
-          self._number_of_consumed_sources, self._number_of_produced_sources,
-          self._number_of_consumed_events, self._number_of_produced_events,
-          self._number_of_consumed_event_tags,
-          self._number_of_produced_event_tags,
-          self._number_of_consumed_errors, self._number_of_produced_errors,
-          self._number_of_consumed_reports, self._number_of_produced_reports)
+      self._UpdateForemanProcessStatus()
 
       tasks_status = self._task_manager.GetStatusInformation()
       self._processing_status.UpdateTasksStatus(tasks_status)
@@ -590,6 +595,21 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if self._serializers_profiler:
       self._serializers_profiler.Write()
       self._serializers_profiler = None
+
+  def _UpdateForemanProcessStatus(self):
+    """Update the foreman process status."""
+    used_memory = self._process_information.GetUsedMemory() or 0
+
+    display_name = getattr(self._merge_task, 'identifier', '')
+
+    self._processing_status.UpdateForemanStatus(
+        self._name, self._status, self._pid, used_memory, display_name,
+        self._number_of_consumed_sources, self._number_of_produced_sources,
+        self._number_of_consumed_events, self._number_of_produced_events,
+        self._number_of_consumed_event_tags,
+        self._number_of_produced_event_tags,
+        self._number_of_consumed_errors, self._number_of_produced_errors,
+        self._number_of_consumed_reports, self._number_of_produced_reports)
 
   def _UpdateProcessingStatus(self, pid, process_status, used_memory):
     """Updates the processing status.
