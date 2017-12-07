@@ -295,7 +295,6 @@ class PsortTool(
             'Maximum amount of memory a worker process is allowed to consume, '
             'where 0 represents no limit [defaults to 2 GiB].'))
 
-
   def ParseArguments(self):
     """Parses the command line arguments.
 
@@ -396,6 +395,8 @@ class PsortTool(
 
       return False
 
+    self._ConfigureLogging(filename=self._log_file)
+
     return True
 
   def ParseOptions(self, options):
@@ -443,21 +444,6 @@ class PsortTool(
 
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['event_filters'])
-
-    format_string = (
-        '%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
-        '<%(module)s> %(message)s')
-
-    if self._debug_mode:
-      logging_level = logging.DEBUG
-    elif self._quiet_mode:
-      logging_level = logging.WARNING
-    else:
-      logging_level = logging.INFO
-
-    self._ConfigureLogging(
-        filename=self._log_file, format_string=format_string,
-        log_level=logging_level)
 
     self._deduplicate_events = getattr(options, 'dedup', True)
 

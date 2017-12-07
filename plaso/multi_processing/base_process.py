@@ -11,6 +11,7 @@ import random
 import signal
 import time
 
+from plaso.lib import loggers
 from plaso.multi_processing import plaso_xmlrpc
 
 
@@ -34,11 +35,14 @@ class MultiProcessBaseProcess(multiprocessing.Process):
           multiprocessing.Process.
     """
     super(MultiProcessBaseProcess, self).__init__(**kwargs)
+    self._debug_output = False
     self._enable_sigsegv_handler = enable_sigsegv_handler
+    self._log_filename = None
     self._original_sigsegv_handler = None
     # TODO: check if this can be replaced by self.pid or does this only apply
     # to the parent process?
     self._pid = None
+    self._quiet_mode = False
     self._rpc_server = None
     self._status_is_running = False
 
@@ -49,6 +53,40 @@ class MultiProcessBaseProcess(multiprocessing.Process):
   def name(self):
     """str: process name."""
     return self._name
+
+  def _ConfigureLogging(self):
+    """Configures logging."""
+    # Remove all possible log handlers.
+    for handler in logging.root.handlers:
+      logging.root.removeHandler(handler)
+
+    logger = logging.getLogger()
+
+    if self._log_filename and self._log_filename.endswith('.gz'):
+      handler = loggers.CompressedFileHandler(self._log_filename, mode='w')
+    elif self._log_filename:
+      handler = logging.FileHandler(self._log_filename, mode='w')
+    else:
+      handler = logging.StreamHandler()
+
+    format_string = (
+        '%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
+        '<%(module)s> %(message)s')
+
+    formatter = logging.Formatter(format_string)
+    handler.setFormatter(formatter)
+
+    if self._debug_output:
+      level = logging.DEBUG
+    elif self._quiet_mode:
+      level = logging.WARNING
+    else:
+      level = logging.INFO
+
+    logger.setLevel(level)
+    handler.setLevel(level)
+
+    logger.addHandler(handler)
 
   @abc.abstractmethod
   def _GetStatus(self):
@@ -193,6 +231,10 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     # the process completes before the engine is able to determine
     # the status of the process, e.g. in the unit tests.
     self._status_is_running = True
+
+    # Logging needs to be configured before the first output otherwise we
+    # mess up the logging of the parent process.
+    self._ConfigureLogging()
 
     logging.debug(
         'Process: {0!s} (PID: {1:d}) started'.format(self._name, self._pid))

@@ -11,9 +11,9 @@ import sys
 
 import plaso
 
-from plaso.cli import loggers
 from plaso.cli import views
 from plaso.lib import errors
+from plaso.lib import loggers
 from plaso.lib import py2to3
 
 import pytz  # pylint: disable=wrong-import-order
@@ -68,9 +68,8 @@ class CLITool(object):
     self.list_timezones = False
     self.preferred_encoding = preferred_encoding
 
-  def _ConfigureLogging(
-      self, filename=None, format_string=None, log_level=None):
-    """Configure the logger.
+  def _ConfigureLogging(self, filename=None):
+    """Configures logging.
 
     If a filename is specified and the corresponding log file already exists,
     the file is truncated.
@@ -78,20 +77,10 @@ class CLITool(object):
     Args:
       filename (Optional[str]): path to a filename to append logs to, where
           None means logs will not be redirected to a file.
-      format_string (Optional[str]): format string for the logs, where None
-           configures the logger to use a default format string.
-      log_level (Optional[int]): integer representing the log level, for
-          example logging.DEBUG, where None represents logging.INFO.
     """
     # Remove all possible log handlers.
     for handler in logging.root.handlers:
       logging.root.removeHandler(handler)
-
-    if log_level is None:
-      log_level = logging.INFO
-
-    if not format_string:
-      format_string = '[%(levelname)s] %(message)s'
 
     logger = logging.getLogger()
 
@@ -102,11 +91,22 @@ class CLITool(object):
     else:
       handler = logging.StreamHandler()
 
+    format_string = (
+        '%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
+        '<%(module)s> %(message)s')
+
     formatter = logging.Formatter(format_string)
     handler.setFormatter(formatter)
 
-    logger.setLevel(log_level)
-    handler.setLevel(log_level)
+    if self._debug_mode:
+      level = logging.DEBUG
+    elif self._quiet_mode:
+      level = logging.WARNING
+    else:
+      level = logging.INFO
+
+    logger.setLevel(level)
+    handler.setLevel(level)
 
     logger.addHandler(handler)
 

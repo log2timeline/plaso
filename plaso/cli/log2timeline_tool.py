@@ -311,6 +311,13 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._command_line_arguments = self.GetCommandLineArguments()
 
+    self._ConfigureLogging(filename=self._log_file)
+
+    if self._debug_mode:
+      log_filter = logging_filter.LoggingFilter()
+      root_logger = logging.getLogger()
+      root_logger.addFilter(log_filter)
+
     return True
 
   def ParseOptions(self, options):
@@ -362,26 +369,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._ParsePerformanceOptions(options)
     self._ParseProcessingOptions(options)
-
-    format_string = (
-        '%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
-        '<%(module)s> %(message)s')
-
-    if self._debug_mode:
-      logging_level = logging.DEBUG
-    elif self._quiet_mode:
-      logging_level = logging.WARNING
-    else:
-      logging_level = logging.INFO
-
-    self._ConfigureLogging(
-        filename=self._log_file, format_string=format_string,
-        log_level=logging_level)
-
-    if self._debug_mode:
-      log_filter = logging_filter.LoggingFilter()
-      root_logger = logging.getLogger()
-      root_logger.addFilter(log_filter)
 
     if not self._storage_file_path:
       raise errors.BadConfigOption('Missing storage file option.')

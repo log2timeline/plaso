@@ -584,6 +584,8 @@ class PinfoTool(
       self._output_writer.Write(argument_parser.format_usage())
       return False
 
+    self._ConfigureLogging(filename=self._log_file)
+
     return True
 
   def ParseOptions(self, options):
@@ -596,15 +598,6 @@ class PinfoTool(
       BadConfigOption: if the options are invalid.
     """
     self._ParseInformationalOptions(options)
-
-    if self._debug_mode:
-      logging_level = logging.DEBUG
-    elif self._quiet_mode:
-      logging_level = logging.WARNING
-    else:
-      logging_level = logging.INFO
-
-    self._ConfigureLogging(log_level=logging_level)
 
     self._verbose = getattr(options, 'verbose', False)
 

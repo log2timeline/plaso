@@ -11,7 +11,7 @@ class CompressedFileHandler(logging.FileHandler):
   """Compressed file handler for logging."""
 
   def __init__(self, filename, mode='a', encoding=None):
-    """Opens a specified file and use it as the stream for logging.
+    """Initializes a compressed file logging handler.
 
     Args:
       filename (str): name of the log file.
@@ -37,7 +37,7 @@ class CompressedFileHandler(logging.FileHandler):
     constructor, open it before calling the superclass's emit.
 
     Args:
-      record (str): record.
+      record (logging.LogRecord): log record.
     """
     if self.encoding:
       record = record.encode(self.encoding)

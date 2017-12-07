@@ -675,6 +675,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       self._output_writer.Write(argument_parser.format_usage())
       return False
 
+    self._ConfigureLogging(filename=self._log_file)
+
     return True
 
   def ParseOptions(self, options):
@@ -703,21 +705,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._ParseLogFileOptions(options)
 
     self._ParseStorageMediaOptions(options)
-
-    format_string = (
-        '%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
-        '<%(module)s> %(message)s')
-
-    if self._debug_mode:
-      logging_level = logging.DEBUG
-    elif self._quiet_mode:
-      logging_level = logging.WARNING
-    else:
-      logging_level = logging.INFO
-
-    self._ConfigureLogging(
-        filename=self._log_file, format_string=format_string,
-        log_level=logging_level)
 
     self._destination_path = self.ParseStringOption(
         options, 'path', default_value='export')

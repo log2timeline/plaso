@@ -345,6 +345,8 @@ class PstealTool(
     Returns:
       bool: True if the arguments were successfully parsed.
     """
+    self._ConfigureLogging()
+
     argument_parser = argparse.ArgumentParser(
         description=self.DESCRIPTION, epilog=self.EPILOG, add_help=False,
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -415,6 +417,8 @@ class PstealTool(
       self._output_writer.Write('\n')
       self._output_writer.Write(argument_parser.format_usage())
       return False
+
+    self._ConfigureLogging(filename=self._log_file)
 
     return True
 
