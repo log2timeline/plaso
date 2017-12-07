@@ -103,6 +103,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
 
   def _GetHostname(self, url):
     """Retrieves the hostname from a full URL.
+
     Args:
       url (str): full URL.
     Returns:
@@ -122,6 +123,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
   def ParsePageVisitRow(self, parser_mediator, query, row, cache=None, database=None,
                         **unused_kwargs):
     """Parses a visited row.
+
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
