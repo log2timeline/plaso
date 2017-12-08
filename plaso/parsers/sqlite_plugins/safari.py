@@ -120,8 +120,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
 
     return url
 
-  def ParsePageVisitRow(self, parser_mediator, query, row, database=None,
-                        **unused_kwargs):
+  def ParsePageVisitRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a visited row.
 
     Args:
