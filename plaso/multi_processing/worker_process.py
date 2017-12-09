@@ -43,7 +43,6 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._abort = False
     self._buffer_size = 0
     self._current_display_name = ''
-    self._debug_output = processing_configuration.debug_output
     self._extraction_worker = None
     self._guppy_memory_profiler = None
     self._knowledge_base = knowledge_base
@@ -60,9 +59,12 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._task = None
     self._task_queue = task_queue
 
-    if processing_configuration.log_filename:
-      self._log_filename = '{0:s}_{1:s}'.format(
-          self._name, self._processing_configuration.log_filename)
+    if self._processing_configuration:
+      self._debug_output = self._processing_configuration.debug_output
+
+      if processing_configuration.log_filename:
+        self._log_filename = '{0:s}_{1:s}'.format(
+            self._name, self._processing_configuration.log_filename)
 
   def _GetStatus(self):
     """Retrieves status information.
