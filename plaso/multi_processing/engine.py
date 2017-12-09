@@ -15,7 +15,6 @@ import time
 from plaso.engine import engine
 from plaso.engine import process_info
 from plaso.lib import definitions
-from plaso.lib import loggers
 from plaso.multi_processing import plaso_xmlrpc
 
 
@@ -250,36 +249,6 @@ class MultiProcessEngine(engine.BaseEngine):
     if pid not in self._processes_per_pid:
       raise KeyError(
           'Process (PID: {0:d}) not registered with engine'.format(pid))
-
-  def _ReconfigureLogging(self):
-    """Reconfigures logging."""
-    logger = logging.getLogger()
-
-    if self._log_filename and self._log_filename.endswith('.gz'):
-      handler = loggers.CompressedFileHandler(self._log_filename, mode='a')
-    elif self._log_filename:
-      handler = logging.FileHandler(self._log_filename, mode='a')
-    else:
-      handler = logging.StreamHandler()
-
-    format_string = (
-        '%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
-        '<%(module)s> %(message)s')
-
-    formatter = logging.Formatter(format_string)
-    handler.setFormatter(formatter)
-
-    if self._debug_output:
-      level = logging.DEBUG
-    elif self._quiet_mode:
-      level = logging.WARNING
-    else:
-      level = logging.INFO
-
-    logger.setLevel(level)
-    handler.setLevel(level)
-
-    logger.addHandler(handler)
 
   def _RegisterProcess(self, process):
     """Registers a process with the engine.

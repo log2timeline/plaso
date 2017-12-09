@@ -54,40 +54,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     """str: process name."""
     return self._name
 
-  def _ConfigureLogging(self):
-    """Configures logging."""
-    # Remove all possible log handlers.
-    for handler in logging.root.handlers:
-      logging.root.removeHandler(handler)
-
-    logger = logging.getLogger()
-
-    if self._log_filename and self._log_filename.endswith('.gz'):
-      handler = loggers.CompressedFileHandler(self._log_filename, mode='w')
-    elif self._log_filename:
-      handler = logging.FileHandler(self._log_filename, mode='w')
-    else:
-      handler = logging.StreamHandler()
-
-    format_string = (
-        '%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
-        '<%(module)s> %(message)s')
-
-    formatter = logging.Formatter(format_string)
-    handler.setFormatter(formatter)
-
-    if self._debug_output:
-      level = logging.DEBUG
-    elif self._quiet_mode:
-      level = logging.WARNING
-    else:
-      level = logging.INFO
-
-    logger.setLevel(level)
-    handler.setLevel(level)
-
-    logger.addHandler(handler)
-
   @abc.abstractmethod
   def _GetStatus(self):
     """Returns status information.
@@ -234,7 +200,9 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
     # Logging needs to be configured before the first output otherwise we
     # mess up the logging of the parent process.
-    self._ConfigureLogging()
+    logger.ConfigureLogging(
+        debug_output=self._debug_output, filename=self._log_filename,
+        quiet_mode=self._quiet_mode)
 
     logging.debug(
         'Process: {0!s} (PID: {1:d}) started'.format(self._name, self._pid))

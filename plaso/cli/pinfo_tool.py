@@ -16,6 +16,7 @@ from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import knowledge_base
 from plaso.lib import definitions
 from plaso.lib import errors
+from plaso.lib import loggers
 from plaso.lib import timelib
 from plaso.serializer import json_serializer
 from plaso.storage import factory as storage_factory
@@ -538,7 +539,7 @@ class PinfoTool(
     Returns:
       bool: True if the arguments were successfully parsed.
     """
-    self._ConfigureLogging()
+    logger.ConfigureLogging()
 
     argument_parser = argparse.ArgumentParser(
         description=self.DESCRIPTION, add_help=False,
@@ -584,7 +585,9 @@ class PinfoTool(
       self._output_writer.Write(argument_parser.format_usage())
       return False
 
-    self._ConfigureLogging(filename=self._log_file)
+    logger.ConfigureLogging(
+        debug_output=self._debug_mode, filename=self._log_file,
+        quiet_mode=self._quiet_mode)
 
     return True
 

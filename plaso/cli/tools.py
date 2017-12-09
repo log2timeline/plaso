@@ -68,48 +68,6 @@ class CLITool(object):
     self.list_timezones = False
     self.preferred_encoding = preferred_encoding
 
-  def _ConfigureLogging(self, filename=None):
-    """Configures logging.
-
-    If a filename is specified and the corresponding log file already exists,
-    the file is truncated.
-
-    Args:
-      filename (Optional[str]): path to a filename to append logs to, where
-          None means logs will not be redirected to a file.
-    """
-    # Remove all possible log handlers.
-    for handler in logging.root.handlers:
-      logging.root.removeHandler(handler)
-
-    logger = logging.getLogger()
-
-    if filename and filename.endswith('.gz'):
-      handler = loggers.CompressedFileHandler(filename, mode='w')
-    elif filename:
-      handler = logging.FileHandler(filename, mode='w')
-    else:
-      handler = logging.StreamHandler()
-
-    format_string = (
-        '%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
-        '<%(module)s> %(message)s')
-
-    formatter = logging.Formatter(format_string)
-    handler.setFormatter(formatter)
-
-    if self._debug_mode:
-      level = logging.DEBUG
-    elif self._quiet_mode:
-      level = logging.WARNING
-    else:
-      level = logging.INFO
-
-    logger.setLevel(level)
-    handler.setLevel(level)
-
-    logger.addHandler(handler)
-
   def _EncodeString(self, string):
     """Encodes a string in the preferred encoding.
 

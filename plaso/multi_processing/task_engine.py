@@ -20,6 +20,7 @@ from plaso.engine import profiler
 from plaso.engine import zeromq_queue
 from plaso.lib import definitions
 from plaso.lib import errors
+from plaso.lib import loggers
 from plaso.multi_processing import engine
 from plaso.multi_processing import multi_process_queue
 from plaso.multi_processing import task_manager
@@ -486,7 +487,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     process.start()
 
-    self._ReconfigureLogging()
+    logger.ConfigureLogging(
+        debug_output=self._debug_output, filename=self._log_filename,
+        mode='a', quiet_mode=self._quiet_mode)
 
     try:
       self._StartMonitoringProcess(process)
