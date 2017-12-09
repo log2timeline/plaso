@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-"""A plugin to tag events according to rules in a tag file."""
+"""A plugin to tag events according to rules in a tagging file."""
 
 from __future__ import unicode_literals
 
 import logging
+import io
 import re
 import os
 
@@ -15,6 +16,7 @@ from efilter import query as efilter_query
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.containers import reports
+from plaso.lib import errors
 
 
 class TaggingAnalysisPlugin(interface.AnalysisPlugin):
@@ -69,11 +71,11 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     self.SetAndLoadTagFile(tag_file_path)
     return True
 
-  def _ParseDefinitions(self, tag_file_path):
+  def _ParseDefinitions(self, tagging_file_path):
     """Parses the tag file and yields tuples of label name, list of rule ASTs.
 
     Args:
-      tag_file_path (str): path to the tag file.
+      tagging_file_path (str): path to the tagging file.
 
     Yields:
       tuple: contains:
@@ -82,57 +84,63 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
         list[efilter.query.Query]: efilter queries.
     """
     queries = None
-    tag = None
-    with open(tag_file_path, 'r') as tag_file:
-      for line in tag_file.readlines():
+    label_name = None
+    with io.open(tagging_file_path, 'r', encoding='utf-8') as tagging_file:
+      for line in tagging_file.readlines():
         label_match = self._TAG_LABEL_LINE.match(line)
         if label_match:
-          if tag and queries:
-            yield tag, queries
+          if label_name and queries:
+            yield label_name, queries
+
           queries = []
-          tag = label_match.group(1)
+          label_name = label_match.group(1)
           continue
 
-        rule_match = self._TAG_RULE_LINE.match(line)
-        if rule_match:
-          rule = rule_match.group(1)
-          query = self._ParseRule(rule)
-          if query:
-            queries.append(query)
+        event_tagging_expression = self._TAG_RULE_LINE.match(line)
+        if not event_tagging_expression:
+          continue
+
+        tagging_rule = self._ParseEventTaggingRule(
+            event_tagging_expression.group(1))
+        queries.append(tagging_rule)
 
       # Yield any remaining tags once we reach the end of the file.
-      if tag and queries:
-        yield tag, queries
+      if label_name and queries:
+        yield label_name, queries
 
-  def _ParseRule(self, rule):
-    """Parses a single tagging rule.
+  def _ParseEventTaggingRule(self, event_tagging_expression):
+    """Parses an event tagging expression.
 
-    This method attempts to detect whether the rule is written with objectfilter
-    or dottysql syntax - either is acceptable.
+    This method attempts to detect whether the event tagging expression is valid
+    objectfilter or dottysql syntax.
 
     Example:
-      _ParseRule('5 + 5')
+      _ParseEventTaggingRule('5 + 5')
       # Returns Sum(Literal(5), Literal(5))
 
     Args:
-      rule (str): rule in either objectfilter or dottysql syntax.
+      event_tagging_expression (str): event tagging experssion either in
+          objectfilter or dottysql syntax.
 
     Returns:
-      efilter.query.Query: efilter query of the rule or None.
+      efilter.query.Query: efilter query of the event tagging expression.
+
+    Raises:
+      TaggingFileError: when the tagging file cannot be correctly parsed.
     """
-    if self._OBJECTFILTER_WORDS.search(rule):
+    if self._OBJECTFILTER_WORDS.search(event_tagging_expression):
       syntax = 'objectfilter'
     else:
       syntax = 'dottysql'
 
     try:
-      return efilter_query.Query(rule, syntax=syntax)
+      return efilter_query.Query(event_tagging_expression, syntax=syntax)
 
     except efilter_errors.EfilterParseError as exception:
-      stripped_rule = rule.rstrip()
-      logging.warning(
-          'Unable to build query from rule: "{0:s}" with error: {1!s}'.format(
-              stripped_rule, exception))
+      stripped_expression = event_tagging_expression.rstrip()
+      raise errors.TaggingFileError((
+          'Unable to parse event tagging expressoin: "{0:s}" with error: '
+          '{1!s}').format(stripped_expression, exception))
 
   def _ParseTaggingFile(self, tag_file_path):
     """Parses tag definitions from the source.
@@ -147,8 +155,6 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     tags = []
     for label_name, rules in self._ParseDefinitions(tag_file_path):
       if not rules:
-        logging.warning('All rules for label "{0:s}" are invalid.'.format(
-            label_name))
         continue
 
       tag = efilter_ast.IfElse(
@@ -220,8 +226,8 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     Args:
       tagging_file_path (str): path of the tagging file.
     """
+    self._tag_rules = self._ParseTaggingFile(tagging_file_path)
     self._tagging_file_name = tagging_file_path
-    self._tag_rules = self._ParseTaggingFile(self._tagging_file_name)
 
 
 manager.AnalysisPluginManager.RegisterPlugin(TaggingAnalysisPlugin)
