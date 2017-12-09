@@ -11,6 +11,7 @@ from plaso.analysis import tagging
 from plaso.lib import errors
 from plaso.cli.helpers import tagging_analysis
 
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 from tests.cli.helpers import test_lib
 
@@ -44,9 +45,15 @@ optional arguments:
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT)
 
+  @shared_test_lib.skipUnlessHasTestFile([
+      'tagging_file', 'invalid_encoding.txt'])
+  @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'invalid_syntax.txt'])
+  @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'valid.txt'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
+
+    options.tagging_file = self._GetTestFilePath(['tagging_file', 'valid.txt'])
 
     analysis_plugin = tagging.TaggingAnalysisPlugin()
     tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
@@ -55,6 +62,26 @@ optional arguments:
     with self.assertRaises(errors.BadConfigObject):
       tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
           options, None)
+
+    options.tagging_file = None
+
+    with self.assertRaises(errors.BadConfigOption):
+      tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
+          options, analysis_plugin)
+
+    options.tagging_file = self._GetTestFilePath([
+        'tagging_file', 'invalid_syntax.txt'])
+
+    with self.assertRaises(errors.BadConfigOption):
+      tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
+          options, analysis_plugin)
+
+    options.tagging_file = self._GetTestFilePath([
+        'tagging_file', 'invalid_encoding.txt'])
+
+    with self.assertRaises(errors.BadConfigOption):
+      tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
+          options, analysis_plugin)
 
 
 if __name__ == '__main__':
