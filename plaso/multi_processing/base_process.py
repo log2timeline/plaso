@@ -248,6 +248,9 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     logging.debug(
         'Process: {0!s} (PID: {1:d}) stopped'.format(self._name, self._pid))
 
+    # Make sure log files are cleanly closed.
+    logging.shutdown()
+
     self._status_is_running = False
 
   @abc.abstractmethod
