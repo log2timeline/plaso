@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+import logging
+
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfvfs.lib import definitions as dfvfs_definitions
 
@@ -80,6 +82,7 @@ class FileStatParser(interface.FileEntryParser):
       file_entry (dfvfs.FileEntry): a file entry.
     """
     stat_object = file_entry.GetStat()
+    logging.debug('{0:s} {1!s}'.format(self.NAME, stat_object))
     if not stat_object:
       return
 
