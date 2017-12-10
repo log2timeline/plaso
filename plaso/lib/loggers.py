@@ -46,7 +46,7 @@ class CompressedFileHandler(logging.FileHandler):
 
 
 def ConfigureLogging(
-    self, debug_output=False, filename=None, mode='w', quiet_mode=False):
+    debug_output=False, filename=None, mode='w', quiet_mode=False):
   """Configures the logging root logger.
 
   Args:
@@ -65,7 +65,7 @@ def ConfigureLogging(
   logger = logging.getLogger()
 
   if filename and filename.endswith('.gz'):
-    handler = loggers.CompressedFileHandler(filename, mode=mode)
+    handler = CompressedFileHandler(filename, mode=mode)
   elif filename:
     handler = logging.FileHandler(filename, mode=mode)
   else:

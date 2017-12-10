@@ -184,7 +184,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     Returns:
       bool: True if the arguments were successfully parsed.
     """
-    logger.ConfigureLogging()
+    loggers.ConfigureLogging()
 
     argument_parser = argparse.ArgumentParser(
         description=self.DESCRIPTION, epilog=self.EPILOG, add_help=False,
@@ -312,7 +312,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._command_line_arguments = self.GetCommandLineArguments()
 
-    logger.ConfigureLogging(
+    loggers.ConfigureLogging(
         debug_output=self._debug_mode, filename=self._log_file,
         quiet_mode=self._quiet_mode)
 

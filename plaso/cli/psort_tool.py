@@ -302,7 +302,7 @@ class PsortTool(
     Returns:
       bool: True if the arguments were successfully parsed.
     """
-    logger.ConfigureLogging()
+    loggers.ConfigureLogging()
 
     argument_parser = argparse.ArgumentParser(
         description=self.DESCRIPTION, add_help=False,
@@ -396,7 +396,7 @@ class PsortTool(
 
       return False
 
-    logger.ConfigureLogging(
+    loggers.ConfigureLogging(
         debug_output=self._debug_mode, filename=self._log_file,
         quiet_mode=self._quiet_mode)
 

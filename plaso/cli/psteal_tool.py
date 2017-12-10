@@ -346,7 +346,7 @@ class PstealTool(
     Returns:
       bool: True if the arguments were successfully parsed.
     """
-    logger.ConfigureLogging()
+    loggers.ConfigureLogging()
 
     argument_parser = argparse.ArgumentParser(
         description=self.DESCRIPTION, epilog=self.EPILOG, add_help=False,
@@ -419,7 +419,7 @@ class PstealTool(
       self._output_writer.Write(argument_parser.format_usage())
       return False
 
-    logger.ConfigureLogging(
+    loggers.ConfigureLogging(
         debug_output=self._debug_mode, filename=self._log_file,
         quiet_mode=self._quiet_mode)
 

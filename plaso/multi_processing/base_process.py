@@ -200,7 +200,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
     # Logging needs to be configured before the first output otherwise we
     # mess up the logging of the parent process.
-    logger.ConfigureLogging(
+    loggers.ConfigureLogging(
         debug_output=self._debug_output, filename=self._log_filename,
         quiet_mode=self._quiet_mode)
 

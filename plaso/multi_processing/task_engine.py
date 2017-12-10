@@ -487,7 +487,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     process.start()
 
-    logger.ConfigureLogging(
+    loggers.ConfigureLogging(
         debug_output=self._debug_output, filename=self._log_filename,
         mode='a', quiet_mode=self._quiet_mode)
 
