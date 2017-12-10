@@ -16,12 +16,9 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
 from plaso.unix import bsmtoken
-
-import pytz  # pylint: disable=wrong-import-order
 
 
 # Note that we're using Array and a helper function here instead of
