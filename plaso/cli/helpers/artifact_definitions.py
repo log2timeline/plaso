@@ -38,10 +38,10 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
         '--artifact_definitions', '--artifact-definitions',
         dest='artifact_definitions_path', type=str, metavar='PATH',
         action='store', help=(
-            'Path to a directory containing artifact definitions. Artifact '
-            'definitions can be used to describe and quickly collect data '
-            'data of interest, such as specific files or Windows Registry '
-            'keys.'))
+            'Path to a directory containing artifact definitions, which are '
+            '.yaml files. Artifact definitions can be used to describe and '
+            'quickly collect data of interest, such as specific files or '
+            'Windows Registry keys.'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
