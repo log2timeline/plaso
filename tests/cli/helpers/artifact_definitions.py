@@ -27,10 +27,10 @@ Test argument parser.
 
 optional arguments:
   --artifact_definitions PATH, --artifact-definitions PATH
-                        Path to a directory containing artifact definitions.
-                        Artifact definitions can be used to describe and
-                        quickly collect data data of interest, such as
-                        specific files or Windows Registry keys.
+                        Path to a directory containing artifact definitions,
+                        which are .yaml files. Artifact definitions can be
+                        used to describe and quickly collect data of interest,
+                        such as specific files or Windows Registry keys.
 """
 
   def testAddArguments(self):
