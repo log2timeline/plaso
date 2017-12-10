@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Custom logger."""
+"""Logging related classes and functions."""
 
 from __future__ import unicode_literals
 
