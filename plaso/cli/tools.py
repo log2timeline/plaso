@@ -13,7 +13,6 @@ import plaso
 
 from plaso.cli import views
 from plaso.lib import errors
-from plaso.lib import loggers
 from plaso.lib import py2to3
 
 import pytz  # pylint: disable=wrong-import-order

@@ -56,7 +56,7 @@ def ConfigureLogging(
     mode (Optional[str]): log file access mode.
     quiet_mode (Optional[bool]): True if the logging should not include
         information output. Note that debug_output takes precedence over
-        quiet_mode. 
+        quiet_mode.
   """
   # Remove all possible log handlers.
   for handler in logging.root.handlers:
