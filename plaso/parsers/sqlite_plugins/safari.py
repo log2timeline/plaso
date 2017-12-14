@@ -43,7 +43,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
   """Parse Safari History Files.
   Safari history file is stored in a SQLite database file name History.DB
   """
-  NAME =  'safari_history'
+  NAME = 'safari_history'
   DESCRIPTION = 'Parser for Safari history SQLite database files.'
 
   #Define the needed queries.
@@ -84,8 +84,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
       'history_events': (
           'CREATE TABLE history_events (id INTEGER PRIMARY KEY AUTOINCREMENT,'
           ' event_type TEXT NOT NULL, event_time REAL NOT NULL, '
-          'pending_listeners TEXT NOT NULL, value BLOB)'
-      ),
+          'pending_listeners TEXT NOT NULL, value BLOB)'),
       'history_visits': (
           'CREATE TABLE history_visits (id INTEGER PRIMARY KEY AUTOINCREMENT,'
           ' history_item INTEGER NOT NULL REFERENCES history_items(id) ON '
@@ -97,28 +96,8 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
           ' NULL UNIQUE REFERENCES history_visits(id) ON DELETE CASCADE, '
           'origin INTEGER NOT NULL DEFAULT 0, generation INTEGER NOT NULL '
           'DEFAULT 0, attributes INTEGER NOT NULL DEFAULT 0, score INTEGER '
-          'NOT NULL DEFAULT 0)'
-      )
+          'NOT NULL DEFAULT 0)')
   }]
-
-  def _GetHostname(self, url):
-    """Retrieves the hostname from a full URL.
-
-    Args:
-      url (str): full URL.
-    Returns:
-      str: hostname or full URL if not hostname could be retrieved.
-    """
-    if url.startswith('http') or url.startswith('ftp'):
-      _, _, uri = url.partition('//')
-      hostname, _, _ = uri.partition('/')
-      return hostname
-
-    if url.startswith('about'):
-      hostname, _, _ = url.partition('/')
-      return hostname
-
-    return url
 
   def ParsePageVisitRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a visited row.
@@ -126,19 +105,11 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
-      cache (Optional[SQLiteCache]): cache.
-      database (Optional[SQLiteDatabase]): database.
-      query (Optional[str]): query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
-
-    # Todo: Extras
 
     query_hash = hash(query)
-
-    url = self._GetRowValue(query_hash, row, 'url')
     was_http_non_get = self._GetRowValue(query_hash, row, 'http_non_get')
 
     event_data = SafariHistoryPageVisitedEventData()
@@ -147,7 +118,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
     event_data.title = self._GetRowValue(query_hash, row, 'title')
     event_data.url = self._GetRowValue(query_hash, row, 'url')
     event_data.visit_count = self._GetRowValue(query_hash, row, 'visit_count')
-    event_data.host = self._GetHostname(url)
+    event_data.host = self._GetRowValue(query_hash, row, 'domain_expansion')
     event_data.was_http_non_get = bool(was_http_non_get)
 
     timestamp = self._GetRowValue(query_hash, row, 'visit_time')
