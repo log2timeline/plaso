@@ -16,13 +16,14 @@ from plaso.parsers.sqlite_plugins import interface
 
 class SafariHistoryPageVisitedEventData(events.EventData):
   """Safari history event data.
+
   Attributes:
     title (str): title of the webpage visited.
     url (str): URL visited.
-    host(str): Host name of the host server
+    host(str): hostname of the server.
     visit_count (int): number of times the website was visited.
-    was_http_non_get (bool): True if the webpage was
-     visited using a non-GET HTTP request.
+    was_http_non_get (bool): True if the webpage was visited using a
+        non-GET HTTP request.
   """
 
   DATA_TYPE = 'safari:history:visit_sqlite'
@@ -41,12 +42,11 @@ class SafariHistoryPageVisitedEventData(events.EventData):
 
 class SafariHistoryPluginSqlite(interface.SQLitePlugin):
   """Parse Safari History Files.
+
   Safari history file is stored in a SQLite database file name History.DB
   """
   NAME = 'safari_history'
   DESCRIPTION = 'Parser for Safari history SQLite database files.'
-
-  #Define the needed queries.
 
   QUERIES = [
       (('SELECT history_items.id, history_items.url, history_items.visit'
@@ -59,7 +59,6 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
         'ORDER BY history_visits.visit_time'), 'ParsePageVisitRow')
   ]
 
-  # The required tables
   REQUIRED_TABLES = frozenset(['history_items', 'history_visits'])
 
   SCHEMAS = [{

@@ -28,11 +28,11 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History.db'], plugin, cache=cache)
 
-    # the History file contains 19 events
+    # The History file contains 25 events
     self.assertEqual(storage_writer.number_of_events, 25)
 
     events = list(storage_writer.GetEvents())
-    #check the first page visited entry
+    # Check the first page visited entry
     event = events[1]
 
     self.assertEqual(event.timestamp_desc,
