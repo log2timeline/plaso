@@ -1037,8 +1037,7 @@ class ZIPStorageFile(interface.BaseStorageFile):
           container_type, stream_number)
       stream_offset = offset_table.GetOffset(index)
 
-      data_stream = _SerializedDataStream(
-          self._zipfile, self._temporary_path, stream_name)
+      data_stream = self._GetSerializedDataStream(container_type, stream_number)
       data_stream.SeekEntryAtOffset(index, stream_offset)
 
       attribute_container = self._ReadAttributeContainerFromStreamEntry(
