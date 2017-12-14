@@ -28,11 +28,11 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History.db'], plugin, cache=cache)
 
-    # the History file contains 19 events
+    # tThe History file contains 19 events.
     self.assertEqual(storage_writer.number_of_events, 25)
 
     events = list(storage_writer.GetEvents())
-    #check the first page visited entry
+    # Check the first page visited entry.
     event = events[1]
 
     self.assertEqual(event.timestamp_desc,
@@ -49,9 +49,8 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event.title, expected_title)
 
     expected_message = (
-        'URL: {0:s} [count: 2] Host: facebook.com http_non_get: False'
-    ).format(expected_url)
-
+        'URL: http://facebook.com/ [count: 2] '
+        'Host: facebook.com http_non_get: False')
     self._TestGetMessageStrings(event, expected_message, expected_message)
 
 

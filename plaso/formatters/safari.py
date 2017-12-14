@@ -24,7 +24,7 @@ class SafariHistoryFormatter(interface.ConditionalEventFormatter):
 
 
 class SafariHistoryFormatterSqlite(interface.ConditionalEventFormatter):
-  """ Formatter for a Safari history event for Sqlite History.db"""
+  """Formatter for a Safari history event from Sqlite History.db"""
 
   DATA_TYPE = 'safari:history:visit_sqlite'
 
