@@ -20,7 +20,7 @@ class ExtractionArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   # pylint: disable=no-member,protected-access
 
   _EXPECTED_OUTPUT = """\
-usage: cli_helper.py [--preferred_year YEAR] [-p] [--process_archives]
+usage: cli_helper.py [--preferred_year YEAR] [--process_archives]
                      [--skip_compressed_streams]
 
 Test argument parser.
@@ -37,10 +37,6 @@ optional arguments:
   --skip_compressed_streams, --skip-compressed-streams
                         Skip processing file content within compressed
                         streams, such as syslog.gz and syslog.bz2.
-  -p, --preprocess      Turn on preprocessing. Preprocessing is turned on by
-                        default when parsing image files, however if a mount
-                        point is being parsed then this parameter needs to be
-                        set manually.
 """
 
   def testAddArguments(self):
@@ -62,7 +58,6 @@ optional arguments:
     test_tool = tools.CLITool()
     extraction.ExtractionArgumentsHelper.ParseOptions(options, test_tool)
 
-    self.assertFalse(test_tool._force_preprocessing)
     self.assertIsNone(test_tool._preferred_year)
     self.assertFalse(test_tool._process_archives)
     self.assertTrue(test_tool._process_compressed_streams)

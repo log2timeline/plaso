@@ -21,7 +21,11 @@ class SafariHistoryPageVisitedEventData(events.EventData):
     title (str): title of the webpage visited.
     url (str): URL visited.
     host(str): hostname of the server.
+<<<<<<< HEAD
     visit_count (int): number of times the website was visited.
+=======
+    visit_count (int): number of times the webpage was visited.
+>>>>>>> 942655f4c020b49c3970ee94646d418bd68e165b
     was_http_non_get (bool): True if the webpage was visited using a
         non-GET HTTP request.
   """
@@ -43,8 +47,14 @@ class SafariHistoryPageVisitedEventData(events.EventData):
 class SafariHistoryPluginSqlite(interface.SQLitePlugin):
   """Parse Safari History Files.
 
+<<<<<<< HEAD
   Safari history file is stored in a SQLite database file name History.DB
   """
+=======
+  Safari history file is stored in a SQLite database file named 'History.DB'.
+  """
+
+>>>>>>> 942655f4c020b49c3970ee94646d418bd68e165b
   NAME = 'safari_history'
   DESCRIPTION = 'Parser for Safari history SQLite database files.'
 
@@ -83,7 +93,12 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
       'history_events': (
           'CREATE TABLE history_events (id INTEGER PRIMARY KEY AUTOINCREMENT,'
           ' event_type TEXT NOT NULL, event_time REAL NOT NULL, '
+<<<<<<< HEAD
           'pending_listeners TEXT NOT NULL, value BLOB)'),
+=======
+          'pending_listeners TEXT NOT NULL, value BLOB)'
+      ),
+>>>>>>> 942655f4c020b49c3970ee94646d418bd68e165b
       'history_visits': (
           'CREATE TABLE history_visits (id INTEGER PRIMARY KEY AUTOINCREMENT,'
           ' history_item INTEGER NOT NULL REFERENCES history_items(id) ON '
@@ -95,20 +110,63 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
           ' NULL UNIQUE REFERENCES history_visits(id) ON DELETE CASCADE, '
           'origin INTEGER NOT NULL DEFAULT 0, generation INTEGER NOT NULL '
           'DEFAULT 0, attributes INTEGER NOT NULL DEFAULT 0, score INTEGER '
+<<<<<<< HEAD
           'NOT NULL DEFAULT 0)')
   }]
 
+=======
+          'NOT NULL DEFAULT 0)'
+      )
+  }]
+
+  def _GetHostname(self, url):
+    """Retrieves the hostname from a full URL.
+
+    Args:
+      url (str): full URL.
+
+    Returns:
+      str: hostname or full URL if not hostname could be retrieved.
+    """
+    if url.startswith('http') or url.startswith('ftp'):
+      _, _, uri = url.partition('//')
+      hostname, _, _ = uri.partition('/')
+      return hostname
+
+    if url.startswith('about'):
+      hostname, _, _ = url.partition('/')
+      return hostname
+
+    return url
+
+>>>>>>> 942655f4c020b49c3970ee94646d418bd68e165b
   def ParsePageVisitRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a visited row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+<<<<<<< HEAD
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
 
     query_hash = hash(query)
+=======
+      row (sqlite3.Row): row.
+      cache (Optional[SQLiteCache]): cache.
+      database (Optional[SQLiteDatabase]): database.
+      query (Optional[str]): query.
+    """
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
+    # Todo: Extras
+
+    query_hash = hash(query)
+
+    url = self._GetRowValue(query_hash, row, 'url')
+>>>>>>> 942655f4c020b49c3970ee94646d418bd68e165b
     was_http_non_get = self._GetRowValue(query_hash, row, 'http_non_get')
 
     event_data = SafariHistoryPageVisitedEventData()
@@ -117,7 +175,11 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
     event_data.title = self._GetRowValue(query_hash, row, 'title')
     event_data.url = self._GetRowValue(query_hash, row, 'url')
     event_data.visit_count = self._GetRowValue(query_hash, row, 'visit_count')
+<<<<<<< HEAD
     event_data.host = self._GetRowValue(query_hash, row, 'domain_expansion')
+=======
+    event_data.host = self._GetHostname(url)
+>>>>>>> 942655f4c020b49c3970ee94646d418bd68e165b
     event_data.was_http_non_get = bool(was_http_non_get)
 
     timestamp = self._GetRowValue(query_hash, row, 'visit_time')

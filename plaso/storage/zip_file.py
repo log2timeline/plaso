@@ -722,6 +722,9 @@ class ZIPStorageFile(interface.BaseStorageFile):
   # decompressed data.
   _MAXIMUM_NUMBER_OF_DECOMPRESSED_STREAMS = 24
 
+  # The maximum number of cached attribute containers.
+  _MAXIMUM_NUMBER_OF_CACHED_ATTRIBUTE_CONTAINERS = 1024
+
   # The maximum number of cached tables.
   _MAXIMUM_NUMBER_OF_CACHED_TABLES = 16
 
@@ -787,6 +790,9 @@ class ZIPStorageFile(interface.BaseStorageFile):
     self._temporary_path = None
     self._zipfile = None
     self._zipfile_path = None
+
+    self._attribute_container_caches = {}
+    self._attribute_container_caches_lfu = {}
 
     self.format_version = self._FORMAT_VERSION
     self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
@@ -939,6 +945,55 @@ class ZIPStorageFile(interface.BaseStorageFile):
       identifier = identifiers.SerializedStreamIdentifier(
           stream_number, entry_index)
       attribute_container.SetIdentifier(identifier)
+
+    return attribute_container
+
+  def _GetAttributeContainerWithCache(
+      self, container_type, stream_number, entry_index=NEXT_AVAILABLE_ENTRY):
+    """Reads an attribute container from a specific stream.
+
+    Args:
+      container_type (str): attribute container type.
+      stream_number (int): number of the serialized event source stream.
+      entry_index (Optional[int]): number of the serialized event source
+          within the stream, where NEXT_AVAILABLE_ENTRY represents the next
+          available event source.
+
+    Returns:
+      AttributeContainer: attribute container or None if not available.
+    """
+    if container_type not in self._attribute_container_caches:
+      self._attribute_container_caches[container_type] = {}
+
+    if container_type not in self._attribute_container_caches_lfu:
+      self._attribute_container_caches_lfu[container_type] = []
+
+    container_cache = self._attribute_container_caches[container_type]
+    container_cache_lfu = self._attribute_container_caches_lfu[container_type]
+
+    lookup_key = u'{0:d}.{1:d}'.format(stream_number, entry_index)
+
+    attribute_container = None
+    if entry_index != self.NEXT_AVAILABLE_ENTRY:
+      attribute_container = container_cache.get(lookup_key, None)
+
+    if not attribute_container:
+      attribute_container = self._GetAttributeContainer(
+          container_type, stream_number, entry_index=entry_index)
+
+      number_of_cached_containers = len(container_cache)
+      if (number_of_cached_containers >=
+          self._MAXIMUM_NUMBER_OF_CACHED_ATTRIBUTE_CONTAINERS):
+        lfu_lookup_key = container_cache_lfu.pop()
+        del container_cache[lfu_lookup_key]
+
+      container_cache[lookup_key] = attribute_container
+
+    if lookup_key in container_cache_lfu:
+      lfu_index = container_cache_lfu.index(lookup_key)
+      container_cache_lfu.pop(lfu_index)
+
+    container_cache_lfu.insert(0, lookup_key)
 
     return attribute_container
 
@@ -1814,6 +1869,33 @@ class ZIPStorageFile(interface.BaseStorageFile):
       attribute_container = self._ReadAttributeContainerFromStreamEntry(
           data_stream, container_type)
 
+  def _ReadEventDataIntoEvent(self, event):
+    """Reads event data into the event.
+
+    This function is intended to offer backwards compatible event behavior.
+
+    Args:
+      event (EventObject): event.
+    """
+    if self.storage_type != definitions.STORAGE_TYPE_SESSION:
+      return
+
+    if (hasattr(event, u'event_data_stream_number') and
+        hasattr(event, u'event_data_entry_index')):
+      event_data_identifier = identifiers.SerializedStreamIdentifier(
+          event.event_data_stream_number, event.event_data_entry_index)
+      event.SetEventDataIdentifier(event_data_identifier)
+
+      event_data = self._GetAttributeContainerWithCache(
+          u'event_data', event.event_data_stream_number,
+          entry_index=event.event_data_entry_index)
+
+      for attribute_name, attribute_value in event_data.GetAttributes():
+        setattr(event, attribute_name, attribute_value)
+
+      del event.event_data_stream_number
+      del event.event_data_entry_index
+
   def _ReadSerializerStream(self):
     """Reads the serializer stream.
 
@@ -2435,7 +2517,7 @@ class ZIPStorageFile(interface.BaseStorageFile):
     Returns:
       EventData: event data or None if not available.
     """
-    return self._GetAttributeContainer(
+    return self._GetAttributeContainerWithCache(
         'event_data', identifier.stream_number,
         entry_index=identifier.entry_index)
 

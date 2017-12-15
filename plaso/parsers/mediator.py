@@ -7,6 +7,8 @@ import logging
 import os
 import time
 
+from dfvfs.lib import definitions as dfvfs_definitions
+
 from plaso.containers import errors
 from plaso.engine import path_helper
 from plaso.lib import py2to3
@@ -130,6 +132,11 @@ class ParserMediator(object):
     file_entry = self.GetFileEntry()
     if not file_entry:
       return
+
+    # Gzip files don't store the creation or metadata modification times,
+    # but the parent file times are relevant.
+    if file_entry.TYPE_INDICATOR == dfvfs_definitions.TYPE_INDICATOR_GZIP:
+      file_entry = file_entry.GetParentFileEntry()
 
     stat_object = file_entry.GetStat()
 
@@ -406,7 +413,7 @@ class ParserMediator(object):
 
       stat_object = file_entry.GetStat()
       inode_value = getattr(stat_object, 'ino', None)
-      if not hasattr(event, 'inode') and inode_value:
+      if event.inode is None and inode_value is not None:
         event.inode = self._GetInode(inode_value)
 
     if not getattr(event, 'display_name', None) and display_name:

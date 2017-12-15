@@ -10,7 +10,6 @@ import time
 import textwrap
 
 from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.resolver import context as dfvfs_context
 
 import plaso
 
@@ -109,7 +108,6 @@ class Log2TimelineTool(
     self._command_line_arguments = None
     self._enable_sigsegv_handler = False
     self._number_of_extraction_workers = 0
-    self._resolver_context = dfvfs_context.Context()
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
     self._source_type = None
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
@@ -450,25 +448,6 @@ class Log2TimelineTool(
 
     self._enable_sigsegv_handler = getattr(options, 'sigsegv_handler', False)
 
-  def _PreprocessSources(self, extraction_engine):
-    """Preprocesses the sources.
-
-    Args:
-      extraction_engine (BaseEngine): extraction engine to preprocess
-          the sources.
-    """
-    logging.debug('Starting preprocessing.')
-
-    try:
-      extraction_engine.PreprocessSources(
-          self._artifacts_registry, self._source_path_specs,
-          resolver_context=self._resolver_context)
-
-    except IOError as exception:
-      logging.error('Unable to preprocess with error: {0!s}'.format(exception))
-
-    logging.debug('Preprocessing done.')
-
   def ExtractEventsFromSources(self):
     """Processes the sources and extracts events.
 
@@ -523,8 +502,7 @@ class Log2TimelineTool(
 
     # If the source is a directory or a storage media image
     # run pre-processing.
-    if (self._force_preprocessing or
-        self._source_type in self._SOURCE_TYPES_TO_PREPROCESS):
+    if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
       self._PreprocessSources(extraction_engine)
 
     configuration = self._CreateProcessingConfiguration()
