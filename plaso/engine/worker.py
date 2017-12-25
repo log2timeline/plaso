@@ -646,10 +646,7 @@ class EventExtractionWorker(object):
     """
     mediator.ClearEventAttributes()
 
-    data_stream_name = getattr(data_stream, 'name', None) or ''
-    has_data_stream = file_entry.HasDataStream(data_stream_name)
-
-    if has_data_stream and self._analyzers:
+    if data_stream and self._analyzers:
       # Since AnalyzeDataStream generates event attributes it needs to be
       # called before producing events.
       self._AnalyzeDataStream(mediator, file_entry, data_stream.name)
@@ -658,7 +655,7 @@ class EventExtractionWorker(object):
 
     # Not every file entry has a data stream. In such cases we want to
     # extract the metadata only.
-    if not file_entry.IsFile() or not has_data_stream:
+    if not data_stream:
       return
 
     # Determine if the content of the file entry should not be extracted.
@@ -672,7 +669,7 @@ class EventExtractionWorker(object):
 
     path_spec = copy.deepcopy(file_entry.path_spec)
     if data_stream:
-      path_spec.data_stream = data_stream_name
+      path_spec.data_stream = data_stream.name
 
     archive_types = []
     compressed_stream_types = []
@@ -691,7 +688,7 @@ class EventExtractionWorker(object):
       if dfvfs_definitions.TYPE_INDICATOR_ZIP in archive_types:
         # ZIP files are the base of certain file formats like docx.
         self._ExtractContentFromDataStream(
-            mediator, file_entry, data_stream_name)
+            mediator, file_entry, data_stream.name)
 
     elif compressed_stream_types:
       self._ProcessCompressedStreamTypes(
@@ -699,7 +696,7 @@ class EventExtractionWorker(object):
 
     else:
       self._ExtractContentFromDataStream(
-          mediator, file_entry, data_stream_name)
+          mediator, file_entry, data_stream.name)
 
   def _ProcessMetadataFile(self, mediator, file_entry):
     """Processes a metadata file.
