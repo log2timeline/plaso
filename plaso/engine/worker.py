@@ -326,7 +326,8 @@ class EventExtractionWorker(object):
       mediator (ParserMediator): mediates the interactions between
           parsers and other components, such as storage and abort signals.
       file_entry (dfvfs.FileEntry): file entry to extract metadata from.
-      data_stream (dfvfs.DataStream): data stream.
+      data_stream (dfvfs.DataStream): data stream or None if the file entry
+          has no data stream.
     """
     # Do not extract metadata from the root file entry when it is virtual.
     if file_entry.IsRoot() and file_entry.type_indicator not in (
@@ -609,8 +610,7 @@ class EventExtractionWorker(object):
           if self._abort:
             break
 
-          self._ProcessFileEntryDataStream(
-              mediator, file_entry, data_stream)
+          self._ProcessFileEntryDataStream(mediator, file_entry, data_stream)
 
           file_entry_processed = True
 
@@ -641,24 +641,24 @@ class EventExtractionWorker(object):
       mediator (ParserMediator): mediates the interactions between
           parsers and other components, such as storage and abort signals.
       file_entry (dfvfs.FileEntry): file entry containing the data stream.
-      data_stream (dfvfs.DataStream): data stream.
+      data_stream (dfvfs.DataStream): data stream or None if the file entry
+          has no data stream.
     """
     mediator.ClearEventAttributes()
 
-    if data_stream and self._analyzers:
+    data_stream_name = getattr(data_stream, 'name', None) or ''
+    has_data_stream = file_entry.HasDataStream(data_stream_name)
+
+    if has_data_stream and self._analyzers:
       # Since AnalyzeDataStream generates event attributes it needs to be
       # called before producing events.
       self._AnalyzeDataStream(mediator, file_entry, data_stream.name)
 
     self._ExtractMetadataFromFileEntry(mediator, file_entry, data_stream)
 
-    if not file_entry.IsFile():
-      return
-
     # Not every file entry has a data stream. In such cases we want to
     # extract the metadata only.
-    data_stream_name = getattr(data_stream, 'name', None) or ''
-    if not file_entry.HasDataStream(data_stream_name):
+    if not file_entry.IsFile() or not has_data_stream:
       return
 
     # Determine if the content of the file entry should not be extracted.
