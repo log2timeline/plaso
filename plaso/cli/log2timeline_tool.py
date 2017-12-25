@@ -20,11 +20,9 @@ from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.cli import extraction_tool
 from plaso.cli import logging_filter
 from plaso.cli import status_view
-from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
-from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.engine import filter_file
 from plaso.engine import single_process as single_process_engine
@@ -36,12 +34,7 @@ from plaso.storage import sqlite_file as storage_sqlite_file
 from plaso.storage import zip_file as storage_zip_file
 
 
-class Log2TimelineTool(
-    extraction_tool.ExtractionTool,
-    tool_options.HashersOptions,
-    tool_options.ParsersOptions,
-    tool_options.ProfilingOptions,
-    tool_options.StorageFileOptions):
+class Log2TimelineTool(extraction_tool.ExtractionTool):
   """Log2timeline CLI tool.
 
   Attributes:
@@ -116,46 +109,14 @@ class Log2TimelineTool(
         self._output_writer, tools.StdoutOutputWriter)
     self._storage_file_path = None
     self._storage_format = definitions.STORAGE_FORMAT_ZIP
-    self._temporary_directory = None
-    self._text_prepend = None
     self._use_zeromq = True
     self._worker_memory_limit = None
-    self._yara_rules_string = None
 
     self.dependencies_check = True
     self.list_hashers = False
     self.list_parsers_and_plugins = False
     self.list_profilers = False
     self.show_info = False
-
-  def _CreateProcessingConfiguration(self):
-    """Creates a processing configuration.
-
-    Returns:
-      ProcessingConfiguration: processing configuration.
-    """
-    # TODO: pass preferred_encoding.
-    configuration = configurations.ProcessingConfiguration()
-    configuration.credentials = self._credential_configurations
-    configuration.debug_output = self._debug_mode
-    configuration.event_extraction.text_prepend = self._text_prepend
-    configuration.extraction.hasher_file_size_limit = (
-        self._hasher_file_size_limit)
-    configuration.extraction.hasher_names_string = self._hasher_names_string
-    configuration.extraction.process_archives = self._process_archives
-    configuration.extraction.process_compressed_streams = (
-        self._process_compressed_streams)
-    configuration.extraction.yara_rules_string = self._yara_rules_string
-    configuration.filter_file = self._filter_file
-    configuration.input_source.mount_path = self._mount_path
-    configuration.parser_filter_expression = self._parser_filter_expression
-    configuration.preferred_year = self._preferred_year
-    configuration.profiling.directory = self._profiling_directory
-    configuration.profiling.sample_rate = self._profiling_sample_rate
-    configuration.profiling.profilers = self._profilers
-    configuration.temporary_directory = self._temporary_directory
-
-    return configuration
 
   def _GetPluginData(self):
     """Retrieves the version and various plugin information.
@@ -505,43 +466,11 @@ class Log2TimelineTool(
     if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
       self._PreprocessSources(extraction_engine)
 
-    configuration = self._CreateProcessingConfiguration()
+    configuration = self._CreateProcessingConfiguration(
+        extraction_engine.knowledge_base)
 
-    if not configuration.parser_filter_expression:
-      operating_system = extraction_engine.knowledge_base.GetValue(
-          'operating_system')
-      operating_system_product = extraction_engine.knowledge_base.GetValue(
-          'operating_system_product')
-      operating_system_version = extraction_engine.knowledge_base.GetValue(
-          'operating_system_version')
-      parser_filter_expression = (
-          parsers_manager.ParsersManager.GetPresetForOperatingSystem(
-              operating_system, operating_system_product,
-              operating_system_version))
-
-      if parser_filter_expression:
-        logging.info('Parser filter expression changed to: {0:s}'.format(
-            parser_filter_expression))
-
-      configuration.parser_filter_expression = parser_filter_expression
-
-      names_generator = parsers_manager.ParsersManager.GetParserAndPluginNames(
-          parser_filter_expression=parser_filter_expression)
-
-      session.enabled_parser_names = list(names_generator)
-      session.parser_filter_expression = parser_filter_expression
-
-    # Note session.preferred_time_zone will default to UTC but
-    # self._preferred_time_zone is None when not set.
-    if self._preferred_time_zone:
-      try:
-        extraction_engine.knowledge_base.SetTimeZone(self._preferred_time_zone)
-      except ValueError:
-        # pylint: disable=protected-access
-        logging.warning(
-            'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
-                self._preferred_time_zone,
-                extraction_engine.knowledge_base._time_zone.zone))
+    self._SetExtractionParsersAndPlugins(configuration, session)
+    self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
     filter_find_specs = None
     if configuration.filter_file:
