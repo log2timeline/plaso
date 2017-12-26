@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 import abc
 
 try:
-  import win32api
   import win32console
 except ImportError:
   win32console = None
@@ -280,13 +279,7 @@ class CLITabularTableView(BaseTableView):
 
     Args:
       output_writer (OutputWriter): output writer.
-
-    Raises:
-      RuntimeError: if the title exceeds the maximum width.
     """
-    if self._title and len(self._title) > self._MAXIMUM_WIDTH:
-      raise RuntimeError('Title length out of bounds.')
-
     # Round up the column sizes to the nearest tab.
     for column_index, column_size in enumerate(self._column_sizes):
       column_size, _ = divmod(column_size, self._NUMBER_OF_SPACES_IN_TAB)

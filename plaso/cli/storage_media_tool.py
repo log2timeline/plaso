@@ -647,7 +647,7 @@ class StorageMediaTool(tools.CLITool):
     self._output_writer.Write('The following partitions were found:\n')
 
     table_view = views.CLITabularTableView(
-        column_names=['Identifier','Offset (in bytes)', 'Size (in bytes)'])
+        column_names=['Identifier', 'Offset (in bytes)', 'Size (in bytes)'])
 
     for volume_identifier in sorted(volume_identifiers):
       volume = volume_system.GetVolumeByIdentifier(volume_identifier)
