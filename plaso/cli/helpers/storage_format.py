@@ -16,7 +16,7 @@ class StorageFormatArgumentsHelper(interface.ArgumentsHelper):
   NAME = 'storage_format'
   DESCRIPTION = 'Storage format command line arguments.'
 
-  _DEFAULT_STORAGE_FORMAT = definitions.STORAGE_FORMAT_ZIP
+  _DEFAULT_STORAGE_FORMAT = definitions.STORAGE_FORMAT_SQLITE
 
   @classmethod
   def AddArguments(cls, argument_group):
