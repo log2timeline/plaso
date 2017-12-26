@@ -79,17 +79,13 @@ class StatusView(object):
           screen_buffer_attributes, console_size, top_left_coordinate)
       screen_buffer.SetConsoleCursorPosition(top_left_coordinate)
 
-  def _FormatAnalysisStatusTableRow(self, process_status):
+  def _FormatAnalysisStatusTableRow(self, process_status, table_view):
     """Formats an analysis status table row.
 
     Args:
       process_status (ProcessStatus): processing status.
-
-    Returns:
-      str: processing status formatted as a row.
+      table_view (CLITabularTableView): table view.
     """
-    pid = '{0:d}'.format(process_status.pid)
-
     used_memory = self._FormatSizeInUnitsOf1024(process_status.used_memory)
 
     events = ''
@@ -113,21 +109,9 @@ class StatusView(object):
           process_status.number_of_produced_reports,
           process_status.number_of_produced_reports_delta)
 
-    # The columns are 8-spaces aligned.
-    return ''.join([
-        process_status.identifier,
-        ' ' * (24 - len(process_status.identifier)),
-        pid,
-        ' ' * (8 - len(pid)),
-        process_status.status,
-        ' ' * (16 - len(process_status.status)),
-        used_memory,
-        ' ' * (16 - len(used_memory)),
-        events,
-        ' ' * (16 - len(events)),
-        event_tags,
-        ' ' * (16 - len(event_tags)),
-        reports])
+    table_view.AddRow([
+        process_status.identifier, process_status.pid, process_status.status,
+        used_memory, events, event_tags, reports])
 
   def _FormatExtractionStatusTableRow(self, process_status, table_view):
     """Formats an extraction status table row.
@@ -216,31 +200,17 @@ class StatusView(object):
 
     self._PrintAnalysisStatusHeader()
 
-    status_header = (
-        'Identifier              '
-        'PID     '
-        'Status          '
-        'Memory          '
-        'Events          '
-        'Tags            '
-        'Reports')
-    if not win32console:
-      # TODO: for win32console get current color and set intensity,
-      # write the header separately then reset intensity.
-      status_header = '\x1b[1m{0:s}\x1b[0m'.format(status_header)
+    table_view = views.CLITabularTableView(column_names=[
+        'Identifier', 'PID', 'Status', 'Memory', 'Events', 'Tags',
+        'Reports'], column_sizes=[23, 7, 15, 15, 15, 15, 0])
 
-    status_table = [status_header]
-
-    status_row = self._FormatAnalysisStatusTableRow(
-        processing_status.foreman_status)
-    status_table.append(status_row)
+    self._FormatAnalysisStatusTableRow(
+        processing_status.foreman_status, table_view)
 
     for worker_status in processing_status.workers_status:
-      status_row = self._FormatAnalysisStatusTableRow(worker_status)
-      status_table.append(status_row)
+      self._FormatAnalysisStatusTableRow(worker_status, table_view)
 
-    status_table.append('')
-    self._output_writer.Write('\n'.join(status_table))
+    table_view.Write(self._output_writer)
     self._output_writer.Write('\n')
 
     if processing_status.aborted:

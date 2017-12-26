@@ -20,7 +20,7 @@ class BaseTableView(object):
     """Initializes a table view.
 
     Args:
-      column_names (Optional[str]): column names.
+      column_names (Optional[list[str]]): column names.
       title (Optional[str]): title.
     """
     super(BaseTableView, self).__init__()
@@ -71,7 +71,7 @@ class CLITableView(BaseTableView):
     """Initializes a command line table view.
 
     Args:
-      column_names (Optional[str]): column names.
+      column_names (Optional[list[str]]): column names.
       title (Optional[str]): title.
     """
     super(CLITableView, self).__init__(column_names=column_names, title=title)
@@ -211,8 +211,8 @@ class CLITabularTableView(BaseTableView):
     """Initializes a command line table view.
 
     Args:
-      column_names (Optional[str]): column names.
-      column_sizes (Optional[int]): minimum column sizes, in number of
+      column_names (Optional[list[str]]): column names.
+      column_sizes (Optional[list[int]]): minimum column sizes, in number of
           characters. If a column name or row value is larger than the
           minimum column size the column will be enlarged. Note that the
           minimum columns size will be rounded up to the number of spaces
@@ -346,7 +346,7 @@ class ViewsFactory(object):
 
     Args:
       format_type (str): table view format type.
-      column_names (Optional[str]): column names.
+      column_names (Optional[list[str]]): column names.
       title (Optional[str]): title.
 
     Returns:
