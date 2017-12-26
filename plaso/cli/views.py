@@ -1,18 +1,24 @@
 # -*- coding: utf-8 -*-
-"""The CLI view classes."""
+"""View classes."""
 
 from __future__ import unicode_literals
 
 import abc
 
+try:
+  import win32api
+  import win32console
+except ImportError:
+  win32console = None
+
 from plaso.lib import py2to3
 
 
 class BaseTableView(object):
-  """Class that implements the table view interface."""
+  """Table view interface."""
 
   def __init__(self, column_names=None, title=None):
-    """Initializes the table view object.
+    """Initializes a table view.
 
     Args:
       column_names (Optional[str]): column names.
@@ -51,7 +57,7 @@ class BaseTableView(object):
 
 
 class CLITableView(BaseTableView):
-  """Class that implements a command line table view.
+  """Command line table view.
 
   Note that currently this table view does not support more than 2 columns.
   """
@@ -63,7 +69,7 @@ class CLITableView(BaseTableView):
   _HEADER_FORMAT_STRING = '{{0:*^{0:d}}}\n'.format(_MAXIMUM_WIDTH)
 
   def __init__(self, column_names=None, title=None):
-    """Initializes the command line table view object.
+    """Initializes a command line table view.
 
     Args:
       column_names (Optional[str]): column names.
@@ -74,6 +80,19 @@ class CLITableView(BaseTableView):
       self._column_width = len(self._columns[0])
     else:
       self._column_width = 0
+
+  def _WriteHeader(self, output_writer):
+    """Writes a header.
+
+    Args:
+      output_writer (OutputWriter): output writer.
+    """
+    header_string = ''
+    if self._title:
+      header_string = ' {0:s} '.format(self._title)
+
+    header_string = self._HEADER_FORMAT_STRING.format(header_string)
+    output_writer.Write(header_string)
 
   def _WriteRow(self, output_writer, values):
     """Writes a row of values aligned to the column width.
@@ -157,8 +176,8 @@ class CLITableView(BaseTableView):
 
     Raises:
       RuntimeError: if the title exceeds the maximum width or
-                    if the table has more than 2 columns or
-                    if the column width is out of bounds.
+          if the table has more than 2 columns or
+          if the column width is out of bounds.
     """
     if self._title and len(self._title) > self._MAXIMUM_WIDTH:
       raise RuntimeError('Title length out of bounds.')
@@ -172,12 +191,7 @@ class CLITableView(BaseTableView):
 
     output_writer.Write('\n')
 
-    if self._title:
-      header_string = ' {0:s} '.format(self._title)
-    else:
-      header_string = ''
-    header_string = self._HEADER_FORMAT_STRING.format(header_string)
-    output_writer.Write(header_string)
+    self._WriteHeader(output_writer)
 
     if self._columns:
       self._WriteRow(output_writer, self._columns)
@@ -189,8 +203,109 @@ class CLITableView(BaseTableView):
     self._WriteSeparatorLine(output_writer)
 
 
+class CLITabularTableView(BaseTableView):
+  """Command line tabular table view interface."""
+
+  _NUMBER_OF_SPACES_IN_TAB = 8
+
+  def __init__(self, column_names=None, title=None):
+    """Initializes a command line table view.
+
+    Args:
+      column_names (Optional[str]): column names.
+      title (Optional[str]): title.
+    """
+    super(CLITabularTableView, self).__init__(
+        column_names=column_names, title=title)
+    self._column_sizes = []
+
+  def _WriteRow(self, output_writer, values, in_bold=False):
+    """Writes a row of values aligned to the column width.
+
+    Args:
+      output_writer (OutputWriter): output writer.
+      values (list[object]): values.
+      in_bold (Optional[bool]): True if the row should be written in bold.
+    """
+    row_strings = []
+    for value_index, value_string in enumerate(values):
+      padding_size = self._column_sizes[value_index] - len(value_string)
+      padding_string = ' ' * padding_size
+
+      row_strings.extend([value_string, padding_string])
+
+    row_strings.pop()
+
+    row_strings = ''.join(row_strings)
+
+    if in_bold and not win32console:
+      # TODO: for win32console get current color and set intensity,
+      # write the header separately then reset intensity.
+      row_strings = '\x1b[1m{0:s}\x1b[0m'.format(row_strings)
+
+    row_strings = '{0:s}\n'.format(row_strings)
+    output_writer.Write(row_strings)
+
+  def AddRow(self, values):
+    """Adds a row of values.
+
+    Args:
+      values (list[object]): values.
+
+    Raises:
+      ValueError: if the number of values is out of bounds.
+    """
+    if self._number_of_columns and len(values) != self._number_of_columns:
+      raise ValueError('Number of values is out of bounds.')
+
+    if not self._column_sizes and self._columns:
+      self._column_sizes = [len(column) for column in self._columns]
+
+    value_strings = []
+    for value_index, value_string in enumerate(values):
+      if not isinstance(value_string, py2to3.UNICODE_TYPE):
+        value_string = '{0!s}'.format(value_string)
+      value_strings.append(value_string)
+
+      self._column_sizes[value_index] = max(
+          self._column_sizes[value_index], len(value_string))
+
+    self._rows.append(value_strings)
+
+    if not self._number_of_columns:
+      self._number_of_columns = len(value_strings)
+
+  def Write(self, output_writer):
+    """Writes the table to the output writer.
+
+    Args:
+      output_writer (OutputWriter): output writer.
+
+    Raises:
+      RuntimeError: if the title exceeds the maximum width.
+    """
+    if self._title and len(self._title) > self._MAXIMUM_WIDTH:
+      raise RuntimeError('Title length out of bounds.')
+
+    # Round up the column sizes to the nearest tab.
+    for column_index, column_size in enumerate(self._column_sizes):
+      column_size, _ = divmod(column_size, self._NUMBER_OF_SPACES_IN_TAB)
+      column_size = (column_size + 1) * self._NUMBER_OF_SPACES_IN_TAB
+      self._column_sizes[column_index] = column_size
+
+    output_writer.Write('\n')
+
+    # TODO: write title.
+
+    if self._columns:
+      self._WriteRow(output_writer, self._columns, in_bold=True)
+
+    for values in self._rows:
+      self._WriteRow(output_writer, values)
+
+
 class MarkdownTableView(BaseTableView):
-  """Class that implements a Markdown table view."""
+  """Markdown table view."""
 
   def Write(self, output_writer):
     """Writes the table to the output writer.
@@ -219,7 +334,7 @@ class MarkdownTableView(BaseTableView):
 
 
 class ViewsFactory(object):
-  """Class that implements the views factory."""
+  """Views factory."""
 
   FORMAT_TYPE_CLI = 'cli'
   FORMAT_TYPE_MARKDOWN = 'markdown'

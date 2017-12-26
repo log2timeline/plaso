@@ -20,6 +20,7 @@ from dfvfs.volume import tsk_volume_system
 from dfvfs.volume import vshadow_volume_system
 
 from plaso.cli import tools
+from plaso.cli import views
 from plaso.engine import configurations
 from plaso.lib import errors
 from plaso.lib import py2to3
@@ -643,9 +644,10 @@ class StorageMediaTool(tools.CLITool):
     Raises:
       SourceScannerError: if the source cannot be processed.
     """
-    self._output_writer.Write(
-        'The following partitions were found:\n'
-        'Identifier\tOffset (in bytes)\tSize (in bytes)\n')
+    self._output_writer.Write('The following partitions were found:\n')
+
+    table_view = views.CLITabularTableView(
+        column_names=['Identifier','Offset (in bytes)', 'Size (in bytes)'])
 
     for volume_identifier in sorted(volume_identifiers):
       volume = volume_system.GetVolumeByIdentifier(volume_identifier)
@@ -654,10 +656,12 @@ class StorageMediaTool(tools.CLITool):
             'Volume missing for identifier: {0:s}.'.format(volume_identifier))
 
       volume_extent = volume.extents[0]
-      self._output_writer.Write(
-          '{0:s}\t\t{1:d} (0x{1:08x})\t{2:s}\n'.format(
-              volume.identifier, volume_extent.offset,
-              self._FormatHumanReadableSize(volume_extent.size)))
+      volume_offset = '{0:d} (0x{0:08x})'.format(volume_extent.offset)
+      volume_size = self._FormatHumanReadableSize(volume_extent.size)
+
+      table_view.AddRow([volume.identifier, volume_offset, volume_size])
+
+    table_view.Write(self._output_writer)
 
     self._output_writer.Write('\n')
 
@@ -751,8 +755,10 @@ class StorageMediaTool(tools.CLITool):
     while True:
       if print_header:
         self._output_writer.Write(
-            'The following Volume Shadow Snapshots (VSS) were found:\n'
-            'Identifier\t\tCreation Time\n')
+            'The following Volume Shadow Snapshots (VSS) were found:\n')
+
+        table_view = views.CLITabularTableView(
+            column_names=['Identifier', 'Creation Time'])
 
         for volume_identifier in volume_identifiers:
           volume = volume_system.GetVolumeByIdentifier(volume_identifier)
@@ -769,12 +775,13 @@ class StorageMediaTool(tools.CLITool):
               vss_creation_time)
 
           if volume.HasExternalData():
-            external_data = '\tWARNING: data stored outside volume'
-          else:
-            external_data = ''
+            vss_creation_time = (
+                '{0:s}\tWARNING: data stored outside volume').format(
+                    vss_creation_time)
 
-          self._output_writer.Write('{0:s}\t\t\t{1:s}{2:s}\n'.format(
-              volume.identifier, vss_creation_time, external_data))
+          table_view.AddRow([volume.identifier, vss_creation_time])
+
+        table_view.Write(self._output_writer)
 
         self._output_writer.Write('\n')
 
