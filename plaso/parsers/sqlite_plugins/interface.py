@@ -230,7 +230,7 @@ class SQLitePlugin(plugins.BasePlugin):
 
           self._ParseQueryWithWAL(
               parser_mediator, database_wal, query, callback, callback_method,
-             row_cache, cache=cache)
+              row_cache, cache=cache)
 
         finally:
           parser_mediator.RemoveEventAttribute('schema_match')
