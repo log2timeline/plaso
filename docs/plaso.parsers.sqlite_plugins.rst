@@ -140,6 +140,14 @@ plaso\.parsers\.sqlite\_plugins\.mackeeper\_cache module
     :undoc-members:
     :show-inheritance:
 
+plaso\.parsers\.sqlite\_plugins\.safari module
+----------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.safari
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso\.parsers\.sqlite\_plugins\.skype module
 ---------------------------------------------
 
