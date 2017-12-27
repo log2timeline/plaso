@@ -138,14 +138,13 @@ class CLITabularTableView(shared_test_lib.BaseTestCase):
     string = output_writer.ReadOutput()
 
     expected_strings = [
-        b'',
         b'Name            Description',
         b'First name      The first name in the table',
         b'Second name     The second name in the table',
         b'']
 
     if not sys.platform.startswith('win'):
-      expected_strings[1] = b'\x1b[1mName            Description\x1b[0m'
+      expected_strings[0] = b'\x1b[1mName            Description\x1b[0m'
 
     self.assertEqual(string.split(b'\n'), expected_strings)
 

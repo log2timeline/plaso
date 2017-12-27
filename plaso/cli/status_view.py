@@ -17,6 +17,7 @@ import plaso
 
 from plaso.lib import definitions
 from plaso.cli import tools
+from plaso.cli import views
 
 
 class StatusView(object):
@@ -53,6 +54,69 @@ class StatusView(object):
     self._storage_file_path = None
     self._tool_name = tool_name
 
+  def _AddsAnalysisProcessStatusTableRow(self, process_status, table_view):
+    """Adds an analysis process status table row.
+
+    Args:
+      process_status (ProcessStatus): processing status.
+      table_view (CLITabularTableView): table view.
+    """
+    used_memory = self._FormatSizeInUnitsOf1024(process_status.used_memory)
+
+    events = ''
+    if (process_status.number_of_consumed_events is not None and
+        process_status.number_of_consumed_events_delta is not None):
+      events = '{0:d} ({1:d})'.format(
+          process_status.number_of_consumed_events,
+          process_status.number_of_consumed_events_delta)
+
+    event_tags = ''
+    if (process_status.number_of_produced_event_tags is not None and
+        process_status.number_of_produced_event_tags_delta is not None):
+      event_tags = '{0:d} ({1:d})'.format(
+          process_status.number_of_produced_event_tags,
+          process_status.number_of_produced_event_tags_delta)
+
+    reports = ''
+    if (process_status.number_of_produced_reports is not None and
+        process_status.number_of_produced_reports_delta is not None):
+      reports = '{0:d} ({1:d})'.format(
+          process_status.number_of_produced_reports,
+          process_status.number_of_produced_reports_delta)
+
+    table_view.AddRow([
+        process_status.identifier, process_status.pid, process_status.status,
+        used_memory, events, event_tags, reports])
+
+  def _AddExtractionProcessStatusTableRow(self, process_status, table_view):
+    """Adds an extraction process status table row.
+
+    Args:
+      process_status (ProcessStatus): processing status.
+      table_view (CLITabularTableView): table view.
+    """
+    used_memory = self._FormatSizeInUnitsOf1024(process_status.used_memory)
+
+    sources = ''
+    if (process_status.number_of_produced_sources is not None and
+        process_status.number_of_produced_sources_delta is not None):
+      sources = '{0:d} ({1:d})'.format(
+          process_status.number_of_produced_sources,
+          process_status.number_of_produced_sources_delta)
+
+    events = ''
+    if (process_status.number_of_produced_events is not None and
+        process_status.number_of_produced_events_delta is not None):
+      events = '{0:d} ({1:d})'.format(
+          process_status.number_of_produced_events,
+          process_status.number_of_produced_events_delta)
+
+    # TODO: shorten display name to fit in 80 chars and show the filename.
+
+    table_view.AddRow([
+        process_status.identifier, process_status.pid, process_status.status,
+        used_memory, sources, events, process_status.display_name])
+
   def _ClearScreen(self):
     """Clears the terminal/console screen."""
     if not win32console:
@@ -77,101 +141,6 @@ class StatusView(object):
       screen_buffer.FillConsoleOutputAttribute(
           screen_buffer_attributes, console_size, top_left_coordinate)
       screen_buffer.SetConsoleCursorPosition(top_left_coordinate)
-
-  def _FormatAnalysisStatusTableRow(self, process_status):
-    """Formats an analysis status table row.
-
-    Args:
-      process_status (ProcessStatus): processing status.
-
-    Returns:
-      str: processing status formatted as a row.
-    """
-    pid = '{0:d}'.format(process_status.pid)
-
-    used_memory = self._FormatSizeInUnitsOf1024(process_status.used_memory)
-
-    events = ''
-    if (process_status.number_of_consumed_events is not None and
-        process_status.number_of_consumed_events_delta is not None):
-      events = '{0:d} ({1:d})'.format(
-          process_status.number_of_consumed_events,
-          process_status.number_of_consumed_events_delta)
-
-    event_tags = ''
-    if (process_status.number_of_produced_event_tags is not None and
-        process_status.number_of_produced_event_tags_delta is not None):
-      event_tags = '{0:d} ({1:d})'.format(
-          process_status.number_of_produced_event_tags,
-          process_status.number_of_produced_event_tags_delta)
-
-    reports = ''
-    if (process_status.number_of_produced_reports is not None and
-        process_status.number_of_produced_reports_delta is not None):
-      reports = '{0:d} ({1:d})'.format(
-          process_status.number_of_produced_reports,
-          process_status.number_of_produced_reports_delta)
-
-    # The columns are 8-spaces aligned.
-    return ''.join([
-        process_status.identifier,
-        ' ' * (24 - len(process_status.identifier)),
-        pid,
-        ' ' * (8 - len(pid)),
-        process_status.status,
-        ' ' * (16 - len(process_status.status)),
-        used_memory,
-        ' ' * (16 - len(used_memory)),
-        events,
-        ' ' * (16 - len(events)),
-        event_tags,
-        ' ' * (16 - len(event_tags)),
-        reports])
-
-  def _FormatExtractionStatusTableRow(self, process_status):
-    """Formats an extraction status table row.
-
-    Args:
-      process_status (ProcessStatus): processing status.
-
-    Returns:
-      str: processing status formatted as a row.
-    """
-    pid = '{0:d}'.format(process_status.pid)
-
-    used_memory = self._FormatSizeInUnitsOf1024(process_status.used_memory)
-
-    sources = ''
-    if (process_status.number_of_produced_sources is not None and
-        process_status.number_of_produced_sources_delta is not None):
-      sources = '{0:d} ({1:d})'.format(
-          process_status.number_of_produced_sources,
-          process_status.number_of_produced_sources_delta)
-
-    events = ''
-    if (process_status.number_of_produced_events is not None and
-        process_status.number_of_produced_events_delta is not None):
-      events = '{0:d} ({1:d})'.format(
-          process_status.number_of_produced_events,
-          process_status.number_of_produced_events_delta)
-
-    # TODO: shorten display name to fit in 80 chars and show the filename.
-
-    # The columns are 8-spaces aligned.
-    return ''.join([
-        process_status.identifier,
-        ' ' * (16 - len(process_status.identifier)),
-        pid,
-        ' ' * (8 - len(pid)),
-        process_status.status,
-        ' ' * (16 - len(process_status.status)),
-        used_memory,
-        ' ' * (16 - len(used_memory)),
-        sources,
-        ' ' * (16 - len(sources)),
-        events,
-        ' ' * (16 - len(events)),
-        process_status.display_name])
 
   def _FormatSizeInUnitsOf1024(self, size):
     """Represents a number of bytes in units of 1024.
@@ -231,31 +200,17 @@ class StatusView(object):
 
     self._PrintAnalysisStatusHeader()
 
-    status_header = (
-        'Identifier              '
-        'PID     '
-        'Status          '
-        'Memory          '
-        'Events          '
-        'Tags            '
-        'Reports')
-    if not win32console:
-      # TODO: for win32console get current color and set intensity,
-      # write the header separately then reset intensity.
-      status_header = '\x1b[1m{0:s}\x1b[0m'.format(status_header)
+    table_view = views.CLITabularTableView(column_names=[
+        'Identifier', 'PID', 'Status', 'Memory', 'Events', 'Tags',
+        'Reports'], column_sizes=[23, 7, 15, 15, 15, 15, 0])
 
-    status_table = [status_header]
-
-    status_row = self._FormatAnalysisStatusTableRow(
-        processing_status.foreman_status)
-    status_table.append(status_row)
+    self._AddsAnalysisProcessStatusTableRow(
+        processing_status.foreman_status, table_view)
 
     for worker_status in processing_status.workers_status:
-      status_row = self._FormatAnalysisStatusTableRow(worker_status)
-      status_table.append(status_row)
+      self._AddsAnalysisProcessStatusTableRow(worker_status, table_view)
 
-    status_table.append('')
-    self._output_writer.Write('\n'.join(status_table))
+    table_view.Write(self._output_writer)
     self._output_writer.Write('\n')
 
     if processing_status.aborted:
@@ -300,31 +255,17 @@ class StatusView(object):
 
     self.PrintExtractionStatusHeader(processing_status)
 
-    # TODO: for win32console get current color and set intensity,
-    # write the header separately then reset intensity.
-    status_header = (
-        'Identifier      '
-        'PID     '
-        'Status          '
-        'Memory          '
-        'Sources         '
-        'Events          '
-        'File')
-    if not win32console:
-      status_header = '\x1b[1m{0:s}\x1b[0m'.format(status_header)
+    table_view = views.CLITabularTableView(column_names=[
+        'Identifier', 'PID', 'Status', 'Memory', 'Sources', 'Events',
+        'File'], column_sizes=[15, 7, 15, 15, 15, 15, 0])
 
-    status_table = [status_header]
-
-    status_row = self._FormatExtractionStatusTableRow(
-        processing_status.foreman_status)
-    status_table.append(status_row)
+    self._AddExtractionProcessStatusTableRow(
+        processing_status.foreman_status, table_view)
 
     for worker_status in processing_status.workers_status:
-      status_row = self._FormatExtractionStatusTableRow(worker_status)
-      status_table.append(status_row)
+      self._AddExtractionProcessStatusTableRow(worker_status, table_view)
 
-    status_table.append('')
-    self._output_writer.Write('\n'.join(status_table))
+    table_view.Write(self._output_writer)
     self._output_writer.Write('\n')
 
     if processing_status.aborted:
@@ -379,49 +320,20 @@ class StatusView(object):
     if processing_status and processing_status.tasks_status:
       tasks_status = processing_status.tasks_status
 
+      table_view = views.CLITabularTableView(
+          column_names=['Tasks:', 'Queued', 'Processing', 'To merge',
+                        'Abandoned', 'Total'],
+          column_sizes=[15, 7, 15, 15, 15, 0])
+
+      table_view.AddRow([
+          '', tasks_status.number_of_queued_tasks,
+          tasks_status.number_of_tasks_processing,
+          tasks_status.number_of_tasks_pending_merge,
+          tasks_status.number_of_abandoned_tasks,
+          tasks_status.total_number_of_tasks])
+
       self._output_writer.Write('\n')
-
-      status_header = (
-          'Tasks:          '
-          'Queued  '
-          'Processing      '
-          'To merge        '
-          'Abandoned       '
-          'Total')
-
-      if not win32console:
-        status_header = '\x1b[1m{0:s}\x1b[0m\n'.format(status_header)
-      else:
-        status_header = '{0:s}\n'.format(status_header)
-
-      self._output_writer.Write(status_header)
-
-      number_of_queued_tasks = '{0:d}'.format(
-          tasks_status.number_of_queued_tasks)
-      number_of_tasks_processing = '{0:d}'.format(
-          tasks_status.number_of_tasks_processing)
-      number_of_tasks_pending_merge = '{0:d}'.format(
-          tasks_status.number_of_tasks_pending_merge)
-      number_of_abandoned_tasks = '{0:d}'.format(
-          tasks_status.number_of_abandoned_tasks)
-      total_number_of_tasks = '{0:d}'.format(
-          tasks_status.total_number_of_tasks)
-
-      # The columns are 8-spaces aligned.
-      status_line = ''.join([
-          ' ' * 16,
-          number_of_queued_tasks,
-          ' ' * (8 - len(number_of_queued_tasks)),
-          number_of_tasks_processing,
-          ' ' * (16 - len(number_of_tasks_processing)),
-          number_of_tasks_pending_merge,
-          ' ' * (16 - len(number_of_tasks_pending_merge)),
-          number_of_abandoned_tasks,
-          ' ' * (16 - len(number_of_abandoned_tasks)),
-          total_number_of_tasks])
-
-      self._output_writer.Write(status_line)
-      self._output_writer.Write('\n')
+      table_view.Write(self._output_writer)
 
     self._output_writer.Write('\n')
 

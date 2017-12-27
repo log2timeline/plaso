@@ -20,7 +20,7 @@ class BaseTableView(object):
     """Initializes a table view.
 
     Args:
-      column_names (Optional[str]): column names.
+      column_names (Optional[list[str]]): column names.
       title (Optional[str]): title.
     """
     super(BaseTableView, self).__init__()
@@ -71,7 +71,7 @@ class CLITableView(BaseTableView):
     """Initializes a command line table view.
 
     Args:
-      column_names (Optional[str]): column names.
+      column_names (Optional[list[str]]): column names.
       title (Optional[str]): title.
     """
     super(CLITableView, self).__init__(column_names=column_names, title=title)
@@ -207,16 +207,21 @@ class CLITabularTableView(BaseTableView):
 
   _NUMBER_OF_SPACES_IN_TAB = 8
 
-  def __init__(self, column_names=None, title=None):
+  def __init__(self, column_names=None, column_sizes=None, title=None):
     """Initializes a command line table view.
 
     Args:
-      column_names (Optional[str]): column names.
+      column_names (Optional[list[str]]): column names.
+      column_sizes (Optional[list[int]]): minimum column sizes, in number of
+          characters. If a column name or row value is larger than the
+          minimum column size the column will be enlarged. Note that the
+          minimum columns size will be rounded up to the number of spaces
+          of the next tab.
       title (Optional[str]): title.
     """
     super(CLITabularTableView, self).__init__(
         column_names=column_names, title=title)
-    self._column_sizes = []
+    self._column_sizes = column_sizes or []
 
   def _WriteRow(self, output_writer, values, in_bold=False):
     """Writes a row of values aligned to the column width.
@@ -286,8 +291,6 @@ class CLITabularTableView(BaseTableView):
       column_size = (column_size + 1) * self._NUMBER_OF_SPACES_IN_TAB
       self._column_sizes[column_index] = column_size
 
-    output_writer.Write('\n')
-
     # TODO: write title.
 
     if self._columns:
@@ -343,7 +346,7 @@ class ViewsFactory(object):
 
     Args:
       format_type (str): table view format type.
-      column_names (Optional[str]): column names.
+      column_names (Optional[list[str]]): column names.
       title (Optional[str]): title.
 
     Returns:
