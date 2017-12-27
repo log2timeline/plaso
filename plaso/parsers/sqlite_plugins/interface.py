@@ -118,10 +118,11 @@ class SQLitePlugin(plugins.BasePlugin):
         row_hash = self._HashRow(row)
         row_cache.add(row_hash)
 
-      except sqlite3.DatabaseError as exception:
+      except Exception as exception:  # pylint: disable=broad-except
         parser_mediator.ProduceExtractionError((
-            'unable to parse row: {0:d} of results of query: {1:s} on '
-            'database with error: {2!s}').format(index, query, exception))
+            'unable to parse row: {0:d} with callback: {1:s} on database '
+            'with error: {2!s}').format(
+                index, callback.__name__, exception))
         # TODO: consider removing return.
         return
 
@@ -161,11 +162,11 @@ class SQLitePlugin(plugins.BasePlugin):
         callback(
             parser_mediator, query, row, cache=cache, database=database_wal)
 
-      except sqlite3.DatabaseError as exception:
+      except Exception as exception:  # pylint: disable=broad-except
         parser_mediator.ProduceExtractionError((
-            'unable to parse row: {0:d} of results of query: {1:s} on '
-            'database with WAL with error: {2!s}').format(
-                index, query, exception))
+            'unable to parse row: {0:d} with callback: {1:s} on database '
+            'with WAL with error: {2!s}').format(
+                index, callback.__name__, exception))
         # TODO: consider removing return.
         return
 
@@ -183,14 +184,13 @@ class SQLitePlugin(plugins.BasePlugin):
       wal_file_entry (Optional[dfvfs.FileEntry]): file entry for the database
           with WAL file commited.
     """
-    schema_match = None
-    if database:
-      schema_match = any(schema == database.schema for schema in self.SCHEMAS)
-
-    wal_schema_match = None
-    if database_wal:
-      wal_schema_match = any(
-          schema == database_wal.schema for schema in self.SCHEMAS)
+    schema_match = False
+    wal_schema_match = False
+    for schema in self.SCHEMAS:
+      if database and database.schema == schema:
+        schema_match = True
+      if database_wal and database_wal.schema == schema:
+        wal_schema_match = True
 
     for query, callback_method in self.QUERIES:
       if parser_mediator.abort:

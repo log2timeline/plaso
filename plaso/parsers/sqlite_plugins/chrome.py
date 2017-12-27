@@ -245,9 +245,6 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     Returns:
       str: visit source or None if not found.
     """
-    if not visit_id:
-      return
-
     sync_cache_results = cache.GetResults('sync')
     if not sync_cache_results:
       result_set = database.Query(self.SYNC_CACHE_QUERY)
@@ -255,11 +252,10 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
       cache.CacheQueryResults(result_set, 'sync', 'id', ('source',))
       sync_cache_results = cache.GetResults('sync')
 
-    results = sync_cache_results.get(visit_id, None)
-    if results is None:
-      return
-
-    return self.VISIT_SOURCE.get(results[0], None)
+    if sync_cache_results and visit_id:
+      results = sync_cache_results.get(visit_id, None)
+      if results:
+        return self.VISIT_SOURCE.get(results[0], None)
 
   def ParseFileDownloadedRow(
       self, parser_mediator, query, row, **unused_kwargs):
