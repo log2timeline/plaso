@@ -32,7 +32,6 @@ class SafariHistoryFormatterSqlite(interface.ConditionalEventFormatter):
       'URL: {url}',
       'Title: ({title})',
       '[count: {visit_count}]',
-      'Host: {host}',
       'http_non_get: {was_http_non_get}']
 
 
