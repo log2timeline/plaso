@@ -54,33 +54,8 @@ class StatusView(object):
     self._storage_file_path = None
     self._tool_name = tool_name
 
-  def _ClearScreen(self):
-    """Clears the terminal/console screen."""
-    if not win32console:
-      # ANSI escape sequence to clear screen.
-      self._output_writer.Write('\033[2J')
-      # ANSI escape sequence to move cursor to top left.
-      self._output_writer.Write('\033[H')
-
-    else:
-      # Windows cmd.exe does not support ANSI escape codes, thus instead we
-      # fill the console screen buffer with spaces.
-      top_left_coordinate = win32console.PyCOORDType(0, 0)
-      screen_buffer = win32console.GetStdHandle(win32api.STD_OUTPUT_HANDLE)
-      screen_buffer_information = screen_buffer.GetConsoleScreenBufferInfo()
-
-      screen_buffer_attributes = screen_buffer_information['Attributes']
-      screen_buffer_size = screen_buffer_information['Size']
-      console_size = screen_buffer_size.X * screen_buffer_size.Y
-
-      screen_buffer.FillConsoleOutputCharacter(
-          ' ', console_size, top_left_coordinate)
-      screen_buffer.FillConsoleOutputAttribute(
-          screen_buffer_attributes, console_size, top_left_coordinate)
-      screen_buffer.SetConsoleCursorPosition(top_left_coordinate)
-
-  def _FormatAnalysisStatusTableRow(self, process_status, table_view):
-    """Formats an analysis status table row.
+  def _AddsAnalysisProcessStatusTableRow(self, process_status, table_view):
+    """Adds an analysis process status table row.
 
     Args:
       process_status (ProcessStatus): processing status.
@@ -113,8 +88,8 @@ class StatusView(object):
         process_status.identifier, process_status.pid, process_status.status,
         used_memory, events, event_tags, reports])
 
-  def _FormatExtractionStatusTableRow(self, process_status, table_view):
-    """Formats an extraction status table row.
+  def _AddExtractionProcessStatusTableRow(self, process_status, table_view):
+    """Adds an extraction process status table row.
 
     Args:
       process_status (ProcessStatus): processing status.
@@ -141,6 +116,31 @@ class StatusView(object):
     table_view.AddRow([
         process_status.identifier, process_status.pid, process_status.status,
         used_memory, sources, events, process_status.display_name])
+
+  def _ClearScreen(self):
+    """Clears the terminal/console screen."""
+    if not win32console:
+      # ANSI escape sequence to clear screen.
+      self._output_writer.Write('\033[2J')
+      # ANSI escape sequence to move cursor to top left.
+      self._output_writer.Write('\033[H')
+
+    else:
+      # Windows cmd.exe does not support ANSI escape codes, thus instead we
+      # fill the console screen buffer with spaces.
+      top_left_coordinate = win32console.PyCOORDType(0, 0)
+      screen_buffer = win32console.GetStdHandle(win32api.STD_OUTPUT_HANDLE)
+      screen_buffer_information = screen_buffer.GetConsoleScreenBufferInfo()
+
+      screen_buffer_attributes = screen_buffer_information['Attributes']
+      screen_buffer_size = screen_buffer_information['Size']
+      console_size = screen_buffer_size.X * screen_buffer_size.Y
+
+      screen_buffer.FillConsoleOutputCharacter(
+          ' ', console_size, top_left_coordinate)
+      screen_buffer.FillConsoleOutputAttribute(
+          screen_buffer_attributes, console_size, top_left_coordinate)
+      screen_buffer.SetConsoleCursorPosition(top_left_coordinate)
 
   def _FormatSizeInUnitsOf1024(self, size):
     """Represents a number of bytes in units of 1024.
@@ -204,11 +204,11 @@ class StatusView(object):
         'Identifier', 'PID', 'Status', 'Memory', 'Events', 'Tags',
         'Reports'], column_sizes=[23, 7, 15, 15, 15, 15, 0])
 
-    self._FormatAnalysisStatusTableRow(
+    self._AddsAnalysisProcessStatusTableRow(
         processing_status.foreman_status, table_view)
 
     for worker_status in processing_status.workers_status:
-      self._FormatAnalysisStatusTableRow(worker_status, table_view)
+      self._AddsAnalysisProcessStatusTableRow(worker_status, table_view)
 
     table_view.Write(self._output_writer)
     self._output_writer.Write('\n')
@@ -259,11 +259,11 @@ class StatusView(object):
         'Identifier', 'PID', 'Status', 'Memory', 'Sources', 'Events',
         'File'], column_sizes=[15, 7, 15, 15, 15, 15, 0])
 
-    self._FormatExtractionStatusTableRow(
+    self._AddExtractionProcessStatusTableRow(
         processing_status.foreman_status, table_view)
 
     for worker_status in processing_status.workers_status:
-      self._FormatExtractionStatusTableRow(worker_status, table_view)
+      self._AddExtractionProcessStatusTableRow(worker_status, table_view)
 
     table_view.Write(self._output_writer)
     self._output_writer.Write('\n')
