@@ -87,8 +87,7 @@ class SQLitePlugin(plugins.BasePlugin):
     return hash_value
 
   def _ParseQuery(
-      self, parser_mediator, database, query, callback, callback_method,
-      row_cache, cache=None):
+      self, parser_mediator, database, query, callback, row_cache, cache=None):
     """Queries a database and parses the results.
 
     Args:
@@ -96,8 +95,6 @@ class SQLitePlugin(plugins.BasePlugin):
       database (SQLiteDatabase): database.
       query (str): query.
       callback (function): function to invoke to parse an individual row.
-      callback_method (str): name of the function to invoke to parse an
-          individual row.
       row_cache (set): hashes of the rows that have been parsed.
       cache (Optional[SQLiteCache]): cache.
     """
@@ -125,13 +122,13 @@ class SQLitePlugin(plugins.BasePlugin):
         parser_mediator.ProduceExtractionError((
             'unable to parse row: {0:d} with callback: {1:s} on database '
             'with error: {2!s}').format(
-                index, callback_method, exception))
+                index, callback.__name__, exception))
         # TODO: consider removing return.
         return
 
   def _ParseQueryWithWAL(
-      self, parser_mediator, database_wal, query, callback, callback_method,
-      row_cache, cache=None):
+      self, parser_mediator, database_wal, query, callback, row_cache,
+      cache=None):
     """Queries a database with WAL and parses the results.
 
     Note that cached rows will be ignored.
@@ -141,8 +138,6 @@ class SQLitePlugin(plugins.BasePlugin):
       database_wal (SQLiteDatabase): database with WAL.
       query (str): query.
       callback (function): function to invoke to parse an individual row.
-      callback_method (str): name of the function to invoke to parse an
-          individual row.
       row_cache (set): hashes of the rows that have been parsed.
       cache (Optional[SQLiteCache]): cache.
     """
@@ -171,7 +166,7 @@ class SQLitePlugin(plugins.BasePlugin):
         parser_mediator.ProduceExtractionError((
             'unable to parse row: {0:d} with callback: {1:s} on database '
             'with WAL with error: {2!s}').format(
-                index, callback_method, exception))
+                index, callback.__name__, exception))
         # TODO: consider removing return.
         return
 
@@ -215,8 +210,8 @@ class SQLitePlugin(plugins.BasePlugin):
           parser_mediator.AddEventAttribute('schema_match', schema_match)
 
           self._ParseQuery(
-              parser_mediator, database, query, callback, callback_method,
-              row_cache, cache=cache)
+              parser_mediator, database, query, callback, row_cache,
+              cache=cache)
 
         finally:
           parser_mediator.RemoveEventAttribute('schema_match')
@@ -229,8 +224,8 @@ class SQLitePlugin(plugins.BasePlugin):
           parser_mediator.SetFileEntry(wal_file_entry)
 
           self._ParseQueryWithWAL(
-              parser_mediator, database_wal, query, callback, callback_method,
-              row_cache, cache=cache)
+              parser_mediator, database_wal, query, callback, row_cache,
+              cache=cache)
 
         finally:
           parser_mediator.RemoveEventAttribute('schema_match')
