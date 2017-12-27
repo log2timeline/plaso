@@ -646,8 +646,8 @@ class StorageMediaTool(tools.CLITool):
     """
     self._output_writer.Write('The following partitions were found:\n')
 
-    table_view = views.CLITabularTableView(
-        column_names=['Identifier', 'Offset (in bytes)', 'Size (in bytes)'])
+    table_view = views.CLITabularTableView(column_names=[
+        'Identifier', 'Offset (in bytes)', 'Size (in bytes)'])
 
     for volume_identifier in sorted(volume_identifiers):
       volume = volume_system.GetVolumeByIdentifier(volume_identifier)
@@ -661,8 +661,8 @@ class StorageMediaTool(tools.CLITool):
 
       table_view.AddRow([volume.identifier, volume_offset, volume_size])
 
+    self._output_writer.Write('\n')
     table_view.Write(self._output_writer)
-
     self._output_writer.Write('\n')
 
     while True:
@@ -757,8 +757,8 @@ class StorageMediaTool(tools.CLITool):
         self._output_writer.Write(
             'The following Volume Shadow Snapshots (VSS) were found:\n')
 
-        table_view = views.CLITabularTableView(
-            column_names=['Identifier', 'Creation Time'])
+        table_view = views.CLITabularTableView(column_names=[
+            'Identifier', 'Creation Time'])
 
         for volume_identifier in volume_identifiers:
           volume = volume_system.GetVolumeByIdentifier(volume_identifier)
@@ -781,8 +781,8 @@ class StorageMediaTool(tools.CLITool):
 
           table_view.AddRow([volume.identifier, vss_creation_time])
 
+        self._output_writer.Write('\n')
         table_view.Write(self._output_writer)
-
         self._output_writer.Write('\n')
 
         print_header = False
