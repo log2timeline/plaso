@@ -30,8 +30,6 @@ from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import task_engine as multi_process_engine
 from plaso.parsers import manager as parsers_manager
-from plaso.storage import sqlite_file as storage_sqlite_file
-from plaso.storage import zip_file as storage_zip_file
 
 
 class Log2TimelineTool(extraction_tool.ExtractionTool):
@@ -107,8 +105,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
     self._stdout_output_writer = isinstance(
         self._output_writer, tools.StdoutOutputWriter)
-    self._storage_file_path = None
-    self._storage_format = definitions.STORAGE_FORMAT_ZIP
     self._use_zeromq = True
     self._worker_memory_limit = None
 
@@ -442,13 +438,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         preferred_time_zone=self._preferred_time_zone,
         preferred_year=self._preferred_year)
 
-    if self._storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      storage_writer = storage_sqlite_file.SQLiteStorageFileWriter(
-          session, self._storage_file_path)
-
-    else:
-      storage_writer = storage_zip_file.ZIPStorageFileWriter(
-          session, self._storage_file_path)
+    storage_writer = self._CreateStorageWriter(session)
 
     single_process_mode = self._single_process_mode
     if self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:

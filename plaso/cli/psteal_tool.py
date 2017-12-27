@@ -28,8 +28,8 @@ from plaso.engine import single_process as single_process_engine
 from plaso.lib import errors
 from plaso.multi_processing import psort
 from plaso.multi_processing import task_engine as multi_process_engine
+from plaso.storage import factory as storage_factory
 from plaso.parsers import manager as parsers_manager
-from plaso.storage import zip_file as storage_zip_file
 
 
 class PstealTool(
@@ -120,7 +120,6 @@ class PstealTool(
     self._single_process_mode = False
     self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
-    self._storage_file_path = None
     self._time_slice = None
     self._use_time_slicer = False
     self._use_zeromq = True
@@ -191,8 +190,13 @@ class PstealTool(
         command_line_arguments=self._command_line_arguments,
         preferred_encoding=self.preferred_encoding)
 
-    storage_reader = storage_zip_file.ZIPStorageFileReader(
+    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
+    if not storage_reader:
+      logging.error('Format of storage file: {0:s} not supported'.format(
+          self._storage_file_path))
+      return
+
     self._number_of_analysis_reports = (
         storage_reader.GetNumberOfAnalysisReports())
     storage_reader.Close()
@@ -205,8 +209,9 @@ class PstealTool(
       status_update_callback = (
           self._status_view.GetAnalysisStatusUpdateCallback())
 
-      storage_reader = storage_zip_file.ZIPStorageFileReader(
-          self._storage_file_path)
+      storage_reader = (
+          storage_factory.StorageFactory.CreateStorageReaderForFile(
+              self._storage_file_path))
 
       # TODO: add single processing support.
       analysis_engine = psort.PsortMultiProcessEngine(
@@ -237,7 +242,7 @@ class PstealTool(
       table_view.AddRow([element, count])
     table_view.Write(self._output_writer)
 
-    storage_reader = storage_zip_file.ZIPStorageFileReader(
+    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
     self._PrintAnalysisReportsDetails(
         storage_reader, self._number_of_analysis_reports)
@@ -280,8 +285,7 @@ class PstealTool(
         preferred_time_zone=self._preferred_time_zone,
         preferred_year=self._preferred_year)
 
-    storage_writer = storage_zip_file.ZIPStorageFileWriter(
-        session, self._storage_file_path)
+    storage_writer = self._CreateStorageWriter(session)
 
     single_process_mode = self._single_process_mode
     if source_type == dfvfs_definitions.SOURCE_TYPE_FILE:

@@ -16,8 +16,11 @@ from plaso import parsers  # pylint: disable=unused-import
 from plaso.cli import storage_media_tool
 from plaso.cli import tool_options
 from plaso.engine import configurations
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import manager as parsers_manager
+from plaso.storage import sqlite_file as storage_sqlite_file
+from plaso.storage import zip_file as storage_zip_file
 
 
 class ExtractionTool(
@@ -54,6 +57,8 @@ class ExtractionTool(
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._resolver_context = dfvfs_context.Context()
     self._single_process_mode = False
+    self._storage_file_path = None
+    self._storage_format = definitions.STORAGE_FORMAT_SQLITE
     self._temporary_directory = None
     self._text_prepend = None
     self._yara_rules_string = None
@@ -107,6 +112,22 @@ class ExtractionTool(
       configuration.parser_filter_expression = parser_filter_expression
 
     return configuration
+
+  def _CreateStorageWriter(self, session):
+    """Creates a storage writer.
+
+    Args:
+      session (Session): session.
+
+    Returns:
+      StorageWriter: storage writer.
+    """
+    if self._storage_format == definitions.STORAGE_FORMAT_ZIP:
+      return storage_zip_file.ZIPStorageFileWriter(
+          session, self._storage_file_path)
+
+    return storage_sqlite_file.SQLiteStorageFileWriter(
+        session, self._storage_file_path)
 
   def _ParsePerformanceOptions(self, options):
     """Parses the performance options.

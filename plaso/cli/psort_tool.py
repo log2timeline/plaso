@@ -505,9 +505,8 @@ class PsortTool(
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
     if not storage_reader:
-      logging.error(
-          'Format of storage file: {0:s} not supported'.format(
-              self._storage_file_path))
+      logging.error('Format of storage file: {0:s} not supported'.format(
+          self._storage_file_path))
       return
 
     self._number_of_analysis_reports = (
