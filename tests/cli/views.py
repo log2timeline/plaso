@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import sys
 import unittest
 
 from plaso.cli import views
@@ -119,6 +120,34 @@ class CLITableViewTests(shared_test_lib.BaseTestCase):
 
     with self.assertRaises(RuntimeError):
       table_view.Write(output_writer)
+
+
+class CLITabularTableView(shared_test_lib.BaseTestCase):
+  """Tests for the command line tabular table view class."""
+
+  def testWrite(self):
+    """Tests the Write function."""
+    output_writer = test_lib.TestOutputWriter()
+
+    table_view = views.CLITabularTableView(
+        column_names=['Name', 'Description'])
+    table_view.AddRow(['First name', 'The first name in the table'])
+    table_view.AddRow(['Second name', 'The second name in the table'])
+
+    table_view.Write(output_writer)
+    string = output_writer.ReadOutput()
+
+    expected_strings = [
+        b'',
+        b'Name            Description',
+        b'First name      The first name in the table',
+        b'Second name     The second name in the table',
+        b'']
+
+    if not sys.platform.startswith('win'):
+      expected_strings[1] = b'\x1b[1mName            Description\x1b[0m'
+
+    self.assertEqual(string.split(b'\n'), expected_strings)
 
 
 class MarkdownTableViewTests(shared_test_lib.BaseTestCase):
