@@ -35,7 +35,7 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
 
   def _CreateWindowsPathResolver(
       self, file_system, mount_point, environment_variables):
-    """Create a Windows path resolver and sets the evironment variables.
+    """Create a Windows path resolver and sets the environment variables.
 
     Args:
       file_system (dfvfs.FileSytem): file system.
@@ -66,7 +66,7 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
     """Opens the Windows Registry file specified by the path specification.
 
     Args:
-      path_specification (dfvfs.PathSpec): path specfication.
+      path_specification (dfvfs.PathSpec): path specification.
       ascii_codepage (Optional[str]): ASCII string codepage.
 
     Returns:

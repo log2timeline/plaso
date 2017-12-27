@@ -464,7 +464,7 @@ class PstealTool(
     self._ParseStorageMediaOptions(options)
 
     # These arguments are parsed from argparse.Namespace, so we can make
-    # tests consistents with the log2timeline/psort ones.
+    # tests consistent with the log2timeline/psort ones.
     self._single_process_mode = getattr(options, 'single_process', False)
 
     self._storage_file_path = getattr(options, 'storage_file', None)

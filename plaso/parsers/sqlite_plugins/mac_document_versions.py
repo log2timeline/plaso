@@ -12,9 +12,6 @@ from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-__author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
-
-
 class MacDocumentVersionsEventData(events.EventData):
   """Mac OS X Document Versions database event data.
 

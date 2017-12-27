@@ -253,7 +253,7 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Shared4n6TimeOutputModule):
     """Sets the server information.
 
     Args:
-      server (str): hostname or IP address of the databse server.
+      server (str): hostname or IP address of the database server.
       port (int): port number of the database server.
     """
     self._host = server

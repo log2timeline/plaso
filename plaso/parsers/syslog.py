@@ -99,7 +99,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   _VERIFICATION_REGEX = re.compile(
       r'^\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2}\s' + _BODY_CONTENT)
 
-  # The Chrome OS syslog messages are of a format begininng with an
+  # The Chrome OS syslog messages are of a format beginning with an
   # ISO 8601 combined date and time expression with timezone designator:
   #   2016-10-25T12:37:23.297265-07:00
   #

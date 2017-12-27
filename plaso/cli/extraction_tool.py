@@ -168,7 +168,7 @@ class ExtractionTool(
       session.parser_filter_expression = configuration.parser_filter_expression
 
   def _SetExtractionPreferredTimeZone(self, knowledge_base):
-    """Sets the perferred time zone before extraction.
+    """Sets the preferred time zone before extraction.
 
     Args:
       knowledge_base (KnowledgeBase): contains information from the source

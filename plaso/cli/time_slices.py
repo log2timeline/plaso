@@ -11,7 +11,7 @@ class TimeSlice(object):
   of interest.
 
   Attributes:
-    duration (int): duration of the time slize in minutes.
+    duration (int): duration of the time slice in minutes.
     event_timestamp (int): event timestamp of the time slice or None.
   """
 
@@ -22,7 +22,7 @@ class TimeSlice(object):
 
     Args:
       event_timestamp (int): event timestamp of the time slice or None.
-      duration (Optional[int]): duration of the time slize in minutes.
+      duration (Optional[int]): duration of the time slice in minutes.
           The default is 5, which represent 2.5 minutes before and 2.5 minutes
           after the event timestamp.
     """

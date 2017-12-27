@@ -40,7 +40,7 @@ class ElasticSearchHelper(object):
       index_name (str): Name of the Elasticsearch index.
       mapping (dict): Elasticsearch index configuration.
       doc_type (str): Elasticsearch document type name.
-      elastic_passsword (Optional[str]): Elasticsearch password to authenticate
+      elastic_password (Optional[str]): Elasticsearch password to authenticate
           with.
       elastic_user (Optional[str]): Elasticsearch username to authenticate with.
     """

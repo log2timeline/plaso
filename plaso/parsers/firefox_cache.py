@@ -20,9 +20,6 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-__author__ = 'Petter Bjelland (petter.bjelland@gmail.com)'
-
-
 class FirefoxCacheEventData(events.EventData):
   """Firefox cache event data.
 

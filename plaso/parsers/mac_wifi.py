@@ -19,9 +19,6 @@ from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
-__author__ = 'Joaquin Moreno Garijo (bastionado@gmail.com)'
-
-
 class MacWifiLogEventData(events.EventData):
   """Mac Wifi log event data.
 

@@ -11,9 +11,6 @@ from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-__author__ = 'Joaquin Moreno Garijo (bastionado@gmail.com)'
-
-
 class SkypeChatEventData(events.EventData):
   """Skype chat event data.
 

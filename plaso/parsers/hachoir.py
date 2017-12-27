@@ -27,9 +27,6 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-__author__ = 'David Nides (david.nides@gmail.com)'
-
-
 class HachoirEvent(time_events.TimestampEvent):
   """Class to represent Hachoir events."""
 

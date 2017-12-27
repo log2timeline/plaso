@@ -10,9 +10,6 @@ from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-__author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
-
-
 class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
   """Plug-in to collect information about the Windows timezone settings."""
 

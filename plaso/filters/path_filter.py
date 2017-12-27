@@ -627,7 +627,7 @@ class PathFilterScanTreeNode(object):
     """Converts the path filter scan tree node into a debug string.
 
     Args:
-      indentation_level: an integer containing the text identation level.
+      indentation_level: an integer containing the text indentation level.
 
     Returns:
       A string containing a debug representation of the path filter scan

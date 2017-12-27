@@ -63,7 +63,7 @@ class SQLiteSchemaExtractor(object):
       schema (dict[str, str]): schema as an SQL query per table name.
 
     Returns:
-      str: schema formated as word-wrapped string.
+      str: schema formatted as word-wrapped string.
     """
     textwrapper = textwrap.TextWrapper()
     textwrapper.break_long_words = False

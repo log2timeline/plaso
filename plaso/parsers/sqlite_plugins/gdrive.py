@@ -16,9 +16,6 @@ from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-__author__ = 'David Nides (david.nides@gmail.com)'
-
-
 class GoogleDriveSnapshotCloudEntryEventData(events.EventData):
   """Google Drive snapshot cloud entry event data.
 

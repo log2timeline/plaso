@@ -15,11 +15,8 @@ from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
-__author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
-
-
 class TimeMachinePlugin(interface.PlistPlugin):
-  """Basic plugin to extract time machine hardisk and the backups.
+  """Basic plugin to extract time machine hard disk and the backups.
 
   Further details about the extracted fields:
     DestinationID:

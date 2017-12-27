@@ -14,9 +14,6 @@ from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
-__author__ = 'Ashley Holtz (ashley.a.holtz@gmail.com)'
-
-
 class WinIISUnitTest(test_lib.ParserTestCase):
   """Tests for the Windows IIS parser."""
 
