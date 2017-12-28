@@ -188,6 +188,18 @@ class BaseStore(object):
     """
 
   @abc.abstractmethod
+  def GetEventTagByIdentifier(self, event_tag_identifier):
+    """Retrieves a specific event tag.
+
+    Args:
+      event_tag_identifier (AttributeContainerIdentifier): event tag attribute
+          container identifier.
+
+    Returns:
+      EventTag: event tag or None.
+    """
+
+  @abc.abstractmethod
   def GetEventTags(self):
     """Retrieves the event tags.
 
@@ -598,6 +610,18 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
+  def GetEventTagByIdentifier(self, event_tag_identifier):
+    """Retrieves a specific event tag.
+
+    Args:
+      event_tag_identifier (AttributeContainerIdentifier): event tag attribute
+          container identifier.
+
+    Returns:
+      EventTag: event tag or None.
+    """
+
+  @abc.abstractmethod
   def GetEventTags(self):
     """Retrieves the event tags.
 
@@ -711,6 +735,18 @@ class StorageFileReader(StorageReader):
       generator(EventSource): event source generator.
     """
     return self._storage_file.GetEventSources()
+
+  def GetEventTagByIdentifier(self, event_tag_identifier):
+    """Retrieves a specific event tag.
+
+    Args:
+      event_tag_identifier (AttributeContainerIdentifier): event tag attribute
+          container identifier.
+
+    Returns:
+      EventTag: event tag or None.
+    """
+    return self._storage_file.GetEventTagByIdentifier(event_tag_identifier)
 
   def GetEventTags(self):
     """Retrieves the event tags.
@@ -1205,6 +1241,26 @@ class StorageFileWriter(StorageWriter):
       IOError: when the storage writer is closed.
     """
     return self._storage_file.GetEvents()
+
+  def GetEventTagByIdentifier(self, event_tag_identifier):
+    """Retrieves a specific event tag.
+
+    Args:
+      event_tag_identifier (AttributeContainerIdentifier): event tag attribute
+          container identifier.
+
+    Returns:
+      EventTag: event tag or None.
+    """
+    return self._storage_file.GetEventTagByIdentifier(event_tag_identifier)
+
+  def GetEventTags(self):
+    """Retrieves the event tags.
+
+    Returns:
+      generator(EventTag): event tag generator.
+    """
+    return self._storage_file.GetEventTags()
 
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.

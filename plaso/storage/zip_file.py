@@ -1506,9 +1506,6 @@ class ZIPStorageFile(interface.BaseStorageFile):
         next_event.timestamp != event.timestamp):
       self._FillEventHeapFromStream(stream_number)
 
-    event_identifier = event.GetIdentifier()
-    event.tag = self._event_tag_index.GetEventTagByIdentifier(
-        self, event_identifier)
     return event
 
   def _HasStream(self, stream_name):
