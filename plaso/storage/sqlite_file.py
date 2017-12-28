@@ -1038,10 +1038,6 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
       self._storage_writer.AddEvent(attribute_container)
 
     elif container_type == 'event_tag':
-      event_identifier = identifiers.SQLTableIdentifier(
-          'event', attribute_container.event_row_identifier)
-      attribute_container.SetEventIdentifier(event_identifier)
-
       self._storage_writer.AddEventTag(attribute_container)
 
     elif container_type == 'extraction_error':
@@ -1114,6 +1110,11 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
         attribute_container = self._DeserializeAttributeContainer(
             self._active_container_type, serialized_data)
         attribute_container.SetIdentifier(identifier)
+
+        if self._active_container_type == 'event_tag':
+          event_identifier = identifiers.SQLTableIdentifier(
+              'event', attribute_container.event_row_identifier)
+          attribute_container.SetEventIdentifier(event_identifier)
 
         if callback:
           callback(self._storage_writer, attribute_container)

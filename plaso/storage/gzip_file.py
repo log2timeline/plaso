@@ -486,11 +486,6 @@ class GZIPStorageMergeReader(interface.StorageFileMergeReader):
       self._storage_writer.AddEvent(attribute_container)
 
     elif container_type == 'event_tag':
-      event_identifier = identifiers.SerializedStreamIdentifier(
-          attribute_container.event_stream_number,
-          attribute_container.event_entry_index)
-      attribute_container.SetEventIdentifier(event_identifier)
-
       self._storage_writer.AddEventTag(attribute_container)
 
     elif container_type == 'extraction_error':
@@ -539,6 +534,12 @@ class GZIPStorageMergeReader(interface.StorageFileMergeReader):
         attribute_container = self._DeserializeAttributeContainer(
             'attribute_container', line)
         attribute_container.SetIdentifier(identifier)
+
+        if attribute_container.CONTAINER_TYPE == 'event_tag':
+          event_identifier = identifiers.SerializedStreamIdentifier(
+              attribute_container.event_stream_number,
+              attribute_container.event_entry_index)
+          attribute_container.SetEventIdentifier(event_identifier)
 
         if callback:
           callback(self._storage_writer, attribute_container)
