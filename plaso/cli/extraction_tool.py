@@ -87,6 +87,7 @@ class ExtractionTool(
     configuration.extraction.yara_rules_string = self._yara_rules_string
     configuration.filter_file = self._filter_file
     configuration.input_source.mount_path = self._mount_path
+    configuration.log_filename = self._log_file
     configuration.parser_filter_expression = self._parser_filter_expression
     configuration.preferred_year = self._preferred_year
     configuration.profiling.directory = self._profiling_directory

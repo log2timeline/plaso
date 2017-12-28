@@ -28,6 +28,7 @@ from plaso.engine import filter_file
 from plaso.engine import single_process as single_process_engine
 from plaso.lib import definitions
 from plaso.lib import errors
+from plaso.lib import loggers
 from plaso.multi_processing import task_engine as multi_process_engine
 from plaso.parsers import manager as parsers_manager
 
@@ -183,7 +184,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     Returns:
       bool: True if the arguments were successfully parsed.
     """
-    self._ConfigureLogging()
+    loggers.ConfigureLogging()
 
     argument_parser = argparse.ArgumentParser(
         description=self.DESCRIPTION, epilog=self.EPILOG, add_help=False,
@@ -311,6 +312,15 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._command_line_arguments = self.GetCommandLineArguments()
 
+    loggers.ConfigureLogging(
+        debug_output=self._debug_mode, filename=self._log_file,
+        quiet_mode=self._quiet_mode)
+
+    if self._debug_mode:
+      log_filter = logging_filter.LoggingFilter()
+      root_logger = logging.getLogger()
+      root_logger.addFilter(log_filter)
+
     return True
 
   def ParseOptions(self, options):
@@ -362,26 +372,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._ParsePerformanceOptions(options)
     self._ParseProcessingOptions(options)
-
-    format_string = (
-        '%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
-        '<%(module)s> %(message)s')
-
-    if self._debug_mode:
-      logging_level = logging.DEBUG
-    elif self._quiet_mode:
-      logging_level = logging.WARNING
-    else:
-      logging_level = logging.INFO
-
-    self._ConfigureLogging(
-        filename=self._log_file, format_string=format_string,
-        log_level=logging_level)
-
-    if self._debug_mode:
-      log_filter = logging_filter.LoggingFilter()
-      root_logger = logging.getLogger()
-      root_logger.addFilter(log_filter)
 
     if not self._storage_file_path:
       raise errors.BadConfigOption('Missing storage file option.')

@@ -11,6 +11,7 @@ import random
 import signal
 import time
 
+from plaso.lib import loggers
 from plaso.multi_processing import plaso_xmlrpc
 
 
@@ -34,11 +35,14 @@ class MultiProcessBaseProcess(multiprocessing.Process):
           multiprocessing.Process.
     """
     super(MultiProcessBaseProcess, self).__init__(**kwargs)
+    self._debug_output = False
     self._enable_sigsegv_handler = enable_sigsegv_handler
+    self._log_filename = None
     self._original_sigsegv_handler = None
     # TODO: check if this can be replaced by self.pid or does this only apply
     # to the parent process?
     self._pid = None
+    self._quiet_mode = False
     self._rpc_server = None
     self._status_is_running = False
 
@@ -194,6 +198,12 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     # the status of the process, e.g. in the unit tests.
     self._status_is_running = True
 
+    # Logging needs to be configured before the first output otherwise we
+    # mess up the logging of the parent process.
+    loggers.ConfigureLogging(
+        debug_output=self._debug_output, filename=self._log_filename,
+        quiet_mode=self._quiet_mode)
+
     logging.debug(
         'Process: {0!s} (PID: {1:d}) started'.format(self._name, self._pid))
 
@@ -205,6 +215,9 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
     logging.debug(
         'Process: {0!s} (PID: {1:d}) stopped'.format(self._name, self._pid))
+
+    # Make sure log files are cleanly closed.
+    logging.shutdown()
 
     self._status_is_running = False
 
