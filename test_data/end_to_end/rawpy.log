@@ -11,6 +11,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} 774779
   {offset} 0
   {parser} syslog
   {timestamp} 1327218753000000
@@ -34,6 +35,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} 774779
   {offset} 0
   {parser} syslog
   {timestamp} 1327218753000000
@@ -57,6 +59,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} 774779
   {offset} 0
   {parser} syslog
   {timestamp} 1327218781000000
@@ -82,6 +85,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} 774779
   {offset} 0
   {parser} syslog
   {timestamp} 1327218841000000
@@ -107,6 +111,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} 774779
   {offset} 0
   {parser} syslog
   {timestamp} 1327218841000000
@@ -132,6 +137,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} 774779
   {offset} 0
   {parser} syslog
   {timestamp} 1327218872000000
@@ -155,6 +161,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} :
+  {inode} 774779
   {offset} 0
   {parser} syslog
   {timestamp} 1330478143000000
@@ -178,6 +185,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} 774779
   {offset} 0
   {parser} syslog
   {timestamp} 1355853272000000
@@ -201,6 +209,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} 774779
   {offset} 0
   {parser} syslog
   {timestamp} 1364079678000000
@@ -224,6 +233,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} 774779
   {offset} 0
   {parser} syslog
   {timestamp} 1364079678000000
@@ -248,6 +258,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} 774779
   {offset} 0
   {parser} syslog
   {timestamp} 1384737320000000
@@ -271,6 +282,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
+  {inode} 774779
   {offset} 0
   {parser} syslog
   {timestamp} 1388512472000000
@@ -294,6 +306,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} victoria
+  {inode} 774779
   {offset} 0
   {parser} syslog
   {timestamp} 1391699790000000
@@ -317,6 +330,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} :
+  {inode} 774779
   {offset} 0
   {parser} syslog
   {timestamp} 1416273343000000
@@ -339,6 +353,7 @@
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
+  {inode} 774779
   {offset} 0
   {parser} syslog
   {timestamp} 1416299420000000
@@ -362,6 +377,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} victoria
+  {inode} 774779
   {offset} 0
   {parser} syslog
   {timestamp} 1416299480000000
@@ -374,7 +390,7 @@
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2017-08-20T10:35:02+00:00
+  2017-12-28T19:29:04.312307+00:00
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
   
@@ -383,9 +399,9 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {offset} 0
+  {inode} 774779
   {parser} filestat
-  {timestamp} 1503225302000000
+  {timestamp} 1.51448934431e+15
   {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
@@ -396,7 +412,7 @@
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2017-08-20T10:35:02+00:00
+  2017-12-28T19:29:04.312307+00:00
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
   
@@ -405,9 +421,9 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {offset} 0
+  {inode} 774779
   {parser} filestat
-  {timestamp} 1503225302000000
+  {timestamp} 1.51448934431e+15
   {timestamp_desc} Metadata Modification Time
 
 [Additional attributes]:
@@ -418,7 +434,7 @@
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2017-08-20T10:35:04+00:00
+  2017-12-28T19:29:06.085309+00:00
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
   
@@ -427,9 +443,9 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {offset} 0
+  {inode} 774779
   {parser} filestat
-  {timestamp} 1503225304000000
+  {timestamp} 1.51448934609e+15
   {timestamp_desc} Last Access Time
 
 [Additional attributes]:
@@ -440,7 +456,7 @@
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2017-08-20T10:35:05+00:00
+  2017-12-28T19:29:07.710310+00:00
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
   
@@ -449,9 +465,9 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {offset} 0
+  {inode} 774779
   {parser} filestat
-  {timestamp} 1503225305000000
+  {timestamp} 1.51448934771e+15
   {timestamp_desc} Last Access Time
 
 [Additional attributes]:
