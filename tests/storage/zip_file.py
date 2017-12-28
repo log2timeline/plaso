@@ -1236,7 +1236,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     # the first version as well.
     event = tagged_events[3]
     self.assertEqual(event.tag.labels[0], 'Interesting')
-    self.assertEqual(event.tag.labels[1], 'Malware')
 
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetNumberOfAnalysisReports(self):

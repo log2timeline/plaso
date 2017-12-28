@@ -138,7 +138,6 @@ from plaso.lib import definitions
 from plaso.lib import platform_specific
 from plaso.serializer import json_serializer
 from plaso.storage import event_heaps
-from plaso.storage import event_tag_index
 from plaso.storage import identifiers
 from plaso.storage import interface
 from plaso.storage import gzip_file
@@ -718,7 +717,6 @@ class ZIPStorageFile(interface.BaseStorageFile):
     self._event_timestamp_tables = {}
     self._event_timestamp_tables_lfu = []
     self._event_heap = None
-    self._event_tag_index = event_tag_index.EventTagIndex()
     self._last_preprocess = 0
     self._last_session = 0
     self._last_stream_numbers = {}
@@ -2187,9 +2185,6 @@ class ZIPStorageFile(interface.BaseStorageFile):
   def AddEventTag(self, event_tag):
     """Adds an event tag.
 
-    If the event referenced by the tag is already tagged, the comment
-    and labels will be appended to the existing tag.
-
     Args:
       event_tag (EventTag): event tag.
 
@@ -2209,17 +2204,7 @@ class ZIPStorageFile(interface.BaseStorageFile):
     event_tag.event_stream_number = event_identifier.stream_number
     event_tag.event_entry_index = event_identifier.entry_index
 
-    # Check if the event has already been tagged on a previous occasion,
-    # we need to append the event tag any existing event tag.
-    stored_event_tag = self._event_tag_index.GetEventTagByIdentifier(
-        self, event_identifier)
-    if stored_event_tag:
-      event_tag.AddComment(stored_event_tag.comment)
-      event_tag.AddLabels(stored_event_tag.labels)
-
     self._AddAttributeContainer('event_tag', event_tag)
-
-    self._event_tag_index.UpdateEventTag(event_tag)
 
   def AddEventTags(self, event_tags):
     """Adds event tags.
@@ -2439,26 +2424,25 @@ class ZIPStorageFile(interface.BaseStorageFile):
     """
     return self._GetAttributeContainers('event_source')
 
-  def GetEventTagByIdentifier(self, event_tag_identifier):
+  def GetEventTagByIdentifier(self, identifier):
     """Retrieves a specific event tag.
 
     Args:
-      event_tag_identifier (AttributeContainerIdentifier): event tag attribute
-          container identifier.
+      identifier (SerializedStreamIdentifier): event data identifier.
 
     Returns:
       EventTag: event tag or None.
     """
     event_tag_data, _ = self._GetSerializedAttributeContainerData(
-        'event_tag', event_tag_identifier.stream_number,
-        entry_index=event_tag_identifier.entry_index)
+        'event_tag', identifier.stream_number,
+        entry_index=identifier.entry_index)
     if not event_tag_data:
       return
 
     event_tag = self._DeserializeAttributeContainer('event_tag', event_tag_data)
     if event_tag:
       event_tag_identifier = identifiers.SerializedStreamIdentifier(
-          event_tag_identifier.stream_number, event_tag_identifier.entry_index)
+          identifier.stream_number, identifier.entry_index)
       event_tag.SetIdentifier(event_tag_identifier)
 
       event_identifier = identifiers.SerializedStreamIdentifier(
