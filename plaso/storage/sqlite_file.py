@@ -368,7 +368,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       attribute_container (AttributeContainer): attribute container.
     """
     if attribute_container.CONTAINER_TYPE == 'event':
-      timestamp, serialize_data = self._serialized_event_heap.PopEvent()
+      timestamp, serialized_data = self._serialized_event_heap.PopEvent()
     else:
       serialized_data = self._SerializeAttributeContainer(attribute_container)
 
