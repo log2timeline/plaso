@@ -14,6 +14,9 @@ from tests import test_lib as shared_test_lib
 from tests.storage import test_lib
 
 
+# TODO: add tests for SerializedEventHeap
+
+
 class SerializedStreamEventHeapTest(test_lib.StorageTestCase):
   """Tests for the event heap for serialized stream storage."""
 

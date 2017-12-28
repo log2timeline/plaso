@@ -11,62 +11,9 @@ import zlib
 
 from plaso.containers import sessions
 from plaso.lib import definitions
+from plaso.storage import event_heaps
 from plaso.storage import identifiers
 from plaso.storage import interface
-
-
-class _SerializedEventHeap(object):
-  """Serialized event heap.
-
-  Attributes:
-    data_size (int): total data size of the serialized events on the heap.
-  """
-
-  def __init__(self):
-    """Initializes a serialized event heap."""
-    super(_SerializedEventHeap, self).__init__()
-    self._heap = []
-    self.data_size = 0
-
-  @property
-  def number_of_events(self):
-    """int: number of serialized events on the heap."""
-    return len(self._heap)
-
-  def Empty(self):
-    """Empties the heap."""
-    self._heap = []
-    self.data_size = 0
-
-  def PopEvent(self):
-    """Pops an event from the heap.
-
-    Returns:
-      tuple: contains:
-
-        int: event timestamp or None if the heap is empty
-        bytes: serialized event or None if the heap is empty
-    """
-    try:
-      timestamp, serialized_event = heapq.heappop(self._heap)
-
-      self.data_size -= len(serialized_event)
-      return timestamp, serialized_event
-
-    except IndexError:
-      return None, None
-
-  def PushEvent(self, timestamp, event_data):
-    """Pushes a serialized event onto the heap.
-
-    Args:
-      timestamp (int): event timestamp, which contains the number of
-          micro seconds since January 1, 1970, 00:00:00 UTC.
-      event_data (bytes): serialized event.
-    """
-    heap_values = (timestamp, event_data)
-    heapq.heappush(self._heap, heap_values)
-    self.data_size += len(event_data)
 
 
 class SQLiteStorageFile(interface.BaseStorageFile):
@@ -137,7 +84,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     self._cursor = None
     self._last_session = 0
     self._maximum_buffer_size = maximum_buffer_size
-    self._serialized_event_heap = _SerializedEventHeap()
+    self._serialized_event_heap = event_heaps.SerializedEventHeap()
 
     if storage_type == definitions.STORAGE_TYPE_SESSION:
       self.compression_format = definitions.COMPRESSION_FORMAT_ZLIB
@@ -377,8 +324,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       serialized_data = sqlite3.Binary(serialized_data)
 
     if attribute_container.CONTAINER_TYPE == 'event':
-      query = 'INSERT INTO {0:s} (_timestamp, _data) VALUES (?, ?)'.format(
-          attribute_container.CONTAINER_TYPE)
+      query = 'INSERT INTO event (_timestamp, _data) VALUES (?, ?)'
       self._cursor.execute(query, (timestamp, serialized_data))
     else:
       query = 'INSERT INTO {0:s} (_data) VALUES (?)'.format(
