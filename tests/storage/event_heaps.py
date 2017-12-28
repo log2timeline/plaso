@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the heaps to sort events in chronological order.."""
+"""Tests for the heaps to sort events in chronological order."""
 
 from __future__ import unicode_literals
 
