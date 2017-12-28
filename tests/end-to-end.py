@@ -81,6 +81,7 @@ class TestCase(object):
     self._log2timeline_path = None
     self._pinfo_path = None
     self._psort_path = None
+    self._psteal_path = None
     self._test_references_path = test_references_path
     self._test_results_path = test_results_path
     self._test_sources_path = test_sources_path
@@ -106,6 +107,13 @@ class TestCase(object):
     for filename in ('psort.exe', 'psort.sh', 'psort.py'):
       self._psort_path = os.path.join(self._tools_path, filename)
       if os.path.exists(self._psort_path):
+        break
+
+  def _InitializePstealPath(self):
+    """Initializes the location of psteal."""
+    for filename in ('psteal.exe', 'psteal.sh', 'psteal.py'):
+      self._psteal_path = os.path.join(self._tools_path, filename)
+      if os.path.exists(self._psteal_path):
         break
 
   def _RunCommand(self, command, stdout=None, stderr=None):
@@ -454,8 +462,7 @@ class ExtractAndOutputTestCase(TestCase):
 
   The extract and output test case runs log2timeline to extract data
   from a source, specified by the test definition. After the data has been
-  extracted pinfo and psort are run to validate if the resulting storage
-  file is readable.
+  extracted pinfo and psort are run to read from the resulting storage file.
   """
 
   NAME = 'extract_and_output'
@@ -737,6 +744,164 @@ class ExtractAndOutputTestCase(TestCase):
 
       # Check if the resulting storage file can be read with psort.
       if not self._RunPsort(test_definition, temp_directory, storage_file):
+        return False
+
+    return True
+
+
+class ExtractAndOutputWithPstealTestCase(TestCase):
+  """Extract and output with psteal test case.
+
+  The extract and output test case runs psteal to extract data from a source,
+  specified by the test definition, and outputs the extracted events.
+  """
+
+  NAME = 'extract_and_output_with_psteal'
+
+  def __init__(
+      self, tools_path, test_sources_path, test_references_path,
+      test_results_path, debug_output=False):
+    """Initializes a test case.
+
+    Args:
+      tools_path (str): path to the plaso tools.
+      test_sources_path (str): path to the test sources.
+      test_references_path (str): path to the test references.
+      test_results_path (str): path to store test results.
+      debug_output (Optional[bool]): True if debug output should be generated.
+    """
+    super(ExtractAndOutputWithPstealTestCase, self).__init__(
+        tools_path, test_sources_path, test_references_path,
+        test_results_path, debug_output=debug_output)
+    self._InitializePstealPath()
+
+  def _RunPsteal(
+      self, test_definition, temp_directory, storage_file, source_path):
+    """Runs psteal with the parameters specified by the test definition.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+      temp_directory (str): name of a temporary directory.
+      storage_file (str): path of the storage file.
+      source_path (str): path of the source.
+
+    Returns:
+      bool: True if psteal ran successfully.
+    """
+    psteal_options = [
+        '--source={0:s}'.format(source_path),
+        '--status-view=none',
+        '--storage-file={0:s}'.format(storage_file)]
+    psteal_options.extend(test_definition.extract_options)
+
+    if test_definition.output_format:
+      psteal_options.extend(['-o', test_definition.output_format])
+
+    output_file_path = None
+    if test_definition.output_file:
+      output_file_path = os.path.join(
+          temp_directory, test_definition.output_file)
+    psteal_options.extend(['-w', output_file_path])
+
+    stdout_file = os.path.join(
+        temp_directory, '{0:s}-psteal.out'.format(test_definition.name))
+    stderr_file = os.path.join(
+        temp_directory, '{0:s}-psteal.err'.format(test_definition.name))
+    command = [self._psteal_path]
+    command.extend(psteal_options)
+
+    with open(stdout_file, 'w') as stdout:
+      with open(stderr_file, 'w') as stderr:
+        result = self._RunCommand(command, stdout=stdout, stderr=stderr)
+
+    if self._debug_output:
+      with open(stderr_file, 'rb') as file_object:
+        output_data = file_object.read()
+        print(output_data)
+
+    if os.path.exists(storage_file):
+      shutil.copy(storage_file, self._test_results_path)
+
+    if os.path.exists(stdout_file):
+      shutil.copy(stdout_file, self._test_results_path)
+    if os.path.exists(stderr_file):
+      shutil.copy(stderr_file, self._test_results_path)
+
+    return result
+
+  def ReadAttributes(self, test_definition_reader, test_definition):
+    """Reads the test definition attributes into to the test definition.
+
+    Args:
+      test_definition_reader (TestDefinitionReader): test definition reader.
+      test_definition (TestDefinition): test definition.
+
+    Returns:
+      bool: True if the read was successful.
+    """
+    test_definition.extract_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'extract_options')
+
+    if test_definition.extract_options is None:
+      test_definition.extract_options = []
+    elif isinstance(test_definition.extract_options, STRING_TYPES):
+      tmp_extract_options = []
+      for option_and_value in test_definition.extract_options.split(
+          ' '):
+        if option_and_value.find('=') > 0:
+          tmp_extract_options.extend(option_and_value.split('='))
+        else:
+          tmp_extract_options.append(option_and_value)
+      test_definition.extract_options = tmp_extract_options
+
+    test_definition.output_file = test_definition_reader.GetConfigValue(
+        test_definition.name, 'output_file')
+
+    test_definition.output_format = test_definition_reader.GetConfigValue(
+        test_definition.name, 'output_format')
+
+    test_definition.output_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'output_options')
+
+    if test_definition.output_options is None:
+      test_definition.output_options = []
+    elif isinstance(test_definition.output_options, STRING_TYPES):
+      test_definition.output_options = test_definition.output_options.split(
+          ',')
+
+    test_definition.reference_storage_file = (
+        test_definition_reader.GetConfigValue(
+            test_definition.name, 'reference_storage_file'))
+
+    test_definition.source = test_definition_reader.GetConfigValue(
+        test_definition.name, 'source')
+
+    return True
+
+  def Run(self, test_definition):
+    """Runs the test case with the parameters specified by the test definition.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+
+    Returns:
+      bool: True if the test ran successfully.
+    """
+    source_path = test_definition.source
+    if self._test_sources_path:
+      source_path = os.path.join(self._test_sources_path, source_path)
+
+    if not os.path.exists(source_path):
+      logging.error('No such source: {0:s}'.format(source_path))
+      return False
+
+    with TempDirectory() as temp_directory:
+      storage_file = os.path.join(
+          temp_directory, '{0:s}.plaso'.format(test_definition.name))
+
+      # Extract and output events with psteal.
+      if not self._RunPsteal(
+          test_definition, temp_directory, storage_file, source_path):
         return False
 
     return True
@@ -1180,8 +1345,8 @@ class OutputTestCase(TestCase):
 
 
 TestCasesManager.RegisterTestCases([
-    ExtractAndOutputTestCase, ExtractAndTagTestCase, ImageExportTestCase,
-    OutputTestCase])
+    ExtractAndOutputTestCase, ExtractAndOutputWithPstealTestCase,
+    ExtractAndTagTestCase, ImageExportTestCase, OutputTestCase])
 
 
 def Main():
