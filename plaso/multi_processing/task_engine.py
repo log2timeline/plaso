@@ -20,6 +20,7 @@ from plaso.engine import profiler
 from plaso.engine import zeromq_queue
 from plaso.lib import definitions
 from plaso.lib import errors
+from plaso.lib import loggers
 from plaso.multi_processing import engine
 from plaso.multi_processing import multi_process_queue
 from plaso.multi_processing import task_manager
@@ -479,7 +480,17 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         self._session_identifier, self._processing_configuration,
         enable_sigsegv_handler=self._enable_sigsegv_handler, name=process_name)
 
+    # Remove all possible log handlers to prevent a child process from logging
+    # to the main process log file and garbling the log. The log handlers are
+    # recreated after the worker process has been started.
+    for handler in logging.root.handlers:
+      logging.root.removeHandler(handler)
+
     process.start()
+
+    loggers.ConfigureLogging(
+        debug_output=self._debug_output, filename=self._log_filename,
+        mode='a', quiet_mode=self._quiet_mode)
 
     try:
       self._StartMonitoringProcess(process)
@@ -758,7 +769,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     # Keep track of certain values so we can spawn new extraction workers.
     self._processing_configuration = processing_configuration
 
+    self._debug_output = processing_configuration.debug_output
     self._filter_find_specs = filter_find_specs
+    self._log_filename = processing_configuration.log_filename
     self._session_identifier = session_identifier
     self._status_update_callback = status_update_callback
     self._storage_writer = storage_writer

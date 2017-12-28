@@ -23,6 +23,7 @@ from plaso.engine import knowledge_base
 from plaso.engine import path_helper
 from plaso.filters import file_entry as file_entry_filters
 from plaso.lib import errors
+from plaso.lib import loggers
 from plaso.lib import specification
 from plaso.preprocessors import manager as preprocess_manager
 
@@ -618,7 +619,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     Returns:
       bool: True if the arguments were successfully parsed.
     """
-    self._ConfigureLogging()
+    loggers.ConfigureLogging()
 
     argument_parser = argparse.ArgumentParser(
         description=self.DESCRIPTION, epilog=self.EPILOG, add_help=False,
@@ -675,6 +676,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       self._output_writer.Write(argument_parser.format_usage())
       return False
 
+    loggers.ConfigureLogging(
+        debug_output=self._debug_mode, filename=self._log_file,
+        quiet_mode=self._quiet_mode)
+
     return True
 
   def ParseOptions(self, options):
@@ -703,21 +708,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._ParseLogFileOptions(options)
 
     self._ParseStorageMediaOptions(options)
-
-    format_string = (
-        '%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
-        '<%(module)s> %(message)s')
-
-    if self._debug_mode:
-      logging_level = logging.DEBUG
-    elif self._quiet_mode:
-      logging_level = logging.WARNING
-    else:
-      logging_level = logging.INFO
-
-    self._ConfigureLogging(
-        filename=self._log_file, format_string=format_string,
-        log_level=logging_level)
 
     self._destination_path = self.ParseStringOption(
         options, 'path', default_value='export')
