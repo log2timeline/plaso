@@ -26,7 +26,7 @@ class AnalysisMediator(object):
   """
 
   def __init__(self, storage_writer, knowledge_base, data_location=None):
-    """Initializes an analysis plugin mediator object.
+    """Initializes an analysis plugin mediator.
 
     Args:
       storage_writer (StorageWriter): storage writer.

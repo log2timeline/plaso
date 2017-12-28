@@ -138,6 +138,7 @@ from plaso.lib import definitions
 from plaso.lib import platform_specific
 from plaso.serializer import json_serializer
 from plaso.storage import event_heaps
+from plaso.storage import event_tag_index
 from plaso.storage import identifiers
 from plaso.storage import interface
 from plaso.storage import gzip_file
@@ -714,10 +715,10 @@ class ZIPStorageFile(interface.BaseStorageFile):
     super(ZIPStorageFile, self).__init__()
     self._analysis_report_stream_number = 0
     self._event_sources_in_stream = []
-    self._event_tag_index = None
     self._event_timestamp_tables = {}
     self._event_timestamp_tables_lfu = []
     self._event_heap = None
+    self._event_tag_index = event_tag_index.EventTagIndex()
     self._last_preprocess = 0
     self._last_session = 0
     self._last_stream_numbers = {}
@@ -795,14 +796,6 @@ class ZIPStorageFile(interface.BaseStorageFile):
 
     if self._serialized_event_heap.data_size > self._maximum_buffer_size:
       self._WriteSerializedEvents()
-
-  def _BuildEventTagIndex(self):
-    """Builds the event tag index."""
-    self._event_tag_index = {}
-    for event_tag in self.GetEventTags():
-      event_identifier = event_tag.GetEventIdentifier()
-      lookup_key = event_identifier.CopyToString()
-      self._event_tag_index[lookup_key] = event_tag.GetIdentifier()
 
   @classmethod
   def _CheckStorageMetadata(cls, storage_metadata):
@@ -1210,31 +1203,6 @@ class ZIPStorageFile(interface.BaseStorageFile):
 
     return event_tag
 
-  def _GetEventTagByIdentifier(self, event_identifier):
-    """Retrieves an event tag by the event identifier.
-
-    Args:
-      event_identifier (AttributeContainerIdentifier): event attribute
-          container identifier.
-
-    Returns:
-      EventTag: event tag or None.
-
-    Raises:
-      IOError: if the event tag data stream cannot be opened.
-    """
-    if not self._event_tag_index:
-      self._BuildEventTagIndex()
-
-    lookup_key = event_identifier.CopyToString()
-    event_tag_identifier = self._event_tag_index.get(lookup_key, None)
-    if not event_tag_identifier:
-      return
-
-    return self._GetEventTag(
-        event_tag_identifier.stream_number,
-        entry_index=event_tag_identifier.entry_index)
-
   def _GetLastStreamNumber(self, stream_name_prefix):
     """Retrieves the last stream number.
 
@@ -1572,7 +1540,8 @@ class ZIPStorageFile(interface.BaseStorageFile):
       self._FillEventHeapFromStream(stream_number)
 
     event_identifier = event.GetIdentifier()
-    event.tag = self._GetEventTagByIdentifier(event_identifier)
+    event.tag = self._event_tag_index.GetEventTagByIdentifier(
+        self, event_identifier)
     return event
 
   def _HasStream(self, stream_name):
@@ -1909,17 +1878,6 @@ class ZIPStorageFile(interface.BaseStorageFile):
       file_object.close()
 
     return data
-
-  def _UpdateEventTagIndex(self, event_tag):
-    """Builds the event tag index.
-
-    Args:
-      event_tag (EventTag): event tag.
-    """
-    event_identifier = event_tag.GetEventIdentifier()
-
-    lookup_key = event_identifier.CopyToString()
-    self._event_tag_index[lookup_key] = event_tag.GetIdentifier()
 
   def _WriteSerializedAttributeContainerList(self, container_type):
     """Writes a serialized attribute container list.
@@ -2289,14 +2247,15 @@ class ZIPStorageFile(interface.BaseStorageFile):
 
     # Check if the event has already been tagged on a previous occasion,
     # we need to append the event tag any existing event tag.
-    stored_event_tag = self._GetEventTagByIdentifier(event_identifier)
+    stored_event_tag = self._event_tag_index.GetEventTagByIdentifier(
+        self, event_identifier)
     if stored_event_tag:
       event_tag.AddComment(stored_event_tag.comment)
       event_tag.AddLabels(stored_event_tag.labels)
 
     self._AddAttributeContainer('event_tag', event_tag)
 
-    self._UpdateEventTagIndex(event_tag)
+    self._event_tag_index.UpdateEventTag(event_tag)
 
   def AddEventTags(self, event_tags):
     """Adds event tags.
