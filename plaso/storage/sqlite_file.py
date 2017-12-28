@@ -367,7 +367,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     Args:
       attribute_container (AttributeContainer): attribute container.
     """
-    if container_type == 'event':
+    if attribute_container.CONTAINER_TYPE == 'event':
       timestamp, serialize_data = self._serialized_event_heap.PopEvent()
     else:
       serialized_data = self._SerializeAttributeContainer(attribute_container)
@@ -376,7 +376,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       serialized_data = zlib.compress(serialized_data)
       serialized_data = sqlite3.Binary(serialized_data)
 
-    if container_type == 'event':
+    if attribute_container.CONTAINER_TYPE == 'event':
       query = 'INSERT INTO {0:s} (_timestamp, _data) VALUES (?, ?)'.format(
           attribute_container.CONTAINER_TYPE)
       self._cursor.execute(query, (timestamp, serialized_data))
