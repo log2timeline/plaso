@@ -14,9 +14,6 @@ from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
-__author__ = 'David Nides (david.nides@gmail.com)'
-
-
 class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the MSIE typed URLs Windows Registry plugin."""
 

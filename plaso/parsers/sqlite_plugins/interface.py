@@ -180,9 +180,9 @@ class SQLitePlugin(plugins.BasePlugin):
       cache (Optional[SQLiteCache]): cache.
       database (Optional[SQLiteDatabase]): database.
       database_wal (Optional[SQLiteDatabase]): database object with WAL file
-          commited.
+          committed.
       wal_file_entry (Optional[dfvfs.FileEntry]): file entry for the database
-          with WAL file commited.
+          with WAL file committed.
     """
     schema_match = False
     wal_schema_match = False

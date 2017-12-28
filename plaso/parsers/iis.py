@@ -20,9 +20,6 @@ from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
-__author__ = 'Ashley Holtz (ashley.a.holtz@gmail.com)'
-
-
 class IISEventData(events.EventData):
   """IIS log event data.
 

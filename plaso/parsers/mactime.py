@@ -78,7 +78,7 @@ class MactimeParser(dsv_parser.DSVParser):
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
       value_name (str): name of the value within the row.
 
-    Retruns:
+    Returns:
       int: value or None if the value cannot be converted.
     """
     value = row.get(value_name, None)
@@ -157,7 +157,7 @@ class MactimeParser(dsv_parser.DSVParser):
     if row['md5'] != b'0' and not self._MD5_RE.match(row['md5']):
       return False
 
-    # Check if the folowing columns contain a base 10 integer value if set.
+    # Check if the following columns contain a base 10 integer value if set.
     for column_name in (
         'uid', 'gid', 'size', 'atime', 'mtime', 'ctime', 'crtime'):
       column_value = row.get(column_name, None)

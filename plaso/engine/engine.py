@@ -90,7 +90,7 @@ class BaseEngine(object):
       cls, command_line_arguments=None, debug_mode=False,
       filter_file=None, preferred_encoding='utf-8',
       preferred_time_zone=None, preferred_year=None):
-    """Creates a session attribute containiner.
+    """Creates a session attribute container.
 
     Args:
       command_line_arguments (Optional[str]): the command line arguments.

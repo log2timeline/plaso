@@ -40,9 +40,6 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-__author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
-
-
 # TODO: RFC Pendings types: resolution, dateTime, rangeOfInteger.
 #       "dateTime" is not used by Mac OS, instead it uses integer types.
 # TODO: Only tested against CUPS IPP Mac OS X.

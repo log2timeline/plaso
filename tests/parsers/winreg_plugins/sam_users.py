@@ -15,9 +15,6 @@ from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
-__author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
-
-
 class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests the SAM Users Account information plugin."""
 

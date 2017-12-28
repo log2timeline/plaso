@@ -16,9 +16,6 @@ from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
-__author__ = 'David Nides (david.nides@gmail.com)'
-
-
 class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Microsoft Office MRUs Windows Registry plugin."""
 

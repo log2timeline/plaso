@@ -24,9 +24,6 @@ from plaso.unix import bsmtoken
 import pytz  # pylint: disable=wrong-import-order
 
 
-__author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
-
-
 # Note that we're using Array and a helper function here instead of
 # PascalString because the latter seems to break pickling on Windows.
 
@@ -120,7 +117,7 @@ class BSMParser(interface.FileObjectParser):
       construct.UBInt64('low'))
 
   # Tested structures.
-  # INFO: I have ommited the ID in the structures declaration.
+  # INFO: I have omitted the ID in the structures declaration.
   #       I used the BSM_TYPE first to read the ID, and then, the structure.
   # Tokens always start with an ID value that identifies their token
   # type and subsequent structure.
@@ -1078,7 +1075,7 @@ class BSMParser(interface.FileObjectParser):
       return {bsm_type: token.record_length}
 
     elif bsm_type == 'BSM_TOKEN_FILE':
-      # TODO: if this timestamp is usefull, it must be extracted as a separate
+      # TODO: if this timestamp is usefull it must be extracted as a separate
       #       event object.
       timestamp = timelib.Timestamp.FromPosixTimeWithMicrosecond(
           token.timestamp, token.microseconds)

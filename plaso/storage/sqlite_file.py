@@ -258,7 +258,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       table_name (str): name of the table.
 
     Returns:
-      True if the table exists, false otheriwse.
+      True if the table exists, false otherwise.
     """
     query = self._HAS_TABLE_QUERY.format(table_name)
 

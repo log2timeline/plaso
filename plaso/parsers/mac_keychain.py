@@ -31,9 +31,6 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-__author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
-
-
 class KeychainInternetRecordEventData(events.EventData):
   """Mac OS X keychain internet record event data.
 
@@ -509,7 +506,7 @@ class KeychainParser(interface.FileObjectParser):
               db_header.major_version, db_header.minor_version))
       return
 
-    # TODO: document format and deterime if -1 offset correction is needed.
+    # TODO: document format and determine if -1 offset correction is needed.
     table_offsets = self._ReadTableOffsets(parser_mediator, file_object)
     for table_offset in table_offsets:
       # Skipping X bytes, unknown data at this point.

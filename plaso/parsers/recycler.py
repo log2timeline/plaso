@@ -240,7 +240,7 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
       return
 
     if file_header_struct.unknown1 != 5:
-      parser_mediator.ProduceExtractionError('unsupport format signature.')
+      parser_mediator.ProduceExtractionError('unsupported format signature.')
       return
 
     record_size = file_header_struct.record_size

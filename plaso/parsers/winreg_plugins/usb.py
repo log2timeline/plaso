@@ -12,9 +12,6 @@ from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-__author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
-
-
 class USBPlugin(interface.WindowsRegistryPlugin):
   """USB Windows Registry plugin for last connection time."""
 

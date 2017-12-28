@@ -23,7 +23,7 @@ class McafeeAVEventData(events.EventData):
     filename (str): filename.
     rule (str): rule.
     status (str): status.
-    trigger_location (str): trigger loction.
+    trigger_location (str): trigger location.
     username (str): username.
   """
 

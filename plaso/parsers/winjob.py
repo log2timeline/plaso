@@ -18,9 +18,6 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-__author__ = 'Brian Baskin (brian@thebaskins.com)'
-
-
 class WinJobEventData(events.EventData):
   """Windows Scheduled Task event data.
 

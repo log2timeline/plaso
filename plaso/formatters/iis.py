@@ -7,9 +7,6 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-__author__ = 'Ashley Holtz (ashley.a.holtz@gmail.com)'
-
-
 class IISLogFileEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Microsoft IIS log file event."""
 

@@ -1,11 +1,11 @@
-plaso\.unix package
-===================
+plaso.unix package
+==================
 
 Submodules
 ----------
 
-plaso\.unix\.bsmtoken module
-----------------------------
+plaso.unix.bsmtoken module
+--------------------------
 
 .. automodule:: plaso.unix.bsmtoken
     :members:

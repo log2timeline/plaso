@@ -192,7 +192,7 @@ class StorageMediaTool(tools.CLITool):
     Args:
       scan_node (dfvfs.SourceScanNode): scan node.
       partition_offset (Optional[int]): preferred partition byte offset.
-      paritions (Optional[list[str]]): preferred partition identifiers.
+      partitions (Optional[list[str]]): preferred partition identifiers.
 
     Returns:
       list[str]: partition identifiers.

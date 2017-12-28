@@ -13,7 +13,6 @@ from plaso.lib import definitions
 from plaso.parsers import interface
 from plaso.parsers import manager
 
-__author__ = 'Ramses de Beer, rbdebeer@google.com'
 
 class AmcacheEventData(events.EventData):
   """Amcache event data.

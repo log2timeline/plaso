@@ -52,7 +52,7 @@ class HostnameArtifactTest(shared_test_lib.BaseTestCase):
 
 
 class SystemConfigurationArtifactTest(shared_test_lib.BaseTestCase):
-  """Tests for the system configuration aritifact."""
+  """Tests for the system configuration artifact."""
 
   # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):

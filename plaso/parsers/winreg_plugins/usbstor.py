@@ -12,9 +12,6 @@ from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-__author__ = 'David Nides (david.nides@gmail.com)'
-
-
 class USBStorPlugin(interface.WindowsRegistryPlugin):
   """USBStor key plugin."""
 

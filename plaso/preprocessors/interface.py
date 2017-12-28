@@ -64,7 +64,7 @@ class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
       file_system (dfvfs.FileSystem): file system to be preprocessed.
 
     Raises:
-      PreProcessFail: if the Windows Registry key or value cannnot be read.
+      PreProcessFail: if the Windows Registry key or value cannot be read.
     """
     for source in artifact_definition.sources:
       if source.type_indicator not in (
@@ -231,7 +231,7 @@ class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
           preprocess the Windows Registry.
 
     Raises:
-      PreProcessFail: if the Windows Registry key or value cannnot be read.
+      PreProcessFail: if the Windows Registry key or value cannot be read.
     """
     for source in artifact_definition.sources:
       if source.type_indicator not in (

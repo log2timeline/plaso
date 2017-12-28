@@ -97,9 +97,6 @@ from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
-__author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
-
-
 class PopularityContestSessionEventData(events.EventData):
   """Popularity Contest session event data.
 
