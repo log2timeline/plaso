@@ -587,6 +587,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       return
 
     event_identifier = attribute_container.GetEventIdentifier()
+    if not event_identifier:
+      return
 
     # Check if the event has already been tagged on a previous occasion,
     # we need to append the event tag any existing event tag.
