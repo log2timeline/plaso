@@ -97,9 +97,9 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     test_filename = 'pinfo_test.json.plaso'
     format_version = '20170707'
     plaso_version = '20171228'
-    session_identifier = '76a59660-5734-47e9-a928-6ffbb9f6bee1'
-    session_start_time = '2017-12-28T19:29:32.410464+00:00'
-    session_completion_time = '2017-12-28T19:29:33.200695+00:00'
+    session_identifier = 'd280b33c-845b-4e8b-b3d0-b33da11b180b'
+    session_start_time = '2017-12-28T20:06:34.578880+00:00'
+    session_completion_time = '2017-12-28T20:06:35.367057+00:00'
 
     command_line_arguments = (
         './tools/log2timeline.py --partition=all --quiet '
@@ -219,9 +219,9 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
   def testPrintStorageInformationAsJSON(self):
     """Tests the _PrintStorageInformationAsJSON function."""
     test_filename = 'pinfo_test.json.plaso'
-    session_identifier = '76a59660573447e9a9286ffbb9f6bee1'
+    session_identifier = 'd280b33c845b4e8bb3d0b33da11b180b'
     session_start_time = timelib.Timestamp.CopyFromString(
-        '2017-12-28 19:29:32.410464')
+        '2017-12-28 20:06:34.578880')
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
     test_file = self._GetTestFilePath([test_filename])
