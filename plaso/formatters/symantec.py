@@ -8,9 +8,6 @@ from plaso.formatters import manager
 from plaso.lib import errors
 
 
-__author__ = 'David Nides (david.nides@gmail.com)'
-
-
 class SymantecAVFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Symantec AV log file event."""
 

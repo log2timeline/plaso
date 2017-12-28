@@ -222,7 +222,7 @@ class OutputMediator(object):
     "MACB" or a "." if the corresponding timestamp is not set.
 
     Note that this is an output format shorthand and does not guarantee that
-    the timestamps represent the same occurence.
+    the timestamps represent the same occurrence.
 
     Args:
       timestamp_descriptions (list[str]): timestamp descriptions, which are

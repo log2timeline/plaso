@@ -13,9 +13,6 @@ from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
-__author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
-
-
 class InstallHistoryPlugin(interface.PlistPlugin):
   """Plist plugin that extracts the installation history."""
 

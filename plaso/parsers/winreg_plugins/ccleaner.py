@@ -15,9 +15,6 @@ from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-__author__ = 'Marc Seguin (segumarc@gmail.com)'
-
-
 class CCleanerUpdateEventData(events.EventData):
   """CCleaner update event data.
 

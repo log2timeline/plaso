@@ -22,9 +22,6 @@ from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
-__author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
-
-
 class MacSecuritydLogEventData(events.EventData):
   """Mac OS X securityd log event data.
 

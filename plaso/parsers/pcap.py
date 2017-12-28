@@ -19,9 +19,6 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-__author__ = 'Dominique Kilman (lexistar97@gmail.com)'
-
-
 # pylint: disable=no-member
 
 

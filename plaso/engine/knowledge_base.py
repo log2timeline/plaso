@@ -94,22 +94,22 @@ class KnowledgeBase(object):
 
     user_accounts[user_account.identifier] = user_account
 
-  def AddEnvironmentVariable(self, enviroment_variable):
+  def AddEnvironmentVariable(self, environment_variable):
     """Adds an environment variable.
 
     Args:
-      enviroment_variable (EnvironmentVariableArtifact): environment variable
+      environment_variable (EnvironmentVariableArtifact): environment variable
           artifact.
 
     Raises:
       KeyError: if the environment variable already exists.
     """
-    name = enviroment_variable.name.upper()
+    name = environment_variable.name.upper()
     if name in self._environment_variables:
       raise KeyError('Environment variable: {0:s} already exists.'.format(
-          enviroment_variable.name))
+          environment_variable.name))
 
-    self._environment_variables[name] = enviroment_variable
+    self._environment_variables[name] = environment_variable
 
   def GetEnvironmentVariable(self, name):
     """Retrieves an environment variable.

@@ -7,9 +7,6 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-__author__ = 'David Nides (david.nides@gmail.com)'
-
-
 class OpenXMLParserFormatter(interface.ConditionalEventFormatter):
   """Formatter for an OXML event."""
 

@@ -20,9 +20,6 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-__author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
-
-
 class UtmpxMacOsXEventData(events.EventData):
   """Mac OS X utmpx event data.
 

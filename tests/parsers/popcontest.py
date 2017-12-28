@@ -15,9 +15,6 @@ from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
-__author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
-
-
 class PopularityContestUnitTest(test_lib.ParserTestCase):
   """Tests for the popcontest parser."""
 

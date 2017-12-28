@@ -16,9 +16,6 @@ from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-__author__ = 'David Nides (david.nides@gmail.com)'
-
-
 class OfficeMRUWindowsRegistryEventData(events.EventData):
   """Microsoft Office MRU Windows Registry event data.
 
