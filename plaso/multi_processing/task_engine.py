@@ -480,8 +480,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         self._session_identifier, self._processing_configuration,
         enable_sigsegv_handler=self._enable_sigsegv_handler, name=process_name)
 
-    # Remove all possible log handlers to prevent a child process from
-    # logging to the main process log file and garbling the log.
+    # Remove all possible log handlers to prevent a child process from logging
+    # to the main process log file and garbling the log. The log handlers are
+    # recreated after the worker process has been started.
     for handler in logging.root.handlers:
       logging.root.removeHandler(handler)
 

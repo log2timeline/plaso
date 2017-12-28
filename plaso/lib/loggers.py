@@ -22,7 +22,7 @@ class CompressedFileHandler(logging.FileHandler):
         filename, mode=mode, encoding=encoding, delay=True)
 
   def _open(self):
-    """Opens the current base file with the (original) mode and encoding.
+    """Opens the current compressed log file.
 
     Returns
       file: file-like object of the resulting stream.
@@ -32,9 +32,6 @@ class CompressedFileHandler(logging.FileHandler):
 
   def emit(self, record):
     """Emits a record.
-
-    If the stream was not opened because 'delay' was specified in the
-    constructor, open it before calling the superclass's emit.
 
     Args:
       record (logging.LogRecord): log record.
@@ -58,7 +55,8 @@ def ConfigureLogging(
         information output. Note that debug_output takes precedence over
         quiet_mode.
   """
-  # Remove all possible log handlers.
+  # Remove all possible log handlers. The log handlers cannot be reconfigured
+  # and therefore must be recreated.
   for handler in logging.root.handlers:
     logging.root.removeHandler(handler)
 
