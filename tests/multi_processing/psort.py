@@ -336,11 +336,6 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     formatters_manager.FormattersManager.DeregisterFormatter(TestEventFormatter)
 
-    lines = []
-    output = output_writer.ReadOutput()
-    for line in output.split(b'\n'):
-      lines.append(line)
-
     self.assertEqual(len(output_module.events), 17)
     self.assertEqual(len(output_module.macb_groups), 3)
 
