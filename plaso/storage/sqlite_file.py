@@ -358,8 +358,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       self._serializers_profiler.StartTiming('write')
 
     if container_type == 'event':
-      query = 'INSERT INTO {0:s} (_timestamp, _data) VALUES (?, ?)'.format(
-          container_type)
+      query = 'INSERT INTO event (_timestamp, _data) VALUES (?, ?)'
     else:
       query = 'INSERT INTO {0:s} (_data) VALUES (?)'.format(container_type)
 
