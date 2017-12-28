@@ -195,7 +195,7 @@ class BaseStore(object):
       identifier (AttributeContainerIdentifier): event tag identifier.
 
     Returns:
-      EventTag: event tag or None.
+      EventTag: event tag or None if not available.
     """
 
   @abc.abstractmethod
@@ -462,7 +462,8 @@ class StorageMergeReader(object):
     """Reads attribute containers from a task storage file into the writer.
 
     Args:
-      callback (function): function to call after deserialization.
+      callback (function[StorageWriter, AttributeContainer]): function to call
+          after deserialization.
       maximum_number_of_containers (Optional[int]): maximum number of
           containers to merge, where 0 represent no limit.
 
@@ -618,7 +619,7 @@ class StorageReader(object):
       identifier (AttributeContainerIdentifier): event tag identifier.
 
     Returns:
-      EventTag: event tag or None.
+      EventTag: event tag or None if not available.
     """
 
   @abc.abstractmethod
@@ -743,7 +744,7 @@ class StorageFileReader(StorageReader):
       identifier (AttributeContainerIdentifier): event tag identifier.
 
     Returns:
-      EventTag: event tag or None.
+      EventTag: event tag or None if not available.
     """
     return self._storage_file.GetEventTagByIdentifier(identifier)
 
@@ -1248,7 +1249,7 @@ class StorageFileWriter(StorageWriter):
       identifier (AttributeContainerIdentifier): event tag identifier.
 
     Returns:
-      EventTag: event tag or None.
+      EventTag: event tag or None if not available.
     """
     return self._storage_file.GetEventTagByIdentifier(identifier)
 

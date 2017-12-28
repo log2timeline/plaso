@@ -81,7 +81,7 @@ class EventTagIndexTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
-  # TODO: add test for UpdateEventTag.
+  # TODO: add test for SetEventTag.
 
 
 if __name__ == '__main__':

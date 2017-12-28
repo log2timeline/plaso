@@ -627,7 +627,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       index (int): event source index.
 
     Returns:
-      EventSource: event source or None if not availabl.e
+      EventSource: event source or None if not available.
     """
     return self._GetAttributeContainerByIndex('event_source', index)
 
@@ -646,7 +646,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       identifier (SQLTableIdentifier): event tag identifier.
 
     Returns:
-      EventTag: event tag or None.
+      EventTag: event tag or None if not available.
     """
     return self._GetAttributeContainerByIndex(
         'event_tag', identifier.row_identifier - 1)
@@ -1055,7 +1055,8 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
     """Reads attribute containers from a task storage file into the writer.
 
     Args:
-      callback (function): function to call after deserialization.
+      callback (function[StorageWriter, AttributeContainer]): function to call
+          after deserialization.
       maximum_number_of_containers (Optional[int]): maximum number of
           containers to merge, where 0 represent no limit.
 

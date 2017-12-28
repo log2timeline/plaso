@@ -5,7 +5,13 @@ from __future__ import unicode_literals
 
 
 class EventTagIndex(object):
-  """Event tag index."""
+  """Event tag index.
+
+  The event tag index is used to map event tags to events.
+
+  It is necessary for the ZIP storage files since previously
+  stored event tags cannot be altered.
+  """
 
   def __init__(self):
     """Initializes an event tag index."""
@@ -20,12 +26,10 @@ class EventTagIndex(object):
     """
     self._index = {}
     for event_tag in storage_file.GetEventTags():
-      event_identifier = event_tag.GetEventIdentifier()
-      lookup_key = event_identifier.CopyToString()
-      self._index[lookup_key] = event_tag.GetIdentifier()
+      self.SetEventTag(event_tag)
 
   def GetEventTagByIdentifier(self, storage_file, event_identifier):
-    """Retrieves an event tag by the event identifier.
+    """Retrieves the most recent updated event tag for an event.
 
     Args:
       storage_file (BaseStorageFile): storage file.
@@ -33,7 +37,7 @@ class EventTagIndex(object):
           container identifier.
 
     Returns:
-      EventTag: event tag or None.
+      EventTag: event tag or None if the event has no event tag.
     """
     if not self._index:
       self._Build(storage_file)
@@ -45,8 +49,8 @@ class EventTagIndex(object):
 
     return storage_file.GetEventTagByIdentifier(event_tag_identifier)
 
-  def UpdateEventTag(self, event_tag):
-    """Updates an event tag in the index.
+  def SetEventTag(self, event_tag):
+    """Sets an event tag in the index.
 
     Args:
       event_tag (EventTag): event tag.

@@ -2431,7 +2431,7 @@ class ZIPStorageFile(interface.BaseStorageFile):
       identifier (SerializedStreamIdentifier): event data identifier.
 
     Returns:
-      EventTag: event tag or None.
+      EventTag: event tag or None if not available.
     """
     event_tag_data, _ = self._GetSerializedAttributeContainerData(
         'event_tag', identifier.stream_number,

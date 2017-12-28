@@ -503,7 +503,8 @@ class GZIPStorageMergeReader(interface.StorageFileMergeReader):
     """Reads attribute containers from a task storage file into the writer.
 
     Args:
-      callback (function): function to call after deserialization.
+      callback (function[StorageWriter, AttributeContainer]): function to call
+          after deserialization.
       maximum_number_of_containers (Optional[int]): maximum number of
           containers to merge, where 0 represent no limit.
 
