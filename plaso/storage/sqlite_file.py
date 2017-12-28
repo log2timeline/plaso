@@ -1157,10 +1157,7 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
             self._active_container_type, serialized_data)
         attribute_container.SetIdentifier(identifier)
 
-        if self._active_container_type == 'event':
-          self._AddSerializedEvent(attribute_container)
-        else:
-          self._AddAttributeContainer(attribute_container)
+        self._AddAttributeContainer(attribute_container)
 
         number_of_containers += 1
 
