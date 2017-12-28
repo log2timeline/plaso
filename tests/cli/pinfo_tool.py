@@ -96,17 +96,17 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 
     test_filename = 'pinfo_test.json.plaso'
     format_version = '20170707'
-    plaso_version = '20170819'
-    session_identifier = 'ec42c87f-79ce-4b8b-bd5c-686d78ef0486'
-    session_start_time = '2017-08-20T10:35:30.291759+00:00'
-    session_completion_time = '2017-08-20T10:35:31.088995+00:00'
+    plaso_version = '20171228'
+    session_identifier = '93a1dce8-2c4e-4b4a-806f-081bb6b10402'
+    session_start_time = '2017-12-28T11:25:31.950714+00:00'
+    session_completion_time = '2017-12-28T11:25:32.738181+00:00'
 
     command_line_arguments = (
         './tools/log2timeline.py --partition=all --quiet '
         'pinfo_test.json.plaso test_data/tsk_volume_system.raw')
 
     enabled_parser_names = ', '.join([
-        'android_app_usage', 'asl_log', 'bash', 'bencode',
+        'amcache', 'android_app_usage', 'asl_log', 'bash', 'bencode',
         'bencode/bencode_transmission', 'bencode/bencode_utorrent',
         'binary_cookies', 'bsm_log', 'chrome_cache', 'chrome_preferences',
         'cups_ipp', 'custom_destinations', 'dockerjson', 'dpkg', 'esedb',
@@ -124,7 +124,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
         'plist/spotlight_volume', 'plist/time_machine', 'pls_recall',
         'popularity_contest', 'prefetch', 'recycle_bin',
         'recycle_bin_info2', 'rplog', 'sccm', 'selinux', 'skydrive_log',
-        'skydrive_log_old', 'sqlite', 'sqlite/android_calls',
+        'skydrive_log_old', 'sophos_av', 'sqlite', 'sqlite/android_calls',
         'sqlite/android_sms', 'sqlite/android_webview',
         'sqlite/android_webviewcache', 'sqlite/appusage',
         'sqlite/chrome_cookies', 'sqlite/chrome_extension_activity',
@@ -219,9 +219,9 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
   def testPrintStorageInformationAsJSON(self):
     """Tests the _PrintStorageInformationAsJSON function."""
     test_filename = 'pinfo_test.json.plaso'
-    session_identifier = 'ec42c87f79ce4b8bbd5c686d78ef0486'
+    session_identifier = '93a1dce82c4e4b4a806f081bb6b10402'
     session_start_time = timelib.Timestamp.CopyFromString(
-        '2017-08-20 10:35:30.291759')
+        '2017-12-28 11:25:31.950714')
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
     test_file = self._GetTestFilePath([test_filename])
