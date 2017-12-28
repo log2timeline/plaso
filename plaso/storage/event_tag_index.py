@@ -43,10 +43,7 @@ class EventTagIndex(object):
     if not event_tag_identifier:
       return
 
-    # pylint: disable=protected-access
-    return storage_file._GetEventTag(
-        event_tag_identifier.stream_number,
-        entry_index=event_tag_identifier.entry_index)
+    return storage_file.GetEventTagByIdentifier(event_tag_identifier)
 
   def UpdateEventTag(self, event_tag):
     """Updates an event tag in the index.

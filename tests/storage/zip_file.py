@@ -1182,6 +1182,8 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
+  # TODO: add tests for GetEventTagByIdentifier.
+
   def testGetEventTags(self):
     """Tests the GetEventTags function."""
     formatter_mediator = formatters_mediator.FormatterMediator()
