@@ -1,43 +1,43 @@
-plaso.analyzers.hashers package
-===============================
+plaso\.analyzers\.hashers package
+=================================
 
 Submodules
 ----------
 
-plaso.analyzers.hashers.interface module
-----------------------------------------
+plaso\.analyzers\.hashers\.interface module
+-------------------------------------------
 
 .. automodule:: plaso.analyzers.hashers.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.analyzers.hashers.manager module
---------------------------------------
+plaso\.analyzers\.hashers\.manager module
+-----------------------------------------
 
 .. automodule:: plaso.analyzers.hashers.manager
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.analyzers.hashers.md5 module
-----------------------------------
+plaso\.analyzers\.hashers\.md5 module
+-------------------------------------
 
 .. automodule:: plaso.analyzers.hashers.md5
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.analyzers.hashers.sha1 module
------------------------------------
+plaso\.analyzers\.hashers\.sha1 module
+--------------------------------------
 
 .. automodule:: plaso.analyzers.hashers.sha1
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.analyzers.hashers.sha256 module
--------------------------------------
+plaso\.analyzers\.hashers\.sha256 module
+----------------------------------------
 
 .. automodule:: plaso.analyzers.hashers.sha256
     :members:

@@ -22,6 +22,7 @@ from plaso.output import dynamic
 from plaso.output import interface as output_interface
 from plaso.output import mediator as output_mediator
 from plaso.output import null
+from plaso.storage import sqlite_file as storage_sqlite_file
 from plaso.storage import zip_file as storage_zip_file
 
 from tests import test_lib as shared_test_lib
@@ -245,7 +246,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     Args:
       path (str): path.
     """
-    storage_file = storage_zip_file.ZIPStorageFile()
+    storage_file = storage_sqlite_file.SQLiteStorageFile()
     storage_file.Open(path=path, read_only=False)
 
     # TODO: add preprocessing information.
@@ -269,7 +270,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       self._CreateTestStorageFile(temp_file)
 
-      storage_writer = storage_zip_file.ZIPStorageFileWriter(
+      storage_writer = storage_sqlite_file.SQLiteStorageFileWriter(
           session, temp_file)
 
       storage_writer.StartTaskStorage()
@@ -287,7 +288,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       self._CreateTestStorageFile(temp_file)
 
-      storage_writer = storage_zip_file.ZIPStorageFileWriter(
+      storage_writer = storage_sqlite_file.SQLiteStorageFileWriter(
           session, temp_file)
 
       storage_writer.StartTaskStorage()
@@ -327,18 +328,13 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       self._CreateTestStorageFile(temp_file)
 
-      storage_reader = storage_zip_file.ZIPStorageFileReader(temp_file)
+      storage_reader = storage_sqlite_file.SQLiteStorageFileReader(temp_file)
       storage_reader.ReadPreprocessingInformation(knowledge_base_object)
 
       test_engine._ExportEvents(
           storage_reader, output_module, deduplicate_events=False)
 
     formatters_manager.FormattersManager.DeregisterFormatter(TestEventFormatter)
-
-    lines = []
-    output = output_writer.ReadOutput()
-    for line in output.split(b'\n'):
-      lines.append(line)
 
     self.assertEqual(len(output_module.events), 17)
     self.assertEqual(len(output_module.macb_groups), 3)
@@ -364,7 +360,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       self._CreateTestStorageFile(temp_file)
 
-      storage_reader = storage_zip_file.ZIPStorageFileReader(temp_file)
+      storage_reader = storage_sqlite_file.SQLiteStorageFileReader(temp_file)
       storage_reader.ReadPreprocessingInformation(knowledge_base_object)
 
       test_engine._ExportEvents(storage_reader, output_module)
