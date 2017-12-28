@@ -181,12 +181,11 @@ class ExtractionTool(
       configuration (ProcessingConfiguration): processing configuration.
       session (Session): session.
     """
-    if configuration.parser_filter_expression:
-      names_generator = parsers_manager.ParsersManager.GetParserAndPluginNames(
-          parser_filter_expression=configuration.parser_filter_expression)
+    names_generator = parsers_manager.ParsersManager.GetParserAndPluginNames(
+        parser_filter_expression=configuration.parser_filter_expression)
 
-      session.enabled_parser_names = list(names_generator)
-      session.parser_filter_expression = configuration.parser_filter_expression
+    session.enabled_parser_names = list(names_generator)
+    session.parser_filter_expression = configuration.parser_filter_expression
 
   def _SetExtractionPreferredTimeZone(self, knowledge_base):
     """Sets the perferred time zone before extraction.
