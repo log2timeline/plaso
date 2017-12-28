@@ -22,7 +22,7 @@ class CompressedFileHandler(logging.FileHandler):
         filename, mode=mode, encoding=encoding, delay=True)
 
   def _open(self):
-    """Opens the current compressed log file.
+    """Opens the compressed log file.
 
     Returns
       file: file-like object of the resulting stream.
