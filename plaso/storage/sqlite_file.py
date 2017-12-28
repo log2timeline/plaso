@@ -508,6 +508,21 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     self._AddAttributeContainer('event_tag', event_tag)
 
+  def AddEventTags(self, event_tags):
+    """Adds event tags.
+
+    Args:
+      event_tags (list[EventTag]): event tags.
+
+    Raises:
+      IOError: when the storage file is closed or read-only or
+          if the event tags cannot be serialized.
+    """
+    self._RaiseIfNotWritable()
+
+    for event_tag in event_tags:
+      self.AddEventTag(event_tag)
+
   @classmethod
   def CheckSupportedFormat(cls, path):
     """Checks if the storage file format is supported.
