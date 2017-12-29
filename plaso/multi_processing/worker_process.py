@@ -65,7 +65,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
       if processing_configuration.log_filename:
         log_path = os.path.dirname(self._processing_configuration.log_filename)
-        log_filename = os.path.basename(self._processing_configuration.log_filename)
+        log_filename = os.path.basename(
+            self._processing_configuration.log_filename)
         log_filename = '{0:s}_{1:s}'.format(self._name, log_filename)
         self._log_filename = os.path.join(log_path, log_filename)
 
