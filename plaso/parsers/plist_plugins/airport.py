@@ -3,13 +3,12 @@
 
 from __future__ import unicode_literals
 
-from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
+from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import plist_event
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
@@ -48,11 +47,18 @@ class AirportPlugin(interface.PlistPlugin):
 
       datetime_value = wifi.get('LastConnected', None)
       if datetime_value:
-        timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
-        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-            timestamp=timestamp)
+        year, month, day_of_month, hours, minutes, seconds, _, _, _ = (
+            datetime_value.utctimetuple())
+
+        time_elements_tuple = (
+            year, month, day_of_month, hours, minutes, seconds,
+            datetime_value.microsecond)
+
+        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
+            time_elements_tuple=time_elements_tuple)
         event = time_events.DateTimeValuesEvent(
             date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+
       else:
         date_time = dfdatetime_semantic_time.SemanticTime('Not set')
         event = time_events.DateTimeValuesEvent(

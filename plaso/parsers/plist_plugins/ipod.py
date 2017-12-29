@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
@@ -61,7 +63,16 @@ class IPodPlugin(interface.PlistPlugin):
         attribute_name = key.lower().replace(' ', '_')
         setattr(event_data, attribute_name, value)
 
-      timestamp = timelib.Timestamp.FromPythonDatetime(connected_time)
+      year, month, day_of_month, hours, minutes, seconds, _, _, _ = (
+          datetime_value.utctimetuple())
+
+      time_elements_tuple = (
+          year, month, day_of_month, hours, minutes, seconds,
+          datetime_value.microsecond)
+
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
+          time_elements_tuple=time_elements_tuple)
+
       event = time_events.TimestampEvent(
           timestamp, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
       parser_mediator.ProduceEventWithEventData(event, event_data)

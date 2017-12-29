@@ -149,13 +149,13 @@ class HachoirParser(interface.FileObjectParser):
     event_data = HachoirEventData()
     event_data.metadata = attributes
 
-    for python_datetime, usage in extracted_events:
+    for datetime_value, usage in extracted_events:
       year, month, day_of_month, hours, minutes, seconds, _, _, _ = (
-          python_datetime.utctimetuple())
+          datetime_value.utctimetuple())
 
       time_elements_tuple = (
           year, month, day_of_month, hours, minutes, seconds,
-          python_datetime.microsecond)
+          datetime_value.microsecond)
 
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
           time_elements_tuple=time_elements_tuple)
