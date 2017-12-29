@@ -49,8 +49,8 @@ class IPodPlugin(interface.PlistPlugin):
     """
     devices = match.get('Devices', {})
     for device_identifier, device_information in iter(devices.items()):
-      connected_time = device_information.get('Connected', None)
-      if not connected_time:
+      datetime_value = device_information.get('Connected', None)
+      if not datetime_value:
         continue
 
       event_data = IPodPlistEventData()
