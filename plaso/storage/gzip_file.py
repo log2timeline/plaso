@@ -449,7 +449,7 @@ class GZIPStorageMergeReader(interface.StorageFileMergeReader):
     """Adds a single attribute container to the storage writer.
 
     Args:
-      attribute_container (AttributeContainer): container
+      attribute_container (AttributeContainer): container.
 
     Raises:
       RuntimeError: if the attribute container type is not supported.
@@ -486,11 +486,6 @@ class GZIPStorageMergeReader(interface.StorageFileMergeReader):
       self._storage_writer.AddEvent(attribute_container)
 
     elif container_type == 'event_tag':
-      event_identifier = identifiers.SerializedStreamIdentifier(
-          attribute_container.event_stream_number,
-          attribute_container.event_entry_index)
-      attribute_container.SetEventIdentifier(event_identifier)
-
       self._storage_writer.AddEventTag(attribute_container)
 
     elif container_type == 'extraction_error':
@@ -503,10 +498,13 @@ class GZIPStorageMergeReader(interface.StorageFileMergeReader):
       raise RuntimeError('Unsupported container type: {0:s}'.format(
           container_type))
 
-  def MergeAttributeContainers(self, maximum_number_of_containers=0):
+  def MergeAttributeContainers(
+      self, callback=None, maximum_number_of_containers=0):
     """Reads attribute containers from a task storage file into the writer.
 
     Args:
+      callback (function[StorageWriter, AttributeContainer]): function to call
+          after each attribute container is deserialized.
       maximum_number_of_containers (Optional[int]): maximum number of
           containers to merge, where 0 represent no limit.
 
@@ -537,6 +535,15 @@ class GZIPStorageMergeReader(interface.StorageFileMergeReader):
         attribute_container = self._DeserializeAttributeContainer(
             'attribute_container', line)
         attribute_container.SetIdentifier(identifier)
+
+        if attribute_container.CONTAINER_TYPE == 'event_tag':
+          event_identifier = identifiers.SerializedStreamIdentifier(
+              attribute_container.event_stream_number,
+              attribute_container.event_entry_index)
+          attribute_container.SetEventIdentifier(event_identifier)
+
+        if callback:
+          callback(self._storage_writer, attribute_container)
 
         self._AddAttributeContainer(attribute_container)
 
