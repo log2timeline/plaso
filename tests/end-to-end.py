@@ -144,21 +144,6 @@ class TestCase(object):
 
     return True
 
-  def _SplitToolOptions(self, options):
-    """Splits option strings passed to different tools."""
-    split_options = []
-
-    if options is None:
-      return split_options
-
-    elif isinstance(options, STRING_TYPES):
-      for option_and_value in options.split(' '):
-        if option_and_value.find('=') > 0:
-          options.extend(option_and_value.split('='))
-        else:
-          options.append(option_and_value)
-      test_definition.extract_options = split_extract_options
-
   @abc.abstractmethod
   def ReadAttributes(self, test_definition_reader, test_definition):
     """Reads the test definition attributes into to the test definition.
@@ -327,15 +312,19 @@ class TestDefinitionReader(object):
     self._test_sources_path = test_sources_path
     self._tools_path = tools_path
 
-  def GetConfigValue(self, section_name, value_name):
+  def GetConfigValue(self, section_name, value_name, default=None, split_string=False):
     """Retrieves a value from the config parser.
 
     Args:
       section_name (str): name of the section that contains the value.
       value_name (str): the name of the value.
+      default (Optional[object]): default value to return if no value is set
+          in the config parser.
+      split_string (Optional[bool]): if True, the value will be split into a
+          list of strings, suitable for passing to subprocess.Popen().
 
     Returns:
-      object: value or None if the value does not exists.
+      object: value or the default if the value does not exist.
 
     Raises:
       RuntimeError: if the configuration parser is not set.
@@ -344,9 +333,23 @@ class TestDefinitionReader(object):
       raise RuntimeError('Missing configuration parser.')
 
     try:
-      return self._config_parser.get(section_name, value_name).decode('utf-8')
+      value = self._config_parser.get(section_name, value_name).decode('utf-8')
     except configparser.NoOptionError:
-      return
+      value = None
+
+    if split_string and value:
+      options = []
+      for flag_and_setting in value.split(' '):
+        if flag_and_setting.find('=') > 0:
+          options.extend(flag_and_setting.split('='))
+        else:
+          options.append(flag_and_setting)
+      value = options
+
+    if value is None:
+      value = default
+
+    return value
 
   def Read(self, file_object):
     """Reads test definitions.
@@ -358,7 +361,7 @@ class TestDefinitionReader(object):
       TestDefinition: end-to-end test definition.
     """
     # TODO: replace by:
-    # self._config_parser = configparser. ConfigParser(interpolation=None)
+    # self._config_parser = configparser.ConfigParser(interpolation=None)
     self._config_parser = configparser.RawConfigParser()
 
     try:
@@ -683,18 +686,7 @@ class ExtractAndOutputTestCase(TestCase):
       bool: True if the read was successful.
     """
     test_definition.extract_options = test_definition_reader.GetConfigValue(
-        test_definition.name, 'extract_options')
-
-    if test_definition.extract_options is None:
-      test_definition.extract_options = []
-    elif isinstance(test_definition.extract_options, STRING_TYPES):
-      split_extract_options = []
-      for option_and_value in test_definition.extract_options.split(' '):
-        if option_and_value.find('=') > 0:
-          split_extract_options.extend(option_and_value.split('='))
-        else:
-          split_extract_options.append(option_and_value)
-      test_definition.extract_options = split_extract_options
+        test_definition.name, 'extract_options', default=[], split_string=True)
 
     test_definition.output_file = test_definition_reader.GetConfigValue(
         test_definition.name, 'output_file')
@@ -703,13 +695,7 @@ class ExtractAndOutputTestCase(TestCase):
         test_definition.name, 'output_format')
 
     test_definition.output_options = test_definition_reader.GetConfigValue(
-        test_definition.name, 'output_options')
-
-    if test_definition.output_options is None:
-      test_definition.output_options = []
-    elif isinstance(test_definition.output_options, STRING_TYPES):
-      test_definition.output_options = test_definition.output_options.split(
-          ',')
+        test_definition.name, 'output_options', default=[], split_string=True)
 
     test_definition.reference_storage_file = (
         test_definition_reader.GetConfigValue(
@@ -855,18 +841,10 @@ class ExtractAndOutputWithPstealTestCase(TestCase):
       bool: True if the read was successful.
     """
     test_definition.extract_options = test_definition_reader.GetConfigValue(
-        test_definition.name, 'extract_options')
+        test_definition.name, 'extract_options', default=[], split_string=True)
 
     if test_definition.extract_options is None:
       test_definition.extract_options = []
-    elif isinstance(test_definition.extract_options, STRING_TYPES):
-      split_extract_options = []
-      for option_and_value in test_definition.extract_options.split(' '):
-        if option_and_value.find('=') > 0:
-          split_extract_options.extend(option_and_value.split('='))
-        else:
-          split_extract_options.append(option_and_value)
-      test_definition.extract_options = split_extract_options
 
     test_definition.output_file = test_definition_reader.GetConfigValue(
         test_definition.name, 'output_file')
@@ -875,13 +853,7 @@ class ExtractAndOutputWithPstealTestCase(TestCase):
         test_definition.name, 'output_format')
 
     test_definition.output_options = test_definition_reader.GetConfigValue(
-        test_definition.name, 'output_options')
-
-    if test_definition.output_options is None:
-      test_definition.output_options = []
-    elif isinstance(test_definition.output_options, STRING_TYPES):
-      test_definition.output_options = test_definition.output_options.split(
-          ',')
+        test_definition.name, 'output_options', default=[], split_string=True)
 
     test_definition.reference_storage_file = (
         test_definition_reader.GetConfigValue(
@@ -1194,7 +1166,7 @@ class OutputTestCase(TestCase):
       bool: True if he output files are identical.
     """
     if test_definition.output_format not in self._SUPPORTED_OUTPUT_FORMATS:
-      logging.error('Unsuppored output format: {0:s}'.format(
+      logging.error('Unsupported output format: {0:s}'.format(
           test_definition.output_format))
       return False
 
@@ -1312,18 +1284,7 @@ class OutputTestCase(TestCase):
         test_definition.name, 'output_format')
 
     test_definition.output_options = test_definition_reader.GetConfigValue(
-        test_definition.name, 'output_options')
-
-    if test_definition.output_options is None:
-      test_definition.output_options = []
-    elif isinstance(test_definition.output_options, STRING_TYPES):
-      split_output_options = []
-      for option_and_value in test_definition.output_options.split(' '):
-        if option_and_value.find('=') > 0:
-          split_output_options.extend(option_and_value.split('='))
-        else:
-          split_output_options.append(option_and_value)
-      test_definition.output_options = split_output_options
+        test_definition.name, 'output_options', default=[], split_string=True)
 
     test_definition.reference_output_file = (
         test_definition_reader.GetConfigValue(
