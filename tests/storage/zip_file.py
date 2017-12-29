@@ -18,7 +18,6 @@ from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.formatters import winreg   # pylint: disable=unused-import
-from plaso.storage import identifiers
 from plaso.storage import time_range
 from plaso.storage import zip_file
 
@@ -326,20 +325,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
   # TODO: add test for _AddAttributeContainer.
   # TODO: add test for _AddSerializedEvent.
 
-  def testBuildEventTagIndex(self):
-    """Tests the _BuildEventTagIndex function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
-    storage_file = zip_file.ZIPStorageFile()
-    storage_file.Open(path=test_file)
-
-    self.assertIsNone(storage_file._event_tag_index)
-
-    storage_file._BuildEventTagIndex()
-
-    self.assertIsNotNone(storage_file._event_tag_index)
-
-    storage_file.Close()
-
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testDeserializeAttributeContainer(self):
     """Tests the _DeserializeAttributeContainer function."""
@@ -561,26 +546,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
       storage_file._GetEventSource(3)
 
     storage_file.Close()
-
-  def testGetEventTagByIdentifier(self):
-    """Tests the _GetEventTagByIdentifier function."""
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, 'storage.plaso')
-      self._CreateTestStorageFileWithTags(temp_file)
-
-      storage_file = zip_file.ZIPStorageFile()
-      storage_file.Open(path=temp_file)
-
-      event_identifier = identifiers.SerializedStreamIdentifier(1, 0)
-      event_tag = storage_file._GetEventTagByIdentifier(event_identifier)
-      self.assertIsNotNone(event_tag)
-      self.assertEqual(event_tag.comment, 'My comment')
-
-      event_identifier = identifiers.SerializedStreamIdentifier(99, 0)
-      event_tag = storage_file._GetEventTagByIdentifier(event_identifier)
-      self.assertIsNone(event_tag)
-
-      storage_file.Close()
 
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetLastStreamNumber(self):
@@ -938,7 +903,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file.Close()
 
   # TODO: add test for _SerializeAttributeContainer.
-  # TODO: add test for _UpdateEventTagIndex.
   # TODO: add test for _WriteAttributeContainersHeap.
 
   def testWriteSerializedAttributeContainerList(self):
@@ -1218,6 +1182,8 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
+  # TODO: add tests for GetEventTagByIdentifier.
+
   def testGetEventTags(self):
     """Tests the GetEventTags function."""
     formatter_mediator = formatters_mediator.FormatterMediator()
@@ -1270,7 +1236,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     # the first version as well.
     event = tagged_events[3]
     self.assertEqual(event.tag.labels[0], 'Interesting')
-    self.assertEqual(event.tag.labels[1], 'Malware')
 
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testGetNumberOfAnalysisReports(self):

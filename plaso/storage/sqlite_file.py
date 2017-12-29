@@ -627,7 +627,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       index (int): event source index.
 
     Returns:
-      EventSource: event source or None if not availabl.e
+      EventSource: event source or None if not available.
     """
     return self._GetAttributeContainerByIndex('event_source', index)
 
@@ -638,6 +638,18 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       generator(EventSource): event source generator.
     """
     return self._GetAttributeContainers('event_source')
+
+  def GetEventTagByIdentifier(self, identifier):
+    """Retrieves a specific event tag.
+
+    Args:
+      identifier (SQLTableIdentifier): event tag identifier.
+
+    Returns:
+      EventTag: event tag or None if not available.
+    """
+    return self._GetAttributeContainerByIndex(
+        'event_tag', identifier.row_identifier - 1)
 
   def GetEventTags(self):
     """Retrieves the event tags.
@@ -1026,10 +1038,6 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
       self._storage_writer.AddEvent(attribute_container)
 
     elif container_type == 'event_tag':
-      event_identifier = identifiers.SQLTableIdentifier(
-          'event', attribute_container.event_row_identifier)
-      attribute_container.SetEventIdentifier(event_identifier)
-
       self._storage_writer.AddEventTag(attribute_container)
 
     elif container_type == 'extraction_error':
@@ -1042,10 +1050,13 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
       raise RuntimeError('Unsupported container type: {0:s}'.format(
           container_type))
 
-  def MergeAttributeContainers(self, maximum_number_of_containers=0):
+  def MergeAttributeContainers(
+      self, callback=None, maximum_number_of_containers=0):
     """Reads attribute containers from a task storage file into the writer.
 
     Args:
+      callback (function[StorageWriter, AttributeContainer]): function to call
+          after each attribute container is deserialized.
       maximum_number_of_containers (Optional[int]): maximum number of
           containers to merge, where 0 represent no limit.
 
@@ -1100,6 +1111,14 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
         attribute_container = self._DeserializeAttributeContainer(
             self._active_container_type, serialized_data)
         attribute_container.SetIdentifier(identifier)
+
+        if self._active_container_type == 'event_tag':
+          event_identifier = identifiers.SQLTableIdentifier(
+              'event', attribute_container.event_row_identifier)
+          attribute_container.SetEventIdentifier(event_identifier)
+
+        if callback:
+          callback(self._storage_writer, attribute_container)
 
         self._AddAttributeContainer(attribute_container)
 

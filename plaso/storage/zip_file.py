@@ -714,7 +714,6 @@ class ZIPStorageFile(interface.BaseStorageFile):
     super(ZIPStorageFile, self).__init__()
     self._analysis_report_stream_number = 0
     self._event_sources_in_stream = []
-    self._event_tag_index = None
     self._event_timestamp_tables = {}
     self._event_timestamp_tables_lfu = []
     self._event_heap = None
@@ -795,14 +794,6 @@ class ZIPStorageFile(interface.BaseStorageFile):
 
     if self._serialized_event_heap.data_size > self._maximum_buffer_size:
       self._WriteSerializedEvents()
-
-  def _BuildEventTagIndex(self):
-    """Builds the event tag index."""
-    self._event_tag_index = {}
-    for event_tag in self.GetEventTags():
-      event_identifier = event_tag.GetEventIdentifier()
-      lookup_key = event_identifier.CopyToString()
-      self._event_tag_index[lookup_key] = event_tag.GetIdentifier()
 
   @classmethod
   def _CheckStorageMetadata(cls, storage_metadata):
@@ -1177,64 +1168,6 @@ class ZIPStorageFile(interface.BaseStorageFile):
       event_source.SetIdentifier(event_source_identifier)
     return event_source
 
-  def _GetEventTag(self, stream_number, entry_index=NEXT_AVAILABLE_ENTRY):
-    """Reads an event tag from a specific stream.
-
-    Args:
-      stream_number (int): number of the serialized event tag stream.
-      entry_index (Optional[int]): number of the serialized event tag
-          within the stream, where NEXT_AVAILABLE_ENTRY represents
-          the next available event tag.
-
-    Returns:
-      EventTag: event tag or None.
-    """
-    event_tag_data, entry_index = self._GetSerializedAttributeContainerData(
-        'event_tag', stream_number, entry_index=entry_index)
-    if not event_tag_data:
-      return
-
-    event_tag = self._DeserializeAttributeContainer(
-        'event_tag', event_tag_data)
-    if event_tag:
-      event_tag_identifier = identifiers.SerializedStreamIdentifier(
-          stream_number, entry_index)
-      event_tag.SetIdentifier(event_tag_identifier)
-
-      event_identifier = identifiers.SerializedStreamIdentifier(
-          event_tag.event_stream_number, event_tag.event_entry_index)
-      event_tag.SetEventIdentifier(event_identifier)
-
-      del event_tag.event_stream_number
-      del event_tag.event_entry_index
-
-    return event_tag
-
-  def _GetEventTagByIdentifier(self, event_identifier):
-    """Retrieves an event tag by the event identifier.
-
-    Args:
-      event_identifier (AttributeContainerIdentifier): event attribute
-          container identifier.
-
-    Returns:
-      EventTag: event tag or None.
-
-    Raises:
-      IOError: if the event tag data stream cannot be opened.
-    """
-    if not self._event_tag_index:
-      self._BuildEventTagIndex()
-
-    lookup_key = event_identifier.CopyToString()
-    event_tag_identifier = self._event_tag_index.get(lookup_key, None)
-    if not event_tag_identifier:
-      return
-
-    return self._GetEventTag(
-        event_tag_identifier.stream_number,
-        entry_index=event_tag_identifier.entry_index)
-
   def _GetLastStreamNumber(self, stream_name_prefix):
     """Retrieves the last stream number.
 
@@ -1571,8 +1504,6 @@ class ZIPStorageFile(interface.BaseStorageFile):
         next_event.timestamp != event.timestamp):
       self._FillEventHeapFromStream(stream_number)
 
-    event_identifier = event.GetIdentifier()
-    event.tag = self._GetEventTagByIdentifier(event_identifier)
     return event
 
   def _HasStream(self, stream_name):
@@ -1909,17 +1840,6 @@ class ZIPStorageFile(interface.BaseStorageFile):
       file_object.close()
 
     return data
-
-  def _UpdateEventTagIndex(self, event_tag):
-    """Builds the event tag index.
-
-    Args:
-      event_tag (EventTag): event tag.
-    """
-    event_identifier = event_tag.GetEventIdentifier()
-
-    lookup_key = event_identifier.CopyToString()
-    self._event_tag_index[lookup_key] = event_tag.GetIdentifier()
 
   def _WriteSerializedAttributeContainerList(self, container_type):
     """Writes a serialized attribute container list.
@@ -2265,9 +2185,6 @@ class ZIPStorageFile(interface.BaseStorageFile):
   def AddEventTag(self, event_tag):
     """Adds an event tag.
 
-    If the event referenced by the tag is already tagged, the comment
-    and labels will be appended to the existing tag.
-
     Args:
       event_tag (EventTag): event tag.
 
@@ -2287,16 +2204,7 @@ class ZIPStorageFile(interface.BaseStorageFile):
     event_tag.event_stream_number = event_identifier.stream_number
     event_tag.event_entry_index = event_identifier.entry_index
 
-    # Check if the event has already been tagged on a previous occasion,
-    # we need to append the event tag any existing event tag.
-    stored_event_tag = self._GetEventTagByIdentifier(event_identifier)
-    if stored_event_tag:
-      event_tag.AddComment(stored_event_tag.comment)
-      event_tag.AddLabels(stored_event_tag.labels)
-
     self._AddAttributeContainer('event_tag', event_tag)
-
-    self._UpdateEventTagIndex(event_tag)
 
   def AddEventTags(self, event_tags):
     """Adds event tags.
@@ -2515,6 +2423,36 @@ class ZIPStorageFile(interface.BaseStorageFile):
       generator(EventSource): event source generator.
     """
     return self._GetAttributeContainers('event_source')
+
+  def GetEventTagByIdentifier(self, identifier):
+    """Retrieves a specific event tag.
+
+    Args:
+      identifier (SerializedStreamIdentifier): event data identifier.
+
+    Returns:
+      EventTag: event tag or None if not available.
+    """
+    event_tag_data, _ = self._GetSerializedAttributeContainerData(
+        'event_tag', identifier.stream_number,
+        entry_index=identifier.entry_index)
+    if not event_tag_data:
+      return
+
+    event_tag = self._DeserializeAttributeContainer('event_tag', event_tag_data)
+    if event_tag:
+      event_tag_identifier = identifiers.SerializedStreamIdentifier(
+          identifier.stream_number, identifier.entry_index)
+      event_tag.SetIdentifier(event_tag_identifier)
+
+      event_identifier = identifiers.SerializedStreamIdentifier(
+          event_tag.event_stream_number, event_tag.event_entry_index)
+      event_tag.SetEventIdentifier(event_identifier)
+
+      del event_tag.event_stream_number
+      del event_tag.event_entry_index
+
+    return event_tag
 
   def GetEventTags(self):
     """Retrieves the event tags.

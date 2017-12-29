@@ -12,6 +12,14 @@ plaso\.storage\.event\_heaps module
     :undoc-members:
     :show-inheritance:
 
+plaso\.storage\.event\_tag\_index module
+----------------------------------------
+
+.. automodule:: plaso.storage.event_tag_index
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso\.storage\.factory module
 ------------------------------
 

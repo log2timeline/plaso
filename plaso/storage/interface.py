@@ -188,6 +188,17 @@ class BaseStore(object):
     """
 
   @abc.abstractmethod
+  def GetEventTagByIdentifier(self, identifier):
+    """Retrieves a specific event tag.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event tag identifier.
+
+    Returns:
+      EventTag: event tag or None if not available.
+    """
+
+  @abc.abstractmethod
   def GetEventTags(self):
     """Retrieves the event tags.
 
@@ -446,10 +457,13 @@ class StorageMergeReader(object):
     self._storage_writer = storage_writer
 
   @abc.abstractmethod
-  def MergeAttributeContainers(self, maximum_number_of_containers=0):
+  def MergeAttributeContainers(
+      self, callback=None, maximum_number_of_containers=0):
     """Reads attribute containers from a task storage file into the writer.
 
     Args:
+      callback (function[StorageWriter, AttributeContainer]): function to call
+          after each attribute container is deserialized.
       maximum_number_of_containers (Optional[int]): maximum number of
           containers to merge, where 0 represent no limit.
 
@@ -598,6 +612,17 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
+  def GetEventTagByIdentifier(self, identifier):
+    """Retrieves a specific event tag.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event tag identifier.
+
+    Returns:
+      EventTag: event tag or None if not available.
+    """
+
+  @abc.abstractmethod
   def GetEventTags(self):
     """Retrieves the event tags.
 
@@ -711,6 +736,17 @@ class StorageFileReader(StorageReader):
       generator(EventSource): event source generator.
     """
     return self._storage_file.GetEventSources()
+
+  def GetEventTagByIdentifier(self, identifier):
+    """Retrieves a specific event tag.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event tag identifier.
+
+    Returns:
+      EventTag: event tag or None if not available.
+    """
+    return self._storage_file.GetEventTagByIdentifier(identifier)
 
   def GetEventTags(self):
     """Retrieves the event tags.
@@ -1205,6 +1241,25 @@ class StorageFileWriter(StorageWriter):
       IOError: when the storage writer is closed.
     """
     return self._storage_file.GetEvents()
+
+  def GetEventTagByIdentifier(self, identifier):
+    """Retrieves a specific event tag.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event tag identifier.
+
+    Returns:
+      EventTag: event tag or None if not available.
+    """
+    return self._storage_file.GetEventTagByIdentifier(identifier)
+
+  def GetEventTags(self):
+    """Retrieves the event tags.
+
+    Returns:
+      generator(EventTag): event tag generator.
+    """
+    return self._storage_file.GetEventTags()
 
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.
