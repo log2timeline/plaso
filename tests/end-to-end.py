@@ -86,6 +86,7 @@ class TestCase(object):
     self._test_results_path = test_results_path
     self._test_sources_path = test_sources_path
     self._tools_path = tools_path
+    self.name = self.NAME
 
   def _InitializeLog2TimelinePath(self):
     """Initializes the location of log2timeline."""
@@ -142,6 +143,21 @@ class TestCase(object):
       return False
 
     return True
+
+  def _SplitToolOptions(self, options):
+    """Splits option strings passed to different tools."""
+    split_options = []
+
+    if options is None:
+      return split_options
+
+    elif isinstance(options, STRING_TYPES):
+      for option_and_value in options.split(' '):
+        if option_and_value.find('=') > 0:
+          options.extend(option_and_value.split('='))
+        else:
+          options.append(option_and_value)
+      test_definition.extract_options = split_extract_options
 
   @abc.abstractmethod
   def ReadAttributes(self, test_definition_reader, test_definition):
@@ -672,14 +688,13 @@ class ExtractAndOutputTestCase(TestCase):
     if test_definition.extract_options is None:
       test_definition.extract_options = []
     elif isinstance(test_definition.extract_options, STRING_TYPES):
-      tmp_extract_options = []
-      for option_and_value in test_definition.extract_options.split(
-          ' '):
+      split_extract_options = []
+      for option_and_value in test_definition.extract_options.split(' '):
         if option_and_value.find('=') > 0:
-          tmp_extract_options.extend(option_and_value.split('='))
+          split_extract_options.extend(option_and_value.split('='))
         else:
-          tmp_extract_options.append(option_and_value)
-      test_definition.extract_options = tmp_extract_options
+          split_extract_options.append(option_and_value)
+      test_definition.extract_options = split_extract_options
 
     test_definition.output_file = test_definition_reader.GetConfigValue(
         test_definition.name, 'output_file')
@@ -845,14 +860,13 @@ class ExtractAndOutputWithPstealTestCase(TestCase):
     if test_definition.extract_options is None:
       test_definition.extract_options = []
     elif isinstance(test_definition.extract_options, STRING_TYPES):
-      tmp_extract_options = []
-      for option_and_value in test_definition.extract_options.split(
-          ' '):
+      split_extract_options = []
+      for option_and_value in test_definition.extract_options.split(' '):
         if option_and_value.find('=') > 0:
-          tmp_extract_options.extend(option_and_value.split('='))
+          split_extract_options.extend(option_and_value.split('='))
         else:
-          tmp_extract_options.append(option_and_value)
-      test_definition.extract_options = tmp_extract_options
+          split_extract_options.append(option_and_value)
+      test_definition.extract_options = split_extract_options
 
     test_definition.output_file = test_definition_reader.GetConfigValue(
         test_definition.name, 'output_file')
@@ -1253,6 +1267,7 @@ class OutputTestCase(TestCase):
       output_file_path = os.path.join(
           temp_directory, test_definition.output_file)
       output_options.extend(['-w', output_file_path])
+    output_options.append(storage_file)
 
     stdout_file = os.path.join(
         temp_directory, '{0:s}-psort.out'.format(test_definition.name))
@@ -1260,7 +1275,6 @@ class OutputTestCase(TestCase):
         temp_directory, '{0:s}-psort.err'.format(test_definition.name))
     command = [self._psort_path]
     command.extend(output_options)
-    command.append(storage_file)
 
     with open(stdout_file, 'w') as stdout:
       with open(stderr_file, 'w') as stderr:
@@ -1303,8 +1317,13 @@ class OutputTestCase(TestCase):
     if test_definition.output_options is None:
       test_definition.output_options = []
     elif isinstance(test_definition.output_options, STRING_TYPES):
-      test_definition.output_options = test_definition.output_options.split(
-          ',')
+      split_output_options = []
+      for option_and_value in test_definition.output_options.split(' '):
+        if option_and_value.find('=') > 0:
+          split_output_options.extend(option_and_value.split('='))
+        else:
+          split_output_options.append(option_and_value)
+      test_definition.output_options = split_output_options
 
     test_definition.reference_output_file = (
         test_definition_reader.GetConfigValue(
