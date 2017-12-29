@@ -133,16 +133,18 @@ class ParserMediator(object):
     if not file_entry:
       return
 
-    # Gzip files don't store the creation or metadata modification times,
-    # but the parent file times are relevant.
-    if file_entry.TYPE_INDICATOR == dfvfs_definitions.TYPE_INDICATOR_GZIP:
-      file_entry = file_entry.GetParentFileEntry()
+
 
     stat_object = file_entry.GetStat()
 
     posix_time = getattr(stat_object, 'crtime', None)
     if posix_time is None:
       posix_time = getattr(stat_object, 'ctime', None)
+
+    # Gzip files don't store the creation or metadata modification times,
+    # but the modification time stored in the file is a good proxy.
+    if file_entry.TYPE_INDICATOR == dfvfs_definitions.TYPE_INDICATOR_GZIP:
+      posix_time = getattr(stat_object, 'mtime', None)
 
     if posix_time is None:
       logging.warning(
