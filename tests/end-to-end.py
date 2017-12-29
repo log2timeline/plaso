@@ -312,7 +312,8 @@ class TestDefinitionReader(object):
     self._test_sources_path = test_sources_path
     self._tools_path = tools_path
 
-  def GetConfigValue(self, section_name, value_name, default=None, split_string=False):
+  def GetConfigValue(
+      self, section_name, value_name, default=None, split_string=False):
     """Retrieves a value from the config parser.
 
     Args:
