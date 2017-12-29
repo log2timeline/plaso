@@ -57,9 +57,6 @@ class TestCase(object):
   The test case defines what aspect of the plaso tools to test.
   A test definition is used to provide parameters for the test
   case so it can be easily run on different input files.
-
-  Attributes:
-    name (str): name of the test case.
   """
 
   NAME = None
@@ -86,7 +83,6 @@ class TestCase(object):
     self._test_results_path = test_results_path
     self._test_sources_path = test_sources_path
     self._tools_path = tools_path
-    self.name = self.NAME
 
   def _InitializeLog2TimelinePath(self):
     """Initializes the location of log2timeline."""
