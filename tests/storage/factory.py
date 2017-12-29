@@ -8,7 +8,7 @@ import unittest
 
 from plaso.containers import sessions
 from plaso.storage import factory
-from plaso.storage import zip_file
+from plaso.storage import sqlite_file
 
 from tests import test_lib as shared_test_lib
 from tests.storage import test_lib
@@ -23,7 +23,7 @@ class StorageFactoryTest(test_lib.StorageTestCase):
     test_file = self._GetTestFilePath(['psort_test.json.plaso'])
 
     storage_file = factory.StorageFactory.CreateStorageFileForFile(test_file)
-    self.assertIsInstance(storage_file, zip_file.ZIPStorageFile)
+    self.assertIsInstance(storage_file, sqlite_file.SQLiteStorageFile)
 
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testCreateStorageReaderForFile(self):
@@ -32,7 +32,7 @@ class StorageFactoryTest(test_lib.StorageTestCase):
 
     storage_reader = factory.StorageFactory.CreateStorageReaderForFile(
         test_file)
-    self.assertIsInstance(storage_reader, zip_file.ZIPStorageFileReader)
+    self.assertIsInstance(storage_reader, sqlite_file.SQLiteStorageFileReader)
 
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testCreateStorageWriterForFile(self):
@@ -42,7 +42,7 @@ class StorageFactoryTest(test_lib.StorageTestCase):
 
     storage_reader = factory.StorageFactory.CreateStorageWriterForFile(
         session, test_file)
-    self.assertIsInstance(storage_reader, zip_file.ZIPStorageFileWriter)
+    self.assertIsInstance(storage_reader, sqlite_file.SQLiteStorageFileWriter)
 
 
 if __name__ == '__main__':

@@ -508,6 +508,21 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     self._AddAttributeContainer('event_tag', event_tag)
 
+  def AddEventTags(self, event_tags):
+    """Adds event tags.
+
+    Args:
+      event_tags (list[EventTag]): event tags.
+
+    Raises:
+      IOError: when the storage file is closed or read-only or
+          if the event tags cannot be serialized.
+    """
+    self._RaiseIfNotWritable()
+
+    for event_tag in event_tags:
+      self.AddEventTag(event_tag)
+
   @classmethod
   def CheckSupportedFormat(cls, path):
     """Checks if the storage file format is supported.
@@ -648,8 +663,16 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     Returns:
       EventTag: event tag or None if not available.
     """
-    return self._GetAttributeContainerByIndex(
+    event_tag = self._GetAttributeContainerByIndex(
         'event_tag', identifier.row_identifier - 1)
+    if event_tag:
+      event_identifier = identifiers.SQLTableIdentifier(
+          'event', event_tag.event_row_identifier)
+      event_tag.SetEventIdentifier(event_identifier)
+
+      del event_tag.event_row_identifier
+
+    return event_tag
 
   def GetEventTags(self):
     """Retrieves the event tags.
@@ -1116,6 +1139,8 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
           event_identifier = identifiers.SQLTableIdentifier(
               'event', attribute_container.event_row_identifier)
           attribute_container.SetEventIdentifier(event_identifier)
+
+          del attribute_container.event_row_identifier
 
         if callback:
           callback(self._storage_writer, attribute_container)

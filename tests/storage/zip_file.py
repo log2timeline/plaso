@@ -30,10 +30,10 @@ class SerializedDataStreamTest(test_lib.StorageTestCase):
 
   # pylint: disable=protected-access
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testReadAndSeek(self):
     """Tests the ReadEntry and SeekEntryAtOffset functions."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     zip_file_object = zipfile.ZipFile(
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
@@ -145,10 +145,10 @@ class SerializedDataOffsetTableTest(test_lib.StorageTestCase):
 
   # pylint: disable=protected-access
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetOffset(self):
     """Tests the GetOffset function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     zip_file_object = zipfile.ZipFile(
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
@@ -169,10 +169,10 @@ class SerializedDataOffsetTableTest(test_lib.StorageTestCase):
     with self.assertRaises(IndexError):
       offset_table.GetOffset(-99)
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testRead(self):
     """Tests the Read function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     zip_file_object = zipfile.ZipFile(
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
@@ -211,10 +211,10 @@ class SerializedDataTimestampTableTest(test_lib.StorageTestCase):
 
   # pylint: disable=protected-access
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetTimestamp(self):
     """Tests the GetTimestamp function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     zip_file_object = zipfile.ZipFile(
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
@@ -235,10 +235,10 @@ class SerializedDataTimestampTableTest(test_lib.StorageTestCase):
     with self.assertRaises(IndexError):
       timestamp_table.GetTimestamp(-99)
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testRead(self):
     """Tests the Read function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     zip_file_object = zipfile.ZipFile(
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
@@ -325,10 +325,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
   # TODO: add test for _AddAttributeContainer.
   # TODO: add test for _AddSerializedEvent.
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testDeserializeAttributeContainer(self):
     """Tests the _DeserializeAttributeContainer function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -343,10 +343,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetAttributeContainer(self):
     """Tests the _GetAttributeContainer function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -379,10 +379,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetAttributeContainerWithCache(self):
     """Tests the _GetAttributeContainerWithCache function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -416,10 +416,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetAttributeContainerByIndex(self):
     """Tests the _GetAttributeContainerByIndex function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -431,10 +431,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
   # TODO: add tests for _GetAttributeContainers
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetEvent(self):
     """Tests the _GetEvent function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -466,10 +466,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetEventObjectSerializedData(self):
     """Tests the _GetEventSerializedData function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -515,10 +515,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetEventSource(self):
     """Tests the _GetEventSource function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -547,10 +547,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetLastStreamNumber(self):
     """Tests the _GetLastStreamNumber function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -568,10 +568,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
   # TODO: add test for _InitializeEventHeap.
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetEventSourceSerializedData(self):
     """Tests the _GetSerializedAttributeContainerData function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -616,10 +616,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetSerializedDataStream(self):
     """Tests the _GetSerializedDataStream function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -631,10 +631,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetSerializedDataOffsetTable(self):
     """Tests the _GetSerializedDataOffsetTable function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -646,10 +646,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetSerializedDataStreamNumbers(self):
     """Tests the _GetSerializedDataStreamNumbers function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -659,10 +659,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetSerializedEventTimestampTable(self):
     """Tests the _GetSerializedEventTimestampTable function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -671,10 +671,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetStreamNames(self):
     """Tests the _GetStreamNames function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -683,10 +683,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetSortedEvent(self):
     """Tests the _GetSortedEvent function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -728,10 +728,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testHasStream(self):
     """Tests the _HasStream function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -740,10 +740,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testOpenStream(self):
     """Tests the _OpenStream function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -755,10 +755,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testOpenZIPFile(self):
     """Tests the _OpenZIPFile, _OpenRead and _OpenWrite functions."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
 
     storage_file._OpenZIPFile(test_file, True)
@@ -824,10 +824,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testReadAttributeContainerFromStreamEntry(self):
     """Tests the _ReadAttributeContainerFromStreamEntry function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -841,10 +841,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testReadAttributeContainersFromStream(self):
     """Tests the _ReadAttributeContainersFromStream function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -861,10 +861,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
   # TODO: add tests for _ReadEventDataIntoEvent
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testReadSerializerStream(self):
     """Tests the _ReadSerializerStream function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -876,10 +876,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testReadStorageMetadata(self):
     """Tests the _ReadStorageMetadata function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -887,10 +887,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testReadStream(self):
     """Tests the _ReadStream function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1074,11 +1074,11 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
   # TODO: add tests for CheckSupportedFormat
   # TODO: add tests for Flush
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso.zip'])
   def testGetAnalysisReports(self):
     """Tests the GetAnalysisReports function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1087,7 +1087,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-    test_file = self._GetTestFilePath(['pinfo_test.json.plaso'])
+    test_file = self._GetTestFilePath(['pinfo_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1096,11 +1096,11 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso.zip'])
   def testGetErrors(self):
     """Tests the GetErrors function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1109,7 +1109,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-    test_file = self._GetTestFilePath(['pinfo_test.json.plaso'])
+    test_file = self._GetTestFilePath(['pinfo_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1120,11 +1120,11 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
   # TODO: add tests for GetEventData
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso.zip'])
   def testGetEvents(self):
     """Tests the GetEvents function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1133,7 +1133,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-    test_file = self._GetTestFilePath(['pinfo_test.json.plaso'])
+    test_file = self._GetTestFilePath(['pinfo_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1142,10 +1142,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetEventSourceByIndex(self):
     """Tests the GetEventSourceByIndex function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1160,11 +1160,11 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso.zip'])
   def testGetEventSources(self):
     """Tests the GetEventSources function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1173,7 +1173,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-    test_file = self._GetTestFilePath(['pinfo_test.json.plaso'])
+    test_file = self._GetTestFilePath(['pinfo_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1237,10 +1237,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     event = tagged_events[3]
     self.assertEqual(event.tag.labels[0], 'Interesting')
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetNumberOfAnalysisReports(self):
     """Tests the GetNumberOfAnalysisReports function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1249,10 +1249,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetNumberOfEventSources(self):
     """Tests the GetNumberOfEventSources function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1261,10 +1261,10 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetSessions(self):
     """Tests the GetSessions function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1273,11 +1273,11 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso.zip'])
   def testGetSortedEvents(self):
     """Tests the GetSortedEvents function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1286,7 +1286,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-    test_file = self._GetTestFilePath(['pinfo_test.json.plaso'])
+    test_file = self._GetTestFilePath(['pinfo_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1297,11 +1297,11 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     # TODO: add test with time range.
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso.zip'])
   def testHasAnalysisReports(self):
     """Tests the HasAnalysisReports function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1310,7 +1310,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-    test_file = self._GetTestFilePath(['pinfo_test.json.plaso'])
+    test_file = self._GetTestFilePath(['pinfo_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1319,11 +1319,11 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso.zip'])
   def testHasErrors(self):
     """Tests the HasErrors function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1331,7 +1331,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-    test_file = self._GetTestFilePath(['pinfo_test.json.plaso'])
+    test_file = self._GetTestFilePath(['pinfo_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1339,11 +1339,11 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso.zip'])
   def testHasEventTags(self):
     """Tests the HasEventTags function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1351,7 +1351,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-    test_file = self._GetTestFilePath(['pinfo_test.json.plaso'])
+    test_file = self._GetTestFilePath(['pinfo_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
@@ -1359,11 +1359,11 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testOpenClose(self):
     """Tests the Open and Close functions."""
     # Read-only of session storage.
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
     storage_file.Close()
@@ -1477,10 +1477,10 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
 
   # TODO: add test for GetEventSources.
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso.zip'])
   def testGetSortedEvents(self):
     """Tests the GetSortedEvents function."""
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.json.plaso.zip'])
 
     timestamps = []
     with zip_file.ZIPStorageFileReader(test_file) as storage_reader:
