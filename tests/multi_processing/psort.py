@@ -23,7 +23,6 @@ from plaso.output import interface as output_interface
 from plaso.output import mediator as output_mediator
 from plaso.output import null
 from plaso.storage import sqlite_file as storage_sqlite_file
-from plaso.storage import zip_file as storage_zip_file
 
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
@@ -408,7 +407,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       shutil.copyfile(storage_file_path, temp_file)
 
-      storage_writer = storage_zip_file.ZIPStorageFileWriter(
+      storage_writer = storage_sqlite_file.SQLiteStorageFileWriter(
           session, temp_file)
 
       counter = test_engine.AnalyzeEvents(
@@ -424,7 +423,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       shutil.copyfile(storage_file_path, temp_file)
 
-      storage_writer = storage_zip_file.ZIPStorageFileWriter(
+      storage_writer = storage_sqlite_file.SQLiteStorageFileWriter(
           session, temp_file)
 
       counter = test_engine.AnalyzeEvents(
@@ -453,7 +452,8 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     output_module = dynamic.DynamicOutputModule(output_mediator_object)
     output_module.SetOutputWriter(output_writer)
 
-    storage_reader = storage_zip_file.ZIPStorageFileReader(storage_file_path)
+    storage_reader = storage_sqlite_file.SQLiteStorageFileReader(
+        storage_file_path)
 
     test_engine = psort.PsortMultiProcessEngine()
     counter = test_engine.ExportEvents(
