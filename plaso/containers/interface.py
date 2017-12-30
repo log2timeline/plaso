@@ -102,11 +102,19 @@ class AttributeContainer(object):
 
       yield attribute_name, attribute_value
 
+  def GetAttributeValuesHash(self):
+    """Retrieves a comparable string of the attribute values.
+
+    Returns:
+      int: hash of comparable string of the attribute values.
+    """
+    return hash(self.GetAttributeValuesString())
+
   def GetAttributeValuesString(self):
     """Retrieves a comparable string of the attribute values.
 
     Returns:
-      int: comparable string of the attribute values.
+      str: comparable string of the attribute values.
     """
     attributes = []
     for attribute_name, attribute_value in sorted(self.__dict__.items()):

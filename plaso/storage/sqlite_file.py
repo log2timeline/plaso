@@ -287,6 +287,30 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     self._cursor.execute(query)
     return bool(self._cursor.fetchone())
 
+  def _ReadEventDataIntoEvent(self, event):
+    """Reads event data into the event.
+
+    This function is intended to offer backwards compatible event behavior.
+
+    Args:
+      event (EventObject): event.
+    """
+    if self.storage_type != definitions.STORAGE_TYPE_SESSION:
+      return
+
+    if hasattr(event, 'event_data_row_identifier'):
+      event_data_identifier = identifiers.SQLTableIdentifier(
+          'event_data', event.event_data_row_identifier)
+      event.SetEventDataIdentifier(event_data_identifier)
+
+      event_data = self._GetAttributeContainerByIndex(
+          'event_data', event.event_data_row_identifier)
+
+      for attribute_name, attribute_value in event_data.GetAttributes():
+        setattr(event, attribute_name, attribute_value)
+
+      del event.event_data_row_identifier
+
   def _ReadStorageMetadata(self):
     """Reads the storage metadata.
 
@@ -606,12 +630,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       EventObject: event.
     """
     for event in self._GetAttributeContainers('event'):
-      if hasattr(event, 'event_data_row_identifier'):
-        event_data_identifier = identifiers.SQLTableIdentifier(
-            'event_data', event.event_data_row_identifier)
-        event.SetEventDataIdentifier(event_data_identifier)
-
-        del event.event_data_row_identifier
+      # TODO: refactor this into psort.
+      self._ReadEventDataIntoEvent(event)
 
       yield event
 
@@ -782,12 +802,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
         'event', filter_expression=filter_expression, order_by='_timestamp')
 
     for event in event_generator:
-      if hasattr(event, 'event_data_row_identifier'):
-        event_data_identifier = identifiers.SQLTableIdentifier(
-            'event_data', event.event_data_row_identifier)
-        event.SetEventDataIdentifier(event_data_identifier)
-
-        del event.event_data_row_identifier
+      # TODO: refactor this into psort.
+      self._ReadEventDataIntoEvent(event)
 
       yield event
 

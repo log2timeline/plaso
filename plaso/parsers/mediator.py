@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import copy
 import logging
 import os
 import time
@@ -47,6 +48,8 @@ class ParserMediator(object):
     self._extra_event_attributes = {}
     self._file_entry = None
     self._knowledge_base = knowledge_base
+    self._last_event_data_hash = None
+    self._last_event_data_identifier = None
     self._mount_path = None
     self._number_of_errors = 0
     self._number_of_event_sources = 0
@@ -415,7 +418,10 @@ class ParserMediator(object):
 
       stat_object = file_entry.GetStat()
       inode_value = getattr(stat_object, 'ino', None)
-      if event.inode is None and inode_value is not None:
+      # TODO: refactor to ProcessEventData.
+      # Note that we use getattr here since event can be either EventObject
+      # or EventData.
+      if getattr(event, 'inode', None) is None and inode_value is not None:
         event.inode = self._GetInode(inode_value)
 
     if not getattr(event, 'display_name', None) and display_name:
@@ -461,6 +467,9 @@ class ParserMediator(object):
 
     self.last_activity_timestamp = time.time()
 
+    self._last_event_data_hash = None
+    self._last_event_data_identifier = None
+
   def ProduceEvents(self, events, query=None):
     """Produces events.
 
@@ -495,11 +504,26 @@ class ParserMediator(object):
       event (EventObject): event.
       event_data (EventData): event data.
     """
-    # TODO: store event data and event seperately.
-    for attribute_name, attribute_value in event_data.GetAttributes():
-      setattr(event, attribute_name, attribute_value)
+    event_data_hash = event_data.GetAttributeValuesHash()
+    if event_data_hash != self._last_event_data_hash:
+      # Make a copy of the event data before adding additional values.
+      event_data = copy.deepcopy(event_data)
 
-    self.ProduceEvent(event)
+      # TODO: refactor to ProcessEventData.
+      self.ProcessEvent(
+          event_data, parser_chain=self.GetParserChain(),
+          file_entry=self._file_entry)
+
+      self._storage_writer.AddEventData(event_data)
+
+      self._last_event_data_hash = event_data_hash
+      self._last_event_data_identifier = event_data.GetIdentifier()
+
+    if self._last_event_data_identifier:
+      event.SetEventDataIdentifier(self._last_event_data_identifier)
+
+    self._storage_writer.AddEvent(event)
+    self._number_of_events += 1
 
   def ProduceExtractionError(self, message, path_spec=None):
     """Produces an extraction error.
@@ -584,6 +608,11 @@ class ParserMediator(object):
       storage_writer (StorageWriter): storage writer.
     """
     self._storage_writer = storage_writer
+
+    # Reset the last event data information. Each storage file should
+    # contain event data for their events.
+    self._last_event_data_hash = None
+    self._last_event_data_identifier = None
 
   def SignalAbort(self):
     """Signals the parsers to abort."""
