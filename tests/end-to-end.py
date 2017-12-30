@@ -1278,6 +1278,9 @@ class OutputTestCase(TestCase):
         test_definition.name, 'output_file')
 
     test_definition.output_format = test_definition_reader.GetConfigValue(
+        test_definition.name, 'output_filter', default='')
+
+    test_definition.output_format = test_definition_reader.GetConfigValue(
         test_definition.name, 'output_format')
 
     test_definition.output_options = test_definition_reader.GetConfigValue(
