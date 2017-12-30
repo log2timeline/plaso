@@ -343,7 +343,7 @@ class EventExtractionWorker(object):
     display_name = mediator.GetDisplayName()
     logging.debug(
         '[ExtractMetadataFromFileEntry] processing file entry: {0:s}'.format(
-        display_name))
+            display_name))
 
     self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
 
