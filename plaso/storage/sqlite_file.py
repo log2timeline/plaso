@@ -298,18 +298,22 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     if self.storage_type != definitions.STORAGE_TYPE_SESSION:
       return
 
-    if hasattr(event, 'event_data_row_identifier'):
-      event_data_identifier = identifiers.SQLTableIdentifier(
-          'event_data', event.event_data_row_identifier)
-      event.SetEventDataIdentifier(event_data_identifier)
+    if not hasattr(event, 'event_data_row_identifier'):
+      return
 
-      event_data = self._GetAttributeContainerByIndex(
-          'event_data', event.event_data_row_identifier)
+    event_data_identifier = identifiers.SQLTableIdentifier(
+        'event_data', event.event_data_row_identifier)
+    event.SetEventDataIdentifier(event_data_identifier)
 
-      for attribute_name, attribute_value in event_data.GetAttributes():
-        setattr(event, attribute_name, attribute_value)
+    event_data = self._GetAttributeContainerByIndex(
+        'event_data', event.event_data_row_identifier)
+    if not event_data:
+      return
 
-      del event.event_data_row_identifier
+    for attribute_name, attribute_value in event_data.GetAttributes():
+      setattr(event, attribute_name, attribute_value)
+
+    del event.event_data_row_identifier
 
   def _ReadStorageMetadata(self):
     """Reads the storage metadata.
