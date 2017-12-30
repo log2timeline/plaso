@@ -20,7 +20,6 @@ from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import manager as parsers_manager
 from plaso.storage import sqlite_file as storage_sqlite_file
-from plaso.storage import zip_file as storage_zip_file
 
 
 class ExtractionTool(
@@ -121,14 +120,12 @@ class ExtractionTool(
       session (Session): session.
 
     Returns:
-      StorageWriter: storage writer.
+      StorageWriter: storage writer or None if the storage writer cannot be
+          opened or the storage format is not supported.
     """
-    if self._storage_format == definitions.STORAGE_FORMAT_ZIP:
-      return storage_zip_file.ZIPStorageFileWriter(
+    if self._storage_format == definitions.STORAGE_FORMAT_SQLITE:
+      return storage_sqlite_file.SQLiteStorageFileWriter(
           session, self._storage_file_path)
-
-    return storage_sqlite_file.SQLiteStorageFileWriter(
-        session, self._storage_file_path)
 
   def _ParsePerformanceOptions(self, options):
     """Parses the performance options.

@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 from plaso.storage import sqlite_file as storage_sqlite_file
-from plaso.storage import zip_file as storage_zip_file
 
 
 class StorageFactory(object):
@@ -24,9 +23,6 @@ class StorageFactory(object):
     if storage_sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
       return storage_sqlite_file.SQLiteStorageFile()
 
-    elif storage_zip_file.ZIPStorageFile.CheckSupportedFormat(path):
-      return storage_zip_file.ZIPStorageFile()
-
   @classmethod
   def CreateStorageReaderForFile(cls, path):
     """Creates a storage reader based on the file.
@@ -40,9 +36,6 @@ class StorageFactory(object):
     """
     if storage_sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
       return storage_sqlite_file.SQLiteStorageFileReader(path)
-
-    elif storage_zip_file.ZIPStorageFile.CheckSupportedFormat(path):
-      return storage_zip_file.ZIPStorageFileReader(path)
 
   @classmethod
   def CreateStorageWriterForFile(cls, session, path):
@@ -58,6 +51,3 @@ class StorageFactory(object):
     """
     if storage_sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
       return storage_sqlite_file.SQLiteStorageFileWriter(session, path)
-
-    elif storage_zip_file.ZIPStorageFile.CheckSupportedFormat(path):
-      return storage_zip_file.ZIPStorageFileWriter(session, path)
