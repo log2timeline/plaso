@@ -1,0 +1,5 @@
+datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
+2014-02-06T15:16:30+00:00,Content Modification Time,LOG,Log File,[process  pid: 2085] Test message with single character day,syslog,OS:/tmp/test/test_data/syslog,-
+2014-11-18T01:15:43+00:00,Content Modification Time,LOG,Log File,[---] last message repeated 5 times ---,syslog,OS:/tmp/test/test_data/syslog,repeated
+2014-11-18T08:30:20+00:00,Content Modification Time,LOG,Log File,[kernel] [997.390602] sda2: rw=0  want=65  limit=2,syslog,OS:/tmp/test/test_data/syslog,-
+2014-11-18T08:31:20+00:00,Content Modification Time,LOG,Log File,[kernel] [998.390602] sda2: rw=0  want=66  limit=2,syslog,OS:/tmp/test/test_data/syslog,-
