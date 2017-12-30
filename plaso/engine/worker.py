@@ -340,6 +340,11 @@ class EventExtractionWorker(object):
     if data_stream and not data_stream.IsDefault():
       return
 
+    display_name = mediator.GetDisplayName()
+    logging.debug(
+        '[ExtractMetadataFromFileEntry] processing file entry: {0:s}'.format(
+        display_name))
+
     self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
 
     if self._processing_profiler:
@@ -644,6 +649,12 @@ class EventExtractionWorker(object):
       data_stream (dfvfs.DataStream): data stream or None if the file entry
           has no data stream.
     """
+    display_name = mediator.GetDisplayName()
+    data_stream_name = getattr(data_stream, 'name', '') or ''
+    logging.debug((
+        '[ProcessFileEntryDataStream] processing data stream: "{0:s}" of '
+        'file entry: {1:s}').format(data_stream_name, display_name))
+
     mediator.ClearEventAttributes()
 
     if data_stream and self._analyzers:
