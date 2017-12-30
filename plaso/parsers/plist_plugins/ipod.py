@@ -8,7 +8,6 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
@@ -72,9 +71,8 @@ class IPodPlugin(interface.PlistPlugin):
 
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
           time_elements_tuple=time_elements_tuple)
-
-      event = time_events.TimestampEvent(
-          timestamp, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
