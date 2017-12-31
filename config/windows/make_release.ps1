@@ -9,15 +9,22 @@ If ( $Architecture -eq "win32" )
 {
 	$Python = "C:\Python27 (x86)\python.exe"
 }
+
 $PyInstaller = "pyinstaller.exe"
 
 If (-Not (Test-Path (Get-Command $PyInstaller).Path))
 {
 	$PyInstaller = "pyinstaller\pyinstaller.py"
 
-	If (-Not (Test-Path (Get-Command $PyInstaller).Path))
+	If (-Not (Test-Path $PyInstaller))
 	{
 	    Write-Host "Missing PyInstaller." -foreground Red
+
+	    Exit 1
+	}
+	If (-Not (Test-Path (Get-Command $Python).Path))
+	{
+	    Write-Host "Missing Python: ${Python}." -foreground Red
 
 	    Exit 1
 	}
