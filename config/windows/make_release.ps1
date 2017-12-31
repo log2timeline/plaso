@@ -28,7 +28,7 @@ If (-Not (Test-Path $PyInstaller))
 
 	    Exit 1
 	}
-	If (-Not (Test-Path (Get-Command $Python).Path))
+	If (-Not (Test-Path $Python))
 	{
 	    Write-Host "Missing Python: ${Python}." -foreground Red
 
