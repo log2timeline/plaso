@@ -3,19 +3,13 @@
 
 $Architecture = "amd64"
 
-$Python = "C:\Python27\python.exe"
-
-If ( $Architecture -eq "win32" )
-{
-	$Python = "& 'C:\Python27 (x86)\python.exe'"
-}
-
 Try
 {
 	# -ErrorAction Stop causes Get-Command to raise a non-terminating
 	# exception. A non-terminating exception will not be caught by
 	# try-catch.
 	$PyInstaller = (Get-Command "pyinstaller.exe" -ErrorAction Stop).Path
+	$Python = ""
 }
 Catch
 {
@@ -32,13 +26,19 @@ If (-Not (Test-Path $PyInstaller))
 
 	    Exit 1
 	}
+	$Python = "C:\Python27\python.exe"
+
+	If ( $Architecture -eq "win32" )
+	{
+		# Note that the backtick here is used as escape character.
+		$Python = "C:\Python27` (x86)\python.exe"
+	}
 	If (-Not (Test-Path $Python))
 	{
 	    Write-Host "Missing Python: ${Python}." -foreground Red
 
 	    Exit 1
 	}
-	$PyInstaller = "${Python} ${PyInstaller}"
 }
 
 $Version = & Invoke-Expression -Command "git describe --tags --abbrev=0"
@@ -61,31 +61,76 @@ If (Test-Path "dist")
     rm -Force -Recurse "dist"
 }
 
-Invoke-Expression -Command "${PyInstaller} --hidden-import artifacts --onedir tools\image_export.py"
+$Arguments = "--hidden-import artifacts --onedir tools\image_export.py"
+
+If ( $Python -ne "" )
+{
+	Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments}"
+}
+Else
+{
+	Invoke-Expression -Command "${PyInstaller} ${Arguments}"
+}
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\image_export.py." -foreground Red
     Exit 1
 }
 
-Invoke-Expression -Command "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\log2timeline.py"
+$Arguments = "--hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\log2timeline.py"
+
+If ( $Python -ne "" )
+{
+	Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments}"
+}
+Else
+{
+	Invoke-Expression -Command "${PyInstaller} ${Arguments}"
+}
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\log2timeline.py." -foreground Red
     Exit 1
 }
 
-Invoke-Expression -Command "${PyInstaller} --hidden-import artifacts --onedir tools\pinfo.py"
+$Arguments = "--hidden-import artifacts --onedir tools\pinfo.py"
+
+If ( $Python -ne "" )
+{
+	Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments}"
+}
+Else
+{
+	Invoke-Expression -Command "${PyInstaller} ${Arguments}"
+}
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\pinfo.py." -foreground Red
     Exit 1
 }
 
-Invoke-Expression -Command "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psort.py"
+$Arguments = "--hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psort.py"
+
+If ( $Python -ne "" )
+{
+	Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments}"
+}
+Else
+{
+	Invoke-Expression -Command "${PyInstaller} ${Arguments}"
+}
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\psort.py." -foreground Red
     Exit 1
 }
 
-Invoke-Expression -Command "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psteal.py"
+$Arguments = "--hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psteal.py"
+
+If ( $Python -ne "" )
+{
+	Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments}"
+}
+Else
+{
+	Invoke-Expression -Command "${PyInstaller} ${Arguments}"
+}
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\psteal.py." -foreground Red
     Exit 1
