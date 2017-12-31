@@ -1,14 +1,30 @@
 # Scripts to build a onedir PyInstaller versions of the plaso tools.
 # The tools are bundled into a single ZIP file.
 
+$Architecture = "amd64"
+
+$Python = "C:\Python27\python.exe"
+
+If ( $Architecture -eq "win32" )
+{
+	$Python = "C:\Python27 (x86)\python.exe"
+}
 $PyInstaller = "pyinstaller.exe"
 
 If (-Not (Test-Path (Get-Command $PyInstaller).Path))
 {
-    Write-Host "Missing PyInstaller." -foreground Red
+	$PyInstaller = "pyinstaller\pyinstaller.py"
 
-    Exit 1
+	If (-Not (Test-Path (Get-Command $PyInstaller).Path))
+	{
+	    Write-Host "Missing PyInstaller." -foreground Red
+
+	    Exit 1
+	}
+	$PyInstaller = "${Python} ${PyInstaller}"
 }
+
+$Version = & Invoke-Expression "git describe --tags --abbrev=0"
 
 # Remove support for hachoir which is GPLv2 and cannot be distributed
 # in binary form. Leave the formatter because it does not link in the
@@ -100,6 +116,6 @@ git.exe clone https://github.com/ForensicArtifacts/artifacts dist\artifacts
 mkdir dist\plaso\artifacts
 xcopy /q /y dist\artifacts\data\* dist\plaso\artifacts
 
-# Makes plaso.zip
+# Makes plaso-<version>-<architecture>.zip
 Add-Type -assembly "system.io.compression.filesystem"
-[io.compression.zipfile]::CreateFromDirectory("$(pwd | % Path)\dist\plaso", "$(pwd| % Path)\plaso.zip")
+[io.compression.zipfile]::CreateFromDirectory("$(pwd | % Path)\dist\plaso", "$(pwd| % Path)\plaso-${Version}-${Architecture}.zip")
