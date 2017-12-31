@@ -847,6 +847,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     if not path:
       raise ValueError('Missing path.')
 
+    path = os.path.abspath(path)
+
     connection = sqlite3.connect(
         path, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
 

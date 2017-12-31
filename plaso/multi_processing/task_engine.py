@@ -485,6 +485,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     # recreated after the worker process has been started.
     for handler in logging.root.handlers:
       logging.root.removeHandler(handler)
+      handler.close()
 
     process.start()
 
