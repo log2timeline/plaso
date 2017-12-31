@@ -12,8 +12,9 @@ If ( $Architecture -eq "win32" )
 
 Try
 {
-	# -ErrorAction Stop causes Get-Command to raise a non-terminal
-	# exception. A non-terminal exception will not be caught.
+	# -ErrorAction Stop causes Get-Command to raise a non-terminating
+	# exception. A non-terminating exception will not be caught by
+	# try-catch.
 	$PyInstaller = (Get-Command "pyinstaller.exe" -ErrorAction Stop).Path
 }
 Catch
