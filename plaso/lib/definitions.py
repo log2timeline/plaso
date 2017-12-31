@@ -85,7 +85,7 @@ STORAGE_FORMAT_SQLITE = 'sqlite'
 
 STORAGE_FORMATS = frozenset([STORAGE_FORMAT_SQLITE])
 
-DEFAULT_STORAGE_FORMAT = definitions.STORAGE_FORMAT_SQLITE
+DEFAULT_STORAGE_FORMAT = STORAGE_FORMAT_SQLITE
 
 # The session storage contains the results of one or more sessions.
 # A typical session is e.g. a single run of a tool (log2timeline.py).
