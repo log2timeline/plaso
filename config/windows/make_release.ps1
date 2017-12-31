@@ -10,9 +10,15 @@ If ( $Architecture -eq "win32" )
 	$Python = "C:\Python27 (x86)\python.exe"
 }
 
-$PyInstaller = "pyinstaller.exe"
-
-If (-Not (Test-Path (Get-Command $PyInstaller).Path))
+Try
+{
+	$PyInstaller = (Get-Command "pyinstaller.exe").Path
+}
+Catch
+{
+	$PyInstaller = "pyinstaller.exe"
+}
+If (-Not (Test-Path $PyInstaller))
 {
 	$PyInstaller = "pyinstaller\pyinstaller.py"
 
