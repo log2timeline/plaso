@@ -41,7 +41,7 @@ If (-Not (Test-Path $PyInstaller))
 	$PyInstaller = "${Python} ${PyInstaller}"
 }
 
-$Version = & Invoke-Expression "git describe --tags --abbrev=0"
+$Version = & Invoke-Expression -Command "git describe --tags --abbrev=0"
 
 # Remove support for hachoir which is GPLv2 and cannot be distributed
 # in binary form. Leave the formatter because it does not link in the
@@ -61,31 +61,31 @@ If (Test-Path "dist")
     rm -Force -Recurse "dist"
 }
 
-Invoke-Expression "${PyInstaller} --hidden-import artifacts --onedir tools\image_export.py"
+Invoke-Expression -Command "& '${PyInstaller} --hidden-import artifacts --onedir tools\image_export.py'"
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\image_export.py." -foreground Red
     Exit 1
 }
 
-Invoke-Expression "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\log2timeline.py"
+Invoke-Expression -Command "& '${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\log2timeline.py'"
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\log2timeline.py." -foreground Red
     Exit 1
 }
 
-Invoke-Expression "${PyInstaller} --hidden-import artifacts --onedir tools\pinfo.py"
+Invoke-Expression -Command "& '${PyInstaller} --hidden-import artifacts --onedir tools\pinfo.py'"
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\pinfo.py." -foreground Red
     Exit 1
 }
 
-Invoke-Expression "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psort.py"
+Invoke-Expression -Command "& '${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psort.py'"
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\psort.py." -foreground Red
     Exit 1
 }
 
-Invoke-Expression "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psteal.py"
+Invoke-Expression -Command "& '${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psteal.py'"
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\psteal.py." -foreground Red
     Exit 1
