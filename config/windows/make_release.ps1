@@ -3,6 +3,16 @@
 
 $Architecture = "amd64"
 
+If ( $Architecture -eq "win32" )
+{
+	# Note that the backtick here is used as escape character.
+	$PythonPath = "C:\Python27` (x86)"
+}
+Else
+{
+	$PythonPath = "C:\Python27"
+}
+
 Try
 {
 	# -ErrorAction Stop causes Get-Command to raise a non-terminating
@@ -26,13 +36,8 @@ If (-Not (Test-Path $PyInstaller))
 
 	    Exit 1
 	}
-	$Python = "C:\Python27\python.exe"
+	$Python = "${PythonPath}\python.exe"
 
-	If ( $Architecture -eq "win32" )
-	{
-		# Note that the backtick here is used as escape character.
-		$Python = "C:\Python27` (x86)\python.exe"
-	}
 	If (-Not (Test-Path $Python))
 	{
 	    Write-Host "Missing Python: ${Python}." -foreground Red
@@ -156,7 +161,7 @@ xcopy /q /y /s dist\pinfo\* dist\plaso
 xcopy /q /y /s dist\psort\* dist\plaso
 xcopy /q /y /s dist\psteal\* dist\plaso
 xcopy /q /y data\* dist\plaso\data
-xcopy /q /y C:\Python27\Lib\site-packages\zmq\libzmq.pyd dist\plaso
+xcopy /q /y "${PythonPath}\Lib\site-packages\zmq\libzmq.pyd" dist\plaso
 
 # Copy the license files of the dependencies
 git.exe clone https://github.com/log2timeline/l2tdevtools dist\l2tdevtools
