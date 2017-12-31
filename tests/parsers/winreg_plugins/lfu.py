@@ -31,7 +31,7 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromString(time_string)
+    filetime.CopyFromDateTimeString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
         'Session Manager', key_path=key_path,
         last_written_time=filetime.timestamp, offset=153)
@@ -152,7 +152,7 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromString(time_string)
+    filetime.CopyFromDateTimeString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
         'BootVerificationProgram', key_path=key_path,
         last_written_time=filetime.timestamp, offset=153)

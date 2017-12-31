@@ -61,7 +61,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     """
     key_path = '\\ControlSet001\\Control\\Session Manager\\AppCompatCache'
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromString(time_string)
+    filetime.CopyFromDateTimeString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
         'AppCompatCache', key_path=key_path,
         last_written_time=filetime.timestamp, offset=1456)

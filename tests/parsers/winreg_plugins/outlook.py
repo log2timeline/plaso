@@ -31,7 +31,7 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromString(time_string)
+    filetime.CopyFromDateTimeString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
         'Search', key_path=key_path, last_written_time=filetime.timestamp,
         offset=1456)
@@ -96,7 +96,7 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
 #     time_string = '2012-08-28 09:23:49.002031'
 #
 #     filetime = dfdatetime_filetime.Filetime()
-#     filetime.CopyFromString(time_string)
+#     filetime.CopyFromDateTimeString(time_string)
 #     registry_key = dfwinreg_fake.FakeWinRegistryKey(
 #         'Catalog', key_path=key_path, last_written_time=filetime.timestamp,
 #         offset=3421)
