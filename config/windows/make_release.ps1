@@ -12,16 +12,18 @@ If ( $Architecture -eq "win32" )
 
 Try
 {
-	$PyInstaller = (Get-Command "pyinstaller.exe").Path
+	# -ErrorAction Stop causes Get-Command to raise a non-terminal
+	# exception. A non-terminal exception will not be caught.
+	$PyInstaller = (Get-Command "pyinstaller.exe" -ErrorAction Stop).Path
 }
-Catch [System.Management.Automation.CommandNotFoundException]
+Catch
 {
 	$PyInstaller = "pyinstaller.exe"
 }
 
 If (-Not (Test-Path $PyInstaller))
 {
-	$PyInstaller = "pyinstaller\pyinstaller.py"
+	$PyInstaller = "..\pyinstaller\pyinstaller.py"
 
 	If (-Not (Test-Path $PyInstaller))
 	{
