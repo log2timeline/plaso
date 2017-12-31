@@ -14,10 +14,11 @@ Try
 {
 	$PyInstaller = (Get-Command "pyinstaller.exe").Path
 }
-Catch
+Catch [System.Management.Automation.CommandNotFoundException]
 {
 	$PyInstaller = "pyinstaller.exe"
 }
+
 If (-Not (Test-Path $PyInstaller))
 {
 	$PyInstaller = "pyinstaller\pyinstaller.py"
