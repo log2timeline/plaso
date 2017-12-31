@@ -29,8 +29,8 @@ from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.multi_processing import psort
 from plaso.multi_processing import task_engine as multi_process_engine
-from plaso.storage import factory as storage_factory
 from plaso.parsers import manager as parsers_manager
+from plaso.storage import factory as storage_factory
 
 
 class PstealTool(
@@ -286,7 +286,8 @@ class PstealTool(
         preferred_time_zone=self._preferred_time_zone,
         preferred_year=self._preferred_year)
 
-    storage_writer = self._CreateStorageWriter(session)
+    storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
+        self._storage_format, session, self._storage_file_path)
 
     single_process_mode = self._single_process_mode
     if source_type == dfvfs_definitions.SOURCE_TYPE_FILE:

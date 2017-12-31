@@ -22,7 +22,7 @@ from plaso.output import dynamic
 from plaso.output import interface as output_interface
 from plaso.output import mediator as output_mediator
 from plaso.output import null
-from plaso.storage import sqlite_file as storage_sqlite_file
+from plaso.storage import factory as storage_factory
 
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
@@ -245,7 +245,8 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     Args:
       path (str): path.
     """
-    storage_file = storage_sqlite_file.SQLiteStorageFile()
+    storage_file = storage_factory.StorageFactory.CreateStorageFile(
+        definitions.DEFAULT_STORAGE_FORMAT)
     storage_file.Open(path=path, read_only=False)
 
     # TODO: add preprocessing information.
@@ -269,8 +270,8 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       self._CreateTestStorageFile(temp_file)
 
-      storage_writer = storage_sqlite_file.SQLiteStorageFileWriter(
-          session, temp_file)
+      storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
+          definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
 
       storage_writer.StartTaskStorage()
 
@@ -287,8 +288,8 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       self._CreateTestStorageFile(temp_file)
 
-      storage_writer = storage_sqlite_file.SQLiteStorageFileWriter(
-          session, temp_file)
+      storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
+          definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
 
       storage_writer.StartTaskStorage()
 
@@ -327,7 +328,8 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       self._CreateTestStorageFile(temp_file)
 
-      storage_reader = storage_sqlite_file.SQLiteStorageFileReader(temp_file)
+      storage_reader = (
+          storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
       storage_reader.ReadPreprocessingInformation(knowledge_base_object)
 
       test_engine._ExportEvents(
@@ -359,7 +361,8 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       self._CreateTestStorageFile(temp_file)
 
-      storage_reader = storage_sqlite_file.SQLiteStorageFileReader(temp_file)
+      storage_reader = (
+          storage_factory.StorageFactory.CreateStorageReaderForFile(temp_file))
       storage_reader.ReadPreprocessingInformation(knowledge_base_object)
 
       test_engine._ExportEvents(storage_reader, output_module)
@@ -407,8 +410,8 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       shutil.copyfile(storage_file_path, temp_file)
 
-      storage_writer = storage_sqlite_file.SQLiteStorageFileWriter(
-          session, temp_file)
+      storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
+          definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
 
       counter = test_engine.AnalyzeEvents(
           knowledge_base_object, storage_writer, output_module, data_location,
@@ -423,8 +426,8 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       temp_file = os.path.join(temp_directory, 'storage.plaso')
       shutil.copyfile(storage_file_path, temp_file)
 
-      storage_writer = storage_sqlite_file.SQLiteStorageFileWriter(
-          session, temp_file)
+      storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
+          definitions.DEFAULT_STORAGE_FORMAT, session, temp_file)
 
       counter = test_engine.AnalyzeEvents(
           knowledge_base_object, storage_writer, data_location,
@@ -452,7 +455,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     output_module = dynamic.DynamicOutputModule(output_mediator_object)
     output_module.SetOutputWriter(output_writer)
 
-    storage_reader = storage_sqlite_file.SQLiteStorageFileReader(
+    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         storage_file_path)
 
     test_engine = psort.PsortMultiProcessEngine()
