@@ -37,27 +37,27 @@ class DockerJSONContainerLogEventData(events.EventData):
     self.log_source = None
 
 
-class DockerJSONContainerEvent(time_events.TimestampEvent):
-  """Event parsed from a Docker container's configuration file.
+class DockerJSONContainerEventData(events.EventData):
+  """Docker container's configuration file event data.
 
   Attributes:
     action (str): whether the container was created, started, or finished.
-    container_id (str): identifier of the container (sha256).
+    container_id (str): identifier of the container (SHA256).
     container_name (str): name of the container.
   """
 
   DATA_TYPE = 'docker:json:container'
 
-  def __init__(self, timestamp, event_type, attributes):
-    super(DockerJSONContainerEvent, self).__init__(
-        timestamp, event_type)
-    self.container_id = attributes['container_id']
-    self.container_name = attributes['container_name']
-    self.action = attributes['action']
+  def __init__(self):
+    """Initializes event data."""
+    super(DockerJSONContainerEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.container_id = None
+    self.container_name = None
+    self.action = None
 
 
-class DockerJSONLayerEvent(time_events.TimestampEvent):
-  """Event parsed from a Docker filesystem layer configuration file
+class DockerJSONLayerEventData(events.EventData):
+  """Docker filesystem layer configuration file event data.
 
   Attributes:
     command: the command used which made Docker create a new layer
@@ -66,11 +66,11 @@ class DockerJSONLayerEvent(time_events.TimestampEvent):
 
   DATA_TYPE = 'docker:json:layer'
 
-  def __init__(self, timestamp, event_type, attributes):
-    super(DockerJSONLayerEvent, self).__init__(
-        timestamp, event_type)
-    self.command = attributes['command']
-    self.layer_id = attributes['layer_id']
+  def __init__(self):
+    """Initializes event data."""
+    super(DockerJSONLayerEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.command = None
+    self.layer_id = None
 
 
 class DockerJSONParser(interface.FileObjectParser):
@@ -116,8 +116,6 @@ class DockerJSONParser(interface.FileObjectParser):
       UnableToParseFile: when the file is not a valid layer config file.
     """
     json_dict = json.load(file_object)
-    layer_id_from_path = self._GetIDFromPath(parser_mediator)
-    event_attributes = {'layer_id': layer_id_from_path}
 
     if 'docker_version' not in json_dict:
       raise errors.UnableToParseFile(
@@ -125,17 +123,19 @@ class DockerJSONParser(interface.FileObjectParser):
           '\'docker_version\' key.')
 
     if 'created' in json_dict:
-      timestamp = timelib.Timestamp.FromTimeString(json_dict['created'])
       layer_creation_command_array = [
           x.strip() for x in json_dict['container_config']['Cmd']]
       layer_creation_command = ' '.join(layer_creation_command_array).replace(
           '\t', '')
 
-      event_attributes['command'] = layer_creation_command
+      event_data = DockerJSONLayerEventData()
+      event_data.command = layer_creation_command
+      event_data.layer_id = self._GetIDFromPath(parser_mediator)
 
-      event = DockerJSONLayerEvent(
-          timestamp, definitions.TIME_DESCRIPTION_ADDED, event_attributes)
-      parser_mediator.ProduceEvent(event)
+      timestamp = timelib.Timestamp.FromTimeString(json_dict['created'])
+      event = time_events.TimestampEvent(
+          timestamp, definitions.TIME_DESCRIPTION_ADDED)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseContainerConfigJSON(self, parser_mediator, file_object):
     """Extracts events from a Docker container configuration file.
@@ -152,14 +152,13 @@ class DockerJSONParser(interface.FileObjectParser):
       UnableToParseFile: when the file is not a valid container config file.
     """
     json_dict = json.load(file_object)
-    container_id_from_path = self._GetIDFromPath(parser_mediator)
-    event_attributes = {'container_id': container_id_from_path}
 
     if 'Driver' not in json_dict:
       raise errors.UnableToParseFile(
           'not a valid Docker container configuration file, ' 'missing '
           '\'Driver\' key.')
 
+    container_id_from_path = self._GetIDFromPath(parser_mediator)
     container_id_from_json = json_dict.get('ID', None)
     if not container_id_from_json:
       raise errors.UnableToParseFile(
@@ -175,35 +174,44 @@ class DockerJSONParser(interface.FileObjectParser):
               container_id_from_json, container_id_from_path))
 
     if 'Config' in json_dict and 'Hostname' in json_dict['Config']:
-      event_attributes['container_name'] = json_dict['Config']['Hostname']
+      container_name = json_dict['Config']['Hostname']
     else:
-      event_attributes['container_name'] = 'Unknown container name'
+      container_name = 'Unknown container name'
+
+    event_data = DockerJSONContainerEventData()
+    event_data.container_id = container_id_from_path
+    event_data.container_name = container_name
 
     if 'State' in json_dict:
       if 'StartedAt' in json_dict['State']:
+        event_data.action = 'Container Started'
+
         timestamp = timelib.Timestamp.FromTimeString(
             json_dict['State']['StartedAt'])
-        event_attributes['action'] = 'Container Started'
-        parser_mediator.ProduceEvent(DockerJSONContainerEvent(
-            timestamp, definitions.TIME_DESCRIPTION_START, event_attributes))
+        event = time_events.TimestampEvent(
+            timestamp, definitions.TIME_DESCRIPTION_START)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
+
       if 'FinishedAt' in json_dict['State']:
         if json_dict['State']['FinishedAt'] != '0001-01-01T00:00:00Z':
+          event_data.action = 'Container Finished'
+
           # If the timestamp is 0001-01-01T00:00:00Z, the container
           # is still running, so we don't generate a Finished event
-          event_attributes['action'] = 'Container Finished'
           timestamp = timelib.Timestamp.FromTimeString(
               json_dict['State']['FinishedAt'])
-          parser_mediator.ProduceEvent(DockerJSONContainerEvent(
-              timestamp, definitions.TIME_DESCRIPTION_END, event_attributes))
+          event = time_events.TimestampEvent(
+              timestamp, definitions.TIME_DESCRIPTION_END)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
 
     created_time = json_dict.get('Created', None)
     if created_time:
+      event_data.action = 'Container Created'
+
       timestamp = timelib.Timestamp.FromTimeString(created_time)
-      event_attributes['action'] = 'Container Created'
-      parser_mediator.ProduceEvent(
-          DockerJSONContainerEvent(
-              timestamp, definitions.TIME_DESCRIPTION_ADDED, event_attributes)
-      )
+      event = time_events.TimestampEvent(
+          timestamp, definitions.TIME_DESCRIPTION_ADDED)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseContainerLogJSON(self, parser_mediator, file_object):
     """Extract events from a Docker container log files.

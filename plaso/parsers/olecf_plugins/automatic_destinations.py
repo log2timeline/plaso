@@ -12,6 +12,7 @@ from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import uuid_time as dfdatetime_uuid_time
 
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import binary
@@ -22,8 +23,8 @@ from plaso.parsers import winlnk
 from plaso.parsers.olecf_plugins import interface
 
 
-class AutomaticDestinationsDestListEntryEvent(time_events.DateTimeValuesEvent):
-  """Convenience class for an .automaticDestinations-ms DestList entry event.
+class AutomaticDestinationsDestListEntryEventData(events.EventData):
+  """.automaticDestinations-ms DestList entry event data.
 
   Attributes:
     birth_droid_file_identifier (str): birth droid file identifier.
@@ -39,40 +40,19 @@ class AutomaticDestinationsDestListEntryEvent(time_events.DateTimeValuesEvent):
 
   DATA_TYPE = 'olecf:dest_list:entry'
 
-  def __init__(
-      self, date_time, date_time_description, entry_offset, dest_list_entry,
-      droid_volume_identifier, droid_file_identifier,
-      birth_droid_volume_identifier, birth_droid_file_identifier):
-    """Initializes an event.
-
-    Args:
-      date_time (dfdatetime.DateTimeValues): date and time values.
-      date_time_description (str): description of the meaning of the date
-          and time values.
-      entry_offset (int): offset of the DestList entry relative to the start of
-          the DestList stream.
-      droid_volume_identifier (str): droid volume identifier.
-      droid_file_identifier (str): droid file identifier.
-      birth_droid_volume_identifier (str): birth droid volume identifier.
-      birth_droid_file_identifier (str): birth droid file identifier.
-      dest_list_entry (construct.Struct): DestList entry.
-    """
-    # TODO: move to parser plugin.
-    hostname = binary.ByteStreamCopyToString(
-        dest_list_entry.hostname, codepage='ascii')
-    path = binary.UTF16StreamCopyToString(dest_list_entry.path)
-
-    super(AutomaticDestinationsDestListEntryEvent, self).__init__(
-        date_time, date_time_description)
-    self.birth_droid_file_identifier = birth_droid_file_identifier
-    self.birth_droid_volume_identifier = birth_droid_volume_identifier
-    self.droid_file_identifier = droid_file_identifier
-    self.droid_volume_identifier = droid_volume_identifier
-    self.entry_number = dest_list_entry.entry_number
-    self.hostname = hostname
-    self.offset = entry_offset
-    self.path = path
-    self.pin_status = dest_list_entry.pin_status
+  def __init__(self):
+    """Initializes event data."""
+    super(AutomaticDestinationsDestListEntryEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.birth_droid_file_identifier = None
+    self.birth_droid_volume_identifier = None
+    self.droid_file_identifier = None
+    self.droid_volume_identifier = None
+    self.entry_number = None
+    self.hostname = None
+    self.offset = None
+    self.path = None
+    self.pin_status = None
 
 
 class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
@@ -250,11 +230,21 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
         date_time = dfdatetime_filetime.Filetime(
             timestamp=entry.last_modification_time)
 
-      event = AutomaticDestinationsDestListEntryEvent(
-          date_time, definitions.TIME_DESCRIPTION_MODIFICATION, entry_offset,
-          entry, droid_volume_identifier, droid_file_identifier,
-          birth_droid_volume_identifier, birth_droid_file_identifier)
-      parser_mediator.ProduceEvent(event)
+      event_data = AutomaticDestinationsDestListEntryEventData()
+      event_data.birth_droid_file_identifier = birth_droid_file_identifier
+      event_data.birth_droid_volume_identifier = birth_droid_volume_identifier
+      event_data.droid_file_identifier = droid_file_identifier
+      event_data.droid_volume_identifier = droid_volume_identifier
+      event_data.entry_number = entry.entry_number
+      event_data.hostname = binary.ByteStreamCopyToString(
+          entry.hostname, codepage='ascii')
+      event_data.offset = entry_offset
+      event_data.path = binary.UTF16StreamCopyToString(entry.path)
+      event_data.pin_status = entry.pin_status
+
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
       entry_offset = olecf_item.get_offset()
 
