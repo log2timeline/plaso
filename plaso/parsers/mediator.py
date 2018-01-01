@@ -136,8 +136,6 @@ class ParserMediator(object):
     if not file_entry:
       return
 
-
-
     stat_object = file_entry.GetStat()
 
     posix_time = getattr(stat_object, 'crtime', None)
