@@ -12,6 +12,7 @@ from plaso.cli import pinfo_tool
 from plaso.lib import errors
 from plaso.lib import timelib
 
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
@@ -31,6 +32,8 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
   # TODO: add test for _PrintTasksInformation.
   # TODO: add test for _PrintStorageInformationAsText.
 
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
   def testCompareStores(self):
     """Tests the CompareStores function."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
@@ -72,6 +75,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     # TODO: check output.
     # TODO: improve test coverage.
 
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
@@ -89,6 +93,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 
     # TODO: improve test coverage.
 
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
   def testPrintStorageInformationAsText(self):
     """Tests the _PrintStorageInformationAsText function."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
@@ -216,6 +221,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     # differences.
     self.assertEqual(output.split(b'\n'), expected_output.split(b'\n'))
 
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
   def testPrintStorageInformationAsJSON(self):
     """Tests the _PrintStorageInformationAsJSON function."""
     test_filename = 'pinfo_test.json.plaso'

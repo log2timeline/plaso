@@ -881,7 +881,9 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     self._is_open = True
     self._read_only = read_only
 
-    if not read_only:
+    if read_only:
+      self._ReadStorageMetadata()
+    else:
       # self._cursor.execute('PRAGMA journal_mode=MEMORY')
 
       # Turn off insert transaction integrity since we want to do bulk insert.
