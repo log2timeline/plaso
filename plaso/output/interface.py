@@ -37,6 +37,7 @@ class OutputModule(object):
     """
     event_identifier = event.GetIdentifier()
     event_identifier_string = event_identifier.CopyToString()
+    print("E", event.CopyToDict())
     error_message = (
         'Event: {0!s} data type: {1:s} display name: {2:s} '
         'parser chain: {3:s} with error: {4:s}').format(

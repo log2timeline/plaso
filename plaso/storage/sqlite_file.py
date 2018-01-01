@@ -306,7 +306,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     event.SetEventDataIdentifier(event_data_identifier)
 
     event_data = self._GetAttributeContainerByIndex(
-        'event_data', event.event_data_row_identifier)
+        'event_data', event.event_data_row_identifier - 1)
     if not event_data:
       return
 
@@ -719,10 +719,10 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     Returns:
       int: number of analysis reports.
     """
-    if not self._HasTable('analysis_reports'):
+    if not self._HasTable('analysis_report'):
       return 0
 
-    query = 'SELECT COUNT(*) FROM analysis_reports'
+    query = 'SELECT COUNT(*) FROM analysis_report'
     self._cursor.execute(query)
 
     row = self._cursor.fetchone()
@@ -744,7 +744,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     number_of_event_sources = row[0]
 
     number_of_event_sources += self._GetNumberOfSerializedAttributeContainers(
-        'event_sources')
+        'event_source')
     return number_of_event_sources
 
   def GetSessions(self):
@@ -841,7 +841,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     Returns:
       bool: True if the store contains event tags.
     """
-    query = 'SELECT COUNT(*) FROM event_tags'
+    query = 'SELECT COUNT(*) FROM event_tag'
     self._cursor.execute(query)
 
     row = self._cursor.fetchone()
