@@ -24,7 +24,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     storage_type (str): storage type.
   """
 
-  _FORMAT_VERSION = 20170707
+  _FORMAT_VERSION = 20180101
 
   # The earliest format version, stored in-file, that this class
   # is able to read.
