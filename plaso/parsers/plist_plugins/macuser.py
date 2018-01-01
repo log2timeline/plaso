@@ -96,7 +96,7 @@ class MacUserPlugin(interface.PlistPlugin):
         continue
 
       for dict_elements in xml_policy.iterfind('dict'):
-        key_values = [value.text for value in dict_elements.getchildren()]
+        key_values = [value.text for value in iter(dict_elements)]
         # Taking a list and converting it to a dict, using every other item
         # as the key and the other one as the value.
         policy_dict = dict(zip(key_values[0::2], key_values[1::2]))
@@ -109,7 +109,7 @@ class MacUserPlugin(interface.PlistPlugin):
         except ValueError:
           date_time = None
           parser_mediator.ProduceExtractionError(
-              'unable to parse passworkd last set time string: {0:s}'.format(
+              'unable to parse password last set time string: {0:s}'.format(
                   time_string))
 
         shadow_hash_data = match.get('ShadowHashData', None)
