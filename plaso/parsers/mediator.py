@@ -383,7 +383,7 @@ class ParserMediator(object):
     """Processes an event before it written to the storage.
 
     Args:
-      event (EventObject): event.
+      event (EventObject|EventData): event or event data.
       parser_chain (Optional[str]): parsing chain up to this point.
       file_entry (Optional[dfvfs.FileEntry]): file entry, where None will
           use the current file entry set in the mediator.

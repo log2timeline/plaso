@@ -77,7 +77,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
     options = test_lib.TestOptions()
     options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
-    options.storage_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    options.storage_file = self._GetTestFilePath(['psort_test.plaso'])
     options.source = 'unused_source'
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -366,7 +366,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
     options = test_lib.TestOptions()
     options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
-    options.storage_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    options.storage_file = self._GetTestFilePath(['psort_test.plaso'])
     options.source = 'unused_source'
 
     with shared_test_lib.TempDirectory() as temp_directory:

@@ -32,15 +32,15 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
   # TODO: add test for _PrintTasksInformation.
   # TODO: add test for _PrintStorageInformationAsText.
 
-  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testCompareStores(self):
     """Tests the CompareStores function."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
-    test_file1 = self._GetTestFilePath(['psort_test.json.plaso'])
-    test_file2 = self._GetTestFilePath(['pinfo_test.json.plaso'])
+    test_file1 = self._GetTestFilePath(['psort_test.plaso'])
+    test_file2 = self._GetTestFilePath(['pinfo_test.plaso'])
 
     options = test_lib.TestOptions()
     options.compare_storage_file = test_file1
@@ -75,14 +75,14 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     # TODO: check output.
     # TODO: improve test coverage.
 
-  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.plaso'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.storage_file = self._GetTestFilePath(['pinfo_test.json.plaso'])
+    options.storage_file = self._GetTestFilePath(['pinfo_test.plaso'])
 
     test_tool.ParseOptions(options)
 
@@ -93,13 +93,13 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 
     # TODO: improve test coverage.
 
-  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.plaso'])
   def testPrintStorageInformationAsText(self):
     """Tests the _PrintStorageInformationAsText function."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
-    test_filename = 'pinfo_test.json.plaso'
+    test_filename = 'pinfo_test.plaso'
     format_version = '20170707'
     plaso_version = '20171228'
     session_identifier = 'd280b33c-845b-4e8b-b3d0-b33da11b180b'
@@ -221,10 +221,10 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     # differences.
     self.assertEqual(output.split(b'\n'), expected_output.split(b'\n'))
 
-  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.plaso'])
   def testPrintStorageInformationAsJSON(self):
     """Tests the _PrintStorageInformationAsJSON function."""
-    test_filename = 'pinfo_test.json.plaso'
+    test_filename = 'pinfo_test.plaso'
     session_identifier = 'd280b33c845b4e8bb3d0b33da11b180b'
     session_start_time = timelib.Timestamp.CopyFromString(
         '2017-12-28 20:06:34.578880')
