@@ -1237,6 +1237,8 @@ class OutputTestCase(TestCase):
           temp_directory, test_definition.output_file)
       output_options.extend(['-w', output_file_path])
     output_options.append(storage_file)
+    if test_definition.output_filter:
+      output_options.append(test_definition.output_filter)
 
     stdout_file = os.path.join(
         temp_directory, '{0:s}-psort.out'.format(test_definition.name))
@@ -1276,6 +1278,9 @@ class OutputTestCase(TestCase):
     """
     test_definition.output_file = test_definition_reader.GetConfigValue(
         test_definition.name, 'output_file')
+
+    test_definition.output_filter = test_definition_reader.GetConfigValue(
+        test_definition.name, 'output_filter', default='')
 
     test_definition.output_format = test_definition_reader.GetConfigValue(
         test_definition.name, 'output_format')
