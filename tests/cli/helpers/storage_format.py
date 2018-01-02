@@ -27,7 +27,7 @@ Test argument parser.
 optional arguments:
   --storage_format FORMAT, --storage-format FORMAT
                         Format of the storage file, the default is: sqlite.
-                        Supported options: sqlite, zip
+                        Supported options: sqlite
 """
 
   def testAddArguments(self):

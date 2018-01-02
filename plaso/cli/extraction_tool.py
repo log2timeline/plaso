@@ -20,7 +20,6 @@ from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import manager as parsers_manager
 from plaso.storage import sqlite_file as storage_sqlite_file
-from plaso.storage import zip_file as storage_zip_file
 
 
 class ExtractionTool(
@@ -122,10 +121,13 @@ class ExtractionTool(
 
     Returns:
       StorageWriter: storage writer.
+
+    Raises:
+      BadConfigOption: if the storage format is not supported.
     """
-    if self._storage_format == definitions.STORAGE_FORMAT_ZIP:
-      return storage_zip_file.ZIPStorageFileWriter(
-          session, self._storage_file_path)
+    if self._storage_format != definitions.STORAGE_FORMAT_SQLITE:
+      raise errors.BadConfigOption(
+          'Unsupported storage format: {0:s}'.format(self._storage_format))
 
     return storage_sqlite_file.SQLiteStorageFileWriter(
         session, self._storage_file_path)
