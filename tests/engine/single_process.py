@@ -15,7 +15,7 @@ from dfvfs.resolver import context
 from plaso.containers import sessions
 from plaso.engine import configurations
 from plaso.engine import single_process
-from plaso.storage import fake_storage
+from plaso.storage.fake import fake_storage
 
 from tests import test_lib as shared_test_lib
 

@@ -11,7 +11,7 @@ from dfvfs.path import factory as path_spec_factory
 
 from plaso.analysis import mediator
 from plaso.containers import sessions
-from plaso.storage import fake_storage
+from plaso.storage.fake import fake_storage
 
 from tests.analysis import test_lib
 

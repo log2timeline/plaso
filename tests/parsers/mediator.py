@@ -13,7 +13,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.containers import sessions
 from plaso.lib import timelib
 from plaso.engine import configurations
-from plaso.storage import fake_storage
+from plaso.storage.fake import fake_storage
 
 from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib

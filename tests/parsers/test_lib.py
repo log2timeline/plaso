@@ -13,7 +13,7 @@ from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.parsers import interface
 from plaso.parsers import mediator
-from plaso.storage import fake_storage
+from plaso.storage.fake import fake_storage
 
 from tests import test_lib as shared_test_lib
 

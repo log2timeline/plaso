@@ -3,7 +3,7 @@
 
 from __future__ import unicode_literals
 
-from plaso.storage import fake_storage
+from plaso.storage.fake import fake_storage
 
 from plaso.containers import sessions
 from plaso.parsers import plist

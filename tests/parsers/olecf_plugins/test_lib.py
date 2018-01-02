@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import pyolecf
 
 from plaso.containers import sessions
-from plaso.storage import fake_storage
+from plaso.storage.fake import fake_storage
 
 from tests.parsers import test_lib
 

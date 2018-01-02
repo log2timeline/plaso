@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 from plaso.engine import knowledge_base
 from plaso.parsers import mediator as parsers_mediator
-from plaso.storage import fake_storage
+from plaso.storage.fake import fake_storage
 
 from tests import test_lib as shared_test_lib
 

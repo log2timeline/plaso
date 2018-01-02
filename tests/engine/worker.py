@@ -15,7 +15,7 @@ from plaso.engine import configurations
 from plaso.engine import knowledge_base
 from plaso.engine import worker
 from plaso.parsers import mediator as parsers_mediator
-from plaso.storage import fake_storage
+from plaso.storage.fake import fake_storage
 
 from tests.analyzers import manager as analyzers_manager_test
 from tests import test_lib as shared_test_lib

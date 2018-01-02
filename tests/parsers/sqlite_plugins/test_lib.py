@@ -9,7 +9,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import sessions
 from plaso.parsers import sqlite
-from plaso.storage import fake_storage
+from plaso.storage.fake import fake_storage
 
 from tests.parsers import test_lib
 

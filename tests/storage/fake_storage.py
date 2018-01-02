@@ -12,7 +12,7 @@ from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.containers import tasks
 from plaso.lib import definitions
-from plaso.storage import fake_storage
+from plaso.storage.fake import fake_storage
 
 from tests.storage import test_lib
 

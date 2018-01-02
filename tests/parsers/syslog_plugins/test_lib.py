@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 from plaso.containers import sessions
 from plaso.parsers import syslog
-from plaso.storage import fake_storage
+from plaso.storage.fake import fake_storage
 
 from tests.parsers import test_lib
 

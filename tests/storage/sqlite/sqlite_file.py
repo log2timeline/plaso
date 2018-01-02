@@ -13,7 +13,7 @@ from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.containers import tasks
 from plaso.lib import definitions
-from plaso.storage import sqlite_file
+from plaso.storage.sqlite import sqlite_file
 
 from tests import test_lib as shared_test_lib
 from tests.storage import test_lib

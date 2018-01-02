@@ -7,7 +7,7 @@ from dfwinreg import registry as dfwinreg_registry
 
 from plaso.containers import sessions
 from plaso.parsers import winreg
-from plaso.storage import fake_storage
+from plaso.storage.fake import fake_storage
 
 from tests.parsers import test_lib
 
