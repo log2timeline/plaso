@@ -92,8 +92,9 @@ ADDITIONAL_MODULES = set([
     'timesketch.models.user'])
 modules_to_mock = set(modules_to_mock).union(ADDITIONAL_MODULES)
 
-# Readthedocs has it's own install of requests and urllib3, so remove them from
-# mocking.
+# Readthedocs has it's own install of chardet, requests and urllib3, so remove
+# them from mocking.
+modules_to_mock.remove('chardet')
 modules_to_mock.remove('requests')
 modules_to_mock.remove('urllib3')
 
