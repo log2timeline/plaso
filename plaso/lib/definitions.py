@@ -82,9 +82,8 @@ SERIALIZER_FORMAT_JSON = 'json'
 SERIALIZER_FORMATS = frozenset([SERIALIZER_FORMAT_JSON])
 
 STORAGE_FORMAT_SQLITE = 'sqlite'
-STORAGE_FORMAT_ZIP = 'zip'
 
-STORAGE_FORMATS = frozenset([STORAGE_FORMAT_SQLITE, STORAGE_FORMAT_ZIP])
+STORAGE_FORMATS = frozenset([STORAGE_FORMAT_SQLITE])
 
 # The session storage contains the results of one or more sessions.
 # A typical session is e.g. a single run of a tool (log2timeline.py).

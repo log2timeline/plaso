@@ -15,7 +15,7 @@ from dfvfs.path import factory as path_spec_factory
 from plaso.containers import sessions
 from plaso.engine import configurations
 from plaso.multi_processing import task_engine
-from plaso.storage import zip_file as storage_zip_file
+from plaso.storage import sqlite_file as storage_sqlite_file
 
 from tests import test_lib as shared_test_lib
 
@@ -50,7 +50,7 @@ class TaskMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')
-      storage_writer = storage_zip_file.ZIPStorageFileWriter(
+      storage_writer = storage_sqlite_file.SQLiteStorageFileWriter(
           session, temp_file)
 
       test_engine.ProcessSources(
