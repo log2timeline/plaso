@@ -15,7 +15,7 @@ from plaso.engine import configurations
 from plaso.engine import knowledge_base
 from plaso.engine import worker
 from plaso.parsers import mediator as parsers_mediator
-from plaso.storage.fake import fake_storage
+from plaso.storage.fake import writer
 
 from tests.analyzers import manager as analyzers_manager_test
 from tests import test_lib as shared_test_lib
@@ -75,7 +75,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     knowledge_base_values = {'year': 2016}
     session = sessions.Session()
 
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
@@ -116,7 +116,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     session = sessions.Session()
 
     path_spec = self._GetTestFilePathSpec(['syslog'])
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values)
 
@@ -129,7 +129,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     session = sessions.Session()
 
     path_spec = self._GetTestFilePathSpec(['syslog.gz'])
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values)
 
@@ -142,7 +142,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     session = sessions.Session()
 
     path_spec = self._GetTestFilePathSpec(['syslog.bz2'])
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values)
 
@@ -161,7 +161,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TAR, location='/syslog',
         parent=path_spec)
 
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values)
 
@@ -169,7 +169,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     # Process an archive file without "process archive files" mode.
     path_spec = self._GetTestFilePathSpec(['syslog.tar'])
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values)
 
@@ -177,7 +177,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     # Process an archive file with "process archive files" mode.
     path_spec = self._GetTestFilePathSpec(['syslog.tar'])
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values,
         process_archives=True)
@@ -199,7 +199,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TAR, location='/syslog',
         parent=path_spec)
 
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values)
 
@@ -207,7 +207,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     # Process an archive file with "process archive files" mode.
     path_spec = self._GetTestFilePathSpec(['syslog.tgz'])
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values,
         process_archives=True)
@@ -228,7 +228,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
         parent=path_spec)
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, knowledge_base_values=knowledge_base_values)
 
@@ -246,7 +246,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     session = sessions.Session()
 
     path_spec = self._GetTestFilePathSpec(['empty_file'])
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, extraction_worker=extraction_worker,
         knowledge_base_values=knowledge_base_values)
@@ -277,7 +277,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     session = sessions.Session()
 
     path_spec = self._GetTestFilePathSpec(['test_pe.exe'])
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, extraction_worker=extraction_worker,
         knowledge_base_values=knowledge_base_values)

@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
+"""Storage writer for SQLite storage files."""
+
 from plaso.lib import definitions
 from plaso.storage import interface
-from sqlite_file import SQLiteStorageFile
-from plaso.storage.sqlite.merge_reader import SQLiteStorageMergeReader
+from plaso.storage.sqlite import merge_reader
+from plaso.storage.sqlite import sqlite_file
 
 
 class SQLiteStorageFileWriter(interface.StorageFileWriter):
@@ -11,9 +14,9 @@ class SQLiteStorageFileWriter(interface.StorageFileWriter):
     """Creates a storage file.
 
     Returns:
-      sqlite_file.SQLiteStorageFile: storage file.
+      SQLiteStorageFile: storage file.
     """
-    return SQLiteStorageFile(storage_type=self._storage_type)
+    return sqlite_file.SQLiteStorageFile(storage_type=self._storage_type)
 
   def _CreateTaskStorageMergeReader(self, path):
     """Creates a task storage merge reader.
@@ -22,9 +25,9 @@ class SQLiteStorageFileWriter(interface.StorageFileWriter):
       path (str): path to the task storage file that should be merged.
 
     Returns:
-      plaso.storage.sqlite.merge_reader.SQLiteStorageMergeReader: storage merge reader.
+      SQLiteStorageMergeReader: storage merge reader.
     """
-    return SQLiteStorageMergeReader(self, path)
+    return merge_reader.SQLiteStorageMergeReader(self, path)
 
   def _CreateTaskStorageWriter(self, path, task):
     """Creates a task storage writer.

@@ -9,8 +9,8 @@ import unittest
 from plaso.containers import sessions
 from plaso.storage import factory
 from plaso.storage.sqlite import sqlite_file
-from plaso.storage.sqlite import sqlite_reader
-from plaso.storage.sqlite import sqlite_writer
+from plaso.storage.sqlite import reader as sqlite_reader
+from plaso.storage.sqlite import writer as sqlite_writer
 
 from tests import test_lib as shared_test_lib
 from tests.storage import test_lib

@@ -13,7 +13,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.containers import sessions
 from plaso.lib import timelib
 from plaso.engine import configurations
-from plaso.storage.fake import fake_storage
+from plaso.storage.fake import writer
 
 from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
@@ -27,7 +27,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
   def testGetEarliestYearFromFileEntry(self):
     """Tests the _GetEarliestYearFromFileEntry function."""
     session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
     earliest_year = parsers_mediator._GetEarliestYearFromFileEntry()
@@ -40,7 +40,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
   def testGetLatestYearFromFileEntry(self):
     """Tests the _GetLatestYearFromFileEntry function."""
     session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
     latest_year = parsers_mediator._GetLatestYearFromFileEntry()
@@ -58,7 +58,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
   def testGetDisplayName(self):
     """Tests the GetDisplayName function."""
     session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
     with self.assertRaises(ValueError):
@@ -115,7 +115,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
   def testGetDisplayNameForPathSpec(self):
     """Tests the GetDisplayNameForPathSpec function."""
     session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
     test_path = self._GetTestFilePath(['syslog.gz'])
@@ -129,7 +129,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
   def testGetEstimatedYear(self):
     """Tests the GetEstimatedYear function."""
     session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
     expected_estimated_year = timelib.GetCurrentYear()
@@ -141,7 +141,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
   def testGetFileEntry(self):
     """Tests the GetFileEntry function."""
     session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
     file_entry = parsers_mediator.GetFileEntry()
@@ -150,7 +150,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
   def testGetFilename(self):
     """Tests the GetFilename function."""
     session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
     filename = parsers_mediator.GetFilename()
@@ -159,7 +159,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
   def testGetLatestYear(self):
     """Tests the GetLatestYear function."""
     session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
     expected_latest_year = timelib.GetCurrentYear()
@@ -179,7 +179,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
   def testResetFileEntry(self):
     """Tests the ResetFileEntry function."""
     session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
     parsers_mediator.ResetFileEntry()
@@ -190,7 +190,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
   def testSetFileEntry(self):
     """Tests the SetFileEntry function."""
     session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
     parsers_mediator.SetFileEntry(None)
@@ -198,7 +198,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
   def testSetStorageWriter(self):
     """Tests the SetStorageWriter function."""
     session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
     parsers_mediator.SetStorageWriter(None)
@@ -206,7 +206,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
   def testSignalAbort(self):
     """Tests the SignalAbort function."""
     session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
     parsers_mediator.SignalAbort()

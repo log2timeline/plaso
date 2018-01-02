@@ -1,5 +1,10 @@
+# -*- coding: utf-8 -*-
+"""Reader for SQLite storage files."""
+
+from __future__ import unicode_literals
+
 from plaso.storage import interface
-from sqlite_file import SQLiteStorageFile
+from plaso.storage.sqlite import sqlite_file
 
 
 class SQLiteStorageFileReader(interface.StorageFileReader):
@@ -12,5 +17,5 @@ class SQLiteStorageFileReader(interface.StorageFileReader):
       path (str): path to the input file.
     """
     super(SQLiteStorageFileReader, self).__init__(path)
-    self._storage_file = SQLiteStorageFile()
+    self._storage_file = sqlite_file.SQLiteStorageFile()
     self._storage_file.Open(path=path)

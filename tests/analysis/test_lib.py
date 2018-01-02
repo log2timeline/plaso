@@ -10,7 +10,7 @@ from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.parsers import interface as parsers_interface
 from plaso.parsers import mediator as parsers_mediator
-from plaso.storage.fake import fake_storage
+from plaso.storage.fake import writer
 
 from tests import test_lib as shared_test_lib
 
@@ -34,7 +34,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
         knowledge_base_values=knowledge_base_values)
 
     session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     storage_writer.Open()
     for event in event_objects:
       storage_writer.AddEvent(event)
@@ -105,7 +105,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
       FakeStorageWriter: storage writer.
     """
     session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = writer.FakeStorageWriter(session)
     storage_writer.Open()
 
     mediator = parsers_mediator.ParserMediator(
