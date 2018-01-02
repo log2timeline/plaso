@@ -91,13 +91,16 @@ ADDITIONAL_MODULES = set([
     'timesketch.models', 'timesketch.models.sketch',
     'timesketch.models.user'])
 modules_to_mock = set(modules_to_mock).union(ADDITIONAL_MODULES)
-# Readthedocs now has it's own install of requests, so remove it from mocking.
+# Readthedocs now has it's own install of requests and urllib3, so remove them
+#  from mocking.
 modules_to_mock.remove('requests')
+modules_to_mock.remove('urllib3')
 
 # There are some modules we install via pip on readthedocs that we don't need
 # to mock.
 PIP_INSTALLED_MODULES = set(['construct', 'pyparsing', 'six'])
 modules_to_mock = set(modules_to_mock).difference(PIP_INSTALLED_MODULES)
+modules_to_mock = sorted(modules_to_mock)
 print('Mocking modules')
 for module_name in modules_to_mock:
   print(module_name)
