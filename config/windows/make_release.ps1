@@ -1,14 +1,52 @@
 # Scripts to build a onedir PyInstaller versions of the plaso tools.
 # The tools are bundled into a single ZIP file.
 
-$PyInstaller = "pyinstaller.exe"
+$Architecture = "amd64"
 
-If (-Not (Test-Path (Get-Command $PyInstaller).Path))
+If ( $Architecture -eq "win32" )
 {
-    Write-Host "Missing PyInstaller." -foreground Red
-
-    Exit 1
+	# Note that the backtick here is used as escape character.
+	$PythonPath = "C:\Python27` (x86)"
 }
+Else
+{
+	$PythonPath = "C:\Python27"
+}
+
+Try
+{
+	# -ErrorAction Stop causes Get-Command to raise a non-terminating
+	# exception. A non-terminating exception will not be caught by
+	# try-catch.
+	$PyInstaller = (Get-Command "pyinstaller.exe" -ErrorAction Stop).Path
+	$Python = ""
+}
+Catch
+{
+	$PyInstaller = "pyinstaller.exe"
+}
+
+If (-Not (Test-Path $PyInstaller))
+{
+	$PyInstaller = "..\pyinstaller\pyinstaller.py"
+
+	If (-Not (Test-Path $PyInstaller))
+	{
+	    Write-Host "Missing PyInstaller." -foreground Red
+
+	    Exit 1
+	}
+	$Python = "${PythonPath}\python.exe"
+
+	If (-Not (Test-Path $Python))
+	{
+	    Write-Host "Missing Python: ${Python}." -foreground Red
+
+	    Exit 1
+	}
+}
+
+$Version = & Invoke-Expression -Command "git describe --tags --abbrev=0"
 
 # Remove support for hachoir which is GPLv2 and cannot be distributed
 # in binary form. Leave the formatter because it does not link in the
@@ -28,31 +66,76 @@ If (Test-Path "dist")
     rm -Force -Recurse "dist"
 }
 
-Invoke-Expression "${PyInstaller} --hidden-import artifacts --onedir tools\image_export.py"
+$Arguments = "--hidden-import artifacts --onedir tools\image_export.py"
+
+If ( $Python -ne "" )
+{
+	Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments}"
+}
+Else
+{
+	Invoke-Expression -Command "${PyInstaller} ${Arguments}"
+}
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\image_export.py." -foreground Red
     Exit 1
 }
 
-Invoke-Expression "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\log2timeline.py"
+$Arguments = "--hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\log2timeline.py"
+
+If ( $Python -ne "" )
+{
+	Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments}"
+}
+Else
+{
+	Invoke-Expression -Command "${PyInstaller} ${Arguments}"
+}
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\log2timeline.py." -foreground Red
     Exit 1
 }
 
-Invoke-Expression "${PyInstaller} --hidden-import artifacts --onedir tools\pinfo.py"
+$Arguments = "--hidden-import artifacts --onedir tools\pinfo.py"
+
+If ( $Python -ne "" )
+{
+	Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments}"
+}
+Else
+{
+	Invoke-Expression -Command "${PyInstaller} ${Arguments}"
+}
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\pinfo.py." -foreground Red
     Exit 1
 }
 
-Invoke-Expression "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psort.py"
+$Arguments = "--hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psort.py"
+
+If ( $Python -ne "" )
+{
+	Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments}"
+}
+Else
+{
+	Invoke-Expression -Command "${PyInstaller} ${Arguments}"
+}
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\psort.py." -foreground Red
     Exit 1
 }
 
-Invoke-Expression "${PyInstaller} --hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psteal.py"
+$Arguments = "--hidden-import artifacts --hidden-import requests --hidden-import dpkt --onedir tools\psteal.py"
+
+If ( $Python -ne "" )
+{
+	Invoke-Expression -Command "& '${Python}' ${PyInstaller} ${Arguments}"
+}
+Else
+{
+	Invoke-Expression -Command "${PyInstaller} ${Arguments}"
+}
 If ( $LastExitCode -ne 0 ) {
     Write-Host "Error running PyInstaller for tools\psteal.py." -foreground Red
     Exit 1
@@ -78,7 +161,7 @@ xcopy /q /y /s dist\pinfo\* dist\plaso
 xcopy /q /y /s dist\psort\* dist\plaso
 xcopy /q /y /s dist\psteal\* dist\plaso
 xcopy /q /y data\* dist\plaso\data
-xcopy /q /y C:\Python27\Lib\site-packages\zmq\libzmq.pyd dist\plaso
+xcopy /q /y "${PythonPath}\Lib\site-packages\zmq\libzmq.pyd" dist\plaso
 
 # Copy the license files of the dependencies
 git.exe clone https://github.com/log2timeline/l2tdevtools dist\l2tdevtools
@@ -100,6 +183,6 @@ git.exe clone https://github.com/ForensicArtifacts/artifacts dist\artifacts
 mkdir dist\plaso\artifacts
 xcopy /q /y dist\artifacts\data\* dist\plaso\artifacts
 
-# Makes plaso.zip
+# Makes plaso-<version>-<architecture>.zip
 Add-Type -assembly "system.io.compression.filesystem"
-[io.compression.zipfile]::CreateFromDirectory("$(pwd | % Path)\dist\plaso", "$(pwd| % Path)\plaso.zip")
+[io.compression.zipfile]::CreateFromDirectory("$(pwd | % Path)\dist\plaso", "$(pwd| % Path)\plaso-${Version}-${Architecture}.zip")
