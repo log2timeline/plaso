@@ -8,7 +8,13 @@ import os
 import sqlite3
 import zlib
 
+from plaso.containers import artifacts
+from plaso.containers import errors
+from plaso.containers import event_sources
+from plaso.containers import events
+from plaso.containers import reports
 from plaso.containers import sessions
+from plaso.containers import tasks
 from plaso.lib import definitions
 from plaso.storage import event_heaps
 from plaso.storage import identifiers
@@ -30,12 +36,28 @@ class SQLiteStorageFile(interface.BaseStorageFile):
   # is able to read.
   _COMPATIBLE_FORMAT_VERSION = 20170707
 
-  _CONTAINER_TYPE_ANALYSIS_REPORT = 'analysis_report'
-  _CONTAINER_TYPE_EXTRACTION_ERROR = 'extraction_error'
-  _CONTAINER_TYPE_EVENT = 'event'
-  _CONTAINER_TYPE_EVENT_DATA = 'event_data'
-  _CONTAINER_TYPE_EVENT_SOURCE = 'event_source'
-  _CONTAINER_TYPE_EVENT_TAG = 'event_tag'
+  _CONTAINER_TYPE_ANALYSIS_REPORT = (
+      plaso.containers.reports.AnalysisReport.CONTAINER_TYPE)
+  _CONTAINER_TYPE_EVENT = (
+      plaso.containers.events.EventObject.CONTAINER_TYPE)
+  _CONTAINER_TYPE_EVENT_DATA = (
+      plaso.containers.events.EventData.CONTAINER_TYPE)
+  _CONTAINER_TYPE_EVENT_SOURCE = (
+      plaso.containers.event_sources.EventSource.CONTAINER_TYPE)
+  _CONTAINER_TYPE_EVENT_TAG = (
+      plaso.containers.events.EventTag.CONTAINER_TYPE)
+  _CONTAINER_TYPE_EXTRACTION_ERROR = (
+      plaso.containers.errors.ExtractionError.CONTAINER_TYPE)
+  _CONTAINER_TYPE_SESSION_COMPLETION = (
+      plaso.containers.sessions.SessionCompletion.CONTAINER_TYPE)
+  _CONTAINER_TYPE_SESSION_START = (
+      plaso.containers.taks.SessionStart.CONTAINER_TYPE)
+  _CONTAINER_TYPE_SYSTEM_CONFIGURATION = (
+      plaso.containers.artifacts.SystemConfigurationArtifact.CONTAINER_TYPE)
+  _CONTAINER_TYPE_TASK_COMPLETION = (
+      plaso.containers.sessions.TaskCompletion.CONTAINER_TYPE)
+  _CONTAINER_TYPE_TASK_START = (
+      plaso.containers.taks.TaskStart.CONTAINER_TYPE)
 
   _CONTAINER_TYPES = (
       _CONTAINER_TYPE_ANALYSIS_REPORT,
@@ -44,8 +66,11 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       _CONTAINER_TYPE_EVENT_DATA,
       _CONTAINER_TYPE_EVENT_SOURCE,
       _CONTAINER_TYPE_EVENT_TAG,
-      'session_completion', 'session_start', 'system_configuration',
-      'task_completion', 'task_start')
+      _CONTAINER_TYPE_SESSION_COMPLETION,
+      _CONTAINER_TYPE_SESSION_START,
+      _CONTAINER_TYPE_SYSTEM_CONFIGURATION,
+      _CONTAINER_TYPE_TASK_COMPLETION,
+      _CONTAINER_TYPE_TASK_START)
 
   _CREATE_METADATA_TABLE_QUERY = (
       'CREATE TABLE metadata (key TEXT, value TEXT);')
@@ -285,6 +310,22 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       yield attribute_container
 
       row = cursor.fetchone()
+
+  def _HasAttributeContainers(self, container_type):
+    """Determines if a store contains a specific type of attribute containers.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      bool: True if the store contains the specified type of attribute
+          containers.
+    """
+    query = 'SELECT COUNT(*) FROM {0:s}'.format(container_type)
+    self._cursor.execute(query)
+
+    row = self._cursor.fetchone()
+    return row and row[0] != 0
 
   def _HasTable(self, table_name):
     """Determines if a specific table exists.
@@ -780,9 +821,10 @@ class SQLiteStorageFile(interface.BaseStorageFile):
           identifiers between the session start and completion attribute
           containers.
     """
-    session_start_generator = self._GetAttributeContainers('session_start')
+    session_start_generator = self._GetAttributeContainers(
+        self._CONTAINER_TYPE_SESSION_START)
     session_completion_generator = self._GetAttributeContainers(
-        'session_completion')
+        self._CONTAINER_TYPE_SESSION_COMPLETION)
 
     for session_index in range(0, self._last_session):
       session_start = next(session_start_generator)
@@ -840,12 +882,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     Returns:
       bool: True if the store contains analysis reports.
     """
-    query = 'SELECT COUNT(*) FROM {0:s}'.format(
-        self._CONTAINER_TYPE_ANALYSIS_REPORT)
-    self._cursor.execute(query)
-
-    row = self._cursor.fetchone()
-    return row and row[0] != 0
+    return self._HasAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_REPORT)
 
   def HasErrors(self):
     """Determines if a store contains extraction errors.
@@ -853,12 +890,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     Returns:
       bool: True if the store contains extraction errors.
     """
-    query = 'SELECT COUNT(*) FROM {0:s}'.format(
-        self._CONTAINER_TYPE_EXTRACTION_ERROR)
-    self._cursor.execute(query)
-
-    row = self._cursor.fetchone()
-    return row and row[0] != 0
+    return self._HasAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_ERROR)
 
   def HasEventTags(self):
     """Determines if a store contains event tags.
@@ -866,11 +898,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     Returns:
       bool: True if the store contains event tags.
     """
-    query = 'SELECT COUNT(*) FROM {0:s}'.format(self._CONTAINER_TYPE_EVENT_TAG)
-    self._cursor.execute(query)
-
-    row = self._cursor.fetchone()
-    return row and row[0] != 0
+    return self._HasAttributeContainers(self._CONTAINER_TYPE_EVENT_TAG)
 
   # pylint: disable=arguments-differ
   def Open(self, path=None, read_only=True, **unused_kwargs):
@@ -937,15 +965,17 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       self._connection.commit()
 
     last_session_start = 0
-    if self._HasTable('session_start'):
-      query = 'SELECT COUNT(*) FROM session_start'
+    if self._HasTable(self._CONTAINER_TYPE_SESSION_START):
+      query = 'SELECT COUNT(*) FROM {0:s}'.format(
+          self._CONTAINER_TYPE_SESSION_START)
       self._cursor.execute(query)
       row = self._cursor.fetchone()
       last_session_start = row[0]
 
     last_session_completion = 0
-    if self._HasTable('session_completion'):
-      query = 'SELECT COUNT(*) FROM session_completion'
+    if self._HasTable(self._CONTAINER_TYPE_SESSION_COMPLETION)
+      query = 'SELECT COUNT(*) FROM {0:s}'.format(
+          self._CONTAINER_TYPE_SESSION_COMPLETION)
       self._cursor.execute(query)
       row = self._cursor.fetchone()
       last_session_completion = row[0]
@@ -967,7 +997,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       knowledge_base (KnowledgeBase): is used to store the preprocessing
           information.
     """
-    generator = self._GetAttributeContainers('system_configuration')
+    generator = self._GetAttributeContainers(
+        self._CONTAINER_TYPE_SYSTEM_CONFIGURATION)
     for stream_number, system_configuration in enumerate(generator):
       # TODO: replace stream_number by session_identifier.
       knowledge_base.ReadSystemConfigurationArtifact(
@@ -1048,9 +1079,30 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
   """SQLite-based storage file reader for merging."""
 
+  _CONTAINER_TYPE_ANALYSIS_REPORT = (
+      plaso.containers.reports.AnalysisReport.CONTAINER_TYPE)
+  _CONTAINER_TYPE_EVENT = (
+      plaso.containers.events.EventObject.CONTAINER_TYPE)
+  _CONTAINER_TYPE_EVENT_DATA = (
+      plaso.containers.events.EventData.CONTAINER_TYPE)
+  _CONTAINER_TYPE_EVENT_SOURCE = (
+      plaso.containers.event_sources.EventSource.CONTAINER_TYPE)
+  _CONTAINER_TYPE_EVENT_TAG = (
+      plaso.containers.events.EventTag.CONTAINER_TYPE)
+  _CONTAINER_TYPE_EXTRACTION_ERROR = (
+      plaso.containers.errors.ExtractionError.CONTAINER_TYPE)
+  _CONTAINER_TYPE_TASK_COMPLETION = (
+      plaso.containers.sessions.TaskCompletion.CONTAINER_TYPE)
+  _CONTAINER_TYPE_TASK_START = (
+      plaso.containers.taks.TaskStart.CONTAINER_TYPE)
+
   _CONTAINER_TYPES = (
-      'event_source', 'event_data', 'event', 'event_tag',
-      'extraction_error', 'analysis_report')
+      _CONTAINER_TYPE_EVENT_SOURCE,
+      _CONTAINER_TYPE_EVENT_DATA,
+      _CONTAINER_TYPE_EVENT,
+      _CONTAINER_TYPE_EVENT_TAG,
+      _CONTAINER_TYPE_EXTRACTION_ERROR,
+      _CONTAINER_TYPE_ANALYSIS_REPORT)
 
   _TABLE_NAMES_QUERY = (
       'SELECT name FROM sqlite_master WHERE type = "table"')
@@ -1084,10 +1136,10 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
       RuntimeError: if the attribute container type is not supported.
     """
     container_type = attribute_container.CONTAINER_TYPE
-    if container_type == 'event_source':
+    if container_type == self._CONTAINER_TYPE_EVENT_SOURCE:
       self._storage_writer.AddEventSource(attribute_container)
 
-    elif container_type == 'event_data':
+    elif container_type == self._CONTAINER_TYPE_EVENT_DATA:
       identifier = attribute_container.GetIdentifier()
       lookup_key = identifier.CopyToString()
 
@@ -1096,10 +1148,11 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
       identifier = attribute_container.GetIdentifier()
       self._event_data_identifier_mappings[lookup_key] = identifier
 
-    elif container_type == 'event':
+    elif container_type == self._CONTAINER_TYPE_EVENT:
       if hasattr(attribute_container, 'event_data_row_identifier'):
         event_data_identifier = identifiers.SQLTableIdentifier(
-            'event_data', attribute_container.event_data_row_identifier)
+            self._CONTAINER_TYPE_EVENT_DATA,
+            attribute_container.event_data_row_identifier)
         lookup_key = event_data_identifier.CopyToString()
 
         event_data_identifier = self._event_data_identifier_mappings[lookup_key]
@@ -1109,16 +1162,18 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
 
       self._storage_writer.AddEvent(attribute_container)
 
-    elif container_type == 'event_tag':
+    elif container_type == self._CONTAINER_TYPE_EVENT_TAG:
       self._storage_writer.AddEventTag(attribute_container)
 
-    elif container_type == 'extraction_error':
+    elif container_type == self._CONTAINER_TYPE_EXTRACTION_ERROR:
       self._storage_writer.AddError(attribute_container)
 
-    elif container_type == 'analysis_report':
+    elif container_type == self._CONTAINER_TYPE_ANALYSIS_REPORT:
       self._storage_writer.AddAnalysisReport(attribute_container)
 
-    elif container_type not in ('task_completion', 'task_start'):
+    elif container_type not in (
+        self._CONTAINER_TYPE_TASK_COMPLETION,
+        self.self._CONTAINER_TYPE_TASK_START):
       raise RuntimeError('Unsupported container type: {0:s}'.format(
           container_type))
 
@@ -1184,9 +1239,10 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
             self._active_container_type, serialized_data)
         attribute_container.SetIdentifier(identifier)
 
-        if self._active_container_type == 'event_tag':
+        if self._active_container_type == self._CONTAINER_TYPE_EVENT_TAG:
           event_identifier = identifiers.SQLTableIdentifier(
-              'event', attribute_container.event_row_identifier)
+              self._CONTAINER_TYPE_EVENT,
+              attribute_container.event_row_identifier)
           attribute_container.SetEventIdentifier(event_identifier)
 
           del attribute_container.event_row_identifier
