@@ -1154,8 +1154,7 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
       self._storage_writer.AddAnalysisReport(attribute_container)
 
     elif container_type not in (
-        self._CONTAINER_TYPE_TASK_COMPLETION,
-        self.self._CONTAINER_TYPE_TASK_START):
+        self._CONTAINER_TYPE_TASK_COMPLETION, self._CONTAINER_TYPE_TASK_START):
       raise RuntimeError('Unsupported container type: {0:s}'.format(
           container_type))
 
