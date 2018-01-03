@@ -973,7 +973,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       last_session_start = row[0]
 
     last_session_completion = 0
-    if self._HasTable(self._CONTAINER_TYPE_SESSION_COMPLETION)
+    if self._HasTable(self._CONTAINER_TYPE_SESSION_COMPLETION):
       query = 'SELECT COUNT(*) FROM {0:s}'.format(
           self._CONTAINER_TYPE_SESSION_COMPLETION)
       self._cursor.execute(query)
