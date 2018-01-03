@@ -400,7 +400,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Processes the sources and extracts events.
 
     Raises:
-      BadConfigOption: if the storage file path is invalid.
+      BadConfigOption: if the storage file path is invalid or the storage
+          format not supported.
       SourceScannerError: if the source scanner could not find a supported
           file system.
       UserAbort: if the user initiated an abort.
@@ -431,6 +432,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
         self._storage_format, session, self._storage_file_path)
+    if not storage_writer:
+      raise errors.BadConfigOption(
+          'Unsupported storage format: {0:s}'.format(self._storage_format))
 
     single_process_mode = self._single_process_mode
     if self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:

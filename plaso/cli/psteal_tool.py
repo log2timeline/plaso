@@ -259,6 +259,7 @@ class PstealTool(
     constructor of this class.
 
     Raises:
+      BadConfigOption: if the storage format is not supported.
       SourceScannerError: if the source scanner could not find a supported
           file system.
       UserAbort: if the user initiated an abort.
@@ -288,6 +289,9 @@ class PstealTool(
 
     storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
         self._storage_format, session, self._storage_file_path)
+    if not storage_writer:
+      raise errors.BadConfigOption(
+          'Unsupported storage format: {0:s}'.format(self._storage_format))
 
     single_process_mode = self._single_process_mode
     if source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
