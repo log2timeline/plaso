@@ -36,28 +36,18 @@ class SQLiteStorageFile(interface.BaseStorageFile):
   # is able to read.
   _COMPATIBLE_FORMAT_VERSION = 20170707
 
-  _CONTAINER_TYPE_ANALYSIS_REPORT = (
-      plaso.containers.reports.AnalysisReport.CONTAINER_TYPE)
-  _CONTAINER_TYPE_EVENT = (
-      plaso.containers.events.EventObject.CONTAINER_TYPE)
-  _CONTAINER_TYPE_EVENT_DATA = (
-      plaso.containers.events.EventData.CONTAINER_TYPE)
-  _CONTAINER_TYPE_EVENT_SOURCE = (
-      plaso.containers.event_sources.EventSource.CONTAINER_TYPE)
-  _CONTAINER_TYPE_EVENT_TAG = (
-      plaso.containers.events.EventTag.CONTAINER_TYPE)
-  _CONTAINER_TYPE_EXTRACTION_ERROR = (
-      plaso.containers.errors.ExtractionError.CONTAINER_TYPE)
-  _CONTAINER_TYPE_SESSION_COMPLETION = (
-      plaso.containers.sessions.SessionCompletion.CONTAINER_TYPE)
-  _CONTAINER_TYPE_SESSION_START = (
-      plaso.containers.taks.SessionStart.CONTAINER_TYPE)
+  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
+  _CONTAINER_TYPE_EXTRACTION_ERROR = errors.ExtractionError.CONTAINER_TYPE
+  _CONTAINER_TYPE_SESSION_COMPLETION = sessions.SessionCompletion.CONTAINER_TYPE
+  _CONTAINER_TYPE_SESSION_START = sessions.SessionStart.CONTAINER_TYPE
   _CONTAINER_TYPE_SYSTEM_CONFIGURATION = (
-      plaso.containers.artifacts.SystemConfigurationArtifact.CONTAINER_TYPE)
-  _CONTAINER_TYPE_TASK_COMPLETION = (
-      plaso.containers.sessions.TaskCompletion.CONTAINER_TYPE)
-  _CONTAINER_TYPE_TASK_START = (
-      plaso.containers.taks.TaskStart.CONTAINER_TYPE)
+      artifacts.SystemConfigurationArtifact.CONTAINER_TYPE)
+  _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
+  _CONTAINER_TYPE_TASK_START = taks.TaskStart.CONTAINER_TYPE
 
   _CONTAINER_TYPES = (
       _CONTAINER_TYPE_ANALYSIS_REPORT,
@@ -1079,22 +1069,14 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
   """SQLite-based storage file reader for merging."""
 
-  _CONTAINER_TYPE_ANALYSIS_REPORT = (
-      plaso.containers.reports.AnalysisReport.CONTAINER_TYPE)
-  _CONTAINER_TYPE_EVENT = (
-      plaso.containers.events.EventObject.CONTAINER_TYPE)
-  _CONTAINER_TYPE_EVENT_DATA = (
-      plaso.containers.events.EventData.CONTAINER_TYPE)
-  _CONTAINER_TYPE_EVENT_SOURCE = (
-      plaso.containers.event_sources.EventSource.CONTAINER_TYPE)
-  _CONTAINER_TYPE_EVENT_TAG = (
-      plaso.containers.events.EventTag.CONTAINER_TYPE)
-  _CONTAINER_TYPE_EXTRACTION_ERROR = (
-      plaso.containers.errors.ExtractionError.CONTAINER_TYPE)
-  _CONTAINER_TYPE_TASK_COMPLETION = (
-      plaso.containers.sessions.TaskCompletion.CONTAINER_TYPE)
-  _CONTAINER_TYPE_TASK_START = (
-      plaso.containers.taks.TaskStart.CONTAINER_TYPE)
+  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
+  _CONTAINER_TYPE_EXTRACTION_ERROR = errors.ExtractionError.CONTAINER_TYPE
+  _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
+  _CONTAINER_TYPE_TASK_START = taks.TaskStart.CONTAINER_TYPE
 
   _CONTAINER_TYPES = (
       _CONTAINER_TYPE_EVENT_SOURCE,
