@@ -31,7 +31,7 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
       dfwinreg.WinRegistryKey: a Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromString(time_string)
+    filetime.CopyFromDateTimeString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
         'Winlogon', key_path=key_path,
         last_written_time=filetime.timestamp, offset=153)
