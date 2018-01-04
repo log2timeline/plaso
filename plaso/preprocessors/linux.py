@@ -62,13 +62,46 @@ class LinuxDistributionPlugin(interface.FileArtifactPreprocessorPlugin):
 
     system_product = text_file_object.readline()
     system_product = system_product.strip()
-    if system_product:
-      knowledge_base.SetValue('operating_system_product', system_product)
+
+    if not knowledge_base.GetValue('operating_system_product'):
+      if system_product:
+        knowledge_base.SetValue('operating_system_product', system_product)
+
+
+class LinuxStandardBaseReleasePlugin(interface.FileArtifactPreprocessorPlugin):
+  """The Linux standard base (LSB) release plugin."""
+
+  ARTIFACT_DEFINITION_NAME = 'LinuxLSBRelease'
+
+  def _ParseFileData(self, knowledge_base, file_object):
+    """Parses file content (data) for system product preprocessing attribute.
+
+    Args:
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      file_object (dfvfs.FileIO): file-like object that contains the artifact
+          value data.
+
+    Raises:
+      errors.PreProcessFail: if the preprocessing fails.
+    """
+    text_file_object = dfvfs_text_file.TextFile(file_object, encoding='utf-8')
+
+    product_values = {}
+    for line in text_file_object.readlines():
+      key, value = line.split('=')
+      key = key.strip().upper()
+      value = value.strip().strip('"')
+      product_values[key] = value
+
+    if not knowledge_base.GetValue('operating_system_product'):
+      system_product = product_values.get('DISTRIB_DESCRIPTION', None)
+      if system_product:
+        knowledge_base.SetValue('operating_system_product', system_product)
 
 
 class LinuxSystemdOperatingSystemPlugin(
     interface.FileArtifactPreprocessorPlugin):
-  """The Linux systemd operating system plugin."""
+  """The Linux systemd operating system release plugin."""
 
   ARTIFACT_DEFINITION_NAME = 'LinuxSystemdOSRelease'
 
@@ -189,5 +222,5 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
 
 manager.PreprocessPluginsManager.RegisterPlugins([
     LinuxHostnamePlugin, LinuxDistributionPlugin,
-    LinuxSystemdOperatingSystemPlugin, LinuxTimeZonePlugin,
-    LinuxUserAccountsPlugin])
+    LinuxStandardBaseReleasePlugin, LinuxSystemdOperatingSystemPlugin,
+    LinuxTimeZonePlugin, LinuxUserAccountsPlugin])

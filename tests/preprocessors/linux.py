@@ -54,9 +54,34 @@ class LinuxDistributionPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     self.assertEqual(system_product, 'Fedora release 26 (Twenty Six)')
 
 
+class LinuxStandardBaseReleasePluginTest(
+    test_lib.ArtifactPreprocessorPluginTestCase):
+  """Tests for the Linux standard base (LSB) release plugin."""
+
+  _FILE_DATA = b"""\
+DISTRIB_CODENAME=trusty
+DISTRIB_DESCRIPTION="Ubuntu 14.04 LTS"
+DISTRIB_ID=Ubuntu
+DISTRIB_RELEASE=14.04"""
+
+  def testParseFileData(self):
+    """Tests the _ParseFileData function."""
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile('/etc/lsb-release', self._FILE_DATA)
+
+    mount_point = fake_path_spec.FakePathSpec(location='/')
+
+    plugin = linux.LinuxStandardBaseReleasePlugin()
+    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, plugin)
+
+    system_product = knowledge_base.GetValue('operating_system_product')
+    self.assertEqual(system_product, 'Ubuntu 14.04 LTS')
+
+
 class LinuxSystemdOperatingSystemPluginTest(
     test_lib.ArtifactPreprocessorPluginTestCase):
-  """Tests for the Linux operating system plugin."""
+  """Tests for the Linux operating system release plugin."""
 
   _FILE_DATA = b"""\
 NAME=Fedora
