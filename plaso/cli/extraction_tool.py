@@ -105,6 +105,10 @@ class ExtractionTool(
               operating_system, operating_system_product,
               operating_system_version))
 
+      if not parser_filter_expression:
+        # knowledge_base.platform contains the first result of GuessOS.
+        parser_filter_expression = knowledge_base.platform.lower()
+
       if parser_filter_expression:
         logging.info('Parser filter expression changed to: {0:s}'.format(
             parser_filter_expression))
