@@ -40,7 +40,7 @@ class TaggingAnalysisArgumentsHelper(interface.ArgumentsHelper):
 
     Args:
       options (argparse.Namespace): parser options.
-      output_module (OutputModule): output module to configure.
+      analysis_plugin (AnalysisPlugin): analysis plugin to configure.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
