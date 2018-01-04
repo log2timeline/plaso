@@ -380,10 +380,10 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
   # TODO: add test for _StopAnalysisProcesses.
   # TODO: add test for _UpdateProcessingStatus.
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testAnalyzeEvents(self):
     """Tests the AnalyzeEvents function."""
-    storage_file_path = self._GetTestFilePath(['psort_test.json.plaso'])
+    storage_file_path = self._GetTestFilePath(['psort_test.plaso'])
 
     session = sessions.Session()
     knowledge_base_object = knowledge_base.KnowledgeBase()
@@ -435,10 +435,10 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     # TODO: add bogus data location test.
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testExportEvents(self):
     """Tests the ExportEvents function."""
-    storage_file_path = self._GetTestFilePath(['psort_test.json.plaso'])
+    storage_file_path = self._GetTestFilePath(['psort_test.plaso'])
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     output_writer = cli_test_lib.TestOutputWriter()

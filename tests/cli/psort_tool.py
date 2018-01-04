@@ -201,7 +201,7 @@ class PsortToolTest(test_lib.CLIToolTestCase):
 
     options = test_lib.TestOptions()
     options.output_format = 'null'
-    options.storage_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    options.storage_file = self._GetTestFilePath(['psort_test.plaso'])
 
     test_tool.ParseOptions(options)
 
@@ -211,7 +211,7 @@ class PsortToolTest(test_lib.CLIToolTestCase):
       test_tool.ParseOptions(options)
 
     options = test_lib.TestOptions()
-    options.storage_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    options.storage_file = self._GetTestFilePath(['psort_test.plaso'])
 
     with self.assertRaises(errors.BadConfigOption):
       test_tool.ParseOptions(options)
@@ -226,7 +226,7 @@ class PsortToolTest(test_lib.CLIToolTestCase):
         input_reader=input_reader, output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.storage_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    options.storage_file = self._GetTestFilePath(['psort_test.plaso'])
     options.output_format = 'test_missing'
 
     output_manager.OutputManager.RegisterOutput(

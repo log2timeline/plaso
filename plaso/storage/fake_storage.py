@@ -248,6 +248,7 @@ class FakeStorageWriter(interface.StorageWriter):
       EventObject: event.
     """
     for event in self._events:
+      # TODO: refactor this into psort.
       self._ReadEventDataIntoEvent(event)
 
       yield event
@@ -344,6 +345,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
       # Make a copy of the event before adding the event data.
       event = copy.deepcopy(event)
+      # TODO: refactor this into psort.
       self._ReadEventDataIntoEvent(event)
 
       event_heap.PushEvent(event)
