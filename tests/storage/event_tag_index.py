@@ -42,14 +42,14 @@ class EventTagIndexTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testBuild(self):
     """Tests the _Build function."""
     test_index = event_tag_index.EventTagIndex()
 
     self.assertIsNone(test_index._index)
 
-    test_file = self._GetTestFilePath(['psort_test.json.plaso'])
+    test_file = self._GetTestFilePath(['psort_test.plaso'])
     storage_file = sqlite_file.SQLiteStorageFile()
     storage_file.Open(path=test_file)
     test_index._Build(storage_file)

@@ -69,7 +69,7 @@ fi
 
 cp -rf ${SOURCE_DIRECTORY}/* .;
 
-TEST_FILE="psort_test.json.plaso";
+TEST_FILE="psort_test.plaso";
 
 # Syslog does not contain a year we must pass preferred year to prevent the parser failing early on non-leap years.
 PYTHONPATH=. python ./tools/log2timeline.py --buffer_size=300 --quiet --preferred_year 2012 ${TEST_FILE} test_data/syslog;
@@ -104,7 +104,7 @@ PYTHONPATH=. python ./tools/psort.py --analysis tagging --output-format=null --t
 
 mv ${TEST_FILE} ${OLD_PWD}/test_data/;
 
-TEST_FILE="pinfo_test.json.plaso";
+TEST_FILE="pinfo_test.plaso";
 
 PYTHONPATH=. python ./tools/log2timeline.py --partition=all --quiet ${TEST_FILE} test_data/tsk_volume_system.raw;
 
