@@ -15,7 +15,7 @@ from tests import test_lib as shared_test_lib
 class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
   """Tests for the knowledge base."""
 
-  _MAXOS_PATHS = [
+  _MACOS_PATHS = [
       '/Users/dude/Library/Application Data/Google/Chrome/Default/Extensions',
       ('/Users/dude/Library/Application Data/Google/Chrome/Default/Extensions/'
        'apdfllckaahabafndbhieahigkjlhalf'),
@@ -26,7 +26,7 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
        'Extensions/pjkljhegncpnkpknbcohdijeoejaedia'),
       '/Users/frank/Library/Application Data/Google/Chrome/Default/Extensions']
 
-  _MAXOS_USERS = [
+  _MACOS_USERS = [
       {'name': 'root', 'path': '/var/root', 'sid': '0'},
       {'name': 'frank', 'path': '/Users/frank', 'sid': '4052'},
       {'name': 'hans', 'path': '/Users/hans', 'sid': '4352'},
@@ -218,14 +218,14 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
   def testGetUsernameForPath(self):
     """Tests the GetUsernameForPath function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    self._SetUserAccounts(knowledge_base_object, self._MAXOS_USERS)
+    self._SetUserAccounts(knowledge_base_object, self._MACOS_USERS)
 
     username = knowledge_base_object.GetUsernameForPath(
-        self._MAXOS_PATHS[0])
+        self._MACOS_PATHS[0])
     self.assertEqual(username, 'dude')
 
     username = knowledge_base_object.GetUsernameForPath(
-        self._MAXOS_PATHS[4])
+        self._MACOS_PATHS[4])
     self.assertEqual(username, 'hans')
 
     username = knowledge_base_object.GetUsernameForPath(
@@ -244,7 +244,7 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     self.assertEqual(username, 'frank')
 
     username = knowledge_base_object.GetUsernameForPath(
-        self._MAXOS_PATHS[2])
+        self._MACOS_PATHS[2])
     self.assertIsNone(username)
 
   def testGetSetValue(self):
