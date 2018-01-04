@@ -4,23 +4,32 @@
 from __future__ import unicode_literals
 import unittest
 
-from plaso.lib import timelib
 from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 from plaso.parsers import fseventsd
 
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import resolver as path_spec_resolver
+
 
 class FSEventsdParserTest(test_lib.ParserTestCase):
+  """Tests for the fseventsd parser."""
 
 
-  @shared_test_lib.skipUnlessHasTestFile(
-      ['fsevents-0000000002d89b58-decompressed'])
-  def testParse(self):
+  @shared_test_lib.skipUnlessHasTestFile(['fsevents-0000000002d89b58'])
+  def testParseV1(self):
     """Tests the Parse function."""
-    parser = fseventsd.FSEventsdParser()
+    parser = fseventsd.FSEventsdParserV1()
 
-    storage_writer = self._ParseFile(
-        ['fsevents-0000000002d89b58-decompressed'], parser)
+    path = self._GetTestFilePath(['fsevents-0000000002d89b58'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
+
+    gzip_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_GZIP, parent=os_path_spec)
+
+    storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser)
 
     self.assertEqual(storage_writer.number_of_events, 12)
 
@@ -30,14 +39,39 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.path, '.Spotlight-V100/Store-V1')
     self.assertEqual(event.event_id, 47747061)
     self.assertEqual(event.flags, b'\x00\x00\x00\x00\x80\x00\x00\x01')
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2017-10-18 11:55:20')
+
+    os_file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
+    expected_time = os_file_entry.modification_time
+    expected_timestamp = expected_time.GetPlasoTimestamp()
     self.assertEqual(event.timestamp, expected_timestamp)
 
-    event = storage_writer.events[0]
-    self.assertEqual(event.filename, None)
+  @shared_test_lib.skipUnlessHasTestFile(['fsevents-00000000001a0b79'])
+  def testParseV2(self):
+    """Tests the Parse function."""
+    parser = fseventsd.FSEventsdParserV2()
 
-    self.assertNotEquals(storage_writer.number_of_events, 0)
+    path = self._GetTestFilePath(['fsevents-00000000001a0b79'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
+
+    gzip_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_GZIP, parent=os_path_spec)
+
+    storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser)
+
+    self.assertEqual(storage_writer.number_of_events, 6)
+
+    events = list(storage_writer.GetEvents())
+
+    event = events[2]
+    self.assertEqual(event.path, 'Hi, Sierra')
+    self.assertEqual(event.event_id, 1706838)
+    self.assertEqual(event.flags, b'\x00\x00\x00\x00\x08\x00\x00\x01')
+
+    os_file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
+    expected_time = os_file_entry.modification_time
+    expected_timestamp = expected_time.GetPlasoTimestamp()
+    self.assertEqual(event.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

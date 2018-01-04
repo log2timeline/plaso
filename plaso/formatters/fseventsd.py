@@ -11,50 +11,42 @@ from plaso.lib import errors
 class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
   """The fseventsd event formatter."""
 
-  DATA_TYPE = 'macos:fseventsd'
+  DATA_TYPE = 'macos:fseventsd:record'
 
   FORMAT_STRING_PIECES = [
-    '{object_type}',
-    ':',
-    '{path}',
-    'Changes:',
-    '{event_types}',
-    'Event ID:',
-    '{event_id}'
+      '{object_type}', ':', '{path}', 'Changes:', '{event_types}', 'Event ID:',
+      '{event_id}'
   ]
 
-  FORMAT_STRING_SHORT_PIECES = [
-    '{path}',
-    '{event_types}']
+  FORMAT_STRING_SHORT_PIECES = ['{path}', '{event_types}']
 
   SOURCE_SHORT = 'FSEVENT'
 
   _OBJECT_TYPE_MASKS = {
-    0x00000001: 'Folder',
-    0x00001000: 'HardLink',
-    0x00004000: 'SymbolicLink',
-    0x00008000: 'File',
-  }
+      0x00000001: 'Folder',
+      0x00001000: 'HardLink',
+      0x00004000: 'SymbolicLink',
+      0x00008000: 'File'}
 
   _EVENT_MASKS = {
-    0x00000000: 'None',
-    0x00000002: 'Mount',
-    0x00000004: 'Unmount',
-    0x00000020: 'EndOfTransaction',
-    0x00000800: 'LastHardLinkRemoved',
-    0x00010000: 'PermissionChanged',
-    0x00020000: 'ExtendedAttrModified',
-    0x00040000: 'ExtendedAttrRemoved',
-    0x00100000: 'DocumentRevision',
-    0x01000000: 'Created',
-    0x02000000: 'Removed',
-    0x04000000: 'InodeMetaModified',
-    0x08000000: 'Renamed',
-    0x10000000: 'Modified',
-    0x20000000: 'Exchange',
-    0x40000000: 'FinderInfoModified',
-    0x80000000: 'FolderCreated',
-  }
+      0x00000000: 'None',
+      0x00000002: 'Mount',
+      0x00000004: 'Unmount',
+      0x00000020: 'EndOfTransaction',
+      0x00000800: 'LastHardLinkRemoved',
+      0x00010000: 'PermissionChanged',
+      0x00020000: 'ExtendedAttrModified',
+      0x00040000: 'ExtendedAttrRemoved',
+      0x00100000: 'DocumentRevision',
+      0x00400000: 'Item Cloned',
+      0x01000000: 'Created',
+      0x02000000: 'Removed',
+      0x04000000: 'InodeMetaModified',
+      0x08000000: 'Renamed',
+      0x10000000: 'Modified',
+      0x20000000: 'Exchange',
+      0x40000000: 'FinderInfoModified',
+      0x80000000: 'FolderCreated'}
 
   def _GetObjectType(self, mask):
     """Determines the object type for a given FSEvents mask.
@@ -102,8 +94,8 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event.data_type:
-      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event.data_type))
+      raise errors.WrongFormatter(
+          'Unsupported data type: {0:s}.'.format(event.data_type))
 
     event_values = event.CopyToDict()
     mask = event_values['flags']
