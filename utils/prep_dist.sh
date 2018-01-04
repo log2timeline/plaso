@@ -10,19 +10,7 @@ EXIT_SUCCESS=0;
 
 rm -f plaso/parsers/hachoir*
 
-sed -i"~" -e '/import hachoir/d' plaso/parsers/__init__.py
-
-SED_SCRIPT="
-/_slow': \[/ {
-:loop
-  /'\],/ !{
-      N
-      b loop
-  }
-  d
-}";
-
-sed -i"~" -e "${SED_SCRIPT}" plaso/parsers/presets.py
+sed -i"~" -e "s/'hachoir', //" plaso/parsers/presets.py
 
 sed -i"~" '/hachoir_/d' plaso/dependencies.py
 
