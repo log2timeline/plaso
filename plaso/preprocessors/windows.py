@@ -26,10 +26,6 @@ class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
       value_data (object): Windows Registry value data.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
@@ -39,18 +35,14 @@ class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
           'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
-    result = False
     evironment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name=self._NAME, value=value_data)
 
     try:
       knowledge_base.AddEnvironmentVariable(evironment_variable)
-      result = True
     except KeyError:
       # TODO: add and store preprocessing errors.
       pass
-
-    return result
 
 
 class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
@@ -73,15 +65,9 @@ class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
           the artifact value data.
       path_separator (str): path segment separator.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
-    result = False
-
     relative_path = searcher.GetRelativePath(path_specification)
     if not relative_path:
       raise errors.PreProcessFail(
@@ -98,12 +84,9 @@ class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
 
     try:
       knowledge_base.AddEnvironmentVariable(evironment_variable)
-      result = True
     except KeyError:
       # TODO: add and store preprocessing errors.
       pass
-
-    return result
 
 
 class WindowsCodepagePlugin(
@@ -119,10 +102,6 @@ class WindowsCodepagePlugin(
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
       value_data (object): Windows Registry value data.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
@@ -132,18 +111,14 @@ class WindowsCodepagePlugin(
           'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
-    result = False
     # Map the Windows code page name to a Python equivalent name.
     codepage = 'cp{0:s}'.format(value_data)
 
     try:
       knowledge_base.SetCodepage(codepage)
-      result = True
     except ValueError:
       # TODO: add and store preprocessing errors.
       pass
-
-    return result
 
 
 class WindowsHostnamePlugin(
@@ -159,10 +134,6 @@ class WindowsHostnamePlugin(
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
       value_data (object): Windows Registry value data.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
@@ -174,7 +145,6 @@ class WindowsHostnamePlugin(
 
     hostname_artifact = artifacts.HostnameArtifact(name=value_data)
     knowledge_base.SetHostname(hostname_artifact)
-    return True
 
 
 class WindowsProgramFilesEnvironmentVariablePlugin(
@@ -208,10 +178,6 @@ class WindowsSystemProductPlugin(
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
       value_data (object): Windows Registry value data.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
@@ -222,7 +188,6 @@ class WindowsSystemProductPlugin(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
     knowledge_base.SetValue('operating_system_product', value_data)
-    return True
 
 
 class WindowsSystemRootEnvironmentVariablePlugin(
@@ -247,10 +212,6 @@ class WindowsSystemVersionPlugin(
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
       value_data (object): Windows Registry value data.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
@@ -261,7 +222,6 @@ class WindowsSystemVersionPlugin(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
     knowledge_base.SetValue('operating_system_version', value_data)
-    return True
 
 
 class WindowsTimeZonePlugin(
@@ -277,10 +237,6 @@ class WindowsTimeZonePlugin(
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
       value_data (object): Windows Registry value data.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
@@ -290,7 +246,6 @@ class WindowsTimeZonePlugin(
           'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
-    result = False
     # Map the Windows time zone name to a Python equivalent name.
     lookup_key = value_data.replace(' ', '')
 
@@ -306,8 +261,6 @@ class WindowsTimeZonePlugin(
       # TODO: add and store preprocessing errors.
       time_zone = value_data
       logging.warning('Unable to map: "{0:s}" to time zone'.format(value_data))
-
-    return result
 
 
 class WindowsUserAccountsPlugin(
@@ -343,10 +296,6 @@ class WindowsUserAccountsPlugin(
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       value_name (str): name of the Windows Registry value.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
@@ -366,8 +315,6 @@ class WindowsUserAccountsPlugin(
     except KeyError:
       # TODO: add and store preprocessing errors.
       pass
-
-    return False
 
 
 class WindowsWinDirEnvironmentVariablePlugin(
