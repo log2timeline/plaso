@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The Mac OS X keychain password database file event formatter."""
+"""The MacOS keychain password database file event formatter."""
 
 from __future__ import unicode_literals
 

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""This file contains the Mac OS X user plist plugin."""
+"""This file contains the MacOS user plist plugin."""
 
 from __future__ import unicode_literals
 
-# TODO: Only plists from Mac OS X 10.8 and 10.9 were tested. Look at other
+# TODO: Only plists from MacOS 10.8 and 10.9 were tested. Look at other
 #       versions as well.
 
 import binascii
@@ -48,17 +48,17 @@ class MacUserPlugin(interface.PlistPlugin):
   """
 
   NAME = 'macuser'
-  DESCRIPTION = 'Parser for Mac OS X user plist files.'
+  DESCRIPTION = 'Parser for MacOS user plist files.'
 
   # The PLIST_PATH is dynamic, "user".plist is the name of the
-  # Mac OS X user.
+  # MacOS user.
   PLIST_KEYS = frozenset([
       'name', 'uid', 'home', 'passwordpolicyoptions', 'ShadowHashData'])
 
   _ROOT = '/'
 
   def Process(self, parser_mediator, plist_name, top_level, **kwargs):
-    """Check if it is a valid Mac OS X system  account plist file name.
+    """Check if it is a valid MacOS system  account plist file name.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers

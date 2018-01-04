@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the Mac OS X local users plist plugin."""
+"""Tests for the MacOS local users plist plugin."""
 
 from __future__ import unicode_literals
 
@@ -15,7 +15,7 @@ from tests.parsers.plist_plugins import test_lib
 
 
 class MacUserPluginTest(test_lib.PlistPluginTestCase):
-  """Tests for the Mac OS X local user plist plugin."""
+  """Tests for the MacOS local user plist plugin."""
 
   @shared_test_lib.skipUnlessHasTestFile(['user.plist'])
   def testProcess(self):

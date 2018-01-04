@@ -29,7 +29,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
   _EVENT_TAG_COMMENT = 'Tag applied by tagging analysis plugin.'
 
   _OS_TAG_FILES = {
-      'macosx': 'tag_macosx.txt',
+      'macos': 'tag_macos.txt',
       'windows': 'tag_windows.txt'}
 
   # A line with no indent is a tag name.

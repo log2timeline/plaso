@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains the Mac OS X securityd log plaintext parser.
+"""This file contains the MacOS securityd log plaintext parser.
 
 Also see:
   http://opensource.apple.com/source/Security/Security-55471/sec/securityd/
@@ -22,8 +22,8 @@ from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
-class MacSecuritydLogEventData(events.EventData):
-  """Mac OS X securityd log event data.
+class MacOSSecuritydLogEventData(events.EventData):
+  """MacOS securityd log event data.
 
   Attributes:
     caller (str): caller, consists of two hex numbers.
@@ -39,7 +39,7 @@ class MacSecuritydLogEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacSecuritydLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(MacOSSecuritydLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.caller = None
     self.facility = None
     self.level = None
@@ -49,11 +49,11 @@ class MacSecuritydLogEventData(events.EventData):
     self.sender_pid = None
 
 
-class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
+class MacOSSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parses the securityd file that contains logs from the security daemon."""
 
   NAME = 'mac_securityd'
-  DESCRIPTION = 'Parser for Mac OS X securityd log files.'
+  DESCRIPTION = 'Parser for MacOS securityd log files.'
 
   _ENCODING = 'utf-8'
   _DEFAULT_YEAR = 2012
@@ -94,7 +94,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
 
   def __init__(self):
     """Initializes a parser object."""
-    super(MacSecuritydLogParser, self).__init__()
+    super(MacOSSecuritydLogParser, self).__init__()
     self._last_month = None
     self._previous_structure = None
     self._year_use = 0
@@ -160,7 +160,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     # It uses CarsNotIn structure which leaves whitespaces
     # at the beginning of the sender and the caller.
 
-    event_data = MacSecuritydLogEventData()
+    event_data = MacOSSecuritydLogEventData()
     event_data.caller = structure.caller.strip() or 'unknown'
     event_data.facility = structure.facility
     event_data.level = structure.level
@@ -209,7 +209,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       structure = self.SECURITYD_LINE.parseString(line)
     except pyparsing.ParseException:
-      logging.debug('Not a Mac securityd log file')
+      logging.debug('Not a MacOS securityd log file')
       return False
 
     time_elements_tuple = self._GetTimeElementsTuple(structure)
@@ -219,7 +219,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
           time_elements_tuple=time_elements_tuple)
     except ValueError:
       logging.debug(
-          'Not a Mac securityd log file, invalid date and time: {0!s}'.format(
+          'Not a MacOS securityd log file, invalid date and time: {0!s}'.format(
               structure.date_time))
       return False
 
@@ -228,4 +228,4 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     return True
 
 
-manager.ParsersManager.RegisterParser(MacSecuritydLogParser)
+manager.ParsersManager.RegisterParser(MacOSSecuritydLogParser)

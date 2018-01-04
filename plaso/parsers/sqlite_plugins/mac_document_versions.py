@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the Mac OS X Document Versions files."""
+"""Parser for the MacOS Document Versions files."""
 
 from __future__ import unicode_literals
 
@@ -13,7 +13,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class MacDocumentVersionsEventData(events.EventData):
-  """Mac OS X Document Versions database event data.
+  """MacOS Document Versions database event data.
 
   Attributes:
     name (str): name of the original file.
@@ -37,7 +37,7 @@ class MacDocumentVersionsEventData(events.EventData):
 
 
 class MacDocumentVersionsPlugin(interface.SQLitePlugin):
-  """Parse the Mac OS X Document Versions SQLite database.."""
+  """Parse the MacOS Document Versions SQLite database.."""
 
   NAME = 'mac_document_versions'
   DESCRIPTION = 'Parser for document revisions SQLite database files.'

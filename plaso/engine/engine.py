@@ -78,7 +78,7 @@ class BaseEngine(object):
       return definitions.OPERATING_SYSTEM_WINDOWS
 
     if '/system/library' in locations:
-      return definitions.OPERATING_SYSTEM_MACOSX
+      return definitions.OPERATING_SYSTEM_MACOS
 
     if '/etc' in locations:
       return definitions.OPERATING_SYSTEM_LINUX

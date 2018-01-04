@@ -54,26 +54,7 @@ def _BSMTokenGetSocketDomain(context):
 
 
 class BSMEventData(events.EventData):
-  """Generic BSM event data.
-
-  Attributes:
-    event_type (str): text with ID that represents the type of the event.
-    extra_tokens (dict): event extra tokens.
-    record_length (int): record length in bytes (trailer number).
-  """
-
-  DATA_TYPE = 'bsm:event'
-
-  def __init__(self):
-    """Initializes event data."""
-    super(BSMEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.event_type = None
-    self.extra_tokens = None
-    self.record_length = None
-
-
-class MacBSMEventData(events.EventData):
-  """Mac OS X BSM event data.
+  """BSM event data.
 
   Attributes:
     event_type (str): text with ID that represents the type of the event.
@@ -82,11 +63,11 @@ class MacBSMEventData(events.EventData):
     return_value (str): processed return value and exit status.
   """
 
-  DATA_TYPE = 'mac:bsm:event'
+  DATA_TYPE = 'bsm:event'
 
   def __init__(self):
     """Initializes event data."""
-    super(MacBSMEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(BSMEventData, self).__init__(data_type=self.DATA_TYPE)
     self.event_type = None
     self.extra_tokens = None
     self.record_length = None
@@ -697,7 +678,7 @@ class BSMParser(interface.FileObjectParser):
       parser_mediator.ProduceExtractionError(
           'unsupported token type: {0:d} at offset: 0x{1:08x}.'.format(
               token_type, record_start_offset))
-      # TODO: if it is a Mac OS X, search for the trailer magic value
+      # TODO: if it is a MacOS, search for the trailer magic value
       #       as a end of the entry can be a possibility to continue.
       return False
 
@@ -762,13 +743,10 @@ class BSMParser(interface.FileObjectParser):
             'Unable to jump to next entry with error: {0!s}'.format(exception))
         return False
 
-    # BSM can be in more than one OS: BSD, Solaris and Mac OS X.
-    if parser_mediator.platform != 'MacOSX':
-      event_data = BSMEventData()
-    else:
-      event_data = MacBSMEventData()
-
-      # In Mac OS X the last two tokens are the return status and the trailer.
+    event_data = BSMEventData()
+    if parser_mediator.platform == definitions.OPERATING_SYSTEM_MACOS:
+      # BSM can be in more than one OS: BSD, Solaris and MacOS.
+      # In MacOS the last two tokens are the return status and the trailer.
       return_value = extra_tokens.get('BSM_TOKEN_RETURN32')
       if not return_value:
         return_value = extra_tokens.get('BSM_TOKEN_RETURN64')
@@ -870,9 +848,9 @@ class BSMParser(interface.FileObjectParser):
     except (IOError, construct.FieldError):
       return False
 
-    # If is Mac OS X BSM file, next entry is a  text token indicating
+    # If is MacOS BSM file, next entry is a  text token indicating
     # if it is a normal start or it is a recovery track.
-    if parser_mediator.platform == 'MacOSX':
+    if parser_mediator.platform == definitions.OPERATING_SYSTEM_MACOS:
       token_type, record_structure = self._BSM_TOKEN_TYPES.get(
           token_identifier, ('', None))
 
@@ -880,7 +858,7 @@ class BSMParser(interface.FileObjectParser):
         return False
 
       if token_type != 'BSM_TOKEN_TEXT':
-        logging.warning('It is not a valid first entry for Mac OS X BSM.')
+        logging.warning('It is not a valid first entry for MacOS BSM.')
         return False
 
       try:
@@ -891,7 +869,7 @@ class BSMParser(interface.FileObjectParser):
       text = self._CopyUtf8ByteArrayToString(token.text)
       if (text != 'launchctl::Audit startup' and
           text != 'launchctl::Audit recovery'):
-        logging.warning('It is not a valid first entry for Mac OS X BSM.')
+        logging.warning('It is not a valid first entry for MacOS BSM.')
         return False
 
     return True
