@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the Mac OS X application usage database plugin."""
+"""Tests for the MacOS application usage database plugin."""
 
 from __future__ import unicode_literals
 
@@ -15,7 +15,7 @@ from tests.parsers.sqlite_plugins import test_lib
 
 
 class ApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
-  """Tests for the Mac OS X application usage activity database plugin."""
+  """Tests for the MacOS application usage activity database plugin."""
 
   @shared_test_lib.skipUnlessHasTestFile(['application_usage.sqlite'])
   def testProcess(self):

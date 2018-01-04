@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the Mac OS X appfirewall.log file event formatter."""
+"""Tests for the MacOS appfirewall.log file event formatter."""
 
 from __future__ import unicode_literals
 
@@ -12,7 +12,7 @@ from tests.formatters import test_lib
 
 
 class MacAppFirewallLogFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the Mac OS X appfirewall.log file event formatter."""
+  """Tests for the MacOS appfirewall.log file event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""

@@ -21,7 +21,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['mac_cups_ipp'])
   def testParse(self):
     """Tests the Parse function."""
-    # TODO: only tested against Mac OS X Cups IPP (Version 2.0)
+    # TODO: only tested against MacOS Cups IPP (Version 2.0)
     parser = cups_ipp.CupsIppParser()
     storage_writer = self._ParseFile(['mac_cups_ipp'], parser)
 

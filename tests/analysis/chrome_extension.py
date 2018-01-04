@@ -58,7 +58,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
 
   # pylint: disable=protected-access
 
-  _MACOSX_PATHS = [
+  _MACOS_PATHS = [
       '/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions',
       ('/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions/'
        'apdfllckaahabafndbhieahigkjlhalf'),
@@ -81,7 +81,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
       'C:\\Windows\\System32',
       'C:\\Stuff/with path separator\\Folder']
 
-  _MACOSX_USERS = [
+  _MACOS_USERS = [
       {'name': 'root', 'path': '/var/root', 'sid': '0'},
       {'name': 'frank', 'path': '/Users/frank', 'sid': '4052'},
       {'name': 'hans', 'path': '/Users/hans', 'sid': '4352'},
@@ -96,7 +96,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     """Tests the _GetPathSegmentSeparator function."""
     plugin = MockChromeExtensionPlugin()
 
-    for path in self._MACOSX_PATHS:
+    for path in self._MACOS_PATHS:
       path_segment_separator = plugin._GetPathSegmentSeparator(path)
       self.assertEqual(path_segment_separator, '/')
 
@@ -105,10 +105,10 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
       self.assertEqual(path_segment_separator, '\\')
 
   @shared_test_lib.skipUnlessHasTestFile(['chrome_extensions'])
-  def testExamineEventAndCompileReportMacOSXPaths(self):
-    """Tests the ExamineEvent and CompileReport functions on Mac OS X paths."""
+  def testExamineEventAndCompileReportMacOSPaths(self):
+    """Tests the ExamineEvent and CompileReport functions on MacOS paths."""
     events = []
-    for path in self._MACOSX_PATHS:
+    for path in self._MACOS_PATHS:
       event_dictionary = {
           'data_type': 'fs:stat',
           'filename': path,
@@ -120,7 +120,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
 
     plugin = MockChromeExtensionPlugin()
     storage_writer = self._AnalyzeEvents(
-        events, plugin, knowledge_base_values={'users': self._MACOSX_USERS})
+        events, plugin, knowledge_base_values={'users': self._MACOS_USERS})
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
 

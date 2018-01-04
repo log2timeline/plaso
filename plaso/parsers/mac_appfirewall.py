@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a appfirewall.log (Mac OS X Firewall) parser."""
+"""This file contains a appfirewall.log (MacOS Firewall) parser."""
 
 from __future__ import unicode_literals
 
@@ -19,7 +19,7 @@ from plaso.parsers import text_parser
 
 
 class MacAppFirewallLogEventData(events.EventData):
-  """Mac OS X Firewall log event data.
+  """MacOS Firewall log event data.
 
   Attributes:
     action (str): action.

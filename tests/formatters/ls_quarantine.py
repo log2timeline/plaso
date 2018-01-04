@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the Mac OS X launch services (LS) quarantine event formatter."""
+"""Tests for the MacOS launch services (LS) quarantine event formatter."""
 
 from __future__ import unicode_literals
 

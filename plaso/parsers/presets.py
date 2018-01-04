@@ -31,7 +31,7 @@ CATEGORIES = {
         'popularity_contest', 'selinux', 'sqlite/skype', 'syslog',
         'systemd_journal', 'utmp', 'webhist', 'xchatlog', 'xchatscrollback',
         'sqlite/zeitgeist', 'zsh_extended_history'],
-    'macosx': [
+    'macos': [
         'sqlite/appusage', 'asl_log', 'bash_history', 'bencode', 'bsm_log',
         'cups_ipp', 'filestat', 'sqlite/google_drive', 'sqlite/imessage',
         'java_idx', 'sqlite/ls_quarantine', 'mac_appfirewall_log',

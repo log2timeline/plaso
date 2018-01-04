@@ -356,8 +356,8 @@ class ParsersManager(object):
     if operating_system == definitions.OPERATING_SYSTEM_LINUX:
       return 'linux'
 
-    if operating_system == definitions.OPERATING_SYSTEM_MACOSX:
-      return 'macosx'
+    if operating_system == definitions.OPERATING_SYSTEM_MACOS:
+      return 'macos'
 
     if operating_system_product:
       operating_system_product = operating_system_product.lower()

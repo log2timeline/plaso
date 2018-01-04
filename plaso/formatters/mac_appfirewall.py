@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The Mac OS X appfirewall.log file event formatter."""
+"""The MacOS appfirewall.log file event formatter."""
 
 from __future__ import unicode_literals
 
@@ -8,7 +8,7 @@ from plaso.formatters import manager
 
 
 class MacAppFirewallLogFormatter(interface.ConditionalEventFormatter):
-  """Formatter for Mac OS X appfirewall.log file event."""
+  """Formatter for MacOS appfirewall.log file event."""
 
   DATA_TYPE = 'mac:appfirewall:line'
 

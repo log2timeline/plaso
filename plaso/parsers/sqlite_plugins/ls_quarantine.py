@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Plugin for the Mac OS X launch services quarantine events."""
+"""Plugin for the MacOS launch services quarantine events."""
 
 from __future__ import unicode_literals
 
@@ -14,7 +14,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 # TODO: describe more clearly what the data value contains.
 class LsQuarantineEventData(events.EventData):
-  """Mac OS X launch services quarantine event data.
+  """MacOS launch services quarantine event data.
 
   Attributes:
     data (bytes): data.
