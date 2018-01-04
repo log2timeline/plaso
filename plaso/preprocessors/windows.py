@@ -256,7 +256,6 @@ class WindowsTimeZonePlugin(
     try:
       # Catch and warn about unsupported preprocessor plugin.
       knowledge_base.SetTimeZone(time_zone)
-      result = True
     except ValueError:
       # TODO: add and store preprocessing errors.
       time_zone = value_data

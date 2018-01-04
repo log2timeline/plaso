@@ -66,7 +66,8 @@ class LinuxDistributionPlugin(interface.FileArtifactPreprocessorPlugin):
       knowledge_base.SetValue('operating_system_product', system_product)
 
 
-class LinuxSystemdOperatingSystemPlugin(interface.FileArtifactPreprocessorPlugin):
+class LinuxSystemdOperatingSystemPlugin(
+    interface.FileArtifactPreprocessorPlugin):
   """The Linux systemd operating system plugin."""
 
   ARTIFACT_DEFINITION_NAME = 'LinuxSystemdOSRelease'
