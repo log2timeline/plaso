@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the Mac OS X application usage event formatter."""
+"""Tests for the MacOS application usage event formatter."""
 
 from __future__ import unicode_literals
 
@@ -12,7 +12,7 @@ from tests.formatters import test_lib
 
 
 class ApplicationUsageFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the Mac OS X Application usage event formatter."""
+  """Tests for the MacOS Application usage event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""

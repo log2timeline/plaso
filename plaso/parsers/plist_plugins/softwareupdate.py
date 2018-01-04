@@ -15,17 +15,17 @@ from plaso.parsers.plist_plugins import interface
 
 
 class SoftwareUpdatePlugin(interface.PlistPlugin):
-  """Basic plugin to extract the Mac OS X update status.
+  """Basic plugin to extract the MacOS update status.
 
   Further details about the extracted fields:
     LastFullSuccessfulDate:
-      timestamp when Mac OS X was full update.
+      timestamp when MacOS was full update.
     LastSuccessfulDate:
-      timestamp when Mac OS X was partially update.
+      timestamp when MacOS was partially update.
   """
 
   NAME = 'maxos_software_update'
-  DESCRIPTION = 'Parser for Mac OS X software update plist files.'
+  DESCRIPTION = 'Parser for MacOS software update plist files.'
 
   PLIST_PATH = 'com.apple.SoftwareUpdate.plist'
   PLIST_KEYS = frozenset([
@@ -35,7 +35,7 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
 
   # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
-    """Extracts relevant Mac OS X update entries.
+    """Extracts relevant MacOS update entries.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -46,7 +46,7 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
     pending = match.get('LastUpdatesAvailable', None)
 
     event_data = plist_event.PlistTimeEventData()
-    event_data.desc = 'Last Mac OS X {0:s} full update.'.format(version)
+    event_data.desc = 'Last MacOS {0:s} full update.'.format(version)
     event_data.key = ''
     event_data.root = '/'
 

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the Mac OS X wifi.log file event formatter."""
+"""Tests for the MacOS wifi.log file event formatter."""
 
 from __future__ import unicode_literals
 

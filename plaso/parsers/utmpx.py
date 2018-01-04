@@ -3,7 +3,7 @@
 
 from __future__ import unicode_literals
 
-# TODO: Add support for other implementations than Mac OS X.
+# TODO: Add support for other implementations than MacOS.
 #       The parser should be checked against IOS UTMPX file.
 
 import logging
@@ -20,8 +20,8 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-class UtmpxMacOsXEventData(events.EventData):
-  """Mac OS X utmpx event data.
+class UtmpxMacOSEventData(events.EventData):
+  """MacOS utmpx event data.
 
   Attributes:
     computer_name (str): name of the host or IP address.
@@ -34,7 +34,7 @@ class UtmpxMacOsXEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(UtmpxMacOsXEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(UtmpxMacOSEventData, self).__init__(data_type=self.DATA_TYPE)
     self.computer_name = None
     self.status_type = None
     self.terminal = None
@@ -86,7 +86,7 @@ class UtmpxParser(interface.FileObjectParser):
       entry_struct = self._UTMPX_ENTRY.parse(data)
     except (IOError, construct.FieldError) as exception:
       logging.warning(
-          'Unable to parse Mac OS X UTMPX entry with error: {0!s}'.format(
+          'Unable to parse MacOS UTMPX entry with error: {0!s}'.format(
               exception))
       return False
 
@@ -102,7 +102,7 @@ class UtmpxParser(interface.FileObjectParser):
     if not computer_name:
       computer_name = 'localhost'
 
-    event_data = UtmpxMacOsXEventData()
+    event_data = UtmpxMacOSEventData()
     event_data.computer_name = computer_name
     event_data.offset = file_object.tell()
     event_data.status_type = entry_struct.status_type

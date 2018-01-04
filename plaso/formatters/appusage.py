@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The Mac OS X application usage event formatter."""
+"""The MacOS application usage event formatter."""
 
 from __future__ import unicode_literals
 
@@ -8,7 +8,7 @@ from plaso.formatters import manager
 
 
 class ApplicationUsageFormatter(interface.EventFormatter):
-  """Formatter for a Mac OS X Application usage event."""
+  """Formatter for a MacOS Application usage event."""
 
   DATA_TYPE = 'macosx:application_usage'
 

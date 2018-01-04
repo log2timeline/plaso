@@ -25,28 +25,6 @@ class BSMFormatterTest(test_lib.EventFormatterTestCase):
 
     expected_attribute_names = [
         'event_type',
-        'extra_tokens']
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-  # TODO: add test for GetMessages.
-
-
-class MacBSMFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the Mac OS X BSM log entry event formatter."""
-
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = bsm.MacBSMFormatter()
-    self.assertIsNotNone(event_formatter)
-
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = bsm.MacBSMFormatter()
-
-    expected_attribute_names = [
-        'event_type',
         'return_value',
         'extra_tokens']
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains the wifi.log (Mac OS X) parser."""
+"""This file contains the wifi.log (MacOS) parser."""
 
 from __future__ import unicode_literals
 
@@ -46,7 +46,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parse text based on wifi.log file."""
 
   NAME = 'macwifi'
-  DESCRIPTION = 'Parser for Mac OS X wifi.log files.'
+  DESCRIPTION = 'Parser for MacOS wifi.log files.'
 
   _ENCODING = 'utf-8'
 

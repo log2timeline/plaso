@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Mac OS X Keychain files."""
+"""Parser for MacOS Keychain files."""
 
 from __future__ import unicode_literals
 
@@ -32,7 +32,7 @@ from plaso.parsers import manager
 
 
 class KeychainInternetRecordEventData(events.EventData):
-  """Mac OS X keychain internet record event data.
+  """MacOS keychain internet record event data.
 
   Attributes:
     account_name (str): name of the account.
@@ -63,7 +63,7 @@ class KeychainInternetRecordEventData(events.EventData):
 
 # TODO: merge with KeychainInternetRecordEventData.
 class KeychainApplicationRecordEventData(events.EventData):
-  """Mac OS X keychain application password record event data.
+  """MacOS keychain application password record event data.
 
   Attributes:
     account_name (str): name of the account.
@@ -90,7 +90,7 @@ class KeychainParser(interface.FileObjectParser):
   """Parser for Keychain files."""
 
   NAME = 'mac_keychain'
-  DESCRIPTION = 'Parser for Mac OS X Keychain files.'
+  DESCRIPTION = 'Parser for MacOS Keychain files.'
 
   KEYCHAIN_SIGNATURE = b'kych'
   KEYCHAIN_MAJOR_VERSION = 1
@@ -481,7 +481,7 @@ class KeychainParser(interface.FileObjectParser):
     return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
-    """Parses a Mac OS X keychain file-like object.
+    """Parses a MacOS keychain file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -497,7 +497,7 @@ class KeychainParser(interface.FileObjectParser):
       raise errors.UnableToParseFile('Unable to parse file header.')
 
     if db_header.signature != self.KEYCHAIN_SIGNATURE:
-      raise errors.UnableToParseFile('Not a Mac OS X keychain file.')
+      raise errors.UnableToParseFile('Not a MacOS keychain file.')
 
     if (db_header.major_version != self.KEYCHAIN_MAJOR_VERSION or
         db_header.minor_version != self.KEYCHAIN_MINOR_VERSION):
