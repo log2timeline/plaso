@@ -254,7 +254,8 @@ class WindowsTimeZonePlugin(
     lookup_key = value_data.replace(' ', '')
 
     time_zone = time_zones.TIME_ZONES.get(lookup_key, value_data)
-    if not knowledge_base.timezone and time_zone:
+    # TODO: check if time zone is set in knowledge base.
+    if time_zone:
       try:
         # Catch and warn about unsupported preprocessor plugin.
         knowledge_base.SetTimeZone(time_zone)

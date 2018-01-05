@@ -193,7 +193,8 @@ class MacOSTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
               self.ARTIFACT_DEFINITION_NAME))
 
     _, _, time_zone = file_entry.link.partition('zoneinfo/')
-    if not knowledge_base.timezone and time_zone:
+    # TODO: check if time zone is set in knowledge base.
+    if time_zone:
       try:
         knowledge_base.SetTimeZone(time_zone)
       except ValueError:

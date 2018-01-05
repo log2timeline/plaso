@@ -169,7 +169,8 @@ class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
       finally:
         file_object.close()
 
-    if not knowledge_base.timezone and time_zone:
+    # TODO: check if time zone is set in knowledge base.
+    if time_zone:
       try:
         knowledge_base.SetTimeZone(time_zone)
       except ValueError:
