@@ -35,11 +35,12 @@ class LinuxHostnamePlugin(interface.FileArtifactPreprocessorPlugin):
     """
     text_file_object = dfvfs_text_file.TextFile(file_object, encoding='utf-8')
 
-    hostname = text_file_object.readline()
-    hostname = hostname.strip()
-    if hostname:
-      hostname_artifact = artifacts.HostnameArtifact(name=hostname)
-      knowledge_base.SetHostname(hostname_artifact)
+    if not knowledge_base.GetHostname():
+      hostname = text_file_object.readline()
+      hostname = hostname.strip()
+      if hostname:
+        hostname_artifact = artifacts.HostnameArtifact(name=hostname)
+        knowledge_base.SetHostname(hostname_artifact)
 
 
 class LinuxDistributionPlugin(interface.FileArtifactPreprocessorPlugin):
@@ -168,7 +169,7 @@ class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
       finally:
         file_object.close()
 
-    if time_zone:
+    if not knowledge_base.timezone and time_zone:
       try:
         knowledge_base.SetTimeZone(time_zone)
       except ValueError:

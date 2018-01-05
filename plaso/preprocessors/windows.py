@@ -114,11 +114,12 @@ class WindowsCodepagePlugin(
     # Map the Windows code page name to a Python equivalent name.
     codepage = 'cp{0:s}'.format(value_data)
 
-    try:
-      knowledge_base.SetCodepage(codepage)
-    except ValueError:
-      # TODO: add and store preprocessing errors.
-      pass
+    if not knowledge_base.codepage:
+      try:
+        knowledge_base.SetCodepage(codepage)
+      except ValueError:
+        # TODO: add and store preprocessing errors.
+        pass
 
 
 class WindowsHostnamePlugin(
@@ -143,8 +144,9 @@ class WindowsHostnamePlugin(
           'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
-    hostname_artifact = artifacts.HostnameArtifact(name=value_data)
-    knowledge_base.SetHostname(hostname_artifact)
+    if not knowledge_base.GetHostname():
+      hostname_artifact = artifacts.HostnameArtifact(name=value_data)
+      knowledge_base.SetHostname(hostname_artifact)
 
 
 class WindowsProgramFilesEnvironmentVariablePlugin(
@@ -187,7 +189,8 @@ class WindowsSystemProductPlugin(
           'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
-    knowledge_base.SetValue('operating_system_product', value_data)
+    if not knowledge_base.GetValue('operating_system_product'):
+      knowledge_base.SetValue('operating_system_product', value_data)
 
 
 class WindowsSystemRootEnvironmentVariablePlugin(
@@ -221,7 +224,8 @@ class WindowsSystemVersionPlugin(
           'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
-    knowledge_base.SetValue('operating_system_version', value_data)
+    if not knowledge_base.GetValue('operating_system_version'):
+      knowledge_base.SetValue('operating_system_version', value_data)
 
 
 class WindowsTimeZonePlugin(
@@ -250,16 +254,15 @@ class WindowsTimeZonePlugin(
     lookup_key = value_data.replace(' ', '')
 
     time_zone = time_zones.TIME_ZONES.get(lookup_key, value_data)
-    if not time_zone:
-      return
-
-    try:
-      # Catch and warn about unsupported preprocessor plugin.
-      knowledge_base.SetTimeZone(time_zone)
-    except ValueError:
-      # TODO: add and store preprocessing errors.
-      time_zone = value_data
-      logging.warning('Unable to map: "{0:s}" to time zone'.format(value_data))
+    if not knowledge_base.timezone and time_zone:
+      try:
+        # Catch and warn about unsupported preprocessor plugin.
+        knowledge_base.SetTimeZone(time_zone)
+      except ValueError:
+        # TODO: add and store preprocessing errors.
+        time_zone = value_data
+        logging.warning('Unable to map: "{0:s}" to time zone'.format(
+            value_data))
 
 
 class WindowsUserAccountsPlugin(

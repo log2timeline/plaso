@@ -120,9 +120,10 @@ class MacOSHostnamePlugin(PlistFileArtifactPreprocessorPlugin):
       name (str): name of the plist key.
       value (str): value of the plist key.
     """
-    if name in self._PLIST_KEYS:
-      hostname_artifact = artifacts.HostnameArtifact(name=value)
-      knowledge_base.SetHostname(hostname_artifact)
+    if not knowledge_base.GetHostname():
+      if name in self._PLIST_KEYS:
+        hostname_artifact = artifacts.HostnameArtifact(name=value)
+        knowledge_base.SetHostname(hostname_artifact)
 
 
 class MacOSKeyboardLayoutPlugin(PlistFileArtifactPreprocessorPlugin):
@@ -140,13 +141,14 @@ class MacOSKeyboardLayoutPlugin(PlistFileArtifactPreprocessorPlugin):
       name (str): name of the plist key.
       value (str): value of the plist key.
     """
-    if name in self._PLIST_KEYS:
-      if isinstance(value, (list, tuple)):
-        value = value[0]
+    if not knowledge_base.GetValue('keyboard_layout'):
+      if name in self._PLIST_KEYS:
+        if isinstance(value, (list, tuple)):
+          value = value[0]
 
-      _, _, keyboard_layout = value.rpartition('.')
+        _, _, keyboard_layout = value.rpartition('.')
 
-      knowledge_base.SetValue('keyboard_layout', keyboard_layout)
+        knowledge_base.SetValue('keyboard_layout', keyboard_layout)
 
 
 class MacOSSystemVersionPlugin(PlistFileArtifactPreprocessorPlugin):
@@ -164,8 +166,9 @@ class MacOSSystemVersionPlugin(PlistFileArtifactPreprocessorPlugin):
       name (str): name of the plist key.
       value (str): value of the plist key.
     """
-    if name in self._PLIST_KEYS:
-      knowledge_base.SetValue('operating_system_version', value)
+    if not knowledge_base.GetValue('operating_system_version'):
+      if name in self._PLIST_KEYS:
+        knowledge_base.SetValue('operating_system_version', value)
 
 
 class MacOSTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
@@ -190,7 +193,7 @@ class MacOSTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
               self.ARTIFACT_DEFINITION_NAME))
 
     _, _, time_zone = file_entry.link.partition('zoneinfo/')
-    if time_zone:
+    if not knowledge_base.timezone and time_zone:
       try:
         knowledge_base.SetTimeZone(time_zone)
       except ValueError:
