@@ -292,7 +292,7 @@ class KnowledgeBase(object):
       except ValueError:
         logging.warning(
             'Unsupported codepage: {0:s}, defaulting to {1:s}'.format(
-                system_configuration.code_page, self._code_page))
+                system_configuration.code_page, self._codepage))
 
     self._hostnames[session_identifier] = system_configuration.hostname
 
