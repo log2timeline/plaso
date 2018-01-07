@@ -82,11 +82,15 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
     """Tests the operating_system property."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    self.assertIsNone(knowledge_base_object.operating_system)
+    operating_system = knowledge_base_object.operating_system.GetValue(
+        'operating_system')
+    self.assertIsNone(operating_system)
 
-    knowledge_base_object.operating_system = 'Windows'
+    knowledge_base_object.SetValue('operating_system', 'Windows')
 
-    self.assertEqual(knowledge_base_object.operating_system, 'Windows')
+    expected_operating_system = knowledge_base_object.operating_system.GetValue(
+        'operating_system')
+    self.assertEqual(operating_system, 'Windows')
 
   def testTimezoneProperty(self):
     """Tests the timezone property."""
