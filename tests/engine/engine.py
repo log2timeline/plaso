@@ -117,7 +117,7 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
     test_engine.PreprocessSources(registry, [source_path_spec])
 
-    self.assertEqual(test_engine.knowledge_base.platform, 'Windows')
+    self.assertEqual(test_engine.knowledge_base.operating_system, 'Windows')
 
     test_engine.PreprocessSources(registry, [None])
 

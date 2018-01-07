@@ -78,15 +78,15 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(knowledge_base_object.hostname, '')
 
-  def testPlatformProperty(self):
-    """Tests the platform property."""
+  def testOperatingSystemProperty(self):
+    """Tests the operating_system property."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    self.assertEqual(knowledge_base_object.platform, '')
+    self.assertIsNone(knowledge_base_object.operating_system)
 
-    knowledge_base_object.platform = 'Windows'
+    knowledge_base_object.operating_system = 'Windows'
 
-    self.assertEqual(knowledge_base_object.platform, 'Windows')
+    self.assertEqual(knowledge_base_object.operating_system, 'Windows')
 
   def testTimezoneProperty(self):
     """Tests the timezone property."""
