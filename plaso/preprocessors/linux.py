@@ -13,6 +13,7 @@ from dfvfs.helpers import text_file as dfvfs_text_file
 
 from plaso.containers import artifacts
 from plaso.lib import errors
+from plaso.lib import line_reader_file
 from plaso.preprocessors import interface
 from plaso.preprocessors import manager
 
@@ -194,10 +195,10 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
-    text_file_object = dfvfs_text_file.TextFile(file_object, encoding='utf-8')
+    line_reader = line_reader_file.BinaryLineReader(file_object)
 
     try:
-      reader = csv.reader(text_file_object, delimiter=b':')
+      reader = csv.reader(line_reader, delimiter=b':')
     except csv.Error as exception:
       raise errors.PreProcessFail(
           'Unable to read: {0:s} with error: {1!s}'.format(
@@ -208,12 +209,58 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
         # TODO: add and store preprocessing errors.
         continue
 
+      try:
+        username = row[0].decode('utf-8')
+      except UnicodeDecodeError:
+        # TODO: add and store preprocessing errors.
+        logging.error('Unable to decode username.')
+        continue
+
+      try:
+        identifier = row[2].decode('utf-8')
+      except UnicodeDecodeError:
+        # TODO: add and store preprocessing errors.
+        logging.error('Unable to decode identifier.')
+        continue
+
+      group_identifier = None
+      if row[3]:
+        try:
+          group_identifier = row[3].decode('utf-8')
+        except UnicodeDecodeError:
+          # TODO: add and store preprocessing errors.
+          logging.error('Unable to decode group identifier.')
+
+      full_name = None
+      if row[4]:
+        try:
+          full_name = row[4].decode('utf-8')
+        except UnicodeDecodeError:
+          # TODO: add and store preprocessing errors.
+          logging.error('Unable to decode full name.')
+
+      user_directory = None
+      if row[5]:
+        try:
+          user_directory = row[5].decode('utf-8')
+        except UnicodeDecodeError:
+          # TODO: add and store preprocessing errors.
+          logging.error('Unable to decode user directory.')
+
+      shell = None
+      if row[6]:
+        try:
+          shell = row[6].decode('utf-8')
+        except UnicodeDecodeError:
+          # TODO: add and store preprocessing errors.
+          logging.error('Unable to decode shell.')
+
       user_account = artifacts.UserAccountArtifact(
-          identifier=row[2], username=row[0])
-      user_account.group_identifier = row[3] or None
-      user_account.full_name = row[4] or None
-      user_account.user_directory = row[5] or None
-      user_account.shell = row[6] or None
+          identifier=identifier, username=username)
+      user_account.group_identifier = group_identifier
+      user_account.full_name = full_name
+      user_account.user_directory = user_directory
+      user_account.shell = shell
 
       try:
         knowledge_base.AddUserAccount(user_account)
