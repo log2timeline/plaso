@@ -96,7 +96,7 @@ class LinuxIssueFilePlugin(interface.FileArtifactPreprocessorPlugin):
       system_product = system_product.rstrip()
 
     else:
-      system_product == None
+      system_product = None
 
     if not knowledge_base.GetValue('operating_system_product'):
       if system_product:
