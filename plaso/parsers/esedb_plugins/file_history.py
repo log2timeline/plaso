@@ -56,7 +56,8 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
     """Build a dictionary of the value in the strings table.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       table (pyesedb.table): strings table.
 
     Returns:
@@ -88,7 +89,8 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
     """Parses the namespace table.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       cache (Optional[ESEDBCache]): cache.
       database (Optional[pyesedb.file]): ESE database.
       table (Optional[pyesedb.table]): table.
