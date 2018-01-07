@@ -5,6 +5,8 @@ from __future__ import unicode_literals
 
 import logging
 
+import construct
+
 from dfdatetime import ole_automation_date as dfdatetime_ole_automation_date
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
@@ -52,6 +54,28 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       'SruDbIdMapTable': '',
       'SruDbCheckpointTable': ''}
 
+  _GUID_TABLE_VALUE_MAPPINGS = {
+      'TimeStamp': '_ConvertValueBinaryDataToFloatingPointValue'}
+
+  _FLOAT32_LITTLE_ENDIAN = construct.LFloat32('float32')
+  _FLOAT64_LITTLE_ENDIAN = construct.LFloat64('float64')
+
+  def _ConvertValueBinaryDataToFloatingPointValue(self, value):
+    """Converts a binary data value into a floating-point value.
+
+    Args:
+      value (bytes): binary data value containing an ASCII string or None.
+
+    Returns:
+      float: floating-point representation of binary data value or None.
+    """
+    if value:
+      value_length = len(value)
+      if value_length == 4:
+        return self._FLOAT32_LITTLE_ENDIAN.parse(value)
+      elif value_length == 8:
+        return self._FLOAT64_LITTLE_ENDIAN.parse(value)
+
   def ParseNetworkDataUsageMonitor(
       self, parser_mediator, database=None, table=None, **unused_kwargs):
     """Parses the network data usage monitor table.
@@ -75,11 +99,12 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
         break
 
       record_values = self._GetRecordValues(
-          parser_mediator, table.name, esedb_record)
+          parser_mediator, table.name, esedb_record,
+          value_mappings=self._GUID_TABLE_VALUE_MAPPINGS)
 
       # TODO: determine if L2ProfileId and L2ProfileFlags are worthwhile to
       # extract.
-      event_data = NetworkDataUsageMonitorEventData()
+      event_data = SRUMNetworkDataUsageMonitorEventData()
       event_data.application_identifier = record_values.get('AppId', None)
       event_data.bytes_recieved = record_values.get('BytesRecvd', None)
       event_data.bytes_sent = record_values.get('BytesSent', None)
