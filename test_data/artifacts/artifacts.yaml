@@ -42,6 +42,18 @@ provides: [os_release, os_major_version, os_minor_version]
 labels: [Software]
 supported_os: [Linux]
 ---
+name: LinuxIssueFile
+doc: Linux prelogin message and identification (issue) file.
+sources:
+- type: FILE
+  attributes:
+    paths:
+      - '/etc/issue'
+      - '/etc/issue.net'
+labels: [Configuration Files, System]
+supported_os: [Linux]
+urls: ['https://linux.die.net/man/5/issue']
+---
 name: LinuxLSBRelease
 doc: Linux Standard Base (LSB) release information
 sources:

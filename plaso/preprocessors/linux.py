@@ -70,6 +70,39 @@ class LinuxDistributionPlugin(interface.FileArtifactPreprocessorPlugin):
         knowledge_base.SetValue('operating_system_product', system_product)
 
 
+class LinuxIssueFilePlugin(interface.FileArtifactPreprocessorPlugin):
+  """The Linux issue file plugin."""
+
+  ARTIFACT_DEFINITION_NAME = 'LinuxIssueFile'
+
+  def _ParseFileData(self, knowledge_base, file_object):
+    """Parses file content (data) for system product preprocessing attribute.
+
+    Args:
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      file_object (dfvfs.FileIO): file-like object that contains the artifact
+          value data.
+
+    Raises:
+      errors.PreProcessFail: if the preprocessing fails.
+    """
+    text_file_object = dfvfs_text_file.TextFile(file_object, encoding='utf-8')
+
+    system_product = text_file_object.readline()
+
+    # Only parse known default /etc/issue file contents.
+    if system_product.startswith('Debian GNU/Linux '):
+      system_product, _, _ = system_product.partition('\\')
+      system_product = system_product.rstrip()
+
+    else:
+      system_product == None
+
+    if not knowledge_base.GetValue('operating_system_product'):
+      if system_product:
+        knowledge_base.SetValue('operating_system_product', system_product)
+
+
 class LinuxStandardBaseReleasePlugin(interface.FileArtifactPreprocessorPlugin):
   """The Linux standard base (LSB) release plugin."""
 
@@ -270,6 +303,6 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
 
 
 manager.PreprocessPluginsManager.RegisterPlugins([
-    LinuxHostnamePlugin, LinuxDistributionPlugin,
+    LinuxHostnamePlugin, LinuxDistributionPlugin, LinuxIssueFilePlugin,
     LinuxStandardBaseReleasePlugin, LinuxSystemdOperatingSystemPlugin,
     LinuxTimeZonePlugin, LinuxUserAccountsPlugin])
