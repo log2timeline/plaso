@@ -3,7 +3,7 @@
 
 from __future__ import unicode_literals
 
-from plaso.storage.fake import writer
+from plaso.storage.fake import writer as fake_writer
 
 from plaso.containers import sessions
 from plaso.parsers import plist
@@ -56,7 +56,7 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
       FakeStorageWriter: a storage writer.
     """
     session = sessions.Session()
-    storage_writer = writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
     parser_mediator = self._CreateParserMediator(

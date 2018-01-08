@@ -11,7 +11,7 @@ from dfvfs.path import factory as path_spec_factory
 
 from plaso.analysis import mediator
 from plaso.containers import sessions
-from plaso.storage.fake import writer
+from plaso.storage.fake import writer as fake_writer
 
 from tests.analysis import test_lib
 
@@ -22,7 +22,7 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
   def testGetDisplayNameForPathSpec(self):
     """Tests the GetDisplayNameForPathSpec function."""
     session = sessions.Session()
-    storage_writer = writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     knowledge_base = self._SetUpKnowledgeBase()
 
     analysis_mediator = mediator.AnalysisMediator(
@@ -43,7 +43,7 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
   def testSignalAbort(self):
     """Tests the SignalAbort function."""
     session = sessions.Session()
-    storage_writer = writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     knowledge_base = self._SetUpKnowledgeBase()
 
     analysis_mediator = mediator.AnalysisMediator(

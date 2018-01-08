@@ -13,7 +13,7 @@ from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.parsers import interface
 from plaso.parsers import mediator
-from plaso.storage.fake import writer
+from plaso.storage.fake import writer as fake_writer
 
 from tests import test_lib as shared_test_lib
 
@@ -64,7 +64,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       FakeStorageWriter: storage writer.
     """
     session = sessions.Session()
-    storage_writer = writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
     return storage_writer
 

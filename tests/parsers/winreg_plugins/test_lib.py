@@ -7,7 +7,7 @@ from dfwinreg import registry as dfwinreg_registry
 
 from plaso.containers import sessions
 from plaso.parsers import winreg
-from plaso.storage.fake import writer
+from plaso.storage.fake import writer as fake_writer
 
 from tests.parsers import test_lib
 
@@ -60,7 +60,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     self.assertNotEqual(registry_key, None)
 
     session = sessions.Session()
-    storage_writer = writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
     parser_mediator = self._CreateParserMediator(

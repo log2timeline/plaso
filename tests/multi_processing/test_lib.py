@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 from plaso.engine import knowledge_base
 from plaso.parsers import mediator as parsers_mediator
-from plaso.storage.fake import writer
+from plaso.storage.fake import writer as fake_writer
 
 from tests import test_lib as shared_test_lib
 
@@ -66,6 +66,6 @@ class MultiProcessingTestCase(shared_test_lib.BaseTestCase):
     Returns:
       FakeStorageWriter: storage writer.
     """
-    storage_writer = writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
     return storage_writer

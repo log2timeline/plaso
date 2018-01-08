@@ -6,16 +6,34 @@ from __future__ import unicode_literals
 import os
 import sqlite3
 
-from plaso.storage import interface
+from plaso.containers import errors
+from plaso.containers import event_sources
+from plaso.containers import events
+from plaso.containers import reports
+from plaso.containers import tasks
 from plaso.storage import identifiers
+from plaso.storage import interface
 
 
 class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
   """SQLite-based storage file reader for merging."""
 
+  _CONTAINER_TYPE_ANALYSIS_REPORT = reports.AnalysisReport.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
+  _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
+  _CONTAINER_TYPE_EXTRACTION_ERROR = errors.ExtractionError.CONTAINER_TYPE
+  _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
+  _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
+
   _CONTAINER_TYPES = (
-      'event_source', 'event_data', 'event', 'event_tag',
-      'extraction_error', 'analysis_report')
+      _CONTAINER_TYPE_EVENT_SOURCE,
+      _CONTAINER_TYPE_EVENT_DATA,
+      _CONTAINER_TYPE_EVENT,
+      _CONTAINER_TYPE_EVENT_TAG,
+      _CONTAINER_TYPE_EXTRACTION_ERROR,
+      _CONTAINER_TYPE_ANALYSIS_REPORT)
 
   _TABLE_NAMES_QUERY = (
       'SELECT name FROM sqlite_master WHERE type = "table"')
@@ -49,10 +67,10 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
       RuntimeError: if the attribute container type is not supported.
     """
     container_type = attribute_container.CONTAINER_TYPE
-    if container_type == 'event_source':
+    if container_type == self._CONTAINER_TYPE_EVENT_SOURCE:
       self._storage_writer.AddEventSource(attribute_container)
 
-    elif container_type == 'event_data':
+    elif container_type == self._CONTAINER_TYPE_EVENT_DATA:
       identifier = attribute_container.GetIdentifier()
       lookup_key = identifier.CopyToString()
 
@@ -61,10 +79,11 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
       identifier = attribute_container.GetIdentifier()
       self._event_data_identifier_mappings[lookup_key] = identifier
 
-    elif container_type == 'event':
+    elif container_type == self._CONTAINER_TYPE_EVENT:
       if hasattr(attribute_container, 'event_data_row_identifier'):
         event_data_identifier = identifiers.SQLTableIdentifier(
-            'event_data', attribute_container.event_data_row_identifier)
+            self._CONTAINER_TYPE_EVENT_DATA,
+            attribute_container.event_data_row_identifier)
         lookup_key = event_data_identifier.CopyToString()
 
         event_data_identifier = self._event_data_identifier_mappings[lookup_key]
@@ -74,16 +93,17 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
 
       self._storage_writer.AddEvent(attribute_container)
 
-    elif container_type == 'event_tag':
+    elif container_type == self._CONTAINER_TYPE_EVENT_TAG:
       self._storage_writer.AddEventTag(attribute_container)
 
-    elif container_type == 'extraction_error':
+    elif container_type == self._CONTAINER_TYPE_EXTRACTION_ERROR:
       self._storage_writer.AddError(attribute_container)
 
-    elif container_type == 'analysis_report':
+    elif container_type == self._CONTAINER_TYPE_ANALYSIS_REPORT:
       self._storage_writer.AddAnalysisReport(attribute_container)
 
-    elif container_type not in ('task_completion', 'task_start'):
+    elif container_type not in (
+        self._CONTAINER_TYPE_TASK_COMPLETION, self._CONTAINER_TYPE_TASK_START):
       raise RuntimeError('Unsupported container type: {0:s}'.format(
           container_type))
 
@@ -149,9 +169,10 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
             self._active_container_type, serialized_data)
         attribute_container.SetIdentifier(identifier)
 
-        if self._active_container_type == 'event_tag':
+        if self._active_container_type == self._CONTAINER_TYPE_EVENT_TAG:
           event_identifier = identifiers.SQLTableIdentifier(
-              'event', attribute_container.event_row_identifier)
+              self._CONTAINER_TYPE_EVENT,
+              attribute_container.event_row_identifier)
           attribute_container.SetEventIdentifier(event_identifier)
 
           del attribute_container.event_row_identifier

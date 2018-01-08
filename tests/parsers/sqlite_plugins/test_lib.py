@@ -9,7 +9,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import sessions
 from plaso.parsers import sqlite
-from plaso.storage.fake import writer
+from plaso.storage.fake import writer as fake_writer
 
 from tests.parsers import test_lib
 
@@ -36,7 +36,7 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
       A storage writer object (instance of FakeStorageWriter).
     """
     session = sessions.Session()
-    storage_writer = writer.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
     file_entry = self._GetTestFileEntry(path_segments)
