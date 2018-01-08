@@ -30,34 +30,21 @@ class LinuxHostnamePlugin(interface.FileArtifactPreprocessorPlugin):
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
-    result = False
-    text_file_object = dfvfs_text_file.TextFile(file_object)
-    hostname = text_file_object.readline()
+    text_file_object = dfvfs_text_file.TextFile(file_object, encoding='utf-8')
 
-    try:
-      hostname = hostname.decode('utf-8')
-    except UnicodeDecodeError:
-      # TODO: add and store preprocessing errors.
-      hostname = hostname.decode('utf-8', errors='replace')
-
-    hostname = hostname.strip()
-    if hostname:
-      hostname_artifact = artifacts.HostnameArtifact(name=hostname)
-      knowledge_base.SetHostname(hostname_artifact)
-      result = True
-
-    return result
+    if not knowledge_base.GetHostname():
+      hostname = text_file_object.readline()
+      hostname = hostname.strip()
+      if hostname:
+        hostname_artifact = artifacts.HostnameArtifact(name=hostname)
+        knowledge_base.SetHostname(hostname_artifact)
 
 
-class LinuxSystemProductPlugin(interface.FileArtifactPreprocessorPlugin):
-  """The Linux system product plugin."""
+class LinuxDistributionPlugin(interface.FileArtifactPreprocessorPlugin):
+  """The Linux distribution plugin."""
 
   ARTIFACT_DEFINITION_NAME = 'LinuxDistributionRelease'
 
@@ -69,29 +56,80 @@ class LinuxSystemProductPlugin(interface.FileArtifactPreprocessorPlugin):
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
+    Raises:
+      errors.PreProcessFail: if the preprocessing fails.
+    """
+    text_file_object = dfvfs_text_file.TextFile(file_object, encoding='utf-8')
+
+    system_product = text_file_object.readline()
+    system_product = system_product.strip()
+
+    if not knowledge_base.GetValue('operating_system_product'):
+      if system_product:
+        knowledge_base.SetValue('operating_system_product', system_product)
+
+
+class LinuxStandardBaseReleasePlugin(interface.FileArtifactPreprocessorPlugin):
+  """The Linux standard base (LSB) release plugin."""
+
+  ARTIFACT_DEFINITION_NAME = 'LinuxLSBRelease'
+
+  def _ParseFileData(self, knowledge_base, file_object):
+    """Parses file content (data) for system product preprocessing attribute.
+
+    Args:
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      file_object (dfvfs.FileIO): file-like object that contains the artifact
+          value data.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
-    result = False
-    text_file_object = dfvfs_text_file.TextFile(file_object)
-    system_product = text_file_object.readline()
+    text_file_object = dfvfs_text_file.TextFile(file_object, encoding='utf-8')
 
-    try:
-      system_product = system_product.decode('utf-8')
-    except UnicodeDecodeError:
-      # TODO: add and store preprocessing errors.
-      system_product = system_product.decode('utf-8', errors='replace')
+    product_values = {}
+    for line in text_file_object.readlines():
+      key, value = line.split('=')
+      key = key.strip().upper()
+      value = value.strip().strip('"')
+      product_values[key] = value
 
-    system_product = system_product.strip()
-    if system_product:
-      knowledge_base.SetValue('operating_system_product', system_product)
-      result = True
+    if not knowledge_base.GetValue('operating_system_product'):
+      system_product = product_values.get('DISTRIB_DESCRIPTION', None)
+      if system_product:
+        knowledge_base.SetValue('operating_system_product', system_product)
 
-    return result
+
+class LinuxSystemdOperatingSystemPlugin(
+    interface.FileArtifactPreprocessorPlugin):
+  """The Linux systemd operating system release plugin."""
+
+  ARTIFACT_DEFINITION_NAME = 'LinuxSystemdOSRelease'
+
+  def _ParseFileData(self, knowledge_base, file_object):
+    """Parses file content (data) for system product preprocessing attribute.
+
+    Args:
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      file_object (dfvfs.FileIO): file-like object that contains the artifact
+          value data.
+
+    Raises:
+      errors.PreProcessFail: if the preprocessing fails.
+    """
+    text_file_object = dfvfs_text_file.TextFile(file_object, encoding='utf-8')
+
+    product_values = {}
+    for line in text_file_object.readlines():
+      key, value = line.split('=')
+      key = key.strip().upper()
+      value = value.strip().strip('"')
+      product_values[key] = value
+
+    if not knowledge_base.GetValue('operating_system_product'):
+      system_product = product_values.get('PRETTY_NAME', None)
+      if system_product:
+        knowledge_base.SetValue('operating_system_product', system_product)
 
 
 class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
@@ -107,15 +145,9 @@ class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
       file_entry (dfvfs.FileEntry): file entry that contains the artifact
           value data.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
-    result = False
-
     if file_entry.link:
       # Determine the timezone based on the file path.
       _, _, time_zone = file_entry.link.partition('zoneinfo/')
@@ -137,15 +169,13 @@ class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
       finally:
         file_object.close()
 
+    # TODO: check if time zone is set in knowledge base.
     if time_zone:
       try:
         knowledge_base.SetTimeZone(time_zone)
-        result = True
       except ValueError:
         # TODO: add and store preprocessing errors.
         logging.error('Unable to set time zone in knowledge base.')
-
-    return result
 
 
 class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
@@ -161,15 +191,10 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
-    result = False
-    text_file_object = dfvfs_text_file.TextFile(file_object)
+    text_file_object = dfvfs_text_file.TextFile(file_object, encoding='utf-8')
 
     try:
       reader = csv.reader(text_file_object, delimiter=b':')
@@ -192,14 +217,12 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
 
       try:
         knowledge_base.AddUserAccount(user_account)
-        result = True
       except KeyError:
         # TODO: add and store preprocessing errors.
         pass
 
-    return result
-
 
 manager.PreprocessPluginsManager.RegisterPlugins([
-    LinuxHostnamePlugin, LinuxSystemProductPlugin, LinuxTimeZonePlugin,
-    LinuxUserAccountsPlugin])
+    LinuxHostnamePlugin, LinuxDistributionPlugin,
+    LinuxStandardBaseReleasePlugin, LinuxSystemdOperatingSystemPlugin,
+    LinuxTimeZonePlugin, LinuxUserAccountsPlugin])

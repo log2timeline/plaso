@@ -34,8 +34,8 @@ class LinuxHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
     self.assertEqual(knowledge_base.hostname, 'plaso.kiddaland.net')
 
 
-class LinuxSystemProductPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
-  """Tests for the Linux system product plugin."""
+class LinuxDistributionPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
+  """Tests for the Linux distribution plugin."""
 
   _FILE_DATA = b'Fedora release 26 (Twenty Six)\n'
 
@@ -46,12 +46,74 @@ class LinuxSystemProductPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     mount_point = fake_path_spec.FakePathSpec(location='/')
 
-    plugin = linux.LinuxSystemProductPlugin()
+    plugin = linux.LinuxDistributionPlugin()
     knowledge_base = self._RunPreprocessorPluginOnFileSystem(
         file_system_builder.file_system, mount_point, plugin)
 
     system_product = knowledge_base.GetValue('operating_system_product')
     self.assertEqual(system_product, 'Fedora release 26 (Twenty Six)')
+
+
+class LinuxStandardBaseReleasePluginTest(
+    test_lib.ArtifactPreprocessorPluginTestCase):
+  """Tests for the Linux standard base (LSB) release plugin."""
+
+  _FILE_DATA = b"""\
+DISTRIB_CODENAME=trusty
+DISTRIB_DESCRIPTION="Ubuntu 14.04 LTS"
+DISTRIB_ID=Ubuntu
+DISTRIB_RELEASE=14.04"""
+
+  def testParseFileData(self):
+    """Tests the _ParseFileData function."""
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile('/etc/lsb-release', self._FILE_DATA)
+
+    mount_point = fake_path_spec.FakePathSpec(location='/')
+
+    plugin = linux.LinuxStandardBaseReleasePlugin()
+    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, plugin)
+
+    system_product = knowledge_base.GetValue('operating_system_product')
+    self.assertEqual(system_product, 'Ubuntu 14.04 LTS')
+
+
+class LinuxSystemdOperatingSystemPluginTest(
+    test_lib.ArtifactPreprocessorPluginTestCase):
+  """Tests for the Linux operating system release plugin."""
+
+  _FILE_DATA = b"""\
+NAME=Fedora
+VERSION="26 (Workstation Edition)"
+ID=fedora
+VERSION_ID=26
+PRETTY_NAME="Fedora 26 (Workstation Edition)"
+ANSI_COLOR="0;34"
+CPE_NAME="cpe:/o:fedoraproject:fedora:26"
+HOME_URL="https://fedoraproject.org/"
+BUG_REPORT_URL="https://bugzilla.redhat.com/"
+REDHAT_BUGZILLA_PRODUCT="Fedora"
+REDHAT_BUGZILLA_PRODUCT_VERSION=26
+REDHAT_SUPPORT_PRODUCT="Fedora"
+REDHAT_SUPPORT_PRODUCT_VERSION=26
+PRIVACY_POLICY_URL=https://fedoraproject.org/wiki/Legal:PrivacyPolicy
+VARIANT="Workstation Edition"
+VARIANT_ID=workstation"""
+
+  def testParseFileData(self):
+    """Tests the _ParseFileData function."""
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile('/etc/os-release', self._FILE_DATA)
+
+    mount_point = fake_path_spec.FakePathSpec(location='/')
+
+    plugin = linux.LinuxSystemdOperatingSystemPlugin()
+    knowledge_base = self._RunPreprocessorPluginOnFileSystem(
+        file_system_builder.file_system, mount_point, plugin)
+
+    system_product = knowledge_base.GetValue('operating_system_product')
+    self.assertEqual(system_product, 'Fedora 26 (Workstation Edition)')
 
 
 class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):

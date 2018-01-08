@@ -54,10 +54,6 @@ class PlistFileArtifactPreprocessorPlugin(
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
@@ -96,7 +92,7 @@ class PlistFileArtifactPreprocessorPlugin(
           '{1:s}.').format(
               self.ARTIFACT_DEFINITION_NAME, ', '.join(self._PLIST_KEYS)))
 
-    return self._ParsePlistKeyValue(knowledge_base, name, value)
+    self._ParsePlistKeyValue(knowledge_base, name, value)
 
   @abc.abstractmethod
   def _ParsePlistKeyValue(self, knowledge_base, name, value):
@@ -106,10 +102,6 @@ class PlistFileArtifactPreprocessorPlugin(
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
       name (str): name of the plist key.
       value (str): value of the plist key.
-
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
     """
 
 
@@ -127,16 +119,11 @@ class MacOSHostnamePlugin(PlistFileArtifactPreprocessorPlugin):
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
       name (str): name of the plist key.
       value (str): value of the plist key.
-
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
     """
-    if name in self._PLIST_KEYS:
-      hostname_artifact = artifacts.HostnameArtifact(name=value)
-      knowledge_base.SetHostname(hostname_artifact)
-
-    return name in self._PLIST_KEYS
+    if not knowledge_base.GetHostname():
+      if name in self._PLIST_KEYS:
+        hostname_artifact = artifacts.HostnameArtifact(name=value)
+        knowledge_base.SetHostname(hostname_artifact)
 
 
 class MacOSKeyboardLayoutPlugin(PlistFileArtifactPreprocessorPlugin):
@@ -153,20 +140,15 @@ class MacOSKeyboardLayoutPlugin(PlistFileArtifactPreprocessorPlugin):
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
       name (str): name of the plist key.
       value (str): value of the plist key.
-
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
     """
-    if name in self._PLIST_KEYS:
-      if isinstance(value, (list, tuple)):
-        value = value[0]
+    if not knowledge_base.GetValue('keyboard_layout'):
+      if name in self._PLIST_KEYS:
+        if isinstance(value, (list, tuple)):
+          value = value[0]
 
-      _, _, keyboard_layout = value.rpartition('.')
+        _, _, keyboard_layout = value.rpartition('.')
 
-      knowledge_base.SetValue('keyboard_layout', keyboard_layout)
-
-    return name in self._PLIST_KEYS
+        knowledge_base.SetValue('keyboard_layout', keyboard_layout)
 
 
 class MacOSSystemVersionPlugin(PlistFileArtifactPreprocessorPlugin):
@@ -183,15 +165,10 @@ class MacOSSystemVersionPlugin(PlistFileArtifactPreprocessorPlugin):
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
       name (str): name of the plist key.
       value (str): value of the plist key.
-
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
     """
-    if name in self._PLIST_KEYS:
-      knowledge_base.SetValue('operating_system_version', value)
-
-    return name in self._PLIST_KEYS
+    if not knowledge_base.GetValue('operating_system_version'):
+      if name in self._PLIST_KEYS:
+        knowledge_base.SetValue('operating_system_version', value)
 
 
 class MacOSTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
@@ -207,10 +184,6 @@ class MacOSTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
       file_entry (dfvfs.FileEntry): file entry that contains the artifact
           value data.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
@@ -219,18 +192,14 @@ class MacOSTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
           'Unable to read: {0:s} with error: not a symbolic link'.format(
               self.ARTIFACT_DEFINITION_NAME))
 
-    result = False
-
     _, _, time_zone = file_entry.link.partition('zoneinfo/')
+    # TODO: check if time zone is set in knowledge base.
     if time_zone:
       try:
         knowledge_base.SetTimeZone(time_zone)
-        result = True
       except ValueError:
         # TODO: add and store preprocessing errors.
         pass
-
-    return result
 
 
 class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
@@ -305,10 +274,6 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
       file_entry (dfvfs.FileEntry): file entry that contains the artifact
           value data.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
@@ -332,7 +297,7 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
 
     if not name or not uid:
       # TODO: add and store preprocessing errors.
-      return False
+      return
 
     user_account = artifacts.UserAccountArtifact(
         identifier=uid, username=name)
@@ -346,8 +311,6 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
     except KeyError:
       # TODO: add and store preprocessing errors.
       pass
-
-    return False
 
 
 manager.PreprocessPluginsManager.RegisterPlugins([
