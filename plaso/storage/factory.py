@@ -4,8 +4,9 @@
 from __future__ import unicode_literals
 
 from plaso.lib import definitions
-from plaso.storage import sqlite_file as storage_sqlite_file
-
+from plaso.storage.sqlite import reader as sqlite_reader
+from plaso.storage.sqlite import sqlite_file
+from plaso.storage.sqlite import writer as sqlite_writer
 
 class StorageFactory(object):
   """Storage factory."""
@@ -22,7 +23,7 @@ class StorageFactory(object):
           opened or the storage format is not supported.
     """
     if storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      return storage_sqlite_file.SQLiteStorageFile()
+      return sqlite_file.SQLiteStorageFile()
 
   @classmethod
   def CreateStorageFileForFile(cls, path):
@@ -35,8 +36,8 @@ class StorageFactory(object):
       StorageFile: a storage file or None if the storage file cannot be
           opened or the storage format is not supported.
     """
-    if storage_sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
-      return storage_sqlite_file.SQLiteStorageFile()
+    if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
+      return sqlite_file.SQLiteStorageFile()
 
   @classmethod
   def CreateStorageReaderForFile(cls, path):
@@ -49,8 +50,8 @@ class StorageFactory(object):
       StorageReader: a storage reader or None if the storage file cannot be
           opened or the storage format is not supported.
     """
-    if storage_sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
-      return storage_sqlite_file.SQLiteStorageFileReader(path)
+    if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
+      return sqlite_reader.SQLiteStorageFileReader(path)
 
   @classmethod
   def CreateStorageWriter(cls, storage_format, session, path):
@@ -66,7 +67,7 @@ class StorageFactory(object):
           opened or the storage format is not supported.
     """
     if storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      return storage_sqlite_file.SQLiteStorageFileWriter(session, path)
+      return sqlite_writer.SQLiteStorageFileWriter(session, path)
 
   @classmethod
   def CreateStorageWriterForFile(cls, session, path):
@@ -80,5 +81,5 @@ class StorageFactory(object):
       StorageWriter: a storage writer or None if the storage file cannot be
           opened or the storage format is not supported.
     """
-    if storage_sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
-      return storage_sqlite_file.SQLiteStorageFileWriter(session, path)
+    if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
+      return sqlite_writer.SQLiteStorageFileWriter(session, path)
