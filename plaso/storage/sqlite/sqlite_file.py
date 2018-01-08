@@ -1064,5 +1064,3 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     self._RaiseIfNotWritable()
 
     self._WriteAttributeContainer(task_start)
-
-
