@@ -17,8 +17,62 @@ from plaso.parsers import esedb
 from plaso.parsers.esedb_plugins import interface
 
 
-class SRUMNetworkDataUsageMonitorEventData(events.EventData):
-  """SRUM network data usage monitor event data.
+class SRUMApplicationResourceUsageEventData(events.EventData):
+  """SRUM application resource usage event data.
+
+  Attributes:
+    application_identifier (int): application identifier.
+    background_bytes_read (int): background number of bytes read.
+    background_bytes_written (int): background number of bytes written.
+    background_context_switches (int): number of background context switches.
+    background_cycle_time (int): background cycle time.
+    background_number_for_flushes (int): background number of flushes.
+    background_number_for_read_operations (int): background number of read
+        operations.
+    background_number_for_write_operations (int): background number of write
+        operations.
+    face_time (int): face time.
+    foreground_bytes_read (int): foreground number of bytes read.
+    foreground_bytes_written (int): foreground number of bytes written.
+    foreground_context_switches (int): number of foreground context switches.
+    foreground_cycle_time (int): foreground cycle time.
+    foreground_number_for_flushes (int): foreground number of flushes.
+    foreground_number_for_read_operations (int): foreground number of read
+        operations.
+    foreground_number_for_write_operations (int): foreground number of write
+        operations.
+    identifier (int): record identifier.
+    user_identifier (int): user identifier.
+  """
+
+  DATA_TYPE = 'windows:srum:application_usage'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(SRUMApplicationResourceUsageEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.application_identifier = None
+    self.background_bytes_read = None
+    self.background_bytes_written = None
+    self.background_context_switches = None
+    self.background_cycle_time = None
+    self.background_number_for_flushes = None
+    self.background_number_for_read_operations = None
+    self.background_number_for_write_operations = None
+    self.face_time = None
+    self.foreground_bytes_read = None
+    self.foreground_bytes_written = None
+    self.foreground_context_switches = None
+    self.foreground_cycle_time = None
+    self.foreground_number_for_flushes = None
+    self.foreground_number_for_read_operations = None
+    self.foreground_number_for_write_operations = None
+    self.identifier = None
+    self.user_identifier = None
+
+
+class SRUMNetworkDataUsageEventData(events.EventData):
+  """SRUM network data usage event data.
 
   Attributes:
     application_identifier (int): application identifier.
@@ -26,6 +80,8 @@ class SRUMNetworkDataUsageMonitorEventData(events.EventData):
     bytes_sent (int): number of bytes sent.
     identifier (int): record identifier.
     interface_luid (int): interface locally unique identifier (LUID).
+    l2_profile_flags (int): L2 profile flags.
+    l2_profile_identifier (int): L2 profile identifier.
     user_identifier (int): user identifier.
   """
 
@@ -33,24 +89,31 @@ class SRUMNetworkDataUsageMonitorEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SRUMNetworkDataUsageMonitorEventData, self).__init__(
+    super(SRUMNetworkDataUsageEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.application_identifier = None
     self.bytes_received = None
     self.bytes_sent = None
     self.identifier = None
     self.interface_luid = None
+    self.l2_profile_flags = None
+    self.l2_profile_identifier = None
     self.user_identifier = None
 
-class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
+
+class SystemResourceUsageESEDBPlugin(interface.ESEDBPlugin):
   """Parses a System Resource Usage Monitor (SRUM) ESE database file."""
 
   NAME = 'esedb_srum'
   DESCRIPTION = (
       'Parser for System Resource Usage Monitor (SRUM) ESE database files.')
 
+  OPTIONAL_TABLES = {
+      '{973F5D5C-1D90-4944-BE8E-24B94231A174}': 'ParseNetworkDataUsage',
+      '{D10CA2FE-6FCF-4F6D-848E-B2E99266FA89}': 'ParseApplicationResourceUsage',
+      '{DD6636C4-8929-4683-974E-22C046A43763}': 'ParseNetworkConnectivityUsage'}
+
   REQUIRED_TABLES = {
-      '{973F5D5C-1D90-4944-BE8E-24B94231A174}': 'ParseNetworkDataUsageMonitor',
       'SruDbIdMapTable': '',
       'SruDbCheckpointTable': ''}
 
@@ -59,6 +122,45 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
   _FLOAT32_LITTLE_ENDIAN = construct.LFloat32('float32')
   _FLOAT64_LITTLE_ENDIAN = construct.LFloat64('float64')
+
+  _APPLICATION_RESOURCE_USAGE_VALUES_MAP = {
+      'application_identifier': 'AppId',
+      'background_bytes_read': 'BackgroundBytesRead',
+      'background_bytes_written': 'BackgroundBytesWritten',
+      'background_context_switches': 'BackgroundContextSwitches',
+      'background_cycle_time': 'BackgroundCycleTime',
+      'background_number_for_flushes': 'BackgroundNumberOfFlushes',
+      'background_number_for_read_operations': 'BackgroundNumReadOperations',
+      'background_number_for_write_operations': 'BackgroundNumWriteOperations',
+      'face_time': 'FaceTime',
+      'foreground_bytes_read': 'ForegroundBytesRead',
+      'foreground_bytes_written': 'ForegroundBytesWritten',
+      'foreground_context_switches': 'ForegroundContextSwitches',
+      'foreground_cycle_time': 'ForegroundCycleTime',
+      'foreground_number_for_flushes': 'ForegroundNumberOfFlushes',
+      'foreground_number_for_read_operations': 'ForegroundNumReadOperations',
+      'foreground_number_for_write_operations': 'ForegroundNumWriteOperations',
+      'identifier': 'AutoIncId',
+      'user_identifier': 'UserId'}
+
+  _NETWORK_DATA_USAGE_VALUES_MAP = {
+      'application_identifier': 'AppId',
+      'bytes_recieved': 'BytesRecvd',
+      'bytes_sent': 'BytesSent',
+      'identifier': 'AutoIncId',
+      'interface_luid': 'InterfaceLuid',
+      'l2_profile_flags': 'L2ProfileFlags',
+      'l2_profile_identifier': 'L2ProfileId',
+      'user_identifier': 'UserId'}
+
+  _NETWORK_CONNECTIVITY_USAGE_VALUES_MAP = {
+      'application_identifier': 'AppId',
+      'connected_time': 'ConnectedTime',
+      'identifier': 'AutoIncId',
+      'interface_luid': 'InterfaceLuid',
+      'l2_profile_flags': 'L2ProfileFlags',
+      'l2_profile_identifier': 'L2ProfileId',
+      'user_identifier': 'UserId'}
 
   def _ConvertValueBinaryDataToFloatingPointValue(self, value):
     """Converts a binary data value into a floating-point value.
@@ -76,15 +178,17 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       elif value_length == 8:
         return self._FLOAT64_LITTLE_ENDIAN.parse(value)
 
-  def ParseNetworkDataUsageMonitor(
-      self, parser_mediator, database=None, table=None, **unused_kwargs):
-    """Parses the network data usage monitor table.
+  def _ParseGUIDTable(
+      self, parser_mediator, database, table, values_map, event_data_class):
+    """Parses a table with a GUID as name.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      database (Optional[pyesedb.file]): ESE database.
-      table (Optional[pyesedb.table]): table.
+      database (pyesedb.file): ESE database.
+      table (pyesedb.table): table.
+      values_map (dict[str, str]): maps table column names to attribute names.
+      event_data_class (type): event data class.
     """
     if database is None:
       logging.warning('[{0:s}] invalid database'.format(self.NAME))
@@ -102,29 +206,69 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
           parser_mediator, table.name, esedb_record,
           value_mappings=self._GUID_TABLE_VALUE_MAPPINGS)
 
-      # TODO: determine if L2ProfileId and L2ProfileFlags are worthwhile to
-      # extract.
-      event_data = SRUMNetworkDataUsageMonitorEventData()
-      event_data.application_identifier = record_values.get('AppId', None)
-      event_data.bytes_recieved = record_values.get('BytesRecvd', None)
-      event_data.bytes_sent = record_values.get('BytesSent', None)
-      event_data.identifier = record_values.get('AutoIncId', None)
-      event_data.interface_luid = record_values.get('InterfaceLuid', None)
-      event_data.user_identifier = record_values.get('UserId', None)
+      event_data = event_data_class()
+
+      for attribute_name, column_name in values_map.items():
+        record_value = record_values.get(column_name, None)
+        setattr(event_data, attribute_name, record_value)
 
       timestamp = record_values.get('TimeStamp')
       if timestamp:
         date_time = dfdatetime_ole_automation_date.OLEAutomationDate(
             timestamp=timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_SAMPLE)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-
-      if not timestamp:
+        timestamp_description = definitions.TIME_DESCRIPTION_SAMPLE
+      else:
         date_time = dfdatetime_semantic_time.SemanticTime('Not set')
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+        timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
+
+      event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+  def ParseApplicationResourceUsage(
+      self, parser_mediator, database=None, table=None, **unused_kwargs):
+    """Parses the application resource usage table.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      database (Optional[pyesedb.file]): ESE database.
+      table (Optional[pyesedb.table]): table.
+    """
+    self._ParseGUIDTable(
+        parser_mediator, database, table,
+        self._APPLICATION_RESOURCE_USAGE_VALUES_MAP,
+        SRUMApplicationResourceUsageEventData)
+
+  def ParseNetworkDataUsage(
+      self, parser_mediator, database=None, table=None, **unused_kwargs):
+    """Parses the network data usage monitor table.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      database (Optional[pyesedb.file]): ESE database.
+      table (Optional[pyesedb.table]): table.
+    """
+    self._ParseGUIDTable(
+        parser_mediator, database, table, self._NETWORK_DATA_USAGE_VALUES_MAP,
+        SRUMNetworkDataUsageEventData)
+
+  def ParseNetworkConnectivityUsage(
+      self, parser_mediator, database=None, table=None, **unused_kwargs):
+    """Parses the network connectivity usage monitor table.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      database (Optional[pyesedb.file]): ESE database.
+      table (Optional[pyesedb.table]): table.
+    """
+    # TODO: turn ConnectStartTime into event
+    # TODO: turn ConnectStartTime + ConnectedTime into event
+    self._ParseGUIDTable(
+        parser_mediator, database, table,
+        self._NETWORK_CONNECTIVITY_USAGE_VALUES_MAP,
+        SRUMNetworkConnectivityUsageEventData)
 
 
 esedb.ESEDBParser.RegisterPlugin(SystemResourceUsageMonitorESEDBPlugin)
