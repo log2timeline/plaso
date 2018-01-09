@@ -21,8 +21,6 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 from plaso.unix import bsmtoken
 
-import pytz  # pylint: disable=wrong-import-order
-
 
 # Note that we're using Array and a helper function here instead of
 # PascalString because the latter seems to break pickling on Windows.
@@ -1053,12 +1051,13 @@ class BSMParser(interface.FileObjectParser):
       return {bsm_type: token.record_length}
 
     elif bsm_type == 'BSM_TOKEN_FILE':
-      # TODO: if this timestamp is usefull it must be extracted as a separate
-      #       event object.
-      timestamp = timelib.Timestamp.FromPosixTimeWithMicrosecond(
-          token.timestamp, token.microseconds)
-      date_time = timelib.Timestamp.CopyToDatetime(timestamp, pytz.UTC)
-      date_time_string = date_time.strftime('%Y-%m-%d %H:%M:%S')
+      # TODO: if this timestamp is useful, it must be extracted as a separate
+      # event object.
+      timestamp = token.microseconds + (
+          token.timestamp * timelib.Timestamp.MICRO_SECONDS_PER_SECOND)
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=timestamp)
+      date_time_string = date_time.CopyToDateTimeString()
 
       string = self._CopyUtf8ByteArrayToString(token.text)
       return {bsm_type: {'string': string, 'timestamp': date_time_string}}
