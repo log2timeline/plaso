@@ -193,6 +193,10 @@ class KnowledgeBase(object):
 
     date_time = datetime.datetime(2017, 1, 1)
     time_zone = self._time_zone.tzname(date_time)
+
+    if time_zone and isinstance(time_zone, py2to3.BYTES_TYPE):
+      time_zone = time_zone.decode('ascii')
+
     system_configuration.time_zone = time_zone
 
     user_accounts = self._user_accounts.get(session_identifier, {})
