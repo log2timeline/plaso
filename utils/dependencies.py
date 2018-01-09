@@ -30,7 +30,7 @@ class DependencyDefinition(object):
   """
 
   def __init__(self, name):
-    """Initializes a dependency configuation.
+    """Initializes a dependency configuration.
 
     Args:
       name (str): name of the dependency.

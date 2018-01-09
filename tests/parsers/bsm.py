@@ -205,7 +205,7 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
          'BSM_TOKEN_TRAILER': 39},
         {'BSM_TOKEN_FILE': {
             'string': 'test',
-            'timestamp': '1970-01-01 20:42:45'},
+            'timestamp': '1970-01-01 20:42:45.000424'},
          'BSM_TOKEN_TRAILER': 41},
         {'BSM_TOKEN_ADDR': '192.168.100.15',
          'BSM_TOKEN_TRAILER': 30},
