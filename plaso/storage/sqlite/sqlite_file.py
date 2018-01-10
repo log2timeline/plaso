@@ -245,6 +245,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       attribute_container.SetIdentifier(identifier)
       return attribute_container
 
+    count = self._CountStoredAttributeContainers(container_type)
     query = 'SELECT COUNT(*) FROM {0:s}'.format(container_type)
     self._cursor.execute(query)
 
@@ -311,11 +312,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       bool: True if the store contains the specified type of attribute
           containers.
     """
-    query = 'SELECT COUNT(*) FROM {0:s}'.format(container_type)
-    self._cursor.execute(query)
-
-    row = self._cursor.fetchone()
-    return row and row[0] != 0
+    count  = self._CountStoredAttributeContainers(container_type)
+    return count > 0
 
   def _HasTable(self, table_name):
     """Determines if a specific table exists.
@@ -482,6 +480,32 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     key = 'storage_type'
     value = self.storage_type
     self._cursor.execute(query, (key, value))
+
+  def _CountStoredAttributeContainers(self, container_type):
+    """Counts the number of attribute containers of the given type.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+        int: number of attribute containers of the given type.
+
+    Raises:
+        ValueError: if an unsupported container_type is provided.
+    """
+    if not container_type in self._CONTAINER_TYPES:
+      raise ValueError('Attribute container type {0:s} is not supported'.format(
+          container_type))
+
+    if not self._HasTable(self._CONTAINER_TYPE_ANALYSIS_REPORT):
+      return 0
+
+    # Note that this is SQLite specific, and will give inaccurate results if
+    # there are DELETE commands run on the table.
+    query = 'SELECT MAX(_ROWID_) FROM {0:s} LIMIT 1'.format(container_type)
+    self._cursor.execute(query)
+    row = self._cursor.fetchone()
+    return row[0]
 
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
@@ -770,15 +794,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     Returns:
       int: number of analysis reports.
     """
-    if not self._HasTable(self._CONTAINER_TYPE_ANALYSIS_REPORT):
-      return 0
-
-    query = 'SELECT COUNT(*) FROM {0:s}'.format(
+    return self._CountStoredAttributeContainers(
         self._CONTAINER_TYPE_ANALYSIS_REPORT)
-    self._cursor.execute(query)
-
-    row = self._cursor.fetchone()
-    return row[0]
 
   def GetNumberOfEventSources(self):
     """Retrieves the number event sources.
@@ -786,15 +803,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     Returns:
       int: number of event sources.
     """
-    if not self._HasTable(self._CONTAINER_TYPE_EVENT_SOURCE):
-      return 0
-
-    query = 'SELECT COUNT(*) FROM {0:s}'.format(
+    number_of_event_sources = self._CountStoredAttributeContainers(
         self._CONTAINER_TYPE_EVENT_SOURCE)
-    self._cursor.execute(query)
-
-    row = self._cursor.fetchone()
-    number_of_event_sources = row[0]
 
     number_of_event_sources += self._GetNumberOfSerializedAttributeContainers(
         self._CONTAINER_TYPE_EVENT_SOURCE)
@@ -954,21 +964,11 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
       self._connection.commit()
 
-    last_session_start = 0
-    if self._HasTable(self._CONTAINER_TYPE_SESSION_START):
-      query = 'SELECT COUNT(*) FROM {0:s}'.format(
-          self._CONTAINER_TYPE_SESSION_START)
-      self._cursor.execute(query)
-      row = self._cursor.fetchone()
-      last_session_start = row[0]
+    last_session_start = self._CountStoredAttributeContainers(
+        self._CONTAINER_TYPE_SESSION_START)
 
-    last_session_completion = 0
-    if self._HasTable(self._CONTAINER_TYPE_SESSION_COMPLETION):
-      query = 'SELECT COUNT(*) FROM {0:s}'.format(
-          self._CONTAINER_TYPE_SESSION_COMPLETION)
-      self._cursor.execute(query)
-      row = self._cursor.fetchone()
-      last_session_completion = row[0]
+    last_session_completion = self._CountStoredAttributeContainers(
+        self._CONTAINER_TYPE_SESSION_COMPLETION)
 
     # TODO: handle open sessions.
     if last_session_start != last_session_completion:
