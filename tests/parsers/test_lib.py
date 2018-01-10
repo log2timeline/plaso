@@ -180,17 +180,17 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     self.assertEqual(source, expected_source)
     self.assertEqual(source_short, expected_source_short)
 
-  def assertDictContains(self, received, expected):
+  def AssertDictContains(self, received, expected):
     """Asserts if a dictionary contains every key-value pair as expected.
 
-    Recieved can contain new keys. If any value is a dict, this function is
+    Received can contain new keys. If any value is a dict, this function is
     called recursively.
 
     Args:
       received (dict): received dictionary.
       expected (dict): expected dictionary.
     """
-    for key, value in expected.items():
+    for key, value in iter(expected.items()):
       self.assertIn(key, received)
 
       if isinstance(value, dict):
