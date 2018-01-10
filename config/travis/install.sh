@@ -2,15 +2,15 @@
 #
 # Script to set up Travis-CI test VM.
 
-COVERALL_DEPENDENCIES="python-coverage python-coveralls python-docopt";
+COVERALLS_DEPENDENCIES="python-coverage python-coveralls python-docopt";
 
 L2TBINARIES_DEPENDENCIES="PyYAML XlsxWriter artifacts bencode binplist certifi chardet construct dateutil dfdatetime dfvfs dfwinreg dpkt efilter future hachoir-core hachoir-metadata hachoir-parser idna libbde libesedb libevt libevtx libewf libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm lzma pefile psutil pycrypto pyparsing pysqlite pytsk3 pytz pyzmq requests six urllib3 yara-python";
 
-L2TBINARIES_TEST_DEPENDENCIES="funcsigs mock pbr";
+L2TBINARIES_TEST_DEPENDENCIES="funcsigs mock pbr yapf";
 
 PYTHON2_DEPENDENCIES="libbde-python libesedb-python libevt-python libevtx-python libewf-python libfsntfs-python libfvde-python libfwnt-python libfwsi-python liblnk-python libmsiecf-python libolecf-python libqcow-python libregf-python libscca-python libsigscan-python libsmdev-python libsmraw-python libvhdi-python libvmdk-python libvshadow-python libvslvm-python python-artifacts python-bencode python-binplist python-certifi python-chardet python-construct python-crypto python-dateutil python-dfdatetime python-dfvfs python-dfwinreg python-dpkt python-efilter python-future python-hachoir-core python-hachoir-metadata python-hachoir-parser python-idna python-lzma python-pefile python-psutil python-pyparsing python-pysqlite2 python-pytsk3 python-requests python-six python-tz python-urllib3 python-xlsxwriter python-yaml python-yara python-zmq";
 
-PYTHON2_TEST_DEPENDENCIES="python-mock python-tox";
+PYTHON2_TEST_DEPENDENCIES="python-mock python-tox python-yapf";
 
 # Exit on error.
 set -e;
@@ -32,5 +32,5 @@ then
 	sudo apt-get update -q;
 	# Only install the Python 2 dependencies.
 	# Also see: https://docs.travis-ci.com/user/languages/python/#Travis-CI-Uses-Isolated-virtualenvs
-	sudo apt-get install -y ${COVERALL_DEPENDENCIES} ${PYTHON2_DEPENDENCIES} ${PYTHON2_TEST_DEPENDENCIES};
+	sudo apt-get install -y ${COVERALLS_DEPENDENCIES} ${PYTHON2_DEPENDENCIES} ${PYTHON2_TEST_DEPENDENCIES};
 fi
