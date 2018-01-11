@@ -25,8 +25,7 @@ class StorageFactoryTest(test_lib.StorageTestCase):
     test_file = self._GetTestFilePath(['psort_test.plaso'])
 
     storage_file = factory.StorageFactory.CreateStorageFileForFile(test_file)
-    self.assertIsInstance(
-        storage_file, sqlite_file.SQLiteStorageFile)
+    self.assertIsInstance(storage_file, sqlite_file.SQLiteStorageFile)
 
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testCreateStorageReaderForFile(self):
