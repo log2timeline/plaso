@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The fake storage intended for testing."""
+"""Fake storage writer for testing."""
 
 from __future__ import unicode_literals
 

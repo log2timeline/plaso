@@ -9,7 +9,7 @@ import unittest
 
 from plaso.storage import event_tag_index
 from plaso.storage import identifiers
-from plaso.storage import sqlite_file
+from plaso.storage.sqlite import sqlite_file
 
 from tests import test_lib as shared_test_lib
 from tests.storage import test_lib

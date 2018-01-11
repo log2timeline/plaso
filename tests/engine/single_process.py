@@ -15,7 +15,7 @@ from dfvfs.resolver import context
 from plaso.containers import sessions
 from plaso.engine import configurations
 from plaso.engine import single_process
-from plaso.storage import fake_storage
+from plaso.storage.fake import writer as fake_writer
 
 from tests import test_lib as shared_test_lib
 
@@ -47,7 +47,7 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
 
     test_engine.PreprocessSources(registry, [source_path_spec])
 
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
 
     configuration = configurations.ProcessingConfiguration()
     configuration.parser_filter_expression = 'filestat'
