@@ -222,7 +222,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       container_type (str): attribute container type.
       index (int): attribute container index.
 
-    Returnes:
+    Returns:
       AttributeContainer: attribute container or None if not available.
     """
     sequence_number = index + 1
@@ -246,11 +246,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       return attribute_container
 
     count = self._CountStoredAttributeContainers(container_type)
-    query = 'SELECT COUNT(*) FROM {0:s}'.format(container_type)
-    self._cursor.execute(query)
-
-    row = self._cursor.fetchone()
-    index -= row[0]
+    index -= count
 
     serialized_data = self._GetSerializedAttributeContainerByIndex(
         container_type, index)
@@ -312,7 +308,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       bool: True if the store contains the specified type of attribute
           containers.
     """
-    count  = self._CountStoredAttributeContainers(container_type)
+    count = self._CountStoredAttributeContainers(container_type)
     return count > 0
 
   def _HasTable(self, table_name):
@@ -505,6 +501,9 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     query = 'SELECT MAX(_ROWID_) FROM {0:s} LIMIT 1'.format(container_type)
     self._cursor.execute(query)
     row = self._cursor.fetchone()
+    if not row:
+      return 0
+
     return row[0]
 
   def AddAnalysisReport(self, analysis_report):
