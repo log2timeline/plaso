@@ -501,10 +501,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     query = 'SELECT MAX(_ROWID_) FROM {0:s} LIMIT 1'.format(container_type)
     self._cursor.execute(query)
     row = self._cursor.fetchone()
-    if not row:
-      return 0
 
-    return row[0]
+    return row[0] or 0
 
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
