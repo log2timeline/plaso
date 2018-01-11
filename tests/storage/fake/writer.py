@@ -12,7 +12,7 @@ from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.containers import tasks
 from plaso.lib import definitions
-from plaso.storage import fake_storage
+from plaso.storage.fake import writer as fake_writer
 
 from tests.storage import test_lib
 
@@ -26,7 +26,7 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     analysis_report = reports.AnalysisReport(
         plugin_name='test', text='test report')
 
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
     storage_writer.AddAnalysisReport(analysis_report)
@@ -42,7 +42,7 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     extraction_error = errors.ExtractionError(
         message='Test extraction error')
 
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
     storage_writer.AddError(extraction_error)
@@ -57,7 +57,7 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     session = sessions.Session()
     test_events = self._CreateTestEvents()
 
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
     event = None
@@ -74,7 +74,7 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     session = sessions.Session()
     event_source = event_sources.EventSource()
 
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
     storage_writer.AddEventSource(event_source)
@@ -88,7 +88,7 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     """Tests the AddEventTag function."""
     session = sessions.Session()
 
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
     test_events = self._CreateTestEvents()
@@ -108,14 +108,14 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
   def testOpenClose(self):
     """Tests the Open and Close functions."""
     session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
     storage_writer.Close()
 
     storage_writer.Open()
     storage_writer.Close()
 
-    storage_writer = fake_storage.FakeStorageWriter(
+    storage_writer = fake_writer.FakeStorageWriter(
         session, storage_type=definitions.STORAGE_TYPE_TASK)
     storage_writer.Open()
     storage_writer.Close()
@@ -135,10 +135,9 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     session = sessions.Session()
     test_events = self._CreateTestEvents()
 
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
-    event = None
     for event in test_events:
       storage_writer.AddEvent(event)
 
@@ -157,10 +156,9 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     session = sessions.Session()
     test_events = self._CreateTestEvents()
 
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
-    event = None
     for event in test_events:
       storage_writer.AddEvent(event)
 
@@ -175,7 +173,7 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     """Tests the WriteSessionStart and WriteSessionCompletion functions."""
     session = sessions.Session()
 
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
     storage_writer.WriteSessionStart()
@@ -189,7 +187,7 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     with self.assertRaises(IOError):
       storage_writer.WriteSessionCompletion()
 
-    storage_writer = fake_storage.FakeStorageWriter(
+    storage_writer = fake_writer.FakeStorageWriter(
         session, storage_type=definitions.STORAGE_TYPE_TASK)
     storage_writer.Open()
 
@@ -206,7 +204,7 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     session = sessions.Session()
     task = tasks.Task(session_identifier=session.identifier)
 
-    storage_writer = fake_storage.FakeStorageWriter(
+    storage_writer = fake_writer.FakeStorageWriter(
         session, storage_type=definitions.STORAGE_TYPE_TASK, task=task)
     storage_writer.Open()
 
@@ -221,7 +219,7 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     with self.assertRaises(IOError):
       storage_writer.WriteTaskCompletion()
 
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
     with self.assertRaises(IOError):

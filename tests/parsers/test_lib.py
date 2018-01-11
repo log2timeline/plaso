@@ -13,7 +13,7 @@ from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.parsers import interface
 from plaso.parsers import mediator
-from plaso.storage import fake_storage
+from plaso.storage.fake import writer as fake_writer
 
 from tests import test_lib as shared_test_lib
 
@@ -64,7 +64,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       FakeStorageWriter: storage writer.
     """
     session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
     return storage_writer
 
@@ -180,17 +180,17 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     self.assertEqual(source, expected_source)
     self.assertEqual(source_short, expected_source_short)
 
-  def assertDictContains(self, received, expected):
+  def CheckDictContents(self, received, expected):
     """Asserts if a dictionary contains every key-value pair as expected.
 
-    Recieved can contain new keys. If any value is a dict, this function is
+    Received can contain new keys. If any value is a dict, this function is
     called recursively.
 
     Args:
       received (dict): received dictionary.
       expected (dict): expected dictionary.
     """
-    for key, value in expected.items():
+    for key, value in iter(expected.items()):
       self.assertIn(key, received)
 
       if isinstance(value, dict):

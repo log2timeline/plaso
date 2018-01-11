@@ -294,7 +294,7 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
       event = events[event_index]
       expected_extra_tokens_dict = expected_extra_tokens[event_index]
       extra_tokens_dict = getattr(event, 'extra_tokens', {})
-      self.assertDictContains(extra_tokens_dict, expected_extra_tokens_dict)
+      self.CheckDictContents(extra_tokens_dict, expected_extra_tokens_dict)
 
 
 if __name__ == '__main__':

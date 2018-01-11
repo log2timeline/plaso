@@ -1,6 +1,14 @@
 plaso\.storage package
 ======================
 
+Subpackages
+-----------
+
+.. toctree::
+
+    plaso.storage.fake
+    plaso.storage.sqlite
+
 Submodules
 ----------
 
@@ -28,14 +36,6 @@ plaso\.storage\.factory module
     :undoc-members:
     :show-inheritance:
 
-plaso\.storage\.fake\_storage module
-------------------------------------
-
-.. automodule:: plaso.storage.fake_storage
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso\.storage\.identifiers module
 ----------------------------------
 
@@ -48,14 +48,6 @@ plaso\.storage\.interface module
 --------------------------------
 
 .. automodule:: plaso.storage.interface
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso\.storage\.sqlite\_file module
------------------------------------
-
-.. automodule:: plaso.storage.sqlite_file
     :members:
     :undoc-members:
     :show-inheritance:

@@ -12,7 +12,7 @@ import unittest
 from plaso.cli import log2timeline_tool
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.storage import sqlite_file as storage_sqlite_file
+from plaso.storage.sqlite import sqlite_file
 
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
@@ -428,7 +428,7 @@ optional arguments:
 
       test_tool.ExtractEventsFromSources()
 
-      storage_file = storage_sqlite_file.SQLiteStorageFile()
+      storage_file = sqlite_file.SQLiteStorageFile()
       try:
         storage_file.Open(path=options.storage_file, read_only=True)
       except IOError as exception:
