@@ -484,10 +484,10 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       container_type (str): attribute container type.
 
     Returns:
-        int: number of attribute containers of the given type.
+      int: number of attribute containers of the given type.
 
     Raises:
-        ValueError: if an unsupported container_type is provided.
+      ValueError: if an unsupported container_type is provided.
     """
     if not container_type in self._CONTAINER_TYPES:
       raise ValueError('Attribute container type {0:s} is not supported'.format(
@@ -497,10 +497,13 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       return 0
 
     # Note that this is SQLite specific, and will give inaccurate results if
-    # there are DELETE commands run on the table.
+    # there are DELETE commands run on the table. The Plaso SQLite storage
+    # implementation does not run any DELETE commands.
     query = 'SELECT MAX(_ROWID_) FROM {0:s} LIMIT 1'.format(container_type)
     self._cursor.execute(query)
     row = self._cursor.fetchone()
+    if not row:
+      return 0
 
     return row[0] or 0
 
