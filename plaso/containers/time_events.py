@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
 from plaso.containers import events
 from plaso.lib import timelib
 
@@ -57,3 +59,34 @@ class DateTimeValuesEvent(TimestampEvent):
 
     super(DateTimeValuesEvent, self).__init__(
         timestamp, date_time_description, data_type=data_type)
+
+
+class PythonDatetimeEvent(DateTimeValuesEvent):
+  """Python datetime-based event attribute container."""
+
+  def __init__(
+      self, datetime_value, date_time_description, data_type=None,
+      time_zone=None):
+    """Initializes an event.
+
+    Args:
+      datetime_value (datetime.datetime): date and time values.
+      date_time_description (str): description of the meaning of the date and
+          time values.
+      data_type (Optional[str]): event data type. If the data type is not set
+          it is derived from the DATA_TYPE class attribute.
+      time_zone (Optional[datetime.tzinfo]): time zone.
+    """
+    year, month, day_of_month, hours, minutes, seconds, _, _, _ = (
+        datetime_value.utctimetuple())
+
+    time_elements_tuple = (
+        year, month, day_of_month, hours, minutes, seconds,
+        datetime_value.microsecond)
+
+    date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
+        time_elements_tuple=time_elements_tuple)
+
+    super(PythonDatetimeEvent, self).__init__(
+        date_time, date_time_description, data_type=data_type,
+        time_zone=time_zone)

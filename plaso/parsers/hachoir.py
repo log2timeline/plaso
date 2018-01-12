@@ -7,8 +7,6 @@ from __future__ import unicode_literals
 
 import datetime
 
-from dfdatetime import time_elements as dfdatetime_time_elements
-
 # pylint: disable=import-error,wrong-import-position
 import hachoir_core.config
 
@@ -150,16 +148,7 @@ class HachoirParser(interface.FileObjectParser):
     event_data.metadata = attributes
 
     for datetime_value, usage in extracted_events:
-      year, month, day_of_month, hours, minutes, seconds, _, _, _ = (
-          datetime_value.utctimetuple())
-
-      time_elements_tuple = (
-          year, month, day_of_month, hours, minutes, seconds,
-          datetime_value.microsecond)
-
-      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-          time_elements_tuple=time_elements_tuple)
-      event = time_events.DateTimeValuesEvent(date_time, usage)
+      event = time_events.PythonDatetimeEvent(datetime_value, usage)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-from dfdatetime import time_elements as dfdatetime_time_elements
-
 from plaso.containers import plist_event
 from plaso.containers import time_events
 from plaso.lib import definitions
@@ -61,17 +59,8 @@ class BluetoothPlugin(interface.PlistPlugin):
             filter(None, ('Bluetooth Discovery', name)))
         event_data.key = '{0:s}/LastInquiryUpdate'.format(device)
 
-        year, month, day_of_month, hours, minutes, seconds, _, _, _ = (
-            datetime_value.utctimetuple())
-
-        time_elements_tuple = (
-            year, month, day_of_month, hours, minutes, seconds,
-            datetime_value.microsecond)
-
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-            time_elements_tuple=time_elements_tuple)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+        event = time_events.PythonDatetimeEvent(
+            datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
         if device in match.get('PairedDevices', []):
@@ -79,7 +68,7 @@ class BluetoothPlugin(interface.PlistPlugin):
           event_data.key = device
 
           event = time_events.DateTimeValuesEvent(
-              date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+              datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
       datetime_value = value.get('LastNameUpdate', None)
@@ -87,17 +76,8 @@ class BluetoothPlugin(interface.PlistPlugin):
         event_data.desc = ' '.join(filter(None, ('Device Name Set', name)))
         event_data.key = '{0:s}/LastNameUpdate'.format(device)
 
-        year, month, day_of_month, hours, minutes, seconds, _, _, _ = (
-            datetime_value.utctimetuple())
-
-        time_elements_tuple = (
-            year, month, day_of_month, hours, minutes, seconds,
-            datetime_value.microsecond)
-
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-            time_elements_tuple=time_elements_tuple)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+        event = time_events.PythonDatetimeEvent(
+            datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       datetime_value = value.get('LastServicesUpdate', None)
@@ -105,17 +85,8 @@ class BluetoothPlugin(interface.PlistPlugin):
         event_data.desc = ' '.join(filter(None, ('Services Updated', name)))
         event_data.key = '{0:s}/LastServicesUpdate'.format(device)
 
-        year, month, day_of_month, hours, minutes, seconds, _, _, _ = (
-            datetime_value.utctimetuple())
-
-        time_elements_tuple = (
-            year, month, day_of_month, hours, minutes, seconds,
-            datetime_value.microsecond)
-
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-            time_elements_tuple=time_elements_tuple)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+        event = time_events.PythonDatetimeEvent(
+            datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

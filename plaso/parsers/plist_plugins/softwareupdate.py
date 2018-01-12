@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-from dfdatetime import time_elements as dfdatetime_time_elements
-
 from plaso.containers import plist_event
 from plaso.containers import time_events
 from plaso.lib import definitions
@@ -51,17 +49,8 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
 
     datetime_value = match.get('LastFullSuccessfulDate', None)
     if datetime_value:
-      year, month, day_of_month, hours, minutes, seconds, _, _, _ = (
-          datetime_value.utctimetuple())
-
-      time_elements_tuple = (
-          year, month, day_of_month, hours, minutes, seconds,
-          datetime_value.microsecond)
-
-      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-          time_elements_tuple=time_elements_tuple)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+      event = time_events.PythonDatetimeEvent(
+          datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     datetime_value = match.get('LastSuccessfulDate', None)
@@ -81,17 +70,8 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
           'Last Mac OS {0!s} partially update, pending {1!s}: '
           '{2:s}.').format(version, pending, software)
 
-      year, month, day_of_month, hours, minutes, seconds, _, _, _ = (
-          datetime_value.utctimetuple())
-
-      time_elements_tuple = (
-          year, month, day_of_month, hours, minutes, seconds,
-          datetime_value.microsecond)
-
-      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-          time_elements_tuple=time_elements_tuple)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+      event = time_events.PythonDatetimeEvent(
+          datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
