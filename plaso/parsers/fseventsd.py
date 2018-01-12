@@ -3,8 +3,9 @@
 
 from __future__ import unicode_literals
 
-import construct
 import logging
+
+import construct
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
