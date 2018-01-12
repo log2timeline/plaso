@@ -2,20 +2,21 @@
 """Tests for fseventsd file parser."""
 
 from __future__ import unicode_literals
-import unittest
 
-from tests import test_lib as shared_test_lib
-from tests.parsers import test_lib
-from plaso.parsers import fseventsd
+import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.parsers import fseventsd
+
+from tests import test_lib as shared_test_lib
+from tests.parsers import test_lib
+
 
 class FSEventsdParserTest(test_lib.ParserTestCase):
   """Tests for the fseventsd parser."""
-
 
   @shared_test_lib.skipUnlessHasTestFile(['fsevents-0000000002d89b58'])
   def testParseV1(self):

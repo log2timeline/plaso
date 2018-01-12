@@ -93,7 +93,7 @@ class FseventsdParser(interface.FileObjectParser):
 
 
   def _ParseDLSHeader(self, file_object):
-    """Parses a SLD header from a stream.
+    """Parses a DLS header from a stream.
 
     Args:
       file_object (file): file-like object to read the header from.

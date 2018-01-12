@@ -11,7 +11,7 @@ from plaso.formatters import fseventsd
 from tests.formatters import test_lib
 
 
-class FirefoxCookieFormatterTest(test_lib.EventFormatterTestCase):
+class FseventsdFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the fseventsd record event formatter."""
 
   def testInitialization(self):
