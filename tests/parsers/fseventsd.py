@@ -20,7 +20,7 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['fsevents-0000000002d89b58'])
   def testParseV1(self):
     """Tests the Parse function."""
-    parser = fseventsd.FseventsdParserV1()
+    parser = fseventsd.FseventsdParser()
 
     path = self._GetTestFilePath(['fsevents-0000000002d89b58'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -37,7 +37,7 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
 
     event = events[3]
     self.assertEqual(event.path, '.Spotlight-V100/Store-V1')
-    self.assertEqual(event.event_id, 47747061)
+    self.assertEqual(event.event_identifier, 47747061)
     self.assertEqual(event.flags, b'\x00\x00\x00\x00\x80\x00\x00\x01')
 
     os_file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
@@ -48,7 +48,7 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['fsevents-00000000001a0b79'])
   def testParseV2(self):
     """Tests the Parse function."""
-    parser = fseventsd.FseventsdParserV2()
+    parser = fseventsd.FseventsdParser()
 
     path = self._GetTestFilePath(['fsevents-00000000001a0b79'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -65,7 +65,7 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
 
     event = events[2]
     self.assertEqual(event.path, 'Hi, Sierra')
-    self.assertEqual(event.event_id, 1706838)
+    self.assertEqual(event.event_identifier, 1706838)
     self.assertEqual(event.flags, b'\x00\x00\x00\x00\x08\x00\x00\x01')
 
     os_file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)

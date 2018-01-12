@@ -15,7 +15,7 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_PIECES = [
       '{object_type}', ':', '{path}', 'Changes:', '{event_types}', 'Event ID:',
-      '{event_id}'
+      '{event_identifier}'
   ]
 
   FORMAT_STRING_SHORT_PIECES = ['{path}', '{event_types}']
@@ -48,22 +48,22 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
       0x40000000: 'FinderInfoModified',
       0x80000000: 'FolderCreated'}
 
-  def _GetObjectType(self, mask):
-    """Determines the object type for a given FSEvents mask.
+  def _GetObjectType(self, flags):
+    """Determines the object type for a given set of FSEvents flags.
 
     Args:
-      mask (int): fsevents record type mask.
+      flags (int): fsevents record type flags.
 
     Returns:
       str: name of the object type represented by the mask.
     """
     for value in self._OBJECT_TYPE_MASKS:
-      if value & mask:
+      if value & flags:
         return self._OBJECT_TYPE_MASKS[value]
     return 'UNKNOWN'
 
   def _GetEventTypes(self, mask):
-    """Determines which events are stored in a fsevents mask.
+    """Determines which events are stored in a set of fsevents flags.
 
     Args:
       mask (int): fsevents record type mask.
@@ -98,9 +98,9 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
           'Unsupported data type: {0:s}.'.format(event.data_type))
 
     event_values = event.CopyToDict()
-    mask = event_values['flags']
-    event_values['object_type'] = self._GetObjectType(mask)
-    event_values['event_types'] = self._GetEventTypes(mask)
+    flags = event_values['flags']
+    event_values['object_type'] = self._GetObjectType(flags)
+    event_values['event_types'] = self._GetEventTypes(flags)
 
     return self._ConditionalFormatMessages(event_values)
 

@@ -24,7 +24,7 @@ class FirefoxCookieFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = fseventsd.FSEventsdEventFormatter()
 
     expected_attribute_names = [
-        'object_type', 'path', 'event_types', 'event_id']
+        'object_type', 'path', 'event_types', 'event_identifier']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
