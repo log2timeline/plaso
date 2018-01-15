@@ -61,7 +61,7 @@ class IPodPlugin(interface.PlistPlugin):
         setattr(event_data, attribute_name, value)
 
       event = time_events.PythonDatetimeEvent(
-          datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
+          datetime_value, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

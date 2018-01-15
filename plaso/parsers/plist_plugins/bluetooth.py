@@ -67,7 +67,7 @@ class BluetoothPlugin(interface.PlistPlugin):
           event_data.desc = 'Paired:True {0:s}'.format(name)
           event_data.key = device
 
-          event = time_events.DateTimeValuesEvent(
+          event = time_events.PythonDatetimeEvent(
               datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
