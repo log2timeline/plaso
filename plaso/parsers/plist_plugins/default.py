@@ -30,24 +30,16 @@ class DefaultPlugin(interface.PlistPlugin):
           and other components, such as storage and dfvfs.
       top_level (dict[str, object]): plist top-level key.
     """
-    for root, key, value in interface.RecurseKey(top_level):
-      if not isinstance(value, datetime.datetime):
+    for root, key, datetime_value in interface.RecurseKey(top_level):
+      if not isinstance(datetime_value, datetime.datetime):
         continue
 
       event_data = plist_event.PlistTimeEventData()
       event_data.key = key
       event_data.root = root
 
-      year, month, day_of_month, hours, minutes, seconds, _, _, _ = (
-          value.utctimetuple())
-
-      time_elements_tuple = (
-          year, month, day_of_month, hours, minutes, seconds, value.microsecond)
-
-      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-          time_elements_tuple=time_elements_tuple)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+      event = time_events.PythonDatetimeEvent(
+          datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
       # TODO: Binplist keeps a list of offsets but not mapped to a key.
