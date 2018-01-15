@@ -1,35 +1,35 @@
-plaso.storage.sqlite package
-============================
+plaso\.storage\.sqlite package
+==============================
 
 Submodules
 ----------
 
-plaso.storage.sqlite.merge_reader module
-----------------------------------------
+plaso\.storage\.sqlite\.merge\_reader module
+--------------------------------------------
 
 .. automodule:: plaso.storage.sqlite.merge_reader
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.storage.sqlite.reader module
-----------------------------------
+plaso\.storage\.sqlite\.reader module
+-------------------------------------
 
 .. automodule:: plaso.storage.sqlite.reader
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.storage.sqlite.sqlite_file module
----------------------------------------
+plaso\.storage\.sqlite\.sqlite\_file module
+-------------------------------------------
 
 .. automodule:: plaso.storage.sqlite.sqlite_file
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.storage.sqlite.writer module
-----------------------------------
+plaso\.storage\.sqlite\.writer module
+-------------------------------------
 
 .. automodule:: plaso.storage.sqlite.writer
     :members:
