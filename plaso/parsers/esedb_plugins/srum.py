@@ -71,6 +71,32 @@ class SRUMApplicationResourceUsageEventData(events.EventData):
     self.user_identifier = None
 
 
+class SRUMNetworkConnectivityUsageEventData(events.EventData):
+  """SRUM network connectivity usage event data.
+
+  Attributes:
+    application_identifier (int): application identifier.
+    identifier (int): record identifier.
+    interface_luid (int): interface locally unique identifier (LUID).
+    l2_profile_flags (int): L2 profile flags.
+    l2_profile_identifier (int): L2 profile identifier.
+    user_identifier (int): user identifier.
+  """
+
+  DATA_TYPE = 'windows:srum:network_connectivity'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(SRUMNetworkConnectivityUsageEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.application_identifier = None
+    self.identifier = None
+    self.interface_luid = None
+    self.l2_profile_flags = None
+    self.l2_profile_identifier = None
+    self.user_identifier = None
+
+
 class SRUMNetworkDataUsageEventData(events.EventData):
   """SRUM network data usage event data.
 
@@ -101,7 +127,7 @@ class SRUMNetworkDataUsageEventData(events.EventData):
     self.user_identifier = None
 
 
-class SystemResourceUsageESEDBPlugin(interface.ESEDBPlugin):
+class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
   """Parses a System Resource Usage Monitor (SRUM) ESE database file."""
 
   NAME = 'esedb_srum'
@@ -143,19 +169,19 @@ class SystemResourceUsageESEDBPlugin(interface.ESEDBPlugin):
       'identifier': 'AutoIncId',
       'user_identifier': 'UserId'}
 
-  _NETWORK_DATA_USAGE_VALUES_MAP = {
+  _NETWORK_CONNECTIVITY_USAGE_VALUES_MAP = {
       'application_identifier': 'AppId',
-      'bytes_recieved': 'BytesRecvd',
-      'bytes_sent': 'BytesSent',
+      'connected_time': 'ConnectedTime',
       'identifier': 'AutoIncId',
       'interface_luid': 'InterfaceLuid',
       'l2_profile_flags': 'L2ProfileFlags',
       'l2_profile_identifier': 'L2ProfileId',
       'user_identifier': 'UserId'}
 
-  _NETWORK_CONNECTIVITY_USAGE_VALUES_MAP = {
+  _NETWORK_DATA_USAGE_VALUES_MAP = {
       'application_identifier': 'AppId',
-      'connected_time': 'ConnectedTime',
+      'bytes_recieved': 'BytesRecvd',
+      'bytes_sent': 'BytesSent',
       'identifier': 'AutoIncId',
       'interface_luid': 'InterfaceLuid',
       'l2_profile_flags': 'L2ProfileFlags',
