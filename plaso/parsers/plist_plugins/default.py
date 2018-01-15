@@ -6,8 +6,6 @@ from __future__ import unicode_literals
 import datetime
 import logging
 
-from dfdatetime import time_elements as dfdatetime_time_elements
-
 from plaso.containers import plist_event
 from plaso.containers import time_events
 from plaso.lib import definitions
