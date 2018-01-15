@@ -6,36 +6,28 @@ from __future__ import unicode_literals
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import olecf
 from plaso.parsers.olecf_plugins import interface
 
 
-class OLECFItemEvent(time_events.DateTimeValuesEvent):
-  """Convenience class for an OLECF item event."""
+class OLECFItemEventData(events.EventData):
+  """OLECF item event data.
+
+  Attributes:
+    name (str): name of the OLE Compound File item.
+    size (int): data size of the OLE Compound File item.
+  """
 
   DATA_TYPE = 'olecf:item'
 
-  def __init__(self, date_time, date_time_description, olecf_item):
-    """Initializes an event.
-
-    Args:
-      date_time (dfdatetime.DateTimeValues): date and time values.
-      date_time_description (str): description of the meaning of the date
-          and time values.
-      olecf_item (pyolecf.item): OLECF item.
-    """
-    super(OLECFItemEvent, self).__init__(date_time, date_time_description)
-    self.name = olecf_item.name
-
-    # TODO: need a better way to express the original location of the
-    # original data.
-    self.offset = 0
-
-    # TODO: have pyolecf return the item type here.
-    # self.type = olecf_item.type
-    self.size = olecf_item.size
+  def __init__(self):
+    """Initializes event data."""
+    super(OLECFItemEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.name = None
+    self.size = None
 
 
 class DefaultOLECFPlugin(interface.OLECFPlugin):
@@ -55,24 +47,26 @@ class DefaultOLECFPlugin(interface.OLECFPlugin):
     Returns:
       bool: True if an event was produced.
     """
-    event = None
     result = False
 
-    creation_time, modification_time = self._GetTimestamps(olecf_item)
+    event_data = OLECFItemEventData()
+    event_data.name = olecf_item.name
+    event_data.offset = 0
+    event_data.size = olecf_item.size
 
+    creation_time, modification_time = self._GetTimestamps(olecf_item)
     if creation_time:
       date_time = dfdatetime_filetime.Filetime(timestamp=creation_time)
-      event = OLECFItemEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION, olecf_item)
-      parser_mediator.ProduceEvent(event)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_CREATION)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+      result = True
 
     if modification_time:
       date_time = dfdatetime_filetime.Filetime(timestamp=modification_time)
-      event = OLECFItemEvent(
-          date_time, definitions.TIME_DESCRIPTION_MODIFICATION, olecf_item)
-      parser_mediator.ProduceEvent(event)
-
-    if event:
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
       result = True
 
     for sub_item in olecf_item.sub_items:
@@ -99,11 +93,16 @@ class DefaultOLECFPlugin(interface.OLECFPlugin):
       raise ValueError('Root item not set.')
 
     if not self._ParseItem(parser_mediator, root_item):
+      event_data = OLECFItemEventData()
+      event_data.name = root_item.name
+      event_data.offset = 0
+      event_data.size = root_item.size
+
       # If no event was produced, produce at least one for the root item.
       date_time = dfdatetime_semantic_time.SemanticTime('Not set')
-      event = OLECFItemEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION, root_item)
-      parser_mediator.ProduceEvent(event)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_CREATION)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 olecf.OLECFParser.RegisterPlugin(DefaultOLECFPlugin)

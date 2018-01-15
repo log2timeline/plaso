@@ -26,8 +26,8 @@ Subpackages
 Submodules
 ----------
 
-plaso.dependencies module
--------------------------
+plaso\.dependencies module
+--------------------------
 
 .. automodule:: plaso.dependencies
     :members:
