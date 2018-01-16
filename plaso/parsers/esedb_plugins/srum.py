@@ -7,6 +7,7 @@ import logging
 
 import construct
 
+from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import ole_automation_date as dfdatetime_ole_automation_date
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
@@ -148,7 +149,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       '{DD6636C4-8929-4683-974E-22C046A43763}': 'ParseNetworkConnectivityUsage'}
 
   REQUIRED_TABLES = {
-      'SruDbIdMapTable': '' }
+      'SruDbIdMapTable': ''}
 
   _GUID_TABLE_VALUE_MAPPINGS = {
       'TimeStamp': '_ConvertValueBinaryDataToFloatingPointValue'}
@@ -257,6 +258,13 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
+      timestamp = record_values.get('ConnectStartTime')
+      if timestamp:
+        date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
+        event = time_events.DateTimeValuesEvent(
+            date_time, definitions.TIME_DESCRIPTION_FIRST_CONNECTED)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
+
   def ParseApplicationResourceUsage(
       self, parser_mediator, database=None, table=None, **unused_kwargs):
     """Parses the application resource usage table.
@@ -296,8 +304,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       database (Optional[pyesedb.file]): ESE database.
       table (Optional[pyesedb.table]): table.
     """
-    # TODO: turn ConnectStartTime into event
-    # TODO: turn ConnectStartTime + ConnectedTime into event
+    # TODO: consider making ConnectStartTime + ConnectedTime an event.
     self._ParseGUIDTable(
         parser_mediator, database, table,
         self._NETWORK_CONNECTIVITY_USAGE_VALUES_MAP,

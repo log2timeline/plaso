@@ -24,11 +24,11 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     plugin = srum.SystemResourceUsageMonitorESEDBPlugin()
     storage_writer = self._ParseESEDBFileWithPlugin(['SRUDB.dat'], plugin)
 
-    self.assertEqual(storage_writer.number_of_events, 18283)
+    self.assertEqual(storage_writer.number_of_events, 18543)
 
-    events = list(storage_writer.GetEvents())
+    events = list(storage_writer.GetSortedEvents())
 
-    event = events[16183]
+    event = events[39]
 
     self.assertEqual(event.identifier, 3495)
 
