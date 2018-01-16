@@ -134,14 +134,21 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
   DESCRIPTION = (
       'Parser for System Resource Usage Monitor (SRUM) ESE database files.')
 
+  # TODO: add support for tables:
+  # {5C8CF1C7-7257-4F13-B223-970EF5939312}
+  # {97C2CE28-A37B-4920-B1E9-8B76CD341EC5}
+  # {B6D82AF1-F780-4E17-8077-6CB9AD8A6FC4}
+  # {D10CA2FE-6FCF-4F6D-848E-B2E99266FA86}
+  # {DA73FB89-2BEA-4DDC-86B8-6E048C6DA477}
+  # {FEE4E14F-02A9-4550-B5CE-5FA2DA202E37}
+
   OPTIONAL_TABLES = {
       '{973F5D5C-1D90-4944-BE8E-24B94231A174}': 'ParseNetworkDataUsage',
       '{D10CA2FE-6FCF-4F6D-848E-B2E99266FA89}': 'ParseApplicationResourceUsage',
       '{DD6636C4-8929-4683-974E-22C046A43763}': 'ParseNetworkConnectivityUsage'}
 
   REQUIRED_TABLES = {
-      'SruDbIdMapTable': '',
-      'SruDbCheckpointTable': ''}
+      'SruDbIdMapTable': '' }
 
   _GUID_TABLE_VALUE_MAPPINGS = {
       'TimeStamp': '_ConvertValueBinaryDataToFloatingPointValue'}
