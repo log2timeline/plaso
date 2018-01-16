@@ -36,7 +36,7 @@ class BaseEngine(object):
 
     self.knowledge_base = knowledge_base.KnowledgeBase()
 
-  def _GuessOS(self, searcher):
+  def _DetermineOperatingSystem(self, searcher):
     """Tries to determine the underlying operating system.
 
     Args:
@@ -160,7 +160,7 @@ class BaseEngine(object):
           the sources to process.
       resolver_context (Optional[dfvfs.Context]): resolver context.
     """
-    platforms = []
+    detected_operating_systems = []
     for source_path_spec in source_path_specs:
       try:
         file_system, mount_point = self.GetSourceFileSystem(
@@ -173,20 +173,21 @@ class BaseEngine(object):
         searcher = file_system_searcher.FileSystemSearcher(
             file_system, mount_point)
 
-        platform = self._GuessOS(searcher)
-        if platform != definitions.OPERATING_SYSTEM_UNKNOWN:
+        operating_system = self._DetermineOperatingSystem(searcher)
+        if operating_system != definitions.OPERATING_SYSTEM_UNKNOWN:
           preprocess_manager.PreprocessPluginsManager.RunPlugins(
               artifacts_registry, file_system, mount_point, self.knowledge_base)
 
-          platforms.append(platform)
+          detected_operating_systems.append(operating_system)
 
       finally:
         file_system.Close()
 
-    if platforms:
-      logging.info('Preprocessing detected platforms: {0:s}'.format(
-          ', '.join(platforms)))
-      self.knowledge_base.platform = platforms[0]
+    if detected_operating_systems:
+      logging.info('Preprocessing detected operating systems: {0:s}'.format(
+          ', '.join(detected_operating_systems)))
+      self.knowledge_base.SetValue(
+          'operating_system', detected_operating_systems[0])
 
   @classmethod
   def SupportsGuppyMemoryProfiling(cls):
