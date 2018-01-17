@@ -28,7 +28,7 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event = events[39]
+    event = events[14]
 
     self.assertEqual(event.identifier, 3495)
 
@@ -38,12 +38,12 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_SAMPLE)
 
     expected_message = (
-        'Application identifier: 153 '
+        'Application: DiagTrack '
         'Bytes sent: 2076 '
         'Interface LUID: 1689399632855040 '
         'User identifer: 4')
 
-    expected_short_message = '153'
+    expected_short_message = 'DiagTrack'
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 

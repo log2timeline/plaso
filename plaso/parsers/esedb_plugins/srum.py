@@ -23,7 +23,7 @@ class SRUMApplicationResourceUsageEventData(events.EventData):
   """SRUM application resource usage event data.
 
   Attributes:
-    application_identifier (int): application identifier.
+    application (int): application.
     background_bytes_read (int): background number of bytes read.
     background_bytes_written (int): background number of bytes written.
     background_context_switches (int): number of background context switches.
@@ -53,7 +53,7 @@ class SRUMApplicationResourceUsageEventData(events.EventData):
     """Initializes event data."""
     super(SRUMApplicationResourceUsageEventData, self).__init__(
         data_type=self.DATA_TYPE)
-    self.application_identifier = None
+    self.application = None
     self.background_bytes_read = None
     self.background_bytes_written = None
     self.background_context_switches = None
@@ -77,7 +77,7 @@ class SRUMNetworkConnectivityUsageEventData(events.EventData):
   """SRUM network connectivity usage event data.
 
   Attributes:
-    application_identifier (int): application identifier.
+    application (int): application.
     identifier (int): record identifier.
     interface_luid (int): interface locally unique identifier (LUID).
     l2_profile_flags (int): L2 profile flags.
@@ -91,7 +91,7 @@ class SRUMNetworkConnectivityUsageEventData(events.EventData):
     """Initializes event data."""
     super(SRUMNetworkConnectivityUsageEventData, self).__init__(
         data_type=self.DATA_TYPE)
-    self.application_identifier = None
+    self.application = None
     self.identifier = None
     self.interface_luid = None
     self.l2_profile_flags = None
@@ -103,7 +103,7 @@ class SRUMNetworkDataUsageEventData(events.EventData):
   """SRUM network data usage event data.
 
   Attributes:
-    application_identifier (int): application identifier.
+    application (int): application.
     bytes_received (int): number of bytes received.
     bytes_sent (int): number of bytes sent.
     identifier (int): record identifier.
@@ -119,7 +119,7 @@ class SRUMNetworkDataUsageEventData(events.EventData):
     """Initializes event data."""
     super(SRUMNetworkDataUsageEventData, self).__init__(
         data_type=self.DATA_TYPE)
-    self.application_identifier = None
+    self.application = None
     self.bytes_received = None
     self.bytes_sent = None
     self.identifier = None
@@ -159,7 +159,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
   _FLOAT64_LITTLE_ENDIAN = construct.LFloat64('float64')
 
   _APPLICATION_RESOURCE_USAGE_VALUES_MAP = {
-      'application_identifier': 'AppId',
+      'application': 'AppId',
       'background_bytes_read': 'BackgroundBytesRead',
       'background_bytes_written': 'BackgroundBytesWritten',
       'background_context_switches': 'BackgroundContextSwitches',
@@ -179,7 +179,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       'user_identifier': 'UserId'}
 
   _NETWORK_CONNECTIVITY_USAGE_VALUES_MAP = {
-      'application_identifier': 'AppId',
+      'application': 'AppId',
       'connected_time': 'ConnectedTime',
       'identifier': 'AutoIncId',
       'interface_luid': 'InterfaceLuid',
@@ -188,7 +188,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       'user_identifier': 'UserId'}
 
   _NETWORK_DATA_USAGE_VALUES_MAP = {
-      'application_identifier': 'AppId',
+      'application': 'AppId',
       'bytes_recieved': 'BytesRecvd',
       'bytes_sent': 'BytesSent',
       'identifier': 'AutoIncId',
@@ -266,7 +266,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
       if identifier_type in (0, 1, 2):
         try:
-          mapping = mapping.decode('utf-16le')
+          mapping = mapping.decode('utf-16le').rstrip('\0')
         except UnicodeDecodeError:
           parser_mediator.ProduceExtractionError(
               'column: IdBlob missing from parse table: SruDbIdMapTable')
@@ -274,7 +274,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
       elif identifier_type == 3:
          # TODO: convert byte stream to SID
-         pass
+         mapping = '%SID%'
 
          # fwnt_identifier = pyfwnt.security_identifier()
          # fwnt_identifier.copy_from_byte_stream(mapping)
@@ -337,7 +337,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
       for attribute_name, column_name in values_map.items():
         record_value = record_values.get(column_name, None)
-        if attribute_name == 'AppId':
+        if attribute_name == 'application':
           record_value = identifier_mappings.get(record_value, record_value)
 
         setattr(event_data, attribute_name, record_value)

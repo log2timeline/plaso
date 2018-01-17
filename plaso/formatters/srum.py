@@ -14,10 +14,10 @@ class SRUMApplicationResourceUsageEventFormatter(
   DATA_TYPE = 'windows:srum:application_usage'
 
   FORMAT_STRING_PIECES = [
-      'Identifier: {identifier}']
+      'Application: {application}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      '{identifier}']
+      '{application}']
 
 
 class SRUMNetworkDataUsageEventFormatter(interface.ConditionalEventFormatter):
@@ -26,14 +26,14 @@ class SRUMNetworkDataUsageEventFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'windows:srum:network_usage'
 
   FORMAT_STRING_PIECES = [
-      'Application identifier: {application_identifier}',
+      'Application: {application}',
       'Bytes received: {bytes_received}',
       'Bytes sent: {bytes_sent}',
       'Interface LUID: {interface_luid}',
       'User identifer: {user_identifier}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      '{application_identifier}']
+      '{application}']
 
 
 class SRUMNetworkConnectivityUsageEventFormatter(
@@ -43,10 +43,10 @@ class SRUMNetworkConnectivityUsageEventFormatter(
   DATA_TYPE = 'windows:srum:network_connectivity'
 
   FORMAT_STRING_PIECES = [
-      'Identifier: {identifier}']
+      'Application: {application}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      '{identifier}']
+      '{application}']
 
 
 manager.FormattersManager.RegisterFormatters([

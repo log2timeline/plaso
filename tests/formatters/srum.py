@@ -25,7 +25,7 @@ class SRUMApplicationResourceUsageEventFormatterTest(
     event_formatter = srum.SRUMApplicationResourceUsageEventFormatter()
 
     expected_attribute_names = [
-        'identifier']
+        'application']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -46,7 +46,7 @@ class SRUMNetworkDataUsageEventFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = srum.SRUMNetworkDataUsageEventFormatter()
 
     expected_attribute_names = [
-        'application_identifier',
+        'application',
         'bytes_received',
         'bytes_sent',
         'interface_luid',
@@ -72,7 +72,7 @@ class SRUMNetworkConnectivityUsageEventFormatterTest(
     event_formatter = srum.SRUMNetworkConnectivityUsageEventFormatter()
 
     expected_attribute_names = [
-        'identifier']
+        'application']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
