@@ -44,7 +44,8 @@ class SRUMApplicationResourceUsageEventData(events.EventData):
     foreground_number_for_write_operations (int): foreground number of write
         operations.
     identifier (int): record identifier.
-    user_identifier (int): user identifier.
+    user_identifier (int): user identifier, which is a Windows NT security
+        identifier.
   """
 
   DATA_TYPE = 'windows:srum:application_usage'
@@ -82,7 +83,8 @@ class SRUMNetworkConnectivityUsageEventData(events.EventData):
     interface_luid (int): interface locally unique identifier (LUID).
     l2_profile_flags (int): L2 profile flags.
     l2_profile_identifier (int): L2 profile identifier.
-    user_identifier (int): user identifier.
+    user_identifier (int): user identifier, which is a Windows NT security
+        identifier.
   """
 
   DATA_TYPE = 'windows:srum:network_connectivity'
@@ -110,7 +112,8 @@ class SRUMNetworkDataUsageEventData(events.EventData):
     interface_luid (int): interface locally unique identifier (LUID).
     l2_profile_flags (int): L2 profile flags.
     l2_profile_identifier (int): L2 profile identifier.
-    user_identifier (int): user identifier.
+    user_identifier (int): user identifier, which is a Windows NT security
+        identifier.
   """
 
   DATA_TYPE = 'windows:srum:network_usage'
@@ -337,7 +340,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
       for attribute_name, column_name in values_map.items():
         record_value = record_values.get(column_name, None)
-        if attribute_name == 'application':
+        if attribute_name in ('application', 'user_identifier'):
           record_value = identifier_mappings.get(record_value, record_value)
 
         setattr(event_data, attribute_name, record_value)
