@@ -252,41 +252,43 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       identifier = record_values.get('IdIndex', None)
       if identifier is None:
         parser_mediator.ProduceExtractionError(
-            'column: IdIndex missing from parse table: SruDbIdMapTable')
+            'IdIndex value missing from parse table: SruDbIdMapTable')
         continue
 
       identifier_type = record_values.get('IdType', None)
       if identifier_type is None:
         parser_mediator.ProduceExtractionError(
-            'column: IdType missing from parse table: SruDbIdMapTable')
+            'IdType value missing from parse table: SruDbIdMapTable')
         continue
 
       mapping = record_values.get('IdBlob', None)
       if mapping is None:
         parser_mediator.ProduceExtractionError(
-            'column: IdBlob missing from parse table: SruDbIdMapTable')
+            'IdBlob value missing from parse table: SruDbIdMapTable')
         continue
 
-      if identifier_type in (0, 1, 2):
+      if identifier_type not in (0, 1, 2, 3):
+        parser_mediator.ProduceExtractionError(
+            'unsupported identifier type: {0:d}'.format(identifier_type))
+        continue
+
+      if identifier_type == 3:
+        try:
+          fwnt_identifier = pyfwnt.security_identifier()
+          fwnt_identifier.copy_from_byte_stream(mapping)
+          mapping = fwnt_identifier.get_string()
+        except IOError:
+          parser_mediator.ProduceExtractionError(
+              'unable to decode IdBlob value as Windows NT security identifier')
+          continue
+
+      else:
         try:
           mapping = mapping.decode('utf-16le').rstrip('\0')
         except UnicodeDecodeError:
           parser_mediator.ProduceExtractionError(
-              'column: IdBlob missing from parse table: SruDbIdMapTable')
+              'unable to decode IdBlob value as UTF-16 little-endian string')
           continue
-
-      elif identifier_type == 3:
-         # TODO: convert byte stream to SID
-         mapping = '%SID%'
-
-         # fwnt_identifier = pyfwnt.security_identifier()
-         # fwnt_identifier.copy_from_byte_stream(mapping)
-         # mapping = fwnt_identifier.get_string()
-
-      else:
-        parser_mediator.ProduceExtractionError(
-            'unsupported identifier type: {0:d}'.format(identifier_type))
-        continue
 
       if identifier in identifier_mappings:
         parser_mediator.ProduceExtractionError(

@@ -43,7 +43,7 @@ PYTHON_DEPENDENCIES = {
     'pyewf': ('get_version()', '20131210', None, True),
     'pyfsntfs': ('get_version()', '20151130', None, True),
     'pyfvde': ('get_version()', '20160719', None, True),
-    'pyfwnt': ('get_version()', '20160418', None, True),
+    'pyfwnt': ('get_version()', '20180117', None, True),
     'pyfwsi': ('get_version()', '20150606', None, True),
     'pylnk': ('get_version()', '20150830', None, True),
     'pymsiecf': ('get_version()', '20150314', None, True),
