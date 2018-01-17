@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import logging
 
 import construct
+import pyfwnt
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import ole_automation_date as dfdatetime_ole_automation_date
@@ -212,38 +213,133 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       elif value_length == 8:
         return self._FLOAT64_LITTLE_ENDIAN.parse(value)
 
+  def _GetIdentifierMappings(self, parser_mediator, cache, database):
+    """Retrieves the identifier mappings from SruDbIdMapTable table.
+
+    Identifier mappings are stored in the cache for optimization.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      cache (ESEDBCache): cache, which contains information about
+          the identifiers stored in the SruDbIdMapTable table.
+      database (pyesedb.file): ESE database.
+
+    Returns:
+      dict[str, str]: mapping of identifiers to their string representation.
+    """
+    identifier_mappings = cache.GetResults('SruDbIdMapTable', default_value={})
+    if identifier_mappings:
+      return identifier_mappings
+
+    esedb_table = database.get_table_by_name('SruDbIdMapTable')
+    if not esedb_table:
+      parser_mediator.ProduceExtractionError(
+          'unable to retrieve table: SruDbIdMapTable')
+      cache.StoreDictInCache('SruDbIdMapTable', {})
+      return identifier_mappings
+
+    for esedb_record in esedb_table.records:
+      if parser_mediator.abort:
+        break
+
+      record_values = self._GetRecordValues(
+          parser_mediator, esedb_table.name, esedb_record)
+
+      identifier = record_values.get('IdIndex', None)
+      if identifier is None:
+        parser_mediator.ProduceExtractionError(
+            'column: IdIndex missing from parse table: SruDbIdMapTable')
+        continue
+
+      identifier_type = record_values.get('IdType', None)
+      if identifier_type is None:
+        parser_mediator.ProduceExtractionError(
+            'column: IdType missing from parse table: SruDbIdMapTable')
+        continue
+
+      mapping = record_values.get('IdBlob', None)
+      if mapping is None:
+        parser_mediator.ProduceExtractionError(
+            'column: IdBlob missing from parse table: SruDbIdMapTable')
+        continue
+
+      if identifier_type in (0, 1, 2):
+        try:
+          mapping = mapping.decode('utf-16le')
+        except UnicodeDecodeError:
+          parser_mediator.ProduceExtractionError(
+              'column: IdBlob missing from parse table: SruDbIdMapTable')
+          continue
+
+      elif identifier_type == 3:
+         # TODO: convert byte stream to SID
+         pass
+
+         # fwnt_identifier = pyfwnt.security_identifier()
+         # fwnt_identifier.copy_from_byte_stream(mapping)
+         # mapping = fwnt_identifier.get_string()
+
+      else:
+        parser_mediator.ProduceExtractionError(
+            'unsupported identifier type: {0:d}'.format(identifier_type))
+        continue
+
+      if identifier in identifier_mappings:
+        parser_mediator.ProduceExtractionError(
+            'identifier: {0:d} already exists in mappings.'.format(identifier))
+        continue
+
+      identifier_mappings[identifier] = mapping
+
+    cache.StoreDictInCache('SruDbIdMapTable', identifier_mappings)
+    return identifier_mappings
+
   def _ParseGUIDTable(
-      self, parser_mediator, database, table, values_map, event_data_class):
+      self, parser_mediator, cache, database, esedb_table, values_map,
+      event_data_class):
     """Parses a table with a GUID as name.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      cache (ESEDBCache): cache, which contains information about
+          the identifiers stored in the SruDbIdMapTable table.
       database (pyesedb.file): ESE database.
-      table (pyesedb.table): table.
+      esedb_table (pyesedb.table): table.
       values_map (dict[str, str]): maps table column names to attribute names.
       event_data_class (type): event data class.
     """
+    if cache is None:
+      logging.warning('[{0:s}] invalid cache'.format(self.NAME))
+      return
+
     if database is None:
       logging.warning('[{0:s}] invalid database'.format(self.NAME))
       return
 
-    if table is None:
-      logging.warning('[{0:s}] invalid Containers table'.format(self.NAME))
+    if esedb_table is None:
+      logging.warning('[{0:s}] invalid table'.format(self.NAME))
       return
 
-    for esedb_record in table.records:
+    identifier_mappings = self._GetIdentifierMappings(
+        parser_mediator, cache, database)
+
+    for esedb_record in esedb_table.records:
       if parser_mediator.abort:
         break
 
       record_values = self._GetRecordValues(
-          parser_mediator, table.name, esedb_record,
+          parser_mediator, esedb_table.name, esedb_record,
           value_mappings=self._GUID_TABLE_VALUE_MAPPINGS)
 
       event_data = event_data_class()
 
       for attribute_name, column_name in values_map.items():
         record_value = record_values.get(column_name, None)
+        if attribute_name == 'AppId':
+          record_value = identifier_mappings.get(record_value, record_value)
+
         setattr(event_data, attribute_name, record_value)
 
       timestamp = record_values.get('TimeStamp')
@@ -266,47 +362,56 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseApplicationResourceUsage(
-      self, parser_mediator, database=None, table=None, **unused_kwargs):
+      self, parser_mediator, cache=None, database=None, table=None,
+      **unused_kwargs):
     """Parses the application resource usage table.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      cache (Optional[ESEDBCache]): cache, which contains information about
+          the identifiers stored in the SruDbIdMapTable table.
       database (Optional[pyesedb.file]): ESE database.
       table (Optional[pyesedb.table]): table.
     """
     self._ParseGUIDTable(
-        parser_mediator, database, table,
+        parser_mediator, cache, database, table,
         self._APPLICATION_RESOURCE_USAGE_VALUES_MAP,
         SRUMApplicationResourceUsageEventData)
 
   def ParseNetworkDataUsage(
-      self, parser_mediator, database=None, table=None, **unused_kwargs):
+      self, parser_mediator, cache=None, database=None, table=None,
+      **unused_kwargs):
     """Parses the network data usage monitor table.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      cache (Optional[ESEDBCache]): cache, which contains information about
+          the identifiers stored in the SruDbIdMapTable table.
       database (Optional[pyesedb.file]): ESE database.
       table (Optional[pyesedb.table]): table.
     """
     self._ParseGUIDTable(
-        parser_mediator, database, table, self._NETWORK_DATA_USAGE_VALUES_MAP,
-        SRUMNetworkDataUsageEventData)
+        parser_mediator, cache, database, table,
+        self._NETWORK_DATA_USAGE_VALUES_MAP, SRUMNetworkDataUsageEventData)
 
   def ParseNetworkConnectivityUsage(
-      self, parser_mediator, database=None, table=None, **unused_kwargs):
+      self, parser_mediator, cache=None, database=None, table=None,
+      **unused_kwargs):
     """Parses the network connectivity usage monitor table.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      cache (Optional[ESEDBCache]): cache, which contains information about
+          the identifiers stored in the SruDbIdMapTable table.
       database (Optional[pyesedb.file]): ESE database.
       table (Optional[pyesedb.table]): table.
     """
     # TODO: consider making ConnectStartTime + ConnectedTime an event.
     self._ParseGUIDTable(
-        parser_mediator, database, table,
+        parser_mediator, cache, database, table,
         self._NETWORK_CONNECTIVITY_USAGE_VALUES_MAP,
         SRUMNetworkConnectivityUsageEventData)
 
