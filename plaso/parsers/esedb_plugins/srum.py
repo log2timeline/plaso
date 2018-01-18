@@ -133,7 +133,9 @@ class SRUMNetworkDataUsageEventData(events.EventData):
 class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
   """Parses a System Resource Usage Monitor (SRUM) ESE database file.
 
-  For more information about the database format see: https://github.com/libyal/esedb-kb/blob/master/documentation/System%20Resource%20Usage%20Monitor%20(SRUM).asciidoc
+  For more information about the database format see:
+      https://github.com/libyal/esedb-kb/blob/master/documentation/
+          System%20Resource%20Usage%20Monitor%20(SRUM).asciidoc
   """
 
   NAME = 'srum'
@@ -228,8 +230,8 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
     In the SRUM database individual tables contain numeric identifiers for
     the application ("AppId") and user identifier ("UserId"). A more descriptive
     string of these values can be found in the SruDbIdMapTable. For example the
-    numeric value of 42 mapping to DiagTrack. This method will cache the mappings
-    of a specific SRUM database.
+    numeric value of 42 mapping to DiagTrack. This method will cache the
+    mappings of a specific SRUM database.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
