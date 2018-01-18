@@ -241,77 +241,21 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       database (pyesedb.file): ESE database.
 
     Returns:
-      dict[str, str]: mapping of identifiers to their string representation.
+      dict[int, str]: mapping of numeric identifiers to their string
+          representation.
     """
     identifier_mappings = cache.GetResults('SruDbIdMapTable', default_value={})
-    if identifier_mappings:
-      return identifier_mappings
-
-    esedb_table = database.get_table_by_name('SruDbIdMapTable')
-    if not esedb_table:
-      parser_mediator.ProduceExtractionError(
-          'unable to retrieve table: SruDbIdMapTable')
-      cache.StoreDictInCache('SruDbIdMapTable', {})
-      return identifier_mappings
-
-    for esedb_record in esedb_table.records:
-      if parser_mediator.abort:
-        break
-
-      record_values = self._GetRecordValues(
-          parser_mediator, esedb_table.name, esedb_record)
-
-      # Here we want to first check if the mapping values exist, then check
-      # for their sanity.
-      identifier = record_values.get('IdIndex', None)
-      if identifier is None:
+    if not identifier_mappings:
+      esedb_table = database.get_table_by_name('SruDbIdMapTable')
+      if not esedb_table:
         parser_mediator.ProduceExtractionError(
-            'IdIndex value missing from table: SruDbIdMapTable')
-        continue
-
-      identifier_type = record_values.get('IdType', None)
-      if identifier_type is None:
-        parser_mediator.ProduceExtractionError(
-            'IdType value missing from table: SruDbIdMapTable')
-        continue
-
-      mapped_value = record_values.get('IdBlob', None)
-      if mapped_value is None:
-        parser_mediator.ProduceExtractionError(
-            'IdBlob value missing from table: SruDbIdMapTable')
-        continue
-
-      if identifier_type not in self._SUPPORTED_IDENTIFIER_TYPES:
-        parser_mediator.ProduceExtractionError(
-            'unsupported identifier type: {0:d}'.format(identifier_type))
-        continue
-
-      if identifier_type == 3:
-        try:
-          fwnt_identifier = pyfwnt.security_identifier()
-          fwnt_identifier.copy_from_byte_stream(mapped_value)
-          mapped_value = fwnt_identifier.get_string()
-        except IOError:
-          parser_mediator.ProduceExtractionError(
-              'unable to decode IdBlob value as Windows NT security identifier')
-          continue
-
+            'unable to retrieve table: SruDbIdMapTable')
       else:
-        try:
-          mapped_value = mapped_value.decode('utf-16le').rstrip('\0')
-        except UnicodeDecodeError:
-          parser_mediator.ProduceExtractionError(
-              'unable to decode IdBlob value as UTF-16 little-endian string')
-          continue
+        identifier_mappings = self._ParseIdentifierMappingsTable(
+            parser_mediator, esedb_table)
 
-      if identifier in identifier_mappings:
-        parser_mediator.ProduceExtractionError(
-            'identifier: {0:d} already exists in mappings.'.format(identifier))
-        continue
+      cache.StoreDictInCache('SruDbIdMapTable', identifier_mappings)
 
-      identifier_mappings[identifier] = mapped_value
-
-    cache.StoreDictInCache('SruDbIdMapTable', identifier_mappings)
     return identifier_mappings
 
   def _ParseGUIDTable(
@@ -384,6 +328,102 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
         event = time_events.DateTimeValuesEvent(
             date_time, definitions.TIME_DESCRIPTION_FIRST_CONNECTED)
         parser_mediator.ProduceEventWithEventData(event, event_data)
+
+  def _ParseIdentifierMapping(self, parser_mediator, esedb_table, esedb_record):
+    """Extracts an identifier mapping from a SruDbIdMapTable record.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      esedb_table (pyesedb.table): table.
+      esedb_record (pyesedb.table): record.
+
+    Returns:
+      tuple[int, str]: numeric identifier and its string representation.
+
+    Raises:
+      ValueError: if the cache, database or table value is missing.
+    """
+    record_values = self._GetRecordValues(
+        parser_mediator, esedb_table.name, esedb_record)
+
+    identifier = record_values.get('IdIndex', None)
+    if identifier is None:
+      parser_mediator.ProduceExtractionError(
+          'IdIndex value missing from table: SruDbIdMapTable')
+      return None, None
+
+    identifier_type = record_values.get('IdType', None)
+    if identifier_type is None:
+      parser_mediator.ProduceExtractionError(
+          'IdType value missing from table: SruDbIdMapTable')
+      return None, None
+
+    mapped_value = record_values.get('IdBlob', None)
+    if mapped_value is None:
+      parser_mediator.ProduceExtractionError(
+          'IdBlob value missing from table: SruDbIdMapTable')
+      return None, None
+
+    if identifier_type not in self._SUPPORTED_IDENTIFIER_TYPES:
+      parser_mediator.ProduceExtractionError(
+          'unsupported identifier type: {0:d}'.format(identifier_type))
+      return None, None
+
+    if identifier_type == 3:
+      try:
+        fwnt_identifier = pyfwnt.security_identifier()
+        fwnt_identifier.copy_from_byte_stream(mapped_value)
+        mapped_value = fwnt_identifier.get_string()
+      except IOError:
+        parser_mediator.ProduceExtractionError(
+            'unable to decode IdBlob value as Windows NT security identifier')
+        return None, None
+
+    else:
+      try:
+        mapped_value = mapped_value.decode('utf-16le').rstrip('\0')
+      except UnicodeDecodeError:
+        parser_mediator.ProduceExtractionError(
+            'unable to decode IdBlob value as UTF-16 little-endian string')
+        return None, None
+
+    return identifier, mapped_value
+
+  def _ParseIdentifierMappingsTable(self, parser_mediator, esedb_table):
+    """Extracts identifier mappings from the SruDbIdMapTable table.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      esedb_table (pyesedb.table): table.
+
+    Returns:
+      dict[int, str]: mapping of numeric identifiers to their string
+          representation.
+
+    Raises:
+      ValueError: if the cache, database or table value is missing.
+    """
+    identifier_mappings = {}
+
+    for esedb_record in esedb_table.records:
+      if parser_mediator.abort:
+        break
+
+      identifier, mapped_value = self._ParseIdentifierMapping(
+          parser_mediator, esedb_table, esedb_record)
+      if identifier is None or mapped_value is None:
+        continue
+
+      if identifier in identifier_mappings:
+        parser_mediator.ProduceExtractionError(
+            'identifier: {0:d} already exists in mappings.'.format(identifier))
+        continue
+
+      identifier_mappings[identifier] = mapped_value
+
+    return identifier_mappings
 
   def ParseApplicationResourceUsage(
       self, parser_mediator, cache=None, database=None, table=None,
