@@ -329,7 +329,8 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
             date_time, definitions.TIME_DESCRIPTION_FIRST_CONNECTED)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def _ParseIdentifierMapping(self, parser_mediator, esedb_table, esedb_record):
+  def _ParseIdentifierMappingRecord(
+      self, parser_mediator, esedb_table, esedb_record):
     """Extracts an identifier mapping from a SruDbIdMapTable record.
 
     Args:
@@ -411,7 +412,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       if parser_mediator.abort:
         break
 
-      identifier, mapped_value = self._ParseIdentifierMapping(
+      identifier, mapped_value = self._ParseIdentifierMappingRecord(
           parser_mediator, esedb_table, esedb_record)
       if identifier is None or mapped_value is None:
         continue
