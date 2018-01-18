@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
@@ -42,7 +40,7 @@ class FileHistoryNamespaceEventData(events.EventData):
 class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
   """Parses a File History ESE database file."""
 
-  NAME = 'esedb_file_history'
+  NAME = 'file_history'
   DESCRIPTION = 'Parser for File History ESE database files.'
 
   # TODO: Add support for other tables as well, backupset, file, library, etc.
@@ -94,14 +92,15 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
       cache (Optional[ESEDBCache]): cache.
       database (Optional[pyesedb.file]): ESE database.
       table (Optional[pyesedb.table]): table.
+
+    Raises:
+      ValueError: if the database or table value is missing.
     """
     if database is None:
-      logging.warning('[{0:s}] invalid database'.format(self.NAME))
-      return
+      raise ValueError('Missing database value.')
 
     if table is None:
-      logging.warning('[{0:s}] invalid Containers table'.format(self.NAME))
-      return
+      raise ValueError('Missing table value.')
 
     strings = cache.GetResults('strings')
     if not strings:

@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 import construct
 import pyfwnt
 
@@ -23,7 +21,7 @@ class SRUMApplicationResourceUsageEventData(events.EventData):
   """SRUM application resource usage event data.
 
   Attributes:
-    application (int): application.
+    application (str): application.
     background_bytes_read (int): background number of bytes read.
     background_bytes_written (int): background number of bytes written.
     background_context_switches (int): number of background context switches.
@@ -44,7 +42,7 @@ class SRUMApplicationResourceUsageEventData(events.EventData):
     foreground_number_for_write_operations (int): foreground number of write
         operations.
     identifier (int): record identifier.
-    user_identifier (int): user identifier, which is a Windows NT security
+    user_identifier (str): user identifier, which is a Windows NT security
         identifier.
   """
 
@@ -78,12 +76,12 @@ class SRUMNetworkConnectivityUsageEventData(events.EventData):
   """SRUM network connectivity usage event data.
 
   Attributes:
-    application (int): application.
+    application (str): application.
     identifier (int): record identifier.
     interface_luid (int): interface locally unique identifier (LUID).
     l2_profile_flags (int): L2 profile flags.
     l2_profile_identifier (int): L2 profile identifier.
-    user_identifier (int): user identifier, which is a Windows NT security
+    user_identifier (str): user identifier, which is a Windows NT security
         identifier.
   """
 
@@ -105,14 +103,14 @@ class SRUMNetworkDataUsageEventData(events.EventData):
   """SRUM network data usage event data.
 
   Attributes:
-    application (int): application.
+    application (str): application.
     bytes_received (int): number of bytes received.
     bytes_sent (int): number of bytes sent.
     identifier (int): record identifier.
     interface_luid (int): interface locally unique identifier (LUID).
     l2_profile_flags (int): L2 profile flags.
     l2_profile_identifier (int): L2 profile identifier.
-    user_identifier (int): user identifier, which is a Windows NT security
+    user_identifier (str): user identifier, which is a Windows NT security
         identifier.
   """
 
@@ -133,9 +131,12 @@ class SRUMNetworkDataUsageEventData(events.EventData):
 
 
 class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
-  """Parses a System Resource Usage Monitor (SRUM) ESE database file."""
+  """Parses a System Resource Usage Monitor (SRUM) ESE database file.
 
-  NAME = 'esedb_srum'
+  For more information about the database format see: https://github.com/libyal/esedb-kb/blob/master/documentation/System%20Resource%20Usage%20Monitor%20(SRUM).asciidoc
+  """
+
+  NAME = 'srum'
   DESCRIPTION = (
       'Parser for System Resource Usage Monitor (SRUM) ESE database files.')
 
@@ -146,6 +147,9 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
   # {D10CA2FE-6FCF-4F6D-848E-B2E99266FA86}
   # {DA73FB89-2BEA-4DDC-86B8-6E048C6DA477}
   # {FEE4E14F-02A9-4550-B5CE-5FA2DA202E37}
+
+  # TODO: convert interface_luid into string representation
+  # TODO: convert l2_profile_flags into string representation in formatter
 
   OPTIONAL_TABLES = {
       '{973F5D5C-1D90-4944-BE8E-24B94231A174}': 'ParseNetworkDataUsage',
@@ -200,6 +204,8 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       'l2_profile_identifier': 'L2ProfileId',
       'user_identifier': 'UserId'}
 
+  _SUPPORTED_IDENTIFIER_TYPES = (0, 1, 2, 3)
+
   def _ConvertValueBinaryDataToFloatingPointValue(self, value):
     """Converts a binary data value into a floating-point value.
 
@@ -219,7 +225,11 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
   def _GetIdentifierMappings(self, parser_mediator, cache, database):
     """Retrieves the identifier mappings from SruDbIdMapTable table.
 
-    Identifier mappings are stored in the cache for optimization.
+    In the SRUM database individual tables contain numeric identifiers for
+    the application ("AppId") and user identifier ("UserId"). A more descriptive
+    string of these values can be found in the SruDbIdMapTable. For example the
+    numeric value of 42 mapping to DiagTrack. This method will cache the mappings
+    of a specific SRUM database.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -249,25 +259,27 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       record_values = self._GetRecordValues(
           parser_mediator, esedb_table.name, esedb_record)
 
+      # Here we want to first check if the mapping values exist, then check
+      # for their sanity.
       identifier = record_values.get('IdIndex', None)
       if identifier is None:
         parser_mediator.ProduceExtractionError(
-            'IdIndex value missing from parse table: SruDbIdMapTable')
+            'IdIndex value missing from table: SruDbIdMapTable')
         continue
 
       identifier_type = record_values.get('IdType', None)
       if identifier_type is None:
         parser_mediator.ProduceExtractionError(
-            'IdType value missing from parse table: SruDbIdMapTable')
+            'IdType value missing from table: SruDbIdMapTable')
         continue
 
-      mapping = record_values.get('IdBlob', None)
-      if mapping is None:
+      mapped_value = record_values.get('IdBlob', None)
+      if mapped_value is None:
         parser_mediator.ProduceExtractionError(
-            'IdBlob value missing from parse table: SruDbIdMapTable')
+            'IdBlob value missing from table: SruDbIdMapTable')
         continue
 
-      if identifier_type not in (0, 1, 2, 3):
+      if identifier_type not in self._SUPPORTED_IDENTIFIER_TYPES:
         parser_mediator.ProduceExtractionError(
             'unsupported identifier type: {0:d}'.format(identifier_type))
         continue
@@ -275,8 +287,8 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       if identifier_type == 3:
         try:
           fwnt_identifier = pyfwnt.security_identifier()
-          fwnt_identifier.copy_from_byte_stream(mapping)
-          mapping = fwnt_identifier.get_string()
+          fwnt_identifier.copy_from_byte_stream(mapped_value)
+          mapped_value = fwnt_identifier.get_string()
         except IOError:
           parser_mediator.ProduceExtractionError(
               'unable to decode IdBlob value as Windows NT security identifier')
@@ -284,7 +296,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
       else:
         try:
-          mapping = mapping.decode('utf-16le').rstrip('\0')
+          mapped_value = mapped_value.decode('utf-16le').rstrip('\0')
         except UnicodeDecodeError:
           parser_mediator.ProduceExtractionError(
               'unable to decode IdBlob value as UTF-16 little-endian string')
@@ -295,7 +307,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
             'identifier: {0:d} already exists in mappings.'.format(identifier))
         continue
 
-      identifier_mappings[identifier] = mapping
+      identifier_mappings[identifier] = mapped_value
 
     cache.StoreDictInCache('SruDbIdMapTable', identifier_mappings)
     return identifier_mappings
@@ -312,20 +324,21 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
           the identifiers stored in the SruDbIdMapTable table.
       database (pyesedb.file): ESE database.
       esedb_table (pyesedb.table): table.
-      values_map (dict[str, str]): maps table column names to attribute names.
+      values_map (dict[str, str]): mapping of table columns to event data
+          attribute names.
       event_data_class (type): event data class.
+
+    Raises:
+      ValueError: if the cache, database or table value is missing.
     """
     if cache is None:
-      logging.warning('[{0:s}] invalid cache'.format(self.NAME))
-      return
+      raise ValueError('Missing cache value.')
 
     if database is None:
-      logging.warning('[{0:s}] invalid database'.format(self.NAME))
-      return
+      raise ValueError('Missing database value.')
 
     if esedb_table is None:
-      logging.warning('[{0:s}] invalid table'.format(self.NAME))
-      return
+      raise ValueError('Missing table value.')
 
     identifier_mappings = self._GetIdentifierMappings(
         parser_mediator, cache, database)
@@ -343,6 +356,9 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       for attribute_name, column_name in values_map.items():
         record_value = record_values.get(column_name, None)
         if attribute_name in ('application', 'user_identifier'):
+          # The AppId and UserId values are stored as numeric values in the
+          # the GUID table. Obtain their string representations from the
+          # identifier mappings stored in the table: SruDbIdMapTable.
           record_value = identifier_mappings.get(record_value, record_value)
 
         setattr(event_data, attribute_name, record_value)
