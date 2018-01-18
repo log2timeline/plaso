@@ -358,9 +358,10 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       for attribute_name, column_name in values_map.items():
         record_value = record_values.get(column_name, None)
         if attribute_name in ('application', 'user_identifier'):
-          # The AppId and UserId values are stored as numeric values in the
-          # the GUID table. Obtain their string representations from the
-          # identifier mappings stored in the table: SruDbIdMapTable.
+          # Human readable versions of AppId and UserId values are stored
+          # in the SruDbIdMapTable table; also referred to as identifier
+          # mapping. Here we look up the numeric identifier stored the GUID
+          # table in SruDbIdMapTable.
           record_value = identifier_mappings.get(record_value, record_value)
 
         setattr(event_data, attribute_name, record_value)
