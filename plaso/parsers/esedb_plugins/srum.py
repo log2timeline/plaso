@@ -355,20 +355,16 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       return None, None
 
     identifier_type = record_values.get('IdType', None)
-    if identifier_type is None:
+    if identifier_type not in self._SUPPORTED_IDENTIFIER_TYPES:
       parser_mediator.ProduceExtractionError(
-          'IdType value missing from table: SruDbIdMapTable')
+          'unsupported IdType value: {0!s} in table: SruDbIdMapTable'.format(
+              identifier_type))
       return None, None
 
     mapped_value = record_values.get('IdBlob', None)
     if mapped_value is None:
       parser_mediator.ProduceExtractionError(
           'IdBlob value missing from table: SruDbIdMapTable')
-      return None, None
-
-    if identifier_type not in self._SUPPORTED_IDENTIFIER_TYPES:
-      parser_mediator.ProduceExtractionError(
-          'unsupported identifier type: {0:d}'.format(identifier_type))
       return None, None
 
     if identifier_type == 3:
