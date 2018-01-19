@@ -45,7 +45,7 @@ class ChromePageVisitedFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = chrome.ChromePageVisitedFormatter()
 
     expected_attribute_names = [
-        'url', 'title', 'typed_count', 'host', 'from_visit',
+        'url', 'title', 'typed_count', 'from_visit',
         'visit_source', 'extra']
 
     self._TestGetFormatStringAttributeNames(

@@ -35,7 +35,6 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
       '{url}',
       '({title})',
       '[count: {typed_count}]',
-      'Host: {host}',
       'Visit from: {from_visit}',
       'Visit Source: [{visit_source}]',
       '{extra}']

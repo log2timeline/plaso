@@ -46,7 +46,6 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
   Attributes:
     extra (str): extra event data.
     from_visit (str): URL where the visit originated from.
-    hostname (str): visited hostname.
     title (str): title of the visited page.
     typed_count (int): number of characters of the URL that were typed.
     url (str): URL of the visited page.
@@ -61,7 +60,6 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
         data_type=self.DATA_TYPE)
     self.extra = None
     self.from_visit = None
-    self.host = None
     self.title = None
     self.typed_count = None
     self.url = None
@@ -188,26 +186,6 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
   }
 
   CORE_MASK = 0xff
-
-  def _GetHostname(self, url):
-    """Retrieves the hostname from a full URL.
-
-    Args:
-      url (str): full URL.
-
-    Returns:
-      str: hostname or full URL if not hostname could be retrieved.
-    """
-    if url.startswith('http') or url.startswith('ftp'):
-      _, _, uri = url.partition('//')
-      hostname, _, _ = uri.partition('/')
-      return hostname
-
-    if url.startswith('about') or url.startswith('chrome'):
-      hostname, _, _ = url.partition('/')
-      return hostname
-
-    return url
 
   def _GetUrl(self, url, cache, database):
     """Retrieves an URL from a reference to an entry in the from_visit table.
@@ -362,7 +340,6 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     event_data = ChromeHistoryPageVisitedEventData()
     event_data.extra = ' '.join(extras)
     event_data.from_visit = self._GetUrl(from_visit, cache, database)
-    event_data.host = self._GetHostname(url)
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
     event_data.title = self._GetRowValue(query_hash, row, 'title')
