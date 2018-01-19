@@ -35,49 +35,47 @@ class FseventsdEventData(events.EventData):
 
   def __init__(self):
     """Initializes an Fseventsd event data."""
-    super(FseventsdEventData, self).__init__()
-    # Offset of the record within the fsevent file.
+    super(FseventsdEventData, self).__init__(data_type=self.DATA_TYPE)
     self.event_identifier = None
     self.flags = None
     self.node_identifier = None
+    # Offset of the record within the fsevents file.
     self.offset = None
     self.path = None
 
 
 class FseventsdParser(interface.FileObjectParser):
-  """Superclass for fseventsd file parsers.
+  """Parser for fseventsd files.
 
+  This parser supports both version 1 and version 2 fseventsd files.
   Refer to http://nicoleibrahim.com/apple-fsevents-forensics/ for details.
   """
 
   # The version 1 format was used in Mac OS X 10.5 (Leopard) through macOS 10.12
   # (Sierra).
-
-  _DLS_HEADER_V1 = construct.Struct(
-      'dls_header_v1',
-      construct.Const(construct.Bytes('signature', 4), b'1SLD'),
-      construct.Padding(4),
-      construct.ULInt32('page_size'))
-
+  _DLS_V1_SIGNATURE = b'1SLD'
   _DLS_RECORD_V1 = construct.Struct(
       'dls_record_v1',
       construct.CString('filename'),
-      construct.ULInt32('event_identifier'),
-      construct.Bytes('flags', 8))
+      construct.ULInt64('event_identifier'),
+      construct.UBInt32('flags'))
 
-  # The version 2 format was introduced in MacOS High Sierra (10.13)
-  _DLS_HEADER_V2 = construct.Struct(
-      'dls_header_v2',
-      construct.Const(construct.Bytes('signature', 4), b'2SLD'),
-      construct.Padding(4),
-      construct.ULInt32('page_size'))
-
+  # The version 2 format was introduced in MacOS High Sierra (10.13).
+  _DLS_V2_SIGNATURE = b'2SLD'
   _DLS_RECORD_V2 = construct.Struct(
       'dls_record_v2',
       construct.CString('filename'),
-      construct.ULInt32('event_identifier'),
-      construct.Bytes('flags', 8),
+      construct.ULInt64('event_identifier'),
+      construct.UBInt32('flags'),
       construct.Bytes('node_identifier', 8))
+
+  _DLS_SIGNATURES = [_DLS_V1_SIGNATURE, _DLS_V2_SIGNATURE]
+
+  _DLS_HEADER = construct.Struct(
+      'dls_header_v1',
+      construct.OneOf(construct.Bytes('signature', 4), _DLS_SIGNATURES),
+      construct.Padding(4),
+      construct.ULInt32('page_size'))
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -87,36 +85,28 @@ class FseventsdParser(interface.FileObjectParser):
       FormatSpecification: format specification.
     """
     format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(b'1SLD', offset=0)
-    format_specification.AddNewSignature(b'2SLD', offset=0)
+    format_specification.AddNewSignature(cls._DLS_V1_SIGNATURE, offset=0)
+    format_specification.AddNewSignature(cls._DLS_V2_SIGNATURE, offset=0)
     return format_specification
 
-
   def _ParseDLSHeader(self, file_object):
-    """Parses a DLS header from a stream.
+    """Parses a DLS header from a file-like object.
 
     Args:
       file_object (file): file-like object to read the header from.
 
     Returns:
-      tuple: containing:
-        int: the version of the header that was parsed, either 1 or 2.
-        construct.Container: parsed record structure.
+      construct.Container: parsed record structure.
 
     Raises:
       UnableToParseFile: when the header cannot be parsed.
     """
-    file_position = file_object.get_offset()
-    headers = {1: self._DLS_HEADER_V1, 2: self._DLS_HEADER_V2}
-    for version, header_type in headers.items():
-      try:
-        return version, header_type.parse_stream(file_object)
-      except construct.ConstructError as exception:
-        file_object.seek(file_position)
-        logging.debug('Unable to parse DLS header with error: {0:s}'.format(
-            exception))
-
-    raise errors.UnableToParseFile('Unable to parse DLS header from file')
+    try:
+      return self._DLS_HEADER.parse_stream(file_object)
+    except construct.ConstructError as exception:
+      logging.debug('Unable to parse DLS header with error: {0:s}'.format(
+          exception))
+      raise errors.UnableToParseFile('Unable to parse DLS header from file')
 
   def _BuildEventData(self, record):
     """Builds an FseventsdData object from a parsed structure.
@@ -152,7 +142,8 @@ class FseventsdParser(interface.FileObjectParser):
           the fseventsd data.
 
     Returns:
-      dfdatetime.DateTimeValues: time values, or None if not available.
+      dfdatetime.DateTimeValues: parent modification time, or None if not
+          available.
     """
     parent_path_spec = gzip_file_entry.path_spec.parent
     parent_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
@@ -170,12 +161,12 @@ class FseventsdParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the header cannot be parsed.
     """
-    version, header = self._ParseDLSHeader(file_object)
+    header = self._ParseDLSHeader(file_object)
     current_page_end = header.page_size
     file_entry = parser_mediator.GetFileEntry()
     date_time = self._GetParentModificationTime(file_entry)
-    # TODO: Change this to use a more representative time definition after
-    # https://github.com/log2timeline/dfdatetime/issues/65 is resolved.
+    # TODO: Change this to use a more representative time definition (time span)
+    # when https://github.com/log2timeline/dfdatetime/issues/65 is resolved.
     if date_time:
       timestamp_description = definitions.TIME_DESCRIPTION_RECORDED
     else:
@@ -185,10 +176,10 @@ class FseventsdParser(interface.FileObjectParser):
 
     while file_object.get_offset() < file_object.get_size():
       if file_object.get_offset() >= current_page_end:
-        version, header = self._ParseDLSHeader(file_object)
+        header = self._ParseDLSHeader(file_object)
         current_page_end += header.page_size
         continue
-      if version == 1:
+      if header.signature == self._DLS_V1_SIGNATURE:
         record = self._DLS_RECORD_V1.parse_stream(file_object)
       else:
         record = self._DLS_RECORD_V2.parse_stream(file_object)

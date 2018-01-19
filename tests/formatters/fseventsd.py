@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import fseventsd
+from plaso.parsers import fseventsd as fseventsd_parser
 
 from tests.formatters import test_lib
 
@@ -29,7 +30,22 @@ class FseventsdFormatterTest(test_lib.EventFormatterTestCase):
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
 
-  # TODO: add test for GetMessages.
+  def testGetMessages(self):
+    """Tests the GetMessages method."""
+    formatter = fseventsd.FSEventsdEventFormatter()
+
+    event_data = fseventsd_parser.FseventsdEventData()
+    event_data.flags = 0x80000001
+    event_data.event_identifier = 47747061
+    event_data.path = '.Spotlight-V100/Store-V1'
+    event = self._MakeTestEvent(event_data)
+    expected_message = (
+        'Folder: .Spotlight-V100/Store-V1 Changes: FolderCreated Event ID: '
+        '47747061')
+    expected_short_message = '.Spotlight-V100/Store-V1 FolderCreated'
+    self._TestGetMessages(
+        event, formatter, expected_message, expected_short_message)
+
   # TODO: add test for GetSources.
 
 

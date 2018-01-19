@@ -14,7 +14,7 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'macos:fseventsd:record'
 
   FORMAT_STRING_PIECES = [
-      '{object_type}', ':', '{path}', 'Changes:', '{event_types}', 'Event ID:',
+      '{object_type}:', '{path}', 'Changes:', '{event_types}', 'Event ID:',
       '{event_identifier}'
   ]
 
@@ -38,7 +38,7 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
       0x00020000: 'ExtendedAttrModified',
       0x00040000: 'ExtendedAttrRemoved',
       0x00100000: 'DocumentRevision',
-      0x00400000: 'Item Cloned',
+      0x00400000: 'ItemCloned',
       0x01000000: 'Created',
       0x02000000: 'Removed',
       0x04000000: 'InodeMetaModified',

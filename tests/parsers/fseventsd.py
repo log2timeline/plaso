@@ -39,7 +39,7 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
     event = events[3]
     self.assertEqual(event.path, '.Spotlight-V100/Store-V1')
     self.assertEqual(event.event_identifier, 47747061)
-    self.assertEqual(event.flags, b'\x00\x00\x00\x00\x80\x00\x00\x01')
+    self.assertEqual(event.flags, 0x80000001)
 
     os_file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
     expected_time = os_file_entry.modification_time
@@ -67,7 +67,7 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
     event = events[2]
     self.assertEqual(event.path, 'Hi, Sierra')
     self.assertEqual(event.event_identifier, 1706838)
-    self.assertEqual(event.flags, b'\x00\x00\x00\x00\x08\x00\x00\x01')
+    self.assertEqual(event.flags, 0x8000001)
 
     os_file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
     expected_time = os_file_entry.modification_time
