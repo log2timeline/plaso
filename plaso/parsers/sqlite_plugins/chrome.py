@@ -142,26 +142,6 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
   # https://cs.chromium.org/chromium/src/ui/base/page_transition_types.h?l=108
   _PAGE_TRANSITION_CORE_MASK = 0xff
 
-  def _GetHostname(self, url):
-    """Retrieves the hostname from a full URL.
-
-    Args:
-      url (str): full URL.
-
-    Returns:
-      str: hostname or full URL if not hostname could be retrieved.
-    """
-    if url.startswith('http') or url.startswith('ftp'):
-      _, _, uri = url.partition('//')
-      hostname, _, _ = uri.partition('/')
-      return hostname
-
-    if url.startswith('about') or url.startswith('chrome'):
-      hostname, _, _ = url.partition('/')
-      return hostname
-
-    return url
-
   def _GetUrl(self, url, cache, database):
     """Retrieves an URL from a reference to an entry in the from_visit table.
 
@@ -290,7 +270,6 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
 
     event_data = ChromeHistoryPageVisitedEventData()
     event_data.from_visit = self._GetUrl(from_visit, cache, database)
-    event_data.host = self._GetHostname(url)
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
     event_data.page_transition_type = (
