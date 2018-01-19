@@ -742,7 +742,7 @@ class BSMParser(interface.FileObjectParser):
         return False
 
     event_data = BSMEventData()
-    if parser_mediator.operating_system == definitions.OPERATING_SYSTEM_MACOS:
+    if parser_mediator.platform == definitions.OPERATING_SYSTEM_MACOS:
       # BSM can be in more than one OS: BSD, Solaris and MacOS.
       # In MacOS the last two tokens are the return status and the trailer.
       return_value = extra_tokens.get('BSM_TOKEN_RETURN32')
@@ -848,7 +848,7 @@ class BSMParser(interface.FileObjectParser):
 
     # If is MacOS BSM file, next entry is a  text token indicating
     # if it is a normal start or it is a recovery track.
-    if parser_mediator.operating_system == definitions.OPERATING_SYSTEM_MACOS:
+    if parser_mediator.platform == definitions.OPERATING_SYSTEM_MACOS:
       token_type, record_structure = self._BSM_TOKEN_TYPES.get(
           token_identifier, ('', None))
 
