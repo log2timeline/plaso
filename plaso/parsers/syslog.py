@@ -267,7 +267,6 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     if key == 'chromeos_syslog_line':
-      # TODO: add support for different precision.
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
 
       try:

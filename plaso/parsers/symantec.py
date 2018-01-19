@@ -175,7 +175,7 @@ class SymantecParser(dsv_parser.DSVParser):
   def _GetTimeElementsTuple(self, timestamp):
     """Retrieves a time elements tuple from the timestamp.
 
-    A Symantic log timestamp consist of six hexadecimal octets, that represent:
+    A Symantec log timestamp consist of six hexadecimal octets, that represent:
       First octet: Number of years since 1970
       Second octet: Month, where January is represented by 0
       Third octet: Day of the month
