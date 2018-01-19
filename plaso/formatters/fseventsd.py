@@ -57,9 +57,9 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
     Returns:
       str: name of the object type represented by the mask.
     """
-    for value in self._OBJECT_TYPE_MASKS:
-      if value & flags:
-        return self._OBJECT_TYPE_MASKS[value]
+    for mask, description in self._OBJECT_TYPE_MASKS.items():
+      if mask & flags:
+        return description
     return 'UNKNOWN'
 
   def _GetEventTypes(self, flags):
@@ -73,9 +73,9 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
           fsevents record.
     """
     event_types = []
-    for value in self._EVENT_MASKS:
-      if value & flags:
-        event_types.append(self._EVENT_MASKS[value])
+    for mask, description in self._EVENT_MASKS.items():
+      if mask & flags:
+        event_types.append(description)
     return ','.join(event_types)
 
   def GetMessages(self, unused_formatter_mediator, event):

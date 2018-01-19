@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 import construct
 
 from dfdatetime import semantic_time as dfdatetime_semantic_time
@@ -26,7 +24,8 @@ class FseventsdEventData(events.EventData):
   Attributes:
     event_identifier (int): the record event identifier.
     flags (int): object type and event flags stored in the record.
-    node_identifier (str): node identifier stored in the fseventsd record.
+    node_identifier (int): file system node identifier stored in the fseventsd
+        record.
     path (str): path recorded in the fseventsd record.
   """
 
@@ -50,7 +49,7 @@ class FseventsdParser(interface.FileObjectParser):
 
   NAME = 'fsevents'
 
-  DESCRIPTION = ''
+  DESCRIPTION = 'Parser for fseventsd files.'
 
   # The version 1 format was used in Mac OS X 10.5 (Leopard) through macOS 10.12
   # (Sierra).
@@ -68,7 +67,7 @@ class FseventsdParser(interface.FileObjectParser):
       construct.CString('filename'),
       construct.ULInt64('event_identifier'),
       construct.UBInt32('flags'),
-      construct.Bytes('node_identifier', 8))
+      construct.ULInt64('node_identifier'))
 
   _DLS_SIGNATURES = [_DLS_V1_SIGNATURE, _DLS_V2_SIGNATURE]
 

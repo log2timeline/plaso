@@ -9,6 +9,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.formatters import fseventsd as _  # pylint: disable=unused-import
 from plaso.parsers import fseventsd
 
 from tests import test_lib as shared_test_lib
@@ -46,6 +47,12 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
     expected_timestamp = expected_time.GetPlasoTimestamp()
     self.assertEqual(event.timestamp, expected_timestamp)
 
+    expected_message = (
+        'Folder: .Spotlight-V100/Store-V1 Changes: FolderCreated '
+        'Event ID: 47747061')
+    expected_short_message = '.Spotlight-V100/Store-V1 FolderCreated'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+
   @shared_test_lib.skipUnlessHasTestFile(['fsevents-00000000001a0b79'])
   def testParseV2(self):
     """Tests the Parse function on a version 2 file."""
@@ -73,6 +80,10 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
     expected_time = os_file_entry.modification_time
     expected_timestamp = expected_time.GetPlasoTimestamp()
     self.assertEqual(event.timestamp, expected_timestamp)
+
+    expected_message = 'Folder: Hi, Sierra Changes: Renamed Event ID: 1706838'
+    expected_short_message = 'Hi, Sierra Renamed'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
