@@ -244,6 +244,14 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     filter_limit = getattr(event_filter, 'limit', None)
 
     for event in storage_writer.GetSortedEvents():
+      event_data_identifier = event.GetEventDataIdentifier()
+      if event_data_identifier:
+        event_data = storage_writer.GetEventDataByIdentifier(
+            event_data_identifier)
+        if event_data:
+          for attribute_name, attribute_value in event_data.GetAttributes():
+            setattr(event, attribute_name, attribute_value)
+
       event_identifier = event.GetIdentifier()
       event.tag = self._event_tag_index.GetEventTagByIdentifier(
           storage_writer, event_identifier)
@@ -461,6 +469,14 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     number_of_events_from_time_slice = 0
 
     for event in storage_reader.GetSortedEvents(time_range=time_slice_range):
+      event_data_identifier = event.GetEventDataIdentifier()
+      if event_data_identifier:
+        event_data = storage_reader.GetEventDataByIdentifier(
+            event_data_identifier)
+        if event_data:
+          for attribute_name, attribute_value in event_data.GetAttributes():
+            setattr(event, attribute_name, attribute_value)
+
       event_identifier = event.GetIdentifier()
       event.tag = self._event_tag_index.GetEventTagByIdentifier(
           storage_reader, event_identifier)

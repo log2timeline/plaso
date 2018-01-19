@@ -341,16 +341,12 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
           break
 
       if parsed_structure:
-        parsed_event = self.ParseRecord(
-            parser_mediator, use_key, parsed_structure)
-        if parsed_event:
-          parsed_event.offset = self._current_offset
-          parser_mediator.ProduceEvent(parsed_event)
+        self.ParseRecord(parser_mediator, use_key, parsed_structure)
       else:
         if len(line) > 80:
           line = '{0:s}...'.format(line[:77])
         parser_mediator.ProduceExtractionError(
-            'unable to parse log line: {0:s} at offset {1:d}'.format(
+            'unable to parse log line: {0:s} at offset: {1:d}'.format(
                 repr(line), self._current_offset))
 
       self._current_offset = text_file_object.get_offset()
@@ -375,9 +371,6 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
           and other components, such as storage and dfvfs.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): tokens from a parsed log line.
-
-    Returns:
-      EventObject: event or None.
     """
 
   @abc.abstractmethod

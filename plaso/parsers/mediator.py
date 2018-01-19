@@ -443,41 +443,6 @@ class ParserMediator(object):
 
       setattr(event, attribute, value)
 
-  def ProduceEvent(self, event, query=None):
-    """Produces an event.
-
-    Args:
-      event (EventObject): event.
-      query (Optional[str]): query that was used to obtain the event.
-
-    Raises:
-      RuntimeError: when storage writer is not set.
-    """
-    if not self._storage_writer:
-      raise RuntimeError('Storage writer not set.')
-
-    self.ProcessEvent(
-        event, parser_chain=self.GetParserChain(),
-        file_entry=self._file_entry, query=query)
-
-    self._storage_writer.AddEvent(event)
-    self._number_of_events += 1
-
-    self.last_activity_timestamp = time.time()
-
-    self._last_event_data_hash = None
-    self._last_event_data_identifier = None
-
-  def ProduceEvents(self, events, query=None):
-    """Produces events.
-
-    Args:
-      events (list[EventObject]): event objects.
-      query (Optional[str]): query string.
-    """
-    for event in events:
-      self.ProduceEvent(event, query=query)
-
   def ProduceEventSource(self, event_source):
     """Produces an event source.
 

@@ -34,7 +34,7 @@ class TLNBaseOutputModule(interface.LinearOutputModule):
     """
     date_time_string = timelib.Timestamp.CopyToIsoFormat(
         event.timestamp, timezone=self._output_mediator.timezone)
-    timestamp_description = getattr(event, 'timestamp_desc', 'UNKNOWN')
+    timestamp_description = event.timestamp_desc or 'UNKNOWN'
 
     message, _ = self._output_mediator.GetFormattedMessages(event)
     if message is None:
