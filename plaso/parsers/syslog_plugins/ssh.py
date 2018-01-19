@@ -54,8 +54,9 @@ class SSHOpenedConnectionEventData(SSHEventData):
   DATA_TYPE = 'syslog:ssh:opened_connection'
 
 
-class SSHPlugin(interface.SyslogPlugin):
+class SSHSyslogPlugin(interface.SyslogPlugin):
   """A plugin for creating events from syslog message produced by SSH."""
+
   NAME = 'ssh'
   DESCRIPTION = 'Parser for SSH syslog entries.'
   REPORTER = 'sshd'
@@ -124,11 +125,10 @@ class SSHPlugin(interface.SyslogPlugin):
           the defined grammar.
 
     Raises:
-      AttributeError: If an unknown key is provided.
+      ValueError: If an unknown key is provided.
     """
-    # TODO: change AttributeError into ValueError or equiv.
     if key not in ('failed_connection', 'login', 'opened_connection'):
-      raise AttributeError('Unknown grammar key: {0:s}'.format(key))
+      raise ValueError('Unknown grammar key: {0:s}'.format(key))
 
     if key == 'login':
       event_data = SSHLoginEventData()
@@ -159,4 +159,4 @@ class SSHPlugin(interface.SyslogPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-syslog.SyslogParser.RegisterPlugin(SSHPlugin)
+syslog.SyslogParser.RegisterPlugin(SSHSyslogPlugin)
