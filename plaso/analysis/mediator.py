@@ -59,9 +59,9 @@ class AnalysisMediator(object):
     return self._data_location
 
   @property
-  def operating_system(self):
-    """str: operating system or None if not set."""
-    return self._knowledge_base.GetValue('operating_system')
+  def platform(self):
+    """str: platform."""
+    return self._knowledge_base.platform
 
   def GetDisplayNameForPathSpec(self, path_spec):
     """Retrieves the display name for a path specification.
