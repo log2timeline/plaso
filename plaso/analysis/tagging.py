@@ -61,8 +61,8 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     if not analysis_mediator.data_location:
       return False
 
-    operating_system = analysis_mediator.operating_system.lower()
-    filename = self._OS_TAG_FILES.get(operating_system, None)
+    platform = analysis_mediator.platform
+    filename = self._OS_TAG_FILES.get(platform.lower(), None)
     if not filename:
       return False
 
