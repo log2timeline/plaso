@@ -86,7 +86,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
         'Strings: [\'cifs/CONTROLLER\', '
         '\'"The system detected a possible attempt to '
         'compromise security. Please ensure that you can '
-        'contact the server that authenticated you. (0xc0000388)"\']'
+        'contact the server that authenticated you. (0xc0000388)"\'] '
         'Computer Name: WKS-WINXP32BIT '
         'Severity: Warning '
         'Record Number: 1392 '
