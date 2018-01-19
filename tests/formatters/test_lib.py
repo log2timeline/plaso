@@ -24,7 +24,7 @@ class TestEventFormatter(interface.EventFormatter):
 class EventFormatterTestCase(unittest.TestCase):
   """The unit test case for an event formatter."""
 
-  def _MakeTestEvent(self, event_data):
+  def _CreateTestEvent(self, event_data):
     """Creates a test event containing the provided data.
 
     Args:
@@ -61,9 +61,9 @@ class EventFormatterTestCase(unittest.TestCase):
       event (EventObject): event.
       expected_message (str): expected message string.
       expected_short_message (str): expected short message  string.
-      formatter_mediator (FormatterMediator): mediates the interactions between
-          formatters and other components, such as storage and Windows EventLog
-          resources.
+      formatter_mediator (Optional[FormatterMediator]): mediates interactions
+          between formatters and other components, such as storage and Windows
+          EventLog resources.
     """
     if not formatter_mediator:
       formatter_mediator = mediator.FormatterMediator()

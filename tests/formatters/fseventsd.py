@@ -38,7 +38,7 @@ class FseventsdFormatterTest(test_lib.EventFormatterTestCase):
     event_data.flags = 0x80000001
     event_data.event_identifier = 47747061
     event_data.path = '.Spotlight-V100/Store-V1'
-    event = self._MakeTestEvent(event_data)
+    event = self._CreateTestEvent(event_data)
     expected_message = (
         'Folder: .Spotlight-V100/Store-V1 Changes: FolderCreated Event ID: '
         '47747061')

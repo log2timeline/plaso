@@ -20,7 +20,7 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
 
   @shared_test_lib.skipUnlessHasTestFile(['fsevents-0000000002d89b58'])
   def testParseV1(self):
-    """Tests the Parse function."""
+    """Tests the Parse function on a version 1 file."""
     parser = fseventsd.FseventsdParser()
 
     path = self._GetTestFilePath(['fsevents-0000000002d89b58'])
@@ -48,7 +48,7 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
 
   @shared_test_lib.skipUnlessHasTestFile(['fsevents-00000000001a0b79'])
   def testParseV2(self):
-    """Tests the Parse function."""
+    """Tests the Parse function on a version 2 file."""
     parser = fseventsd.FseventsdParser()
 
     path = self._GetTestFilePath(['fsevents-00000000001a0b79'])

@@ -24,10 +24,9 @@ class FseventsdEventData(events.EventData):
   """Fseventsd event data.
 
   Attributes:
-    event_identifier (int): the record event id.
+    event_identifier (int): the record event identifier.
     flags (int): object type and event flags stored in the record.
     node_identifier (str): node identifier stored in the fseventsd record.
-    offset (int): offset of the record in the fseventsd file.
     path (str): path recorded in the fseventsd record.
   """
 
@@ -39,8 +38,6 @@ class FseventsdEventData(events.EventData):
     self.event_identifier = None
     self.flags = None
     self.node_identifier = None
-    # Offset of the record within the fsevents file.
-    self.offset = None
     self.path = None
 
 
@@ -50,6 +47,10 @@ class FseventsdParser(interface.FileObjectParser):
   This parser supports both version 1 and version 2 fseventsd files.
   Refer to http://nicoleibrahim.com/apple-fsevents-forensics/ for details.
   """
+
+  NAME = 'fsevents'
+
+  DESCRIPTION = ''
 
   # The version 1 format was used in Mac OS X 10.5 (Leopard) through macOS 10.12
   # (Sierra).
@@ -103,9 +104,7 @@ class FseventsdParser(interface.FileObjectParser):
     """
     try:
       return self._DLS_HEADER.parse_stream(file_object)
-    except construct.ConstructError as exception:
-      logging.debug('Unable to parse DLS header with error: {0:s}'.format(
-          exception))
+    except construct.ConstructError:
       raise errors.UnableToParseFile('Unable to parse DLS header from file')
 
   def _BuildEventData(self, record):
@@ -117,14 +116,14 @@ class FseventsdParser(interface.FileObjectParser):
     Returns:
       FseventsdEventData: event data attribute container.
     """
-    data = FseventsdEventData()
-    data.path = record.filename
-    data.flags = record.flags
-    data.event_identifier = record.event_identifier
+    event_data = FseventsdEventData()
+    event_data.path = record.filename
+    event_data.flags = record.flags
+    event_data.event_identifier = record.event_identifier
     # Node identifier is only set in DLS V2 records.
-    data.node_identifier = getattr(record, 'node_identifier', None)
+    event_data.node_identifier = getattr(record, 'node_identifier', None)
 
-    return data
+    return event_data
 
   def _GetParentModificationTime(self, gzip_file_entry):
     """Retrieves the modification time of the file entry's parent file.
@@ -184,8 +183,8 @@ class FseventsdParser(interface.FileObjectParser):
       else:
         record = self._DLS_RECORD_V2.parse_stream(file_object)
 
-      data = self._BuildEventData(record)
-      parser_mediator.ProduceEventWithEventData(event, data)
+      event_data = self._BuildEventData(record)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 manager.ParsersManager.RegisterParser(FseventsdParser)

@@ -62,11 +62,11 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
         return self._OBJECT_TYPE_MASKS[value]
     return 'UNKNOWN'
 
-  def _GetEventTypes(self, mask):
+  def _GetEventTypes(self, flags):
     """Determines which events are stored in a set of fsevents flags.
 
     Args:
-      mask (int): fsevents record type mask.
+      flags (int): fsevents record type flags.
 
     Returns:
       str: a comma separated string containing all the events listed in an
@@ -74,7 +74,7 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
     """
     event_types = []
     for value in self._EVENT_MASKS:
-      if value & mask:
+      if value & flags:
         event_types.append(self._EVENT_MASKS[value])
     return ','.join(event_types)
 
