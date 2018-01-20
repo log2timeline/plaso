@@ -304,7 +304,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
         if attribute_name in ('application', 'user_identifier'):
           # Human readable versions of AppId and UserId values are stored
           # in the SruDbIdMapTable table; also referred to as identifier
-          # mapping. Here we look up the numeric identifier stored the GUID
+          # mapping. Here we look up the numeric identifier stored in the GUID
           # table in SruDbIdMapTable.
           record_value = identifier_mappings.get(record_value, record_value)
 
@@ -330,23 +330,21 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseIdentifierMappingRecord(
-      self, parser_mediator, esedb_table, esedb_record):
+      self, parser_mediator, table_name, esedb_record):
     """Extracts an identifier mapping from a SruDbIdMapTable record.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      esedb_table (pyesedb.table): table.
-      esedb_record (pyesedb.table): record.
+      table_name (str): name of the table the record is stored in.
+      esedb_record (pyesedb.record): record.
 
     Returns:
-      tuple[int, str]: numeric identifier and its string representation.
-
-    Raises:
-      ValueError: if the cache, database or table value is missing.
+      tuple[int, str]: numeric identifier and its string representation or
+          None, None if no identifier mapping can be retrieved from the record.
     """
     record_values = self._GetRecordValues(
-        parser_mediator, esedb_table.name, esedb_record)
+        parser_mediator, table_name, esedb_record)
 
     identifier = record_values.get('IdIndex', None)
     if identifier is None:
@@ -398,9 +396,6 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
     Returns:
       dict[int, str]: mapping of numeric identifiers to their string
           representation.
-
-    Raises:
-      ValueError: if the cache, database or table value is missing.
     """
     identifier_mappings = {}
 
@@ -409,7 +404,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
         break
 
       identifier, mapped_value = self._ParseIdentifierMappingRecord(
-          parser_mediator, esedb_table, esedb_record)
+          parser_mediator, esedb_table.name, esedb_record)
       if identifier is None or mapped_value is None:
         continue
 
