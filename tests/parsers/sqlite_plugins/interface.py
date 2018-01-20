@@ -10,7 +10,6 @@ import unittest
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import timelib
-from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 from tests import test_lib as shared_test_lib
@@ -48,11 +47,6 @@ class TestSQLitePlugin(interface.SQLitePlugin):
     """
     query_hash = hash(query)
 
-    file_entry = parser_mediator.GetFileEntry()
-    path_spec = file_entry.path_spec
-    location = path_spec.location
-    from_wal = location.endswith('-wal')
-
     field1 = self._GetRowValue(query_hash, row, 'Field1')
     field2 = self._GetRowValue(query_hash, row, 'Field2')
     field3 = self._GetRowValue(query_hash, row, 'Field3')
@@ -62,7 +56,7 @@ class TestSQLitePlugin(interface.SQLitePlugin):
     if sys.version_info[0] < 3:
       field3 = str(field3)
 
-    self.results.append(((field1, field2, field3), from_wal))
+    self.results.append((field1, field2, field3))
 
     event = time_events.TimestampEvent(
         timelib.Timestamp.NONE_TIMESTAMP,
@@ -70,7 +64,6 @@ class TestSQLitePlugin(interface.SQLitePlugin):
     event.field1 = field1
     event.field2 = field2
     event.field3 = field3
-    event.from_wal = location.endswith('-wal')
     parser_mediator.ProduceEvent(event)
 
 
@@ -82,26 +75,22 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
   def testProcessWithWAL(self):
     """Tests the Process function on a database with WAL file."""
     plugin = TestSQLitePlugin()
-    cache = sqlite.SQLiteCache()
     wal_file = self._GetTestFilePath(['wal_database.db-wal'])
     self._ParseDatabaseFileWithPlugin(
-        ['wal_database.db'], plugin, cache=cache, wal_path=wal_file)
+        ['wal_database.db'], plugin, wal_path=wal_file)
 
     expected_results = [
-        (('Committed Text 1', 1, b'None'), False),
-        (('Committed Text 2', 2, b'None'), False),
-        (('Deleted Text 1', 3, b'None'), False),
-        (('Committed Text 3', 4, b'None'), False),
-        (('Committed Text 4', 5, b'None'), False),
-        (('Deleted Text 2', 6, b'None'), False),
-        (('Committed Text 5', 7, b'None'), False),
-        (('Committed Text 6', 8, b'None'), False),
-        (('Committed Text 7', 9, b'None'), False),
-        (('Unhashable Row 1', 10, b'Binary Text!\x01\x02\x03'), False),
-        (('Modified Committed Text 3', 4, b'None'), True),
-        (('Unhashable Row 2', 11, b'More Binary Text!\x01\x02\x03'), True),
-        (('New Text 1', 12, b'None'), True),
-        (('New Text 2', 13, b'None'), True)]
+        ('Committed Text 1', 1, b'None'),
+        ('Committed Text 2', 2, b'None'),
+        ('Modified Committed Text 3', 4, b'None'),
+        ('Committed Text 4', 5, b'None'),
+        ('Committed Text 5', 7, b'None'),
+        ('Committed Text 6', 8, b'None'),
+        ('Committed Text 7', 9, b'None'),
+        ('Unhashable Row 1', 10, b'Binary Text!\x01\x02\x03'),
+        ('Unhashable Row 2', 11, b'More Binary Text!\x01\x02\x03'),
+        ('New Text 1', 12, b'None'),
+        ('New Text 2', 13, b'None')]
 
     self.assertEqual(expected_results, plugin.results)
 
@@ -109,47 +98,41 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
   def testProcessWithoutWAL(self):
     """Tests the Process function on a database without WAL file."""
     plugin = TestSQLitePlugin()
-    cache = sqlite.SQLiteCache()
-    self._ParseDatabaseFileWithPlugin(
-        ['wal_database.db'], plugin, cache=cache)
+    self._ParseDatabaseFileWithPlugin(['wal_database.db'], plugin)
 
     expected_results = [
-        (('Committed Text 1', 1, b'None'), False),
-        (('Committed Text 2', 2, b'None'), False),
-        (('Deleted Text 1', 3, b'None'), False),
-        (('Committed Text 3', 4, b'None'), False),
-        (('Committed Text 4', 5, b'None'), False),
-        (('Deleted Text 2', 6, b'None'), False),
-        (('Committed Text 5', 7, b'None'), False),
-        (('Committed Text 6', 8, b'None'), False),
-        (('Committed Text 7', 9, b'None'), False),
-        (('Unhashable Row 1', 10, b'Binary Text!\x01\x02\x03'), False)]
+        ('Committed Text 1', 1, b'None'),
+        ('Committed Text 2', 2, b'None'),
+        ('Deleted Text 1', 3, b'None'),
+        ('Committed Text 3', 4, b'None'),
+        ('Committed Text 4', 5, b'None'),
+        ('Deleted Text 2', 6, b'None'),
+        ('Committed Text 5', 7, b'None'),
+        ('Committed Text 6', 8, b'None'),
+        ('Committed Text 7', 9, b'None'),
+        ('Unhashable Row 1', 10, b'Binary Text!\x01\x02\x03')]
 
-    self.assertEqual(expected_results, plugin.results)
+    self.assertEqual(plugin.results, expected_results)
 
   @shared_test_lib.skipUnlessHasTestFile(['wal_database.db'])
   @shared_test_lib.skipUnlessHasTestFile(['wal_database.db-wal'])
-  def testSchemaMatching(self):
-    """Tests the Schema matching capabilities."""
+  def testCheckSchema(self):
+    """Tests the CheckSchema function."""
     plugin = TestSQLitePlugin()
-    cache = sqlite.SQLiteCache()
 
     # Test matching schema.
-    storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['wal_database.db'], plugin, cache=cache)
-    for event in storage_writer.GetEvents():
-      self.assertTrue(event.schema_match)
+    _, database = self._OpenDatabaseFile(['wal_database.db'])
+
+    schema_match = plugin.CheckSchema(database)
+    self.assertTrue(schema_match)
 
     # Test schema change with WAL.
     wal_file = self._GetTestFilePath(['wal_database.db-wal'])
-    storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['wal_database.db'], plugin, cache=cache, wal_path=wal_file)
+    _, database = self._OpenDatabaseFile(
+        ['wal_database.db'], wal_path=wal_file)
 
-    for event in storage_writer.GetEvents():
-      if event.from_wal:
-        self.assertFalse(event.schema_match)
-      else:
-        self.assertTrue(event.schema_match)
+    schema_match = plugin.CheckSchema(database)
+    self.assertFalse(schema_match)
 
     # Add schema change from WAL file and test again.
     plugin.SCHEMAS.append(
@@ -159,21 +142,14 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
          'NewTable':
          'CREATE TABLE NewTable(NewTableField1 TEXT, NewTableField2 TEXT)'})
 
-    storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['wal_database.db'], plugin, cache=cache, wal_path=wal_file)
-    for event in storage_writer.GetEvents():
-      self.assertTrue(event.schema_match)
+    schema_match = plugin.CheckSchema(database)
+    self.assertTrue(schema_match)
 
     # Test without original schema.
     del plugin.SCHEMAS[0]
-    storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['wal_database.db'], plugin, cache=cache, wal_path=wal_file)
 
-    for event in storage_writer.GetEvents():
-      if event.from_wal:
-        self.assertTrue(event.schema_match)
-      else:
-        self.assertFalse(event.schema_match)
+    schema_match = plugin.CheckSchema(database)
+    self.assertTrue(schema_match)
 
 
 if __name__ == '__main__':

@@ -10,7 +10,6 @@ import unittest
 from plaso.formatters import firefox as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import timelib
-from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import firefox
 
 from tests import test_lib as shared_test_lib
@@ -25,9 +24,8 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     """Tests the Process function on a Firefox History database file."""
     # This is probably version 23 but potentially an older version.
     plugin = firefox.FirefoxHistoryPlugin()
-    cache = sqlite.SQLiteCache()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['places.sqlite'], plugin, cache=cache)
+        ['places.sqlite'], plugin)
 
     # The places.sqlite file contains 205 events (1 page visit,
     # 2 x 91 bookmark records, 2 x 3 bookmark annotations,
@@ -184,9 +182,8 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
   def testProcessVersion25(self):
     """Tests the Process function on a Firefox History database file v 25."""
     plugin = firefox.FirefoxHistoryPlugin()
-    cache = sqlite.SQLiteCache()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['places_new.sqlite'], plugin, cache=cache)
+        ['places_new.sqlite'], plugin)
 
     # The places.sqlite file contains 84 events:
     #     34 page visits.
@@ -227,9 +224,8 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
   def testProcessVersion25(self):
     """Tests the Process function on a Firefox Downloads database file."""
     plugin = firefox.FirefoxDownloadsPlugin()
-    cache = sqlite.SQLiteCache()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['downloads.sqlite'], plugin, cache=cache)
+        ['downloads.sqlite'], plugin)
 
     # The downloads.sqlite file contains 2 events (1 download).
     self.assertEqual(storage_writer.number_of_events, 2)
