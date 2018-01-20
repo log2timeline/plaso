@@ -74,9 +74,12 @@ class SQLitePlugin(plugins.BasePlugin):
     """
     values = []
     for value in row:
-      if isinstance(value, py2to3.BYTES_TYPE):
+      try:
+        value = '{0!s}'.format(value)
+      except UnicodeDecodeError:
         value = repr(value)
-      values.append('{0!s}'.format(value))
+
+      values.append(value)
 
     return hash(' '.join(values))
 
