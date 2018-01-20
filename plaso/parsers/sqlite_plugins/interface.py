@@ -11,6 +11,7 @@ try:
 except ImportError:
   import sqlite3
 
+from plaso.lib import py2to3
 from plaso.parsers import plugins
 
 
@@ -71,20 +72,13 @@ class SQLitePlugin(plugins.BasePlugin):
     Returns:
       int: hash value of the given row.
     """
-    hash_value = 0
-    for column_value in row:
-      try:
-        column_hash_value = hash(column_value)
-      except TypeError:
-        # In Python 2, blobs are "read-write buffer" and will cause a
-        # "writable buffers are not hashable" TypeError exception if we try
-        # to hash it. Therefore, we will turn it into a string beforehand.
-        # Since Python 3 does not support the buffer type we cannot check
-        # the type of column_value.
-        column_hash_value = hash(str(column_value))
+    values = []
+    for value in row:
+      if isinstance(value, py2to3.BYTES_TYPE):
+        value = repr(value)
+      values.append('{0!s}'.format(value))
 
-      hash_value ^= column_hash_value
-    return hash_value
+    return hash(' '.join(values))
 
   def _ParseQuery(self, parser_mediator, database, query, callback, cache):
     """Queries a database and parses the results.

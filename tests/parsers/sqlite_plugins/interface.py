@@ -92,7 +92,7 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
         ('New Text 1', 12, b'None'),
         ('New Text 2', 13, b'None')]
 
-    self.assertEqual(expected_results, plugin.results)
+    self.assertEqual(plugin.results, expected_results)
 
   @shared_test_lib.skipUnlessHasTestFile(['wal_database.db'])
   def testProcessWithoutWAL(self):
