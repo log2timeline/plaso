@@ -1,11 +1,11 @@
-plaso\.storage\.fake package
-============================
+plaso.storage.fake package
+==========================
 
 Submodules
 ----------
 
-plaso\.storage\.fake\.writer module
------------------------------------
+plaso.storage.fake.writer module
+--------------------------------
 
 .. automodule:: plaso.storage.fake.writer
     :members:
