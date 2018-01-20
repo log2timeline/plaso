@@ -1,10 +1,15 @@
 **Description of problem:**
 
-Please describe the problem in as much detail as possible, including relevant command line arguments, flags etc.
+Please describe the problem in as much detail as possible.
 What does the tool not do that it should? What would you like it to do?
 
-For more information see the [troubleshooting
-guide][https://github.com/log2timeline/plaso/wiki/Troubleshooting].
+**Command line and arguments:**
+
+Please describe the command and arguments that is causing the issue.
+
+**Source data:**
+
+Please describe the source that is causing the issue.
 
 **Plaso version:**
 
@@ -29,10 +34,5 @@ If multiple methods were used please indicate.
 
 Please run the tool with "-d" to generate debug output, and include anything relevant.
 
-**Command line and arguments:**
-
-Please describe the command and arguments that is causing the issue.
-
-**Source data:**
-
-Please describe the source that is causing the issue.
+For more information see the [troubleshooting
+guide][https://github.com/log2timeline/plaso/wiki/Troubleshooting].
