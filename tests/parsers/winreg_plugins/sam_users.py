@@ -21,11 +21,12 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['SAM'])
   def testProcess(self):
     """Tests the Process function."""
+    # pylint: disable=protected-access
     test_file_entry = self._GetTestFileEntry(['SAM'])
-    key_path = 'HKEY_LOCAL_MACHINE\\SAM\\SAM\\Domains\\Account\\Users'
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
-    registry_key = win_registry.GetKeyByPath(key_path)
+    registry_key = win_registry.GetKeyByPath(
+        sam_users.SAMUsersWindowsRegistryPlugin._SAM_KEY_PATH)
 
     plugin = sam_users.SAMUsersWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
@@ -52,7 +53,8 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'account_rid: 500 '
         'comments: Built-in account for administering the computer/domain '
         'login_count: 6 '
-        'username: Administrator').format(key_path)
+        'username: Administrator').format(
+            sam_users.SAMUsersWindowsRegistryPlugin._SAM_KEY_PATH)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
@@ -75,7 +77,8 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'Username: Administrator '
         'Comments: Built-in account for administering the computer/domain '
         'RID: 500 '
-        'Login count: 6').format(key_path)
+        'Login count: 6').format(
+            sam_users.SAMUsersWindowsRegistryPlugin._SAM_KEY_PATH)
     expected_short_message = (
         'Administrator '
         'RID: 500 '
