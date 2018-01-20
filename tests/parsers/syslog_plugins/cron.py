@@ -12,7 +12,7 @@ from tests import test_lib as shared_test_lib
 from tests.parsers.syslog_plugins import test_lib
 
 
-class SyslogCronPluginTest(test_lib.SyslogPluginTestCase):
+class CronSyslogPluginTest(test_lib.SyslogPluginTestCase):
   """Tests for the cron syslog plugin."""
 
   @shared_test_lib.skipUnlessHasTestFile(['syslog_cron.log'])

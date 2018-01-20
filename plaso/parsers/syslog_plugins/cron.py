@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a plugin for SSH syslog entries."""
+"""This file contains a plugin for cron syslog entries."""
 
 from __future__ import unicode_literals
 
@@ -28,12 +28,11 @@ class CronTaskRunEventData(syslog.SyslogLineEventData):
     self.username = None
 
 
-class CronPlugin(interface.SyslogPlugin):
+class CronSyslogPlugin(interface.SyslogPlugin):
   """A syslog plugin for parsing cron messages."""
+
   NAME = 'cron'
-
   DESCRIPTION = 'Parser for syslog cron messages.'
-
   REPORTER = 'CRON'
 
   _PYPARSING_COMPONENTS = {
@@ -67,11 +66,10 @@ class CronPlugin(interface.SyslogPlugin):
           the defined grammar.
 
     Raises:
-      AttributeError: If an unknown key is provided.
+      ValueError: If an unknown key is provided.
     """
-    # TODO: change AttributeError into ValueError or equiv.
     if key != 'task_run':
-      raise AttributeError('Unknown grammar key: {0:s}'.format(key))
+      raise ValueError('Unknown grammar key: {0:s}'.format(key))
 
     event_data = CronTaskRunEventData()
     event_data.body = tokens.get('body', None)
@@ -89,4 +87,4 @@ class CronPlugin(interface.SyslogPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-syslog.SyslogParser.RegisterPlugin(CronPlugin)
+syslog.SyslogParser.RegisterPlugin(CronSyslogPlugin)
