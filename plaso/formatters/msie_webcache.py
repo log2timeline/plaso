@@ -13,9 +13,6 @@ class MsieWebCacheContainerEventFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'msie:webcache:container'
 
   FORMAT_STRING_PIECES = [
-      'Entry identifier: {entry_identifier}',
-      'Container identifier: {container_identifier}',
-      'Cache identifier: {cache_identifier}',
       'URL: {url}',
       'Redirect URL: {redirect_url}',
       'Access count: {access_count}',
@@ -24,7 +21,10 @@ class MsieWebCacheContainerEventFormatter(interface.ConditionalEventFormatter):
       'File extension: {file_extension}',
       'Cached file size: {cached_file_size}',
       'Request headers: {request_headers}',
-      'Response headers: {response_headers}']
+      'Response headers: {response_headers}',
+      'Entry identifier: {entry_identifier}',
+      'Container identifier: {container_identifier}',
+      'Cache identifier: {cache_identifier}']
 
   FORMAT_STRING_SHORT_PIECES = [
       'URL: {url}']
@@ -39,11 +39,11 @@ class MsieWebCacheContainersEventFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'msie:webcache:containers'
 
   FORMAT_STRING_PIECES = [
-      'Container identifier: {container_identifier}',
-      'Set identifier: {set_identifier}',
       'Name: {name}',
       'Directory: {directory}',
-      'Table: Container_{container_identifier}']
+      'Table: Container_{container_identifier}',
+      'Container identifier: {container_identifier}',
+      'Set identifier: {set_identifier}']
 
   FORMAT_STRING_SHORT_PIECES = [
       'Directory: {directory}']
@@ -58,8 +58,8 @@ class MsieWebCacheLeakFilesEventFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'msie:webcache:leak_file'
 
   FORMAT_STRING_PIECES = [
-      'Leak identifier: {leak_identifier}',
-      'Filename: {cached_filename}']
+      'Filename: {cached_filename}',
+      'Leak identifier: {leak_identifier}']
 
   FORMAT_STRING_SHORT_PIECES = [
       'Filename: {cached_filename}']
