@@ -42,12 +42,12 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
     expected_message = (
-        'Container identifier: 1 '
-        'Set identifier: 0 '
         'Name: Content '
         'Directory: C:\\Users\\test\\AppData\\Local\\Microsoft\\Windows\\'
         'INetCache\\IE\\ '
-        'Table: Container_1')
+        'Table: Container_1 '
+        'Container identifier: 1 '
+        'Set identifier: 0')
     expected_short_message = (
         'Directory: C:\\Users\\test\\AppData\\Local\\Microsoft\\Windows\\'
         'INetCache\\IE\\')

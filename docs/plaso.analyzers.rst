@@ -1,5 +1,5 @@
-plaso\.analyzers package
-========================
+plaso.analyzers package
+=======================
 
 Subpackages
 -----------
@@ -11,32 +11,32 @@ Subpackages
 Submodules
 ----------
 
-plaso\.analyzers\.hashing\_analyzer module
-------------------------------------------
+plaso.analyzers.hashing_analyzer module
+---------------------------------------
 
 .. automodule:: plaso.analyzers.hashing_analyzer
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso\.analyzers\.interface module
-----------------------------------
+plaso.analyzers.interface module
+--------------------------------
 
 .. automodule:: plaso.analyzers.interface
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso\.analyzers\.manager module
---------------------------------
+plaso.analyzers.manager module
+------------------------------
 
 .. automodule:: plaso.analyzers.manager
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso\.analyzers\.yara\_analyzer module
----------------------------------------
+plaso.analyzers.yara_analyzer module
+------------------------------------
 
 .. automodule:: plaso.analyzers.yara_analyzer
     :members:

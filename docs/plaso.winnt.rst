@@ -1,43 +1,43 @@
-plaso\.winnt package
-====================
+plaso.winnt package
+===================
 
 Submodules
 ----------
 
-plaso\.winnt\.human\_readable\_service\_enums module
-----------------------------------------------------
+plaso.winnt.human_readable_service_enums module
+-----------------------------------------------
 
 .. automodule:: plaso.winnt.human_readable_service_enums
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso\.winnt\.known\_folder\_ids module
----------------------------------------
+plaso.winnt.known_folder_ids module
+-----------------------------------
 
 .. automodule:: plaso.winnt.known_folder_ids
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso\.winnt\.language\_ids module
-----------------------------------
+plaso.winnt.language_ids module
+-------------------------------
 
 .. automodule:: plaso.winnt.language_ids
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso\.winnt\.shell\_folder\_ids module
----------------------------------------
+plaso.winnt.shell_folder_ids module
+-----------------------------------
 
 .. automodule:: plaso.winnt.shell_folder_ids
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso\.winnt\.time\_zones module
---------------------------------
+plaso.winnt.time_zones module
+-----------------------------
 
 .. automodule:: plaso.winnt.time_zones
     :members:
