@@ -11,7 +11,6 @@ try:
 except ImportError:
   import sqlite3
 
-from plaso.lib import py2to3
 from plaso.parsers import plugins
 
 
@@ -77,6 +76,10 @@ class SQLitePlugin(plugins.BasePlugin):
       try:
         value = '{0!s}'.format(value)
       except UnicodeDecodeError:
+        # In Python 2, blobs are "read-write buffer" and will cause a
+        # UnicodeDecodeError exception if we try format it as a string.
+        # Since Python 3 does not support the buffer type we cannot check
+        # the type of value.
         value = repr(value)
 
       values.append(value)
