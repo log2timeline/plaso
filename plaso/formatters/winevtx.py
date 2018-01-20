@@ -16,12 +16,12 @@ class WinEVTXFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_PIECES = [
       '[{event_identifier} /',
       '0x{event_identifier:04x}]',
-      'Record Number: {record_number}',
-      'Event Level: {event_level}',
       'Source Name: {source_name}',
-      'Computer Name: {computer_name}',
       'Message string: {message_string}',
-      'Strings: {strings}']
+      'Strings: {strings}',
+      'Computer Name: {computer_name}',
+      'Record Number: {record_number}',
+      'Event Level: {event_level}']
 
   FORMAT_STRING_SHORT_PIECES = [
       '[{event_identifier} /',
