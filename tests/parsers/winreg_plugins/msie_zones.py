@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 
 import unittest
 
+from dfwinreg import fake as dfwinreg_fake
+
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import msie_zones
@@ -16,6 +18,53 @@ from tests.parsers.winreg_plugins import test_lib
 
 class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for Internet Settings Zones plugin."""
+
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = msie_zones.MsieZoneSettingsPlugin()
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Internet Settings\\Lockdown_Zones')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'Lockdown_Zones', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Internet Settings\\Zones')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'Lockdown_Zones', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Internet Settings\\Lockdown_Zones')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'Lockdown_Zones', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Internet Settings\\Zones')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'Lockdown_Zones', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'Bogus', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
 
   @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcessNtuserLockdownZones(self):
