@@ -130,7 +130,7 @@ if __name__ == '__main__':
 
   database_schema = extractor.FormatSchema(database_schema)
 
-  if options.to_clipboard:
+  if paperclip and options.to_clipboard:
     pyperclip.copy(database_schema)
   else:
     print(database_schema)
