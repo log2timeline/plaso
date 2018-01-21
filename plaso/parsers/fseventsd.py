@@ -72,7 +72,7 @@ class FseventsdParser(interface.FileObjectParser):
   _DLS_SIGNATURES = [_DLS_V1_SIGNATURE, _DLS_V2_SIGNATURE]
 
   _DLS_HEADER = construct.Struct(
-      'dls_header_v1',
+      'dls_header',
       construct.OneOf(construct.Bytes('signature', 4), _DLS_SIGNATURES),
       construct.Padding(4),
       construct.ULInt32('page_size'))
