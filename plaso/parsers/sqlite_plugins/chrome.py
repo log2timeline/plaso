@@ -66,6 +66,7 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
     self.title = None
     self.typed_count = None
     self.url = None
+    self.url_hidden = None
     self.visit_source = None
 
 

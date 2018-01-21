@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 from plaso.formatters import interface
 from plaso.formatters import manager
+from plaso.lib import errors
 
 
 class ChromeFileDownloadFormatter(interface.ConditionalEventFormatter):
@@ -142,9 +143,9 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
     if typed_count == 0:
       extras.append('(URL not typed directly - no typed count)')
     elif typed_count == 1:
-      extras.append('(type count {0:d} time)'.format(count))
+      extras.append('(type count {0:d} time)'.format(typed_count))
     else:
-      extras.append('(type count {0:d} times)'.format(count))
+      extras.append('(type count {0:d} times)'.format(typed_count))
 
     event_values['extra'] = ' '.join(extras)
 
