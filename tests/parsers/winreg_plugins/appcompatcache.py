@@ -298,8 +298,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self.assertTrue(result)
 
     key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
-    registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Bogus', key_path=key_path)
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
 
     result = self._CheckFiltersOnKeyPath(plugin, registry_key)
     self.assertFalse(result)
