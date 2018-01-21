@@ -9,6 +9,7 @@ import unittest
 from plaso.formatters import chrome as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import timelib
+from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import chrome
 
 from tests import test_lib as shared_test_lib
@@ -22,7 +23,9 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
   def testProcess(self):
     """Tests the Process function on a Chrome History database file."""
     plugin = chrome.ChromeHistoryPlugin()
-    storage_writer = self._ParseDatabaseFileWithPlugin(['History'], plugin)
+    cache = sqlite.SQLiteCache()
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        ['History'], plugin, cache=cache)
 
     # The History file contains 71 events (69 page visits, 1 file downloads).
     self.assertEqual(storage_writer.number_of_events, 71)

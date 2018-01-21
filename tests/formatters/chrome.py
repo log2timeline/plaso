@@ -24,7 +24,10 @@ class ChromeFileDownloadFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = chrome.ChromeFileDownloadFormatter()
 
     expected_attribute_names = [
-        'url', 'full_path', 'received_bytes', 'total_bytes']
+        'url',
+        'full_path',
+        'received_bytes',
+        'total_bytes']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
@@ -45,8 +48,14 @@ class ChromePageVisitedFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = chrome.ChromePageVisitedFormatter()
 
     expected_attribute_names = [
-        'url', 'title', 'typed_count', 'host', 'from_visit',
-        'visit_source', 'extra']
+        'url',
+        'title',
+        'typed_count',
+        'host',
+        'from_visit',
+        'visit_source',
+        'page_transition',
+        'extra']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
