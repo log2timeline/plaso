@@ -240,8 +240,10 @@ class ParsersOptionsTest(test_lib.CLIToolTestCase):
     expected_line = b'plist_default : Parser for plist files.'
     self.assertIn(expected_line, lines)
 
+    # Note that the expected line is truncated by the cell wrapping in
+    # the table.
     expected_line = (
-        b'chrome_history : Parser for Chrome history SQLite database files.')
+        b'chrome_27_history : Parser for Google Chrome 27 - 59 history SQLite')
     self.assertIn(expected_line, lines)
 
     expected_line = b'ssh : Parser for SSH syslog entries.'

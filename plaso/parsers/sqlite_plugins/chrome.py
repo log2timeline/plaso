@@ -199,10 +199,11 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
 
 
 class GoogleChrome15HistoryPlugin(BaseGoogleChromeHistoryPlugin):
-  """Google Chrome 15 history SQLite database plugin."""
+  """Google Chrome 15 - 25 history SQLite database plugin."""
 
   NAME = 'chrome_15_history'
-  DESCRIPTION = 'Parser for Google Chrome 15 history SQLite database files.'
+  DESCRIPTION = (
+      'Parser for Google Chrome 15 - 25 history SQLite database files.')
 
   QUERIES = [
       (('SELECT urls.id, urls.url, urls.title, urls.visit_count, '
@@ -397,10 +398,11 @@ class GoogleChrome15HistoryPlugin(BaseGoogleChromeHistoryPlugin):
 
 
 class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
-  """Google Chrome 27 history SQLite database plugin."""
+  """Google Chrome 27 - 59 history SQLite database plugin."""
 
   NAME = 'chrome_27_history'
-  DESCRIPTION = 'Parser for Google Chrome 27 history SQLite database files.'
+  DESCRIPTION = (
+      'Parser for Google Chrome 27 - 59 history SQLite database files.')
 
   QUERIES = [
       (('SELECT urls.id, urls.url, urls.title, urls.visit_count, '
