@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 
 import unittest
 
+from dfwinreg import fake as dfwinreg_fake
+
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import timelib
@@ -17,6 +19,34 @@ from tests.parsers.winreg_plugins import test_lib
 
 class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Explorer ProgramsCache Windows Registry plugin."""
+
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = programscache.ExplorerProgramsCachePlugin()
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Explorer\\StartPage')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'StartPage', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Explorer\\StartPage2')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'StartPage2', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
 
   @shared_test_lib.skipUnlessHasTestFile(['NTUSER.DAT'])
   def testProcessStartPage(self):
