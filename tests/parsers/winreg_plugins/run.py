@@ -34,7 +34,8 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         'RunOnce')
-    registry_key = dfwinreg_fake.FakeWinRegistryKey('RunOnce', key_path=key_path)
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'RunOnce', key_path=key_path)
 
     result = self._CheckFiltersOnKeyPath(plugin, registry_key)
     self.assertTrue(result)
@@ -50,7 +51,8 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     key_path = (
         'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         'RunOnce')
-    registry_key = dfwinreg_fake.FakeWinRegistryKey('RunOnce', key_path=key_path)
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'RunOnce', key_path=key_path)
 
     result = self._CheckFiltersOnKeyPath(plugin, registry_key)
     self.assertTrue(result)
