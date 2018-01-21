@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 
 import unittest
 
+from dfwinreg import fake as dfwinreg_fake
+
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import bagmru
@@ -23,41 +25,62 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
 
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\Shell\\BagMRU')
-    result = self._CheckFiltersOnKeyPath(plugin, key_path)
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'BagMRU', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
     self.assertTrue(result)
 
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\ShellNoRoam\\'
         'BagMRU')
-    result = self._CheckFiltersOnKeyPath(plugin, key_path)
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'BagMRU', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
     self.assertTrue(result)
 
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Classes\\Local Settings\\Software\\'
         'Microsoft\\Windows\\Shell\\BagMRU')
-    result = self._CheckFiltersOnKeyPath(plugin, key_path)
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'BagMRU', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
     self.assertTrue(result)
 
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Classes\\Local Settings\\Software\\'
         'Microsoft\\Windows\\ShellNoRoam\\BagMRU')
-    result = self._CheckFiltersOnKeyPath(plugin, key_path)
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'BagMRU', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
     self.assertTrue(result)
 
     key_path = (
         'HKEY_CURRENT_USER\\Local Settings\\Software\\Microsoft\\Windows\\'
         'Shell\\BagMRU')
-    result = self._CheckFiltersOnKeyPath(plugin, key_path)
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'BagMRU', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
     self.assertTrue(result)
 
     key_path = (
         'HKEY_CURRENT_USER\\Local Settings\\Software\\Microsoft\\Windows\\'
         'ShellNoRoam\\BagMRU')
-    result = self._CheckFiltersOnKeyPath(plugin, key_path)
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'BagMRU', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
     self.assertTrue(result)
 
     key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
-    result = self._CheckFiltersOnKeyPath(plugin, key_path)
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'Bogus', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
     self.assertFalse(result)
 
   @shared_test_lib.skipUnlessHasTestFile(['NTUSER.DAT'])

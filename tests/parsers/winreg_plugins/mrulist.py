@@ -62,6 +62,44 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
 
     return registry_key
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = mrulist.MRUListStringPlugin()
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\'
+        'InterestingApp\\MRU')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'MRUlist', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
+
+    registry_value = dfwinreg_fake.FakeWinRegistryValue('MRUList')
+    registry_key.AddValue(registry_value)
+
+    registry_value = dfwinreg_fake.FakeWinRegistryValue('a')
+    registry_key.AddValue(registry_value)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'Bogus', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Explorer\\DesktopStreamMRU')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'DesktopStreamMRU', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
+
   def testProcess(self):
     """Tests the Process function."""
     key_path = (
@@ -142,6 +180,26 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
     registry_key.AddValue(registry_value)
 
     return registry_key
+
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = mrulist.MRUListShellItemListPlugin()
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Explorer\\DesktopStreamMRU')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'DesktopStreamMRU', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'Bogus', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
 
   def testProcess(self):
     """Tests the Process function."""
