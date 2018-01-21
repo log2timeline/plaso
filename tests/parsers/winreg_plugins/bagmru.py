@@ -17,6 +17,49 @@ from tests.parsers.winreg_plugins import test_lib
 class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the BagMRU plugin."""
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = bagmru.BagMRUPlugin()
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\Shell\\BagMRU')
+    result = self._CheckFiltersOnKeyPath(plugin, key_path)
+    self.assertTrue(result)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\ShellNoRoam\\'
+        'BagMRU')
+    result = self._CheckFiltersOnKeyPath(plugin, key_path)
+    self.assertTrue(result)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Classes\\Local Settings\\Software\\'
+        'Microsoft\\Windows\\Shell\\BagMRU')
+    result = self._CheckFiltersOnKeyPath(plugin, key_path)
+    self.assertTrue(result)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Classes\\Local Settings\\Software\\'
+        'Microsoft\\Windows\\ShellNoRoam\\BagMRU')
+    result = self._CheckFiltersOnKeyPath(plugin, key_path)
+    self.assertTrue(result)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Local Settings\\Software\\Microsoft\\Windows\\'
+        'Shell\\BagMRU')
+    result = self._CheckFiltersOnKeyPath(plugin, key_path)
+    self.assertTrue(result)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Local Settings\\Software\\Microsoft\\Windows\\'
+        'ShellNoRoam\\BagMRU')
+    result = self._CheckFiltersOnKeyPath(plugin, key_path)
+    self.assertTrue(result)
+
+    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
+    result = self._CheckFiltersOnKeyPath(plugin, key_path)
+    self.assertFalse(result)
+
   @shared_test_lib.skipUnlessHasTestFile(['NTUSER.DAT'])
   def testProcess(self):
     """Tests the Process function."""

@@ -17,6 +17,18 @@ from tests.parsers.winreg_plugins import test_lib
 class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the CCleaner Windows Registry plugin."""
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = ccleaner.CCleanerPlugin()
+
+    key_path = 'HKEY_CURRENT_USER\\Software\\Piriform\\CCleaner'
+    result = self._CheckFiltersOnKeyPath(plugin, key_path)
+    self.assertTrue(result)
+
+    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
+    result = self._CheckFiltersOnKeyPath(plugin, key_path)
+    self.assertFalse(result)
+
   @shared_test_lib.skipUnlessHasTestFile(['NTUSER-CCLEANER.DAT'])
   def testProcess(self):
     """Tests the Process function."""
