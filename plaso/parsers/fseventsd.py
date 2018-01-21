@@ -19,13 +19,13 @@ from plaso.parsers import manager
 
 
 class FseventsdEventData(events.EventData):
-  """Fseventsd event data.
+  """MacOS file system event (fseventsd) event data
 
   Attributes:
     event_identifier (int): the record event identifier.
-    flags (int): object type and event flags stored in the record.
-    node_identifier (int): file system node identifier stored in the fseventsd
-        record.
+    flags (int): flags stored in the record.
+    node_identifier (int): file system node identifier related to the file
+        system event.
     path (str): path recorded in the fseventsd record.
   """
 
@@ -159,8 +159,8 @@ class FseventsdParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the header cannot be parsed.
     """
-    header = self._ParseDLSHeader(file_object)
-    current_page_end = header.page_size
+    page_header = self._ParseDLSHeader(file_object)
+    current_page_end = page_header.page_size
     file_entry = parser_mediator.GetFileEntry()
     date_time = self._GetParentModificationTime(file_entry)
     # TODO: Change this to use a more representative time definition (time span)
@@ -174,10 +174,10 @@ class FseventsdParser(interface.FileObjectParser):
 
     while file_object.get_offset() < file_object.get_size():
       if file_object.get_offset() >= current_page_end:
-        header = self._ParseDLSHeader(file_object)
-        current_page_end += header.page_size
+        page_header = self._ParseDLSHeader(file_object)
+        current_page_end += page_header.page_size
         continue
-      if header.signature == self._DLS_V1_SIGNATURE:
+      if page_header.signature == self._DLS_V1_SIGNATURE:
         record = self._DLS_RECORD_V1.parse_stream(file_object)
       else:
         record = self._DLS_RECORD_V2.parse_stream(file_object)
