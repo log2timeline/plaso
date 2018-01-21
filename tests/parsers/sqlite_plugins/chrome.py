@@ -15,13 +15,13 @@ from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
-class GoogleChrome15HistoryPluginTest(test_lib.SQLitePluginTestCase):
-  """Tests for the Google Chrome 15 history SQLite database plugin."""
+class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
+  """Tests for the Google Chrome 8 history SQLite database plugin."""
 
   @shared_test_lib.skipUnlessHasTestFile(['History'])
   def testProcess(self):
     """Tests the Process function on a Chrome History database file."""
-    plugin = chrome.GoogleChrome15HistoryPlugin()
+    plugin = chrome.GoogleChrome8HistoryPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History'], plugin)
 

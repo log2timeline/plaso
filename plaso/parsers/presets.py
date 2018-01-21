@@ -19,7 +19,7 @@ CATEGORIES = {
     'win7_slow': ['hachoir', 'mft', 'win7'],
     'webhist': [
         'binary_cookies', 'chrome_cache', 'sqlite/chrome_cookies',
-        'sqlite/chrome_extension_activity', 'sqlite/chrome_15_history',
+        'sqlite/chrome_extension_activity', 'sqlite/chrome_8_history',
         'sqlite/chrome_27_history', 'chrome_preferences', 'firefox_cache',
         'sqlite/firefox_cookies', 'sqlite/firefox_downloads',
         'sqlite/firefox_history', 'java_idx', 'esedb/msie_webcache', 'msiecf',
@@ -41,4 +41,4 @@ CATEGORIES = {
         'android_app_usage', 'filestat', 'chrome_cache',
         'sqlite/android_calls', 'sqlite/android_sms', 'sqlite/android_webview',
         'sqlite/android_webviewcache', 'sqlite/chrome_cookies',
-        'sqlite/chrome_15_history', 'sqlite/chrome_27_history', 'sqlite/skype']}
+        'sqlite/chrome_8_history', 'sqlite/chrome_27_history', 'sqlite/skype']}

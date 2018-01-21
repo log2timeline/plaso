@@ -198,12 +198,12 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-class GoogleChrome15HistoryPlugin(BaseGoogleChromeHistoryPlugin):
-  """Google Chrome 15 - 25 history SQLite database plugin."""
+class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
+  """Google Chrome 8 - 25 history SQLite database plugin."""
 
-  NAME = 'chrome_15_history'
+  NAME = 'chrome_8_history'
   DESCRIPTION = (
-      'Parser for Google Chrome 15 - 25 history SQLite database files.')
+      'Parser for Google Chrome 8 - 25 history SQLite database files.')
 
   QUERIES = [
       (('SELECT urls.id, urls.url, urls.title, urls.visit_count, '
@@ -217,7 +217,7 @@ class GoogleChrome15HistoryPlugin(BaseGoogleChromeHistoryPlugin):
   REQUIRED_TABLES = frozenset([
       'keyword_search_terms', 'meta', 'urls', 'visits', 'visit_source'])
 
-  _SCHEMA_15 = {
+  _SCHEMA_8 = {
       'downloads': (
           'CREATE TABLE downloads (id INTEGER PRIMARY KEY,full_path '
           'LONGVARCHAR NOT NULL,url LONGVARCHAR NOT NULL,start_time INTEGER '
@@ -365,7 +365,7 @@ class GoogleChrome15HistoryPlugin(BaseGoogleChromeHistoryPlugin):
           'INTEGER DEFAULT 0 NOT NULL,segment_id INTEGER,is_indexed '
           'BOOLEAN,visit_duration INTEGER DEFAULT 0 NOT NULL)')}
 
-  SCHEMAS = [_SCHEMA_15, _SCHEMA_16, _SCHEMA_19, _SCHEMA_20]
+  SCHEMAS = [_SCHEMA_8, _SCHEMA_16, _SCHEMA_19, _SCHEMA_20]
 
   REQUIRES_SCHEMA_MATCH = True
 
@@ -728,4 +728,4 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
 
 
 sqlite.SQLiteParser.RegisterPlugins([
-    GoogleChrome15HistoryPlugin, GoogleChrome27HistoryPlugin])
+    GoogleChrome8HistoryPlugin, GoogleChrome27HistoryPlugin])
