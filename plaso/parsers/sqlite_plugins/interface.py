@@ -32,6 +32,10 @@ class SQLitePlugin(plugins.BasePlugin):
   # Should be a list of dictionaries with {table_name: SQLCommand} format.
   SCHEMAS = []
 
+  # Value to indicate the schema of the database must match one of the schemas
+  # defined by the plugin.
+  REQUIRES_SCHEMA_MATCH = False
+
   def __init__(self):
     """Initializes a SQLite parser plugin."""
     super(SQLitePlugin, self).__init__()

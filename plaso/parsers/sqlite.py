@@ -411,9 +411,12 @@ class SQLiteParser(interface.FileEntryParser):
         if not plugin.REQUIRED_TABLES.issubset(table_names):
           continue
 
-        parser_mediator.SetFileEntry(file_entry)
-
         schema_match = plugin.CheckSchema(database)
+
+        if plugin.REQUIRES_SCHEMA_MATCH and not schema_match:
+          continue
+
+        parser_mediator.SetFileEntry(file_entry)
         parser_mediator.AddEventAttribute('schema_match', schema_match)
 
         try:
@@ -432,9 +435,9 @@ class SQLiteParser(interface.FileEntryParser):
         if not database_wal:
           continue
 
-        parser_mediator.SetFileEntry(wal_file_entry)
-
         schema_match = plugin.CheckSchema(database)
+
+        parser_mediator.SetFileEntry(wal_file_entry)
         parser_mediator.AddEventAttribute('schema_match', schema_match)
 
         try:
