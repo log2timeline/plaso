@@ -47,6 +47,32 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
 
     return registry_key
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = outlook.OutlookSearchMRUPlugin()
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\Outlook\\'
+        'Search')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('Search', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\15.0\\Outlook\\'
+        'Search')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('Search', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
+
   def testProcess(self):
     """Tests the Process function."""
     key_path = (

@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 
 import unittest
 
+from dfwinreg import fake as dfwinreg_fake
+
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import run
@@ -16,6 +18,74 @@ from tests.parsers.winreg_plugins import test_lib
 
 class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the auto rus Windows Registry plugin."""
+
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = run.AutoRunsPlugin()
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Run')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('Run', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'RunOnce')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('RunOnce', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Run')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('Run', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'RunOnce')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('RunOnce', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'RunOnce\\Setup')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('Setup', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'RunServices')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'RunServicesOnce', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'RunServicesOnce')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'RunServicesOnce', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
 
   @shared_test_lib.skipUnlessHasTestFile(['NTUSER-RunTests.DAT'])
   def testProcessNtuserRun(self):
