@@ -21,7 +21,7 @@ class SQLiteParserTest(test_lib.ParserTestCase):
   def testEnablePlugins(self):
     """Tests the EnablePlugins function."""
     parser = sqlite.SQLiteParser()
-    parser.EnablePlugins(['chrome_history'])
+    parser.EnablePlugins(['chrome_27_history'])
 
     self.assertIsNotNone(parser)
     self.assertIsNone(parser._default_plugin)
