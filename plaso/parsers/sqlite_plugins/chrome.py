@@ -398,11 +398,11 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
 
 
 class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
-  """Google Chrome 27 - 59 history SQLite database plugin."""
+  """Google Chrome 27 - 63 history SQLite database plugin."""
 
   NAME = 'chrome_27_history'
   DESCRIPTION = (
-      'Parser for Google Chrome 27 - 59 history SQLite database files.')
+      'Parser for Google Chrome 27 - 63 history SQLite database files.')
 
   QUERIES = [
       (('SELECT urls.id, urls.url, urls.title, urls.visit_count, '
