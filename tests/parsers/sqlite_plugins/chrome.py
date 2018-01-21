@@ -9,7 +9,6 @@ import unittest
 from plaso.formatters import chrome as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import timelib
-from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import chrome
 
 from tests import test_lib as shared_test_lib
