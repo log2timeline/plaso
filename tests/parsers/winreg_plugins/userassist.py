@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 
 import unittest
 
+from dfwinreg import fake as dfwinreg_fake
+
 from plaso.formatters import userassist as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import timelib
@@ -17,6 +19,39 @@ from tests.parsers.winreg_plugins import test_lib
 
 class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the UserAssist Windows Registry plugin."""
+
+  _TEST_GUIDS = [
+      '{0D6D4F41-2994-4BA0-8FEF-620E43CD2812}',
+      '{5E6AB780-7743-11CF-A12B-00AA004AE837}',
+      '{75048700-EF1F-11D0-9888-006097DEACF9}',
+      '{9E04CAB2-CC14-11DF-BB8C-A2F1DED72085}',
+      '{A3D53349-6E61-4557-8FC7-0028EDCEEBF6}',
+      '{B267E3AD-A825-4A09-82B9-EEC22AA3B847}',
+      '{BCB48336-4DDD-48FF-BB0B-D3190DACB3E2}',
+      '{CAA59E3C-4792-41A5-9909-6A6A8D32490E}',
+      '{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}',
+      '{F2A1CB5A-E3CC-4A2E-AF9D-505A7009D442}',
+      '{F4E57C4B-2036-45F0-A9AB-443BCFE33D9F}',
+      '{FA99DFC7-6AC2-453A-A5E2-5E2AFF4507BD}']
+
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = userassist.UserAssistPlugin()
+
+    for guid in self._TEST_GUIDS:
+      key_path = (
+          'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+          'Explorer\\UserAssist\\{0:s}').format(guid)
+      registry_key = dfwinreg_fake.FakeWinRegistryKey(guid, key_path=key_path)
+
+      result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+      self.assertTrue(result)
+
+    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
 
   @shared_test_lib.skipUnlessHasTestFile(['NTUSER.DAT'])
   def testProcessOnWinXP(self):

@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 
 import unittest
 
+from dfwinreg import fake as dfwinreg_fake
+
 from plaso.formatters import shutdown as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import timelib
@@ -17,6 +19,23 @@ from tests.parsers.winreg_plugins import test_lib
 
 class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the LastShutdown value plugin."""
+
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = shutdown.ShutdownPlugin()
+
+    key_path = 'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Windows'
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'Windows', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
 
   @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testProcess(self):
@@ -44,7 +63,6 @@ class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
 
     self.assertEqual(event.value_name, 'ShutdownTime')
 
-    # Match UTC timestamp.
     expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-04-04 01:58:40.839249')
     self.assertEqual(event.timestamp, expected_timestamp)

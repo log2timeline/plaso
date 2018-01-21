@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 
 import unittest
 
+from dfwinreg import fake as dfwinreg_fake
+
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import typedurls
@@ -16,6 +18,34 @@ from tests.parsers.winreg_plugins import test_lib
 
 class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the MSIE typed URLs Windows Registry plugin."""
+
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = typedurls.TypedURLsPlugin()
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Internet Explorer\\'
+        'TypedURLs')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'TypedURLs', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Explorer\\TypedPaths')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'TypedPaths', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
 
   @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcess(self):

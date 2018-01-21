@@ -51,6 +51,23 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
 
     return registry_key
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = winrar.WinRarHistoryPlugin()
+
+    key_path = 'HKEY_CURRENT_USER\\Software\\WinRAR\\ArcHistory'
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'ArcHistory', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
+
   def testProcess(self):
     """Tests the Process function."""
     key_path = 'HKEY_CURRENT_USER\\Software\\WinRAR\\ArcHistory'

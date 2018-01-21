@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 
 import unittest
 
+from dfwinreg import fake as dfwinreg_fake
+
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import task_scheduler
@@ -16,6 +18,25 @@ from tests.parsers.winreg_plugins import test_lib
 
 class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Task Cache key Windows Registry plugin."""
+
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = task_scheduler.TaskCachePlugin()
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\'
+        'CurrentVersion\\Schedule\\TaskCache')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'TaskCache', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
 
   @shared_test_lib.skipUnlessHasTestFile(['SOFTWARE-RunTests'])
   def testProcess(self):

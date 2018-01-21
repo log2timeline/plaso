@@ -82,6 +82,18 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     return registry_key
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = services.ServicesPlugin()
+
+    # TODO: add test.
+
+    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
+
   def testProcess(self):
     """Tests the Process function on a virtual key."""
     key_path = (

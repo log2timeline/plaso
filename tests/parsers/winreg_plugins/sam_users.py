@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 
 import unittest
 
+from dfwinreg import fake as dfwinreg_fake
+
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import timelib
@@ -17,6 +19,23 @@ from tests.parsers.winreg_plugins import test_lib
 
 class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests the SAM Users Account information plugin."""
+
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = sam_users.SAMUsersWindowsRegistryPlugin()
+
+    key_path = 'HKEY_LOCAL_MACHINE\\SAM\\SAM\\Domains\\Account\\Users'
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'Users', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
 
   @shared_test_lib.skipUnlessHasTestFile(['SAM'])
   def testProcess(self):

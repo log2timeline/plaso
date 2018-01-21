@@ -268,6 +268,24 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
 
     return registry_key
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = winlogon.WinlogonPlugin()
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'CurrentVersion', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
+    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
+
   def testProcess(self):
     """Tests the Process function on created key."""
     key_path = (
