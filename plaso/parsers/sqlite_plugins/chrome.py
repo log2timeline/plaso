@@ -44,13 +44,14 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
   """Chrome History page visited event data.
 
   Attributes:
-    extra (str): extra event data.
     from_visit (str): URL where the visit originated from.
     hostname (str): visited hostname.
+    page_transition_type (int): type of transitions between pages.
     title (str): title of the visited page.
     typed_count (int): number of characters of the URL that were typed.
     url (str): URL of the visited page.
-    visit_source (str): source of the page visit.
+    url_hidden (bool): True if the URL is hidden.
+    visit_source (int): source of the page visit.
   """
 
   DATA_TYPE = 'chrome:history:page_visited'
@@ -59,9 +60,9 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
     """Initializes event data."""
     super(ChromeHistoryPageVisitedEventData, self).__init__(
         data_type=self.DATA_TYPE)
-    self.extra = None
     self.from_visit = None
     self.host = None
+    self.page_transition_type = None
     self.title = None
     self.typed_count = None
     self.url = None
@@ -137,58 +138,6 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
       'visits, urls WHERE urls.id = visits.url')
   SYNC_CACHE_QUERY = 'SELECT id, source FROM visit_source'
 
-  # The following definition for values can be found here:
-  # http://src.chromium.org/svn/trunk/src/content/public/common/ \
-  # page_transition_types_list.h
-  PAGE_TRANSITION = {
-      0: 'LINK',
-      1: 'TYPED',
-      2: 'AUTO_BOOKMARK',
-      3: 'AUTO_SUBFRAME',
-      4: 'MANUAL_SUBFRAME',
-      5: 'GENERATED',
-      6: 'START_PAGE',
-      7: 'FORM_SUBMIT',
-      8: 'RELOAD',
-      9: 'KEYWORD',
-      10: 'KEYWORD_GENERATED '
-  }
-
-  TRANSITION_LONGER = {
-      0: 'User clicked a link',
-      1: 'User typed the URL in the URL bar',
-      2: 'Got through a suggestion in the UI',
-      3: ('Content automatically loaded in a non-toplevel frame - user may '
-          'not realize'),
-      4: 'Subframe explicitly requested by the user',
-      5: ('User typed in the URL bar and selected an entry from the list - '
-          'such as a search bar'),
-      6: 'The start page of the browser',
-      7: 'A form the user has submitted values to',
-      8: ('The user reloaded the page, eg by hitting the reload button or '
-          'restored a session'),
-      9: ('URL what was generated from a replaceable keyword other than the '
-          'default search provider'),
-      10: 'Corresponds to a visit generated from a KEYWORD'
-  }
-
-  # The following is the values for the source enum found in the visit_source
-  # table and describes where a record originated from (if it originates from a
-  # different storage than locally generated).
-  # The source can be found here:
-  # http://src.chromium.org/svn/trunk/src/chrome/browser/history/\
-  # history_types.h
-  VISIT_SOURCE = {
-      0: 'SOURCE_SYNCED',
-      1: 'SOURCE_BROWSED',
-      2: 'SOURCE_EXTENSION',
-      3: 'SOURCE_FIREFOX_IMPORTED',
-      4: 'SOURCE_IE_IMPORTED',
-      5: 'SOURCE_SAFARI_IMPORTED'
-  }
-
-  CORE_MASK = 0xff
-
   def _GetHostname(self, url):
     """Retrieves the hostname from a full URL.
 
@@ -234,16 +183,18 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
 
     return '{0:s} ({1:s})'.format(reference_url, reference_title)
 
-  def _GetVisitSource(self, visit_id, cache, database):
-    """Return a string denoting the visit source type if possible.
+  def _GetVisitSource(self, visit_identifier, cache, database):
+    """Retrieves a visit source type based on the identifier.
 
     Args:
-      visit_id (str): ID from the visits table for the particular record.
+      visit_identifier (str): identifier from the visits table for
+          the particular record.
       cache (SQLiteCache): cache.
       database (SQLiteDatabase): database.
 
     Returns:
-      str: visit source or None if not found.
+      int: visit source type or None if no visit source type was found for
+          the identifier.
     """
     sync_cache_results = cache.GetResults('sync')
     if not sync_cache_results:
@@ -252,10 +203,10 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
       cache.CacheQueryResults(result_set, 'sync', 'id', ('source',))
       sync_cache_results = cache.GetResults('sync')
 
-    if sync_cache_results and visit_id:
-      results = sync_cache_results.get(visit_id, None)
+    if sync_cache_results and visit_identifier:
+      results = sync_cache_results.get(visit_identifier, None)
       if results:
-        return self.VISIT_SOURCE.get(results[0], None)
+        return results[0]
 
   def ParseFileDownloadedRow(
       self, parser_mediator, query, row, **unused_kwargs):
@@ -326,49 +277,24 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     """
     query_hash = hash(query)
 
-    extras = []
-
     hidden = self._GetRowValue(query_hash, row, 'hidden')
     transition = self._GetRowValue(query_hash, row, 'transition')
-
-    transition_nr = transition & self.CORE_MASK
-    page_transition = self.PAGE_TRANSITION.get(transition_nr, '')
-    if page_transition:
-      extras.append('Type: [{0:s} - {1:s}]'.format(
-          page_transition, self.TRANSITION_LONGER.get(transition_nr, '')))
-
-    if hidden == '1':
-      extras.append('(url hidden)')
-
-    # TODO: move to formatter.
-    count = self._GetRowValue(query_hash, row, 'typed_count')
-    if count >= 1:
-      if count > 1:
-        multi = 's'
-      else:
-        multi = ''
-
-      extras.append('(type count {1:d} time{0:s})'.format(multi, count))
-    else:
-      extras.append('(URL not typed directly - no typed count)')
 
     visit_id = self._GetRowValue(query_hash, row, 'visit_id')
     from_visit = self._GetRowValue(query_hash, row, 'from_visit')
     url = self._GetRowValue(query_hash, row, 'url')
 
-    visit_source = self._GetVisitSource(visit_id, cache, database)
-
-    # TODO: replace extras by conditional formatting.
     event_data = ChromeHistoryPageVisitedEventData()
-    event_data.extra = ' '.join(extras)
     event_data.from_visit = self._GetUrl(from_visit, cache, database)
     event_data.host = self._GetHostname(url)
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
+    event_data.page_transition_type = transition & 0xff
     event_data.title = self._GetRowValue(query_hash, row, 'title')
     event_data.typed_count = self._GetRowValue(query_hash, row, 'typed_count')
     event_data.url = self._GetRowValue(query_hash, row, 'url')
-    event_data.visit_source = visit_source
+    event_data.url_hidden = hidden == '1'
+    event_data.visit_source = self._GetVisitSource(visit_id, cache, database)
 
     timestamp = self._GetRowValue(query_hash, row, 'visit_time')
     date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
