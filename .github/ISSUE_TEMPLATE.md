@@ -5,11 +5,13 @@ What does the tool not do that it should? What would you like it to do?
 
 **Command line and arguments:**
 
-Please describe the command and arguments that is causing the issue.
+Please provide the command with arguments you ran when you experienced
+the problem?
 
 **Source data:**
 
-Please describe the source that is causing the issue.
+Please provide the source data you used when you experienced the problem?
+For publicly available data please provide an URL or path of the source data.
 
 **Plaso version:**
 
