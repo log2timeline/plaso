@@ -23,10 +23,13 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
   SOURCE_SHORT = 'FSEVENT'
 
   # pylint: disable=line-too-long
-  # The object type and event flag values are similar, but not identical to
-  # those described in https://developer.apple.com/documentation/coreservices/core_services_enumerations/1455361-fseventstreameventflags
+  # Flag values are similar, but not identical to those described in the Apple
+  # documentation [1]. For example, the value of the IsDir flag is 0x00020000
+  # but the value 0x00000001 corresponds to a change to a directory item in
+  # an fseventsd file, by observation.
+  # [1] https://developer.apple.com/documentation/coreservices/core_services_enumerations/1455361-fseventstreameventflags
   _OBJECT_TYPE_FLAGS = {
-      0x00000001: 'Folder',
+      0x00000001: 'Directory',
       0x00001000: 'HardLink',
       0x00004000: 'SymbolicLink',
       0x00008000: 'File'}
@@ -49,7 +52,7 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
       0x10000000: 'Modified',
       0x20000000: 'Exchange',
       0x40000000: 'FinderInfoModified',
-      0x80000000: 'FolderCreated'}
+      0x80000000: 'DirectoryCreated'}
 
   def _GetObjectType(self, flags):
     """Determines the object type for a given set of FSEvents flags.

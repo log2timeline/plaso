@@ -56,7 +56,7 @@ class FseventsdParser(interface.FileObjectParser):
   _DLS_V1_SIGNATURE = b'1SLD'
   _DLS_RECORD_V1 = construct.Struct(
       'dls_record_v1',
-      construct.CString('filename'),
+      construct.CString('path'),
       construct.ULInt64('event_identifier'),
       construct.UBInt32('flags'))
 
@@ -64,14 +64,14 @@ class FseventsdParser(interface.FileObjectParser):
   _DLS_V2_SIGNATURE = b'2SLD'
   _DLS_RECORD_V2 = construct.Struct(
       'dls_record_v2',
-      construct.CString('filename'),
+      construct.CString('path'),
       construct.ULInt64('event_identifier'),
       construct.UBInt32('flags'),
       construct.ULInt64('node_identifier'))
 
   _DLS_SIGNATURES = [_DLS_V1_SIGNATURE, _DLS_V2_SIGNATURE]
 
-  _DLS_HEADER = construct.Struct(
+  _DLS_PAGE_HEADER = construct.Struct(
       'dls_header',
       construct.OneOf(construct.Bytes('signature', 4), _DLS_SIGNATURES),
       construct.Padding(4),
@@ -89,8 +89,8 @@ class FseventsdParser(interface.FileObjectParser):
     format_specification.AddNewSignature(cls._DLS_V2_SIGNATURE, offset=0)
     return format_specification
 
-  def _ParseDLSHeader(self, file_object):
-    """Parses a DLS header from a file-like object.
+  def _ParseDLSPageHeader(self, file_object):
+    """Parses a DLS page header from a file-like object.
 
     Args:
       file_object (file): file-like object to read the header from.
@@ -102,7 +102,7 @@ class FseventsdParser(interface.FileObjectParser):
       UnableToParseFile: when the header cannot be parsed.
     """
     try:
-      return self._DLS_HEADER.parse_stream(file_object)
+      return self._DLS_PAGE_HEADER.parse_stream(file_object)
     except construct.ConstructError:
       raise errors.UnableToParseFile('Unable to parse DLS header from file')
 
@@ -116,7 +116,7 @@ class FseventsdParser(interface.FileObjectParser):
       FseventsdEventData: event data attribute container.
     """
     event_data = FseventsdEventData()
-    event_data.path = record.filename
+    event_data.path = record.path
     event_data.flags = record.flags
     event_data.event_identifier = record.event_identifier
     # Node identifier is only set in DLS V2 records.
@@ -159,7 +159,7 @@ class FseventsdParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the header cannot be parsed.
     """
-    page_header = self._ParseDLSHeader(file_object)
+    page_header = self._ParseDLSPageHeader(file_object)
     current_page_end = page_header.page_size
     file_entry = parser_mediator.GetFileEntry()
     date_time = self._GetParentModificationTime(file_entry)
@@ -174,7 +174,7 @@ class FseventsdParser(interface.FileObjectParser):
 
     while file_object.get_offset() < file_object.get_size():
       if file_object.get_offset() >= current_page_end:
-        page_header = self._ParseDLSHeader(file_object)
+        page_header = self._ParseDLSPageHeader(file_object)
         current_page_end += page_header.page_size
         continue
       if page_header.signature == self._DLS_V1_SIGNATURE:
