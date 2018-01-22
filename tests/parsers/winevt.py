@@ -82,16 +82,16 @@ class WinEvtParserTest(test_lib.ParserTestCase):
 
     expected_message = (
         '[40961 / 0xa001] '
-        'Severity: Warning '
-        'Record Number: 1392 '
-        'Event Type: Information event '
-        'Event Category: 3 '
         'Source Name: LSASRV '
-        'Computer Name: WKS-WINXP32BIT '
         'Strings: [\'cifs/CONTROLLER\', '
         '\'"The system detected a possible attempt to '
         'compromise security. Please ensure that you can '
-        'contact the server that authenticated you. (0xc0000388)"\']')
+        'contact the server that authenticated you. (0xc0000388)"\'] '
+        'Computer Name: WKS-WINXP32BIT '
+        'Severity: Warning '
+        'Record Number: 1392 '
+        'Event Type: Information event '
+        'Event Category: 3')
 
     expected_short_message = (
         '[40961 / 0xa001] '

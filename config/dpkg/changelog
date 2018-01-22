@@ -1,5 +1,9 @@
-plaso (20180116-1) unstable; urgency=low
+plaso (20180122-1) unstable; urgency=low
 
   * Auto-generated
 
+<<<<<<< HEAD
  -- Log2Timeline <log2timeline-dev@googlegroups.com>  Tue, 16 Jan 2018 07:45:28 +0100
+=======
+ -- Log2Timeline <log2timeline-dev@googlegroups.com>  Mon, 22 Jan 2018 06:38:38 +0100
+>>>>>>> a8531ae485244bbf84708fa12d50fbeb861b1731

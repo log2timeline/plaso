@@ -104,15 +104,16 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     expected_message = (
         '[7036 / 0x1b7c] '
-        'Record Number: 12050 '
-        'Event Level: 4 '
         'Source Name: Service Control Manager '
-        'Computer Name: WKS-WIN764BITB.shieldbase.local '
         'Message string: The Windows Modules Installer service entered '
         'the stopped state. '
         'Strings: [\'Windows Modules Installer\', \'stopped\', '
         '\'540072007500730074006500640049006E00'
-        '7300740061006C006C00650072002F0031000000\']')
+        '7300740061006C006C00650072002F0031000000\'] '
+        'Computer Name: WKS-WIN764BITB.shieldbase.local '
+        'Record Number: 12050 '
+        'Event Level: 4'
+    )
 
     expected_short_message = (
         '[7036 / 0x1b7c] '

@@ -68,9 +68,11 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
       data_location_egg = os.path.join(data_location, 'share', 'plaso')
       data_location_source = os.path.join(data_location, 'data')
 
-      if os.path.exists(data_location_egg):
+      if os.path.exists(data_location_egg) and os.path.isfile(os.path.join(
+          data_location_egg, 'plaso-data.README')):
         data_location = data_location_egg
-      elif os.path.exists(data_location_source):
+      elif os.path.exists(data_location_source) and os.path.isfile(os.path.join(
+          data_location_source, 'plaso-data.README')):
         data_location = data_location_source
 
       if not os.path.exists(data_location):
@@ -84,7 +86,8 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
         if not os.path.exists(data_location):
           data_location = os.path.join('/usr', 'local', 'share', 'plaso')
 
-      if not os.path.exists(data_location):
+      if not os.path.exists(data_location) and os.path.isfile(os.path.join(
+          data_location, 'plaso-data.README')):
         data_location = None
 
     if not data_location:
