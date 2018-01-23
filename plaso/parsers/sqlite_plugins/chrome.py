@@ -332,7 +332,6 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
 
     visit_id = self._GetRowValue(query_hash, row, 'visit_id')
     from_visit = self._GetRowValue(query_hash, row, 'from_visit')
-    url = self._GetRowValue(query_hash, row, 'url')
 
     visit_source = self._GetVisitSource(visit_id, cache, database)
 
