@@ -76,6 +76,14 @@ plaso\.lib\.pfilter module
     :undoc-members:
     :show-inheritance:
 
+plaso\.lib\.platform\_specific module
+-------------------------------------
+
+.. automodule:: plaso.lib.platform_specific
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso\.lib\.plist module
 ------------------------
 
