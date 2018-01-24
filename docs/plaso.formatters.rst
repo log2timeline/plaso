@@ -564,6 +564,14 @@ plaso\.formatters\.sophos\_av module
     :undoc-members:
     :show-inheritance:
 
+plaso\.formatters\.srum module
+------------------------------
+
+.. automodule:: plaso.formatters.srum
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso\.formatters\.ssh module
 -----------------------------
 

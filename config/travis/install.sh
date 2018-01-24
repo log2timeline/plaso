@@ -2,7 +2,7 @@
 #
 # Script to set up Travis-CI test VM.
 
-COVERALL_DEPENDENCIES="python-coverage python-coveralls python-docopt";
+COVERALLS_DEPENDENCIES="python-coverage python-coveralls python-docopt";
 
 L2TBINARIES_DEPENDENCIES="PyYAML XlsxWriter artifacts bencode binplist certifi chardet construct dateutil dfdatetime dfvfs dfwinreg dpkt efilter future hachoir-core hachoir-metadata hachoir-parser idna libbde libesedb libevt libevtx libewf libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm lzma pefile psutil pycrypto pyparsing pysqlite pytsk3 pytz pyzmq requests six urllib3 yara-python";
 
@@ -32,5 +32,5 @@ then
 	sudo apt-get update -q;
 	# Only install the Python 2 dependencies.
 	# Also see: https://docs.travis-ci.com/user/languages/python/#Travis-CI-Uses-Isolated-virtualenvs
-	sudo apt-get install -y ${COVERALL_DEPENDENCIES} ${PYTHON2_DEPENDENCIES} ${PYTHON2_TEST_DEPENDENCIES};
+	sudo apt-get install -y ${COVERALLS_DEPENDENCIES} ${PYTHON2_DEPENDENCIES} ${PYTHON2_TEST_DEPENDENCIES};
 fi

@@ -200,13 +200,26 @@ class ESEDBPlugin(plugins.BasePlugin):
                 '{2:s} in table: {3:s}').format(
                     self.NAME, value_callback_method, column_name, table_name))
 
-      try:
-        value = self._GetRecordValue(record, value_entry)
-      except ValueError as exception:
-        logging.warning(exception)
-
       if value_callback:
-        value = value_callback(value)
+        try:
+          value_data = record.get_value_data(value_entry)
+          value = value_callback(value_data)
+
+        except Exception as exception:  # pylint: disable=broad-except
+          logging.error(exception)
+          value = None
+          parser_mediator.ProduceExtractionError((
+              'unable to parse value: {0:s} with callback: {1:s} with error: '
+              '{2!s}').format(column_name, value_callback_method, exception))
+
+      else:
+        try:
+          value = self._GetRecordValue(record, value_entry)
+        except ValueError as exception:
+          value = None
+          parser_mediator.ProduceExtractionError(
+              'unable to parse value: {0:s} with error: {1!s}'.format(
+                  column_name, exception))
 
       record_values[column_name] = value
 
