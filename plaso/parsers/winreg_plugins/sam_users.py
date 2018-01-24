@@ -46,10 +46,9 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
   NAME = 'windows_sam_users'
   DESCRIPTION = 'Parser for SAM Users and Names Registry keys.'
 
-  _SAM_KEY_PATH = 'HKEY_LOCAL_MACHINE\\SAM\\SAM\\Domains\\Account\\Users'
-
   FILTERS = frozenset([
-      interface.WindowsRegistryKeyPathFilter(_SAM_KEY_PATH)])
+      interface.WindowsRegistryKeyPathFilter(
+          'HKEY_LOCAL_MACHINE\\SAM\\SAM\\Domains\\Account\\Users')])
 
   _F_VALUE_STRUCT = construct.Struct(
       'f_struct',
