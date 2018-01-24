@@ -142,6 +142,59 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
   # https://cs.chromium.org/chromium/src/ui/base/page_transition_types.h?l=108
   _PAGE_TRANSITION_CORE_MASK = 0xff
 
+  # The following definition for values can be found here:
+  # http://src.chromium.org/svn/trunk/src/content/public/common/ \
+  # page_transition_types_list.h
+  PAGE_TRANSITION = {
+      0: 'LINK',
+      1: 'TYPED',
+      2: 'AUTO_BOOKMARK',
+      3: 'AUTO_SUBFRAME',
+      4: 'MANUAL_SUBFRAME',
+      5: 'GENERATED',
+      6: 'START_PAGE',
+      7: 'FORM_SUBMIT',
+      8: 'RELOAD',
+      9: 'KEYWORD',
+      10: 'KEYWORD_GENERATED '
+  }
+
+  TRANSITION_LONGER = {
+      0: 'User clicked a link',
+      1: 'User typed the URL in the URL bar',
+      2: 'Got through a suggestion in the UI',
+      3: ('Content automatically loaded in a non-toplevel frame - user may '
+          'not realize'),
+      4: 'Subframe explicitly requested by the user',
+      5: ('User typed in the URL bar and selected an entry from the list - '
+          'such as a search bar'),
+      6: 'The start page of the browser',
+      7: 'A form the user has submitted values to',
+      8: ('The user reloaded the page, eg by hitting the reload button or '
+          'restored a session'),
+      9: ('URL what was generated from a replaceable keyword other than the '
+          'default search provider'),
+      10: 'Corresponds to a visit generated from a KEYWORD'
+  }
+
+  # The following is the values for the source enum found in the visit_source
+  # table and describes where a record originated from (if it originates from a
+  # different storage than locally generated).
+  # The source can be found here:
+  # http://src.chromium.org/svn/trunk/src/chrome/browser/history/\
+  # history_types.h
+  VISIT_SOURCE = {
+      0: 'SOURCE_SYNCED',
+      1: 'SOURCE_BROWSED',
+      2: 'SOURCE_EXTENSION',
+      3: 'SOURCE_FIREFOX_IMPORTED',
+      4: 'SOURCE_IE_IMPORTED',
+      5: 'SOURCE_SAFARI_IMPORTED'
+  }
+
+  CORE_MASK = 0xff
+>>>>>>> 2e2af12ffee7f4926d251a797adbfc62190ef49b
+
   def _GetUrl(self, url, cache, database):
     """Retrieves an URL from a reference to an entry in the from_visit table.
 
@@ -266,6 +319,8 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
 
     visit_id = self._GetRowValue(query_hash, row, 'visit_id')
     from_visit = self._GetRowValue(query_hash, row, 'from_visit')
+
+    visit_source = self._GetVisitSource(visit_id, cache, database)
 
     event_data = ChromeHistoryPageVisitedEventData()
     event_data.from_visit = self._GetUrl(from_visit, cache, database)
