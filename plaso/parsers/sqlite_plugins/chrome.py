@@ -193,7 +193,7 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
   }
 
   CORE_MASK = 0xff
->>>>>>> 2e2af12ffee7f4926d251a797adbfc62190ef49b
+
 
   def _GetUrl(self, url, cache, database):
     """Retrieves an URL from a reference to an entry in the from_visit table.
