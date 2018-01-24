@@ -7,8 +7,6 @@ as of version 10.
 
 from __future__ import unicode_literals
 
-import logging
-
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
@@ -147,10 +145,12 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
           and other components, such as storage and dfvfs.
       table (pyesedb.table): table.
       container_name (str): container name, which indicates the table type.
+
+    Raises:
+      ValueError: if the table value is missing.
     """
     if table is None:
-      logging.warning('[{0:s}] invalid Container_# table'.format(self.NAME))
-      return
+      raise ValueError('Missing table value.')
 
     for record_index, esedb_record in enumerate(table.records):
       if parser_mediator.abort:
@@ -266,14 +266,15 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
           and other components, such as storage and dfvfs.
       database (Optional[pyesedb.file]): ESE database.
       table (Optional[pyesedb.table]): table.
+
+    Raises:
+      ValueError: if the database or table value is missing.
     """
     if database is None:
-      logging.warning('[{0:s}] invalid database'.format(self.NAME))
-      return
+      raise ValueError('Missing database value.')
 
     if table is None:
-      logging.warning('[{0:s}] invalid Containers table'.format(self.NAME))
-      return
+      raise ValueError('Missing table value.')
 
     for esedb_record in table.records:
       if parser_mediator.abort:
@@ -326,14 +327,15 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
           and other components, such as storage and dfvfs.
       database (Optional[pyesedb.file]): ESE database.
       table (Optional[pyesedb.table]): table.
+
+    Raises:
+      ValueError: if the database or table value is missing.
     """
     if database is None:
-      logging.warning('[{0:s}] invalid database'.format(self.NAME))
-      return
+      raise ValueError('Missing database value.')
 
     if table is None:
-      logging.warning('[{0:s}] invalid LeakFiles table'.format(self.NAME))
-      return
+      raise ValueError('Missing table value.')
 
     for esedb_record in table.records:
       if parser_mediator.abort:
@@ -362,14 +364,15 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
           and other components, such as storage and dfvfs.
       database (Optional[pyesedb.file]): ESE database.
       table (Optional[pyesedb.table]): table.
+
+    Raises:
+      ValueError: if the database or table value is missing.
     """
     if database is None:
-      logging.warning('[{0:s}] invalid database'.format(self.NAME))
-      return
+      raise ValueError('Missing database value.')
 
     if table is None:
-      logging.warning('[{0:s}] invalid Partitions table'.format(self.NAME))
-      return
+      raise ValueError('Missing table value.')
 
     for esedb_record in table.records:
       if parser_mediator.abort:

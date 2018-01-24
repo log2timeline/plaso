@@ -14,7 +14,7 @@ CATEGORIES = {
     'winxp': ['recycle_bin_info2', 'rplog', 'win_gen', 'winevt'],
     'winxp_slow': ['hachoir', 'mft', 'winxp'],
     'win7': [
-        'recycle_bin', 'custom_destinations', 'esedb/esedb_file_history',
+        'recycle_bin', 'custom_destinations', 'esedb/file_history',
         'olecf/olecf_automatic_destinations', 'win_gen', 'winevtx',
         'amcache'],
     'win7_slow': ['hachoir', 'mft', 'win7'],
