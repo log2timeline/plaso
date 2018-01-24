@@ -139,6 +139,9 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
       'visits, urls WHERE urls.id = visits.url')
   SYNC_CACHE_QUERY = 'SELECT id, source FROM visit_source'
 
+  # https://cs.chromium.org/chromium/src/ui/base/page_transition_types.h?l=108
+  _PAGE_TRANSITION_CORE_MASK = 0xff
+
   def _GetHostname(self, url):
     """Retrieves the hostname from a full URL.
 
@@ -188,8 +191,8 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     """Retrieves a visit source type based on the identifier.
 
     Args:
-      visit_identifier (str): identifier from the visits table for
-          the particular record.
+      visit_identifier (str): identifier from the visits table for the
+          particular record.
       cache (SQLiteCache): cache.
       database (SQLiteDatabase): database.
 
@@ -290,7 +293,8 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     event_data.host = self._GetHostname(url)
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-    event_data.page_transition_type = transition & 0xff
+    event_data.page_transition_type = (
+        transition & self.PAGE_TRANSITION_CORE_MASK)
     event_data.title = self._GetRowValue(query_hash, row, 'title')
     event_data.typed_count = self._GetRowValue(query_hash, row, 'typed_count')
     event_data.url = self._GetRowValue(query_hash, row, 'url')

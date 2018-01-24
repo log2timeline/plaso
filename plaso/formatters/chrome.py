@@ -49,6 +49,9 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'Chrome History'
   SOURCE_SHORT = 'WEBHIST'
 
+  # TODO: merge _PAGE_TRANSITION and _PAGE_TRANSITION_LONG
+  # https://github.com/log2timeline/plaso/issues/1676
+
   # The following definition for values can be found here:
   # https://cs.chromium.org/chromium/src/ui/base/page_transition_types.h
   _PAGE_TRANSITION = {
