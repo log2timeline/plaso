@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Plugin for the Mac OS X launch services quarantine events."""
+"""Plugin for the MacOS launch services quarantine events."""
 
 from __future__ import unicode_literals
 
@@ -14,7 +14,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 # TODO: describe more clearly what the data value contains.
 class LsQuarantineEventData(events.EventData):
-  """Mac OS X launch services quarantine event data.
+  """MacOS launch services quarantine event data.
 
   Attributes:
     data (bytes): data.
@@ -64,14 +64,14 @@ class LsQuarantinePlugin(interface.SQLitePlugin):
           'LSQuarantineOriginAlias BLOB )')}]
 
   def ParseLSQuarantineRow(
-      self, parser_mediator, row, query=None, **unused_kwargs):
+      self, parser_mediator, query, row, **unused_kwargs):
     """Parses a launch services quarantine event row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 

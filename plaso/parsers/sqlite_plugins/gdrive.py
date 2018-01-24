@@ -16,9 +16,6 @@ from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-__author__ = 'David Nides (david.nides@gmail.com)'
-
-
 class GoogleDriveSnapshotCloudEntryEventData(events.EventData):
   """Google Drive snapshot cloud entry event data.
 
@@ -211,17 +208,17 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     return '/{0:s}/'.format('/'.join(paths))
 
   def ParseCloudEntryRow(
-      self, parser_mediator, row, cache=None, database=None, query=None,
+      self, parser_mediator, query, row, cache=None, database=None,
       **unused_kwargs):
     """Parses a cloud entry row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
       cache (SQLiteCache): cache.
       database (SQLiteDatabase): database.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 
@@ -254,17 +251,17 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseLocalEntryRow(
-      self, parser_mediator, row, cache=None, database=None, query=None,
+      self, parser_mediator, query, row, cache=None, database=None,
       **unused_kwargs):
     """Parses a local entry row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
-      cache (SQLiteCache): cache.
-      database (SQLiteDatabase): database.
-      query (Optional[str]): query.
+      cache (Optional[SQLiteCache]): cache.
+      database (Optional[SQLiteDatabase]): database.
     """
     query_hash = hash(query)
 

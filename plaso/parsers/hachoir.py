@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for extracting metadata."""
+"""Parser that uses Hachoir to extract metadata."""
 
 from __future__ import unicode_literals
 
@@ -20,6 +20,7 @@ import hachoir_core
 import hachoir_parser
 import hachoir_metadata
 
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import timelib
@@ -27,29 +28,23 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-__author__ = 'David Nides (david.nides@gmail.com)'
+class HachoirEventData(events.EventData):
+  """Hachoir event data.
 
-
-class HachoirEvent(time_events.TimestampEvent):
-  """Class to represent Hachoir events."""
+  Attributes:
+    metadata (dict[str, object]): hachoir metadata.
+  """
 
   DATA_TYPE = 'metadata:hachoir'
 
-  def __init__(self, dt_timestamp, usage, attributes):
-    """Initializes an event object.
-
-    Args:
-      dt_timestamp: A Python datetime.datetime object.
-      usage: The description of the usage of the time value.
-      attributes: A dict containing metadata for the event.
-    """
-    timestamp = timelib.Timestamp.FromPythonDatetime(dt_timestamp)
-    super(HachoirEvent, self).__init__(timestamp, usage, self.DATA_TYPE)
-    self.metadata = attributes
+  def __init__(self):
+    """Initializes event data."""
+    super(HachoirEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.metadata = {}
 
 
 class HachoirParser(interface.FileObjectParser):
-  """Class to parse meta data from files using Hachoir."""
+  """Parser that uses Hachoir."""
 
   NAME = 'hachoir'
   DESCRIPTION = 'Parser that wraps Hachoir.'
@@ -58,8 +53,9 @@ class HachoirParser(interface.FileObjectParser):
     """Parses a file-like object using Hachoir.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -148,9 +144,12 @@ class HachoirParser(interface.FileObjectParser):
           '[{0:s}] unable to parse file {1:s}: {2:s}'.format(
               self.NAME, file_name, 'No events discovered'))
 
-    for date, key in extracted_events:
-      event_object = HachoirEvent(date, key, attributes)
-      parser_mediator.ProduceEvent(event_object)
+    event_data = HachoirEventData()
+    event_data.metadata = attributes
+
+    for datetime_value, usage in extracted_events:
+      event = time_events.PythonDatetimeEvent(datetime_value, usage)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 manager.ParsersManager.RegisterParser(HachoirParser)

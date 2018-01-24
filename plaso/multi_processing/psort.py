@@ -19,6 +19,7 @@ from plaso.lib import py2to3
 from plaso.multi_processing import analysis_process
 from plaso.multi_processing import engine as multi_process_engine
 from plaso.multi_processing import multi_process_queue
+from plaso.storage import event_tag_index
 from plaso.storage import time_range as storage_time_range
 
 
@@ -186,7 +187,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._data_location = None
     self._event_filter_expression = None
     self._event_queues = {}
-    # The event heap is used to make sure the events are sorted in
+    self._event_tag_index = event_tag_index.EventTagIndex()
+    # The export event heap is used to make sure the events are sorted in
     # a deterministic way.
     self._export_event_heap = PsortEventHeap()
     self._export_event_timestamp = 0
@@ -242,6 +244,10 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     filter_limit = getattr(event_filter, 'limit', None)
 
     for event in storage_writer.GetSortedEvents():
+      event_identifier = event.GetIdentifier()
+      event.tag = self._event_tag_index.GetEventTagByIdentifier(
+          storage_writer, event_identifier)
+
       if event_filter:
         filter_match = event_filter.Match(event)
       else:
@@ -291,7 +297,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
           storage_merge_reader = storage_writer.StartMergeTaskStorage(task)
 
-          storage_merge_reader.MergeAttributeContainers()
+          storage_merge_reader.MergeAttributeContainers(
+              callback=self._MergeEventTag)
           # TODO: temporary solution.
           plugin_names.remove(plugin_name)
 
@@ -452,6 +459,10 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     number_of_events_from_time_slice = 0
 
     for event in storage_reader.GetSortedEvents(time_range=time_slice):
+      event_identifier = event.GetIdentifier()
+      event.tag = self._event_tag_index.GetEventTagByIdentifier(
+          storage_reader, event_identifier)
+
       if event_filter:
         filter_match = event_filter.Match(event)
       else:
@@ -564,6 +575,33 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     if macb_group:
       output_module.WriteEventMACBGroup(macb_group)
+
+  def _MergeEventTag(self, storage_writer, attribute_container):
+    """Merges an event tag with the last stored event tag.
+
+    If there is an existing event the provided event tag is updated with
+    the contents of the existing one. Afterwhich the event tag index is updated.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+      attribute_container (AttributeContainer): container.
+    """
+    if attribute_container.CONTAINER_TYPE != 'event_tag':
+      return
+
+    event_identifier = attribute_container.GetEventIdentifier()
+    if not event_identifier:
+      return
+
+    # Check if the event has already been tagged on a previous occasion,
+    # we need to append the event tag to the last stored one.
+    stored_event_tag = self._event_tag_index.GetEventTagByIdentifier(
+        storage_writer, event_identifier)
+    if stored_event_tag:
+      attribute_container.AddComment(stored_event_tag.comment)
+      attribute_container.AddLabels(stored_event_tag.labels)
+
+    self._event_tag_index.SetEventTag(attribute_container)
 
   def _StartAnalysisProcesses(self, storage_writer, analysis_plugins):
     """Starts the analysis processes.

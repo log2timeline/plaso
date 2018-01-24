@@ -32,7 +32,7 @@ class DpkgFormatterTest(test_lib.EventFormatterTestCase):
   def testGetMessages(self):
     """Tests the GetMessages method."""
     date_time = dfdatetime_posix_time.PosixTime()
-    date_time.CopyFromString('2016-08-09 04:57:14')
+    date_time.CopyFromDateTimeString('2016-08-09 04:57:14')
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_MODIFICATION)

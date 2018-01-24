@@ -3,17 +3,11 @@
 
 from __future__ import unicode_literals
 
-from dfdatetime import posix_time as dfdatetime_posix_time
-
 from plaso.containers import plist_event
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
-
-
-__author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
 class SpotlightPlugin(interface.PlistPlugin):
@@ -64,11 +58,8 @@ class SpotlightPlugin(interface.PlistPlugin):
       event_data.key = search_text
       event_data.root = '/UserShortcuts'
 
-      timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+      event = time_events.PythonDatetimeEvent(
+          datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

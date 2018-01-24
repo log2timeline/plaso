@@ -45,16 +45,16 @@ class PlistPlugin(plugins.BasePlugin):
   NAME = 'plist_plugin'
 
   # PLIST_PATH is a string for the filename this parser is designed to process.
-  # This is expected to be overriden by the processing plugin.
+  # This is expected to be overridden by the processing plugin.
   # Ex. 'com.apple.bluetooth.plist'
   PLIST_PATH = 'any'
 
   # PLIST_KEYS is a list of keys required by a plugin.
-  # This is expected to be overriden by the processing plugin.
+  # This is expected to be overridden by the processing plugin.
   # Ex. frozenset(['DeviceCache', 'PairedDevices'])
   PLIST_KEYS = frozenset(['any'])
 
-  # This is expected to be overriden by the processing plugin.
+  # This is expected to be overridden by the processing plugin.
   # URLS should contain a list of URLs with additional information about
   # this key or value.
   # Ex. ['http://www.forensicswiki.org/wiki/Property_list_(plist)']
@@ -252,7 +252,7 @@ def RecurseKey(recur_item, depth=15, key_path=''):
 
   # TODO determine if recur_item is a plistlib._InternalDict to determine
   # if recur_item.iteritems() should be replaced with iter(recur_item.items()).
-  # Note that testing breaks when explictly only allowing
+  # Note that testing breaks when explicitly only allowing
   # plistlib._InternalDict.
   for subkey, value in iter(recur_item.items()):
     yield key_path, subkey, value

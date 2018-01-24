@@ -7,9 +7,6 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-__author__ = 'Dominique Kilman (lexistar97@gmail.com)'
-
-
 class PCAPFormatter(interface.ConditionalEventFormatter):
   """Formatter for a PCAP event."""
 

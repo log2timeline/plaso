@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import bsm as _  # pylint: disable=unused-import
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import bsm
 
@@ -14,14 +15,14 @@ from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
-class MacOSXBSMParserTest(test_lib.ParserTestCase):
+class MacOSBSMParserTest(test_lib.ParserTestCase):
   """Tests for Basic Security Module (BSM) file parser."""
 
   @shared_test_lib.skipUnlessHasTestFile(['apple.bsm'])
   def testParse(self):
-    """Tests the Parse function on a Mac OS X BSM file."""
+    """Tests the Parse function on a MacOS BSM file."""
     parser = bsm.BSMParser()
-    knowledge_base_values = {'guessed_os': 'MacOSX'}
+    knowledge_base_values = {'guessed_os': definitions.OPERATING_SYSTEM_MACOS}
     storage_writer = self._ParseFile(
         ['apple.bsm'], parser,
         knowledge_base_values=knowledge_base_values)
@@ -32,7 +33,7 @@ class MacOSXBSMParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    self.assertEqual(event.data_type, 'mac:bsm:event')
+    self.assertEqual(event.data_type, 'bsm:event')
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         '2013-11-04 18:36:20.000381')
@@ -182,7 +183,7 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function on a "generic" BSM file."""
     parser = bsm.BSMParser()
-    knowledge_base_values = {'guessed_os': 'openbsm'}
+    knowledge_base_values = {'guessed_os': definitions.OPERATING_SYSTEM_LINUX}
     storage_writer = self._ParseFile(
         ['openbsm.bsm'],
         parser,
@@ -204,7 +205,7 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
          'BSM_TOKEN_TRAILER': 39},
         {'BSM_TOKEN_FILE': {
             'string': 'test',
-            'timestamp': '1970-01-01 20:42:45'},
+            'timestamp': '1970-01-01 20:42:45.000424'},
          'BSM_TOKEN_TRAILER': 41},
         {'BSM_TOKEN_ADDR': '192.168.100.15',
          'BSM_TOKEN_TRAILER': 30},
@@ -293,7 +294,7 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
       event = events[event_index]
       expected_extra_tokens_dict = expected_extra_tokens[event_index]
       extra_tokens_dict = getattr(event, 'extra_tokens', {})
-      self.assertDictContains(extra_tokens_dict, expected_extra_tokens_dict)
+      self.CheckDictContents(extra_tokens_dict, expected_extra_tokens_dict)
 
 
 if __name__ == '__main__':

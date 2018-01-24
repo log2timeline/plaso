@@ -44,10 +44,6 @@ class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
           the artifact value data.
       path_separator (str): path segment separator.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
@@ -64,7 +60,7 @@ class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
       file_system (dfvfs.FileSystem): file system to be preprocessed.
 
     Raises:
-      PreProcessFail: if the Windows Registry key or value cannnot be read.
+      PreProcessFail: if the Windows Registry key or value cannot be read.
     """
     for source in artifact_definition.sources:
       if source.type_indicator not in (
@@ -81,10 +77,9 @@ class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
             location_glob=path_segments[1:], case_sensitive=False)
 
         for path_specification in searcher.Find(find_specs=[find_spec]):
-          if self._ParsePathSpecification(
+          self._ParsePathSpecification(
               knowledge_base, searcher, file_system, path_specification,
-              source.separator):
-            return
+              source.separator)
 
 
 class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
@@ -102,10 +97,6 @@ class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
       file_entry (dfvfs.FileEntry): file entry that contains the artifact
           value data.
-
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
@@ -125,10 +116,6 @@ class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
           the artifact value data.
       path_separator (str): path segment separator.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
@@ -145,7 +132,7 @@ class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
           'Unable to retrieve file entry: {0:s} with error: '
           '{1:s}').format(relative_path, exception))
 
-    return self._ParseFileEntry(knowledge_base, file_entry)
+    self._ParseFileEntry(knowledge_base, file_entry)
 
 
 class FileArtifactPreprocessorPlugin(FileEntryArtifactPreprocessorPlugin):
@@ -164,10 +151,6 @@ class FileArtifactPreprocessorPlugin(FileEntryArtifactPreprocessorPlugin):
       file_object (dfvfs.FileIO): file-like object that contains the artifact
           value data.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
@@ -180,20 +163,14 @@ class FileArtifactPreprocessorPlugin(FileEntryArtifactPreprocessorPlugin):
       file_entry (dfvfs.FileEntry): file entry that contains the artifact
           value data.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
     file_object = file_entry.GetFileObject()
     try:
-      result = self._ParseFileData(knowledge_base, file_object)
+      self._ParseFileData(knowledge_base, file_object)
     finally:
       file_object.close()
-
-    return result
 
 
 class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
@@ -212,10 +189,6 @@ class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       value_name (str): name of the Windows Registry value.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
@@ -231,7 +204,7 @@ class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
           preprocess the Windows Registry.
 
     Raises:
-      PreProcessFail: if the Windows Registry key or value cannnot be read.
+      PreProcessFail: if the Windows Registry key or value cannot be read.
     """
     for source in artifact_definition.sources:
       if source.type_indicator not in (
@@ -268,8 +241,7 @@ class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
 
           if registry_key:
             value_name = key_value_pair.get('value', None)
-            if self._ParseKey(knowledge_base, registry_key, value_name):
-              return True
+            self._ParseKey(knowledge_base, registry_key, value_name)
 
 
 class WindowsRegistryValueArtifactPreprocessorPlugin(
@@ -288,10 +260,6 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       value_name (str): name of the Windows Registry value.
 
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
@@ -303,13 +271,10 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
           'with error: {2!s}').format(
               registry_key.path, value_name, exception))
 
-    result = False
     if registry_value:
       value_object = registry_value.GetDataAsObject()
       if value_object:
-        result = self._ParseValueData(knowledge_base, value_object)
-
-    return result
+        self._ParseValueData(knowledge_base, value_object)
 
   @abc.abstractmethod
   def _ParseValueData(self, knowledge_base, value_data):
@@ -318,10 +283,6 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
     Args:
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
       value_data (object): Windows Registry value data.
-
-    Returns:
-      bool: True if all the preprocessing attributes were found and
-          the preprocessor plugin is done.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.

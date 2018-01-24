@@ -68,6 +68,7 @@ from plaso.formatters import skydrivelog
 from plaso.formatters import skype
 from plaso.formatters import sophos_av
 from plaso.formatters import ssh
+from plaso.formatters import srum
 from plaso.formatters import symantec
 from plaso.formatters import syslog
 from plaso.formatters import systemd_journal

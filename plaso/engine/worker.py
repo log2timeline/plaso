@@ -319,14 +319,32 @@ class EventExtractionWorker(object):
 
     self.last_activity_timestamp = time.time()
 
-  def _ExtractMetadataFromFileEntry(self, mediator, file_entry):
+  def _ExtractMetadataFromFileEntry(self, mediator, file_entry, data_stream):
     """Extracts metadata from a file entry.
 
     Args:
       mediator (ParserMediator): mediates the interactions between
           parsers and other components, such as storage and abort signals.
       file_entry (dfvfs.FileEntry): file entry to extract metadata from.
+      data_stream (dfvfs.DataStream): data stream or None if the file entry
+          has no data stream.
     """
+    # Do not extract metadata from the root file entry when it is virtual.
+    if file_entry.IsRoot() and file_entry.type_indicator not in (
+        self._TYPES_WITH_ROOT_METADATA):
+      return
+
+    # We always want to extract the file entry metadata but we only want
+    # to parse it once per file entry, so we only use it if we are
+    # processing the default data stream of regular files.
+    if data_stream and not data_stream.IsDefault():
+      return
+
+    display_name = mediator.GetDisplayName()
+    logging.debug(
+        '[ExtractMetadataFromFileEntry] processing file entry: {0:s}'.format(
+            display_name))
+
     self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
 
     if self._processing_profiler:
@@ -597,14 +615,13 @@ class EventExtractionWorker(object):
           if self._abort:
             break
 
-          self._ProcessFileEntryDataStream(
-              mediator, file_entry, data_stream.name)
+          self._ProcessFileEntryDataStream(mediator, file_entry, data_stream)
 
           file_entry_processed = True
 
         if not file_entry_processed:
           # For when the file entry does not contain a data stream.
-          self._ProcessFileEntryDataStream(mediator, file_entry, '')
+          self._ProcessFileEntryDataStream(mediator, file_entry, None)
 
     finally:
       new_reference_count = (
@@ -622,38 +639,34 @@ class EventExtractionWorker(object):
         '[ProcessFileEntry] done processing file entry: {0:s}'.format(
             display_name))
 
-  def _ProcessFileEntryDataStream(self, mediator, file_entry, data_stream_name):
+  def _ProcessFileEntryDataStream(self, mediator, file_entry, data_stream):
     """Processes a specific data stream of a file entry.
 
     Args:
       mediator (ParserMediator): mediates the interactions between
           parsers and other components, such as storage and abort signals.
       file_entry (dfvfs.FileEntry): file entry containing the data stream.
-      data_stream_name (str): name of the data stream.
+      data_stream (dfvfs.DataStream): data stream or None if the file entry
+          has no data stream.
     """
+    display_name = mediator.GetDisplayName()
+    data_stream_name = getattr(data_stream, 'name', '') or ''
+    logging.debug((
+        '[ProcessFileEntryDataStream] processing data stream: "{0:s}" of '
+        'file entry: {1:s}').format(data_stream_name, display_name))
+
     mediator.ClearEventAttributes()
+
+    if data_stream and self._analyzers:
+      # Since AnalyzeDataStream generates event attributes it needs to be
+      # called before producing events.
+      self._AnalyzeDataStream(mediator, file_entry, data_stream.name)
+
+    self._ExtractMetadataFromFileEntry(mediator, file_entry, data_stream)
 
     # Not every file entry has a data stream. In such cases we want to
     # extract the metadata only.
-    has_data_stream = file_entry.HasDataStream(data_stream_name)
-    if not data_stream_name and not file_entry.IsFile():
-      has_data_stream = False
-
-    if has_data_stream:
-      if self._analyzers:
-        # Since AnalyzeDataStream generates event attributes it needs to be
-        # called before producing events.
-        self._AnalyzeDataStream(mediator, file_entry, data_stream_name)
-
-    # We always want to extract the file entry metadata but we only want
-    # to parse it once per file entry, so we only use it if we are
-    # processing the default (nameless) data stream.
-    if (not data_stream_name and (
-        not file_entry.IsRoot() or
-        file_entry.type_indicator in self._TYPES_WITH_ROOT_METADATA)):
-      self._ExtractMetadataFromFileEntry(mediator, file_entry)
-
-    if not has_data_stream:
+    if not data_stream:
       return
 
     # Determine if the content of the file entry should not be extracted.
@@ -666,8 +679,8 @@ class EventExtractionWorker(object):
       return
 
     path_spec = copy.deepcopy(file_entry.path_spec)
-    if data_stream_name:
-      path_spec.data_stream = data_stream_name
+    if data_stream:
+      path_spec.data_stream = data_stream.name
 
     archive_types = []
     compressed_stream_types = []
@@ -686,7 +699,7 @@ class EventExtractionWorker(object):
       if dfvfs_definitions.TYPE_INDICATOR_ZIP in archive_types:
         # ZIP files are the base of certain file formats like docx.
         self._ExtractContentFromDataStream(
-            mediator, file_entry, data_stream_name)
+            mediator, file_entry, data_stream.name)
 
     elif compressed_stream_types:
       self._ProcessCompressedStreamTypes(
@@ -694,7 +707,7 @@ class EventExtractionWorker(object):
 
     else:
       self._ExtractContentFromDataStream(
-          mediator, file_entry, data_stream_name)
+          mediator, file_entry, data_stream.name)
 
   def _ProcessMetadataFile(self, mediator, file_entry):
     """Processes a metadata file.

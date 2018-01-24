@@ -10,7 +10,6 @@ import time
 import textwrap
 
 from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.resolver import context as dfvfs_context
 
 import plaso
 
@@ -21,28 +20,21 @@ from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.cli import extraction_tool
 from plaso.cli import logging_filter
 from plaso.cli import status_view
-from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
-from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.engine import filter_file
 from plaso.engine import single_process as single_process_engine
 from plaso.lib import definitions
 from plaso.lib import errors
+from plaso.lib import loggers
 from plaso.multi_processing import task_engine as multi_process_engine
 from plaso.parsers import manager as parsers_manager
-from plaso.storage import sqlite_file as storage_sqlite_file
-from plaso.storage import zip_file as storage_zip_file
+from plaso.storage import factory as storage_factory
 
 
-class Log2TimelineTool(
-    extraction_tool.ExtractionTool,
-    tool_options.HashersOptions,
-    tool_options.ParsersOptions,
-    tool_options.ProfilingOptions,
-    tool_options.StorageFileOptions):
+class Log2TimelineTool(extraction_tool.ExtractionTool):
   """Log2timeline CLI tool.
 
   Attributes:
@@ -109,55 +101,20 @@ class Log2TimelineTool(
     self._command_line_arguments = None
     self._enable_sigsegv_handler = False
     self._number_of_extraction_workers = 0
-    self._resolver_context = dfvfs_context.Context()
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
     self._source_type = None
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
     self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
     self._stdout_output_writer = isinstance(
         self._output_writer, tools.StdoutOutputWriter)
-    self._storage_file_path = None
-    self._storage_format = definitions.STORAGE_FORMAT_ZIP
-    self._temporary_directory = None
-    self._text_prepend = None
     self._use_zeromq = True
     self._worker_memory_limit = None
-    self._yara_rules_string = None
 
     self.dependencies_check = True
     self.list_hashers = False
     self.list_parsers_and_plugins = False
     self.list_profilers = False
     self.show_info = False
-
-  def _CreateProcessingConfiguration(self):
-    """Creates a processing configuration.
-
-    Returns:
-      ProcessingConfiguration: processing configuration.
-    """
-    # TODO: pass preferred_encoding.
-    configuration = configurations.ProcessingConfiguration()
-    configuration.credentials = self._credential_configurations
-    configuration.debug_output = self._debug_mode
-    configuration.event_extraction.text_prepend = self._text_prepend
-    configuration.extraction.hasher_file_size_limit = (
-        self._hasher_file_size_limit)
-    configuration.extraction.hasher_names_string = self._hasher_names_string
-    configuration.extraction.process_archives = self._process_archives
-    configuration.extraction.process_compressed_streams = (
-        self._process_compressed_streams)
-    configuration.extraction.yara_rules_string = self._yara_rules_string
-    configuration.filter_file = self._filter_file
-    configuration.input_source.mount_path = self._mount_path
-    configuration.parser_filter_expression = self._parser_filter_expression
-    configuration.preferred_year = self._preferred_year
-    configuration.profiling.directory = self._profiling_directory
-    configuration.profiling.sample_rate = self._profiling_sample_rate
-    configuration.profiling.profilers = self._profilers
-    configuration.temporary_directory = self._temporary_directory
-
-    return configuration
 
   def _GetPluginData(self):
     """Retrieves the version and various plugin information.
@@ -228,7 +185,7 @@ class Log2TimelineTool(
     Returns:
       bool: True if the arguments were successfully parsed.
     """
-    self._ConfigureLogging()
+    loggers.ConfigureLogging()
 
     argument_parser = argparse.ArgumentParser(
         description=self.DESCRIPTION, epilog=self.EPILOG, add_help=False,
@@ -356,6 +313,15 @@ class Log2TimelineTool(
 
     self._command_line_arguments = self.GetCommandLineArguments()
 
+    loggers.ConfigureLogging(
+        debug_output=self._debug_mode, filename=self._log_file,
+        quiet_mode=self._quiet_mode)
+
+    if self._debug_mode:
+      log_filter = logging_filter.LoggingFilter()
+      root_logger = logging.getLogger()
+      root_logger.addFilter(log_filter)
+
     return True
 
   def ParseOptions(self, options):
@@ -408,26 +374,6 @@ class Log2TimelineTool(
     self._ParsePerformanceOptions(options)
     self._ParseProcessingOptions(options)
 
-    format_string = (
-        '%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
-        '<%(module)s> %(message)s')
-
-    if self._debug_mode:
-      logging_level = logging.DEBUG
-    elif self._quiet_mode:
-      logging_level = logging.WARNING
-    else:
-      logging_level = logging.INFO
-
-    self._ConfigureLogging(
-        filename=self._log_file, format_string=format_string,
-        log_level=logging_level)
-
-    if self._debug_mode:
-      log_filter = logging_filter.LoggingFilter()
-      root_logger = logging.getLogger()
-      root_logger.addFilter(log_filter)
-
     if not self._storage_file_path:
       raise errors.BadConfigOption('Missing storage file option.')
 
@@ -450,30 +396,12 @@ class Log2TimelineTool(
 
     self._enable_sigsegv_handler = getattr(options, 'sigsegv_handler', False)
 
-  def _PreprocessSources(self, extraction_engine):
-    """Preprocesses the sources.
-
-    Args:
-      extraction_engine (BaseEngine): extraction engine to preprocess
-          the sources.
-    """
-    logging.debug('Starting preprocessing.')
-
-    try:
-      extraction_engine.PreprocessSources(
-          self._artifacts_registry, self._source_path_specs,
-          resolver_context=self._resolver_context)
-
-    except IOError as exception:
-      logging.error('Unable to preprocess with error: {0!s}'.format(exception))
-
-    logging.debug('Preprocessing done.')
-
   def ExtractEventsFromSources(self):
     """Processes the sources and extracts events.
 
     Raises:
-      BadConfigOption: if the storage file path is invalid.
+      BadConfigOption: if the storage file path is invalid or the storage
+          format not supported.
       SourceScannerError: if the source scanner could not find a supported
           file system.
       UserAbort: if the user initiated an abort.
@@ -502,13 +430,11 @@ class Log2TimelineTool(
         preferred_time_zone=self._preferred_time_zone,
         preferred_year=self._preferred_year)
 
-    if self._storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      storage_writer = storage_sqlite_file.SQLiteStorageFileWriter(
-          session, self._storage_file_path)
-
-    else:
-      storage_writer = storage_zip_file.ZIPStorageFileWriter(
-          session, self._storage_file_path)
+    storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
+        self._storage_format, session, self._storage_file_path)
+    if not storage_writer:
+      raise errors.BadConfigOption(
+          'Unsupported storage format: {0:s}'.format(self._storage_format))
 
     single_process_mode = self._single_process_mode
     if self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
@@ -523,54 +449,21 @@ class Log2TimelineTool(
 
     # If the source is a directory or a storage media image
     # run pre-processing.
-    if (self._force_preprocessing or
-        self._source_type in self._SOURCE_TYPES_TO_PREPROCESS):
+    if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
       self._PreprocessSources(extraction_engine)
 
-    configuration = self._CreateProcessingConfiguration()
+    configuration = self._CreateProcessingConfiguration(
+        extraction_engine.knowledge_base)
 
-    if not configuration.parser_filter_expression:
-      operating_system = extraction_engine.knowledge_base.GetValue(
-          'operating_system')
-      operating_system_product = extraction_engine.knowledge_base.GetValue(
-          'operating_system_product')
-      operating_system_version = extraction_engine.knowledge_base.GetValue(
-          'operating_system_version')
-      parser_filter_expression = (
-          parsers_manager.ParsersManager.GetPresetForOperatingSystem(
-              operating_system, operating_system_product,
-              operating_system_version))
-
-      if parser_filter_expression:
-        logging.info('Parser filter expression changed to: {0:s}'.format(
-            parser_filter_expression))
-
-      configuration.parser_filter_expression = parser_filter_expression
-
-      names_generator = parsers_manager.ParsersManager.GetParserAndPluginNames(
-          parser_filter_expression=parser_filter_expression)
-
-      session.enabled_parser_names = list(names_generator)
-      session.parser_filter_expression = parser_filter_expression
-
-    # Note session.preferred_time_zone will default to UTC but
-    # self._preferred_time_zone is None when not set.
-    if self._preferred_time_zone:
-      try:
-        extraction_engine.knowledge_base.SetTimeZone(self._preferred_time_zone)
-      except ValueError:
-        # pylint: disable=protected-access
-        logging.warning(
-            'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
-                self._preferred_time_zone,
-                extraction_engine.knowledge_base._time_zone.zone))
+    self._SetExtractionParsersAndPlugins(configuration, session)
+    self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
     filter_find_specs = None
     if configuration.filter_file:
       environment_variables = (
           extraction_engine.knowledge_base.GetEnvironmentVariables())
-      filter_find_specs = filter_file.BuildFindSpecsFromFile(
-          configuration.filter_file,
+      filter_file_object = filter_file.FilterFile(configuration.filter_file)
+      filter_find_specs = filter_file_object.BuildFindSpecs(
           environment_variables=environment_variables)
 
     processing_status = None

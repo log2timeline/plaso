@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains the wifi.log (Mac OS X) parser."""
+"""This file contains the wifi.log (MacOS) parser."""
 
 from __future__ import unicode_literals
 
@@ -17,9 +17,6 @@ from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
-
-
-__author__ = 'Joaquin Moreno Garijo (bastionado@gmail.com)'
 
 
 class MacWifiLogEventData(events.EventData):
@@ -49,7 +46,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parse text based on wifi.log file."""
 
   NAME = 'macwifi'
-  DESCRIPTION = 'Parser for Mac OS X wifi.log files.'
+  DESCRIPTION = 'Parser for MacOS wifi.log files.'
 
   _ENCODING = 'utf-8'
 

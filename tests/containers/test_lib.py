@@ -54,7 +54,7 @@ def CreateTestEvents():
   event_data.hostname = hostname
   event_data.regvalue = {'Value': 'c:/Temp/evil.exe'}
 
-  filetime.CopyFromString('2012-04-20 22:38:46.929596')
+  filetime.CopyFromDateTimeString('2012-04-20 22:38:46.929596')
   event = time_events.DateTimeValuesEvent(
       filetime, definitions.TIME_DESCRIPTION_WRITTEN)
 
@@ -66,7 +66,7 @@ def CreateTestEvents():
   event_data.hostname = hostname
   event_data.regvalue = {'Value': 'send all the exes to the other world'}
 
-  filetime.CopyFromString('2012-04-20 23:56:46.929596')
+  filetime.CopyFromDateTimeString('2012-04-20 23:56:46.929596')
   event = time_events.DateTimeValuesEvent(
       filetime, definitions.TIME_DESCRIPTION_WRITTEN)
 
@@ -78,7 +78,7 @@ def CreateTestEvents():
   event_data.hostname = hostname
   event_data.regvalue = {'Value': 'run all the benign stuff'}
 
-  filetime.CopyFromString('2012-04-20 16:44:46')
+  filetime.CopyFromDateTimeString('2012-04-20 16:44:46')
   event = time_events.DateTimeValuesEvent(
       filetime, definitions.TIME_DESCRIPTION_WRITTEN)
 

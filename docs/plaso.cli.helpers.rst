@@ -164,6 +164,14 @@ plaso\.cli\.helpers\.server\_config module
     :undoc-members:
     :show-inheritance:
 
+plaso\.cli\.helpers\.sessionize\_analysis module
+------------------------------------------------
+
+.. automodule:: plaso.cli.helpers.sessionize_analysis
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso\.cli\.helpers\.shared\_4n6time\_output module
 ---------------------------------------------------
 

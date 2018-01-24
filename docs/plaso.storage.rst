@@ -1,6 +1,14 @@
 plaso\.storage package
 ======================
 
+Subpackages
+-----------
+
+.. toctree::
+
+    plaso.storage.fake
+    plaso.storage.sqlite
+
 Submodules
 ----------
 
@@ -12,26 +20,18 @@ plaso\.storage\.event\_heaps module
     :undoc-members:
     :show-inheritance:
 
+plaso\.storage\.event\_tag\_index module
+----------------------------------------
+
+.. automodule:: plaso.storage.event_tag_index
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso\.storage\.factory module
 ------------------------------
 
 .. automodule:: plaso.storage.factory
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso\.storage\.fake\_storage module
-------------------------------------
-
-.. automodule:: plaso.storage.fake_storage
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso\.storage\.gzip\_file module
----------------------------------
-
-.. automodule:: plaso.storage.gzip_file
     :members:
     :undoc-members:
     :show-inheritance:
@@ -52,26 +52,10 @@ plaso\.storage\.interface module
     :undoc-members:
     :show-inheritance:
 
-plaso\.storage\.sqlite\_file module
------------------------------------
-
-.. automodule:: plaso.storage.sqlite_file
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso\.storage\.time\_range module
 ----------------------------------
 
 .. automodule:: plaso.storage.time_range
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso\.storage\.zip\_file module
---------------------------------
-
-.. automodule:: plaso.storage.zip_file
     :members:
     :undoc-members:
     :show-inheritance:

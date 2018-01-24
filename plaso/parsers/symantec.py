@@ -14,9 +14,6 @@ from plaso.parsers import manager
 import pytz  # pylint: disable=wrong-import-order
 
 
-__author__ = 'David Nides (david.nides@gmail.com)'
-
-
 class SymantecEventData(events.EventData):
   """Symantec event data.
 

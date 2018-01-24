@@ -67,38 +67,6 @@ class CLITool(object):
     self.list_timezones = False
     self.preferred_encoding = preferred_encoding
 
-  def _ConfigureLogging(
-      self, filename=None, format_string=None, log_level=None):
-    """Configure the logger.
-
-    If a filename is specified and the corresponding log file already exists,
-    the file is truncated.
-
-    Args:
-      filename (Optional[str]): path to a filename to append logs to, where
-          None means logs will not be redirected to a file.
-      format_string (Optional[str]): format string for the logs, where None
-           configures the logger to use a default format string.
-      log_level (Optional[int]): integer representing the log level, for
-          example logging.DEBUG, where None represents logging.INFO.
-    """
-    # Remove all possible log handlers.
-    for handler in logging.root.handlers:
-      logging.root.removeHandler(handler)
-
-    if log_level is None:
-      log_level = logging.INFO
-
-    if not format_string:
-      format_string = '[%(levelname)s] %(message)s'
-
-    if filename:
-      logging.basicConfig(
-          level=log_level, format=format_string, filename=filename,
-          filemode='w')
-    else:
-      logging.basicConfig(level=log_level, format=format_string)
-
   def _EncodeString(self, string):
     """Encodes a string in the preferred encoding.
 

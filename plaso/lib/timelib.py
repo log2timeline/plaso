@@ -39,23 +39,23 @@ MONTH_DICT = {
 
 
 class Timestamp(object):
-  """Class for converting timestamps to plaso timestamps.
+  """Class for converting timestamps to Plaso timestamps.
 
     The Plaso timestamp is a 64-bit signed timestamp value containing:
     micro seconds since 1970-01-01 00:00:00.
 
     The timestamp is not necessarily in UTC.
   """
-  # The minimum timestamp in seconds
+  # The minimum timestamp in seconds.
   TIMESTAMP_MIN_SECONDS = -(((1 << 63) - 1) / 1000000)
 
-  # The maximum timestamp in seconds
+  # The maximum timestamp in seconds.
   TIMESTAMP_MAX_SECONDS = ((1 << 63) - 1) / 1000000
 
-  # The minimum timestamp in micro seconds
+  # The minimum timestamp in micro seconds.
   TIMESTAMP_MIN_MICRO_SECONDS = -((1 << 63) - 1)
 
-  # The maximum timestamp in micro seconds
+  # The maximum timestamp in micro seconds.
   TIMESTAMP_MAX_MICRO_SECONDS = (1 << 63) - 1
 
   # Timestamp that represents the timestamp representing not
@@ -63,8 +63,11 @@ class Timestamp(object):
   # TODO: replace this with a real None implementation.
   NONE_TIMESTAMP = 0
 
-  # The number of micro seconds per second
+  # The number of micro seconds per second.
   MICRO_SECONDS_PER_SECOND = 1000000
+
+  # The number of microseconds per minute.
+  MICROSECONDS_PER_MINUTE = (60 * MICRO_SECONDS_PER_SECOND)
 
   # The multiplication factor to change milliseconds to micro seconds.
   MILLI_SECONDS_TO_MICRO_SECONDS = 1000
@@ -304,26 +307,6 @@ class Timestamp(object):
         posix_time > cls.TIMESTAMP_MAX_SECONDS):
       return 0
     return int(posix_time) * cls.MICRO_SECONDS_PER_SECOND
-
-  @classmethod
-  def FromPosixTimeWithMicrosecond(cls, posix_time, microsecond):
-    """Converts a POSIX timestamp with microsecond into a timestamp.
-
-    The POSIX time is a signed 32-bit or 64-bit value containing:
-      seconds since 1970-01-01 00:00:00
-
-    Args:
-      posix_time: The POSIX timestamp.
-      microsecond: The microseconds to add to the timestamp.
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
-    """
-    timestamp = cls.FromPosixTime(posix_time)
-    if not timestamp:
-      return 0
-    return timestamp + microsecond
 
   @classmethod
   def FromPythonDatetime(cls, datetime_object):

@@ -37,7 +37,7 @@ class KnowledgeBase(object):
   @property
   def codepage(self):
     """str: codepage of the current session."""
-    return self._values.get('codepage', self._codepage)
+    return self.GetValue('codepage', default_value=self._codepage)
 
   @property
   def hostname(self):
@@ -51,12 +51,12 @@ class KnowledgeBase(object):
   @property
   def platform(self):
     """str: platform of the current session."""
-    return self._values.get('guessed_os', '')
+    return self.GetValue('guessed_os', default_value='')
 
   @platform.setter
   def platform(self, value):
     """str: platform of the current session."""
-    self._values['guessed_os'] = value
+    self.SetValue('guessed_os', value)
 
   @property
   def timezone(self):
@@ -71,7 +71,7 @@ class KnowledgeBase(object):
   @property
   def year(self):
     """int: year of the current session."""
-    return self._values.get('year', 0)
+    return self.GetValue('year', default_value=0)
 
   def AddUserAccount(self, user_account, session_identifier=CURRENT_SESSION):
     """Adds an user account.
@@ -94,22 +94,22 @@ class KnowledgeBase(object):
 
     user_accounts[user_account.identifier] = user_account
 
-  def AddEnvironmentVariable(self, enviroment_variable):
+  def AddEnvironmentVariable(self, environment_variable):
     """Adds an environment variable.
 
     Args:
-      enviroment_variable (EnvironmentVariableArtifact): environment variable
+      environment_variable (EnvironmentVariableArtifact): environment variable
           artifact.
 
     Raises:
       KeyError: if the environment variable already exists.
     """
-    name = enviroment_variable.name.upper()
+    name = environment_variable.name.upper()
     if name in self._environment_variables:
       raise KeyError('Environment variable: {0:s} already exists.'.format(
-          enviroment_variable.name))
+          environment_variable.name))
 
-    self._environment_variables[name] = enviroment_variable
+    self._environment_variables[name] = environment_variable
 
   def GetEnvironmentVariable(self, name):
     """Retrieves an environment variable.
@@ -176,23 +176,25 @@ class KnowledgeBase(object):
     """
     system_configuration = artifacts.SystemConfigurationArtifact()
 
-    system_configuration.code_page = self._values.get(
-        'codepage', self._codepage)
+    system_configuration.code_page = self.GetValue(
+        'codepage', default_value=self._codepage)
 
     system_configuration.hostname = self._hostnames.get(
         session_identifier, None)
 
-    system_configuration.keyboard_layout = self._values.get(
-        'keyboard_layout', None)
-    system_configuration.operating_system = self._values.get(
-        'operating_system', None)
-    system_configuration.operating_system_product = self._values.get(
-        'operating_system_product', None)
-    system_configuration.operating_system_version = self._values.get(
-        'operating_system_version', None)
+    system_configuration.keyboard_layout = self.GetValue('keyboard_layout')
+    system_configuration.operating_system = self.GetValue('operating_system')
+    system_configuration.operating_system_product = self.GetValue(
+        'operating_system_product')
+    system_configuration.operating_system_version = self.GetValue(
+        'operating_system_version')
 
     date_time = datetime.datetime(2017, 1, 1)
     time_zone = self._time_zone.tzname(date_time)
+
+    if time_zone and isinstance(time_zone, py2to3.BYTES_TYPE):
+      time_zone = time_zone.decode('ascii')
+
     system_configuration.time_zone = time_zone
 
     user_accounts = self._user_accounts.get(session_identifier, {})
@@ -284,27 +286,46 @@ class KnowledgeBase(object):
       session_identifier (Optional[str])): session identifier, where
           CURRENT_SESSION represents the active session.
     """
+    if system_configuration.code_page:
+      try:
+        self.SetCodepage(system_configuration.code_page)
+      except ValueError:
+        logging.warning(
+            'Unsupported codepage: {0:s}, defaulting to {1:s}'.format(
+                system_configuration.code_page, self._codepage))
+
     self._hostnames[session_identifier] = system_configuration.hostname
+
+    self.SetValue('keyboard_layout', system_configuration.keyboard_layout)
+
+    self.SetValue('operating_system', system_configuration.operating_system)
+    self.SetValue(
+        'operating_system_product',
+        system_configuration.operating_system_product)
+    self.SetValue(
+        'operating_system_version',
+        system_configuration.operating_system_version)
+
+    if system_configuration.time_zone:
+      try:
+        self.SetTimeZone(system_configuration.time_zone)
+      except ValueError:
+        logging.warning(
+            'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
+                system_configuration.time_zone, self.timezone.zone))
 
     self._user_accounts[session_identifier] = {
         user_account.username: user_account
         for user_account in system_configuration.user_accounts}
-
-    if not system_configuration.time_zone:
-      return
-
-    try:
-      self.SetTimeZone(system_configuration.time_zone)
-    except ValueError:
-      logging.warning(
-          'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
-              system_configuration.time_zone, self.timezone.zone))
 
   def SetCodepage(self, codepage):
     """Sets the codepage.
 
     Args:
       codepage (str): codepage.
+
+    Raises:
+      ValueError: if the codepage is not supported.
     """
     try:
       codecs.getencoder(codepage)

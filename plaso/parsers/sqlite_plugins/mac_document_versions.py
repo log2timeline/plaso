@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for the Mac OS X Document Versions files."""
+"""Parser for the MacOS Document Versions files."""
 
 from __future__ import unicode_literals
 
@@ -12,11 +12,8 @@ from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-__author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
-
-
 class MacDocumentVersionsEventData(events.EventData):
-  """Mac OS X Document Versions database event data.
+  """MacOS Document Versions database event data.
 
   Attributes:
     name (str): name of the original file.
@@ -40,7 +37,7 @@ class MacDocumentVersionsEventData(events.EventData):
 
 
 class MacDocumentVersionsPlugin(interface.SQLitePlugin):
-  """Parse the Mac OS X Document Versions SQLite database.."""
+  """Parse the MacOS Document Versions SQLite database.."""
 
   NAME = 'mac_document_versions'
   DESCRIPTION = 'Parser for document revisions SQLite database files.'
@@ -85,14 +82,14 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
   ROOT_VERSION_PATH = '/.DocumentRevisions-V100/'
 
   def DocumentVersionsRow(
-      self, parser_mediator, row, query=None, **unused_kwargs):
+      self, parser_mediator, query, row, **unused_kwargs):
     """Parses a document versions row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 

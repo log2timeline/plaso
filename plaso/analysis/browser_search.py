@@ -11,7 +11,7 @@ import sys
 if sys.version_info[0] < 3:
   import urllib as urlparse
 else:
-  from urllib import parse as urlparse
+  from urllib import parse as urlparse # pylint: disable=no-name-in-module
 
 # pylint: disable=wrong-import-position
 from plaso.analysis import interface
@@ -110,7 +110,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     if 'q=' not in url:
       return
 
-    return self._GetBetweenQEqualsAndAmbersand(url).replace('+', ' ')
+    return self._GetBetweenQEqualsAndAmpersand(url).replace('+', ' ')
 
   def _ExtractGMailSearchQuery(self, url):
     """Extracts a search query from a GMail search URL.
@@ -146,7 +146,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     if 'q=' not in url:
       return
 
-    line = self._GetBetweenQEqualsAndAmbersand(url)
+    line = self._GetBetweenQEqualsAndAmpersand(url)
     if not line:
       return
 
@@ -169,7 +169,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     if 'search' not in url or 'q=' not in url:
       return
 
-    line = self._GetBetweenQEqualsAndAmbersand(url)
+    line = self._GetBetweenQEqualsAndAmpersand(url)
     if not line:
       return
 
@@ -224,9 +224,9 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     if 'search' not in url or 'q=' not in url:
       return
 
-    return self._GetBetweenQEqualsAndAmbersand(url).replace('+', ' ')
+    return self._GetBetweenQEqualsAndAmpersand(url).replace('+', ' ')
 
-  def _GetBetweenQEqualsAndAmbersand(self, url):
+  def _GetBetweenQEqualsAndAmpersand(self, url):
     """Retrieves the substring between the substrings 'q=' and '&'.
 
     Args:

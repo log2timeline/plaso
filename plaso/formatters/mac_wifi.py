@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The Mac OS X wifi.log file event formatter."""
+"""The MacOS wifi.log file event formatter."""
 
 from __future__ import unicode_literals
 

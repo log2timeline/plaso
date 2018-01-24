@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# Dependencies for running Plaso, alphabetized, one per line.
+# Dependencies for running plaso, alphabetized, one per line.
 # This should not include packages only required for testing or development.
 PYTHON2_DEPENDENCIES="PyYAML
                       libbde-python
@@ -58,16 +58,16 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python2-zmq
                       pytz";
 
-# Additional dependencies for running Plaso tests, alphabetized,
+# Additional dependencies for running plaso tests, alphabetized,
 # one per line.
 TEST_DEPENDENCIES="python-mock";
 
-# Additional dependencies for doing Plaso development, alphabetized,
+# Additional dependencies for doing plaso development, alphabetized,
 # one per line.
 DEVELOPMENT_DEPENDENCIES="python-sphinx
                           pylint";
 
-# Additional dependencies for doing Plaso debugging, alphabetized,
+# Additional dependencies for doing plaso debugging, alphabetized,
 # one per line.
 DEBUG_DEPENDENCIES="libbde-debuginfo
                     libesedb-debuginfo

@@ -1,23 +1,26 @@
 environment:
   matrix:
-    - PYTHON: "C:\\Python27"
+  - TARGET: python27
+    PYTHON: "C:\\Python27"
+  - TARGET: python36
+    PYTHON: "C:\\Python36"
+
+matrix:
+  allow_failures:
+  - TARGET: python36
 
 install:
-  - cmd: '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x86 /release'
-  - ps: "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12"
-  - ps: (new-object net.webclient).DownloadFile('https://bootstrap.pypa.io/get-pip.py', 'C:\Projects\get-pip.py')
-  - ps: (new-object net.webclient).DownloadFile('https://github.com/log2timeline/l2tbinaries/raw/master/win32/pywin32-220.win32-py2.7.exe', 'C:\Projects\pywin32-220.win32-py2.7.exe')
-  - ps: (new-object net.webclient).DownloadFile('https://github.com/log2timeline/l2tbinaries/raw/master/win32/WMI-1.4.9.win32.exe', 'C:\Projects\WMI-1.4.9.win32.exe')
-  - cmd: "%PYTHON%\\python.exe C:\\Projects\\get-pip.py"
-  - cmd: "%PYTHON%\\Scripts\\easy_install.exe C:\\Projects\\pywin32-220.win32-py2.7.exe"
-  - cmd: "%PYTHON%\\Scripts\\easy_install.exe C:\\Projects\\WMI-1.4.9.win32.exe"
-  - cmd: git clone https://github.com/log2timeline/l2tdevtools.git && move l2tdevtools ..\
-  - ps: (new-object net.webclient).DownloadFile('https://www.sqlite.org/2017/sqlite-dll-win32-x86-3180000.zip', 'C:\Projects\sqlite-dll-win32-x86-3180000.zip')
-  - ps: $Output = Invoke-Expression -Command "& 'C:\\Program Files\\7-Zip\\7z.exe' -y -oC:\\Projects\\ x C:\\Projects\\sqlite-dll-win32-x86-3180000.zip 2>&1"
-  - cmd: copy C:\Projects\sqlite3.dll C:\Python27\DLLs\
-  - cmd: mkdir dependencies && set PYTHONPATH=..\l2tdevtools && "%PYTHON%\\python.exe" ..\l2tdevtools\tools\update.py --download-directory dependencies --machine-type x86 --msi-targetdir "%PYTHON%" --track dev PyYAML XlsxWriter artifacts bencode binplist certifi chardet construct dateutil dfdatetime dfvfs dfwinreg dpkt efilter future hachoir-core hachoir-metadata hachoir-parser idna libbde libesedb libevt libevtx libewf libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm lzma pefile psutil pycrypto pyparsing pysqlite pytsk3 pytz pyzmq requests six urllib3 yara-python funcsigs mock pbr
+- cmd: '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x86 /release'
+- ps: "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12"
+- ps: (new-object net.webclient).DownloadFile('https://www.sqlite.org/2017/sqlite-dll-win32-x86-3180000.zip', 'C:\Projects\sqlite-dll-win32-x86-3180000.zip')
+- ps: $Output = Invoke-Expression -Command "& 'C:\\Program Files\\7-Zip\\7z.exe' -y -oC:\\Projects\\ x C:\\Projects\\sqlite-dll-win32-x86-3180000.zip 2>&1"
+- cmd: copy C:\Projects\sqlite3.dll C:\Python27\DLLs\
+- cmd: "%PYTHON%\\Scripts\\pip.exe install --upgrade pip"
+- cmd: "%PYTHON%\\Scripts\\pip.exe install pypiwin32 WMI"
+- cmd: git clone https://github.com/log2timeline/l2tdevtools.git ..\l2tdevtools
+- cmd: mkdir dependencies && set PYTHONPATH=..\l2tdevtools && "%PYTHON%\\python.exe" ..\l2tdevtools\tools\update.py --download-directory dependencies --machine-type x86 --msi-targetdir "%PYTHON%" --track dev PyYAML XlsxWriter artifacts bencode binplist certifi chardet construct dateutil dfdatetime dfvfs dfwinreg dpkt efilter funcsigs future hachoir-core hachoir-metadata hachoir-parser idna libbde libesedb libevt libevtx libewf libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm lzma mock pbr pefile psutil pycrypto pyparsing pysqlite pytsk3 pytz pyzmq requests six urllib3 yara-python
 
 build: off
 
 test_script:
-  - "%PYTHON%\\python.exe run_tests.py"
+- "%PYTHON%\\python.exe run_tests.py"

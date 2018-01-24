@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import logging
+import os
 
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import context
@@ -58,6 +59,16 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._storage_writer = storage_writer
     self._task = None
     self._task_queue = task_queue
+
+    if self._processing_configuration:
+      self._debug_output = self._processing_configuration.debug_output
+
+      if processing_configuration.log_filename:
+        log_path = os.path.dirname(self._processing_configuration.log_filename)
+        log_filename = os.path.basename(
+            self._processing_configuration.log_filename)
+        log_filename = '{0:s}_{1:s}'.format(self._name, log_filename)
+        self._log_filename = os.path.join(log_path, log_filename)
 
   def _GetStatus(self):
     """Retrieves status information.

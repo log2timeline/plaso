@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import pyolecf
 
 from plaso.containers import sessions
-from plaso.storage import fake_storage
+from plaso.storage.fake import writer as fake_writer
 
 from tests.parsers import test_lib
 
@@ -32,7 +32,7 @@ class OLECFPluginTestCase(test_lib.ParserTestCase):
       FakeStorageWriter: storage writer.
     """
     session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
 
     file_entry = self._GetTestFileEntry(path_segments)

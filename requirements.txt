@@ -7,8 +7,8 @@ binplist >= 0.1.4
 certifi >= 2016.9.26
 chardet >= 2.0.1
 construct >= 2.5.2,<= 2.5.3
-dfdatetime >= 20171109
-dfvfs >= 20171018
+dfdatetime >= 20180110
+dfvfs >= 20171230
 dfwinreg >= 20170521
 dpkt >= 1.8
 efilter == 1-1.5
@@ -24,7 +24,7 @@ libevtx-python >= 20141112
 libewf-python >= 20131210
 libfsntfs-python >= 20151130
 libfvde-python >= 20160719
-libfwnt-python >= 20160418
+libfwnt-python >= 20180117
 libfwsi-python >= 20150606
 liblnk-python >= 20150830
 libmsiecf-python >= 20150314

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the Mac OS X Document Versions plugin."""
+"""Tests for the MacOS Document Versions plugin."""
 
 from __future__ import unicode_literals
 
@@ -16,11 +16,11 @@ from tests.parsers.sqlite_plugins import test_lib
 
 
 class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
-  """Tests for the Mac OS X Document Versions plugin."""
+  """Tests for the MacOS Document Versions plugin."""
 
   @shared_test_lib.skipUnlessHasTestFile(['document_versions.sql'])
   def testProcess(self):
-    """Tests the Process function on a Mac OS X Document Versions file."""
+    """Tests the Process function on a MacOS Document Versions file."""
     plugin = mac_document_versions.MacDocumentVersionsPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['document_versions.sql'], plugin)

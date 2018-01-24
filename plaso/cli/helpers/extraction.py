@@ -34,13 +34,6 @@ class ExtractionArgumentsHelper(interface.ArgumentsHelper):
             'auto-detection.'))
 
     argument_group.add_argument(
-        '-p', '--preprocess', dest='preprocess', action='store_true',
-        default=False, help=(
-            'Turn on preprocessing. Preprocessing is turned on by default '
-            'when parsing image files, however if a mount point is being '
-            'parsed then this parameter needs to be set manually.'))
-
-    argument_group.add_argument(
         '--process_archives', '--process-archives', dest='process_archives',
         action='store_true', default=False, help=(
             'Process file entries embedded within archive files, such as '
@@ -70,15 +63,12 @@ class ExtractionArgumentsHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           'Configuration object is not an instance of CLITool')
 
-    preprocess = getattr(options, 'preprocess', False)
-
     preferred_year = cls._ParseNumericOption(options, 'preferred_year')
 
     process_archives = getattr(options, 'process_archives', False)
     process_compressed_streams = getattr(
         options, 'process_compressed_streams', True)
 
-    setattr(configuration_object, '_force_preprocessing', preprocess)
     setattr(configuration_object, '_preferred_year', preferred_year)
     setattr(configuration_object, '_process_archives', process_archives)
     setattr(

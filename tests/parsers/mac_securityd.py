@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""This file contains a unit test for ASL securityd log parser."""
+"""This file contains a unit test for MacOS securityd log parser."""
 
 from __future__ import unicode_literals
 
@@ -14,13 +14,13 @@ from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
-class MacSecurityUnitTest(test_lib.ParserTestCase):
-  """A unit test for the ASL securityd log parser."""
+class MacOSSecurityUnitTest(test_lib.ParserTestCase):
+  """A unit test for the MacOS securityd log parser."""
 
   @shared_test_lib.skipUnlessHasTestFile(['security.log'])
   def testParseFile(self):
-    """Test parsing of a ASL securityd log file."""
-    parser = mac_securityd.MacSecuritydLogParser()
+    """Test parsing of a MacOS securityd log file."""
+    parser = mac_securityd.MacOSSecuritydLogParser()
     knowledge_base_values = {'year': 2013}
     storage_writer = self._ParseFile(
         ['security.log'], parser,

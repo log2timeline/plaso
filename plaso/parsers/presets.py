@@ -14,7 +14,7 @@ CATEGORIES = {
     'winxp': ['recycle_bin_info2', 'rplog', 'win_gen', 'winevt'],
     'winxp_slow': ['hachoir', 'mft', 'winxp'],
     'win7': [
-        'recycle_bin', 'custom_destinations', 'esedb/esedb_file_history',
+        'recycle_bin', 'custom_destinations', 'esedb/file_history',
         'olecf/olecf_automatic_destinations', 'win_gen', 'winevtx',
         'amcache'],
     'win7_slow': ['hachoir', 'mft', 'win7'],
@@ -31,7 +31,7 @@ CATEGORIES = {
         'popularity_contest', 'selinux', 'sqlite/skype', 'syslog',
         'systemd_journal', 'utmp', 'webhist', 'xchatlog', 'xchatscrollback',
         'sqlite/zeitgeist', 'zsh_extended_history'],
-    'macosx': [
+    'macos': [
         'sqlite/appusage', 'asl_log', 'bash_history', 'bencode', 'bsm_log',
         'cups_ipp', 'filestat', 'sqlite/google_drive', 'sqlite/imessage',
         'java_idx', 'sqlite/ls_quarantine', 'mac_appfirewall_log',

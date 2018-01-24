@@ -1,0 +1,9 @@
+Application Execution
+  data_type is 'windows:prefetch'
+
+Invalid Tag
+  some text here
+
+Partially Valid Tag
+  filename contains '/tmp/whoaaaa'
+  some other invalid text.

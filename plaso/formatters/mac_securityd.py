@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The Mac OS X securityd log file event formatter."""
+"""The MacOS securityd log file event formatter."""
 
 from __future__ import unicode_literals
 
@@ -7,8 +7,8 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class MacSecuritydLogFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a securityd log event."""
+class MacOSSecuritydLogFormatter(interface.ConditionalEventFormatter):
+  """Formatter for a MacOS securityd log event."""
 
   DATA_TYPE = 'mac:securityd:line'
 
@@ -25,4 +25,4 @@ class MacSecuritydLogFormatter(interface.ConditionalEventFormatter):
   SOURCE_SHORT = 'LOG'
 
 
-manager.FormattersManager.RegisterFormatter(MacSecuritydLogFormatter)
+manager.FormattersManager.RegisterFormatter(MacOSSecuritydLogFormatter)

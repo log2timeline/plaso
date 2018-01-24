@@ -63,15 +63,16 @@ class SQLiteCache(plugins.BasePluginCache):
           be stored directly, otherwise the value will be a list containing
           the extracted results based on the names provided in this list.
     """
-    attribute_value = {}
-
     row = sql_results.fetchone()
+    if not row:
+      return
 
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
     keys_name_to_index_map = {
         name: index for index, name in enumerate(row.keys())}
 
+    attribute_value = {}
     while row:
       value_index = keys_name_to_index_map.get(key_name)
       key_value = row[value_index]

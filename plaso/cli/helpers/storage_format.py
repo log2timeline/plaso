@@ -16,8 +16,6 @@ class StorageFormatArgumentsHelper(interface.ArgumentsHelper):
   NAME = 'storage_format'
   DESCRIPTION = 'Storage format command line arguments.'
 
-  _DEFAULT_STORAGE_FORMAT = definitions.STORAGE_FORMAT_ZIP
-
   @classmethod
   def AddArguments(cls, argument_group):
     """Adds command line arguments to an argument group.
@@ -34,10 +32,11 @@ class StorageFormatArgumentsHelper(interface.ArgumentsHelper):
     argument_group.add_argument(
         '--storage_format', '--storage-format', action='store',
         choices=storage_formats, dest='storage_format', type=str,
-        metavar='FORMAT', default=cls._DEFAULT_STORAGE_FORMAT, help=(
+        metavar='FORMAT', default=definitions.DEFAULT_STORAGE_FORMAT, help=(
             'Format of the storage file, the default is: {0:s}. Supported '
             'options: {1:s}'.format(
-                cls._DEFAULT_STORAGE_FORMAT, ', '.join(storage_formats))))
+                definitions.DEFAULT_STORAGE_FORMAT,
+                ', '.join(storage_formats))))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):

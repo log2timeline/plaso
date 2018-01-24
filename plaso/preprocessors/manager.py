@@ -35,7 +35,7 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
 
   def _CreateWindowsPathResolver(
       self, file_system, mount_point, environment_variables):
-    """Create a Windows path resolver and sets the evironment variables.
+    """Create a Windows path resolver and sets the environment variables.
 
     Args:
       file_system (dfvfs.FileSytem): file system.
@@ -66,7 +66,7 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
     """Opens the Windows Registry file specified by the path specification.
 
     Args:
-      path_specification (dfvfs.PathSpec): path specfication.
+      path_specification (dfvfs.PathSpec): path specification.
       ascii_codepage (Optional[str]): ASCII string codepage.
 
     Returns:
@@ -119,7 +119,7 @@ class PreprocessPluginsManager(object):
 
   _plugins = {}
   _file_system_plugins = {}
-  _registry_value_plugins = {}
+  _windows_registry_plugins = {}
 
   @classmethod
   def CollectFromFileSystem(
@@ -164,7 +164,7 @@ class PreprocessPluginsManager(object):
       searcher (dfwinreg.WinRegistrySearcher): Windows Registry searcher to
           preprocess the Windows Registry.
     """
-    for preprocess_plugin in cls._registry_value_plugins.values():
+    for preprocess_plugin in cls._windows_registry_plugins.values():
       artifact_definition = artifacts_registry.GetDefinitionByName(
           preprocess_plugin.ARTIFACT_DEFINITION_NAME)
       if not artifact_definition:
@@ -202,8 +202,8 @@ class PreprocessPluginsManager(object):
     if name in cls._file_system_plugins:
       del cls._file_system_plugins[name]
 
-    if name in cls._registry_value_plugins:
-      del cls._registry_value_plugins[name]
+    if name in cls._windows_registry_plugins:
+      del cls._windows_registry_plugins[name]
 
   @classmethod
   def GetNames(cls):
@@ -242,8 +242,8 @@ class PreprocessPluginsManager(object):
 
     elif isinstance(
         preprocess_plugin,
-        interface.WindowsRegistryValueArtifactPreprocessorPlugin):
-      cls._registry_value_plugins[name] = preprocess_plugin
+        interface.WindowsRegistryKeyArtifactPreprocessorPlugin):
+      cls._windows_registry_plugins[name] = preprocess_plugin
 
   @classmethod
   def RegisterPlugins(cls, plugin_classes):

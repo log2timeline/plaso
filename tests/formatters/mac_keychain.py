@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the Mac OS X keychain password database file event formatter."""
+"""Tests for the MacOS keychain password database file event formatter."""
 
 from __future__ import unicode_literals
 

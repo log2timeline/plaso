@@ -52,6 +52,14 @@ plaso\.lib\.line\_reader\_file module
     :undoc-members:
     :show-inheritance:
 
+plaso\.lib\.loggers module
+--------------------------
+
+.. automodule:: plaso.lib.loggers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso\.lib\.objectfilter module
 -------------------------------
 

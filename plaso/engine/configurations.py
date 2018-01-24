@@ -173,6 +173,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
     extraction (ExtractionConfiguration): extraction configuration.
     filter_file (str): path to a file with find specifications.
     input_source (InputSourceConfiguration): input source configuration.
+    log_filename (str): name of the log file.
     parser_filter_expression (str): parser filter expression,
         where None represents all parsers and plugins.
     preferred_year (int): preferred initial year value for year-less date and
@@ -192,6 +193,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
     self.extraction = ExtractionConfiguration()
     self.filter_file = None
     self.input_source = InputSourceConfiguration()
+    self.log_filename = None
     self.parser_filter_expression = None
     self.preferred_year = None
     self.profiling = ProfilingConfiguration()

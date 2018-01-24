@@ -3,18 +3,12 @@
 
 from __future__ import unicode_literals
 
-from dfdatetime import posix_time as dfdatetime_posix_time
-
 from plaso.containers import plist_event
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.lib import timelib
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
-
-
-__author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
 class AppleAccountPlugin(interface.PlistPlugin):
@@ -75,11 +69,8 @@ class AppleAccountPlugin(interface.PlistPlugin):
         event_data.desc = 'Configured Apple account {0:s}'.format(
             general_description)
 
-        timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
-        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-            timestamp=timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+        event = time_events.PythonDatetimeEvent(
+            datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       datetime_value = account.get('LastSuccessfulConnect', None)
@@ -87,11 +78,8 @@ class AppleAccountPlugin(interface.PlistPlugin):
         event_data.desc = 'Connected Apple account {0:s}'.format(
             general_description)
 
-        timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
-        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-            timestamp=timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+        event = time_events.PythonDatetimeEvent(
+            datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       datetime_value = account.get('ValidationDate', None)
@@ -99,11 +87,8 @@ class AppleAccountPlugin(interface.PlistPlugin):
         event_data.desc = 'Last validation Apple account {0:s}'.format(
             general_description)
 
-        timestamp = timelib.Timestamp.FromPythonDatetime(datetime_value)
-        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-            timestamp=timestamp)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+        event = time_events.PythonDatetimeEvent(
+            datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

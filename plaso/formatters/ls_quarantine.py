@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The Mac OS X launch services (LS) quarantine event formatter."""
+"""The MacOS launch services (LS) quarantine event formatter."""
 
 from __future__ import unicode_literals
 

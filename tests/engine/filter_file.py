@@ -30,7 +30,7 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
     """Tests the BuildFindSpecsFromFile function."""
     filter_file_path = ''
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-      filter_file_path = temp_file.name
+      test_filter_file = filter_file.FilterFile(temp_file.name)
       # 2 hits.
       temp_file.write(b'/test_data/testdir/filter_.+.txt\n')
       # A single hit.
@@ -48,8 +48,8 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='SystemRoot', value='C:\\Windows')
 
-    find_specs = filter_file.BuildFindSpecsFromFile(
-        filter_file_path, environment_variables=[environment_variable])
+    find_specs = test_filter_file.BuildFindSpecs(
+        environment_variables=[environment_variable])
 
     try:
       os.remove(filter_file_path)
@@ -75,7 +75,8 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(path_specs), 6)
 
     with self.assertRaises(IOError):
-      filter_file.BuildFindSpecsFromFile('thisfiledoesnotexist')
+      test_filter_file = filter_file.FilterFile('thisfiledoesnotexist')
+      test_filter_file.BuildFindSpecs()
 
     file_system.Close()
 

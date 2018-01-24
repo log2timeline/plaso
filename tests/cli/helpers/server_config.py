@@ -17,7 +17,7 @@ class MockOutputModule(object):
   """Mock output module for testing.
 
   Attributes:
-    hostname (str): hostname or IP address of the databse server.
+    hostname (str): hostname or IP address of the database server.
     port (int): port number of the database server.
   """
 
@@ -31,7 +31,7 @@ class MockOutputModule(object):
     """Sets the server information.
 
     Args:
-      server (str): hostname or IP address of the databse server.
+      server (str): hostname or IP address of the database server.
       port (int): port number of the database server.
     """
     self.hostname = server

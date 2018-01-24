@@ -43,11 +43,14 @@ class MultiProcessEngine(engine.BaseEngine):
   def __init__(self):
     """Initializes a multi-process engine."""
     super(MultiProcessEngine, self).__init__()
+    self._debug_output = False
     self._name = 'Main'
+    self._log_filename = None
     self._pid = os.getpid()
     self._process_information = process_info.ProcessInfo(self._pid)
     self._process_information_per_pid = {}
     self._processes_per_pid = {}
+    self._quiet_mode = False
     self._rpc_clients_per_pid = {}
     self._rpc_errors_per_pid = {}
     self._status_update_active = False
@@ -184,23 +187,6 @@ class MultiProcessEngine(engine.BaseEngine):
             'Unable to create replacement worker process for: {0:s}'.format(
                 process.name))
 
-  def _QueryProcessStatus(self, process):
-    """Queries a process to determine its status.
-
-    Args:
-      process (MultiProcessBaseProcess): process to query for its status.
-
-    Returns:
-      dict[str, str]: status values received from the worker process.
-    """
-    process_is_alive = process.is_alive()
-    if process_is_alive:
-      rpc_client = self._rpc_clients_per_pid.get(process.pid, None)
-      process_status = rpc_client.CallFunction()
-    else:
-      process_status = None
-    return process_status
-
   def _KillProcess(self, pid):
     """Issues a SIGKILL or equivalent to the process.
 
@@ -220,6 +206,23 @@ class MultiProcessEngine(engine.BaseEngine):
       except OSError as exception:
         logging.error('Unable to kill process {0:d} with error: {1!s}'.format(
             pid, exception))
+
+  def _QueryProcessStatus(self, process):
+    """Queries a process to determine its status.
+
+    Args:
+      process (MultiProcessBaseProcess): process to query for its status.
+
+    Returns:
+      dict[str, str]: status values received from the worker process.
+    """
+    process_is_alive = process.is_alive()
+    if process_is_alive:
+      rpc_client = self._rpc_clients_per_pid.get(process.pid, None)
+      process_status = rpc_client.CallFunction()
+    else:
+      process_status = None
+    return process_status
 
   def _RaiseIfNotMonitored(self, pid):
     """Raises if the process is not monitored by the engine.

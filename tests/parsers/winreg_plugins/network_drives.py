@@ -31,7 +31,7 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
       dfwinreg.WinRegistryKey: Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromString(time_string)
+    filetime.CopyFromDateTimeString(time_string)
     registry_key = dfwinreg_fake.FakeWinRegistryKey(
         'Network', key_path=key_path,
         last_written_time=filetime.timestamp, offset=153)

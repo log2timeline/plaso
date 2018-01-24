@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for the Mac OS X application usage.
+"""This file contains a parser for the MacOS application usage.
 
 The application usage is stored in SQLite database files named
 /var/db/application_usage.sqlite
@@ -15,8 +15,8 @@ from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class MacOSXApplicationUsageEventData(events.EventData):
-  """Mac OS X application usage event data.
+class MacOSApplicationUsageEventData(events.EventData):
+  """MacOS application usage event data.
 
   Attributes:
     application (str): name of the application.
@@ -29,7 +29,7 @@ class MacOSXApplicationUsageEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSXApplicationUsageEventData, self).__init__(
+    super(MacOSApplicationUsageEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.application = None
     self.app_version = None
@@ -53,7 +53,7 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
   """
 
   NAME = 'appusage'
-  DESCRIPTION = 'Parser for Mac OS X application usage SQLite database files.'
+  DESCRIPTION = 'Parser for MacOS application usage SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [(
@@ -71,14 +71,14 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
           'number_times INTEGER DEFAULT 0, PRIMARY KEY (event, bundle_id))')}]
 
   def ParseApplicationUsageRow(
-      self, parser_mediator, row, query=None, **unused_kwargs):
+      self, parser_mediator, query, row, **unused_kwargs):
     """Parses an application usage row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 
@@ -87,7 +87,7 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
     application_name = self._GetRowValue(query_hash, row, 'event')
     usage = 'Application {0:s}'.format(application_name)
 
-    event_data = MacOSXApplicationUsageEventData()
+    event_data = MacOSApplicationUsageEventData()
     event_data.application = self._GetRowValue(query_hash, row, 'app_path')
     event_data.app_version = self._GetRowValue(query_hash, row, 'app_version')
     event_data.bundle_id = self._GetRowValue(query_hash, row, 'bundle_id')

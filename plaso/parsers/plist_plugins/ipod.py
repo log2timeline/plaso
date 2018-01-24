@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
@@ -47,8 +46,8 @@ class IPodPlugin(interface.PlistPlugin):
     """
     devices = match.get('Devices', {})
     for device_identifier, device_information in iter(devices.items()):
-      connected_time = device_information.get('Connected', None)
-      if not connected_time:
+      datetime_value = device_information.get('Connected', None)
+      if not datetime_value:
         continue
 
       event_data = IPodPlistEventData()
@@ -61,9 +60,8 @@ class IPodPlugin(interface.PlistPlugin):
         attribute_name = key.lower().replace(' ', '_')
         setattr(event_data, attribute_name, value)
 
-      timestamp = timelib.Timestamp.FromPythonDatetime(connected_time)
-      event = time_events.TimestampEvent(
-          timestamp, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
+      event = time_events.PythonDatetimeEvent(
+          datetime_value, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

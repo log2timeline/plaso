@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the Mac OS X wifi.log file event formatter."""
+"""Tests for the MacOS wifi.log file event formatter."""
 
 from __future__ import unicode_literals
 
@@ -41,7 +41,7 @@ class MacWifiLogFormatterTest(test_lib.EventFormatterTestCase):
   def testGetMessages(self):
     """Tests the GetMessages method."""
     date_time = dfdatetime_time_elements.TimeElements()
-    date_time.CopyFromString('2016-11-14 20:36:37.222')
+    date_time.CopyFromDateTimeString('2016-11-14 20:36:37.222')
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
@@ -62,7 +62,7 @@ class MacWifiLogFormatterTest(test_lib.EventFormatterTestCase):
     self.assertEqual(messages, expected_messages)
 
     date_time = dfdatetime_time_elements.TimeElements()
-    date_time.CopyFromString('2017-01-02 00:10:15')
+    date_time.CopyFromDateTimeString('2017-01-02 00:10:15')
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_MODIFICATION)

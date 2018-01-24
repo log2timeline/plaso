@@ -30,7 +30,7 @@ class DependencyDefinition(object):
   """
 
   def __init__(self, name):
-    """Initializes a dependency configuation.
+    """Initializes a dependency configuration.
 
     Args:
       name (str): name of the dependency.
@@ -334,7 +334,7 @@ class DependencyHelper(object):
       else:
         result, status_message = self._CheckPythonModule(dependency)
 
-      if not result:
+      if not result and not dependency.is_optional:
         check_result = False
 
       self._PrintCheckDependencyStatus(

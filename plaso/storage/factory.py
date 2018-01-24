@@ -3,12 +3,28 @@
 
 from __future__ import unicode_literals
 
-from plaso.storage import sqlite_file as storage_sqlite_file
-from plaso.storage import zip_file as storage_zip_file
+from plaso.lib import definitions
+from plaso.storage.sqlite import reader as sqlite_reader
+from plaso.storage.sqlite import sqlite_file
+from plaso.storage.sqlite import writer as sqlite_writer
 
 
 class StorageFactory(object):
   """Storage factory."""
+
+  @classmethod
+  def CreateStorageFile(cls, storage_format):
+    """Creates a storage file.
+
+    Args:
+      storage_format (str): storage format.
+
+    Returns:
+      StorageFile: a storage file or None if the storage file cannot be
+          opened or the storage format is not supported.
+    """
+    if storage_format == definitions.STORAGE_FORMAT_SQLITE:
+      return sqlite_file.SQLiteStorageFile()
 
   @classmethod
   def CreateStorageFileForFile(cls, path):
@@ -21,11 +37,8 @@ class StorageFactory(object):
       StorageFile: a storage file or None if the storage file cannot be
           opened or the storage format is not supported.
     """
-    if storage_sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
-      return storage_sqlite_file.SQLiteStorageFile()
-
-    elif storage_zip_file.ZIPStorageFile.CheckSupportedFormat(path):
-      return storage_zip_file.ZIPStorageFile()
+    if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
+      return sqlite_file.SQLiteStorageFile()
 
   @classmethod
   def CreateStorageReaderForFile(cls, path):
@@ -38,11 +51,24 @@ class StorageFactory(object):
       StorageReader: a storage reader or None if the storage file cannot be
           opened or the storage format is not supported.
     """
-    if storage_sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
-      return storage_sqlite_file.SQLiteStorageFileReader(path)
+    if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
+      return sqlite_reader.SQLiteStorageFileReader(path)
 
-    elif storage_zip_file.ZIPStorageFile.CheckSupportedFormat(path):
-      return storage_zip_file.ZIPStorageFileReader(path)
+  @classmethod
+  def CreateStorageWriter(cls, storage_format, session, path):
+    """Creates a storage writer.
+
+    Args:
+      session (Session): session the storage changes are part of.
+      path (str): path to the storage file.
+      storage_format (str): storage format.
+
+    Returns:
+      StorageWriter: a storage writer or None if the storage file cannot be
+          opened or the storage format is not supported.
+    """
+    if storage_format == definitions.STORAGE_FORMAT_SQLITE:
+      return sqlite_writer.SQLiteStorageFileWriter(session, path)
 
   @classmethod
   def CreateStorageWriterForFile(cls, session, path):
@@ -56,8 +82,5 @@ class StorageFactory(object):
       StorageWriter: a storage writer or None if the storage file cannot be
           opened or the storage format is not supported.
     """
-    if storage_sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
-      return storage_sqlite_file.SQLiteStorageFileWriter(session, path)
-
-    elif storage_zip_file.ZIPStorageFile.CheckSupportedFormat(path):
-      return storage_zip_file.ZIPStorageFileWriter(session, path)
+    if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
+      return sqlite_writer.SQLiteStorageFileWriter(session, path)

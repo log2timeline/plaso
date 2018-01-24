@@ -12,6 +12,7 @@ from plaso.cli import pinfo_tool
 from plaso.lib import errors
 from plaso.lib import timelib
 
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
@@ -31,13 +32,15 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
   # TODO: add test for _PrintTasksInformation.
   # TODO: add test for _PrintStorageInformationAsText.
 
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testCompareStores(self):
     """Tests the CompareStores function."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
-    test_file1 = self._GetTestFilePath(['psort_test.json.plaso'])
-    test_file2 = self._GetTestFilePath(['pinfo_test.json.plaso'])
+    test_file1 = self._GetTestFilePath(['psort_test.plaso'])
+    test_file2 = self._GetTestFilePath(['pinfo_test.plaso'])
 
     options = test_lib.TestOptions()
     options.compare_storage_file = test_file1
@@ -72,13 +75,14 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     # TODO: check output.
     # TODO: improve test coverage.
 
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.plaso'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
-    options.storage_file = self._GetTestFilePath(['pinfo_test.json.plaso'])
+    options.storage_file = self._GetTestFilePath(['pinfo_test.plaso'])
 
     test_tool.ParseOptions(options)
 
@@ -89,24 +93,25 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 
     # TODO: improve test coverage.
 
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.plaso'])
   def testPrintStorageInformationAsText(self):
     """Tests the _PrintStorageInformationAsText function."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
-    test_filename = 'pinfo_test.json.plaso'
+    test_filename = 'pinfo_test.plaso'
     format_version = '20170707'
-    plaso_version = '20170819'
-    session_identifier = 'ec42c87f-79ce-4b8b-bd5c-686d78ef0486'
-    session_start_time = '2017-08-20T10:35:30.291759+00:00'
-    session_completion_time = '2017-08-20T10:35:31.088995+00:00'
+    plaso_version = '20171228'
+    session_identifier = 'd280b33c-845b-4e8b-b3d0-b33da11b180b'
+    session_start_time = '2017-12-28T20:06:34.578880+00:00'
+    session_completion_time = '2017-12-28T20:06:35.367057+00:00'
 
     command_line_arguments = (
         './tools/log2timeline.py --partition=all --quiet '
         'pinfo_test.json.plaso test_data/tsk_volume_system.raw')
 
     enabled_parser_names = ', '.join([
-        'android_app_usage', 'asl_log', 'bash', 'bencode',
+        'amcache', 'android_app_usage', 'asl_log', 'bash', 'bencode',
         'bencode/bencode_transmission', 'bencode/bencode_utorrent',
         'binary_cookies', 'bsm_log', 'chrome_cache', 'chrome_preferences',
         'cups_ipp', 'custom_destinations', 'dockerjson', 'dpkg', 'esedb',
@@ -124,7 +129,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
         'plist/spotlight_volume', 'plist/time_machine', 'pls_recall',
         'popularity_contest', 'prefetch', 'recycle_bin',
         'recycle_bin_info2', 'rplog', 'sccm', 'selinux', 'skydrive_log',
-        'skydrive_log_old', 'sqlite', 'sqlite/android_calls',
+        'skydrive_log_old', 'sophos_av', 'sqlite', 'sqlite/android_calls',
         'sqlite/android_sms', 'sqlite/android_webview',
         'sqlite/android_webviewcache', 'sqlite/appusage',
         'sqlite/chrome_cookies', 'sqlite/chrome_extension_activity',
@@ -216,12 +221,13 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     # differences.
     self.assertEqual(output.split(b'\n'), expected_output.split(b'\n'))
 
+  @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.plaso'])
   def testPrintStorageInformationAsJSON(self):
     """Tests the _PrintStorageInformationAsJSON function."""
-    test_filename = 'pinfo_test.json.plaso'
-    session_identifier = 'ec42c87f79ce4b8bbd5c686d78ef0486'
+    test_filename = 'pinfo_test.plaso'
+    session_identifier = 'd280b33c845b4e8bb3d0b33da11b180b'
     session_start_time = timelib.Timestamp.CopyFromString(
-        '2017-08-20 10:35:30.291759')
+        '2017-12-28 20:06:34.578880')
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
     test_file = self._GetTestFilePath([test_filename])

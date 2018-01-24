@@ -14,9 +14,6 @@ from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
-__author__ = 'Petter Bjelland (petter.bjelland@gmail.com)'
-
-
 class FirefoxCacheParserTest(test_lib.ParserTestCase):
   """A unit test for the FirefoxCacheParser."""
 

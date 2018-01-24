@@ -12,7 +12,7 @@ import unittest
 from plaso.cli import log2timeline_tool
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.storage import zip_file as storage_zip_file
+from plaso.storage.sqlite import sqlite_file
 
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
@@ -113,7 +113,7 @@ optional arguments:
     options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
     options.source = self._GetTestFilePath(['testdir'])
     options.storage_file = 'storage.plaso'
-    options.storage_format = definitions.STORAGE_FORMAT_ZIP
+    options.storage_format = definitions.STORAGE_FORMAT_SQLITE
 
     test_tool.ParseOptions(options)
 
@@ -147,7 +147,7 @@ optional arguments:
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
-      options.storage_format = definitions.STORAGE_FORMAT_ZIP
+      options.storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 
@@ -181,7 +181,7 @@ optional arguments:
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
-      options.storage_format = definitions.STORAGE_FORMAT_ZIP
+      options.storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 
@@ -214,7 +214,7 @@ optional arguments:
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
-      options.storage_format = definitions.STORAGE_FORMAT_ZIP
+      options.storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 
@@ -249,7 +249,7 @@ optional arguments:
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
-      options.storage_format = definitions.STORAGE_FORMAT_ZIP
+      options.storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 
@@ -283,7 +283,7 @@ optional arguments:
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
-      options.storage_format = definitions.STORAGE_FORMAT_ZIP
+      options.storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 
@@ -320,7 +320,7 @@ optional arguments:
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
-      options.storage_format = definitions.STORAGE_FORMAT_ZIP
+      options.storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 
@@ -354,7 +354,7 @@ optional arguments:
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
-      options.storage_format = definitions.STORAGE_FORMAT_ZIP
+      options.storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 
@@ -388,7 +388,7 @@ optional arguments:
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
-      options.storage_format = definitions.STORAGE_FORMAT_ZIP
+      options.storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 
@@ -422,13 +422,13 @@ optional arguments:
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
-      options.storage_format = definitions.STORAGE_FORMAT_ZIP
+      options.storage_format = definitions.STORAGE_FORMAT_SQLITE
 
       test_tool.ParseOptions(options)
 
       test_tool.ExtractEventsFromSources()
 
-      storage_file = storage_zip_file.ZIPStorageFile()
+      storage_file = sqlite_file.SQLiteStorageFile()
       try:
         storage_file.Open(path=options.storage_file, read_only=True)
       except IOError as exception:

@@ -28,6 +28,14 @@ plaso\.parsers\.esedb\_plugins\.msie\_webcache module
     :undoc-members:
     :show-inheritance:
 
+plaso\.parsers\.esedb\_plugins\.srum module
+-------------------------------------------
+
+.. automodule:: plaso.parsers.esedb_plugins.srum
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

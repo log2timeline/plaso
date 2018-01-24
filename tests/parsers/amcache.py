@@ -11,9 +11,6 @@ from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 from plaso.parsers import amcache
 
-__author__ = 'Ramses de Beer, rbdebeer@google.com'
-
-
 class AmcacheParserTest(test_lib.ParserTestCase):
   """Tests for the Amcache Registry plugin."""
 

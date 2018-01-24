@@ -40,7 +40,7 @@ class TaggingAnalysisArgumentsHelper(interface.ArgumentsHelper):
 
     Args:
       options (argparse.Namespace): parser options.
-      output_module (OutputModule): output module to configure.
+      analysis_plugin (AnalysisPlugin): analysis plugin to configure.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
@@ -51,20 +51,33 @@ class TaggingAnalysisArgumentsHelper(interface.ArgumentsHelper):
           'Analysis plugin is not an instance of TaggingAnalysisPlugin')
 
     tagging_file = cls._ParseStringOption(options, 'tagging_file')
-    if tagging_file:
-      if not os.path.exists(tagging_file) or not os.path.isfile(tagging_file):
-        # Check if the file exists in the data location path.
-        data_location = getattr(options, 'data_location', None)
-        if data_location:
-          new_tagging_path = os.path.join(data_location, tagging_file)
-          if os.path.exists(new_tagging_path) and os.path.isfile(
-              new_tagging_path):
-            analysis_plugin.SetAndLoadTagFile(new_tagging_path)
-            return
+    if not tagging_file:
+      raise errors.BadConfigOption(
+          'Tagging analysis plugin requires a tagging file.')
 
-        raise errors.BadConfigOption(
-            'Tagging file {0:s} does not exist.'.format(tagging_file))
-      analysis_plugin.SetAndLoadTagFile(tagging_file)
+    tagging_file_path = tagging_file
+    if not os.path.isfile(tagging_file_path):
+      # Check if the file exists in the data location path.
+      data_location = getattr(options, 'data_location', None)
+      if data_location:
+        tagging_file_path = os.path.join(data_location, tagging_file)
+
+    if not os.path.isfile(tagging_file_path):
+      raise errors.BadConfigOption(
+          'No such tagging file: {0:s}.'.format(tagging_file))
+
+    try:
+      analysis_plugin.SetAndLoadTagFile(tagging_file_path)
+
+    except UnicodeDecodeError:
+      raise errors.BadConfigOption(
+          'Invalid tagging file: {0:s} encoding must be UTF-8.'.format(
+              tagging_file))
+
+    except errors.TaggingFileError as exception:
+      raise errors.BadConfigOption(
+          'Unable to read tagging file: {0:s} with error: {1!s}'.format(
+              tagging_file, exception))
 
 
 manager.ArgumentHelperManager.RegisterHelper(TaggingAnalysisArgumentsHelper)

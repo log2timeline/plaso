@@ -31,6 +31,7 @@ from plaso.engine import engine
 from plaso.engine import knowledge_base
 from plaso.filters import manager as filters_manager
 from plaso.lib import errors
+from plaso.lib import loggers
 from plaso.lib import timelib
 from plaso.multi_processing import psort
 from plaso.storage import factory as storage_factory
@@ -295,14 +296,13 @@ class PsortTool(
             'Maximum amount of memory a worker process is allowed to consume, '
             'where 0 represents no limit [defaults to 2 GiB].'))
 
-
   def ParseArguments(self):
     """Parses the command line arguments.
 
     Returns:
       bool: True if the arguments were successfully parsed.
     """
-    self._ConfigureLogging()
+    loggers.ConfigureLogging()
 
     argument_parser = argparse.ArgumentParser(
         description=self.DESCRIPTION, add_help=False,
@@ -396,6 +396,10 @@ class PsortTool(
 
       return False
 
+    loggers.ConfigureLogging(
+        debug_output=self._debug_mode, filename=self._log_file,
+        quiet_mode=self._quiet_mode)
+
     return True
 
   def ParseOptions(self, options):
@@ -444,21 +448,6 @@ class PsortTool(
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['event_filters'])
 
-    format_string = (
-        '%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
-        '<%(module)s> %(message)s')
-
-    if self._debug_mode:
-      logging_level = logging.DEBUG
-    elif self._quiet_mode:
-      logging_level = logging.WARNING
-    else:
-      logging_level = logging.INFO
-
-    self._ConfigureLogging(
-        filename=self._log_file, format_string=format_string,
-        log_level=logging_level)
-
     self._deduplicate_events = getattr(options, 'dedup', True)
 
     if self._data_location:
@@ -505,9 +494,8 @@ class PsortTool(
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
     if not storage_reader:
-      logging.error(
-          'Format of storage file: {0:s} not supported'.format(
-              self._storage_file_path))
+      logging.error('Format of storage file: {0:s} not supported'.format(
+          self._storage_file_path))
       return
 
     self._number_of_analysis_reports = (

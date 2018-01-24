@@ -19,9 +19,6 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-__author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
-
-
 class UtmpEventData(events.EventData):
   """UTMP event data.
 

@@ -68,6 +68,14 @@ plaso\.analysis\.nsrlsvr module
     :undoc-members:
     :show-inheritance:
 
+plaso\.analysis\.sessionize module
+----------------------------------
+
+.. automodule:: plaso.analysis.sessionize
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso\.analysis\.tagging module
 -------------------------------
 

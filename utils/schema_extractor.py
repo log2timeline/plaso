@@ -16,7 +16,10 @@ import os
 import sys
 import textwrap
 
-import pyperclip  # pylint: disable=import-error
+try:
+  import pyperclip
+except ImportError:
+  paperclip = None
 
 # Change PYTHONPATH to include plaso.
 sys.path.insert(0, '.')
@@ -63,7 +66,7 @@ class SQLiteSchemaExtractor(object):
       schema (dict[str, str]): schema as an SQL query per table name.
 
     Returns:
-      str: schema formated as word-wrapped string.
+      str: schema formatted as word-wrapped string.
     """
     textwrapper = textwrap.TextWrapper()
     textwrapper.break_long_words = False
@@ -95,13 +98,20 @@ class SQLiteSchemaExtractor(object):
 if __name__ == '__main__':
   argument_parser = argparse.ArgumentParser()
 
+  if paperclip:
+    argument_parser.add_argument(
+        '--to-clipboard', '--to_clipboard', dest='to_clipboard',
+        action='store_true', default=False, help=(
+            'copy the database schema to the clipboard instead of writing '
+            'to stdout.'))
+
   argument_parser.add_argument(
       'database_path', type=str,
-      help='The path to the database file to extract schema from.')
+      help='path to the database file to extract schema from.')
 
   argument_parser.add_argument(
       'wal_path', type=str, nargs='?', default=None,
-      help='Optional path to a WAL file to commit into the database.')
+      help='optional path to a WAL file to commit into the database.')
 
   options = argument_parser.parse_args()
 
@@ -120,6 +130,9 @@ if __name__ == '__main__':
 
   database_schema = extractor.FormatSchema(database_schema)
 
-  pyperclip.copy(database_schema)
+  if paperclip and options.to_clipboard:
+    pyperclip.copy(database_schema)
+  else:
+    print(database_schema)
 
   sys.exit(0)

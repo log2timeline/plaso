@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""This file contains the Mac OS X user plist plugin."""
+"""This file contains the MacOS user plist plugin."""
 
 from __future__ import unicode_literals
 
-# TODO: Only plists from Mac OS X 10.8 and 10.9 were tested. Look at other
+# TODO: Only plists from MacOS 10.8 and 10.9 were tested. Look at other
 #       versions as well.
 
 import binascii
@@ -22,9 +22,6 @@ from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
-
-
-__author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
 class MacUserPlugin(interface.PlistPlugin):
@@ -51,17 +48,17 @@ class MacUserPlugin(interface.PlistPlugin):
   """
 
   NAME = 'macuser'
-  DESCRIPTION = 'Parser for Mac OS X user plist files.'
+  DESCRIPTION = 'Parser for MacOS user plist files.'
 
   # The PLIST_PATH is dynamic, "user".plist is the name of the
-  # Mac OS X user.
+  # MacOS user.
   PLIST_KEYS = frozenset([
       'name', 'uid', 'home', 'passwordpolicyoptions', 'ShadowHashData'])
 
   _ROOT = '/'
 
   def Process(self, parser_mediator, plist_name, top_level, **kwargs):
-    """Check if it is a valid Mac OS X system  account plist file name.
+    """Check if it is a valid MacOS system  account plist file name.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -99,7 +96,7 @@ class MacUserPlugin(interface.PlistPlugin):
         continue
 
       for dict_elements in xml_policy.iterfind('dict'):
-        key_values = [value.text for value in dict_elements.getchildren()]
+        key_values = [value.text for value in iter(dict_elements)]
         # Taking a list and converting it to a dict, using every other item
         # as the key and the other one as the value.
         policy_dict = dict(zip(key_values[0::2], key_values[1::2]))
@@ -112,7 +109,7 @@ class MacUserPlugin(interface.PlistPlugin):
         except ValueError:
           date_time = None
           parser_mediator.ProduceExtractionError(
-              'unable to parse passworkd last set time string: {0:s}'.format(
+              'unable to parse password last set time string: {0:s}'.format(
                   time_string))
 
         shadow_hash_data = match.get('ShadowHashData', None)

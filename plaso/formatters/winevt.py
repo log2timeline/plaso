@@ -17,14 +17,14 @@ class WinEVTFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_PIECES = [
       '[{event_identifier} /',
       '0x{event_identifier:04x}]',
+      'Source Name: {source_name}',
+      'Message string: {message_string}',
+      'Strings: {strings}',
+      'Computer Name: {computer_name}',
       'Severity: {severity}',
       'Record Number: {record_number}',
       'Event Type: {event_type}',
-      'Event Category: {event_category}',
-      'Source Name: {source_name}',
-      'Computer Name: {computer_name}',
-      'Message string: {message_string}',
-      'Strings: {strings}']
+      'Event Category: {event_category}']
 
   FORMAT_STRING_SHORT_PIECES = [
       '[{event_identifier} /',

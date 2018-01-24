@@ -15,9 +15,6 @@ from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-__author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
-
-
 class ShutdownWindowsRegistryEventData(events.EventData):
   """Shutdown Windows Registry event data.
 

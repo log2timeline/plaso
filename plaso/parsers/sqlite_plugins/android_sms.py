@@ -129,14 +129,14 @@ class AndroidSMSPlugin(interface.SQLitePlugin):
       0: 'UNREAD',
       1: 'READ'}
 
-  def ParseSmsRow(self, parser_mediator, row, query=None, **unused_kwargs):
+  def ParseSmsRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses an SMS row.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
-      query (Optional[str]): query.
     """
     query_hash = hash(query)
 
