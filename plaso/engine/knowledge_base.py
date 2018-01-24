@@ -49,6 +49,16 @@ class KnowledgeBase(object):
     return hostname_artifact.name or ''
 
   @property
+  def platform(self):
+    """str: platform of the current session."""
+    return self.GetValue('guessed_os', default_value='')
+
+  @platform.setter
+  def platform(self, value):
+    """str: platform of the current session."""
+    self.SetValue('guessed_os', value)
+
+  @property
   def timezone(self):
     """datetime.tzinfo: timezone of the current session."""
     return self._time_zone

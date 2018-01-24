@@ -99,9 +99,9 @@ class ParserMediator(object):
     return self._number_of_events
 
   @property
-  def operating_system(self):
-    """str: operating system or None if not set."""
-    return self._knowledge_base.GetValue('operating_system')
+  def platform(self):
+    """str: platform."""
+    return self._knowledge_base.platform
 
   @property
   def resolver_context(self):
