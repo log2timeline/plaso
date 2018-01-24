@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Parser for the System Resource Usage Monitor (SRUM) ESE database."""
+"""Parser for the System Resource Usage Monitor (SRUM) ESE database.
+
+For more information about the database format see:
+https://github.com/libyal/esedb-kb/blob/master/documentation/
+    System%20Resource%20Usage%20Monitor%20(SRUM).asciidoc
+"""
 
 from __future__ import unicode_literals
 
@@ -19,6 +24,9 @@ from plaso.parsers.esedb_plugins import interface
 
 class SRUMApplicationResourceUsageEventData(events.EventData):
   """SRUM application resource usage event data.
+
+  Note that the interpretation of some of these values is undocumented
+  as far as currently known.
 
   Attributes:
     application (str): application.
@@ -75,6 +83,9 @@ class SRUMApplicationResourceUsageEventData(events.EventData):
 class SRUMNetworkConnectivityUsageEventData(events.EventData):
   """SRUM network connectivity usage event data.
 
+  Note that the interpretation of some of these values is undocumented
+  as far as currently known.
+
   Attributes:
     application (str): application.
     identifier (int): record identifier.
@@ -101,6 +112,9 @@ class SRUMNetworkConnectivityUsageEventData(events.EventData):
 
 class SRUMNetworkDataUsageEventData(events.EventData):
   """SRUM network data usage event data.
+
+  Note that the interpretation of some of these values is undocumented
+  as far as currently known.
 
   Attributes:
     application (str): application.
@@ -131,12 +145,7 @@ class SRUMNetworkDataUsageEventData(events.EventData):
 
 
 class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
-  """Parses a System Resource Usage Monitor (SRUM) ESE database file.
-
-  For more information about the database format see:
-      https://github.com/libyal/esedb-kb/blob/master/documentation/
-          System%20Resource%20Usage%20Monitor%20(SRUM).asciidoc
-  """
+  """Parses a System Resource Usage Monitor (SRUM) ESE database file."""
 
   NAME = 'srum'
   DESCRIPTION = (
