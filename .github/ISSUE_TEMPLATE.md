@@ -1,6 +1,21 @@
+**Description of problem:**
+
+Please describe the problem in as much detail as possible.
+What does the tool not do that it should? What would you like it to do?
+
+**Command line and arguments:**
+
+Please provide the command with arguments you ran when you experienced
+the problem.
+
+**Source data:**
+
+Please provide the source data you used when you experienced the problem.
+For publicly available data please provide an URL or path of the source data.
+
 **Plaso version:**
 
-For example 1.4.0 Release
+For example 20171231
 
 **Operating system Plaso is running on:**
 
@@ -8,20 +23,19 @@ Not the operating system of the image/files you're trying to analyze.
 
 **Installation method:**
 
-For example installed from [GiFT][https://launchpad.net/~gift], built using [l2devtools][https://github.com/log2timeline/l2tdevtools], or some other method.
+For example:
+* installed from [GiFT PPA][https://launchpad.net/~gift] stable track
+* installed from [GiFT COPR][https://copr.fedorainfracloud.org/coprs/g/gift/] stable track
+* installed from [l2tbinaries][https://github.com/log2timeline/l2tbinaries] master branch
+* built using [l2devtools][https://github.com/log2timeline/l2tdevtools]
+* other, namely ...
 
-**Description of problem:**
-
-Please describe the problem in as much detail as possible, including relevant command line arguments, flags etc.
-What does the tool not do that it should? What would you like it to do?
-
-For more information see the [troubleshooting
-guide][https://github.com/log2timeline/plaso/wiki/Troubleshooting].
+If multiple methods were used please indicate.
 
 **Debug output/tracebacks:**
 
 Please run the tool with "-d" to generate debug output, and include anything relevant.
+Also see: [Producing debug logs][https://github.com/log2timeline/plaso/wiki/Troubleshooting#producing-debug-logs]
 
-**Source data:**
-
-Please describe the source that is causing the issue.
+For more information see the [troubleshooting
+guide][https://github.com/log2timeline/plaso/wiki/Troubleshooting].
