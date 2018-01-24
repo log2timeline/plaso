@@ -95,6 +95,10 @@ class SQLiteCache(plugins.BasePluginCache):
   def GetRowCache(self, query):
     """Retrieves the row cache for a specific query.
 
+    The row cache is a set that contains hashes of values in a row. The row
+    cache is used to find duplicate row when a database and a database with
+    a WAL file is parsed.
+
     Args:
       query (str): query.
 
@@ -370,7 +374,7 @@ class SQLiteParser(interface.FileEntryParser):
     return format_specification
 
   def ParseFileEntry(self, parser_mediator, file_entry, **kwargs):
-    """Parses a SQLite database file-like object.
+    """Parses a SQLite database file entry.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
