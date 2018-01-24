@@ -35,6 +35,7 @@ If multiple methods were used please indicate.
 **Debug output/tracebacks:**
 
 Please run the tool with "-d" to generate debug output, and include anything relevant.
+Also see: [Producing debug logs][https://github.com/log2timeline/plaso/wiki/Troubleshooting#producing-debug-logs]
 
 For more information see the [troubleshooting
 guide][https://github.com/log2timeline/plaso/wiki/Troubleshooting].
