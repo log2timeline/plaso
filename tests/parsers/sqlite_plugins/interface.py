@@ -28,7 +28,7 @@ class TestEventData(events.EventData):
         with a WAL file.
   """
 
-  DATA_TYPE = 'test:sqlite_plusins:interface'
+  DATA_TYPE = 'test:sqlite_plugins:interface'
 
   def __init__(self):
     """Initializes event data."""
