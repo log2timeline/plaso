@@ -1,16 +1,24 @@
 # Scripts to build a onedir PyInstaller versions of the plaso tools.
 # The tools are bundled into a single ZIP file.
 
-$Architecture = "amd64"
+# Note that Param must be called first.
+# Usage: .\make_release.ps1 -Archirecture win32
+Param (
+	[string]$Architecture = "amd64"
+	[string]$PythonPath = ""
+)
 
-If ( $Architecture -eq "win32" )
+If ( -not $PythonPath )
 {
-	# Note that the backtick here is used as escape character.
-	$PythonPath = "C:\Python27` (x86)"
-}
-Else
-{
-	$PythonPath = "C:\Python27"
+	If ( $Architecture -eq "win32" )
+	{
+		# Note that the backtick here is used as escape character.
+		$PythonPath = "C:\Python27` (x86)"
+	}
+	Else
+	{
+		$PythonPath = "C:\Python27"
+	}
 }
 
 Try
