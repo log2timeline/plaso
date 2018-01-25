@@ -136,15 +136,14 @@ class SQLitePlugin(plugins.BasePlugin):
 
     Returns:
       bool: True if the schema of the database matches that defined by
-          the plugin, or None if no schema defined by the plugin.
+          the plugin, or False if the schemas do not match or no schema
+          is defined by the plugin.
     """
-    if not self.SCHEMAS:
-      return None
-
     schema_match = False
-    for schema in self.SCHEMAS:
-      if database and database.schema == schema:
-        schema_match = True
+    if self.SCHEMAS:
+      for schema in self.SCHEMAS:
+        if database and database.schema == schema:
+          schema_match = True
 
     return schema_match
 
