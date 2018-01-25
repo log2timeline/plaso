@@ -94,8 +94,7 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
       2: 'SOURCE_EXTENSION',
       3: 'SOURCE_FIREFOX_IMPORTED',
       4: 'SOURCE_IE_IMPORTED',
-      5: 'SOURCE_SAFARI_IMPORTED'
-  }
+      5: 'SOURCE_SAFARI_IMPORTED'}
 
   def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.

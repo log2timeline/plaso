@@ -15,16 +15,15 @@ CATEGORIES = {
     'winxp_slow': ['hachoir', 'mft', 'winxp'],
     'win7': [
         'recycle_bin', 'custom_destinations', 'esedb/file_history',
-        'olecf/olecf_automatic_destinations', 'win_gen', 'winevtx',
-        'amcache'],
+        'olecf/olecf_automatic_destinations', 'win_gen', 'winevtx', 'amcache'],
     'win7_slow': ['hachoir', 'mft', 'win7'],
     'webhist': [
         'binary_cookies', 'chrome_cache', 'sqlite/chrome_cookies',
-        'sqlite/chrome_extension_activity', 'sqlite/chrome_history',
-        'chrome_preferences', 'firefox_cache', 'sqlite/firefox_cookies',
-        'sqlite/firefox_downloads', 'sqlite/firefox_history', 'java_idx',
-        'esedb/msie_webcache', 'msiecf', 'opera_global', 'opera_typed_history',
-        'plist/safari_history'],
+        'sqlite/chrome_extension_activity', 'sqlite/chrome_8_history',
+        'sqlite/chrome_27_history', 'chrome_preferences', 'firefox_cache',
+        'sqlite/firefox_cookies', 'sqlite/firefox_downloads',
+        'sqlite/firefox_history', 'java_idx', 'esedb/msie_webcache', 'msiecf',
+        'opera_global', 'opera_typed_history', 'plist/safari_history'],
     'linux': [
         'bash_history', 'bencode', 'dockerjson', 'dpkg', 'filestat',
         'sqlite/google_drive', 'java_idx', 'olecf', 'openxml', 'pls_recall',
@@ -42,4 +41,4 @@ CATEGORIES = {
         'android_app_usage', 'filestat', 'chrome_cache',
         'sqlite/android_calls', 'sqlite/android_sms', 'sqlite/android_webview',
         'sqlite/android_webviewcache', 'sqlite/chrome_cookies',
-        'sqlite/chrome_history', 'sqlite/skype']}
+        'sqlite/chrome_8_history', 'sqlite/chrome_27_history', 'sqlite/skype']}
