@@ -71,23 +71,22 @@ class SQLitePlugin(plugins.BasePlugin):
     Returns:
       int: hash value of the given row.
     """
-    hash_value = 0
-    for column_value in row:
+    values = []
+    for value in row:
       try:
-        column_hash_value = hash(column_value)
-      except TypeError:
+        value = '{0!s}'.format(value)
+      except UnicodeDecodeError:
         # In Python 2, blobs are "read-write buffer" and will cause a
-        # "writable buffers are not hashable" TypeError exception if we try
-        # to hash it. Therefore, we will turn it into a string beforehand.
+        # UnicodeDecodeError exception if we try format it as a string.
         # Since Python 3 does not support the buffer type we cannot check
-        # the type of column_value.
-        column_hash_value = hash(str(column_value))
+        # the type of value.
+        value = repr(value)
 
-      hash_value ^= column_hash_value
-    return hash_value
+      values.append(value)
 
-  def _ParseQuery(
-      self, parser_mediator, database, query, callback, row_cache, cache=None):
+    return hash(' '.join(values))
+
+  def _ParseQuery(self, parser_mediator, database, query, callback, cache):
     """Queries a database and parses the results.
 
     Args:
@@ -95,9 +94,10 @@ class SQLitePlugin(plugins.BasePlugin):
       database (SQLiteDatabase): database.
       query (str): query.
       callback (function): function to invoke to parse an individual row.
-      row_cache (set): hashes of the rows that have been parsed.
-      cache (Optional[SQLiteCache]): cache.
+      cache (SQLiteCache): cache.
     """
+    row_cache = cache.GetRowCache(query)
+
     try:
       rows = database.Query(query)
 
@@ -111,12 +111,12 @@ class SQLitePlugin(plugins.BasePlugin):
       if parser_mediator.abort:
         break
 
-      try:
-        callback(
-            parser_mediator, query, row, cache=cache, database=database)
+      row_hash = self._HashRow(row)
+      if row_hash in row_cache:
+        continue
 
-        row_hash = self._HashRow(row)
-        row_cache.add(row_hash)
+      try:
+        callback(parser_mediator, query, row, cache=cache, database=database)
 
       except Exception as exception:  # pylint: disable=broad-except
         parser_mediator.ProduceExtractionError((
@@ -126,71 +126,55 @@ class SQLitePlugin(plugins.BasePlugin):
         # TODO: consider removing return.
         return
 
-  def _ParseQueryWithWAL(
-      self, parser_mediator, database_wal, query, callback, row_cache,
-      cache=None):
-    """Queries a database with WAL and parses the results.
+      row_cache.add(row_hash)
 
-    Note that cached rows will be ignored.
+  def CheckSchema(self, database):
+    """Checks the schema of a database with that defined in the plugin.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
-      database_wal (SQLiteDatabase): database with WAL.
-      query (str): query.
-      callback (function): function to invoke to parse an individual row.
-      row_cache (set): hashes of the rows that have been parsed.
-      cache (Optional[SQLiteCache]): cache.
+      database (SQLiteDatabase): database.
+
+    Returns:
+      bool: True if the schema of the database matches that defined by
+          the plugin, or False if the schemas do not match or no schema
+          is defined by the plugin.
     """
-    try:
-      rows = database_wal.Query(query)
+    schema_match = False
+    if self.SCHEMAS:
+      for schema in self.SCHEMAS:
+        if database and database.schema == schema:
+          schema_match = True
 
-    except sqlite3.DatabaseError as exception:
-      parser_mediator.ProduceExtractionError((
-          'unable to run query: {0:s} on database with WAL with error: '
-          '{1!s}').format(query, exception))
-      return
+    return schema_match
 
-    for index, row in enumerate(rows):
-      if parser_mediator.abort:
-        break
+  # pylint: disable=arguments-differ
+  def Process(
+      self, parser_mediator, cache=None, database=None, **unused_kwargs):
+    """Determine if this is the right plugin for this database.
 
-      row_hash = self._HashRow(row)
-      if row_hash in row_cache:
-        continue
-
-      try:
-        callback(
-            parser_mediator, query, row, cache=cache, database=database_wal)
-
-      except Exception as exception:  # pylint: disable=broad-except
-        parser_mediator.ProduceExtractionError((
-            'unable to parse row: {0:d} with callback: {1:s} on database '
-            'with WAL with error: {2!s}').format(
-                index, callback.__name__, exception))
-        # TODO: consider removing return.
-        return
-
-  def GetEntries(
-      self, parser_mediator, cache=None, database=None, database_wal=None,
-      wal_file_entry=None, **unused_kwargs):
-    """Extracts events from a SQLite database.
+    This function takes a SQLiteDatabase object and compares the list
+    of required tables against the available tables in the database.
+    If all the tables defined in REQUIRED_TABLES are present in the
+    database then this plugin is considered to be the correct plugin
+    and the function will return back a generator that yields event
+    objects.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
       cache (Optional[SQLiteCache]): cache.
       database (Optional[SQLiteDatabase]): database.
-      database_wal (Optional[SQLiteDatabase]): database object with WAL file
-          committed.
-      wal_file_entry (Optional[dfvfs.FileEntry]): file entry for the database
-          with WAL file committed.
+
+    Raises:
+      ValueError: If the database or cache value are missing.
     """
-    schema_match = False
-    wal_schema_match = False
-    for schema in self.SCHEMAS:
-      if database and database.schema == schema:
-        schema_match = True
-      if database_wal and database_wal.schema == schema:
-        wal_schema_match = True
+    if cache is None:
+      raise ValueError('Missing cache value.')
+
+    if database is None:
+      raise ValueError('Missing database value.')
+
+    # This will raise if unhandled keyword arguments are passed.
+    super(SQLitePlugin, self).Process(parser_mediator)
 
     for query, callback_method in self.QUERIES:
       if parser_mediator.abort:
@@ -203,65 +187,4 @@ class SQLitePlugin(plugins.BasePlugin):
                 self.NAME, callback_method, query))
         continue
 
-      row_cache = set()
-
-      if database:
-        try:
-          parser_mediator.AddEventAttribute('schema_match', schema_match)
-
-          self._ParseQuery(
-              parser_mediator, database, query, callback, row_cache,
-              cache=cache)
-
-        finally:
-          parser_mediator.RemoveEventAttribute('schema_match')
-
-      if database_wal:
-        file_entry = parser_mediator.GetFileEntry()
-
-        try:
-          parser_mediator.AddEventAttribute('schema_match', wal_schema_match)
-          parser_mediator.SetFileEntry(wal_file_entry)
-
-          self._ParseQueryWithWAL(
-              parser_mediator, database_wal, query, callback, row_cache,
-              cache=cache)
-
-        finally:
-          parser_mediator.RemoveEventAttribute('schema_match')
-          parser_mediator.SetFileEntry(file_entry)
-
-  # pylint: disable=arguments-differ
-  def Process(
-      self, parser_mediator, cache=None, database=None, database_wal=None,
-      wal_file_entry=None, **kwargs):
-    """Determine if this is the right plugin for this database.
-
-    This function takes a SQLiteDatabase object and compares the list
-    of required tables against the available tables in the database.
-    If all the tables defined in REQUIRED_TABLES are present in the
-    database then this plugin is considered to be the correct plugin
-    and the function will return back a generator that yields event
-    objects.
-
-    Args:
-      parser_mediator (ParserMediator): parser mediator.
-      cache (SQLiteCache): cache.
-      database (SQLiteDatabase): database.
-      database_wal (Optional[SQLiteDatabase]): database with its
-          Write-Ahead Log (WAL) committed.
-      wal_file_entry (Optional[dfvfs.FileEntry]): file entry of the database
-          with is Write-Ahead Log (WAL) committed.
-
-    Raises:
-      ValueError: If the database attribute is not passed in.
-    """
-    if database is None:
-      raise ValueError('Database is not set.')
-
-    # This will raise if unhandled keyword arguments are passed.
-    super(SQLitePlugin, self).Process(parser_mediator)
-
-    self.GetEntries(
-        parser_mediator, cache=cache, database=database,
-        database_wal=database_wal, wal_file_entry=wal_file_entry)
+      self._ParseQuery(parser_mediator, database, query, callback, cache)

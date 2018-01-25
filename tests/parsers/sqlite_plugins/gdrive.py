@@ -9,7 +9,6 @@ import unittest
 from plaso.formatters import gdrive as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import timelib
-from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import gdrive
 
 from tests import test_lib as shared_test_lib
@@ -23,9 +22,8 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
   def testProcess(self):
     """Tests the Process function on a Google Drive database file."""
     plugin = gdrive.GoogleDrivePlugin()
-    cache = sqlite.SQLiteCache()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['snapshot.db'], plugin, cache=cache)
+        ['snapshot.db'], plugin)
 
     self.assertEqual(storage_writer.number_of_events, 30)
 

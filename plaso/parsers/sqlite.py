@@ -24,6 +24,11 @@ from plaso.parsers import plugins
 class SQLiteCache(plugins.BasePluginCache):
   """Cache for storing results of SQL queries."""
 
+  def __init__(self):
+    """Initializes a SQLite cache."""
+    super(SQLiteCache, self).__init__()
+    self._row_caches = {}
+
   def CacheQueryResults(
       self, sql_results, attribute_name, key_name, column_names):
     """Build a dictionary object based on a SQL command.
@@ -86,6 +91,24 @@ class SQLiteCache(plugins.BasePluginCache):
       row = sql_results.fetchone()
 
     setattr(self, attribute_name, attribute_value)
+
+  def GetRowCache(self, query):
+    """Retrieves the row cache for a specific query.
+
+    The row cache is a set that contains hashes of values in a row. The row
+    cache is used to find duplicate row when a database and a database with
+    a WAL file is parsed.
+
+    Args:
+      query (str): query.
+
+    Returns:
+      set: hashes of the rows that have been parsed.
+    """
+    query_hash = hash(query)
+    if query_hash not in self._row_caches:
+      self._row_caches[query_hash] = set()
+    return self._row_caches[query_hash]
 
 
 class SQLiteDatabase(object):
@@ -351,7 +374,7 @@ class SQLiteParser(interface.FileEntryParser):
     return format_specification
 
   def ParseFileEntry(self, parser_mediator, file_entry, **kwargs):
-    """Parses a SQLite database file-like object.
+    """Parses a SQLite database file entry.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
@@ -388,6 +411,11 @@ class SQLiteParser(interface.FileEntryParser):
         if not plugin.REQUIRED_TABLES.issubset(table_names):
           continue
 
+        parser_mediator.SetFileEntry(file_entry)
+
+        schema_match = plugin.CheckSchema(database)
+        parser_mediator.AddEventAttribute('schema_match', schema_match)
+
         try:
           plugin.UpdateChainAndProcess(
               parser_mediator, cache=cache, database=database,
@@ -397,6 +425,30 @@ class SQLiteParser(interface.FileEntryParser):
           parser_mediator.ProduceExtractionError((
               'plugin: {0:s} unable to parse SQLite database with error: '
               '{1:s}').format(plugin.NAME, exception))
+
+        finally:
+          parser_mediator.RemoveEventAttribute('schema_match')
+
+        if not database_wal:
+          continue
+
+        parser_mediator.SetFileEntry(wal_file_entry)
+
+        schema_match = plugin.CheckSchema(database)
+        parser_mediator.AddEventAttribute('schema_match', schema_match)
+
+        try:
+          plugin.UpdateChainAndProcess(
+              parser_mediator, cache=cache, database=database,
+              database_wal=database_wal, wal_file_entry=wal_file_entry)
+
+        except Exception as exception:  # pylint: disable=broad-except
+          parser_mediator.ProduceExtractionError((
+              'plugin: {0:s} unable to parse SQLite database and WAL with '
+              'error: {1:s}').format(plugin.NAME, exception))
+
+        finally:
+          parser_mediator.RemoveEventAttribute('schema_match')
 
     finally:
       database.Close()

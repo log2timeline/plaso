@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import skype as _  # pylint: disable=unused-import
 from plaso.lib import timelib
-from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import skype
 
 from tests import test_lib as shared_test_lib
@@ -36,9 +35,8 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
       id = 14 -> ChatRoom
     """
     plugin = skype.SkypePlugin()
-    cache = sqlite.SQLiteCache()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['skype_main.db'], plugin, cache=cache)
+        ['skype_main.db'], plugin)
 
     self.assertEqual(storage_writer.number_of_events, 24)
 
