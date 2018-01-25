@@ -9,7 +9,6 @@ import unittest
 from plaso.formatters import safari as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import timelib
-from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import safari
 
 from tests import test_lib as shared_test_lib
@@ -24,9 +23,8 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
     """Tests the process function on a Safari History.db database file."""
 
     plugin = safari.SafariHistoryPluginSqlite()
-    cache = sqlite.SQLiteCache()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['History.db'], plugin, cache=cache)
+        ['History.db'], plugin)
 
     # The History file contains 25 events
     self.assertEqual(storage_writer.number_of_events, 25)
@@ -34,8 +32,6 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
     events = list(storage_writer.GetEvents())
     # Check the first page visited entry
     event = events[1]
-
-    self.assertEqual(event.schema_match, True)
 
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
