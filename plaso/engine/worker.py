@@ -679,7 +679,7 @@ class EventExtractionWorker(object):
       return
 
     path_spec = copy.deepcopy(file_entry.path_spec)
-    if data_stream:
+    if data_stream and not data_stream.IsDefault():
       path_spec.data_stream = data_stream.name
 
     archive_types = []
