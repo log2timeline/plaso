@@ -51,8 +51,7 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
       0x10000000: 'Modified',
       0x20000000: 'Exchange',
       0x40000000: 'FinderInfoModified',
-      0x80000000: 'DirectoryCreated',
-    }
+      0x80000000: 'DirectoryCreated'}
 
   def _GetFlagValues(self, flags):
     """Determines which events are indicated by a set of fsevents flags.
