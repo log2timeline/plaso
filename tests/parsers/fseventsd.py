@@ -48,9 +48,11 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
-        'Directory: .Spotlight-V100/Store-V1 Changes: DirectoryCreated '
-        'Event ID: 47747061')
-    expected_short_message = '.Spotlight-V100/Store-V1 DirectoryCreated'
+        '.Spotlight-V100/Store-V1 '
+        'Flag Values: IsDirectory, DirectoryCreated '
+        'Flags: 0x80000001 Event Identifier: 47747061')
+    expected_short_message = (
+        '.Spotlight-V100/Store-V1 IsDirectory, DirectoryCreated')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
   @shared_test_lib.skipUnlessHasTestFile(['fsevents-00000000001a0b79'])
@@ -82,8 +84,9 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
-        'Directory: Hi, Sierra Changes: Renamed Event ID: 1706838')
-    expected_short_message = 'Hi, Sierra Renamed'
+        'Hi, Sierra Flag Values: IsDirectory, Renamed Flags: 0x8000001 '
+        'Event Identifier: 1706838')
+    expected_short_message = 'Hi, Sierra IsDirectory, Renamed'
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 

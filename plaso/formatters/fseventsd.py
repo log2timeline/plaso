@@ -14,11 +14,11 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'macos:fseventsd:record'
 
   FORMAT_STRING_PIECES = [
-      '{object_types}:', '{path}', 'Changes:', '{event_types}', 'Event ID:',
-      '{event_identifier}'
+      '{path}', 'Flag Values:', '{flag_values}', 'Flags:', '{hex_flags}',
+      'Event Identifier:', '{event_identifier}'
   ]
 
-  FORMAT_STRING_SHORT_PIECES = ['{path}', '{event_types}']
+  FORMAT_STRING_SHORT_PIECES = ['{path}', '{flag_values}']
 
   SOURCE_SHORT = 'FSEVENT'
 
@@ -28,18 +28,17 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
   # but the value 0x00000001 corresponds to a change to a directory item in
   # an fseventsd file, by observation.
   # [1] https://developer.apple.com/documentation/coreservices/core_services_enumerations/1455361-fseventstreameventflags
-  _OBJECT_TYPE_FLAGS = {
-      0x00000001: 'Directory',
-      0x00001000: 'HardLink',
-      0x00004000: 'SymbolicLink',
-      0x00008000: 'File'}
 
-  _EVENT_FLAGS = {
+  _FLAG_VALUES = {
       0x00000000: 'None',
+      0x00000001: 'IsDirectory',
       0x00000002: 'Mount',
       0x00000004: 'Unmount',
       0x00000020: 'EndOfTransaction',
       0x00000800: 'LastHardLinkRemoved',
+      0x00001000: 'IsHardLink',
+      0x00004000: 'IsSymbolicLink',
+      0x00008000: 'IsFile',
       0x00010000: 'PermissionChanged',
       0x00020000: 'ExtendedAttributeModified',
       0x00040000: 'ExtendedAttributeRemoved',
@@ -52,39 +51,24 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
       0x10000000: 'Modified',
       0x20000000: 'Exchange',
       0x40000000: 'FinderInfoModified',
-      0x80000000: 'DirectoryCreated'}
+      0x80000000: 'DirectoryCreated',
+    }
 
-  def _GetObjectType(self, flags):
-    """Determines the object type for a given set of FSEvents flags.
-
-    Args:
-      flags (int): fsevents record type flags.
-
-    Returns:
-      str: a comma separated string containing all the object types listed in an
-          fsevents record.
-    """
-    object_types = []
-    for type_flag, description in self._OBJECT_TYPE_FLAGS.items():
-      if type_flag & flags:
-        object_types.append(description)
-    return ','.join(object_types)
-
-  def _GetEventTypes(self, flags):
-    """Determines which events are stored in a set of fsevents flags.
+  def _GetFlagValues(self, flags):
+    """Determines which events are indicated by a set of fsevents flags.
 
     Args:
-      flags (int): fsevents record type flags.
+      flags (int): fsevents record flags.
 
     Returns:
-      str: a comma separated string containing all the events listed in an
-          fsevents record.
+      str: a comma separated string containing descriptions of the flag values
+          stored in an fsevents record.
     """
     event_types = []
-    for event_flag, description in self._EVENT_FLAGS.items():
+    for event_flag, description in self._FLAG_VALUES.items():
       if event_flag & flags:
         event_types.append(description)
-    return ','.join(event_types)
+    return ', '.join(event_types)
 
   def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
@@ -107,8 +91,8 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
 
     event_values = event.CopyToDict()
     flags = event_values['flags']
-    event_values['object_types'] = self._GetObjectType(flags)
-    event_values['event_types'] = self._GetEventTypes(flags)
+    event_values['hex_flags'] = '0x{0:X}'.format(flags)
+    event_values['flag_values'] = self._GetFlagValues(flags)
 
     return self._ConditionalFormatMessages(event_values)
 
