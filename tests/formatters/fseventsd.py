@@ -24,7 +24,7 @@ class FseventsdFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = fseventsd.FSEventsdEventFormatter()
 
     expected_attribute_names = [
-        'object_types', 'path', 'event_types', 'event_identifier']
+        u'event_identifier', u'flag_values', u'hex_flags', u'path']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
