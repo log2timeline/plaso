@@ -62,7 +62,7 @@ class DynamicFieldsHelper(object):
       date_use = timelib.Timestamp.CopyToDatetime(
           event.timestamp, self._output_mediator.timezone,
           raise_error=True)
-    except OverflowError as exception:
+    except (OverflowError, ValueError) as exception:
       self._ReportEventError(event, (
           'unable to copy timestamp: {0:d} to a human readable date '
           'with error: {1!s}. Defaulting to: "0000-00-00"').format(
@@ -87,7 +87,7 @@ class DynamicFieldsHelper(object):
           event.timestamp, timezone=self._output_mediator.timezone,
           raise_error=True)
 
-    except OverflowError as exception:
+    except (OverflowError, ValueError) as exception:
       self._ReportEventError(event, (
           'unable to copy timestamp: {0:d} to a human readable date and time '
           'with error: {1!s}. Defaulting to: "0000-00-00T00:00:00"').format(
@@ -248,7 +248,7 @@ class DynamicFieldsHelper(object):
       date_use = timelib.Timestamp.CopyToDatetime(
           event.timestamp, self._output_mediator.timezone,
           raise_error=True)
-    except OverflowError as exception:
+    except (OverflowError, ValueError) as exception:
       self._ReportEventError(event, (
           'unable to copy timestamp: {0:d} to a human readable time '
           'with error: {1!s}. Defaulting to: "00:00:00"').format(
