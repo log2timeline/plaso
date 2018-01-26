@@ -147,6 +147,14 @@ plaso\.parsers\.firefox\_cache module
     :undoc-members:
     :show-inheritance:
 
+plaso\.parsers\.fseventsd module
+--------------------------------
+
+.. automodule:: plaso.parsers.fseventsd
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso\.parsers\.hachoir module
 ------------------------------
 

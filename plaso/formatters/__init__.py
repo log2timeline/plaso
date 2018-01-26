@@ -28,6 +28,7 @@ from plaso.formatters import file_system
 from plaso.formatters import firefox
 from plaso.formatters import firefox_cache
 from plaso.formatters import firefox_cookies
+from plaso.formatters import fseventsd
 from plaso.formatters import ganalytics
 from plaso.formatters import gdrive
 from plaso.formatters import hachoir
