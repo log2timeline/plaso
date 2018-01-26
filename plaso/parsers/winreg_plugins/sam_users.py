@@ -48,7 +48,7 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
 
   FILTERS = frozenset([
       interface.WindowsRegistryKeyPathFilter(
-          'HKEY_LOCAL_MACHINE\\SAM\\Domains\\Account\\Users')])
+          'HKEY_LOCAL_MACHINE\\SAM\\SAM\\Domains\\Account\\Users')])
 
   _F_VALUE_STRUCT = construct.Struct(
       'f_struct',
