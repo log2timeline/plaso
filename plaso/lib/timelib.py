@@ -240,9 +240,17 @@ class Timestamp(object):
 
     Raises:
       OverflowError: If raises_error is set to True and an overflow error
-                     occurs.
+          occurs.
+      ValueError: If raises_error is set to True and no timestamp value is
+          provided.
     """
     datetime_object = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
+
+    if not timestamp:
+      if raise_error:
+        raise ValueError('Missing timestamp value')
+      return datetime_object
+
     try:
       datetime_object += datetime.timedelta(microseconds=timestamp)
       return datetime_object.astimezone(timezone)
