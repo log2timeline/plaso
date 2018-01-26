@@ -1,0 +1,94 @@
+# -*- coding: utf-8 -*-
+"""Tests for fseventsd file parser."""
+
+from __future__ import unicode_literals
+
+import unittest
+
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import resolver as path_spec_resolver
+
+from plaso.formatters import fseventsd as _  # pylint: disable=unused-import
+from plaso.parsers import fseventsd
+
+from tests import test_lib as shared_test_lib
+from tests.parsers import test_lib
+
+
+class FSEventsdParserTest(test_lib.ParserTestCase):
+  """Tests for the fseventsd parser."""
+
+  @shared_test_lib.skipUnlessHasTestFile(['fsevents-0000000002d89b58'])
+  def testParseV1(self):
+    """Tests the Parse function on a version 1 file."""
+    parser = fseventsd.FseventsdParser()
+
+    path = self._GetTestFilePath(['fsevents-0000000002d89b58'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
+
+    gzip_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_GZIP, parent=os_path_spec)
+
+    storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser)
+
+    self.assertEqual(storage_writer.number_of_events, 12)
+
+    events = list(storage_writer.GetEvents())
+
+    event = events[3]
+    self.assertEqual(event.path, '.Spotlight-V100/Store-V1')
+    self.assertEqual(event.event_identifier, 47747061)
+    self.assertEqual(event.flags, 0x80000001)
+
+    os_file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
+    expected_time = os_file_entry.modification_time
+    expected_timestamp = expected_time.GetPlasoTimestamp()
+    self.assertEqual(event.timestamp, expected_timestamp)
+
+    expected_message = (
+        '.Spotlight-V100/Store-V1 '
+        'Flag Values: IsDirectory, DirectoryCreated '
+        'Flags: 0x80000001 Event Identifier: 47747061')
+    expected_short_message = (
+        '.Spotlight-V100/Store-V1 IsDirectory, DirectoryCreated')
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+
+  @shared_test_lib.skipUnlessHasTestFile(['fsevents-00000000001a0b79'])
+  def testParseV2(self):
+    """Tests the Parse function on a version 2 file."""
+    parser = fseventsd.FseventsdParser()
+
+    path = self._GetTestFilePath(['fsevents-00000000001a0b79'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
+
+    gzip_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_GZIP, parent=os_path_spec)
+
+    storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser)
+
+    self.assertEqual(storage_writer.number_of_events, 6)
+
+    events = list(storage_writer.GetEvents())
+
+    event = events[2]
+    self.assertEqual(event.path, 'Hi, Sierra')
+    self.assertEqual(event.event_identifier, 1706838)
+    self.assertEqual(event.flags, 0x8000001)
+
+    os_file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
+    expected_time = os_file_entry.modification_time
+    expected_timestamp = expected_time.GetPlasoTimestamp()
+    self.assertEqual(event.timestamp, expected_timestamp)
+
+    expected_message = (
+        'Hi, Sierra Flag Values: IsDirectory, Renamed Flags: 0x8000001 '
+        'Event Identifier: 1706838')
+    expected_short_message = 'Hi, Sierra IsDirectory, Renamed'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+
+
+if __name__ == '__main__':
+  unittest.main()

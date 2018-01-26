@@ -70,7 +70,6 @@ class EventExtractionWorker(object):
   _CHROME_CACHE_DATA_FILE_RE = re.compile(r'^[fF]_[0-9a-fA-F]{6}$')
   _FIREFOX_CACHE_DATA_FILE_RE = re.compile(r'^[0-9a-fA-F]{5}[dm][0-9]{2}$')
   _FIREFOX_CACHE2_DATA_FILE_RE = re.compile(r'^[0-9a-fA-F]{40}$')
-  _FSEVENTSD_FILE_RE = re.compile(r'^[0-9a-fA-F]{16}$')
 
   _TYPES_WITH_ROOT_METADATA = frozenset([
       dfvfs_definitions.TYPE_INDICATOR_GZIP])
@@ -281,10 +280,6 @@ class EventExtractionWorker(object):
       if file_system.FileEntryExistsByPathSpec(index_path_spec):
         # TODO: improve this check if "index" is a Firefox Cache version 2
         # index file.
-        return True
-
-    elif self._FSEVENTSD_FILE_RE.match(path_segments[-1]):
-      if len(path_segments) == 2 and path_segments[0].lower() == '.fseventsd':
         return True
 
     elif len(path_segments) == 1 and path_segments[0].lower() in (

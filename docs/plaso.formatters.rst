@@ -228,6 +228,14 @@ plaso\.formatters\.firefox\_cookies module
     :undoc-members:
     :show-inheritance:
 
+plaso\.formatters\.fseventsd module
+-----------------------------------
+
+.. automodule:: plaso.formatters.fseventsd
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso\.formatters\.ganalytics module
 ------------------------------------
 

@@ -16,6 +16,7 @@ from plaso.parsers import dpkg
 from plaso.parsers import esedb
 from plaso.parsers import filestat
 from plaso.parsers import firefox_cache
+from plaso.parsers import fseventsd
 
 try:
   from plaso.parsers import hachoir
