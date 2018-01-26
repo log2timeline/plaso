@@ -47,7 +47,7 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event.title, expected_title)
 
     expected_message = (
-        '{0:s} ({1:s}) [count: 0] Host: start.ubuntu.com '
+        '{0:s} ({1:s}) [count: 0] '
         'Visit Source: [SOURCE_FIREFOX_IMPORTED] Type: [LINK - User clicked '
         'a link] (URL not typed directly - no typed count)').format(
             expected_url, expected_title)
@@ -119,7 +119,6 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     expected_message = (
         '{0:s} '
         '[count: 0] '
-        'Host: raw.githubusercontent.com '
         'Type: [START_PAGE - The start page of the browser] '
         '(URL not typed directly - no typed count)').format(expected_url)
     expected_short_message = '{0:s}...'.format(expected_url[:77])
@@ -185,7 +184,6 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     expected_message = (
         '{0:s} '
         '[count: 0] '
-        'Host: raw.githubusercontent.com '
         'Type: [START_PAGE - The start page of the browser] '
         '(URL not typed directly - no typed count)').format(expected_url)
     expected_short_message = '{0:s}...'.format(expected_url[:77])
@@ -251,7 +249,6 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     expected_message = (
         '{0:s} '
         '[count: 0] '
-        'Host: raw.githubusercontent.com '
         'Type: [START_PAGE - The start page of the browser] '
         '(URL not typed directly - no typed count)').format(expected_url)
     expected_short_message = '{0:s}...'.format(expected_url[:77])
