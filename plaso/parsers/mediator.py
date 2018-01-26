@@ -520,6 +520,9 @@ class ParserMediator(object):
     if self._last_event_data_identifier:
       event.SetEventDataIdentifier(self._last_event_data_identifier)
 
+    # TODO: rename this to event.parser_chain or equivalent.
+    event.parser_chain = self.GetParserChain()
+
     self._storage_writer.AddEvent(event)
     self._number_of_events += 1
 
