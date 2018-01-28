@@ -2,7 +2,7 @@
 # The tools are bundled into a single ZIP file.
 
 # Note that Param must be called first.
-# Usage: .\make_release.ps1 -$Architecture win32
+# Usage: .\make_release.ps1 -Architecture win32
 Param (
 	[string]$Architecture = "amd64",
 	[string]$PythonPath = ""
