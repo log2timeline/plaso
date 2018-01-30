@@ -74,7 +74,7 @@ class GDriveSyncLogUnitTest(test_lib.ParserTestCase):
         '12180, \'WinHttpGetProxyForUrl\', \'The Proxy Auto-configuration URL '
         'was not found.\')')
     expected_short_message = (
-        ' Exception while auto resolving proxy. Traceback (most recent call'
+        ' Exception while auto resolving proxy. Traceback (most recent call '
         'last):   F...')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
@@ -95,7 +95,7 @@ class GDriveSyncLogUnitTest(test_lib.ParserTestCase):
         'Data\\\\Local\\\\Google\\\\Drive\', main_sync_root=None, '
         'profile_id=None)')
     expected_short_message = (
-        ' Initialize factory with policy'
+        ' Initialize factory with policy '
         'PlatformPolicy(google_drive_config_directory_...')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
