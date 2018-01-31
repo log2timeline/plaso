@@ -4,8 +4,6 @@
 from __future__ import unicode_literals
 
 import logging
-# TODO: DO NOT SUBMIT, remove
-logging.basicConfig(level=logging.DEBUG)
 
 import pyparsing
 
