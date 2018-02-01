@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the SkyDrive log event formatter."""
+"""Tests for the GDrive log event formatter."""
 
 from __future__ import unicode_literals
 
@@ -12,7 +12,7 @@ from tests.formatters import test_lib
 
 
 class GDriveSyncLogFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the SkyDrive log event formatter."""
+  """Tests for the GDrive log event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""

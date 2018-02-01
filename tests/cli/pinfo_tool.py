@@ -116,7 +116,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
         'binary_cookies', 'bsm_log', 'chrome_cache', 'chrome_preferences',
         'cups_ipp', 'custom_destinations', 'dockerjson', 'dpkg', 'esedb',
         'esedb/esedb_file_history', 'esedb/msie_webcache', 'filestat',
-        'firefox_cache', 'firefox_cache2', 'gdrive_synclog', 'hachoir',
+        'firefox_cache', 'firefox_cache2', 'hachoir',
         'java_idx', 'lnk', 'mac_appfirewall_log', 'mac_keychain',
         'mac_securityd', 'mactime', 'macwifi', 'mcafee_protection', 'mft',
         'msiecf', 'olecf', 'olecf/olecf_automatic_destinations',

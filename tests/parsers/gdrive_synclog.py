@@ -66,10 +66,10 @@ class GDriveSyncLogUnitTest(test_lib.ParserTestCase):
     expected_message = (
         '[INFO pid=2376 5712:ExternalBrowserFlow proxy_manager.py:141]  '
         'Exception while auto resolving proxy. Traceback (most recent call '
-        'last):   File "common\proxy_manager.py", line 135, in '
-        '_GetProxyInfoForUrl   File "windows\system_proxy_resolver.py", '
+        'last):   File "common\\proxy_manager.py", line 135, in '
+        '_GetProxyInfoForUrl   File "windows\\system_proxy_resolver.py", '
         'line 96, in GetProxyForUrlViaWPAD   File '
-        '"windows\system_proxy_resolver.py", line 155, in _GetProxy '
+        '"windows\\system_proxy_resolver.py", line 155, in _GetProxy '
         'ProxyInfoResolutionError: ProxyInfoResolutionError: inner_error=('
         '12180, \'WinHttpGetProxyForUrl\', \'The Proxy Auto-configuration URL '
         'was not found.\')')

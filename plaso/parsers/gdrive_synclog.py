@@ -21,12 +21,14 @@ class GDriveSyncLogEventData(events.EventData):
   """GDrive Sync log event data.
 
   Attributes:
-    time (str): time of event (string, time with offset and timezone of user).
-    log_level (str): logging level of event (e.g., DEBUG, WARN, INFO, ERR).
-    pid (int): process ID of process which logged event.
-    thread (str): ID:name of thread which logged event (colon-separated).
-    source_code (str): filename:line_number of source file which logged event.
+    log_level (str): logging level of event such as "DEBUG", "WARN", "INFO",
+        "ERROR".
     message (str): log message.
+    pid (int): process ID of process which logged event.
+    source_code (str): filename:line_number of source file which logged event.
+    thread (str): colon-separated thread identifier in the form "ID:name"
+        which logged event.
+    time (str): date and time of the log entry event with timezone offset.
   """
 
   DATA_TYPE = 'gdrive_sync:log:line'
@@ -49,8 +51,11 @@ class GDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
 
   DESCRIPTION = 'Parser for GDrive Sync log files.'
 
-  # TODO: confirm this is ascii on OS X, Linux?
-  _ENCODING = 'ascii'
+  _ENCODING = 'utf-8'
+
+  # Increase the buffer size, as log messages are often many lines of python
+  # object dumps or similar.
+  BUFFER_SIZE = 16384
 
   # Common structures.
   _HYPHEN = text_parser.PyparsingConstants.HYPHEN
@@ -113,12 +118,12 @@ class GDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     # Initialize it without the TZ, then convert to a TZ-aware value with
     # a formatting hack and CopyFromDateTimeString.
     dfdatetime_obj = dfdatetime_time_elements.TimeElementsInMilliseconds(
-        [year, month, day_of_month, hours, minutes, seconds, milliseconds])
+        (year, month, day_of_month, hours, minutes, seconds, milliseconds))
 
-    dt_hack = '{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:03d}{!s}:{!s}'.format(
-        year, month, day_of_month, hours, minutes, seconds, milliseconds,
-        # TODO(johngalvin): Make this less awful.
-        tz[0:3], tz[3:5])
+    dt_hack = ('{0:d}-{1:02d}-{2:02d} {3:02d}:'
+               '{4:02d}:{5:02d}.{6:03d}{7!s}:{8!s}').format(
+                   year, month, day_of_month, hours, minutes, seconds,
+                   milliseconds, tz[0:3], tz[3:5])
     try:
       dfdatetime_obj.CopyFromDateTimeString(dt_hack)
     except ValueError:
@@ -140,7 +145,7 @@ class GDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseRecord(self, parser_mediator, key, structure):
-    """Parse each record structure and return an EventObject if applicable.
+    """Parses a log record structure and produces events.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -174,8 +179,8 @@ class GDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     """
     try:
       structure = self._GDS_LINE.parseString(lines)
-    except pyparsing.ParseException as e:
-      logging.debug('Not a GDrive Sync log file: %s' % e)
+    except pyparsing.ParseException as exception:
+      logging.debug('Not a GDrive Sync log file: {0!s}'.format(exception))
       return False
 
     try:
