@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the GDriveSyncLog log parser."""
+"""Tests for the GoogleDriveSyncLog log parser."""
 
 from __future__ import unicode_literals
 
@@ -15,17 +15,16 @@ from tests.parsers import test_lib
 
 # TODO: more tests, esp. for confirming Unicode support, other OS discrepancies.
 
-class GDriveSyncLogUnitTest(test_lib.ParserTestCase):
+class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
   """Tests for the Google Drive Sync client log parser."""
 
   # TODO: it seems like this takes a different call path entirely when parsing
-  # files, as the main parser currently fails to parse some unusual lines (u''
-  # strings in ascii-encoded files, will follow-up), while the test for the same
-  # passes. We should ensure tests execute the same code path where possible.
+  # files, as the main parser failed on an earlier edge case when this passed.
+  # We should ensure tests execute the same code path where possible.
   @shared_test_lib.skipUnlessHasTestFile(['sync_log-short.log'])
   def testParseLog(self):
     """Tests the Parse function on normal log."""
-    parser = gdrive_synclog.GDriveSyncLogParser()
+    parser = gdrive_synclog.GoogleDriveSyncLogParser()
     storage_writer = self._ParseFile(['sync_log-short.log'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 5)
@@ -81,7 +80,7 @@ class GDriveSyncLogUnitTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['sync_log.log'])
   def testParseFullLog(self):
     """Tests the Parse function on full log."""
-    parser = gdrive_synclog.GDriveSyncLogParser()
+    parser = gdrive_synclog.GoogleDriveSyncLogParser()
     storage_writer = self._ParseFile(['sync_log.log'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 2190)

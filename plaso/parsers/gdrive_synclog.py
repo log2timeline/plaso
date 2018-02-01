@@ -17,8 +17,8 @@ from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
-class GDriveSyncLogEventData(events.EventData):
-  """GDrive Sync log event data.
+class GoogleDriveSyncLogEventData(events.EventData):
+  """Google Drive Sync log event data.
 
   Attributes:
     log_level (str): logging level of event such as "DEBUG", "WARN", "INFO",
@@ -35,7 +35,7 @@ class GDriveSyncLogEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(GDriveSyncLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(GoogleDriveSyncLogEventData, self).__init__(data_type=self.DATA_TYPE)
     self.time = None
     self.log_level = None
     self.pid = None
@@ -44,12 +44,12 @@ class GDriveSyncLogEventData(events.EventData):
     self.message = None
 
 
-class GDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
-  """Parses events from GDrive Sync log files."""
+class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
+  """Parses events from Google Drive Sync log files."""
 
   NAME = 'gdrive_synclog'
 
-  DESCRIPTION = 'Parser for GDrive Sync log files.'
+  DESCRIPTION = 'Parser for Google Drive Sync log files.'
 
   _ENCODING = 'utf-8'
 
@@ -72,7 +72,6 @@ class GDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
       _TWO_DIGITS.setResultsName('month') + _HYPHEN +
       _TWO_DIGITS.setResultsName('day') +
       text_parser.PyparsingConstants.TIME_MSEC_ELEMENTS +
-      # TODO: consider adding tz-offset support to parsers/text_parser.py?
       pyparsing.Word(pyparsing.printables).setResultsName('time_zone_offset')
   ).setResultsName('date_time')
 
@@ -108,7 +107,7 @@ class GDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     # is_local_time and converting to UTC (see
     # https://github.com/log2timeline/dfdatetime/issues/47, possibly others).
     # As such, I'm hacking around things with some string reformats to get it
-    # working for a first-pass, and will take direction from jbmetz when I have
+    # working for a first-pass, and will take direction from Joachim when I have
     # more context on the ongoing work/best practices.
     year, month, day_of_month, hours, minutes, seconds, milliseconds, tz = (
         structure.date_time)
@@ -131,7 +130,7 @@ class GDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
           'invalid date time value: {0!s}'.format(structure.date_time))
       return
 
-    event_data = GDriveSyncLogEventData()
+    event_data = GoogleDriveSyncLogEventData()
     event_data.log_level = structure.log_level
     event_data.pid = structure.pid
     event_data.thread = structure.thread
@@ -158,8 +157,8 @@ class GDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
       ParseError: when the structure type is unknown.
     """
     # Note: this may be overcomplicated/unnecessary; I'm mostly cloning SkyDrive
-    # parser but GDrive sync seems to have no header/other key types: consider
-    # refactoring or extending this in the future.
+    # parser but Google Drive sync seems to have no header/other key types:
+    # consider refactoring or extending this in the future.
     if key == 'logline':
       self._ParseLine(parser_mediator, structure)
     else:
@@ -167,7 +166,7 @@ class GDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def VerifyStructure(self, parser_mediator, lines):
-    """Verify that this file is a GDrive Sync log file.
+    """Verify that this file is a Google Drive Sync log file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -180,7 +179,7 @@ class GDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     try:
       structure = self._GDS_LINE.parseString(lines)
     except pyparsing.ParseException as exception:
-      logging.debug('Not a GDrive Sync log file: {0!s}'.format(exception))
+      logging.debug('Not a Google Drive Sync log file: {0!s}'.format(exception))
       return False
 
     try:
@@ -188,11 +187,11 @@ class GDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
           time_elements_tuple=structure.header_date_time)
     except ValueError:
       logging.debug(
-          'Not a GDrive Sync log file, invalid date and time: {0!s}'.format(
+          'Not a Google Drive Sync log file, invalid date/time: {0!s}'.format(
               structure.header_date_time))
       return False
 
     return True
 
 
-manager.ParsersManager.RegisterParser(GDriveSyncLogParser)
+manager.ParsersManager.RegisterParser(GoogleDriveSyncLogParser)
