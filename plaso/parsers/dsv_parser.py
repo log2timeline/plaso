@@ -83,16 +83,19 @@ class DSVParser(interface.FileObjectParser):
 
     return row
 
-  def ParseFileObject(self, parser_mediator, file_object, **unused_kwargs):
-    """Parses a DSV text file-like object.
+  def _CreateDictReader(self, parser_mediator, line_reader):
+    """Returns a reader that processes each row and yields dictionaries.
+
+    csv.DictReader does this job well for single-character delimiters; parsers
+    that need multi-character delimiters need to override this method.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): file-like object.
+      line_reader (iter): yields lines from a file-like object.
 
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
+    Returns:
+      iter: a reader of dictionaries, as returned by csv.DictReader().
     """
     if not self._encoding:
       self._encoding = parser_mediator.codepage
@@ -106,16 +109,29 @@ class DSVParser(interface.FileObjectParser):
       quotechar = quotechar.decode(self._encoding)
       magic_test_string = magic_test_string.decode(self._encoding)
 
+    return csv.DictReader(
+        line_reader, delimiter=delimiter, fieldnames=self.COLUMNS,
+        quotechar=quotechar, restkey=magic_test_string,
+        restval=magic_test_string)
+
+  def ParseFileObject(self, parser_mediator, file_object, **unused_kwargs):
+    """Parses a DSV text file-like object.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
     line_reader = line_reader_file.BinaryLineReader(file_object)
 
     # If we specifically define a number of lines we should skip, do that here.
     for _ in range(0, self.NUMBER_OF_HEADER_LINES):
       line_reader.readline()
 
-    reader = csv.DictReader(
-        line_reader, delimiter=delimiter, fieldnames=self.COLUMNS,
-        quotechar=quotechar, restkey=magic_test_string,
-        restval=magic_test_string)
+    reader = self._CreateDictReader(parser_mediator, line_reader)
 
     row_offset = line_reader.tell()
     try:
