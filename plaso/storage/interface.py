@@ -341,7 +341,12 @@ class BaseStorageFile(BaseStore):
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(container_type)
 
-    attribute_container = self._serializer.ReadSerialized(serialized_data)
+    try:
+      serialized_string = serialized_data.decode('utf-8')
+    except UnicodeDecodeError as exception:
+      raise IOError('Unable to decode serialized data: {0!s}'.format(
+          exception))
+    attribute_container = self._serializer.ReadSerialized(serialized_string)
 
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(container_type)
@@ -537,7 +542,12 @@ class StorageFileMergeReader(StorageMergeReader):
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(container_type)
 
-    attribute_container = self._serializer.ReadSerialized(serialized_data)
+    try:
+      serialized_string = serialized_data.decode('utf-8')
+    except UnicodeDecodeError as exception:
+      raise IOError('Unable to decode serialized data: {0!s}'.format(
+          exception))
+    attribute_container = self._serializer.ReadSerialized(serialized_string)
 
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(container_type)
