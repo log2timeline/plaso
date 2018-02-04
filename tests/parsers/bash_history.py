@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.lib import timelib
 from plaso.parsers import bash_history
 
 from tests import test_lib as shared_test_lib
@@ -25,23 +24,14 @@ class BashHistoryTest(test_lib.ParserTestCase):
 
     events = list(storage_writer.GetEvents())
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-10-01 12:36:17')
-    expected_command = '/usr/lib/plaso'
-    self.assertEqual(events[0].timestamp, expected_timestamp)
-    self.assertEqual(events[0].command, expected_command)
+    self.CheckTimestamp(events[0].timestamp, '2013-10-01 12:36:17.000000')
+    self.assertEqual(events[0].command, '/usr/lib/plaso')
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-10-01 12:36:18')
-    expected_command = '/bin/bash'
-    self.assertEqual(events[1].timestamp, expected_timestamp)
-    self.assertEqual(events[1].command, expected_command)
+    self.CheckTimestamp(events[1].timestamp, '2013-10-01 12:36:18.000000')
+    self.assertEqual(events[1].command, '/bin/bash')
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-10-01 12:36:19')
-    expected_command = '/usr/local/bin/splunk -p 8080'
-    self.assertEqual(events[2].timestamp, expected_timestamp)
-    self.assertEqual(events[2].command, expected_command)
+    self.CheckTimestamp(events[2].timestamp, '2013-10-01 12:36:19.000000')
+    self.assertEqual(events[2].command, '/usr/local/bin/splunk -p 8080')
 
   @shared_test_lib.skipUnlessHasTestFile(['bash_history_desync'])
   def testParsingExtractionDesync(self):
@@ -63,6 +53,8 @@ class BashHistoryTest(test_lib.ParserTestCase):
     parser = bash_history.BashHistoryParser()
     storage_writer = self._ParseFile(['bash_history'], parser)
     self._TestEventsFromFile(storage_writer)
+
+    # TODO: add test for message string
 
 
 if __name__ == '__main__':

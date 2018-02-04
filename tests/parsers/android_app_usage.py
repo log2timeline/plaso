@@ -6,9 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import android_app_usage as _
-from plaso.lib import timelib
+from plaso.formatters import android_app_usage as _  # pylint: disable=unused-import
 from plaso.parsers import android_app_usage
 
 from tests import test_lib as shared_test_lib
@@ -31,9 +29,8 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
 
     event = events[22]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-09 19:28:33.047000')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-12-09 19:28:33.047000')
+
     self.assertEqual(
         event.component,
         'com.sec.android.widgetapp.ap.hero.accuweather.menu.MenuAdd')
@@ -51,9 +48,8 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
 
     event = events[17]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-09-27 19:45:55.675000')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-09-27 19:45:55.675000')
+
     self.assertEqual(event.package, 'com.google.android.gsf.login')
 
     expected_message = (
