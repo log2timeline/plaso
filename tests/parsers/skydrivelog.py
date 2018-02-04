@@ -197,7 +197,7 @@ class SkyDriveOldLogUnitTest(test_lib.ParserTestCase):
 
     event = events[17]
 
-    self.CheckTimestamp(event.timestamp, '2013-08-01 21:22:58.344000')
+    self.CheckTimestamp(event.timestamp, '2013-08-01 21:28:46.742000')
 
     expected_message = (
         'SyncToken = Not a sync token (\xe0\xe8\xec\xf2\xf9)!')
