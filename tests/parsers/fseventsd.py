@@ -39,7 +39,7 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
 
     event = events[3]
 
-    self.CheckTimestamp(event.timestamp, '2018-02-04 08:15:55.000000')
+    # Do not check the timestamp since it is derived from the file entry.
 
     self.assertEqual(event.path, '.Spotlight-V100/Store-V1')
     self.assertEqual(event.event_identifier, 47747061)
@@ -78,7 +78,7 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
 
     event = events[2]
 
-    self.CheckTimestamp(event.timestamp, '2018-02-04 08:15:55.000000')
+    # Do not check the timestamp since it is derived from the file entry.
 
     self.assertEqual(event.path, 'Hi, Sierra')
     self.assertEqual(event.event_identifier, 1706838)
