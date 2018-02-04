@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import sccm as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import sccm
 
 from tests import test_lib as shared_test_lib
@@ -28,27 +27,23 @@ class SCCMLogsUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[0]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-11-29 01:03:19.766')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2014-11-29 01:03:19.766000')
 
     # Test timestamps with seven digits after seconds.
     event = events[3]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2015-01-02 10:22:50.873496')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2015-01-02 10:22:50.873496')
 
     # Test timestamps with '-' in microseconds.
     event = events[7]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-12-28 18:59:43.373')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2014-12-28 18:59:43.373000')
 
     # Test timestamps with '+' in microseconds.
     event = events[9]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-11-23 17:52:13.827')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2014-11-23 17:52:13.827000')
 
     # Test full and short message formats.
     event = events[4]

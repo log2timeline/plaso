@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import android_webview
 
 from tests import test_lib as shared_test_lib
@@ -29,10 +28,9 @@ class AndroidWebView(test_lib.SQLitePluginTestCase):
 
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2014-03-05 15:04:44.000000')
+
     self.assertEqual(event.host, 'skype.com')
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-03-05 15:04:44')
-    self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(event.cookie_name, 'SC')
     expected_data = (
         'CC=:CCY=:LC=en-us:LIM=:TM=1362495731:TS=1362495680:TZ=:VAT=:VER=')

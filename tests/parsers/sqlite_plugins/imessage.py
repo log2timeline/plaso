@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import imessage as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import imessage
 
 from tests import test_lib as shared_test_lib
@@ -33,12 +32,9 @@ class IMessageTest(test_lib.SQLitePluginTestCase):
     # Check the eighth message sent.
     event = events[7]
 
+    self.CheckTimestamp(event.timestamp, '2015-11-30 10:48:40.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2015-11-30 10:48:40.000')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(event.imessage_id, 'xxxxxx2015@icloud.com')
     self.assertEqual(event.read_receipt, 1)

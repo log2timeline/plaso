@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import skydrivelog as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import skydrivelog
 
 from tests import test_lib as shared_test_lib
@@ -29,9 +28,7 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-07-25 16:03:23.291')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-07-25 16:03:23.291000')
 
     expected_message = (
         'Logging started. Version= 17.0.2011.0627 StartLocalTime: '
@@ -43,9 +40,7 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 
     event = events[1]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-07-25 16:03:24.649')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-07-25 16:03:24.649000')
 
     expected_message = (
         '[AUTH authapi.cpp(280) ERR] Sign in failed : '
@@ -56,9 +51,7 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 
     event = events[18]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-08-01 21:27:44.124')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-08-01 21:27:44.124000')
 
     expected_message = (
         '[WNS absconn.cpp(177) VRB] Received data from server,'
@@ -100,21 +93,15 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-08-12 01:08:52.985')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-08-12 01:08:52.985000')
 
     event = events[1]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-08-12 01:10:08.835')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-08-12 01:10:08.835000')
 
     event = events[11]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-08-12 02:52:32.976')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-08-12 02:52:32.976000')
 
     expected_message = (
         '[WNS absconn.cpp(177) VRB] Received data from server,dwID=0x0;'
@@ -131,9 +118,7 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 
     event = events[13]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-08-12 03:18:57.232')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-08-12 03:18:57.232000')
 
     expected_message = (
         'Logging started. Version= 17.0.2011.0627 StartLocalTime: '
@@ -145,9 +130,7 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 
     event = events[15]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-08-31 03:45:37.940')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-08-31 03:45:37.940000')
 
     expected_message = (
         '[PAL cwinhttp.cpp(1581) VRB] ,output=GET <- /MyData/LiveFolders?'
@@ -176,9 +159,7 @@ class SkyDriveOldLogUnitTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-08-01 21:22:28.999')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-08-01 21:22:28.999000')
 
     expected_message = (
         '[global.cpp:626!logVersionInfo] (DETAIL) 17.0.2011.0627 (Ship)')
@@ -186,17 +167,17 @@ class SkyDriveOldLogUnitTest(test_lib.ParserTestCase):
         '17.0.2011.0627 (Ship)')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-08-01 21:22:29.702')
-
     event = events[1]
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2013-08-01 21:22:29.702000')
 
     event = events[2]
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2013-08-01 21:22:29.702000')
 
     event = events[3]
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2013-08-01 21:22:29.702000')
 
     expected_message = (
         'SyncToken = LM%3d12345678905670%3bID%3d1234567890E059C0!'
@@ -206,16 +187,18 @@ class SkyDriveOldLogUnitTest(test_lib.ParserTestCase):
         '103%3bLR%3d1234567890...')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-08-01 21:22:58.344')
-
     event = events[4]
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2013-08-01 21:22:58.344000')
 
     event = events[5]
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2013-08-01 21:22:58.344000')
 
     event = events[17]
+
+    self.CheckTimestamp(event.timestamp, '2013-08-01 21:22:58.344000')
+
     expected_message = (
         'SyncToken = Not a sync token (\xe0\xe8\xec\xf2\xf9)!')
     self._TestGetMessageStrings(event, expected_message, expected_message)

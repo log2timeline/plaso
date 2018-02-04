@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import android_calls as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import android_calls
 
 from tests import test_lib as shared_test_lib
@@ -34,12 +33,7 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
 
     self.assertEqual(event.timestamp_desc, 'Call Started')
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-06 21:17:16.690')
-    self.assertEqual(event.timestamp, expected_timestamp)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-06 21:17:16.690')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-06 21:17:16.690000')
 
     expected_number = '5404561685'
     self.assertEqual(event.number, expected_number)
@@ -55,25 +49,17 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
     expected_short_message = 'MISSED Call'
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    # Run some tests on the last 2 events.
-    event_3 = events[3]
-    event_4 = events[4]
+    event = events[3]
 
-    # Check the timestamp_desc of the last event.
-    self.assertEqual(event_4.timestamp_desc, 'Call Ended')
+    self.CheckTimestamp(event.timestamp, '2013-11-07 00:03:36.690000')
 
-    expected_timestamp3 = timelib.Timestamp.CopyFromString(
-        '2013-11-07 00:03:36.690')
-    self.assertEqual(event_3.timestamp, expected_timestamp3)
+    event = events[4]
 
-    expected_timestamp4 = timelib.Timestamp.CopyFromString(
-        '2013-11-07 00:14:15.690')
-    self.assertEqual(event_4.timestamp, expected_timestamp4)
+    self.CheckTimestamp(event.timestamp, '2013-11-07 00:14:15.690000')
 
-    # Ensure the difference in btw. events 3 and 4 equals the duration.
-    expected_duration, _ = divmod(
-        expected_timestamp4 - expected_timestamp3, 1000000)
-    self.assertEqual(event_4.duration, expected_duration)
+    self.assertEqual(event.timestamp_desc, 'Call Ended')
+
+    self.assertEqual(event.duration, 639)
 
 
 if __name__ == '__main__':

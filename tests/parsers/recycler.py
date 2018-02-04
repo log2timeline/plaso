@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import recycler as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import recycler
 
 from tests import test_lib as shared_test_lib
@@ -30,13 +29,11 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2012-03-12 20:49:58.633000')
+
     expected_filename = (
         'C:\\Users\\nfury\\Documents\\Alloy Research\\StarFury.zip')
     self.assertEqual(event.original_filename, expected_filename)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-03-12 20:49:58.633')
-    self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(event.file_size, 724919)
 
     expected_message = '{0:s} (from drive: UNKNOWN)'.format(expected_filename)
@@ -55,13 +52,11 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2016-06-29 21:37:45.618000')
+
     expected_filename = (
         'C:\\Users\\random\\Downloads\\bunnies.jpg')
     self.assertEqual(event.original_filename, expected_filename)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2016-06-29 21:37:45.618')
-    self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(event.file_size, 222255)
 
     expected_message = '{0:s} (from drive: UNKNOWN)'.format(expected_filename)
@@ -84,11 +79,8 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2004-08-25 16:18:25.237')
-    self.assertEqual(event.timestamp, expected_timestamp)
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_DELETED)
+    self.CheckTimestamp(event.timestamp, '2004-08-25 16:18:25.237000')
+    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_DELETED)
 
     self.assertEqual(event.record_index, 1)
 

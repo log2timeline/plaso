@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import chrome_extension_activity as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import chrome_extension_activity
 
 from tests import test_lib as shared_test_lib
@@ -31,12 +30,9 @@ class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
 
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2014-11-25 21:08:23.698737')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_UNKNOWN)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-11-25 21:08:23.698737')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_extension_id = 'ognampngfcbddbfemdapefohjiobgbdl'
     self.assertEqual(event.extension_id, expected_extension_id)
