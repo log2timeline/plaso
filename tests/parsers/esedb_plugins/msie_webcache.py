@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import msie_webcache as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.esedb_plugins import msie_webcache
 
 from tests import test_lib as shared_test_lib
@@ -35,9 +34,7 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     self.assertEqual(event.container_identifier, 1)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-05-12 07:30:25.486198')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2014-05-12 07:30:25.486198')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 

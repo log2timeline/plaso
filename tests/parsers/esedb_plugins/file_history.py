@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import file_history as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.esedb_plugins import file_history
 
 from tests import test_lib as shared_test_lib
@@ -22,8 +21,7 @@ class FileHistoryESEDBPluginTest(test_lib.ESEDBPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     plugin = file_history.FileHistoryESEDBPlugin()
-    storage_writer = self._ParseESEDBFileWithPlugin(
-        ['Catalog1.edb'], plugin)
+    storage_writer = self._ParseESEDBFileWithPlugin(['Catalog1.edb'], plugin)
 
     self.assertEqual(storage_writer.number_of_events, 2713)
 
@@ -31,15 +29,12 @@ class FileHistoryESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     event = events[702]
 
-    self.assertEqual(event.usn_number, 9251162904)
-    self.assertEqual(event.identifier, 356)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-10-12 17:34:36.688580')
-
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-10-12 17:34:36.688580')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
+
+    self.assertEqual(event.usn_number, 9251162904)
+    self.assertEqual(event.identifier, 356)
 
     filename = '?UP\\Favorites\\Links\\Lenovo'
     self.assertEqual(event.original_filename, filename)

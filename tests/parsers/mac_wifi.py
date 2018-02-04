@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import mac_wifi as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import mac_wifi
 
 from tests import test_lib as shared_test_lib
@@ -32,9 +31,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2017-01-02 00:10:15')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2017-01-02 00:10:15.000000')
 
     self.assertEqual(
         event.text,
@@ -42,9 +39,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     event = events[1]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2017-01-02 00:11:02.378')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2017-01-02 00:11:02.378000')
 
     expected_text = (
         '<kernel> wl0: powerChange: *** '
@@ -53,9 +48,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     event = events[2]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2017-01-02 07:41:01.371')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2017-01-02 07:41:01.371000')
 
     expected_string = (
         '<kernel> wl0: leaveModulePoweredForOffloads: Wi-Fi will stay on.')
@@ -63,9 +56,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     event = events[5]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2017-01-02 07:41:02.207')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2017-01-02 07:41:02.207000')
 
     expected_text = (
         '<kernel> Setting BTCoex Config: enable_2G:1, profile_2g:0, '
@@ -88,9 +79,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     event = events[1]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-14 20:36:37.222')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-14 20:36:37.222000')
 
     self.assertEqual(event.agent, 'airportd[88]')
     self.assertEqual(event.function, 'airportdProcessDLILEvent')
@@ -109,9 +98,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     event = events[2]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-14 20:36:43.818')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-14 20:36:43.818000')
 
     self.assertEqual(event.agent, 'airportd[88]')
     self.assertEqual(event.function, '_doAutoJoin')
@@ -123,9 +110,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     event = events[3]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-14 21:50:52.395')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-14 21:50:52.395000')
 
     expected_string = (
         '<airportd[88]> _handleLinkEvent: Unable to process link event, '
@@ -135,9 +120,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     event = events[6]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-14 21:52:09.883')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-14 21:52:09.883000')
 
     self.assertEqual('airportd[88]', event.agent)
     self.assertEqual('_processSystemPSKAssoc', event.function)
@@ -159,15 +142,11 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
 
     event = events[8]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-31 23:59:38.165')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-12-31 23:59:38.165000')
 
     event = events[9]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-01-01 01:12:17.311')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2014-01-01 01:12:17.311000')
 
 if __name__ == '__main__':
   unittest.main()

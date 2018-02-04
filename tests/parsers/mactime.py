@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import mactime as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import mactime
 
 from tests import test_lib as shared_test_lib
@@ -40,26 +39,21 @@ class MactimeTest(test_lib.ParserTestCase):
 
     event = events[21]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-05-25 15:59:43')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-05-25 15:59:43.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+
     self.assertEqual(event.inode, 16)
 
     event = events[22]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-05-25 15:59:44')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-05-25 15:59:44.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
     event = events[23]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-05-25 15:59:45')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-05-25 15:59:45.000000')
     self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_CHANGE)
 
     expected_filename = '/a_directory/another_file'

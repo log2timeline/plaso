@@ -9,7 +9,6 @@ import unittest
 
 from plaso.formatters import srum as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.esedb_plugins import srum
 
 from tests import test_lib as shared_test_lib
@@ -41,13 +40,11 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     # Test event with data type windows:srum:application_usage
     event = events[21]
 
+    self.CheckTimestamp(event.timestamp, '2017-11-05 11:32:00.000000')
+    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_SAMPLE)
+
     self.assertEqual(event.data_type, 'windows:srum:application_usage')
     self.assertEqual(event.identifier, 22167)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString('2017-11-05 11:32:00')
-
-    self.assertEqual(event.timestamp, expected_timestamp)
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_SAMPLE)
 
     expected_message = (
         'Application: Memory Compression')
@@ -59,15 +56,12 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     # Test event with data type windows:srum:network_connectivity
     event = events[0]
 
-    self.assertEqual(event.data_type, 'windows:srum:network_connectivity')
-    self.assertEqual(event.identifier, 501)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2017-11-05 10:30:48.167971')
-
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2017-11-05 10:30:48.167971')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_FIRST_CONNECTED)
+
+    self.assertEqual(event.data_type, 'windows:srum:network_connectivity')
+    self.assertEqual(event.identifier, 501)
 
     expected_message = (
         'Application: 1')
@@ -79,13 +73,11 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     # Test event with data type windows:srum:network_usage
     event = events[14]
 
+    self.CheckTimestamp(event.timestamp, '2017-11-05 11:32:00.000000')
+    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_SAMPLE)
+
     self.assertEqual(event.data_type, 'windows:srum:network_usage')
     self.assertEqual(event.identifier, 3495)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString('2017-11-05 11:32:00')
-
-    self.assertEqual(event.timestamp, expected_timestamp)
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_SAMPLE)
 
     expected_message = (
         'Application: DiagTrack '

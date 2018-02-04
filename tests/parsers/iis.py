@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import iis as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import iis
 
 from tests import test_lib as shared_test_lib
@@ -29,9 +28,7 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-07-30 00:00:00')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-07-30 00:00:00.000000')
 
     self.assertEqual(event.source_ip, '10.10.10.100')
     self.assertEqual(event.dest_ip, '10.10.10.100')
@@ -51,9 +48,7 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     event = events[5]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-07-30 00:00:05')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-07-30 00:00:05.000000')
 
     self.assertEqual(event.http_method, 'GET')
     self.assertEqual(event.http_status, 200)
@@ -87,9 +82,7 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     event = events[1]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-07-30 00:00:03')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-07-30 00:00:03.000000')
 
     self.assertEqual(event.protocol_version, 'HTTP/1.1')
 

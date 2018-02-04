@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import mac_keychain as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import mac_keychain
 
 from tests import test_lib as shared_test_lib
@@ -30,9 +29,7 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-01-26 14:51:48')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2014-01-26 14:51:48.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
@@ -52,15 +49,11 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
         event.timestamp_desc,
         definitions.TIME_DESCRIPTION_MODIFICATION)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-01-26 14:52:29')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2014-01-26 14:52:29.000000')
 
     event = events[2]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-01-26 14:53:29')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2014-01-26 14:53:29.000000')
 
     self.assertEqual(event.entry_name, 'Secret Note')
     self.assertEqual(event.text_description, 'secure note')
@@ -71,9 +64,7 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
 
     event = events[4]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-01-26 14:54:33')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2014-01-26 14:54:33.000000')
 
     self.assertEqual(event.entry_name, 'plaso.kiddaland.net')
     self.assertEqual(event.account_name, 'MrMoreno')
