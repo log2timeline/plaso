@@ -41,7 +41,8 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event = events[1]
 
     self.CheckTimestamp(event.timestamp, '2010-06-22 07:34:42.000000')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
     expected_message = 'mru [/usr/sbin/atd] package [at]'
     expected_short_message = '/usr/sbin/atd'
@@ -50,7 +51,8 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event = events[3]
 
     self.CheckTimestamp(event.timestamp, '2010-06-22 07:34:43.000000')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
     expected_message = (
         'mru [/usr/lib/python2.5/lib-dynload/_struct.so] '
@@ -61,7 +63,8 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event = events[5]
 
     self.CheckTimestamp(event.timestamp, '2010-05-30 05:26:20.000000')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
     expected_message = (
         'mru [/usr/bin/empathy] package [empathy] tag [RECENT-CTIME]')
@@ -82,7 +85,8 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event = events[11]
 
     self.CheckTimestamp(event.timestamp, '2010-05-12 07:58:33.000000')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
     expected_message = 'mru [/usr/bin/orca] package [gnome-orca] tag [OLD]'
     expected_short_message = '/usr/bin/orca'
@@ -111,7 +115,8 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event = events[15]
 
     self.CheckTimestamp(event.timestamp, '2010-06-22 07:34:42.000000')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
     expected_message = 'mru [/super/cool/plasuz] package [plaso]'
     expected_short_message = '/super/cool/plasuz'
@@ -120,7 +125,8 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event = events[18]
 
     self.CheckTimestamp(event.timestamp, '2010-04-06 12:25:42.000000')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
     expected_message = 'mru [/super/cool/plasuz] package [miss_ctime]'
     expected_short_message = '/super/cool/plasuz'
@@ -129,7 +135,8 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     event = events[19]
 
     self.CheckTimestamp(event.timestamp, '2010-05-12 07:58:33.000000')
-    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
     expected_message = 'mru [/super/cóól] package [plaso] tag [WRONG_TAG]'
     expected_short_message = '/super/cóól'
