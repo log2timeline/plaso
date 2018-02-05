@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the Google Drive log event formatter."""
+"""Tests for the Google Drive sync log event formatter."""
 
 from __future__ import unicode_literals
 
@@ -12,7 +12,7 @@ from tests.formatters import test_lib
 
 
 class GoogleDriveSyncLogFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the Google Drive log event formatter."""
+  """Tests for the Google Drive sync log event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""

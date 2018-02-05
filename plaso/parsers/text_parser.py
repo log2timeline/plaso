@@ -612,10 +612,6 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
         self._text_reader.SkipAhead(file_object, end)
 
       else:
-        # TODO: somewhere above here we seem to be choking on ascii-encoded
-        # lines which contain u'' string output, e.g. test_data/sync_log.log:31.
-        # It seems to be a bug but I haven't pinned down where, yet -- will
-        # follow up with jbmetz@ and ask for help.
         odd_line = self._text_reader.ReadLine(file_object)
         if odd_line:
           if len(odd_line) > 80:

@@ -3,9 +3,9 @@
 
 from __future__ import unicode_literals
 
+# TODO: add gdrive_sync to linux/macos after further testing.
 CATEGORIES = {
     'win_gen': [
-        # TODO: add gdrive_sync to linux/macos after further testing.
         'bencode', 'esedb', 'filestat', 'sqlite/google_drive', 'gdrive_synclog',
         'java_idx', 'lnk', 'mcafee_protection', 'olecf', 'openxml', 'pe',
         'prefetch', 'sccm', 'skydrive_log', 'skydrive_log_old', 'sqlite/skype',
