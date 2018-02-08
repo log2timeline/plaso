@@ -201,7 +201,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         self.assertEqual(value, expected[key])
 
   def CheckTimestamp(self, timestamp, expected_date_time):
-    """Asserts if a timestamp value matches the expected date and time.
+    """Asserts that a timestamp value matches the expected date and time.
 
     Args:
       timestamp (int): timestamp, which contains the number of microseconds
