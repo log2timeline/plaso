@@ -11,7 +11,6 @@ from dfvfs.path import factory as path_spec_factory
 
 from plaso.formatters import file_system  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import ntfs
 
 from tests import test_lib as shared_test_lib
@@ -39,11 +38,9 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     # A distributed link tracking event.
     event = events[3684]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2007-06-30 12:58:40.500004')
+    self.CheckTimestamp(event.timestamp, '2007-06-30 12:58:40.500004')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         '9fe44b69-2709-11dc-a06b-db3099beae3c '
@@ -84,11 +81,9 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     self.assertIsInstance(event.is_allocated, bool)
     self.assertTrue(event.is_allocated)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-03 06:30:41.807907')
+    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807907')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     # The last modification timestamp.
     event = events[1]
@@ -97,11 +92,9 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     self.assertIsInstance(event.is_allocated, bool)
     self.assertTrue(event.is_allocated)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-03 06:30:41.807907')
+    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807907')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     # The last accessed timestamp.
     event = events[2]
@@ -110,11 +103,9 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     self.assertIsInstance(event.is_allocated, bool)
     self.assertTrue(event.is_allocated)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-03 06:30:41.807907')
+    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807907')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     # The entry modification timestamp.
     event = events[3]
@@ -123,12 +114,9 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     self.assertIsInstance(event.is_allocated, bool)
     self.assertTrue(event.is_allocated)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-03 06:30:41.807907')
+    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807907')
     self.assertEqual(
-        event.timestamp_desc,
-        definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
-    self.assertEqual(event.timestamp, expected_timestamp)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
 
     expected_message = (
         'TSK:/$MFT '
@@ -147,11 +135,9 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     self.assertIsInstance(event.is_allocated, bool)
     self.assertTrue(event.is_allocated)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-03 06:30:41.807907')
+    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807907')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         'TSK:/$MFT '
@@ -208,12 +194,9 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2015-11-30 21:15:27.203125')
+    self.CheckTimestamp(event.timestamp, '2015-11-30 21:15:27.203125')
     self.assertEqual(
-        event.timestamp_desc,
-        definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
-    self.assertEqual(event.timestamp, expected_timestamp)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
 
     expected_message = (
         'Nieuw - Tekstdocument.txt '

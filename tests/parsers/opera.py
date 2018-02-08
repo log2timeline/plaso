@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import opera as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import opera
 
 from tests import test_lib as shared_test_lib
@@ -29,9 +28,8 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-11 23:45:27')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-11 23:45:27.000000')
+
     self.assertEqual(event.entry_selection, 'Filled from autocomplete.')
 
     expected_string = 'plaso.kiddaland.net (Filled from autocomplete.)'
@@ -40,9 +38,8 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
 
     event = events[3]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-11 22:46:07')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-11 22:46:07.000000')
+
     self.assertEqual(event.entry_selection, 'Manually typed.')
 
     expected_string = 'theonion.com (Manually typed.)'
@@ -65,9 +62,7 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
 
     event = events[4]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-11 22:45:46')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-11 22:45:46.000000')
 
     expected_message = (
         'http://www.mbl.is/frettir/erlent/2013/11/11/'
@@ -81,15 +76,11 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
 
     event = events[10]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-11 22:45:55')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-11 22:45:55.000000')
 
     event = events[16]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-11 22:46:16')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-11 22:46:16.000000')
 
     expected_title = (
         '10 Celebrities You Never Knew Were Abducted And Murdered '

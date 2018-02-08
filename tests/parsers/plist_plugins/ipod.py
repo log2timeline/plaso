@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import ipod as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.plist_plugins import ipod
 
 from tests import test_lib as shared_test_lib
@@ -35,14 +34,13 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
 
     event = events[0]
 
-    timestamp = timelib.Timestamp.CopyFromString('1995-11-22 18:25:07')
-    self.assertEqual(event.timestamp, timestamp)
+    self.CheckTimestamp(event.timestamp, '1995-11-22 18:25:07.000000')
+
     self.assertEqual(event.device_id, '0000A11300000000')
 
     event = events[2]
 
-    timestamp = timelib.Timestamp.CopyFromString('2013-10-09 19:27:54')
-    self.assertEqual(event.timestamp, timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-10-09 19:27:54.000000')
 
     expected_message = (
         'Device ID: 4C6F6F6E65000000 '

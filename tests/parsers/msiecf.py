@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import msiecf as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import msiecf
 
 from tests import test_lib as shared_test_lib
@@ -55,33 +54,25 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.url, expected_url)
     self.assertEqual(event.cache_directory_index, -2)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-06-23 18:02:10.066')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2011-06-23 18:02:10.066000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
 
     event = events[9]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-06-23 18:02:10.066')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2011-06-23 18:02:10.066000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
 
     event = events[10]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-06-29 17:55:02')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2011-06-29 17:55:02.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_EXPIRATION)
 
     event = events[11]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-06-23 18:02:12')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2011-06-23 18:02:12.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_CHECKED)
 
