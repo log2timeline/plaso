@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -197,3 +199,17 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         self.assertDictEqual(received[key], expected[key])
       else:
         self.assertEqual(value, expected[key])
+
+  def CheckTimestamp(self, timestamp, expected_date_time):
+    """Asserts that a timestamp value matches the expected date and time.
+
+    Args:
+      timestamp (int): timestamp, which contains the number of microseconds
+          since January 1, 1970, 00:00:00 UTC.
+      expected_date_time (str): expected date and time in UTC, formatted as:
+          YYYY-MM-DD hh:mm:ss.######
+    """
+    posix_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=timestamp)
+    date_time = posix_time.CopyToDateTimeString()
+    self.assertEqual(date_time, expected_date_time)

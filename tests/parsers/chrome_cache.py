@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import chrome_cache as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import chrome_cache
 
 from tests import test_lib as shared_test_lib
@@ -21,8 +20,7 @@ class ChromeCacheParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser = chrome_cache.ChromeCacheParser()
-    storage_writer = self._ParseFile(
-        ['chrome_cache', 'index'], parser)
+    storage_writer = self._ParseFile(['chrome_cache', 'index'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 217)
 
@@ -30,9 +28,7 @@ class ChromeCacheParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-04-30 16:44:36.226091')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2014-04-30 16:44:36.226091')
 
     expected_original_url = (
         'https://s.ytimg.com/yts/imgbin/player-common-vfliLfqPT.webp')
