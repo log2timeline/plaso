@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import bsm as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import bsm
 
 from tests import test_lib as shared_test_lib
@@ -35,9 +34,8 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.data_type, 'bsm:event')
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-04 18:36:20.000381')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-04 18:36:20.000381')
+
     self.assertEqual(event.event_type, 'audit crash recovery (45029)')
 
     expected_extra_tokens = {
@@ -61,9 +59,8 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
 
     event = events[15]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-04 18:36:26.000171')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-04 18:36:26.000171')
+
     self.assertEqual(event.event_type, 'user authentication (45023)')
 
     expected_extra_tokens = {
@@ -101,9 +98,7 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
 
     event = events[31]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-04 18:36:26.000530')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-04 18:36:26.000530')
 
     self.assertEqual(event.event_type, 'SecSrvr AuthEngine (45025)')
     expected_extra_tokens = {
@@ -135,9 +130,7 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
 
     event = events[50]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-04 18:37:36.000399')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-04 18:37:36.000399')
 
     self.assertEqual(event.event_type, 'session end (44903)')
 
@@ -185,8 +178,7 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
     parser = bsm.BSMParser()
     knowledge_base_values = {'guessed_os': definitions.OPERATING_SYSTEM_LINUX}
     storage_writer = self._ParseFile(
-        ['openbsm.bsm'],
-        parser,
+        ['openbsm.bsm'], parser,
         knowledge_base_values=knowledge_base_values)
 
     self.assertEqual(storage_writer.number_of_events, 50)

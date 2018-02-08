@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import asl as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import asl
 
 from tests import test_lib as shared_test_lib
@@ -21,8 +20,7 @@ class ASLParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser = asl.ASLParser()
-    storage_writer = self._ParseFile(
-        ['applesystemlog.asl'], parser)
+    storage_writer = self._ParseFile(['applesystemlog.asl'], parser)
 
     self.assertEqual(storage_writer.number_of_events, 2)
 
@@ -30,9 +28,7 @@ class ASLParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-25 09:45:35.705481')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-25 09:45:35.705481')
 
     self.assertEqual(event.record_position, 442)
     self.assertEqual(event.message_id, 101406)
