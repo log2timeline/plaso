@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import pe as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import pe
 
 from tests import test_lib as shared_test_lib
@@ -28,22 +27,22 @@ class PECOFFTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[0]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2015-04-21 14:53:56')
-    self.assertEqual(event.pe_type, 'Executable (EXE)')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2015-04-21 14:53:56.000000')
+
     self.assertEqual(event.data_type, 'pe:compilation:compilation_time')
+    self.assertEqual(event.pe_type, 'Executable (EXE)')
 
     event = events[1]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2015-04-21 14:53:55')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2015-04-21 14:53:55.000000')
+
     self.assertEqual(event.data_type, 'pe:import:import_time')
 
     event = events[2]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2015-04-21 14:53:54')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2015-04-21 14:53:54.000000')
+
     self.assertEqual(event.data_type, 'pe:delay_import:import_time')
 
   @shared_test_lib.skipUnlessHasTestFile(['test_driver.sys'])
@@ -57,10 +56,10 @@ class PECOFFTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[0]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2015-04-21 14:53:54')
+
+    self.CheckTimestamp(event.timestamp, '2015-04-21 14:53:54.000000')
+
     self.assertEqual(event.pe_type, 'Driver (SYS)')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

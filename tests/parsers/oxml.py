@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import oxml as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import oxml
 
 from tests import test_lib as shared_test_lib
@@ -116,8 +115,7 @@ class OXMLTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString('2012-11-07 23:29:00')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-11-07 23:29:00.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
