@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import olecf  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.olecf_plugins import summary
 
 from tests import test_lib as shared_test_lib
@@ -21,8 +20,7 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
   def testProcess(self):
     """Tests the Process function on a Summary Information stream."""
     plugin = summary.SummaryInformationOLECFPlugin()
-    storage_writer = self._ParseOLECFFileWithPlugin(
-        ['Document.doc'], plugin)
+    storage_writer = self._ParseOLECFFileWithPlugin(['Document.doc'], plugin)
 
     # There is one summary info stream with three event objects.
     self.assertEqual(storage_writer.number_of_events, 3)
@@ -30,6 +28,10 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
     events = list(storage_writer.GetSortedEvents())
 
     event = events[0]
+
+    self.CheckTimestamp(event.timestamp, '2012-12-10 18:38:00.000000')
+    self.assertEqual(event.timestamp_desc, 'Document Creation Time')
+
     self.assertEqual(event.name, 'Summary Information')
 
     self.assertEqual(event.title, 'Table of Context')
@@ -40,11 +42,6 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
     self.assertEqual(event.number_of_characters, 18)
     self.assertEqual(event.application, 'Microsoft Office Word')
     self.assertEqual(event.security, 0)
-
-    self.assertEqual(event.timestamp_desc, 'Document Creation Time')
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-12-10 18:38:00')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         'Title: Table of Context '
@@ -76,8 +73,7 @@ class TestDocumentSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
   def testProcess(self):
     """Tests the Process function on a Document Summary Information stream."""
     plugin = summary.DocumentSummaryInformationOLECFPlugin()
-    storage_writer = self._ParseOLECFFileWithPlugin(
-        ['Document.doc'], plugin)
+    storage_writer = self._ParseOLECFFileWithPlugin(['Document.doc'], plugin)
 
     # There should only be one summary info stream with one event.
     self.assertEqual(storage_writer.number_of_events, 1)

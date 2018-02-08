@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import olecf  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.olecf_plugins import automatic_destinations
 
 from tests import test_lib as shared_test_lib
@@ -36,12 +35,9 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     self.assertEqual(event.offset, 32)
     self.assertEqual(event.data_type, 'olecf:dest_list:entry')
 
+    self.CheckTimestamp(event.timestamp, '2012-04-01 13:52:38.997538')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-04-01 13:52:38.997538')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         'Entry: 11 '
@@ -67,9 +63,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
 
     self.assertEqual(event.data_type, 'windows:lnk:link')
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2010-11-10 07:51:16.749125')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2010-11-10 07:51:16.749125')
 
     expected_message = (
         '[Empty description] '
@@ -94,9 +88,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     self.assertEqual(
         event.data_type, 'windows:distributed_link_tracking:creation')
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-03-31 23:01:03.527741')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-03-31 23:01:03.527741')
 
     expected_message = (
         '63eea867-7b85-11e1-8950-005056a50b40 '
@@ -130,12 +122,9 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     self.assertEqual(event.offset, 32)
     self.assertEqual(event.data_type, 'olecf:dest_list:entry')
 
+    self.CheckTimestamp(event.timestamp, '2016-01-17 13:08:08.247504')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2016-01-17 13:08:08.247504')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         'Entry: 2 '
