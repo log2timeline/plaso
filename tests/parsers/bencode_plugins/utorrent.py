@@ -37,58 +37,51 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     # First test on when the torrent was added to the client.
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2013-08-03 14:52:12.000000')
+    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
+
     self.assertEqual(event.caption, expected_caption)
     self.assertEqual(event.path, expected_path)
     self.assertEqual(event.seedtime, 511)
-
-    expected_description = definitions.TIME_DESCRIPTION_ADDED
-    self.assertEqual(event.timestamp_desc, expected_description)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-08-03 14:52:12')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     # Second test on when the torrent file was completely downloaded.
     event = events[3]
 
+    self.CheckTimestamp(event.timestamp, '2013-08-03 18:11:35.000000')
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
+
     self.assertEqual(event.caption, expected_caption)
     self.assertEqual(event.path, expected_path)
     self.assertEqual(event.seedtime, 511)
-
-    expected_description = definitions.TIME_DESCRIPTION_FILE_DOWNLOADED
-    self.assertEqual(event.timestamp_desc, expected_description)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-08-03 18:11:35')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     # Third test on when the torrent was first modified.
     event = events[2]
 
+    self.CheckTimestamp(event.timestamp, '2013-08-03 18:11:34.000000')
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
+
     self.assertEqual(event.caption, expected_caption)
     self.assertEqual(event.path, expected_path)
     self.assertEqual(event.seedtime, 511)
-
-    expected_description = definitions.TIME_DESCRIPTION_MODIFICATION
-    self.assertEqual(event.timestamp_desc, expected_description)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-08-03 18:11:34')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     # Fourth test on when the torrent was again modified.
     event = events[1]
 
+    self.CheckTimestamp(event.timestamp, '2013-08-03 16:27:59.000000')
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
+
     self.assertEqual(event.caption, expected_caption)
     self.assertEqual(event.path, expected_path)
     self.assertEqual(event.seedtime, 511)
 
-    expected_description = definitions.TIME_DESCRIPTION_MODIFICATION
-    self.assertEqual(event.timestamp_desc, expected_description)
+    expected_message = (
+        'Torrent plaso test; Saved to e:\\torrent\\files\\plaso test; '
+        'Minutes seeded: 511')
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-08-03 16:27:59')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self._TestGetMessageStrings(event, expected_message, expected_message)
 
 
 if __name__ == '__main__':

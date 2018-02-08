@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import ganalytics as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.cookie_plugins import ganalytics
 from plaso.parsers.sqlite_plugins import chrome_cookies
 from plaso.parsers.sqlite_plugins import firefox_cookies
@@ -44,12 +43,11 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
 
     event = events[14]
 
+    self.CheckTimestamp(event.timestamp, '2013-10-30 21:56:06.000000')
+
     self.assertEqual(
         event.utmcct,
         '/frettir/erlent/2013/10/30/maelt_med_kerfisbundnum_hydingum/')
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-10-30 21:56:06')
-    self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(event.url, 'http://ads.aha.is/')
     self.assertEqual(event.utmcsr, 'mbl.is')
 
@@ -93,14 +91,13 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
 
     # Check the UTMA Google Analytics event.
     event = events[41]
+
+    self.CheckTimestamp(event.timestamp, '2012-03-22 01:55:29.000000')
+
     self.assertEqual(event.timestamp_desc, 'Analytics Previous Time')
     self.assertEqual(event.cookie_name, '__utma')
     self.assertEqual(event.visitor_id, '1827102436')
     self.assertEqual(event.sessions, 2)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-03-22 01:55:29')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         'http://assets.tumblr.com/ (__utma) '
@@ -113,15 +110,14 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
 
     # Check the UTMB Google Analytics event.
     event = events[34]
+
+    self.CheckTimestamp(event.timestamp, '2012-03-22 01:48:30.000000')
+
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
     self.assertEqual(event.cookie_name, '__utmb')
     self.assertEqual(event.domain_hash, '154523900')
     self.assertEqual(event.pages_viewed, 1)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-03-22 01:48:30')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         'http://upressonline.com/ (__utmb) Pages Viewed: 1 Domain Hash: '

@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import bencode_parser as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import bencode_parser
 
 from tests import test_lib as shared_test_lib
@@ -32,29 +31,25 @@ class BencodeTest(test_lib.BencodePluginTestCase):
 
     event = events[0]
 
-    expected_destination = '/Users/brian/Downloads'
-    self.assertEqual(event.destination, expected_destination)
-
+    self.CheckTimestamp(event.timestamp, '2013-11-08 15:31:20.000000')
+    self.assertEqual(event.timestamp_desc, definitions.TIME_DESCRIPTION_ADDED)
+    self.assertEqual(event.destination, '/Users/brian/Downloads')
     self.assertEqual(event.seedtime, 4)
-
-    expected_description = definitions.TIME_DESCRIPTION_ADDED
-    self.assertEqual(event.timestamp_desc, expected_description)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-08 15:31:20')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     # Test on second event of first torrent.
     event = events[1]
-    self.assertEqual(event.destination, expected_destination)
+
+    self.CheckTimestamp(event.timestamp, '2013-11-08 18:24:24.000000')
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
+    self.assertEqual(event.destination, '/Users/brian/Downloads')
     self.assertEqual(event.seedtime, 4)
 
-    expected_description = definitions.TIME_DESCRIPTION_FILE_DOWNLOADED
-    self.assertEqual(event.timestamp_desc, expected_description)
+    expected_message = (
+        'Saved to /Users/brian/Downloads; '
+        'Minutes seeded: 4')
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-08 18:24:24')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self._TestGetMessageStrings(event, expected_message, expected_message)
 
 
 if __name__ == '__main__':
