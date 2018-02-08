@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import plist  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.plist_plugins import safari
 
 from tests import test_lib as shared_test_lib
@@ -34,9 +33,7 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
 
     event = events[7]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-07-08 17:31:00')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-07-08 17:31:00.000000')
 
     event = events[9]
 

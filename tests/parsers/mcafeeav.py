@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import mcafeeav as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import mcafeeav
 
 from tests import test_lib as shared_test_lib
@@ -33,9 +32,7 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
 
     event = events[10]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-09-27 14:42:26')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-09-27 14:42:26.000000')
 
     # TODO: Test that the UTF-8 byte order mark gets removed from
     # the first line.
@@ -49,9 +46,7 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
 
     event = events[11]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-09-27 14:42:39')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-09-27 14:42:39.000000')
 
     self.assertEqual(event.username, 'SOMEDOMAIN\\someUser')
     self.assertEqual(

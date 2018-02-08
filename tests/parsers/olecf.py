@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import olecf
 from plaso.parsers import olecf_plugins  # pylint: disable=unused-import
 
@@ -36,12 +35,9 @@ class OLECFParserTest(test_lib.ParserTestCase):
 
     event = events[8]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-05-16 02:29:49.785')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-05-16 02:29:49.785000')
     self.assertEqual(
-        event.timestamp_desc,
-        definitions.TIME_DESCRIPTION_MODIFICATION)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
     self.assertEqual(event.data_type, 'olecf:item')
     self.assertEqual(event.offset, 0)

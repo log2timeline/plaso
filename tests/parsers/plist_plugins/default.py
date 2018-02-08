@@ -8,7 +8,6 @@ import datetime
 import unittest
 
 from plaso.formatters import plist  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.plist_plugins import default
 
 from tests.parsers.plist_plugins import test_lib
@@ -39,9 +38,8 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-11-02 01:21:38.997672')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-11-02 01:21:38.997672')
+
     self.assertEqual(event.root, '/DE-00-AD-00-BE-EF')
     self.assertEqual(event.key, 'LastUsed')
 
@@ -89,9 +87,8 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-04-07 17:56:53.524275')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2011-04-07 17:56:53.524275')
+
     self.assertEqual(event.root, '/DeviceCache/44-00-00-00-00-02')
     self.assertEqual(event.key, 'LastNameUpdate')
 
