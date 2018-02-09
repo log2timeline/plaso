@@ -93,7 +93,7 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     """Retrieves an ISO 8601 date time string from the structure.
 
     The date and time values in Google Drive Sync log files are formatted as:
-    2018-01-24 18:25:08,454 -0800.
+    "2018-01-24 18:25:08,454 -0800".
 
     Args:
       structure (pyparsing.ParseResults): structure of tokens derived from a
@@ -105,31 +105,29 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ValueError: if the structure cannot be converted into a date time string.
     """
-    # Some hacks follow: our log source uses a different datetime format than
-    # dfdatetime does, so we're hacking around things using string reformats to
-    # get it working until https://github.com/log2timeline/dfdatetime/issues/47
-    # and related work is completed.
-    year, month, day_of_month, hours, minutes, seconds, milliseconds, tz = (
-        structure.date_time)
-
-    # Perform basic check on timezone offset and extract more readable values.
+    time_zone_offset = structure.time_zone_offset
+    
     try:
-      offset_hours = int(tz[1:3])
-      offset_minutes = int(tz[3:5])
+      offset_hours = int(time_zone_offset[1:3])
+      offset_minutes = int(time_zone_offset[3:5])
     except (IndexError, TypeError, ValueError) as exception:
       raise ValueError(
           'unable to parse time zone offset with error: {0!s}.'.format(
               exception))
 
     try:
-      iso8601 = ('{0:d}-{1:02d}-{2:02d}T{3:02d}:'
-                 '{4:02d}:{5:02d},{6:03d}{7!s}{8:02d}:{9:02d}').format(
-                     year, month, day_of_month, hours, minutes, seconds,
-                     milliseconds, tz[:1], offset_hours, offset_minutes)
+      iso8601 = (
+          '{0:d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02d}.{6:03d}'
+          '{7:s}{8:02d}:{9:02d}').format(
+              structure.year, structure.month, structure.day_of_month,
+              structure.hours, structure.minutes, structure.date_time.seconds,
+              structure.milliseconds, time_zone_offset[0], 
+              time_zone_offset_hours, time_zone_offset_minutes)
     except ValueError as exception:
       raise ValueError(
           'unable to format date time string with error: {0!s}.'.format(
               exception))
+      
     return iso8601
 
   def _ParseRecordLogline(self, parser_mediator, structure):
@@ -141,14 +139,11 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
     """
-    # TimeElementsInMilliseconds appears not to support local timezones, yet,
-    # and time_elements.CopyFromDateTimeString requires a different format.
-    # Initialize it without the TZ, then convert to a TZ-aware value with
-    # a formatting hack and CopyFromDateTimeString.
-    dfdatetime_obj = dfdatetime_time_elements.TimeElementsInMilliseconds()
-    datetime_iso8601 = self._GetISO8601String(structure)
+    date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
+
     try:
-      dfdatetime_obj.CopyFromStringISO8601(datetime_iso8601)
+      datetime_iso8601 = self._GetISO8601String(structure.date_time)
+      date_time.CopyFromStringISO8601(datetime_iso8601)
     except ValueError:
       parser_mediator.ProduceExtractionError(
           'invalid date time value: {0!s}'.format(structure.date_time))
@@ -163,7 +158,7 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     event_data.message = structure.message.replace('\n', ' ')
 
     event = time_events.DateTimeValuesEvent(
-        dfdatetime_obj, definitions.TIME_DESCRIPTION_ADDED)
+        date_time, definitions.TIME_DESCRIPTION_ADDED)
 
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
@@ -180,12 +175,13 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       ParseError: when the structure type is unknown.
     """
-    if key == 'logline':
-      self._ParseRecordLogline(parser_mediator, structure)
-    else:
+    if key != 'logline':
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
-
+      
+    self._ParseRecordLogline(parser_mediator, structure)
+      
+      
   def VerifyStructure(self, parser_mediator, lines):
     """Verify that this file is a Google Drive Sync log file.
 
@@ -203,10 +199,11 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
       logging.debug('Not a Google Drive Sync log file: {0!s}'.format(exception))
       return False
 
-    dfdatetime_obj = dfdatetime_time_elements.TimeElementsInMilliseconds()
-    datetime_iso8601 = self._GetISO8601String(structure)
+    date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
+    
     try:
-      dfdatetime_obj.CopyFromStringISO8601(datetime_iso8601)
+      datetime_iso8601 = self._GetISO8601String(structure.date_time)
+      date_time.CopyFromStringISO8601(datetime_iso8601)
     except ValueError:
       logging.debug(
           'Not a Google Drive Sync log file, invalid date/time: {0!s}'.format(
