@@ -17,6 +17,7 @@ from plaso.parsers import esedb
 from plaso.parsers import filestat
 from plaso.parsers import firefox_cache
 from plaso.parsers import fseventsd
+from plaso.parsers import gdrive_synclog
 
 try:
   from plaso.parsers import hachoir

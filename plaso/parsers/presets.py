@@ -3,11 +3,12 @@
 
 from __future__ import unicode_literals
 
+# TODO: add gdrive_sync to linux/macos after further testing.
 CATEGORIES = {
     'win_gen': [
-        'bencode', 'esedb', 'filestat', 'sqlite/google_drive', 'java_idx',
-        'lnk', 'mcafee_protection', 'olecf', 'openxml', 'pe', 'prefetch',
-        'sccm', 'skydrive_log', 'skydrive_log_old', 'sqlite/skype',
+        'bencode', 'esedb', 'filestat', 'sqlite/google_drive', 'gdrive_synclog',
+        'java_idx', 'lnk', 'mcafee_protection', 'olecf', 'openxml', 'pe',
+        'prefetch', 'sccm', 'skydrive_log', 'skydrive_log_old', 'sqlite/skype',
         'symantec_scanlog', 'usnjrnl', 'webhist', 'winfirewall', 'winjob',
         'winreg'],
     'winxp': ['recycle_bin_info2', 'rplog', 'win_gen', 'winevt'],

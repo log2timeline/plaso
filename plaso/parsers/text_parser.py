@@ -193,7 +193,7 @@ class PyparsingConstants(object):
       TWO_DIGITS.setResultsName('minutes') + pyparsing.Suppress(':') +
       TWO_DIGITS.setResultsName('seconds'))
   TIME_MSEC_ELEMENTS = (
-      TIME_ELEMENTS + pyparsing.Suppress('.') +
+      TIME_ELEMENTS + pyparsing.Word('.,', exact=1).suppress() +
       INTEGER.setResultsName('microseconds'))
 
   # Date structures defined as a single group.
