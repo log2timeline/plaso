@@ -28,19 +28,16 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[0]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2018-01-24 18:25:08.454-08:00')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    
+    self.CheckTimestamp(event.timestamp, '2018-01-25 04:25:08.454000')
 
     event = events[1]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2018-01-24 18:25:08.454-08:00')
-    self.assertEqual(event.timestamp, expected_timestamp)
-
+    
+    self.CheckTimestamp(event.timestamp, '2018-01-25 04:25:08.454000')
+    
     event = events[2]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2018-01-24 18:25:08.456-08:00')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2018-01-25 04:25:08.456000')
 
     expected_message = (
         '[INFO pid=2376 7780:MainThread logging_config.py:299]  SSL: OpenSSL '
@@ -62,9 +59,8 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[82]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2018-01-24 18:25:18.563-08:00')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    
+    self.CheckTimestamp(event.timestamp, '2018-01-25 04:25:18.563000')
 
     expected_message = (
         '[INFO pid=2376 5712:ExternalBrowserFlow proxy_manager.py:141]  '
