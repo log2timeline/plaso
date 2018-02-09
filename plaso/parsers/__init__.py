@@ -54,6 +54,7 @@ from plaso.parsers import sqlite
 from plaso.parsers import symantec
 from plaso.parsers import systemd_journal
 from plaso.parsers import syslog
+from plaso.parsers import trendmicroav
 from plaso.parsers import utmp
 from plaso.parsers import utmpx
 from plaso.parsers import winevt
