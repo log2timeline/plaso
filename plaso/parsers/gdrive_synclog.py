@@ -106,10 +106,10 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
       ValueError: if the structure cannot be converted into a date time string.
     """
     time_zone_offset = structure.time_zone_offset
-    
+
     try:
-      offset_hours = int(time_zone_offset[1:3])
-      offset_minutes = int(time_zone_offset[3:5])
+      time_zone_offset_hours = int(time_zone_offset[1:3], 10)
+      time_zone_offset_minutes = int(time_zone_offset[3:5], 10)
     except (IndexError, TypeError, ValueError) as exception:
       raise ValueError(
           'unable to parse time zone offset with error: {0!s}.'.format(
@@ -117,17 +117,17 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
 
     try:
       iso8601 = (
-          '{0:d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02d}.{6:03d}'
+          '{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02d}.{6:03d}'
           '{7:s}{8:02d}:{9:02d}').format(
-              structure.year, structure.month, structure.day_of_month,
-              structure.hours, structure.minutes, structure.date_time.seconds,
-              structure.milliseconds, time_zone_offset[0], 
+              structure.year, structure.month, structure.day,
+              structure.hours, structure.minutes, structure.seconds,
+              structure.microseconds, time_zone_offset[0],
               time_zone_offset_hours, time_zone_offset_minutes)
     except ValueError as exception:
       raise ValueError(
           'unable to format date time string with error: {0!s}.'.format(
               exception))
-      
+
     return iso8601
 
   def _ParseRecordLogline(self, parser_mediator, structure):
@@ -178,10 +178,9 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     if key != 'logline':
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
-      
+
     self._ParseRecordLogline(parser_mediator, structure)
-      
-      
+
   def VerifyStructure(self, parser_mediator, lines):
     """Verify that this file is a Google Drive Sync log file.
 
@@ -200,14 +199,14 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
       return False
 
     date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
-    
+
     try:
       datetime_iso8601 = self._GetISO8601String(structure.date_time)
       date_time.CopyFromStringISO8601(datetime_iso8601)
     except ValueError:
       logging.debug(
           'Not a Google Drive Sync log file, invalid date/time: {0!s}'.format(
-              structure.header_date_time))
+              structure.date_time))
       return False
 
     return True

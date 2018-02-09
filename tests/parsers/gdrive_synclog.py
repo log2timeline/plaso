@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import gdrive_synclog as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import gdrive_synclog
 
 from tests import test_lib as shared_test_lib
@@ -28,16 +27,16 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[0]
-    
-    self.CheckTimestamp(event.timestamp, '2018-01-25 04:25:08.454000')
+
+    self.CheckTimestamp(event.timestamp, '2018-01-25 02:25:08.454000')
 
     event = events[1]
-    
-    self.CheckTimestamp(event.timestamp, '2018-01-25 04:25:08.454000')
-    
+
+    self.CheckTimestamp(event.timestamp, '2018-01-25 02:25:08.454000')
+
     event = events[2]
 
-    self.CheckTimestamp(event.timestamp, '2018-01-25 04:25:08.456000')
+    self.CheckTimestamp(event.timestamp, '2018-01-25 02:25:08.456000')
 
     expected_message = (
         '[INFO pid=2376 7780:MainThread logging_config.py:299]  SSL: OpenSSL '
@@ -59,8 +58,8 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[82]
-    
-    self.CheckTimestamp(event.timestamp, '2018-01-25 04:25:18.563000')
+
+    self.CheckTimestamp(event.timestamp, '2018-01-25 02:25:18.563000')
 
     expected_message = (
         '[INFO pid=2376 5712:ExternalBrowserFlow proxy_manager.py:141]  '
