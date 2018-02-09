@@ -53,7 +53,7 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
 
   _ENCODING = 'utf-8'
 
-  # Increase the buffer size, as log messages are often many lines of python
+  # Increase the buffer size, as log messages are often many lines of Python
   # object dumps or similar. The default is too small for this and results in
   # premature end of string matching on multi-line log entries.
   BUFFER_SIZE = 16384
