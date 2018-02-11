@@ -282,26 +282,14 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     key_path = (
         'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
         'Session Manager\\AppCompatCache')
-    registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'AppCompatCache', key_path=key_path)
-
-    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
-    self.assertTrue(result)
+    self._AssertFiltersOnKeyPath(plugin, key_path)
 
     key_path = (
         'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
         'Session Manager\\AppCompatCache')
-    registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'AppCompatCache', key_path=key_path)
+    self._AssertFiltersOnKeyPath(plugin, key_path)
 
-    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
-    self.assertTrue(result)
-
-    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
-    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
-
-    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
-    self.assertFalse(result)
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
   def testProcessWindowsXP(self):
     """Tests the Process function for Windows XP AppCompatCache data."""

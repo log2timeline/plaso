@@ -6,8 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from dfwinreg import fake as dfwinreg_fake
-
 from plaso.formatters import shutdown as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import timelib
@@ -25,17 +23,9 @@ class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
     plugin = shutdown.ShutdownPlugin()
 
     key_path = 'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Windows'
-    registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Windows', key_path=key_path)
+    self._AssertFiltersOnKeyPath(plugin, key_path)
 
-    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
-    self.assertTrue(result)
-
-    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
-    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
-
-    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
-    self.assertFalse(result)
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
   @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testProcess(self):

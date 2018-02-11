@@ -98,17 +98,9 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
 
     key_path = (
         'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Session Manager')
-    registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Session Manager', key_path=key_path)
+    self._AssertFiltersOnKeyPath(plugin, key_path)
 
-    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
-    self.assertTrue(result)
-
-    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
-    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
-
-    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
-    self.assertFalse(result)
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
   def testProcess(self):
     """Tests the Process function."""
@@ -191,17 +183,9 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
     key_path = (
         'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\'
         'BootVerificationProgram')
-    registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'BootVerificationProgram', key_path=key_path)
+    self._AssertFiltersOnKeyPath(plugin, key_path)
 
-    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
-    self.assertTrue(result)
-
-    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
-    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
-
-    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
-    self.assertFalse(result)
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
   def testProcess(self):
     """Tests the Process function."""

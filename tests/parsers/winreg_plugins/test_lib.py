@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+from dfwinreg import fake as dfwinreg_fake
 from dfwinreg import registry as dfwinreg_registry
 
 from plaso.containers import sessions
@@ -17,12 +18,38 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
 
   # pylint: disable=protected-access
 
+  def _AssertFiltersOnKeyPath(self, plugin, key_path):
+    """Asserts if the key path matches one of the plugin filters.
+
+    Args:
+      plugin (WindowsRegistryPlugin): Windows Registry plugin.
+      key_path (str): Windows Registry key path.
+    """
+    _, _, key_name = key_path.rpartition('\\')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(key_name, key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+  def _AssertNotFiltersOnKeyPath(self, plugin, key_path):
+    """Asserts if the key path does not match one of the plugin filters.
+
+    Args:
+      plugin (WindowsRegistryPlugin): Windows Registry plugin.
+      key_path (str): Windows Registry key path.
+    """
+    _, _, key_name = key_path.rpartition('\\')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(key_name, key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
+
   def _CheckFiltersOnKeyPath(self, plugin, registry_key):
     """Checks if the key path matches one of the plugin filters.
 
     Args:
       plugin (WindowsRegistryPlugin): Windows Registry plugin.
-      registry_key (dfwinreg.WinRegistryKey): Windows Registry Key.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
 
     Returns:
       bool: True if the key path matches one of the plugin filters,

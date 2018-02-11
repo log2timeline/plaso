@@ -6,8 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from dfwinreg import fake as dfwinreg_fake
-
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import ccleaner
@@ -24,17 +22,9 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = ccleaner.CCleanerPlugin()
 
     key_path = 'HKEY_CURRENT_USER\\Software\\Piriform\\CCleaner'
-    registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'CCleaner', key_path=key_path)
+    self._AssertFiltersOnKeyPath(plugin, key_path)
 
-    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
-    self.assertTrue(result)
-
-    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
-    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
-
-    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
-    self.assertFalse(result)
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
   @shared_test_lib.skipUnlessHasTestFile(['NTUSER-CCLEANER.DAT'])
   def testProcess(self):

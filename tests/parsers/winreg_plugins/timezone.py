@@ -114,17 +114,9 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
     key_path = (
         'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\'
         'TimeZoneInformation')
-    registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'TimeZoneInformation', key_path=key_path)
+    self._AssertFiltersOnKeyPath(plugin, key_path)
 
-    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
-    self.assertTrue(result)
-
-    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
-    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
-
-    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
-    self.assertFalse(result)
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
   def testProcessMock(self):
     """Tests the Process function on created key."""

@@ -56,25 +56,14 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
         'Servers')
-    registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Servers', key_path=key_path)
-
-    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
-    self.assertTrue(result)
+    self._AssertFiltersOnKeyPath(plugin, key_path)
 
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\'
         'Default\\AddIns\\RDPDR')
-    registry_key = dfwinreg_fake.FakeWinRegistryKey('RDPDR', key_path=key_path)
+    self._AssertFiltersOnKeyPath(plugin, key_path)
 
-    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
-    self.assertTrue(result)
-
-    key_path = 'HKEY_LOCAL_MACHINE\\Bogus'
-    registry_key = dfwinreg_fake.FakeWinRegistryKey('Bogus', key_path=key_path)
-
-    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
-    self.assertFalse(result)
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
   def testProcess(self):
     """Tests the Process function."""
