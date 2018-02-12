@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import mac_appfirewall as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import mac_appfirewall
 
 from tests import test_lib as shared_test_lib
@@ -32,9 +31,7 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-02 04:07:35')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-02 04:07:35.000000')
 
     self.assertEqual(event.agent, 'socketfilterfw[112]')
     self.assertEqual(event.computer_name, 'DarkTemplar-2.local')
@@ -56,9 +53,7 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
 
     event = events[9]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-03 13:25:15')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-03 13:25:15.000000')
 
     self.assertEqual(event.agent, 'socketfilterfw[87]')
     self.assertEqual(event.computer_name, 'DarkTemplar-2.local')
@@ -91,14 +86,12 @@ class MacAppFirewallUnitTest(test_lib.ParserTestCase):
 
     # Year changes.
     event = events[45]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-31 23:59:23')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2013-12-31 23:59:23.000000')
 
     event = events[46]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-01-01 01:13:23')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2014-01-01 01:13:23.000000')
 
 
 if __name__ == '__main__':

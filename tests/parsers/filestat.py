@@ -12,7 +12,6 @@ from dfvfs.path import factory as path_spec_factory
 
 from plaso.formatters import file_system  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import filestat
 
 from tests import test_lib as shared_test_lib
@@ -43,10 +42,9 @@ class FileStatTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString('2012-05-25 16:00:53')
+    self.CheckTimestamp(event.timestamp, '2012-05-25 16:00:53.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(event.file_size, 116)
     self.assertEqual(event.inode, 15)
@@ -79,10 +77,9 @@ class FileStatTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString('2012-07-24 14:45:24')
+    self.CheckTimestamp(event.timestamp, '2012-07-24 14:45:24.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(event.file_size, 1247)
     self.assertIsNone(event.inode)
@@ -113,10 +110,9 @@ class FileStatTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString('2012-07-28 16:44:07')
+    self.CheckTimestamp(event.timestamp, '2012-07-28 16:44:07.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(event.file_size, 1247)
     self.assertIsNone(event.inode)
@@ -149,10 +145,9 @@ class FileStatTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString('2012-07-24 21:45:24')
+    self.CheckTimestamp(event.timestamp, '2012-07-24 21:45:24.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(event.file_size, 1247)
     self.assertIsNone(event.inode)
@@ -186,10 +181,9 @@ class FileStatTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString('2012-07-24 21:45:24')
+    self.CheckTimestamp(event.timestamp, '2012-07-24 21:45:24.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(event.file_size, 1247)
     self.assertIsNone(event.inode)
@@ -215,10 +209,9 @@ class FileStatTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString('2012-07-28 16:44:43')
+    self.CheckTimestamp(event.timestamp, '2012-07-28 16:44:43.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(event.file_size, 10240)
     self.assertIsNone(event.inode)
@@ -254,10 +247,9 @@ class FileStatTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString('2012-07-20 15:44:14')
+    self.CheckTimestamp(event.timestamp, '2012-07-20 15:44:14.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(event.file_size, 1247)
     self.assertIsNone(event.inode)

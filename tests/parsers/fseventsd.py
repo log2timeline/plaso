@@ -38,6 +38,9 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[3]
+
+    # Do not check the timestamp since it is derived from the file entry.
+
     self.assertEqual(event.path, '.Spotlight-V100/Store-V1')
     self.assertEqual(event.event_identifier, 47747061)
     self.assertEqual(event.flags, 0x80000001)
@@ -74,6 +77,9 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[2]
+
+    # Do not check the timestamp since it is derived from the file entry.
+
     self.assertEqual(event.path, 'Hi, Sierra')
     self.assertEqual(event.event_identifier, 1706838)
     self.assertEqual(event.flags, 0x8000001)
