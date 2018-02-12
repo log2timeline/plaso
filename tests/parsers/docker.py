@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.lib import timelib
 from plaso.parsers import docker
 
 from tests import test_lib as shared_test_lib
@@ -62,9 +61,8 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
         )
 
     for index, event in enumerate(events):
-      expected_timestamp = timelib.Timestamp.CopyFromString(
-          expected_times[index])
-      self.assertEqual(event.timestamp, expected_timestamp)
+      self.CheckTimestamp(event.timestamp, expected_times[index])
+
       self.assertEqual(event.container_id, container_identifier)
       self.assertEqual(event.log_line, expected_log)
       self.assertEqual(event.log_source, 'stdout')
@@ -90,17 +88,17 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[0]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2016-01-07 16:49:08.674873')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2016-01-07 16:49:08.674873')
+
     self.assertEqual(event.action, 'Container Started')
     self.assertEqual(event.container_id, container_identifier)
     self.assertEqual(event.container_name, 'e7d0b7ea5ccf')
 
     event = events[1]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2016-01-07 16:49:08.507979')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2016-01-07 16:49:08.507979')
+
     self.assertEqual(event.action, 'Container Created')
     self.assertEqual(event.container_id, container_identifier)
     self.assertEqual(event.container_name, 'e7d0b7ea5ccf')

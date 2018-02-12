@@ -7,7 +7,6 @@ import unittest
 
 from plaso.formatters import firefox_cache as _  # pylint: disable=unused-import
 from plaso.lib import errors
-from plaso.lib import timelib
 from plaso.parsers import firefox_cache
 
 from tests import test_lib as shared_test_lib
@@ -45,12 +44,11 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[3]
+
+    self.CheckTimestamp(event.timestamp, '2014-04-21 14:13:35.000000')
+
     self.assertEqual(
         event.url, 'HTTP:http://start.ubuntu.com/12.04/sprite.png')
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-04-21 14:13:35')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         'Fetched 2 time(s) '
@@ -88,12 +86,12 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[5]
+
     self.assertEqual(event.url, expected_url)
 
     event = events[1]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-04-21 14:10:58')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2014-04-21 14:10:58.000000')
 
     self._VerifyMajorMinor(events)
 
@@ -115,9 +113,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
         'jquery.min.js')
     self.assertEqual(event.url, expected_url)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-04-21 14:11:07')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2014-04-21 14:11:07.000000')
 
     self._VerifyMajorMinor(events)
 
@@ -145,9 +141,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-05-02 14:15:03')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2014-05-02 14:15:03.000000')
 
     expected_message = (
         'Fetched 1 time(s) '
@@ -174,9 +168,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
     event = events[2]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-05-02 14:25:55')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2014-05-02 14:25:55.000000')
 
   @shared_test_lib.skipUnlessHasTestFile([
       'firefox_cache', 'firefox3', '_CACHE_003_'])
@@ -192,9 +184,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
     event = events[3]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-05-02 14:15:07')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2014-05-02 14:15:07.000000')
 
 
 class FirefoxCache2ParserTest(test_lib.ParserTestCase):
@@ -216,9 +206,7 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2015-05-02 15:35:31')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2015-05-02 15:35:31.000000')
 
     expected_url = (
         ':https://tiles.cdn.mozilla.net/images/'
@@ -231,15 +219,11 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
 
     event = events[1]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2015-05-02 15:35:31')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2015-05-02 15:35:31.000000')
 
     event = events[2]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2016-05-01 15:35:31')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2016-05-01 15:35:31.000000')
 
   @shared_test_lib.skipUnlessHasTestFile([
       'firefox_cache', 'cache2', 'C966EB70794E44E7E3E8A260106D0C72439AF65B'])
