@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import java_idx as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import java_idx
 
 from tests import test_lib as shared_test_lib
@@ -30,6 +29,8 @@ class IDXTest(test_lib.ParserTestCase):
 
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2010-05-05 01:34:19.720000')
+
     idx_version_expected = 602
     self.assertEqual(event.idx_version, idx_version_expected)
 
@@ -42,12 +43,10 @@ class IDXTest(test_lib.ParserTestCase):
     description_expected = 'File Hosted Date'
     self.assertEqual(event.timestamp_desc, description_expected)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2010-05-05 01:34:19.720')
-    self.assertEqual(event.timestamp, expected_timestamp)
-
     # Parse second event. Same metadata; different timestamp event.
     event = events[1]
+
+    self.CheckTimestamp(event.timestamp, '2010-05-05 03:52:31.000000')
 
     self.assertEqual(event.idx_version, idx_version_expected)
     self.assertEqual(event.ip_address, ip_address_expected)
@@ -55,10 +54,6 @@ class IDXTest(test_lib.ParserTestCase):
 
     description_expected = definitions.TIME_DESCRIPTION_FILE_DOWNLOADED
     self.assertEqual(event.timestamp_desc, description_expected)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2010-05-05 03:52:31')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
   @shared_test_lib.skipUnlessHasTestFile(['java.idx'])
   def testParse605(self):
@@ -71,6 +66,8 @@ class IDXTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[0]
+
+    self.CheckTimestamp(event.timestamp, '2001-07-26 05:00:00.000000')
 
     idx_version_expected = 605
     self.assertEqual(event.idx_version, idx_version_expected)
@@ -86,12 +83,10 @@ class IDXTest(test_lib.ParserTestCase):
     description_expected = 'File Hosted Date'
     self.assertEqual(event.timestamp_desc, description_expected)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2001-07-26 05:00:00')
-    self.assertEqual(event.timestamp, expected_timestamp)
-
     # Parse second event. Same metadata; different timestamp event.
     event = events[1]
+
+    self.CheckTimestamp(event.timestamp, '2013-01-13 16:22:01.000000')
 
     self.assertEqual(event.idx_version, idx_version_expected)
     self.assertEqual(event.ip_address, ip_address_expected)
@@ -99,10 +94,6 @@ class IDXTest(test_lib.ParserTestCase):
 
     description_expected = definitions.TIME_DESCRIPTION_FILE_DOWNLOADED
     self.assertEqual(event.timestamp_desc, description_expected)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-01-13 16:22:01')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

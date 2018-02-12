@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import mac_securityd as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import mac_securityd
 
 from tests import test_lib as shared_test_lib
@@ -31,19 +30,8 @@ class MacOSSecurityUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[0]
-    expected_message = (
-        'Sender: secd (1) Level: Error Facility: user '
-        'Text: securityd_xpc_dictionary_handler EscrowSecurityAl'
-        '[3273] DeviceInCircle \xdeetta \xe6tti a\xf0 '
-        'virka l\xedka, setja \xedslensku inn.')
-    expected_short_message = (
-        'Text: securityd_xpc_dictionary_handler '
-        'EscrowSecurityAl[3273] DeviceInCircle ...')
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-02-26 19:11:56')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-02-26 19:11:56.000000')
 
     self.assertEqual(event.sender, 'secd')
     self.assertEqual(event.sender_pid, 1)
@@ -57,11 +45,19 @@ class MacOSSecurityUnitTest(test_lib.ParserTestCase):
         'l\xedka, setja \xedslensku inn.')
     self.assertEqual(event.message, expected_message)
 
+    expected_message = (
+        'Sender: secd (1) Level: Error Facility: user '
+        'Text: securityd_xpc_dictionary_handler EscrowSecurityAl'
+        '[3273] DeviceInCircle \xdeetta \xe6tti a\xf0 '
+        'virka l\xedka, setja \xedslensku inn.')
+    expected_short_message = (
+        'Text: securityd_xpc_dictionary_handler '
+        'EscrowSecurityAl[3273] DeviceInCircle ...')
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+
     event = events[1]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-26 19:11:57')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-12-26 19:11:57.000000')
 
     self.assertEqual(event.sender, 'secd')
     self.assertEqual(event.sender_pid, 11)
@@ -72,9 +68,7 @@ class MacOSSecurityUnitTest(test_lib.ParserTestCase):
 
     event = events[2]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-26 19:11:58')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-12-26 19:11:58.000000')
 
     self.assertEqual(event.sender, 'secd')
     self.assertEqual(event.sender_pid, 111)
@@ -85,9 +79,7 @@ class MacOSSecurityUnitTest(test_lib.ParserTestCase):
 
     event = events[3]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-26 19:11:59')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-12-26 19:11:59.000000')
 
     self.assertEqual(event.sender, 'secd')
     self.assertEqual(event.sender_pid, 1111)
@@ -98,9 +90,7 @@ class MacOSSecurityUnitTest(test_lib.ParserTestCase):
 
     event = events[4]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-06 19:11:01')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-12-06 19:11:01.000000')
 
     self.assertEqual(event.sender, 'secd')
     self.assertEqual(event.sender_pid, 1)
@@ -112,9 +102,7 @@ class MacOSSecurityUnitTest(test_lib.ParserTestCase):
 
     event = events[5]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-06 19:11:02')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-12-06 19:11:02.000000')
 
     self.assertEqual(event.sender, 'secd')
     self.assertEqual(event.sender_pid, 11111)
@@ -126,15 +114,11 @@ class MacOSSecurityUnitTest(test_lib.ParserTestCase):
 
     event = events[6]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-31 23:59:59')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-12-31 23:59:59.000000')
 
     event = events[7]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-03-01 00:00:01')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2014-03-01 00:00:01.000000')
 
     # Repeated line.
     event = events[8]
