@@ -155,6 +155,14 @@ plaso\.parsers\.fseventsd module
     :undoc-members:
     :show-inheritance:
 
+plaso\.parsers\.gdrive\_synclog module
+--------------------------------------
+
+.. automodule:: plaso.parsers.gdrive_synclog
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso\.parsers\.hachoir module
 ------------------------------
 

@@ -252,6 +252,14 @@ plaso\.formatters\.gdrive module
     :undoc-members:
     :show-inheritance:
 
+plaso\.formatters\.gdrive\_synclog module
+-----------------------------------------
+
+.. automodule:: plaso.formatters.gdrive_synclog
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso\.formatters\.hachoir module
 ---------------------------------
 
