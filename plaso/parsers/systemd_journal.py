@@ -4,9 +4,7 @@
 from __future__ import unicode_literals
 
 import os
-
 from backports import lzma
-
 import construct
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -334,5 +332,4 @@ class SystemdJournalParser(interface.FileObjectParser):
             'error: {1:s}').format(entry_offset, exception))
 
 
-if lzma:
-  manager.ParsersManager.RegisterParser(SystemdJournalParser)
+manager.ParsersManager.RegisterParser(SystemdJournalParser)
