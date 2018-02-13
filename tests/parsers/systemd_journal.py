@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 
 import unittest
-from backports import lzma
+import backports.lzma
 
 from plaso.parsers import systemd_journal
 
