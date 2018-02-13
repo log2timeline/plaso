@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 
 import unittest
-
 from backports import lzma
 
 from plaso.lib import timelib
