@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 
 import unittest
-import backports.lzma
 
 from plaso.lib import timelib
 from plaso.parsers import systemd_journal
@@ -13,7 +12,6 @@ from plaso.parsers import systemd_journal
 from tests.parsers import test_lib
 
 
-@unittest.skipUnless(lzma, 'lzma missing')
 class SystemdJournalParserTest(test_lib.ParserTestCase):
   """Tests for the Systemd Journal parser."""
 
