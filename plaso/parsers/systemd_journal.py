@@ -6,9 +6,7 @@ from __future__ import unicode_literals
 import os
 from backports import lzma
 import construct
-
 from dfdatetime import posix_time as dfdatetime_posix_time
-
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
