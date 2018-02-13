@@ -4,13 +4,17 @@
 from __future__ import unicode_literals
 
 import os
+
 import construct
-from backports import lzma
+
 from dfdatetime import posix_time as dfdatetime_posix_time
+
+from backports import lzma
+
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers import interface
 from plaso.parsers import manager
 
