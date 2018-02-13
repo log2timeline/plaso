@@ -5,10 +5,7 @@ from __future__ import unicode_literals
 
 import os
 
-try:
-  import lzma
-except ImportError:
-  lzma = None
+from backports import lzma
 
 import construct
 
