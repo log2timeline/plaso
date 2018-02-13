@@ -6,10 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-try:
-  import lzma
-except ImportError:
-  lzma = None
+from backports import lzma
 
 from plaso.parsers import systemd_journal
 
