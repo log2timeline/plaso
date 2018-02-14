@@ -114,8 +114,11 @@ optional arguments:
     options.source = self._GetTestFilePath(['testdir'])
     options.storage_file = 'storage.plaso'
     options.storage_format = definitions.STORAGE_FORMAT_SQLITE
+    options.yara_rules_path = self._GetTestFilePath(['yara.rules'])
 
     test_tool.ParseOptions(options)
+
+    self.assertIsNotNone(test_tool._yara_rules_string)
 
     options = test_lib.TestOptions()
     options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
