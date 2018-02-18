@@ -37,6 +37,8 @@ class EventExtractorTest(shared_test_lib.BaseTestCase):
 class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
   """Tests for the path specification extractor."""
 
+  # pylint: disable=protected-access
+
   def _GetFilePaths(self, path_specs):
     """Retrieves file paths from path specifications.
 
