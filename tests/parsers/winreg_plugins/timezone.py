@@ -11,7 +11,6 @@ from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import timezone as winreg_timezone
 
 from tests import test_lib as shared_test_lib
@@ -135,8 +134,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
 
     expected_message = (
         '[{0:s}] '
@@ -173,9 +171,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-03-11 07:00:00.000642')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-03-11 07:00:00.000642')
 
     expected_message = (
         '[{0:s}] '

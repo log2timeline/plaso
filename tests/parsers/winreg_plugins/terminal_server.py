@@ -11,7 +11,6 @@ from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import terminal_server
 
 from tests.parsers.winreg_plugins import test_lib
@@ -86,8 +85,7 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
 
     expected_message = (
         '[{0:s}\\myserver.com] '
@@ -160,8 +158,7 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
 
     expected_message = (
         '[{0:s}] '

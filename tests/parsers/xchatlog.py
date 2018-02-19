@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import xchatlog as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import xchatlog
 
 from tests import test_lib as shared_test_lib
@@ -29,9 +28,8 @@ class XChatLogUnitTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[0]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-12-31 21:11:55+01:00')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2011-12-31 20:11:55.000000')
 
     expected_message = 'XChat start logging'
     self._TestGetMessageStrings(event, expected_message, expected_message)
@@ -61,17 +59,15 @@ class XChatLogUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_message)
 
     event = events[7]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-12-31 23:00:00+01:00')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2011-12-31 22:00:00.000000')
 
     expected_message = '[nickname: STRANGER] \u65e5\u672c'
     self._TestGetMessageStrings(event, expected_message, expected_message)
 
     event = events[8]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-12-31 23:59:00+01:00')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2011-12-31 22:59:00.000000')
 
     expected_message = 'XChat end logging'
     self._TestGetMessageStrings(event, expected_message, expected_message)
