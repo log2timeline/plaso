@@ -301,7 +301,7 @@ class ElasticSearchOutputModule(interface.OutputModule):
               'mapping': {
                   'fields': {
                       'raw': {
-                          'type': 'string',
+                          'type': 'text',
                           'index': 'not_analyzed',
                           'ignore_above': self._ELASTIC_ANALYZER_STRING_LIMIT
                       }
