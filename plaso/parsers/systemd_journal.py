@@ -9,7 +9,10 @@ import construct
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
-from backports import lzma
+try:
+  import lzma
+except ImportError:
+  from backports import lzma
 
 from plaso.containers import events
 from plaso.containers import time_events
