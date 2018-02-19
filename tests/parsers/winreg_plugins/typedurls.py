@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import typedurls
 
 from tests import test_lib as shared_test_lib
@@ -59,9 +58,7 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-03-12 21:23:53.307749')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-03-12 21:23:53.307749')
 
     regvalue_identifier = 'url1'
     expected_value = 'http://cnn.com/'
@@ -116,9 +113,7 @@ class TypedPathsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2010-11-10 07:58:15.811625')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2010-11-10 07:58:15.811625')
 
     regvalue_identifier = 'url1'
     expected_value = '\\\\controller'

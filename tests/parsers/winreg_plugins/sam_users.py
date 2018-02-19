@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import sam_users
 
 from tests import test_lib as shared_test_lib
@@ -46,15 +45,13 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2014-09-24 03:36:06.358837')
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
+
     self._TestRegvalue(event, 'account_rid', 500)
     self._TestRegvalue(event, 'login_count', 6)
     self._TestRegvalue(event, 'username', 'Administrator')
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-09-24 03:36:06.358837')
-    self.assertEqual(event.timestamp, expected_timestamp)
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
     expected_message = (
         '[{0:s}] '
@@ -69,15 +66,13 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     # Test SAMUsersWindowsRegistryEvent.
     event = events[1]
 
+    self.CheckTimestamp(event.timestamp, '2010-11-20 21:48:12.569244')
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_LOGIN)
+
     self.assertEqual(event.account_rid, 500)
     self.assertEqual(event.login_count, 6)
     self.assertEqual(event.username, 'Administrator')
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2010-11-20 21:48:12.569244')
-    self.assertEqual(event.timestamp, expected_timestamp)
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_LOGIN)
 
     expected_message = (
         '[{0:s}] '
