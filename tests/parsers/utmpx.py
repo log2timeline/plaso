@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import utmpx as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import utmpx
 
 from tests import test_lib as shared_test_lib
@@ -28,9 +27,8 @@ class UtmpxParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[0]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-13 17:52:34')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2013-11-13 17:52:34.000000')
 
     expected_message = (
         'User: N/A Status: BOOT_TIME '
@@ -41,9 +39,7 @@ class UtmpxParserTest(test_lib.ParserTestCase):
 
     event = events[1]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-13 17:52:41.736713')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-13 17:52:41.736713')
 
     self.assertEqual(event.user, 'moxilo')
     self.assertEqual(event.terminal, 'console', )
@@ -61,9 +57,7 @@ class UtmpxParserTest(test_lib.ParserTestCase):
 
     event = events[4]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-11-14 04:32:56.641464')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-11-14 04:32:56.641464')
 
     self.assertEqual(event.user, 'moxilo')
     self.assertEqual(event.terminal, 'ttys002')

@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import winprefetch as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import winprefetch
 
 from tests import test_lib as shared_test_lib
@@ -34,11 +33,10 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.data_type, 'windows:prefetch:execution')
     self.assertEqual(event.version, 17)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-03-10 10:11:49.281250')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-03-10 10:11:49.281250')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
+
     self.assertEqual(event.executable, 'CMD.EXE')
     self.assertEqual(event.prefetch_hash, 0x087b4001)
     self.assertEqual(event.volume_serial_numbers[0], 0x24cb074b)
@@ -90,9 +88,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.data_type, 'windows:volume:creation')
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-03-10 10:19:46.234375')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-03-10 10:19:46.234375')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
@@ -123,9 +119,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.data_type, 'windows:prefetch:execution')
     self.assertEqual(event.version, 23)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-04-06 19:00:55.932955')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-04-06 19:00:55.932955')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
 
@@ -152,9 +146,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.data_type, 'windows:volume:creation')
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2010-11-10 17:37:26.484375')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2010-11-10 17:37:26.484375')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
@@ -175,9 +167,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.data_type, 'windows:prefetch:execution')
     self.assertEqual(event.version, 23)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-03-15 21:17:39.807996')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-03-15 21:17:39.807996')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
 
@@ -212,9 +202,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.data_type, 'windows:volume:creation')
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2010-11-10 17:37:26.484375')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2010-11-10 17:37:26.484375')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
@@ -246,23 +234,21 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.data_type, 'windows:prefetch:execution')
     self.assertEqual(event.version, 26)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-10-04 15:40:09.037833')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-10-04 15:40:09.037833')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
+
     self.assertEqual(event.executable, 'TASKHOST.EXE')
     self.assertEqual(event.prefetch_hash, 0x3ae259fc)
 
     # The prefetch previous last run event.
     event = events[2]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-10-04 15:28:09.010356')
-    self.assertEqual(event.timestamp, expected_timestamp)
-    self.assertEqual(
-        event.timestamp_desc,
-        'Previous {0:s}'.format(definitions.TIME_DESCRIPTION_LAST_RUN))
+    self.CheckTimestamp(event.timestamp, '2013-10-04 15:28:09.010356')
+
+    expected_timestamp_desc = 'Previous {0:s}'.format(
+        definitions.TIME_DESCRIPTION_LAST_RUN)
+    self.assertEqual(event.timestamp_desc, expected_timestamp_desc)
 
     expected_mapped_files = [
         ('\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NTDLL.DLL '
@@ -373,9 +359,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.data_type, 'windows:volume:creation')
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-10-04 15:57:26.146547')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-10-04 15:57:26.146547')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
@@ -398,9 +382,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.data_type, 'windows:prefetch:execution')
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2015-05-14 22:11:58.091134')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2015-05-14 22:11:58.091134')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
     self.assertEqual(event.executable, 'BYTECODEGENERATOR.EXE')
@@ -409,12 +391,10 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     # The prefetch previous last run event.
     event = events[2]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2015-05-14 22:11:55.357652')
-    self.assertEqual(event.timestamp, expected_timestamp)
-    self.assertEqual(
-        event.timestamp_desc,
-        'Previous {0:s}'.format(definitions.TIME_DESCRIPTION_LAST_RUN))
+    self.CheckTimestamp(event.timestamp, '2015-05-14 22:11:55.357652')
+    expected_timestamp_desc = 'Previous {0:s}'.format(
+        definitions.TIME_DESCRIPTION_LAST_RUN)
+    self.assertEqual(event.timestamp_desc, expected_timestamp_desc)
 
     self.assertEqual(len(event.mapped_files), 1085)
 
@@ -423,9 +403,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.data_type, 'windows:volume:creation')
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2015-05-15 06:54:55.139294')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2015-05-15 06:54:55.139294')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 

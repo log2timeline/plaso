@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import winfirewall as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import winfirewall
 
 from tests import test_lib as shared_test_lib
@@ -29,18 +28,14 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
 
     event = events[4]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2005-04-11 08:06:02')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2005-04-11 08:06:02.000000')
 
     self.assertEqual(event.source_ip, '123.45.78.90')
     self.assertEqual(event.dest_ip, '123.156.78.90')
 
     event = events[7]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2005-04-11 08:06:26')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2005-04-11 08:06:26.000000')
 
     self.assertEqual(event.size, 576)
     self.assertEqual(event.flags, 'A')
