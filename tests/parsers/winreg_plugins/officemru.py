@@ -9,7 +9,6 @@ import unittest
 from plaso.formatters import officemru as _  # pylint: disable=unused-import
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import officemru
 
 from tests import test_lib as shared_test_lib
@@ -92,9 +91,7 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-03-13 18:27:15.089802')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-03-13 18:27:15.089802')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
@@ -125,9 +122,7 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
     # Test OfficeMRUWindowsRegistryEvent.
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-03-13 18:27:15.083')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-03-13 18:27:15.083000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 

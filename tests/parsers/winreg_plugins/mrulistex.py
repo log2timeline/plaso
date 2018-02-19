@@ -11,7 +11,6 @@ from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import mrulistex
 
 from tests import test_lib as shared_test_lib
@@ -119,8 +118,7 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
 
     expected_message = (
         '[{0:s}] '
@@ -178,9 +176,7 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-08-28 22:48:28.159308')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2011-08-28 22:48:28.159308')
 
     expected_message = (
         '[{0:s}\\exe] '
@@ -196,9 +192,7 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
     # A shell item event.
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-03-08 22:16:02')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-03-08 22:16:02.000000')
 
     expected_message = (
         'Name: ALLOYR~1 '
@@ -256,9 +250,7 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-04-01 13:52:39.113741')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-04-01 13:52:39.113741')
 
     expected_message = (
         '[{0:s}] '
@@ -349,9 +341,7 @@ class TestMRUListExStringAndShellItemListPlugin(
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-04-01 13:52:38.966290')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-04-01 13:52:38.966290')
 
     expected_message = (
         '[{0:s}] '

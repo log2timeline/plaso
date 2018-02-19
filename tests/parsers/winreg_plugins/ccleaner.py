@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import ccleaner
 
 from tests import test_lib as shared_test_lib
@@ -49,18 +48,14 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-07-13 10:03:14')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-07-13 10:03:14.000000')
 
     expected_message = 'Origin: {0:s}'.format(key_path)
     self._TestGetMessageStrings(event, expected_message, expected_message)
 
     event = events[1]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-07-13 14:03:26.861688')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-07-13 14:03:26.861688')
 
     regvalue_identifier = '(App)Delete Index.dat files'
     expected_value = 'True'
