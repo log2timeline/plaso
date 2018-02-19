@@ -17,6 +17,17 @@ from tests.parsers.winreg_plugins import test_lib
 class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the MountPoints2 Windows Registry plugin."""
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = mountpoints.MountPoints2Plugin()
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Explorer\\MountPoints2')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+
   @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcess(self):
     """Tests the Process function."""

@@ -18,6 +18,15 @@ from tests.parsers.winreg_plugins import test_lib
 class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests the SAM Users Account information plugin."""
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = sam_users.SAMUsersWindowsRegistryPlugin()
+
+    key_path = 'HKEY_LOCAL_MACHINE\\SAM\\SAM\\Domains\\Account\\Users'
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+
   @shared_test_lib.skipUnlessHasTestFile(['SAM'])
   def testProcess(self):
     """Tests the Process function."""

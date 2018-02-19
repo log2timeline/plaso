@@ -17,6 +17,47 @@ from tests.parsers.winreg_plugins import test_lib
 class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the auto rus Windows Registry plugin."""
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = run.AutoRunsPlugin()
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Run')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'RunOnce')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Run')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'RunOnce')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'RunOnce\\Setup')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'RunServices')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'RunServicesOnce')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+
   @shared_test_lib.skipUnlessHasTestFile(['NTUSER-RunTests.DAT'])
   def testProcessNtuserRun(self):
     """Tests the Process function on a Run key."""

@@ -64,6 +64,39 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
 
     return registry_key
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = mrulistex.MRUListExStringPlugin()
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\'
+        'InterestingApp\\MRUlist')
+    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+        'MRUlist', key_path=key_path)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertFalse(result)
+
+    registry_value = dfwinreg_fake.FakeWinRegistryValue('MRUListEx')
+    registry_key.AddValue(registry_value)
+
+    registry_value = dfwinreg_fake.FakeWinRegistryValue('0')
+    registry_key.AddValue(registry_value)
+
+    result = self._CheckFiltersOnKeyPath(plugin, registry_key)
+    self.assertTrue(result)
+
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\Shell\\BagMRU')
+    self._AssertNotFiltersOnKeyPath(plugin, key_path)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Explorer\\ComDlg32\\OpenSavePidlMRU')
+    self._AssertNotFiltersOnKeyPath(plugin, key_path)
+
   def testProcess(self):
     """Tests the Process function."""
     key_path = (
@@ -101,6 +134,22 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
 
 class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the shell item list MRUListEx plugin."""
+
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = mrulistex.MRUListExShellItemListPlugin()
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Explorer\\ComDlg32\\OpenSavePidlMRU')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Explorer\\StreamMRU')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
   @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcess(self):
@@ -168,6 +217,17 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
 
 class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the string and shell item MRUListEx plugin."""
+
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = mrulistex.MRUListExStringAndShellItemPlugin()
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Explorer\\RecentDocs')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
   @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcess(self):
@@ -250,6 +310,17 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
 class TestMRUListExStringAndShellItemListPlugin(
     test_lib.RegistryPluginTestCase):
   """Tests for the string and shell item list MRUListEx plugin."""
+
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = mrulistex.MRUListExStringAndShellItemListPlugin()
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Explorer\\ComDlg32\\LastVisitedPidlMRU')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
   @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcess(self):

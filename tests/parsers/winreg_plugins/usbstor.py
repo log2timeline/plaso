@@ -18,6 +18,15 @@ from tests.parsers.winreg_plugins import test_lib
 class USBStorPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the USBStor Windows Registry plugin."""
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = usbstor.USBStorPlugin()
+
+    key_path = 'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Enum\\USBSTOR'
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+
   @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testProcess(self):
     """Tests the Process function."""

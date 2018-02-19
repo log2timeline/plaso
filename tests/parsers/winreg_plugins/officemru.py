@@ -19,6 +19,52 @@ from tests.parsers.winreg_plugins import test_lib
 class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Microsoft Office MRUs Windows Registry plugin."""
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = officemru.OfficeMRUPlugin()
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+        'Access\\File MRU')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+        'Access\\Place MRU')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+        'Excel\\File MRU')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+        'Excel\\Place MRU')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+        'PowerPoint\\File MRU')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+        'PowerPoint\\Place MRU')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+        'Word\\File MRU')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\'
+        'Word\\Place MRU')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+
   @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcess(self):
     """Tests the Process function."""
