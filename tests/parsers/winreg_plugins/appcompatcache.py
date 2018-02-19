@@ -281,7 +281,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     key_path = (
         'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
-        'Session Manager\\AppCompatCache')
+        'Session Manager\\AppCompatibility')
     self._AssertFiltersOnKeyPath(plugin, key_path)
 
     key_path = (
