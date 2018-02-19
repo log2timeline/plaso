@@ -31,29 +31,27 @@ class SyslogPlugin(plugins.BasePlugin):
   MESSAGE_GRAMMARS = []
 
   @abc.abstractmethod
-  def ParseMessage(self, parser_mediator, key, timestamp, tokens):
+  def ParseMessage(self, parser_mediator, key, date_time, tokens):
     """Parses a syslog body that matched one of the grammars the plugin defined.
 
     Args:
       parser_mediator (ParserMediator): mediates the interactions between
           parsers and other components, such as storage and abort signals.
       key (str): name of the parsed structure.
-      timestamp (int): number of micro seconds since January 1, 1970,
-          00:00:00 UTC or 0 on error.
+      date_time (dfdatetime.DateTimeValues): date and time values.
       tokens (dict[str, str]): names of the fields extracted by the syslog
           parser and the matching grammar, and values are the values of those
           fields.
     """
 
   # pylint: disable=arguments-differ
-  def Process(self, parser_mediator, timestamp, syslog_tokens, **kwargs):
+  def Process(self, parser_mediator, date_time, syslog_tokens, **kwargs):
     """Processes the data structure produced by the parser.
 
     Args:
       parser_mediator (ParserMediator): mediates the interactions between
           parsers and other components, such as storage and abort signals.
-      timestamp (int): number of micro seconds since January 1, 1970,
-          00:00:00 UTC or 0 on error.
+      date_time (dfdatetime.DateTimeValues): date and time values.
       syslog_tokens (dict[str, str]): names of the fields extracted by the
           syslog parser and the matching grammar, and values are the values of
           those fields.
@@ -70,8 +68,9 @@ class SyslogPlugin(plugins.BasePlugin):
       try:
         tokens = grammar.parseString(body)
         syslog_tokens.update(tokens.asDict())
-        self.ParseMessage(parser_mediator, key, timestamp, syslog_tokens)
+        self.ParseMessage(parser_mediator, key, date_time, syslog_tokens)
         return
+
       except pyparsing.ParseException:
         pass
 

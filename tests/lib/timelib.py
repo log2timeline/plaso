@@ -336,25 +336,6 @@ class TimeLibTest(unittest.TestCase):
     self.assertEqual(
         timelib.Timestamp.RoundToSeconds(test_two), 1384381247000000)
 
-  def testTimestampFromTimeParts(self):
-    """Test the FromTimeParts function."""
-    timestamp = timelib.Timestamp.FromTimeParts(
-        2013, 6, 25, 22, 19, 46, 0, timezone=pytz.timezone('PST8PDT'))
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-06-25 22:19:46-07:00')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-06-26 05:19:46')
-    timestamp = timelib.Timestamp.FromTimeParts(2013, 6, 26, 5, 19, 46)
-    self.assertEqual(timestamp, expected_timestamp)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-06-26 05:19:46.000542')
-    timestamp = timelib.Timestamp.FromTimeParts(
-        2013, 6, 26, 5, 19, 46, microseconds=542)
-    self.assertEqual(timestamp, expected_timestamp)
-
 
 if __name__ == '__main__':
   unittest.main()

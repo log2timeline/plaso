@@ -13,28 +13,23 @@ from plaso.parsers import symantec
 from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
-import pytz  # pylint: disable=wrong-import-order
-
 
 class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
   """Tests for the Symantec AV Log parser."""
 
-  def testConvertToTimestamp(self):
-    """Tests the _ConvertToTimestamp function."""
+  # pylint: disable=protected-access
+
+  def testGetTimeElementsTuple(self):
+    """Tests the _GetTimeElementsTuple function."""
     parser = symantec.SymantecParser()
 
-    # pylint: disable=protected-access
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2002-11-19 08:01:34')
-    timestamp = parser._ConvertToTimestamp(
-        '200A13080122', timezone=pytz.UTC)
-    self.assertEqual(timestamp, expected_timestamp)
+    expected_time_elements_tuple = (2002, 11, 19, 8, 1, 34)
+    time_elements_tuple = parser._GetTimeElementsTuple('200A13080122')
+    self.assertEqual(time_elements_tuple, expected_time_elements_tuple)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-11-30 10:47:29')
-    timestamp = parser._ConvertToTimestamp(
-        '2A0A1E0A2F1D', timezone=pytz.UTC)
-    self.assertEqual(timestamp, expected_timestamp)
+    expected_time_elements_tuple = (2012, 11, 30, 10, 47, 29)
+    time_elements_tuple = parser._GetTimeElementsTuple('2A0A1E0A2F1D')
+    self.assertEqual(time_elements_tuple, expected_time_elements_tuple)
 
   @shared_test_lib.skipUnlessHasTestFile(['Symantec.Log'])
   def testParse(self):
