@@ -133,6 +133,14 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
 
     return registry_key
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = network_drives.NetworkDrivesPlugin()
+
+    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER\\Network')
+
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+
   def testProcess(self):
     """Tests the Process function on created key."""
     key_path = 'HKEY_CURRENT_USER\\Network'

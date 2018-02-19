@@ -92,6 +92,16 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
 
     return registry_key
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = lfu.BootExecutePlugin()
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Session Manager')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+
   def testProcess(self):
     """Tests the Process function."""
     key_path = (
@@ -165,6 +175,17 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
     registry_key.AddValue(registry_value)
 
     return registry_key
+
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = lfu.BootVerificationPlugin()
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\'
+        'BootVerificationProgram')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
 
   def testProcess(self):
     """Tests the Process function."""
