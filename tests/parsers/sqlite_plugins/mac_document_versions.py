@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import mac_document_versions as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import mac_document_versions
 
 from tests import test_lib as shared_test_lib
@@ -32,11 +31,9 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
     # Check the first page visited entry.
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2014-01-21 02:03:00.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-01-21 02:03:00')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(event.name, 'Spain is beautiful.rtf')
     self.assertEqual(event.path, '/Users/moxilo/Documents')
@@ -49,8 +46,7 @@ class MacDocumentVersionsTest(test_lib.SQLitePluginTestCase):
 
     expected_message = (
         'Version of [{0:s}] ({1:s}) stored in {2:s} by {3:s}'.format(
-            event.name, event.path,
-            event.version_path, event.user_sid))
+            event.name, event.path, event.version_path, event.user_sid))
     expected_short_message = 'Stored a document version of [{0:s}]'.format(
         event.name)
     self._TestGetMessageStrings(event, expected_message, expected_short_message)

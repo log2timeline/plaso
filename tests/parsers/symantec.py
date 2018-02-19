@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import symantec as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import symantec
 
 from tests import test_lib as shared_test_lib
@@ -47,9 +46,8 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
     # Test the second entry:
     event = events[1]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-11-30 10:47:29')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-11-30 10:47:29.000000')
+
     self.assertEqual(event.user, 'davnads')
     expected_file = (
         'D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt')

@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import syslog as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import syslog
 
 from tests import test_lib as shared_test_lib
@@ -54,9 +53,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2016-10-25 19:37:23.297265')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2016-10-25 19:37:23.297265')
 
     expected_message = (
         'INFO [periodic_scheduler, pid: 13707] cleanup_logs: job completed')
@@ -64,16 +61,12 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     event = events[2]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2016-10-25 19:37:24.987014')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2016-10-25 19:37:24.987014')
 
     # Testing year increment.
     event = events[4]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2016-10-25 19:37:24.993079')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2016-10-25 19:37:24.993079')
 
     event = events[6]
 
@@ -104,9 +97,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     event = events[1]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-01-22 07:52:33')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-01-22 07:52:33.000000')
 
     self.assertEqual(event.hostname, 'myhostname.myhost.com')
 
@@ -116,16 +107,12 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     event = events[6]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-02-29 01:15:43')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-02-29 01:15:43.000000')
 
     # Testing year increment.
     event = events[8]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-03-23 23:01:18')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-03-23 23:01:18.000000')
 
     event = events[11]
     expected_reporter = '/sbin/anacron'

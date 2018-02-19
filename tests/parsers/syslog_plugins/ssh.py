@@ -6,8 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.lib import timelib
-
 from tests import test_lib as shared_test_lib
 from tests.parsers.syslog_plugins import test_lib
 
@@ -32,6 +30,9 @@ class SSHSyslogPluginTest(test_lib.SyslogPluginTestCase):
     self.assertEqual(event.data_type, 'syslog:line')
 
     event = events[1]
+
+    self.CheckTimestamp(event.timestamp, '2016-03-11 19:26:39.000000')
+
     self.assertEqual(event.data_type, 'syslog:ssh:login')
     self.assertEqual(event.address, '192.168.0.1')
 
@@ -39,10 +40,6 @@ class SSHSyslogPluginTest(test_lib.SyslogPluginTestCase):
         'Accepted publickey for plaso from 192.168.0.1 port 59229 ssh2: '
         'RSA 00:aa:bb:cc:dd:ee:ff:11:22:33:44:55:66:77:88:99')
     self.assertEqual(expected_body, event.body)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2016-03-11 19:26:39')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_fingerprint = (
         'RSA 00:aa:bb:cc:dd:ee:ff:11:22:33:44:55:66:77:88:99')

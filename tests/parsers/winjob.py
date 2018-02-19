@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import winjob as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import winjob
 
 from tests import test_lib as shared_test_lib
@@ -30,9 +29,7 @@ class WinJobTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-08-24 12:42:00.112')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-08-24 12:42:00.112000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
 
@@ -53,9 +50,7 @@ class WinJobTest(test_lib.ParserTestCase):
     # Parse second event. Same metadata; different timestamp event.
     event = events[1]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-07-12 15:42:00')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-07-12 15:42:00.000000')
     self.assertEqual(event.timestamp_desc, 'Scheduled to start')
 
     self.assertEqual(event.trigger_type, 1)

@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import twitter_ios
 
 from tests import test_lib as shared_test_lib
@@ -35,9 +34,8 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
 
     # Test the first contact creation event.
     event = events[0]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2007-04-22 14:42:37')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2007-04-22 14:42:37.000000')
 
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
@@ -81,9 +79,8 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
 
     # Test first contact modification event.
     event = events[1]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2015-12-02 15:35:44')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2015-12-02 15:35:44.000000')
 
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_UPDATE)
@@ -127,9 +124,8 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
 
     # Test first status creation event.
     event = events[50]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-09-11 11:46:16')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2014-09-11 11:46:16.000000')
 
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
@@ -153,9 +149,8 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
 
     # Test first status update event.
     event = events[51]
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2015-12-02 15:39:37')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2015-12-02 15:39:37.000000')
 
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_UPDATE)

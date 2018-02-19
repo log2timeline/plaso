@@ -11,7 +11,6 @@ try:
 except ImportError:
   lzma = None
 
-from plaso.lib import timelib
 from plaso.parsers import systemd_journal
 
 from tests.parsers import test_lib
@@ -33,10 +32,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2017-01-27 09:40:55.913258')
-
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2017-01-27 09:40:55.913258')
 
     expected_message = (
         'test-VirtualBox [systemd, pid: 1] Started User Manager for '
@@ -46,10 +42,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     # This event uses XZ compressed data
     event = events[2098]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2017-02-06 16:24:32.564585')
-
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2017-02-06 16:24:32.564585')
 
     expected_message = 'test-VirtualBox [root, pid: 22921] {0:s}'.format(
         'a' * 692)
@@ -76,10 +69,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2016-10-24 13:20:01.063423')
-
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2016-10-24 13:20:01.063423')
 
     expected_message = (
         'test-VirtualBox [systemd-journald, pid: 569] Runtime journal '
@@ -96,6 +86,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         'object offset should be after hash tables (4308912 < 2527472) at '
         'offset 0x0041bfb0')
     self.assertEqual(error.message, expected_error_message)
+
 
 if __name__ == '__main__':
   unittest.main()

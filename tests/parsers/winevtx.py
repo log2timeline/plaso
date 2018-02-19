@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import winevtx as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import winevtx
 
 from tests import test_lib as shared_test_lib
@@ -65,9 +64,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     event = events[1]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-03-14 04:17:38.276340')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-03-14 04:17:38.276340')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
