@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import shutdown as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import shutdown
 
 from tests import test_lib as shared_test_lib
@@ -53,9 +52,7 @@ class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
 
     self.assertEqual(event.value_name, 'ShutdownTime')
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-04-04 01:58:40.839249')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-04-04 01:58:40.839249')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_SHUTDOWN)
 

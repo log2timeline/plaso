@@ -12,7 +12,6 @@ from dfwinreg import fake as dfwinreg_fake
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import windows_version
 
 from tests import test_lib as shared_test_lib
@@ -100,8 +99,7 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-08-31 20:09:55.123521')
 
     expected_data_type = 'windows:registry:key_value'
     self.assertEqual(event.data_type, expected_data_type)
@@ -117,11 +115,11 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[1]
+
+    self.CheckTimestamp(event.timestamp, '2012-08-31 20:09:55.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_INSTALLATION)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-08-31 20:09:55')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
     self.assertEqual(event.data_type, 'windows:registry:installation')
 
     expected_data_type = 'windows:registry:installation'
@@ -161,9 +159,8 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-03-15 07:09:20.671875')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-03-15 07:09:20.671875')
+
     self.assertEqual(event.data_type, 'windows:registry:key_value')
 
     expected_message = (

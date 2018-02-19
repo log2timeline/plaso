@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import userassist as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import userassist
 
 from tests import test_lib as shared_test_lib
@@ -70,9 +69,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-08-04 15:11:22.811067')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2009-08-04 15:11:22.811067')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
@@ -113,12 +110,10 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
+
+    self.CheckTimestamp(event.timestamp, '2010-11-10 07:49:37.078067')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2010-11-10 07:49:37.078067')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_value_name = 'Microsoft.Windows.GettingStarted'
     self.assertEqual(event.value_name, expected_value_name)

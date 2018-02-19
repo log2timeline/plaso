@@ -11,7 +11,6 @@ from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import services
 
 from tests import test_lib as shared_test_lib
@@ -110,8 +109,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-08-28 09:23:49.002031')
 
     expected_message = (
         '[{0:s}] '
@@ -170,9 +168,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-04-06 20:43:27.639075')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-04-06 20:43:27.639075')
 
     self._TestRegvalue(event, 'Type', 0x20)
     self._TestRegvalue(event, 'Start', 3)
@@ -184,9 +180,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event = mc_task_manager_events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-09-16 20:49:16.877415')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2011-09-16 20:49:16.877415')
 
     self._TestRegvalue(event, 'DisplayName', 'McAfee Task Manager')
     self._TestRegvalue(event, 'Type', 0x10)
@@ -196,9 +190,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event = rdp_video_miniport_events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-09-17 13:37:59.347157')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2011-09-17 13:37:59.347157')
 
     self._TestRegvalue(event, 'Start', 3)
     expected_value = 'System32\\drivers\\rdpvideominiport.sys'
