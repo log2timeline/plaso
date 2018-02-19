@@ -12,7 +12,6 @@ from dfwinreg import fake as dfwinreg_fake
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import networks
 
 from tests.parsers.winreg_plugins import test_lib
@@ -217,9 +216,7 @@ class NetworksPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-05-06 17:02:19.795')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2014-05-06 17:02:19.795000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
@@ -235,9 +232,7 @@ class NetworksPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[3]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2015-01-27 15:15:27.965')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2015-01-27 15:15:27.965000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_CONNECTED)
 

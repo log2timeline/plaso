@@ -11,7 +11,6 @@ from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import network_drives
 
 from tests.parsers.winreg_plugins import test_lib
@@ -154,10 +153,9 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
 
     events = list(storage_writer.GetSortedEvents())
 
-    event_object = events[0]
+    event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-01-30 10:47:57.000000')
 
     expected_message = (
         '[{0:s}] '
@@ -167,8 +165,7 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
         'Type: Mapped Drive').format(key_path)
     expected_short_message = '{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

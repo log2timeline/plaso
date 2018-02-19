@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import msie_zones
 
 from tests import test_lib as shared_test_lib
@@ -68,9 +67,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-09-16 21:12:40.145514')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2011-09-16 21:12:40.145514')
 
     regvalue_identifier = '[1200] Run ActiveX controls and plug-ins'
     expected_value = '3 (Not Allowed)'
@@ -118,9 +115,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-09-16 21:12:40.145514')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2011-09-16 21:12:40.145514')
 
     regvalue_identifier = '[1200] Run ActiveX controls and plug-ins'
     expected_value = '0 (Allow)'
@@ -172,9 +167,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-08-28 21:32:44.937675')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2011-08-28 21:32:44.937675')
 
     regvalue_identifier = '[1200] Run ActiveX controls and plug-ins'
     expected_value = '3 (Not Allowed)'
@@ -303,9 +296,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-08-28 21:32:44.937675')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2011-08-28 21:32:44.937675')
 
     regvalue_identifier = '[1200] Run ActiveX controls and plug-ins'
     expected_value = '0 (Allow)'

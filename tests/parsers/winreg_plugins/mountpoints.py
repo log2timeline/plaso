@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import mountpoints
 
 from tests import test_lib as shared_test_lib
@@ -54,9 +53,7 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-08-23 17:10:14.960960')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2011-08-23 17:10:14.960960')
 
     regvalue = event.regvalue
     self.assertEqual(regvalue.get('Share_Name'), '\\home\\nfury')

@@ -12,7 +12,6 @@ from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import appcompatcache
 
 from tests import test_lib as shared_test_lib
@@ -390,9 +389,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_index = 9
     event = events[event_index]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-04-04 01:46:37.932964')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-04-04 01:46:37.932964')
 
     self.assertEqual(event.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
