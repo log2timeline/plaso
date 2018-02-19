@@ -148,7 +148,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
           pyparsing.Suppress('.') +
           _PYPARSING_COMPONENTS['fractional_seconds']))
 
-  _PYPARSING_COMPONENTS['iso_8601_date'] = pyparsing.Combine(
+  _PYPARSING_COMPONENTS['chromeos_date'] = pyparsing.Combine(
       pyparsing.Word(pyparsing.nums, exact=4) + pyparsing.Literal('-') +
       pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('-') +
       pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('T') +
@@ -161,7 +161,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       joinString='', adjacent=True)
 
   _CHROMEOS_SYSLOG_LINE = (
-      _PYPARSING_COMPONENTS['iso_8601_date'].setResultsName('iso_8601_date') +
+      _PYPARSING_COMPONENTS['chromeos_date'].setResultsName('chromeos_date') +
       _PYPARSING_COMPONENTS['severity'] +
       _PYPARSING_COMPONENTS['reporter'] +
       pyparsing.Optional(pyparsing.Suppress(':')) +
@@ -270,10 +270,10 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
 
       try:
-        date_time.CopyFromStringISO8601(structure.iso_8601_date)
+        date_time.CopyFromStringISO8601(structure.chromeos_date)
       except ValueError:
         parser_mediator.ProduceExtractionError(
-            'invalid date time value: {0:s}'.format(structure.iso_8601_date))
+            'invalid date time value: {0:s}'.format(structure.chromeos_date))
         return
 
     else:

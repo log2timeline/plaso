@@ -74,20 +74,20 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
           r'.*?(?=(\<!\[LOG\[))', re.DOTALL).setResultsName('line_remainder'),
       'lastline_remainder': pyparsing.restOfLine.setResultsName(
           'lastline_remainder'),
-      'hours': _ONE_OR_TWO_DIGITS.setResultsName('hours'),
-      'minutes': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
-          'minutes'),
-      'seconds': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
-          'seconds')}
+      'hour': _ONE_OR_TWO_DIGITS.setResultsName('hour'),
+      'minute': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          'minute'),
+      'second': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
+          'second')}
 
   # Base grammar for individual log event lines.
   LINE_GRAMMAR_BASE = (
       _PARSING_COMPONENTS['msg_left_delimiter'] +
       _PARSING_COMPONENTS['text'] +
       _PARSING_COMPONENTS['msg_right_delimiter'] +
-      _PARSING_COMPONENTS['hours'] +
-      pyparsing.Suppress(':') + _PARSING_COMPONENTS['minutes'] +
-      pyparsing.Suppress(':') + _PARSING_COMPONENTS['seconds'] +
+      _PARSING_COMPONENTS['hour'] +
+      pyparsing.Suppress(':') + _PARSING_COMPONENTS['minute'] +
+      pyparsing.Suppress(':') + _PARSING_COMPONENTS['second'] +
       pyparsing.Suppress('.') + _PARSING_COMPONENTS['fraction_of_second'] +
       _PARSING_COMPONENTS['date_prefix'] + _PARSING_COMPONENTS['month'] +
       pyparsing.Suppress('-') + _PARSING_COMPONENTS['day'] +
@@ -100,9 +100,9 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
       _PARSING_COMPONENTS['msg_left_delimiter'] +
       _PARSING_COMPONENTS['text'] +
       _PARSING_COMPONENTS['msg_right_delimiter'] +
-      _PARSING_COMPONENTS['hours'] +
-      pyparsing.Suppress(':') + _PARSING_COMPONENTS['minutes'] +
-      pyparsing.Suppress(':') + _PARSING_COMPONENTS['seconds'] +
+      _PARSING_COMPONENTS['hour'] +
+      pyparsing.Suppress(':') + _PARSING_COMPONENTS['minute'] +
+      pyparsing.Suppress(':') + _PARSING_COMPONENTS['second'] +
       pyparsing.Suppress('.') + _PARSING_COMPONENTS['fraction_of_second'] +
       _PARSING_COMPONENTS['utc_offset_minutes'] +
       _PARSING_COMPONENTS['date_prefix'] + _PARSING_COMPONENTS['month'] +
@@ -157,8 +157,8 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
       fraction_of_second, _ = divmod(fraction_of_second, 10)
 
     date_time_string = '{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02d}'.format(
-        structure.year, structure.month, structure.day, structure.hours,
-        structure.minutes, structure.seconds)
+        structure.year, structure.month, structure.day, structure.hour,
+        structure.minute, structure.second)
 
     if fraction_of_second_length > 0:
       date_time_string = '{0:s}.{1:d}'.format(
