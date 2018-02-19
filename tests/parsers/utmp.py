@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import utmp as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import utmp
 
 from tests import test_lib as shared_test_lib
@@ -36,9 +35,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
 
     event = events[2]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-13 14:45:09')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-12-13 14:45:09.000000')
 
     self.assertEqual(event.user, 'LOGIN')
     self.assertEqual(event.computer_name, 'localhost')
@@ -62,9 +59,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
 
     event = events[12]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-12-18 22:46:56.305504')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-12-18 22:46:56.305504')
 
     self.assertEqual(event.user, 'moxilo')
     self.assertEqual(event.computer_name, 'localhost')
@@ -98,9 +93,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-12-01 17:36:38.432935')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2011-12-01 17:36:38.432935')
 
     self.assertEqual(event.user, 'userA')
     self.assertEqual(event.computer_name, '10.10.122.1')
