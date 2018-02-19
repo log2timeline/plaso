@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import mackeeper_cache as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import mackeeper_cache
 
 from tests import test_lib as shared_test_lib
@@ -31,9 +30,7 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
 
     event = events[41]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-07-12 19:30:31')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-07-12 19:30:31.000000')
 
     expected_message = (
         'Chat Outgoing Message : I have received your system scan report and '

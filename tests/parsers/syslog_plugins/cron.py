@@ -6,8 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.lib import timelib
-
 from tests import test_lib as shared_test_lib
 from tests.parsers.syslog_plugins import test_lib
 
@@ -30,11 +28,9 @@ class CronSyslogPluginTest(test_lib.SyslogPluginTestCase):
 
     event = events[1]
 
-    self.assertEqual(event.data_type, 'syslog:cron:task_run')
+    self.CheckTimestamp(event.timestamp, '2015-03-11 19:26:39.000000')
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2015-03-11 19:26:39')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.assertEqual(event.data_type, 'syslog:cron:task_run')
 
     expected_command = 'sleep $(( 1 * 60 )); touch /tmp/afile.txt'
     self.assertEqual(event.command, expected_command)

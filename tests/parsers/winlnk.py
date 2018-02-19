@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import winlnk as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import winlnk
 
 from tests import test_lib as shared_test_lib
@@ -55,29 +54,23 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.env_var_location, expected_string)
 
     # The last accessed timestamp.
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-07-13 23:29:02.849131')
+    self.CheckTimestamp(event.timestamp, '2009-07-13 23:29:02.849131')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     # The creation timestamp.
     event = events[1]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-07-13 23:29:02.849131')
+    self.CheckTimestamp(event.timestamp, '2009-07-13 23:29:02.849131')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     # The last modification timestamp.
     event = events[2]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-07-14 01:39:18.220000')
+    self.CheckTimestamp(event.timestamp, '2009-07-14 01:39:18.220000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         '[@%windir%\\system32\\migwiz\\wet.dll,-590] '
@@ -97,11 +90,9 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     # A distributed link tracking event.
     event = events[4]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-07-14 05:45:20.500012')
+    self.CheckTimestamp(event.timestamp, '2009-07-14 05:45:20.500012')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_uuid = '846ee3bb-7039-11de-9d20-001d09fa5a1c'
     self.assertEqual(event.uuid, expected_uuid)
@@ -150,9 +141,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     # A shell item event.
     event = events[12]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-06-05 20:13:20')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2009-06-05 20:13:20.000000')
 
     expected_message = (
         'Name: InfoTool.exe '

@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import winevt as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import winevt
 
 from tests import test_lib as shared_test_lib
@@ -36,9 +35,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-07-27 06:41:47')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2011-07-27 06:41:47.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
@@ -73,10 +70,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.strings[1], expected_string)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-07-27 06:41:47')
-    self.assertEqual(event.timestamp, expected_timestamp)
-
+    self.CheckTimestamp(event.timestamp, '2011-07-27 06:41:47.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 

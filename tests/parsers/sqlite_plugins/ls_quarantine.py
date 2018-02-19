@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import ls_quarantine as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import ls_quarantine
 
 from tests import test_lib as shared_test_lib
@@ -32,9 +31,7 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
     # Examine a VLC event.
     event = events[3]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-07-08 21:12:03')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-07-08 21:12:03.000000')
 
     self.assertEqual(event.agent, 'Google Chrome')
     expected_url = (
@@ -47,16 +44,12 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
     # Examine a MacKeeper event.
     event = events[9]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-07-12 19:28:58')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-07-12 19:28:58.000000')
 
     # Examine a SpeedTest event.
     event = events[10]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-07-12 19:30:16')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-07-12 19:30:16.000000')
 
     expected_message = (
         '[Google Chrome] Downloaded: http://mackeeperapp.zeobit.com/aff/'
