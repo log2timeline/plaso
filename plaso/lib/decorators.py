@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 import warnings
 
 
+# pylint: disable=invalid-name
+
 def deprecated(function):
   """Decorator to mark functions or methods as deprecated."""
 
