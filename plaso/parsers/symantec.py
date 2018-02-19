@@ -3,15 +3,13 @@
 
 from __future__ import unicode_literals
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers import dsv_parser
 from plaso.parsers import manager
-
-import pytz  # pylint: disable=wrong-import-order
 
 
 class SymantecEventData(events.EventData):
@@ -25,58 +23,58 @@ class SymantecEventData(events.EventData):
     action2 (str): action2.
     action2_status (str): action2 status.
     address (str): address.
-    backup_id (str): backup id.
-    cat (str): cat.
-    cleaninfo (str): cleaninfo.
-    clientgroup (str): clientgroup.
+    backup_id (str): backup identifier.
+    cat (str): category.
+    cleaninfo (str): clean information.
+    clientgroup (str): client group.
     compressed (str): compressed.
     computer (str): computer.
     definfo (str): definfo.
-    defseqnumber (str): defseqnumber.
-    deleteinfo (str): deleteinfo.
+    defseqnumber (str): def sequence number.
+    deleteinfo (str): delete information.
     depth (str): depth.
     description (str): description.
-    domain_guid (str): domain guid.
-    domainname (str): domainname.
-    err_code (str): err code.
+    domain_guid (str): domain identifier (GUID).
+    domainname (str): domain name.
+    err_code (str): error code.
     event_data (str): event data.
     event (str): event.
     extra (str): extra.
     file (str): file.
     flags (str): flags.
-    groupid (str): groupid.
+    groupid (str): group identifier.
     guid (str): guid.
-    license_expiration_dt (str): license expiration dt.
+    license_expiration_dt (str): license expiration date.
     license_feature_name (str): license feature name.
     license_feature_ver (str): license feature ver.
-    license_fulfillment_id (str): license fulfillment id.
+    license_fulfillment_id (str): license fulfillment identifier.
     license_lifecycle (str): license lifecycle.
     license_seats_delta (str): license seats delta.
     license_seats (str): license seats.
     license_seats_total (str): license seats total.
-    license_serial_num (str): license serial num.
-    license_start_dt (str): license start dt.
+    license_serial_num (str): license serial number.
+    license_start_dt (str): license start date.
     logger (str): logger.
     login_domain (str): login domain.
-    log_session_guid (str): log session guid.
-    macaddr (str): macaddr.
+    log_session_guid (str): log session identifier (GUID).
+    macaddr (str): MAC address.
     new_ext (str): new ext.
     ntdomain (str): ntdomain.
     offset (str): offset.
     parent (str): parent.
     quarfwd_status (str): quarfwd status.
-    remote_machine_ip (str): remote machine ip.
+    remote_machine_ip (str): remote machine IP address.
     remote_machine (str): remote machine.
-    scanid (str): scanid.
+    scanid (str): scan identifier.
     snd_status (str): snd status.
     status (str): status.
     still_infected (str): still infected.
     time (str): time.
     user (str): user.
-    vbin_id (str): vbin id.
-    vbin_session_id (str): vbin session id.
+    vbin_id (str): vbin identifier.
+    vbin_session_id (str): vbin session identifier.
     version (str): version.
-    virus_id (str): virus id.
+    virus_id (str): virus identifier.
     virus (str): virus.
     virustype (str): virustype.
   """
@@ -150,7 +148,7 @@ class SymantecEventData(events.EventData):
 
 
 class SymantecParser(dsv_parser.DSVParser):
-  """Parse Symantec AV Corporate Edition and Endpoint Protection log files."""
+  """Parses Symantec AV Corporate Edition and Endpoint Protection log files."""
 
   NAME = 'symantec_scanlog'
   DESCRIPTION = 'Parser for Symantec Anti-Virus log files.'
@@ -174,37 +172,36 @@ class SymantecParser(dsv_parser.DSVParser):
       'domain_guid', 'log_session_guid', 'vbin_session_id',
       'login_domain', 'extra']
 
-  def _ConvertToTimestamp(self, date_time_values, timezone=pytz.UTC):
-    """Converts the given parsed date and time values to a timestamp.
+  def _GetTimeElementsTuple(self, timestamp):
+    """Retrieves a time elements tuple from the timestamp.
 
-    The date and time values consist of six hexadecimal octets.
-    They represent the following:
+    A Symantec log timestamp consist of six hexadecimal octets, that represent:
       First octet: Number of years since 1970
-      Second octet: Month, where January = 0
-      Third octet: Day
-      Fourth octet: Hour
-      Fifth octet: Minute
-      Sixth octet: Second
+      Second octet: Month, where January is represented by 0
+      Third octet: Day of the month
+      Fourth octet: Number of hours
+      Fifth octet: Number of minutes
+      Sixth octet: Number of seconds
 
     For example, 200A13080122 represents November 19, 2002, 8:01:34 AM.
 
     Args:
-      date_time_values: The hexadecimal encoded date and time values.
-      timezone: Optional timezone (instance of pytz.timezone).
+      timestamp (str): hexadecimal encoded date and time values.
 
     Returns:
-      A timestamp value, contains the number of micro seconds since
-      January 1, 1970, 00:00:00 UTC.
+      tuple: contains:
+        year (int): year.
+        month (int): month, where 1 represents January.
+        day_of_month (int): day of month, where 1 is the first day of the month.
+        hours (int): hours.
+        minutes (int): minutes.
+        seconds (int): seconds.
     """
-    if not date_time_values:
-      return timelib.Timestamp.NONE_TIMESTAMP
-
-    year, month, day, hours, minutes, seconds = (
+    year, month, day_of_month, hours, minutes, seconds = (
         int(hexdigit[0] + hexdigit[1], 16) for hexdigit in zip(
-            date_time_values[::2], date_time_values[1::2]))
+            timestamp[::2], timestamp[1::2]))
 
-    return timelib.Timestamp.FromTimeParts(
-        year + 1970, month + 1, day, hours, minutes, seconds, timezone=timezone)
+    return (year + 1970, month + 1, day_of_month, hours, minutes, seconds)
 
   def ParseRow(self, parser_mediator, row_offset, row):
     """Parses a line of the log file and produces events.
@@ -215,14 +212,16 @@ class SymantecParser(dsv_parser.DSVParser):
       row_offset (int): line number of the row.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
+    time_elements_tuple = self._GetTimeElementsTuple(row['time'])
+
     try:
-      timestamp = self._ConvertToTimestamp(
-          row['time'], timezone=parser_mediator.timezone)
-    except (TypeError, ValueError, errors.TimestampError) as exception:
-      timestamp = timelib.Timestamp.NONE_TIMESTAMP
+      date_time = dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
+      date_time.is_local_time = True
+    except ValueError:
       parser_mediator.ProduceExtractionError(
-          'unable to determine timestamp with error: {0!s}'.format(
-              exception))
+          'invalid date time value: {0!s}'.format(time_elements_tuple))
+      return
 
     # TODO: remove unused attributes.
     event_data = SymantecEventData()
@@ -288,8 +287,8 @@ class SymantecParser(dsv_parser.DSVParser):
     event_data.virus = row.get('virus', None)
     event_data.virustype = row.get('virustype', None)
 
-    event = time_events.TimestampEvent(
-        timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
+    event = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyRow(self, parser_mediator, row):
@@ -303,18 +302,16 @@ class SymantecParser(dsv_parser.DSVParser):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
+    time_elements_tuple = self._GetTimeElementsTuple(row['time'])
+
     try:
-      timestamp = self._ConvertToTimestamp(
-          row['time'], timezone=parser_mediator.timezone)
-    except (TypeError, ValueError, errors.TimestampError):
+      dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
+    except ValueError:
       return False
 
-    if not timestamp:
-      return False
-
-    # Check few entries.
     try:
-      my_event = int(row['event'])
+      my_event = int(row['event'], 10)
     except (TypeError, ValueError):
       return False
 
@@ -322,7 +319,7 @@ class SymantecParser(dsv_parser.DSVParser):
       return False
 
     try:
-      category = int(row['cat'])
+      category = int(row['cat'], 10)
     except (TypeError, ValueError):
       return False
 

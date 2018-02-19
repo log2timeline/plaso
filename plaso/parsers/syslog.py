@@ -5,6 +5,8 @@ from __future__ import unicode_literals
 
 import re
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
 import pyparsing
 
 from plaso.containers import events
@@ -87,10 +89,6 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       'INFO',
       'DEBUG']
 
-  _OFFSET_PREFIX = [
-      '-',
-      '+']
-
   _BODY_CONTENT = (
       r'.*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2})|' \
       r'($|\n\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}' \
@@ -136,18 +134,9 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       'pid': text_parser.PyparsingConstants.PID.setResultsName('pid'),
       'facility': pyparsing.Word(_FACILITY_CHARACTERS).setResultsName(
           'facility'),
-      'severity': pyparsing.oneOf(_SYSLOG_SEVERITY).setResultsName(
-          'severity'),
-      'body': pyparsing.Regex(_BODY_CONTENT, re.DOTALL).setResultsName(
-          'body'),
-      'comment_body': pyparsing.SkipTo(' ---').setResultsName(
-          'body'),
-      'iso_8601_offset': (
-          pyparsing.oneOf(_OFFSET_PREFIX) +
-          text_parser.PyparsingConstants.TWO_DIGITS +
-          pyparsing.Optional(
-              pyparsing.Literal(':') +
-              text_parser.PyparsingConstants.TWO_DIGITS))
+      'severity': pyparsing.oneOf(_SYSLOG_SEVERITY).setResultsName('severity'),
+      'body': pyparsing.Regex(_BODY_CONTENT, re.DOTALL).setResultsName('body'),
+      'comment_body': pyparsing.SkipTo(' ---').setResultsName('body')
   }
 
   _PYPARSING_COMPONENTS['date'] = (
@@ -159,19 +148,20 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
           pyparsing.Suppress('.') +
           _PYPARSING_COMPONENTS['fractional_seconds']))
 
-  _PYPARSING_COMPONENTS['iso_8601_date'] = pyparsing.Combine(
-      _PYPARSING_COMPONENTS['year'] + pyparsing.Literal('-') +
-      _PYPARSING_COMPONENTS['two_digit_month'] + pyparsing.Literal('-') +
-      _PYPARSING_COMPONENTS['day'] + pyparsing.Literal('T') +
-      _PYPARSING_COMPONENTS['hour'] + pyparsing.Literal(':') +
-      _PYPARSING_COMPONENTS['minute'] + pyparsing.Literal(':') +
-      _PYPARSING_COMPONENTS['second'] + pyparsing.Literal('.') +
-      _PYPARSING_COMPONENTS['fractional_seconds'] +
-      _PYPARSING_COMPONENTS['iso_8601_offset'],
-      joinString='', adjacent=True).setResultsName('iso_8601_date')
+  _PYPARSING_COMPONENTS['chromeos_date'] = pyparsing.Combine(
+      pyparsing.Word(pyparsing.nums, exact=4) + pyparsing.Literal('-') +
+      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('-') +
+      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('T') +
+      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal(':') +
+      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal(':') +
+      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('.') +
+      pyparsing.Word(pyparsing.nums, exact=6) + pyparsing.oneOf(['-', '+']) +
+      pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Optional(
+          pyparsing.Literal(':') + pyparsing.Word(pyparsing.nums, exact=2)),
+      joinString='', adjacent=True)
 
   _CHROMEOS_SYSLOG_LINE = (
-      _PYPARSING_COMPONENTS['iso_8601_date'] +
+      _PYPARSING_COMPONENTS['chromeos_date'].setResultsName('chromeos_date') +
       _PYPARSING_COMPONENTS['severity'] +
       _PYPARSING_COMPONENTS['reporter'] +
       pyparsing.Optional(pyparsing.Suppress(':')) +
@@ -277,19 +267,34 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     if key == 'chromeos_syslog_line':
-      timestamp = timelib.Timestamp.FromTimeString(structure.iso_8601_date[0])
-    else:
-      month = timelib.MONTH_DICT.get(structure.month.lower(), None)
-      if not month:
-        parser_mediator.ProduceParserError(
-            'Invalid month value: {0:s}'.format(month))
+      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+
+      try:
+        date_time.CopyFromStringISO8601(structure.chromeos_date)
+      except ValueError:
+        parser_mediator.ProduceExtractionError(
+            'invalid date time value: {0:s}'.format(structure.chromeos_date))
         return
 
-      self._UpdateYear(parser_mediator, month)
-      timestamp = timelib.Timestamp.FromTimeParts(
-          year=self._year_use, month=month, day=structure.day,
-          hour=structure.hour, minutes=structure.minute,
-          seconds=structure.second, timezone=parser_mediator.timezone)
+    else:
+      # TODO: add support for fractional seconds.
+
+      month = timelib.MONTH_DICT.get(structure.month.lower(), 0)
+      if month != 0:
+        self._UpdateYear(parser_mediator, month)
+
+      time_elements_tuple = (
+          self._year_use, month, structure.day, structure.hour,
+          structure.minute, structure.second)
+
+      try:
+        date_time = dfdatetime_time_elements.TimeElements(
+            time_elements_tuple=time_elements_tuple)
+        date_time.is_local_time = True
+      except ValueError:
+        parser_mediator.ProduceExtractionError(
+            'invalid date time value: {0!s}'.format(time_elements_tuple))
+        return
 
     plugin = None
     if key == 'syslog_comment':
@@ -319,14 +324,14 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
 
         try:
           # TODO: pass event_data instead of attributes.
-          plugin.Process(parser_mediator, timestamp, attributes)
+          plugin.Process(parser_mediator, date_time, attributes)
 
         except errors.WrongPlugin:
           plugin = None
 
     if not plugin:
-      event = time_events.TimestampEvent(
-          timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, unused_parser_mediator, lines):
