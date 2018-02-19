@@ -18,6 +18,15 @@ from tests.parsers.winreg_plugins import test_lib
 class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the LastShutdown value plugin."""
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = shutdown.ShutdownPlugin()
+
+    key_path = 'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Windows'
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+
   @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testProcess(self):
     """Tests the Process function."""
@@ -44,7 +53,6 @@ class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
 
     self.assertEqual(event.value_name, 'ShutdownTime')
 
-    # Match UTC timestamp.
     expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-04-04 01:58:40.839249')
     self.assertEqual(event.timestamp, expected_timestamp)

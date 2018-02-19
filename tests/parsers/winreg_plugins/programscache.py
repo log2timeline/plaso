@@ -18,6 +18,22 @@ from tests.parsers.winreg_plugins import test_lib
 class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Explorer ProgramsCache Windows Registry plugin."""
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = programscache.ExplorerProgramsCachePlugin()
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Explorer\\StartPage')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Explorer\\StartPage2')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+
   @shared_test_lib.skipUnlessHasTestFile(['NTUSER.DAT'])
   def testProcessStartPage(self):
     """Tests the Process function on a StartPage key."""

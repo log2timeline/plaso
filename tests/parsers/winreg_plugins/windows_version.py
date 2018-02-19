@@ -70,6 +70,16 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
 
     return registry_key
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = windows_version.WindowsVersionPlugin()
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+
   def testProcess(self):
     """Tests the Process function."""
     key_path = (

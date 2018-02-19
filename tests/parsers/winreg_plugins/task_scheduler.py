@@ -17,6 +17,17 @@ from tests.parsers.winreg_plugins import test_lib
 class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Task Cache key Windows Registry plugin."""
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = task_scheduler.TaskCachePlugin()
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\'
+        'CurrentVersion\\Schedule\\TaskCache')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+
   @shared_test_lib.skipUnlessHasTestFile(['SOFTWARE-RunTests'])
   def testProcess(self):
     """Tests the Process function."""

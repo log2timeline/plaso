@@ -107,6 +107,17 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
     return registry_key
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = winreg_timezone.WinRegTimezonePlugin()
+
+    key_path = (
+        'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\'
+        'TimeZoneInformation')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+
   def testProcessMock(self):
     """Tests the Process function on created key."""
     key_path = (

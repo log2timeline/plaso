@@ -17,6 +17,22 @@ from tests.parsers.winreg_plugins import test_lib
 class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the MSIE typed URLs Windows Registry plugin."""
 
+  def testFilters(self):
+    """Tests the FILTERS class attribute."""
+    plugin = typedurls.TypedURLsPlugin()
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Internet Explorer\\'
+        'TypedURLs')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    key_path = (
+        'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
+        'Explorer\\TypedPaths')
+    self._AssertFiltersOnKeyPath(plugin, key_path)
+
+    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\Bogus')
+
   @shared_test_lib.skipUnlessHasTestFile(['NTUSER-WIN7.DAT'])
   def testProcess(self):
     """Tests the Process function."""
