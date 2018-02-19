@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import programscache
 
 from tests import test_lib as shared_test_lib
@@ -59,11 +58,9 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
     expected_parser = 'explorer_programscache/shell_items'
     self.assertEqual(event.parser, expected_parser)
 
+    self.CheckTimestamp(event.timestamp, '2009-08-04 15:12:24.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-08-04 15:12:24')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_data_type = 'windows:shell_item:file_entry'
     self.assertEqual(event.data_type, expected_data_type)
@@ -87,11 +84,9 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
     expected_parser = 'explorer_programscache'
     self.assertEqual(event.parser, expected_parser)
 
+    self.CheckTimestamp(event.timestamp, '2009-08-04 15:22:18.419625')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-08-04 15:22:18.419625')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_data_type = 'windows:registry:list'
     self.assertEqual(event.data_type, expected_data_type)
@@ -130,11 +125,9 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
     expected_parser = 'explorer_programscache'
     self.assertEqual(event.parser, expected_parser)
 
+    self.CheckTimestamp(event.timestamp, '2009-08-04 15:22:18.419625')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-08-04 15:22:18.419625')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_data_type = 'windows:registry:key_value'
     self.assertEqual(event.data_type, expected_data_type)
@@ -163,11 +156,9 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
     expected_parser = 'explorer_programscache/shell_items'
     self.assertEqual(event.parser, expected_parser)
 
+    self.CheckTimestamp(event.timestamp, '2010-11-10 07:50:38.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2010-11-10 07:50:38')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_data_type = 'windows:shell_item:file_entry'
     self.assertEqual(event.data_type, expected_data_type)

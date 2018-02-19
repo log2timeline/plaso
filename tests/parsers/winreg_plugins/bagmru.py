@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import bagmru
 
 from tests import test_lib as shared_test_lib
@@ -76,9 +75,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-08-04 15:19:16.997750')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2009-08-04 15:19:16.997750')
 
     expected_message = (
         '[{0:s}] '
@@ -90,9 +87,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
 
     event = events[1]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-08-04 15:19:10.669625')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2009-08-04 15:19:10.669625')
 
     expected_message = (
         '[{0:s}\\0] '
@@ -104,9 +99,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
 
     event = events[14]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-08-04 15:19:16.997750')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2009-08-04 15:19:16.997750')
 
     # The winreg_formatter will add a space after the key path even when there
     # is not text.
