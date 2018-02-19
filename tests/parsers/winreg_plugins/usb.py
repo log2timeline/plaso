@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import usb
 
 from tests import test_lib as shared_test_lib
@@ -55,10 +54,7 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
     self._TestRegvalue(event, 'vendor', 'VID_0E0F')
     self._TestRegvalue(event, 'product', 'PID_0002')
 
-    # Match UTC timestamp.
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-04-07 10:31:37.625246')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-04-07 10:31:37.625246')
 
     expected_message = (
         '[{0:s}] '

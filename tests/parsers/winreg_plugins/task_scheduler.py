@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import task_scheduler
 
 from tests import test_lib as shared_test_lib
@@ -53,9 +52,7 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-07-14 04:53:25.811618')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2009-07-14 04:53:25.811618')
 
     regvalue_identifier = 'Task: SynchronizeTime'
     expected_value = '[ID: {044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}]'
@@ -69,9 +66,7 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[1]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2009-07-14 05:08:50.811626')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2009-07-14 05:08:50.811626')
 
     regvalue_identifier = 'Task: SynchronizeTime'
 
