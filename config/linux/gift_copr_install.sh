@@ -26,9 +26,9 @@ PYTHON2_DEPENDENCIES="PyYAML
                       libvmdk-python
                       libvshadow-python
                       libvslvm-python
-                      pyliblzma
                       python-XlsxWriter
                       python-artifacts
+                      python-backports-lzma
                       python-bencode
                       python-binplist
                       python-chardet
