@@ -20,7 +20,6 @@ import dateutil.parser
 import pytz
 
 from plaso.lib import errors
-from plaso.lib import py2to3
 
 
 MONTH_DICT = {
@@ -332,48 +331,6 @@ class Timestamp(object):
 
     posix_time = int(calendar.timegm(datetime_object.utctimetuple()))
     return cls.FromPosixTime(posix_time) + datetime_object.microsecond
-
-  @classmethod
-  def FromTimeParts(
-      cls, year, month, day, hour, minutes, seconds, microseconds=0,
-      timezone=pytz.UTC):
-    """Converts a list of time entries to a timestamp.
-
-    Args:
-      year: An integer representing the year.
-      month: An integer between 1 and 12.
-      day: An integer representing the number of day in the month.
-      hour: An integer representing the hour, 0 <= hour < 24.
-      minutes: An integer, 0 <= minute < 60.
-      seconds: An integer, 0 <= second < 60.
-      microseconds: Optional number of microseconds ranging from:
-                    0 <= microsecond < 1000000.
-      timezone: Optional timezone (instance of pytz.timezone).
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
-
-    Raises:
-      TimestampError: if the timestamp cannot be created from the time parts.
-    """
-    try:
-      date = datetime.datetime(
-          year, month, day, hour, minutes, seconds, microseconds)
-    except ValueError as exception:
-      raise errors.TimestampError((
-          'Unable to create timestamp from {0:04d}-{1:02d}-{2:02d} '
-          '{3:02d}:{4:02d}:{5:02d}.{6:06d} with error: {7!s}').format(
-              year, month, day, hour, minutes, seconds, microseconds,
-              exception))
-
-    if isinstance(timezone, py2to3.STRING_TYPES):
-      timezone = pytz.timezone(timezone)
-
-    date_use = timezone.localize(date)
-    posix_time = int(calendar.timegm(date_use.utctimetuple()))
-
-    return cls.FromPosixTime(posix_time) + microseconds
 
   @classmethod
   def FromTimeString(

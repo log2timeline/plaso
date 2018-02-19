@@ -112,15 +112,14 @@ class SSHSyslogPlugin(interface.SyslogPlugin):
       ('failed_connection', _FAILED_CONNECTION_GRAMMAR),
       ('opened_connection', _OPENED_CONNECTION_GRAMMAR),]
 
-  def ParseMessage(self, parser_mediator, key, timestamp, tokens):
+  def ParseMessage(self, parser_mediator, key, date_time, tokens):
     """Produces an event from a syslog body that matched one of the grammars.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       key (str): name of the matching grammar.
-      timestamp (int): the timestamp, which contains the number of micro seconds
-          since January 1, 1970, 00:00:00 UTC or 0 on error.
+      date_time (dfdatetime.DateTimeValues): date and time values.
       tokens (dict[str, str]): tokens derived from a syslog message based on
           the defined grammar.
 
@@ -154,8 +153,8 @@ class SSHSyslogPlugin(interface.SyslogPlugin):
     event_data.severity = tokens.get('severity', None)
     event_data.username = tokens.get('username', None)
 
-    event = time_events.TimestampEvent(
-        timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
+    event = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
