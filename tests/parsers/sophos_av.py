@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import sophos_av as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import sophos_av
 
 from tests import test_lib as shared_test_lib
@@ -28,8 +27,8 @@ class SophosAVLogParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     event = events[0]
-    expected_timestamp = timelib.Timestamp.CopyFromString('2010-07-20 18:38:14')
-    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.CheckTimestamp(event.timestamp, '2010-07-20 18:38:14.000000')
 
     expected_message = (
         'File "C:\\Documents and Settings\\Administrator\\Desktop\\'

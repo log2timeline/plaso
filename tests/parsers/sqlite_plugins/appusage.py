@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import appusage as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import appusage
 
 from tests import test_lib as shared_test_lib
@@ -32,9 +31,7 @@ class ApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
     # Check the first event.
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-05-07 18:52:02')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2014-05-07 18:52:02.000000')
 
     self.assertEqual(event.application, '/Applications/Safari.app')
     self.assertEqual(event.app_version, '9537.75.14')

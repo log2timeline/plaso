@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import android_webviewcache as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import android_webviewcache
 
 from tests import test_lib as shared_test_lib
@@ -30,9 +29,7 @@ class AndroidWebViewCache(test_lib.SQLitePluginTestCase):
 
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2013-03-28 09:48:18')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2013-03-28 09:48:18.000000')
 
     self.assertEqual(1821, event.content_length)
 

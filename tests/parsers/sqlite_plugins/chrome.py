@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import chrome as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import chrome
 
 from tests import test_lib as shared_test_lib
@@ -33,12 +32,9 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the first page visited entry.
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2011-04-07 12:03:11.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-04-07 12:03:11')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_url = 'http://start.ubuntu.com/10.04/Google/'
     self.assertEqual(event.url, expected_url)
@@ -59,12 +55,9 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the first file downloaded entry.
     event = events[69]
 
+    self.CheckTimestamp(event.timestamp, '2011-05-23 08:35:30.000000')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-05-23 08:35:30')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_url = (
         'http://fatloss4idiotsx.com/download/funcats/'
@@ -101,12 +94,9 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the page visit event.
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2018-01-21 14:09:53.885478')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2018-01-21 14:09:53.885478')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_url = (
         'https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/'
@@ -129,12 +119,9 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the file downloaded event.
     event = events[1]
 
+    self.CheckTimestamp(event.timestamp, '2018-01-21 14:09:53.900399')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2018-01-21 14:09:53.900399')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_url = (
         'https://raw.githubusercontent.com/log2timeline/l2tbinaries/master/'
@@ -167,12 +154,9 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the page visit event.
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2018-01-21 14:09:27.315765')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2018-01-21 14:09:27.315765')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_url = (
         'https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/'
@@ -195,12 +179,9 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the file downloaded event.
     event = events[1]
 
+    self.CheckTimestamp(event.timestamp, '2018-01-21 14:09:27.200398')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2018-01-21 14:09:27.200398')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_url = (
         'https://raw.githubusercontent.com/log2timeline/l2tbinaries/master/'
@@ -233,12 +214,9 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the page visit event.
     event = events[0]
 
+    self.CheckTimestamp(event.timestamp, '2018-01-21 14:08:52.037692')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2018-01-21 14:08:52.037692')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_url = (
         'https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/'
@@ -261,12 +239,9 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     # Check the file downloaded event.
     event = events[1]
 
+    self.CheckTimestamp(event.timestamp, '2018-01-21 14:08:51.811123')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2018-01-21 14:08:51.811123')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_url = (
         'https://raw.githubusercontent.com/log2timeline/l2tbinaries/master/'
