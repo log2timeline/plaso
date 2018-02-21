@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import pls_recall as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import pls_recall
 
 from tests import test_lib as shared_test_lib
@@ -30,9 +29,7 @@ class PlsRecallTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    timestamp_expected = timelib.Timestamp.CopyFromString(
-        '2013-06-18 19:50:00.550')
-    self.assertEqual(event.timestamp, timestamp_expected)
+    self.CheckTimestamp(event.timestamp, '2013-06-18 19:50:00.550000')
 
     self.assertEqual(event.sequence_number, 206)
     self.assertEqual(event.username, 'tsltmp')

@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import gdrive as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import gdrive
 
 from tests import test_lib as shared_test_lib
@@ -46,6 +45,8 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
     # Test one local and one cloud entry.
     event = local_entries[5]
 
+    self.CheckTimestamp(event.timestamp, '2014-01-28 00:11:25.000000')
+
     file_path = (
         '%local_sync_root%/Top Secret/Enn meiri '
         'leyndarmál/Sýnileiki - Örverpi.gdoc')
@@ -55,11 +56,9 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
 
     self._TestGetMessageStrings(event, expected_message, file_path)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-01-28 00:11:25')
-    self.assertEqual(event.timestamp, expected_timestamp)
-
     event = cloud_entries[16]
+
+    self.CheckTimestamp(event.timestamp, '2014-01-28 00:12:27.000000')
 
     self.assertEqual(event.document_type, 6)
     self.assertEqual(
@@ -79,10 +78,6 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
     expected_short_message = '/Almenningur/Saklausa hliðin'
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2014-01-28 00:12:27')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':

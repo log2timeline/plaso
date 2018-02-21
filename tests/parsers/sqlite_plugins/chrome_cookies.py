@@ -8,7 +8,6 @@ import unittest
 
 from plaso.formatters import chrome_cookies as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import chrome_cookies
 
 from tests import test_lib as shared_test_lib
@@ -50,16 +49,15 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
 
     # Check one linkedin cookie.
     event = events[124]
+
+    self.CheckTimestamp(event.timestamp, '2011-08-25 21:50:27.292367')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
+
     self.assertEqual(event.host, 'www.linkedin.com')
     self.assertEqual(event.cookie_name, 'leo_auth_token')
     self.assertFalse(event.httponly)
     self.assertEqual(event.url, 'http://www.linkedin.com/')
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2011-08-25 21:50:27.292367')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         'http://www.linkedin.com/ (leo_auth_token) Flags: [HTTP only] = False '
@@ -69,12 +67,10 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
 
     # Check one of the visits to rubiconproject.com.
     event = events[379]
+
+    self.CheckTimestamp(event.timestamp, '2012-04-01 13:54:34.949210')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-04-01 13:54:34.949210')
-    self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(event.url, 'http://rubiconproject.com/')
     self.assertEqual(event.path, '/')
@@ -89,26 +85,24 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
 
     # Examine an event for a visit to a political blog site.
     event = events[444]
+
+    self.CheckTimestamp(event.timestamp, '2012-03-22 01:47:21.012022')
+
     self.assertEqual(
         event.path,
         '/2012/03/21/romney-tries-to-clean-up-etch-a-sketch-mess/')
     self.assertEqual(event.host, 'politicalticker.blogs.cnn.com')
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-03-22 01:47:21.012022')
-    self.assertEqual(event.timestamp, expected_timestamp)
-
     # Examine a cookie that has an autologin entry.
     event = events[1425]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-04-01 13:52:56.189444')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-04-01 13:52:56.189444')
+    self.assertEqual(
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
     self.assertEqual(event.host, 'marvel.com')
     self.assertEqual(event.cookie_name, 'autologin[timeout]')
-    self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
+
     # This particular cookie value represents a timeout value that corresponds
     # to the expiration date of the cookie.
     self.assertEqual(event.data, '1364824322')

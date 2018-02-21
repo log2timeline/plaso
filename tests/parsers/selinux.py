@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.formatters import selinux as _  # pylint: disable=unused-import
-from plaso.lib import timelib
 from plaso.parsers import selinux
 
 from tests import test_lib as shared_test_lib
@@ -33,9 +32,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     # Test case: normal entry.
     event = events[0]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-05-24 07:40:01.174')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-05-24 07:40:01.174000')
 
     expected_message = (
         '[audit_type: LOGIN, pid: 25443] pid=25443 uid=0 old '
@@ -49,9 +46,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     # Test case: short date.
     event = events[1]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-05-24 07:40:01')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-05-24 07:40:01.000000')
 
     expected_string = '[audit_type: SHORTDATE] check rounding'
 
@@ -60,9 +55,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     # Test case: no msg.
     event = events[2]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-05-24 07:40:22.174')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-05-24 07:40:22.174000')
 
     expected_string = '[audit_type: NOMSG]'
 
@@ -71,9 +64,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     # Test case: under score.
     event = events[3]
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2012-05-24 07:47:46.174')
-    self.assertEqual(event.timestamp, expected_timestamp)
+    self.CheckTimestamp(event.timestamp, '2012-05-24 07:47:46.174000')
 
     expected_message = (
         '[audit_type: UNDER_SCORE, pid: 25444] pid=25444 uid=0 old '
