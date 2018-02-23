@@ -12,17 +12,32 @@ from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
+from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.engine import extractors
 
 from tests import test_lib as shared_test_lib
 
 
-# TODO: add EventExtractorTest
+class EventExtractorTest(shared_test_lib.BaseTestCase):
+  """Tests for the event extractor."""
+
+  # TODO: add test for _CheckParserCanProcessFileEntry
+  # TODO: add test for _GetSignatureMatchParserNames
+  # TODO: add test for _InitializeParserObjects
+  # TODO: add test for _ParseDataStreamWithParser
+  # TODO: add test for _ParseFileEntryWithParser
+  # TODO: add test for _ParserFileEntryWithParsers
+  # TODO: add test for ParseDataStream
+  # TODO: add test for ParseFileEntryMetadata
+  # TODO: add test for ParseMetadataFile
+  # TODO: add test for SetParsersProfiler
 
 
 class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
   """Tests for the path specification extractor."""
+
+  # pylint: disable=protected-access
 
   def _GetFilePaths(self, path_specs):
     """Retrieves file paths from path specifications.
@@ -65,6 +80,48 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
       find_specs.append(find_spec)
 
     return find_specs
+
+  @shared_test_lib.skipUnlessHasTestFile(['multi_partition_image.vmdk'])
+  def testCalculateNTFSTimeHash(self):
+    """Tests the _CalculateNTFSTimeHash function."""
+    # Note that the source file is a RAW (VMDK flat) image.
+    test_file = self._GetTestFilePath(['multi_partition_image.vmdk'])
+
+    image_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file)
+
+    p1_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location='/p1',
+        part_index=2, start_offset=0x00010000, parent=image_path_spec)
+    p1_file_system_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location='/file1.txt',
+        parent=p1_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+        p1_file_system_path_spec)
+
+    test_extractor = extractors.PathSpecExtractor()
+    hash_value = test_extractor._CalculateNTFSTimeHash(file_entry)
+    self.assertEqual(hash_value, '6b181becbc9529b73cf3dc35c99a61e7')
+
+    p2_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, location='/p2',
+        part_index=3, start_offset=0x00510000, parent=image_path_spec)
+    p2_file_system_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location='/file2_on_part_2.txt',
+        parent=p2_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+        p2_file_system_path_spec)
+
+    test_extractor = extractors.PathSpecExtractor()
+    hash_value = test_extractor._CalculateNTFSTimeHash(file_entry)
+    self.assertEqual(hash_value, '8738ed1e707fec64cd1593fd81eb26d2')
+
+  # TODO: add test for _ExtractPathSpecs
+  # TODO: add test for _ExtractPathSpecsFromDirectory
+  # TODO: add test for _ExtractPathSpecsFromFile
+  # TODO: add test for _ExtractPathSpecsFromFileSystem
 
   @shared_test_lib.skipUnlessHasTestFile(['syslog.bz2'])
   @shared_test_lib.skipUnlessHasTestFile(['syslog.tgz'])
