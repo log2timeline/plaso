@@ -353,7 +353,7 @@ class EventExtractor(object):
 
 
 class PathSpecExtractor(object):
-  """Class that implements a path specification extractor object.
+  """Path specification extractor.
 
   A path specification extractor extracts path specification from a source
   directory, file or storage media device or image.
@@ -362,7 +362,7 @@ class PathSpecExtractor(object):
   _MAXIMUM_DEPTH = 255
 
   def __init__(self, duplicate_file_check=False):
-    """Initializes a path specification extractor object.
+    """Initializes a path specification extractor.
 
     The source collector discovers all the file entries in the source.
     The source can be a single file, directory or a volume within
@@ -377,42 +377,44 @@ class PathSpecExtractor(object):
     self._hashlist = {}
 
   def _CalculateNTFSTimeHash(self, file_entry):
-    """Returns a hash value calculated from a NTFS file entry.
+    """Calculates an MD5 from the date and time value of a NTFS file entry.
 
     Args:
       file_entry (dfvfs.FileEntry): file entry.
 
     Returns:
-      str: hash value of the file entry.
+      str: hexadecimal representation of the MD5 hash value of the date and
+          time values of the file entry.
     """
-    stat_object = file_entry.GetStat()
-    ret_hash = hashlib.md5()
+    date_time_values = []
 
-    atime = getattr(stat_object, 'atime', None)
-    if not atime:
-      atime = 0
-    ret_hash.update(b'atime:{0:d}.{1:d}'.format(
-        atime, getattr(stat_object, 'atime_nano', 0)))
+    access_time = getattr(file_entry, 'access_time', None)
+    if access_time:
+      date_time_string = access_time.CopyToDateTimeString()
+      date_time_values.append('atime:{0:s}'.format(date_time_string))
 
-    crtime = getattr(stat_object, 'crtime', None)
-    if not crtime:
-      crtime = 0
-    ret_hash.update(b'crtime:{0:d}.{1:d}'.format(
-        crtime, getattr(stat_object, 'crtime_nano', 0)))
+    creation_time = getattr(file_entry, 'creation_time', None)
+    if creation_time:
+      date_time_string = creation_time.CopyToDateTimeString()
+      date_time_values.append('crtime:{0:s}'.format(date_time_string))
 
-    mtime = getattr(stat_object, 'mtime', None)
-    if not mtime:
-      mtime = 0
-    ret_hash.update(b'mtime:{0:d}.{1:d}'.format(
-        mtime, getattr(stat_object, 'mtime_nano', 0)))
+    modification_time = getattr(file_entry, 'modification_time', None)
+    if modification_time:
+      date_time_string = modification_time.CopyToDateTimeString()
+      date_time_values.append('mtime:{0:s}'.format(date_time_string))
 
-    ctime = getattr(stat_object, 'ctime', None)
-    if not ctime:
-      ctime = 0
-    ret_hash.update(b'ctime:{0:d}.{1:d}'.format(
-        ctime, getattr(stat_object, 'ctime_nano', 0)))
+    # file_entry.change_time is an alias of file_entry.entry_modification_time.
+    change_time = getattr(file_entry, 'change_time', None)
+    if change_time:
+      date_time_string = change_time.CopyToDateTimeString()
+      date_time_values.append('ctime:{0:s}'.format(date_time_string))
 
-    return ret_hash.hexdigest()
+    date_time_values = ''.join(date_time_values)
+    date_time_values = date_time_values.encode('ascii')
+
+    hash_value = hashlib.md5()
+    hash_value.update(date_time_values)
+    return hash_value.hexdigest()
 
   def _ExtractPathSpecs(
       self, path_spec, find_specs=None, recurse_file_system=True,
