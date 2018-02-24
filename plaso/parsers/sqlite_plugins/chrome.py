@@ -80,7 +80,6 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
   # https://cs.chromium.org/chromium/src/ui/base/page_transition_types.h?l=108
   _PAGE_TRANSITION_CORE_MASK = 0xff
 
-
   def _GetUrl(self, url, cache, database):
     """Retrieves an URL from a reference to an entry in the from_visit table.
 
