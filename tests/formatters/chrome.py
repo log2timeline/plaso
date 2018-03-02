@@ -51,7 +51,6 @@ class ChromePageVisitedFormatterTest(test_lib.EventFormatterTestCase):
         'url',
         'title',
         'typed_count',
-        'host',
         'from_visit',
         'visit_source',
         'page_transition',
