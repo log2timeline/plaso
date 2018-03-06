@@ -363,7 +363,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     argument_helper_names = [
         'artifact_definitions', 'extraction', 'filter_file', 'status_view',
-        'storage_file', 'storage_format', 'text_prepend']
+        'storage_file', 'storage_format', 'text_prepend', 'yara_rules']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
