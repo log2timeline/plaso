@@ -524,6 +524,7 @@ class PsortTool(
           self._analysis_plugins, event_filter=self._event_filter,
           event_filter_expression=self._event_filter_expression,
           status_update_callback=status_update_callback,
+          worker_memory_limit=self._worker_memory_limit,
           profiling_configuration=configuration.profiling)
 
       analysis_counter = collections.Counter()
