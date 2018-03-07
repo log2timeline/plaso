@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-# TODO: add gdrive_sync to linux/macos after further testing.
 CATEGORIES = {
     'win_gen': [
         'bencode', 'esedb', 'filestat', 'sqlite/google_drive', 'gdrive_synclog',
@@ -26,14 +25,14 @@ CATEGORIES = {
         'opera_global', 'opera_typed_history', 'plist/safari_history'],
     'linux': [
         'bash_history', 'bencode', 'dockerjson', 'dpkg', 'filestat',
-        'sqlite/google_drive', 'java_idx', 'olecf', 'openxml', 'pls_recall',
-        'popularity_contest', 'selinux', 'sqlite/skype', 'syslog',
+        'sqlite/google_drive', 'gdrive_synclog', 'java_idx', 'olecf', 'openxml',
+        'pls_recall', 'popularity_contest', 'selinux', 'sqlite/skype', 'syslog',
         'systemd_journal', 'utmp', 'webhist', 'xchatlog', 'xchatscrollback',
         'sqlite/zeitgeist', 'zsh_extended_history'],
     'macos': [
         'sqlite/appusage', 'asl_log', 'bash_history', 'bencode', 'bsm_log',
         'cups_ipp', 'filestat', 'fseventsd', 'sqlite/google_drive',
-        'sqlite/imessage', 'java_idx', 'sqlite/ls_quarantine',
+        'gdrive_synclog', 'sqlite/imessage', 'java_idx', 'sqlite/ls_quarantine',
         'mac_appfirewall_log', 'sqlite/mac_document_versions', 'mac_keychain',
         'mac_securityd', 'sqlite/mackeeper_cache', 'macwifi', 'olecf',
         'openxml', 'plist', 'sqlite/skype', 'syslog', 'utmpx', 'webhist',
