@@ -76,6 +76,54 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
         'last):   F...')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
+  @shared_test_lib.skipUnlessHasTestFile(['sync_log-osx.log'])
+  def testOSXParseLog(self):
+    """Tests the Parse function on OS X log.
+
+    Test contains UTC timestamps and Unicode (UTF-8) filenames.
+    """
+    parser = gdrive_synclog.GoogleDriveSyncLogParser()
+    storage_writer = self._ParseFile(['sync_log-osx.log'], parser)
+
+    self.assertEqual(storage_writer.number_of_events, 2338)
+
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
+
+    self.CheckTimestamp(event.timestamp, '2018-03-01 20:48:14.224000')
+    expected_message = (
+        '[INFO pid=1730 140736280556352:MainThread logging_config.pyo:295]  '
+        'OS: Darwin/10.13.3')
+    expected_short_message = ' OS: Darwin/10.13.3'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+
+    # Log file contains a change in local system time from -0800 to UTC, around
+    # line 215. Confirm the switch is handled correctly.
+    event = events[169]
+
+    self.CheckTimestamp(event.timestamp, '2018-03-01 20:57:33.499000')
+
+    expected_message = (
+        '[INFO pid=2590 140736280556352:MainThread logging_config.pyo:299]  SSL'
+        ': OpenSSL 1.0.2n  7 Dec 2017')
+    expected_short_message = ' SSL: OpenSSL 1.0.2n  7 Dec 2017'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+
+    # Ensure Unicode characters in filenames are handled cleanly.
+    event = events[1400]
+
+    expected_message = (
+        '[INFO pid=2608 123145558327296:Worker-1 snapshot_sqlite.pyo:219]  '
+        'Updating local entry local_id=LocalID(inode=870321, volume=\'60228'
+        'B87-A626-4F5C-873E-476615F863C6\'), filename=АБВГДЕ.gdoc, modified'
+        '=1520218963, checksum=ab0618852c5d671d7b1b9191aef03bda, size=185, '
+        'is_folder=False')
+    expected_short_message = (
+        ' Updating local entry local_id=LocalID(inode=870321, '
+        'volume=\'60228B87-A626-4F...')
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+
 
 if __name__ == '__main__':
   unittest.main()
