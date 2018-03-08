@@ -76,6 +76,7 @@ from plaso.formatters import syslog
 from plaso.formatters import systemd_journal
 from plaso.formatters import task_scheduler
 from plaso.formatters import text
+from plaso.formatters import trendmicroav
 from plaso.formatters import twitter_ios
 from plaso.formatters import userassist
 from plaso.formatters import utmp
