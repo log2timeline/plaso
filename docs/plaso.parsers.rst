@@ -443,6 +443,14 @@ plaso\.parsers\.text\_parser module
     :undoc-members:
     :show-inheritance:
 
+plaso\.parsers\.trendmicroav module
+-----------------------------------
+
+.. automodule:: plaso.parsers.trendmicroav
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso\.parsers\.utmp module
 ---------------------------
 

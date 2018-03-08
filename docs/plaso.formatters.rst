@@ -636,6 +636,14 @@ plaso\.formatters\.text module
     :undoc-members:
     :show-inheritance:
 
+plaso\.formatters\.trendmicroav module
+--------------------------------------
+
+.. automodule:: plaso.formatters.trendmicroav
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso\.formatters\.twitter\_ios module
 --------------------------------------
 
