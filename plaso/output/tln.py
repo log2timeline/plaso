@@ -132,7 +132,15 @@ class TLNOutputModule(TLNBaseOutputModule):
     if not hasattr(event, 'timestamp'):
       return
 
-    posix_timestamp = timelib.Timestamp.CopyToPosix(event.timestamp)
+    try:
+      posix_timestamp = timelib.Timestamp.CopyToPosix(event.timestamp)
+    except (OverflowError, ValueError) as exception:
+      self._ReportEventError(event, (
+          'unable to copy timestamp: {0!s} to a posix value '
+          'with error: {1!s}. Defaulting to: "0"').format(
+              event.timestamp, exception))
+      posix_timestamp = 0
+
     source = self._FormatSource(event)
     hostname = self._FormatHostname(event)
     username = self._FormatUsername(event)
@@ -190,7 +198,15 @@ class L2TTLNOutputModule(TLNBaseOutputModule):
     if not hasattr(event, 'timestamp'):
       return
 
-    posix_timestamp = timelib.Timestamp.CopyToPosix(event.timestamp)
+    try:
+      posix_timestamp = timelib.Timestamp.CopyToPosix(event.timestamp)
+    except (OverflowError, ValueError) as exception:
+      self._ReportEventError(event, (
+          'unable to copy timestamp: {0!s} to a posix value '
+          'with error: {1!s}. Defaulting to: "0"').format(
+              event.timestamp, exception))
+      posix_timestamp = 0
+
     source = self._FormatSource(event)
     hostname = self._FormatHostname(event)
     username = self._FormatUsername(event)
