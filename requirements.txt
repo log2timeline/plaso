@@ -2,6 +2,7 @@ pip >= 7.0.0
 PyYAML >= 3.10
 XlsxWriter >= 0.9.3
 artifacts >= 20170818
+backports.lzma ; python_version < '3.0'
 bencode.py
 binplist >= 0.1.4
 certifi >= 2016.9.26
@@ -42,7 +43,6 @@ libvslvm-python >= 20160109
 pefile >= 2017.5.26
 psutil >= 1.2.1
 pycrypto >= 2.6
-pyliblzma >= 0.5.3 ; python_version < '3.0'
 pyparsing >= 2.0.3
 python-dateutil >= 1.5
 pytsk3 >= 20160721

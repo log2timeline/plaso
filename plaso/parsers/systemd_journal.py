@@ -5,19 +5,19 @@ from __future__ import unicode_literals
 
 import os
 
-try:
-  import lzma
-except ImportError:
-  lzma = None
-
 import construct
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
+try:
+  import lzma
+except ImportError:
+  from backports import lzma
+
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -337,5 +337,4 @@ class SystemdJournalParser(interface.FileObjectParser):
             'error: {1:s}').format(entry_offset, exception))
 
 
-if lzma:
-  manager.ParsersManager.RegisterParser(SystemdJournalParser)
+manager.ParsersManager.RegisterParser(SystemdJournalParser)

@@ -26,6 +26,7 @@ PYTHON2_DEPENDENCIES="libbde-python
                       libvshadow-python
                       libvslvm-python
                       python-artifacts
+                      python-backports.lzma
                       python-bencode
                       python-binplist
                       python-certifi
@@ -43,7 +44,6 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-hachoir-metadata
                       python-hachoir-parser
                       python-idna
-                      python-lzma
                       python-pefile
                       python-psutil
                       python-pyparsing
