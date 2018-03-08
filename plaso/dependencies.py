@@ -33,7 +33,7 @@ PYTHON_DEPENDENCIES = {
     'hachoir_metadata': ('__version__', '1.3.3', None, False),
     'hachoir_parser': ('__version__', '1.3.4', None, False),
     'idna': ('', '2.5', None, True),
-    'lzma': ('__version__', '0.5.3', None, False),
+    'lzma': ('__version__', '', None, False),
     'pefile': ('__version__', '2017.5.26', None, True),
     'psutil': ('__version__', '1.2.1', None, True),
     'pybde': ('get_version()', '20140531', None, True),
