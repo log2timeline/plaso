@@ -43,9 +43,9 @@ class ParserImportTest(test_lib.BaseTestCase):
   def testPluginsImported(self):
     """Tests that all plugins are imported."""
     plugin_directories = [
-      'bencode_plugins', 'cookie_plugins', 'esedb_plugins',
-      'esedb_plugins', 'olecf_plugins', 'plist_plugins', 'sqlite_plugins',
-      'syslog_plugins', 'winreg_plugins']
+        'bencode_plugins', 'cookie_plugins', 'esedb_plugins',
+        'esedb_plugins', 'olecf_plugins', 'plist_plugins', 'sqlite_plugins',
+        'syslog_plugins', 'winreg_plugins']
     for plugin_directory in plugin_directories:
       plugin_directory_path = os.path.join(
           self._PARSERS_PATH, plugin_directory)
