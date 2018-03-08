@@ -8,9 +8,10 @@ from __future__ import unicode_literals
 
 import binascii
 
+import biplist
+
 from xml.etree import ElementTree
 
-from binplist import binplist
 from dfdatetime import time_elements as dfdatetime_time_elements
 from dfvfs.file_io import fake_file_io
 from dfvfs.path import fake_path_spec
@@ -84,7 +85,6 @@ class MacUserPlugin(interface.PlistPlugin):
     account = match['name'][0]
     uid = match['uid'][0]
 
-    # INFO: binplist return a string with the Plist XML.
     for policy in match.get('passwordpolicyoptions', []):
       try:
         xml_policy = ElementTree.fromstring(policy)
@@ -132,9 +132,9 @@ class MacUserPlugin(interface.PlistPlugin):
           fake_file.open(path_spec=shadow_hash_data_path_spec)
 
           try:
-            plist_file = binplist.BinaryPlist(file_obj=fake_file)
-            top_level = plist_file.Parse()
-          except binplist.FormatError:
+            plist_file = biplist.readPlist(fake_file)
+            top_level = plist_file
+          except biplist.InvalidPlistException:
             top_level = dict()
           salted_hash = top_level.get('SALTED-SHA512-PBKDF2', None)
           if salted_hash:

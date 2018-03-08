@@ -4,10 +4,9 @@
 from __future__ import unicode_literals
 
 import binascii
-import os
 import plistlib
 
-from binplist import binplist
+import biplist
 
 
 class PlistFile(object):
@@ -64,11 +63,9 @@ class PlistFile(object):
       IOError: if the plist file-like object cannot be read.
     """
     try:
-      file_object.seek(0, os.SEEK_SET)
-      # Note that binplist.readPlist does not seek to offset 0.
-      self.root_key = binplist.readPlist(file_object)
+      self.root_key = biplist.readPlist(file_object)
 
     except (
-        AttributeError, binascii.Error, binplist.FormatError, LookupError,
-        OverflowError, ValueError) as exception:
+        AttributeError, binascii.Error, biplist.InvalidPlistException,
+        LookupError, OverflowError, ValueError) as exception:
       raise IOError(exception)
