@@ -19,7 +19,6 @@ from plaso import output  # pylint: disable=unused-import
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.cli import extraction_tool
 from plaso.cli import logger
-from plaso.cli import logging_filter
 from plaso.cli import status_view
 from plaso.cli import tools
 from plaso.cli import views
@@ -278,11 +277,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     loggers.ConfigureLogging(
         debug_output=self._debug_mode, filename=self._log_file,
         quiet_mode=self._quiet_mode)
-
-    if self._debug_mode:
-      log_filter = logging_filter.LoggingFilter()
-      root_logger = logging.getLogger()
-      root_logger.addFilter(log_filter)
 
     return True
 

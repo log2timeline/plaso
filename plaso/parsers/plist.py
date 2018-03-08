@@ -8,7 +8,7 @@ from __future__ import unicode_literals
 
 import binascii
 
-from binplist import binplist
+import biplist
 
 from plaso.lib import errors
 from plaso.lib import py2to3
@@ -21,7 +21,7 @@ class PlistParser(interface.FileObjectParser):
   """Parses binary and text plist plist files.
 
   The Plaso engine calls parsers by their Parse() method. This parser's
-  Parse() has GetTopLevel() which deserializes plist files using the binplist
+  Parse() has GetTopLevel() which deserializes plist files using the biplist
   library and calls plugins (PlistPlugin) registered through the
   interface by their Process() to produce event objects.
 
@@ -49,11 +49,11 @@ class PlistParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    # Note that binplist.readPlist does not seek to offset 0.
     try:
-      top_level_object = binplist.readPlist(file_object)
+      top_level_object = biplist.readPlist(file_object)
 
-    except binplist.FormatError as exception:
+    except (
+        biplist.InvalidPlistException, biplist.NotBinaryPlistException) as exception:
       if not isinstance(exception, py2to3.BYTES_TYPE):
         error_string = str(exception).decode('utf8', errors='replace')
       else:
@@ -75,14 +75,6 @@ class PlistParser(interface.FileObjectParser):
     if not top_level_object:
       raise errors.UnableToParseFile(
           'File is not a plist: missing top level object')
-
-    # Since we are using readPlist from binplist now instead of manually
-    # opening  the binary plist file we loose this option. Keep it commented
-    # out for now but this needs to be tested a bit more.
-    # TODO: Re-evaluate if we can delete this or still require it.
-    #if bpl.is_corrupt:
-    #  logger.warning(
-    #      'Corruption detected in binary plist: {0:s}'.format(file_name))
 
     return top_level_object
 
