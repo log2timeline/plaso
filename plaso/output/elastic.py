@@ -132,9 +132,9 @@ class ElasticSearchHelper(object):
       attribute_value = timelib.Timestamp.RoundToSeconds(event_object.timestamp)
     except TypeError as exception:
       logging.warning(
-          'Unable to round timestamp {0!s}. error: {1!s}. '
-          'Defaulting to 0'.format(
-              event_object.timestamp, exception))
+          ('Unable to round timestamp {0!s}. error: {1!s}. '
+           'Defaulting to 0').format(
+               event_object.timestamp, exception))
       attribute_value = 0
 
     attribute_value = timelib.Timestamp.CopyToIsoFormat(
