@@ -58,7 +58,7 @@ class FilterObject(object):
       return parser.Compile(pfilter.PlasoAttributeFilterImplementation)
 
     except errors.ParseError:
-      pass
+      return None
 
   @abc.abstractmethod
   def CompileFilter(self, filter_expression):

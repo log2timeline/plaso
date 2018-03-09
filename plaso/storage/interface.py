@@ -64,6 +64,8 @@ class SerializedAttributeContainerList(object):
     if index < len(self._list):
       return self._list[index]
 
+    return None
+
   def PopAttributeContainer(self):
     """Pops a serialized attribute container from the list.
 
@@ -76,7 +78,7 @@ class SerializedAttributeContainerList(object):
       return serialized_data
 
     except IndexError:
-      return
+      return None
 
   def PushAttributeContainer(self, serialized_data):
     """Pushes a serialized attribute container onto the list.

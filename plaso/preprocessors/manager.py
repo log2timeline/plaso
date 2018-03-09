@@ -73,15 +73,15 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
       WinRegistryFile: Windows Registry file or None.
     """
     if not path_specification:
-      return
+      return None
 
     file_entry = self._file_system.GetFileEntryByPathSpec(path_specification)
     if file_entry is None:
-      return
+      return None
 
     file_object = file_entry.GetFileObject()
     if file_object is None:
-      return
+      return None
 
     registry_file = dfwinreg_regf.REGFWinRegistryFile(
         ascii_codepage=ascii_codepage)
@@ -93,7 +93,7 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
           'Unable to open Windows Registry file with error: {0!s}'.format(
               exception))
       file_object.close()
-      return
+      return None
 
     return registry_file
 
@@ -109,7 +109,7 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
     """
     path_specification = self._path_resolver.ResolvePath(path)
     if path_specification is None:
-      return
+      return None
 
     return self._OpenPathSpec(path_specification)
 

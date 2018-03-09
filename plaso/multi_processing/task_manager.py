@@ -49,7 +49,7 @@ class _PendingMergeTaskHeap(object):
       _, task = self._heap[0]
 
     except IndexError:
-      return
+      return None
 
     return task
 
@@ -63,7 +63,7 @@ class _PendingMergeTaskHeap(object):
       _, task = heapq.heappop(self._heap)
 
     except IndexError:
-      return
+      return None
     self._task_identifiers.remove(task.identifier)
     return task
 
@@ -219,10 +219,10 @@ class TaskManager(object):
     """
     next_task = self._tasks_pending_merge.PeekTask()
     if not next_task:
-      return
+      return None
 
     if current_task and next_task.merge_priority > current_task.merge_priority:
-      return
+      return None
 
     with self._lock:
       next_task = self._tasks_pending_merge.PopTask()
@@ -350,6 +350,8 @@ class TaskManager(object):
       if self._TaskIsRetriable(abandoned_task):
         return True
 
+    return False
+
   def GetRetryTask(self):
     """Creates a task that is an attempt to retry an abandoned task.
 
@@ -369,6 +371,7 @@ class TaskManager(object):
           self._tasks_queued[retry_task.identifier] = retry_task
           self._total_number_of_tasks += 1
           return retry_task
+      return None
 
   def UpdateTaskAsPendingMerge(self, task):
     """Updates the task manager to reflect the task is ready to be merged.

@@ -38,11 +38,11 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
     """
     parameters_key = key.GetSubkeyByName('Parameters')
     if not parameters_key:
-      return
+      return None
 
     service_dll = parameters_key.GetValueByName('ServiceDll')
     if not service_dll:
-      return
+      return None
 
     return service_dll.GetDataAsObject()
 

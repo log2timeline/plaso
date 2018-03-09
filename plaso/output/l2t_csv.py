@@ -87,7 +87,8 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
       event (EventObject): event.
 
     Returns:
-      list[str]: output values.
+      list[str]|None: output values or None if no timestamp was present in the
+          event.
 
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data
@@ -95,7 +96,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     """
     if not hasattr(event, 'timestamp'):
       logging.error('Unable to output event without timestamp.')
-      return
+      return None
 
     # TODO: add function to pass event_values to GetFormattedMessages.
     message, message_short = self._output_mediator.GetFormattedMessages(event)

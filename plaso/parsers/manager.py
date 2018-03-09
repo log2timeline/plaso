@@ -240,6 +240,7 @@ class ParsersManager(object):
     parser_class = cls._parser_classes.get(parser_name, None)
     if parser_class:
       return parser_class()
+    return None
 
   @classmethod
   def GetParserObjects(cls, parser_filter_expression=None):
@@ -388,6 +389,8 @@ class ParsersManager(object):
 
     if operating_system == definitions.OPERATING_SYSTEM_WINDOWS:
       return 'win7'
+
+    return None
 
   @classmethod
   def GetScanner(cls, specification_store):

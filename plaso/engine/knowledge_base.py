@@ -237,6 +237,8 @@ class KnowledgeBase(object):
       if path.startswith(user_directory):
         return user_account.username
 
+    return None
+
   def GetValue(self, identifier, default_value=None):
     """Retrieves a value by identifier.
 

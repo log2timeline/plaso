@@ -70,6 +70,8 @@ class ESEDBPlugin(plugins.BasePlugin):
     if value:
       return value.decode('ascii')
 
+    return None
+
   def _ConvertValueBinaryDataToStringBase16(self, value):
     """Converts a binary data value into a base-16 (hexadecimal) string.
 
@@ -81,6 +83,8 @@ class ESEDBPlugin(plugins.BasePlugin):
     """
     if value:
       return value.encode('hex')
+
+    return None
 
   def _ConvertValueBinaryDataToUBInt64(self, value):
     """Converts a binary data value into an integer.
@@ -95,6 +99,8 @@ class ESEDBPlugin(plugins.BasePlugin):
     if value:
       return self._UINT64_BIG_ENDIAN.parse(value)
 
+    return None
+
   def _ConvertValueBinaryDataToULInt64(self, value):
     """Converts a binary data value into an integer.
 
@@ -107,6 +113,8 @@ class ESEDBPlugin(plugins.BasePlugin):
     """
     if value:
       return self._UINT64_LITTLE_ENDIAN.parse(value)
+
+    return None
 
   def _GetRecordValue(self, record, value_entry):
     """Retrieves a specific value from the record.
@@ -132,7 +140,7 @@ class ESEDBPlugin(plugins.BasePlugin):
       raise ValueError('Multi value support not implemented yet.')
 
     if column_type == pyesedb.column_types.NULL:
-      return
+      return None
 
     elif column_type == pyesedb.column_types.BOOLEAN:
       # TODO: implement

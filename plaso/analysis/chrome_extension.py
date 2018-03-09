@@ -53,7 +53,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
       logging.warning((
           '[{0:s}] unable to retrieve URL: {1:s} with error: {2!s}').format(
               self.NAME, web_store_url, exception))
-      return
+      return None
 
     return response.text
 
@@ -107,7 +107,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
       logging.warning(
           '[{0:s}] no data returned for extension identifier: {1:s}'.format(
               self.NAME, extension_identifier))
-      return
+      return None
 
     first_line, _, _ = page_content.partition(b'\n')
     match = self._TITLE_RE.search(first_line)
@@ -121,7 +121,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
 
     if not name:
       self._extensions[extension_identifier] = 'UNKNOWN'
-      return
+      return None
 
     name = name.decode('utf-8', errors='replace')
     self._extensions[extension_identifier] = name

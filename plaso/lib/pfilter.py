@@ -79,6 +79,8 @@ class DictObject(object):
     if test in self._dict_translated:
       return self._dict_translated.get(test)
 
+    return None
+
 
 class PlasoValueExpander(objectfilter.AttributeValueExpander):
   """An expander that gives values based on object attribute names."""
@@ -145,6 +147,8 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
     if attr_name in ('source_long', 'sourcetype'):
       _, source_long = self._GetSources(obj)
       return source_long
+
+    return None
 
   def _GetAttributeName(self, path):
     return path[0].lower()
