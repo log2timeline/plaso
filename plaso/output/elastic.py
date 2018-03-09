@@ -128,7 +128,15 @@ class ElasticSearchHelper(object):
       event_values[attribute_name] = attribute_value
 
     # Add string representation of the timestamp
-    attribute_value = timelib.Timestamp.RoundToSeconds(event_object.timestamp)
+    try:
+      attribute_value = timelib.Timestamp.RoundToSeconds(event_object.timestamp)
+    except TypeError as exception:
+      logging.warning(
+          ('Unable to round timestamp {0!s}. error: {1!s}. '
+           'Defaulting to 0').format(
+               event_object.timestamp, exception))
+      attribute_value = 0
+
     attribute_value = timelib.Timestamp.CopyToIsoFormat(
         attribute_value, timezone=self._output_mediator.timezone)
     event_values['datetime'] = attribute_value
