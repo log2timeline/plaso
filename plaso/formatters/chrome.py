@@ -48,40 +48,30 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'Chrome History'
   SOURCE_SHORT = 'WEBHIST'
 
-  # TODO: merge _PAGE_TRANSITION and _PAGE_TRANSITION_LONG
-  # https://github.com/log2timeline/plaso/issues/1676
-
+  _UNKNOWN_PAGE_TRANSITION = ('UNKNOWN', None)
   # The following definition for values can be found here:
   # https://cs.chromium.org/chromium/src/ui/base/page_transition_types.h
-  _PAGE_TRANSITION = {
-      0: 'LINK',
-      1: 'TYPED',
-      2: 'AUTO_BOOKMARK',
-      3: 'AUTO_SUBFRAME',
-      4: 'MANUAL_SUBFRAME',
-      5: 'GENERATED',
-      6: 'START_PAGE',
-      7: 'FORM_SUBMIT',
-      8: 'RELOAD',
-      9: 'KEYWORD',
-      10: 'KEYWORD_GENERATED'}
-
-  _PAGE_TRANSITION_LONG = {
-      0: 'User clicked a link',
-      1: 'User typed the URL in the URL bar',
-      2: 'Got through a suggestion in the UI',
-      3: ('Content automatically loaded in a non-toplevel frame - user may '
-          'not realize'),
-      4: 'Subframe explicitly requested by the user',
-      5: ('User typed in the URL bar and selected an entry from the list - '
-          'such as a search bar'),
-      6: 'The start page of the browser',
-      7: 'A form the user has submitted values to',
-      8: ('The user reloaded the page, eg by hitting the reload button or '
-          'restored a session'),
-      9: ('URL what was generated from a replaceable keyword other than the '
-          'default search provider'),
-      10: 'Corresponds to a visit generated from a KEYWORD'}
+  _PAGE_TRANSITIONS = {
+      0: ('LINK', 'User clicked a link'),
+      1: ('TYPED', 'User typed the URL in the URL bar'),
+      2: ('AUTO_BOOKMARK', 'Got through a suggestion in the UI'),
+      3: ('AUTO_SUBFRAME',
+          ('Content automatically loaded in a non-toplevel frame - user may not'
+           'realize')),
+      4: ('MANUAL_SUBFRAME', 'Subframe explicitly requested by the user'),
+      5: ('GENERATED',
+          ('User typed in the URL bar and selected an entry from the list - '
+           'such as a search bar')),
+      6: ('START_PAGE', 'The start page of the browser'),
+      7: ('FORM_SUBMIT', 'A form the user has submitted values to'),
+      8: ('RELOAD',
+          ('The user reloaded the page, eg by hitting the reload button or '
+           'restored a session')),
+      9: ('KEYWORD',
+          ('URL what was generated from a replaceable keyword other than the '
+           'default search provider')),
+      10: ('KEYWORD_GENERATED',
+           ('Corresponds to a visit generated from a KEYWORD'))}
 
   # The following is the values for the source enum found in the visit_source
   # table and describes where a record originated from (if it originates from a
@@ -118,10 +108,8 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
 
     page_transition_type = event_values.get('page_transition_type', None)
     if page_transition_type is not None:
-      page_transition = self._PAGE_TRANSITION.get(
-          page_transition_type, 'UNKNOWN')
-      page_transition_long = self._PAGE_TRANSITION_LONG.get(
-          page_transition_type, '')
+      page_transition, page_transition_long = self._PAGE_TRANSITIONS.get(
+          page_transition_type, self._UNKNOWN_PAGE_TRANSITION)
 
       if page_transition_long:
         event_values['page_transition'] = '{0:s} - {1:s}'.format(
