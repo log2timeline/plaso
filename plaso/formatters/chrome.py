@@ -108,10 +108,8 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
 
     page_transition_type = event_values.get('page_transition_type', None)
     if page_transition_type is not None:
-      page_transition = self._PAGE_TRANSITIONS.get(
-          page_transition_type, self._UNKNOWN_PAGE_TRANSITION)[0]
-      page_transition_long = self._PAGE_TRANSITIONS.get(
-          page_transition_type, self._UNKNOWN_PAGE_TRANSITION)[1]
+      page_transition, page_transition_long = self._PAGE_TRANSITIONS.get(
+          page_transition_type, self._UNKNOWN_PAGE_TRANSITION)
 
       if page_transition_long:
         event_values['page_transition'] = '{0:s} - {1:s}'.format(
