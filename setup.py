@@ -128,11 +128,11 @@ else:
               '%exclude %{_prefix}/lib/python*/site-packages/plaso/*/*.pyc',
               '%exclude %{_prefix}/lib/python*/site-packages/plaso/*/*.pyo',
               ('%exclude %{_prefix}/lib/python*/site-packages/plaso/*/'
-               '__pycache__/*',
+               '__pycache__/*'),
               '%exclude %{_prefix}/lib/python*/site-packages/plaso/*/*/*.pyc',
               '%exclude %{_prefix}/lib/python*/site-packages/plaso/*/*/*.pyo',
               ('%exclude %{_prefix}/lib/python*/site-packages/plaso/*/*/'
-               '__pycache__/*']
+               '__pycache__/*')]
 
           python_spec_file.extend(lines)
           break
