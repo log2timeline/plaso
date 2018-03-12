@@ -273,7 +273,7 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     Returns:
       str: message string in Python format() (PEP 3101) style.
     """
-    def place_holder_specifier_replacer(match_object):
+    def _PlaceHolderSpecifierReplacer(match_object):
       """Replaces message string place holders into Python format() style."""
       expanded_groups = []
       for group in match_object.groups():
@@ -294,7 +294,7 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     message_string = self._TEXT_SPECIFIER_RE.sub(r'\\\1', message_string)
     message_string = self._CURLY_BRACKETS.sub(r'\1\1', message_string)
     return self._PLACE_HOLDER_SPECIFIER_RE.sub(
-        place_holder_specifier_replacer, message_string)
+        _PlaceHolderSpecifierReplacer, message_string)
 
   def GetMessage(self, log_source, lcid, message_identifier):
     """Retrieves a specific message for a specific Event Log source.
