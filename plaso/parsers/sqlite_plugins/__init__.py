@@ -17,6 +17,7 @@ from plaso.parsers.sqlite_plugins import kik_ios
 from plaso.parsers.sqlite_plugins import ls_quarantine
 from plaso.parsers.sqlite_plugins import mac_document_versions
 from plaso.parsers.sqlite_plugins import mackeeper_cache
+from plaso.parsers.sqlite_plugins import safari
 from plaso.parsers.sqlite_plugins import skype
 from plaso.parsers.sqlite_plugins import twitter_ios
 from plaso.parsers.sqlite_plugins import zeitgeist
