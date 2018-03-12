@@ -13,6 +13,7 @@ from plaso.parsers.winreg_plugins import msie_zones
 from plaso.parsers.winreg_plugins import network_drives
 from plaso.parsers.winreg_plugins import officemru
 from plaso.parsers.winreg_plugins import outlook
+from plaso.parsers.winreg_plugins import networks
 from plaso.parsers.winreg_plugins import programscache
 from plaso.parsers.winreg_plugins import run
 from plaso.parsers.winreg_plugins import sam_users
