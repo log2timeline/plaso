@@ -504,7 +504,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
               process_name, pid, exception))
 
       self._TerminateProcess(process)
-      return
+      return None
 
     self._RegisterProcess(process)
 

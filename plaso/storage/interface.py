@@ -338,7 +338,7 @@ class BaseStorageFile(BaseStore):
       AttributeContainer: attribute container or None.
     """
     if not serialized_data:
-      return
+      return None
 
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(container_type)
@@ -539,7 +539,7 @@ class StorageFileMergeReader(StorageMergeReader):
       AttributeContainer: attribute container or None.
     """
     if not serialized_data:
-      return
+      return None
 
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(container_type)

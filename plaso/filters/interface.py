@@ -29,6 +29,8 @@ class FilterObject(object):
     if self._filter_expression:
       return self._filter_expression
 
+    return None
+
   @property
   def filter_name(self):
     """str: name of the filter."""

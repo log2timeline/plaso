@@ -46,7 +46,7 @@ class OutputMediator(object):
   def filter_expression(self):
     """str: filter expression if a filter is set, None otherwise."""
     if not self.fields_filter:
-      return
+      return None
 
     return self.fields_filter.filter_expression
 
@@ -66,7 +66,7 @@ class OutputMediator(object):
     """
     data_type = getattr(event, 'data_type', None)
     if not data_type:
-      return
+      return None
 
     return formatters_manager.FormattersManager.GetFormatterObject(
         event.data_type)
@@ -117,7 +117,7 @@ class OutputMediator(object):
     """
     event_formatter = self.GetEventFormatter(event)
     if not event_formatter:
-      return
+      return None
 
     return event_formatter.GetFormatStringAttributeNames()
 

@@ -290,6 +290,8 @@ class StatusView(object):
     elif self._mode == self.MODE_WINDOW:
       return self._PrintAnalysisStatusUpdateWindow
 
+    return None
+
   def GetExtractionStatusUpdateCallback(self):
     """Retrieves the extraction status update callback function.
 
@@ -300,6 +302,8 @@ class StatusView(object):
       return self._PrintExtractionStatusUpdateLinear
     elif self._mode == self.MODE_WINDOW:
       return self._PrintExtractionStatusUpdateWindow
+
+    return None
 
   # TODO: refactor to protected method.
   def PrintExtractionStatusHeader(self, processing_status):
