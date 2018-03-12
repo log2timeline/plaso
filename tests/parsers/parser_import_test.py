@@ -27,8 +27,8 @@ class ParserImportTest(test_lib.BaseTestCase):
     Args:
       path (str): path to directory containing an __init__.py file and other
           Python files which should be imported.
-      ignorable_files (list[str]): list of file names of Python files that
-          don't need to appear in __init__.py. For example, 'manager.py'.
+      ignorable_files (list[str]): names of Python files that don't need to
+          appear in __init__.py. For example, 'manager.py'.
     """
     init_path = '{0:s}/__init__.py'.format(path)
     with io.open(init_path, mode='r', encoding='utf-8') as init_file:
