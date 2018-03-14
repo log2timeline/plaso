@@ -13,10 +13,9 @@ def deprecated(function):
 
   def IssueDeprecationWarning(*args, **kwargs):
     """Issue a deprecation warning."""
-    warnings.simplefilter('always', DeprecationWarning)
+    warnings.simplefilter('default', DeprecationWarning)
     warnings.warn('Call to deprecated function: {0:s}.'.format(
         function.__name__), category=DeprecationWarning, stacklevel=2)
-    warnings.simplefilter('default', DeprecationWarning)
 
     return function(*args, **kwargs)
 
