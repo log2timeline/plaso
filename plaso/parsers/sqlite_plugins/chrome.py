@@ -135,6 +135,8 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
       if results:
         return results[0]
 
+    return None
+
   def ParseLastVisitedRow(
       self, parser_mediator, query, row, cache=None, database=None,
       **unused_kwargs):
