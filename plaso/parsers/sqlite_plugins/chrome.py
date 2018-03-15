@@ -378,11 +378,11 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
 
 
 class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
-  """Google Chrome 27 - 63 history SQLite database plugin."""
+  """Google Chrome 27 - 65 history SQLite database plugin."""
 
   NAME = 'chrome_27_history'
   DESCRIPTION = (
-      'Parser for Google Chrome 27 - 63 history SQLite database files.')
+      'Parser for Google Chrome 27 - 65 history SQLite database files.')
 
   QUERIES = [
       (('SELECT urls.id, urls.url, urls.title, urls.visit_count, '
@@ -728,9 +728,65 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
           'INTEGER DEFAULT 0 NOT NULL,segment_id INTEGER,visit_duration '
           'INTEGER DEFAULT 0 NOT NULL)')}
 
+  # Observed in Chrome 65.0.3325.162
+  _SCHEMA_65 = {
+      'downloads': (
+          'CREATE TABLE downloads (id INTEGER PRIMARY KEY,current_path '
+          'LONGVARCHAR NOT NULL,target_path LONGVARCHAR NOT NULL,start_time '
+          'INTEGER NOT NULL,received_bytes INTEGER NOT NULL,total_bytes '
+          'INTEGER NOT NULL,state INTEGER NOT NULL,danger_type INTEGER NOT '
+          'NULL,interrupt_reason INTEGER NOT NULL,end_time INTEGER NOT '
+          'NULL,opened INTEGER NOT NULL,referrer VARCHAR NOT NULL,by_ext_id '
+          'VARCHAR NOT NULL,by_ext_name VARCHAR NOT NULL,etag VARCHAR NOT '
+          'NULL,last_modified VARCHAR NOT NULL,mime_type VARCHAR(255) NOT '
+          'NULL,original_mime_type VARCHAR(255) NOT NULL, guid VARCHAR NOT '
+          'NULL DEFAULT \'\', hash BLOB NOT NULL DEFAULT X\'\', http_method '
+          'VARCHAR NOT NULL DEFAULT \'\', tab_url VARCHAR NOT NULL '
+          'DEFAULT \'\', tab_referrer_url VARCHAR NOT NULL DEFAULT \'\', '
+          'site_url VARCHAR NOT NULL DEFAULT \'\', last_access_time INTEGER '
+          'NOT NULL DEFAULT 0, transient INTEGER NOT NULL DEFAULT 0)'),
+      'downloads_slices': (
+          'CREATE TABLE downloads_slices (download_id INTEGER NOT NULL,offset '
+          'INTEGER NOT NULL,received_bytes INTEGER NOT NULL,PRIMARY KEY '
+          '(download_id, offset) )'),
+      'downloads_url_chains': (
+          'CREATE TABLE downloads_url_chains (id INTEGER NOT NULL,chain_index '
+          'INTEGER NOT NULL,url LONGVARCHAR NOT NULL, PRIMARY KEY (id, '
+          'chain_index) )'),
+      'keyword_search_terms': (
+          'CREATE TABLE keyword_search_terms (keyword_id INTEGER NOT '
+          'NULL,url_id INTEGER NOT NULL,lower_term LONGVARCHAR NOT NULL,term '
+          'LONGVARCHAR NOT NULL)'),
+      'meta': (
+          'CREATE TABLE meta(key LONGVARCHAR NOT NULL UNIQUE PRIMARY KEY, '
+          'value LONGVARCHAR)'),
+      'segment_usage': (
+          'CREATE TABLE segment_usage (id INTEGER PRIMARY KEY,segment_id '
+          'INTEGER NOT NULL,time_slot INTEGER NOT NULL,visit_count INTEGER '
+          'DEFAULT 0 NOT NULL)'),
+      'segments': (
+          'CREATE TABLE segments (id INTEGER PRIMARY KEY,name VARCHAR,url_id '
+          'INTEGER NON NULL)'),
+      'typed_url_sync_metadata': (
+          'CREATE TABLE typed_url_sync_metadata (storage_key INTEGER PRIMARY '
+          'KEY NOT NULL,value BLOB)'),
+      'urls': (
+          'CREATE TABLE "urls"(id INTEGER PRIMARY KEY AUTOINCREMENT,url '
+          'LONGVARCHAR,title LONGVARCHAR,visit_count INTEGER DEFAULT 0 NOT '
+          'NULL,typed_count INTEGER DEFAULT 0 NOT NULL,last_visit_time '
+          'INTEGER NOT NULL,hidden INTEGER DEFAULT 0 NOT NULL)'),
+      'visit_source': (
+          'CREATE TABLE visit_source(id INTEGER PRIMARY KEY,source INTEGER '
+          'NOT NULL)'),
+      'visits': (
+          'CREATE TABLE visits(id INTEGER PRIMARY KEY,url INTEGER NOT '
+          'NULL,visit_time INTEGER NOT NULL,from_visit INTEGER,transition '
+          'INTEGER DEFAULT 0 NOT NULL,segment_id INTEGER,visit_duration '
+          'INTEGER DEFAULT 0 NOT NULL)')}
+
   SCHEMAS = [
       _SCHEMA_27, _SCHEMA_31, _SCHEMA_37, _SCHEMA_51, _SCHEMA_58, _SCHEMA_59,
-      _SCHEMA_63]
+      _SCHEMA_63, _SCHEMA_65]
 
   REQUIRES_SCHEMA_MATCH = True
 
