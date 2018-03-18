@@ -160,3 +160,9 @@ class WindowsVolumeEventData(events.EventData):
     # TODO: replace origin my something machine readable.
     self.origin = None
     self.serial_number = None
+
+
+manager.AttributeContainersManager.RegisterAttributeContainers(
+    [WindowsDistributedLinkTrackingEventData, WindowsRegistryEventData,
+      WindowsRegistryInstallationEventData, WindowsRegistryListEventData,
+      WindowsRegistryServiceEventData, WindowsVolumeEventData])

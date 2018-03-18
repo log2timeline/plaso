@@ -31,3 +31,6 @@ class ShellItemFileEntryEventData(events.EventData):
     self.name = None
     self.origin = None
     self.shell_item_path = None
+
+manager.AttributeContainersManager.RegisterAttributeContainer(
+    ShellItemFileEntryEventData)
