@@ -35,7 +35,7 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python-artifacts
                       python-backports-lzma
                       python-bencode
-                      python-binplist
+                      python-binlist
                       python-chardet
                       python-construct
                       python-crypto
