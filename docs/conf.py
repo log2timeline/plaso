@@ -21,6 +21,8 @@ import sys
 import time
 
 from mock import Mock as MagicMock
+from sphinx import apidoc
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -340,3 +342,14 @@ texinfo_documents = [(
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
+
+def RunSphinxAPIDoc(_):
+  """Run sphinx-apidoc to auto-generate documentation."""
+  # sys.path.append(os.path.join(os.path.dirname(__file__)))
+  current_directory = os.path.abspath(os.path.dirname(__file__))
+  module = os.path.join(current_directory,"..","plaso")
+  apidoc.main([None, '-o', current_directory, module, '--force'])
+
+def setup(app):
+  """Override Sphinx setup to trigger sphinx-apidoc."""
+  app.connect('builder-inited', RunSphinxAPIDoc)
