@@ -10,13 +10,13 @@ import unittest
 from tests import test_lib
 
 
-class ParserImportTest(test_lib.ImportCheckTestCase):
+class ContainersImportTest(test_lib.ImportCheckTestCase):
   """Tests that container classes are imported correctly."""
 
   _CONTAINERS_PATH = os.path.join(os.getcwd(), 'plaso', 'containers')
   _IGNORABLE_FILES = frozenset(['manager.py', 'interface.py'])
 
-  def testAnalysisPluginsImported(self):
+  def testContainersImported(self):
     """Tests that all parsers are imported."""
     self._AssertFilesImportedInInit(
         self._CONTAINERS_PATH, self._IGNORABLE_FILES)

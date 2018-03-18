@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 from plaso.containers import events
-from plaso.containers import manager
 
 
 # TODO: remove the need for this class.
@@ -29,6 +28,3 @@ class PlistTimeEventData(events.EventData):
     self.key = None
     self.root = None
     self.username = None
-
-manager.AttributeContainersManager.RegisterAttributeContainer(
-    PlistTimeEventData)

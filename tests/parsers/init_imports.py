@@ -16,7 +16,8 @@ class ParserImportTest(test_lib.ImportCheckTestCase):
 
   _PARSERS_PATH = os.path.join(os.getcwd(), 'plaso', 'parsers')
   _IGNORABLE_FILES = frozenset(
-      ['manager.py', 'presets.py', 'mediator.py', 'interface.py', 'plugins.py'])
+      ['manager.py', 'presets.py', 'mediator.py', 'interface.py', 'plugins.py',
+       'dsv_parser.py', 'text_parser.py'])
 
   def testParsersImported(self):
     """Tests that all parsers are imported."""

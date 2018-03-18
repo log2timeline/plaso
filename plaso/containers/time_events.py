@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
-from plaso.containers import manager
 from plaso.containers import events
 from plaso.lib import timelib
 
@@ -91,7 +90,3 @@ class PythonDatetimeEvent(DateTimeValuesEvent):
     super(PythonDatetimeEvent, self).__init__(
         date_time, date_time_description, data_type=data_type,
         time_zone=time_zone)
-
-
-manager.AttributeContainersManager.RegisterAttributeContainers(
-    [TimestampEvent, DateTimeValuesEvent, PythonDatetimeEvent])

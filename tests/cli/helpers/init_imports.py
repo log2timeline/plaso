@@ -14,7 +14,8 @@ class CLIHelperImportTest(test_lib.ImportCheckTestCase):
   """Tests that CLI helper classes are imported correctly."""
 
   _CLI_HELPERS_PATH = os.path.join(os.getcwd(), 'plaso', 'cli', 'helpers')
-  _IGNORABLE_FILES = frozenset(['manager.py', 'interface.py'])
+  _IGNORABLE_FILES = frozenset(
+      ['manager.py', 'interface.py', 'shared_4n6time_output.py'])
 
   def testCLIHelpersImported(self):
     """Tests that all parsers are imported."""
