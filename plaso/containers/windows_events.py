@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+from plaso.containers import manager
 from plaso.containers import events
 
 
@@ -159,3 +160,9 @@ class WindowsVolumeEventData(events.EventData):
     # TODO: replace origin my something machine readable.
     self.origin = None
     self.serial_number = None
+
+
+manager.AttributeContainersManager.RegisterAttributeContainers(
+    [WindowsDistributedLinkTrackingEventData, WindowsRegistryEventData,
+      WindowsRegistryInstallationEventData, WindowsRegistryListEventData,
+      WindowsRegistryServiceEventData, WindowsVolumeEventData])

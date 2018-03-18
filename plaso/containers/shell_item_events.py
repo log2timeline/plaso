@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 from plaso.containers import events
+from plaso.containers import manager
 
 
 class ShellItemFileEntryEventData(events.EventData):
@@ -30,3 +31,6 @@ class ShellItemFileEntryEventData(events.EventData):
     self.name = None
     self.origin = None
     self.shell_item_path = None
+
+manager.AttributeContainersManager.RegisterAttributeContainer(
+    ShellItemFileEntryEventData)
