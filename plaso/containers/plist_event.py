@@ -13,10 +13,10 @@ class PlistTimeEventData(events.EventData):
 
   Attributes:
     desc (str): description.
-    host (str): hostname.
+    hostname (str): hostname.
     key (str): name of plist key.
     root (str): path from the root to this plist key.
-    user (str): unique username.
+    username (str): unique username.
   """
 
   DATA_TYPE = 'plist:key'

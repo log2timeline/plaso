@@ -164,5 +164,5 @@ class WindowsVolumeEventData(events.EventData):
 
 manager.AttributeContainersManager.RegisterAttributeContainers(
     [WindowsDistributedLinkTrackingEventData, WindowsRegistryEventData,
-      WindowsRegistryInstallationEventData, WindowsRegistryListEventData,
-      WindowsRegistryServiceEventData, WindowsVolumeEventData])
+     WindowsRegistryInstallationEventData, WindowsRegistryListEventData,
+     WindowsRegistryServiceEventData, WindowsVolumeEventData])
