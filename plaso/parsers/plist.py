@@ -52,8 +52,8 @@ class PlistParser(interface.FileObjectParser):
     try:
       top_level_object = biplist.readPlist(file_object)
 
-    except (
-        biplist.InvalidPlistException, biplist.NotBinaryPlistException) as exception:
+    except (biplist.InvalidPlistException,
+            biplist.NotBinaryPlistException) as exception:
       if not isinstance(exception, py2to3.BYTES_TYPE):
         error_string = str(exception).decode('utf8', errors='replace')
       else:
