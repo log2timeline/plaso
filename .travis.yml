@@ -31,9 +31,9 @@ matrix:
     sudo: required
     group: edge
     python: 3.4
-  - env: TARGET=["macos-python27", PYTHONPATH="/Library/Python/2.7/site-packages/"]
+  - env: [TARGET="macos-python27", PYTHONPATH="/Library/Python/2.7/site-packages/"]
     os: osx
-    osx_image: xcode8.3
+    osx_image: xcode9.2
     language: generic
   allow_failures:
   - env: TARGET="linux-python34"
