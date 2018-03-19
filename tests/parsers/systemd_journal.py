@@ -11,6 +11,7 @@ from plaso.parsers import systemd_journal
 from tests.parsers import test_lib
 
 
+@unittest.skipIf(systemd_journal is None, 'requires LZMA compression support')
 class SystemdJournalParserTest(test_lib.ParserTestCase):
   """Tests for the Systemd Journal parser."""
 

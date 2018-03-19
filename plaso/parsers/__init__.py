@@ -52,7 +52,12 @@ from plaso.parsers import skydrivelog
 from plaso.parsers import sophos_av
 from plaso.parsers import sqlite
 from plaso.parsers import symantec
-from plaso.parsers import systemd_journal
+
+try:
+  from plaso.parsers import systemd_journal
+except ImportError:
+  pass
+
 from plaso.parsers import syslog
 from plaso.parsers import trendmicroav
 from plaso.parsers import utmp
