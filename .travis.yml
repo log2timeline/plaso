@@ -43,4 +43,4 @@ install:
 script:
 - ./config/travis/runtests.sh
 after_success:
-- if test ${TARGET} = "linux-python27"; then coveralls --verbose; fi
+- if test ${TARGET} = "linux-python27"; then curl -o codecov.sh -s https://codecov.io/bash && /bin/bash ./codecov.sh; fi
