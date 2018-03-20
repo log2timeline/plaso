@@ -11,6 +11,10 @@ class Error(object):
 class FakeMySQLdbConnection(object):
   """Fake implementation of MySQLdb Connection class for testing."""
 
+  # Note: that the following functions do not follow the style guide
+  # because they are part of the MySQL database connection interface.
+  # pylint: disable=invalid-name
+
   def close(self):
     """Closes the connection."""
     return

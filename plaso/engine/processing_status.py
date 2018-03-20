@@ -354,6 +354,7 @@ class ProcessingStatus(object):
     return [self._workers_status[identifier]
             for identifier in sorted(self._workers_status.keys())]
 
+  # pylint: disable=too-many-arguments
   def _UpdateProcessStatus(
       self, process_status, identifier, status, pid, used_memory, display_name,
       number_of_consumed_sources, number_of_produced_sources,
@@ -417,6 +418,7 @@ class ProcessingStatus(object):
         new_reports):
       process_status.last_running_time = time.time()
 
+  # pylint: disable=too-many-arguments
   def UpdateForemanStatus(
       self, identifier, status, pid, used_memory, display_name,
       number_of_consumed_sources, number_of_produced_sources,
@@ -465,6 +467,7 @@ class ProcessingStatus(object):
         number_of_consumed_errors, number_of_produced_errors,
         number_of_consumed_reports, number_of_produced_reports)
 
+  # pylint: disable=too-many-arguments
   def UpdateTasksStatus(self, tasks_status):
     """Updates the tasks status.
 
@@ -473,6 +476,7 @@ class ProcessingStatus(object):
     """
     self.tasks_status = tasks_status
 
+  # pylint: disable=too-many-arguments
   def UpdateWorkerStatus(
       self, identifier, status, pid, used_memory, display_name,
       number_of_consumed_sources, number_of_produced_sources,
