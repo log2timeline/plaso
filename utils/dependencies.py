@@ -149,9 +149,9 @@ class DependencyHelper(object):
     module_object = self._ImportPythonModule(dependency.name)
     if not module_object:
       status_message = 'missing: {0:s}'.format(dependency.name)
-      return dependency.is_optional, status_message
+      return False, status_message
 
-    if not dependency.version_property or not dependency.minimum_version:
+    if not dependency.version_property:
       return True, dependency.name
 
     return self._CheckPythonModuleVersion(
@@ -212,19 +212,20 @@ class DependencyHelper(object):
           module_name, module_version)
       return False, status_message
 
-    try:
-      minimum_version_map = list(
-          map(int, self._VERSION_SPLIT_REGEX.split(minimum_version)))
-    except ValueError:
-      status_message = 'unable to parse minimum version: {0:s} {1:s}'.format(
-          module_name, minimum_version)
-      return False, status_message
+    if minimum_version:
+      try:
+        minimum_version_map = list(
+            map(int, self._VERSION_SPLIT_REGEX.split(minimum_version)))
+      except ValueError:
+        status_message = 'unable to parse minimum version: {0:s} {1:s}'.format(
+            module_name, minimum_version)
+        return False, status_message
 
-    if module_version_map < minimum_version_map:
-      status_message = (
-          '{0:s} version: {1!s} is too old, {2!s} or later required').format(
-              module_name, module_version, minimum_version)
-      return False, status_message
+      if module_version_map < minimum_version_map:
+        status_message = (
+            '{0:s} version: {1!s} is too old, {2!s} or later required').format(
+                module_name, module_version, minimum_version)
+        return False, status_message
 
     if maximum_version:
       try:
@@ -311,7 +312,7 @@ class DependencyHelper(object):
       else:
         status_indicator = '[FAILURE]'
 
-      print('{0:s}\t{1:s}.'.format(status_indicator, status_message))
+      print('{0:s}\t{1:s}'.format(status_indicator, status_message))
 
     elif verbose_output:
       print('[OK]\t\t{0:s}'.format(status_message))
@@ -332,6 +333,10 @@ class DependencyHelper(object):
       if module_name == 'sqlite3':
         result, status_message = self._CheckSQLite3()
       else:
+        result, status_message = self._CheckPythonModule(dependency)
+
+      if not result and module_name == 'lzma':
+        dependency.name = 'backports.lzma'
         result, status_message = self._CheckPythonModule(dependency)
 
       if not result and not dependency.is_optional:
