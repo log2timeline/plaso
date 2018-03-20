@@ -70,6 +70,8 @@ class TestSQLitePlugin(interface.SQLitePlugin):
     """
     query_hash = hash(query)
 
+    file_entry = parser_mediator.GetFileEntry()
+
     field1 = self._GetRowValue(query_hash, row, 'Field1')
     field2 = self._GetRowValue(query_hash, row, 'Field2')
     field3 = self._GetRowValue(query_hash, row, 'Field3')
@@ -85,7 +87,7 @@ class TestSQLitePlugin(interface.SQLitePlugin):
     event_data.field1 = field1
     event_data.field2 = field2
     event_data.field3 = field3
-    event_data.from_wal = location.endswith('-wal')
+    event_data.from_wal = file_entry.path_spec.location.endswith('-wal')
 
     event = time_events.TimestampEvent(
         timelib.Timestamp.NONE_TIMESTAMP,
