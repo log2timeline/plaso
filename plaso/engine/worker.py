@@ -222,7 +222,7 @@ class EventExtractionWorker(object):
     """Determines if analysis and extraction of a data stream can be skipped.
 
     This is used to prevent Plaso trying to analyze or extract from a pipe
-    or socket it encounters whhile processing a mounted filesystem.
+    or socket it encounters while processing a mounted filesystem.
 
     Args:
       file_entry (dfvfs.FileEntry): file entry to consider for skipping.
@@ -627,15 +627,15 @@ class EventExtractionWorker(object):
       else:
         file_entry_processed = False
         for data_stream in file_entry.data_streams:
+          if self._abort:
+            break
+
           if self._CanSkipDataStream(file_entry, data_stream):
             logging.debug(
                 ('[ProcessFileEntry] Skipping datastream {0:s} '
-                'for file entry: {1:s}').format(
+                 'for file entry: {1:s}').format(
                     data_stream.name, display_name))
             continue
-
-          if self._abort:
-            break
 
           self._ProcessFileEntryDataStream(mediator, file_entry, data_stream)
 
