@@ -25,6 +25,10 @@ from tests.analysis import test_lib
 class MockResponse(dict):
   """A mock object to simulate a response object from the requests library."""
 
+  # Note: that the following functions do not follow the style guide
+  # because they are part of the requests response interface.
+  # pylint: disable=invalid-name
+
   def json(self):
     """Provided for compatibility with the requests library."""
     return self

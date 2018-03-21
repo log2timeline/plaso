@@ -53,6 +53,7 @@ class BinaryLineReader(object):
 
   # Note: that the following functions do not follow the style guide
   # because they are part of the readline file-like object interface.
+  # pylint: disable=invalid-name
 
   def readline(self, size=None):
     """Reads a single line of text.

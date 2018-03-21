@@ -28,8 +28,10 @@ class _MockNsrlsvrSocket(object):
     super(_MockNsrlsvrSocket, self).__init__()
     self._data = None
 
-  # These methods are part of the socket interface, hence their names do not
-  # follow the Plaso style guide.
+  # Note: that the following functions do not follow the style guide
+  # because they are part of the socket interface.
+  # pylint: disable=invalid-name
+
   def recv(self, unused_buffer_size):
     """Mocks the socket.recv method."""
     expected_data = (
