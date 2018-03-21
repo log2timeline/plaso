@@ -45,13 +45,13 @@ class _EventSourceHeap(object):
     """Pops an event source from the heap.
 
     Returns:
-      EventSource: event source.
+      EventSource: event source or None on error.
     """
     try:
       _, event_source = heapq.heappop(self._heap)
 
     except IndexError:
-      return
+      return None
 
     return event_source
 
@@ -504,7 +504,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
               process_name, pid, exception))
 
       self._TerminateProcess(process)
-      return
+      return None
 
     self._RegisterProcess(process)
 

@@ -213,7 +213,7 @@ class StorageMediaTool(tools.CLITool):
         volume_system)
     if not volume_identifiers:
       self._output_writer.Write('[WARNING] No partitions found.\n')
-      return
+      return None
 
     normalized_volume_identifiers = self._GetNormalizedTSKVolumeIdentifiers(
         volume_system, volume_identifiers)

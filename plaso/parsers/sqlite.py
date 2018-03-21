@@ -150,6 +150,8 @@ class SQLiteDatabase(object):
     if self._is_open:
       return self.schema.keys()
 
+    return []
+
   def _CopyFileObjectToTemporaryFile(self, file_object, temporary_file):
     """Copies the contents of the file-like object to a temporary file.
 

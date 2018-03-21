@@ -85,7 +85,7 @@ class MactimeParser(dsv_parser.DSVParser):
     try:
       return int(value, 10)
     except (TypeError, ValueError):
-      return
+      return None
 
   def ParseRow(self, parser_mediator, row_offset, row):
     """Parses a line of the log file and produces events.

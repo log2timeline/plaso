@@ -67,7 +67,7 @@ class WinRecycleBinParser(interface.FileObjectParser):
       format_version (int): format version.
 
     Returns:
-      str: filename
+      str: filename or None on error.
     """
     if format_version == 1:
       return binary.ReadUTF16Stream(file_object)
@@ -78,7 +78,7 @@ class WinRecycleBinParser(interface.FileObjectParser):
     except (IOError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError(
           'unable to parse filename with error: {0!s}'.format(exception))
-      return
+      return None
 
     return binary.ReadUTF16(filename_struct.string)
 

@@ -28,8 +28,10 @@ class FakeIdentifier(containers_interface.AttributeContainerIdentifier):
     Returns:
       str: unique identifier or None.
     """
-    if self.attribute_values_hash is not None:
-      return '{0:d}'.format(self.attribute_values_hash)
+    if self.attribute_values_hash is None:
+      return None
+
+    return '{0:d}'.format(self.attribute_values_hash)
 
 
 class SerializedStreamIdentifier(
@@ -65,6 +67,8 @@ class SerializedStreamIdentifier(
     if self.stream_number is not None and self.entry_index is not None:
       return '{0:d}.{1:d}'.format(self.stream_number, self.entry_index)
 
+    return None
+
 
 class SQLTableIdentifier(containers_interface.AttributeContainerIdentifier):
   """SQL table attribute container identifier.
@@ -97,3 +101,5 @@ class SQLTableIdentifier(containers_interface.AttributeContainerIdentifier):
     """
     if self.name is not None and self.row_identifier is not None:
       return '{0:s}.{1:d}'.format(self.name, self.row_identifier)
+
+    return None

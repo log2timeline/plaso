@@ -389,6 +389,8 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       json_dict = json.loads(json_string)
       return cls.ReadSerializedDict(json_dict)
 
+    return None
+
   @classmethod
   def ReadSerializedDict(cls, json_dict):
     """Reads an attribute container from serialized dictionary form.
@@ -409,6 +411,8 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
         raise TypeError('{0:s} is not an attribute container type.'.format(
             type(json_object)))
       return json_object
+
+    return None
 
   @classmethod
   def WriteSerialized(cls, attribute_container):

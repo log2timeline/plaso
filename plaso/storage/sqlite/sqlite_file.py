@@ -927,7 +927,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     cursor = connection.cursor()
     if not cursor:
-      return False
+      return
 
     self._connection = connection
     self._cursor = cursor

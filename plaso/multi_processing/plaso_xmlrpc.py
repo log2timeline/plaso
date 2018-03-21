@@ -36,11 +36,11 @@ class XMLRPCClient(rpc.RPCClient):
   def CallFunction(self):
     """Calls the function via RPC."""
     if self._xmlrpc_proxy is None:
-      return
+      return None
 
     rpc_call = getattr(self._xmlrpc_proxy, self._RPC_FUNCTION_NAME, None)
     if rpc_call is None:
-      return
+      return None
 
     try:
       return rpc_call()
@@ -48,7 +48,7 @@ class XMLRPCClient(rpc.RPCClient):
         expat.ExpatError, SocketServer.socket.error,
         xmlrpclib.Fault) as exception:
       logging.warning('Error while making RPC call: {0:s}'.format(exception))
-      return
+      return None
 
   def Close(self):
     """Closes the RPC communication channel to the server."""

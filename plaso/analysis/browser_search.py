@@ -105,10 +105,10 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       url (str): URL.
 
     Returns:
-      str: search query.
+      str: search query or None if no query was found.
     """
     if 'q=' not in url:
-      return
+      return None
 
     return self._GetBetweenQEqualsAndAmpersand(url).replace('+', ' ')
 
@@ -121,10 +121,10 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       url (str): URL.
 
     Returns:
-      str: search query.
+      str: search query or None if no query was found.
     """
     if 'search/' not in url:
-      return
+      return None
 
     _, _, line = url.partition('search/')
     line, _, _ = line.partition('/')
@@ -141,14 +141,14 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       url (str): URL.
 
     Returns:
-      str: search query.
+      str: search query  or None if no query was found.
     """
     if 'q=' not in url:
-      return
+      return None
 
     line = self._GetBetweenQEqualsAndAmpersand(url)
     if not line:
-      return
+      return None
 
     return line.replace('+', ' ')
 
@@ -164,14 +164,14 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       url (str): URL.
 
     Returns:
-      str: search query.
+      str: search query or None if no query was found.
     """
     if 'search' not in url or 'q=' not in url:
-      return
+      return None
 
     line = self._GetBetweenQEqualsAndAmpersand(url)
     if not line:
-      return
+      return None
 
     return line.replace('+', ' ')
 
@@ -184,14 +184,14 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       url (str): URL.
 
     Returns:
-      str: search query.
+      str: search query or None if no query was found.
     """
     if 'text=' not in url:
-      return
+      return None
     _, _, line = url.partition('text=')
     before_and, _, _ = line.partition('&')
     if not before_and:
-      return
+      return None
     yandex_search_url = before_and.split()[0]
 
     return yandex_search_url.replace('+', ' ')
@@ -219,10 +219,11 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       url (str): URL.
 
     Returns:
-      str: search query, the value between 'q=' and '&'.
+      str: search query, the value between 'q=' and '&' or None if no
+          query was found.
     """
     if 'search' not in url or 'q=' not in url:
-      return
+      return None
 
     return self._GetBetweenQEqualsAndAmpersand(url).replace('+', ' ')
 
@@ -233,7 +234,8 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       url (str): URL.
 
     Returns:
-      str: search query, the value between 'q=' and '&'.
+      str: search query, the value between 'q=' and '&'  or None if no query
+      was found.
     """
     # Make sure we're analyzing the query part of the URL.
     _, _, url = url.partition('?')

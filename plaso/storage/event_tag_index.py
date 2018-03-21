@@ -45,7 +45,7 @@ class EventTagIndex(object):
     lookup_key = event_identifier.CopyToString()
     event_tag_identifier = self._index.get(lookup_key, None)
     if not event_tag_identifier:
-      return
+      return None
 
     return storage_file.GetEventTagByIdentifier(event_tag_identifier)
 

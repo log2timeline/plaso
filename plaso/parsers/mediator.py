@@ -134,7 +134,7 @@ class ParserMediator(object):
     """
     file_entry = self.GetFileEntry()
     if not file_entry:
-      return
+      return None
 
     stat_object = file_entry.GetStat()
 
@@ -150,7 +150,7 @@ class ParserMediator(object):
     if posix_time is None:
       logging.warning(
           'Unable to determine earliest year from file stat information.')
-      return
+      return None
 
     try:
       year = timelib.GetYearFromPosixTime(
@@ -160,7 +160,7 @@ class ParserMediator(object):
       logging.error((
           'Unable to determine earliest year from file stat information with '
           'error: {0:s}').format(exception))
-      return
+      return None
 
   def _GetInode(self, inode_value):
     """Retrieves the inode from the inode value.
@@ -199,7 +199,7 @@ class ParserMediator(object):
     """
     file_entry = self.GetFileEntry()
     if not file_entry:
-      return
+      return None
 
     stat_object = file_entry.GetStat()
 
@@ -210,7 +210,7 @@ class ParserMediator(object):
     if posix_time is None:
       logging.warning(
           'Unable to determine modification year from file stat information.')
-      return
+      return None
 
     try:
       year = timelib.GetYearFromPosixTime(
@@ -220,7 +220,7 @@ class ParserMediator(object):
       logging.error((
           'Unable to determine creation year from file stat '
           'information with error: {0!s}').format(exception))
-      return
+      return None
 
   def AddEventAttribute(self, attribute_name, attribute_value):
     """Adds an attribute that will be set on all events produced.
@@ -343,7 +343,7 @@ class ParserMediator(object):
       str: name of the active file entry or None.
     """
     if not self._file_entry:
-      return
+      return None
 
     data_stream = getattr(self._file_entry.path_spec, 'data_stream', None)
     if data_stream:

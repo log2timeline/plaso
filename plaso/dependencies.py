@@ -219,7 +219,7 @@ def _ImportPythonModule(module_name):
   try:
     module_object = list(map(__import__, [module_name]))[0]
   except ImportError:
-    return
+    return None
 
   # If the module name contains dots get the upper most module object.
   if '.' in module_name:

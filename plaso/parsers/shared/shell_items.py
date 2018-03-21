@@ -143,7 +143,7 @@ class ShellItemsParser(object):
     """
     number_of_path_segments = len(self._path_segments)
     if number_of_path_segments == 0:
-      return
+      return None
 
     strings = [self._path_segments[0]]
     number_of_path_segments -= 1

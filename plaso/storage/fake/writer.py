@@ -293,7 +293,7 @@ class FakeStorageWriter(interface.StorageWriter):
       raise IOError('Unable to read from closed storage writer.')
 
     if self._written_event_source_index >= len(self._event_sources):
-      return
+      return None
 
     event_source = self._event_sources[self._first_written_event_source_index]
     self._written_event_source_index = (
@@ -313,7 +313,7 @@ class FakeStorageWriter(interface.StorageWriter):
       raise IOError('Unable to read from closed storage writer.')
 
     if self._written_event_source_index >= len(self._event_sources):
-      return
+      return None
 
     event_source = self._event_sources[self._written_event_source_index]
     self._written_event_source_index += 1

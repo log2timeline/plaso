@@ -252,6 +252,8 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
           self._CACHED_ENTRY_SIGNATURE_8_1]:
         return self._FORMAT_TYPE_10
 
+    return None
+
   def _DetermineCacheEntrySize(
       self, format_type, value_data, cached_entry_offset):
     """Determines the size of a cached entry.
@@ -294,13 +296,13 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
       if maximum_path_size < path_size:
         logging.error(
             '[{0:s}] Path size value out of bounds.'.format(self.NAME))
-        return
+        return None
 
       path_end_of_string_size = maximum_path_size - path_size
       if path_size == 0 or path_end_of_string_size != 2:
         logging.error(
             '[{0:s}] Unsupported path size values.'.format(self.NAME))
-        return
+        return None
 
       # Assume the entry is 64-bit if the 32-bit path offset is 0 and
       # the 64-bit path offset is set.

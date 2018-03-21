@@ -118,6 +118,8 @@ class OutputManager(object):
     if output_class:
       return issubclass(output_class, interface.LinearOutputModule)
 
+    return False
+
   @classmethod
   def NewOutputModule(cls, name, output_mediator):
     """Creates a new output module object for the specified output format.

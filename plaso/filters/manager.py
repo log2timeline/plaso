@@ -45,7 +45,7 @@ class FiltersManager(object):
          None if no corresponding filter is available.
     """
     if not filter_expression:
-      return
+      return None
 
     # TODO: refactor not to instantiate all filter classes.
     for filter_object in cls.GetFilterObjects():

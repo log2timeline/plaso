@@ -37,9 +37,13 @@ class TimeSlice(object):
       return self.event_timestamp + (
           self.duration * self._MICRO_SECONDS_PER_MINUTE)
 
+    return None
+
   @property
   def start_timestamp(self):
     """int: slice start timestamp or None."""
     if self.event_timestamp:
       return self.event_timestamp - (
           self.duration * self._MICRO_SECONDS_PER_MINUTE)
+
+    return None
