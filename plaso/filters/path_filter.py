@@ -155,7 +155,7 @@ class _PathSegmentWeights(object):
     """
     path_segment_indexes = sorted(self._weight_per_index.keys())
     if not path_segment_indexes:
-      return
+      return None
 
     return path_segment_indexes[0]
 

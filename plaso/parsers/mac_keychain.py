@@ -462,7 +462,7 @@ class KeychainParser(interface.FileObjectParser):
       except (IOError, construct.FieldError):
         parser_mediator.ProduceExtractionError(
             'unable to parse table offsets: {0:d}'.format(index))
-        return
+        return []
 
       table_offsets.append(table_offset + self.KEYCHAIN_DB_HEADER.sizeof())
 

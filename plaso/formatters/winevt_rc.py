@@ -202,7 +202,7 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     number_of_values = len(values_list)
     if number_of_values == 0:
-      return
+      return None
 
     elif number_of_values == 1:
       values = values_list[0]
@@ -228,7 +228,7 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
-      return
+      return None
 
     column_names = ['message_string']
     condition = 'message_identifier == "0x{0:08x}"'.format(message_identifier)
@@ -238,7 +238,7 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     number_of_values = len(values)
     if number_of_values == 0:
-      return
+      return None
 
     elif number_of_values == 1:
       return values[0]['message_string']
@@ -273,7 +273,7 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     Returns:
       str: message string in Python format() (PEP 3101) style.
     """
-    def place_holder_specifier_replacer(match_object):
+    def _PlaceHolderSpecifierReplacer(match_object):
       """Replaces message string place holders into Python format() style."""
       expanded_groups = []
       for group in match_object.groups():
@@ -288,13 +288,13 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
       return ''.join(expanded_groups)
 
     if not message_string:
-      return
+      return None
 
     message_string = self._WHITE_SPACE_SPECIFIER_RE.sub(r'', message_string)
     message_string = self._TEXT_SPECIFIER_RE.sub(r'\\\1', message_string)
     message_string = self._CURLY_BRACKETS.sub(r'\1\1', message_string)
     return self._PLACE_HOLDER_SPECIFIER_RE.sub(
-        place_holder_specifier_replacer, message_string)
+        _PlaceHolderSpecifierReplacer, message_string)
 
   def GetMessage(self, log_source, lcid, message_identifier):
     """Retrieves a specific message for a specific Event Log source.
@@ -309,11 +309,11 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """
     event_log_provider_key = self._GetEventLogProviderKey(log_source)
     if not event_log_provider_key:
-      return
+      return None
 
     generator = self._GetMessageFileKeys(event_log_provider_key)
     if not generator:
-      return
+      return None
 
     # TODO: cache a number of message strings.
     message_string = None
@@ -345,7 +345,7 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     has_table = self._database_file.HasTable(table_name)
     if not has_table:
-      return
+      return None
 
     column_names = ['value']
     condition = 'name == "{0:s}"'.format(attribute_name)
@@ -355,7 +355,7 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
 
     number_of_values = len(values)
     if number_of_values == 0:
-      return
+      return None
 
     elif number_of_values == 1:
       return values[0]['value']

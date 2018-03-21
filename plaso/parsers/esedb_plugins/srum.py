@@ -233,6 +233,8 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       elif value_length == 8:
         return self._FLOAT64_LITTLE_ENDIAN.parse(value)
 
+    return None
+
   def _GetIdentifierMappings(self, parser_mediator, cache, database):
     """Retrieves the identifier mappings from SruDbIdMapTable table.
 

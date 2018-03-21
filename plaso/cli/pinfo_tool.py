@@ -490,7 +490,7 @@ class PinfoTool(
       logging.error(
           'Format of storage file: {0:s} not supported'.format(
               self._storage_file_path))
-      return
+      return False
 
     try:
       storage_file.Open(path=self._storage_file_path, read_only=True)
@@ -498,7 +498,7 @@ class PinfoTool(
       logging.error(
           'Unable to open storage file: {0:s} with error: {1!s}'.format(
               self._storage_file_path, exception))
-      return
+      return False
 
     compare_storage_file = (
         storage_factory.StorageFactory.CreateStorageFileForFile(
@@ -507,7 +507,7 @@ class PinfoTool(
       logging.error(
           'Format of storage file: {0:s} not supported'.format(
               self._compare_storage_file_path))
-      return
+      return False
 
     try:
       compare_storage_file.Open(
@@ -517,7 +517,7 @@ class PinfoTool(
           'Unable to open storage file: {0:s} with error: {1!s}'.format(
               self._compare_storage_file_path, exception))
       storage_file.Close()
-      return
+      return False
 
     try:
       result = self._CompareStores(storage_file, compare_storage_file)

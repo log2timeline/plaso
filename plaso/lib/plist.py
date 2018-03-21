@@ -42,15 +42,15 @@ class PlistFile(object):
         try:
           list_index = int(path_segment, 10)
         except ValueError:
-          return
+          return None
 
         key = key[list_index]
 
       else:
-        return
+        return None
 
       if not key:
-        return
+        return None
 
     return key
 

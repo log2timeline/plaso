@@ -38,7 +38,7 @@ class ObjectFilterList(interface.FilterObject):
     """
     filename = loader.construct_scalar(node)
     if not os.path.isfile(filename):
-      return
+      return None
 
     with open(filename, 'rb') as file_object:
       try:
@@ -47,7 +47,7 @@ class ObjectFilterList(interface.FilterObject):
       except yaml.ParserError as exception:
         logging.error(
             'Unable to load rule file with error: {0!s}'.format(exception))
-        return
+        return None
 
   def _ParseEntry(self, entry):
     """Parses a single filter entry.

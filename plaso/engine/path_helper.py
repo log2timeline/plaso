@@ -64,7 +64,7 @@ class PathHelper(object):
       str: human readable version of the path specification or None.
     """
     if not path_spec:
-      return
+      return None
 
     relative_path = cls.GetRelativePathForPathSpec(
         path_spec, mount_path=mount_path)
@@ -108,7 +108,7 @@ class PathHelper(object):
       str: relative path or None.
     """
     if not path_spec:
-      return
+      return None
 
     # TODO: Solve this differently, quite possibly inside dfVFS using mount
     # path spec.
@@ -117,7 +117,7 @@ class PathHelper(object):
       location = getattr(path_spec.parent, 'location', None)
 
     if not location:
-      return
+      return None
 
     data_stream = getattr(path_spec, 'data_stream', None)
     if data_stream:

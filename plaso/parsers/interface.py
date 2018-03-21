@@ -152,6 +152,8 @@ class BaseParser(object):
     if plugin_class:
       return plugin_class()
 
+    return None
+
   @classmethod
   def GetPlugins(cls):
     """Retrieves the registered plugins.

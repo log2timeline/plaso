@@ -26,6 +26,8 @@ class StorageFactory(object):
     if storage_format == definitions.STORAGE_FORMAT_SQLITE:
       return sqlite_file.SQLiteStorageFile()
 
+    return None
+
   @classmethod
   def CreateStorageFileForFile(cls, path):
     """Creates a storage file based on the file.
@@ -40,6 +42,8 @@ class StorageFactory(object):
     if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
       return sqlite_file.SQLiteStorageFile()
 
+    return None
+
   @classmethod
   def CreateStorageReaderForFile(cls, path):
     """Creates a storage reader based on the file.
@@ -53,6 +57,8 @@ class StorageFactory(object):
     """
     if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
       return sqlite_reader.SQLiteStorageFileReader(path)
+
+    return None
 
   @classmethod
   def CreateStorageWriter(cls, storage_format, session, path):
@@ -70,6 +76,8 @@ class StorageFactory(object):
     if storage_format == definitions.STORAGE_FORMAT_SQLITE:
       return sqlite_writer.SQLiteStorageFileWriter(session, path)
 
+    return None
+
   @classmethod
   def CreateStorageWriterForFile(cls, session, path):
     """Creates a storage writer based on the file.
@@ -84,3 +92,5 @@ class StorageFactory(object):
     """
     if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
       return sqlite_writer.SQLiteStorageFileWriter(session, path)
+
+    return None

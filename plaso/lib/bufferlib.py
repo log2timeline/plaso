@@ -69,6 +69,6 @@ class CircularBuffer(object):
     """
     index = self._index - 1
     if index < 0:
-      return
+      return None
 
     return self._list[index]

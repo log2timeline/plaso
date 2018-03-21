@@ -810,12 +810,13 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           to create task storage.
 
     Returns:
-      MultiProcessWorkerProcess: extraction worker process.
+      MultiProcessWorkerProcess|None: extraction worker process or None on
+          error.
     """
     analysis_plugin = self._analysis_plugins.get(process_name, None)
     if not analysis_plugin:
       logging.error('Missing analysis plugin: {0:s}'.format(process_name))
-      return
+      return None
 
     if self._use_zeromq:
       queue_name = '{0:s} output event queue'.format(process_name)
@@ -859,7 +860,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           'with error: {2!s}').format(process_name, process.pid, exception))
 
       process.terminate()
-      return
+      return None
 
     self._RegisterProcess(process)
     return process

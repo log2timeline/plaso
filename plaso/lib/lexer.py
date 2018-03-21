@@ -211,7 +211,7 @@ class SelfFeederMixIn(Lexer):
     # that we must have at least one sector in our buffer.
     if len(self.buffer) < 512:
       if self.Feed() == 0 and not self.buffer:
-        return
+        return None
 
     return Lexer.NextToken(self)
 
@@ -429,6 +429,7 @@ class SearchParser(Lexer):
 
     elif self.state == 'ARG_LIST':
       return self.InsertArg(string=self.string)
+    return None
 
   def StoreAttribute(self, string='', **unused_kwargs):
     """Store the attribute."""
@@ -456,6 +457,7 @@ class SearchParser(Lexer):
       self.stack.append(self.current_expression)
       self.current_expression = self.expression_cls()
       return self.PopState()
+    return None
 
   def _CombineBinaryExpressions(self, operator):
     """Combine binary expressions."""

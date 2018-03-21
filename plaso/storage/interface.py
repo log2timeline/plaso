@@ -64,6 +64,8 @@ class SerializedAttributeContainerList(object):
     if index < len(self._list):
       return self._list[index]
 
+    return None
+
   def PopAttributeContainer(self):
     """Pops a serialized attribute container from the list.
 
@@ -76,7 +78,7 @@ class SerializedAttributeContainerList(object):
       return serialized_data
 
     except IndexError:
-      return
+      return None
 
   def PushAttributeContainer(self, serialized_data):
     """Pushes a serialized attribute container onto the list.
@@ -336,7 +338,7 @@ class BaseStorageFile(BaseStore):
       AttributeContainer: attribute container or None.
     """
     if not serialized_data:
-      return
+      return None
 
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(container_type)
@@ -537,7 +539,7 @@ class StorageFileMergeReader(StorageMergeReader):
       AttributeContainer: attribute container or None.
     """
     if not serialized_data:
-      return
+      return None
 
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(container_type)

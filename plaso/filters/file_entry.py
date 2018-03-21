@@ -113,7 +113,7 @@ class DateTimeFileEntryFilter(FileEntryFilter):
           None if the filter does not apply.
     """
     if not self._date_time_ranges:
-      return
+      return None
 
     stat_object = file_entry.GetStat()
     for date_time_range in self._date_time_ranges:
@@ -197,7 +197,7 @@ class ExtensionsFileEntryFilter(FileEntryFilter):
     """
     location = getattr(file_entry.path_spec, 'location', None)
     if not location:
-      return
+      return None
 
     if '.' not in location:
       return False
@@ -238,7 +238,7 @@ class NamesFileEntryFilter(FileEntryFilter):
       bool: True if the file entry matches the filter.
     """
     if not self._names or not file_entry.IsFile():
-      return
+      return False
 
     return file_entry.name.lower() in self._names
 
@@ -281,7 +281,7 @@ class SignaturesFileEntryFilter(FileEntryFilter):
       pysigscan.scanner: signature scanner or None.
     """
     if not specification_store:
-      return
+      return None
 
     scanner_object = pysigscan.scanner()
 
@@ -318,7 +318,7 @@ class SignaturesFileEntryFilter(FileEntryFilter):
           None if the filter does not apply.
     """
     if not self._file_scanner or not file_entry.IsFile():
-      return
+      return None
 
     file_object = file_entry.GetFileObject()
     if not file_object:

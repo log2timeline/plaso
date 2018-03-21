@@ -72,7 +72,7 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
       if not datetime_object:
         self._ReportEventError(event, (
             'unable to copy timestamp: {0:d} to datetime object.'))
-        return
+        return None
 
     format_variables = self._output_mediator.GetFormatStringAttributeNames(
         event)

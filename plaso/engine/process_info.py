@@ -40,7 +40,7 @@ class ProcessInfo(object):
     try:
       memory_info = self._memory_info_function()
     except psutil.NoSuchProcess:
-      return
+      return None
 
     # Psutil will return different memory information depending on what is
     # available in that platform.

@@ -862,7 +862,7 @@ class BSMParser(interface.FileObjectParser):
       try:
         token = record_structure.parse_stream(file_object)
       except (IOError, construct.FieldError):
-        return
+        return False
 
       text = self._CopyUtf8ByteArrayToString(token.text)
       if (text != 'launchctl::Audit startup' and
@@ -883,7 +883,7 @@ class BSMParser(interface.FileObjectParser):
     Returns:
       A list of extra tokens data that can be parsed using non-tested
       structures. A message indicating that a structure cannot be parsed
-      is added for unparsed structures.
+      is added for unparsed structures or None on error.
     """
     # Data from the unknown structure.
     start_position = file_object.tell()
@@ -904,7 +904,7 @@ class BSMParser(interface.FileObjectParser):
             logging.warning(
                 'Unable to parse the Token ID at position: {0:d}'.format(
                     file_object.tell()))
-            return
+            return None
           if token_id not in self._bsm_type_list_all:
             break
           token = self._bsm_type_list_all[token_id][1].parse_stream(file_object)
@@ -924,7 +924,7 @@ class BSMParser(interface.FileObjectParser):
               start_position - 1, start_token_id)})
       # Move to next entry.
       file_object.seek(next_entry - file_object.tell(), os.SEEK_CUR)
-      # It returns null list because it doesn't know witch structure was
+      # It returns null list because it doesn't know which structure was
       # the incorrect structure that makes that it can arrive to the spected
       # end of the entry.
       return {}
@@ -1182,6 +1182,8 @@ class BSMParser(interface.FileObjectParser):
 
     elif bsm_type == 'BSM_TOKEN_SEQUENCE':
       return {bsm_type: token}
+
+    return {}
 
 
 manager.ParsersManager.RegisterParser(BSMParser)

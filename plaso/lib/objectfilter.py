@@ -767,6 +767,7 @@ class Parser(lexer.SearchParser):
       self.current_expression = self.expression_cls()
       # We go to the BINARY state, to find if there's an AND or OR operator
       return 'BINARY'
+    return None
 
   def InsertFloatArg(self, string='', **unused_kwargs):
     """Inserts a Float argument."""
@@ -799,6 +800,8 @@ class Parser(lexer.SearchParser):
 
     elif self.state == 'ARG':
       return self.InsertArg(string=self.string)
+
+    return None
 
   def StringEscape(self, string, match, **unused_kwargs):
     """Escape backslashes found inside a string quote.

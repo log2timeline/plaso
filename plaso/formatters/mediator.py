@@ -44,7 +44,7 @@ class FormatterMediator(object):
       database_path = os.path.join(
           self._data_location, self._WINEVT_RC_DATABASE)
       if not os.path.isfile(database_path):
-        return
+        return None
 
       self._winevt_database_reader = (
           winevt_rc.WinevtResourcesSqlite3DatabaseReader())
@@ -70,7 +70,7 @@ class FormatterMediator(object):
     """
     database_reader = self._GetWinevtRcDatabaseReader()
     if not database_reader:
-      return
+      return None
 
     if self._lcid != self.DEFAULT_LCID:
       message_string = database_reader.GetMessage(

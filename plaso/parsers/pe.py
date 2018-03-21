@@ -124,10 +124,10 @@ class PEParser(interface.FileObjectParser):
       pefile_object (pefile.PE): pefile object.
 
     Returns:
-      int: load configuration timestamps.
+      int|None: load configuration timestamps or None if there are none present.
     """
     if not hasattr(pefile_object, 'DIRECTORY_ENTRY_LOAD_CONFIG'):
-      return
+      return None
     timestamp = getattr(
         pefile_object.DIRECTORY_ENTRY_LOAD_CONFIG.struct, 'TimeDateStamp', 0)
     return timestamp

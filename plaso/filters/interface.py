@@ -29,6 +29,8 @@ class FilterObject(object):
     if self._filter_expression:
       return self._filter_expression
 
+    return None
+
   @property
   def filter_name(self):
     """str: name of the filter."""
@@ -58,7 +60,7 @@ class FilterObject(object):
       return parser.Compile(pfilter.PlasoAttributeFilterImplementation)
 
     except errors.ParseError:
-      pass
+      return None
 
   @abc.abstractmethod
   def CompileFilter(self, filter_expression):
