@@ -11,6 +11,10 @@ class Error(object):
 class FakeMySQLdbConnection(object):
   """Fake implementation of MySQLdb Connection class for testing."""
 
+  # Note: that the following functions do not follow the style guide
+  # because they are part of the MySQL database connection interface.
+  # pylint: disable=invalid-name
+
   def close(self):
     """Closes the connection."""
     return
@@ -51,6 +55,10 @@ class FakeMySQLdbCursor(object):
     self.expected_query = None
     self.expected_query_args = None
     self.query_results = []
+
+  # Note: that the following functions do not follow the style guide
+  # because they are part of the MySQL database cursor interface.
+  # pylint: disable=invalid-name
 
   def close(self):
     """Closes the cursor."""
@@ -94,6 +102,10 @@ class FakeMySQLdbCursor(object):
     self._result_index += 1
     return row
 
+
+# Note: that the following functions do not follow the style guide
+# because they are part of the MySQL database module interface.
+# pylint: disable=invalid-name
 
 def connect(
     unused_hostname, unused_username, unused_password, unused_database_name):
