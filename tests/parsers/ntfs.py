@@ -81,7 +81,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     self.assertIsInstance(event.is_allocated, bool)
     self.assertTrue(event.is_allocated)
 
-    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807907')
+    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
@@ -92,7 +92,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     self.assertIsInstance(event.is_allocated, bool)
     self.assertTrue(event.is_allocated)
 
-    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807907')
+    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
@@ -103,7 +103,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     self.assertIsInstance(event.is_allocated, bool)
     self.assertTrue(event.is_allocated)
 
-    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807907')
+    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
@@ -114,7 +114,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     self.assertIsInstance(event.is_allocated, bool)
     self.assertTrue(event.is_allocated)
 
-    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807907')
+    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
 
@@ -135,7 +135,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     self.assertIsInstance(event.is_allocated, bool)
     self.assertTrue(event.is_allocated)
 
-    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807907')
+    self.CheckTimestamp(event.timestamp, '2013-12-03 06:30:41.807908')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 

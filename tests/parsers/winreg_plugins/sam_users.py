@@ -45,7 +45,7 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
-    self.CheckTimestamp(event.timestamp, '2014-09-24 03:36:06.358837')
+    self.CheckTimestamp(event.timestamp, '2014-09-24 03:36:06.358838')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 

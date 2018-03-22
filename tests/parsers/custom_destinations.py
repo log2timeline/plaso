@@ -33,14 +33,14 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     # The last accessed timestamp.
     event = events[121]
 
-    self.CheckTimestamp(event.timestamp, '2009-07-13 23:55:56.248103')
+    self.CheckTimestamp(event.timestamp, '2009-07-13 23:55:56.248104')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
     # The creation timestamp.
     event = events[122]
 
-    self.CheckTimestamp(event.timestamp, '2009-07-13 23:55:56.248103')
+    self.CheckTimestamp(event.timestamp, '2009-07-13 23:55:56.248104')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
@@ -92,7 +92,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     # A distributed link tracking event.
     event = events[12]
 
-    self.CheckTimestamp(event.timestamp, '2010-11-10 19:08:32.656259')
+    self.CheckTimestamp(event.timestamp, '2010-11-10 19:08:32.656260')
 
     expected_message = (
         'e9215b24-ecfd-11df-a81c-000c29031e1e '

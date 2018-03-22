@@ -180,7 +180,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event = mc_task_manager_events[0]
 
-    self.CheckTimestamp(event.timestamp, '2011-09-16 20:49:16.877415')
+    self.CheckTimestamp(event.timestamp, '2011-09-16 20:49:16.877416')
 
     self._TestRegvalue(event, 'DisplayName', 'McAfee Task Manager')
     self._TestRegvalue(event, 'Type', 0x10)
@@ -190,7 +190,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     event = rdp_video_miniport_events[0]
 
-    self.CheckTimestamp(event.timestamp, '2011-09-17 13:37:59.347157')
+    self.CheckTimestamp(event.timestamp, '2011-09-17 13:37:59.347158')
 
     self._TestRegvalue(event, 'Start', 3)
     expected_value = 'System32\\drivers\\rdpvideominiport.sys'

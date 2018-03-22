@@ -56,7 +56,7 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     # Test event with data type windows:srum:network_connectivity
     event = events[0]
 
-    self.CheckTimestamp(event.timestamp, '2017-11-05 10:30:48.167971')
+    self.CheckTimestamp(event.timestamp, '2017-11-05 10:30:48.167972')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_FIRST_CONNECTED)
 

@@ -34,7 +34,7 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     self.assertEqual(event.container_identifier, 1)
 
-    self.CheckTimestamp(event.timestamp, '2014-05-12 07:30:25.486198')
+    self.CheckTimestamp(event.timestamp, '2014-05-12 07:30:25.486199')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
