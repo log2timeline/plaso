@@ -17,7 +17,7 @@ from tests.parsers import test_lib
 
 
 class SQLitePluginTestCase(test_lib.ParserTestCase):
-  """The unit test case for SQLite database plugins."""
+  """SQLite database plugin test case."""
 
   def _OpenDatabaseFile(self, path_segments, wal_path=None):
     """Opens a SQLite database file.

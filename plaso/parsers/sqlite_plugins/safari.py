@@ -18,9 +18,9 @@ class SafariHistoryPageVisitedEventData(events.EventData):
   """Safari history event data.
 
   Attributes:
+    host(str): hostname of the server.
     title (str): title of the webpage visited.
     url (str): URL visited.
-    host(str): hostname of the server.
     visit_count (int): number of times the website was visited.
     was_http_non_get (bool): True if the webpage was visited using a
         non-GET HTTP request.
@@ -30,14 +30,14 @@ class SafariHistoryPageVisitedEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SafariHistoryPageVisitedEventData,
-          self).__init__(data_type=self.DATA_TYPE)
+    super(SafariHistoryPageVisitedEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.host = None
     self.title = None
     self.url = None
     self.visit_count = None
-    self.host = None
-    self.was_http_non_get = None
     self.visit_redirect_source = None
+    self.was_http_non_get = None
 
 
 class SafariHistoryPluginSqlite(interface.SQLitePlugin):
