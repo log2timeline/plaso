@@ -91,7 +91,3 @@ class PythonDatetimeEvent(DateTimeValuesEvent):
     super(PythonDatetimeEvent, self).__init__(
         date_time, date_time_description, data_type=data_type,
         time_zone=time_zone)
-
-
-manager.AttributeContainersManager.RegisterAttributeContainers(
-    [TimestampEvent, DateTimeValuesEvent, PythonDatetimeEvent])

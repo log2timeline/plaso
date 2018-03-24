@@ -29,6 +29,3 @@ class PlistTimeEventData(events.EventData):
     self.key = None
     self.root = None
     self.username = None
-
-manager.AttributeContainersManager.RegisterAttributeContainer(
-    PlistTimeEventData)
