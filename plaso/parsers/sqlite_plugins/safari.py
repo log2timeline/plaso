@@ -18,7 +18,7 @@ class SafariHistoryPageVisitedEventData(events.EventData):
   """Safari history event data.
 
   Attributes:
-    host(str): hostname of the server.
+    host (str): hostname of the server.
     title (str): title of the webpage visited.
     url (str): URL visited.
     visit_count (int): number of times the website was visited.
