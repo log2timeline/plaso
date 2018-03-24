@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Imports for the parsers and plugins manager."""
+"""This file imports python modules that register parsers."""
 
 from plaso.parsers import asl
 from plaso.parsers import amcache
@@ -82,3 +82,8 @@ from plaso.parsers import plist_plugins
 from plaso.parsers import sqlite_plugins
 from plaso.parsers import syslog_plugins
 from plaso.parsers import winreg_plugins
+
+# These modules do not register parsers themselves, but contain super classes
+# used by parsers in other modules.
+# from plaso.parsers import dsv_parser
+# from plaso.parsers import text_parser
