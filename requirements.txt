@@ -9,7 +9,7 @@ certifi >= 2016.9.26
 chardet >= 2.0.1
 construct >= 2.5.2,<= 2.5.3
 dfdatetime >= 20180324
-dfvfs >= 20171230
+dfvfs >= 20180325
 dfwinreg >= 20170521
 dpkt >= 1.8
 efilter == 1-1.5
