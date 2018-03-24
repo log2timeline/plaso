@@ -66,6 +66,6 @@ class PlistFile(object):
       self.root_key = biplist.readPlist(file_object)
 
     except (
-        AttributeError, binascii.Error, biplist.InvalidPlistException,
-        LookupError, OverflowError, ValueError) as exception:
+        biplist.NotBinaryPlistException,
+        biplist.InvalidPlistException) as exception:
       raise IOError(exception)
