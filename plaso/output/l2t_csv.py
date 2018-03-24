@@ -87,8 +87,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
       event (EventObject): event.
 
     Returns:
-      list[str]|None: output values or None if no timestamp was present in the
-          event.
+      list[str]: output values or None if no timestamp was present in the event.
 
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data

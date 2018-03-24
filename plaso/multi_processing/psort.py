@@ -810,8 +810,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           to create task storage.
 
     Returns:
-      MultiProcessWorkerProcess|None: extraction worker process or None on
-          error.
+      MultiProcessWorkerProcess: extraction worker process or None on error.
     """
     analysis_plugin = self._analysis_plugins.get(process_name, None)
     if not analysis_plugin:

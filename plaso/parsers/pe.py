@@ -124,7 +124,7 @@ class PEParser(interface.FileObjectParser):
       pefile_object (pefile.PE): pefile object.
 
     Returns:
-      int|None: load configuration timestamps or None if there are none present.
+      int: load configuration timestamps or None if there are none present.
     """
     if not hasattr(pefile_object, 'DIRECTORY_ENTRY_LOAD_CONFIG'):
       return None
