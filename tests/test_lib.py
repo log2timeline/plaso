@@ -129,12 +129,12 @@ class ImportCheckTestCase(BaseTestCase):
       if filename in ignorable_files:
         continue
       if self._FILENAME_REGEXP.search(filename):
-        import_name, _, _ = filename.partition('.')
-        import_expression = re.compile(r' import {0:s}\b'.format(import_name))
+        module_name, _, _ = filename.partition('.')
+        import_expression = re.compile(r' import {0:s}\b'.format(module_name))
 
         self.assertRegexpMatches(
             init_content, import_expression,
-            '{0:s} not imported in {1:s}'.format(import_name, init_path))
+            '{0:s} not imported in {1:s}'.format(module_name, init_path))
 
 
 class TempDirectory(object):
