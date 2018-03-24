@@ -15,6 +15,6 @@ from plaso.output import timesketch_out
 from plaso.output import tln
 from plaso.output import xlsx
 
-# These python do not register output modules, but are super classes used by
-# output modules in other python modules.
+# These python modules do not register output modules, but are super classes
+# used by output modules in other python modules.
 # from plaso.output import shared_4n6time
