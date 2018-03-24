@@ -14,3 +14,7 @@ from plaso.output import sqlite_4n6time
 from plaso.output import timesketch_out
 from plaso.output import tln
 from plaso.output import xlsx
+
+# The files do not register output modules, but are super classes used by
+# output modules.
+# from plaso.output import shared_4n6time
