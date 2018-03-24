@@ -45,7 +45,6 @@ matrix:
     python: 2.7
   allow_failures:
   - env: TARGET="linux-python34"
-  - env: [TARGET="linux-python34-tox", TOXENV="py34"]
 install:
 - ./config/travis/install.sh
 script:
