@@ -1,31 +1,46 @@
 language: python
 matrix:
   include:
-  - os: linux
+  - env: TARGET="pylint"
+    os: linux
     dist: trusty
     sudo: required
     group: edge
     python: 2.7
-    env: TOXENV=py27
-  - os: linux
+  - env: TARGET="linux-python27"
+    os: linux
+    dist: trusty
+    sudo: required
+    group: edge
+    python: 2.7
+  - env: TARGET="linux-python34"
+    os: linux
     dist: trusty
     sudo: required
     group: edge
     python: 3.4
-    env: TOXENV=py34
-  - os: osx
-    osx_image: xcode8.3
+  - env: [TARGET="linux-python27-tox", TOXENV="py27"]
+    os: linux
+    dist: trusty
+    sudo: required
+    group: edge
+    python: 2.7
+  - env: [TARGET="linux-python34-tox", TOXENV="py34"]
+    os: linux
+    dist: trusty
+    sudo: required
+    group: edge
+    python: 3.4
+  - env: [TARGET="macos-python27", PYTHONPATH="/Library/Python/2.7/site-packages/"]
+    os: osx
+    osx_image: xcode9.2
     language: generic
-    env: PYTHONPATH=/Library/Python/2.7/site-packages/
+  allow_failures:
+  - env: TARGET="linux-python34"
+  - env: [TARGET="linux-python34-tox", TOXENV="py34"]
 install:
-  - ./config/travis/install.sh
+- ./config/travis/install.sh
 script:
-  - if test ${TRAVIS_OS_NAME} = "osx"; then PYTHONPATH=/Library/Python/2.7/site-packages/ /usr/bin/python ./run_tests.py; elif test ${TRAVIS_OS_NAME} = "linux"; then travis_wait 30 tox --sitepackages ${TOXENV}; fi
-  - if test ${TRAVIS_OS_NAME} = "linux"; then python setup.py build; fi
-  - if test ${TRAVIS_OS_NAME} = "linux"; then python setup.py sdist; fi
-  - if test ${TRAVIS_OS_NAME} = "linux"; then python setup.py bdist; fi
-  - if test ${TRAVIS_OS_NAME} = "linux"; then mkdir -p ${PWD}/tmp/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/ && PYTHONPATH=${PWD}/tmp/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/ python setup.py install --prefix=${PWD}/tmp/; fi
-  - PYTHONPATH=${PYTHONPATH}:. ./tests/end-to-end.py --debug -c config/end-to-end.ini
-  - if test ${TRAVIS_OS_NAME} = "osx"; then mv dependencies ../l2tdevtools/build && ./config/macos/make_dist.sh; fi
+- ./config/travis/runtests.sh
 after_success:
-  - if test ${TRAVIS_OS_NAME} = "linux" && test ${TRAVIS_PYTHON_VERSION} = "2.7"; then coveralls; fi
+- if test ${TARGET} = "linux-python27"; then coveralls --verbose; fi
