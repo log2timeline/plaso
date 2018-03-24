@@ -112,7 +112,7 @@ else:
         elif line.startswith('%files'):
           # Cannot use %{_libdir} here since it can expand to "lib64".
           lines = [
-              '%files',
+              '%files -n {0:s}-%{{name}}'.format(python_package),
               '%defattr(644,root,root,755)',
               '%doc ACKNOWLEDGEMENTS AUTHORS LICENSE README',
               '%{_prefix}/bin/*.py',
@@ -121,15 +121,20 @@ else:
               '%{_prefix}/lib/python*/site-packages/plaso/*/*/*.py',
               '%{_prefix}/lib/python*/site-packages/plaso*.egg-info/*',
               '%{_prefix}/share/plaso/*',
+              '',
+              '%exclude %{_prefix}/share/doc/*',
               '%exclude %{_prefix}/lib/python*/site-packages/plaso/*.pyc',
               '%exclude %{_prefix}/lib/python*/site-packages/plaso/*.pyo',
-              '%exclude %{_prefix}/lib/python*/site-packages/plaso/__pycache__/*',
+              ('%exclude %{_prefix}/lib/python*/site-packages/plaso/'
+               '__pycache__/*'),
               '%exclude %{_prefix}/lib/python*/site-packages/plaso/*/*.pyc',
               '%exclude %{_prefix}/lib/python*/site-packages/plaso/*/*.pyo',
-              '%exclude %{_prefix}/lib/python*/site-packages/plaso/*/__pycache__/*',
+              ('%exclude %{_prefix}/lib/python*/site-packages/plaso/*/'
+               '__pycache__/*'),
               '%exclude %{_prefix}/lib/python*/site-packages/plaso/*/*/*.pyc',
               '%exclude %{_prefix}/lib/python*/site-packages/plaso/*/*/*.pyo',
-              '%exclude %{_prefix}/lib/python*/site-packages/plaso/*/*/__pycache__/*']
+              ('%exclude %{_prefix}/lib/python*/site-packages/plaso/*/*/'
+               '__pycache__/*')]
 
           python_spec_file.extend(lines)
           break
