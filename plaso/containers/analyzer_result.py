@@ -29,4 +29,5 @@ class AnalyzerResult(interface.AttributeContainer):
     self.attribute_name = None
     self.attribute_value = None
 
+
 manager.AttributeContainersManager.RegisterAttributeContainer(AnalyzerResult)

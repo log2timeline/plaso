@@ -105,11 +105,11 @@ class BaseTestCase(unittest.TestCase):
     return path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
 
+
 class ImportCheckTestCase(BaseTestCase):
   """Super class for tests that check modules are imported correctly."""
 
   _FILENAME_REGEXP = re.compile(r'^[^_].*\.py$')
-
 
   def _AssertFilesImportedInInit(self, path, ignorable_files):
     """Checks that files in path are imported in __init__.py
