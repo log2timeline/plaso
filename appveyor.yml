@@ -15,7 +15,7 @@ install:
 - ps: (new-object net.webclient).DownloadFile('https://www.sqlite.org/2017/sqlite-dll-win32-x86-3180000.zip', 'C:\Projects\sqlite-dll-win32-x86-3180000.zip')
 - ps: $Output = Invoke-Expression -Command "& 'C:\\Program Files\\7-Zip\\7z.exe' -y -oC:\\Projects\\ x C:\\Projects\\sqlite-dll-win32-x86-3180000.zip 2>&1"
 - cmd: copy C:\Projects\sqlite3.dll C:\Python27\DLLs\
-- cmd: "%PYTHON%\\Scripts\\pip.exe install --upgrade pip"
+- cmd: "%PYTHON%\\python.exe -m pip install --upgrade pip"
 - cmd: "%PYTHON%\\Scripts\\pip.exe install pywin32 WMI"
 - cmd: "%PYTHON%\\python.exe %PYTHON%\\Scripts\\pywin32_postinstall.py -install"
 - cmd: git clone https://github.com/log2timeline/l2tdevtools.git ..\l2tdevtools
