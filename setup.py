@@ -180,7 +180,7 @@ def GetScripts():
 
 
 if version_tuple[0] == 2:
-  encoding = sys.stdin.encoding
+  encoding = sys.stdin.encoding  #pylint: disable=invalid-name
 
   # Note that sys.stdin.encoding can be None.
   if not encoding:
