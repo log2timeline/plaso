@@ -12,7 +12,7 @@ if test "${TARGET}" = "pylint";
 then
 	pylint --version
 
-	for FILE in `find setup.py plaso tests tools -name \*.py`;
+	for FILE in `find setup.py config plaso tests tools -name \*.py`;
 	do
 		echo "Checking: ${FILE}";
 
