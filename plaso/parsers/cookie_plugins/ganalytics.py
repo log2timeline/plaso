@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import sys
 
 if sys.version_info[0] < 3:
-  import urllib as urlparse
+  import urllib as urlparse  # pylint: disable=no-name-in-module
 else:
   from urllib import parse as urlparse
 
