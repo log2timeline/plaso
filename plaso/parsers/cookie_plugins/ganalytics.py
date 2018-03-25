@@ -6,9 +6,9 @@ from __future__ import unicode_literals
 import sys
 
 if sys.version_info[0] < 3:
-  import urllib as urlparse  # pylint: disable=no-name-in-module
+  import urllib as urlparse
 else:
-  from urllib import parse as urlparse
+  from urllib import parse as urlparse  # pylint: disable=no-name-in-module
 
 # pylint: disable=wrong-import-position
 from dfdatetime import posix_time as dfdatetime_posix_time
