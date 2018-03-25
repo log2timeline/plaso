@@ -50,7 +50,7 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    self.CheckTimestamp(event.timestamp, '2012-04-07 10:31:37.640871')
+    self.CheckTimestamp(event.timestamp, '2012-04-07 10:31:37.640872')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 

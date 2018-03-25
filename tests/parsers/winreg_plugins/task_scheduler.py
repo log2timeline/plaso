@@ -66,7 +66,7 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[1]
 
-    self.CheckTimestamp(event.timestamp, '2009-07-14 05:08:50.811626')
+    self.CheckTimestamp(event.timestamp, '2009-07-14 05:08:50.811627')
 
     regvalue_identifier = 'Task: SynchronizeTime'
 

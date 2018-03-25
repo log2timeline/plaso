@@ -1,4 +1,6 @@
 language: python
+virtualenv:
+  system_site_packages: true
 matrix:
   include:
   - env: TARGET="pylint"
@@ -37,6 +39,7 @@ matrix:
     language: generic
   allow_failures:
   - env: TARGET="linux-python34"
+  - env: [TARGET="linux-python27-tox", TOXENV="py27"]
   - env: [TARGET="linux-python34-tox", TOXENV="py34"]
 install:
 - ./config/travis/install.sh

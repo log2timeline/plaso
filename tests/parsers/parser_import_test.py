@@ -42,6 +42,7 @@ class ParserImportTest(test_lib.BaseTestCase):
         import_name, _, _ = filename.partition('.')
         import_expression = re.compile(r' import {0:s}\b'.format(import_name))
 
+        # pylint: disable=deprecated-method
         self.assertRegexpMatches(
             init_content, import_expression,
             '{0:s} not imported in {1:s}'.format(import_name, init_path))

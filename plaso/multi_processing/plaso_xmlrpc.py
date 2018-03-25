@@ -43,7 +43,7 @@ class XMLRPCClient(rpc.RPCClient):
       return None
 
     try:
-      return rpc_call()
+      return rpc_call()  # pylint: disable=not-callable
     except (
         expat.ExpatError, SocketServer.socket.error,
         xmlrpclib.Fault) as exception:

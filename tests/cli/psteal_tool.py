@@ -70,6 +70,8 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     # pylint: disable=deprecated-method
     self.assertRegexpMatches(storage_filename, expected_storage_filename)
 
+  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testFailWhenOutputAlreadyExists(self):
     """Test to make sure the tool raises when the output file already exists."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
@@ -95,6 +97,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
         test_tool.ParseOptions(options)
 
+  @shared_test_lib.skipUnlessHasTestFile(['testdir'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
@@ -154,6 +157,8 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     expected_error = 'ERROR: Output format: dynamic requires an output file'
     self.assertIn(expected_error, output)
 
+  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
+  @shared_test_lib.skipUnlessHasTestFile(['testdir'])
   def testExtractEventsFromSourceDirectory(self):
     """Tests the ExtractEventsFromSources function on a directory."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
@@ -186,6 +191,8 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
+  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
+  @shared_test_lib.skipUnlessHasTestFile(['bdetogo.raw'])
   def testExtractEventsFromSourceBDEImage(self):
     """Tests the ExtractEventsFromSources function on an image with BDE."""
     # TODO: added for testing.
@@ -222,6 +229,8 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
+  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
+  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testExtractEventsFromSourcesImage(self):
     """Tests the ExtractEventsFromSources function on a single partition."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
@@ -254,9 +263,10 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
+  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
+  @shared_test_lib.skipUnlessHasTestFile(['multi_partition_image.vmdk'])
   def testExtractEventsFromSourcePartitionedImage(self):
-    """Tests the ExtractEventsFromSources function on a multi partition
-    image."""
+    """Tests the ExtractEventsFromSources function on a partitioned image."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
@@ -289,6 +299,8 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
+  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
+  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testExtractEventsFromSourceVSSImage(self):
     """Tests the ExtractEventsFromSources function on an image with VSS."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
@@ -327,6 +339,8 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
+  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
+  @shared_test_lib.skipUnlessHasTestFile(['System.evtx'])
   def testExtractEventsFromSourceSingleFile(self):
     """Tests the ExtractEventsFromSources function on a single file."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
@@ -359,6 +373,9 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
+  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
+  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile(['end_to_end', 'dynamic.log'])
   def testProcessStorage(self):
     """Test the AnalyzeEvents function"""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')

@@ -29,7 +29,7 @@ class FileHistoryESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
     event = events[702]
 
-    self.CheckTimestamp(event.timestamp, '2013-10-12 17:34:36.688580')
+    self.CheckTimestamp(event.timestamp, '2013-10-12 17:34:36.688581')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 

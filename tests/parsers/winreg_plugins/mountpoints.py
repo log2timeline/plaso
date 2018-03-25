@@ -53,7 +53,7 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    self.CheckTimestamp(event.timestamp, '2011-08-23 17:10:14.960960')
+    self.CheckTimestamp(event.timestamp, '2011-08-23 17:10:14.960961')
 
     regvalue = event.regvalue
     self.assertEqual(regvalue.get('Share_Name'), '\\home\\nfury')

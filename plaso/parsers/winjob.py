@@ -234,7 +234,8 @@ class WinJobParser(interface.FileObjectParser):
           date_time = dfdatetime_time_elements.TimeElements(
               time_elements_tuple=time_elements_tuple)
           date_time.is_local_time = True
-          date_time.precision = dfdatetime_definitions.PRECISION_1_MINUTE
+          # TODO: add functionality to dfdatetime to control precision.
+          date_time._precision = dfdatetime_definitions.PRECISION_1_MINUTE  # pylint: disable=protected-access
         except ValueError:
           date_time = None
           parser_mediator.ProduceExtractionError(
@@ -255,7 +256,8 @@ class WinJobParser(interface.FileObjectParser):
           date_time = dfdatetime_time_elements.TimeElements(
               time_elements_tuple=time_elements_tuple)
           date_time.is_local_time = True
-          date_time.precision = dfdatetime_definitions.PRECISION_1_DAY
+          # TODO: add functionality to dfdatetime to control precision.
+          date_time._precision = dfdatetime_definitions.PRECISION_1_DAY  # pylint: disable=protected-access
         except ValueError:
           date_time = None
           parser_mediator.ProduceExtractionError(

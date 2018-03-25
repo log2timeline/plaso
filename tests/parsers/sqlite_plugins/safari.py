@@ -15,12 +15,11 @@ from tests.parsers.sqlite_plugins import test_lib
 
 
 class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
-  """Tests for the Safari History database plugin ."""
+  """Tests for the Safari History database plugin."""
 
   @shared_test_lib.skipUnlessHasTestFile(['History.db'])
   def testProcess(self):
     """Tests the process function on a Safari History.db database file."""
-
     plugin = safari.SafariHistoryPluginSqlite()
     storage_writer = self._ParseDatabaseFileWithPlugin(['History.db'], plugin)
 
@@ -48,5 +47,5 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_message)
 
 
-if __name__ == '_main_':
+if __name__ == '__main__':
   unittest.main()
