@@ -176,7 +176,7 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    self.CheckTimestamp(event.timestamp, '2011-08-28 22:48:28.159308')
+    self.CheckTimestamp(event.timestamp, '2011-08-28 22:48:28.159309')
 
     expected_message = (
         '[{0:s}\\exe] '
@@ -250,7 +250,7 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    self.CheckTimestamp(event.timestamp, '2012-04-01 13:52:39.113741')
+    self.CheckTimestamp(event.timestamp, '2012-04-01 13:52:39.113742')
 
     expected_message = (
         '[{0:s}] '

@@ -29,7 +29,7 @@ class RestorePointLogParserTest(test_lib.ParserTestCase):
 
     event = events[0]
 
-    self.CheckTimestamp(event.timestamp, '2015-03-23 18:38:14.246954')
+    self.CheckTimestamp(event.timestamp, '2015-03-23 18:38:14.246955')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 

@@ -25,7 +25,15 @@ class FileStatEventFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_SHORT = 'FILE'
 
+  # The numeric values are for backwards compatibility with plaso files
+  # generated with older versions of dfvfs.
   _FILE_ENTRY_TYPES = {
+      1: 'device',
+      2: 'directory',
+      3: 'file',
+      4: 'link',
+      5: 'socket',
+      6: 'pipe',
       dfvfs_definitions.FILE_ENTRY_TYPE_DEVICE: 'device',
       dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY: 'directory',
       dfvfs_definitions.FILE_ENTRY_TYPE_FILE: 'file',

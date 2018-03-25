@@ -1,5 +1,6 @@
 """Script to create Jenkins Slaves."""
 
+from __future__ import print_function
 from __future__ import unicode_literals
 
 import argparse
@@ -7,8 +8,8 @@ import json
 import sys
 import time
 
-from googleapiclient import discovery
-from googleapiclient import errors as apierrors
+from googleapiclient import discovery  # pylint: disable=import-error
+from googleapiclient import errors as apierrors  # pylint: disable=import-error
 
 #pylint: disable=no-member
 
@@ -24,7 +25,6 @@ class SlaveManager(object):
       project (str): the GCE project name.
       zone (str): the destination GCP zone.
     """
-
     self._project = project
     self._zone = zone
 
@@ -103,10 +103,9 @@ class SlaveManager(object):
           the instance, in the form {'persistent_disk_name': 'device_name'}.
         scopes (Optional[list[str]]): the list of scopes to set for the instance
     """
-
     scopes = scopes or self.DEFAULT_SCOPES
 
-    print 'Creating new instance {0:s}'.format(instance_name)
+    print('Creating new instance {0:s}'.format(instance_name))
 
     project_url = 'compute/v1/projects/{0:s}'.format(self._project)
     machine_type_url = '{0:s}/zones/{1:s}/machineTypes/{2:s}'.format(
@@ -152,7 +151,12 @@ class SlaveManager(object):
     self._WaitForOperation(operation)
 
 
-if __name__ == '__main__':
+def Main():
+  """The main function.
+
+  Returns:
+    bool: True if successful or False otherwise.
+  """
   parser = argparse.ArgumentParser()
   parser.add_argument(
       '--attach_persistent_disk', action='append', required=False,
@@ -246,9 +250,18 @@ if __name__ == '__main__':
     status = error_dict['error'].get('code', None)
     error_message = error_dict['error'].get('message', '')
     if status == 409 and error_message.endswith('already exists'):
-      print error_message
+      print(error_message)
     if status == 400 and error_message.endswith(
         'The referenced image resource cannot be found.'):
-      print error_message
+      print(error_message)
     else:
       raise error
+
+  return True
+
+
+if __name__ == '__main__':
+  if not Main():
+    sys.exit(1)
+  else:
+    sys.exit(0)

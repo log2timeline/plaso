@@ -76,7 +76,7 @@ class DependencyDefinitionReader(object):
     try:
       return config_parser.get(section_name, value_name)
     except configparser.NoOptionError:
-      return
+      return None
 
   def Read(self, file_object):
     """Reads dependency definitions.
@@ -287,7 +287,7 @@ class DependencyHelper(object):
     try:
       module_object = list(map(__import__, [module_name]))[0]
     except ImportError:
-      return
+      return None
 
     # If the module name contains dots get the upper most module object.
     if '.' in module_name:

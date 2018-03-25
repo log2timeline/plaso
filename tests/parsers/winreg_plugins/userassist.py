@@ -69,7 +69,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    self.CheckTimestamp(event.timestamp, '2009-08-04 15:11:22.811067')
+    self.CheckTimestamp(event.timestamp, '2009-08-04 15:11:22.811068')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
@@ -111,7 +111,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    self.CheckTimestamp(event.timestamp, '2010-11-10 07:49:37.078067')
+    self.CheckTimestamp(event.timestamp, '2010-11-10 07:49:37.078068')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 

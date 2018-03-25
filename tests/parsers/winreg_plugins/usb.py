@@ -54,7 +54,7 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
     self._TestRegvalue(event, 'vendor', 'VID_0E0F')
     self._TestRegvalue(event, 'product', 'PID_0002')
 
-    self.CheckTimestamp(event.timestamp, '2012-04-07 10:31:37.625246')
+    self.CheckTimestamp(event.timestamp, '2012-04-07 10:31:37.625247')
 
     expected_message = (
         '[{0:s}] '

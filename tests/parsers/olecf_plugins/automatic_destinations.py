@@ -88,7 +88,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     self.assertEqual(
         event.data_type, 'windows:distributed_link_tracking:creation')
 
-    self.CheckTimestamp(event.timestamp, '2012-03-31 23:01:03.527741')
+    self.CheckTimestamp(event.timestamp, '2012-03-31 23:01:03.527742')
 
     expected_message = (
         '63eea867-7b85-11e1-8950-005056a50b40 '
@@ -122,7 +122,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     self.assertEqual(event.offset, 32)
     self.assertEqual(event.data_type, 'olecf:dest_list:entry')
 
-    self.CheckTimestamp(event.timestamp, '2016-01-17 13:08:08.247504')
+    self.CheckTimestamp(event.timestamp, '2016-01-17 13:08:08.247505')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 

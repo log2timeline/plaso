@@ -27,8 +27,8 @@ PYTHON_DEPENDENCIES = {
     'construct': ('__version__', '2.5.2', '2.5.3', True),
     'Crypto': ('__version__', '2.6', None, True),
     'dateutil': ('__version__', '1.5', None, True),
-    'dfdatetime': ('__version__', '20180110', None, True),
-    'dfvfs': ('__version__', '20171230', None, True),
+    'dfdatetime': ('__version__', '20180324', None, True),
+    'dfvfs': ('__version__', '20180326', None, True),
     'dfwinreg': ('__version__', '20170521', None, True),
     'dpkt': ('__version__', '1.8', None, True),
     'efilter': ('', '1.5', None, True),
@@ -223,7 +223,7 @@ def _ImportPythonModule(module_name):
   try:
     module_object = list(map(__import__, [module_name]))[0]
   except ImportError:
-    return None
+    return
 
   # If the module name contains dots get the upper most module object.
   if '.' in module_name:

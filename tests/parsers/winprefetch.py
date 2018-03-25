@@ -119,7 +119,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.data_type, 'windows:prefetch:execution')
     self.assertEqual(event.version, 23)
 
-    self.CheckTimestamp(event.timestamp, '2012-04-06 19:00:55.932955')
+    self.CheckTimestamp(event.timestamp, '2012-04-06 19:00:55.932956')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
 
@@ -244,7 +244,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     # The prefetch previous last run event.
     event = events[2]
 
-    self.CheckTimestamp(event.timestamp, '2013-10-04 15:28:09.010356')
+    self.CheckTimestamp(event.timestamp, '2013-10-04 15:28:09.010357')
 
     expected_timestamp_desc = 'Previous {0:s}'.format(
         definitions.TIME_DESCRIPTION_LAST_RUN)
@@ -359,7 +359,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.data_type, 'windows:volume:creation')
 
-    self.CheckTimestamp(event.timestamp, '2013-10-04 15:57:26.146547')
+    self.CheckTimestamp(event.timestamp, '2013-10-04 15:57:26.146548')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 

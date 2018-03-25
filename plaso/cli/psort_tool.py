@@ -106,7 +106,7 @@ class PsortTool(
     self.list_output_modules = False
     self.list_profilers = False
 
-  def _CheckStorageFile(self, storage_file_path):
+  def _CheckStorageFile(self, storage_file_path):  # pylint: disable=arguments-differ
     """Checks if the storage file path is valid.
 
     Args:

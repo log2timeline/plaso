@@ -52,7 +52,7 @@ class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
 
     self.assertEqual(event.value_name, 'ShutdownTime')
 
-    self.CheckTimestamp(event.timestamp, '2012-04-04 01:58:40.839249')
+    self.CheckTimestamp(event.timestamp, '2012-04-04 01:58:40.839250')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_SHUTDOWN)
 

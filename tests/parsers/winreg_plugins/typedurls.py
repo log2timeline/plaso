@@ -58,7 +58,7 @@ class MsieTypedURLsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    self.CheckTimestamp(event.timestamp, '2012-03-12 21:23:53.307749')
+    self.CheckTimestamp(event.timestamp, '2012-03-12 21:23:53.307750')
 
     regvalue_identifier = 'url1'
     expected_value = 'http://cnn.com/'

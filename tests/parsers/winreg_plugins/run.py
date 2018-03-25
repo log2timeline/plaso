@@ -83,8 +83,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    # Timestamp is: 2012-04-05T17:03:53.992061+00:00
-    self.assertEqual(event.timestamp, 1333645433992061)
+    self.CheckTimestamp(event.timestamp, '2012-04-05 17:03:53.992062')
 
     expected_message = (
         '[{0:s}] Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe '
@@ -119,7 +118,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    self.CheckTimestamp(event.timestamp, '2012-04-05 17:03:53.992061')
+    self.CheckTimestamp(event.timestamp, '2012-04-05 17:03:53.992062')
 
     expected_message = (
         '[{0:s}] mctadmin: C:\\Windows\\System32\\mctadmin.exe').format(
@@ -154,7 +153,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
 
-    self.CheckTimestamp(event.timestamp, '2011-09-16 20:57:09.067575')
+    self.CheckTimestamp(event.timestamp, '2011-09-16 20:57:09.067576')
 
     expected_message = (
         '[{0:s}] '

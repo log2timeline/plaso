@@ -6,7 +6,10 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.parsers import systemd_journal
+try:
+  from plaso.parsers import systemd_journal
+except ImportError:
+  systemd_journal = None
 
 from tests.parsers import test_lib
 

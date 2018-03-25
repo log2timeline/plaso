@@ -92,7 +92,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
 
     If the Trend Micro log comes from a version that provides a Unix timestamp,
     use that directly; it provides the advantages of UTC and of second
-    precision.  Otherwise fall back onto the local-timezone date and time.
+    precision. Otherwise fall back onto the local-timezone date and time.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -159,7 +159,8 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
     date_time = dfdatetime_time_elements.TimeElements(
         time_elements_tuple=time_elements_tuple)
     date_time.is_local_time = True
-    date_time.precision = dfdatetime_definitions.PRECISION_1_MINUTE
+    # TODO: add functionality to dfdatetime to control precision.
+    date_time._precision = dfdatetime_definitions.PRECISION_1_MINUTE  # pylint: disable=protected-access
 
     return date_time
 
