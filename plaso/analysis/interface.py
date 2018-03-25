@@ -22,7 +22,7 @@ import requests
 # access some methods inside urllib3 to disable warnings. We'll try to import it
 # here, to keep the imports together.
 try:
-  import urllib3  # pylint: disable=no-member
+  import urllib3
 except ImportError:
   urllib3 = None
 
@@ -497,16 +497,18 @@ class HTTPHashAnalyzer(HashAnalyzer):
           'can allow an attacker to read or modify SSL encrypted data. '
           'Please update. Further SSL warnings will be suppressed. See '
           'https://www.python.org/dev/peps/pep-0466/ for more information.')
+
       # Some distributions de-vendor urllib3 from requests, so we have to
       # check if this has occurred and disable warnings in the correct
       # package.
-      if (hasattr(requests, 'packages') and
-          hasattr(requests.packages, 'urllib3') and
-          hasattr(requests.packages.urllib3, 'disable_warnings')):
-        requests.packages.urllib3.disable_warnings()
-      else:
-        if urllib3 and hasattr(urllib3, 'disable_warnings'):
-          urllib3.disable_warnings()
+      urllib3_module = urllib3
+      if not urllib3_module:
+        if hasattr(requests, 'packages'):
+          urllib3_module = getattr(requests.packages, 'urllib3')
+
+      if urllib3_module and hasattr(urllib3_module, 'disable_warnings'):
+        urllib3_module.disable_warnings()
+
     self._checked_for_old_python_version = True
 
   @abc.abstractmethod

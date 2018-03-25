@@ -8,8 +8,8 @@ import json
 import sys
 import time
 
-from googleapiclient import discovery
-from googleapiclient import errors as apierrors
+from googleapiclient import discovery  # pylint: disable=import-error
+from googleapiclient import errors as apierrors  # pylint: disable=import-error
 
 #pylint: disable=no-member
 
