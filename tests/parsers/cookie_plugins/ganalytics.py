@@ -8,7 +8,7 @@ import unittest
 
 from plaso.formatters import ganalytics as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.parsers.cookie_plugins import ganalytics
+from plaso.parsers.cookie_plugins import ganalytics  # pylint: disable=unused-import
 from plaso.parsers.sqlite_plugins import chrome_cookies
 from plaso.parsers.sqlite_plugins import firefox_cookies
 
