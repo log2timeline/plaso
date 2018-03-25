@@ -22,7 +22,7 @@ import requests
 # access some methods inside urllib3 to disable warnings. We'll try to import it
 # here, to keep the imports together.
 try:
-  import urllib3
+  import urllib3  # pylint: disable=no-member
 except ImportError:
   urllib3 = None
 

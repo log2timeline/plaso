@@ -12,7 +12,11 @@ from plaso.lib import errors
 
 
 def Main():
-  """The main function."""
+  """The main function.
+
+  Returns:
+    bool: True if successful or False otherwise.
+  """
   tool = image_export_tool.ImageExportTool()
 
   if not tool.ParseArguments():
