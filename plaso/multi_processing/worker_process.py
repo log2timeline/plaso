@@ -296,17 +296,15 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       return
 
     if self._processing_configuration.profiling.HaveProfileMemoryGuppy():
-      identifier = '{0:s}-guppy'.format(self._name)
       self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
-          identifier, path=self._processing_configuration.profiling.directory,
+          self._name, path=self._processing_configuration.profiling.directory,
           profiling_sample_rate=(
               self._processing_configuration.profiling.sample_rate))
       self._guppy_memory_profiler.Start()
 
     if self._processing_configuration.profiling.HaveProfileMemory():
-      identifier = '{0:s}-memory'.format(self._name)
       self._memory_profiler = profiler.MemoryProfiler(
-          identifier, path=self._processing_configuration.profiling.directory)
+          self._name, path=self._processing_configuration.profiling.directory)
       self._memory_profiler.Start()
 
     if self._processing_configuration.profiling.HaveProfileParsers():

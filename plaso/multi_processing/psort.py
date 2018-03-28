@@ -635,17 +635,15 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       return
 
     if self._profiling_configuration.HaveProfileMemoryGuppy():
-      identifier = '{0:s}-guppy'.format(self._name)
       self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
-          identifier, path=self._profiling_configuration.directory,
+          self._name, path=self._profiling_configuration.directory,
           profiling_sample_rate=(
               self._profiling_configuration.sample_rate))
       self._guppy_memory_profiler.Start()
 
     if self._profiling_configuration.HaveProfileMemory():
-      identifier = '{0:s}-memory'.format(self._name)
       self._memory_profiler = profiler.MemoryProfiler(
-          identifier, path=self._profiling_configuration.directory)
+          self._name, path=self._profiling_configuration.directory)
 
     if self._profiling_configuration.HaveProfileProcessing():
       identifier = '{0:s}-processing'.format(self._name)
