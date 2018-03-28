@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file imports python modules that register parsers."""
+"""This file imports Python modules that register parsers."""
 
 from plaso.parsers import asl
 from plaso.parsers import amcache
