@@ -47,6 +47,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._extraction_worker = None
     self._guppy_memory_profiler = None
     self._knowledge_base = knowledge_base
+    self._memory_profiler = None
     self._number_of_consumed_events = 0
     self._number_of_consumed_sources = 0
     self._parser_mediator = None
@@ -99,6 +100,14 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
     task_identifier = getattr(self._task, 'identifier', '')
 
+    if self._process_information:
+      used_memory = self._process_information.GetUsedMemory() or 0
+    else:
+      used_memory = 0
+
+    if self._memory_profiler:
+      self._memory_profiler.Sample(used_memory)
+
     status = {
         'display_name': self._current_display_name,
         'identifier': self._name,
@@ -112,7 +121,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
         'number_of_produced_sources': number_of_produced_sources,
         'last_activity_timestamp': last_activity_timestamp,
         'processing_status': processing_status,
-        'task_identifier': task_identifier}
+        'task_identifier': task_identifier,
+        'used_memory': used_memory}
 
     return status
 
@@ -286,12 +296,18 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       return
 
     if self._processing_configuration.profiling.HaveProfileMemoryGuppy():
-      identifier = '{0:s}-memory'.format(self._name)
+      identifier = '{0:s}-guppy'.format(self._name)
       self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
           identifier, path=self._processing_configuration.profiling.directory,
           profiling_sample_rate=(
               self._processing_configuration.profiling.sample_rate))
       self._guppy_memory_profiler.Start()
+
+    if self._processing_configuration.profiling.HaveProfileMemory():
+      identifier = '{0:s}-memory'.format(self._name)
+      self._memory_profiler = profiler.MemoryProfiler(
+          identifier, path=self._processing_configuration.profiling.directory)
+      self._memory_profiler.Start()
 
     if self._processing_configuration.profiling.HaveProfileParsers():
       identifier = '{0:s}-parsers'.format(self._name)
@@ -319,6 +335,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       self._guppy_memory_profiler.Sample()
       self._guppy_memory_profiler.Stop()
       self._guppy_memory_profiler = None
+
+    if self._memory_profiler:
+      self._memory_profiler.Stop()
+      self._memory_profiler = None
 
     if self._parsers_profiler:
       self._extraction_worker.SetParsersProfiler(None)

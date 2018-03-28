@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-import abc
 import gzip
 import os
 import time
@@ -45,7 +44,7 @@ class CPUTimeProfiler(object):
   _FILENAME_PREFIX = 'cputime'
 
   def __init__(self, identifier, path=None):
-    """Initializes the CPU time profiler object.
+    """Initializes the CPU time profiler.
 
     Args:
       identifier (str): identifier of the profiling session used to create
@@ -104,68 +103,23 @@ class CPUTimeProfiler(object):
     self._sample_file = None
 
 
-class BaseMemoryProfiler(object):
-  """The memory profiler interface."""
+class GuppyMemoryProfiler(object):
+  """The guppy-based memory profiler."""
 
   def __init__(self, identifier, path=None, profiling_sample_rate=1000):
-    """Initializes a memory profiler object.
+    """Initializes a memory profiler.
 
     Args:
       identifier (str): unique name of the profile.
+      path (Optional[str]): path to write the sample file.
       profiling_sample_rate (Optional[int]): the profiling sample rate.
           Contains the number of event sources processed.
-      path (Optional[str]): path to write the sample file.
     """
-    super(BaseMemoryProfiler, self).__init__()
+    super(GuppyMemoryProfiler, self).__init__()
     self._identifier = identifier
     self._path = path
     self._profiling_sample = 0
     self._profiling_sample_rate = profiling_sample_rate
-
-  @abc.abstractmethod
-  def _Sample(self):
-    """Takes a sample for profiling."""
-
-  @classmethod
-  def IsSupported(cls):
-    """Determines if the profiler is supported.
-
-    Returns:
-      bool: True if the profiler is supported.
-    """
-    return False
-
-  def Sample(self):
-    """Takes a sample for profiling."""
-    self._profiling_sample += 1
-
-    if self._profiling_sample >= self._profiling_sample_rate:
-      self._Sample()
-      self._profiling_sample = 0
-
-  @abc.abstractmethod
-  def Start(self):
-    """Starts the profiler."""
-
-  @abc.abstractmethod
-  def Stop(self):
-    """Stops the profiler."""
-
-
-class GuppyMemoryProfiler(BaseMemoryProfiler):
-  """The guppy-based memory profiler."""
-
-  def __init__(self, identifier, path=None, profiling_sample_rate=1000):
-    """Initializes a memory profiler object.
-
-    Args:
-      identifier (str): unique name of the profile.
-      path (Optional[str]): path to write the sample file.
-      profiling_sample_rate (Optional[int]): the profiling sample rate.
-          Contains the number of event sources processed.
-    """
-    super(GuppyMemoryProfiler, self).__init__(
-        identifier, path=path, profiling_sample_rate=profiling_sample_rate)
     self._heapy = None
     self._sample_file = '{0!s}.hpy'.format(identifier)
 
@@ -174,14 +128,6 @@ class GuppyMemoryProfiler(BaseMemoryProfiler):
 
     if hpy:
       self._heapy = hpy()
-
-  def _Sample(self):
-    """Takes a sample for profiling."""
-    if not self._heapy:
-      return
-
-    heap = self._heapy.heap()
-    heap.dump(self._sample_file)
 
   @classmethod
   def IsSupported(cls):
@@ -192,21 +138,81 @@ class GuppyMemoryProfiler(BaseMemoryProfiler):
     """
     return hpy is not None
 
+  def Sample(self):
+    """Takes a sample for profiling."""
+    self._profiling_sample += 1
+
+    if self._profiling_sample >= self._profiling_sample_rate:
+      if self._heapy:
+        heap = self._heapy.heap()
+        heap.dump(self._sample_file)
+
+      self._profiling_sample = 0
+
   def Start(self):
     """Starts the profiler."""
-    if not self._heapy:
-      return
+    if self._heapy:
+      self._heapy.setrelheap()
 
-    self._heapy.setrelheap()
-
-    try:
-      os.remove(self._sample_file)
-    except OSError:
-      pass
+      try:
+        os.remove(self._sample_file)
+      except OSError:
+        pass
 
   def Stop(self):
     """Stops the profiler."""
     return
+
+
+class MemoryProfiler(object):
+  """The memory profiler."""
+
+  def __init__(self, identifier, path=None):
+    """Initializes a memory profiler.
+
+    Args:
+      identifier (str): unique name of the profile.
+          Contains the number of event sources processed.
+      path (Optional[str]): path to write the sample file.
+    """
+    super(MemoryProfiler, self).__init__()
+    self._identifier = identifier
+    self._path = path
+    self._sample_file = None
+
+  @classmethod
+  def IsSupported(cls):
+    """Determines if the profiler is supported.
+
+    Returns:
+      bool: True if the profiler is supported.
+    """
+    return True
+
+  def Sample(self, used_memory):
+    """Takes a sample for profiling.
+
+    Args:
+      used_memory (int): amount of used memory in bytes.
+    """
+    cpu_time = time.clock()
+    system_time = time.time()
+    sample = '{0:f}\t{1:f}\t{2:d}\n'.format(cpu_time, system_time, used_memory)
+    self._sample_file.write(sample)
+
+  def Start(self):
+    """Starts the profiler."""
+    filename = 'memory-{0:s}.csv.gz'.format(self._identifier)
+    if self._path:
+      filename = os.path.join(self._path, filename)
+
+    self._sample_file = gzip.open(filename, 'wb')
+    self._sample_file.write('CPU time\tSystem time\tUsed memory\n')
+
+  def Stop(self):
+    """Stops the profiler."""
+    self._sample_file.close()
+    self._sample_file = None
 
 
 class ParsersProfiler(CPUTimeProfiler):

@@ -11,6 +11,7 @@ import random
 import signal
 import time
 
+from plaso.engine import process_info
 from plaso.lib import loggers
 from plaso.multi_processing import plaso_xmlrpc
 
@@ -42,6 +43,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     # TODO: check if this can be replaced by self.pid or does this only apply
     # to the parent process?
     self._pid = None
+    self._process_information = None
     self._quiet_mode = False
     self._rpc_server = None
     self._status_is_running = False
@@ -192,6 +194,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
           signal.SIGSEGV, self._SigSegvHandler)
 
     self._pid = os.getpid()
+    self._process_information = process_info.ProcessInfo(self._pid)
 
     # We need to set the is running status explicitly to True in case
     # the process completes before the engine is able to determine

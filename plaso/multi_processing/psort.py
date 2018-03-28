@@ -195,6 +195,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._knowledge_base = None
     self._merge_task = None
     self._guppy_memory_profiler = None
+    self._memory_profiler = None
     self._processing_profiler = None
     self._serializers_profiler = None
     self._number_of_consumed_errors = 0
@@ -634,12 +635,17 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       return
 
     if self._profiling_configuration.HaveProfileMemoryGuppy():
-      identifier = '{0:s}-memory'.format(self._name)
+      identifier = '{0:s}-guppy'.format(self._name)
       self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
           identifier, path=self._profiling_configuration.directory,
           profiling_sample_rate=(
               self._profiling_configuration.sample_rate))
       self._guppy_memory_profiler.Start()
+
+    if self._profiling_configuration.HaveProfileMemory():
+      identifier = '{0:s}-memory'.format(self._name)
+      self._memory_profiler = profiler.MemoryProfiler(
+          identifier, path=self._profiling_configuration.directory)
 
     if self._profiling_configuration.HaveProfileProcessing():
       identifier = '{0:s}-processing'.format(self._name)
@@ -728,6 +734,10 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       self._guppy_memory_profiler.Sample()
       self._guppy_memory_profiler.Stop()
       self._guppy_memory_profiler = None
+
+    if self._memory_profiler:
+      self._memory_profiler.Stop()
+      self._memory_profiler = None
 
     if self._processing_profiler:
       self._processing_profiler.Stop()

@@ -21,6 +21,7 @@ class ProfilingArgumentsHelper(interface.ArgumentsHelper):
   DEFAULT_PROFILING_SAMPLE_RATE = 1000
 
   PROFILERS_INFORMATION = {
+      'memory': 'Profile memory usage over time',
       'parsers': 'Profile CPU time per parser',
       'processing': 'Profile CPU time of processing phases',
       'serializers': 'Profile CPU time of serialization'}
