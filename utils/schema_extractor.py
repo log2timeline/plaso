@@ -95,8 +95,14 @@ class SQLiteSchemaExtractor(object):
     return '\n'.join(lines)
 
 
-if __name__ == '__main__':
-  argument_parser = argparse.ArgumentParser()
+def Main():
+  """The main program function.
+
+  Returns:
+    bool: True if successful or False if not.
+  """
+  argument_parser = argparse.ArgumentParser(description=(
+      'Extract the database schema from a SQLite database file.'))
 
   if paperclip:
     argument_parser.add_argument(
@@ -117,11 +123,11 @@ if __name__ == '__main__':
 
   if not os.path.exists(options.database_path):
     print('No such database file: {0:s}'.format(options.database_path))
-    sys.exit(1)
+    return False
 
   if options.wal_path and not os.path.exists(options.wal_path):
     print('No such WAL file: {0:s}'.format(options.wal_path))
-    sys.exit(1)
+    return False
 
   extractor = SQLiteSchemaExtractor()
 
@@ -135,4 +141,11 @@ if __name__ == '__main__':
   else:
     print(database_schema)
 
-  sys.exit(0)
+  return True
+
+
+if __name__ == '__main__':
+  if not Main():
+    sys.exit(1)
+  else:
+    sys.exit(0)
