@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file imports python modules that register output modules."""
+"""This file imports Python modules that register output modules."""
 
 from plaso.output import dynamic
 from plaso.output import elastic
@@ -15,6 +15,6 @@ from plaso.output import timesketch_out
 from plaso.output import tln
 from plaso.output import xlsx
 
-# These python modules do not register output modules, but are super classes
+# These Python modules do not register output modules, but are super classes
 # used by output modules in other python modules.
 # from plaso.output import shared_4n6time

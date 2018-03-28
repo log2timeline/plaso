@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file imports python modules that register CLI helpers."""
+"""This file imports Python modules that register CLI helpers."""
 
 from plaso.cli.helpers import analysis_plugins
 from plaso.cli.helpers import artifact_definitions

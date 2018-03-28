@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file imports python modules that register filters."""
+"""This file imports Python modules that register filters."""
 
 from plaso.filters import dynamic_filter
 from plaso.filters import event_filter
