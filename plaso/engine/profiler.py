@@ -196,8 +196,7 @@ class MemoryProfiler(object):
       used_memory (int): amount of used memory in bytes.
     """
     cpu_time = time.clock()
-    system_time = time.time()
-    sample = '{0:f}\t{1:f}\t{2:d}\n'.format(cpu_time, system_time, used_memory)
+    sample = '{0:f}\t{1:d}\n'.format(cpu_time, used_memory)
     self._sample_file.write(sample)
 
   def Start(self):
@@ -207,7 +206,7 @@ class MemoryProfiler(object):
       filename = os.path.join(self._path, filename)
 
     self._sample_file = gzip.open(filename, 'wb')
-    self._sample_file.write('CPU time\tSystem time\tUsed memory\n')
+    self._sample_file.write('CPU time\tUsed memory\n')
 
   def Stop(self):
     """Stops the profiler."""
