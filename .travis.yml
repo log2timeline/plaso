@@ -44,6 +44,6 @@ matrix:
 install:
 - ./config/travis/install.sh
 script:
-- travis_wait 30 ./config/travis/runtests.sh
+- ./config/travis/run_with_timeout.sh 30 ./config/travis/runtests.sh
 after_success:
 - if test ${TARGET} = "linux-python27"; then curl -o codecov.sh -s https://codecov.io/bash && /bin/bash ./codecov.sh; fi
