@@ -218,7 +218,7 @@ class EventExtractionWorker(object):
 
     self.processing_status = definitions.PROCESSING_STATUS_RUNNING
 
-  def _CanSkipDataStream(self, data_stream, file_entry):
+  def _CanSkipDataStream(self, file_entry, data_stream):
     """Determines if analysis and extraction of a data stream can be skipped.
 
     This is used to prevent Plaso trying to analyze or extract from a pipe
