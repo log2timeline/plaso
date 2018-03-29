@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*_ coding: utf-8 -*-
 """Tests for the SCCM Logs Parser."""
 
