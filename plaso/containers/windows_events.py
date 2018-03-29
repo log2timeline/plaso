@@ -156,6 +156,6 @@ class WindowsVolumeEventData(events.EventData):
     """Initializes event data."""
     super(WindowsVolumeEventData, self).__init__(data_type=self.DATA_TYPE)
     self.device_path = None
-    # TODO: replace origin my something machine readable.
+    # TODO: replace origin with something machine readable.
     self.origin = None
     self.serial_number = None

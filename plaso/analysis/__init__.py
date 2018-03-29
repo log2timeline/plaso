@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains an import statement for each analysis plugin."""
+"""This file imports Python modules that register analysis plugins."""
 
 from plaso.analysis import browser_search
 from plaso.analysis import chrome_extension

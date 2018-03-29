@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 from plaso.containers import interface
+from plaso.containers import manager
 
 
 class AnalyzerResult(interface.AttributeContainer):
@@ -27,3 +28,6 @@ class AnalyzerResult(interface.AttributeContainer):
     self.analyzer_name = None
     self.attribute_name = None
     self.attribute_value = None
+
+
+manager.AttributeContainersManager.RegisterAttributeContainer(AnalyzerResult)
