@@ -21,14 +21,7 @@ class ProcessInfo(object):
     if not psutil.pid_exists(pid):
       raise IOError('Process with PID: {0:d} does not exist'.format(pid))
 
-    self._memory_info_function = None
     self._process = psutil.Process(pid)
-
-    version = getattr(psutil, 'version_info', (0, 0, 0))
-    if version < (2, 0, 0):
-      self._memory_info_function = self._process.get_ext_memory_info  # pylint: disable=no-member
-    else:
-      self._memory_info_function = self._process.memory_info_ex
 
   def GetUsedMemory(self):
     """Retrieves the amount of memory used by the process.
@@ -38,7 +31,7 @@ class ProcessInfo(object):
           if not available.
     """
     try:
-      memory_info = self._memory_info_function()
+      memory_info = self._process.memory_info()
     except psutil.NoSuchProcess:
       return None
 
