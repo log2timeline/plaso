@@ -1239,7 +1239,7 @@ class StorageFileWriter(StorageWriter):
 
     completed_task_filenames = os.listdir(self._merge_task_storage_path)
     completed_task_identifiers = [
-      path.replace('.plaso', '') for path in completed_task_filenames]
+        path.replace('.plaso', '') for path in completed_task_filenames]
 
     for identifier in completed_task_identifiers:
       task = tasks_by_identifier.get(identifier, None)
@@ -1247,7 +1247,7 @@ class StorageFileWriter(StorageWriter):
         continue
 
       storage_file_path = os.path.join(
-        self._merge_task_storage_path, '{0:s}.plaso'.format(task.identifier))
+          self._merge_task_storage_path, '{0:s}.plaso'.format(task.identifier))
       task.storage_file_size = os.path.getsize(storage_file_path)
       tasks_pending_merge.append(task)
 
