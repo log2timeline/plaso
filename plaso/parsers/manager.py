@@ -13,7 +13,7 @@ from plaso.parsers import presets
 
 
 class ParsersManager(object):
-  """Class that implements the parsers and plugins manager."""
+  """The parsers and plugins manager."""
 
   _parser_classes = {}
 
@@ -31,9 +31,10 @@ class ParsersManager(object):
           represents all parsers and plugins.
 
     Returns:
-      A tuple containing dictionaries of the names of the included and
-      excluded parsers and plugins. Where the keys contain the names of
-      the parser and the corresponding value the names of the plugins.
+      tuple: contains:
+
+        * dict[str, BaseParser]: included parsers and plugins by name.
+        * dict[str, BaseParser]: excluded parsers and plugins by name.
     """
     if not parser_filter_expression:
       return {}, {}
@@ -104,8 +105,8 @@ class ParsersManager(object):
     to have it in the exclusion set.
 
     Args:
-      includes: a dictionary of the names of the parsers and plugins to include.
-      excludes: a dictionary of the names of the parsers and plugins to exclude.
+      includes (dict[str, BaseParser]): included parsers and plugins by name.
+      excludes (dict[str, BaseParser]): excluded parsers and plugins by name.
     """
     if not includes or not excludes:
       return
@@ -155,7 +156,7 @@ class ParsersManager(object):
     The parser classes are identified based on their lower case name.
 
     Args:
-      parser_class: the class object of the parser.
+      parser_class (type): parser class (subclass of BaseParser).
 
     Raises:
       KeyError: if parser class is not set for the corresponding name.
@@ -300,8 +301,10 @@ class ParsersManager(object):
           where None represents all parsers and plugins.
 
     Yields:
-      A tuple that contains the uniquely identifying name of the parser
-      and the parser class (subclass of BaseParser).
+      tuple: contains:
+
+      * str: name of the parser:
+      * type: parser class (subclass of BaseParser).
     """
     includes, excludes = cls._GetParserFilters(parser_filter_expression)
 
@@ -320,7 +323,7 @@ class ParsersManager(object):
     """Retrieves the parsers information.
 
     Returns:
-      A list of tuples of parser names and descriptions.
+      list[tuple[str, str]]: parser names and descriptions.
     """
     parsers_information = []
     for _, parser_class in cls.GetParsers():
@@ -434,9 +437,11 @@ class ParsersManager(object):
           where None represents all parsers and plugins.
 
     Returns:
-      A tuple of a format specification store (instance of
-      FormatSpecificationStore) and the list of remaining parser names
-      that do not have a format specification.
+      tuple: contains:
+
+      * FormatSpecificationStore: format specification store.
+      * list[str[: remaining parser names that do not have a format
+          specification.
     """
     specification_store = specification.FormatSpecificationStore()
     remainder_list = []
@@ -459,7 +464,7 @@ class ParsersManager(object):
     The parser classes are identified based on their lower case name.
 
     Args:
-      parser_class: the class object of the parser.
+      parser_class (type): parser class (subclass of BaseParser).
 
     Raises:
       KeyError: if parser class is already set for the corresponding name.
@@ -478,7 +483,7 @@ class ParsersManager(object):
     The parser classes are identified based on their lower case name.
 
     Args:
-      parser_classes: a list of class objects of the parsers.
+      parser_classes (list[type]): parsers classes (subclasses of BaseParser).
 
     Raises:
       KeyError: if parser class is already set for the corresponding name.
