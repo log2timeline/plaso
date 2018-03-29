@@ -113,7 +113,6 @@ class GuppyMemoryProfiler(object):
       identifier (str): unique name of the profile.
       path (Optional[str]): path to write the sample file.
       profiling_sample_rate (Optional[int]): the profiling sample rate.
-          Contains the number of event sources processed.
     """
     super(GuppyMemoryProfiler, self).__init__()
     self._identifier = identifier
@@ -172,7 +171,6 @@ class MemoryProfiler(object):
 
     Args:
       identifier (str): unique name of the profile.
-          Contains the number of event sources processed.
       path (Optional[str]): path to write the sample file.
     """
     super(MemoryProfiler, self).__init__()
