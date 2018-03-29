@@ -130,6 +130,9 @@ class EventExtractor(object):
     self._parsers = parsers_manager.ParsersManager.GetParserObjects(
         parser_filter_expression=parser_filter_expression)
 
+    active_parser_names = ', '.join(sorted(self._parsers.keys()))
+    logging.debug('Active parsers: {0:s}'.format(active_parser_names))
+
     self._filestat_parser = self._parsers.get('filestat', None)
     if 'filestat' in self._parsers:
       del self._parsers['filestat']
