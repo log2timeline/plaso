@@ -48,7 +48,7 @@ class EventFiltersArgumentsHelper(interface.ArgumentsHelper):
             'defines the number of minutes the slice size should be. In the '
             'case of the --slicer it determines the number of events before '
             'and after a filter match has been made that will be included in '
-            'the result set. The default value is 5]. See --slice or --slicer '
+            'the result set. The default value is 5. See --slice or --slicer '
             'for more details about this option.'))
 
     argument_group.add_argument(
