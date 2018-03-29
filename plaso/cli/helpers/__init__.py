@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""CLI argument helpers."""
+"""This file imports Python modules that register CLI helpers."""
 
 from plaso.cli.helpers import analysis_plugins
 from plaso.cli.helpers import artifact_definitions
@@ -16,6 +16,7 @@ from plaso.cli.helpers import mysql_4n6time_output
 from plaso.cli.helpers import nsrlsvr_analysis
 from plaso.cli.helpers import output_modules
 from plaso.cli.helpers import parsers
+from plaso.cli.helpers import profiling
 from plaso.cli.helpers import sessionize_analysis
 from plaso.cli.helpers import sqlite_4n6time_output
 from plaso.cli.helpers import status_view
@@ -31,3 +32,9 @@ from plaso.cli.helpers import windows_services_analysis
 from plaso.cli.helpers import xlsx_output
 from plaso.cli.helpers import yara_rules
 from plaso.cli.helpers import workers
+
+# These modules do not register CLI helpers, but contain super classes used by
+# CLI helpers in other modules.
+# from plaso.cli.helpers import database_config
+# from plaso.cli.helpers import server_config
+# from plaso.cli.helpers import shared_4n6time_output

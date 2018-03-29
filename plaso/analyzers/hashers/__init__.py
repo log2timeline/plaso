@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains an import statement for each hasher."""
+"""This file imports Python modules that register hashers."""
 
 from plaso.analyzers.hashers import md5
 from plaso.analyzers.hashers import sha1
