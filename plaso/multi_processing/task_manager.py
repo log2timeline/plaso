@@ -410,6 +410,19 @@ class TaskManager(object):
     else:
       logging.debug('Task {0:s} is pending merge'.format(task.identifier))
 
+  def UpdateTasksAsPendingMerge(self, tasks):
+    """Updates the task manager to reflect that tasks are ready to be merged.
+
+    Args:
+      tasks (list[Task]0): list of tasks.
+
+    Raises:
+      KeyError: if a task was not processing or abandoned.
+    """
+    for task in tasks:
+      self.UpdateTaskAsPendingMerge(task)
+
+
   def UpdateTaskAsProcessingByIdentifier(self, task_identifier):
     """Updates the task manager to reflect the task is processing.
 

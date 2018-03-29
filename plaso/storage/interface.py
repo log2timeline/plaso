@@ -1210,14 +1210,17 @@ class StorageFileWriter(StorageWriter):
     return True
 
   def CheckTasksReadyForMerge(self, tasks):
-    """Checks if a task is ready for merging with this session storage.
+    """Checks which tasks are ready to be merged.
+
+    This method also updates the size of the storage file for tasks that are
+    ready to be merged.
 
     Args:
       tasks (list[Task]): tasks to check for merging.
 
     Returns:
       list[Task]: list of tasks that are ready for merge, with the
-          storage file size set..
+          storage file size set.
 
     Raises:
       IOError: if the storage type is not supported or
@@ -1234,14 +1237,15 @@ class StorageFileWriter(StorageWriter):
     for task in tasks:
       tasks_by_identifier[task.identifier] = task
 
-    storage_filenames = os.listdir(self._merge_task_storage_path)
-    storage_identifiers = [path.replace('.plaso', '')
-                           for path in storage_filenames]
+    completed_task_filenames = os.listdir(self._merge_task_storage_path)
+    completed_task_identifiers = [
+      path.replace('.plaso', '') for path in completed_task_filenames]
 
-    for identifier in storage_identifiers:
+    for identifier in completed_task_identifiers:
       task = tasks_by_identifier.get(identifier, None)
       if not task:
         continue
+
       storage_file_path = os.path.join(
         self._merge_task_storage_path, '{0:s}.plaso'.format(task.identifier))
       task.storage_file_size = os.path.getsize(storage_file_path)

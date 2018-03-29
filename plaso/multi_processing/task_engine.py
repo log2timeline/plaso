@@ -199,13 +199,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if self._processing_profiler:
       self._processing_profiler.StartTiming('merge_check')
 
-    for task in self._task_manager.GetTasksCheckMerge():
-      if self._abort:
-        break
-
-      merge_ready = storage_writer.CheckTaskReadyForMerge(task)
-      if merge_ready:
-        self._task_manager.UpdateTaskAsPendingMerge(task)
+    pending_tasks = self._task_manager.GetTasksCheckMerge()
+    mergeable_tasks = storage_writer.CheckTasksReadyForMerge(pending_tasks)
+    self._task_manager.UpdateTasksAsPendingMerge(mergeable_tasks)
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming('merge_check')
