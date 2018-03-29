@@ -444,6 +444,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._status = definitions.PROCESSING_STATUS_EXPORTING
 
     time_slice_buffer = None
+    time_slice_range = None
+
     if time_slice:
       if time_slice.event_timestamp is not None:
         time_slice_range = storage_time_range.TimeRange(
