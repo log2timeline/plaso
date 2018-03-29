@@ -444,9 +444,11 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._status = definitions.PROCESSING_STATUS_EXPORTING
 
     time_slice_buffer = None
+    time_slice_range = None
+
     if time_slice:
       if time_slice.event_timestamp is not None:
-        time_slice = storage_time_range.TimeRange(
+        time_slice_range = storage_time_range.TimeRange(
             time_slice.start_timestamp, time_slice.end_timestamp)
 
       if use_time_slicer:
@@ -458,10 +460,13 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     number_of_filtered_events = 0
     number_of_events_from_time_slice = 0
 
-    for event in storage_reader.GetSortedEvents(time_range=time_slice):
+    for event in storage_reader.GetSortedEvents(time_range=time_slice_range):
       event_identifier = event.GetIdentifier()
       event.tag = self._event_tag_index.GetEventTagByIdentifier(
           storage_reader, event_identifier)
+
+      if time_slice_range and event.timestamp != time_slice.event_timestamp:
+        number_of_events_from_time_slice += 1
 
       if event_filter:
         filter_match = event_filter.Match(event)
