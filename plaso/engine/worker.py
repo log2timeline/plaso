@@ -231,10 +231,10 @@ class EventExtractionWorker(object):
     Returns:
       bool: True if the data stream can be skipped.
     """
-    if file_entry.isFile():
+    if file_entry.IsFile():
       return False
 
-    if data_stream.isDefault():
+    if data_stream.IsDefault():
       return True
 
 
