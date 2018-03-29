@@ -644,6 +644,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     if self._profiling_configuration.HaveProfileMemory():
       self._memory_profiler = profiler.MemoryProfiler(
           self._name, path=self._profiling_configuration.directory)
+      self._memory_profiler.Start()
 
     if self._profiling_configuration.HaveProfileProcessing():
       identifier = '{0:s}-processing'.format(self._name)
