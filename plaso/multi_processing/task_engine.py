@@ -21,6 +21,7 @@ from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.multi_processing import engine
+from plaso.multi_processing import logger
 from plaso.multi_processing import multi_process_queue
 from plaso.multi_processing import task_manager
 from plaso.multi_processing import worker_process
@@ -224,7 +225,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._storage_merge_reader = storage_writer.StartMergeTaskStorage(
               task)
         except IOError as exception:
-          logging.error((
+          logger.error((
               'Unable to merge results of task: {0:s} '
               'with error: {1!s}').format(task.identifier, exception))
           self._storage_merge_reader = None
@@ -245,7 +246,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         try:
           self._task_manager.CompleteTask(self._merge_task)
         except KeyError as exception:
-          logging.error(
+          logger.error(
               'Unable to complete task {0:s}, with Error {1:s}'.format(
                   self._merge_task.identifier, exception))
 
@@ -369,7 +370,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     Args:
       storage_writer (StorageWriter): storage writer for a session storage.
     """
-    logging.debug('Task scheduler started')
+    logger.debug('Task scheduler started')
 
     self._status = definitions.PROCESSING_STATUS_RUNNING
 
@@ -407,7 +408,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
         if task:
           if self._ScheduleTask(task):
-            logging.debug(
+            logger.debug(
                 'Scheduled task {0:s} for path specification {1:s}'.format(
                     task.identifier, task.path_spec.comparable))
             task = None
@@ -437,9 +438,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._status = definitions.PROCESSING_STATUS_IDLE
 
     if self._abort:
-      logging.debug('Task scheduler aborted')
+      logger.debug('Task scheduler aborted')
     else:
-      logging.debug('Task scheduler stopped')
+      logger.debug('Task scheduler stopped')
 
   def _StartWorkerProcess(self, process_name, storage_writer):
     """Creates, starts, monitors and registers a worker process.
@@ -454,7 +455,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           process could not be started.
     """
     process_name = 'Worker_{0:02d}'.format(self._last_worker_number)
-    logging.debug('Starting worker process {0:s}'.format(process_name))
+    logger.debug('Starting worker process {0:s}'.format(process_name))
 
     if self._use_zeromq:
       queue_name = '{0:s} task queue'.format(process_name)
@@ -488,7 +489,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     except (IOError, KeyError) as exception:
       pid = process.pid
-      logging.error((
+      logger.error((
           'Unable to monitor replacement worker process: {0:s} '
           '(PID: {1:d}) with error: {2!s}').format(
               process_name, pid, exception))
@@ -529,7 +530,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     Args:
       abort (bool): True to indicated the stop is issued on abort.
     """
-    logging.debug('Stopping extraction processes.')
+    logger.debug('Stopping extraction processes.')
     self._StopMonitoringProcesses()
 
     # Note that multiprocessing.Queue is very sensitive regarding
@@ -540,7 +541,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       # Signal all the processes to abort.
       self._AbortTerminate()
 
-    logging.debug('Emptying task queue.')
+    logger.debug('Emptying task queue.')
     self._task_queue.Empty()
 
     # Wake the processes to make sure that they are not blocking
@@ -549,7 +550,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       try:
         self._task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
       except errors.QueueFull:
-        logging.warning('Task queue full, unable to push abort message.')
+        logger.warning('Task queue full, unable to push abort message.')
 
     # Try waiting for the processes to exit normally.
     self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
@@ -640,7 +641,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
         current_timestamp = time.time()
         if current_timestamp > last_activity_timestamp:
-          logging.error((
+          logger.error((
               'Process {0:s} (PID: {1:d}) has not reported activity within '
               'the timeout period.').format(process.name, pid))
           processing_status = definitions.PROCESSING_STATUS_NOT_RESPONDING
@@ -661,7 +662,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._task_manager.UpdateTaskAsProcessingByIdentifier(task_identifier)
       return
     except KeyError:
-      logging.debug(
+      logger.debug(
           'Worker {0:s} is processing unknown task: {1:s}.'.format(
               process.name, task_identifier))
 
@@ -711,7 +712,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           cpu_count = self._WORKER_PROCESSES_MAXIMUM
 
       except NotImplementedError:
-        logging.error((
+        logger.error((
             'Unable to determine number of CPUs defaulting to {0:d} worker '
             'processes.').format(self._WORKER_PROCESSES_MINIMUM))
         cpu_count = self._WORKER_PROCESSES_MINIMUM
@@ -769,7 +770,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       # First argument to _StartWorkerProcess is not used.
       extraction_process = self._StartWorkerProcess('', storage_writer)
       if not extraction_process:
-        logging.error('Unable to create worker process: {0:d}'.format(
+        logger.error('Unable to create worker process: {0:d}'.format(
             worker_number))
 
     self._StartStatusUpdateThread()
@@ -829,14 +830,14 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     try:
       storage_writer.StopTaskStorage(abort=task_storage_abort)
     except (IOError, OSError) as exception:
-      logging.error('Unable to stop task storage with error: {0!s}'.format(
+      logger.error('Unable to stop task storage with error: {0!s}'.format(
           exception))
 
     if self._abort:
-      logging.debug('Processing aborted.')
+      logger.debug('Processing aborted.')
       self._processing_status.aborted = True
     else:
-      logging.debug('Processing completed.')
+      logger.debug('Processing completed.')
 
     # Reset values.
     self._enable_sigsegv_handler = None

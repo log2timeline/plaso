@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
 import os
 import pdb
 import time
@@ -13,6 +12,7 @@ from dfvfs.lib import errors as dfvfs_errors
 from plaso.containers import event_sources
 from plaso.engine import engine
 from plaso.engine import extractors
+from plaso.engine import logger
 from plaso.engine import process_info
 from plaso.engine import worker
 from plaso.lib import definitions
@@ -59,7 +59,7 @@ class SingleProcessEngine(engine.BaseEngine):
     except dfvfs_errors.CacheFullError:
       # TODO: signal engine of failure.
       self._abort = True
-      logging.error((
+      logger.error((
           'ABORT: detected cache full error while processing '
           'path spec: {0:s}').format(self._current_display_name))
 
@@ -71,10 +71,10 @@ class SingleProcessEngine(engine.BaseEngine):
           '{0!s}').format(exception), path_spec=path_spec)
 
       if getattr(self._processing_configuration, 'debug_output', False):
-        logging.warning(
+        logger.warning(
             'Unhandled exception while processing path spec: {0:s}.'.format(
                 self._current_display_name))
-        logging.exception(exception)
+        logger.exception(exception)
 
         pdb.post_mortem()
 
@@ -251,7 +251,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._processing_configuration = processing_configuration
     self._status_update_callback = status_update_callback
 
-    logging.debug('Processing started.')
+    logger.debug('Processing started.')
 
     self._StartProfiling(self._processing_configuration.profiling)
 
@@ -297,10 +297,10 @@ class SingleProcessEngine(engine.BaseEngine):
       self._StopProfiling()
 
     if self._abort:
-      logging.debug('Processing aborted.')
+      logger.debug('Processing aborted.')
       self._processing_status.aborted = True
     else:
-      logging.debug('Processing completed.')
+      logger.debug('Processing completed.')
 
     self._processing_configuration = None
     self._status_update_callback = None

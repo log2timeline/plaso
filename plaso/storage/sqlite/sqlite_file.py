@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
 import os
 import sqlite3
 import zlib
@@ -19,6 +18,7 @@ from plaso.lib import definitions
 from plaso.storage import event_heaps
 from plaso.storage import identifiers
 from plaso.storage import interface
+from plaso.storage import logger
 
 
 class SQLiteStorageFile(interface.BaseStorageFile):
@@ -392,6 +392,10 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     else:
       serialized_data = self._SerializeAttributeContainer(attribute_container)
 
+    logger.debug(
+        '[WriteAttributeContainer] serialized data size: {0:d}'.format(
+            len(serialized_data)))
+
     if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
       compressed_data = zlib.compress(serialized_data)
       serialized_data = sqlite3.Binary(compressed_data)
@@ -402,6 +406,10 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       self._storage_profiler.Sample(
           'write', attribute_container.CONTAINER_TYPE, len(serialized_data),
           len(compressed_data))
+
+      logger.debug((
+          '[WriteAttributeContainer] compressed serialized data size: '
+          '{0:d}').format(len(serialized_data)))
 
     if attribute_container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
       query = 'INSERT INTO event (_timestamp, _data) VALUES (?, ?)'
@@ -993,7 +1001,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     # TODO: handle open sessions.
     if last_session_start != last_session_completion:
-      logging.warning('Detected unclosed session.')
+      logger.warning('Detected unclosed session.')
 
     self._last_session = last_session_completion
 

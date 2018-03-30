@@ -15,8 +15,9 @@ class ParserImportTest(test_lib.ImportCheckTestCase):
   """Tests that parser classes are imported correctly."""
 
   _PARSERS_PATH = os.path.join(os.getcwd(), 'plaso', 'parsers')
-  _IGNORABLE_FILES = frozenset(
-      ['manager.py', 'presets.py', 'mediator.py', 'interface.py', 'plugins.py'])
+  _IGNORABLE_FILES = frozenset([
+      'logger.py', 'manager.py', 'presets.py', 'mediator.py', 'interface.py',
+      'plugins.py'])
 
   def testParsersImported(self):
     """Tests that all parsers are imported."""

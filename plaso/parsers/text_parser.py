@@ -9,7 +9,6 @@ parser.
 from __future__ import unicode_literals
 
 import abc
-import logging
 
 import pyparsing
 
@@ -18,6 +17,7 @@ from dfvfs.helpers import text_file
 from plaso.lib import errors
 from plaso.lib import utils
 from plaso.parsers import interface
+from plaso.parsers import logger
 
 
 # Pylint complains about some functions not being implemented that shouldn't
@@ -107,7 +107,7 @@ def PyParseIntCast(unused_string, unused_location, tokens):
     try:
       tokens[index] = int(token)
     except ValueError:
-      logging.error('Unable to cast [{0:s}] to an int, setting to 0'.format(
+      logger.error('Unable to cast [{0:s}] to an int, setting to 0'.format(
           token))
       tokens[index] = 0
 
@@ -116,7 +116,7 @@ def PyParseIntCast(unused_string, unused_location, tokens):
     try:
       tokens[key] = int(tokens[key], 10)
     except ValueError:
-      logging.error(
+      logger.error(
           'Unable to cast [{0:s} = {1:d}] to an int, setting to 0'.format(
               key, tokens[key]))
       tokens[key] = 0
@@ -310,7 +310,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
     if len(line) == self.MAX_LINE_LENGTH or len(
         line) == self.MAX_LINE_LENGTH - 1:
-      logging.debug((
+      logger.debug((
           'Trying to read a line and reached the maximum allowed length of '
           '{0:d}. The last few bytes of the line are: {1:s} [parser '
           '{2:s}]').format(

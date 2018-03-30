@@ -3,12 +3,11 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.output import interface
+from plaso.output import logger
 from plaso.output import manager
 
 
@@ -306,7 +305,7 @@ class DynamicFieldsHelper(object):
         'parser chain: {3:s} with error: {4:s}').format(
             event_identifier_string, event.data_type, event.display_name,
             event.parser, error_message)
-    logging.error(error_message)
+    logger.error(error_message)
 
   def GetFormattedField(self, event, field_name):
     """Formats the specified field.

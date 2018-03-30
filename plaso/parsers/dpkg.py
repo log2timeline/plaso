@@ -26,8 +26,6 @@ Where decision is install or keep.
 
 from __future__ import unicode_literals
 
-import logging
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -36,6 +34,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -178,7 +177,7 @@ class DpkgParser(text_parser.PyparsingSingleLineTextParser):
     try:
       structure = self._DPKG_LOG_LINE.parseString(line)
     except pyparsing.ParseException as exception:
-      logging.debug(
+      logger.debug(
           'Unable to parse Debian dpkg.log file with error: {0!s}'.format(
               exception))
       return False

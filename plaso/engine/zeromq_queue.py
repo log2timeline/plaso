@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 import abc
 import errno
-import logging
 import threading
 import time
 
@@ -17,6 +16,7 @@ except ImportError:
 
 import zmq
 
+from plaso.engine import logger
 from plaso.engine import plaso_queue
 from plaso.lib import errors
 
@@ -102,20 +102,20 @@ class ZeroMQQueue(plaso_queue.Queue):
       bool: whether the item was sent successfully.
     """
     try:
-      logging.debug('{0:s} sending item'.format(self.name))
+      logger.debug('{0:s} sending item'.format(self.name))
       if block:
         zmq_socket.send_pyobj(item)
       else:
         zmq_socket.send_pyobj(item, zmq.DONTWAIT)
-      logging.debug('{0:s} sent item'.format(self.name))
+      logger.debug('{0:s} sent item'.format(self.name))
       return True
 
     except zmq.error.Again:
-      logging.debug('{0:s} could not send an item'.format(self.name))
+      logger.debug('{0:s} could not send an item'.format(self.name))
 
     except zmq.error.ZMQError as exception:
       if exception.errno == errno.EINTR:
-        logging.error(
+        logger.error(
             'ZMQ syscall interrupted in {0:s}.'.format(
                 self.name))
 
@@ -142,14 +142,14 @@ class ZeroMQQueue(plaso_queue.Queue):
         return received_object
 
       except zmq.error.Again:
-        logging.error(
+        logger.error(
             '{0:s}. Failed to receive item in time.'.format(
                 self.name))
         raise
 
       except zmq.error.ZMQError as exception:
         if exception.errno == errno.EINTR:
-          logging.error(
+          logger.error(
               'ZMQ syscall interrupted in {0:s}. Queue aborting.'.format(
                   self.name))
         raise
@@ -178,7 +178,7 @@ class ZeroMQQueue(plaso_queue.Queue):
 
   def _CreateZMQSocket(self):
     """Creates a ZeroMQ socket."""
-    logging.debug('Creating socket for {0:s}'.format(self.name))
+    logger.debug('Creating socket for {0:s}'.format(self.name))
 
     if not self._zmq_context:
       self._zmq_context = zmq.Context()
@@ -194,7 +194,7 @@ class ZeroMQQueue(plaso_queue.Queue):
       self._closed_event = threading.Event()
 
     if self._zmq_socket:
-      logging.debug('Closing old socket for {0:s}'.format(self.name))
+      logger.debug('Closing old socket for {0:s}'.format(self.name))
       self._zmq_socket.close()
       self._zmq_socket = None
 
@@ -206,14 +206,14 @@ class ZeroMQQueue(plaso_queue.Queue):
       address = '{0:s}:{1:d}'.format(self._SOCKET_ADDRESS, self.port)
       if self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_CONNECT:
         self._zmq_socket.connect(address)
-        logging.debug('{0:s} connected to {1:s}'.format(self.name, address))
+        logger.debug('{0:s} connected to {1:s}'.format(self.name, address))
       else:
         self._zmq_socket.bind(address)
-        logging.debug(
+        logger.debug(
             '{0:s} bound to specified port {1:s}'.format(self.name, address))
     else:
       self.port = self._zmq_socket.bind_to_random_port(self._SOCKET_ADDRESS)
-      logging.debug(
+      logger.debug(
           '{0:s} bound to random port {1:d}'.format(self.name, self.port))
 
   def Open(self):
@@ -250,7 +250,7 @@ class ZeroMQQueue(plaso_queue.Queue):
 
     if abort:
       if not self._closed_event.is_set():
-        logging.warning(
+        logger.warning(
             '{0:s} queue aborting. Contents may be lost.'.format(self.name))
 
       self._linger_seconds = 0
@@ -261,7 +261,7 @@ class ZeroMQQueue(plaso_queue.Queue):
       self._terminate_event.set()
 
     else:
-      logging.debug(
+      logger.debug(
           '{0:s} queue closing, will linger for up to {1:d} seconds'.format(
               self.name, self._linger_seconds))
 
@@ -349,7 +349,7 @@ class ZeroMQPullQueue(ZeroMQQueue):
     if not self._closed_event or not self._terminate_event:
       raise RuntimeError('Missing closed or terminate event.')
 
-    logging.debug(
+    logger.debug(
         'Pop on {0:s} queue, port {1:d}'.format(self.name, self.port))
 
     last_retry_timestamp = time.time() + self.timeout_seconds
@@ -436,7 +436,7 @@ class ZeroMQPushQueue(ZeroMQQueue):
     if not self._terminate_event:
       raise RuntimeError('Missing terminate event.')
 
-    logging.debug(
+    logger.debug(
         'Push on {0:s} queue, port {1:d}'.format(self.name, self.port))
 
     last_retry_timestamp = time.time() + self.timeout_seconds
@@ -447,7 +447,7 @@ class ZeroMQPushQueue(ZeroMQQueue):
           break
 
         if time.time() > last_retry_timestamp:
-          logging.error('{0:s} unable to push item, raising.'.format(
+          logger.error('{0:s} unable to push item, raising.'.format(
               self.name))
           raise errors.QueueFull
 
@@ -499,7 +499,7 @@ class ZeroMQRequestQueue(ZeroMQQueue):
     if not self._terminate_event:
       raise RuntimeError('Missing terminate event.')
 
-    logging.debug('Pop on {0:s} queue, port {1:d}'.format(
+    logger.debug('Pop on {0:s} queue, port {1:d}'.format(
         self.name, self.port))
 
     last_retry_time = time.time() + self.timeout_seconds
@@ -512,7 +512,7 @@ class ZeroMQRequestQueue(ZeroMQQueue):
         # The existing socket is now out of sync, so we need to open a new one.
         self._CreateZMQSocket()
         if time.time() > last_retry_time:
-          logging.warning('{0:s} timeout requesting item'.format(self.name))
+          logger.warning('{0:s} timeout requesting item'.format(self.name))
           raise errors.QueueEmpty
 
         continue
@@ -639,7 +639,7 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
 
     if abort:
       if not self._closed_event.is_set():
-        logging.warning(
+        logger.warning(
             '{0:s} queue aborting. Contents may be lost.'.format(self.name))
 
       # We can't determine whether a there might be an operation being performed
@@ -650,14 +650,14 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
       self._linger_seconds = 0
 
       if self._zmq_thread:
-        logging.debug('[{0:s}] Waiting for thread to exit.'.format(self.name))
+        logger.debug('[{0:s}] Waiting for thread to exit.'.format(self.name))
         self._zmq_thread.join(timeout=self.timeout_seconds)
         if self._zmq_thread.isAlive():
-          logging.error((
+          logger.error((
               '{0:s} ZMQ responder thread did not exit within timeout').format(
                   self.name))
     else:
-      logging.debug(
+      logger.debug(
           '{0:s} queue closing, will linger for up to {1:d} seconds'.format(
               self.name, self._linger_seconds))
 
@@ -697,7 +697,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
     if not self._closed_event or not self._terminate_event:
       raise RuntimeError('Missing closed or terminate event.')
 
-    logging.debug('{0:s} responder thread started'.format(self.name))
+    logger.debug('{0:s} responder thread started'.format(self.name))
 
     item = None
     while not self._terminate_event.is_set():
@@ -727,10 +727,10 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
       sent_successfully = self._SendItem(self._zmq_socket, item)
       item = None
       if not sent_successfully:
-        logging.error('Queue {0:s} unable to send item.'.format(self.name))
+        logger.error('Queue {0:s} unable to send item.'.format(self.name))
         break
 
-    logging.info('Queue {0:s} responder exiting.'.format(self.name))
+    logger.info('Queue {0:s} responder exiting.'.format(self.name))
     self._zmq_socket.close(self._linger_seconds)
 
   def PopItem(self):

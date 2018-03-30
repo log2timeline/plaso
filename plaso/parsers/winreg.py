@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 from dfwinreg import errors as dfwinreg_errors
 from dfwinreg import interface as dfwinreg_interface
 from dfwinreg import regf as dfwinreg_regf
@@ -13,6 +11,7 @@ from dfwinreg import registry as dfwinreg_registry
 from plaso.lib import specification
 from plaso.filters import path_filter
 from plaso.parsers import interface
+from plaso.parsers import logger
 from plaso.parsers import manager
 
 
@@ -78,7 +77,7 @@ class WinRegistryParser(interface.FileObjectParser):
         for plugin_key_path in plugin_key_paths:
           plugin_key_path = plugin_key_path.lower()
           if plugin_key_path in self._plugin_per_key_path:
-            logging.warning((
+            logger.warning((
                 'Windows Registry key path: {0:s} defined by plugin: {1:s} '
                 'already set by plugin: {2:s}').format(
                     plugin_key_path, plugin.NAME,

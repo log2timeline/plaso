@@ -37,8 +37,6 @@ http://xchat.org
 
 from __future__ import unicode_literals
 
-import logging
-
 import pyparsing
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -46,6 +44,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -141,21 +140,21 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
       structure (pyparsing.ParseResults): structure parsed from the log file.
     """
     if key != 'logline':
-      logging.warning(
+      logger.warning(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
       return
 
     try:
       timestamp = int(structure.timestamp)
     except ValueError:
-      logging.debug('Invalid timestamp string {0:s}, skipping record'.format(
+      logger.debug('Invalid timestamp string {0:s}, skipping record'.format(
           structure.timestamp))
       return
 
     try:
       nickname, text = self._StripThenGetNicknameAndText(structure.text)
     except pyparsing.ParseException:
-      logging.debug('Error parsing entry at offset {0:d}'.format(self._offset))
+      logger.debug('Error parsing entry at offset {0:d}'.format(self._offset))
       return
 
     event_data = XChatScrollbackEventData()
@@ -184,13 +183,13 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
     try:
       parsed_structure = structure.parseString(line)
     except pyparsing.ParseException:
-      logging.debug('Not a XChat scrollback log file')
+      logger.debug('Not a XChat scrollback log file')
       return False
 
     try:
       int(parsed_structure.timestamp, 10)
     except ValueError:
-      logging.debug('Not a XChat scrollback log file, invalid timestamp string')
+      logger.debug('Not a XChat scrollback log file, invalid timestamp string')
       return False
 
     return True

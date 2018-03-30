@@ -18,6 +18,7 @@ from plaso import output  # pylint: disable=unused-import
 
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.cli import extraction_tool
+from plaso.cli import logger
 from plaso.cli import logging_filter
 from plaso.cli import status_view
 from plaso.cli import tools
@@ -287,7 +288,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     # Properly prepare the attributes according to local encoding.
     if self.preferred_encoding == 'ascii':
-      logging.warning(
+      logger.warning(
           'The preferred encoding of your system is ASCII, which is not '
           'optimal for the typically non-ASCII characters that need to be '
           'parsed and processed. The tool will most likely crash and die, '
@@ -298,7 +299,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       time.sleep(5)
 
     if self._process_archives:
-      logging.warning(
+      logger.warning(
           'Scanning archive files currently can cause deadlock. Continue at '
           'your own risk.')
       time.sleep(5)
@@ -468,7 +469,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     processing_status = None
     if single_process_mode:
-      logging.debug('Starting extraction in single process mode.')
+      logger.debug('Starting extraction in single process mode.')
 
       processing_status = extraction_engine.ProcessSources(
           self._source_path_specs, storage_writer, self._resolver_context,
@@ -476,7 +477,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           status_update_callback=status_update_callback)
 
     else:
-      logging.debug('Starting extraction in multi process mode.')
+      logger.debug('Starting extraction in multi process mode.')
 
       processing_status = extraction_engine.ProcessSources(
           session.identifier, self._source_path_specs, storage_writer,

@@ -3,12 +3,12 @@
 
 from __future__ import unicode_literals
 
-import logging
 import re
 
 import requests
 
 from plaso.analysis import interface
+from plaso.analysis import logger
 from plaso.analysis import manager
 from plaso.containers import reports
 
@@ -50,7 +50,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
       response = requests.get(web_store_url)
 
     except (requests.ConnectionError, requests.HTTPError) as exception:
-      logging.warning((
+      logger.warning((
           '[{0:s}] unable to retrieve URL: {1:s} with error: {2!s}').format(
               self.NAME, web_store_url, exception))
       return None
@@ -104,7 +104,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
 
     page_content = self._GetChromeWebStorePage(extension_identifier)
     if not page_content:
-      logging.warning(
+      logger.warning(
           '[{0:s}] no data returned for extension identifier: {1:s}'.format(
               self.NAME, extension_identifier))
       return None

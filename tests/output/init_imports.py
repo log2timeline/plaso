@@ -14,8 +14,9 @@ class OutputImportTest(test_lib.ImportCheckTestCase):
   """Tests that analysis plugin classes are imported correctly."""
 
   _OUTPUT_PATH = os.path.join(os.getcwd(), 'plaso', 'output')
-  _IGNORABLE_FILES = frozenset(
-      ['manager.py', 'mediator.py', 'interface.py', 'shared_4n6time.py'])
+  _IGNORABLE_FILES = frozenset([
+      'logger.py', 'manager.py', 'mediator.py', 'interface.py',
+      'shared_4n6time.py'])
 
   def testOutputModulesImported(self):
     """Tests that all output modules are imported."""

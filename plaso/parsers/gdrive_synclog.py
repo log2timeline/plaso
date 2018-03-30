@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -13,6 +11,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -195,7 +194,7 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     try:
       structure = self._GDS_LINE.parseString(lines)
     except pyparsing.ParseException as exception:
-      logging.debug('Not a Google Drive Sync log file: {0!s}'.format(exception))
+      logger.debug('Not a Google Drive Sync log file: {0!s}'.format(exception))
       return False
 
     date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
@@ -204,7 +203,7 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
       datetime_iso8601 = self._GetISO8601String(structure.date_time)
       date_time.CopyFromStringISO8601(datetime_iso8601)
     except ValueError:
-      logging.debug(
+      logger.debug(
           'Not a Google Drive Sync log file, invalid date/time: {0!s}'.format(
               structure.date_time))
       return False

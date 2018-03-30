@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import argparse
-import logging
 import os
 import textwrap
 
@@ -15,6 +14,7 @@ from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.analyzers.hashers import manager as hashers_manager
+from plaso.cli import logger
 from plaso.cli import storage_media_tool
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import extractors
@@ -466,7 +466,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       mount_point (dfvfs.PathSpec): mount point path specification that refers
           to the base location of the file system.
     """
-    logging.debug('Starting preprocessing.')
+    logger.debug('Starting preprocessing.')
 
     try:
       preprocess_manager.PreprocessPluginsManager.RunPlugins(
@@ -474,9 +474,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           self._knowledge_base)
 
     except IOError as exception:
-      logging.error('Unable to preprocess with error: {0!s}'.format(exception))
+      logger.error('Unable to preprocess with error: {0!s}'.format(exception))
 
-    logging.debug('Preprocessing done.')
+    logger.debug('Preprocessing done.')
 
   def _ReadSpecificationFile(self, path):
     """Reads the format specification file.
@@ -498,14 +498,14 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         try:
           identifier, offset, pattern = line.split()
         except ValueError:
-          logging.error('[skipping] invalid line: {0:s}'.format(
+          logger.error('[skipping] invalid line: {0:s}'.format(
               line.decode('utf-8')))
           continue
 
         try:
           offset = int(offset, 10)
         except ValueError:
-          logging.error('[skipping] invalid offset in line: {0:s}'.format(
+          logger.error('[skipping] invalid offset in line: {0:s}'.format(
               line.decode('utf-8')))
           continue
 
@@ -513,7 +513,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           pattern = pattern.decode('string_escape')
         # ValueError is raised e.g. when the patterns contains "\xg1".
         except ValueError:
-          logging.error(
+          logger.error(
               '[skipping] invalid pattern in line: {0:s}'.format(
                   line.decode('utf-8')))
           continue
@@ -713,7 +713,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         options, 'path', default_value='export')
 
     if not self._data_location:
-      logging.warning('Unable to automatically determine data location.')
+      logger.warning('Unable to automatically determine data location.')
 
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['artifact_definitions'])

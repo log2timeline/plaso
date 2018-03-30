@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 import collections
 import heapq
-import logging
 import threading
 import time
 
@@ -13,6 +12,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.containers import tasks
 from plaso.engine import processing_status
+from plaso.multi_processing import logger
 
 
 class _PendingMergeTaskHeap(object):
@@ -210,7 +210,7 @@ class TaskManager(object):
         last_active_time = task.start_time
 
       if last_active_time < inactive_time:
-        logging.debug('Task {0:s} is abandoned'.format(task_identifier))
+        logger.debug('Task {0:s} is abandoned'.format(task_identifier))
         self._tasks_abandoned[task_identifier] = task
         del tasks_for_timeout[task_identifier]
 
@@ -243,22 +243,22 @@ class TaskManager(object):
     with self._lock:
       if task.identifier in self._tasks_merging:
         del self._tasks_merging[task.identifier]
-        logging.debug('Task {0:s} is complete.'.format(task.identifier))
+        logger.debug('Task {0:s} is complete.'.format(task.identifier))
 
       if task.identifier in self._tasks_pending_merge:
-        logging.debug('Task {0:s} completed while pending merge.'.format(
+        logger.debug('Task {0:s} completed while pending merge.'.format(
             task.identifier))
         return
 
       if task.identifier in self._tasks_processing:
         del self._tasks_processing[task.identifier]
-        logging.debug('Task {0:s} completed from processing'.format(
+        logger.debug('Task {0:s} completed from processing'.format(
             task.identifier))
         return
 
       if task.identifier in self._tasks_queued:
         del self._tasks_queued[task.identifier]
-        logging.debug('Task {0:s} is completed from queued'.format(
+        logger.debug('Task {0:s} is completed from queued'.format(
             task.identifier))
         return
 
@@ -285,7 +285,7 @@ class TaskManager(object):
         # are not themselves retries of another task.
         if self._TaskIsRetriable(abandoned_task):
           retry_task = abandoned_task.CreateRetry()
-          logging.debug(
+          logger.debug(
               'Retrying task {0:s} as {1:s}'.format(
                   abandoned_task.identifier, retry_task.identifier))
           self._tasks_queued[retry_task.identifier] = retry_task
@@ -417,11 +417,11 @@ class TaskManager(object):
         del self._tasks_abandoned[task.identifier]
 
     if is_abandoned:
-      logging.warning(
+      logger.warning(
           'Previously abandoned task {0:s} is now pending merge'.format(
               task.identifier))
     else:
-      logging.debug('Task {0:s} is pending merge'.format(task.identifier))
+      logger.debug('Task {0:s} is pending merge'.format(task.identifier))
 
   def UpdateTasksAsPendingMerge(self, mergeable_tasks):
     """Updates the task manager to reflect that tasks are ready to be merged.
@@ -452,7 +452,7 @@ class TaskManager(object):
 
       task_queued = self._tasks_queued.get(task_identifier, None)
       if task_queued:
-        logging.debug('Task {0:s} was queued, now processing'.format(
+        logger.debug('Task {0:s} was queued, now processing'.format(
             task_identifier))
         self._tasks_processing[task_identifier] = task_queued
         del self._tasks_queued[task_identifier]
@@ -463,7 +463,7 @@ class TaskManager(object):
       if task_abandoned:
         del self._tasks_abandoned[task_identifier]
         self._tasks_processing[task_identifier] = task_abandoned
-        logging.debug('Task {0:s} was abandoned, but now processing'.format(
+        logger.debug('Task {0:s} was abandoned, but now processing'.format(
             task_identifier))
         task_abandoned.UpdateProcessingTime()
         return

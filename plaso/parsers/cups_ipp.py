@@ -25,8 +25,6 @@ Also see:
 
 from __future__ import unicode_literals
 
-import logging
-
 import construct
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -37,6 +35,7 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.parsers import interface
+from plaso.parsers import logger
 from plaso.parsers import manager
 
 
@@ -359,7 +358,7 @@ class CupsIppParser(interface.FileObjectParser):
     if header.operation_id != self.IPP_OP_ID:
       # Warn if the operation ID differs from the standard one. We should be
       # able to parse the file nonetheless.
-      logging.debug(
+      logger.debug(
           '[{0:s}] Unsupported operation identifier in file: {1:s}.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
 

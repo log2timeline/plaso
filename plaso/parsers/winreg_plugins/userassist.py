@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 import construct
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -14,6 +12,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.engine import path_helper
 from plaso.lib import definitions
+from plaso.parsers import logger
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 from plaso.winnt import known_folder_ids
@@ -156,7 +155,7 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
       try:
         value_name = registry_value.name.decode('rot-13')
       except UnicodeEncodeError as exception:
-        logging.debug((
+        logger.debug((
             'Unable to decode UserAssist string: {0:s} with error: {1!s}.\n'
             'Attempting piecewise decoding.').format(
                 registry_value.name, exception))

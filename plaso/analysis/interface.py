@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 import abc
 import collections
-import logging
 import sys
 import threading
 import time
@@ -27,6 +26,7 @@ except ImportError:
   urllib3 = None
 
 from plaso.analysis import definitions
+from plaso.analysis import logger
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.lib import errors
@@ -79,7 +79,7 @@ class AnalysisPlugin(object):
     event_tag.AddLabels(labels)
 
     event_identifier_string = event_identifier.CopyToString()
-    logging.debug('Created event tag: {0:s} for event: {1:s}'.format(
+    logger.debug('Created event tag: {0:s} for event: {1:s}'.format(
         comment, event_identifier_string))
 
     return event_tag
@@ -217,7 +217,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     lookup_hash = getattr(event, lookup_hash, None)
     if not lookup_hash:
       display_name = mediator.GetDisplayNameForPathSpec(path_spec)
-      logging.warning((
+      logger.warning((
           'Lookup hash attribute: {0:s}_hash missing from event that '
           'originated from: {1:s}.').format(
               self._analyzer.lookup_hash, display_name))
@@ -257,7 +257,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
         '{0:s} hash analysis plugin running. {1:d} hashes in queue, '
         'estimated completion time {2:s}.'.format(
             self.NAME, self.hash_queue.qsize(), completion_time))
-    logging.info(log_message)
+    logger.info(log_message)
     self._time_of_last_status_log = current_time
 
   def CompileReport(self, mediator):
@@ -491,7 +491,7 @@ class HTTPHashAnalyzer(HashAnalyzer):
     if self._checked_for_old_python_version:
       return
     if sys.version_info[0:3] < (2, 7, 9):
-      logging.warning(
+      logger.warning(
           'You are running a version of Python prior to 2.7.9. Your version '
           'of Python has multiple weaknesses in its SSL implementation that '
           'can allow an attacker to read or modify SSL encrypted data. '

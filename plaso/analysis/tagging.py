@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
 import io
 import re
 import os
@@ -14,6 +13,7 @@ from efilter import errors as efilter_errors
 from efilter import query as efilter_query
 
 from plaso.analysis import interface
+from plaso.analysis import logger
 from plaso.analysis import manager
 from plaso.containers import reports
 from plaso.lib import errors
@@ -66,7 +66,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     if not filename:
       return False
 
-    logging.info('Using auto detected tag file: {0:s}'.format(filename))
+    logger.info('Using auto detected tag file: {0:s}'.format(filename))
     tag_file_path = os.path.join(analysis_mediator.data_location, filename)
     self.SetAndLoadTagFile(tag_file_path)
     return True
@@ -198,7 +198,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
         # tag file, so there's nothing we can do with this event (or any other).
         return
       if not self._AttemptAutoDetectTagFile(mediator):
-        logging.info(
+        logger.info(
             'No tag definition file specified, and plaso was not able to '
             'autoselect a tagging file. As no definitions were specified, '
             'no events will be tagged.')
@@ -207,7 +207,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     try:
       matched_labels = efilter_api.apply(self._tag_rules, vars=event)
     except efilter_errors.EfilterTypeError as exception:
-      logging.warning('Unable to apply efilter query with error: {0!s}'.format(
+      logger.warning('Unable to apply efilter query with error: {0!s}'.format(
           exception))
       matched_labels = None
 

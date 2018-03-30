@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 import construct
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -14,6 +12,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import binary
 from plaso.lib import definitions
+from plaso.parsers import logger
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -294,13 +293,13 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
           cached_entry_data[8:16])
 
       if maximum_path_size < path_size:
-        logging.error(
+        logger.error(
             '[{0:s}] Path size value out of bounds.'.format(self.NAME))
         return None
 
       path_end_of_string_size = maximum_path_size - path_size
       if path_size == 0 or path_end_of_string_size != 2:
-        logging.error(
+        logger.error(
             '[{0:s}] Unsupported path size values.'.format(self.NAME))
         return None
 

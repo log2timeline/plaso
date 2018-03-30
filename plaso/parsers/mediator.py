@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import copy
-import logging
 import os
 import time
 
@@ -14,6 +13,7 @@ from plaso.containers import errors
 from plaso.engine import path_helper
 from plaso.lib import py2to3
 from plaso.lib import timelib
+from plaso.parsers import logger
 
 
 class ParserMediator(object):
@@ -148,7 +148,7 @@ class ParserMediator(object):
       posix_time = getattr(stat_object, 'mtime', None)
 
     if posix_time is None:
-      logging.warning(
+      logger.warning(
           'Unable to determine earliest year from file stat information.')
       return None
 
@@ -157,7 +157,7 @@ class ParserMediator(object):
           posix_time, timezone=self._knowledge_base.timezone)
       return year
     except ValueError as exception:
-      logging.error((
+      logger.error((
           'Unable to determine earliest year from file stat information with '
           'error: {0:s}').format(exception))
       return None
@@ -208,7 +208,7 @@ class ParserMediator(object):
       posix_time = getattr(stat_object, 'ctime', None)
 
     if posix_time is None:
-      logging.warning(
+      logger.warning(
           'Unable to determine modification year from file stat information.')
       return None
 
@@ -217,7 +217,7 @@ class ParserMediator(object):
           posix_time, timezone=self._knowledge_base.timezone)
       return year
     except ValueError as exception:
-      logging.error((
+      logger.error((
           'Unable to determine creation year from file stat '
           'information with error: {0!s}').format(exception))
       return None

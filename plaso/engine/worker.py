@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import copy
-import logging
 import os
 import re
 import time
@@ -19,6 +18,7 @@ from plaso.analyzers import hashing_analyzer
 from plaso.analyzers import manager as analyzers_manager
 from plaso.containers import event_sources
 from plaso.engine import extractors
+from plaso.engine import logger
 from plaso.lib import definitions
 from plaso.lib import errors
 
@@ -123,7 +123,7 @@ class EventExtractionWorker(object):
           the file entry.
     """
     display_name = mediator.GetDisplayName()
-    logging.debug('[AnalyzeDataStream] analyzing file: {0:s}'.format(
+    logger.debug('[AnalyzeDataStream] analyzing file: {0:s}'.format(
         display_name))
 
     if self._processing_profiler:
@@ -145,7 +145,7 @@ class EventExtractionWorker(object):
       if self._processing_profiler:
         self._processing_profiler.StopTiming('analyzing')
 
-    logging.debug(
+    logger.debug(
         '[AnalyzeDataStream] completed analyzing file: {0:s}'.format(
             display_name))
 
@@ -206,7 +206,7 @@ class EventExtractionWorker(object):
         break
 
       for result in analyzer_object.GetResults():
-        logging.debug((
+        logger.debug((
             '[AnalyzeFileObject] attribute {0:s}:{1:s} calculated for '
             'file: {2:s}.').format(
                 result.attribute_name, result.attribute_value, display_name))
@@ -357,7 +357,7 @@ class EventExtractionWorker(object):
       return
 
     display_name = mediator.GetDisplayName()
-    logging.debug(
+    logger.debug(
         '[ExtractMetadataFromFileEntry] processing file entry: {0:s}'.format(
             display_name))
 
@@ -455,7 +455,7 @@ class EventExtractionWorker(object):
 
     if number_of_type_indicators > 1:
       display_name = mediator.GetDisplayName()
-      logging.debug((
+      logger.debug((
           'Found multiple format type indicators: {0:s} for '
           'archive file: {1:s}').format(type_indicators, display_name))
 
@@ -521,7 +521,7 @@ class EventExtractionWorker(object):
 
     if number_of_type_indicators > 1:
       display_name = mediator.GetDisplayName()
-      logging.debug((
+      logger.debug((
           'Found multiple format type indicators: {0:s} for '
           'compressed stream file: {1:s}').format(
               type_indicators, display_name))
@@ -615,7 +615,7 @@ class EventExtractionWorker(object):
       file_entry (dfvfs.FileEntry): file entry.
     """
     display_name = mediator.GetDisplayName()
-    logging.debug(
+    logger.debug(
         '[ProcessFileEntry] processing file entry: {0:s}'.format(display_name))
 
     reference_count = mediator.resolver_context.GetFileObjectReferenceCount(
@@ -654,11 +654,11 @@ class EventExtractionWorker(object):
         # Clean up after parsers that do not call close explicitly.
         if mediator.resolver_context.ForceRemoveFileObject(
             file_entry.path_spec):
-          logging.warning(
+          logger.warning(
               'File-object not explicitly closed for file: {0:s}'.format(
                   display_name))
 
-    logging.debug(
+    logger.debug(
         '[ProcessFileEntry] done processing file entry: {0:s}'.format(
             display_name))
 
@@ -674,7 +674,7 @@ class EventExtractionWorker(object):
     """
     display_name = mediator.GetDisplayName()
     data_stream_name = getattr(data_stream, 'name', '') or ''
-    logging.debug((
+    logger.debug((
         '[ProcessFileEntryDataStream] processing data stream: "{0:s}" of '
         'file entry: {1:s}').format(data_stream_name, display_name))
 
@@ -696,7 +696,7 @@ class EventExtractionWorker(object):
     skip_content_extraction = self._CanSkipContentExtraction(file_entry)
     if skip_content_extraction:
       display_name = mediator.GetDisplayName()
-      logging.debug(
+      logger.debug(
           'Skipping content extraction of: {0:s}'.format(display_name))
       self.processing_status = definitions.PROCESSING_STATUS_IDLE
       return
@@ -804,7 +804,7 @@ class EventExtractionWorker(object):
 
     if file_entry is None:
       display_name = mediator.GetDisplayNameForPathSpec(path_spec)
-      logging.warning(
+      logger.warning(
           'Unable to open file entry with path spec: {0:s}'.format(
               display_name))
       self.processing_status = definitions.PROCESSING_STATUS_IDLE

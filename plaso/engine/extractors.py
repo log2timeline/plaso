@@ -8,7 +8,6 @@ from __future__ import unicode_literals
 
 import copy
 import hashlib
-import logging
 
 import pysigscan
 
@@ -17,6 +16,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.engine import logger
 from plaso.lib import errors
 from plaso.parsers import interface as parsers_interface
 from plaso.parsers import manager as parsers_manager
@@ -131,7 +131,7 @@ class EventExtractor(object):
         parser_filter_expression=parser_filter_expression)
 
     active_parser_names = ', '.join(sorted(self._parsers.keys()))
-    logging.debug('Active parsers: {0:s}'.format(active_parser_names))
+    logger.debug('Active parsers: {0:s}'.format(active_parser_names))
 
     self._filestat_parser = self._parsers.get('filestat', None)
     if 'filestat' in self._parsers:
@@ -210,13 +210,13 @@ class EventExtractor(object):
     # We catch IOError so we can determine the parser that generated the error.
     except (IOError, dfvfs_errors.BackEndError) as exception:
       display_name = parser_mediator.GetDisplayName(file_entry)
-      logging.warning(
+      logger.warning(
           '{0:s} unable to parse file: {1:s} with error: {2!s}'.format(
               parser.NAME, display_name, exception))
 
     except errors.UnableToParseFile as exception:
       display_name = parser_mediator.GetDisplayName(file_entry)
-      logging.debug(
+      logger.debug(
           '{0:s} unable to parse file: {1:s} with error: {2!s}'.format(
               parser.NAME, display_name, exception))
       result = False
@@ -230,7 +230,7 @@ class EventExtractor(object):
               file_entry.path_spec))
       if reference_count != new_reference_count:
         display_name = parser_mediator.GetDisplayName(file_entry)
-        logging.warning((
+        logger.warning((
             '[{0:s}] did not explicitly close file-object for file: '
             '{1:s}.').format(parser.NAME, display_name))
 
@@ -266,7 +266,7 @@ class EventExtractor(object):
           continue
 
       display_name = parser_mediator.GetDisplayName(file_entry)
-      logging.debug((
+      logger.debug((
           '[ParseDataStream] parsing file: {0:s} with parser: '
           '{1:s}').format(display_name, parser_name))
 
@@ -441,17 +441,17 @@ class PathSpecExtractor(object):
     except (
         dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
         dfvfs_errors.PathSpecError) as exception:
-      logging.error(
+      logger.error(
           'Unable to open file entry with error: {0!s}'.format(exception))
       return
 
     if not file_entry:
-      logging.warning('Unable to open: {0:s}'.format(path_spec.comparable))
+      logger.warning('Unable to open: {0:s}'.format(path_spec.comparable))
       return
 
     if (not file_entry.IsDirectory() and not file_entry.IsFile() and
         not file_entry.IsDevice()):
-      logging.warning((
+      logger.warning((
           'Source path specification not a device, file or directory.\n'
           '{0:s}').format(path_spec.comparable))
       return
@@ -489,7 +489,7 @@ class PathSpecExtractor(object):
         if not sub_file_entry.IsAllocated() or sub_file_entry.IsLink():
           continue
       except dfvfs_errors.BackEndError as exception:
-        logging.warning(
+        logger.warning(
             'Unable to process file: {0:s} with error: {1!s}'.format(
                 sub_file_entry.path_spec.comparable.replace(
                     '\n', ';'), exception))
@@ -531,7 +531,7 @@ class PathSpecExtractor(object):
       except (
           IOError, dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
           dfvfs_errors.PathSpecError) as exception:
-        logging.warning('{0:s}'.format(exception))
+        logger.warning('{0:s}'.format(exception))
 
   def _ExtractPathSpecsFromFile(self, file_entry):
     """Extracts path specification from a file.
@@ -581,7 +581,7 @@ class PathSpecExtractor(object):
     except (
         dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
         dfvfs_errors.PathSpecError) as exception:
-      logging.error(
+      logger.error(
           'Unable to open file system with error: {0!s}'.format(exception))
       return
 
@@ -605,7 +605,7 @@ class PathSpecExtractor(object):
     except (
         dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
         dfvfs_errors.PathSpecError) as exception:
-      logging.warning('{0:s}'.format(exception))
+      logger.warning('{0:s}'.format(exception))
 
     finally:
       file_system.Close()

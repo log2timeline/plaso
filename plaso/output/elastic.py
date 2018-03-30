@@ -17,6 +17,7 @@ except ImportError:
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import interface
+from plaso.output import logger
 from plaso.output import manager
 
 # Configure Elasticsearch logger
@@ -131,7 +132,7 @@ class ElasticSearchHelper(object):
     try:
       attribute_value = timelib.Timestamp.RoundToSeconds(event_object.timestamp)
     except TypeError as exception:
-      logging.warning(
+      logger.warning(
           ('Unable to round timestamp {0!s}. error: {1!s}. '
            'Defaulting to 0').format(
                event_object.timestamp, exception))
@@ -173,11 +174,11 @@ class ElasticSearchHelper(object):
           index=self._index, doc_type=self._doc_type, body=self._events)
     except ValueError as e:
       # Ignore problematic events
-      logging.warning('{0:s}'.format(e))
+      logger.warning('{0:s}'.format(e))
 
     # Clear the events list
     self._events = []
-    logging.info('{0:d} events added'.format(self._counter['events']))
+    logger.info('{0:d} events added'.format(self._counter['events']))
 
 
 class ElasticSearchOutputModule(interface.OutputModule):
@@ -224,8 +225,8 @@ class ElasticSearchOutputModule(interface.OutputModule):
     """
     self._host = server
     self._port = port
-    logging.info('Server address: {0:s}'.format(self._host))
-    logging.info('Server port: {0:d}'.format(self._port))
+    logger.info('Server address: {0:s}'.format(self._host))
+    logger.info('Server port: {0:d}'.format(self._port))
 
   def SetFlushInterval(self, flush_interval):
     """Set the flush interval.
@@ -234,7 +235,7 @@ class ElasticSearchOutputModule(interface.OutputModule):
       flush_interval (int): Number of events to buffer before bulk insert.
     """
     self._flush_interval = flush_interval
-    logging.info('Flush interval: {0:d}'.format(self._flush_interval))
+    logger.info('Flush interval: {0:d}'.format(self._flush_interval))
 
   def SetIndexName(self, index_name):
     """Set the index name.
@@ -243,7 +244,7 @@ class ElasticSearchOutputModule(interface.OutputModule):
       index_name: the index name.
     """
     self._index_name = index_name
-    logging.info('Index name: {0:s}'.format(self._index_name))
+    logger.info('Index name: {0:s}'.format(self._index_name))
 
   def SetDocType(self, doc_type):
     """Set the port.
@@ -252,7 +253,7 @@ class ElasticSearchOutputModule(interface.OutputModule):
       doc_type (str): The document type to use when indexing.
     """
     self._doc_type = doc_type
-    logging.info('Document type: {0:s}'.format(self._doc_type))
+    logger.info('Document type: {0:s}'.format(self._doc_type))
 
   def SetRawFields(self, raw_fields):
     """Set raw (not analyzed) fields.
@@ -265,7 +266,7 @@ class ElasticSearchOutputModule(interface.OutputModule):
       raw_fields (bool): Add not-analyzed index for string fields.
     """
     self._raw_fields = raw_fields
-    logging.info('Add non analyzed string fields: {0!s}'.format(
+    logger.info('Add non analyzed string fields: {0!s}'.format(
         self._raw_fields))
 
   def SetElasticUser(self, elastic_user):
@@ -275,7 +276,7 @@ class ElasticSearchOutputModule(interface.OutputModule):
       elastic_user (str): Elastic user to authenticate with.
     """
     self._elastic_user = elastic_user
-    logging.info('Elastic user: {0:s}'.format(self._elastic_user))
+    logger.info('Elastic user: {0:s}'.format(self._elastic_user))
 
   def SetElasticPassword(self, elastic_password):
     """Set the Elastic password.
@@ -284,7 +285,7 @@ class ElasticSearchOutputModule(interface.OutputModule):
       elastic_password (str): Elastic password to authenticate with.
     """
     self._elastic_password = elastic_password
-    logging.info('Elastic password: {0:s}'.format('****'))
+    logger.info('Elastic password: {0:s}'.format('****'))
 
   def WriteEventBody(self, event):
     """Writes the body of an event to the output.
@@ -324,7 +325,7 @@ class ElasticSearchOutputModule(interface.OutputModule):
         self._index_name, self._mapping, self._doc_type,
         elastic_password=self._elastic_password,
         elastic_user=self._elastic_user)
-    logging.info('Adding events to Elasticsearch..')
+    logger.info('Adding events to Elasticsearch..')
 
 
 manager.OutputManager.RegisterOutput(
