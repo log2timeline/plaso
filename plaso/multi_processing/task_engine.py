@@ -529,11 +529,13 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       identifier = '{0:s}-processing'.format(self._name)
       self._processing_profiler = profiler.ProcessingProfiler(
           identifier, path=self._processing_configuration.profiling.directory)
+      self._processing_profiler.Start()
 
     if self._processing_configuration.profiling.HaveProfileSerializers():
       identifier = '{0:s}-serializers'.format(self._name)
       self._serializers_profiler = profiler.SerializersProfiler(
           identifier, path=self._processing_configuration.profiling.directory)
+      self._serializers_profiler.Start()
 
   def _StatusUpdateThreadMain(self):
     """Main function of the status update thread."""
@@ -598,14 +600,15 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     """Stops profiling."""
     if self._guppy_memory_profiler:
       self._guppy_memory_profiler.Sample()
+      self._guppy_memory_profiler.Stop()
       self._guppy_memory_profiler = None
 
     if self._processing_profiler:
-      self._processing_profiler.Write()
+      self._processing_profiler.Stop()
       self._processing_profiler = None
 
     if self._serializers_profiler:
-      self._serializers_profiler.Write()
+      self._serializers_profiler.Stop()
       self._serializers_profiler = None
 
   def _UpdateForemanProcessStatus(self):
