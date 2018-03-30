@@ -453,7 +453,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
       if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
         compressed_data = zlib.compress(serialized_data)
-        serialized_data = sqlite3.Binary(serialized_data)
+        serialized_data = sqlite3.Binary(compressed_data)
       else:
         compressed_data = ''
 
