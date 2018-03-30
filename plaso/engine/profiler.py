@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import abc
+import gzip
 import os
 import time
 
