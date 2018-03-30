@@ -55,6 +55,7 @@ class CPUTimeProfiler(object):
     self._identifier = identifier
     self._path = configuration.path
     self._profile_measurements = {}
+    self._sample_file = None
 
   def StartTiming(self, profile_name):
     """Starts timing CPU time.
