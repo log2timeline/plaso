@@ -39,7 +39,7 @@ class CPUTimeMeasurement(object):
 
 
 class SampleFileProfiler(object):
-  """The sample file profiler base class."""
+  """Shared functionaly for sample file-based profilers."""
 
   _FILENAME_PREFIX = None
 
@@ -236,28 +236,16 @@ class StorageProfiler(SampleFileProfiler):
   _FILE_HEADER = (
       'CPU time\tOperation\tDescription\tData size\tCompressed data size\n')
 
-  def SampleRead(self, description, data_size, compressed_data_size):
-    """Takes a sample of data read for profiling.
+  def Sample(self, operation, description, data_size, compressed_data_size):
+    """Takes a sample of data read or written for profiling.
 
     Args:
+      operation (str): operation, either 'read' or 'write'.
       description (str): description of the data read.
       data_size (int): size of the data read in bytes.
       compressed_data_size (int): size of the compressed data read in bytes.
     """
     cpu_time = time.clock()
-    sample = '{0:f}\tread\t{1:s}\t{2:d}\t{3:d}\n'.format(
-        cpu_time, description, data_size, compressed_data_size)
-    self._sample_file.write(sample)
-
-  def SampleWrite(self, description, data_size, compressed_data_size):
-    """Takes a sample of data written for profiling.
-
-    Args:
-      description (str): description of the data written.
-      data_size (int): size of the data written in bytes.
-      compressed_data_size (int): size of the compressed data written in bytes.
-    """
-    cpu_time = time.clock()
-    sample = '{0:f}\twrite\t{1:s}\t{2:d}\t{3:d}\n'.format(
-        cpu_time, description, data_size, compressed_data_size)
+    sample = '{0:f}\t{1:s}\t{2:s}\t{3:d}\t{4:d}\n'.format(
+        cpu_time, operation, description, data_size, compressed_data_size)
     self._sample_file.write(sample)

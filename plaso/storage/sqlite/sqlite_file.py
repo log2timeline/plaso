@@ -241,8 +241,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
         serialized_data = row[0]
 
       if self._storage_profiler:
-        self._storage_profiler.SampleRead(
-            container_type, len(serialized_data), len(row[0]))
+        self._storage_profiler.Sample(
+            'read', container_type, len(serialized_data), len(row[0]))
 
       attribute_container = self._DeserializeAttributeContainer(
           container_type, serialized_data)
@@ -296,8 +296,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
         serialized_data = row[1]
 
       if self._storage_profiler:
-        self._storage_profiler.SampleRead(
-            container_type, len(serialized_data), len(row[1]))
+        self._storage_profiler.Sample(
+            'read', container_type, len(serialized_data), len(row[1]))
 
       attribute_container = self._DeserializeAttributeContainer(
           container_type, serialized_data)
@@ -399,8 +399,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       compressed_data = ''
 
     if self._storage_profiler:
-      self._storage_profiler.SampleWrite(
-          attribute_container.CONTAINER_TYPE, len(serialized_data),
+      self._storage_profiler.Sample(
+          'write', attribute_container.CONTAINER_TYPE, len(serialized_data),
           len(compressed_data))
 
     if attribute_container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
@@ -458,8 +458,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
         compressed_data = ''
 
       if self._storage_profiler:
-        self._storage_profiler.SampleWrite(
-            container_type, len(serialized_data), len(compressed_data))
+        self._storage_profiler.Sample(
+            'write', container_type, len(serialized_data), len(compressed_data))
 
       if container_type == self._CONTAINER_TYPE_EVENT:
         values_tuple_list.append((timestamp, serialized_data))
