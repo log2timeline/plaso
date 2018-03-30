@@ -629,8 +629,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self.AddBasicOptions(argument_parser)
     self.AddInformationalOptions(argument_parser)
 
-    argument_helper_names = [
-        'artifact_definitions', 'data_location', 'process_resources']
+    argument_helper_names = ['artifact_definitions', 'data_location']
+    if self._CanEnforceProcessMemoryLimit():
+      argument_helper_names.append('process_resources')
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         argument_parser, names=argument_helper_names)
 

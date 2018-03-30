@@ -291,8 +291,9 @@ class PsortTool(
     Args:
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
-    argument_helper_names = [
-        'process_resources', 'temporary_directory', 'zeromq']
+    argument_helper_names = ['temporary_directory', 'zeromq']
+    if self._CanEnforceProcessMemoryLimit():
+      argument_helper_names.append('process_resources')
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         argument_group, names=argument_helper_names)
 

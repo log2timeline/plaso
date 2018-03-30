@@ -234,7 +234,8 @@ class ExtractionTool(
         action='store_true', default=False, help=(
             'Indicate that the tool should run in a single process.'))
 
-    argument_helper_names = [
-        'process_resources', 'temporary_directory', 'workers', 'zeromq']
+    argument_helper_names = ['temporary_directory', 'workers', 'zeromq']
+    if self._CanEnforceProcessMemoryLimit():
+      argument_helper_names.append('process_resources')
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         argument_group, names=argument_helper_names)

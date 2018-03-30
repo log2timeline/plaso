@@ -6,8 +6,12 @@ from __future__ import unicode_literals
 import abc
 import datetime
 import locale
-import resource
 import sys
+
+try:
+  import resource
+except ImportError:
+  resource = None
 
 import plaso
 
@@ -93,6 +97,14 @@ class CLITool(object):
 
     return encoded_string
 
+  def _CanEnforceProcessMemoryLimit(self):
+    """Determines if a process memory limit can be enforced.
+
+    Returns:
+      bool: True a process memory limit can be enforced, False otherwise.
+    """
+    return bool(resource)
+
   def _EnforceProcessMemoryLimit(self, memory_limit):
     """Enforces a process memory limit.
 
@@ -101,12 +113,14 @@ class CLITool(object):
           to allocate, where 0 represents no limit and None a default of
           4 GiB.
     """
-    if memory_limit is None:
-      memory_limit = 4 * 1024 * 1024 * 1024
-    elif memory_limit == 0:
-      memory_limit = resource.RLIM_INFINITY
+    # Resource is not supported on Windows.
+    if resource:
+      if memory_limit is None:
+        memory_limit = 4 * 1024 * 1024 * 1024
+      elif memory_limit == 0:
+        memory_limit = resource.RLIM_INFINITY
 
-    resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
+      resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
 
   def _ParseInformationalOptions(self, options):
     """Parses the informational options.

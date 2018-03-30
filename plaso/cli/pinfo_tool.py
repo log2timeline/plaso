@@ -548,8 +548,11 @@ class PinfoTool(
 
     self.AddBasicOptions(argument_parser)
 
+    argument_helper_names = ['storage_file']
+    if self._CanEnforceProcessMemoryLimit():
+      argument_helper_names.append('process_resources')
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_parser, names=['process_resources', 'storage_file'])
+        argument_parser, names=argument_helper_names)
 
     argument_parser.add_argument(
         '--compare', dest='compare_storage_file', type=str,
