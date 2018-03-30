@@ -53,13 +53,8 @@ class CPUTimeProfiler(object):
     """
     super(CPUTimeProfiler, self).__init__()
     self._identifier = identifier
-    self._path = path
+    self._path = configuration.path
     self._profile_measurements = {}
-    self._sample_file = '{0:s}-{1!s}.csv'.format(
-        self._FILENAME_PREFIX, identifier)
-
-    if configuration.path:
-      self._sample_file = os.path.join(path, self._sample_file)
 
   def StartTiming(self, profile_name):
     """Starts timing CPU time.

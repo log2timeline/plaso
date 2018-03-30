@@ -636,24 +636,24 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     if self._profiling_configuration.HaveProfileMemoryGuppy():
       self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
-          self._name, self._processing_configuration.profiling)
+          self._name, self._profiling_configuration)
       self._guppy_memory_profiler.Start()
 
     if self._profiling_configuration.HaveProfileMemory():
       self._memory_profiler = profiler.MemoryProfiler(
-          self._name, self._processing_configuration.profiling)
+          self._name, self._profiling_configuration)
       self._memory_profiler.Start()
 
     if self._profiling_configuration.HaveProfileProcessing():
       identifier = '{0:s}-processing'.format(self._name)
       self._processing_profiler = profiler.ProcessingProfiler(
-          identifier, self._processing_configuration.profiling)
+          identifier, self._profiling_configuration)
       self._processing_profiler.Start()
 
     if self._profiling_configuration.HaveProfileSerializers():
       identifier = '{0:s}-serializers'.format(self._name)
       self._serializers_profiler = profiler.SerializersProfiler(
-          identifier, self._processing_configuration.profiling)
+          identifier, self._profiling_configuration)
       self._serializers_profiler.Start()
 
   def _StatusUpdateThreadMain(self):
