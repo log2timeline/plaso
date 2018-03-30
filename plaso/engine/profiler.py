@@ -43,13 +43,13 @@ class CPUTimeProfiler(object):
 
   _FILENAME_PREFIX = 'cputime'
 
-  def __init__(self, identifier, path=None):
+  def __init__(self, identifier, configuration):
     """Initializes the CPU time profiler.
 
     Args:
       identifier (str): identifier of the profiling session used to create
           the sample filename.
-      path (Optional[str]): path to write the sample file.
+      configuration (ProfilingConfiguration): profiling configuration.
     """
     super(CPUTimeProfiler, self).__init__()
     self._identifier = identifier
@@ -58,7 +58,7 @@ class CPUTimeProfiler(object):
     self._sample_file = '{0:s}-{1!s}.csv'.format(
         self._FILENAME_PREFIX, identifier)
 
-    if path:
+    if configuration.path:
       self._sample_file = os.path.join(path, self._sample_file)
 
   def StartTiming(self, profile_name):
@@ -106,19 +106,18 @@ class CPUTimeProfiler(object):
 class GuppyMemoryProfiler(object):
   """The guppy-based memory profiler."""
 
-  def __init__(self, identifier, path=None, profiling_sample_rate=1000):
+  def __init__(self, identifier, configuration):
     """Initializes a memory profiler.
 
     Args:
       identifier (str): unique name of the profile.
-      path (Optional[str]): path to write the sample file.
-      profiling_sample_rate (Optional[int]): the profiling sample rate.
+      configuration (ProfilingConfiguration): profiling configuration.
     """
     super(GuppyMemoryProfiler, self).__init__()
     self._identifier = identifier
-    self._path = path
+    self._path = configuration.path
     self._profiling_sample = 0
-    self._profiling_sample_rate = profiling_sample_rate
+    self._profiling_sample_rate = configuration.profiling_sample_rate
     self._heapy = None
     self._sample_file = '{0!s}.hpy'.format(identifier)
 
@@ -166,16 +165,16 @@ class GuppyMemoryProfiler(object):
 class MemoryProfiler(object):
   """The memory profiler."""
 
-  def __init__(self, identifier, path=None):
+  def __init__(self, identifier, configuration):
     """Initializes a memory profiler.
 
     Args:
       identifier (str): unique name of the profile.
-      path (Optional[str]): path to write the sample file.
+      configuration (ProfilingConfiguration): profiling configuration.
     """
     super(MemoryProfiler, self).__init__()
     self._identifier = identifier
-    self._path = path
+    self._path = configuration.path
     self._sample_file = None
 
   @classmethod
