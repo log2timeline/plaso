@@ -94,6 +94,12 @@ class SerializedAttributeContainerList(object):
 class BaseStore(object):
   """Storage interface."""
 
+  def __init__(self):
+    """Initializes a storage."""
+    super(BaseStorage, self).__init__()
+    self._serializers_profiler = None
+    self._storage_profiler = None
+
   @abc.abstractmethod
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
@@ -272,6 +278,22 @@ class BaseStore(object):
           information.
     """
 
+  def SetSerializersProfiler(self, serializers_profiler):
+    """Sets the serializers profiler.
+
+    Args:
+      serializers_profiler (SerializersProfiler): serializers profiler.
+    """
+    self._serializers_profiler = serializers_profiler
+
+  def SetStorageProfiler(self, storage_profiler):
+    """Sets the storage profiler.
+
+    Args:
+      storage_profiler (StorageProfiler): storage profiler.
+    """
+    self._storage_profiler = storage_profiler
+
   @abc.abstractmethod
   def WritePreprocessingInformation(self, knowledge_base):
     """Writes preprocessing information.
@@ -325,7 +347,6 @@ class BaseStorageFile(BaseStore):
     self._read_only = True
     self._serialized_attribute_containers = {}
     self._serializer = json_serializer.JSONAttributeContainerSerializer
-    self._serializers_profiler = None
 
   def _DeserializeAttributeContainer(self, container_type, serialized_data):
     """Deserializes an attribute container.
@@ -441,14 +462,6 @@ class BaseStorageFile(BaseStore):
 
     if self._read_only:
       raise IOError('Unable to write to read-only storage file.')
-
-  def SetSerializersProfiler(self, serializers_profiler):
-    """Sets the serializers profiler.
-
-    Args:
-      serializers_profiler (SerializersProfiler): serializers profile.
-    """
-    self._serializers_profiler = serializers_profiler
 
 
 class StorageMergeReader(object):
@@ -678,6 +691,22 @@ class StorageReader(object):
           information.
     """
 
+  @abc.abstractmethod
+  def SetSerializersProfiler(self, serializers_profiler):
+    """Sets the serializers profiler.
+
+    Args:
+      serializers_profiler (SerializersProfiler): serializers profiler.
+    """
+
+  @abc.abstractmethod
+  def SetStorageProfiler(self, storage_profiler):
+    """Sets the storage profiler.
+
+    Args:
+      storage_profiler (StorageProfiler): storage profile.
+    """
+
 
 class StorageFileReader(StorageReader):
   """File-based storage reader interface."""
@@ -804,6 +833,22 @@ class StorageFileReader(StorageReader):
     """
     return self._storage_file.ReadPreprocessingInformation(knowledge_base)
 
+  def SetSerializersProfiler(self, serializers_profiler):
+    """Sets the serializers profilerr.
+
+    Args:
+      serializers_profiler (SerializersProfiler): serializers profiler.
+    """
+    self._storage_file.SetSerializersProfiler(serializers_profiler)
+
+  def SetStorageProfiler(self, storage_profiler):
+    """Sets the storage profiler.
+
+    Args:
+      storage_profiler (StorageProfiler): storage profiler.
+    """
+    self._storage_file.SetStorageProfiler(storage_profiler)
+
 
 class StorageWriter(object):
   """Storage writer interface.
@@ -827,7 +872,9 @@ class StorageWriter(object):
     """
     super(StorageWriter, self).__init__()
     self._first_written_event_source_index = 0
+    self._serializers_profiler = None
     self._session = session
+    self._storage_profiler = None
     self._storage_type = storage_type
     self._task = task
     self._written_event_source_index = 0
@@ -970,7 +1017,15 @@ class StorageWriter(object):
     """Sets the serializers profiler.
 
     Args:
-      serializers_profiler (SerializersProfiler): serializers profile.
+      serializers_profiler (SerializersProfiler): serializers profiler.
+    """
+
+  @abc.abstractmethod
+  def SetStorageProfiler(self, storage_profiler):
+    """Sets the storage profiler.
+
+    Args:
+      storage_profiler (StorageProfiler): storage profiler.
     """
 
   @abc.abstractmethod
@@ -1025,7 +1080,6 @@ class StorageFileWriter(StorageWriter):
     self._merge_task_storage_path = ''
     self._output_file = output_file
     self._storage_file = None
-    self._serializers_profiler = None
     self._task_storage_path = None
 
   @abc.abstractmethod
@@ -1394,6 +1448,9 @@ class StorageFileWriter(StorageWriter):
     if self._serializers_profiler:
       self._storage_file.SetSerializersProfiler(self._serializers_profiler)
 
+    if self._storage_profiler:
+      self._storage_file.SetStorageProfiler(self._storage_profiler)
+
     self._storage_file.Open(path=self._output_file, read_only=False)
 
     self._first_written_event_source_index = (
@@ -1452,11 +1509,21 @@ class StorageFileWriter(StorageWriter):
     """Sets the serializers profiler.
 
     Args:
-      serializers_profiler (SerializersProfiler): serializers profile.
+      serializers_profiler (SerializersProfiler): serializers profiler.
     """
     self._serializers_profiler = serializers_profiler
     if self._storage_file:
       self._storage_file.SetSerializersProfiler(serializers_profiler)
+
+  def SetStorageProfiler(self, storage_profiler):
+    """Sets the storage profiler.
+
+    Args:
+      storage_profiler (StorageProfiler): storage profiler.
+    """
+    self._storage_profiler = storage_profiler
+    if self._storage_file:
+      self._storage_file.SetStorageProfiler(storage_profiler)
 
   def StartMergeTaskStorage(self, task):
     """Starts a merge of a task storage with the session storage.

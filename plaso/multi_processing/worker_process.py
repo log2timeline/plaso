@@ -57,6 +57,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._serializers_profiler = None
     self._session_identifier = session_identifier
     self._status = definitions.PROCESSING_STATUS_INITIALIZED
+    self._storage_profiler = None
     self._storage_writer = storage_writer
     self._task = None
     self._task_queue = task_queue
@@ -160,7 +161,19 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._extraction_worker.SetExtractionConfiguration(
         self._processing_configuration.extraction)
 
-    self._StartProfiling()
+    self._StartProfiling(self._processing_configuration.profiling)
+
+    if self._parsers_profiler:
+      self._extraction_worker.SetParsersProfiler(self._parsers_profiler)
+
+    if self._processing_profiler:
+      self._extraction_worker.SetProcessingProfiler(self._processing_profiler)
+
+    if self._serializers_profiler:
+      self._storage_writer.SetSerializersProfiler(self._serializers_profiler)
+
+    if self._storage_profiler:
+      self._storage_writer.SetStorageProfiler(self._storage_profiler)
 
     logging.debug('Worker: {0!s} (PID: {1:d}) started'.format(
         self._name, self._pid))
@@ -198,7 +211,20 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
       self._abort = True
 
+    if self._parsers_profiler:
+      self._extraction_worker.SetParsersProfiler(None)
+
+    if self._processing_profiler:
+      self._extraction_worker.SetProcessingProfiler(None)
+
+    if self._serializers_profiler:
+      self._storage_writer.SetSerializersProfiler(None)
+
+    if self._storage_profiler:
+      self._storage_writer.SetStorageProfiler(None)
+
     self._StopProfiling()
+
     self._extraction_worker = None
     self._parser_mediator = None
     self._storage_writer = None
@@ -290,40 +316,47 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
     self._task = None
 
-  def _StartProfiling(self):
-    """Starts profiling."""
-    if not self._processing_configuration:
+  def _StartProfiling(self, configuration):
+    """Starts profiling.
+
+    Args:
+      configuration (ProfilingConfiguration): profiling configuration.
+    """
+    if not configuration:
       return
 
-    if self._processing_configuration.profiling.HaveProfileMemoryGuppy():
+    if configuration.HaveProfileMemoryGuppy():
       self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
-          self._name, self._processing_configuration.profiling)
+          self._name, configuration)
       self._guppy_memory_profiler.Start()
 
-    if self._processing_configuration.profiling.HaveProfileMemory():
+    if configuration.HaveProfileMemory():
       self._memory_profiler = profiler.MemoryProfiler(
-          self._name, self._processing_configuration.profiling)
+          self._name, configuration)
       self._memory_profiler.Start()
 
-    if self._processing_configuration.profiling.HaveProfileParsers():
+    if configuration.HaveProfileParsers():
       identifier = '{0:s}-parsers'.format(self._name)
       self._parsers_profiler = profiler.ParsersProfiler(
-          identifier, self._processing_configuration.profiling)
-      self._extraction_worker.SetParsersProfiler(self._parsers_profiler)
+          identifier, configuration)
       self._parsers_profiler.Start()
 
-    if self._processing_configuration.profiling.HaveProfileProcessing():
+    if configuration.HaveProfileProcessing():
       identifier = '{0:s}-processing'.format(self._name)
       self._processing_profiler = profiler.ProcessingProfiler(
-          identifier, self._processing_configuration.profiling)
-      self._extraction_worker.SetProcessingProfiler(self._processing_profiler)
+          identifier, configuration)
       self._processing_profiler.Start()
 
-    if self._processing_configuration.profiling.HaveProfileSerializers():
+    if configuration.HaveProfileSerializers():
       identifier = '{0:s}-serializers'.format(self._name)
       self._serializers_profiler = profiler.SerializersProfiler(
-          identifier, self._processing_configuration.profiling)
+          identifier, configuration)
       self._serializers_profiler.Start()
+
+    if configuration.HaveProfileStorage():
+      self._storage_profiler = profiler.StorageProfiler(
+          self._name, configuration)
+      self._storage_profiler.Start()
 
   def _StopProfiling(self):
     """Stops profiling."""
@@ -337,18 +370,20 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       self._memory_profiler = None
 
     if self._parsers_profiler:
-      self._extraction_worker.SetParsersProfiler(None)
       self._parsers_profiler.Stop()
       self._parsers_profiler = None
 
     if self._processing_profiler:
-      self._extraction_worker.SetProcessingProfiler(None)
       self._processing_profiler.Stop()
       self._processing_profiler = None
 
     if self._serializers_profiler:
       self._serializers_profiler.Stop()
       self._serializers_profiler = None
+
+    if self._storage_profiler:
+      self._storage_profiler.Stop()
+      self._storage_profiler = None
 
   def SignalAbort(self):
     """Signals the process to abort."""

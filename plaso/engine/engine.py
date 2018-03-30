@@ -32,7 +32,14 @@ class BaseEngine(object):
     """Initializes an engine."""
     super(BaseEngine, self).__init__()
     self._abort = False
+    self._guppy_memory_profiler = None
+    self._memory_profiler = None
+    self._name = 'Main'
+    self._parsers_profiler = None
     self._processing_status = processing_status.ProcessingStatus()
+    self._processing_profiler = None
+    self._serializers_profiler = None
+    self._storage_profiler = None
 
     self.knowledge_base = knowledge_base.KnowledgeBase()
 
@@ -188,6 +195,74 @@ class BaseEngine(object):
           ', '.join(detected_operating_systems)))
       self.knowledge_base.SetValue(
           'operating_system', detected_operating_systems[0])
+
+  def _StartProfiling(self, configuration):
+    """Starts profiling.
+
+    Args:
+      configuration (ProfilingConfiguration): profiling configuration.
+    """
+    if not configuration:
+      return
+
+    if configuration.HaveProfileMemoryGuppy():
+      self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
+          self._name, configuration)
+      self._guppy_memory_profiler.Start()
+
+    if configuration.HaveProfileMemory():
+      self._memory_profiler = profiler.MemoryProfiler(self._name, configuration)
+      self._memory_profiler.Start()
+
+    if configuration.HaveProfileParsers():
+      identifier = '{0:s}-parsers'.format(self._name)
+      self._parsers_profiler = profiler.ParsersProfiler(
+          identifier, configuration)
+      self._parsers_profiler.Start()
+
+    if configuration.HaveProfileProcessing():
+      identifier = '{0:s}-processing'.format(self._name)
+      self._processing_profiler = profiler.ProcessingProfiler(
+          identifier, configuration)
+      self._processing_profiler.Start()
+
+    if configuration.HaveProfileSerializers():
+      identifier = '{0:s}-serializers'.format(self._name)
+      self._serializers_profiler = profiler.SerializersProfiler(
+          identifier, configuration)
+      self._serializers_profiler.Start()
+
+    if configuration.HaveProfileStorage():
+      self._storage_profiler = profiler.StorageProfiler(
+          self._name, configuration)
+      self._storage_profiler.Start()
+
+  def _StopProfiling(self):
+    """Stops profiling."""
+    if self._guppy_memory_profiler:
+      self._guppy_memory_profiler.Sample()
+      self._guppy_memory_profiler.Stop()
+      self._guppy_memory_profiler = None
+
+    if self._memory_profiler:
+      self._memory_profiler.Stop()
+      self._memory_profiler = None
+
+    if self._parsers_profiler:
+      self._parsers_profiler.Stop()
+      self._parsers_profiler = None
+
+    if self._processing_profiler:
+      self._processing_profiler.Stop()
+      self._processing_profiler = None
+
+    if self._serializers_profiler:
+      self._serializers_profiler.Stop()
+      self._serializers_profiler = None
+
+    if self._storage_profiler:
+      self._storage_profiler.Stop()
+      self._storage_profiler = None
 
   @classmethod
   def SupportsGuppyMemoryProfiling(cls):

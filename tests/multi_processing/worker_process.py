@@ -152,7 +152,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
           None, None, None, None, configuration, name='TestWorker')
       test_process._extraction_worker = TestEventExtractionWorker()
 
-      test_process._StartProfiling()
+      test_process._StartProfiling(configuration.profiling)
       test_process._StopProfiling()
 
   def testSignalAbort(self):
