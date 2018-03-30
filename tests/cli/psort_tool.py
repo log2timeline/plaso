@@ -8,6 +8,11 @@ import argparse
 import os
 import unittest
 
+try:
+  import resource
+except ImportError
+  resource = None
+
 from plaso.cli import psort_tool
 from plaso.cli.helpers import interface as helpers_interface
 from plaso.cli.helpers import manager as helpers_manager
@@ -109,7 +114,27 @@ class TestOutputModuleMissingParameters(output_interface.LinearOutputModule):
 class PsortToolTest(test_lib.CLIToolTestCase):
   """Tests for the psort tool."""
 
-  _EXPECTED_PROCESSING_OPTIONS = """\
+  if resource is None:
+    _EXPECTED_PROCESSING_OPTIONS = """\
+usage: psort_test.py [--temporary_directory DIRECTORY] [--disable_zeromq]
+                     [--worker-memory-limit SIZE]
+
+Test argument parser.
+
+optional arguments:
+  --disable_zeromq, --disable-zeromq
+                        Disable queueing using ZeroMQ. A Multiprocessing queue
+                        will be used instead.
+  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
+                        Path to the directory that should be used to store
+                        temporary files created during processing.
+  --worker-memory-limit SIZE, --worker_memory_limit SIZE
+                        Maximum amount of memory a worker process is allowed
+                        to consume, where 0 represents no limit [defaults to 2
+                        GiB].
+"""
+  else:
+    _EXPECTED_PROCESSING_OPTIONS = """\
 usage: psort_test.py [--process_memory_limit SIZE]
                      [--temporary_directory DIRECTORY] [--disable_zeromq]
                      [--worker-memory-limit SIZE]
