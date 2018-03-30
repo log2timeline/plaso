@@ -104,8 +104,7 @@ class CLITool(object):
     if memory_limit is None:
       memory_limit = 4 * 1024 * 1024 * 1024
     elif memory_limit == 0:
-      # setrlimit uses -1 to represent unlimited.
-      memory_limit = -1
+      memory_limit = resource.RLIM_INFINITY
 
     resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
 
