@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import abc
 import datetime
 import locale
-import resources
+import resource
 import sys
 
 import plaso

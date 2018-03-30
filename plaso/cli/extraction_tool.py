@@ -235,6 +235,6 @@ class ExtractionTool(
             'Indicate that the tool should run in a single process.'))
 
     argument_helper_names = [
-        'process_resources', 'temporary_directory', 'workers', 'zeromq'])
+        'process_resources', 'temporary_directory', 'workers', 'zeromq']
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         argument_group, names=argument_helper_names)

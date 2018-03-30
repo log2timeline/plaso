@@ -28,7 +28,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
   _EXPECTED_PROCESSING_OPTIONS = ("""\
 usage: log2timeline_test.py [--disable_zeromq] [--single_process]
                             [--temporary_directory DIRECTORY]
-                            [--worker-memory-limit SIZE] [--workers WORKERS]
+                            [--worker_memory_limit SIZE] [--workers WORKERS]
 
 Test argument parser.
 
@@ -45,7 +45,7 @@ optional arguments:
                         Maximum amount of memory a worker process is allowed
                         to consume, where 0 represents no limit [defaults to 2
                         GiB].
-  --workers WORKERS     The number of worker processes [defaults to available
+  --workers WORKERS     Number of worker processes [defaults to available
                         system CPUs minus one].
 """)
 
