@@ -53,7 +53,7 @@ class CPUTimeProfiler(object):
     """
     super(CPUTimeProfiler, self).__init__()
     self._identifier = identifier
-    self._path = configuration.path
+    self._path = configuration.directory
     self._profile_measurements = {}
     self._sample_file = None
 
@@ -111,7 +111,7 @@ class GuppyMemoryProfiler(object):
     """
     super(GuppyMemoryProfiler, self).__init__()
     self._identifier = identifier
-    self._path = configuration.path
+    self._path = configuration.directory
     self._profiling_sample = 0
     self._profiling_sample_rate = configuration.profiling_sample_rate
     self._heapy = None
@@ -170,7 +170,7 @@ class MemoryProfiler(object):
     """
     super(MemoryProfiler, self).__init__()
     self._identifier = identifier
-    self._path = configuration.path
+    self._path = configuration.directory
     self._sample_file = None
 
   @classmethod
