@@ -120,7 +120,7 @@ class CLITool(object):
       elif memory_limit == 0:
         memory_limit = resource.RLIM_INFINITY
 
-      resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
+      resource.setrlimit(resource.RLIMIT_DATA, (memory_limit, memory_limit))
 
   def _ParseInformationalOptions(self, options):
     """Parses the informational options.
