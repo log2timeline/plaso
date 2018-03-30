@@ -29,6 +29,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._current_display_name = ''
     self._guppy_memory_profiler = None
     self._last_status_update_timestamp = 0.0
+    self._memory_profiler = None
     self._name = 'Main'
     self._parsers_profiler = None
     self._path_spec_extractor = extractors.PathSpecExtractor()
@@ -188,29 +189,32 @@ class SingleProcessEngine(engine.BaseEngine):
 
     if self._processing_configuration.profiling.HaveProfileMemoryGuppy():
       self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
-          self._name, path=self._processing_configuration.profiling.directory,
-          profiling_sample_rate=(
-              self._processing_configuration.profiling.sample_rate))
+          self._name, self._processing_configuration.profiling)
       self._guppy_memory_profiler.Start()
+
+    if self._processing_configuration.profiling.HaveProfileMemory():
+      self._memory_profiler = profiler.MemoryProfiler(
+          self._name, self._processing_configuration.profiling)
+      self._memory_profiler.Start()
 
     if self._processing_configuration.profiling.HaveProfileParsers():
       identifier = '{0:s}-parsers'.format(self._name)
       self._parsers_profiler = profiler.ParsersProfiler(
-          identifier, path=self._processing_configuration.profiling.directory)
+          identifier, self._processing_configuration.profiling)
       extraction_worker.SetParsersProfiler(self._parsers_profiler)
       self._parsers_profiler.Start()
 
     if self._processing_configuration.profiling.HaveProfileProcessing():
       identifier = '{0:s}-processing'.format(self._name)
       self._processing_profiler = profiler.ProcessingProfiler(
-          identifier, path=self._processing_configuration.profiling.directory)
+          identifier, self._processing_configuration.profiling)
       extraction_worker.SetProcessingProfiler(self._processing_profiler)
       self._processing_profiler.Start()
 
     if self._processing_configuration.profiling.HaveProfileSerializers():
       identifier = '{0:s}-serializers'.format(self._name)
       self._serializers_profiler = profiler.SerializersProfiler(
-          identifier, path=self._processing_configuration.profiling.directory)
+          identifier, self._processing_configuration.profiling)
       self._serializers_profiler.Start()
 
   def _StopProfiling(self, extraction_worker):
@@ -223,6 +227,10 @@ class SingleProcessEngine(engine.BaseEngine):
       self._guppy_memory_profiler.Sample()
       self._guppy_memory_profiler.Stop()
       self._guppy_memory_profiler = None
+
+    if self._memory_profiler:
+      self._memory_profiler.Stop()
+      self._memory_profiler = None
 
     if self._parsers_profiler:
       extraction_worker.SetParsersProfiler(None)
