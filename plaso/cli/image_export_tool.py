@@ -7,6 +7,7 @@ import argparse
 import os
 import textwrap
 
+
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
@@ -16,9 +17,9 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.cli import logger
 from plaso.cli import storage_media_tool
+from plaso.cli import tools
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import extractors
-from plaso.engine import filter_file
 from plaso.engine import knowledge_base
 from plaso.engine import path_helper
 from plaso.filters import file_entry as file_entry_filters
@@ -73,6 +74,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     super(ImageExportTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._abort = False
+    self._artifact_filters = None
     self._artifacts_registry = None
     self._destination_path = None
     self._digests = {}
@@ -287,7 +289,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
   # TODO: merge with collector and/or engine.
   def _ExtractWithFilter(
       self, source_path_specs, destination_path, output_writer,
-      filter_file_path, skip_duplicates=True):
+      artifacts_registry, artifact_filters_path, filter_file_path,
+      skip_duplicates=True):
     """Extracts files using a filter expression.
 
     This method runs the file extraction process on the image and
@@ -297,8 +300,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       source_path_specs (list[dfvfs.PathSpec]): path specifications to extract.
       destination_path (str): path where the extracted files should be stored.
       output_writer (CLIOutputWriter): output writer.
+      artifacts_registry (ArtifactRegistry): Artifacts registry object.
+      artifact_filters_path (str): path of the file that contains the
+          names of the artifacts filter definitions or definitions directly
+          listed comma separated.
       filter_file_path (str): path of the file that contains the filter
-          expressions.
+          expressions or artifact definitions.
       skip_duplicates (Optional[bool]): True if files with duplicate content
           should be skipped.
     """
@@ -314,10 +321,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       output_writer.Write(
           'Extracting file entries from: {0:s}\n'.format(display_name))
 
-      environment_variables = self._knowledge_base.GetEnvironmentVariables()
-      filter_file_object = filter_file.FilterFile(filter_file_path)
-      find_specs = filter_file_object.BuildFindSpecs(
-          environment_variables=environment_variables)
+      find_specs = tools.FindSpecsGetter().GetFindSpecs(artifacts_registry,
+        artifact_filters_path, filter_file_path, self._knowledge_base)
 
       searcher = file_system_searcher.FileSystemSearcher(
           file_system, mount_point)
@@ -399,7 +404,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    names = ['date_filters', 'filter_file']
+    names = ['artifact_filters', 'date_filters', 'filter_file']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=names)
 
@@ -416,7 +421,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     except (IOError, ValueError) as exception:
       raise errors.BadConfigOption(exception)
 
-    if self._filter_file:
+    if self._artifact_filters or self._filter_file:
       self.has_filters = True
     else:
       self.has_filters = self._filter_collection.HasFilters()
@@ -559,7 +564,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     Args:
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
-    names = ['date_filters', 'filter_file']
+    names = ['artifact_filters', 'date_filters', 'filter_file']
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         argument_group, names=names)
 
@@ -749,9 +754,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     if not os.path.isdir(self._destination_path):
       os.makedirs(self._destination_path)
 
-    if self._filter_file:
+    if self._artifact_filters or self._filter_file:
       self._ExtractWithFilter(
           self._source_path_specs, self._destination_path, self._output_writer,
+          self._artifacts_registry, self._artifact_filters,
           self._filter_file, skip_duplicates=self._skip_duplicates)
     else:
       self._Extract(

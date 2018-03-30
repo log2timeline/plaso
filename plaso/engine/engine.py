@@ -162,12 +162,13 @@ class BaseEngine(object):
 
   @classmethod
   def CreateSession(
-      cls, command_line_arguments=None, debug_mode=False,
-      filter_file=None, preferred_encoding='utf-8',
+      cls, artifact_filters=None, command_line_arguments=None,
+      debug_mode=False, filter_file=None, preferred_encoding='utf-8',
       preferred_time_zone=None, preferred_year=None):
     """Creates a session attribute container.
 
     Args:
+      artifact_filters (Optional[str]): Artifact filters definitions.
       command_line_arguments (Optional[str]): the command line arguments.
       debug_mode (bool): True if debug mode was enabled.
       filter_file (Optional[str]): path to a file with find specifications.
@@ -180,6 +181,7 @@ class BaseEngine(object):
     """
     session = sessions.Session()
 
+    session.artifact_filters = artifact_filters
     session.command_line_arguments = command_line_arguments
     session.debug_mode = debug_mode
     session.filter_file = filter_file

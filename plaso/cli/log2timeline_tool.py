@@ -23,7 +23,6 @@ from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import engine
-from plaso.engine import filter_file
 from plaso.engine import single_process as single_process_engine
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -167,7 +166,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         'extraction arguments')
 
     argument_helper_names = [
-        'extraction', 'filter_file', 'hashers', 'parsers', 'yara_rules']
+        'artifact_filters', 'extraction', 'filter_file', 'hashers',
+        'parsers', 'yara_rules']
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         extraction_group, names=argument_helper_names)
 
@@ -317,8 +317,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._ParseInformationalOptions(options)
 
     argument_helper_names = [
-        'artifact_definitions', 'extraction', 'filter_file', 'status_view',
-        'storage_file', 'storage_format', 'text_prepend', 'yara_rules']
+        'artifact_definitions', 'artifact_filters', 'extraction',
+        'filter_file', 'status_view', 'storage_file', 'storage_format',
+        'text_prepend', 'yara_rules']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
@@ -370,7 +371,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._status_view.SetMode(self._status_view_mode)
     self._status_view.SetSourceInformation(
-        self._source_path, self._source_type, filter_file=self._filter_file)
+        self._source_path, self._source_type,
+        artifact_filters=self._artifact_filters,
+        filter_file=self._filter_file)
 
     status_update_callback = (
         self._status_view.GetExtractionStatusUpdateCallback())
@@ -380,6 +383,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._output_writer.Write('Processing started.\n')
 
     session = engine.BaseEngine.CreateSession(
+        artifact_filters=self._artifact_filters,
         command_line_arguments=self._command_line_arguments,
         debug_mode=self._debug_mode,
         filter_file=self._filter_file,
@@ -415,13 +419,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._SetExtractionParsersAndPlugins(configuration, session)
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
-    filter_find_specs = None
-    if configuration.filter_file:
-      environment_variables = (
-          extraction_engine.knowledge_base.GetEnvironmentVariables())
-      filter_file_object = filter_file.FilterFile(configuration.filter_file)
-      filter_find_specs = filter_file_object.BuildFindSpecs(
-          environment_variables=environment_variables)
+    filter_find_specs = tools.FindSpecsGetter().GetFindSpecs(
+      configuration.artifacts_registry, configuration.artifact_filters,
+      configuration.filter_file, extraction_engine.knowledge_base)
 
     processing_status = None
     if single_process_mode:

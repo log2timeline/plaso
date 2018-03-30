@@ -43,6 +43,15 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
             'quickly collect data of interest, such as specific files or '
             'Windows Registry keys.'))
 
+    argument_group.add_argument(
+        '--custom_artifact_definitions', '--custom-artifact-definitions',
+        dest='custom_artifact_definitions_path', type=str, metavar='PATH',
+        action='store', help=(
+            'Path to a file containing custom artifact definitions, which are '
+            '.yaml files. Artifact definitions can be used to describe and '
+            'quickly collect data of interest, such as specific files or '
+            'Windows Registry keys.'))
+
   @classmethod
   def ParseOptions(cls, options, configuration_object):
     """Parses and validates options.
@@ -86,11 +95,19 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
       raise errors.BadConfigOption(
           'Unable to determine path to artifact definitions.')
 
+    custom_artifacts_path = getattr(
+        options, 'custom_artifact_definitions_path', None)
+
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
 
     try:
       registry.ReadFromDirectory(reader, artifacts_path)
+      if custom_artifacts_path and os.path.isfile(custom_artifacts_path):
+        registry.ReadFromFile(reader, custom_artifacts_path)
+      elif custom_artifacts_path and not os.path.isfile(custom_artifacts_path):
+        raise errors.BadConfigOption(
+          'No such artifacts filter file: {0:s}.'.format(custom_artifacts_path))
 
     except (KeyError, artifacts_errors.FormatError) as exception:
       raise errors.BadConfigOption((

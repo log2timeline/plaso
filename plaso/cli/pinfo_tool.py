@@ -353,6 +353,7 @@ class PinfoTool(
       command_line_arguments = session.command_line_arguments or 'N/A'
       parser_filter_expression = session.parser_filter_expression or 'N/A'
       preferred_encoding = session.preferred_encoding or 'N/A'
+      artifact_filters = session.artifact_filters or 'N/A'
       filter_file = session.filter_file or 'N/A'
 
       title = 'Session: {0!s}'.format(session_identifier)
@@ -368,6 +369,7 @@ class PinfoTool(
       table_view.AddRow(['Enabled parser and plugins', enabled_parser_names])
       table_view.AddRow(['Preferred encoding', preferred_encoding])
       table_view.AddRow(['Debug mode', session.debug_mode])
+      table_view.AddRow(['Artifact filters', artifact_filters])
       table_view.AddRow(['Filter file', filter_file])
 
       table_view.Write(self._output_writer)

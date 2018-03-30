@@ -6,6 +6,11 @@ from __future__ import unicode_literals
 
 import unittest
 
+from artifacts import reader as artifacts_reader
+from artifacts import registry as artifacts_registry
+
+from plaso.engine import artifact_filters
+from plaso.engine import knowledge_base as knowledge_base_engine
 from plaso.parsers import winreg
 # Register all plugins.
 from plaso.parsers import winreg_plugins  # pylint: disable=unused-import
@@ -76,6 +81,55 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     """Tests the Parse function on a SYSTEM file."""
     parser = winreg.WinRegistryParser()
     storage_writer = self._ParseFile(['SYSTEM'], parser)
+
+    events = list(storage_writer.GetEvents())
+
+    parser_chains = self._GetParserChains(events)
+
+    # Check the existence of few known plugins, see if they
+    # are being properly picked up and are parsed.
+    plugin_names = [
+        'windows_usbstor_devices', 'windows_boot_execute',
+        'windows_services']
+    for plugin in plugin_names:
+      expected_parser_chain = self._PluginNameToParserChain(plugin)
+      self.assertTrue(
+          expected_parser_chain in parser_chains,
+          'Chain {0:s} not found in events.'.format(expected_parser_chain))
+
+    # Check that the number of events produced by each plugin are correct.
+    parser_chain = self._PluginNameToParserChain('windows_usbstor_devices')
+    self.assertEqual(parser_chains.get(parser_chain, 0), 10)
+
+    parser_chain = self._PluginNameToParserChain('windows_boot_execute')
+    self.assertEqual(parser_chains.get(parser_chain, 0), 4)
+
+    parser_chain = self._PluginNameToParserChain('windows_services')
+    self.assertEqual(parser_chains.get(parser_chain, 0), 831)
+
+  @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
+  @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
+  def testParseSystemWithArtifactFilters(self):
+    """Tests the Parse function on a SYSTEM file with artifact filters."""
+    parser = winreg.WinRegistryParser()
+    knowledge_base = knowledge_base_engine.KnowledgeBase()
+
+    artifacts_filters = ['TestRegistryKey', 'TestRegistryValue']
+    registry = artifacts_registry.ArtifactDefinitionsRegistry()
+    reader = artifacts_reader.YamlArtifactsReader()
+
+    registry.ReadFromDirectory(reader, self._GetTestFilePath(['artifacts']))
+
+    test_filter_file = artifact_filters.ArtifactFilters(
+        registry, artifacts_filters, knowledge_base)
+
+    test_filter_file.BuildFindSpecs(environment_variables=None)
+
+    find_specs = {
+      artifact_filters.ARTIFACT_FILTERS : knowledge_base.GetValue(
+        artifact_filters.ARTIFACT_FILTERS)}
+    storage_writer = self._ParseFile(['SYSTEM'], parser,
+                                     knowledge_base_values=find_specs)
 
     events = list(storage_writer.GetEvents())
 
