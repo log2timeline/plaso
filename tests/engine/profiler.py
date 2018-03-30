@@ -77,6 +77,7 @@ class GuppyMemoryProfilerTest(shared_test_lib.BaseTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       profiling_configuration.directory = temp_directory
+      profiling_configuration.profiling_sample_rate = 1000
 
       test_profiler = profiler.GuppyMemoryProfiler(
           'unittest', profiling_configuration)
