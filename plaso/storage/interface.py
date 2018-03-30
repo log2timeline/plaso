@@ -1179,8 +1179,8 @@ class StorageFileWriter(StorageWriter):
   def CheckTaskReadyForMerge(self, task):
     """Checks if a task is ready for merging with this session storage.
 
-    This method also updates the size of the storage file if the task
-    is ready to be merged.
+    If the task is ready to be merged, this method also sets the task's
+    storage file size.
 
     Args:
       task (Task): task.
@@ -1212,8 +1212,8 @@ class StorageFileWriter(StorageWriter):
   def CheckTasksReadyForMerge(self, tasks):
     """Checks which tasks are ready to be merged.
 
-    This method also updates the size of the storage file for tasks that are
-    ready to be merged.
+    If the task is ready to be merged, this method also sets the task's
+    storage file size.
 
     Args:
       tasks (list[Task]): tasks to check for merging.
@@ -1232,10 +1232,8 @@ class StorageFileWriter(StorageWriter):
     if not self._merge_task_storage_path:
       raise IOError('Missing merge task storage path.')
 
-    tasks_by_identifier = {}
+    tasks_by_identifier = {task.identifier: task for task in tasks}
     tasks_pending_merge = []
-    for task in tasks:
-      tasks_by_identifier[task.identifier] = task
 
     completed_task_filenames = os.listdir(self._merge_task_storage_path)
     completed_task_identifiers = [

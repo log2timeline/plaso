@@ -414,14 +414,13 @@ class TaskManager(object):
     """Updates the task manager to reflect that tasks are ready to be merged.
 
     Args:
-      mergeable_tasks (list[Task]): list of tasks that are ready to be merged.
+      mergeable_tasks (list[Task]): tasks that are ready to be merged.
 
     Raises:
       KeyError: if a task was not processing or abandoned.
     """
     for task in mergeable_tasks:
       self.UpdateTaskAsPendingMerge(task)
-
 
   def UpdateTaskAsProcessingByIdentifier(self, task_identifier):
     """Updates the task manager to reflect the task is processing.
