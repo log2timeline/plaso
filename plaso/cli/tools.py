@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import abc
 import datetime
 import locale
+import resources
 import sys
 
 import plaso
@@ -91,6 +92,19 @@ class CLITool(object):
           self.preferred_encoding, errors=self._encode_errors)
 
     return encoded_string
+
+  def _EnforceProcessMemoryLimit(self, memory_limit):
+    """Enforces a process memory limit.
+
+    Args:
+      memory_limit (int): maximum number of bytes the process is allowed
+          to allocate, where 0 represents no limit.
+    """
+    if memory_limit == 0:
+      # setrlimit uses -1 to represent unlimited.
+      memory_limit = -1
+
+    resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
 
   def _ParseInformationalOptions(self, options):
     """Parses the informational options.

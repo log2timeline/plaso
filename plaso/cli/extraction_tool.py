@@ -14,6 +14,7 @@ from plaso import parsers  # pylint: disable=unused-import
 from plaso.cli import logger
 from plaso.cli import storage_media_tool
 from plaso.cli import tool_options
+from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import configurations
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -51,6 +52,7 @@ class ExtractionTool(
     self._preferred_year = None
     self._process_archives = False
     self._process_compressed_streams = True
+    self._process_memory_limit = None
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._resolver_context = dfvfs_context.Context()
     self._single_process_mode = False
@@ -58,6 +60,7 @@ class ExtractionTool(
     self._storage_format = definitions.STORAGE_FORMAT_SQLITE
     self._temporary_directory = None
     self._text_prepend = None
+    self._use_zeromq = True
     self._yara_rules_string = None
 
   def _CreateProcessingConfiguration(self, knowledge_base):
@@ -137,6 +140,22 @@ class ExtractionTool(
 
     self._queue_size = self.ParseNumericOption(options, 'queue_size')
 
+  def _ParseProcessingOptions(self, options):
+    """Parses the processing options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    self._single_process_mode = getattr(options, 'single_process', False)
+
+    argument_helper_names = [
+        'process_resources', 'temporary_directory', 'workers', 'zeromq']
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=argument_helper_names)
+
   def _PreprocessSources(self, extraction_engine):
     """Preprocesses the sources.
 
@@ -203,3 +222,19 @@ class ExtractionTool(
         default=0, help=(
             'The maximum number of queued items per worker '
             '(defaults to {0:d})').format(self._DEFAULT_QUEUE_SIZE))
+
+  def AddProcessingOptions(self, argument_group):
+    """Adds the processing options to the argument group.
+
+    Args:
+      argument_group (argparse._ArgumentGroup): argparse argument group.
+    """
+    argument_group.add_argument(
+        '--single_process', '--single-process', dest='single_process',
+        action='store_true', default=False, help=(
+            'Indicate that the tool should run in a single process.'))
+
+    argument_helper_names = [
+        'process_resources', 'temporary_directory', 'workers', 'zeromq'])
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_group, names=argument_helper_names)
