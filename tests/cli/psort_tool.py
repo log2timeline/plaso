@@ -109,29 +109,29 @@ class TestOutputModuleMissingParameters(output_interface.LinearOutputModule):
 class PsortToolTest(test_lib.CLIToolTestCase):
   """Tests for the psort tool."""
 
-  _EXPECTED_PROCESSING_OPTIONS = '\n'.join([
-      ('usage: psort_test.py [--disable_zeromq] '
-       '[--temporary_directory DIRECTORY]'),
-      '                     [--worker-memory-limit SIZE]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --disable_zeromq, --disable-zeromq',
-      ('                        Disable queueing using ZeroMQ. A '
-       'Multiprocessing queue'),
-      '                        will be used instead.',
-      '  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
-      ('                        Path to the directory that should be used to '
-       'store'),
-      '                        temporary files created during processing.',
-      '  --worker-memory-limit SIZE, --worker_memory_limit SIZE',
-      ('                        Maximum amount of memory a worker process is '
-       'allowed'),
-      ('                        to consume, where 0 represents no limit '
-       '[defaults to 2'),
-      '                        GiB].',
-      ''])
+  _EXPECTED_PROCESSING_OPTIONS = """\
+usage: psort_test.py [--process_memory_limit SIZE]
+                     [--temporary_directory DIRECTORY] [--disable_zeromq]
+                     [--worker-memory-limit SIZE]
+
+Test argument parser.
+
+optional arguments:
+  --disable_zeromq, --disable-zeromq
+                        Disable queueing using ZeroMQ. A Multiprocessing queue
+                        will be used instead.
+  --process_memory_limit SIZE, --process-memory-limit SIZE
+                        Maximum amount of memory a process is allowed to
+                        allocate, where 0 represents no limit [defaults to 4
+                        GiB].
+  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
+                        Path to the directory that should be used to store
+                        temporary files created during processing.
+  --worker-memory-limit SIZE, --worker_memory_limit SIZE
+                        Maximum amount of memory a worker process is allowed
+                        to consume, where 0 represents no limit [defaults to 2
+                        GiB].
+"""
 
   # TODO: add test for _CreateOutputModule.
   # TODO: add test for _FormatStatusTableRow.
