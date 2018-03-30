@@ -419,7 +419,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._SetExtractionParsersAndPlugins(configuration, session)
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
-    filter_find_specs = tools.FindSpecsGetter().GetFindSpecs(
+    filter_find_specs = engine.BaseEngine.BuildFilterFindSpecs(
       configuration.artifacts_registry, configuration.artifact_filters,
       configuration.filter_file, extraction_engine.knowledge_base)
 

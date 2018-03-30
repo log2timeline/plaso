@@ -7,7 +7,6 @@ import argparse
 import os
 import textwrap
 
-
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
@@ -17,8 +16,8 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.cli import logger
 from plaso.cli import storage_media_tool
-from plaso.cli import tools
 from plaso.cli.helpers import manager as helpers_manager
+from plaso.engine import engine
 from plaso.engine import extractors
 from plaso.engine import knowledge_base
 from plaso.engine import path_helper
@@ -300,12 +299,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       source_path_specs (list[dfvfs.PathSpec]): path specifications to extract.
       destination_path (str): path where the extracted files should be stored.
       output_writer (CLIOutputWriter): output writer.
-      artifacts_registry (ArtifactRegistry): Artifacts registry object.
+      artifacts_registry (artifacts.ArtifactDefinitionsRegistry]): artifact
+          definitions registry.
       artifact_filters_path (str): path of the file that contains the
           names of the artifacts filter definitions or definitions directly
           listed comma separated.
-      filter_file_path (str): path of the file that contains the filter
-          expressions or artifact definitions.
+      filter_file_path (str): path of the file that contains the filter.
       skip_duplicates (Optional[bool]): True if files with duplicate content
           should be skipped.
     """
@@ -321,7 +320,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       output_writer.Write(
           'Extracting file entries from: {0:s}\n'.format(display_name))
 
-      find_specs = tools.FindSpecsGetter().GetFindSpecs(artifacts_registry,
+      find_specs = engine.BaseEngine.BuildFilterFindSpecs(artifacts_registry,
         artifact_filters_path, filter_file_path, self._knowledge_base)
 
       searcher = file_system_searcher.FileSystemSearcher(

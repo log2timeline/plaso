@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import logging
 import unittest
 
 from artifacts import reader as artifacts_reader
@@ -111,6 +112,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])
   def testParseSystemWithArtifactFilters(self):
     """Tests the Parse function on a SYSTEM file with artifact filters."""
+    logging.warning('HELP')
     parser = winreg.WinRegistryParser()
     knowledge_base = knowledge_base_engine.KnowledgeBase()
 
@@ -120,14 +122,14 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
 
     registry.ReadFromDirectory(reader, self._GetTestFilePath(['artifacts']))
 
-    test_filter_file = artifact_filters.ArtifactFilters(
+    test_filter_file = artifact_filters.ArtifactDefinitionsFilterHelper(
         registry, artifacts_filters, knowledge_base)
 
     test_filter_file.BuildFindSpecs(environment_variables=None)
 
     find_specs = {
-      artifact_filters.ARTIFACT_FILTERS : knowledge_base.GetValue(
-        artifact_filters.ARTIFACT_FILTERS)}
+      test_filter_file.KNOWLEDGE_BASE_VALUE : knowledge_base.GetValue(
+        test_filter_file.KNOWLEDGE_BASE_VALUE)}
     storage_writer = self._ParseFile(['SYSTEM'], parser,
                                      knowledge_base_values=find_specs)
 
@@ -147,12 +149,21 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
           'Chain {0:s} not found in events.'.format(expected_parser_chain))
 
     # Check that the number of events produced by each plugin are correct.
-    parser_chain = self._PluginNameToParserChain('windows_usbstor_devices')
-    self.assertEqual(parser_chains.get(parser_chain, 0), 10)
 
+    # There will be 5 usbstor chains for currentcontrolset:
+    # 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Enum\USBSTOR'
+    parser_chain = self._PluginNameToParserChain('windows_usbstor_devices')
+    self.assertEqual(parser_chains.get(parser_chain, 0), 5)
+
+    # There will be 4 Windows boot execute chains for key_value pairs:
+    # {key: 'HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager', value: 'BootExecute'}
+    # {key: 'HKEY_LOCAL_MACHINE\System\ControlSet002\Control\Session Manager', value: 'BootExecute'}
     parser_chain = self._PluginNameToParserChain('windows_boot_execute')
     self.assertEqual(parser_chains.get(parser_chain, 0), 4)
 
+    # There will be 831 windows services chains for keys:
+    # 'HKEY_LOCAL_MACHINE\System\ControlSet001\services\**'
+    # 'HKEY_LOCAL_MACHINE\System\ControlSet002\services\**'
     parser_chain = self._PluginNameToParserChain('windows_services')
     self.assertEqual(parser_chains.get(parser_chain, 0), 831)
 

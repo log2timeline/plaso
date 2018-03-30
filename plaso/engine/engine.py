@@ -3,12 +3,16 @@
 
 from __future__ import unicode_literals
 
+from artifacts import definitions as artifact_types
+
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import sessions
+from plaso.engine import artifact_filters
+from plaso.engine import filter_file
 from plaso.engine import knowledge_base
 from plaso.engine import logger
 from plaso.engine import processing_status
@@ -274,3 +278,37 @@ class BaseEngine(object):
       bool: True if memory profiling with guppy is supported.
     """
     return profilers.GuppyMemoryProfiler.IsSupported()
+
+  @classmethod
+  def BuildFilterFindSpecs(
+      self, artifacts_registry, artifact_filter_names, filter_file_path,
+      knowledge_base):
+    """Get Find Specs from artifacts or filter file if available.
+
+    Args:
+       artifact_filters (str): Path to file listing artifact filters by
+          name or artifact names listed directly, comma separated.
+       filter_file_path (str): Path of filter file.
+       knowledge_base (KnowledgeBase): Knowledge base.
+    """
+
+    environment_variables = knowledge_base.GetEnvironmentVariables()
+    find_specs = None
+    if artifact_filter_names:
+      artifact_filters_object = (
+        artifact_filters.ArtifactDefinitionsFilterHelper(
+            artifacts_registry, artifact_filter_names, knowledge_base))
+      artifact_filters_object.BuildFindSpecs(environment_variables)
+      find_specs = knowledge_base.GetValue(
+          artifact_filters_object.KNOWLEDGE_BASE_VALUE)[
+              artifact_types.TYPE_INDICATOR_FILE]
+    elif filter_file_path:
+      filter_file_object = filter_file.FilterFile(filter_file_path)
+      find_specs = filter_file_object.BuildFindSpecs(
+          environment_variables=environment_variables)
+
+    # if not find_specs:
+    #   raise RuntimeError('Error processing filters, no valid specifications'
+    #                      'built.')
+
+    return find_specs

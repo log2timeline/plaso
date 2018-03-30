@@ -32,16 +32,25 @@ class ArtifactFiltersArgumentsHelper(interface.ArgumentsHelper):
         '--artifact_filters', '--artifact-filters',
         dest='artifact_filters', type=str, default=None,
         action='store', help=(
-            'Names of forensic artifact definitions, provided in the following'
-            'formats. (1) Directly on the command line (comma separated), in a'
-            'in a file with one artifact name per line, or one operating system'
-            'specific keyword which will process all artifacts supporting that'
-            'OS (windows, linux, darwin).  Forensic artifacts are stored '
+            'Names of forensic artifact definitions, provided on the command '
+            'command line (comma separated). Forensic artifacts are stored '
             'in .yaml files that are directly pulled from the artifact '
-            'definitions project. You can also specify a custom artifacts yaml'
-            'file (see --custom_artifact_definitions).  Artifact definitions '
-            'can be used to describe and quickly collect data of interest, such'
-            ' as specific files or Windows Registry keys.'))
+            'definitions project. You can also specify a custom '
+            'artifacts yaml file (see --custom_artifact_definitions). Artifact '
+            'definitions can be used to describe and quickly collect data of '
+            'interest, such as specific files or Windows Registry keys.'))
+
+    argument_group.add_argument(
+        '--artifact_filters_file', '--artifact-filters_file',
+        dest='artifact_filters', type=str, default=None,
+        action='store', help=(
+            'Names of forensic artifact definitions, provided in a file with '
+            'one artifact name per line. Forensic artifacts are stored in '
+            '.yaml files that are directly pulled from the artifact '
+            'definitions project. You can also specify a custom artifacts '
+            'yaml file (see --custom_artifact_definitions). Artifact '
+            'definitions can be used to describe and quickly collect data of '
+            'interest, such as specific files or Windows Registry keys.'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
@@ -61,17 +70,28 @@ class ArtifactFiltersArgumentsHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           'Configuration object is not an instance of CLITool')
 
-    artifact_filters = cls._ParseStringOption(
-        options, 'artifact_filters').lower()
+    artifact_filters = cls._ParseStringOption(options, 'artifact_filters')
+    artifact_filters_file = cls._ParseStringOption(
+        options, 'artifact_filters_file')
+    filter_file = cls._ParseStringOption(options, 'file_filter')
 
-    if artifact_filters and os.path.isfile(artifact_filters):
-      with open(artifact_filters) as f:
-        artifact_filters = f.read().splitlines()
+    if artifact_filters and artifact_filters_file:
+      raise errors.BadConfigOption(
+          'Please only specify artifact definition names in a file '
+          'or on the command line.')
+
+    if (artifact_filters_file or artifact_filters) and filter_file:
+      raise errors.BadConfigOption(
+          'Please do not specify both artifact definitions and legacy filters.')
+
+
+    if artifact_filters_file and os.path.isfile(artifact_filters_file):
+      with open(artifact_filters_file) as file_object:
+        artifact_filters = file_object.read().splitlines()
     elif artifact_filters:
-      artifact_filters = artifact_filters.split(',')
+      artifact_filters = [name.strip() for name in artifact_filters.split(',')]
 
-    setattr(configuration_object, '_artifact_filters',
-            artifact_filters)
+    setattr(configuration_object, '_artifact_filters', artifact_filters)
 
 
 manager.ArgumentHelperManager.RegisterHelper(ArtifactFiltersArgumentsHelper)

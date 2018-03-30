@@ -20,9 +20,14 @@ class ArtifactDefinitionsFilterHelper(object):
   https://github.com/ForensicArtifacts/artifacts/blob/master/docs/Artifacts%20definition%20format%20and%20style%20guide.asciidoc
   """
 
-  _KNOWLEDGE_BASE_VALUE = 'ARTIFACT_FILTERS'
+  KNOWLEDGE_BASE_VALUE = 'ARTIFACT_FILTERS'
 
-  _COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES = ['HKEY_LOCAL_MACHINE']
+  COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES = frozenset([
+      'HKEY_LOCAL_MACHINE',
+      'HKEY_LOCAL_MACHINE\\SYSTEM',
+      'HKEY_LOCAL_MACHINE\\SOFTWARE',
+      'HKEY_LOCAL_MACHINE\\SAM',
+      'HKEY_LOCAL_MACHINE\\SECURITY'])
 
   def __init__(self, artifacts_registry, artifact_definitions, knowledge_base):
     """Initializes an artifact definitions filter helper.
@@ -49,7 +54,7 @@ class ArtifactDefinitionsFilterHelper(object):
     Returns:
       bool: True if key is compatible or False if not.
     """
-    for key_path_prefix in self._COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES:
+    for key_path_prefix in self.COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES:
       if key_path.startswith(key_path_prefix):
         return True
 
@@ -108,7 +113,7 @@ class ArtifactDefinitionsFilterHelper(object):
           # TODO: move source.key_value_pairs iteration into
           # BuildFindSpecsFromRegistryArtifact.
           for key_path in set([
-              key_path for key_path, _ in source.key_value_pairs]):
+              key_value['key'] for key_value in source.key_value_pairs]):
             if self._CheckKeyCompatibility(key_path):
               find_specs = self.BuildFindSpecsFromRegistryArtifact(key_path)
               find_specs_per_source_type[
@@ -121,7 +126,7 @@ class ArtifactDefinitionsFilterHelper(object):
                   source.type_indicator))
 
     self._knowledge_base.SetValue(
-        self._KNOWLEDGE_BASE_VALUE, find_specs_per_source_type)
+        self.KNOWLEDGE_BASE_VALUE, find_specs_per_source_type)
 
   def BuildFindSpecsFromFileArtifact(
       self, source_path, path_separator, environment_variables, user_accounts):
