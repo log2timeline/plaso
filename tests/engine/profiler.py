@@ -26,12 +26,14 @@ class CPUTimeProfilerTest(shared_test_lib.BaseTestCase):
       test_profiler = profiler.CPUTimeProfiler(
           'unittest', path=temp_directory)
 
+      test_profiler.Start()
+
       for _ in range(5):
         test_profiler.StartTiming('test_profile')
         time.sleep(0.01)
         test_profiler.StopTiming('test_profile')
 
-      test_profiler.Write()
+      test_profiler.Stop()
 
 
 # Note that this test can be extremely slow with guppy version 0.1.9

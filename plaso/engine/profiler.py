@@ -13,40 +13,29 @@ except ImportError:
   hpy = None
 
 
-class CPUTimeMeasurements(object):
-  """The CPU time measurements.
+class CPUTimeMeasurement(object):
+  """The CPU time measurement.
 
   Attributes:
-    number_of_samples (int): number of samples.
-    total_cpu_time (int): total CPU time measured by the samples.
-    total_system_time (int): total system time measured by the samples.
+    start_cpu_time (int): start CPU time.
+    total_cpu_time (int): total CPU time.
   """
 
   def __init__(self):
-    """Initializes the CPU time measurements object."""
-    super(CPUTimeMeasurements, self).__init__()
-    self._cpu_time = None
-    self._system_time = None
-    self.number_of_samples = 0
-    self.total_cpu_time = 0
-    self.total_system_time = 0
+    """Initializes the CPU time measurement."""
+    super(CPUTimeMeasurement, self).__init__()
+    self.start_cpu_time = None
+    self.total_cpu_time = None
 
   def SampleStart(self):
     """Starts measuring the CPU and system time."""
-    self._cpu_time = time.clock()
-    self._system_time = time.time()
+    self.start_cpu_time = time.clock()
+    self.total_cpu_time = 0
 
   def SampleStop(self):
     """Stops the current measurement and adds the sample."""
-    if self._cpu_time is None or self._system_time is None:
-      return
-
-    self.total_cpu_time += time.clock() - self._cpu_time
-    self.total_system_time += time.time() - self._system_time
-    self.number_of_samples += 1
-
-    self._cpu_time = None
-    self._system_time = None
+    if self.start_cpu_time is not None:
+      self.total_cpu_time += time.clock() - self.start_cpu_time
 
 
 class CPUTimeProfiler(object):
@@ -64,6 +53,7 @@ class CPUTimeProfiler(object):
     """
     super(CPUTimeProfiler, self).__init__()
     self._identifier = identifier
+    self._path = path
     self._profile_measurements = {}
     self._sample_file = '{0:s}-{1!s}.csv'.format(
         self._FILENAME_PREFIX, identifier)
@@ -78,7 +68,7 @@ class CPUTimeProfiler(object):
       profile_name (str): name of the profile to sample.
     """
     if profile_name not in self._profile_measurements:
-      self._profile_measurements[profile_name] = CPUTimeMeasurements()
+      self._profile_measurements[profile_name] = CPUTimeMeasurement()
 
     self._profile_measurements[profile_name].SampleStart()
 
@@ -88,30 +78,29 @@ class CPUTimeProfiler(object):
     Args:
       profile_name (str): name of the profile to sample.
     """
-    if profile_name not in self._profile_measurements:
-      return
+    measurements = self._profile_measurements.get(profile_name)
+    if measurements:
+      measurements.SampleStop()
 
-    self._profile_measurements[profile_name].SampleStop()
+      sample = '{0:f}\t{1:s}\t{2:f}\n'.format(
+          measurements.start_cpu_time, profile_name,
+          measurements.total_cpu_time)
+      self._sample_file.write(sample)
 
-  def Write(self):
-    """Writes the CPU time measurements to a sample file."""
-    try:
-      os.remove(self._sample_file)
-    except OSError:
-      pass
+  def Start(self):
+    """Starts the profiler."""
+    filename = '{0:s}-{1:s}.csv.gz'.format(
+        self._FILENAME_PREFIX, self._identifier)
+    if self._path:
+      filename = os.path.join(self._path, filename)
 
-    with open(self._sample_file, 'wb') as file_object:
-      line = (
-          'profile name\tnumber of samples\ttotal CPU time\t'
-          'total system time\n')
-      file_object.write(line.encode('utf-8'))
+    self._sample_file = gzip.open(filename, 'wb')
+    self._sample_file.write('CPU time\tName\tProcessing time\n')
 
-      for name, measurements in iter(self._profile_measurements.items()):
-        line = '{0:s}\t{1!s}\t{2!s}\t{3!s}\n'.format(
-            name, measurements.number_of_samples,
-            measurements.total_cpu_time, measurements.total_system_time)
-
-        file_object.write(line.encode('utf-8'))
+  def Stop(self):
+    """Stops the profiler."""
+    self._sample_file.close()
+    self._sample_file = None
 
 
 class BaseMemoryProfiler(object):
