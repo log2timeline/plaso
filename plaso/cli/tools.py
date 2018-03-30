@@ -98,9 +98,12 @@ class CLITool(object):
 
     Args:
       memory_limit (int): maximum number of bytes the process is allowed
-          to allocate, where 0 represents no limit.
+          to allocate, where 0 represents no limit and None a default of
+          4 GiB.
     """
-    if memory_limit == 0:
+    if memory_limit is None:
+      memory_limit = 4 * 1024 * 1024 * 1024
+    elif memory_limit == 0:
       # setrlimit uses -1 to represent unlimited.
       memory_limit = -1
 

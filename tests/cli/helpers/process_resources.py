@@ -27,7 +27,7 @@ Test argument parser.
 optional arguments:
   --process_memory_limit SIZE, --process-memory-limit SIZE
                         Maximum amount of memory a process is allowed to
-                        allocate, where 0 represents no limit [defaults to 2
+                        allocate, where 0 represents no limit [defaults to 4
                         GiB].
 """
 

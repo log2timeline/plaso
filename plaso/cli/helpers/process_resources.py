@@ -31,7 +31,7 @@ class ProcessResourcesArgumentsHelper(interface.ArgumentsHelper):
         dest='process_memory_limit', action='store', type=int,
         metavar='SIZE', help=(
             'Maximum amount of memory a process is allowed to allocate, '
-            'where 0 represents no limit [defaults to 2 GiB].'))
+            'where 0 represents no limit [defaults to 4 GiB].'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
