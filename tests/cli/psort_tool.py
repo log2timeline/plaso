@@ -10,7 +10,7 @@ import unittest
 
 try:
   import resource
-except ImportError
+except ImportError:
   resource = None
 
 from plaso.cli import psort_tool

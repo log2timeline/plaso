@@ -11,7 +11,7 @@ import unittest
 
 try:
   import resource
-except ImportError
+except ImportError:
   resource = None
 
 from plaso.cli import log2timeline_tool
