@@ -96,7 +96,7 @@ class BaseStore(object):
 
   def __init__(self):
     """Initializes a storage."""
-    super(BaseStorage, self).__init__()
+    super(BaseStore, self).__init__()
     self._serializers_profiler = None
     self._storage_profiler = None
 
