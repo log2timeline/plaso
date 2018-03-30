@@ -534,7 +534,7 @@ class EventExtractionWorker(object):
 
       elif type_indicator == dfvfs_definitions.TYPE_INDICATOR_GZIP:
         compressed_stream_path_spec = path_spec_factory.Factory.NewPathSpec(
-             dfvfs_definitions.TYPE_INDICATOR_GZIP, parent=path_spec)
+            dfvfs_definitions.TYPE_INDICATOR_GZIP, parent=path_spec)
 
       else:
         compressed_stream_path_spec = None
@@ -634,7 +634,7 @@ class EventExtractionWorker(object):
             logging.debug(
                 ('[ProcessFileEntry] Skipping datastream {0:s} '
                  'for file entry: {1:s}').format(
-                    data_stream.name, display_name))
+                     data_stream.name, display_name))
             continue
 
           self._ProcessFileEntryDataStream(mediator, file_entry, data_stream)
