@@ -32,7 +32,8 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
   if resource is None:
     _EXPECTED_PROCESSING_OPTIONS = ("""\
-usage: log2timeline_test.py [--single_process] [--temporary_directory DIRECTORY]
+usage: log2timeline_test.py [--single_process]
+                            [--temporary_directory DIRECTORY]
                             [--worker_memory_limit SIZE] [--workers WORKERS]
                             [--disable_zeromq]
 
