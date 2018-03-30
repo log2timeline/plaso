@@ -240,6 +240,10 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       else:
         serialized_data = row[0]
 
+      if self._storage_profiler:
+        self._storage_profiler.SampleRead(
+            container_type, len(serialized_data), len(row[0]))
+
       attribute_container = self._DeserializeAttributeContainer(
           container_type, serialized_data)
       attribute_container.SetIdentifier(identifier)
@@ -290,6 +294,10 @@ class SQLiteStorageFile(interface.BaseStorageFile):
         serialized_data = zlib.decompress(row[1])
       else:
         serialized_data = row[1]
+
+      if self._storage_profiler:
+        self._storage_profiler.SampleRead(
+            container_type, len(serialized_data), len(row[1]))
 
       attribute_container = self._DeserializeAttributeContainer(
           container_type, serialized_data)
@@ -385,8 +393,15 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       serialized_data = self._SerializeAttributeContainer(attribute_container)
 
     if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
-      serialized_data = zlib.compress(serialized_data)
-      serialized_data = sqlite3.Binary(serialized_data)
+      compressed_data = zlib.compress(serialized_data)
+      serialized_data = sqlite3.Binary(compressed_data)
+    else:
+      compressed_data = ''
+
+    if self._storage_profiler:
+      self._storage_profiler.SampleWrite(
+          attribute_container.CONTAINER_TYPE, len(serialized_data),
+          len(compressed_data))
 
     if attribute_container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
       query = 'INSERT INTO event (_timestamp, _data) VALUES (?, ?)'
@@ -437,8 +452,14 @@ class SQLiteStorageFile(interface.BaseStorageFile):
         serialized_data = container_list.PopAttributeContainer()
 
       if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
-        serialized_data = zlib.compress(serialized_data)
+        compressed_data = zlib.compress(serialized_data)
         serialized_data = sqlite3.Binary(serialized_data)
+      else:
+        compressed_data = ''
+
+      if self._storage_profiler:
+        self._storage_profiler.SampleWrite(
+            container_type, len(serialized_data), len(compressed_data))
 
       if container_type == self._CONTAINER_TYPE_EVENT:
         values_tuple_list.append((timestamp, serialized_data))
