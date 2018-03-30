@@ -600,6 +600,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     """Stops profiling."""
     if self._guppy_memory_profiler:
       self._guppy_memory_profiler.Sample()
+      self._guppy_memory_profiler.Stop()
       self._guppy_memory_profiler = None
 
     if self._processing_profiler:
