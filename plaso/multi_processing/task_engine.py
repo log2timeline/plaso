@@ -103,7 +103,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
   def __init__(
       self, maximum_number_of_tasks=_MAXIMUM_NUMBER_OF_TASKS, use_zeromq=True):
-    """Initializes an engine object.
+    """Initializes an engine.
 
     Args:
       maximum_number_of_tasks (Optional[int]): maximum number of concurrent
@@ -117,6 +117,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._guppy_memory_profiler = None
     self._last_worker_number = 0
     self._maximum_number_of_tasks = maximum_number_of_tasks
+    self._memory_profiler = None
     self._merge_task = None
     self._merge_task_on_hold = None
     self._number_of_consumed_errors = 0
@@ -344,11 +345,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
 
-  def _ProfilingSampleMemory(self):
-    """Creates a memory profiling sample."""
-    if self._guppy_memory_profiler:
-      self._guppy_memory_profiler.Sample()
-
   def _ScheduleTask(self, task):
     """Schedules a task.
 
@@ -518,23 +514,25 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       return
 
     if self._processing_configuration.profiling.HaveProfileMemoryGuppy():
-      identifier = '{0:s}-memory'.format(self._name)
       self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
-          identifier, path=self._processing_configuration.profiling.directory,
-          profiling_sample_rate=(
-              self._processing_configuration.profiling.sample_rate))
+          self._name, self._processing_configuration.profiling)
       self._guppy_memory_profiler.Start()
+
+    if self._processing_configuration.profiling.HaveProfileMemory():
+      self._memory_profiler = profiler.MemoryProfiler(
+          self._name, self._processing_configuration.profiling)
+      self._memory_profiler.Start()
 
     if self._processing_configuration.profiling.HaveProfileProcessing():
       identifier = '{0:s}-processing'.format(self._name)
       self._processing_profiler = profiler.ProcessingProfiler(
-          identifier, path=self._processing_configuration.profiling.directory)
+          identifier, self._processing_configuration.profiling)
       self._processing_profiler.Start()
 
     if self._processing_configuration.profiling.HaveProfileSerializers():
       identifier = '{0:s}-serializers'.format(self._name)
       self._serializers_profiler = profiler.SerializersProfiler(
-          identifier, path=self._processing_configuration.profiling.directory)
+          identifier, self._processing_configuration.profiling)
       self._serializers_profiler.Start()
 
   def _StatusUpdateThreadMain(self):
@@ -603,6 +601,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._guppy_memory_profiler.Stop()
       self._guppy_memory_profiler = None
 
+    if self._memory_profiler:
+      self._memory_profiler.Stop()
+      self._memory_profiler = None
+
     if self._processing_profiler:
       self._processing_profiler.Stop()
       self._processing_profiler = None
@@ -614,6 +616,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   def _UpdateForemanProcessStatus(self):
     """Update the foreman process status."""
     used_memory = self._process_information.GetUsedMemory() or 0
+
+    if self._memory_profiler:
+      self._memory_profiler.Sample(used_memory)
 
     display_name = getattr(self._merge_task, 'identifier', '')
 
@@ -714,7 +719,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       processing_configuration, enable_sigsegv_handler=False,
       filter_find_specs=None, number_of_worker_processes=0,
       status_update_callback=None, worker_memory_limit=None):
-    """Processes the sources and extract event objects.
+    """Processes the sources and extract events.
 
     Args:
       session_identifier (str): identifier of the session.

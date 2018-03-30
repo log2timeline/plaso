@@ -12,6 +12,7 @@ try:
 except ImportError:
   hpy = None
 
+from plaso.engine import configurations
 from plaso.engine import profiler
 
 from tests import test_lib as shared_test_lib
@@ -21,10 +22,14 @@ class CPUTimeProfilerTest(shared_test_lib.BaseTestCase):
   """Tests for the CPU time profiler."""
 
   def testCPUTimeProfiler(self):
-    """Tests the StartTiming, StopTiming and Write functions."""
+    """Tests the StartTiming, StopTiming, Start and Stop functions."""
+    profiling_configuration = configurations.ProfilingConfiguration()
+
     with shared_test_lib.TempDirectory() as temp_directory:
+      profiling_configuration.directory = temp_directory
+
       test_profiler = profiler.CPUTimeProfiler(
-          'unittest', path=temp_directory)
+          'unittest', profiling_configuration)
 
       test_profiler.Start()
 
@@ -32,6 +37,28 @@ class CPUTimeProfilerTest(shared_test_lib.BaseTestCase):
         test_profiler.StartTiming('test_profile')
         time.sleep(0.01)
         test_profiler.StopTiming('test_profile')
+
+      test_profiler.Stop()
+
+
+class MemoryProfilerTest(shared_test_lib.BaseTestCase):
+  """Tests for the memory profiler."""
+
+  def testMemoryProfiler(self):
+    """Tests the Sample, Start and Stop functions."""
+    profiling_configuration = configurations.ProfilingConfiguration()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      profiling_configuration.directory = temp_directory
+
+      test_profiler = profiler.MemoryProfiler(
+          'unittest', profiling_configuration)
+
+      test_profiler.Start()
+
+      for _ in range(5):
+        test_profiler.Sample(400)
+        time.sleep(0.01)
 
       test_profiler.Stop()
 
@@ -46,9 +73,14 @@ class GuppyMemoryProfilerTest(shared_test_lib.BaseTestCase):
     """Tests the Start, Sample and Stop functions."""
     self.assertTrue(profiler.GuppyMemoryProfiler.IsSupported())
 
+    profiling_configuration = configurations.ProfilingConfiguration()
+
     with shared_test_lib.TempDirectory() as temp_directory:
+      profiling_configuration.directory = temp_directory
+      profiling_configuration.profiling_sample_rate = 1000
+
       test_profiler = profiler.GuppyMemoryProfiler(
-          'unittest', path=temp_directory)
+          'unittest', profiling_configuration)
 
       test_profiler.Start()
 
