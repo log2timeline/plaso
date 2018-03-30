@@ -26,9 +26,10 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
   _BDE_PASSWORD = 'bde-TEST'
 
   _EXPECTED_PROCESSING_OPTIONS = ("""\
-usage: log2timeline_test.py [--disable_zeromq] [--single_process]
+usage: log2timeline_test.py [--single_process] [--process_memory_limit SIZE]
                             [--temporary_directory DIRECTORY]
                             [--worker_memory_limit SIZE] [--workers WORKERS]
+                            [--disable_zeromq]
 
 Test argument parser.
 
@@ -36,12 +37,16 @@ optional arguments:
   --disable_zeromq, --disable-zeromq
                         Disable queueing using ZeroMQ. A Multiprocessing queue
                         will be used instead.
+  --process_memory_limit SIZE, --process-memory-limit SIZE
+                        Maximum amount of memory a process is allowed to
+                        allocate, where 0 represents no limit [defaults to 4
+                        GiB].
   --single_process, --single-process
                         Indicate that the tool should run in a single process.
   --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
                         Path to the directory that should be used to store
                         temporary files created during processing.
-  --worker-memory-limit SIZE, --worker_memory_limit SIZE
+  --worker_memory_limit SIZE, --worker-memory-limit SIZE
                         Maximum amount of memory a worker process is allowed
                         to consume, where 0 represents no limit [defaults to 2
                         GiB].
