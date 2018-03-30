@@ -43,7 +43,6 @@ class ZeroMQArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the configuration object is of the wrong type.
-      BadConfigOption: when a configuration parameter fails validation.
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
