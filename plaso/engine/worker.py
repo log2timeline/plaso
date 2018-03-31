@@ -237,6 +237,8 @@ class EventExtractionWorker(object):
     if data_stream.IsDefault():
       return True
 
+    return False
+
 
   def _CanSkipContentExtraction(self, file_entry):
     """Determines if content extraction of a file entry can be skipped.
@@ -633,8 +635,8 @@ class EventExtractionWorker(object):
           if self._CanSkipDataStream(file_entry, data_stream):
             logging.debug(
                 ('[ProcessFileEntry] Skipping datastream {0:s} '
-                 'for file entry: {1:s}').format(
-                     data_stream.name, display_name))
+                 'for {0:1s}: {2:s}').format(
+                     data_stream.name, file_entry.type, display_name))
             continue
 
           self._ProcessFileEntryDataStream(mediator, file_entry, data_stream)
