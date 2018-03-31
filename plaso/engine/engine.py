@@ -12,7 +12,7 @@ from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.engine import logger
 from plaso.engine import processing_status
-from plaso.engine import profiler
+from plaso.engine import profilers
 from plaso.lib import definitions
 from plaso.preprocessors import manager as preprocess_manager
 
@@ -206,39 +206,40 @@ class BaseEngine(object):
       return
 
     if configuration.HaveProfileMemoryGuppy():
-      self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
+      self._guppy_memory_profiler = profilers.GuppyMemoryProfiler(
           self._name, configuration)
       self._guppy_memory_profiler.Start()
 
     if configuration.HaveProfileMemory():
-      self._memory_profiler = profiler.MemoryProfiler(self._name, configuration)
+      self._memory_profiler = profilers.MemoryProfiler(
+          self._name, configuration)
       self._memory_profiler.Start()
 
     if configuration.HaveProfileParsers():
       identifier = '{0:s}-parsers'.format(self._name)
-      self._parsers_profiler = profiler.ParsersProfiler(
+      self._parsers_profiler = profilers.ParsersProfiler(
           identifier, configuration)
       self._parsers_profiler.Start()
 
     if configuration.HaveProfileProcessing():
       identifier = '{0:s}-processing'.format(self._name)
-      self._processing_profiler = profiler.ProcessingProfiler(
+      self._processing_profiler = profilers.ProcessingProfiler(
           identifier, configuration)
       self._processing_profiler.Start()
 
     if configuration.HaveProfileSerializers():
       identifier = '{0:s}-serializers'.format(self._name)
-      self._serializers_profiler = profiler.SerializersProfiler(
+      self._serializers_profiler = profilers.SerializersProfiler(
           identifier, configuration)
       self._serializers_profiler.Start()
 
     if configuration.HaveProfileStorage():
-      self._storage_profiler = profiler.StorageProfiler(
+      self._storage_profiler = profilers.StorageProfiler(
           self._name, configuration)
       self._storage_profiler.Start()
 
     if configuration.HaveProfileTaskQueue():
-      self._task_queue_profiler = profiler.TaskQueueProfiler(
+      self._task_queue_profiler = profilers.TaskQueueProfiler(
           self._name, configuration)
       self._task_queue_profiler.Start()
 
@@ -280,4 +281,4 @@ class BaseEngine(object):
     Returns:
       bool: True if memory profiling with guppy is supported.
     """
-    return profiler.GuppyMemoryProfiler.IsSupported()
+    return profilers.GuppyMemoryProfiler.IsSupported()
