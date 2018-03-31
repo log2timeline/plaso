@@ -228,13 +228,55 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
 
   def testGetTaskPendingMerge(self):
     """Tests the GetTaskPendingMerge function."""
-    manager = task_manager.TaskManager()
-    task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
+    current_task = tasks.Task()
+    current_task.storage_file_size = 10
 
-    result_task = manager.GetTaskPendingMerge(None)
+    manager = task_manager.TaskManager()
+
+    self.assertEqual(len(manager._tasks_queued), 0)
+    self.assertEqual(len(manager._tasks_pending_merge), 0)
+    self.assertEqual(len(manager._tasks_merging), 0)
+
+    task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
+    task.storage_file_size = 10
+
+    self.assertEqual(len(manager._tasks_queued), 1)
+    self.assertEqual(len(manager._tasks_pending_merge), 0)
+    self.assertEqual(len(manager._tasks_merging), 0)
+
+    # Determine if there are tasks pending merge when there are none.
+    result_task = manager.GetTaskPendingMerge(current_task)
     self.assertIsNone(result_task)
 
-    # TODO: improve test coverage.
+    self.assertEqual(len(manager._tasks_queued), 1)
+    self.assertEqual(len(manager._tasks_pending_merge), 0)
+    self.assertEqual(len(manager._tasks_merging), 0)
+
+    manager.UpdateTaskAsPendingMerge(task)
+
+    self.assertEqual(len(manager._tasks_queued), 0)
+    self.assertEqual(len(manager._tasks_pending_merge), 1)
+    self.assertEqual(len(manager._tasks_merging), 0)
+
+    # Determine if there are tasks pending merge when there is a current task
+    # with a higher merge priority.
+    current_task.merge_priority = 1
+    task.merge_priority = 1000
+
+    result_task = manager.GetTaskPendingMerge(current_task)
+    self.assertIsNone(result_task)
+
+    self.assertEqual(len(manager._tasks_queued), 0)
+    self.assertEqual(len(manager._tasks_pending_merge), 1)
+    self.assertEqual(len(manager._tasks_merging), 0)
+
+    # Determine if there are tasks pending merge.
+    result_task = manager.GetTaskPendingMerge(None)
+    self.assertIsNotNone(result_task)
+
+    self.assertEqual(len(manager._tasks_queued), 0)
+    self.assertEqual(len(manager._tasks_pending_merge), 0)
+    self.assertEqual(len(manager._tasks_merging), 1)
 
   def testHasPendingTasks(self):
     """Tests the HasPendingTasks function."""
@@ -328,7 +370,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     task.storage_file_size = 10
 
     with self.assertRaises(KeyError):
-       manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
+      manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
 
   def testUpdateTasksAsPendingMerge(self):
     """Tests the UpdateTasksAsPendingMerge function."""
@@ -421,7 +463,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     task = tasks.Task()
 
     with self.assertRaises(KeyError):
-       manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
+      manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
 
   # TODO: determine what to do with the following tests.
 
