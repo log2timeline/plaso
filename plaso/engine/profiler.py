@@ -39,7 +39,7 @@ class CPUTimeMeasurement(object):
 
 
 class SampleFileProfiler(object):
-  """Shared functionaly for sample file-based profilers."""
+  """Shared functionality for sample file-based profilers."""
 
   _FILENAME_PREFIX = None
 
