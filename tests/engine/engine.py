@@ -19,7 +19,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.path import path_spec
 from dfvfs.resolver import context
-from dfvfs.vfs import file_system
+from dfvfs.vfs import file_system as dfvfs_file_system
 
 from plaso.engine import configurations
 from plaso.engine import engine
@@ -133,7 +133,7 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
         source_path_spec, resolver_context=resolver_context)
 
     self.assertIsNotNone(test_file_system)
-    self.assertIsInstance(test_file_system, file_system.FileSystem)
+    self.assertIsInstance(test_file_system, dfvfs_file_system.FileSystem)
 
     self.assertIsNotNone(test_mount_point)
     self.assertIsInstance(test_mount_point, path_spec.PathSpec)
