@@ -216,21 +216,6 @@ class MemoryProfiler(SampleFileProfiler):
     sample = '{0:f}\t{1:d}\n'.format(sample_time, used_memory)
     self._sample_file.write(sample)
 
-  def Start(self):
-    """Starts the profiler."""
-    filename = '{0:s}-{1:s}.csv.gz'.format(
-        self._FILENAME_PREFIX, self._identifier)
-    if self._path:
-      filename = os.path.join(self._path, filename)
-
-    self._sample_file = gzip.open(filename, 'wb')
-    self._sample_file.write(self._FILE_HEADER)
-
-  def Stop(self):
-    """Stops the profiler."""
-    self._sample_file.close()
-    self._sample_file = None
-
 
 class ParsersProfiler(CPUTimeProfiler):
   """The parsers profiler."""
