@@ -1179,6 +1179,9 @@ class StorageFileWriter(StorageWriter):
   def CheckTaskReadyForMerge(self, task):
     """Checks if a task is ready for merging with this session storage.
 
+    If the task is ready to be merged, this method also sets the task's
+    storage file size.
+
     Args:
       task (Task): task.
 
@@ -1205,6 +1208,48 @@ class StorageFileWriter(StorageWriter):
 
     task.storage_file_size = stat_info.st_size
     return True
+
+  def CheckTasksReadyForMerge(self, tasks):
+    """Checks which tasks are ready to be merged.
+
+    If the task is ready to be merged, this method also sets the task's
+    storage file size.
+
+    Args:
+      tasks (list[Task]): tasks to check for merging.
+
+    Returns:
+      list[Task]: list of tasks that are ready for merge, with the
+          storage file size set.
+
+    Raises:
+      IOError: if the storage type is not supported or
+          if the temporary path for the task storage does not exist.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError('Unsupported storage type.')
+
+    if not self._merge_task_storage_path:
+      raise IOError('Missing merge task storage path.')
+
+    tasks_by_identifier = {task.identifier: task for task in tasks}
+    tasks_pending_merge = []
+
+    completed_task_filenames = os.listdir(self._merge_task_storage_path)
+    completed_task_identifiers = [
+        path.replace('.plaso', '') for path in completed_task_filenames]
+
+    for identifier in completed_task_identifiers:
+      task = tasks_by_identifier.get(identifier, None)
+      if not task:
+        continue
+
+      storage_file_path = os.path.join(
+          self._merge_task_storage_path, '{0:s}.plaso'.format(task.identifier))
+      task.storage_file_size = os.path.getsize(storage_file_path)
+      tasks_pending_merge.append(task)
+
+    return tasks_pending_merge
 
   def Close(self):
     """Closes the storage writer.
