@@ -133,48 +133,48 @@ class ProcessStatus(object):
 
     return consumed_errors_delta > 0 or produced_errors_delta > 0
 
-  def UpdateNumberOfEventTags(
-      self, number_of_consumed_event_tags, number_of_produced_event_tags):
-    """Updates the number of event tags.
+  def UpdateNumberOfEventReports(
+      self, number_of_consumed_reports, number_of_produced_reports):
+    """Updates the number of event reports.
 
     Args:
-      number_of_consumed_event_tags (int): total number of event tags consumed
+      number_of_consumed_reports (int): total number of event reports consumed
           by the process.
-      number_of_produced_event_tags (int): total number of event tags produced
+      number_of_produced_reports (int): total number of event reports produced
           by the process.
 
     Returns:
-      bool: True if either number of event tags has increased.
+      bool: True if either number of event reports has increased.
 
     Raises:
-      ValueError: if the consumed or produced number of event tags is smaller
-          than the value of the previous update.
+      ValueError: if the consumed or produced number of event reports is
+          smaller than the value of the previous update.
     """
-    consumed_event_tags_delta = 0
-    if number_of_consumed_event_tags is not None:
-      if number_of_consumed_event_tags < self.number_of_consumed_event_tags:
+    consumed_reports_delta = 0
+    if number_of_consumed_reports is not None:
+      if number_of_consumed_reports < self.number_of_consumed_reports:
         raise ValueError(
-            'Number of consumed event tags smaller than previous update.')
+            'Number of consumed reports smaller than previous update.')
 
-      consumed_event_tags_delta = (
-          number_of_consumed_event_tags - self.number_of_consumed_event_tags)
+      consumed_reports_delta = (
+          number_of_consumed_reports - self.number_of_consumed_reports)
 
-      self.number_of_consumed_event_tags = number_of_consumed_event_tags
-      self.number_of_consumed_event_tags_delta = consumed_event_tags_delta
+      self.number_of_consumed_reports = number_of_consumed_reports
+      self.number_of_consumed_reports_delta = consumed_reports_delta
 
-    produced_event_tags_delta = 0
-    if number_of_produced_event_tags is not None:
-      if number_of_produced_event_tags < self.number_of_produced_event_tags:
+    produced_reports_delta = 0
+    if number_of_produced_reports is not None:
+      if number_of_produced_reports < self.number_of_produced_reports:
         raise ValueError(
-            'Number of produced event tags smaller than previous update.')
+            'Number of produced reports smaller than previous update.')
 
-      produced_event_tags_delta = (
-          number_of_produced_event_tags - self.number_of_produced_event_tags)
+      produced_reports_delta = (
+          number_of_produced_reports - self.number_of_produced_reports)
 
-      self.number_of_produced_event_tags = number_of_produced_event_tags
-      self.number_of_produced_event_tags_delta = produced_event_tags_delta
+      self.number_of_produced_reports = number_of_produced_reports
+      self.number_of_produced_reports_delta = produced_reports_delta
 
-    return consumed_event_tags_delta > 0 or produced_event_tags_delta > 0
+    return consumed_reports_delta > 0 or produced_reports_delta > 0
 
   def UpdateNumberOfEvents(
       self, number_of_consumed_events, number_of_produced_events):
@@ -219,49 +219,6 @@ class ProcessStatus(object):
 
     return consumed_events_delta > 0 or produced_events_delta > 0
 
-  def UpdateNumberOfEventReports(
-      self, number_of_consumed_reports, number_of_produced_reports):
-    """Updates the number of event reports.
-
-    Args:
-      number_of_consumed_reports (int): total number of event reports consumed
-          by the process.
-      number_of_produced_reports (int): total number of event reports produced
-          by the process.
-
-    Returns:
-      bool: True if either number of event reports has increased.
-
-    Raises:
-      ValueError: if the consumed or produced number of event reports is
-          smaller than the value of the previous update.
-    """
-    consumed_reports_delta = 0
-    if number_of_consumed_reports is not None:
-      if number_of_consumed_reports < self.number_of_consumed_reports:
-        raise ValueError(
-            'Number of consumed reports smaller than previous update.')
-
-      consumed_reports_delta = (
-          number_of_consumed_reports - self.number_of_consumed_reports)
-
-      self.number_of_consumed_reports = number_of_consumed_reports
-      self.number_of_consumed_reports_delta = consumed_reports_delta
-
-    produced_reports_delta = 0
-    if number_of_produced_reports is not None:
-      if number_of_produced_reports < self.number_of_produced_reports:
-        raise ValueError(
-            'Number of produced reports smaller than previous update.')
-
-      produced_reports_delta = (
-          number_of_produced_reports - self.number_of_produced_reports)
-
-      self.number_of_produced_reports = number_of_produced_reports
-      self.number_of_produced_reports_delta = produced_reports_delta
-
-    return consumed_reports_delta > 0 or produced_reports_delta > 0
-
   def UpdateNumberOfEventSources(
       self, number_of_consumed_sources, number_of_produced_sources):
     """Updates the number of event sources.
@@ -305,26 +262,48 @@ class ProcessStatus(object):
 
     return consumed_sources_delta > 0 or produced_sources_delta > 0
 
+  def UpdateNumberOfEventTags(
+      self, number_of_consumed_event_tags, number_of_produced_event_tags):
+    """Updates the number of event tags.
 
-class TasksStatus(object):
-  """The status of the tasks.
+    Args:
+      number_of_consumed_event_tags (int): total number of event tags consumed
+          by the process.
+      number_of_produced_event_tags (int): total number of event tags produced
+          by the process.
 
-  Attributes:
-    number_of_abandoned_tasks (int): number of abandoned tasks.
-    number_of_queued_tasks (int): number of active tasks.
-    number_of_tasks_pending_merge (int): number of tasks pending merge.
-    number_of_tasks_processing (int): number of tasks processing.
-    total_number_of_tasks (int): total number of tasks.
-  """
+    Returns:
+      bool: True if either number of event tags has increased.
 
-  def __init__(self):
-    """Initializes a tasks status."""
-    super(TasksStatus, self).__init__()
-    self.number_of_abandoned_tasks = 0
-    self.number_of_queued_tasks = 0
-    self.number_of_tasks_pending_merge = 0
-    self.number_of_tasks_processing = 0
-    self.total_number_of_tasks = 0
+    Raises:
+      ValueError: if the consumed or produced number of event tags is smaller
+          than the value of the previous update.
+    """
+    consumed_event_tags_delta = 0
+    if number_of_consumed_event_tags is not None:
+      if number_of_consumed_event_tags < self.number_of_consumed_event_tags:
+        raise ValueError(
+            'Number of consumed event tags smaller than previous update.')
+
+      consumed_event_tags_delta = (
+          number_of_consumed_event_tags - self.number_of_consumed_event_tags)
+
+      self.number_of_consumed_event_tags = number_of_consumed_event_tags
+      self.number_of_consumed_event_tags_delta = consumed_event_tags_delta
+
+    produced_event_tags_delta = 0
+    if number_of_produced_event_tags is not None:
+      if number_of_produced_event_tags < self.number_of_produced_event_tags:
+        raise ValueError(
+            'Number of produced event tags smaller than previous update.')
+
+      produced_event_tags_delta = (
+          number_of_produced_event_tags - self.number_of_produced_event_tags)
+
+      self.number_of_produced_event_tags = number_of_produced_event_tags
+      self.number_of_produced_event_tags_delta = produced_event_tags_delta
+
+    return consumed_event_tags_delta > 0 or produced_event_tags_delta > 0
 
 
 class ProcessingStatus(object):
@@ -467,7 +446,6 @@ class ProcessingStatus(object):
         number_of_consumed_errors, number_of_produced_errors,
         number_of_consumed_reports, number_of_produced_reports)
 
-  # pylint: disable=too-many-arguments
   def UpdateTasksStatus(self, tasks_status):
     """Updates the tasks status.
 
@@ -525,3 +503,24 @@ class ProcessingStatus(object):
         number_of_consumed_event_tags, number_of_produced_event_tags,
         number_of_consumed_errors, number_of_produced_errors,
         number_of_consumed_reports, number_of_produced_reports)
+
+
+class TasksStatus(object):
+  """The status of the tasks.
+
+  Attributes:
+    number_of_abandoned_tasks (int): number of abandoned tasks.
+    number_of_queued_tasks (int): number of active tasks.
+    number_of_tasks_pending_merge (int): number of tasks pending merge.
+    number_of_tasks_processing (int): number of tasks processing.
+    total_number_of_tasks (int): total number of tasks.
+  """
+
+  def __init__(self):
+    """Initializes a tasks status."""
+    super(TasksStatus, self).__init__()
+    self.number_of_abandoned_tasks = 0
+    self.number_of_queued_tasks = 0
+    self.number_of_tasks_pending_merge = 0
+    self.number_of_tasks_processing = 0
+    self.total_number_of_tasks = 0

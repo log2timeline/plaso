@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests the class to get process information."""
+"""Tests the process information."""
 
 from __future__ import unicode_literals
 
@@ -11,13 +11,16 @@ from plaso.engine import process_info
 
 
 class ProcessInfoTest(unittest.TestCase):
-  """Tests the process information object."""
+  """Tests the process information."""
 
   def testInitialization(self):
-    """Tests the initialization."""
+    """Tests the __init__ function."""
     pid = os.getpid()
     process_information = process_info.ProcessInfo(pid)
     self.assertIsNotNone(process_information)
+
+    with self.assertRaises(IOError):
+      process_info.ProcessInfo(-1)
 
   def testGetUsedMemory(self):
     """Tests the GetUsedMemory function."""

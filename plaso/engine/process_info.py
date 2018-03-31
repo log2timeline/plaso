@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a class to get process information."""
+"""Information about running process."""
 
 from __future__ import unicode_literals
 
