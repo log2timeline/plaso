@@ -53,6 +53,7 @@ class EventObject(interface.AttributeContainer):
     tag (EventTag): event tag.
     timestamp (int): timestamp, which contains the number of microseconds
         since January 1, 1970, 00:00:00 UTC.
+    timestamp_desc (str): description of the meaning of the timestamp.
   """
   CONTAINER_TYPE = 'event'
   # TODO: eventually move data type out of event since the event source
@@ -72,6 +73,7 @@ class EventObject(interface.AttributeContainer):
     self.pathspec = None
     self.tag = None
     self.timestamp = None
+    self.timestamp_desc = None
 
     # TODO: add a solution for event_data_entry_index,
     # event_data_stream_number and event_data_row_identifier

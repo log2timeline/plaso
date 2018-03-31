@@ -197,7 +197,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     output_values = self._GetOutputValues(event)
 
     output_values[3] = self._output_mediator.GetMACBRepresentation(event)
-    output_values[6] = getattr(event, 'timestamp_desc', '-')
+    output_values[6] = event.timestamp_desc or '-'
 
     self._WriteOutputValues(output_values)
 

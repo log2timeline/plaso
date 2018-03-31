@@ -267,7 +267,7 @@ class DynamicFieldsHelper(object):
     Returns:
       str: timestamp description field.
     """
-    return getattr(event, 'timestamp_desc', '-')
+    return event.timestamp_desc or '-'
 
   def _FormatUsername(self, event):
     """Formats the username.
