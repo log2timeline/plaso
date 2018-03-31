@@ -12,6 +12,7 @@ from plaso.analysis import interface as analysis_interface
 from plaso.analysis import tagging
 from plaso.containers import events
 from plaso.containers import sessions
+from plaso.engine import configurations
 from plaso.engine import knowledge_base
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
@@ -404,6 +405,8 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     analysis_plugins = {'tagging': analysis_plugin}
     # TODO: set tag file.
 
+    configuration = configurations.ProcessingConfiguration()
+
     test_engine = psort.PsortMultiProcessEngine()
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -415,7 +418,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
       counter = test_engine.AnalyzeEvents(
           knowledge_base_object, storage_writer, output_module, data_location,
-          analysis_plugins)
+          analysis_plugins, configuration)
 
     # TODO: assert if tests were successful.
     _ = counter
@@ -431,7 +434,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
       counter = test_engine.AnalyzeEvents(
           knowledge_base_object, storage_writer, data_location,
-          analysis_plugins, event_filter=test_filter)
+          analysis_plugins, configuration, event_filter=test_filter)
 
     # TODO: assert if tests were successful.
     _ = counter
@@ -455,12 +458,14 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     output_module = dynamic.DynamicOutputModule(output_mediator_object)
     output_module.SetOutputWriter(output_writer)
 
+    configuration = configurations.ProcessingConfiguration()
+
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         storage_file_path)
 
     test_engine = psort.PsortMultiProcessEngine()
     counter = test_engine.ExportEvents(
-        knowledge_base_object, storage_reader, output_module)
+        knowledge_base_object, storage_reader, output_module, configuration)
 
     self.assertEqual(counter['Stored Events'], 0)
 
