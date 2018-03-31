@@ -72,6 +72,14 @@ class CLITool(object):
     self.list_timezones = False
     self.preferred_encoding = preferred_encoding
 
+  def _CanEnforceProcessMemoryLimit(self):
+    """Determines if a process memory limit can be enforced.
+
+    Returns:
+      bool: True if a process memory limit can be enforced, False otherwise.
+    """
+    return bool(resource)
+
   def _EncodeString(self, string):
     """Encodes a string in the preferred encoding.
 
@@ -96,14 +104,6 @@ class CLITool(object):
           self.preferred_encoding, errors=self._encode_errors)
 
     return encoded_string
-
-  def _CanEnforceProcessMemoryLimit(self):
-    """Determines if a process memory limit can be enforced.
-
-    Returns:
-      bool: True a process memory limit can be enforced, False otherwise.
-    """
-    return bool(resource)
 
   def _EnforceProcessMemoryLimit(self, memory_limit):
     """Enforces a process memory limit.

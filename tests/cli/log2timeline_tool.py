@@ -49,9 +49,11 @@ optional arguments:
                         Path to the directory that should be used to store
                         temporary files created during processing.
   --worker_memory_limit SIZE, --worker-memory-limit SIZE
-                        Maximum amount of memory a worker process is allowed
-                        to consume, where 0 represents no limit [defaults to 2
-                        GiB].
+                        Maximum amount of memory (data segment and shared
+                        memory) a worker process is allowed to consume in
+                        bytes, where 0 represents no limit. The default limit
+                        is 2147483648 (2 GiB). If a worker process exceeds
+                        this limit is is killed by the main (foreman) process.
   --workers WORKERS     Number of worker processes [defaults to available
                         system CPUs minus one].
 """)
@@ -69,18 +71,24 @@ optional arguments:
                         Disable queueing using ZeroMQ. A Multiprocessing queue
                         will be used instead.
   --process_memory_limit SIZE, --process-memory-limit SIZE
-                        Maximum amount of memory a process is allowed to
-                        allocate, where 0 represents no limit [defaults to 4
-                        GiB].
+                        Maximum amount of memory (data segment) a process is
+                        allowed to allocate in bytes, where 0 represents no
+                        limit. The default limit is 4294967296 (4 GiB). This
+                        applies to both the main (foreman) process and the
+                        worker processes. This limit is enforced by the
+                        operating system and will supersede the worker memory
+                        limit (--worker_memory_limit).
   --single_process, --single-process
                         Indicate that the tool should run in a single process.
   --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
                         Path to the directory that should be used to store
                         temporary files created during processing.
   --worker_memory_limit SIZE, --worker-memory-limit SIZE
-                        Maximum amount of memory a worker process is allowed
-                        to consume, where 0 represents no limit [defaults to 2
-                        GiB].
+                        Maximum amount of memory (data segment and shared
+                        memory) a worker process is allowed to consume in
+                        bytes, where 0 represents no limit. The default limit
+                        is 2147483648 (2 GiB). If a worker process exceeds
+                        this limit is is killed by the main (foreman) process.
   --workers WORKERS     Number of worker processes [defaults to available
                         system CPUs minus one].
 """)

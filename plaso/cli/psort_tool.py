@@ -301,8 +301,11 @@ class PsortTool(
         '--worker-memory-limit', '--worker_memory_limit',
         dest='worker_memory_limit', action='store', type=int,
         metavar='SIZE', help=(
-            'Maximum amount of memory a worker process is allowed to consume, '
-            'where 0 represents no limit [defaults to 2 GiB].'))
+            'Maximum amount of memory (data segment and shared memory) '
+            'a worker process is allowed to consume in bytes, where 0 '
+            'represents no limit. The default limit is 2147483648 (2 GiB). '
+            'If a worker process exceeds this limit is is killed by the main '
+            '(foreman) process.'))
 
   def ParseArguments(self):
     """Parses the command line arguments.

@@ -30,8 +30,12 @@ class ProcessResourcesArgumentsHelper(interface.ArgumentsHelper):
         '--process_memory_limit', '--process-memory-limit',
         dest='process_memory_limit', action='store', type=int,
         metavar='SIZE', help=(
-            'Maximum amount of memory a process is allowed to allocate, '
-            'where 0 represents no limit [defaults to 4 GiB].'))
+            'Maximum amount of memory (data segment) a process is allowed '
+            'to allocate in bytes, where 0 represents no limit. The default '
+            'limit is 4294967296 (4 GiB). This applies to both the main '
+            '(foreman) process and the worker processes. This limit is '
+            'enforced by the operating system and will supersede the worker '
+            'memory limit (--worker_memory_limit).'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):
