@@ -161,14 +161,16 @@ class PstealTool(
 
     return '{0:s}-{1:s}.plaso'.format(datetime_string, source_name)
 
-  def _PrintAnalysisReportsDetails(self, storage, number_of_analysis_reports):
+  def _PrintAnalysisReportsDetails(
+      self, storage_reader, number_of_analysis_reports):
     """Prints the details of the analysis reports.
 
     Args:
-      storage (BaseStore): storage writer.
+      storage_reader (StorageReader): storage reader.
       number_of_analysis_reports (int): number of analysis reports.
     """
-    for index, analysis_report in enumerate(storage.GetAnalysisReports()):
+    for index, analysis_report in enumerate(
+        storage_reader.GetAnalysisReports()):
       if index + 1 <= number_of_analysis_reports:
         continue
 

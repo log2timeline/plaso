@@ -256,13 +256,14 @@ class PsortTool(
 
     self._worker_memory_limit = getattr(options, 'worker_memory_limit', None)
 
-  def _PrintAnalysisReportsDetails(self, storage):
+  def _PrintAnalysisReportsDetails(self, storage_reader):
     """Prints the details of the analysis reports.
 
     Args:
-      storage (BaseStore): storage writer.
+      storage_reader (StorageReader): storage reader.
     """
-    for index, analysis_report in enumerate(storage.GetAnalysisReports()):
+    for index, analysis_report in enumerate(
+        storage_reader.GetAnalysisReports()):
       if index + 1 <= self._number_of_analysis_reports:
         continue
 
