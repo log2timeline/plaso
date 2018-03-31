@@ -632,7 +632,7 @@ class EventExtractionWorker(object):
             break
 
           if self._CanSkipDataStream(file_entry, data_stream):
-            logging.debug(
+            logger.debug(
                 ('[ProcessFileEntry] Skipping datastream {0:s} '
                  'for {1:s}: {2:s}').format(
                      data_stream.name, file_entry.type, display_name))
