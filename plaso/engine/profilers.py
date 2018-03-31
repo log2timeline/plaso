@@ -17,25 +17,32 @@ class CPUTimeMeasurement(object):
   """The CPU time measurement.
 
   Attributes:
-    start_cpu_time (int): start CPU time.
-    total_cpu_time (int): total CPU time.
+    sample_time (float): start sample time or None if not set.
+    total_cpu_time (float): total CPU time or None if not set.
   """
 
   def __init__(self):
     """Initializes the CPU time measurement."""
     super(CPUTimeMeasurement, self).__init__()
-    self.start_cpu_time = None
+    self._start_cpu_time = None
+    self.sample_time = None
     self.total_cpu_time = None
 
-  def SampleStart(self):
-    """Starts measuring the CPU and system time."""
-    self.start_cpu_time = time.clock()
+  def SampleStart(self, sample_time):
+    """Starts measuring the CPU and system time.
+
+    Args:
+      sample_time (float): sample time, which contains the number of seconds
+          since the profiler was started.
+    """
+    self._start_cpu_time = time.clock()
+    self.sample_time = sample_time
     self.total_cpu_time = 0
 
   def SampleStop(self):
     """Stops the current measurement and adds the sample."""
-    if self.start_cpu_time is not None:
-      self.total_cpu_time += time.clock() - self.start_cpu_time
+    if self._start_cpu_time is not None:
+      self.total_cpu_time += time.clock() - self._start_cpu_time
 
 
 class SampleFileProfiler(object):
@@ -58,6 +65,19 @@ class SampleFileProfiler(object):
     self._path = configuration.directory
     self._profile_measurements = {}
     self._sample_file = None
+    self._start_time = None
+
+  def _GetSampleTime(self):
+    """Retrieves the sample time.
+
+    Return:
+      float: sample time, which contains the number of seconds since
+          the profiler was started or None if the profiler was not started.
+    """
+    if not self._start_time:
+      return None
+
+    return time.time() - self._start_time
 
   @classmethod
   def IsSupported(cls):
@@ -78,6 +98,8 @@ class SampleFileProfiler(object):
     self._sample_file = gzip.open(filename, 'wb')
     self._sample_file.write(self._FILE_HEADER)
 
+    self._start_time = time.time()
+
   def Stop(self):
     """Stops the profiler."""
     self._sample_file.close()
@@ -89,7 +111,7 @@ class CPUTimeProfiler(SampleFileProfiler):
 
   _FILENAME_PREFIX = 'cputime'
 
-  _FILE_HEADER = 'CPU time\tName\tProcessing time\n'
+  _FILE_HEADER = 'Time\tName\tProcessing time\n'
 
   def StartTiming(self, profile_name):
     """Starts timing CPU time.
@@ -100,7 +122,8 @@ class CPUTimeProfiler(SampleFileProfiler):
     if profile_name not in self._profile_measurements:
       self._profile_measurements[profile_name] = CPUTimeMeasurement()
 
-    self._profile_measurements[profile_name].SampleStart()
+    sample_time = self._GetSampleTime()
+    self._profile_measurements[profile_name].SampleStart(sample_time)
 
   def StopTiming(self, profile_name):
     """Stops timing CPU time.
@@ -113,8 +136,7 @@ class CPUTimeProfiler(SampleFileProfiler):
       measurements.SampleStop()
 
       sample = '{0:f}\t{1:s}\t{2:f}\n'.format(
-          measurements.start_cpu_time, profile_name,
-          measurements.total_cpu_time)
+          measurements.sample_time, profile_name, measurements.total_cpu_time)
       self._sample_file.write(sample)
 
 
@@ -182,7 +204,7 @@ class MemoryProfiler(SampleFileProfiler):
 
   _FILENAME_PREFIX = 'memory'
 
-  _FILE_HEADER = 'CPU time\tUsed memory\n'
+  _FILE_HEADER = 'Time\tUsed memory\n'
 
   def Sample(self, used_memory):
     """Takes a sample for profiling.
@@ -190,8 +212,8 @@ class MemoryProfiler(SampleFileProfiler):
     Args:
       used_memory (int): amount of used memory in bytes.
     """
-    cpu_time = time.clock()
-    sample = '{0:f}\t{1:d}\n'.format(cpu_time, used_memory)
+    sample_time = self._GetSampleTime()
+    sample = '{0:f}\t{1:d}\n'.format(sample_time, used_memory)
     self._sample_file.write(sample)
 
   def Start(self):
@@ -234,7 +256,7 @@ class StorageProfiler(SampleFileProfiler):
   _FILENAME_PREFIX = 'storage'
 
   _FILE_HEADER = (
-      'CPU time\tOperation\tDescription\tData size\tCompressed data size\n')
+      'Time\tOperation\tDescription\tData size\tCompressed data size\n')
 
   def Sample(self, operation, description, data_size, compressed_data_size):
     """Takes a sample of data read or written for profiling.
@@ -245,9 +267,9 @@ class StorageProfiler(SampleFileProfiler):
       data_size (int): size of the data read in bytes.
       compressed_data_size (int): size of the compressed data read in bytes.
     """
-    cpu_time = time.clock()
+    sample_time = self._GetSampleTime()
     sample = '{0:f}\t{1:s}\t{2:s}\t{3:d}\t{4:d}\n'.format(
-        cpu_time, operation, description, data_size, compressed_data_size)
+        sample_time, operation, description, data_size, compressed_data_size)
     self._sample_file.write(sample)
 
 
@@ -257,7 +279,7 @@ class TaskQueueProfiler(SampleFileProfiler):
   _FILENAME_PREFIX = 'task_queue'
 
   _FILE_HEADER = (
-      'CPU time\tQueued\tProcessing\tTo merge\tAbandoned\tTotal\n')
+      'Time\tQueued\tProcessing\tTo merge\tAbandoned\tTotal\n')
 
   def Sample(self, tasks_status):
     """Takes a sample of the status of queued tasks for profiling.
@@ -265,9 +287,9 @@ class TaskQueueProfiler(SampleFileProfiler):
     Args:
       tasks_status (TasksStatus): status information about tasks.
     """
-    cpu_time = time.clock()
+    sample_time = self._GetSampleTime()
     sample = '{0:f}\t{1:d}\t{2:d}\t{3:d}\t{4:d}\t{5:d}\n'.format(
-        cpu_time, tasks_status.number_of_queued_tasks,
+        sample_time, tasks_status.number_of_queued_tasks,
         tasks_status.number_of_tasks_processing,
         tasks_status.number_of_tasks_pending_merge,
         tasks_status.number_of_abandoned_tasks,
