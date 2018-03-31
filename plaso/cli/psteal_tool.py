@@ -202,6 +202,9 @@ class PstealTool(
         storage_reader.GetNumberOfAnalysisReports())
     storage_reader.Close()
 
+    configuration = self._CreateProcessingConfiguration(
+        self._knowledge_base)
+
     counter = collections.Counter()
     if self._output_format != 'null':
       self._status_view.SetMode(self._status_view_mode)
@@ -218,10 +221,9 @@ class PstealTool(
       analysis_engine = psort.PsortMultiProcessEngine(
           use_zeromq=self._use_zeromq)
 
-      # TODO: pass configuration object.
       events_counter = analysis_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,
-          deduplicate_events=self._deduplicate_events,
+          configuration, deduplicate_events=self._deduplicate_events,
           status_update_callback=status_update_callback,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
 
