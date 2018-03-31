@@ -38,24 +38,58 @@ class CPUTimeMeasurement(object):
       self.total_cpu_time += time.clock() - self.start_cpu_time
 
 
-class CPUTimeProfiler(object):
-  """The CPU time profiler."""
+class SampleFileProfiler(object):
+  """Shared functionality for sample file-based profilers."""
 
-  _FILENAME_PREFIX = 'cputime'
+  _FILENAME_PREFIX = None
+
+  _FILE_HEADER = None
 
   def __init__(self, identifier, configuration):
-    """Initializes the CPU time profiler.
+    """Initializes the sample file profiler.
 
     Args:
       identifier (str): identifier of the profiling session used to create
           the sample filename.
       configuration (ProfilingConfiguration): profiling configuration.
     """
-    super(CPUTimeProfiler, self).__init__()
+    super(SampleFileProfiler, self).__init__()
     self._identifier = identifier
     self._path = configuration.directory
     self._profile_measurements = {}
     self._sample_file = None
+
+  @classmethod
+  def IsSupported(cls):
+    """Determines if the profiler is supported.
+
+    Returns:
+      bool: True if the profiler is supported.
+    """
+    return True
+
+  def Start(self):
+    """Starts the profiler."""
+    filename = '{0:s}-{1:s}.csv.gz'.format(
+        self._FILENAME_PREFIX, self._identifier)
+    if self._path:
+      filename = os.path.join(self._path, filename)
+
+    self._sample_file = gzip.open(filename, 'wb')
+    self._sample_file.write(self._FILE_HEADER)
+
+  def Stop(self):
+    """Stops the profiler."""
+    self._sample_file.close()
+    self._sample_file = None
+
+
+class CPUTimeProfiler(SampleFileProfiler):
+  """The CPU time profiler."""
+
+  _FILENAME_PREFIX = 'cputime'
+
+  _FILE_HEADER = 'CPU time\tName\tProcessing time\n'
 
   def StartTiming(self, profile_name):
     """Starts timing CPU time.
@@ -82,21 +116,6 @@ class CPUTimeProfiler(object):
           measurements.start_cpu_time, profile_name,
           measurements.total_cpu_time)
       self._sample_file.write(sample)
-
-  def Start(self):
-    """Starts the profiler."""
-    filename = '{0:s}-{1:s}.csv.gz'.format(
-        self._FILENAME_PREFIX, self._identifier)
-    if self._path:
-      filename = os.path.join(self._path, filename)
-
-    self._sample_file = gzip.open(filename, 'wb')
-    self._sample_file.write('CPU time\tName\tProcessing time\n')
-
-  def Stop(self):
-    """Stops the profiler."""
-    self._sample_file.close()
-    self._sample_file = None
 
 
 class GuppyMemoryProfiler(object):
@@ -158,29 +177,12 @@ class GuppyMemoryProfiler(object):
     return
 
 
-class MemoryProfiler(object):
+class MemoryProfiler(SampleFileProfiler):
   """The memory profiler."""
 
-  def __init__(self, identifier, configuration):
-    """Initializes a memory profiler.
+  _FILENAME_PREFIX = 'memory'
 
-    Args:
-      identifier (str): unique name of the profile.
-      configuration (ProfilingConfiguration): profiling configuration.
-    """
-    super(MemoryProfiler, self).__init__()
-    self._identifier = identifier
-    self._path = configuration.directory
-    self._sample_file = None
-
-  @classmethod
-  def IsSupported(cls):
-    """Determines if the profiler is supported.
-
-    Returns:
-      bool: True if the profiler is supported.
-    """
-    return True
+  _FILE_HEADER = 'CPU time\tUsed memory\n'
 
   def Sample(self, used_memory):
     """Takes a sample for profiling.
@@ -194,12 +196,13 @@ class MemoryProfiler(object):
 
   def Start(self):
     """Starts the profiler."""
-    filename = 'memory-{0:s}.csv.gz'.format(self._identifier)
+    filename = '{0:s}-{1:s}.csv.gz'.format(
+        self._FILENAME_PREFIX, self._identifier)
     if self._path:
       filename = os.path.join(self._path, filename)
 
     self._sample_file = gzip.open(filename, 'wb')
-    self._sample_file.write('CPU time\tUsed memory\n')
+    self._sample_file.write(self._FILE_HEADER)
 
   def Stop(self):
     """Stops the profiler."""
@@ -223,3 +226,26 @@ class SerializersProfiler(CPUTimeProfiler):
   """The serializers profiler."""
 
   _FILENAME_PREFIX = 'serializers'
+
+
+class StorageProfiler(SampleFileProfiler):
+  """The storage profiler."""
+
+  _FILENAME_PREFIX = 'storage'
+
+  _FILE_HEADER = (
+      'CPU time\tOperation\tDescription\tData size\tCompressed data size\n')
+
+  def Sample(self, operation, description, data_size, compressed_data_size):
+    """Takes a sample of data read or written for profiling.
+
+    Args:
+      operation (str): operation, either 'read' or 'write'.
+      description (str): description of the data read.
+      data_size (int): size of the data read in bytes.
+      compressed_data_size (int): size of the compressed data read in bytes.
+    """
+    cpu_time = time.clock()
+    sample = '{0:f}\t{1:s}\t{2:s}\t{3:d}\t{4:d}\n'.format(
+        cpu_time, operation, description, data_size, compressed_data_size)
+    self._sample_file.write(sample)

@@ -24,7 +24,8 @@ class ProfilingArgumentsHelper(interface.ArgumentsHelper):
       'memory': 'Profile memory usage over time',
       'parsers': 'Profile CPU time per parser',
       'processing': 'Profile CPU time of processing phases',
-      'serializers': 'Profile CPU time of serialization'}
+      'serializers': 'Profile CPU time of serialization',
+      'storage': 'Profile storage reads and writes'}
 
   if engine.BaseEngine.SupportsGuppyMemoryProfiling():
     PROFILERS_INFORMATION['guppy'] = (
