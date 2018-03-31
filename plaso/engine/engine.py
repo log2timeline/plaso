@@ -40,6 +40,7 @@ class BaseEngine(object):
     self._processing_profiler = None
     self._serializers_profiler = None
     self._storage_profiler = None
+    self._task_queue_profiler = None
 
     self.knowledge_base = knowledge_base.KnowledgeBase()
 
@@ -237,6 +238,11 @@ class BaseEngine(object):
           self._name, configuration)
       self._storage_profiler.Start()
 
+    if configuration.HaveProfileTaskQueue():
+      self._task_queue_profiler = profiler.TaskQueueProfiler(
+          self._name, configuration)
+      self._task_queue_profiler.Start()
+
   def _StopProfiling(self):
     """Stops profiling."""
     if self._guppy_memory_profiler:
@@ -263,6 +269,10 @@ class BaseEngine(object):
     if self._storage_profiler:
       self._storage_profiler.Stop()
       self._storage_profiler = None
+
+    if self._task_queue_profiler:
+      self._task_queue_profiler.Stop()
+      self._task_queue_profiler = None
 
   @classmethod
   def SupportsGuppyMemoryProfiling(cls):

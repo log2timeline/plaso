@@ -249,3 +249,27 @@ class StorageProfiler(SampleFileProfiler):
     sample = '{0:f}\t{1:s}\t{2:s}\t{3:d}\t{4:d}\n'.format(
         cpu_time, operation, description, data_size, compressed_data_size)
     self._sample_file.write(sample)
+
+
+class TaskQueueProfiler(SampleFileProfiler):
+  """The task queue profiler."""
+
+  _FILENAME_PREFIX = 'task_queue'
+
+  _FILE_HEADER = (
+      'CPU time\tQueued\tProcessing\tTo merge\tAbandoned\tTotal\n')
+
+  def Sample(self, tasks_status):
+    """Takes a sample of the status of queued tasks for profiling.
+
+    Args:
+      tasks_status (TasksStatus): status information about tasks.
+    """
+    cpu_time = time.clock()
+    sample = '{0:f}\t{1:d}\t{2:d}\t{3:d}\t{4:d}\t{5:d}\n'.format(
+        cpu_time, tasks_status.number_of_queued_tasks,
+        tasks_status.number_of_tasks_processing,
+        tasks_status.number_of_tasks_pending_merge,
+        tasks_status.number_of_abandoned_tasks,
+        tasks_status.total_number_of_tasks)
+    self._sample_file.write(sample)
