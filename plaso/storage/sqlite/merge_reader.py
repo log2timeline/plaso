@@ -5,12 +5,14 @@ from __future__ import unicode_literals
 
 import os
 import sqlite3
+import zlib
 
 from plaso.containers import errors
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.containers import tasks
+from plaso.lib import definitions
 from plaso.storage import identifiers
 from plaso.storage import interface
 
@@ -51,6 +53,7 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
     super(SQLiteStorageMergeReader, self).__init__(storage_writer)
     self._active_container_type = None
     self._active_cursor = None
+    self._compression_format = definitions.COMPRESSION_FORMAT_NONE
     self._connection = None
     self._container_types = None
     self._cursor = None
@@ -107,6 +110,19 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
       raise RuntimeError('Unsupported container type: {0:s}'.format(
           container_type))
 
+  def _ReadStorageMetadata(self):
+    """Reads the storage metadata.
+
+    Returns:
+      bool: True if the storage metadata was read.
+    """
+    query = 'SELECT key, value FROM metadata'
+    self._cursor.execute(query)
+
+    metadata_values = {row[0]: row[1] for row in self._cursor.fetchall()}
+
+    self._compression_format = metadata_values['compression_format']
+
   def MergeAttributeContainers(
       self, callback=None, maximum_number_of_containers=0):
     """Reads attribute containers from a task storage file into the writer.
@@ -128,6 +144,8 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
           self._path,
           detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
       self._cursor = self._connection.cursor()
+
+      self._ReadStorageMetadata()
 
       self._cursor.execute(self._TABLE_NAMES_QUERY)
       table_names = [row[0] for row in self._cursor.fetchall()]
@@ -163,7 +181,10 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
         identifier = identifiers.SQLTableIdentifier(
             self._active_container_type, row[0])
 
-        serialized_data = row[1]
+        if self._compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
+          serialized_data = zlib.decompress(row[1])
+        else:
+          serialized_data = row[1]
 
         attribute_container = self._DeserializeAttributeContainer(
             self._active_container_type, serialized_data)

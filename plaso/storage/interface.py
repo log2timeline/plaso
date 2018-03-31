@@ -1124,6 +1124,30 @@ class StorageFileWriter(StorageWriter):
       StorageWriter: storage writer.
     """
 
+  def _GetMergeTaskStorageFilePath(self, task):
+    """Retrieves the path of a task storage file ready to be merged.
+
+    Args:
+      task (Task): task.
+
+    Returns:
+      str: path of a task storage file ready to be merged.
+    """
+    filename = '{0:s}.plaso'.format(task.identifier)
+    return os.path.join(self._merge_task_storage_path, filename)
+
+  def _GetTaskStorageFilePath(self, task):
+    """Retrieves the path of a task storage file.
+
+    Args:
+      task (Task): task.
+
+    Returns:
+      str: path of a task storage file.
+    """
+    filename = '{0:s}.plaso'.format(task.identifier)
+    return os.path.join(self._task_storage_path, filename)
+
   def _UpdateCounters(self, event):
     """Updates the counters.
 
@@ -1263,11 +1287,10 @@ class StorageFileWriter(StorageWriter):
     if not self._merge_task_storage_path:
       raise IOError('Missing merge task storage path.')
 
-    storage_file_path = os.path.join(
-        self._merge_task_storage_path, '{0:s}.plaso'.format(task.identifier))
+    merge_storage_file_path = self._GetMergeTaskStorageFilePath(task)
 
     try:
-      stat_info = os.stat(storage_file_path)
+      stat_info = os.stat(merge_storage_file_path)
     except (IOError, OSError):
       return False
 
@@ -1309,9 +1332,8 @@ class StorageFileWriter(StorageWriter):
       if not task:
         continue
 
-      storage_file_path = os.path.join(
-          self._merge_task_storage_path, '{0:s}.plaso'.format(task.identifier))
-      task.storage_file_size = os.path.getsize(storage_file_path)
+      merge_storage_file_path = self._GetMergeTaskStorageFilePath(task)
+      task.storage_file_size = os.path.getsize(merge_storage_file_path)
       tasks_pending_merge.append(task)
 
     return tasks_pending_merge
@@ -1348,9 +1370,7 @@ class StorageFileWriter(StorageWriter):
     if not self._task_storage_path:
       raise IOError('Missing task storage path.')
 
-    storage_file_path = os.path.join(
-        self._task_storage_path, '{0:s}.plaso'.format(task.identifier))
-
+    storage_file_path = self._GetTaskStorageFilePath(task)
     return self._CreateTaskStorageWriter(storage_file_path, task)
 
   def GetEventDataByIdentifier(self, identifier):
@@ -1495,11 +1515,8 @@ class StorageFileWriter(StorageWriter):
     if not self._task_storage_path:
       raise IOError('Missing task storage path.')
 
-    storage_file_path = os.path.join(
-        self._task_storage_path, '{0:s}.plaso'.format(task.identifier))
-
-    merge_storage_file_path = os.path.join(
-        self._merge_task_storage_path, '{0:s}.plaso'.format(task.identifier))
+    storage_file_path = self._GetTaskStorageFilePath(task)
+    merge_storage_file_path = self._GetMergeTaskStorageFilePath(task)
 
     try:
       os.rename(storage_file_path, merge_storage_file_path)
@@ -1568,13 +1585,12 @@ class StorageFileWriter(StorageWriter):
     if not self._merge_task_storage_path:
       raise IOError('Missing merge task storage path.')
 
-    storage_file_path = os.path.join(
-        self._merge_task_storage_path, '{0:s}.plaso'.format(task.identifier))
+    merge_storage_file_path = self._GetMergeTaskStorageFilePath(task)
 
-    if not os.path.isfile(storage_file_path):
+    if not os.path.isfile(merge_storage_file_path):
       raise IOError('Merge task storage path is not a file.')
 
-    return self._CreateTaskStorageMergeReader(storage_file_path)
+    return self._CreateTaskStorageMergeReader(merge_storage_file_path)
 
   def StartTaskStorage(self):
     """Creates a temporary path for the task storage.
