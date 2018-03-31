@@ -4,9 +4,9 @@
 from __future__ import unicode_literals
 
 import abc
-import logging
 
 from plaso.lib import errors
+from plaso.output import logger
 
 
 class OutputModule(object):
@@ -42,7 +42,7 @@ class OutputModule(object):
         'parser chain: {3:s} with error: {4:s}').format(
             event_identifier_string, event.data_type, event.display_name,
             event.parser, error_message)
-    logging.error(error_message)
+    logger.error(error_message)
 
   def Close(self):
     """Closes the output."""

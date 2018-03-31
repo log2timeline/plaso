@@ -5,10 +5,10 @@ from __future__ import unicode_literals
 
 import argparse
 import collections
-import logging
 import os
 import uuid
 
+from plaso.cli import logger
 from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
@@ -487,7 +487,7 @@ class PinfoTool(
     storage_file = storage_factory.StorageFactory.CreateStorageFileForFile(
         self._storage_file_path)
     if not storage_file:
-      logging.error(
+      logger.error(
           'Format of storage file: {0:s} not supported'.format(
               self._storage_file_path))
       return False
@@ -495,7 +495,7 @@ class PinfoTool(
     try:
       storage_file.Open(path=self._storage_file_path, read_only=True)
     except IOError as exception:
-      logging.error(
+      logger.error(
           'Unable to open storage file: {0:s} with error: {1!s}'.format(
               self._storage_file_path, exception))
       return False
@@ -504,7 +504,7 @@ class PinfoTool(
         storage_factory.StorageFactory.CreateStorageFileForFile(
             self._compare_storage_file_path))
     if not compare_storage_file:
-      logging.error(
+      logger.error(
           'Format of storage file: {0:s} not supported'.format(
               self._compare_storage_file_path))
       return False
@@ -513,7 +513,7 @@ class PinfoTool(
       compare_storage_file.Open(
           path=self._compare_storage_file_path, read_only=True)
     except IOError as exception:
-      logging.error(
+      logger.error(
           'Unable to open storage file: {0:s} with error: {1!s}'.format(
               self._compare_storage_file_path, exception))
       storage_file.Close()
@@ -643,7 +643,7 @@ class PinfoTool(
     storage_file = storage_factory.StorageFactory.CreateStorageFileForFile(
         self._storage_file_path)
     if not storage_file:
-      logging.error(
+      logger.error(
           'Format of storage file: {0:s} not supported'.format(
               self._storage_file_path))
       return
@@ -651,7 +651,7 @@ class PinfoTool(
     try:
       storage_file.Open(path=self._storage_file_path, read_only=True)
     except IOError as exception:
-      logging.error(
+      logger.error(
           'Unable to open storage file: {0:s} with error: {1!s}'.format(
               self._storage_file_path, exception))
       return

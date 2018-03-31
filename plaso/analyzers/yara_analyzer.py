@@ -3,11 +3,10 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 import yara
 
 from plaso.analyzers import interface
+from plaso.analyzers import logger
 from plaso.analyzers import manager
 from plaso.containers import analyzer_result
 from plaso.lib import definitions
@@ -45,10 +44,10 @@ class YaraAnalyzer(interface.BaseAnalyzer):
     try:
       self._matches = self._rules.match(data=data, timeout=self._MATCH_TIMEOUT)
     except yara.YaraTimeoutError:
-      logging.error('Could not process file within timeout: {0:d}'.format(
+      logger.error('Could not process file within timeout: {0:d}'.format(
           self._MATCH_TIMEOUT))
     except yara.YaraError as exception:
-      logging.error('Error processing file with Yara: {0!s}.'.format(
+      logger.error('Error processing file with Yara: {0!s}.'.format(
           exception))
 
   def GetResults(self):

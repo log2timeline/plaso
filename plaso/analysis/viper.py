@@ -3,9 +3,8 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 from plaso.analysis import interface
+from plaso.analysis import logger
 from plaso.analysis import manager
 from plaso.containers import events
 from plaso.lib import errors
@@ -58,7 +57,7 @@ class ViperAnalyzer(interface.HTTPHashAnalyzer):
 
     except errors.ConnectionError as exception:
       json_response = None
-      logging.error('Unable to query Viper with error: {0!s}.'.format(
+      logger.error('Unable to query Viper with error: {0!s}.'.format(
           exception))
 
     return json_response

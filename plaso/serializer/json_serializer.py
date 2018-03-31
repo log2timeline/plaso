@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 import binascii
 import collections
 import json
-import logging
 
 from dfvfs.path import path_spec as dfvfs_path_spec
 from dfvfs.path import factory as dfvfs_path_spec_factory
@@ -15,6 +14,7 @@ from plaso.containers import interface as containers_interface
 from plaso.containers import manager as containers_manager
 from plaso.lib import py2to3
 from plaso.serializer import interface
+from plaso.serializer import logger
 
 
 class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
@@ -225,9 +225,9 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
           attribute_name not in supported_attribute_names):
 
         if attribute_name not in ('__container_type__', '__type__'):
-          logging.debug(
-              'Unsupported attribute name: {0:s}.{1:s}'.format(
-                  container_type, attribute_name))
+          logger.debug((
+              '[ConvertDictToObject] unsupported attribute name: '
+              '{0:s}.{1:s}').format(container_type, attribute_name))
 
         continue
 

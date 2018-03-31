@@ -3,12 +3,11 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 from plaso.containers import artifacts
 from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.preprocessors import interface
+from plaso.preprocessors import logger
 from plaso.preprocessors import manager
 from plaso.winnt import time_zones
 
@@ -262,7 +261,7 @@ class WindowsTimeZonePlugin(
       except ValueError:
         # TODO: add and store preprocessing errors.
         time_zone = value_data
-        logging.warning('Unable to map: "{0:s}" to time zone'.format(
+        logger.warning('Unable to map: "{0:s}" to time zone'.format(
             value_data))
 
 

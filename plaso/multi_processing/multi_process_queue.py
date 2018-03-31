@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
 import multiprocessing
 
 # The 'Queue' module was renamed to 'queue' in Python 3
@@ -14,6 +13,7 @@ except ImportError:
 
 from plaso.engine import plaso_queue
 from plaso.lib import errors
+from plaso.multi_processing import logger
 
 
 class MultiProcessingQueue(plaso_queue.Queue):
@@ -41,7 +41,7 @@ class MultiProcessingQueue(plaso_queue.Queue):
     # pylint: enable=no-member,protected-access
 
     if maximum_number_of_queued_items > queue_max_length:
-      logging.warning((
+      logger.warning((
           'Requested maximum queue size: {0:d} is larger than the maximum '
           'size supported by the system. Defaulting to: {1:d}').format(
               maximum_number_of_queued_items, queue_max_length))

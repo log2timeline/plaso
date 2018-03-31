@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 from dfvfs.resolver import context as dfvfs_context
 
 # The following import makes sure the analyzers are registered.
@@ -13,6 +11,7 @@ from plaso import analyzers  # pylint: disable=unused-import
 # The following import makes sure the parsers are registered.
 from plaso import parsers  # pylint: disable=unused-import
 
+from plaso.cli import logger
 from plaso.cli import storage_media_tool
 from plaso.cli import tool_options
 from plaso.engine import configurations
@@ -105,7 +104,7 @@ class ExtractionTool(
               operating_system_version))
 
       if parser_filter_expression:
-        logging.info('Parser filter expression changed to: {0:s}'.format(
+        logger.info('Parser filter expression changed to: {0:s}'.format(
             parser_filter_expression))
 
       configuration.parser_filter_expression = parser_filter_expression
@@ -145,7 +144,7 @@ class ExtractionTool(
       extraction_engine (BaseEngine): extraction engine to preprocess
           the sources.
     """
-    logging.debug('Starting preprocessing.')
+    logger.debug('Starting preprocessing.')
 
     try:
       extraction_engine.PreprocessSources(
@@ -153,9 +152,9 @@ class ExtractionTool(
           resolver_context=self._resolver_context)
 
     except IOError as exception:
-      logging.error('Unable to preprocess with error: {0!s}'.format(exception))
+      logger.error('Unable to preprocess with error: {0!s}'.format(exception))
 
-    logging.debug('Preprocessing done.')
+    logger.debug('Preprocessing done.')
 
   def _SetExtractionParsersAndPlugins(self, configuration, session):
     """Sets the parsers and plugins before extraction.
@@ -184,7 +183,7 @@ class ExtractionTool(
         knowledge_base.SetTimeZone(self._preferred_time_zone)
       except ValueError:
         # pylint: disable=protected-access
-        logging.warning(
+        logger.warning(
             'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
                 self._preferred_time_zone, knowledge_base._time_zone.zone))
 

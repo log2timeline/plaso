@@ -6,8 +6,6 @@ from __future__ import unicode_literals
 # TODO: Add support for other implementations than MacOS.
 #       The parser should be checked against IOS UTMPX file.
 
-import logging
-
 import construct
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -17,6 +15,7 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.parsers import interface
+from plaso.parsers import logger
 from plaso.parsers import manager
 
 
@@ -85,7 +84,7 @@ class UtmpxParser(interface.FileObjectParser):
     try:
       entry_struct = self._UTMPX_ENTRY.parse(data)
     except (IOError, construct.FieldError) as exception:
-      logging.warning(
+      logger.warning(
           'Unable to parse MacOS UTMPX entry with error: {0!s}'.format(
               exception))
       return False

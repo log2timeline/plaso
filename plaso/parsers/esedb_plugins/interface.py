@@ -3,11 +3,10 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 import construct
 import pyesedb  # pylint: disable=wrong-import-order
 
+from plaso.parsers import logger
 from plaso.parsers import plugins
 
 
@@ -192,7 +191,7 @@ class ESEDBPlugin(plugins.BasePlugin):
 
       column_name = record.get_column_name(value_entry)
       if column_name in record_values:
-        logging.warning(
+        logger.warning(
             '[{0:s}] duplicate column: {1:s} in table: {2:s}'.format(
                 self.NAME, column_name, table_name))
         continue
@@ -203,7 +202,7 @@ class ESEDBPlugin(plugins.BasePlugin):
         if value_callback_method:
           value_callback = getattr(self, value_callback_method, None)
           if value_callback is None:
-            logging.warning((
+            logger.warning((
                 '[{0:s}] missing value callback method: {1:s} for column: '
                 '{2:s} in table: {3:s}').format(
                     self.NAME, value_callback_method, column_name, table_name))
@@ -214,7 +213,7 @@ class ESEDBPlugin(plugins.BasePlugin):
           value = value_callback(value_data)
 
         except Exception as exception:  # pylint: disable=broad-except
-          logging.error(exception)
+          logger.error(exception)
           value = None
           parser_mediator.ProduceExtractionError((
               'unable to parse value: {0:s} with callback: {1:s} with error: '
@@ -259,14 +258,14 @@ class ESEDBPlugin(plugins.BasePlugin):
 
       callback = getattr(self, callback_method, None)
       if callback is None:
-        logging.warning(
+        logger.warning(
             '[{0:s}] missing callback method: {1:s} for table: {2:s}'.format(
                 self.NAME, callback_method, table_name))
         continue
 
       esedb_table = database.get_table_by_name(table_name)
       if not esedb_table:
-        logging.warning('[{0:s}] missing table: {1:s}'.format(
+        logger.warning('[{0:s}] missing table: {1:s}'.format(
             self.NAME, table_name))
         continue
 

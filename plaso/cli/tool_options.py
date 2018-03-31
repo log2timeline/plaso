@@ -3,10 +3,10 @@
 
 from __future__ import unicode_literals
 
-import logging
 import os
 
 from plaso.analysis import manager as analysis_manager
+from plaso.cli import logger
 from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
@@ -156,7 +156,7 @@ class OutputModuleOptions(object):
         value = self._PromptUserForInput(
             'Missing parameter {0:s} for output module'.format(parameter))
         if value is None:
-          logging.warning(
+          logger.warning(
               'Unable to set the missing parameter for: {0:s}'.format(
                   parameter))
           continue
@@ -322,7 +322,7 @@ class StorageFileOptions(object):
                 storage_file_path))
 
       if warn_about_existing:
-        logging.warning('Appending to an already existing storage file.')
+        logger.warning('Appending to an already existing storage file.')
 
     dirname = os.path.dirname(storage_file_path)
     if not dirname:

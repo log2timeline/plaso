@@ -82,8 +82,6 @@ The popularity-contest output looks like this:
 
 from __future__ import unicode_literals
 
-import logging
-
 import pyparsing
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -93,6 +91,7 @@ from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import py2to3
+from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -242,7 +241,7 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
 
     else:
       if not structure.timestamp:
-        logging.debug('[{0:s}] {1:s} with invalid timestamp.'.format(
+        logger.debug('[{0:s}] {1:s} with invalid timestamp.'.format(
             self.NAME, key))
         return
 
@@ -276,7 +275,7 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
     try:
       self.HEADER.parseString(line)
     except pyparsing.ParseException:
-      logging.debug('Not a Popularity Contest log file, invalid header')
+      logger.debug('Not a Popularity Contest log file, invalid header')
       return False
 
     return True

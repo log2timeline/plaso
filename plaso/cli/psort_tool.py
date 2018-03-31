@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 import argparse
 import collections
-import logging
 import os
 import sys
 import time
@@ -20,6 +19,7 @@ from plaso import formatters  # pylint: disable=unused-import
 from plaso import output   # pylint: disable=unused-import
 
 from plaso.analysis import manager as analysis_manager
+from plaso.cli import logger
 from plaso.cli import status_view
 from plaso.cli import time_slices
 from plaso.cli import tool_options
@@ -120,7 +120,7 @@ class PsortTool(
         raise errors.BadConfigOption(
             'Storage file: {0:s} already exists and is not a file.'.format(
                 storage_file_path))
-      logging.warning('Appending to an already existing storage file.')
+      logger.warning('Appending to an already existing storage file.')
 
     dirname = os.path.dirname(storage_file_path)
     if not dirname:
@@ -378,7 +378,7 @@ class PsortTool(
 
     # Properly prepare the attributes according to local encoding.
     if self.preferred_encoding == 'ascii':
-      logging.warning(
+      logger.warning(
           'The preferred encoding of your system is ASCII, which is not '
           'optimal for the typically non-ASCII characters that need to be '
           'parsed and processed. The tool will most likely crash and die, '
@@ -455,7 +455,7 @@ class PsortTool(
       # Update the data location with the calculated value.
       options.data_location = self._data_location
     else:
-      logging.warning('Unable to automatically determine data location.')
+      logger.warning('Unable to automatically determine data location.')
 
     self._command_line_arguments = self.GetCommandLineArguments()
 
@@ -495,7 +495,7 @@ class PsortTool(
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
     if not storage_reader:
-      logging.error('Format of storage file: {0:s} not supported'.format(
+      logger.error('Format of storage file: {0:s} not supported'.format(
           self._storage_file_path))
       return
 

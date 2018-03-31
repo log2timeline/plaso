@@ -54,8 +54,6 @@ http://xchat.org
 
 from __future__ import unicode_literals
 
-import logging
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -65,6 +63,7 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.lib import timelib
+from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -216,7 +215,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       event_data.text = 'XChat end logging'
 
     else:
-      logging.debug('Unknown log action: {0:s}.'.format(
+      logger.debug('Unknown log action: {0:s}.'.format(
           ' '.join(structure.log_action)))
       return
 
@@ -290,7 +289,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       # is found. Stop parsing is done setting xchat_year to 0.
       # Note that the code assumes that LINE_STRUCTURES will be used in the
       # exact order as defined!
-      logging.warning('Unknown locale header.')
+      logger.warning('Unknown locale header.')
       self._xchat_year = 0
 
   def VerifyStructure(self, parser_mediator, line):
@@ -307,7 +306,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       structure = self._HEADER.parseString(line)
     except pyparsing.ParseException:
-      logging.debug('Not a XChat log file')
+      logger.debug('Not a XChat log file')
       return False
 
     _, month, day, hours, minutes, seconds, year = structure.date_time
@@ -320,7 +319,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      logging.debug('Not a XChat log file, invalid date and time: {0!s}'.format(
+      logger.debug('Not a XChat log file, invalid date and time: {0!s}'.format(
           structure.date_time))
       return False
 

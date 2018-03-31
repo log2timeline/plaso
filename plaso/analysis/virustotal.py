@@ -3,9 +3,8 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 from plaso.analysis import interface
+from plaso.analysis import logger
 from plaso.analysis import manager
 from plaso.lib import errors
 
@@ -50,7 +49,7 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
           self._VIRUSTOTAL_API_REPORT_URL, 'GET', params=url_parameters)
     except errors.ConnectionError as exception:
       json_response = None
-      logging.error('Unable to query VirusTotal with error: {0!s}.'.format(
+      logger.error('Unable to query VirusTotal with error: {0!s}.'.format(
           exception))
 
     return json_response
@@ -157,7 +156,7 @@ class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     elif response_code == self._VIRUSTOTAL_ANALYSIS_PENDING_RESPONSE_CODE:
       return ['virustotal_analysis_pending']
     else:
-      logging.error(
+      logger.error(
           'VirusTotal returned unknown response code {0!s}'.format(
               response_code))
       return ['virustotal_unknown_response_code_{0:d}'.format(response_code)]

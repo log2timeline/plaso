@@ -13,6 +13,7 @@ import time
 
 from plaso.engine import process_info
 from plaso.lib import loggers
+from plaso.multi_processing import logger
 from plaso.multi_processing import plaso_xmlrpc
 
 
@@ -136,7 +137,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
         port = 0
 
     if not port:
-      logging.error((
+      logger.error((
           'Unable to start a process status RPC server for {0!s} '
           '(PID: {1:d})').format(self._name, self._pid))
       self._rpc_server = None
@@ -144,7 +145,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
     self.rpc_port.value = port
 
-    logging.debug(
+    logger.debug(
         'Process: {0!s} process status RPC server started'.format(self._name))
 
   def _StopProcessStatusRPCServer(self):
@@ -160,7 +161,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     self._rpc_server = None
     self.rpc_port.value = 0
 
-    logging.debug(
+    logger.debug(
         'Process: {0!s} process status RPC server stopped'.format(self._name))
 
   def _WaitForStatusNotRunning(self):
@@ -207,7 +208,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
         debug_output=self._debug_output, filename=self._log_filename,
         quiet_mode=self._quiet_mode)
 
-    logging.debug(
+    logger.debug(
         'Process: {0!s} (PID: {1:d}) started'.format(self._name, self._pid))
 
     self._StartProcessStatusRPCServer()
@@ -216,7 +217,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
     self._StopProcessStatusRPCServer()
 
-    logging.debug(
+    logger.debug(
         'Process: {0!s} (PID: {1:d}) stopped'.format(self._name, self._pid))
 
     # Make sure log files are cleanly closed.

@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
 import os
 
 from dfvfs.lib import errors as dfvfs_errors
@@ -16,6 +15,7 @@ from plaso.engine import worker
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import base_process
+from plaso.multi_processing import logger
 from plaso.parsers import mediator as parsers_mediator
 
 
@@ -175,39 +175,39 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     if self._storage_profiler:
       self._storage_writer.SetStorageProfiler(self._storage_profiler)
 
-    logging.debug('Worker: {0!s} (PID: {1:d}) started'.format(
+    logger.debug('Worker: {0!s} (PID: {1:d}) started'.format(
         self._name, self._pid))
 
     self._status = definitions.PROCESSING_STATUS_RUNNING
 
     try:
-      logging.debug('{0!s} (PID: {1:d}) started monitoring task queue.'.format(
+      logger.debug('{0!s} (PID: {1:d}) started monitoring task queue.'.format(
           self._name, self._pid))
 
       while not self._abort:
         try:
           task = self._task_queue.PopItem()
         except (errors.QueueClose, errors.QueueEmpty) as exception:
-          logging.debug('ConsumeItems exiting with exception {0:s}.'.format(
+          logger.debug('ConsumeItems exiting with exception {0:s}.'.format(
               type(exception)))
           break
 
         if isinstance(task, plaso_queue.QueueAbort):
-          logging.debug('ConsumeItems exiting, dequeued QueueAbort object.')
+          logger.debug('ConsumeItems exiting, dequeued QueueAbort object.')
           break
 
         self._ProcessTask(task)
 
-      logging.debug('{0!s} (PID: {1:d}) stopped monitoring task queue.'.format(
+      logger.debug('{0!s} (PID: {1:d}) stopped monitoring task queue.'.format(
           self._name, self._pid))
 
     # All exceptions need to be caught here to prevent the process
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
-      logging.warning(
+      logger.warning(
           'Unhandled exception in process: {0!s} (PID: {1:d}).'.format(
               self._name, self._pid))
-      logging.exception(exception)
+      logger.exception(exception)
 
       self._abort = True
 
@@ -234,13 +234,13 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     else:
       self._status = definitions.PROCESSING_STATUS_COMPLETED
 
-    logging.debug('Worker: {0!s} (PID: {1:d}) stopped'.format(
+    logger.debug('Worker: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
 
     try:
       self._task_queue.Close(abort=self._abort)
     except errors.QueueAlreadyClosed:
-      logging.error('Queue for {0:s} was already closed.'.format(self.name))
+      logger.error('Queue for {0:s} was already closed.'.format(self.name))
 
   def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
     """Processes a path specification.
@@ -259,7 +259,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     except dfvfs_errors.CacheFullError:
       # TODO: signal engine of failure.
       self._abort = True
-      logging.error((
+      logger.error((
           'ABORT: detected cache full error while processing path spec: '
           '{0:s}').format(self._current_display_name))
 
@@ -269,10 +269,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
           '{0!s}').format(exception), path_spec=path_spec)
 
       if self._processing_configuration.debug_output:
-        logging.warning((
+        logger.warning((
             'Unhandled exception while processing path specification: '
             '{0:s}.').format(self._current_display_name))
-        logging.exception(exception)
+        logger.exception(exception)
 
   def _ProcessTask(self, task):
     """Processes a task.

@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import collections
-import logging
 import re
 import sys
 
@@ -15,6 +14,7 @@ else:
 
 # pylint: disable=wrong-import-position
 from plaso.analysis import interface
+from plaso.analysis import logger
 from plaso.analysis import manager
 from plaso.containers import reports
 from plaso.formatters import manager as formatters_manager
@@ -90,7 +90,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
         decoded_url = decoded_url.decode('utf-8')
       except UnicodeDecodeError as exception:
         decoded_url = decoded_url.decode('utf-8', errors='replace')
-        logging.warning(
+        logger.warning(
             'Unable to decode URL: {0:s} with error: {1!s}'.format(
                 url, exception))
 
@@ -306,7 +306,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     for engine, url_expression, method_name in self._URL_FILTERS:
       callback_method = getattr(self, method_name, None)
       if not callback_method:
-        logging.warning('Missing method: {0:s}'.format(callback_method))
+        logger.warning('Missing method: {0:s}'.format(callback_method))
         continue
 
       match = url_expression.search(url)
@@ -315,7 +315,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
       search_query = callback_method(url)
       if not search_query:
-        logging.warning('Missing search query for URL: {0:s}'.format(url))
+        logger.warning('Missing search query for URL: {0:s}'.format(url))
         continue
 
       search_query = self._DecodeURL(search_query)

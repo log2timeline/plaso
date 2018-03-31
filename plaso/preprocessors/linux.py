@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 import csv
 import datetime
-import logging
 
 from dateutil import tz
 
@@ -15,6 +14,7 @@ from plaso.containers import artifacts
 from plaso.lib import errors
 from plaso.lib import line_reader_file
 from plaso.preprocessors import interface
+from plaso.preprocessors import logger
 from plaso.preprocessors import manager
 
 
@@ -198,7 +198,7 @@ class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
 
       except ValueError:
         # TODO: add and store preprocessing errors.
-        logging.error('Unable to read time zone information file.')
+        logger.error('Unable to read time zone information file.')
 
       finally:
         file_object.close()
@@ -209,7 +209,7 @@ class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
         knowledge_base.SetTimeZone(time_zone)
       except ValueError:
         # TODO: add and store preprocessing errors.
-        logging.error('Unable to set time zone in knowledge base.')
+        logger.error('Unable to set time zone in knowledge base.')
 
 
 class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
@@ -246,14 +246,14 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
         username = row[0].decode('utf-8')
       except UnicodeDecodeError:
         # TODO: add and store preprocessing errors.
-        logging.error('Unable to decode username.')
+        logger.error('Unable to decode username.')
         continue
 
       try:
         identifier = row[2].decode('utf-8')
       except UnicodeDecodeError:
         # TODO: add and store preprocessing errors.
-        logging.error('Unable to decode identifier.')
+        logger.error('Unable to decode identifier.')
         continue
 
       group_identifier = None
@@ -262,7 +262,7 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
           group_identifier = row[3].decode('utf-8')
         except UnicodeDecodeError:
           # TODO: add and store preprocessing errors.
-          logging.error('Unable to decode group identifier.')
+          logger.error('Unable to decode group identifier.')
 
       full_name = None
       if row[4]:
@@ -270,7 +270,7 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
           full_name = row[4].decode('utf-8')
         except UnicodeDecodeError:
           # TODO: add and store preprocessing errors.
-          logging.error('Unable to decode full name.')
+          logger.error('Unable to decode full name.')
 
       user_directory = None
       if row[5]:
@@ -278,7 +278,7 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
           user_directory = row[5].decode('utf-8')
         except UnicodeDecodeError:
           # TODO: add and store preprocessing errors.
-          logging.error('Unable to decode user directory.')
+          logger.error('Unable to decode user directory.')
 
       shell = None
       if row[6]:
@@ -286,7 +286,7 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
           shell = row[6].decode('utf-8')
         except UnicodeDecodeError:
           # TODO: add and store preprocessing errors.
-          logging.error('Unable to decode shell.')
+          logger.error('Unable to decode shell.')
 
       user_account = artifacts.UserAccountArtifact(
           identifier=identifier, username=username)

@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import binascii
-import logging
 import os
 import socket
 
@@ -18,6 +17,7 @@ from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.parsers import interface
+from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.unix import bsmtoken
 
@@ -602,7 +602,7 @@ class BSMParser(interface.FileObjectParser):
     try:
       string = byte_stream.decode('utf-8')
     except UnicodeDecodeError:
-      logging.warning('Unable to decode UTF-8 formatted byte array.')
+      logger.warning('Unable to decode UTF-8 formatted byte array.')
       string = byte_stream.decode('utf-8', errors='ignore')
 
     string, _, _ = string.partition(b'\x00')
@@ -711,7 +711,7 @@ class BSMParser(interface.FileObjectParser):
       try:
         token_type = self._BSM_TOKEN.parse_stream(file_object)
       except (IOError, construct.FieldError):
-        logging.warning(
+        logger.warning(
             'Unable to parse the Token ID at position: {0:d}'.format(
                 file_object.tell()))
         return False
@@ -729,7 +729,7 @@ class BSMParser(interface.FileObjectParser):
         extra_tokens.update(new_extra_tokens)
 
     if file_object.tell() > record_end_offset:
-      logging.warning(
+      logger.warning(
           'Token ID {0:d} not expected at position 0x{1:08x}.'
           'Jumping for the next entry.'.format(
               token_type, file_object.tell()))
@@ -737,7 +737,7 @@ class BSMParser(interface.FileObjectParser):
         file_object.seek(
             record_end_offset - file_object.tell(), os.SEEK_CUR)
       except (IOError, construct.FieldError) as exception:
-        logging.warning(
+        logger.warning(
             'Unable to jump to next entry with error: {0!s}'.format(exception))
         return False
 
@@ -781,7 +781,7 @@ class BSMParser(interface.FileObjectParser):
     try:
       string = byte_stream.decode('utf-8')
     except UnicodeDecodeError:
-      logging.warning(
+      logger.warning(
           'Decode UTF8 failed, the message string may be cut short.')
       string = byte_stream.decode('utf-8', errors='ignore')
     return string.partition(b'\x00')[0]
@@ -856,7 +856,7 @@ class BSMParser(interface.FileObjectParser):
         return False
 
       if token_type != 'BSM_TOKEN_TEXT':
-        logging.warning('It is not a valid first entry for MacOS BSM.')
+        logger.warning('It is not a valid first entry for MacOS BSM.')
         return False
 
       try:
@@ -867,7 +867,7 @@ class BSMParser(interface.FileObjectParser):
       text = self._CopyUtf8ByteArrayToString(token.text)
       if (text != 'launchctl::Audit startup' and
           text != 'launchctl::Audit recovery'):
-        logging.warning('It is not a valid first entry for MacOS BSM.')
+        logger.warning('It is not a valid first entry for MacOS BSM.')
         return False
 
     return True
@@ -901,7 +901,7 @@ class BSMParser(interface.FileObjectParser):
           try:
             token_id = self._BSM_TOKEN.parse_stream(file_object)
           except (IOError, construct.FieldError):
-            logging.warning(
+            logger.warning(
                 'Unable to parse the Token ID at position: {0:d}'.format(
                     file_object.tell()))
             return None
@@ -916,7 +916,7 @@ class BSMParser(interface.FileObjectParser):
     next_entry = (start_position + pending)
     if file_object.tell() != next_entry:
       # Unknown Structure.
-      logging.warning('Unknown Token at "0x{0:X}", ID: {1} (0x{2:X})'.format(
+      logger.warning('Unknown Token at "0x{0:X}", ID: {1} (0x{2:X})'.format(
           start_position - 1, token_id, token_id))
       # TODO: another way to save this information must be found.
       extra_tokens.update(

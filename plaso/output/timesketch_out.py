@@ -15,6 +15,7 @@ except ImportError:
   timesketch = None
 
 from plaso.output import interface
+from plaso.output import logger
 from plaso.output import manager
 from plaso.output.elastic import ElasticSearchHelper
 
@@ -49,7 +50,7 @@ class TimesketchOutputModule(interface.OutputModule):
 
     hostname = self._output_mediator.GetStoredHostname()
     if hostname:
-      logging.info('Hostname: {0:s}'.format(hostname))
+      logger.info('Hostname: {0:s}'.format(hostname))
       self._timeline_name = hostname
     else:
       self._timeline_name = None
@@ -86,7 +87,7 @@ class TimesketchOutputModule(interface.OutputModule):
       doc_type (str): document type.
     """
     self._doc_type = doc_type
-    logging.info('Document type: {0:s}'.format(self._doc_type))
+    logger.info('Document type: {0:s}'.format(self._doc_type))
 
   def SetFlushInterval(self, flush_interval):
     """Sets the flush interval.
@@ -95,7 +96,7 @@ class TimesketchOutputModule(interface.OutputModule):
       flush_interval (int): flush interval.
     """
     self._flush_interval = flush_interval
-    logging.info('Flush interval: {0:d}'.format(self._flush_interval))
+    logger.info('Flush interval: {0:d}'.format(self._flush_interval))
 
   def SetIndexName(self, index_name):
     """Sets the index name.
@@ -104,7 +105,7 @@ class TimesketchOutputModule(interface.OutputModule):
       index_name (str): index name.
     """
     self._index_name = index_name
-    logging.info('Index name: {0:s}'.format(self._index_name))
+    logger.info('Index name: {0:s}'.format(self._index_name))
 
   def SetTimelineName(self, timeline_name):
     """Sets the timeline name.
@@ -113,7 +114,7 @@ class TimesketchOutputModule(interface.OutputModule):
       timeline_name (str): timeline name.
     """
     self._timeline_name = timeline_name
-    logging.info('Timeline name: {0:s}'.format(self._timeline_name))
+    logger.info('Timeline name: {0:s}'.format(self._timeline_name))
 
   def SetUserName(self, username):
     """Sets the username of the user that should own the timeline.
@@ -122,7 +123,7 @@ class TimesketchOutputModule(interface.OutputModule):
       username (str): username.
     """
     self._username = username
-    logging.info('Owner of the timeline: {0:s}'.format(self._username))
+    logger.info('Owner of the timeline: {0:s}'.format(self._username))
 
   def WriteEventBody(self, event):
     """Writes the body of an event to the output.
@@ -166,7 +167,7 @@ class TimesketchOutputModule(interface.OutputModule):
         raise RuntimeError(
             'Unknown Timesketch user: {0:s}'.format(self._username))
     else:
-      logging.warning('Timeline will be visible to all Timesketch users')
+      logger.warning('Timeline will be visible to all Timesketch users')
 
     with self._timesketch.app_context():
       search_index = SearchIndex.get_or_create(
@@ -189,7 +190,7 @@ class TimesketchOutputModule(interface.OutputModule):
       db_session.add(search_index)
       db_session.commit()
 
-    logging.info('Adding events to Timesketch.')
+    logger.info('Adding events to Timesketch.')
 
 
 manager.OutputManager.RegisterOutput(

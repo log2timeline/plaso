@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 import argparse
 import collections
 import datetime
-import logging
 import os
 import sys
 import textwrap
@@ -17,6 +16,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from plaso import output  # pylint: disable=unused-import
 
 from plaso.cli import extraction_tool
+from plaso.cli import logger
 from plaso.cli import status_view
 from plaso.cli import tool_options
 from plaso.cli import views
@@ -196,7 +196,7 @@ class PstealTool(
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
     if not storage_reader:
-      logging.error('Format of storage file: {0:s} not supported'.format(
+      logger.error('Format of storage file: {0:s} not supported'.format(
           self._storage_file_path))
       return
 
@@ -327,7 +327,7 @@ class PstealTool(
 
     processing_status = None
     if single_process_mode:
-      logging.debug('Starting extraction in single process mode.')
+      logger.debug('Starting extraction in single process mode.')
 
       processing_status = extraction_engine.ProcessSources(
           self._source_path_specs, storage_writer, self._resolver_context,
@@ -335,7 +335,7 @@ class PstealTool(
           status_update_callback=status_update_callback)
 
     else:
-      logging.debug('Starting extraction in multi process mode.')
+      logger.debug('Starting extraction in multi process mode.')
 
       processing_status = extraction_engine.ProcessSources(
           session.identifier, self._source_path_specs, storage_writer,

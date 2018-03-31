@@ -3,10 +3,9 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 from dfvfs.helpers import file_system_searcher
 
+from plaso.engine import logger
 from plaso.lib import py2to3
 
 
@@ -77,13 +76,13 @@ class FilterFile(object):
           try:
             line = line.format(**path_attributes)
           except KeyError as exception:
-            logging.error((
+            logger.error((
                 'Unable to expand path filter: {0:s} with error: '
                 '{1:s}').format(line, exception))
             continue
 
         if not line.startswith('/'):
-          logging.warning((
+          logger.warning((
               'The path filter must be defined as an abolute path: '
               '{0:s}').format(line))
           continue
@@ -94,7 +93,7 @@ class FilterFile(object):
         path_segments.pop(0)
 
         if not path_segments[-1]:
-          logging.warning(
+          logger.warning(
               'Empty last path segment in path filter: {0:s}'.format(line))
           continue
 

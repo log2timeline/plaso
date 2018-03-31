@@ -3,12 +3,11 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 import pysigscan
 
 from plaso.lib import definitions
 from plaso.lib import specification
+from plaso.parsers import logger
 from plaso.parsers import presets
 
 
@@ -114,7 +113,7 @@ class ParsersManager(object):
     for parser_name in set(includes).intersection(excludes):
       # Check parser and plugin list for exact equivalence.
       if includes[parser_name] == excludes[parser_name]:
-        logging.warning(
+        logger.warning(
             'Parser {0:s} was in both the inclusion and exclusion lists. '
             'Ignoring included parser.'.format(parser_name))
         includes.pop(parser_name)
@@ -127,7 +126,7 @@ class ParsersManager(object):
       if not intersection:
         continue
 
-      logging.warning(
+      logger.warning(
           'Parser {0:s} plugins: {1:s} in both the inclusion and exclusion '
           'lists. Ignoring included plugins.'.format(
               parser_name, ', '.join(intersection)))
@@ -140,7 +139,7 @@ class ParsersManager(object):
       if parser_name in includes:
         continue
 
-      logging.warning(
+      logger.warning(
           'The excluded parser: {0:s} is not associated with the included '
           'parsers: {1:s}. Ignoring excluded parser.'.format(
               parser_name, ', '.join(includes.keys())))

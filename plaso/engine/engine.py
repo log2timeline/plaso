@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
@@ -12,6 +10,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
+from plaso.engine import logger
 from plaso.engine import processing_status
 from plaso.engine import profiler
 from plaso.lib import definitions
@@ -174,7 +173,7 @@ class BaseEngine(object):
         file_system, mount_point = self.GetSourceFileSystem(
             source_path_spec, resolver_context=resolver_context)
       except (RuntimeError, dfvfs_errors.BackEndError) as exception:
-        logging.error(exception)
+        logger.error(exception)
         continue
 
       try:
@@ -192,7 +191,7 @@ class BaseEngine(object):
         file_system.Close()
 
     if detected_operating_systems:
-      logging.info('Preprocessing detected operating systems: {0:s}'.format(
+      logger.info('Preprocessing detected operating systems: {0:s}'.format(
           ', '.join(detected_operating_systems)))
       self.knowledge_base.SetValue(
           'operating_system', detected_operating_systems[0])

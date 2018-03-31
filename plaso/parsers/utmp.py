@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
 import os
 import socket
 
@@ -16,6 +15,7 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.parsers import interface
+from plaso.parsers import logger
 from plaso.parsers import manager
 
 
@@ -109,7 +109,7 @@ class UtmpParser(interface.FileObjectParser):
     try:
       text = text.decode('utf-8')
     except UnicodeDecodeError:
-      logging.warning(
+      logger.warning(
           '[UTMP] Decode UTF8 failed, the message string may be cut short.')
       text = text.decode('utf-8', 'ignore')
     if not text:
@@ -135,7 +135,7 @@ class UtmpParser(interface.FileObjectParser):
     try:
       entry = self.LINUX_UTMP_ENTRY.parse(data)
     except (IOError, construct.FieldError):
-      logging.warning((
+      logger.warning((
           'UTMP entry at 0x{0:x} couldn\'t be parsed.').format(offset))
       return False
 

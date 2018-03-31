@@ -7,13 +7,13 @@ Plaso's engine calls PlistParser when it encounters Plist files to be processed.
 from __future__ import unicode_literals
 
 import binascii
-import logging
 
 from binplist import binplist
 
 from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.parsers import interface
+from plaso.parsers import logger
 from plaso.parsers import manager
 
 
@@ -81,7 +81,7 @@ class PlistParser(interface.FileObjectParser):
     # out for now but this needs to be tested a bit more.
     # TODO: Re-evaluate if we can delete this or still require it.
     #if bpl.is_corrupt:
-    #  logging.warning(
+    #  logger.warning(
     #      'Corruption detected in binary plist: {0:s}'.format(file_name))
 
     return top_level_object
@@ -128,7 +128,7 @@ class PlistParser(interface.FileObjectParser):
         matching_plugin = plugin
 
       except errors.WrongPlistPlugin as exception:
-        logging.debug('Wrong plugin: {0:s} for: {1:s}'.format(
+        logger.debug('Wrong plugin: {0:s} for: {1:s}'.format(
             exception.args[0], exception.args[1]))
 
     if not matching_plugin and self._default_plugin:

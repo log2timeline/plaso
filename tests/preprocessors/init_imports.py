@@ -14,8 +14,8 @@ class PreprocessorsImportTest(test_lib.ImportCheckTestCase):
   """Tests that preprocessor classes are imported correctly."""
 
   _PREPROCESSORS_PATH = os.path.join(os.getcwd(), 'plaso', 'preprocessors')
-  _IGNORABLE_FILES = frozenset(
-      ['manager.py', 'mediator.py', 'interface.py'])
+  _IGNORABLE_FILES = frozenset([
+      'logger.py', 'manager.py', 'mediator.py', 'interface.py'])
 
   def testAnalysisPluginsImported(self):
     """Tests that all preprocessors are imported."""

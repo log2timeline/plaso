@@ -13,9 +13,9 @@ BencodeParser.
 from __future__ import unicode_literals
 
 import abc
-import logging
 
 from plaso.lib import errors
+from plaso.parsers import logger
 from plaso.parsers import plugins
 
 
@@ -90,7 +90,7 @@ class BencodePlugin(plugins.BasePlugin):
       A tuple of the root, key, and value from a bencoded file.
     """
     if depth < 1:
-      logging.debug('Recursion limit hit for key: {0:s}'.format(root))
+      logger.debug('Recursion limit hit for key: {0:s}'.format(root))
       return
 
     if isinstance(recur_item, (list, tuple)):
@@ -170,7 +170,7 @@ class BencodePlugin(plugins.BasePlugin):
     # This will raise if unhandled keyword arguments are passed.
     super(BencodePlugin, self).Process(parser_mediator)
 
-    logging.debug('Bencode Plugin Used: {0:s}'.format(self.NAME))
+    logger.debug('Bencode Plugin Used: {0:s}'.format(self.NAME))
     match = self._GetKeys(data, self.BENCODE_KEYS, 3)
 
     self.GetEntries(parser_mediator, data=data, match=match)

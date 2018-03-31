@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import collections
-import logging
 import os
 
 import construct
@@ -17,6 +16,7 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.parsers import interface
+from plaso.parsers import logger
 from plaso.parsers import manager
 
 
@@ -80,7 +80,7 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
       http_header_start = header_data.index(b'request-method')
     except ValueError:
       safe_headers = header_data.decode('ascii', errors='replace')
-      logging.debug('No request method in header: "{0:s}"'.format(
+      logger.debug('No request method in header: "{0:s}"'.format(
           safe_headers))
       return None, None
 
@@ -94,7 +94,7 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
 
     if request_method not in self._REQUEST_METHODS:
       safe_headers = header_data.decode('ascii', errors='replace')
-      logging.debug((
+      logger.debug((
           '[{0:s}] {1:s}:{2:d}: Unknown HTTP method \'{3:s}\'. Response '
           'headers: \'{4:s}\'').format(
               self.NAME, display_name, offset, request_method, safe_headers))
@@ -102,7 +102,7 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
     try:
       response_head_start = http_headers.index(b'response-head')
     except ValueError:
-      logging.debug('No response head in header: "{0:s}"'.format(header_data))
+      logger.debug('No response head in header: "{0:s}"'.format(header_data))
       return request_method, None
 
     # HTTP response headers.
@@ -122,7 +122,7 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
 
     if not response_code.startswith(b'HTTP'):
       safe_headers = header_data.decode('ascii', errors='replace')
-      logging.debug((
+      logger.debug((
           '[{0:s}] {1:s}:{2:d}: Could not determine HTTP response code. '
           'Response headers: \'{3:s}\'.').format(
               self.NAME, display_name, offset, safe_headers))
@@ -228,7 +228,7 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
         return self.FIREFOX_CACHE_CONFIG(block_size, offset)
 
       except IOError:
-        logging.debug('[{0:s}] {1:s}:{2:d}: Invalid record.'.format(
+        logger.debug('[{0:s}] {1:s}:{2:d}: Invalid record.'.format(
             self.NAME, display_name, offset))
 
     raise errors.UnableToParseFile(
@@ -361,7 +361,7 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
 
       except IOError:
         file_offset = file_object.get_offset() - self._MINUMUM_BLOCK_SIZE
-        logging.debug((
+        logger.debug((
             '[{0:s}] Invalid cache record in file: {1:s} at offset: '
             '{2:d}.').format(self.NAME, display_name, file_offset))
 

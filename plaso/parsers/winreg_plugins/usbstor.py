@@ -3,11 +3,10 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
+from plaso.parsers import logger
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -43,7 +42,7 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
 
       # Normally we expect 4 fields here however that is not always the case.
       if number_of_name_values != 4:
-        logging.warning(
+        logger.warning(
             'Expected 4 &-separated values in: {0:s}'.format(subkey.name))
 
       if number_of_name_values >= 1:

@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -13,6 +11,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -238,14 +237,14 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
     try:
       structure = self._SDF_HEADER.parseString(lines)
     except pyparsing.ParseException:
-      logging.debug('Not a SkyDrive log file')
+      logger.debug('Not a SkyDrive log file')
       return False
 
     try:
       dfdatetime_time_elements.TimeElementsInMilliseconds(
           time_elements_tuple=structure.header_date_time)
     except ValueError:
-      logging.debug(
+      logger.debug(
           'Not a SkyDrive log file, invalid date and time: {0!s}'.format(
               structure.header_date_time))
       return False
@@ -362,7 +361,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
           a line of a text file.
     """
     if not self._last_event_data:
-      logging.debug('SkyDrive, found isolated line with no previous events')
+      logger.debug('SkyDrive, found isolated line with no previous events')
       return
 
     event_data = SkyDriveOldLogEventData()
@@ -414,7 +413,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       structure = self._SDOL_LINE.parseString(line)
     except pyparsing.ParseException:
-      logging.debug('Not a SkyDrive old log file')
+      logger.debug('Not a SkyDrive old log file')
       return False
 
     day_of_month, month, year, hours, minutes, seconds, milliseconds = (
@@ -427,7 +426,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
       dfdatetime_time_elements.TimeElementsInMilliseconds(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      logging.debug(
+      logger.debug(
           'Not a SkyDrive old log file, invalid date and time: {0!s}'.format(
               structure.date_time))
       return False
