@@ -14,7 +14,7 @@ except ImportError:
 
 from plaso.engine import configurations
 from plaso.engine import processing_status
-from plaso.engine import profiler
+from plaso.engine import profilers
 
 from tests import test_lib as shared_test_lib
 
@@ -24,7 +24,7 @@ class CPUTimeMeasurementTest(shared_test_lib.BaseTestCase):
 
   def testSampleStartStop(self):
     """Tests the SampleStart and SampleStop functions."""
-    cpu_measurement = profiler.CPUTimeMeasurement()
+    cpu_measurement = profilers.CPUTimeMeasurement()
     cpu_measurement.SampleStart()
     cpu_measurement.SampleStop()
 
@@ -36,7 +36,7 @@ class SampleFileProfilerTest(shared_test_lib.BaseTestCase):
 
   def testIsSupported(self):
     """Tests the IsSupported function."""
-    self.assertTrue(profiler.SampleFileProfiler.IsSupported())
+    self.assertTrue(profilers.SampleFileProfiler.IsSupported())
 
   def testStartStop(self):
     """Tests the Start and Stop functions."""
@@ -45,7 +45,7 @@ class SampleFileProfilerTest(shared_test_lib.BaseTestCase):
     with shared_test_lib.TempDirectory() as temp_directory:
       profiling_configuration.directory = temp_directory
 
-      test_profiler = profiler.SampleFileProfiler(
+      test_profiler = profilers.SampleFileProfiler(
           'test', profiling_configuration)
 
       test_profiler._FILE_HEADER = 'test'
@@ -65,7 +65,7 @@ class CPUTimeProfilerTest(shared_test_lib.BaseTestCase):
     with shared_test_lib.TempDirectory() as temp_directory:
       profiling_configuration.directory = temp_directory
 
-      test_profiler = profiler.CPUTimeProfiler(
+      test_profiler = profilers.CPUTimeProfiler(
           'test', profiling_configuration)
 
       test_profiler.Start()
@@ -86,7 +86,7 @@ class GuppyMemoryProfilerTest(shared_test_lib.BaseTestCase):
 
   def testStartSampleStop(self):
     """Tests the Start, Sample and Stop functions."""
-    self.assertTrue(profiler.GuppyMemoryProfiler.IsSupported())
+    self.assertTrue(profilers.GuppyMemoryProfiler.IsSupported())
 
     profiling_configuration = configurations.ProfilingConfiguration()
 
@@ -94,7 +94,7 @@ class GuppyMemoryProfilerTest(shared_test_lib.BaseTestCase):
       profiling_configuration.directory = temp_directory
       profiling_configuration.profiling_sample_rate = 1000
 
-      test_profiler = profiler.GuppyMemoryProfiler(
+      test_profiler = profilers.GuppyMemoryProfiler(
           'test', profiling_configuration)
 
       test_profiler.Start()
@@ -116,7 +116,7 @@ class MemoryProfilerTest(shared_test_lib.BaseTestCase):
     with shared_test_lib.TempDirectory() as temp_directory:
       profiling_configuration.directory = temp_directory
 
-      test_profiler = profiler.MemoryProfiler(
+      test_profiler = profilers.MemoryProfiler(
           'test', profiling_configuration)
 
       test_profiler.Start()
@@ -138,7 +138,7 @@ class ParsersProfilerTest(shared_test_lib.BaseTestCase):
     with shared_test_lib.TempDirectory() as temp_directory:
       profiling_configuration.directory = temp_directory
 
-      test_profiler = profiler.ParsersProfiler(
+      test_profiler = profilers.ParsersProfiler(
           'test', profiling_configuration)
 
       test_profiler.Start()
@@ -161,7 +161,7 @@ class ProcessingProfilerTest(shared_test_lib.BaseTestCase):
     with shared_test_lib.TempDirectory() as temp_directory:
       profiling_configuration.directory = temp_directory
 
-      test_profiler = profiler.ProcessingProfiler(
+      test_profiler = profilers.ProcessingProfiler(
           'test', profiling_configuration)
 
       test_profiler.Start()
@@ -184,7 +184,7 @@ class SerializersProfilerTest(shared_test_lib.BaseTestCase):
     with shared_test_lib.TempDirectory() as temp_directory:
       profiling_configuration.directory = temp_directory
 
-      test_profiler = profiler.SerializersProfiler(
+      test_profiler = profilers.SerializersProfiler(
           'test', profiling_configuration)
 
       test_profiler.Start()
@@ -207,7 +207,7 @@ class StorageProfilerTest(shared_test_lib.BaseTestCase):
     with shared_test_lib.TempDirectory() as temp_directory:
       profiling_configuration.directory = temp_directory
 
-      test_profiler = profiler.StorageProfiler(
+      test_profiler = profilers.StorageProfiler(
           'test', profiling_configuration)
 
       test_profiler.Start()
@@ -231,7 +231,7 @@ class TaskQueueProfilerTest(shared_test_lib.BaseTestCase):
     with shared_test_lib.TempDirectory() as temp_directory:
       profiling_configuration.directory = temp_directory
 
-      test_profiler = profiler.TaskQueueProfiler(
+      test_profiler = profilers.TaskQueueProfiler(
           'test', profiling_configuration)
 
       test_profiler.Start()
