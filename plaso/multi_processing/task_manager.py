@@ -111,9 +111,10 @@ class TaskManager(object):
   Once the engine reports that a task is completely merged, it is removed
   from the task manager.
 
-  Tasks that are not abandoned or abandoned, but need to be retried are
-  considered "pending", as there is more work that needs to be done to complete
-  them.
+  Tasks are considered "pending" when there is more work that needs to be done
+  to complete these tasks. Pending applies to tasks that are:
+  * not abandoned;
+  * abandoned, but need to be retried.
   """
 
   # Stop pylint from reporting:
@@ -469,7 +470,7 @@ class TaskManager(object):
 
       if task_identifier in self._tasks_pending_merge:
         # No need to update the processing time, as this task is already
-        # has already finished processing and is just waiting for merge.
+        # finished processing and is just waiting for merge.
         return
 
     # If we get here, we don't know what state the tasks is in, so raise.

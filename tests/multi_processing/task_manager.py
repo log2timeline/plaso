@@ -244,7 +244,8 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_pending_merge), 0)
     self.assertEqual(len(manager._tasks_merging), 0)
 
-    # Determine if there are tasks pending merge when there are none.
+    # Determine if there are tasks pending merge when _tasks_pending_merge is
+    # empty.
     result_task = manager.GetTaskPendingMerge(current_task)
     self.assertIsNone(result_task)
 
