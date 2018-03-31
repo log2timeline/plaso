@@ -146,11 +146,14 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
       configuration = configurations.ProcessingConfiguration()
       configuration.profiling.directory = temp_directory
       configuration.profiling.profilers = set([
-          'memory', 'parsers', 'processing', 'serializers'])
+          'memory', 'parsers', 'processing', 'serializers', 'storage',
+          'task_queue'])
 
       test_process = worker_process.WorkerProcess(
           None, None, None, None, configuration, name='TestWorker')
       test_process._extraction_worker = TestEventExtractionWorker()
+
+      test_process._StartProfiling(None)
 
       test_process._StartProfiling(configuration.profiling)
       test_process._StopProfiling()
