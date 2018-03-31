@@ -531,14 +531,13 @@ class PsortTool(
       analysis_engine = psort.PsortMultiProcessEngine(
           use_zeromq=self._use_zeromq)
 
-      # TODO: pass configuration object.
       analysis_engine.AnalyzeEvents(
           self._knowledge_base, storage_writer, self._data_location,
-          self._analysis_plugins, event_filter=self._event_filter,
+          self._analysis_plugins, configuration,
+          event_filter=self._event_filter,
           event_filter_expression=self._event_filter_expression,
           status_update_callback=status_update_callback,
-          worker_memory_limit=self._worker_memory_limit,
-          profiling_configuration=configuration.profiling)
+          worker_memory_limit=self._worker_memory_limit)
 
       analysis_counter = collections.Counter()
       for item, value in iter(session.analysis_reports_counter.items()):
@@ -554,14 +553,12 @@ class PsortTool(
       analysis_engine = psort.PsortMultiProcessEngine(
           use_zeromq=self._use_zeromq)
 
-      # TODO: pass configuration object.
       events_counter = analysis_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,
-          deduplicate_events=self._deduplicate_events,
+          configuration, deduplicate_events=self._deduplicate_events,
           event_filter=self._event_filter,
           status_update_callback=status_update_callback,
-          time_slice=self._time_slice, use_time_slicer=self._use_time_slicer,
-          profiling_configuration=configuration.profiling)
+          time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
 
     if self._quiet_mode:
       return
