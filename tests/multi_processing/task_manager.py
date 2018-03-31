@@ -430,6 +430,8 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
 
     last_processing_time = task.last_processing_time
 
+    time.sleep(0.01)
+
     # Indicate to the task manager that the task is still processing.
     manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
 
@@ -439,8 +441,6 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_pending_merge), 0)
 
     # Check if the last processing time was updated.
-    time.sleep(0.01)
-
     self.assertGreater(task.last_processing_time, last_processing_time)
 
     # TODO: test abandoned task
