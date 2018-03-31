@@ -169,6 +169,14 @@ class ProfilingConfiguration(interface.AttributeContainer):
     """
     return 'storage' in self.profilers
 
+  def HaveProfileTaskQueue(self):
+    """Determines if task queue profiling is configured.
+
+    Returns:
+      bool: True if task queue profiling is configured.
+    """
+    return 'task_queue' in self.profilers
+
 
 class ProcessingConfiguration(interface.AttributeContainer):
   """Configuration settings for processing.

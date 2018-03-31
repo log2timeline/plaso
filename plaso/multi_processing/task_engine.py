@@ -331,6 +331,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._UpdateForemanProcessStatus()
 
     tasks_status = self._task_manager.GetStatusInformation()
+    if self._task_queue_profiler:
+      self._task_queue_profiler.Sample(tasks_status)
+
     self._processing_status.UpdateTasksStatus(tasks_status)
 
     if self._status_update_callback:
@@ -510,6 +513,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._UpdateForemanProcessStatus()
 
       tasks_status = self._task_manager.GetStatusInformation()
+      if self._task_queue_profiler:
+        self._task_queue_profiler.Sample(tasks_status)
+
       self._processing_status.UpdateTasksStatus(tasks_status)
 
       if self._status_update_callback:
