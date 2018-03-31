@@ -41,7 +41,8 @@ class EventObjectTest(shared_test_lib.BaseTestCase):
         'offset',
         'pathspec',
         'tag',
-        'timestamp']
+        'timestamp',
+        'timestamp_desc']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

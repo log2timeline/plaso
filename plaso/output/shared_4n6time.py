@@ -121,7 +121,7 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
         'MACB': self._output_mediator.GetMACBRepresentation(event),
         'source': source_short,
         'sourcetype': source,
-        'type': getattr(event, 'timestamp_desc', '-'),
+        'type': event.timestamp_desc or '-',
         'user': getattr(event, 'username', '-'),
         'host': getattr(event, 'hostname', '-'),
         'description': message,
