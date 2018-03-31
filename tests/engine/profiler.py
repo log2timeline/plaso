@@ -32,6 +32,8 @@ class CPUTimeMeasurementTest(shared_test_lib.BaseTestCase):
 class SampleFileProfilerTest(shared_test_lib.BaseTestCase):
   """Tests for the shared functionality for sample file-based profilers."""
 
+  # pylint: disable=protected-access
+
   def testIsSupported(self):
     """Tests the IsSupported function."""
     self.assertTrue(profiler.SampleFileProfiler.IsSupported())
