@@ -25,7 +25,7 @@ class CPUTimeMeasurementTest(shared_test_lib.BaseTestCase):
   def testSampleStartStop(self):
     """Tests the SampleStart and SampleStop functions."""
     cpu_measurement = profilers.CPUTimeMeasurement()
-    cpu_measurement.SampleStart(0.0)
+    cpu_measurement.SampleStart()
     cpu_measurement.SampleStop()
 
 
@@ -37,28 +37,6 @@ class SampleFileProfilerTest(shared_test_lib.BaseTestCase):
   def testIsSupported(self):
     """Tests the IsSupported function."""
     self.assertTrue(profilers.SampleFileProfiler.IsSupported())
-
-  def testGetSampleTime(self):
-    """Tests the _GetSampleTime function."""
-    profiling_configuration = configurations.ProfilingConfiguration()
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      profiling_configuration.directory = temp_directory
-
-      test_profiler = profilers.SampleFileProfiler(
-          'test', profiling_configuration)
-
-      test_profiler._FILE_HEADER = 'test'
-
-      sample_time = test_profiler._GetSampleTime()
-      self.assertIsNone(sample_time)
-
-      test_profiler.Start()
-
-      sample_time = test_profiler._GetSampleTime()
-      self.assertIsNotNone(sample_time)
-
-      test_profiler.Stop()
 
   def testStartStop(self):
     """Tests the Start and Stop functions."""
