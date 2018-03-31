@@ -44,7 +44,6 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     """
     super(AnalysisProcess, self).__init__(processing_configuration, **kwargs)
     self._abort = False
-    self._analysis_configuration = None
     self._analysis_mediator = None
     self._analysis_plugin = analysis_plugin
     self._data_location = data_location
@@ -107,7 +106,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
   def _Main(self):
     """The main loop."""
-    self._StartProfiling(self._analysis_configuration.profiling)
+    self._StartProfiling(self._processing_configuration.profiling)
 
     if self._serializers_profiler:
       self._storage_writer.SetSerializersProfiler(self._serializers_profiler)
