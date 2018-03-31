@@ -14,7 +14,6 @@ from plaso.containers import event_sources
 from plaso.engine import engine
 from plaso.engine import extractors
 from plaso.engine import process_info
-from plaso.engine import profiler
 from plaso.engine import worker
 from plaso.lib import definitions
 from plaso.parsers import mediator as parsers_mediator
@@ -27,17 +26,11 @@ class SingleProcessEngine(engine.BaseEngine):
     """Initializes a single process engine."""
     super(SingleProcessEngine, self).__init__()
     self._current_display_name = ''
-    self._guppy_memory_profiler = None
     self._last_status_update_timestamp = 0.0
-    self._memory_profiler = None
-    self._name = 'Main'
-    self._parsers_profiler = None
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._pid = os.getpid()
     self._process_information = process_info.ProcessInfo(self._pid)
     self._processing_configuration = None
-    self._processing_profiler = None
-    self._serializers_profiler = None
     self._status_update_callback = None
 
   def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
@@ -178,74 +171,6 @@ class SingleProcessEngine(engine.BaseEngine):
     if self._processing_profiler:
       self._processing_profiler.StopTiming('process_sources')
 
-  def _StartProfiling(self, extraction_worker):
-    """Starts profiling.
-
-    Args:
-      extraction_worker (worker.ExtractionWorker): extraction worker.
-    """
-    if not self._processing_configuration:
-      return
-
-    if self._processing_configuration.profiling.HaveProfileMemoryGuppy():
-      self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
-          self._name, self._processing_configuration.profiling)
-      self._guppy_memory_profiler.Start()
-
-    if self._processing_configuration.profiling.HaveProfileMemory():
-      self._memory_profiler = profiler.MemoryProfiler(
-          self._name, self._processing_configuration.profiling)
-      self._memory_profiler.Start()
-
-    if self._processing_configuration.profiling.HaveProfileParsers():
-      identifier = '{0:s}-parsers'.format(self._name)
-      self._parsers_profiler = profiler.ParsersProfiler(
-          identifier, self._processing_configuration.profiling)
-      extraction_worker.SetParsersProfiler(self._parsers_profiler)
-      self._parsers_profiler.Start()
-
-    if self._processing_configuration.profiling.HaveProfileProcessing():
-      identifier = '{0:s}-processing'.format(self._name)
-      self._processing_profiler = profiler.ProcessingProfiler(
-          identifier, self._processing_configuration.profiling)
-      extraction_worker.SetProcessingProfiler(self._processing_profiler)
-      self._processing_profiler.Start()
-
-    if self._processing_configuration.profiling.HaveProfileSerializers():
-      identifier = '{0:s}-serializers'.format(self._name)
-      self._serializers_profiler = profiler.SerializersProfiler(
-          identifier, self._processing_configuration.profiling)
-      self._serializers_profiler.Start()
-
-  def _StopProfiling(self, extraction_worker):
-    """Stops profiling.
-
-    Args:
-      extraction_worker (worker.ExtractionWorker): extraction worker.
-    """
-    if self._guppy_memory_profiler:
-      self._guppy_memory_profiler.Sample()
-      self._guppy_memory_profiler.Stop()
-      self._guppy_memory_profiler = None
-
-    if self._memory_profiler:
-      self._memory_profiler.Stop()
-      self._memory_profiler = None
-
-    if self._parsers_profiler:
-      extraction_worker.SetParsersProfiler(None)
-      self._parsers_profiler.Stop()
-      self._parsers_profiler = None
-
-    if self._processing_profiler:
-      extraction_worker.SetProcessingProfiler(None)
-      self._processing_profiler.Stop()
-      self._processing_profiler = None
-
-    if self._serializers_profiler:
-      self._serializers_profiler.Stop()
-      self._serializers_profiler = None
-
   def _UpdateStatus(
       self, status, display_name, number_of_consumed_sources, storage_writer,
       force=False):
@@ -328,10 +253,19 @@ class SingleProcessEngine(engine.BaseEngine):
 
     logging.debug('Processing started.')
 
-    self._StartProfiling(extraction_worker)
+    self._StartProfiling(self._processing_configuration.profiling)
+
+    if self._parsers_profiler:
+      extraction_worker.SetParsersProfiler(self._parsers_profiler)
+
+    if self._processing_profiler:
+      extraction_worker.SetProcessingProfiler(self._processing_profiler)
 
     if self._serializers_profiler:
       storage_writer.SetSerializersProfiler(self._serializers_profiler)
+
+    if self._storage_profiler:
+      storage_writer.SetStorageProfiler(self._storage_profiler)
 
     storage_writer.Open()
     storage_writer.WriteSessionStart()
@@ -348,10 +282,19 @@ class SingleProcessEngine(engine.BaseEngine):
 
       storage_writer.Close()
 
+      if self._parsers_profiler:
+        extraction_worker.SetParsersProfiler(None)
+
+      if self._processing_profiler:
+        extraction_worker.SetProcessingProfiler(None)
+
       if self._serializers_profiler:
         storage_writer.SetSerializersProfiler(None)
 
-      self._StopProfiling(extraction_worker)
+      if self._storage_profiler:
+        storage_writer.SetStorageProfiler(None)
+
+      self._StopProfiling()
 
     if self._abort:
       logging.debug('Processing aborted.')

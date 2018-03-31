@@ -108,6 +108,7 @@ class ProfilingConfiguration(interface.AttributeContainer):
           processing;
         * 'serializers', which profiles CPU time consumed by individual
           serializers.
+        * 'storage', which profiles storage reads and writes.
     sample_rate (int): the profiling sample rate. Contains the number of event
         sources processed.
   """
@@ -159,6 +160,14 @@ class ProfilingConfiguration(interface.AttributeContainer):
       bool: True if serializers profiling is configured.
     """
     return 'serializers' in self.profilers
+
+  def HaveProfileStorage(self):
+    """Determines if storage profiling is configured.
+
+    Returns:
+      bool: True if storage profiling is configured.
+    """
+    return 'storage' in self.profilers
 
 
 class ProcessingConfiguration(interface.AttributeContainer):

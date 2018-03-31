@@ -10,7 +10,6 @@ import os
 import time
 
 from plaso.engine import plaso_queue
-from plaso.engine import profiler
 from plaso.engine import zeromq_queue
 from plaso.containers import tasks
 from plaso.lib import bufferlib
@@ -629,33 +628,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     logging.info('Analysis plugins running')
 
-  def _StartProfiling(self):
-    """Starts profiling."""
-    if not self._profiling_configuration:
-      return
-
-    if self._profiling_configuration.HaveProfileMemoryGuppy():
-      self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
-          self._name, self._profiling_configuration)
-      self._guppy_memory_profiler.Start()
-
-    if self._profiling_configuration.HaveProfileMemory():
-      self._memory_profiler = profiler.MemoryProfiler(
-          self._name, self._profiling_configuration)
-      self._memory_profiler.Start()
-
-    if self._profiling_configuration.HaveProfileProcessing():
-      identifier = '{0:s}-processing'.format(self._name)
-      self._processing_profiler = profiler.ProcessingProfiler(
-          identifier, self._profiling_configuration)
-      self._processing_profiler.Start()
-
-    if self._profiling_configuration.HaveProfileSerializers():
-      identifier = '{0:s}-serializers'.format(self._name)
-      self._serializers_profiler = profiler.SerializersProfiler(
-          identifier, self._profiling_configuration)
-      self._serializers_profiler.Start()
-
   def _StatusUpdateThreadMain(self):
     """Main function of the status update thread."""
     while self._status_update_active:
@@ -724,25 +696,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
       for event_queue in self._event_queues.values():
         event_queue.Close(abort=True)
-
-  def _StopProfiling(self):
-    """Stops profiling."""
-    if self._guppy_memory_profiler:
-      self._guppy_memory_profiler.Sample()
-      self._guppy_memory_profiler.Stop()
-      self._guppy_memory_profiler = None
-
-    if self._memory_profiler:
-      self._memory_profiler.Stop()
-      self._memory_profiler = None
-
-    if self._processing_profiler:
-      self._processing_profiler.Stop()
-      self._processing_profiler = None
-
-    if self._serializers_profiler:
-      self._serializers_profiler.Stop()
-      self._serializers_profiler = None
 
   def _UpdateProcessingStatus(self, pid, process_status, used_memory):
     """Updates the processing status.
@@ -923,7 +876,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     else:
       self._worker_memory_limit = worker_memory_limit
 
-    self._StartProfiling()
+    self._StartProfiling(self._profiling_configuration)
 
     # Set up the storage writer before the analysis processes.
     storage_writer.StartTaskStorage()
@@ -1031,7 +984,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     output_module.WriteHeader()
 
     self._StartStatusUpdateThread()
-    self._StartProfiling()
+
+    self._StartProfiling(self._profiling_configuration)
 
     try:
       events_counter = self._ExportEvents(

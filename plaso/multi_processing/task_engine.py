@@ -16,7 +16,6 @@ from plaso.containers import event_sources
 from plaso.containers import errors as error_containers
 from plaso.engine import extractors
 from plaso.engine import plaso_queue
-from plaso.engine import profiler
 from plaso.engine import zeromq_queue
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -114,10 +113,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     super(TaskMultiProcessEngine, self).__init__()
     self._enable_sigsegv_handler = False
     self._filter_find_specs = None
-    self._guppy_memory_profiler = None
     self._last_worker_number = 0
     self._maximum_number_of_tasks = maximum_number_of_tasks
-    self._memory_profiler = None
     self._merge_task = None
     self._merge_task_on_hold = None
     self._number_of_consumed_errors = 0
@@ -133,9 +130,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._number_of_worker_processes = 0
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._processing_configuration = None
-    self._processing_profiler = None
     self._resolver_context = context.Context()
-    self._serializers_profiler = None
     self._session_identifier = None
     self._status = definitions.PROCESSING_STATUS_IDLE
     self._storage_merge_reader = None
@@ -504,33 +499,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     return process
 
-  def _StartProfiling(self):
-    """Starts profiling."""
-    if not self._processing_configuration:
-      return
-
-    if self._processing_configuration.profiling.HaveProfileMemoryGuppy():
-      self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
-          self._name, self._processing_configuration.profiling)
-      self._guppy_memory_profiler.Start()
-
-    if self._processing_configuration.profiling.HaveProfileMemory():
-      self._memory_profiler = profiler.MemoryProfiler(
-          self._name, self._processing_configuration.profiling)
-      self._memory_profiler.Start()
-
-    if self._processing_configuration.profiling.HaveProfileProcessing():
-      identifier = '{0:s}-processing'.format(self._name)
-      self._processing_profiler = profiler.ProcessingProfiler(
-          identifier, self._processing_configuration.profiling)
-      self._processing_profiler.Start()
-
-    if self._processing_configuration.profiling.HaveProfileSerializers():
-      identifier = '{0:s}-serializers'.format(self._name)
-      self._serializers_profiler = profiler.SerializersProfiler(
-          identifier, self._processing_configuration.profiling)
-      self._serializers_profiler.Start()
-
   def _StatusUpdateThreadMain(self):
     """Main function of the status update thread."""
     while self._status_update_active:
@@ -589,25 +557,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     # Kill any lingering processes.
     self._AbortKill()
-
-  def _StopProfiling(self):
-    """Stops profiling."""
-    if self._guppy_memory_profiler:
-      self._guppy_memory_profiler.Sample()
-      self._guppy_memory_profiler.Stop()
-      self._guppy_memory_profiler = None
-
-    if self._memory_profiler:
-      self._memory_profiler.Stop()
-      self._memory_profiler = None
-
-    if self._processing_profiler:
-      self._processing_profiler.Stop()
-      self._processing_profiler = None
-
-    if self._serializers_profiler:
-      self._serializers_profiler.Stop()
-      self._serializers_profiler = None
 
   def _UpdateForemanProcessStatus(self):
     """Update the foreman process status."""
@@ -799,10 +748,13 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._task_queue.Open()
       self._task_queue_port = self._task_queue.port
 
-    self._StartProfiling()
+    self._StartProfiling(self._processing_configuration.profiling)
 
     if self._serializers_profiler:
       storage_writer.SetSerializersProfiler(self._serializers_profiler)
+
+    if self._storage_profiler:
+      storage_writer.SetStorageProfiler(self._storage_profiler)
 
     # Set up the storage writer before the worker processes.
     storage_writer.StartTaskStorage()
@@ -842,6 +794,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
       if self._serializers_profiler:
         storage_writer.SetSerializersProfiler(None)
+
+      if self._storage_profiler:
+        storage_writer.SetStorageProfiler(None)
 
       self._StopProfiling()
 
