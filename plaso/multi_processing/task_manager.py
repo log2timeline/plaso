@@ -200,6 +200,7 @@ class TaskManager(object):
     """
     if not tasks_for_timeout:
       return
+
     inactive_time = int(time.time() * 1000000) - self._TASK_INACTIVE_TIME
 
     for task_identifier, task in iter(tasks_for_timeout.items()):
