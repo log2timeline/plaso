@@ -493,7 +493,7 @@ class StorageMergeReader(object):
 
 
 class StorageFileMergeReader(StorageMergeReader):
-  """Storage reader interface for file-based stores merging."""
+  """Storage reader interface for merging file-based stores."""
 
   # pylint: disable=abstract-method
 
