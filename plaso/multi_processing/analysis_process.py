@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
 import threading
 
 from plaso.analysis import mediator as analysis_mediator
@@ -12,6 +11,7 @@ from plaso.engine import plaso_queue
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import base_process
+from plaso.multi_processing import logger
 
 
 class AnalysisProcess(base_process.MultiProcessBaseProcess):
@@ -96,7 +96,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
   def _Main(self):
     """The main loop."""
-    logging.debug('Analysis plugin: {0!s} (PID: {1:d}) started'.format(
+    logger.debug('Analysis plugin: {0!s} (PID: {1:d}) started'.format(
         self._name, self._pid))
 
     # Creating the threading event in the constructor will cause a pickle
@@ -125,7 +125,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     storage_writer.WriteTaskStart()
 
     try:
-      logging.debug(
+      logger.debug(
           '{0!s} (PID: {1:d}) started monitoring event queue.'.format(
               self._name, self._pid))
 
@@ -134,12 +134,12 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
           event = self._event_queue.PopItem()
 
         except (errors.QueueClose, errors.QueueEmpty) as exception:
-          logging.debug('ConsumeItems exiting with exception {0:s}.'.format(
+          logger.debug('ConsumeItems exiting with exception {0:s}.'.format(
               type(exception)))
           break
 
         if isinstance(event, plaso_queue.QueueAbort):
-          logging.debug('ConsumeItems exiting, dequeued QueueAbort object.')
+          logger.debug('ConsumeItems exiting, dequeued QueueAbort object.')
           break
 
         self._ProcessEvent(self._analysis_mediator, event)
@@ -149,7 +149,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
         if self._memory_profiler:
           self._memory_profiler.Sample()
 
-      logging.debug(
+      logger.debug(
           '{0!s} (PID: {1:d}) stopped monitoring event queue.'.format(
               self._name, self._pid))
 
@@ -161,10 +161,10 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     # All exceptions need to be caught here to prevent the process
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
-      logging.warning(
+      logger.warning(
           'Unhandled exception in process: {0!s} (PID: {1:d}).'.format(
               self._name, self._pid))
-      logging.exception(exception)
+      logger.exception(exception)
 
       self._abort = True
 
@@ -185,7 +185,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
     self._foreman_status_wait_event.wait(self._FOREMAN_STATUS_WAIT)
 
-    logging.debug('Analysis plugin: {0!s} (PID: {1:d}) stopped'.format(
+    logger.debug('Analysis plugin: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
 
     self._analysis_mediator = None
@@ -196,7 +196,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     try:
       self._event_queue.Close(abort=self._abort)
     except errors.QueueAlreadyClosed:
-      logging.error('Queue for {0:s} was already closed.'.format(self.name))
+      logger.error('Queue for {0:s} was already closed.'.format(self.name))
 
   def _ProcessEvent(self, mediator, event):
     """Processes an event.
@@ -215,8 +215,8 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
       # TODO: write analysis error.
 
       if self._debug_output:
-        logging.warning('Unhandled exception while processing event object.')
-        logging.exception(exception)
+        logger.warning('Unhandled exception while processing event object.')
+        logger.exception(exception)
 
   def SignalAbort(self):
     """Signals the process to abort."""

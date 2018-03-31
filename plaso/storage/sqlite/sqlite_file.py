@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
 import os
 import sqlite3
 import zlib
@@ -19,6 +18,7 @@ from plaso.lib import definitions
 from plaso.storage import event_heaps
 from plaso.storage import identifiers
 from plaso.storage import interface
+from plaso.storage import logger
 
 
 class SQLiteStorageFile(interface.BaseStorageFile):
@@ -993,7 +993,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     # TODO: handle open sessions.
     if last_session_start != last_session_completion:
-      logging.warning('Detected unclosed session.')
+      logger.warning('Detected unclosed session.')
 
     self._last_session = last_session_completion
 

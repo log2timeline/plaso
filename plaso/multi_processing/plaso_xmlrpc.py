@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
 import sys
 import threading
 
@@ -20,6 +19,7 @@ else:
 # pylint: disable=wrong-import-position
 from xml.parsers import expat
 
+from plaso.multi_processing import logger
 from plaso.multi_processing import rpc
 
 
@@ -47,7 +47,7 @@ class XMLRPCClient(rpc.RPCClient):
     except (
         expat.ExpatError, SocketServer.socket.error,
         xmlrpclib.Fault) as exception:
-      logging.warning('Error while making RPC call: {0:s}'.format(exception))
+      logger.warning('Error while making RPC call: {0:s}'.format(exception))
       return None
 
   def Close(self):
@@ -68,7 +68,7 @@ class XMLRPCClient(rpc.RPCClient):
     try:
       self._xmlrpc_proxy = xmlrpclib.ServerProxy(server_url, allow_none=True)
     except SocketServer.socket.error as exception:
-      logging.warning((
+      logger.warning((
           'Unable to connect to RPC server on {0:s}:{1:d} with error: '
           '{2:s}').format(hostname, port, exception))
       return False
@@ -113,7 +113,7 @@ class ThreadedXMLRPCServer(rpc.RPCServer):
       self._xmlrpc_server = SimpleXMLRPCServer.SimpleXMLRPCServer(
           (hostname, port), logRequests=False, allow_none=True)
     except SocketServer.socket.error as exception:
-      logging.warning((
+      logger.warning((
           'Unable to bind a RPC server on {0:s}:{1:d} with error: '
           '{2:s}').format(hostname, port, exception))
       return False

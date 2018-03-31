@@ -7,13 +7,12 @@ http://forensicswiki.org/wiki/L2T_CSV
 
 from __future__ import unicode_literals
 
-import logging
-
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.output import interface
+from plaso.output import logger
 from plaso.output import manager
 
 
@@ -94,7 +93,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
           type in the event.
     """
     if not hasattr(event, 'timestamp'):
-      logging.error('Unable to output event without timestamp.')
+      logger.error('Unable to output event without timestamp.')
       return None
 
     # TODO: add function to pass event_values to GetFormattedMessages.

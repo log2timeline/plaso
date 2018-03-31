@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import getpass
-import logging
 import os
 import sys
 
@@ -19,6 +18,7 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.volume import tsk_volume_system
 from dfvfs.volume import vshadow_volume_system
 
+from plaso.cli import logger
 from plaso.cli import tools
 from plaso.cli import views
 from plaso.engine import configurations
@@ -614,7 +614,7 @@ class StorageMediaTool(tools.CLITool):
             credential_data)
 
       except IOError as exception:
-        logging.debug('Unable to unlock volume with error: {0!s}'.format(
+        logger.debug('Unable to unlock volume with error: {0!s}'.format(
             exception))
         result = False
 
@@ -961,7 +961,7 @@ class StorageMediaTool(tools.CLITool):
       location = '/vss{0:d}'.format(vss_store_identifier)
       sub_scan_node = volume_scan_node.GetSubNodeByLocation(location)
       if not sub_scan_node:
-        logging.error(
+        logger.error(
             'Scan node missing for VSS store identifier: {0:d}.'.format(
                 vss_store_identifier))
         continue

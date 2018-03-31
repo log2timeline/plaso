@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import abc
-import logging
 
 import construct
 
@@ -12,6 +11,7 @@ from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.lib import binary
+from plaso.parsers import logger
 from plaso.parsers import winreg
 from plaso.parsers.shared import shell_items
 from plaso.parsers.winreg_plugins import interface
@@ -103,7 +103,7 @@ class BaseMRUListExPlugin(interface.WindowsRegistryPlugin):
     try:
       mru_list = self._MRULISTEX_STRUCT.parse(mru_list_value.data)
     except construct.FieldError:
-      logging.warning('[{0:s}] Unable to parse the MRU key: {1:s}'.format(
+      logger.warning('[{0:s}] Unable to parse the MRU key: {1:s}'.format(
           self.NAME, registry_key.path))
       return enumerate([])
 
@@ -183,7 +183,7 @@ class MRUListExStringPlugin(BaseMRUListExPlugin):
 
     value = registry_key.GetValueByName('{0:d}'.format(entry_number))
     if value is None:
-      logging.debug(
+      logger.debug(
           '[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
               self.NAME, entry_number, registry_key.path))
 
@@ -191,7 +191,7 @@ class MRUListExStringPlugin(BaseMRUListExPlugin):
       value_string = value.GetDataAsObject()
 
     elif value.DataIsBinaryData():
-      logging.debug((
+      logger.debug((
           '[{0:s}] Non-string MRUListEx entry value: {1:d} parsed as string '
           'in key: {2:s}.').format(self.NAME, entry_number, registry_key.path))
       utf16_stream = binary.ByteStreamCopyToUTF16Stream(value.data)
@@ -200,7 +200,7 @@ class MRUListExStringPlugin(BaseMRUListExPlugin):
         value_string = utf16_stream.decode('utf-16-le')
       except UnicodeDecodeError as exception:
         value_string = binary.HexifyBuffer(utf16_stream)
-        logging.warning((
+        logger.warning((
             '[{0:s}] Unable to decode UTF-16 stream: {1:s} in MRUListEx entry '
             'value: {2:d} in key: {3:s} with error: {4!s}').format(
                 self.NAME, value_string, entry_number, registry_key.path,
@@ -258,12 +258,12 @@ class MRUListExShellItemListPlugin(BaseMRUListExPlugin):
 
     value = registry_key.GetValueByName('{0:d}'.format(entry_number))
     if value is None:
-      logging.debug(
+      logger.debug(
           '[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
               self.NAME, entry_number, registry_key.path))
 
     elif not value.DataIsBinaryData():
-      logging.debug((
+      logger.debug((
           '[{0:s}] Non-binary MRUListEx entry value: {1:d} in key: '
           '{2:s}.').format(self.NAME, entry_number, registry_key.path))
 
@@ -337,12 +337,12 @@ class MRUListExStringAndShellItemPlugin(BaseMRUListExPlugin):
 
     value = registry_key.GetValueByName('{0:d}'.format(entry_number))
     if value is None:
-      logging.debug(
+      logger.debug(
           '[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
               self.NAME, entry_number, registry_key.path))
 
     elif not value.DataIsBinaryData():
-      logging.debug((
+      logger.debug((
           '[{0:s}] Non-binary MRUListEx entry value: {1:d} in key: '
           '{2:s}.').format(self.NAME, entry_number, registry_key.path))
 
@@ -354,7 +354,7 @@ class MRUListExStringAndShellItemPlugin(BaseMRUListExPlugin):
         # to strip off.
         path = b''.join(value_struct.string).decode('utf16')[:-1]
       except UnicodeDecodeError as exception:
-        logging.warning((
+        logger.warning((
             '[{0:s}] Unable to decode string MRUListEx entry value: {1:d} '
             'in key: {2:s} with error: {3!s}').format(
                 self.NAME, entry_number, registry_key.path, exception))
@@ -363,7 +363,7 @@ class MRUListExStringAndShellItemPlugin(BaseMRUListExPlugin):
       if path:
         shell_item_list_data = value.data[value_struct.shell_item:]
         if not shell_item_list_data:
-          logging.debug((
+          logger.debug((
               '[{0:s}] Missing shell item in MRUListEx entry value: {1:d}'
               'in key: {2:s}').format(
                   self.NAME, entry_number, registry_key.path))
@@ -438,12 +438,12 @@ class MRUListExStringAndShellItemListPlugin(BaseMRUListExPlugin):
 
     value = registry_key.GetValueByName('{0:d}'.format(entry_number))
     if value is None:
-      logging.debug(
+      logger.debug(
           '[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
               self.NAME, entry_number, registry_key.path))
 
     elif not value.DataIsBinaryData():
-      logging.debug((
+      logger.debug((
           '[{0:s}] Non-binary MRUListEx entry value: {1:d} in key: '
           '{2:s}.').format(self.NAME, entry_number, registry_key.path))
 
@@ -455,7 +455,7 @@ class MRUListExStringAndShellItemListPlugin(BaseMRUListExPlugin):
         # to strip off.
         path = b''.join(value_struct.string).decode('utf16')[:-1]
       except UnicodeDecodeError as exception:
-        logging.warning((
+        logger.warning((
             '[{0:s}] Unable to decode string MRUListEx entry value: {1:d} '
             'in key: {2:s} with error: {3!s}').format(
                 self.NAME, entry_number, registry_key.path, exception))
@@ -464,7 +464,7 @@ class MRUListExStringAndShellItemListPlugin(BaseMRUListExPlugin):
       if path:
         shell_item_list_data = value.data[value_struct.shell_item_list:]
         if not shell_item_list_data:
-          logging.debug((
+          logger.debug((
               '[{0:s}] Missing shell item in MRUListEx entry value: {1:d}'
               'in key: {2:s}').format(
                   self.NAME, entry_number, registry_key.path))

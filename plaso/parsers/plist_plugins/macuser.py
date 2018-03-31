@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 #       versions as well.
 
 import binascii
-import logging
 
 from xml.etree import ElementTree
 
@@ -20,6 +19,7 @@ from dfvfs.resolver import context
 from plaso.containers import plist_event
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.parsers import logger
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
@@ -89,7 +89,7 @@ class MacUserPlugin(interface.PlistPlugin):
       try:
         xml_policy = ElementTree.fromstring(policy)
       except (ElementTree.ParseError, LookupError) as exception:
-        logging.error((
+        logger.error((
             'Unable to parse XML structure for an user policy, account: '
             '{0:s} and uid: {1!s}, with error: {2!s}').format(
                 account, uid, exception))

@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
 import os
 
 import construct
@@ -14,6 +13,7 @@ from dfvfs.resolver import resolver
 
 from plaso.lib import errors
 from plaso.parsers import interface
+from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import winlnk
 
@@ -166,7 +166,7 @@ class CustomDestinationsParser(interface.FileObjectParser):
         if not first_guid_checked:
           raise errors.UnableToParseFile(error_message)
 
-        logging.warning(error_message)
+        logger.warning(error_message)
         break
 
       if entry_header.guid != self._LNK_GUID:
@@ -186,7 +186,7 @@ class CustomDestinationsParser(interface.FileObjectParser):
               'with error: {1!s}').format(file_offset, exception))
 
         if file_footer.signature != self._FOOTER_SIGNATURE:
-          logging.warning(error_message)
+          logger.warning(error_message)
 
         file_object.seek(-4, os.SEEK_CUR)
 
@@ -208,12 +208,12 @@ class CustomDestinationsParser(interface.FileObjectParser):
     try:
       file_footer = self._FILE_FOOTER.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
-      logging.warning((
+      logger.warning((
           'Invalid Custom Destination file: {0:s} - unable to parse '
           'footer with error: {1!s}').format(display_name, exception))
 
     if file_footer.signature != self._FOOTER_SIGNATURE:
-      logging.warning((
+      logger.warning((
           'Unsupported Custom Destination file: {0:s} - invalid footer '
           'signature.').format(display_name))
 

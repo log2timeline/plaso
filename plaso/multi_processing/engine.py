@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 import abc
 import ctypes
-import logging
 import os
 import signal
 import sys
@@ -15,6 +14,7 @@ import time
 from plaso.engine import engine
 from plaso.engine import process_info
 from plaso.lib import definitions
+from plaso.multi_processing import logger
 from plaso.multi_processing import plaso_xmlrpc
 
 
@@ -67,11 +67,11 @@ class MultiProcessEngine(engine.BaseEngine):
           None represents no timeout.
     """
     for pid, process in iter(self._processes_per_pid.items()):
-      logging.debug('Waiting for process: {0:s} (PID: {1:d}).'.format(
+      logger.debug('Waiting for process: {0:s} (PID: {1:d}).'.format(
           process.name, pid))
       process.join(timeout=timeout)
       if not process.is_alive():
-        logging.debug('Process {0:s} (PID: {1:d}) stopped.'.format(
+        logger.debug('Process {0:s} (PID: {1:d}) stopped.'.format(
             process.name, pid))
 
   def _AbortKill(self):
@@ -80,7 +80,7 @@ class MultiProcessEngine(engine.BaseEngine):
       if not process.is_alive():
         continue
 
-      logging.warning('Killing process: {0:s} (PID: {1:d}).'.format(
+      logger.warning('Killing process: {0:s} (PID: {1:d}).'.format(
           process.name, pid))
       self._KillProcess(pid)
 
@@ -90,7 +90,7 @@ class MultiProcessEngine(engine.BaseEngine):
       if not process.is_alive():
         continue
 
-      logging.warning('Terminating process: {0:s} (PID: {1:d}).'.format(
+      logger.warning('Terminating process: {0:s} (PID: {1:d}).'.format(
           process.name, pid))
       process.terminate()
 
@@ -122,7 +122,7 @@ class MultiProcessEngine(engine.BaseEngine):
     used_memory = process_information.GetUsedMemory() or 0
 
     if self._worker_memory_limit and used_memory > self._worker_memory_limit:
-      logging.warning((
+      logger.warning((
           'Process: {0:s} (PID: {1:d}) killed because it exceeded the '
           'memory limit: {2:d}.').format(
               process.name, pid, self._worker_memory_limit))
@@ -141,7 +141,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
       if process_is_alive:
         rpc_port = process.rpc_port.value
-        logging.warning((
+        logger.warning((
             'Unable to retrieve process: {0:s} (PID: {1:d}) status via '
             'RPC socket: http://localhost:{2:d}').format(
                 process.name, pid, rpc_port))
@@ -165,13 +165,13 @@ class MultiProcessEngine(engine.BaseEngine):
         break
 
     if status_indicator in definitions.PROCESSING_ERROR_STATUS:
-      logging.error((
+      logger.error((
           'Process {0:s} (PID: {1:d}) is not functioning correctly. '
           'Status code: {2!s}.').format(process.name, pid, status_indicator))
 
       self._TerminateProcessByPid(pid)
 
-      logging.info('Starting replacement worker process for {0:s}'.format(
+      logger.info('Starting replacement worker process for {0:s}'.format(
           process.name))
       replacement_process_attempts = 0
       replacement_process = None
@@ -183,7 +183,7 @@ class MultiProcessEngine(engine.BaseEngine):
           time.sleep(self._REPLACEMENT_WORKER_RETRY_DELAY)
           break
       if not replacement_process:
-        logging.error(
+        logger.error(
             'Unable to create replacement worker process for: {0:s}'.format(
                 process.name))
 
@@ -204,7 +204,7 @@ class MultiProcessEngine(engine.BaseEngine):
       try:
         os.kill(pid, signal.SIGKILL)
       except OSError as exception:
-        logging.error('Unable to kill process {0:d} with error: {1!s}'.format(
+        logger.error('Unable to kill process {0:d} with error: {1!s}'.format(
             pid, exception))
 
   def _QueryProcessStatus(self, process):
@@ -372,7 +372,7 @@ class MultiProcessEngine(engine.BaseEngine):
     if pid in self._rpc_errors_per_pid:
       del self._rpc_errors_per_pid[pid]
 
-    logging.debug('Stopped monitoring process: {0:s} (PID: {1:d})'.format(
+    logger.debug('Stopped monitoring process: {0:s} (PID: {1:d})'.format(
         process.name, pid))
 
   def _StopMonitoringProcesses(self):
@@ -416,14 +416,14 @@ class MultiProcessEngine(engine.BaseEngine):
       process (MultiProcessBaseProcess): process to terminate.
     """
     pid = process.pid
-    logging.warning('Terminating process: (PID: {0:d}).'.format(pid))
+    logger.warning('Terminating process: (PID: {0:d}).'.format(pid))
     process.terminate()
 
     # Wait for the process to exit.
     process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
 
     if process.is_alive():
-      logging.warning('Killing process: (PID: {0:d}).'.format(pid))
+      logger.warning('Killing process: (PID: {0:d}).'.format(pid))
       self._KillProcess(pid)
 
   @abc.abstractmethod

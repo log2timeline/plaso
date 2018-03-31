@@ -6,11 +6,11 @@ from __future__ import unicode_literals
 import abc
 import datetime
 import locale
-import logging
 import sys
 
 import plaso
 
+from plaso.cli import logger
 from plaso.cli import views
 from plaso.lib import errors
 from plaso.lib import py2to3
@@ -80,7 +80,7 @@ class CLITool(object):
           self.preferred_encoding, errors=self._encode_errors)
     except UnicodeEncodeError:
       if self._encode_errors == 'strict':
-        logging.error(
+        logger.error(
             'Unable to properly write output due to encoding error. '
             'Switching to error tolerant encoding which can result in '
             'non Basic Latin (C0) characters to be replaced with "?" or '
@@ -102,7 +102,7 @@ class CLITool(object):
     self._quiet_mode = getattr(options, 'quiet', False)
 
     if self._debug_mode and self._quiet_mode:
-      logging.warning(
+      logger.warning(
           'Cannot use debug and quiet mode at the same time, defaulting to '
           'debug output.')
 
@@ -231,7 +231,7 @@ class CLITool(object):
             argument.decode(encoding) for argument in command_line_arguments]
 
       except UnicodeDecodeError:
-        logging.error(
+        logger.error(
             'Unable to properly read command line input due to encoding '
             'error. Replacing non Basic Latin (C0) characters with "?" or '
             '"\\ufffd".')
@@ -419,7 +419,7 @@ class FileObjectInputReader(CLIInputReader):
       string = encoded_string.decode(self._encoding, errors=self._errors)
     except UnicodeDecodeError:
       if self._errors == 'strict':
-        logging.error(
+        logger.error(
             'Unable to properly read input due to encoding error. '
             'Switching to error tolerant encoding which can result in '
             'non Basic Latin (C0) characters to be replaced with "?" or '
@@ -472,7 +472,7 @@ class FileObjectOutputWriter(CLIOutputWriter):
       encoded_string = string.encode(self._encoding, errors=self._errors)
     except UnicodeEncodeError:
       if self._errors == 'strict':
-        logging.error(
+        logger.error(
             'Unable to properly write output due to encoding error. '
             'Switching to error tolerant encoding which can result in '
             'non Basic Latin (C0) characters to be replaced with "?" or '

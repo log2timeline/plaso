@@ -3,9 +3,8 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 from plaso.formatters import default
+from plaso.formatters import logger
 
 
 class FormattersManager(object):
@@ -56,7 +55,7 @@ class FormattersManager(object):
         formatter_object = formatter_class()
 
       if not formatter_object:
-        logging.warning(
+        logger.warning(
             'Using default formatter for data type: {0:s}'.format(data_type))
         formatter_object = default.DefaultFormatter()
 

@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
 import re
 
 import pyparsing
@@ -15,6 +14,7 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.lib import timelib
+from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -285,7 +285,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
         structure = None
 
     if not structure:
-      logging.debug('Not a Mac Wifi log file')
+      logger.debug('Not a Mac Wifi log file')
       return False
 
     time_elements_tuple = self._GetTimeElementsTuple(key, structure)
@@ -294,7 +294,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       dfdatetime_time_elements.TimeElementsInMilliseconds(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      logging.debug(
+      logger.debug(
           'Not a Mac Wifi log file, invalid date and time: {0!s}'.format(
               structure.date_time))
       return False

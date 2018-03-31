@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -14,6 +12,7 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.lib import timelib
+from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -151,7 +150,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     try:
       action = structure.action.decode('utf-8')
     except UnicodeDecodeError:
-      logging.warning(
+      logger.warning(
           'Decode UTF8 failed, the message string may be cut short.')
       action = structure.action.decode('utf-8', 'ignore')
 
@@ -204,19 +203,19 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     try:
       structure = self.FIREWALL_LINE.parseString(line)
     except pyparsing.ParseException as exception:
-      logging.debug((
+      logger.debug((
           'Unable to parse file as a Mac AppFirewall log file with error: '
           '{0:s}').format(exception))
       return False
 
     if structure.action != 'creating /var/log/appfirewall.log':
-      logging.debug(
+      logger.debug(
           'Not a Mac AppFirewall log file, invalid action: {0!s}'.format(
               structure.action))
       return False
 
     if structure.status != 'Error':
-      logging.debug(
+      logger.debug(
           'Not a Mac AppFirewall log file, invalid status: {0!s}'.format(
               structure.status))
       return False
@@ -227,7 +226,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      logging.debug((
+      logger.debug((
           'Not a Mac AppFirewall log file, invalid date and time: '
           '{0!s}').format(structure.date_time))
       return False

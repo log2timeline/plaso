@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
 import os
 import tempfile
 
@@ -17,6 +16,7 @@ from dfvfs.path import factory as dfvfs_factory
 
 from plaso.lib import specification
 from plaso.parsers import interface
+from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import plugins
 
@@ -177,7 +177,7 @@ class SQLiteDatabase(object):
       try:
         os.remove(self._temp_db_file_path)
       except (OSError, IOError) as exception:
-        logging.warning((
+        logger.warning((
             'Unable to remove temporary copy: {0:s} of SQLite database: '
             '{1:s} with error: {2!s}').format(
                 self._temp_db_file_path, self._filename, exception))
@@ -188,7 +188,7 @@ class SQLiteDatabase(object):
       try:
         os.remove(self._temp_wal_file_path)
       except (OSError, IOError) as exception:
-        logging.warning((
+        logger.warning((
             'Unable to remove temporary copy: {0:s} of SQLite database: '
             '{1:s} with error: {2!s}').format(
                 self._temp_wal_file_path, self._filename, exception))
@@ -282,7 +282,7 @@ class SQLiteDatabase(object):
         os.remove(self._temp_wal_file_path)
         self._temp_wal_file_path = ''
 
-      logging.debug(
+      logger.debug(
           'Unable to parse SQLite database: {0:s} with error: {1!s}'.format(
               self._filename, exception))
       raise

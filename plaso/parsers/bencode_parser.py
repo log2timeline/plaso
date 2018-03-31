@@ -7,7 +7,6 @@ processed, typically seen for BitTorrent data.
 
 from __future__ import unicode_literals
 
-import logging
 import re
 import os
 
@@ -15,6 +14,7 @@ import bencode
 
 from plaso.lib import errors
 from plaso.parsers import interface
+from plaso.parsers import logger
 from plaso.parsers import manager
 
 
@@ -76,7 +76,7 @@ class BencodeParser(interface.FileObjectParser):
       try:
         plugin.UpdateChainAndProcess(parser_mediator, data=data_object)
       except errors.WrongBencodePlugin as exception:
-        logging.debug('[{0:s}] wrong plugin: {1:s}'.format(
+        logger.debug('[{0:s}] wrong plugin: {1:s}'.format(
             self.NAME, exception))
 
 

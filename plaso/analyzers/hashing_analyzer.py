@@ -3,9 +3,8 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 from plaso.analyzers import interface
+from plaso.analyzers import logger
 from plaso.analyzers import manager
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.containers import analyzer_result
@@ -48,7 +47,7 @@ class HashingAnalyzer(interface.BaseAnalyzer):
     """
     results = []
     for hasher in self._hashers:
-      logging.debug('Processing results for hasher {0:s}'.format(hasher.NAME))
+      logger.debug('Processing results for hasher {0:s}'.format(hasher.NAME))
       result = analyzer_result.AnalyzerResult()
       result.analyzer_name = self.NAME
       result.attribute_name = '{0:s}_hash'.format(hasher.NAME)
@@ -72,7 +71,7 @@ class HashingAnalyzer(interface.BaseAnalyzer):
         hasher_names_string)
 
     debug_hasher_names = ', '.join(hasher_names)
-    logging.debug('Got hasher names: {0:s}'.format(debug_hasher_names))
+    logger.debug('Got hasher names: {0:s}'.format(debug_hasher_names))
 
     self._hashers = hashers_manager.HashersManager.GetHashers(hasher_names)
     self._hasher_names_string = hasher_names_string

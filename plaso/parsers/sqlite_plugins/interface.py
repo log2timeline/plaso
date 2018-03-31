@@ -3,14 +3,13 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 # pylint: disable=wrong-import-order
 try:
   from pysqlite2 import dbapi2 as sqlite3
 except ImportError:
   import sqlite3
 
+from plaso.parsers import logger
 from plaso.parsers import plugins
 
 
@@ -186,7 +185,7 @@ class SQLitePlugin(plugins.BasePlugin):
 
       callback = getattr(self, callback_method, None)
       if callback is None:
-        logging.warning(
+        logger.warning(
             '[{0:s}] missing callback method: {1:s} for query: {2:s}'.format(
                 self.NAME, callback_method, query))
         continue

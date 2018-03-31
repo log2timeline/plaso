@@ -13,9 +13,9 @@ to the description_long and description_short field.
 
 from __future__ import unicode_literals
 
-import logging
 import re
 
+from plaso.formatters import logger
 from plaso.lib import errors
 from plaso.lib import py2to3
 
@@ -64,7 +64,7 @@ class EventFormatter(object):
       str: formatted message string.
     """
     if not isinstance(format_string, py2to3.UNICODE_TYPE):
-      logging.warning('Format string: {0:s} is non-Unicode.'.format(
+      logger.warning('Format string: {0:s} is non-Unicode.'.format(
           format_string))
 
       # Plaso code files should be in UTF-8 any thus binary strings are
@@ -88,7 +88,7 @@ class EventFormatter(object):
           'parser chain: {3:s} with error: {4:s}').format(
               event_identifier, data_type, display_name, parser_chain,
               error_message)
-      logging.error(error_message)
+      logger.error(error_message)
 
       attribute_values = []
       for attribute, value in iter(event_values.items()):
@@ -108,7 +108,7 @@ class EventFormatter(object):
           'parser chain: {3:s} with error: {4:s}').format(
               event_identifier, data_type, display_name, parser_chain,
               error_message)
-      logging.error(error_message)
+      logger.error(error_message)
 
       message_string = ''
 

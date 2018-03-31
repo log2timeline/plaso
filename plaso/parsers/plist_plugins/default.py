@@ -4,11 +4,11 @@
 from __future__ import unicode_literals
 
 import datetime
-import logging
 
 from plaso.containers import plist_event
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.parsers import logger
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
@@ -61,7 +61,7 @@ class DefaultPlugin(interface.PlistPlugin):
       plist_name (str): name of the plist.
       top_level (dict[str, object]): plist top-level key.
     """
-    logging.debug('Plist {0:s} plugin used for: {1:s}'.format(
+    logger.debug('Plist {0:s} plugin used for: {1:s}'.format(
         self.NAME, plist_name))
     self.GetEntries(parser_mediator, top_level=top_level, **kwargs)
 

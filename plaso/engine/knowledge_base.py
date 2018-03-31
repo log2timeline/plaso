@@ -11,9 +11,9 @@ from __future__ import unicode_literals
 
 import codecs
 import datetime
-import logging
 
 from plaso.containers import artifacts
+from plaso.engine import logger
 from plaso.lib import py2to3
 
 import pytz  # pylint: disable=wrong-import-order
@@ -282,7 +282,7 @@ class KnowledgeBase(object):
       try:
         self.SetCodepage(system_configuration.code_page)
       except ValueError:
-        logging.warning(
+        logger.warning(
             'Unsupported codepage: {0:s}, defaulting to {1:s}'.format(
                 system_configuration.code_page, self._codepage))
 
@@ -302,7 +302,7 @@ class KnowledgeBase(object):
       try:
         self.SetTimeZone(system_configuration.time_zone)
       except ValueError:
-        logging.warning(
+        logger.warning(
             'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
                 system_configuration.time_zone, self.timezone.zone))
 

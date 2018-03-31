@@ -7,8 +7,6 @@ https://community.sophos.com/kb/en-us/110923
 
 from __future__ import unicode_literals
 
-import logging
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -17,6 +15,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -124,19 +123,19 @@ class SophosAVLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       structure = self._LOG_LINE.parseString(line)
     except pyparsing.ParseException:
-      logging.debug('Not a Sophos Anti-Virus log file')
+      logger.debug('Not a Sophos Anti-Virus log file')
       return False
 
     # Expect spaces at position 9 and 16.
     if ' ' not in (line[8], line[15]):
-      logging.debug('Not a Sophos Anti-Virus log file')
+      logger.debug('Not a Sophos Anti-Virus log file')
       return False
 
     try:
       dfdatetime_time_elements.TimeElements(
           time_elements_tuple=structure.date_time)
     except ValueError:
-      logging.debug((
+      logger.debug((
           'Not a Sophos Anti-Virus log file, invalid date and time: '
           '{0!s}').format(structure.date_time))
       return False

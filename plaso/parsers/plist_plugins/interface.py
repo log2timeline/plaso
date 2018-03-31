@@ -12,9 +12,9 @@ and operation of plugins for plist files which will be used by PlistParser.
 from __future__ import unicode_literals
 
 import abc
-import logging
 
 from plaso.lib import errors
+from plaso.parsers import logger
 from plaso.parsers import plugins
 
 
@@ -201,7 +201,7 @@ class PlistPlugin(plugins.BasePlugin):
     # This will raise if unhandled keyword arguments are passed.
     super(PlistPlugin, self).Process(parser_mediator)
 
-    logging.debug('Plist Plugin Used: {0:s} for: {1:s}'.format(
+    logger.debug('Plist Plugin Used: {0:s} for: {1:s}'.format(
         self.NAME, plist_name))
     match = self._GetKeys(top_level, self.PLIST_KEYS)
     self.GetEntries(parser_mediator, top_level=top_level, match=match)
@@ -238,7 +238,7 @@ def RecurseKey(recur_item, depth=15, key_path=''):
     A tuple of the key path, key, and value from a plist.
   """
   if depth < 1:
-    logging.debug('Recursion limit hit for key: {0:s}'.format(key_path))
+    logger.debug('Recursion limit hit for key: {0:s}'.format(key_path))
     return
 
   if isinstance(recur_item, (list, tuple)):

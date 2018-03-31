@@ -3,10 +3,10 @@
 
 from __future__ import unicode_literals
 
-import logging
 import socket
 
 from plaso.analysis import interface
+from plaso.analysis import logger
 from plaso.analysis import manager
 
 
@@ -53,7 +53,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
           (self._host, self._port), self._SOCKET_TIMEOUT)
 
     except socket.error as exception:
-      logging.error(
+      logger.error(
           'Unable to connect to nsrlsvr with error: {0!s}.'.format(exception))
 
   def _QueryHash(self, nsrl_socket, digest):
@@ -74,7 +74,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
       response = nsrl_socket.recv(self._RECEIVE_BUFFER_SIZE)
 
     except socket.error as exception:
-      logging.error(
+      logger.error(
           'Unable to query nsrlsvr with error: {0!s}.'.format(exception))
 
     if not response:
@@ -95,7 +95,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     Returns:
       list[HashAnalysis]: analysis results, or an empty list on error.
     """
-    logging.debug(
+    logger.debug(
         'Opening connection to {0:s}:{1:d}'.format(self._host, self._port))
 
     nsrl_socket = self._GetSocket()
@@ -114,7 +114,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
 
     nsrl_socket.close()
 
-    logging.debug(
+    logger.debug(
         'Closed connection to {0:s}:{1:d}'.format(self._host, self._port))
 
     return hash_analyses

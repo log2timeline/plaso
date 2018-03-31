@@ -3,13 +3,12 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 try:
   import MySQLdb
 except ImportError:
   MySQLdb = None
 
+from plaso.output import logger
 from plaso.output import manager
 from plaso.output import shared_4n6time
 
@@ -272,7 +271,7 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Shared4n6TimeOutputModule):
     try:
       self._cursor.execute(self._INSERT_QUERY, row)
     except MySQLdb.Error as exception:
-      logging.warning(
+      logger.warning(
           'Unable to insert into database with error: {0!s}.'.format(
               exception))
 
