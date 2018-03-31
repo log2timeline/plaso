@@ -444,7 +444,6 @@ class ProcessingStatus(object):
         number_of_consumed_errors, number_of_produced_errors,
         number_of_consumed_reports, number_of_produced_reports)
 
-  # pylint: disable=too-many-arguments
   def UpdateTasksStatus(self, tasks_status):
     """Updates the tasks status.
 
@@ -453,14 +452,13 @@ class ProcessingStatus(object):
     """
     self.tasks_status = tasks_status
 
-  # pylint: disable=too-many-arguments
   def UpdateWorkerStatus(
       self, identifier, status, pid, used_memory, display_name,
       number_of_consumed_sources, number_of_produced_sources,
       number_of_consumed_events, number_of_produced_events,
       number_of_consumed_event_tags, number_of_produced_event_tags,
       number_of_consumed_errors, number_of_produced_errors,
-      number_of_consumed_reports, number_of_produced_reports):
+      number_of_consumed_reports, number_of_produced_reports):  # pylint: disable=too-many-arguments
     """Updates the status of a worker.
 
     Args:

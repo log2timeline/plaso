@@ -99,6 +99,20 @@ class ProcessingStatusTest(unittest.TestCase):
         'test', 'Idle', 12345, 2000000, 'test process',
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
+  def testUpdateTasksStatus(self):
+    """Tests the UpdateTasksStatus function."""
+    task_status = processing_status.TasksStatus()
+
+    status = processing_status.ProcessingStatus()
+    status.UpdateTasksStatus(task_status)
+
+  def testUpdateWorkerStatus(self):
+    """Tests the UpdateWorkerStatus function."""
+    status = processing_status.ProcessingStatus()
+    status.UpdateWorkerStatus(
+        'test', 'Idle', 12345, 2000000, 'test process',
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+
 
 class TasksStatusTest(unittest.TestCase):
   """Tests the task status."""
