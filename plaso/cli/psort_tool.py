@@ -90,6 +90,7 @@ class PsortTool(
     self._knowledge_base = knowledge_base.KnowledgeBase()
     self._number_of_analysis_reports = 0
     self._preferred_language = 'en-US'
+    self._process_memory_limit = None
     self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
     self._stdout_output_writer = isinstance(
@@ -248,13 +249,22 @@ class PsortTool(
 
     Args:
       options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
     """
-    self._use_zeromq = getattr(options, 'use_zeromq', True)
-
+    argument_helper_names = [
+        'process_resources', 'temporary_directory', 'zeromq']
     helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=['temporary_directory'])
+        options, self, names=argument_helper_names)
 
-    self._worker_memory_limit = getattr(options, 'worker_memory_limit', None)
+    worker_memory_limit = getattr(options, 'worker_memory_limit', None)
+
+    if worker_memory_limit and worker_memory_limit < 0:
+      raise errors.BadConfigOption(
+          'Invalid worker memory limit value cannot be negative.')
+
+    self._worker_memory_limit = worker_memory_limit
 
   def _PrintAnalysisReportsDetails(self, storage_reader):
     """Prints the details of the analysis reports.
@@ -281,21 +291,21 @@ class PsortTool(
     Args:
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
-    argument_group.add_argument(
-        '--disable_zeromq', '--disable-zeromq', action='store_false',
-        dest='use_zeromq', default=True, help=(
-            'Disable queueing using ZeroMQ. A Multiprocessing queue will be '
-            'used instead.'))
-
+    argument_helper_names = ['temporary_directory', 'zeromq']
+    if self._CanEnforceProcessMemoryLimit():
+      argument_helper_names.append('process_resources')
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_group, names=['temporary_directory'])
+        argument_group, names=argument_helper_names)
 
     argument_group.add_argument(
         '--worker-memory-limit', '--worker_memory_limit',
         dest='worker_memory_limit', action='store', type=int,
         metavar='SIZE', help=(
-            'Maximum amount of memory a worker process is allowed to consume, '
-            'where 0 represents no limit [defaults to 2 GiB].'))
+            'Maximum amount of memory (data segment and shared memory) '
+            'a worker process is allowed to consume in bytes, where 0 '
+            'represents no limit. The default limit is 2147483648 (2 GiB). '
+            'If a worker process exceeds this limit is is killed by the main '
+            '(foreman) process.'))
 
   def ParseArguments(self):
     """Parses the command line arguments.
@@ -469,6 +479,8 @@ class PsortTool(
     if not os.path.isfile(self._storage_file_path):
       raise errors.BadConfigOption(
           'No such storage file: {0:s}.'.format(self._storage_file_path))
+
+    self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
     self._analysis_plugins = self._CreateAnalysisPlugins(options)
     self._output_module = self._CreateOutputModule(options)

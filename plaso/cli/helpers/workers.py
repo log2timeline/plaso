@@ -27,16 +27,19 @@ class WorkersArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        '--worker-memory-limit', '--worker_memory_limit',
+        '--worker_memory_limit', '--worker-memory-limit',
         dest='worker_memory_limit', action='store', type=int,
         metavar='SIZE', help=(
-            'Maximum amount of memory a worker process is allowed to consume, '
-            'where 0 represents no limit [defaults to 2 GiB].'))
+            'Maximum amount of memory (data segment and shared memory) '
+            'a worker process is allowed to consume in bytes, where 0 '
+            'represents no limit. The default limit is 2147483648 (2 GiB). '
+            'If a worker process exceeds this limit is is killed by the main '
+            '(foreman) process.'))
 
     argument_group.add_argument(
-        '--workers', dest='workers', action='store', type=int, default=0,
-        help=('The number of worker processes [defaults to available system '
-              'CPUs minus one].'))
+        '--workers', dest='workers', action='store', type=int, default=0, help=(
+            'Number of worker processes [defaults to available system CPUs '
+            'minus one].'))
 
   @classmethod
   def ParseOptions(cls, options, configuration_object):

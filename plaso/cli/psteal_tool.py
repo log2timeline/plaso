@@ -118,12 +118,10 @@ class PstealTool(
     self._parsers_manager = parsers_manager.ParsersManager
     self._preferred_language = 'en-US'
     self._preferred_year = None
-    self._single_process_mode = False
     self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
     self._time_slice = None
     self._use_time_slicer = False
-    self._use_zeromq = True
 
     self.list_hashers = False
     self.list_language_identifiers = False
@@ -406,8 +404,8 @@ class PstealTool(
     processing_group = argument_parser.add_argument_group(
         'processing arguments')
 
-    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        processing_group, names=['temporary_directory'])
+    self.AddPerformanceOptions(processing_group)
+    self.AddProcessingOptions(processing_group)
 
     try:
       options = argument_parser.parse_args()
@@ -474,7 +472,7 @@ class PstealTool(
 
     self._ParseInformationalOptions(options)
 
-    argument_helper_names = ['extraction', 'status_view', 'temporary_directory']
+    argument_helper_names = ['extraction', 'status_view']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 
@@ -482,9 +480,8 @@ class PstealTool(
 
     self._ParseStorageMediaOptions(options)
 
-    # These arguments are parsed from argparse.Namespace, so we can make
-    # tests consistent with the log2timeline/psort ones.
-    self._single_process_mode = getattr(options, 'single_process', False)
+    self._ParsePerformanceOptions(options)
+    self._ParseProcessingOptions(options)
 
     self._storage_file_path = getattr(options, 'storage_file', None)
     if not self._storage_file_path:
@@ -500,5 +497,7 @@ class PstealTool(
     if os.path.exists(self._output_filename):
       raise errors.BadConfigOption(
           'Output file already exists: {0:s}.'.format(self._output_filename))
+
+    self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
     self._output_module = self._CreateOutputModule(options)
