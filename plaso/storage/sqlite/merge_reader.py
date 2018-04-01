@@ -171,11 +171,9 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
     self._cursor.execute(self._TABLE_NAMES_QUERY)
     table_names = [row[0] for row in self._cursor.fetchall()]
 
-    container_types = [
-        table_name for table_name in table_names
-        if table_name in self._CONTAINER_TYPES]
-
-    return container_types
+    return [
+        table_name for table_name in self._CONTAINER_TYPES
+        if table_name in table_names]
 
   def _Open(self):
     """Opens the task storage for reading."""
