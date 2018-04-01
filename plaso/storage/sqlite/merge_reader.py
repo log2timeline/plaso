@@ -173,7 +173,7 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
 
     container_types = set([
         table_name for table_name in table_names
-        if table_name in self._CONTAINER_TYPE])
+        if table_name in self._CONTAINER_TYPES])
 
     return container_types
 
