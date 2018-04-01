@@ -10,8 +10,8 @@ import zlib
 from plaso.containers import errors
 from plaso.containers import event_sources
 from plaso.containers import events
-from plaso.containers import reports
 from plaso.containers import tasks
+from plaso.containers import reports
 from plaso.lib import definitions
 from plaso.storage import identifiers
 from plaso.storage import interface
@@ -37,6 +37,15 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
       _CONTAINER_TYPE_EXTRACTION_ERROR,
       _CONTAINER_TYPE_ANALYSIS_REPORT)
 
+  _ADD_CONTAINER_TYPE_METHODS = {
+      _CONTAINER_TYPE_ANALYSIS_REPORT: '_AddAnalysisReport',
+      _CONTAINER_TYPE_EVENT: '_AddEvent',
+      _CONTAINER_TYPE_EVENT_DATA: '_AddEventData',
+      _CONTAINER_TYPE_EVENT_SOURCE: '_AddEventSource',
+      _CONTAINER_TYPE_EVENT_TAG: '_AddEventTag',
+      _CONTAINER_TYPE_EXTRACTION_ERROR: '_AddError',
+  }
+
   _TABLE_NAMES_QUERY = (
       'SELECT name FROM sqlite_master WHERE type = "table"')
 
@@ -53,6 +62,8 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
     super(SQLiteStorageMergeReader, self).__init__(storage_writer)
     self._active_container_type = None
     self._active_cursor = None
+    self._add_active_container_method = None
+    self._add_container_type_methods = {}
     self._compression_format = definitions.COMPRESSION_FORMAT_NONE
     self._connection = None
     self._container_types = None
@@ -60,61 +71,116 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
     self._event_data_identifier_mappings = {}
     self._path = path
 
-  def _AddAttributeContainer(self, attribute_container):
-    """Adds a single attribute container to the storage writer.
+    self._add_container_type_methods = {
+        container_type: getattr(self, method_name, None)
+        for container_type, method_name in (
+            self._ADD_CONTAINER_TYPE_METHODS.items())}
+
+  def _AddAnalysisReport(self, analysis_report):
+    """Adds an analysis report.
 
     Args:
-      attribute_container (AttributeContainer): container
-
-    Raises:
-      RuntimeError: if the attribute container type is not supported.
+      analysis_report (AnalysisReport): analysis report.
     """
-    container_type = attribute_container.CONTAINER_TYPE
-    if container_type == self._CONTAINER_TYPE_EVENT_SOURCE:
-      self._storage_writer.AddEventSource(attribute_container)
+    self._storage_writer.AddAnalysisReport(analysis_report)
 
-    elif container_type == self._CONTAINER_TYPE_EVENT_DATA:
-      identifier = attribute_container.GetIdentifier()
-      lookup_key = identifier.CopyToString()
+  def _AddError(self, error):
+    """Adds an error.
 
-      self._storage_writer.AddEventData(attribute_container)
+    Args:
+      error (ExtractionError): error.
+    """
+    self._storage_writer.AddError(error)
 
-      identifier = attribute_container.GetIdentifier()
-      self._event_data_identifier_mappings[lookup_key] = identifier
+  def _AddEvent(self, event):
+    """Adds an event.
 
-    elif container_type == self._CONTAINER_TYPE_EVENT:
-      if hasattr(attribute_container, 'event_data_row_identifier'):
-        event_data_identifier = identifiers.SQLTableIdentifier(
-            self._CONTAINER_TYPE_EVENT_DATA,
-            attribute_container.event_data_row_identifier)
-        lookup_key = event_data_identifier.CopyToString()
+    Args:
+      event (EventObject): event.
+    """
+    if hasattr(event, 'event_data_row_identifier'):
+      event_data_identifier = identifiers.SQLTableIdentifier(
+          self._CONTAINER_TYPE_EVENT_DATA,
+          event.event_data_row_identifier)
+      lookup_key = event_data_identifier.CopyToString()
 
-        event_data_identifier = self._event_data_identifier_mappings[lookup_key]
-        attribute_container.SetEventDataIdentifier(event_data_identifier)
+      event_data_identifier = self._event_data_identifier_mappings[lookup_key]
+      event.SetEventDataIdentifier(event_data_identifier)
 
-      # TODO: add event identifier mappings for event tags.
+    # TODO: add event identifier mappings for event tags.
 
-      self._storage_writer.AddEvent(attribute_container)
+    self._storage_writer.AddEvent(event)
 
-    elif container_type == self._CONTAINER_TYPE_EVENT_TAG:
-      self._storage_writer.AddEventTag(attribute_container)
+  def _AddEventData(self, event_data):
+    """Adds event data.
 
-    elif container_type == self._CONTAINER_TYPE_EXTRACTION_ERROR:
-      self._storage_writer.AddError(attribute_container)
+    Args:
+      event_data (EventData): event data.
+    """
+    identifier = event_data.GetIdentifier()
+    lookup_key = identifier.CopyToString()
 
-    elif container_type == self._CONTAINER_TYPE_ANALYSIS_REPORT:
-      self._storage_writer.AddAnalysisReport(attribute_container)
+    self._storage_writer.AddEventData(event_data)
 
-    elif container_type not in (
-        self._CONTAINER_TYPE_TASK_COMPLETION, self._CONTAINER_TYPE_TASK_START):
-      raise RuntimeError('Unsupported container type: {0:s}'.format(
-          container_type))
+    identifier = event_data.GetIdentifier()
+    self._event_data_identifier_mappings[lookup_key] = identifier
+
+  def _AddEventSource(self, event_source):
+    """Adds an event source.
+
+    Args:
+      event_source (EventSource): event source.
+    """
+    self._storage_writer.AddEventSource(event_source)
+
+  def _AddEventTag(self, event_tag):
+    """Adds an event tag.
+
+    Args:
+      event_tag (EventTag): event tag.
+    """
+    self._storage_writer.AddEventTag(event_tag)
 
   def _Close(self):
     """Closes the task storage after reading."""
     self._connection.close()
     self._connection = None
     self._cursor = None
+
+  def _GetContainerTypes(self):
+    """Retrieves the container types to merge.
+
+    Returns:
+      list[str]: names of the container types to merge.
+    """
+    self._cursor.execute(self._TABLE_NAMES_QUERY)
+    table_names = [row[0] for row in self._cursor.fetchall()]
+
+    # Remove container types not stored in the storage file but keep
+    # the container types list in order.
+    container_types = list(self._CONTAINER_TYPES)
+    for name in set(self._CONTAINER_TYPES).difference(table_names):
+      container_types.remove(name)
+
+    return container_types
+
+  def _NextActiveContainerType(self):
+    """Determines the next active container type."""
+    self._active_container_type = self._container_types.pop(0)
+
+    method = self._add_container_type_methods.get(self._active_container_type)
+    if not method:
+      raise RuntimeError(
+          'Add method missing for active container type: {0:s}'.format(
+              self._active_container_type))
+
+    self._add_active_container_method = method
+
+    query = 'SELECT _identifier, _data FROM {0:s}'.format(
+        self._active_container_type)
+    self._cursor.execute(query)
+
+    self._active_cursor = self._cursor
 
   def _Open(self):
     """Opens the task storage for reading."""
@@ -123,7 +189,7 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
     self._cursor = self._connection.cursor()
 
   def _ReadStorageMetadata(self):
-    """Reads the storage metadata.
+    """Reads the task storage metadata.
 
     Returns:
       bool: True if the storage metadata was read.
@@ -149,31 +215,19 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
       bool: True if the entire task storage file has been merged.
 
     Raises:
+      RuntimeError: if the add method for the active attribute container
+          type is missing.
       OSError: if the task storage file cannot be deleted.
     """
     if not self._cursor:
       self._Open()
       self._ReadStorageMetadata()
-
-      self._cursor.execute(self._TABLE_NAMES_QUERY)
-      table_names = [row[0] for row in self._cursor.fetchall()]
-
-      # Remove container types not stored in the storage file but keep
-      # the container types list in order.
-      self._container_types = list(self._CONTAINER_TYPES)
-      for name in set(self._CONTAINER_TYPES).difference(table_names):
-        self._container_types.remove(name)
+      self._container_types = self._GetContainerTypes()
 
     number_of_containers = 0
     while self._active_cursor or self._container_types:
       if not self._active_cursor:
-        self._active_container_type = self._container_types.pop(0)
-
-        query = 'SELECT _identifier, _data FROM {0:s}'.format(
-            self._active_container_type)
-        self._cursor.execute(query)
-
-        self._active_cursor = self._cursor
+        self._NextActiveContainerType()
 
       if maximum_number_of_containers > 0:
         number_of_rows = maximum_number_of_containers - number_of_containers
@@ -209,7 +263,7 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
         if callback:
           callback(self._storage_writer, attribute_container)
 
-        self._AddAttributeContainer(attribute_container)
+        self._add_active_container_method(attribute_container)
 
         number_of_containers += 1
 
