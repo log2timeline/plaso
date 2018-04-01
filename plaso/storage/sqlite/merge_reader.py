@@ -10,8 +10,8 @@ import zlib
 from plaso.containers import errors
 from plaso.containers import event_sources
 from plaso.containers import events
-from plaso.containers import tasks
 from plaso.containers import reports
+from plaso.containers import tasks
 from plaso.lib import definitions
 from plaso.storage import identifiers
 from plaso.storage import interface
