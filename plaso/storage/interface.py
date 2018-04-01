@@ -1090,25 +1090,25 @@ class StorageFileWriter(StorageWriter):
     """
 
   def _GetMergeTaskStorageFilePath(self, task):
-    """Retrieves the path of a task storage file ready to be merged.
+    """Retrieves the path of a task storage file in the merge directory.
 
     Args:
       task (Task): task.
 
     Returns:
-      str: path of a task storage file ready to be merged.
+      str: path of a task storage file file in the merge directory.
     """
     filename = '{0:s}.plaso'.format(task.identifier)
     return os.path.join(self._merge_task_storage_path, filename)
 
   def _GetTaskStorageFilePath(self, task):
-    """Retrieves the path of a task storage file.
+    """Retrieves the path of a task storage file in the temporary directory.
 
     Args:
       task (Task): task.
 
     Returns:
-      str: path of a task storage file.
+      str: path of a task storage file in the temporary directory.
     """
     filename = '{0:s}.plaso'.format(task.identifier)
     return os.path.join(self._task_storage_path, filename)
