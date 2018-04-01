@@ -8,6 +8,11 @@ import datetime
 import locale
 import sys
 
+try:
+  import resource
+except ImportError:
+  resource = None
+
 import plaso
 
 from plaso.cli import logger
@@ -67,6 +72,14 @@ class CLITool(object):
     self.list_timezones = False
     self.preferred_encoding = preferred_encoding
 
+  def _CanEnforceProcessMemoryLimit(self):
+    """Determines if a process memory limit can be enforced.
+
+    Returns:
+      bool: True if a process memory limit can be enforced, False otherwise.
+    """
+    return bool(resource)
+
   def _EncodeString(self, string):
     """Encodes a string in the preferred encoding.
 
@@ -91,6 +104,23 @@ class CLITool(object):
           self.preferred_encoding, errors=self._encode_errors)
 
     return encoded_string
+
+  def _EnforceProcessMemoryLimit(self, memory_limit):
+    """Enforces a process memory limit.
+
+    Args:
+      memory_limit (int): maximum number of bytes the process is allowed
+          to allocate, where 0 represents no limit and None a default of
+          4 GiB.
+    """
+    # Resource is not supported on Windows.
+    if resource:
+      if memory_limit is None:
+        memory_limit = 4 * 1024 * 1024 * 1024
+      elif memory_limit == 0:
+        memory_limit = resource.RLIM_INFINITY
+
+      resource.setrlimit(resource.RLIMIT_DATA, (memory_limit, memory_limit))
 
   def _ParseInformationalOptions(self, options):
     """Parses the informational options.

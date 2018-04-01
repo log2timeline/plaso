@@ -48,6 +48,7 @@ class PinfoTool(
     self._compare_storage_file_path = None
     self._output_filename = None
     self._output_format = None
+    self._process_memory_limit = None
     self._storage_file_path = None
 
     self._verbose = False
@@ -547,8 +548,11 @@ class PinfoTool(
 
     self.AddBasicOptions(argument_parser)
 
+    argument_helper_names = ['storage_file']
+    if self._CanEnforceProcessMemoryLimit():
+      argument_helper_names.append('process_resources')
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_parser, names=['storage_file'])
+        argument_parser, names=argument_helper_names)
 
     argument_parser.add_argument(
         '--compare', dest='compare_storage_file', type=str,
@@ -608,8 +612,9 @@ class PinfoTool(
 
     self._output_filename = getattr(options, 'write', None)
 
+    argument_helper_names = ['process_resources', 'storage_file']
     helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=['storage_file'])
+        options, self, names=argument_helper_names)
 
     # TODO: move check into _CheckStorageFile.
     if not self._storage_file_path:
@@ -637,6 +642,8 @@ class PinfoTool(
             'Output file already exists: {0:s}.'.format(self._output_filename))
       output_file_object = open(self._output_filename, 'wb')
       self._output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+    self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
   def PrintStorageInformation(self):
     """Prints the storage information."""

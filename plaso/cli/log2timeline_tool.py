@@ -108,7 +108,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
     self._stdout_output_writer = isinstance(
         self._output_writer, tools.StdoutOutputWriter)
-    self._use_zeromq = True
     self._worker_memory_limit = None
 
     self.dependencies_check = True
@@ -141,44 +140,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     return_dict['Parser Presets'] = presets_information
 
     return return_dict
-
-  def _ParseProcessingOptions(self, options):
-    """Parses the processing options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    self._use_zeromq = getattr(options, 'use_zeromq', True)
-
-    self._single_process_mode = getattr(options, 'single_process', False)
-
-    helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=['temporary_directory', 'workers'])
-
-    # TODO: add code to parse the worker options.
-
-  def AddProcessingOptions(self, argument_group):
-    """Adds the processing options to the argument group.
-
-    Args:
-      argument_group (argparse._ArgumentGroup): argparse argument group.
-    """
-    argument_group.add_argument(
-        '--disable_zeromq', '--disable-zeromq', action='store_false',
-        dest='use_zeromq', default=True, help=(
-            'Disable queueing using ZeroMQ. A Multiprocessing queue will be '
-            'used instead.'))
-
-    argument_group.add_argument(
-        '--single_process', '--single-process', dest='single_process',
-        action='store_true', default=False, help=(
-            'Indicate that the tool should run in a single process.'))
-
-    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_group, names=['temporary_directory', 'workers'])
 
   def ParseArguments(self):
     """Parses the command line arguments.
@@ -396,6 +357,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         options, self, names=['status_view'])
 
     self._enable_sigsegv_handler = getattr(options, 'sigsegv_handler', False)
+
+    self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
   def ExtractEventsFromSources(self):
     """Processes the sources and extracts events.

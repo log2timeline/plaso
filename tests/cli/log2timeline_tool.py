@@ -9,6 +9,11 @@ import os
 import platform
 import unittest
 
+try:
+  import resource
+except ImportError:
+  resource = None
+
 from plaso.cli import log2timeline_tool
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -25,10 +30,12 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
   _BDE_PASSWORD = 'bde-TEST'
 
-  _EXPECTED_PROCESSING_OPTIONS = ("""\
-usage: log2timeline_test.py [--disable_zeromq] [--single_process]
+  if resource is None:
+    _EXPECTED_PROCESSING_OPTIONS = ("""\
+usage: log2timeline_test.py [--single_process]
                             [--temporary_directory DIRECTORY]
-                            [--worker-memory-limit SIZE] [--workers WORKERS]
+                            [--worker_memory_limit SIZE] [--workers WORKERS]
+                            [--disable_zeromq]
 
 Test argument parser.
 
@@ -41,11 +48,48 @@ optional arguments:
   --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
                         Path to the directory that should be used to store
                         temporary files created during processing.
-  --worker-memory-limit SIZE, --worker_memory_limit SIZE
-                        Maximum amount of memory a worker process is allowed
-                        to consume, where 0 represents no limit [defaults to 2
-                        GiB].
-  --workers WORKERS     The number of worker processes [defaults to available
+  --worker_memory_limit SIZE, --worker-memory-limit SIZE
+                        Maximum amount of memory (data segment and shared
+                        memory) a worker process is allowed to consume in
+                        bytes, where 0 represents no limit. The default limit
+                        is 2147483648 (2 GiB). If a worker process exceeds
+                        this limit is is killed by the main (foreman) process.
+  --workers WORKERS     Number of worker processes [defaults to available
+                        system CPUs minus one].
+""")
+  else:
+    _EXPECTED_PROCESSING_OPTIONS = ("""\
+usage: log2timeline_test.py [--single_process] [--process_memory_limit SIZE]
+                            [--temporary_directory DIRECTORY]
+                            [--worker_memory_limit SIZE] [--workers WORKERS]
+                            [--disable_zeromq]
+
+Test argument parser.
+
+optional arguments:
+  --disable_zeromq, --disable-zeromq
+                        Disable queueing using ZeroMQ. A Multiprocessing queue
+                        will be used instead.
+  --process_memory_limit SIZE, --process-memory-limit SIZE
+                        Maximum amount of memory (data segment) a process is
+                        allowed to allocate in bytes, where 0 represents no
+                        limit. The default limit is 4294967296 (4 GiB). This
+                        applies to both the main (foreman) process and the
+                        worker processes. This limit is enforced by the
+                        operating system and will supersede the worker memory
+                        limit (--worker_memory_limit).
+  --single_process, --single-process
+                        Indicate that the tool should run in a single process.
+  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
+                        Path to the directory that should be used to store
+                        temporary files created during processing.
+  --worker_memory_limit SIZE, --worker-memory-limit SIZE
+                        Maximum amount of memory (data segment and shared
+                        memory) a worker process is allowed to consume in
+                        bytes, where 0 represents no limit. The default limit
+                        is 2147483648 (2 GiB). If a worker process exceeds
+                        this limit is is killed by the main (foreman) process.
+  --workers WORKERS     Number of worker processes [defaults to available
                         system CPUs minus one].
 """)
 

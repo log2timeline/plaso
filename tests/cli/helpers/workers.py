@@ -20,16 +20,18 @@ class WorkersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   # pylint: disable=no-member,protected-access
 
   _EXPECTED_OUTPUT = """\
-usage: cli_helper.py [--worker-memory-limit SIZE] [--workers WORKERS]
+usage: cli_helper.py [--worker_memory_limit SIZE] [--workers WORKERS]
 
 Test argument parser.
 
 optional arguments:
-  --worker-memory-limit SIZE, --worker_memory_limit SIZE
-                        Maximum amount of memory a worker process is allowed
-                        to consume, where 0 represents no limit [defaults to 2
-                        GiB].
-  --workers WORKERS     The number of worker processes [defaults to available
+  --worker_memory_limit SIZE, --worker-memory-limit SIZE
+                        Maximum amount of memory (data segment and shared
+                        memory) a worker process is allowed to consume in
+                        bytes, where 0 represents no limit. The default limit
+                        is 2147483648 (2 GiB). If a worker process exceeds
+                        this limit is is killed by the main (foreman) process.
+  --workers WORKERS     Number of worker processes [defaults to available
                         system CPUs minus one].
 """
 

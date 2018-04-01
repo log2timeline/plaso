@@ -8,6 +8,11 @@ import argparse
 import os
 import unittest
 
+try:
+  import resource
+except ImportError:
+  resource = None
+
 from plaso.cli import psort_tool
 from plaso.cli.helpers import interface as helpers_interface
 from plaso.cli.helpers import manager as helpers_manager
@@ -109,29 +114,57 @@ class TestOutputModuleMissingParameters(output_interface.LinearOutputModule):
 class PsortToolTest(test_lib.CLIToolTestCase):
   """Tests for the psort tool."""
 
-  _EXPECTED_PROCESSING_OPTIONS = '\n'.join([
-      ('usage: psort_test.py [--disable_zeromq] '
-       '[--temporary_directory DIRECTORY]'),
-      '                     [--worker-memory-limit SIZE]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --disable_zeromq, --disable-zeromq',
-      ('                        Disable queueing using ZeroMQ. A '
-       'Multiprocessing queue'),
-      '                        will be used instead.',
-      '  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
-      ('                        Path to the directory that should be used to '
-       'store'),
-      '                        temporary files created during processing.',
-      '  --worker-memory-limit SIZE, --worker_memory_limit SIZE',
-      ('                        Maximum amount of memory a worker process is '
-       'allowed'),
-      ('                        to consume, where 0 represents no limit '
-       '[defaults to 2'),
-      '                        GiB].',
-      ''])
+  if resource is None:
+    _EXPECTED_PROCESSING_OPTIONS = """\
+usage: psort_test.py [--temporary_directory DIRECTORY] [--disable_zeromq]
+                     [--worker-memory-limit SIZE]
+
+Test argument parser.
+
+optional arguments:
+  --disable_zeromq, --disable-zeromq
+                        Disable queueing using ZeroMQ. A Multiprocessing queue
+                        will be used instead.
+  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
+                        Path to the directory that should be used to store
+                        temporary files created during processing.
+  --worker-memory-limit SIZE, --worker_memory_limit SIZE
+                        Maximum amount of memory (data segment and shared
+                        memory) a worker process is allowed to consume in
+                        bytes, where 0 represents no limit. The default limit
+                        is 2147483648 (2 GiB). If a worker process exceeds
+                        this limit is is killed by the main (foreman) process.
+"""
+  else:
+    _EXPECTED_PROCESSING_OPTIONS = """\
+usage: psort_test.py [--process_memory_limit SIZE]
+                     [--temporary_directory DIRECTORY] [--disable_zeromq]
+                     [--worker-memory-limit SIZE]
+
+Test argument parser.
+
+optional arguments:
+  --disable_zeromq, --disable-zeromq
+                        Disable queueing using ZeroMQ. A Multiprocessing queue
+                        will be used instead.
+  --process_memory_limit SIZE, --process-memory-limit SIZE
+                        Maximum amount of memory (data segment) a process is
+                        allowed to allocate in bytes, where 0 represents no
+                        limit. The default limit is 4294967296 (4 GiB). This
+                        applies to both the main (foreman) process and the
+                        worker processes. This limit is enforced by the
+                        operating system and will supersede the worker memory
+                        limit (--worker_memory_limit).
+  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
+                        Path to the directory that should be used to store
+                        temporary files created during processing.
+  --worker-memory-limit SIZE, --worker_memory_limit SIZE
+                        Maximum amount of memory (data segment and shared
+                        memory) a worker process is allowed to consume in
+                        bytes, where 0 represents no limit. The default limit
+                        is 2147483648 (2 GiB). If a worker process exceeds
+                        this limit is is killed by the main (foreman) process.
+"""
 
   # TODO: add test for _CreateOutputModule.
   # TODO: add test for _FormatStatusTableRow.

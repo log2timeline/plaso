@@ -80,6 +80,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._filter_file = None
     self._knowledge_base = knowledge_base.KnowledgeBase()
     self._path_spec_extractor = extractors.PathSpecExtractor()
+    self._process_memory_limit = None
     self._resolver_context = context.Context()
     self._skip_duplicates = True
 
@@ -628,9 +629,11 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self.AddBasicOptions(argument_parser)
     self.AddInformationalOptions(argument_parser)
 
-    names = ['artifact_definitions', 'data_location']
+    argument_helper_names = ['artifact_definitions', 'data_location']
+    if self._CanEnforceProcessMemoryLimit():
+      argument_helper_names.append('process_resources')
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
-        argument_parser, names=names)
+        argument_parser, names=argument_helper_names)
 
     self.AddLogFileOptions(argument_parser)
 
@@ -715,14 +718,17 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     if not self._data_location:
       logger.warning('Unable to automatically determine data location.')
 
+    argument_helper_names = ['artifact_definitions', 'process_resources']
     helpers_manager.ArgumentHelperManager.ParseOptions(
-        options, self, names=['artifact_definitions'])
+        options, self, names=argument_helper_names)
 
     self._ParseFilterOptions(options)
 
     if (getattr(options, 'no_vss', False) or
         getattr(options, 'include_duplicates', False)):
       self._skip_duplicates = False
+
+    self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
   def PrintFilterCollection(self):
     """Prints the filter collection."""
