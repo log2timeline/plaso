@@ -58,6 +58,7 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
 
     Raises:
       IOError: if the input file cannot be opened.
+      RuntimeError: if an add container method is missing.
     """
     super(SQLiteStorageMergeReader, self).__init__(storage_writer)
     self._active_container_type = None
@@ -71,10 +72,18 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
     self._event_data_identifier_mappings = {}
     self._path = path
 
-    self._add_container_type_methods = {
-        container_type: getattr(self, method_name, None)
-        for container_type, method_name in (
-            self._ADD_CONTAINER_TYPE_METHODS.items())}
+    # Create a runtime lookup table for the add container type method this
+    # approach prevents having to create a series of if-else check for the
+    # container types. Also we need to generate the table at runtime seeing
+    # there are no forard function declarations in Python.
+    for container_type, method_name in self._ADD_CONTAINER_TYPE_METHODS.items():
+      method = getattr(self, method_name, None)
+      if not method:
+        raise RuntimeError(
+            'Add method missing for container type: {0:s}'.format(
+                container_type))
+
+      self._add_container_type_methods[container_type] = method
 
   def _AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
@@ -150,37 +159,23 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
   def _GetContainerTypes(self):
     """Retrieves the container types to merge.
 
+    Container types not defined in _CONTAINER_TYPES are ignored and not merged.
+
+    Specific container types reference other container types, such
+    as event referencing event data. To resulting names are ordered to ensure
+    the attribute containers are merged in the correct order.
+
     Returns:
       list[str]: names of the container types to merge.
     """
     self._cursor.execute(self._TABLE_NAMES_QUERY)
     table_names = [row[0] for row in self._cursor.fetchall()]
 
-    # Remove container types not stored in the storage file but keep
-    # the container types list in order.
-    container_types = list(self._CONTAINER_TYPES)
-    for name in set(self._CONTAINER_TYPES).difference(table_names):
-      container_types.remove(name)
+    container_types = set([
+        table_name for table_name in table_names
+        if table_name in self._CONTAINER_TYPE])
 
     return container_types
-
-  def _NextActiveContainerType(self):
-    """Determines the next active container type."""
-    self._active_container_type = self._container_types.pop(0)
-
-    method = self._add_container_type_methods.get(self._active_container_type)
-    if not method:
-      raise RuntimeError(
-          'Add method missing for active container type: {0:s}'.format(
-              self._active_container_type))
-
-    self._add_active_container_method = method
-
-    query = 'SELECT _identifier, _data FROM {0:s}'.format(
-        self._active_container_type)
-    self._cursor.execute(query)
-
-    self._active_cursor = self._cursor
 
   def _Open(self):
     """Opens the task storage for reading."""
@@ -189,17 +184,31 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
     self._cursor = self._connection.cursor()
 
   def _ReadStorageMetadata(self):
-    """Reads the task storage metadata.
-
-    Returns:
-      bool: True if the storage metadata was read.
-    """
+    """Reads the task storage metadata."""
     query = 'SELECT key, value FROM metadata'
     self._cursor.execute(query)
 
     metadata_values = {row[0]: row[1] for row in self._cursor.fetchall()}
 
     self._compression_format = metadata_values['compression_format']
+
+  def _PrepareForNextContainerType(self):
+    """Prepars for the next container type.
+
+    This method prepares the task storage for merging the next container type.
+    It set the active container type, its add method and active cursor
+    accordingly.
+    """
+    self._active_container_type = self._container_types.pop(0)
+
+    self._add_active_container_method = self._add_container_type_methods.get(
+        self._active_container_type)
+
+    query = 'SELECT _identifier, _data FROM {0:s}'.format(
+        self._active_container_type)
+    self._cursor.execute(query)
+
+    self._active_cursor = self._cursor
 
   def MergeAttributeContainers(
       self, callback=None, maximum_number_of_containers=0):
@@ -227,7 +236,7 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
     number_of_containers = 0
     while self._active_cursor or self._container_types:
       if not self._active_cursor:
-        self._NextActiveContainerType()
+        self._PrepareForNextContainerType()
 
       if maximum_number_of_containers > 0:
         number_of_rows = maximum_number_of_containers - number_of_containers

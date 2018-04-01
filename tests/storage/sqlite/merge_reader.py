@@ -79,7 +79,8 @@ class SQLiteStorageMergeReaderTest(test_lib.StorageTestCase):
 
       storage_writer.Open()
 
-      test_reader.MergeAttributeContainers()
+      result = test_reader.MergeAttributeContainers()
+      self.assertTrue(result)
 
       storage_writer.Close()
 
