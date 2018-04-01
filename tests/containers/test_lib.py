@@ -134,18 +134,27 @@ def CreateTestEvents():
 
 
 class TestAttributeContainer(interface.AttributeContainer):
-  """Class to define a test attribute container."""
+  """Test attribute container."""
+
   CONTAINER_TYPE = 'test_attribute_container'
 
 
 class TestEvent(events.EventObject):
-  """Class to define a test event."""
+  """Test event."""
+
   DATA_TYPE = 'test:event'
 
-  def __init__(self, timestamp, attributes):
-    """Initializes an event object."""
+  def __init__(self, timestamp, attributes=None):
+    """Initializes an event.
+
+    Args:
+      timestamp (int): timestamp, which contains the number of microseconds
+          since January 1, 1970, 00:00:00 UTC.
+      attributes (dict[str, object]): event attributes.
+    """
     super(TestEvent, self).__init__()
     self.timestamp = timestamp
-    self.timestamp_desc = 'Some time in the future'
+
+    attributes = attributes or {}
     for attribute, value in iter(attributes.items()):
       setattr(self, attribute, value)

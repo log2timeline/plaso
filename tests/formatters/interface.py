@@ -80,9 +80,11 @@ class ConditionalEventFormatterTest(unittest.TestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self._event_object = ConditionalTestEvent(1335791207939596, {
+    event_attributes = {
         'numeric': 12, 'description': 'this is beyond words',
-        'text': 'but we\'re still trying to say something about the event'})
+        'text': 'but we\'re still trying to say something about the event'}
+    self._event_object = ConditionalTestEvent(
+        1335791207939596, attributes=event_attributes)
 
   def testInitialization(self):
     """Tests the initialization."""
