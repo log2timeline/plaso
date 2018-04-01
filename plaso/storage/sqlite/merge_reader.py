@@ -110,6 +110,18 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
       raise RuntimeError('Unsupported container type: {0:s}'.format(
           container_type))
 
+  def _Close(self):
+    """Closes the task storage after reading."""
+    self._connection.close()
+    self._connection = None
+    self._cursor = None
+
+  def _Open(self):
+    """Opens the task storage for reading."""
+    self._connection = sqlite3.connect(
+        self._path, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+    self._cursor = self._connection.cursor()
+
   def _ReadStorageMetadata(self):
     """Reads the storage metadata.
 
@@ -140,11 +152,7 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
       OSError: if the task storage file cannot be deleted.
     """
     if not self._cursor:
-      self._connection = sqlite3.connect(
-          self._path,
-          detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
-      self._cursor = self._connection.cursor()
-
+      self._Open()
       self._ReadStorageMetadata()
 
       self._cursor.execute(self._TABLE_NAMES_QUERY)
@@ -209,9 +217,7 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
           number_of_containers >= maximum_number_of_containers):
         return False
 
-    self._connection.close()
-    self._connection = None
-    self._cursor = None
+    self._Close()
 
     os.remove(self._path)
 

@@ -10,7 +10,6 @@ import tempfile
 
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
-from plaso.storage import identifiers
 
 
 class SerializedAttributeContainerList(object):
@@ -506,40 +505,6 @@ class StorageFileMergeReader(StorageMergeReader):
     super(StorageFileMergeReader, self).__init__(storage_writer)
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
-
-  def _AddAttributeContainer(self, attribute_container):
-    """Adds a single attribute container to the storage writer.
-
-    Args:
-      attribute_container (AttributeContainer): container
-
-    Raises:
-      RuntimeError: if the attribute container type is not supported.
-    """
-    container_type = attribute_container.CONTAINER_TYPE
-    if container_type == 'event_source':
-      self._storage_writer.AddEventSource(attribute_container)
-
-    elif container_type == 'event':
-      self._storage_writer.AddEvent(attribute_container)
-
-    elif container_type == 'event_tag':
-      event_identifier = identifiers.SerializedStreamIdentifier(
-          attribute_container.event_stream_number,
-          attribute_container.event_entry_index)
-      attribute_container.SetEventIdentifier(event_identifier)
-
-      self._storage_writer.AddEventTag(attribute_container)
-
-    elif container_type == 'extraction_error':
-      self._storage_writer.AddError(attribute_container)
-
-    elif container_type == 'analysis_report':
-      self._storage_writer.AddAnalysisReport(attribute_container)
-
-    elif container_type not in ('task_completion', 'task_start'):
-      raise RuntimeError('Unsupported container type: {0:s}'.format(
-          container_type))
 
   def _DeserializeAttributeContainer(self, container_type, serialized_data):
     """Deserializes an attribute container.
