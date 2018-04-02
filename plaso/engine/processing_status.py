@@ -314,6 +314,8 @@ class ProcessingStatus(object):
     error_path_specs (list[dfvfs.PathSpec]): path specifications that
         caused critical errors during processing.
     foreman_status (ProcessingStatus): foreman processing status.
+    start_time (float): time that the processing was started. Contains the number
+        of micro seconds since January 1, 1970, 00:00:00 UTC.
     tasks_status (TasksStatus): status information about tasks.
   """
 
@@ -325,6 +327,7 @@ class ProcessingStatus(object):
     self.aborted = False
     self.error_path_specs = []
     self.foreman_status = None
+    self.start_time = time.time()
     self.tasks_status = None
 
   @property

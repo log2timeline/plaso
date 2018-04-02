@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import sys
+import time
 
 try:
   import win32api
@@ -320,6 +321,16 @@ class StatusView(object):
     if self._filter_file:
       self._output_writer.Write('Filter file\t: {0:s}\n'.format(
           self._filter_file))
+
+    if not processing_status:
+      processing_time = '00:00:00'
+    else:
+      processing_time = time.time() - processing_status.start_time
+      time_struct = time.gmtime(processing_time)
+      processing_time = time.strftime('%H:%M:%S', time_struct)
+
+    self._output_writer.Write(
+        'Processing time\t: {0:s}\n'.format(processing_time))
 
     if processing_status and processing_status.tasks_status:
       tasks_status = processing_status.tasks_status
