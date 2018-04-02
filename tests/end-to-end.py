@@ -518,8 +518,9 @@ class ExtractAndOutputTestCase(TestCase):
     extract_options = ['--status-view=none']
     extract_options.extend(test_definition.extract_options)
 
-    logging_options = test_definition.logging_options.replace(
-        '%command%', 'log2timeline')
+    logging_options = [
+        option.replace('%command%', 'log2timeline')
+        for option in test_definition.logging_options]
 
     stdout_file = os.path.join(
         temp_directory, '{0:s}-log2timeline.out'.format(test_definition.name))
@@ -649,8 +650,9 @@ class ExtractAndOutputTestCase(TestCase):
           temp_directory, test_definition.output_file)
     output_options.extend(['-w', output_file_path])
 
-    logging_options = test_definition.logging_options.replace(
-        '%command%', 'psort')
+    logging_options = [
+        option.replace('%command%', 'psort')
+        for option in test_definition.logging_options]
 
     stdout_file = os.path.join(
         temp_directory, '{0:s}-psort.out'.format(test_definition.name))
@@ -818,8 +820,9 @@ class ExtractAndOutputWithPstealTestCase(TestCase):
           temp_directory, test_definition.output_file)
     psteal_options.extend(['-w', output_file_path])
 
-    logging_options = test_definition.logging_options.replace(
-        '%command%', 'psteal')
+    logging_options = [
+        option.replace('%command%', 'psteal')
+        for option in test_definition.logging_options]
 
     stdout_file = os.path.join(
         temp_directory, '{0:s}-psteal.out'.format(test_definition.name))
@@ -949,8 +952,9 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
         '--analysis', 'tagging', '--output-format=null', '--tagging-file',
         tagging_file_path]
 
-    logging_options = test_definition.logging_options.replace(
-        '%command%', 'psort')
+    logging_options = [
+        option.replace('%command%', 'psort')
+        for option in test_definition.logging_options]
 
     stdout_file = os.path.join(
         temp_directory, '{0:s}-psort-tagging.out'.format(test_definition.name))
@@ -1085,8 +1089,9 @@ class ImageExportTestCase(TestCase):
     output_file_path = os.path.join(temp_directory, 'export')
     output_options = ['-w', output_file_path]
 
-    logging_options = test_definition.logging_options.replace(
-        '%command%', 'image_export')
+    logging_options = [
+        option.replace('%command%', 'image_export')
+        for option in test_definition.logging_options]
 
     stdout_file = os.path.join(
         temp_directory, '{0:s}-image_export.out'.format(test_definition.name))
@@ -1286,8 +1291,9 @@ class OutputTestCase(TestCase):
     if test_definition.output_filter:
       output_options.append(test_definition.output_filter)
 
-    logging_options = test_definition.logging_options.replace(
-        '%command%', 'psort')
+    logging_options = [
+        option.replace('%command%', 'psort')
+        for option in test_definition.logging_options]
 
     stdout_file = os.path.join(
         temp_directory, '{0:s}-psort.out'.format(test_definition.name))
