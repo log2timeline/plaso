@@ -42,7 +42,7 @@ then
 		sudo /usr/bin/hdiutil detach /Volumes/${PACKAGE}-*.pkg
 	done
 
-elif test ${TRAVIS_OS_NAME} = "linux";
+elif test ${TRAVIS_OS_NAME} = "linux" && test ${TARGET} != "jenkins";
 then
 	sudo rm -f /etc/apt/sources.list.d/travis_ci_zeromq3-source.list;
 

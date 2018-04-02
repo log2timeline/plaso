@@ -37,6 +37,12 @@ matrix:
     os: osx
     osx_image: xcode9.2
     language: generic
+  - env: [TARGET="jenkins", JOB_NAME="travis"]
+    os: linux
+    dist: trusty
+    sudo: required
+    group: edge
+    python: 2.7
   allow_failures:
   - env: TARGET="linux-python34"
   - env: [TARGET="linux-python34-tox", TOXENV="py34"]
