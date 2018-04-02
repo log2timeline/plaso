@@ -5,6 +5,9 @@
 # Fail on error.
 set -e
 
+# Enable jobs support when running a script.
+set -m
+
 CONFIGURATION_FILE="${JOB_NAME}.ini";
 
 SOURCES_DIRECTORY="/media/greendale_images";
@@ -29,7 +32,13 @@ then
 	CONFIGURATION_FILE="config/jenkins/greendale/${CONFIGURATION_FILE}";
 fi
 
-PYTHONPATH=. ./tests/end-to-end.py --config ${CONFIGURATION_FILE} --sources-directory ${SOURCES_DIRECTORY} --tools-directory ./tools --results-directory ${RESULTS_DIRECTORY} --references-directory ${REFERENCES_DIRECTORY}
+# Start the end-to-end tests in the background so we can capture the PID of
+# the process while the script is running.
+PYTHONPATH=. ./tests/end-to-end.py --config ${CONFIGURATION_FILE} --sources-directory ${SOURCES_DIRECTORY} --tools-directory ./tools --results-directory ${RESULTS_DIRECTORY} --references-directory ${REFERENCES_DIRECTORY} &
+
+echo "End-to-end tests stared (PID: $!)";
+
+fg
 
 # On Travis-Ci print the stdout and stderr output to troubleshoot potential issues. 
 if test ${JOB_NAME} = 'travis';
