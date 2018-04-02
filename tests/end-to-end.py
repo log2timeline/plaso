@@ -518,13 +518,16 @@ class ExtractAndOutputTestCase(TestCase):
     extract_options = ['--status-view=none']
     extract_options.extend(test_definition.extract_options)
 
+    logging_options = test_definition.logging_options.replace(
+        '%command%', 'log2timeline')
+
     stdout_file = os.path.join(
         temp_directory, '{0:s}-log2timeline.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, '{0:s}-log2timeline.err'.format(test_definition.name))
     command = [self._log2timeline_path]
     command.extend(extract_options)
-    command.extend(test_definition.logging_options)
+    command.extend(logging_options)
     command.extend(test_definition.profiling_options)
     command.extend([storage_file, source_path])
 
@@ -646,6 +649,9 @@ class ExtractAndOutputTestCase(TestCase):
           temp_directory, test_definition.output_file)
     output_options.extend(['-w', output_file_path])
 
+    logging_options = test_definition.logging_options.replace(
+        '%command%', 'psort')
+
     stdout_file = os.path.join(
         temp_directory, '{0:s}-psort.out'.format(test_definition.name))
     stderr_file = os.path.join(
@@ -653,7 +659,7 @@ class ExtractAndOutputTestCase(TestCase):
 
     command = [self._psort_path]
     command.extend(output_options)
-    command.extend(test_definition.logging_options)
+    command.extend(logging_options)
     command.extend(test_definition.profiling_options)
     command.append(storage_file)
 
@@ -812,13 +818,17 @@ class ExtractAndOutputWithPstealTestCase(TestCase):
           temp_directory, test_definition.output_file)
     psteal_options.extend(['-w', output_file_path])
 
+    logging_options = test_definition.logging_options.replace(
+        '%command%', 'psteal')
+
     stdout_file = os.path.join(
         temp_directory, '{0:s}-psteal.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, '{0:s}-psteal.err'.format(test_definition.name))
+
     command = [self._psteal_path]
     command.extend(psteal_options)
-    command.extend(test_definition.logging_options)
+    command.extend(logging_options)
     command.extend(test_definition.profiling_options)
 
     with open(stdout_file, 'w') as stdout:
@@ -939,13 +949,17 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
         '--analysis', 'tagging', '--output-format=null', '--tagging-file',
         tagging_file_path]
 
+    logging_options = test_definition.logging_options.replace(
+        '%command%', 'psort')
+
     stdout_file = os.path.join(
         temp_directory, '{0:s}-psort-tagging.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, '{0:s}-psort-tagging.err'.format(test_definition.name))
+
     command = [self._psort_path]
     command.extend(tagging_options)
-    command.extend(test_definition.logging_options)
+    command.extend(logging_options)
     command.extend(test_definition.profiling_options)
     command.append(storage_file)
 
@@ -1071,13 +1085,17 @@ class ImageExportTestCase(TestCase):
     output_file_path = os.path.join(temp_directory, 'export')
     output_options = ['-w', output_file_path]
 
+    logging_options = test_definition.logging_options.replace(
+        '%command%', 'image_export')
+
     stdout_file = os.path.join(
         temp_directory, '{0:s}-image_export.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, '{0:s}-image_export.err'.format(test_definition.name))
+
     command = [self._image_export_path]
     command.extend(output_options)
-    command.extend(test_definition.logging_options)
+    command.extend(logging_options)
     command.extend(test_definition.profiling_options)
     command.append(source_path)
 
@@ -1268,13 +1286,17 @@ class OutputTestCase(TestCase):
     if test_definition.output_filter:
       output_options.append(test_definition.output_filter)
 
+    logging_options = test_definition.logging_options.replace(
+        '%command%', 'psort')
+
     stdout_file = os.path.join(
         temp_directory, '{0:s}-psort.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, '{0:s}-psort.err'.format(test_definition.name))
+
     command = [self._psort_path]
     command.extend(output_options)
-    command.extend(test_definition.logging_options)
+    command.extend(logging_options)
     command.extend(test_definition.profiling_options)
 
     with open(stdout_file, 'w') as stdout:
