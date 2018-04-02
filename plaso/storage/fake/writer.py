@@ -363,6 +363,19 @@ class FakeStorageWriter(interface.StorageWriter):
 
     return iter(event_heap.PopEvents())
 
+  def FinalizeProcessedTaskStorage(self, task):
+    """Finalized a proccessed a task storage.
+
+    Args:
+      task (Task): task.
+
+    Raises:
+      IOError: if the task storage does not exist.
+    """
+    if task.identifier not in self._task_storage_writers:
+      raise IOError('Storage writer for task: {0:s} does not exist.'.format(
+          task.identifier))
+
   def Open(self):
     """Opens the storage writer.
 
@@ -379,19 +392,6 @@ class FakeStorageWriter(interface.StorageWriter):
 
   def PrepareMergeTaskStorage(self, task):
     """Prepares a task storage for merging.
-
-    Args:
-      task (Task): task.
-
-    Raises:
-      IOError: if the task storage does not exist.
-    """
-    if task.identifier not in self._task_storage_writers:
-      raise IOError('Storage writer for task: {0:s} does not exist.'.format(
-          task.identifier))
-
-  def PrepareToMergeTaskStorage(self, task):
-    """Prepares a task storage for pending merge.
 
     Args:
       task (Task): task.
