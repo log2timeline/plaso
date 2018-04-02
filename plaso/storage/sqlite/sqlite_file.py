@@ -664,9 +664,6 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       self._WriteSerializedAttributeContainerList(
           self._CONTAINER_TYPE_EXTRACTION_ERROR)
 
-    if self._serializers_profiler:
-      self._serializers_profiler.Write()
-
     if self._connection:
       # We need to run commit or not all data is stored in the database.
       self._connection.commit()
