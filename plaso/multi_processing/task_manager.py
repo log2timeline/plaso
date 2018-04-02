@@ -320,12 +320,30 @@ class TaskManager(object):
     with self._lock:
       return list(self._tasks_abandoned.values())
 
+  def GetMergeableTask(self, task_identifier):
+    """Retrieves the task when it is mergeable.
+
+    Args:
+      task_identifier (str): unique identifier of the task.
+
+    Returns:
+      Task: a task that is mergeable or None if the task identifier was not
+          found or the task is not mergeable.
+    """
+    with self._lock:
+      task = self._tasks_processing.get(task_identifier, None)
+      if not task:
+        task = self._tasks_queued.get(task_identifier, None)
+      if not task:
+        task = self._tasks_abandoned.get(task_identifier, None)
+
+    return task
+
   def GetProcessedTaskByIdentifier(self, task_identifier):
     """Retrieves a task that has been processed.
 
     Args:
       task_identifier (str): unique identifier of the task.
-
     Returns:
       Task: a task that has been processed.
 
@@ -475,18 +493,6 @@ class TaskManager(object):
               task.identifier))
     else:
       logger.debug('Task {0:s} is pending merge.'.format(task.identifier))
-
-  def UpdateTasksAsPendingMerge(self, mergeable_tasks):
-    """Updates the task manager to reflect that tasks are ready to be merged.
-
-    Args:
-      mergeable_tasks (list[Task]): tasks that are ready to be merged.
-
-    Raises:
-      KeyError: if a task was not processing or abandoned.
-    """
-    for task in mergeable_tasks:
-      self.UpdateTaskAsPendingMerge(task)
 
   def UpdateTaskAsProcessingByIdentifier(self, task_identifier):
     """Updates the task manager to reflect the task is processing.

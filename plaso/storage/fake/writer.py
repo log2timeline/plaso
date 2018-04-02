@@ -390,6 +390,19 @@ class FakeStorageWriter(interface.StorageWriter):
       raise IOError('Storage writer for task: {0:s} does not exist.'.format(
           task.identifier))
 
+  def PrepareToMergeTaskStorage(self, task):
+    """Prepares a task storage for pending merge.
+
+    Args:
+      task (Task): task.
+
+    Raises:
+      IOError: if the task storage does not exist.
+    """
+    if task.identifier not in self._task_storage_writers:
+      raise IOError('Storage writer for task: {0:s} does not exist.'.format(
+          task.identifier))
+
   def ReadPreprocessingInformation(self, unused_knowledge_base):
     """Reads preprocessing information.
 
@@ -425,6 +438,14 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Args:
       storage_profiler (StorageProfiler): storage profile.
+    """
+    pass
+
+  def SetStorageProfiler(self, storage_profiler):
+    """Sets the storage profiler.
+
+    Args:
+      storage_profiler (StorageProfiler): storage profiler.
     """
     pass
 

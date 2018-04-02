@@ -201,7 +201,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
         storage_writer.SetStorageProfiler(None)
 
     try:
-      self._storage_writer.PrepareMergeTaskStorage(task)
+      self._storage_writer.PrepareToMergeTaskStorage(task)
     except IOError:
       pass
 
