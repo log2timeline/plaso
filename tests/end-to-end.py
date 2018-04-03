@@ -518,12 +518,18 @@ class ExtractAndOutputTestCase(TestCase):
     extract_options = ['--status-view=none']
     extract_options.extend(test_definition.extract_options)
 
+    logging_options = [
+        option.replace('%command%', 'log2timeline')
+        for option in test_definition.logging_options]
+
     stdout_file = os.path.join(
         temp_directory, '{0:s}-log2timeline.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, '{0:s}-log2timeline.err'.format(test_definition.name))
     command = [self._log2timeline_path]
     command.extend(extract_options)
+    command.extend(logging_options)
+    command.extend(test_definition.profiling_options)
     command.extend([storage_file, source_path])
 
     with open(stdout_file, 'w') as stdout:
@@ -644,6 +650,10 @@ class ExtractAndOutputTestCase(TestCase):
           temp_directory, test_definition.output_file)
     output_options.extend(['-w', output_file_path])
 
+    logging_options = [
+        option.replace('%command%', 'psort')
+        for option in test_definition.logging_options]
+
     stdout_file = os.path.join(
         temp_directory, '{0:s}-psort.out'.format(test_definition.name))
     stderr_file = os.path.join(
@@ -651,6 +661,8 @@ class ExtractAndOutputTestCase(TestCase):
 
     command = [self._psort_path]
     command.extend(output_options)
+    command.extend(logging_options)
+    command.extend(test_definition.profiling_options)
     command.append(storage_file)
 
     with open(stdout_file, 'w') as stdout:
@@ -685,6 +697,9 @@ class ExtractAndOutputTestCase(TestCase):
     test_definition.extract_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'extract_options', default=[], split_string=True)
 
+    test_definition.logging_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'logging_options', default=[], split_string=True)
+
     test_definition.output_file = test_definition_reader.GetConfigValue(
         test_definition.name, 'output_file')
 
@@ -693,6 +708,10 @@ class ExtractAndOutputTestCase(TestCase):
 
     test_definition.output_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'output_options', default=[], split_string=True)
+
+    test_definition.profiling_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'profiling_options', default=[],
+        split_string=True)
 
     test_definition.reference_storage_file = (
         test_definition_reader.GetConfigValue(
@@ -801,12 +820,19 @@ class ExtractAndOutputWithPstealTestCase(TestCase):
           temp_directory, test_definition.output_file)
     psteal_options.extend(['-w', output_file_path])
 
+    logging_options = [
+        option.replace('%command%', 'psteal')
+        for option in test_definition.logging_options]
+
     stdout_file = os.path.join(
         temp_directory, '{0:s}-psteal.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, '{0:s}-psteal.err'.format(test_definition.name))
+
     command = [self._psteal_path]
     command.extend(psteal_options)
+    command.extend(logging_options)
+    command.extend(test_definition.profiling_options)
 
     with open(stdout_file, 'w') as stdout:
       with open(stderr_file, 'w') as stderr:
@@ -840,8 +866,8 @@ class ExtractAndOutputWithPstealTestCase(TestCase):
     test_definition.extract_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'extract_options', default=[], split_string=True)
 
-    if test_definition.extract_options is None:
-      test_definition.extract_options = []
+    test_definition.logging_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'logging_options', default=[], split_string=True)
 
     test_definition.output_file = test_definition_reader.GetConfigValue(
         test_definition.name, 'output_file')
@@ -851,6 +877,10 @@ class ExtractAndOutputWithPstealTestCase(TestCase):
 
     test_definition.output_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'output_options', default=[], split_string=True)
+
+    test_definition.profiling_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'profiling_options', default=[],
+        split_string=True)
 
     test_definition.reference_storage_file = (
         test_definition_reader.GetConfigValue(
@@ -922,12 +952,19 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
         '--analysis', 'tagging', '--output-format=null', '--tagging-file',
         tagging_file_path]
 
+    logging_options = [
+        option.replace('%command%', 'psort')
+        for option in test_definition.logging_options]
+
     stdout_file = os.path.join(
         temp_directory, '{0:s}-psort-tagging.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, '{0:s}-psort-tagging.err'.format(test_definition.name))
+
     command = [self._psort_path]
     command.extend(tagging_options)
+    command.extend(logging_options)
+    command.extend(test_definition.profiling_options)
     command.append(storage_file)
 
     with open(stdout_file, 'w') as stdout:
@@ -1052,12 +1089,19 @@ class ImageExportTestCase(TestCase):
     output_file_path = os.path.join(temp_directory, 'export')
     output_options = ['-w', output_file_path]
 
+    logging_options = [
+        option.replace('%command%', 'image_export')
+        for option in test_definition.logging_options]
+
     stdout_file = os.path.join(
         temp_directory, '{0:s}-image_export.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, '{0:s}-image_export.err'.format(test_definition.name))
+
     command = [self._image_export_path]
     command.extend(output_options)
+    command.extend(logging_options)
+    command.extend(test_definition.profiling_options)
     command.append(source_path)
 
     with open(stdout_file, 'w') as stdout:
@@ -1090,6 +1134,13 @@ class ImageExportTestCase(TestCase):
     """
     test_definition.filter_file = test_definition_reader.GetConfigValue(
         test_definition.name, 'filter_file')
+
+    test_definition.logging_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'logging_options', default=[], split_string=True)
+
+    test_definition.profiling_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'profiling_options', default=[],
+        split_string=True)
 
     test_definition.source = test_definition_reader.GetConfigValue(
         test_definition.name, 'source')
@@ -1240,12 +1291,19 @@ class OutputTestCase(TestCase):
     if test_definition.output_filter:
       output_options.append(test_definition.output_filter)
 
+    logging_options = [
+        option.replace('%command%', 'psort')
+        for option in test_definition.logging_options]
+
     stdout_file = os.path.join(
         temp_directory, '{0:s}-psort.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, '{0:s}-psort.err'.format(test_definition.name))
+
     command = [self._psort_path]
     command.extend(output_options)
+    command.extend(logging_options)
+    command.extend(test_definition.profiling_options)
 
     with open(stdout_file, 'w') as stdout:
       with open(stderr_file, 'w') as stderr:
@@ -1276,6 +1334,9 @@ class OutputTestCase(TestCase):
     Returns:
       bool: True if the read was successful.
     """
+    test_definition.logging_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'logging_options', default=[], split_string=True)
+
     test_definition.output_file = test_definition_reader.GetConfigValue(
         test_definition.name, 'output_file')
 
@@ -1287,6 +1348,10 @@ class OutputTestCase(TestCase):
 
     test_definition.output_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'output_options', default=[], split_string=True)
+
+    test_definition.profiling_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'profiling_options', default=[],
+        split_string=True)
 
     test_definition.reference_output_file = (
         test_definition_reader.GetConfigValue(
