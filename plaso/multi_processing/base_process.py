@@ -12,13 +12,14 @@ import signal
 import time
 
 from plaso.engine import process_info
+from plaso.engine import profilers
 from plaso.lib import loggers
 from plaso.multi_processing import logger
 from plaso.multi_processing import plaso_xmlrpc
 
 
 class MultiProcessBaseProcess(multiprocessing.Process):
-  """Class that defines the multi-processing process interface.
+  """Multi-processing process interface.
 
   Attributes:
     rpc_port (int): port number of the process status RPC server.
@@ -27,10 +28,13 @@ class MultiProcessBaseProcess(multiprocessing.Process):
   _NUMBER_OF_RPC_SERVER_START_ATTEMPTS = 14
   _PROCESS_JOIN_TIMEOUT = 5.0
 
-  def __init__(self, enable_sigsegv_handler=False, **kwargs):
-    """Initializes a process object.
+  def __init__(
+      self, processing_configuration, enable_sigsegv_handler=False, **kwargs):
+    """Initializes a process.
 
     Args:
+      processing_configuration (ProcessingConfiguration): processing
+          configuration.
       enable_sigsegv_handler (Optional[bool]): True if the SIGSEGV handler
           should be enabled.
       kwargs (dict[str,object]): keyword arguments to pass to
@@ -39,15 +43,32 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     super(MultiProcessBaseProcess, self).__init__(**kwargs)
     self._debug_output = False
     self._enable_sigsegv_handler = enable_sigsegv_handler
+    self._guppy_memory_profiler = None
     self._log_filename = None
+    self._memory_profiler = None
     self._original_sigsegv_handler = None
+    self._parsers_profiler = None
     # TODO: check if this can be replaced by self.pid or does this only apply
     # to the parent process?
     self._pid = None
+    self._processing_configuration = processing_configuration
     self._process_information = None
+    self._processing_profiler = None
     self._quiet_mode = False
     self._rpc_server = None
+    self._serializers_profiler = None
     self._status_is_running = False
+    self._storage_profiler = None
+
+    if self._processing_configuration:
+      self._debug_output = self._processing_configuration.debug_output
+
+      if processing_configuration.log_filename:
+        log_path = os.path.dirname(self._processing_configuration.log_filename)
+        log_filename = os.path.basename(
+            self._processing_configuration.log_filename)
+        log_filename = '{0:s}_{1:s}'.format(self._name, log_filename)
+        self._log_filename = os.path.join(log_path, log_filename)
 
     # We need to share the RPC port number with the engine process.
     self.rpc_port = multiprocessing.Value('I', 0)
@@ -148,6 +169,48 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     logger.debug(
         'Process: {0!s} process status RPC server started'.format(self._name))
 
+  def _StartProfiling(self, configuration):
+    """Starts profiling.
+
+    Args:
+      configuration (ProfilingConfiguration): profiling configuration.
+    """
+    if not configuration:
+      return
+
+    if configuration.HaveProfileMemoryGuppy():
+      self._guppy_memory_profiler = profilers.GuppyMemoryProfiler(
+          self._name, configuration)
+      self._guppy_memory_profiler.Start()
+
+    if configuration.HaveProfileMemory():
+      self._memory_profiler = profilers.MemoryProfiler(
+          self._name, configuration)
+      self._memory_profiler.Start()
+
+    if configuration.HaveProfileParsers():
+      identifier = '{0:s}-parsers'.format(self._name)
+      self._parsers_profiler = profilers.ParsersProfiler(
+          identifier, configuration)
+      self._parsers_profiler.Start()
+
+    if configuration.HaveProfileProcessing():
+      identifier = '{0:s}-processing'.format(self._name)
+      self._processing_profiler = profilers.ProcessingProfiler(
+          identifier, configuration)
+      self._processing_profiler.Start()
+
+    if configuration.HaveProfileSerializers():
+      identifier = '{0:s}-serializers'.format(self._name)
+      self._serializers_profiler = profilers.SerializersProfiler(
+          identifier, configuration)
+      self._serializers_profiler.Start()
+
+    if configuration.HaveProfileStorage():
+      self._storage_profiler = profilers.StorageProfiler(
+          self._name, configuration)
+      self._storage_profiler.Start()
+
   def _StopProcessStatusRPCServer(self):
     """Stops the process status RPC server."""
     if not self._rpc_server:
@@ -163,6 +226,33 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
     logger.debug(
         'Process: {0!s} process status RPC server stopped'.format(self._name))
+
+  def _StopProfiling(self):
+    """Stops profiling."""
+    if self._guppy_memory_profiler:
+      self._guppy_memory_profiler.Sample()
+      self._guppy_memory_profiler.Stop()
+      self._guppy_memory_profiler = None
+
+    if self._memory_profiler:
+      self._memory_profiler.Stop()
+      self._memory_profiler = None
+
+    if self._parsers_profiler:
+      self._parsers_profiler.Stop()
+      self._parsers_profiler = None
+
+    if self._processing_profiler:
+      self._processing_profiler.Stop()
+      self._processing_profiler = None
+
+    if self._serializers_profiler:
+      self._serializers_profiler.Stop()
+      self._serializers_profiler = None
+
+    if self._storage_profiler:
+      self._storage_profiler.Stop()
+      self._storage_profiler = None
 
   def _WaitForStatusNotRunning(self):
     """Waits for the status is running to change to false."""

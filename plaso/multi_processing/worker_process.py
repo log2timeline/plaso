@@ -3,14 +3,11 @@
 
 from __future__ import unicode_literals
 
-import os
-
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver
 
 from plaso.engine import plaso_queue
-from plaso.engine import profilers
 from plaso.engine import worker
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -40,37 +37,20 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
           configuration.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
-    super(WorkerProcess, self).__init__(**kwargs)
+    super(WorkerProcess, self).__init__(processing_configuration, **kwargs)
     self._abort = False
     self._buffer_size = 0
     self._current_display_name = ''
     self._extraction_worker = None
-    self._guppy_memory_profiler = None
     self._knowledge_base = knowledge_base
-    self._memory_profiler = None
     self._number_of_consumed_events = 0
     self._number_of_consumed_sources = 0
     self._parser_mediator = None
-    self._parsers_profiler = None
-    self._processing_configuration = processing_configuration
-    self._processing_profiler = None
-    self._serializers_profiler = None
     self._session_identifier = session_identifier
     self._status = definitions.PROCESSING_STATUS_INITIALIZED
-    self._storage_profiler = None
     self._storage_writer = storage_writer
     self._task = None
     self._task_queue = task_queue
-
-    if self._processing_configuration:
-      self._debug_output = self._processing_configuration.debug_output
-
-      if processing_configuration.log_filename:
-        log_path = os.path.dirname(self._processing_configuration.log_filename)
-        log_filename = os.path.basename(
-            self._processing_configuration.log_filename)
-        log_filename = '{0:s}_{1:s}'.format(self._name, log_filename)
-        self._log_filename = os.path.join(log_path, log_filename)
 
   def _GetStatus(self):
     """Retrieves status information.
@@ -315,75 +295,6 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       pass
 
     self._task = None
-
-  def _StartProfiling(self, configuration):
-    """Starts profiling.
-
-    Args:
-      configuration (ProfilingConfiguration): profiling configuration.
-    """
-    if not configuration:
-      return
-
-    if configuration.HaveProfileMemoryGuppy():
-      self._guppy_memory_profiler = profilers.GuppyMemoryProfiler(
-          self._name, configuration)
-      self._guppy_memory_profiler.Start()
-
-    if configuration.HaveProfileMemory():
-      self._memory_profiler = profilers.MemoryProfiler(
-          self._name, configuration)
-      self._memory_profiler.Start()
-
-    if configuration.HaveProfileParsers():
-      identifier = '{0:s}-parsers'.format(self._name)
-      self._parsers_profiler = profilers.ParsersProfiler(
-          identifier, configuration)
-      self._parsers_profiler.Start()
-
-    if configuration.HaveProfileProcessing():
-      identifier = '{0:s}-processing'.format(self._name)
-      self._processing_profiler = profilers.ProcessingProfiler(
-          identifier, configuration)
-      self._processing_profiler.Start()
-
-    if configuration.HaveProfileSerializers():
-      identifier = '{0:s}-serializers'.format(self._name)
-      self._serializers_profiler = profilers.SerializersProfiler(
-          identifier, configuration)
-      self._serializers_profiler.Start()
-
-    if configuration.HaveProfileStorage():
-      self._storage_profiler = profilers.StorageProfiler(
-          self._name, configuration)
-      self._storage_profiler.Start()
-
-  def _StopProfiling(self):
-    """Stops profiling."""
-    if self._guppy_memory_profiler:
-      self._guppy_memory_profiler.Sample()
-      self._guppy_memory_profiler.Stop()
-      self._guppy_memory_profiler = None
-
-    if self._memory_profiler:
-      self._memory_profiler.Stop()
-      self._memory_profiler = None
-
-    if self._parsers_profiler:
-      self._parsers_profiler.Stop()
-      self._parsers_profiler = None
-
-    if self._processing_profiler:
-      self._processing_profiler.Stop()
-      self._processing_profiler = None
-
-    if self._serializers_profiler:
-      self._serializers_profiler.Stop()
-      self._serializers_profiler = None
-
-    if self._storage_profiler:
-      self._storage_profiler.Stop()
-      self._storage_profiler = None
 
   def SignalAbort(self):
     """Signals the process to abort."""

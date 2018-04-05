@@ -8,6 +8,7 @@ import unittest
 
 from plaso.analysis import interface as analysis_interface
 from plaso.containers import sessions
+from plaso.engine import configurations
 from plaso.multi_processing import analysis_process
 from plaso.multi_processing import multi_process_queue
 
@@ -54,14 +55,18 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
 
   def testInitialization(self):
     """Tests the initialization."""
+    configuration = configurations.ProcessingConfiguration()
+
     test_process = analysis_process.AnalysisProcess(
-        None, None, None, None, name='TestAnalysis')
+        None, None, None, None, configuration, name='TestAnalysis')
     self.assertIsNotNone(test_process)
 
   def testGetStatus(self):
     """Tests the _GetStatus function."""
+    configuration = configurations.ProcessingConfiguration()
+
     test_process = analysis_process.AnalysisProcess(
-        None, None, None, None, name='TestAnalysis')
+        None, None, None, None, configuration, name='TestAnalysis')
     status_attributes = test_process._GetStatus()
 
     self.assertIsNotNone(status_attributes)
@@ -78,8 +83,10 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
     storage_writer = self._CreateStorageWriter(session)
     analysis_plugin = TestAnalysisPlugin()
 
+    configuration = configurations.ProcessingConfiguration()
+
     test_process = analysis_process.AnalysisProcess(
-        event_queue, storage_writer, None, analysis_plugin,
+        event_queue, storage_writer, None, analysis_plugin, configuration,
         name='TestAnalysis')
     test_process._abort = True
     test_process._FOREMAN_STATUS_WAIT = 1
@@ -91,8 +98,10 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
 
   def testSignalAbort(self):
     """Tests the SignalAbort function."""
+
+    configuration = configurations.ProcessingConfiguration()
     test_process = analysis_process.AnalysisProcess(
-        None, None, None, None, name='TestAnalysis')
+        None, None, None, None, configuration, name='TestAnalysis')
     test_process.SignalAbort()
 
 

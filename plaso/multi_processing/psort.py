@@ -191,25 +191,25 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     # a deterministic way.
     self._export_event_heap = PsortEventHeap()
     self._export_event_timestamp = 0
-    self._knowledge_base = None
-    self._merge_task = None
     self._guppy_memory_profiler = None
+    self._knowledge_base = None
     self._memory_profiler = None
-    self._processing_profiler = None
-    self._serializers_profiler = None
+    self._merge_task = None
     self._number_of_consumed_errors = 0
-    self._number_of_consumed_event_tags = 0
     self._number_of_consumed_events = 0
+    self._number_of_consumed_event_tags = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
     self._number_of_duplicate_events = 0
     self._number_of_macb_grouped_events = 0
-    self._profiling_configuration = None
     self._number_of_produced_errors = 0
-    self._number_of_produced_event_tags = 0
     self._number_of_produced_events = 0
+    self._number_of_produced_event_tags = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
+    self._processing_configuration = None
+    self._processing_profiler = None
+    self._serializers_profiler = None
     self._status = definitions.PROCESSING_STATUS_IDLE
     self._status_update_callback = None
     self._use_zeromq = use_zeromq
@@ -825,7 +825,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     process = analysis_process.AnalysisProcess(
         input_event_queue, storage_writer, self._knowledge_base,
-        analysis_plugin, data_location=self._data_location,
+        analysis_plugin, self._processing_configuration,
+        data_location=self._data_location,
         event_filter_expression=self._event_filter_expression,
         name=process_name)
 
@@ -849,9 +850,9 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
   def AnalyzeEvents(
       self, knowledge_base_object, storage_writer, data_location,
-      analysis_plugins, event_filter=None, event_filter_expression=None,
-      status_update_callback=None, worker_memory_limit=None,
-      profiling_configuration=None):
+      analysis_plugins, processing_configuration, event_filter=None,
+      event_filter_expression=None, status_update_callback=None,
+      worker_memory_limit=None):
     """Analyzes events in a plaso storage.
 
     Args:
@@ -862,6 +863,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           be loaded from.
       analysis_plugins (dict[str, AnalysisPlugin]): analysis plugins that
           should be run and their names.
+      processing_configuration (ProcessingConfiguration): processing
+          configuration.
       event_filter (Optional[FilterObject]): event filter.
       event_filter_expression (Optional[str]): event filter expression.
       status_update_callback (Optional[function]): callback function for status
@@ -869,8 +872,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       worker_memory_limit (Optional[int]): maximum amount of memory a worker is
           allowed to consume, where None represents the default memory limit
           and 0 represents no limit.
-      profiling_configuration (Optional[ProfilingConfiguration]): profiling
-          configuration.
 
     Raises:
       KeyboardInterrupt: if a keyboard interrupt was raised.
@@ -885,14 +886,14 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._event_filter_expression = event_filter_expression
     self._knowledge_base = knowledge_base_object
     self._status_update_callback = status_update_callback
-    self._profiling_configuration = profiling_configuration
+    self._processing_configuration = processing_configuration
 
     if worker_memory_limit is None:
       self._worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
     else:
       self._worker_memory_limit = worker_memory_limit
 
-    self._StartProfiling(self._profiling_configuration)
+    self._StartProfiling(self._processing_configuration.profiling)
 
     # Set up the storage writer before the analysis processes.
     storage_writer.StartTaskStorage()
@@ -954,7 +955,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._data_location = None
     self._event_filter_expression = None
     self._knowledge_base = None
-    self._profiling_configuration = None
+    self._processing_configuration = None
     self._status_update_callback = None
     self._worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
 
@@ -966,8 +967,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
   def ExportEvents(
       self, knowledge_base_object, storage_reader, output_module,
-      deduplicate_events=True, event_filter=None, status_update_callback=None,
-      time_slice=None, use_time_slicer=False, profiling_configuration=None):
+      processing_configuration, deduplicate_events=True, event_filter=None,
+      status_update_callback=None, time_slice=None, use_time_slicer=False):
     """Exports events using an output module.
 
     Args:
@@ -975,6 +976,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           the source data needed for processing.
       storage_reader (StorageReader): storage reader.
       output_module (OutputModule): output module.
+      processing_configuration (ProcessingConfiguration): processing
+          configuration.
       deduplicate_events (Optional[bool]): True if events should be
           deduplicated.
       event_filter (Optional[FilterObject]): event filter.
@@ -984,14 +987,12 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       use_time_slicer (Optional[bool]): True if the 'time slicer' should be
           used. The 'time slicer' will provide a context of events around
           an event of interest.
-      profiling_configuration (Optional[ProfilingConfiguration]): profiling
-          configuration.
 
     Returns:
       collections.Counter: counter that tracks the number of events extracted
           from storage.
     """
-    self._profiling_configuration = profiling_configuration
+    self._processing_configuration = processing_configuration
     self._status_update_callback = status_update_callback
 
     storage_reader.ReadPreprocessingInformation(knowledge_base_object)
@@ -1001,7 +1002,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     self._StartStatusUpdateThread()
 
-    self._StartProfiling(self._profiling_configuration)
+    self._StartProfiling(self._processing_configuration.profiling)
 
     try:
       events_counter = self._ExportEvents(
@@ -1021,6 +1022,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     # Reset values.
     self._status_update_callback = None
-    self._profiling_configuration = None
+    self._processing_configuration = None
 
     return events_counter
