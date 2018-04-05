@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
+from plaso.engine import configurations
 from plaso.multi_processing import base_process
 
 from tests import test_lib as shared_test_lib
@@ -45,7 +46,9 @@ class MultiProcessBaseProcessTest(shared_test_lib.BaseTestCase):
 
   def testInitialization(self):
     """Tests the initialization."""
-    test_process = TestProcess(name='TestBase')
+    configuration = configurations.ProcessingConfiguration()
+
+    test_process = TestProcess(configuration, name='TestBase')
     self.assertIsNotNone(test_process)
 
   # TODO: add test for name property.

@@ -23,7 +23,8 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
   def __init__(
       self, event_queue, storage_writer, knowledge_base, analysis_plugin,
-      data_location=None, event_filter_expression=None, **kwargs):
+      processing_configuration, data_location=None,
+      event_filter_expression=None, **kwargs):
     """Initializes an analysis process.
 
     Non-specified keyword arguments (kwargs) are directly passed to
@@ -34,12 +35,14 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
       storage_writer (StorageWriter): storage writer for a session storage.
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for analysis.
-      plugin (AnalysisProcess): plugin running in the process.
+      analysis_plugin (AnalysisPlugin): plugin running in the process.
+      processing_configuration (ProcessingConfiguration): processing
+          configuration.
       data_location (Optional[str]): path to the location that data files
           should be loaded from.
       event_filter_expression (Optional[str]): event filter expression.
     """
-    super(AnalysisProcess, self).__init__(**kwargs)
+    super(AnalysisProcess, self).__init__(processing_configuration, **kwargs)
     self._abort = False
     self._analysis_mediator = None
     self._analysis_plugin = analysis_plugin
@@ -49,9 +52,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     self._event_queue = event_queue
     self._foreman_status_wait_event = None
     self._knowledge_base = knowledge_base
-    self._memory_profiler = None
     self._number_of_consumed_events = 0
-    self._serializers_profiler = None
     self._status = definitions.PROCESSING_STATUS_INITIALIZED
     self._storage_writer = storage_writer
     self._task = None
@@ -71,6 +72,14 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
       number_of_produced_event_tags = None
       number_of_produced_reports = None
 
+    if self._process_information:
+      used_memory = self._process_information.GetUsedMemory() or 0
+    else:
+      used_memory = 0
+
+    if self._memory_profiler:
+      self._memory_profiler.Sample(used_memory)
+
     status = {
         'display_name': '',
         'identifier': self._name,
@@ -85,7 +94,8 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
         'number_of_produced_reports': number_of_produced_reports,
         'number_of_produced_sources': None,
         'processing_status': self._status,
-        'task_identifier': None}
+        'task_identifier': None,
+        'used_memory': used_memory}
 
     if self._status in (
         definitions.PROCESSING_STATUS_ABORTED,
@@ -96,6 +106,14 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
   def _Main(self):
     """The main loop."""
+    self._StartProfiling(self._processing_configuration.profiling)
+
+    if self._serializers_profiler:
+      self._storage_writer.SetSerializersProfiler(self._serializers_profiler)
+
+    if self._storage_profiler:
+      self._storage_writer.SetStorageProfiler(self._storage_profiler)
+
     logger.debug('Analysis plugin: {0!s} (PID: {1:d}) started'.format(
         self._name, self._pid))
 
@@ -114,6 +132,9 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
     if self._serializers_profiler:
       storage_writer.SetSerializersProfiler(self._serializers_profiler)
+
+    if self._storage_profiler:
+      storage_writer.SetStorageProfiler(self._storage_profiler)
 
     storage_writer.Open()
 
@@ -146,8 +167,8 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
         self._number_of_consumed_events += 1
 
-        if self._memory_profiler:
-          self._memory_profiler.Sample()
+        if self._guppy_memory_profiler:
+          self._guppy_memory_profiler.Sample()
 
       logger.debug(
           '{0!s} (PID: {1:d}) stopped monitoring event queue.'.format(
@@ -173,6 +194,12 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
       storage_writer.Close()
 
+      if self._serializers_profiler:
+        storage_writer.SetSerializersProfiler(None)
+
+      if self._storage_profiler:
+        storage_writer.SetStorageProfiler(None)
+
     try:
       self._storage_writer.PrepareMergeTaskStorage(task)
     except IOError:
@@ -187,6 +214,14 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
     logger.debug('Analysis plugin: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
+
+    if self._serializers_profiler:
+      self._storage_writer.SetSerializersProfiler(None)
+
+    if self._storage_profiler:
+      self._storage_writer.SetStorageProfiler(None)
+
+    self._StopProfiling()
 
     self._analysis_mediator = None
     self._foreman_status_wait_event = None
