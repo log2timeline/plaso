@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import os
-
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver
