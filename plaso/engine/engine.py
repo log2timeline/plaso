@@ -81,16 +81,95 @@ class BaseEngine(object):
         '\\winnt\\system32', '/winnt35/system32', '\\winnt35\\system32',
         '\\wtsrv\\system32', '/wtsrv/system32'])
 
+    operating_system = definitions.OPERATING_SYSTEM_UNKNOWN
     if windows_locations.intersection(set(locations)):
-      return definitions.OPERATING_SYSTEM_WINDOWS
+      operating_system = definitions.OPERATING_SYSTEM_WINDOWS
 
-    if '/system/library' in locations:
-      return definitions.OPERATING_SYSTEM_MACOS
+    elif '/system/library' in locations:
+      operating_system = definitions.OPERATING_SYSTEM_MACOS
 
-    if '/etc' in locations:
-      return definitions.OPERATING_SYSTEM_LINUX
+    elif '/etc' in locations:
+      operating_system = definitions.OPERATING_SYSTEM_LINUX
 
-    return definitions.OPERATING_SYSTEM_UNKNOWN
+    return operating_system
+
+  def _StartProfiling(self, configuration):
+    """Starts profiling.
+
+    Args:
+      configuration (ProfilingConfiguration): profiling configuration.
+    """
+    if not configuration:
+      return
+
+    if configuration.HaveProfileMemoryGuppy():
+      self._guppy_memory_profiler = profilers.GuppyMemoryProfiler(
+          self._name, configuration)
+      self._guppy_memory_profiler.Start()
+
+    if configuration.HaveProfileMemory():
+      self._memory_profiler = profilers.MemoryProfiler(
+          self._name, configuration)
+      self._memory_profiler.Start()
+
+    if configuration.HaveProfileParsers():
+      identifier = '{0:s}-parsers'.format(self._name)
+      self._parsers_profiler = profilers.ParsersProfiler(
+          identifier, configuration)
+      self._parsers_profiler.Start()
+
+    if configuration.HaveProfileProcessing():
+      identifier = '{0:s}-processing'.format(self._name)
+      self._processing_profiler = profilers.ProcessingProfiler(
+          identifier, configuration)
+      self._processing_profiler.Start()
+
+    if configuration.HaveProfileSerializers():
+      identifier = '{0:s}-serializers'.format(self._name)
+      self._serializers_profiler = profilers.SerializersProfiler(
+          identifier, configuration)
+      self._serializers_profiler.Start()
+
+    if configuration.HaveProfileStorage():
+      self._storage_profiler = profilers.StorageProfiler(
+          self._name, configuration)
+      self._storage_profiler.Start()
+
+    if configuration.HaveProfileTaskQueue():
+      self._task_queue_profiler = profilers.TaskQueueProfiler(
+          self._name, configuration)
+      self._task_queue_profiler.Start()
+
+  def _StopProfiling(self):
+    """Stops profiling."""
+    if self._guppy_memory_profiler:
+      self._guppy_memory_profiler.Sample()
+      self._guppy_memory_profiler.Stop()
+      self._guppy_memory_profiler = None
+
+    if self._memory_profiler:
+      self._memory_profiler.Stop()
+      self._memory_profiler = None
+
+    if self._parsers_profiler:
+      self._parsers_profiler.Stop()
+      self._parsers_profiler = None
+
+    if self._processing_profiler:
+      self._processing_profiler.Stop()
+      self._processing_profiler = None
+
+    if self._serializers_profiler:
+      self._serializers_profiler.Stop()
+      self._serializers_profiler = None
+
+    if self._storage_profiler:
+      self._storage_profiler.Stop()
+      self._storage_profiler = None
+
+    if self._task_queue_profiler:
+      self._task_queue_profiler.Stop()
+      self._task_queue_profiler = None
 
   @classmethod
   def CreateSession(
@@ -195,84 +274,6 @@ class BaseEngine(object):
           ', '.join(detected_operating_systems)))
       self.knowledge_base.SetValue(
           'operating_system', detected_operating_systems[0])
-
-  def _StartProfiling(self, configuration):
-    """Starts profiling.
-
-    Args:
-      configuration (ProfilingConfiguration): profiling configuration.
-    """
-    if not configuration:
-      return
-
-    if configuration.HaveProfileMemoryGuppy():
-      self._guppy_memory_profiler = profilers.GuppyMemoryProfiler(
-          self._name, configuration)
-      self._guppy_memory_profiler.Start()
-
-    if configuration.HaveProfileMemory():
-      self._memory_profiler = profilers.MemoryProfiler(
-          self._name, configuration)
-      self._memory_profiler.Start()
-
-    if configuration.HaveProfileParsers():
-      identifier = '{0:s}-parsers'.format(self._name)
-      self._parsers_profiler = profilers.ParsersProfiler(
-          identifier, configuration)
-      self._parsers_profiler.Start()
-
-    if configuration.HaveProfileProcessing():
-      identifier = '{0:s}-processing'.format(self._name)
-      self._processing_profiler = profilers.ProcessingProfiler(
-          identifier, configuration)
-      self._processing_profiler.Start()
-
-    if configuration.HaveProfileSerializers():
-      identifier = '{0:s}-serializers'.format(self._name)
-      self._serializers_profiler = profilers.SerializersProfiler(
-          identifier, configuration)
-      self._serializers_profiler.Start()
-
-    if configuration.HaveProfileStorage():
-      self._storage_profiler = profilers.StorageProfiler(
-          self._name, configuration)
-      self._storage_profiler.Start()
-
-    if configuration.HaveProfileTaskQueue():
-      self._task_queue_profiler = profilers.TaskQueueProfiler(
-          self._name, configuration)
-      self._task_queue_profiler.Start()
-
-  def _StopProfiling(self):
-    """Stops profiling."""
-    if self._guppy_memory_profiler:
-      self._guppy_memory_profiler.Sample()
-      self._guppy_memory_profiler.Stop()
-      self._guppy_memory_profiler = None
-
-    if self._memory_profiler:
-      self._memory_profiler.Stop()
-      self._memory_profiler = None
-
-    if self._parsers_profiler:
-      self._parsers_profiler.Stop()
-      self._parsers_profiler = None
-
-    if self._processing_profiler:
-      self._processing_profiler.Stop()
-      self._processing_profiler = None
-
-    if self._serializers_profiler:
-      self._serializers_profiler.Stop()
-      self._serializers_profiler = None
-
-    if self._storage_profiler:
-      self._storage_profiler.Stop()
-      self._storage_profiler = None
-
-    if self._task_queue_profiler:
-      self._task_queue_profiler.Stop()
-      self._task_queue_profiler = None
 
   @classmethod
   def SupportsGuppyMemoryProfiling(cls):
