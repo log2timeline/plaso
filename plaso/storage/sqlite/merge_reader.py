@@ -162,8 +162,8 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
     Container types not defined in _CONTAINER_TYPES are ignored and not merged.
 
     Specific container types reference other container types, such
-    as event referencing event data. To resulting names are ordered to ensure
-    the attribute containers are merged in the correct order.
+    as event referencing event data. The names are ordered to ensure the
+    attribute containers are merged in the correct order.
 
     Returns:
       list[str]: names of the container types to merge.
@@ -191,7 +191,7 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
     self._compression_format = metadata_values['compression_format']
 
   def _PrepareForNextContainerType(self):
-    """Prepars for the next container type.
+    """Prepares for the next container type.
 
     This method prepares the task storage for merging the next container type.
     It set the active container type, its add method and active cursor
