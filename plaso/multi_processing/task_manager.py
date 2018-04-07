@@ -104,9 +104,10 @@ class TaskManager(object):
       possible that a worker has already completed the task, but no status
       update was collected from the worker while it processed the task.
   * processing: a worker is processing the task.
-  * processed: a worker has completed processing the task.
-  * pending_merge: the task is process and awaiting to be merged with the
-      session storage.
+  * processed: a worker has completed processing the task, but it is not ready
+      to be merged into the session storage.
+  * pending_merge: the task has been processed and is ready to be merged with
+      the session storage.
   * merging: tasks that are being merged by the engine.
 
   Once the engine reports that a task is completely merged, it is removed
@@ -321,14 +322,14 @@ class TaskManager(object):
     with self._lock:
       return list(self._tasks_abandoned.values())
 
-  def GetProcessedTasksByIdentifier(self, task_identifier):
-    """Retrieves a task when it completed processing.
+  def GetProcessedTaskByIdentifier(self, task_identifier):
+    """Retrieves a task that has been processed.
 
     Args:
       task_identifier (str): unique identifier of the task.
 
     Returns:
-      Task: a task that is pending merge.
+      Task: a task that has been processed.
 
     Raises:
       KeyError: if the task was not processing, queued or abandoned.

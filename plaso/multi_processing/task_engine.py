@@ -199,14 +199,14 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     for task_identifier in storage_writer.GetProcessedTaskIdentifiers():
       try:
-        task = self._task_manager.GetProcessedTasksByIdentifier(task_identifier)
+        task = self._task_manager.GetProcessedTaskByIdentifier(task_identifier)
 
         storage_writer.PrepareMergeTaskStorage(task)
         self._task_manager.UpdateTaskAsPendingMerge(task)
 
       except KeyError:
         logger.error(
-            'Unable to retrieve task: {0:s} to prepare for merge.'.format(
+            'Unable to retrieve task: {0:s} to prepare it to be merged.'.format(
                 task_identifier))
         continue
 

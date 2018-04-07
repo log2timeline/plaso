@@ -961,7 +961,7 @@ class StorageWriter(object):
     """
 
   def FinalizeProcessedTaskStorage(self, unused_task):
-    """Finalized a proccessed a task storage.
+    """Finalizes a proccessed a task storage.
 
     Args:
       task (Task): task.
@@ -1400,7 +1400,7 @@ class StorageFileWriter(StorageWriter):
     return event_source
 
   def GetProcessedTaskIdentifiers(self):
-    """Retrieves task identifiers which are processed.
+    """Identifers for tasks which have been processed.
 
     Returns:
       list[str]: task identifiers that are processed.
