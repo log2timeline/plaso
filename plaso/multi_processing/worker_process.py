@@ -89,6 +89,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     if self._memory_profiler:
       self._memory_profiler.Sample(used_memory)
 
+    # XML RPC does not support integer values > 2 GiB so we format them
+    # as a string.
+    used_memory = '{0:d}'.format(used_memory)
+
     status = {
         'display_name': self._current_display_name,
         'identifier': self._name,
