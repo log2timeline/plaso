@@ -44,5 +44,6 @@ install:
 - ./config/travis/install.sh
 script:
 - ./config/travis/run_with_timeout.sh 30 ./config/travis/runtests.sh
+- if test -f tests/end-to-end.py; then PYTHONPATH=. ./tests/end-to-end.py --debug -c config/end-to-end.ini; fi
 after_success:
 - if test ${TARGET} = "linux-python27"; then curl -o codecov.sh -s https://codecov.io/bash && /bin/bash ./codecov.sh; fi
