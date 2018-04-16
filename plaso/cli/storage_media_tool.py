@@ -24,7 +24,6 @@ from plaso.cli import views
 from plaso.engine import configurations
 from plaso.lib import errors
 from plaso.lib import py2to3
-from plaso.lib import timelib
 
 
 try:
@@ -770,9 +769,7 @@ class StorageMediaTool(tools.CLITool):
           vss_creation_time = volume.GetAttribute('creation_time')
           filetime = dfdatetime_filetime.Filetime(
               timestamp=vss_creation_time.value)
-          vss_creation_time = filetime.GetPlasoTimestamp()
-          vss_creation_time = timelib.Timestamp.CopyToIsoFormat(
-              vss_creation_time)
+          vss_creation_time = filetime.CopyToDateTimeString()
 
           if volume.HasExternalData():
             vss_creation_time = (
