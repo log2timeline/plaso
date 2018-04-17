@@ -34,8 +34,94 @@ except KeyError:
   pass
 
 
+class VolumeShadowSnapshotsOptions(object):
+  """Volume Shadow Snapshots (VSS) processing options.
+
+  Attributes:
+    process_vss (bool): True if snapshots should be processed.
+    vss_stores (list[str]): VSS stores.
+    vss_only (bool): True if only snapshots should be processed and not
+        the current volume.
+  """
+
+  def __init__(self):
+    """Initializes a Volume Shadow Snapshots (VSS) processing options."""
+    super(VSSStoresConfiguration, self).__init__()
+    self.process_vss = True
+    self.vss_stores = []
+    self.vss_only = False
+
+  def _ParseStoresString(self, vss_stores):
+    """Parses the user specified stores string.
+
+    Args:
+      vss_stores (str): VSS stores. A range of stores can be defined
+          as: "3..5". Multiple stores can be defined as: "1,3,5" (a list
+          of comma separated values). Ranges and lists can also be
+          combined as: "1,3..5". The first store is 1. All stores can be
+          defined as: "all".
+
+    Returns:
+      list[str]: VSS stores.
+
+    Raises:
+      BadConfigOption: if the stores string is invalid.
+    """
+    if not vss_stores:
+      return []
+
+    if vss_stores == 'all':
+      return ['all']
+
+    store_numbers = []
+    for vss_store_range in vss_stores.split(','):
+      # Determine if the range is formatted as 1..3 otherwise it indicates
+      # a single store number.
+      if '..' in vss_store_range:
+        first_store, last_store = vss_store_range.split('..')
+        try:
+          first_store = int(first_store, 10)
+          last_store = int(last_store, 10)
+        except ValueError:
+          raise errors.BadConfigOption('Invalid store range: {0:s}.'.format(
+              vss_store_range))
+
+        for store_number in range(first_store, last_store + 1):
+          if store_number not in store_numbers:
+            store_numbers.append(store_number)
+      else:
+        if vss_store_range.startswith('vss'):
+          vss_store_range = vss_store_range[3:]
+
+        try:
+          store_number = int(vss_store_range, 10)
+        except ValueError:
+          raise errors.BadConfigOption('Invalid store range: {0:s}.'.format(
+              vss_store_range))
+
+        if store_number not in store_numbers:
+          store_numbers.append(store_number)
+
+    return sorted(store_numbers)
+
+  def SetStores(self, vss_stores):
+    """Sets the VSS stores.
+
+    Args:
+      vss_stores (str): VSS stores. A range of stores can be defined
+          as: "3..5". Multiple stores can be defined as: "1,3,5" (a list
+          of comma separated values). Ranges and lists can also be
+          combined as: "1,3..5". The first store is 1. All stores can be
+          defined as: "all".
+
+    Raises:
+      BadConfigOption: if the VSS stores option is invalid.
+    """
+    self.vss_stores = self._ParseStoresString(vss_stores)
+
+
 class StorageMediaTool(tools.CLITool):
-  """Class that implements a storage media CLI tool."""
+  """Storage media CLI tool."""
 
   _DEFAULT_BYTES_PER_SECTOR = 512
 
@@ -67,12 +153,10 @@ class StorageMediaTool(tools.CLITool):
     self._filter_file = None
     self._partitions = None
     self._partition_offset = None
-    self._process_vss = False
     self._source_scanner = source_scanner.SourceScanner()
     self._source_path = None
     self._source_path_specs = []
-    self._vss_only = False
-    self._vss_stores = None
+    self._vss_options = VolumeShadowSnapshotsOptions()
 
   def _AddCredentialConfiguration(
       self, path_spec, credential_type, credential_data):
@@ -475,72 +559,12 @@ class StorageMediaTool(tools.CLITool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    vss_only = False
-    vss_stores = None
-
-    self._process_vss = not getattr(options, 'no_vss', True)
-    if self._process_vss:
-      vss_only = getattr(options, 'vss_only', False)
+    self._vss_options.process_vss = not getattr(options, 'no_vss', True)
+    if self._vss_options.process_vss:
       vss_stores = getattr(options, 'vss_stores', None)
+      self._vss_options.SetStores(vss_stores)
 
-    if vss_stores:
-      vss_stores = self._ParseVSSStoresString(vss_stores)
-
-    self._vss_only = vss_only
-    self._vss_stores = vss_stores
-
-  def _ParseVSSStoresString(self, vss_stores):
-    """Parses the user specified VSS stores string.
-
-    Args:
-      vss_stores (str): VSS stores. A range of stores can be defined
-          as: "3..5". Multiple stores can be defined as: "1,3,5" (a list
-          of comma separated values). Ranges and lists can also be
-          combined as: "1,3..5". The first store is 1. All stores can be
-          defined as: "all".
-
-    Returns:
-      list[str]: VSS stores.
-
-    Raises:
-      BadConfigOption: if the VSS stores option is invalid.
-    """
-    if not vss_stores:
-      return []
-
-    if vss_stores == 'all':
-      return ['all']
-
-    store_numbers = []
-    for vss_store_range in vss_stores.split(','):
-      # Determine if the range is formatted as 1..3 otherwise it indicates
-      # a single store number.
-      if '..' in vss_store_range:
-        first_store, last_store = vss_store_range.split('..')
-        try:
-          first_store = int(first_store, 10)
-          last_store = int(last_store, 10)
-        except ValueError:
-          raise errors.BadConfigOption(
-              'Invalid VSS store range: {0:s}.'.format(vss_store_range))
-
-        for store_number in range(first_store, last_store + 1):
-          if store_number not in store_numbers:
-            store_numbers.append(store_number)
-      else:
-        if vss_store_range.startswith('vss'):
-          vss_store_range = vss_store_range[3:]
-
-        try:
-          store_number = int(vss_store_range, 10)
-        except ValueError:
-          raise errors.BadConfigOption(
-              'Invalid VSS store range: {0:s}.'.format(vss_store_range))
-
-        if store_number not in store_numbers:
-          store_numbers.append(store_number)
-
-    return sorted(store_numbers)
+      self._vss_options.vss_only = getattr(options, 'vss_only', False)
 
   def _PromptUserForEncryptedVolumeCredential(
       self, scan_context, locked_scan_node, credentials):
@@ -884,7 +908,7 @@ class StorageMediaTool(tools.CLITool):
 
     elif scan_node.type_indicator in (
         dfvfs_definitions.FILE_SYSTEM_TYPE_INDICATORS):
-      if (not self._vss_only or not selected_vss_stores or
+      if (not self._vss_options.vss_only or not selected_vss_stores or
           self._PromptUserForVSSCurrentVolume()):
         self._source_path_specs.append(scan_node.path_spec)
 
@@ -939,7 +963,7 @@ class StorageMediaTool(tools.CLITool):
     Raises:
       SourceScannerError: if a VSS sub scan node cannot be retrieved.
     """
-    if not self._process_vss:
+    if not self._vss_options.process_vss:
       return
 
     # Do not scan inside individual VSS store scan nodes.
@@ -948,7 +972,7 @@ class StorageMediaTool(tools.CLITool):
       return
 
     vss_store_identifiers = self._GetVSSStoreIdentifiers(
-        volume_scan_node, vss_stores=self._vss_stores)
+        volume_scan_node, vss_stores=self._vss_options.vss_stores)
 
     selected_vss_stores.extend(vss_store_identifiers)
 
