@@ -46,7 +46,7 @@ class VolumeShadowSnapshotsOptions(object):
 
   def __init__(self):
     """Initializes a Volume Shadow Snapshots (VSS) processing options."""
-    super(VSSStoresConfiguration, self).__init__()
+    super(VolumeShadowSnapshotsOptions, self).__init__()
     self.process_vss = True
     self.vss_stores = []
     self.vss_only = False
