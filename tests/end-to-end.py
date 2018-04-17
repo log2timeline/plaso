@@ -235,7 +235,7 @@ class TestCasesManager(object):
 
     Raises:
       KeyError: if test case class is already set for the corresponding
-                name.
+          name.
     """
     test_case_name = test_case_class.NAME.lower()
     if test_case_name in cls._test_case_classes:
@@ -256,7 +256,7 @@ class TestCasesManager(object):
 
     Raises:
       KeyError: if test case class is already set for the corresponding
-                name.
+          name.
     """
     for test_case_class in test_case_classes:
       cls.RegisterTestCase(test_case_class)
@@ -431,7 +431,7 @@ class TestLauncher(object):
       test_definition (TestDefinition): test definition.
 
     Returns:
-      A boolean value indicating the test ran successfully.
+      bool: True if the test ran successfully.
     """
     test_case = TestCasesManager.GetTestCaseObject(
         test_definition.case, self._tools_path, self._test_sources_path,
