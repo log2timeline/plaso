@@ -29,6 +29,11 @@ then
 
 	python ./setup.py bdist
 
+	if test -f tests/end-to-end.py;
+	then
+		PYTHONPATH=. python ./tests/end-to-end.py --debug -c config/end-to-end.ini;
+	fi
+
 elif test "${TRAVIS_OS_NAME}" = "linux";
 then
 	if test -n "${TOXENV}";
@@ -55,4 +60,9 @@ then
 	mkdir -p ${TMPSITEPACKAGES};
 
 	PYTHONPATH=${TMPSITEPACKAGES} python ./setup.py install --prefix=${TMPDIR};
+
+	if test -f tests/end-to-end.py;
+	then
+		PYTHONPATH=. python ./tests/end-to-end.py --debug -c config/end-to-end.ini;
+	fi
 fi
