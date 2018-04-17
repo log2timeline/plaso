@@ -943,6 +943,17 @@ class StorageWriter(object):
     raise NotImplementedError()
 
   @abc.abstractmethod
+  def GetEventDataByIdentifier(self, identifier):
+    """Retrieves specific event data.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event data identifier.
+
+    Returns:
+      EventData: event data or None if not available.
+    """
+
+  @abc.abstractmethod
   def GetEvents(self):
     """Retrieves the events.
 
@@ -1341,6 +1352,17 @@ class StorageFileWriter(StorageWriter):
         self._task_storage_path, '{0:s}.plaso'.format(task.identifier))
 
     return self._CreateTaskStorageWriter(storage_file_path, task)
+
+  def GetEventDataByIdentifier(self, identifier):
+    """Retrieves specific event data.
+
+    Args:
+      identifier (AttributeContainerIdentifier): event data identifier.
+
+    Returns:
+      EventData: event data or None if not available.
+    """
+    return self._storage_file.GetEventDataByIdentifier(identifier)
 
   def GetEvents(self):
     """Retrieves the events.
