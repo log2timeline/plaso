@@ -51,7 +51,7 @@ class VolumeShadowSnapshotsOptions(object):
     self.vss_stores = []
     self.vss_only = False
 
-  def _ParseStoresString(self, vss_stores):
+  def ParseStoresString(self, vss_stores):
     """Parses the user specified stores string.
 
     Args:
@@ -117,7 +117,7 @@ class VolumeShadowSnapshotsOptions(object):
     Raises:
       BadConfigOption: if the VSS stores option is invalid.
     """
-    self.vss_stores = self._ParseStoresString(vss_stores)
+    self.vss_stores = self.ParseStoresString(vss_stores)
 
 
 class StorageMediaTool(tools.CLITool):
@@ -824,7 +824,8 @@ class StorageMediaTool(tools.CLITool):
         return []
 
       try:
-        selected_vss_stores = self._ParseVSSStoresString(selected_vss_stores)
+        selected_vss_stores = self._vss_options.ParseStoresString(
+            selected_vss_stores)
       except errors.BadConfigOption:
         selected_vss_stores = []
 
