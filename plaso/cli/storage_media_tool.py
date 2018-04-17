@@ -52,7 +52,7 @@ class StorageMediaTool(tools.CLITool):
   _UNITS_1024 = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'EiB', 'ZiB', 'YiB']
 
   def __init__(self, input_reader=None, output_writer=None):
-    """Initializes the CLI tool object.
+    """Initializes a storage media CLI tool.
 
     Args:
       input_reader (Optional[InputReader]): input reader, where None indicates

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for the storage media tool object."""
+"""Tests for the storage media tool."""
 
 from __future__ import unicode_literals
 
@@ -21,34 +21,27 @@ from tests.cli import test_lib
 
 
 class StorageMediaToolTest(test_lib.CLIToolTestCase):
-  """Tests for the storage media tool object."""
+  """Tests for the storage media tool."""
 
   # pylint: disable=protected-access
 
-  _EXPECTED_OUTPUT_CREDENTIAL_OPTIONS = '\n'.join([
-      'usage: storage_media_tool_test.py [--credential TYPE:DATA]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      '  --credential TYPE:DATA',
-      ('                        Define a credentials that can be used to '
-       'unlock'),
-      ('                        encrypted volumes e.g. BitLocker. The '
-       'credential is'),
-      ('                        defined as type:data e.g. '
-       '"password:BDE-test".'),
-      ('                        Supported credential types are: key_data, '
-       'password,'),
-      ('                        recovery_password, startup_key. Binary '
-       'key data is'),
-      '                        expected to be passed in BASE-16 encoding',
-      ('                        (hexadecimal). WARNING credentials passed '
-       'via command'),
-      ('                        line arguments can end up in logs, so use '
-       'this option'),
-      '                        with care.',
-      ''])
+  _EXPECTED_OUTPUT_CREDENTIAL_OPTIONS = """\
+usage: storage_media_tool_test.py [--credential TYPE:DATA]
+
+Test argument parser.
+
+optional arguments:
+  --credential TYPE:DATA
+                        Define a credentials that can be used to unlock
+                        encrypted volumes e.g. BitLocker. The credential is
+                        defined as type:data e.g. "password:BDE-test".
+                        Supported credential types are: key_data, password,
+                        recovery_password, startup_key. Binary key data is
+                        expected to be passed in BASE-16 encoding
+                        (hexadecimal). WARNING credentials passed via command
+                        line arguments can end up in logs, so use this option
+                        with care.
+"""
 
   _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = '\n'.join([
       'usage: storage_media_tool_test.py [--partition PARTITION]',
@@ -99,35 +92,27 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       '                        default.',
       ''])
 
-  _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = '\n'.join([
-      'usage: storage_media_tool_test.py [--no_vss] [--vss_only]',
-      '                                  [--vss_stores VSS_STORES]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      ('  --no_vss, --no-vss    Do not scan for Volume Shadow Snapshots '
-       '(VSS). This'),
-      ('                        means that Volume Shadow Snapshots (VSS) '
-       'are not'),
-      '                        processed.',
-      '  --vss_only, --vss-only',
-      ('                        Do not process the current volume if '
-       'Volume Shadow'),
-      '                        Snapshots (VSS) have been selected.',
-      '  --vss_stores VSS_STORES, --vss-stores VSS_STORES',
-      ('                        Define Volume Shadow Snapshots (VSS) (or '
-       'stores that'),
-      ('                        need to be processed. A range of stores can '
-       'be defined'),
-      ('                        as: "3..5". Multiple stores can be defined '
-       'as: "1,3,5"'),
-      ('                        (a list of comma separated values). Ranges '
-       'and lists'),
-      ('                        can also be combined as: "1,3..5". The '
-       'first store is'),
-      '                        1. All stores can be defined as: "all".',
-      ''])
+  _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = """\
+usage: storage_media_tool_test.py [--no_vss] [--vss_only]
+                                  [--vss_stores VSS_STORES]
+
+Test argument parser.
+
+optional arguments:
+  --no_vss, --no-vss    Do not scan for Volume Shadow Snapshots (VSS). This
+                        means that Volume Shadow Snapshots (VSS) are not
+                        processed.
+  --vss_only, --vss-only
+                        Do not process the current volume if Volume Shadow
+                        Snapshots (VSS) have been selected.
+  --vss_stores VSS_STORES, --vss-stores VSS_STORES
+                        Define Volume Shadow Snapshots (VSS) (or stores that
+                        need to be processed. A range of stores can be defined
+                        as: "3..5". Multiple stores can be defined as: "1,3,5"
+                        (a list of comma separated values). Ranges and lists
+                        can also be combined as: "1,3..5". The first store is
+                        1. All stores can be defined as: "all".
+"""
 
   def _GetTestScanNode(self, scan_context):
     """Retrieves the scan node for testing.
@@ -365,6 +350,11 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
   # TODO: add test for _GetTSKPartitionIdentifiers.
   # TODO: add test for _GetVSSStoreIdentifiers.
 
+  # TODO: add test for _PromptUserForEncryptedVolumeCredential.
+  # TODO: add test for _PromptUserForPartitionIdentifier.
+  # TODO: add test for_ PromptUserForVSSCurrentVolume.
+  # TODO: add test for _PromptUserForVSSStoreIdentifiers.
+
   def testParseCredentialOptions(self):
     """Tests the _ParseCredentialOptions function."""
     test_tool = storage_media_tool.StorageMediaTool()
@@ -450,9 +440,6 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     # TODO: improve test coverage.
 
   # TODO: add test for _ParseVSSStoresString.
-  # TODO: add test for _PromptUserForEncryptedVolumeCredential.
-  # TODO: add test for _PromptUserForPartitionIdentifier.
-  # TODO: add test for _PromptUserForVSSStoreIdentifiers.
   # TODO: add test for _ScanVolume.
   # TODO: add test for _ScanVolumeScanNode.
   # TODO: add test for _ScanVolumeScanNodeEncrypted.
