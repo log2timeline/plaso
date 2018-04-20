@@ -172,7 +172,7 @@ class CustomDestinationsParser(interface.FileObjectParser):
         if not first_guid_checked:
           raise errors.UnableToParseFile((
               'Unsupported Custom Destination file: {0:s} - invalid entry '
-              'header signature offset: 0x{0:08x}.').format(
+              'header signature offset: 0x{1:08x}.').format(
                   display_name, file_offset))
 
         try:
