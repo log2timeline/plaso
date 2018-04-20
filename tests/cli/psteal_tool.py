@@ -31,6 +31,21 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
   _STORAGE_FILENAME_TEMPLATE = r'\d{{8}}T\d{{6}}-{filename}.plaso'
 
+  def _CheckOutput(self, output, expected_output):
+    """Compares the output against the expected output.
+
+    The actual processing time is ignored, since it can vary.
+
+    Args:
+      output (bytes): tool output.
+      expected_output (list[bytes]): expected tool output.
+    """
+    output = output.split(b'\n')
+
+    self.assertEqual(output[:3], expected_output[:3])
+    self.assertTrue(output[3].startswith(b'Processing time\t: '))
+    self.assertEqual(output[4:], expected_output[4:])
+
   def testGenerateStorageFileName(self):
     """Tests the _GenerateStorageFileName function."""
     test_tool = psteal_tool.PstealTool()
@@ -182,6 +197,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           b'',
           b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: directory',
+          b'Processing time\t: 00:00:00',
           b'',
           b'Processing started.',
           b'Processing completed.',
@@ -189,7 +205,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           b'']
 
       output = output_writer.ReadOutput()
-      self.assertEqual(output.split(b'\n'), expected_output)
+      self._CheckOutput(output, expected_output)
 
   @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
   @shared_test_lib.skipUnlessHasTestFile(['bdetogo.raw'])
@@ -220,6 +236,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           b'',
           b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: storage media image',
+          b'Processing time\t: 00:00:00',
           b'',
           b'Processing started.',
           b'Processing completed.',
@@ -227,7 +244,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           b'']
 
       output = output_writer.ReadOutput()
-      self.assertEqual(output.split(b'\n'), expected_output)
+      self._CheckOutput(output, expected_output)
 
   @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
   @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
@@ -254,6 +271,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           b'',
           b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: storage media image',
+          b'Processing time\t: 00:00:00',
           b'',
           b'Processing started.',
           b'Processing completed.',
@@ -261,7 +279,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           b'']
 
       output = output_writer.ReadOutput()
-      self.assertEqual(output.split(b'\n'), expected_output)
+      self._CheckOutput(output, expected_output)
 
   @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
   @shared_test_lib.skipUnlessHasTestFile(['multi_partition_image.vmdk'])
@@ -290,6 +308,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           b'',
           b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: storage media image',
+          b'Processing time\t: 00:00:00',
           b'',
           b'Processing started.',
           b'Processing completed.',
@@ -297,7 +316,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           b'']
 
       output = output_writer.ReadOutput()
-      self.assertEqual(output.split(b'\n'), expected_output)
+      self._CheckOutput(output, expected_output)
 
   @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
   @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
@@ -326,6 +345,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           b'',
           b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: storage media image',
+          b'Processing time\t: 00:00:00',
           b'',
           b'Processing started.',
           b'Processing completed.',
@@ -337,7 +357,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           b'']
 
       output = output_writer.ReadOutput()
-      self.assertEqual(output.split(b'\n'), expected_output)
+      self._CheckOutput(output, expected_output)
 
   @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
   @shared_test_lib.skipUnlessHasTestFile(['System.evtx'])
@@ -364,6 +384,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           b'',
           b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: single file',
+          b'Processing time\t: 00:00:00',
           b'',
           b'Processing started.',
           b'Processing completed.',
@@ -371,7 +392,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
           b'']
 
       output = output_writer.ReadOutput()
-      self.assertEqual(output.split(b'\n'), expected_output)
+      self._CheckOutput(output, expected_output)
 
   @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])

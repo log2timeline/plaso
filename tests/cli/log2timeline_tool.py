@@ -93,6 +93,21 @@ optional arguments:
                         system CPUs minus one].
 """)
 
+  def _CheckOutput(self, output, expected_output):
+    """Compares the output against the expected output.
+
+    The actual processing time is ignored, since it can vary.
+
+    Args:
+      output (bytes): tool output.
+      expected_output (list[bytes]): expected tool output.
+    """
+    output = output.split(b'\n')
+
+    self.assertEqual(output[:3], expected_output[:3])
+    self.assertTrue(output[3].startswith(b'Processing time\t: '))
+    self.assertEqual(output[4:], expected_output[4:])
+
   # TODO: add tests for _CheckStorageFile
   # TODO: add tests for _CreateProcessingConfiguration
 
@@ -204,6 +219,7 @@ optional arguments:
           b'',
           b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: directory',
+          b'Processing time\t: 00:00:00',
           b'',
           b'Processing started.',
           b'Processing completed.',
@@ -211,7 +227,7 @@ optional arguments:
           b'']
 
       output = output_writer.ReadOutput()
-      self.assertEqual(output.split(b'\n'), expected_output)
+      self._CheckOutput(output, expected_output)
 
   def testExtractEventsFromSourcesOnBDEImage(self):
     """Tests the ExtractEventsFromSources function on BDE image."""
@@ -238,6 +254,7 @@ optional arguments:
           b'',
           b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: storage media image',
+          b'Processing time\t: 00:00:00',
           b'',
           b'Processing started.',
           b'Processing completed.',
@@ -245,7 +262,7 @@ optional arguments:
           b'']
 
       output = output_writer.ReadOutput()
-      self.assertEqual(output.split(b'\n'), expected_output)
+      self._CheckOutput(output, expected_output)
 
   def testExtractEventsFromSourcesImage(self):
     """Tests the ExtractEventsFromSources function on single partition image."""
@@ -271,6 +288,7 @@ optional arguments:
           b'',
           b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: storage media image',
+          b'Processing time\t: 00:00:00',
           b'',
           b'Processing started.',
           b'Processing completed.',
@@ -278,7 +296,7 @@ optional arguments:
           b'']
 
       output = output_writer.ReadOutput()
-      self.assertEqual(output.split(b'\n'), expected_output)
+      self._CheckOutput(output, expected_output)
 
   def testExtractEventsFromSourcesPartitionedImage(self):
     """Tests the ExtractEventsFromSources function on multi partition image."""
@@ -306,6 +324,7 @@ optional arguments:
           b'',
           b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: storage media image',
+          b'Processing time\t: 00:00:00',
           b'',
           b'Processing started.',
           b'Processing completed.',
@@ -313,7 +332,7 @@ optional arguments:
           b'']
 
       output = output_writer.ReadOutput()
-      self.assertEqual(output.split(b'\n'), expected_output)
+      self._CheckOutput(output, expected_output)
 
   def testExtractEventsFromSourcesOnVSSImage(self):
     """Tests the ExtractEventsFromSources function on VSS image."""
@@ -340,6 +359,7 @@ optional arguments:
           b'',
           b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: storage media image',
+          b'Processing time\t: 00:00:00',
           b'',
           b'Processing started.',
           b'Processing completed.',
@@ -351,7 +371,7 @@ optional arguments:
           b'']
 
       output = output_writer.ReadOutput()
-      self.assertEqual(output.split(b'\n'), expected_output)
+      self._CheckOutput(output, expected_output)
 
   def testExtractEventsFromSourcesOnFile(self):
     """Tests the ExtractEventsFromSources function on a file."""
@@ -377,6 +397,7 @@ optional arguments:
           b'',
           b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: single file',
+          b'Processing time\t: 00:00:00',
           b'',
           b'Processing started.',
           b'Processing completed.',
@@ -384,7 +405,7 @@ optional arguments:
           b'']
 
       output = output_writer.ReadOutput()
-      self.assertEqual(output.split(b'\n'), expected_output)
+      self._CheckOutput(output, expected_output)
 
   @unittest.skipIf(platform.system() == 'Windows', 'not supported on Windows')
   @unittest.skipIf(
@@ -414,6 +435,7 @@ optional arguments:
           b'',
           b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: directory',
+          b'Processing time\t: 00:00:00',
           b'',
           b'Processing started.',
           b'Processing completed.',
@@ -421,7 +443,7 @@ optional arguments:
           b'']
 
       output = output_writer.ReadOutput()
-      self.assertEqual(output.split(b'\n'), expected_output)
+      self._CheckOutput(output, expected_output)
 
   @unittest.skipIf(platform.system() == 'Windows', 'not supported on Windows')
   @unittest.skipIf(
@@ -451,6 +473,7 @@ optional arguments:
           b'',
           b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
           b'Source type\t: single file',
+          b'Processing time\t: 00:00:00',
           b'',
           b'Processing started.',
           b'Processing completed.',
@@ -458,7 +481,7 @@ optional arguments:
           b'']
 
       output = output_writer.ReadOutput()
-      self.assertEqual(output.split(b'\n'), expected_output)
+      self._CheckOutput(output, expected_output)
 
   def testExtractEventsFromSourcesWithFilestat(self):
     """Tests the ExtractEventsFromSources function with filestat parser."""
