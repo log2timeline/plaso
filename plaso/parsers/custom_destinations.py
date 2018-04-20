@@ -217,9 +217,9 @@ class CustomDestinationsParser(interface.FileObjectParser):
             'invalid footer signature at offset: 0x{0:08x}'.format(file_offset))
 
     except (IOError, construct.FieldError) as exception:
-      parser_mediator.ProduceExtractionError(
-          'unable to parse footer at offset: 0x{0:08x} with error: {1!s}'.format(
-              file_offset, exception))
+      parser_mediator.ProduceExtractionError((
+          'unable to parse footer at offset: 0x{0:08x} with error: '
+          '{1!s}').format(file_offset, exception))
 
 
 manager.ParsersManager.RegisterParser(CustomDestinationsParser)
