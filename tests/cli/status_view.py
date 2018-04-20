@@ -60,20 +60,21 @@ class StatusViewTest(test_lib.CLIToolTestCase):
         8, 9, 10)
     test_view._PrintExtractionStatusUpdateLinear(process_status)
 
-    string = output_writer.ReadOutput()
-    self._CheckOutput(string, [b''])
+    output = output_writer.ReadOutput()
+    self.assertEqual(string, b'')
 
     process_status.UpdateWorkerStatus(
         'w_identifier', 'w_status', 123, 0,
         'w_test_file', 1, 2, 3, 4, 5, 6, 7, 8, 9,
         10)
     test_view._PrintExtractionStatusUpdateLinear(process_status)
-    string = output_writer.ReadOutput()
 
-    expected_string = (
+    expected_output = (
         'w_identifier (PID: 123) - events produced: 4 - '
         'file: w_test_file - running: True\n')
-    self.assertEqual(string, expected_string)
+
+    output = output_writer.ReadOutput()
+    self.assertEqual(output, expected_output)
 
   def testPrintExtractionStatusUpdateWindow(self):
     """Tests the _PrintExtractionStatusUpdateWindow function."""
@@ -102,7 +103,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     if not sys.platform.startswith('win'):
       table_header = b'\x1b[1m{0:s}\x1b[0m'.format(table_header)
 
-    expected_lines = [
+    expected_output = [
         b'plaso - test_tool version {0:s}'.format(plaso.__version__),
         b'',
         b'Source path\t: /test/source/path',
@@ -120,8 +121,8 @@ class StatusViewTest(test_lib.CLIToolTestCase):
         b'',
         b'']
 
-    string = output_writer.ReadOutput()
-    self._CheckOutput(string, expected_lines)
+    output = output_writer.ReadOutput()
+    self._CheckOutput(output, expected_output)
 
     process_status.UpdateWorkerStatus(
         'w_identifier', 'w_status', 123, 0,
@@ -129,7 +130,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
         10)
     test_view._PrintExtractionStatusUpdateWindow(process_status)
 
-    expected_lines = [
+    expected_output = [
         b'plaso - test_tool version {0:s}'.format(plaso.__version__),
         b'',
         b'Source path\t: /test/source/path',
@@ -154,8 +155,8 @@ class StatusViewTest(test_lib.CLIToolTestCase):
         b'',
         b'']
 
-    string = output_writer.ReadOutput()
-    self._CheckOutput(string, expected_lines)
+    output = output_writer.ReadOutput()
+    self._CheckOutput(output, expected_output)
 
   # TODO: add tests for GetAnalysisStatusUpdateCallback
   # TODO: add tests for GetExtractionStatusUpdateCallback
