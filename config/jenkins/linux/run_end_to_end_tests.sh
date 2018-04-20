@@ -5,9 +5,6 @@
 # Fail on error.
 set -e
 
-# Enable jobs support when running a script.
-set -m
-
 CONFIGURATION_FILE="${JOB_NAME}.ini";
 
 SOURCES_DIRECTORY="/media/greendale_images";
@@ -38,9 +35,13 @@ PYTHONPATH=. ./utils/check_dependencies.py
 # the process while the script is running.
 PYTHONPATH=. ./tests/end-to-end.py --config ${CONFIGURATION_FILE} --sources-directory ${SOURCES_DIRECTORY} --tools-directory ./tools --results-directory ${RESULTS_DIRECTORY} --references-directory ${REFERENCES_DIRECTORY} &
 
-echo "End-to-end tests stared (PID: $!)";
+PID_COMMAND=$!;
 
-fg
+echo "End-to-end tests stared (PID: ${PID_COMMAND})";
+
+wait ${PID_COMMAND};
+
+RESULT=$?;
 
 # On Travis-Ci print the stdout and stderr output to troubleshoot potential issues.
 if test ${JOB_NAME} = 'travis';
@@ -59,3 +60,5 @@ then
 		echo "";
 	done
 fi
+
+exit ${RESULT};
