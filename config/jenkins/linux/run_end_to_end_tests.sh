@@ -42,7 +42,7 @@ echo "End-to-end tests stared (PID: $!)";
 
 fg
 
-# On Travis-Ci print the stdout and stderr output to troubleshoot potential issues. 
+# On Travis-Ci print the stdout and stderr output to troubleshoot potential issues.
 if test ${JOB_NAME} = 'travis';
 then
 	for FILE in `find ${RESULTS_DIRECTORY} -name \*.out -type f`;
