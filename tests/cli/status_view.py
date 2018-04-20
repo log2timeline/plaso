@@ -33,9 +33,9 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     """
     output = output.split(b'\n')
 
-    self.assertEqual(output[:3], expected_output[:3])
-    self.assertTrue(output[3].startswith(b'Processing time\t: '))
-    self.assertEqual(output[4:], expected_output[4:])
+    self.assertEqual(output[:4], expected_output[:4])
+    self.assertTrue(output[4].startswith(b'Processing time\t: '))
+    self.assertEqual(output[5:], expected_output[5:])
 
   # TODO: add tests for _ClearScreen
   # TODO: add tests for _FormatAnalysisStatusTableRow
