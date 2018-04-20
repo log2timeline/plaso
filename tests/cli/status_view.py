@@ -61,7 +61,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     test_view._PrintExtractionStatusUpdateLinear(process_status)
 
     output = output_writer.ReadOutput()
-    self.assertEqual(string, b'')
+    self.assertEqual(output, b'')
 
     process_status.UpdateWorkerStatus(
         'w_identifier', 'w_status', 123, 0,
