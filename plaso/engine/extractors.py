@@ -28,6 +28,10 @@ class EventExtractor(object):
   An event extractor extracts events from event sources.
   """
 
+  _PARSE_RESULT_FAILURE = 1
+  _PARSE_RESULT_SUCCESS = 2
+  _PARSE_RESULT_UNSUPPORTED = 3
+
   def __init__(self, parser_filter_expression=None):
     """Initializes an event extractor.
 
@@ -181,8 +185,10 @@ class EventExtractor(object):
           the file entry's default data stream as a file-like object.
 
     Returns:
-      bool: False if the file could not be parsed and UnableToParseFile
-          was raised.
+      int: parse result which is _PARSE_RESULT_FAILURE if the file entry
+          could not be parsed, _PARSE_RESULT_SUCCESS if the file entry
+          successfully was parsed or _PARSE_RESULT_UNSUPPORTED when
+          UnableToParseFile was raised.
 
     Raises:
       TypeError: if parser object is not a supported parser type.
@@ -200,12 +206,12 @@ class EventExtractor(object):
     if self._parsers_profiler:
       self._parsers_profiler.StartTiming(parser.NAME)
 
-    result = True
     try:
       if isinstance(parser, parsers_interface.FileEntryParser):
         parser.Parse(parser_mediator)
       elif isinstance(parser, parsers_interface.FileObjectParser):
         parser.Parse(parser_mediator, file_object)
+      result = self._PARSE_RESULT_SUCCESS
 
     # We catch IOError so we can determine the parser that generated the error.
     except (IOError, dfvfs_errors.BackEndError) as exception:
@@ -213,13 +219,14 @@ class EventExtractor(object):
       logger.warning(
           '{0:s} unable to parse file: {1:s} with error: {2!s}'.format(
               parser.NAME, display_name, exception))
+      result = self._PARSE_RESULT_FAILURE
 
     except errors.UnableToParseFile as exception:
       display_name = parser_mediator.GetDisplayName(file_entry)
       logger.debug(
           '{0:s} unable to parse file: {1:s} with error: {2!s}'.format(
               parser.NAME, display_name, exception))
-      result = False
+      result = self._PARSE_RESULT_UNSUPPORTED
 
     finally:
       if self._parsers_profiler:
@@ -249,12 +256,15 @@ class EventExtractor(object):
           the file entry's default data stream as a file-like object.
 
     Returns:
-      bool: False if the file could not be parsed and UnableToParseFile
-          was raised.
+      int: parse result which is _PARSE_RESULT_FAILURE if the file entry
+          could not be parsed, _PARSE_RESULT_SUCCESS if the file entry
+          successfully was parsed or _PARSE_RESULT_UNSUPPORTED when
+          UnableToParseFile was raised or no names of parser were provided.
 
     Raises:
       RuntimeError: if the parser object is missing.
     """
+    parse_results = self._PARSE_RESULT_UNSUPPORTED
     for parser_name in parser_names:
       parser = self._parsers.get(parser_name, None)
       if not parser:
@@ -263,15 +273,23 @@ class EventExtractor(object):
 
       if parser.FILTERS:
         if not self._CheckParserCanProcessFileEntry(parser, file_entry):
+          parse_results = self._PARSE_RESULT_SUCCESS
           continue
 
       display_name = parser_mediator.GetDisplayName(file_entry)
       logger.debug((
-          '[ParseDataStream] parsing file: {0:s} with parser: '
+          '[ParserFileEntryWithParsers] parsing file: {0:s} with parser: '
           '{1:s}').format(display_name, parser_name))
 
-      self._ParseFileEntryWithParser(
+      parse_result = self._ParseFileEntryWithParser(
           parser_mediator, parser, file_entry, file_object=file_object)
+      if parse_result == self._PARSE_RESULT_FAILURE:
+        return self._PARSE_RESULT_FAILURE
+
+      elif parse_result == self._PARSE_RESULT_SUCCESS:
+        parse_results = self._PARSE_RESULT_SUCCESS
+
+    return parse_results
 
   def ParseDataStream(self, parser_mediator, file_entry, data_stream_name):
     """Parses a data stream of a file entry with the enabled parsers.
@@ -291,13 +309,16 @@ class EventExtractor(object):
 
     try:
       parser_names = self._GetSignatureMatchParserNames(file_object)
-      if not parser_names:
-        result = False
-      else:
-        result = self._ParserFileEntryWithParsers(
-            parser_mediator, parser_names, file_entry, file_object=file_object)
 
-      if not result:
+      parse_with_non_sigscan_parsers = True
+      if parser_names:
+        parse_result = self._ParserFileEntryWithParsers(
+            parser_mediator, parser_names, file_entry, file_object=file_object)
+        if parse_result in (
+            self._PARSE_RESULT_FAILURE, self._PARSE_RESULT_SUCCESS):
+          parse_with_non_sigscan_parsers = False
+
+      if parse_with_non_sigscan_parsers:
         self._ParserFileEntryWithParsers(
             parser_mediator, self._non_sigscan_parser_names, file_entry,
             file_object=file_object)
