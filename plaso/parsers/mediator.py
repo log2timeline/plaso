@@ -492,6 +492,8 @@ class ParserMediator(object):
     self._storage_writer.AddEvent(event)
     self._number_of_events += 1
 
+    self.last_activity_timestamp = time.time()
+
   def ProduceExtractionError(self, message, path_spec=None):
     """Produces an extraction error.
 
