@@ -88,7 +88,8 @@ class ThreadedXMLRPCServer(rpc.RPCServer):
     """Initialize a threaded RPC server.
 
     Args:
-      callback (function): callback function to invoke on get status RPC request.
+      callback (function): callback function to invoke on get status RPC
+          request.
     """
     super(ThreadedXMLRPCServer, self).__init__(callback)
     self._rpc_thread = None
