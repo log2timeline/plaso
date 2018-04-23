@@ -104,6 +104,71 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
 
   _TEST_SESSION_IDENTIFIER = 'b362ab408b054cb08cf69b4c7989df89'
 
+  def testAbandonInactiveProcessingTasks(self):
+    """Tests the _AbandonInactiveProcessingTasks function."""
+    manager = task_manager.TaskManager()
+
+    task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
+
+    # Indicate to the task manager that the task is processing.
+    manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
+
+    self.assertIsNotNone(task.last_processing_time)
+
+    self.assertEqual(len(manager._tasks_queued), 0)
+    self.assertEqual(len(manager._tasks_processing), 1)
+    self.assertEqual(len(manager._tasks_abandoned), 0)
+    self.assertEqual(len(manager._tasks_pending_merge), 0)
+
+    manager._AbandonInactiveProcessingTasks()
+
+    self.assertEqual(len(manager._tasks_queued), 0)
+    self.assertEqual(len(manager._tasks_processing), 1)
+    self.assertEqual(len(manager._tasks_abandoned), 0)
+    self.assertEqual(len(manager._tasks_pending_merge), 0)
+
+    task.last_processing_time -= (
+        2 * manager._PROCESSING_TASK_INACTIVE_TIME *
+        manager._MICROSECONDS_PER_SECOND)
+
+    manager._AbandonInactiveProcessingTasks()
+
+    self.assertEqual(len(manager._tasks_queued), 0)
+    self.assertEqual(len(manager._tasks_processing), 0)
+    self.assertEqual(len(manager._tasks_abandoned), 1)
+    self.assertEqual(len(manager._tasks_pending_merge), 0)
+
+  def testAbandonInactiveQueuedTasks(self):
+    """Tests the _AbandonInactiveQueuedTasks function."""
+    manager = task_manager.TaskManager()
+
+    task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
+
+    self.assertIsNotNone(task.start_time)
+
+    self.assertEqual(len(manager._tasks_queued), 1)
+    self.assertEqual(len(manager._tasks_processing), 0)
+    self.assertEqual(len(manager._tasks_abandoned), 0)
+    self.assertEqual(len(manager._tasks_pending_merge), 0)
+
+    manager._AbandonInactiveQueuedTasks()
+
+    self.assertEqual(len(manager._tasks_queued), 1)
+    self.assertEqual(len(manager._tasks_processing), 0)
+    self.assertEqual(len(manager._tasks_abandoned), 0)
+    self.assertEqual(len(manager._tasks_pending_merge), 0)
+
+    task.start_time -= (
+        2 * manager._QUEUED_TASK_INACTIVE_TIME *
+        manager._MICROSECONDS_PER_SECOND)
+
+    manager._AbandonInactiveQueuedTasks()
+
+    self.assertEqual(len(manager._tasks_queued), 0)
+    self.assertEqual(len(manager._tasks_processing), 0)
+    self.assertEqual(len(manager._tasks_abandoned), 1)
+    self.assertEqual(len(manager._tasks_pending_merge), 0)
+
   def testHasTasksPendingMerge(self):
     """Tests the _HasTasksPendingMerge function."""
     manager = task_manager.TaskManager()
@@ -134,31 +199,6 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     task.retried = True
     result = manager._TaskIsRetriable(task)
     self.assertFalse(result)
-
-  def testTimeoutTasks(self):
-    """Tests the _TimeoutTasks function."""
-    task = tasks.Task()
-    task.storage_file_size = 10
-
-    manager = task_manager.TaskManager()
-
-    self.assertEqual(len(manager._tasks_abandoned), 0)
-
-    tasks_for_timeout = {}
-    manager._TimeoutTasks(tasks_for_timeout)
-    self.assertEqual(len(manager._tasks_abandoned), 0)
-
-    tasks_for_timeout = {task.identifier: task}
-
-    manager._TimeoutTasks(tasks_for_timeout)
-    self.assertEqual(len(manager._tasks_abandoned), 0)
-    self.assertNotEqual(tasks_for_timeout, {})
-
-    task.start_time -= 2 * manager._TASK_INACTIVE_TIME
-
-    manager._TimeoutTasks(tasks_for_timeout)
-    self.assertEqual(len(manager._tasks_abandoned), 1)
-    self.assertEqual(tasks_for_timeout, {})
 
   def testCreateTask(self):
     """Tests the CreateTask function."""
@@ -350,9 +390,11 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_abandoned), 0)
     self.assertEqual(len(manager._tasks_pending_merge), 2)
 
-    task.start_time -= 2 * manager._TASK_INACTIVE_TIME
+    task.start_time -= (
+        2 * manager._QUEUED_TASK_INACTIVE_TIME *
+        manager._MICROSECONDS_PER_SECOND)
 
-    manager._TimeoutTasks(manager._tasks_queued)
+    manager._AbandonInactiveQueuedTasks()
 
     self.assertEqual(len(manager._tasks_queued), 0)
     self.assertEqual(len(manager._tasks_processing), 0)
@@ -526,9 +568,11 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertIsNone(manager.GetRetryTask())
 
     manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
-    timestamp = int(time.time() * 1000000)
-    inactive_time = timestamp - task_manager.TaskManager._TASK_INACTIVE_TIME
-    task.last_processing_time = inactive_time - 1
+
+    inactive_time = 2 * manager._PROCESSING_TASK_INACTIVE_TIME
+    task.last_processing_time = (
+        int(time.time() - inactive_time) * manager._MICROSECONDS_PER_SECOND)
+
     # HasPendingTasks is responsible for marking tasks as abandoned, and it
     # should still return True if the task is abandoned, as it needs to be
     # retried.
