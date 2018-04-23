@@ -9,7 +9,7 @@ import unittest
 from plaso.storage import interface
 
 
-class SerializedAttributeContainerListTets(unittest.TestCase):
+class SerializedAttributeContainerListTest(unittest.TestCase):
   """Tests for the serialized attribute container list."""
 
   # pylint: disable=protected-access
