@@ -27,6 +27,7 @@ from plaso.storage import factory as storage_factory
 
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
+from tests.containers import test_lib as containers_test_lib
 from tests.filters import test_lib as filters_test_lib
 
 
@@ -153,52 +154,93 @@ class TestOutputModule(output_interface.LinearOutputModule):
     self.macb_groups.append(event_macb_group)
 
 
-class PsortEvensHeapTest(shared_test_lib.BaseTestCase):
+class PsortEventHeapTest(shared_test_lib.BaseTestCase):
   """Tests for the psort events heap."""
 
   # pylint: disable=protected-access
 
-  # TODO: add tests for _GetEventIdentifiers
+  _TEST_EVENT_ATTRIBUTES = {
+      'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}
 
   def testNumberOfEvents(self):
     """Tests the number_of_events property."""
     event_heap = psort.PsortEventHeap()
     self.assertEqual(event_heap.number_of_events, 0)
 
+  def testGetEventIdentifiers(self):
+    """Tests the _GetEventIdentifiers function."""
+    event_heap = psort.PsortEventHeap()
+
+    event = containers_test_lib.TestEvent(
+        5134324321, attributes=self._TEST_EVENT_ATTRIBUTES)
+    macb_group_identifier, content_identifier = (
+        event_heap._GetEventIdentifiers(event))
+
+    expected_identifier = 'data_type: test:event'
+    self.assertEqual(macb_group_identifier, expected_identifier)
+
+    expected_identifier = 'Metadata Modification Time, data_type: test:event'
+    self.assertEqual(content_identifier, expected_identifier)
+
   def testPopEvent(self):
     """Tests the PopEvent function."""
     event_heap = psort.PsortEventHeap()
 
+    self.assertEqual(len(event_heap._heap), 0)
+
     test_event = event_heap.PopEvent()
     self.assertIsNone(test_event)
 
-    event = TestEvent(5134324321)
-    event_heap.PushEvent(event)
+    event1 = containers_test_lib.TestEvent(
+        5134324321, attributes=self._TEST_EVENT_ATTRIBUTES)
+    event_heap.PushEvent(event1)
+
+    event2 = containers_test_lib.TestEvent(
+        2345871286, attributes=self._TEST_EVENT_ATTRIBUTES)
+    event_heap.PushEvent(event2)
+
+    self.assertEqual(len(event_heap._heap), 2)
 
     test_event = event_heap.PopEvent()
     self.assertIsNotNone(test_event)
+
+    self.assertEqual(len(event_heap._heap), 1)
 
   def testPopEvents(self):
     """Tests the PopEvents function."""
     event_heap = psort.PsortEventHeap()
 
+    self.assertEqual(len(event_heap._heap), 0)
+
     test_events = list(event_heap.PopEvents())
     self.assertEqual(len(test_events), 0)
 
-    event = TestEvent(5134324321)
-    event_heap.PushEvent(event)
+    event1 = containers_test_lib.TestEvent(
+        5134324321, attributes=self._TEST_EVENT_ATTRIBUTES)
+    event_heap.PushEvent(event1)
+
+    event2 = containers_test_lib.TestEvent(
+        2345871286, attributes=self._TEST_EVENT_ATTRIBUTES)
+    event_heap.PushEvent(event2)
+
+    self.assertEqual(len(event_heap._heap), 2)
 
     test_events = list(event_heap.PopEvents())
-    self.assertEqual(len(test_events), 1)
+    self.assertEqual(len(test_events), 2)
+
+    self.assertEqual(len(event_heap._heap), 0)
 
   def testPushEvent(self):
     """Tests the PushEvent function."""
     event_heap = psort.PsortEventHeap()
 
-    event = TestEvent(5134324321)
+    self.assertEqual(len(event_heap._heap), 0)
+
+    event = containers_test_lib.TestEvent(
+        5134324321, attributes=self._TEST_EVENT_ATTRIBUTES)
     event_heap.PushEvent(event)
 
-    self.assertEqual(event_heap.number_of_events, 1)
+    self.assertEqual(len(event_heap._heap), 1)
 
 
 class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
