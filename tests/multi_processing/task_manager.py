@@ -187,18 +187,14 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
 
     # TODO: test True condition.
 
-  def testTaskIsRetriable(self):
-    """Tests the _TaskIsRetriable function."""
-    task = tasks.Task()
-
+  def testCreateRetryTask(self):
+    """Tests the CreateRetryTask function."""
     manager = task_manager.TaskManager()
 
-    result = manager._TaskIsRetriable(task)
-    self.assertTrue(result)
+    result_task = manager.CreateRetryTask()
+    self.assertIsNone(result_task)
 
-    task.retried = True
-    result = manager._TaskIsRetriable(task)
-    self.assertFalse(result)
+    # TODO: improve test coverage.
 
   def testCreateTask(self):
     """Tests the CreateTask function."""
@@ -232,15 +228,6 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
 
     result_tasks = manager.GetAbandonedTasks()
     self.assertEqual(result_tasks, [])
-
-    # TODO: improve test coverage.
-
-  def testGetRetryTask(self):
-    """Tests the GetRetryTask function."""
-    manager = task_manager.TaskManager()
-
-    result_task = manager.GetRetryTask()
-    self.assertIsNone(result_task)
 
     # TODO: improve test coverage.
 
@@ -565,7 +552,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
     self.assertEqual(manager.GetAbandonedTasks(), [])
     self.assertTrue(manager.HasPendingTasks())
-    self.assertIsNone(manager.GetRetryTask())
+    self.assertIsNone(manager.CreateRetryTask())
 
     manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
 
@@ -579,13 +566,11 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertTrue(manager.HasPendingTasks())
     abandoned_tasks = manager.GetAbandonedTasks()
     self.assertIn(task, abandoned_tasks)
-    self.assertTrue(manager._TaskIsRetriable(task))
 
-    retry_task = manager.GetRetryTask()
+    retry_task = manager.CreateRetryTask()
     self.assertIsNotNone(retry_task)
     self.assertEqual(task.identifier, retry_task.original_task_identifier)
     self.assertTrue(task.retried)
-    self.assertFalse(manager._TaskIsRetriable(retry_task))
     manager.CompleteTask(retry_task)
 
     manager.UpdateTaskAsProcessingByIdentifier(task.identifier)

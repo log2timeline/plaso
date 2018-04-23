@@ -92,6 +92,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   # Maximum number of concurrent tasks.
   _MAXIMUM_NUMBER_OF_TASKS = 10000
 
+  # Consider a worker inactive after 15 minutes of no activity.
   _PROCESS_WORKER_TIMEOUT = 15.0 * 60.0
 
   _WORKER_PROCESSES_MINIMUM = 2
@@ -247,7 +248,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._task_manager.CompleteTask(self._merge_task)
         except KeyError as exception:
           logger.error(
-              'Unable to complete task {0:s}, with Error {1:s}'.format(
+              'Unable to complete task: {0:s} with error: {1!s}'.format(
                   self._merge_task.identifier, exception))
 
         if self._storage_merge_reader_on_hold:
@@ -379,8 +380,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     # TODO: protect task scheduler loop by catch all and
     # handle abort path.
 
-    task = None
-
     event_source_heap = _EventSourceHeap()
 
     self._FillEventSourceHeap(
@@ -388,14 +387,16 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     event_source = event_source_heap.PopEventSource()
 
+    task = None
     while event_source or self._task_manager.HasPendingTasks():
       if self._abort:
         break
 
       try:
         if not task:
-          task = self._task_manager.GetRetryTask()
-        if event_source and not task:
+          task = self._task_manager.CreateRetryTask()
+
+        if not task and event_source:
           task = self._task_manager.CreateTask(self._session_identifier)
           task.file_entry_type = event_source.file_entry_type
           task.path_spec = event_source.path_spec
@@ -406,18 +407,17 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           if self._guppy_memory_profiler:
             self._guppy_memory_profiler.Sample()
 
-        if task:
-          if self._ScheduleTask(task):
-            logger.debug(
-                'Scheduled task {0:s} for path specification {1:s}'.format(
-                    task.identifier, task.path_spec.comparable))
-            task = None
+        if task and self._ScheduleTask(task):
+          logger.debug(
+              'Scheduled task {0:s} for path specification {1:s}'.format(
+                  task.identifier, task.path_spec.comparable))
+          task = None
 
         self._MergeTaskStorage(storage_writer)
 
         self._FillEventSourceHeap(storage_writer, event_source_heap)
 
-        if not event_source and not task:
+        if not task and not event_source:
           event_source = event_source_heap.PopEventSource()
 
       except KeyboardInterrupt:
@@ -430,7 +430,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     for task in self._task_manager.GetAbandonedTasks():
       if not task.retried:
         error = error_containers.ExtractionError(
-            message='Worker failed to process pathspec',
+            message='Worker failed to process path specification',
             path_spec=task.path_spec)
         self._storage_writer.AddError(error)
         self._processing_status.error_path_specs.append(task.path_spec)

@@ -78,7 +78,7 @@ class _PendingMergeTaskHeap(object):
     """
     storage_file_size = getattr(task, 'storage_file_size', None)
     if not storage_file_size:
-      raise ValueError('Task storage file size not set')
+      raise ValueError('Task storage file size not set.')
 
     if task.file_entry_type == dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY:
       weight = 1
@@ -124,10 +124,10 @@ class TaskManager(object):
   _MICROSECONDS_PER_SECOND = 1000000
 
   # Consider a processing task inactive after 5 minutes of no activity.
-  _PROCESSING_TASK_INACTIVE_TIME = 5 * 60
+  _PROCESSING_TASK_INACTIVE_TIME = 5.0 * 60.0
 
   # Consider a queued task inactive after 30 minutes of no activity.
-  _QUEUED_TASK_INACTIVE_TIME = 30 * 60
+  _QUEUED_TASK_INACTIVE_TIME = 30.0 * 60.0
 
   def __init__(self):
     """Initializes a task manager."""
@@ -168,7 +168,7 @@ class TaskManager(object):
 
       for task_identifier, task in iter(self._tasks_processing.items()):
         if task.last_processing_time < inactive_time:
-          logger.debug('Abandoned processing task: {0:s}'.format(
+          logger.debug('Abandoned processing task: {0:s}.'.format(
               task_identifier))
 
           self._tasks_abandoned[task_identifier] = task
@@ -186,16 +186,34 @@ class TaskManager(object):
 
       for task_identifier, task in iter(self._tasks_queued.items()):
         if task.start_time < inactive_time:
-          logger.debug('Abandoned queued task: {0:s}'.format(task_identifier))
+          logger.debug('Abandoned queued task: {0:s}.'.format(task_identifier))
 
           self._tasks_abandoned[task_identifier] = task
           del self._tasks_queued[task_identifier]
 
+  def _GetTaskPendingRetry(self):
+    """Retrieves an abandoned task that should be retried.
+
+    This method does not lock the manager and should be called by a method
+    holding the manager lock.
+
+    Returns:
+      Task: a task that was abandoned but should be retried or None if there are
+          no abandoned tasks that should be retried.
+    """
+    for task in self._tasks_abandoned.values():
+      # Only retry abandoned tasks that are yet to be retried and
+      # are not themselves retries of another task.
+      if not (task.retried or task.original_task_identifier):
+        return task
+
+    return None
+
   def _HasTasksPendingMerge(self):
     """Determines if there are tasks waiting to be merged.
 
-    Note that this method does not lock the manager and should be called
-    by a method holding the manager lock.
+    This method does not lock the manager and should be called by a method
+    holding the manager lock.
 
     Returns:
       bool: True if there are abandoned tasks that need to be retried.
@@ -205,28 +223,44 @@ class TaskManager(object):
   def _HasTasksPendingRetry(self):
     """Determines if there are abandoned tasks that still need to be retried.
 
-    Note that this method does not lock the manager and should be called
-    by a method holding the manager lock.
+    This method does not lock the manager and should be called by a method
+    holding the manager lock.
 
     Returns:
       bool: True if there are abandoned tasks that need to be retried.
     """
-    for abandoned_task in self._tasks_abandoned.values():
-      if self._TaskIsRetriable(abandoned_task):
-        return True
+    return bool(self._GetTaskPendingRetry())
 
-    return False
+  def _QueueTask(self, task):
+    """Queues a task.
 
-  def _TaskIsRetriable(self, task):
-    """Determines if a task is eligible to be retried.
+    This method does not lock the manager and should be called by a method
+    holding the manager lock.
 
     Args:
-      task (Task): task to be checked for its eligibility to be retried.
+      task (Task): task to queue.
+    """
+    self._tasks_queued[task.identifier] = task
+    self._total_number_of_tasks += 1
+
+  def CreateRetryTask(self):
+    """Creates a task that to retry a previously abandoned task.
 
     Returns:
-      bool: True if the task is eligible to be retried.
+      Task: a task that was abandoned but should be retried or None if there are
+          no abandoned tasks that should be retried.
     """
-    return not (task.retried or task.original_task_identifier)
+    with self._lock:
+      abandoned_task = self._GetTaskPendingRetry()
+      if not abandoned_task:
+        return None
+
+      retry_task = abandoned_task.CreateRetry()
+      logger.debug('Retrying task {0:s} as {1:s}.'.format(
+          abandoned_task.identifier, retry_task.identifier))
+
+      self._QueueTask(retry_task)
+      return retry_task
 
   # TODO: add support for task types.
   def CreateTask(self, session_identifier):
@@ -240,12 +274,11 @@ class TaskManager(object):
       Task: task attribute container.
     """
     task = tasks.Task(session_identifier)
-    logger.debug('Created task: {0:s}'.format(task.identifier))
+    logger.debug('Created task: {0:s}.'.format(task.identifier))
 
     with self._lock:
-      self._tasks_queued[task.identifier] = task
+      self._QueueTask(task)
 
-    self._total_number_of_tasks += 1
     return task
 
   def CompleteTask(self, task):
@@ -268,13 +301,13 @@ class TaskManager(object):
 
       if task.identifier in self._tasks_processing:
         del self._tasks_processing[task.identifier]
-        logger.debug('Task {0:s} completed from processing'.format(
+        logger.debug('Task {0:s} completed from processing.'.format(
             task.identifier))
         return
 
       if task.identifier in self._tasks_queued:
         del self._tasks_queued[task.identifier]
-        logger.debug('Task {0:s} is completed from queued'.format(
+        logger.debug('Task {0:s} is completed from queued.'.format(
             task.identifier))
         return
 
@@ -285,30 +318,31 @@ class TaskManager(object):
       list[Task]: tasks.
     """
     with self._lock:
-      abandoned_tasks = list(self._tasks_abandoned.values())
-    return abandoned_tasks
+      return list(self._tasks_abandoned.values())
 
-  def GetRetryTask(self):
-    """Creates a task that is an attempt to retry an abandoned task.
+  def GetProcessedTaskByIdentifier(self, task_identifier):
+    """Retrieves a task that has been processed.
+
+    Args:
+      task_identifier (str): unique identifier of the task.
 
     Returns:
-      Task: a task that is a retry of an existing task or None if there are
-          no tasks that need to be retried.
+      Task: a task that has been processed.
+
+    Raises:
+      KeyError: if the task was not processing, queued or abandoned.
     """
     with self._lock:
-      for abandoned_task in self._tasks_abandoned.values():
-        # Only retry abandoned tasks that are yet to be retried and
-        # are not themselves retries of another task.
-        if self._TaskIsRetriable(abandoned_task):
-          retry_task = abandoned_task.CreateRetry()
-          logger.debug(
-              'Retrying task {0:s} as {1:s}'.format(
-                  abandoned_task.identifier, retry_task.identifier))
-          self._tasks_queued[retry_task.identifier] = retry_task
-          self._total_number_of_tasks += 1
-          return retry_task
+      task = self._tasks_processing.get(task_identifier, None)
+      if not task:
+        task = self._tasks_queued.get(task_identifier, None)
+      if not task:
+        task = self._tasks_abandoned.get(task_identifier, None)
+      if not task:
+        raise KeyError('Status of task {0:s} is unknown.'.format(
+            task_identifier))
 
-    return None
+    return task
 
   def GetStatusInformation(self):
     """Retrieves status information about the tasks.
@@ -420,7 +454,7 @@ class TaskManager(object):
       is_queued = task.identifier in self._tasks_queued
 
       if not (is_queued or is_abandoned or is_processing):
-        raise KeyError('Status of task {0:s} is unknown'.format(
+        raise KeyError('Status of task {0:s} is unknown.'.format(
             task.identifier))
 
       self._tasks_pending_merge.PushTask(task)
@@ -437,10 +471,10 @@ class TaskManager(object):
 
     if is_abandoned:
       logger.warning(
-          'Previously abandoned task {0:s} is now pending merge'.format(
+          'Previously abandoned task {0:s} is now pending merge.'.format(
               task.identifier))
     else:
-      logger.debug('Task {0:s} is pending merge'.format(task.identifier))
+      logger.debug('Task {0:s} is pending merge.'.format(task.identifier))
 
   def UpdateTasksAsPendingMerge(self, mergeable_tasks):
     """Updates the task manager to reflect that tasks are ready to be merged.
@@ -471,7 +505,7 @@ class TaskManager(object):
 
       task_queued = self._tasks_queued.get(task_identifier, None)
       if task_queued:
-        logger.debug('Task {0:s} was queued, now processing'.format(
+        logger.debug('Task {0:s} was queued, now processing.'.format(
             task_identifier))
         self._tasks_processing[task_identifier] = task_queued
         del self._tasks_queued[task_identifier]
@@ -482,7 +516,7 @@ class TaskManager(object):
       if task_abandoned:
         del self._tasks_abandoned[task_identifier]
         self._tasks_processing[task_identifier] = task_abandoned
-        logger.debug('Task {0:s} was abandoned, but now processing'.format(
+        logger.debug('Task {0:s} was abandoned, but now processing.'.format(
             task_identifier))
         task_abandoned.UpdateProcessingTime()
         return
@@ -493,4 +527,4 @@ class TaskManager(object):
         return
 
     # If we get here, we don't know what state the tasks is in, so raise.
-    raise KeyError('Status of task {0:s} is unknown'.format(task_identifier))
+    raise KeyError('Status of task {0:s} is unknown.'.format(task_identifier))
