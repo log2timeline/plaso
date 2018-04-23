@@ -344,28 +344,6 @@ class TaskManager(object):
 
     return task
 
-  def GetRetryTask(self):
-    """Creates a task that is an attempt to retry an abandoned task.
-
-    Returns:
-      Task: a task that is a retry of an existing task or None if there are
-          no tasks that need to be retried.
-    """
-    with self._lock:
-      for abandoned_task in self._tasks_abandoned.values():
-        # Only retry abandoned tasks that are yet to be retried and
-        # are not themselves retries of another task.
-        if self._TaskIsRetriable(abandoned_task):
-          retry_task = abandoned_task.CreateRetry()
-          logger.debug(
-              'Retrying task {0:s} as {1:s}'.format(
-                  abandoned_task.identifier, retry_task.identifier))
-          self._tasks_queued[retry_task.identifier] = retry_task
-          self._total_number_of_tasks += 1
-          return retry_task
-
-    return None
-
   def GetStatusInformation(self):
     """Retrieves status information about the tasks.
 
