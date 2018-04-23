@@ -245,14 +245,13 @@ class TaskManager(object):
     self._tasks_queued[task.identifier] = task
     self._total_number_of_tasks += 1
 
-  def _UpdateProcessingTimeOfTask(self, task):
-    """Updates the processing time of the task to now.
+  def _UpdateProcessingTimeFromTask(self, task):
+    """Updates the last processing time of the task manager from the task.
+
+    This method also updates the last processing time of the task to now.
 
     This method does not lock the manager and should be called by a method
     holding the manager lock.
-
-    This method updates the last processing time of the task manager to that
-    of the task.
 
     Args:
       task (Task): task to update the processing time of.
@@ -483,7 +482,7 @@ class TaskManager(object):
 
       self._tasks_pending_merge.PushTask(task)
 
-      self._UpdateProcessingTimeOfTask(task)
+      self._UpdateProcessingTimeFromTask(task)
 
       if is_queued:
         del self._tasks_queued[task.identifier]
@@ -513,7 +512,7 @@ class TaskManager(object):
     with self._lock:
       task_processing = self._tasks_processing.get(task_identifier, None)
       if task_processing:
-        self._UpdateProcessingTimeOfTask(task_processing)
+        self._UpdateProcessingTimeFromTask(task_processing)
         return
 
       task_queued = self._tasks_queued.get(task_identifier, None)
@@ -522,7 +521,7 @@ class TaskManager(object):
             task_identifier))
         self._tasks_processing[task_identifier] = task_queued
         del self._tasks_queued[task_identifier]
-        self._UpdateProcessingTimeOfTask(task_queued)
+        self._UpdateProcessingTimeFromTask(task_queued)
         return
 
       task_abandoned = self._tasks_abandoned.get(task_identifier, None)
@@ -531,7 +530,7 @@ class TaskManager(object):
         self._tasks_processing[task_identifier] = task_abandoned
         logger.debug('Task {0:s} was abandoned, but now processing.'.format(
             task_identifier))
-        self._UpdateProcessingTimeOfTask(task_abandoned)
+        self._UpdateProcessingTimeFromTask(task_abandoned)
         return
 
       if task_identifier in self._tasks_pending_merge:

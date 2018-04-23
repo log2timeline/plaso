@@ -211,7 +211,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
 
     # TODO: test True condition.
 
-  # TODO: add tests for _UpdateProcessingTimeOfTask
+  # TODO: add tests for _UpdateProcessingTimeFromTask
 
   def testCreateRetryTask(self):
     """Tests the CreateRetryTask function."""
