@@ -98,8 +98,8 @@ class TaskManager(object):
   A task being tracked by the manager must be in exactly one of the
   following states:
 
-  * abandoned: no status information has been recently received from a worker
-      about the task and is assumed to be abandoned.
+  * abandoned: a task assumed to be abandoned because a tasks that has been
+      queued or was processing exceeds the maximum inactive time.
   * queued: the task is waiting for a worker to start processing it. It is also
       possible that a worker has already completed the task, but no status
       update was collected from the worker while it processed the task.
@@ -121,8 +121,13 @@ class TaskManager(object):
   # Context manager 'lock' doesn't implement __enter__ and __exit__.
   # pylint: disable=not-context-manager
 
-  # Consider a task inactive after 5 minutes of no activity.
-  _TASK_INACTIVE_TIME = 5 * 60 * 1000000
+  _MICROSECONDS_PER_SECOND = 1000000
+
+  # Consider a processing task inactive after 5 minutes of no activity.
+  _PROCESSING_TASK_INACTIVE_TIME = 5 * 60
+
+  # Consider a queued task inactive after 30 minutes of no activity.
+  _QUEUED_TASK_INACTIVE_TIME = 30 * 60
 
   def __init__(self):
     """Initializes a task manager."""
@@ -150,6 +155,41 @@ class TaskManager(object):
 
     # TODO: implement a limit on the number of tasks.
     self._total_number_of_tasks = 0
+
+  def _AbandonInactiveProcessingTasks(self):
+    """Marks processing tasks that exceed the inactive time as abandoned.
+
+    This method does not lock the manager and should be called by a method
+    holding the manager lock.
+    """
+    if self._tasks_processing:
+      inactive_time = time.time() - self._PROCESSING_TASK_INACTIVE_TIME
+      inactive_time = int(inactive_time * self._MICROSECONDS_PER_SECOND)
+
+      for task_identifier, task in iter(self._tasks_processing.items()):
+        if task.last_processing_time < inactive_time:
+          logger.debug('Abandoned processing task: {0:s}'.format(
+              task_identifier))
+
+          self._tasks_abandoned[task_identifier] = task
+          del self._tasks_processing[task_identifier]
+
+  def _AbandonInactiveQueuedTasks(self):
+    """Marks queued tasks that exceed the inactive time as abandoned.
+
+    This method does not lock the manager and should be called by a method
+    holding the manager lock.
+    """
+    if self._tasks_queued:
+      inactive_time = time.time() - self._QUEUED_TASK_INACTIVE_TIME
+      inactive_time = int(inactive_time * self._MICROSECONDS_PER_SECOND)
+
+      for task_identifier, task in iter(self._tasks_queued.items()):
+        if task.start_time < inactive_time:
+          logger.debug('Abandoned queued task: {0:s}'.format(task_identifier))
+
+          self._tasks_abandoned[task_identifier] = task
+          del self._tasks_queued[task_identifier]
 
   def _HasTasksPendingMerge(self):
     """Determines if there are tasks waiting to be merged.
@@ -188,32 +228,6 @@ class TaskManager(object):
     """
     return not (task.retried or task.original_task_identifier)
 
-  def _TimeoutTasks(self, tasks_for_timeout):
-    """Checks for inactive tasks and marks such tasks as abandoned.
-
-    Note that this method does not lock the manager and should be called
-    by a method holding the manager lock.
-
-    Args:
-      tasks_for_timeout (dict[str, Task]): mapping of task identifiers to Tasks
-        that will be checked for inactivity and marked as abandoned if
-        required.
-    """
-    if not tasks_for_timeout:
-      return
-
-    inactive_time = int(time.time() * 1000000) - self._TASK_INACTIVE_TIME
-
-    for task_identifier, task in iter(tasks_for_timeout.items()):
-      last_active_time = task.last_processing_time
-      if not last_active_time:
-        last_active_time = task.start_time
-
-      if last_active_time < inactive_time:
-        logger.debug('Task {0:s} is abandoned'.format(task_identifier))
-        self._tasks_abandoned[task_identifier] = task
-        del tasks_for_timeout[task_identifier]
-
   # TODO: add support for task types.
   def CreateTask(self, session_identifier):
     """Creates a task.
@@ -226,6 +240,8 @@ class TaskManager(object):
       Task: task attribute container.
     """
     task = tasks.Task(session_identifier)
+    logger.debug('Created task: {0:s}'.format(task.identifier))
+
     with self._lock:
       self._tasks_queued[task.identifier] = task
 
@@ -358,7 +374,8 @@ class TaskManager(object):
           need to be retried.
     """
     with self._lock:
-      self._TimeoutTasks(self._tasks_processing)
+      self._AbandonInactiveProcessingTasks()
+
       if self._tasks_processing:
         return True
 
@@ -372,11 +389,13 @@ class TaskManager(object):
       if self._HasTasksPendingRetry():
         return True
 
-      # It is possible that a worker received a task and didn't report it.
-      # Check for tasks that we believe are queued that might need to be marked
-      # as abandoned, as all the workers are idle and the task has been queued
-      # for longer than the timeout.
-      self._TimeoutTasks(self._tasks_queued)
+      # It is possible that a worker worked on a task and the foreman does not
+      # know about it, since there is no feedback from the worker when it pops
+      # a task from the queue. Hence we check for tasks that we believe are
+      # queued that might need to be marked as abandoned, as all the workers
+      # are idle and the task has been queued for longer than the timeout.
+      self._AbandonInactiveQueuedTasks()
+
       if self._tasks_queued:
         return True
 
