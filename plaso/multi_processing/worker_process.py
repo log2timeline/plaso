@@ -155,7 +155,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     if self._storage_profiler:
       self._storage_writer.SetStorageProfiler(self._storage_profiler)
 
-    logger.debug('Worker: {0!s} (PID: {1:d}) started'.format(
+    logger.debug('Worker: {0!s} (PID: {1:d}) started.'.format(
         self._name, self._pid))
 
     self._status = definitions.PROCESSING_STATUS_RUNNING
@@ -214,7 +214,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     else:
       self._status = definitions.PROCESSING_STATUS_COMPLETED
 
-    logger.debug('Worker: {0!s} (PID: {1:d}) stopped'.format(
+    logger.debug('Worker: {0!s} (PID: {1:d}) stopped.'.format(
         self._name, self._pid))
 
     try:
@@ -260,6 +260,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     Args:
       task (Task): task.
     """
+    logger.debug('Started processing task: {0:s}.'.format(task.identifier))
+
     self._task = task
 
     storage_writer = self._storage_writer.CreateTaskStorage(task)
@@ -295,6 +297,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       pass
 
     self._task = None
+
+    logger.debug('Completed processing task: {0:s}.'.format(task.identifier))
 
   def SignalAbort(self):
     """Signals the process to abort."""
