@@ -41,3 +41,7 @@ do
 
 	sleep 60;
 done
+
+wait ${PID_COMMAND};
+
+exit $?;
