@@ -13,7 +13,6 @@ from dfvfs.resolver import resolver
 
 from plaso.lib import errors
 from plaso.parsers import interface
-from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import winlnk
 
@@ -85,7 +84,7 @@ class CustomDestinationsParser(interface.FileObjectParser):
       lnk_file_object = resolver.Resolver.OpenFileObject(path_spec)
     except (dfvfs_errors.BackEndError, RuntimeError) as exception:
       message = (
-          'Unable to open LNK file: {0:s} with error {1:s}').format(
+          'unable to open LNK file: {0:s} with error: {1!s}').format(
               display_name, exception)
       parser_mediator.ProduceExtractionError(message)
       return 0
@@ -139,7 +138,7 @@ class CustomDestinationsParser(interface.FileObjectParser):
       data_structure = self._HEADER_VALUE_TYPE_1_OR_2
 
     try:
-      _ = data_structure.parse_stream(file_object)
+      data_structure.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile((
           'Invalid Custom Destination file: {0:s} - unable to parse '
@@ -158,35 +157,40 @@ class CustomDestinationsParser(interface.FileObjectParser):
       try:
         entry_header = self._ENTRY_HEADER.parse_stream(file_object)
       except (IOError, construct.FieldError) as exception:
-        error_message = (
-            'Invalid Custom Destination file: {0:s} - unable to parse '
-            'entry header with error: {1!s}').format(
-                display_name, exception)
-
         if not first_guid_checked:
-          raise errors.UnableToParseFile(error_message)
+          raise errors.UnableToParseFile((
+              'Invalid Custom Destination file: {0:s} - unable to parse '
+              'entry header with error: {1!s}').format(
+                  display_name, exception))
 
-        logger.warning(error_message)
+        parser_mediator.ProduceExtractionError(
+            'unable to parse entry header with error: {0!s}'.format(
+                exception))
         break
 
       if entry_header.guid != self._LNK_GUID:
-        error_message = (
-            'Unsupported Custom Destination file: {0:s} - invalid entry '
-            'header.').format(display_name)
-
         if not first_guid_checked:
-          raise errors.UnableToParseFile(error_message)
+          raise errors.UnableToParseFile((
+              'Unsupported Custom Destination file: {0:s} - invalid entry '
+              'header signature offset: 0x{1:08x}.').format(
+                  display_name, file_offset))
 
-        file_object.seek(-16, os.SEEK_CUR)
         try:
-          file_footer = self._FILE_FOOTER.parse_stream(file_object)
-        except (IOError, construct.FieldError) as exception:
-          raise IOError((
-              'Unable to parse file footer at offset: 0x{0:08x} '
-              'with error: {1!s}').format(file_offset, exception))
+          # Check if we found the footer instead of an entry header.
+          file_object.seek(-16, os.SEEK_CUR)
 
-        if file_footer.signature != self._FOOTER_SIGNATURE:
-          logger.warning(error_message)
+          file_footer = self._FILE_FOOTER.parse_stream(file_object)
+
+          if file_footer.signature != self._FOOTER_SIGNATURE:
+            parser_mediator.ProduceExtractionError(
+                'invalid entry header signature at offset: 0x{0:08x}'.format(
+                    file_offset))
+
+        except (IOError, construct.FieldError) as exception:
+          parser_mediator.ProduceExtractionError((
+              'unable to parse footer at offset: 0x{0:08x} with error: '
+              '{1!s}').format(file_offset, exception))
+          break
 
         file_object.seek(-4, os.SEEK_CUR)
 
@@ -207,15 +211,15 @@ class CustomDestinationsParser(interface.FileObjectParser):
 
     try:
       file_footer = self._FILE_FOOTER.parse_stream(file_object)
-    except (IOError, construct.FieldError) as exception:
-      logger.warning((
-          'Invalid Custom Destination file: {0:s} - unable to parse '
-          'footer with error: {1!s}').format(display_name, exception))
 
-    if file_footer.signature != self._FOOTER_SIGNATURE:
-      logger.warning((
-          'Unsupported Custom Destination file: {0:s} - invalid footer '
-          'signature.').format(display_name))
+      if file_footer.signature != self._FOOTER_SIGNATURE:
+        parser_mediator.ProduceExtractionError(
+            'invalid footer signature at offset: 0x{0:08x}'.format(file_offset))
+
+    except (IOError, construct.FieldError) as exception:
+      parser_mediator.ProduceExtractionError((
+          'unable to parse footer at offset: 0x{0:08x} with error: '
+          '{1!s}').format(file_offset, exception))
 
 
 manager.ParsersManager.RegisterParser(CustomDestinationsParser)
