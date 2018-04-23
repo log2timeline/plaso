@@ -4,6 +4,8 @@
 from __future__ import unicode_literals
 
 
+MICROSECONDS_PER_SECOND = 1000000
+
 COMPRESSION_FORMAT_NONE = 'none'
 COMPRESSION_FORMAT_ZLIB = 'zlib'
 

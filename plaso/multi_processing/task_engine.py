@@ -436,13 +436,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         if self._status_update_callback:
           self._status_update_callback(self._processing_status)
 
-    for task in self._task_manager.GetAbandonedTasks():
-      if not task.retried:
-        error = error_containers.ExtractionError(
-            message='Worker failed to process path specification',
-            path_spec=task.path_spec)
-        self._storage_writer.AddError(error)
-        self._processing_status.error_path_specs.append(task.path_spec)
+    for task in self._task_manager.GetFailedTasks():
+      error = error_containers.ExtractionError(
+          message='Worker failed to process path specification',
+          path_spec=task.path_spec)
+      self._storage_writer.AddError(error)
+      self._processing_status.error_path_specs.append(task.path_spec)
 
     self._status = definitions.PROCESSING_STATUS_IDLE
 
