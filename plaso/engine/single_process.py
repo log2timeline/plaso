@@ -253,6 +253,9 @@ class SingleProcessEngine(engine.BaseEngine):
 
     logger.debug('Processing started.')
 
+    parser_mediator.StartProfiling(
+        self._processing_configuration.profiling, self._name,
+        self._process_information)
     self._StartProfiling(self._processing_configuration.profiling)
 
     if self._parsers_profiler:
@@ -295,6 +298,7 @@ class SingleProcessEngine(engine.BaseEngine):
         storage_writer.SetStorageProfiler(None)
 
       self._StopProfiling()
+      parser_mediator.StopProfiling()
 
     if self._abort:
       logger.debug('Processing aborted.')

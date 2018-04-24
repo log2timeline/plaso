@@ -203,6 +203,7 @@ class EventExtractor(object):
         parser_mediator.resolver_context.GetFileObjectReferenceCount(
             file_entry.path_spec))
 
+    # TODO: move into parser mediator
     if self._parsers_profiler:
       self._parsers_profiler.StartTiming(parser.NAME)
 
@@ -231,6 +232,8 @@ class EventExtractor(object):
     finally:
       if self._parsers_profiler:
         self._parsers_profiler.StopTiming(parser.NAME)
+
+      parser_mediator.SampleMemoryUsage(parser.NAME)
 
       new_reference_count = (
           parser_mediator.resolver_context.GetFileObjectReferenceCount(

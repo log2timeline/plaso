@@ -50,12 +50,14 @@ class ParserMediator(object):
     self._knowledge_base = knowledge_base
     self._last_event_data_hash = None
     self._last_event_data_identifier = None
+    self._memory_profiler = None
     self._mount_path = None
     self._number_of_errors = 0
     self._number_of_event_sources = 0
     self._number_of_events = 0
     self._parser_chain_components = []
     self._preferred_year = preferred_year
+    self._process_information = None
     self._resolver_context = resolver_context
     self._storage_writer = storage_writer
     self._temporary_directory = temporary_directory
@@ -538,6 +540,16 @@ class ParserMediator(object):
     """Resets the active file entry."""
     self._file_entry = None
 
+  def SampleMemoryUsage(self, parser_name):
+    """Takes a sample of the memory usage for profiling.
+
+    Args:
+      parser_name (str): name of the parser.
+    """
+    if self._memory_profiler:
+      used_memory = self._process_information.GetUsedMemory() or 0
+      self._memory_profiler.Sample(parser_name, used_memory)
+
   def SetEventExtractionConfiguration(self, configuration):
     """Sets the event extraction configuration settings.
 
@@ -586,3 +598,30 @@ class ParserMediator(object):
   def SignalAbort(self):
     """Signals the parsers to abort."""
     self._abort = True
+
+  def StartProfiling(self, configuration, identifier, process_information):
+    """Starts profiling.
+
+    Args:
+      configuration (ProfilingConfiguration): profiling configuration.
+      identifier (str): identifier of the profiling session used to create
+          the sample filename.
+      process_information (ProcessInfo): process information.
+    """
+    if not configuration:
+      return
+
+    if configuration.HaveProfileMemory():
+      self._memory_profiler = profilers.MemoryProfiler(
+          '{0:s}-mediator'.format(identifier), configuration)
+      self._memory_profiler.Start()
+
+    self._process_information = process_information
+
+  def StopProfiling(self):
+    """Stops profiling."""
+    if self._memory_profiler:
+      self._memory_profiler.Stop()
+      self._memory_profiler = None
+
+    self._process_information = None

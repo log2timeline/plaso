@@ -141,7 +141,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._extraction_worker.SetExtractionConfiguration(
         self._processing_configuration.extraction)
 
-    self._StartProfiling(self._processing_configuration.profiling)
+    self._parser_mediator.StartProfiling(
+        self._processing_configuration.profiling, self._name,
+        self._process_information)
+    self._StartProfiling('main', self._processing_configuration.profiling)
 
     if self._parsers_profiler:
       self._extraction_worker.SetParsersProfiler(self._parsers_profiler)
@@ -204,6 +207,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       self._storage_writer.SetStorageProfiler(None)
 
     self._StopProfiling()
+    self._parser_mediator.StopProfiling()
 
     self._extraction_worker = None
     self._parser_mediator = None

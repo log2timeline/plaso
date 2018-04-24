@@ -755,7 +755,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._task_queue.Open()
       self._task_queue_port = self._task_queue.port
 
-    self._StartProfiling(self._processing_configuration.profiling)
+    self._StartProfiling('main', self._processing_configuration.profiling)
 
     if self._serializers_profiler:
       storage_writer.SetSerializersProfiler(self._serializers_profiler)

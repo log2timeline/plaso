@@ -187,16 +187,18 @@ class MemoryProfiler(SampleFileProfiler):
 
   _FILENAME_PREFIX = 'memory'
 
-  _FILE_HEADER = 'Time\tUsed memory\n'
+  _FILE_HEADER = 'Time\tName\tUsed memory\n'
 
-  def Sample(self, used_memory):
+  def Sample(self, profile_name, used_memory):
     """Takes a sample for profiling.
 
     Args:
+      profile_name (str): name of the profile to sample.
       used_memory (int): amount of used memory in bytes.
     """
     sample_time = time.time()
-    sample = '{0:f}\t{1:d}\n'.format(sample_time, used_memory)
+    sample = '{0:f}\t{1:s}\t{2:d}\n'.format(
+        sample_time, profile_name, used_memory)
     self._sample_file.write(sample)
 
 
