@@ -46,6 +46,7 @@ class ParserMediator(object):
     """
     super(ParserMediator, self).__init__()
     self._abort = False
+    self._cpu_time_profiler = None
     self._extra_event_attributes = {}
     self._file_entry = None
     self._knowledge_base = knowledge_base
@@ -551,6 +552,24 @@ class ParserMediator(object):
       used_memory = self._process_information.GetUsedMemory() or 0
       self._memory_profiler.Sample(parser_name, used_memory)
 
+  def SampleStartTiming(self, parser_name):
+    """Starts timing a CPU time sample for profiling.
+
+    Args:
+      parser_name (str): name of the parser.
+    """
+    if self._cpu_time_profiler:
+      self._cpu_time_profiler.StartTiming(parser_name)
+
+  def SampleStopTiming(self, parser_name):
+    """Stops timing a CPU time sample for profiling.
+
+    Args:
+      parser_name (str): name of the parser.
+    """
+    if self._cpu_time_profiler:
+      self._cpu_time_profiler.StopTiming(parser_name)
+
   def SetEventExtractionConfiguration(self, configuration):
     """Sets the event extraction configuration settings.
 
@@ -612,15 +631,25 @@ class ParserMediator(object):
     if not configuration:
       return
 
-    if configuration.HaveProfileMemory():
+    if configuration.HaveProfileParsers():
+      identifier = '{0:s}-parsers'.format(identifier)
+
+      self._cpu_time_profiler = profilers.CPUTimeProfiler(
+          identifier, configuration)
+      self._cpu_time_profiler.Start()
+
       self._memory_profiler = profilers.MemoryProfiler(
-          '{0:s}-mediator'.format(identifier), configuration)
+          identifier, configuration)
       self._memory_profiler.Start()
 
     self._process_information = process_information
 
   def StopProfiling(self):
     """Stops profiling."""
+    if self._cpu_time_profiler:
+      self._cpu_time_profiler.Stop()
+      self._cpu_time_profiler = None
+
     if self._memory_profiler:
       self._memory_profiler.Stop()
       self._memory_profiler = None

@@ -87,7 +87,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       used_memory = 0
 
     if self._memory_profiler:
-      self._memory_profiler.Sample(used_memory)
+      self._memory_profiler.Sample('main', used_memory)
 
     status = {
         'display_name': self._current_display_name,
@@ -144,10 +144,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._parser_mediator.StartProfiling(
         self._processing_configuration.profiling, self._name,
         self._process_information)
-    self._StartProfiling('main', self._processing_configuration.profiling)
-
-    if self._parsers_profiler:
-      self._extraction_worker.SetParsersProfiler(self._parsers_profiler)
+    self._StartProfiling(self._processing_configuration.profiling)
 
     if self._processing_profiler:
       self._extraction_worker.SetProcessingProfiler(self._processing_profiler)
@@ -193,9 +190,6 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       logger.exception(exception)
 
       self._abort = True
-
-    if self._parsers_profiler:
-      self._extraction_worker.SetParsersProfiler(None)
 
     if self._processing_profiler:
       self._extraction_worker.SetProcessingProfiler(None)

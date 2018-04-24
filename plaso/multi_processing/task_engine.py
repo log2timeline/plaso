@@ -570,7 +570,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     used_memory = self._process_information.GetUsedMemory() or 0
 
     if self._memory_profiler:
-      self._memory_profiler.Sample(used_memory)
+      self._memory_profiler.Sample('main', used_memory)
 
     display_name = getattr(self._merge_task, 'identifier', '')
 
@@ -755,7 +755,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._task_queue.Open()
       self._task_queue_port = self._task_queue.port
 
-    self._StartProfiling('main', self._processing_configuration.profiling)
+    self._StartProfiling(self._processing_configuration.profiling)
 
     if self._serializers_profiler:
       storage_writer.SetSerializersProfiler(self._serializers_profiler)

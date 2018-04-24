@@ -54,7 +54,6 @@ class EventExtractor(object):
     self._mft_parser = None
     self._non_sigscan_parser_names = None
     self._parsers = None
-    self._parsers_profiler = None
     self._specification_store = None
     self._usnjrnl_parser = None
 
@@ -203,9 +202,7 @@ class EventExtractor(object):
         parser_mediator.resolver_context.GetFileObjectReferenceCount(
             file_entry.path_spec))
 
-    # TODO: move into parser mediator
-    if self._parsers_profiler:
-      self._parsers_profiler.StartTiming(parser.NAME)
+    parser_mediator.SampleStartTiming(parser.NAME)
 
     try:
       if isinstance(parser, parsers_interface.FileEntryParser):
@@ -230,9 +227,7 @@ class EventExtractor(object):
       result = self._PARSE_RESULT_UNSUPPORTED
 
     finally:
-      if self._parsers_profiler:
-        self._parsers_profiler.StopTiming(parser.NAME)
-
+      parser_mediator.SampleStopTiming(parser.NAME)
       parser_mediator.SampleMemoryUsage(parser.NAME)
 
       new_reference_count = (
@@ -369,14 +364,6 @@ class EventExtractor(object):
             file_object=volume_file_object)
       finally:
         volume_file_object.close()
-
-  def SetParsersProfiler(self, parsers_profiler):
-    """Sets the parsers profiler.
-
-    Args:
-      parsers_profiler (ParsersProfiler): parsers profile.
-    """
-    self._parsers_profiler = parsers_profiler
 
 
 class PathSpecExtractor(object):

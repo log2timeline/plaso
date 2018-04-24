@@ -34,7 +34,6 @@ class BaseEngine(object):
     self._guppy_memory_profiler = None
     self._memory_profiler = None
     self._name = 'Main'
-    self._parsers_profiler = None
     self._processing_status = processing_status.ProcessingStatus()
     self._processing_profiler = None
     self._serializers_profiler = None
@@ -112,12 +111,6 @@ class BaseEngine(object):
           self._name, configuration)
       self._memory_profiler.Start()
 
-    if configuration.HaveProfileParsers():
-      identifier = '{0:s}-parsers'.format(self._name)
-      self._parsers_profiler = profilers.ParsersProfiler(
-          identifier, configuration)
-      self._parsers_profiler.Start()
-
     if configuration.HaveProfileProcessing():
       identifier = '{0:s}-processing'.format(self._name)
       self._processing_profiler = profilers.ProcessingProfiler(
@@ -150,10 +143,6 @@ class BaseEngine(object):
     if self._memory_profiler:
       self._memory_profiler.Stop()
       self._memory_profiler = None
-
-    if self._parsers_profiler:
-      self._parsers_profiler.Stop()
-      self._parsers_profiler = None
 
     if self._processing_profiler:
       self._processing_profiler.Stop()

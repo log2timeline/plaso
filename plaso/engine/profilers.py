@@ -202,12 +202,6 @@ class MemoryProfiler(SampleFileProfiler):
     self._sample_file.write(sample)
 
 
-class ParsersProfiler(CPUTimeProfiler):
-  """The parsers profiler."""
-
-  _FILENAME_PREFIX = 'parsers'
-
-
 class ProcessingProfiler(CPUTimeProfiler):
   """The processing profiler."""
 

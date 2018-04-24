@@ -122,31 +122,8 @@ class MemoryProfilerTest(shared_test_lib.BaseTestCase):
       test_profiler.Start()
 
       for _ in range(5):
-        test_profiler.Sample(400)
+        test_profiler.Sample('main', 400)
         time.sleep(0.01)
-
-      test_profiler.Stop()
-
-
-class ParsersProfilerTest(shared_test_lib.BaseTestCase):
-  """Tests for the parsers CPU time profiler."""
-
-  def testStartStopTiming(self):
-    """Tests the StartTiming and StopTiming functions."""
-    profiling_configuration = configurations.ProfilingConfiguration()
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      profiling_configuration.directory = temp_directory
-
-      test_profiler = profilers.ParsersProfiler(
-          'test', profiling_configuration)
-
-      test_profiler.Start()
-
-      for _ in range(5):
-        test_profiler.StartTiming('test_profile')
-        time.sleep(0.01)
-        test_profiler.StopTiming('test_profile')
 
       test_profiler.Stop()
 
