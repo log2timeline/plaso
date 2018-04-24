@@ -429,7 +429,7 @@ class FakeStorageWriter(interface.StorageWriter):
     """Sets the serializers profiler.
 
     Args:
-      serializers_profiler (SerializersProfiler): serializers profile.
+      serializers_profiler (SerializersProfiler): serializers profiler.
     """
     pass
 
@@ -437,7 +437,7 @@ class FakeStorageWriter(interface.StorageWriter):
     """Sets the storage profiler.
 
     Args:
-      storage_profiler (StorageProfiler): storage profile.
+      storage_profiler (StorageProfiler): storage profiler.
     """
     pass
 
