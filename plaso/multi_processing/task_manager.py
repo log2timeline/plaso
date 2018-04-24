@@ -346,29 +346,6 @@ class TaskManager(object):
 
     return task
 
-  def GetProcessedTaskByIdentifier(self, task_identifier):
-    """Retrieves a task that has been processed.
-
-    Args:
-      task_identifier (str): unique identifier of the task.
-    Returns:
-      Task: a task that has been processed.
-
-    Raises:
-      KeyError: if the task was not processing, queued or abandoned.
-    """
-    with self._lock:
-      task = self._tasks_processing.get(task_identifier, None)
-      if not task:
-        task = self._tasks_queued.get(task_identifier, None)
-      if not task:
-        task = self._tasks_abandoned.get(task_identifier, None)
-      if not task:
-        raise KeyError('Status of task {0:s} is unknown.'.format(
-            task_identifier))
-
-    return task
-
   def GetStatusInformation(self):
     """Retrieves status information about the tasks.
 

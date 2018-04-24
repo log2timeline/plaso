@@ -441,14 +441,6 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     pass
 
-  def SetStorageProfiler(self, storage_profiler):
-    """Sets the storage profiler.
-
-    Args:
-      storage_profiler (StorageProfiler): storage profiler.
-    """
-    pass
-
   def WritePreprocessingInformation(self, unused_knowledge_base):
     """Writes preprocessing information.
 
