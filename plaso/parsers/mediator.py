@@ -11,6 +11,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.containers import errors
 from plaso.engine import path_helper
+from plaso.engine import profilers
 from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.parsers import logger
