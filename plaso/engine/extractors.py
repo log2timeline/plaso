@@ -243,7 +243,7 @@ class EventExtractor(object):
 
     return result
 
-  def _ParserFileEntryWithParsers(
+  def _ParseFileEntryWithParsers(
       self, parser_mediator, parser_names, file_entry, file_object=None):
     """Parses a file entry with a specific parsers.
 
@@ -278,7 +278,7 @@ class EventExtractor(object):
 
       display_name = parser_mediator.GetDisplayName(file_entry)
       logger.debug((
-          '[ParserFileEntryWithParsers] parsing file: {0:s} with parser: '
+          '[ParseFileEntryWithParsers] parsing file: {0:s} with parser: '
           '{1:s}').format(display_name, parser_name))
 
       parse_result = self._ParseFileEntryWithParser(
@@ -312,14 +312,14 @@ class EventExtractor(object):
 
       parse_with_non_sigscan_parsers = True
       if parser_names:
-        parse_result = self._ParserFileEntryWithParsers(
+        parse_result = self._ParseFileEntryWithParsers(
             parser_mediator, parser_names, file_entry, file_object=file_object)
         if parse_result in (
             self._PARSE_RESULT_FAILURE, self._PARSE_RESULT_SUCCESS):
           parse_with_non_sigscan_parsers = False
 
       if parse_with_non_sigscan_parsers:
-        self._ParserFileEntryWithParsers(
+        self._ParseFileEntryWithParsers(
             parser_mediator, self._non_sigscan_parser_names, file_entry,
             file_object=file_object)
 

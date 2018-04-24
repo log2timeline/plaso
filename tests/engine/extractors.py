@@ -27,7 +27,7 @@ class EventExtractorTest(shared_test_lib.BaseTestCase):
   # TODO: add test for _InitializeParserObjects
   # TODO: add test for _ParseDataStreamWithParser
   # TODO: add test for _ParseFileEntryWithParser
-  # TODO: add test for _ParserFileEntryWithParsers
+  # TODO: add test for _ParseFileEntryWithParsers
   # TODO: add test for ParseDataStream
   # TODO: add test for ParseFileEntryMetadata
   # TODO: add test for ParseMetadataFile
