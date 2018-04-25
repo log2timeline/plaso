@@ -10,6 +10,7 @@ import sys
 from plaso.lib import errors
 from plaso.lib import line_reader_file
 from plaso.lib import py2to3
+from plaso.lib import specifications
 from plaso.parsers import interface
 
 
@@ -124,7 +125,7 @@ class DSVParser(interface.FileObjectParser):
     Returns:
       FormatSpecification: format specification.
     """
-    return specification.FormatSpecification(cls.NAME, text_format=True)
+    return specifications.FormatSpecification(cls.NAME, text_format=True)
 
   def ParseFileObject(self, parser_mediator, file_object, **unused_kwargs):
     """Parses a DSV text file-like object.
