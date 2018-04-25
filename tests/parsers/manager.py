@@ -132,7 +132,7 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(parser_names, [])
 
   def testReduceParserFilters(self):
-    """Tests the ReduceParserFilters function."""
+    """Tests the _ReduceParserFilters function."""
     includes = {}
     excludes = {}
 
@@ -168,6 +168,8 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(includes, {'test': ['include']})
     self.assertEqual(excludes, {'test': ['exclude', 'intersection']})
 
+  # TODO: add tests for CreateSignatureScanner.
+
   def testParserRegistration(self):
     """Tests the RegisterParser and DeregisterParser functions."""
     number_of_parsers = len(manager.ParsersManager._parser_classes)
@@ -184,6 +186,8 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(
         len(manager.ParsersManager._parser_classes),
         number_of_parsers)
+
+  # TODO: add tests for GetFormatsWithSignatures.
 
   def testGetNamesOfParsersWithPlugins(self):
     """Tests the GetNamesOfParsersWithPlugins function."""
@@ -371,8 +375,6 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     TestParserWithPlugins.DeregisterPlugin(TestPlugin)
 
   # TODO: add tests for GetPresetForOperatingSystem.
-  # TODO: add tests for GetScanner.
-  # TODO: add tests for GetSpecificationStore.
 
   def testPluginRegistration(self):
     """Tests the RegisterPlugin and DeregisterPlugin functions."""

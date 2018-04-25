@@ -117,6 +117,15 @@ class DSVParser(interface.FileObjectParser):
         quotechar=quotechar, restkey=magic_test_string,
         restval=magic_test_string)
 
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification.
+
+    Returns:
+      FormatSpecification: format specification.
+    """
+    return specification.FormatSpecification(cls.NAME, text_format=True)
+
   def ParseFileObject(self, parser_mediator, file_object, **unused_kwargs):
     """Parses a DSV text file-like object.
 
