@@ -132,6 +132,7 @@ class DSVParser(interface.FileObjectParser):
     # The csv module can consume a lot of memory, 1 GiB for a 100 MiB file.
     # Hence that the maximum supported file size is restricted.
     if file_size > self._MAXIMUM_SUPPORTED_FILE_SIZE:
+      display_name = parser_mediator.GetDisplayName()
       raise errors.UnableToParseFile((
           '[{0:s}] Unable to parse DSV file: {1:s} size of file exceeds '
           'maximum supported size').format(self.NAME, display_name))
