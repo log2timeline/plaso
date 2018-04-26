@@ -137,7 +137,7 @@ class GuppyMemoryProfiler(object):
     self._identifier = identifier
     self._path = configuration.directory
     self._profiling_sample = 0
-    self._profiling_sample_rate = configuration.profiling_sample_rate
+    self._profiling_sample_rate = configuration.sample_rate
     self._heapy = None
     self._sample_file = '{0!s}.hpy'.format(identifier)
 
