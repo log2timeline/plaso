@@ -45,8 +45,8 @@ def Main():
     print('No such directory: {0:s}'.format(options.profile_path))
     return False
 
-  names = ['time', 'memory']
-  types = ['float', 'float']
+  names = ['time', 'name', 'memory']
+  types = ['float', 'str', 'float']
 
   glob_expression = os.path.join(options.profile_path, 'memory-*.csv.gz')
   for csv_file in glob.glob(glob_expression):

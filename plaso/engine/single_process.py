@@ -253,10 +253,10 @@ class SingleProcessEngine(engine.BaseEngine):
 
     logger.debug('Processing started.')
 
+    parser_mediator.StartProfiling(
+        self._processing_configuration.profiling, self._name,
+        self._process_information)
     self._StartProfiling(self._processing_configuration.profiling)
-
-    if self._parsers_profiler:
-      extraction_worker.SetParsersProfiler(self._parsers_profiler)
 
     if self._processing_profiler:
       extraction_worker.SetProcessingProfiler(self._processing_profiler)
@@ -282,9 +282,6 @@ class SingleProcessEngine(engine.BaseEngine):
 
       storage_writer.Close()
 
-      if self._parsers_profiler:
-        extraction_worker.SetParsersProfiler(None)
-
       if self._processing_profiler:
         extraction_worker.SetProcessingProfiler(None)
 
@@ -295,6 +292,7 @@ class SingleProcessEngine(engine.BaseEngine):
         storage_writer.SetStorageProfiler(None)
 
       self._StopProfiling()
+      parser_mediator.StopProfiling()
 
     if self._abort:
       logger.debug('Processing aborted.')

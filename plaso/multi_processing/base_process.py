@@ -47,7 +47,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     self._log_filename = None
     self._memory_profiler = None
     self._original_sigsegv_handler = None
-    self._parsers_profiler = None
     # TODO: check if this can be replaced by self.pid or does this only apply
     # to the parent process?
     self._pid = None
@@ -188,12 +187,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
           self._name, configuration)
       self._memory_profiler.Start()
 
-    if configuration.HaveProfileParsers():
-      identifier = '{0:s}-parsers'.format(self._name)
-      self._parsers_profiler = profilers.ParsersProfiler(
-          identifier, configuration)
-      self._parsers_profiler.Start()
-
     if configuration.HaveProfileProcessing():
       identifier = '{0:s}-processing'.format(self._name)
       self._processing_profiler = profilers.ProcessingProfiler(
@@ -237,10 +230,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     if self._memory_profiler:
       self._memory_profiler.Stop()
       self._memory_profiler = None
-
-    if self._parsers_profiler:
-      self._parsers_profiler.Stop()
-      self._parsers_profiler = None
 
     if self._processing_profiler:
       self._processing_profiler.Stop()

@@ -31,7 +31,6 @@ class EventExtractorTest(shared_test_lib.BaseTestCase):
   # TODO: add test for ParseDataStream
   # TODO: add test for ParseFileEntryMetadata
   # TODO: add test for ParseMetadataFile
-  # TODO: add test for SetParsersProfiler
 
 
 class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
