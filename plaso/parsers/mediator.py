@@ -11,6 +11,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.containers import errors
 from plaso.engine import path_helper
+from plaso.engine import profilers
 from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.parsers import logger
@@ -45,17 +46,20 @@ class ParserMediator(object):
     """
     super(ParserMediator, self).__init__()
     self._abort = False
+    self._cpu_time_profiler = None
     self._extra_event_attributes = {}
     self._file_entry = None
     self._knowledge_base = knowledge_base
     self._last_event_data_hash = None
     self._last_event_data_identifier = None
+    self._memory_profiler = None
     self._mount_path = None
     self._number_of_errors = 0
     self._number_of_event_sources = 0
     self._number_of_events = 0
     self._parser_chain_components = []
     self._preferred_year = preferred_year
+    self._process_information = None
     self._resolver_context = resolver_context
     self._storage_writer = storage_writer
     self._temporary_directory = temporary_directory
@@ -538,6 +542,34 @@ class ParserMediator(object):
     """Resets the active file entry."""
     self._file_entry = None
 
+  def SampleMemoryUsage(self, parser_name):
+    """Takes a sample of the memory usage for profiling.
+
+    Args:
+      parser_name (str): name of the parser.
+    """
+    if self._memory_profiler:
+      used_memory = self._process_information.GetUsedMemory() or 0
+      self._memory_profiler.Sample(parser_name, used_memory)
+
+  def SampleStartTiming(self, parser_name):
+    """Starts timing a CPU time sample for profiling.
+
+    Args:
+      parser_name (str): name of the parser.
+    """
+    if self._cpu_time_profiler:
+      self._cpu_time_profiler.StartTiming(parser_name)
+
+  def SampleStopTiming(self, parser_name):
+    """Stops timing a CPU time sample for profiling.
+
+    Args:
+      parser_name (str): name of the parser.
+    """
+    if self._cpu_time_profiler:
+      self._cpu_time_profiler.StopTiming(parser_name)
+
   def SetEventExtractionConfiguration(self, configuration):
     """Sets the event extraction configuration settings.
 
@@ -586,3 +618,40 @@ class ParserMediator(object):
   def SignalAbort(self):
     """Signals the parsers to abort."""
     self._abort = True
+
+  def StartProfiling(self, configuration, identifier, process_information):
+    """Starts profiling.
+
+    Args:
+      configuration (ProfilingConfiguration): profiling configuration.
+      identifier (str): identifier of the profiling session used to create
+          the sample filename.
+      process_information (ProcessInfo): process information.
+    """
+    if not configuration:
+      return
+
+    if configuration.HaveProfileParsers():
+      identifier = '{0:s}-parsers'.format(identifier)
+
+      self._cpu_time_profiler = profilers.CPUTimeProfiler(
+          identifier, configuration)
+      self._cpu_time_profiler.Start()
+
+      self._memory_profiler = profilers.MemoryProfiler(
+          identifier, configuration)
+      self._memory_profiler.Start()
+
+    self._process_information = process_information
+
+  def StopProfiling(self):
+    """Stops profiling."""
+    if self._cpu_time_profiler:
+      self._cpu_time_profiler.Stop()
+      self._cpu_time_profiler = None
+
+    if self._memory_profiler:
+      self._memory_profiler.Stop()
+      self._memory_profiler = None
+
+    self._process_information = None

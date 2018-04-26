@@ -570,7 +570,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     used_memory = self._process_information.GetUsedMemory() or 0
 
     if self._memory_profiler:
-      self._memory_profiler.Sample(used_memory)
+      self._memory_profiler.Sample('main', used_memory)
 
     display_name = getattr(self._merge_task, 'identifier', '')
 

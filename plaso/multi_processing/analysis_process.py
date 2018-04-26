@@ -78,7 +78,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
       used_memory = 0
 
     if self._memory_profiler:
-      self._memory_profiler.Sample(used_memory)
+      self._memory_profiler.Sample('main', used_memory)
 
     status = {
         'display_name': '',

@@ -836,14 +836,6 @@ class EventExtractionWorker(object):
     self._process_compressed_streams = configuration.process_compressed_streams
     self._SetYaraRules(configuration.yara_rules_string)
 
-  def SetParsersProfiler(self, parsers_profiler):
-    """Sets the parsers profiler.
-
-    Args:
-      parsers_profiler (ParsersProfiler): parsers profile.
-    """
-    self._event_extractor.SetParsersProfiler(parsers_profiler)
-
   def SetProcessingProfiler(self, processing_profiler):
     """Sets the parsers profiler.
 
