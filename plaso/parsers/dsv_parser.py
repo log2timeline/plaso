@@ -45,6 +45,9 @@ class DSVParser(interface.FileObjectParser):
   # file to see if it confirms to standards.
   _MAGIC_TEST_STRING = b'RegnThvotturMeistarans'
 
+  # Maximum supported file size of 16 MiB.
+  _MAXIMUM_SUPPORTED_FILE_SIZE = 16 * 1024 * 1024
+
   def __init__(self, encoding=None):
     """Initializes a delimiter separated values (DSV) parser.
 
@@ -125,6 +128,15 @@ class DSVParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
+    file_size = file_object.get_size()
+    # The csv module can consume a lot of memory, 1 GiB for a 100 MiB file.
+    # Hence that the maximum supported file size is restricted.
+    if file_size > self._MAXIMUM_SUPPORTED_FILE_SIZE:
+      display_name = parser_mediator.GetDisplayName()
+      raise errors.UnableToParseFile((
+          '[{0:s}] Unable to parse DSV file: {1:s} size of file exceeds '
+          'maximum supported size').format(self.NAME, display_name))
+
     line_reader = line_reader_file.BinaryLineReader(file_object)
 
     # If we specifically define a number of lines we should skip, do that here.
