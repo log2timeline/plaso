@@ -22,6 +22,21 @@ class StatusViewTest(test_lib.CLIToolTestCase):
 
   # pylint: disable=protected-access
 
+  def _CheckOutput(self, output, expected_output):
+    """Compares the output against the expected output.
+
+    The actual processing time is ignored, since it can vary.
+
+    Args:
+      output (bytes): tool output.
+      expected_output (list[bytes]): expected tool output.
+    """
+    output = output.split(b'\n')
+
+    self.assertEqual(output[:4], expected_output[:4])
+    self.assertTrue(output[4].startswith(b'Processing time\t: '))
+    self.assertEqual(output[5:], expected_output[5:])
+
   # TODO: add tests for _ClearScreen
   # TODO: add tests for _FormatAnalysisStatusTableRow
   # TODO: add tests for _FormatExtractionStatusTableRow
@@ -45,22 +60,21 @@ class StatusViewTest(test_lib.CLIToolTestCase):
         8, 9, 10)
     test_view._PrintExtractionStatusUpdateLinear(process_status)
 
-    string = output_writer.ReadOutput()
-
-    expected_lines = [b'']
-    self.assertEqual(string.split(b'\n'), expected_lines)
+    output = output_writer.ReadOutput()
+    self.assertEqual(output, b'')
 
     process_status.UpdateWorkerStatus(
         'w_identifier', 'w_status', 123, 0,
         'w_test_file', 1, 2, 3, 4, 5, 6, 7, 8, 9,
         10)
     test_view._PrintExtractionStatusUpdateLinear(process_status)
-    string = output_writer.ReadOutput()
 
-    expected_string = (
+    expected_output = (
         'w_identifier (PID: 123) - events produced: 4 - '
         'file: w_test_file - running: True\n')
-    self.assertEqual(string, expected_string)
+
+    output = output_writer.ReadOutput()
+    self.assertEqual(output, expected_output)
 
   def testPrintExtractionStatusUpdateWindow(self):
     """Tests the _PrintExtractionStatusUpdateWindow function."""
@@ -77,8 +91,6 @@ class StatusViewTest(test_lib.CLIToolTestCase):
         8, 9, 10)
     test_view._PrintExtractionStatusUpdateWindow(process_status)
 
-    string = output_writer.ReadOutput()
-
     table_header = (
         b'Identifier      '
         b'PID     '
@@ -91,11 +103,12 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     if not sys.platform.startswith('win'):
       table_header = b'\x1b[1m{0:s}\x1b[0m'.format(table_header)
 
-    expected_lines = [
+    expected_output = [
         b'plaso - test_tool version {0:s}'.format(plaso.__version__),
         b'',
         b'Source path\t: /test/source/path',
         b'Source type\t: directory',
+        b'Processing time\t: 00:00:00',
         b'',
         table_header,
         (b'f_identifier    '
@@ -107,20 +120,22 @@ class StatusViewTest(test_lib.CLIToolTestCase):
          b'f_test_file'),
         b'',
         b'']
-    self.assertEqual(string.split(b'\n'), expected_lines)
+
+    output = output_writer.ReadOutput()
+    self._CheckOutput(output, expected_output)
 
     process_status.UpdateWorkerStatus(
         'w_identifier', 'w_status', 123, 0,
         'w_test_file', 1, 2, 3, 4, 5, 6, 7, 8, 9,
         10)
     test_view._PrintExtractionStatusUpdateWindow(process_status)
-    string = output_writer.ReadOutput()
 
-    expected_lines = [
+    expected_output = [
         b'plaso - test_tool version {0:s}'.format(plaso.__version__),
         b'',
         b'Source path\t: /test/source/path',
         b'Source type\t: directory',
+        b'Processing time\t: 00:00:00',
         b'',
         table_header,
         (b'f_identifier    '
@@ -139,7 +154,9 @@ class StatusViewTest(test_lib.CLIToolTestCase):
          b'w_test_file'),
         b'',
         b'']
-    self.assertEqual(string.split(b'\n'), expected_lines)
+
+    output = output_writer.ReadOutput()
+    self._CheckOutput(output, expected_output)
 
   # TODO: add tests for GetAnalysisStatusUpdateCallback
   # TODO: add tests for GetExtractionStatusUpdateCallback
