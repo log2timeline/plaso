@@ -149,6 +149,37 @@ class ParsersManager(object):
       excludes.pop(parser_name)
 
   @classmethod
+  def CreateSignatureScanner(cls, specification_store):
+    """Creates a signature scanner for format specifications with signatures.
+
+    Args:
+      specification_store (FormatSpecificationStore): format specifications
+          with signaures.
+
+    Returns:
+      pysigscan.scanner: signature scanner.
+    """
+    scanner_object = pysigscan.scanner()
+
+    for format_specification in specification_store.specifications:
+      for signature in format_specification.signatures:
+        pattern_offset = signature.offset
+
+        if pattern_offset is None:
+          signature_flags = pysigscan.signature_flags.NO_OFFSET
+        elif pattern_offset < 0:
+          pattern_offset *= -1
+          signature_flags = pysigscan.signature_flags.RELATIVE_FROM_END
+        else:
+          signature_flags = pysigscan.signature_flags.RELATIVE_FROM_START
+
+        scanner_object.add_signature(
+            signature.identifier, pattern_offset, signature.pattern,
+            signature_flags)
+
+    return scanner_object
+
+  @classmethod
   def DeregisterParser(cls, parser_class):
     """Deregisters a parser class.
 
@@ -166,6 +197,39 @@ class ParsersManager(object):
           parser_class.NAME))
 
     del cls._parser_classes[parser_name]
+
+  @classmethod
+  def GetFormatsWithSignatures(cls, parser_filter_expression=None):
+    """Retrieves the format specifications that have signatures.
+
+    This method will create a specification store for parsers that define
+    a format specification with signatures and a list of parser names for
+    those that do not.
+
+    Args:
+      parser_filter_expression (Optional[str]): parser filter expression,
+          where None represents all parsers and plugins.
+
+    Returns:
+      tuple: contains:
+
+      * FormatSpecificationStore: format specifications with signaures.
+      * list[str[: remaining parser names that do not have a format
+          specification with signatures.
+    """
+    specification_store = specification.FormatSpecificationStore()
+    remainder_list = []
+
+    for parser_name, parser_class in cls.GetParsers(
+        parser_filter_expression=parser_filter_expression):
+      format_specification = parser_class.GetFormatSpecification()
+
+      if format_specification and format_specification.signatures:
+        specification_store.AddSpecification(format_specification)
+      else:
+        remainder_list.append(parser_name)
+
+    return specification_store, remainder_list
 
   @classmethod
   def GetNamesOfParsersWithPlugins(cls):
@@ -393,68 +457,6 @@ class ParsersManager(object):
       return 'win7'
 
     return None
-
-  @classmethod
-  def GetScanner(cls, specification_store):
-    """Initializes a signature scanner form a specification store.
-
-    Args:
-      specification_store (FormatSpecificationStore): specification store.
-
-    Returns:
-      pysigscan.scanner: signature scanner.
-    """
-    scanner_object = pysigscan.scanner()
-
-    for format_specification in specification_store.specifications:
-      for signature in format_specification.signatures:
-        pattern_offset = signature.offset
-
-        if pattern_offset is None:
-          signature_flags = pysigscan.signature_flags.NO_OFFSET
-        elif pattern_offset < 0:
-          pattern_offset *= -1
-          signature_flags = pysigscan.signature_flags.RELATIVE_FROM_END
-        else:
-          signature_flags = pysigscan.signature_flags.RELATIVE_FROM_START
-
-        scanner_object.add_signature(
-            signature.identifier, pattern_offset, signature.pattern,
-            signature_flags)
-
-    return scanner_object
-
-  @classmethod
-  def GetSpecificationStore(cls, parser_filter_expression=None):
-    """Retrieves the specification store for the parsers.
-
-    This method will create a specification store for parsers that define
-    a format specification and a list of parser names for those that do not.
-
-    Args:
-      parser_filter_expression (Optional[str]): parser filter expression,
-          where None represents all parsers and plugins.
-
-    Returns:
-      tuple: contains:
-
-      * FormatSpecificationStore: format specification store.
-      * list[str[: remaining parser names that do not have a format
-          specification.
-    """
-    specification_store = specification.FormatSpecificationStore()
-    remainder_list = []
-
-    for parser_name, parser_class in cls.GetParsers(
-        parser_filter_expression=parser_filter_expression):
-      format_specification = parser_class.GetFormatSpecification()
-
-      if format_specification is not None:
-        specification_store.AddSpecification(format_specification)
-      else:
-        remainder_list.append(parser_name)
-
-    return specification_store, remainder_list
 
   @classmethod
   def RegisterParser(cls, parser_class):
