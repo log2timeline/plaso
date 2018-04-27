@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for the util functions."""
+"""Tests for the filter file."""
 
 from __future__ import unicode_literals
 
@@ -20,14 +20,14 @@ from plaso.engine import filter_file
 from tests import test_lib as shared_test_lib
 
 
-class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
-  """Tests for the BuildFindSpecsFromFile function."""
+class FilterFileTestCase(shared_test_lib.BaseTestCase):
+  """Tests for the filter file."""
 
   @shared_test_lib.skipUnlessHasTestFile(['System.evtx'])
   @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_1.txt'])
   @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_3.txt'])
-  def testBuildFindSpecsFromFile(self):
-    """Tests the BuildFindSpecsFromFile function."""
+  def testBuildFindSpecs(self):
+    """Tests the BuildFindSpecs function."""
     filter_file_path = ''
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
       test_filter_file = filter_file.FilterFile(temp_file.name)
