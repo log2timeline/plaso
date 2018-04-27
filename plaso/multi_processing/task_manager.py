@@ -355,7 +355,8 @@ class TaskManager(object):
     with self._lock:
       status.number_of_abandoned_tasks = len(self._tasks_abandoned)
       status.number_of_queued_tasks = len(self._tasks_queued)
-      status.number_of_tasks_pending_merge = len(self._tasks_pending_merge)
+      status.number_of_tasks_pending_merge = (
+          len(self._tasks_pending_merge) + len(self._tasks_merging))
       status.number_of_tasks_processing = len(self._tasks_processing)
       status.total_number_of_tasks = self._total_number_of_tasks
 
