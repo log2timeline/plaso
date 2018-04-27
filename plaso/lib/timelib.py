@@ -45,12 +45,6 @@ class Timestamp(object):
 
     The timestamp is not necessarily in UTC.
   """
-  # The minimum timestamp in seconds.
-  TIMESTAMP_MIN_SECONDS = -(((1 << 63) - 1) / 1000000)
-
-  # The maximum timestamp in seconds.
-  TIMESTAMP_MAX_SECONDS = ((1 << 63) - 1) / 1000000
-
   # The minimum timestamp in micro seconds.
   TIMESTAMP_MIN_MICRO_SECONDS = -((1 << 63) - 1)
 
@@ -297,25 +291,6 @@ class Timestamp(object):
     return timestamp // cls.MICRO_SECONDS_PER_SECOND
 
   @classmethod
-  def FromPosixTime(cls, posix_time):
-    """Converts a POSIX timestamp into a timestamp.
-
-    The POSIX time is a signed 32-bit or 64-bit value containing:
-      seconds since 1970-01-01 00:00:00
-
-    Args:
-      posix_time: The POSIX timestamp.
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
-    """
-    if (posix_time < cls.TIMESTAMP_MIN_SECONDS or
-        posix_time > cls.TIMESTAMP_MAX_SECONDS):
-      return 0
-    return int(posix_time) * cls.MICRO_SECONDS_PER_SECOND
-
-  @classmethod
   def FromTimeString(
       cls, time_string, dayfirst=False, gmt_as_timezone=True,
       timezone=pytz.UTC):
@@ -361,7 +336,8 @@ class Timestamp(object):
       datetime_object = timezone.localize(datetime_object)
 
     posix_time = int(calendar.timegm(datetime_object.utctimetuple()))
-    return cls.FromPosixTime(posix_time) + datetime_object.microsecond
+    timestamp = posix_time * cls.MICRO_SECONDS_PER_SECOND
+    return timestamp + datetime_object.microsecond
 
   @classmethod
   def GetNow(cls):

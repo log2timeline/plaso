@@ -121,24 +121,6 @@ class TimeLibTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       _ = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01Z')
 
-  def testTimestampFromPosixTime(self):
-    """Test the POSIX time conversion."""
-    timestamp = timelib.Timestamp.FromPosixTime(1281647191)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        '2010-08-12 21:06:31')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    timestamp = timelib.Timestamp.FromPosixTime(-122557518)
-    expected_timestamp = timelib.Timestamp.FromTimeString(
-        '1966-02-12 1966 12:14:42 UTC')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    # POSIX time that exceeds upper bound.
-    self.assertEqual(timelib.Timestamp.FromPosixTime(9223372036855), 0)
-
-    # POSIX time that exceeds lower bound.
-    self.assertEqual(timelib.Timestamp.FromPosixTime(-9223372036855), 0)
-
   def testMonthDict(self):
     """Test the month dict, both inside and outside of scope."""
     self.assertEqual(timelib.MONTH_DICT['nov'], 11)
