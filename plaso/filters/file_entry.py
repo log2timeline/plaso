@@ -9,8 +9,9 @@ import logging
 
 import pysigscan
 
+from dfdatetime import time_elements
+
 from plaso.lib import py2to3
-from plaso.lib import timelib
 
 
 class FileEntryFilter(object):
@@ -41,10 +42,18 @@ class DateTimeFileEntryFilter(FileEntryFilter):
   """Date and time-based file entry filter."""
 
   _DATE_TIME_RANGE_TUPLE = collections.namedtuple(
-      'date_time_range_tuple', 'time_value start_timestamp end_timestamp')
+      'date_time_range_tuple', 'time_value start_date_time end_date_time')
 
-  _SUPPORTED_TIME_VALUES = frozenset([
-      'atime', 'bkup', 'ctime', 'crtime', 'dtime', 'mtime'])
+  # Maps the time value of the date time range to a file entry attribute name.
+  _TIME_VALUE_MAPPINGS = {
+      'atime': 'access_time',
+      'bkup': 'backup_time',
+      'ctime': 'change_time',
+      'crtime': 'creation_time',
+      'dtime': 'deletion_time',
+      'mtime': 'modification_time'}
+
+  _SUPPORTED_TIME_VALUES = frozenset(_TIME_VALUE_MAPPINGS.keys())
 
   def __init__(self):
     """Initializes a date and time-based file entry filter."""
@@ -79,28 +88,27 @@ class DateTimeFileEntryFilter(FileEntryFilter):
 
     time_value_lower = time_value.lower()
     if time_value_lower not in self._SUPPORTED_TIME_VALUES:
-      raise ValueError(
-          'Unsupported time value: {0:s}.'.format(time_value))
+      raise ValueError('Unsupported time value: {0:s}.'.format(time_value))
 
+    start_date_time = None
     if start_time_string:
-      start_timestamp = timelib.Timestamp.CopyFromString(start_time_string)
-    else:
-      start_timestamp = None
+      start_date_time = time_elements.TimeElementsInMicroseconds()
+      start_date_time.CopyFromDateTimeString(start_time_string)
 
+    end_date_time = None
     if end_time_string:
-      end_timestamp = timelib.Timestamp.CopyFromString(end_time_string)
-    else:
-      end_timestamp = None
+      end_date_time = time_elements.TimeElementsInMicroseconds()
+      end_date_time.CopyFromDateTimeString(end_time_string)
 
     # Make sure that the end timestamp occurs after the beginning.
     # If not then we need to reverse the time range.
-    if (None not in [start_timestamp, end_timestamp] and
-        start_timestamp > end_timestamp):
+    if (None not in (start_date_time, end_date_time) and
+        start_date_time > end_date_time):
       raise ValueError(
           'Invalid date time value start must be earlier than end.')
 
     self._date_time_ranges.append(self._DATE_TIME_RANGE_TUPLE(
-        time_value_lower, start_timestamp, end_timestamp))
+        time_value_lower, start_date_time, end_date_time))
 
   def Matches(self, file_entry):
     """Compares the file entry against the filter.
@@ -115,28 +123,22 @@ class DateTimeFileEntryFilter(FileEntryFilter):
     if not self._date_time_ranges:
       return None
 
-    stat_object = file_entry.GetStat()
     for date_time_range in self._date_time_ranges:
-      time_value = date_time_range.time_value
-      timestamp = getattr(stat_object, time_value, None)
+      time_attribute = self._TIME_VALUE_MAPPINGS.get(
+          date_time_range.time_value, None)
+      if not time_attribute:
+        continue
+
+      timestamp = getattr(file_entry, time_attribute, None)
       if timestamp is None:
         continue
 
-      nano_time_value = '{0:s}_nano'.format(time_value)
-      nano_time_value = getattr(stat_object, nano_time_value, None)
-
-      timestamp = timelib.Timestamp.FromPosixTime(timestamp)
-      if nano_time_value is not None:
-        # Note that the _nano values are in intervals of 100th nano seconds.
-        nano_time_value, _ = divmod(nano_time_value, 10)
-        timestamp += nano_time_value
-
-      if (date_time_range.start_timestamp is not None and
-          timestamp < date_time_range.start_timestamp):
+      if (date_time_range.start_date_time is not None and
+          timestamp < date_time_range.start_date_time):
         return False
 
-      if (date_time_range.end_timestamp is not None and
-          timestamp > date_time_range.end_timestamp):
+      if (date_time_range.end_date_time is not None and
+          timestamp > date_time_range.end_date_time):
         return False
 
     return True
@@ -149,23 +151,21 @@ class DateTimeFileEntryFilter(FileEntryFilter):
     """
     if self._date_time_ranges:
       for date_time_range in self._date_time_ranges:
-        if date_time_range.start_timestamp is None:
-          end_time_string = timelib.Timestamp.CopyToIsoFormat(
-              date_time_range.end_timestamp)
+        if date_time_range.start_date_time is None:
+          end_time_string = date_time_range.end_date_time.CopyToDateTimeString()
           output_writer.Write('\t{0:s} after {1:s}\n'.format(
               date_time_range.time_value, end_time_string))
 
-        elif date_time_range.end_timestamp is None:
-          start_time_string = timelib.Timestamp.CopyToIsoFormat(
-              date_time_range.start_timestamp)
+        elif date_time_range.end_date_time is None:
+          start_time_string = (
+              date_time_range.start_date_time.CopyToDateTimeString())
           output_writer.Write('\t{0:s} before {1:s}\n'.format(
               date_time_range.time_value, start_time_string))
 
         else:
-          start_time_string = timelib.Timestamp.CopyToIsoFormat(
-              date_time_range.start_timestamp)
-          end_time_string = timelib.Timestamp.CopyToIsoFormat(
-              date_time_range.end_timestamp)
+          start_time_string = (
+              date_time_range.start_date_time.CopyToDateTimeString())
+          end_time_string = date_time_range.end_date_time.CopyToDateTimeString()
           output_writer.Write('\t{0:s} between {1:s} and {2:s}\n'.format(
               date_time_range.time_value, start_time_string,
               end_time_string))
