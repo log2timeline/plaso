@@ -316,23 +316,6 @@ class Timestamp(object):
     return int(posix_time) * cls.MICRO_SECONDS_PER_SECOND
 
   @classmethod
-  def FromPythonDatetime(cls, datetime_object):
-    """Converts a Python datetime object into a timestamp.
-
-    Args:
-      datetime_object: The datetime object (instance of datetime.datetime).
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
-    """
-    if not isinstance(datetime_object, datetime.datetime):
-      return 0
-
-    posix_time = int(calendar.timegm(datetime_object.utctimetuple()))
-    return cls.FromPosixTime(posix_time) + datetime_object.microsecond
-
-  @classmethod
   def FromTimeString(
       cls, time_string, dayfirst=False, gmt_as_timezone=True,
       timezone=pytz.UTC):
@@ -377,7 +360,8 @@ class Timestamp(object):
     else:
       datetime_object = timezone.localize(datetime_object)
 
-    return cls.FromPythonDatetime(datetime_object)
+    posix_time = int(calendar.timegm(datetime_object.utctimetuple()))
+    return cls.FromPosixTime(posix_time) + datetime_object.microsecond
 
   @classmethod
   def GetNow(cls):

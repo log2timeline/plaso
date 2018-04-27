@@ -293,7 +293,10 @@ class DateCompareObject(object):
             self.text))
 
     elif isinstance(data, datetime.datetime):
-      self.data = timelib.Timestamp.FromPythonDatetime(data)
+      posix_time = int(calendar.timegm(data.utctimetuple()))
+      self.data = (
+          timelib.Timestamp.FromPosixTime(posix_time) +
+          datetime_object.microsecond)
       self.text = '{0!s}'.format(data)
 
     elif isinstance(data, DateCompareObject):
