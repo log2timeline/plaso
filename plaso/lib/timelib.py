@@ -19,6 +19,7 @@ import time
 import dateutil.parser
 import pytz
 
+from plaso.lib import definitions
 from plaso.lib import errors
 
 
@@ -45,25 +46,10 @@ class Timestamp(object):
 
     The timestamp is not necessarily in UTC.
   """
-  # The minimum timestamp in micro seconds.
-  TIMESTAMP_MIN_MICRO_SECONDS = -((1 << 63) - 1)
-
-  # The maximum timestamp in micro seconds.
-  TIMESTAMP_MAX_MICRO_SECONDS = (1 << 63) - 1
-
   # Timestamp that represents the timestamp representing not
   # a date and time value.
   # TODO: replace this with a real None implementation.
   NONE_TIMESTAMP = 0
-
-  # The number of micro seconds per second.
-  MICRO_SECONDS_PER_SECOND = 1000000
-
-  # The number of microseconds per minute.
-  MICROSECONDS_PER_MINUTE = (60 * MICRO_SECONDS_PER_SECOND)
-
-  # The multiplication factor to change milliseconds to micro seconds.
-  MILLI_SECONDS_TO_MICRO_SECONDS = 1000
 
   @classmethod
   def CopyFromString(cls, time_string):
@@ -288,7 +274,7 @@ class Timestamp(object):
       The timestamp which is an integer containing the number of seconds
       since January 1, 1970, 00:00:00 UTC.
     """
-    return timestamp // cls.MICRO_SECONDS_PER_SECOND
+    return timestamp // definitions.MICROSECONDS_PER_SECOND
 
   @classmethod
   def FromTimeString(
@@ -336,7 +322,7 @@ class Timestamp(object):
       datetime_object = timezone.localize(datetime_object)
 
     posix_time = int(calendar.timegm(datetime_object.utctimetuple()))
-    timestamp = posix_time * cls.MICRO_SECONDS_PER_SECOND
+    timestamp = posix_time * definitions.MICROSECONDS_PER_SECOND
     return timestamp + datetime_object.microsecond
 
   @classmethod
@@ -374,18 +360,18 @@ class Timestamp(object):
       # for UTC and will raise.
       datetime_delta = timezone.utcoffset(datetime_object, is_dst=is_dst)
       seconds_delta = int(datetime_delta.total_seconds())
-      timestamp -= seconds_delta * cls.MICRO_SECONDS_PER_SECOND
+      timestamp -= seconds_delta * definitions.MICROSECONDS_PER_SECOND
 
     return timestamp
 
   @classmethod
   def RoundToSeconds(cls, timestamp):
     """Takes a timestamp value and rounds it to a second precision."""
-    leftovers = timestamp % cls.MICRO_SECONDS_PER_SECOND
+    leftovers = timestamp % definitions.MICROSECONDS_PER_SECOND
     scrubbed = timestamp - leftovers
-    rounded = round(float(leftovers) / cls.MICRO_SECONDS_PER_SECOND)
+    rounded = round(float(leftovers) / definitions.MICROSECONDS_PER_SECOND)
 
-    return int(scrubbed + rounded * cls.MICRO_SECONDS_PER_SECOND)
+    return int(scrubbed + rounded * definitions.MICROSECONDS_PER_SECOND)
 
 
 def GetCurrentYear():

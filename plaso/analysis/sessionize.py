@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.containers import reports
-from plaso.lib import timelib
+from plaso.lib import definitions
 
 
 class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
@@ -18,7 +18,7 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
 
   _EVENT_TAG_COMMENT = 'Tag applied by sessionize analysis plugin.'
 
-  _DEFAULT_MAXIMUM_PAUSE = 10 * timelib.Timestamp.MICROSECONDS_PER_MINUTE
+  _DEFAULT_MAXIMUM_PAUSE = 10 * definitions.MICROSECONDS_PER_MINUTE
 
   def __init__(self):
     """Initializes a sessionize analysis plugin."""
@@ -37,7 +37,7 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
           the same session, in minutes.
     """
     self._maximum_pause_microseconds = (
-        maximum_pause_minutes * timelib.Timestamp.MICROSECONDS_PER_MINUTE)
+        maximum_pause_minutes * definitions.MICROSECONDS_PER_MINUTE)
 
   def CompileReport(self, mediator):
     """Compiles an analysis report.
