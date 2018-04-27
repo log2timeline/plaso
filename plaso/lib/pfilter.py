@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import calendar
 import datetime
 import logging
 import re
@@ -294,9 +295,7 @@ class DateCompareObject(object):
 
     elif isinstance(data, datetime.datetime):
       posix_time = int(calendar.timegm(data.utctimetuple()))
-      self.data = (
-          timelib.Timestamp.FromPosixTime(posix_time) +
-          datetime_object.microsecond)
+      self.data = timelib.Timestamp.FromPosixTime(posix_time) + data.microsecond
       self.text = '{0!s}'.format(data)
 
     elif isinstance(data, DateCompareObject):
