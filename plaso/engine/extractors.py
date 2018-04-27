@@ -51,10 +51,11 @@ class EventExtractor(object):
     super(EventExtractor, self).__init__()
     self._file_scanner = None
     self._filestat_parser = None
+    self._formats_with_signatures = None
     self._mft_parser = None
     self._non_sigscan_parser_names = None
     self._parsers = None
-    self._specification_store = None
+    self._parsers_profiler = None
     self._usnjrnl_parser = None
 
     self._InitializeParserObjects(
@@ -93,7 +94,7 @@ class EventExtractor(object):
 
     for scan_result in iter(scan_state.scan_results):
       format_specification = (
-          self._specification_store.GetSpecificationBySignature(
+          self._formats_with_signatures.GetSpecificationBySignature(
               scan_result.identifier))
 
       if format_specification.identifier not in parser_names:
@@ -117,18 +118,17 @@ class EventExtractor(object):
           * A name of a single parser (case insensitive), e.g. msiecf.
           * A glob name for a single parser, e.g. '*msie*' (case insensitive).
     """
-    self._specification_store, non_sigscan_parser_names = (
-        parsers_manager.ParsersManager.GetSpecificationStore(
+    self._formats_with_signatures, non_sigscan_parser_names = (
+        parsers_manager.ParsersManager.GetFormatsWithSignatures(
             parser_filter_expression=parser_filter_expression))
 
     self._non_sigscan_parser_names = []
     for parser_name in non_sigscan_parser_names:
-      if parser_name in ('filestat', 'usnjrnl'):
-        continue
-      self._non_sigscan_parser_names.append(parser_name)
+      if parser_name not in ('filestat', 'usnjrnl'):
+        self._non_sigscan_parser_names.append(parser_name)
 
-    self._file_scanner = parsers_manager.ParsersManager.GetScanner(
-        self._specification_store)
+    self._file_scanner = parsers_manager.ParsersManager.CreateSignatureScanner(
+        self._formats_with_signatures)
 
     self._parsers = parsers_manager.ParsersManager.GetParserObjects(
         parser_filter_expression=parser_filter_expression)

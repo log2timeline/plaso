@@ -23,8 +23,8 @@ class Signature(object):
       and that all of the data is scanned.
 
     Args:
-      pattern (byte): pattern of the signature. Wildcards or regular pattern
-          (regexp) are not supported.
+      pattern (bytes): pattern of the signature. Wildcards or regular
+          expressions (regexp) are not supported.
       offset (int): offset of the signature. None is used to indicate
           the signature has no offset. A positive offset is relative from
           the start of the data a negative offset is relative from the end
@@ -47,13 +47,16 @@ class Signature(object):
 class FormatSpecification(object):
   """The format specification."""
 
-  def __init__(self, identifier):
+  def __init__(self, identifier, text_format=False):
     """Initializes a format specification.
 
     Args:
       identifier (str): unique name for the format.
+      text_format (Optional[bool]): True if the format is a text format,
+          False otherwise.
     """
     super(FormatSpecification, self).__init__()
+    self._text_format = text_format
     self.identifier = identifier
     self.signatures = []
 
@@ -68,6 +71,14 @@ class FormatSpecification(object):
           of the data.
     """
     self.signatures.append(Signature(pattern, offset=offset))
+
+  def IsTextFormat(self):
+    """Determines if the format is a text format.
+
+    Returns:
+      bool: True if the format is a text format, False otherwise.
+    """
+    return self._text_format
 
 
 class FormatSpecificationStore(object):
@@ -131,9 +142,8 @@ class FormatSpecificationStore(object):
           specification.identifier, signature_index)
 
       if signature_identifier in self._signature_map:
-        raise KeyError(
-            'Signature {0:s} is already defined in map.'.format(
-                signature_identifier))
+        raise KeyError('Signature {0:s} is already defined in map.'.format(
+            signature_identifier))
 
       signature.SetIdentifier(signature_identifier)
       self._signature_map[signature_identifier] = specification
