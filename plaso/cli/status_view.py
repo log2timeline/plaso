@@ -336,7 +336,7 @@ class StatusView(object):
       tasks_status = processing_status.tasks_status
 
       table_view = views.CLITabularTableView(
-          column_names=['Tasks:', 'Queued', 'Processing', 'To merge',
+          column_names=['Tasks:', 'Queued', 'Processing', 'Merging',
                         'Abandoned', 'Total'],
           column_sizes=[15, 7, 15, 15, 15, 0])
 
