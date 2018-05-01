@@ -139,7 +139,7 @@ class TaskManager(object):
     # as no worker has reported processing the task in the expected interval.
     self._tasks_abandoned = {}
 
-    # The last processing time observed in a task. This value is set to
+    # The latest processing time observed in a task. This value is set to
     # the current time to not have to handle None as a special case.
     self._task_last_processing_time = int(
         time.time() * definitions.MICROSECONDS_PER_SECOND)
@@ -444,11 +444,11 @@ class TaskManager(object):
       if self._HasTasksPendingRetry():
         return True
 
-      # It is possible that a worker worked on a task and the foreman does not
-      # know about it, since there is no feedback from the worker when it pops
-      # a task from the queue. Hence we check for tasks that we believe are
-      # queued that might need to be marked as abandoned, as all the workers
-      # are idle and the task has been queued for longer than the timeout.
+      # It is possible that a worker has processed a task and the foreman has
+      # not been informed about it, since there is no feedback from the worker
+      # when it pops a task from the queue. Hence we check for tasks that we
+      # believe are queued that might need to be marked as abandoned, as all
+      # the workers are idle for longer than the task inactive time (timeout).
       self._AbandonInactiveQueuedTasks()
 
       if self._tasks_queued:
