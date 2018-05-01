@@ -10,7 +10,6 @@ import tempfile
 
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
-from plaso.storage import identifiers
 
 
 class SerializedAttributeContainerList(object):
@@ -506,40 +505,6 @@ class StorageFileMergeReader(StorageMergeReader):
     super(StorageFileMergeReader, self).__init__(storage_writer)
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
-
-  def _AddAttributeContainer(self, attribute_container):
-    """Adds a single attribute container to the storage writer.
-
-    Args:
-      attribute_container (AttributeContainer): container
-
-    Raises:
-      RuntimeError: if the attribute container type is not supported.
-    """
-    container_type = attribute_container.CONTAINER_TYPE
-    if container_type == 'event_source':
-      self._storage_writer.AddEventSource(attribute_container)
-
-    elif container_type == 'event':
-      self._storage_writer.AddEvent(attribute_container)
-
-    elif container_type == 'event_tag':
-      event_identifier = identifiers.SerializedStreamIdentifier(
-          attribute_container.event_stream_number,
-          attribute_container.event_entry_index)
-      attribute_container.SetEventIdentifier(event_identifier)
-
-      self._storage_writer.AddEventTag(attribute_container)
-
-    elif container_type == 'extraction_error':
-      self._storage_writer.AddError(attribute_container)
-
-    elif container_type == 'analysis_report':
-      self._storage_writer.AddAnalysisReport(attribute_container)
-
-    elif container_type not in ('task_completion', 'task_start'):
-      raise RuntimeError('Unsupported container type: {0:s}'.format(
-          container_type))
 
   def _DeserializeAttributeContainer(self, container_type, serialized_data):
     """Deserializes an attribute container.
@@ -1124,6 +1089,30 @@ class StorageFileWriter(StorageWriter):
       StorageWriter: storage writer.
     """
 
+  def _GetMergeTaskStorageFilePath(self, task):
+    """Retrieves the path of a task storage file in the merge directory.
+
+    Args:
+      task (Task): task.
+
+    Returns:
+      str: path of a task storage file file in the merge directory.
+    """
+    filename = '{0:s}.plaso'.format(task.identifier)
+    return os.path.join(self._merge_task_storage_path, filename)
+
+  def _GetTaskStorageFilePath(self, task):
+    """Retrieves the path of a task storage file in the temporary directory.
+
+    Args:
+      task (Task): task.
+
+    Returns:
+      str: path of a task storage file in the temporary directory.
+    """
+    filename = '{0:s}.plaso'.format(task.identifier)
+    return os.path.join(self._task_storage_path, filename)
+
   def _UpdateCounters(self, event):
     """Updates the counters.
 
@@ -1263,11 +1252,10 @@ class StorageFileWriter(StorageWriter):
     if not self._merge_task_storage_path:
       raise IOError('Missing merge task storage path.')
 
-    storage_file_path = os.path.join(
-        self._merge_task_storage_path, '{0:s}.plaso'.format(task.identifier))
+    merge_storage_file_path = self._GetMergeTaskStorageFilePath(task)
 
     try:
-      stat_info = os.stat(storage_file_path)
+      stat_info = os.stat(merge_storage_file_path)
     except (IOError, OSError):
       return False
 
@@ -1309,9 +1297,8 @@ class StorageFileWriter(StorageWriter):
       if not task:
         continue
 
-      storage_file_path = os.path.join(
-          self._merge_task_storage_path, '{0:s}.plaso'.format(task.identifier))
-      task.storage_file_size = os.path.getsize(storage_file_path)
+      merge_storage_file_path = self._GetMergeTaskStorageFilePath(task)
+      task.storage_file_size = os.path.getsize(merge_storage_file_path)
       tasks_pending_merge.append(task)
 
     return tasks_pending_merge
@@ -1348,9 +1335,7 @@ class StorageFileWriter(StorageWriter):
     if not self._task_storage_path:
       raise IOError('Missing task storage path.')
 
-    storage_file_path = os.path.join(
-        self._task_storage_path, '{0:s}.plaso'.format(task.identifier))
-
+    storage_file_path = self._GetTaskStorageFilePath(task)
     return self._CreateTaskStorageWriter(storage_file_path, task)
 
   def GetEventDataByIdentifier(self, identifier):
@@ -1495,11 +1480,8 @@ class StorageFileWriter(StorageWriter):
     if not self._task_storage_path:
       raise IOError('Missing task storage path.')
 
-    storage_file_path = os.path.join(
-        self._task_storage_path, '{0:s}.plaso'.format(task.identifier))
-
-    merge_storage_file_path = os.path.join(
-        self._merge_task_storage_path, '{0:s}.plaso'.format(task.identifier))
+    storage_file_path = self._GetTaskStorageFilePath(task)
+    merge_storage_file_path = self._GetMergeTaskStorageFilePath(task)
 
     try:
       os.rename(storage_file_path, merge_storage_file_path)
@@ -1568,13 +1550,12 @@ class StorageFileWriter(StorageWriter):
     if not self._merge_task_storage_path:
       raise IOError('Missing merge task storage path.')
 
-    storage_file_path = os.path.join(
-        self._merge_task_storage_path, '{0:s}.plaso'.format(task.identifier))
+    merge_storage_file_path = self._GetMergeTaskStorageFilePath(task)
 
-    if not os.path.isfile(storage_file_path):
+    if not os.path.isfile(merge_storage_file_path):
       raise IOError('Merge task storage path is not a file.')
 
-    return self._CreateTaskStorageMergeReader(storage_file_path)
+    return self._CreateTaskStorageMergeReader(merge_storage_file_path)
 
   def StartTaskStorage(self):
     """Creates a temporary path for the task storage.
