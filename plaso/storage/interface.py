@@ -799,7 +799,7 @@ class StorageFileReader(StorageReader):
     return self._storage_file.ReadPreprocessingInformation(knowledge_base)
 
   def SetSerializersProfiler(self, serializers_profiler):
-    """Sets the serializers profilerr.
+    """Sets the serializers profiler.
 
     Args:
       serializers_profiler (SerializersProfiler): serializers profiler.
@@ -960,6 +960,17 @@ class StorageWriter(object):
       EventObject: event.
     """
 
+  def FinalizeTaskStorage(self, unused_task):
+    """Finalizes a proccessed task storage.
+
+    Args:
+      task (Task): task.
+
+    Raises:
+      NotImplementedError: since there is no implementation.
+    """
+    raise NotImplementedError()
+
   @abc.abstractmethod
   def Open(self):
     """Opens the storage writer."""
@@ -1055,6 +1066,7 @@ class StorageFileWriter(StorageWriter):
         session, storage_type=storage_type, task=task)
     self._merge_task_storage_path = ''
     self._output_file = output_file
+    self._processed_task_storage_path = ''
     self._storage_file = None
     self._task_storage_path = None
 
@@ -1100,6 +1112,18 @@ class StorageFileWriter(StorageWriter):
     """
     filename = '{0:s}.plaso'.format(task.identifier)
     return os.path.join(self._merge_task_storage_path, filename)
+
+  def _GetProcessedStorageFilePath(self, task):
+    """Retrieves the path of a task storage file in the processed directory.
+
+    Args:
+      task (Task): task.
+
+    Returns:
+      str: path of a task storage file in the processed directory.
+    """
+    filename = '{0:s}.plaso'.format(task.identifier)
+    return os.path.join(self._processed_task_storage_path, filename)
 
   def _GetTaskStorageFilePath(self, task):
     """Retrieves the path of a task storage file in the temporary directory.
@@ -1249,59 +1273,18 @@ class StorageFileWriter(StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Unsupported storage type.')
 
-    if not self._merge_task_storage_path:
-      raise IOError('Missing merge task storage path.')
+    if not self._processed_task_storage_path:
+      raise IOError('Missing processed task storage path.')
 
-    merge_storage_file_path = self._GetMergeTaskStorageFilePath(task)
+    processed_storage_file_path = self._GetProcessedStorageFilePath(task)
 
     try:
-      stat_info = os.stat(merge_storage_file_path)
+      stat_info = os.stat(processed_storage_file_path)
     except (IOError, OSError):
       return False
 
     task.storage_file_size = stat_info.st_size
     return True
-
-  def CheckTasksReadyForMerge(self, tasks):
-    """Checks which tasks are ready to be merged.
-
-    If the task is ready to be merged, this method also sets the task's
-    storage file size.
-
-    Args:
-      tasks (list[Task]): tasks to check for merging.
-
-    Returns:
-      list[Task]: list of tasks that are ready for merge, with the
-          storage file size set.
-
-    Raises:
-      IOError: if the storage type is not supported or
-          if the temporary path for the task storage does not exist.
-    """
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError('Unsupported storage type.')
-
-    if not self._merge_task_storage_path:
-      raise IOError('Missing merge task storage path.')
-
-    tasks_by_identifier = {task.identifier: task for task in tasks}
-    tasks_pending_merge = []
-
-    completed_task_filenames = os.listdir(self._merge_task_storage_path)
-    completed_task_identifiers = [
-        path.replace('.plaso', '') for path in completed_task_filenames]
-
-    for identifier in completed_task_identifiers:
-      task = tasks_by_identifier.get(identifier, None)
-      if not task:
-        continue
-
-      merge_storage_file_path = self._GetMergeTaskStorageFilePath(task)
-      task.storage_file_size = os.path.getsize(merge_storage_file_path)
-      tasks_pending_merge.append(task)
-
-    return tasks_pending_merge
 
   def Close(self):
     """Closes the storage writer.
@@ -1326,14 +1309,10 @@ class StorageFileWriter(StorageWriter):
       StorageWriter: storage writer.
 
     Raises:
-      IOError: if the storage type is not supported or
-          if the temporary path for the task storage does not exist.
+      IOError: if the storage type is not supported.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Unsupported storage type.')
-
-    if not self._task_storage_path:
-      raise IOError('Missing task storage path.')
 
     storage_file_path = self._GetTaskStorageFilePath(task)
     return self._CreateTaskStorageWriter(storage_file_path, task)
@@ -1420,6 +1399,26 @@ class StorageFileWriter(StorageWriter):
       self._written_event_source_index += 1
     return event_source
 
+  def GetProcessedTaskIdentifiers(self):
+    """Identifers for tasks which have been processed.
+
+    Returns:
+      list[str]: task identifiers that are processed.
+
+    Raises:
+      IOError: if the storage type is not supported or
+          if the temporary path for the task storage does not exist.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError('Unsupported storage type.')
+
+    if not self._processed_task_storage_path:
+      raise IOError('Missing processed task storage path.')
+
+    return [
+        path.replace('.plaso', '')
+        for path in os.listdir(self._processed_task_storage_path)]
+
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 
@@ -1440,6 +1439,32 @@ class StorageFileWriter(StorageWriter):
       raise IOError('Unable to read from closed storage writer.')
 
     return self._storage_file.GetSortedEvents(time_range=time_range)
+
+  def FinalizeTaskStorage(self, task):
+    """Finalized a proccessed task storage.
+
+    Moves the task storage file from its temporary directory to the processed
+    directory.
+
+    Args:
+      task (Task): task.
+
+    Raises:
+      IOError: if the storage type is not supported or
+          if the storage file cannot be renamed.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError('Unsupported storage type.')
+
+    storage_file_path = self._GetTaskStorageFilePath(task)
+    processed_storage_file_path = self._GetProcessedStorageFilePath(task)
+
+    try:
+      os.rename(storage_file_path, processed_storage_file_path)
+    except OSError as exception:
+      raise IOError((
+          'Unable to rename task storage file: {0:s} with error: '
+          '{1:s}').format(storage_file_path, exception))
 
   def Open(self):
     """Opens the storage writer.
@@ -1467,28 +1492,30 @@ class StorageFileWriter(StorageWriter):
   def PrepareMergeTaskStorage(self, task):
     """Prepares a task storage for merging.
 
+    Moves the task storage file from the processed directory to the merge
+    directory.
+
     Args:
       task (Task): task.
 
     Raises:
       IOError: if the storage type is not supported or
-          if the temporary path for the task storage does not exist.
+          if the storage file cannot be renamed.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Unsupported storage type.')
 
-    if not self._task_storage_path:
-      raise IOError('Missing task storage path.')
-
-    storage_file_path = self._GetTaskStorageFilePath(task)
     merge_storage_file_path = self._GetMergeTaskStorageFilePath(task)
+    processed_storage_file_path = self._GetProcessedStorageFilePath(task)
+
+    task.storage_file_size = os.path.getsize(processed_storage_file_path)
 
     try:
-      os.rename(storage_file_path, merge_storage_file_path)
+      os.rename(processed_storage_file_path, merge_storage_file_path)
     except OSError as exception:
       raise IOError((
           'Unable to rename task storage file: {0:s} with error: '
-          '{1:s}').format(storage_file_path, exception))
+          '{1:s}').format(processed_storage_file_path, exception))
 
   def ReadPreprocessingInformation(self, knowledge_base):
     """Reads preprocessing information.
@@ -1577,6 +1604,10 @@ class StorageFileWriter(StorageWriter):
         self._task_storage_path, 'merge')
     os.mkdir(self._merge_task_storage_path)
 
+    self._processed_task_storage_path = os.path.join(
+        self._task_storage_path, 'processed')
+    os.mkdir(self._processed_task_storage_path)
+
   def StopTaskStorage(self, abort=False):
     """Removes the temporary path for the task storage.
 
@@ -1586,20 +1617,22 @@ class StorageFileWriter(StorageWriter):
       abort (bool): True to indicate the stop is issued on abort.
 
     Raises:
-      IOError: if the storage type is not supported or
-          if the temporary path for the task storage does not exist.
+      IOError: if the storage type is not supported.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Unsupported storage type.')
-
-    if not self._task_storage_path:
-      raise IOError('Missing task storage path.')
 
     if os.path.isdir(self._merge_task_storage_path):
       if abort:
         shutil.rmtree(self._merge_task_storage_path)
       else:
         os.rmdir(self._merge_task_storage_path)
+
+    if os.path.isdir(self._processed_task_storage_path):
+      if abort:
+        shutil.rmtree(self._processed_task_storage_path)
+      else:
+        os.rmdir(self._processed_task_storage_path)
 
     if os.path.isdir(self._task_storage_path):
       if abort:
@@ -1608,6 +1641,7 @@ class StorageFileWriter(StorageWriter):
         os.rmdir(self._task_storage_path)
 
     self._merge_task_storage_path = None
+    self._processed_task_storage_path = None
     self._task_storage_path = None
 
   def WritePreprocessingInformation(self, knowledge_base):

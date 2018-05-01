@@ -402,33 +402,6 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     with self.assertRaises(KeyError):
       manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
 
-  def testUpdateTasksAsPendingMerge(self):
-    """Tests the UpdateTasksAsPendingMerge function."""
-    manager = task_manager.TaskManager()
-
-    self.assertEqual(len(manager._tasks_queued), 0)
-    self.assertEqual(len(manager._tasks_processing), 0)
-    self.assertEqual(len(manager._tasks_abandoned), 0)
-    self.assertEqual(len(manager._tasks_pending_merge), 0)
-
-    task1 = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
-    task1.storage_file_size = 10
-
-    task2 = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
-    task2.storage_file_size = 10
-
-    self.assertEqual(len(manager._tasks_queued), 2)
-    self.assertEqual(len(manager._tasks_processing), 0)
-    self.assertEqual(len(manager._tasks_abandoned), 0)
-    self.assertEqual(len(manager._tasks_pending_merge), 0)
-
-    manager.UpdateTasksAsPendingMerge([task1, task2])
-
-    self.assertEqual(len(manager._tasks_queued), 0)
-    self.assertEqual(len(manager._tasks_processing), 0)
-    self.assertEqual(len(manager._tasks_abandoned), 0)
-    self.assertEqual(len(manager._tasks_pending_merge), 2)
-
   def testUpdateTaskAsProcessingByIdentifier(self):
     """Tests the UpdateTaskAsProcessingByIdentifier function."""
     manager = task_manager.TaskManager()

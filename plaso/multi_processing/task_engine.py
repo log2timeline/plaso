@@ -197,9 +197,18 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if self._processing_profiler:
       self._processing_profiler.StartTiming('merge_check')
 
-    pending_tasks = self._task_manager.GetTasksCheckMerge()
-    mergeable_tasks = storage_writer.CheckTasksReadyForMerge(pending_tasks)
-    self._task_manager.UpdateTasksAsPendingMerge(mergeable_tasks)
+    for task_identifier in storage_writer.GetProcessedTaskIdentifiers():
+      try:
+        task = self._task_manager.GetProcessedTaskByIdentifier(task_identifier)
+
+        storage_writer.PrepareMergeTaskStorage(task)
+        self._task_manager.UpdateTaskAsPendingMerge(task)
+
+      except KeyError:
+        logger.error(
+            'Unable to retrieve task: {0:s} to prepare it to be merged.'.format(
+                task_identifier))
+        continue
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming('merge_check')
