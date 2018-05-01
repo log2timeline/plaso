@@ -12,11 +12,8 @@ from __future__ import print_function
 
 import argparse
 import glob
-import math
 import os
 import sys
-
-import numpy
 
 from matplotlib import pyplot  # pylint: disable=import-error
 from numpy import genfromtxt  # pylint: disable=import-error
@@ -126,7 +123,8 @@ def Main():
         task_measurement.processing_time = time
 
       elif status == 'processing_completed':
-        task_measurement.processing_duration = time - task_measurement.processing_time
+        task_measurement.processing_duration = (
+            time - task_measurement.processing_time)
 
       elif status == 'scheduled':
         task_measurement.scheduled_time = time
@@ -141,7 +139,8 @@ def Main():
   for identifier, task_measurement in measurements.items():
     before_pending_merge_duration[task_measurement.scheduled_time] = (
         task_measurement.pending_merge_time - (
-            task_measurement.processing_time + task_measurement.processing_duration))
+            task_measurement.processing_time +
+            task_measurement.processing_duration))
 
     before_queued_duration[task_measurement.scheduled_time] = (
         task_measurement.scheduled_time - task_measurement.created_time)
