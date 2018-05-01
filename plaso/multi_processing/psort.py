@@ -296,6 +296,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
         merge_ready = storage_writer.CheckTaskReadyForMerge(task)
         if merge_ready:
+          storage_writer.PrepareMergeTaskStorage(task)
           self._status = definitions.PROCESSING_STATUS_MERGING
 
           event_queue = self._event_queues[plugin_name]

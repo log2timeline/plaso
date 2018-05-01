@@ -363,6 +363,19 @@ class FakeStorageWriter(interface.StorageWriter):
 
     return iter(event_heap.PopEvents())
 
+  def FinalizeTaskStorage(self, task):
+    """Finalizes a processed task storage.
+
+    Args:
+      task (Task): task.
+
+    Raises:
+      IOError: if the task storage does not exist.
+    """
+    if task.identifier not in self._task_storage_writers:
+      raise IOError('Storage writer for task: {0:s} does not exist.'.format(
+          task.identifier))
+
   def Open(self):
     """Opens the storage writer.
 
@@ -416,7 +429,7 @@ class FakeStorageWriter(interface.StorageWriter):
     """Sets the serializers profiler.
 
     Args:
-      serializers_profiler (SerializersProfiler): serializers profile.
+      serializers_profiler (SerializersProfiler): serializers profiler.
     """
     pass
 
@@ -424,7 +437,7 @@ class FakeStorageWriter(interface.StorageWriter):
     """Sets the storage profiler.
 
     Args:
-      storage_profiler (StorageProfiler): storage profile.
+      storage_profiler (StorageProfiler): storage profiler.
     """
     pass
 
