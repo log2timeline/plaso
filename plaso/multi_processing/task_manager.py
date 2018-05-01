@@ -37,7 +37,11 @@ class _PendingMergeTaskHeap(object):
     return task_identifier in self._task_identifiers
 
   def __len__(self):
-    """int: number of tasks on the heap."""
+    """Determines the number of tasks on the heap.
+
+    Returns:
+      int: number of tasks on the heap.
+    """
     return len(self._heap)
 
   def PeekTask(self):
@@ -101,15 +105,16 @@ class TaskManager(object):
 
   * abandoned: a task assumed to be abandoned because a tasks that has been
       queued or was processing exceeds the maximum inactive time.
+  * completed: a task that has successfully been merged.
+  * merging: a task that is being merged by the engine.
+  * pending_merge: the task has been processed and is ready to be merged with
+      the session storage.
+  * processed: a worker has completed processing the task, but it is not ready
+      to be merged into the session storage.
+  * processing: a worker is processing the task.
   * queued: the task is waiting for a worker to start processing it. It is also
       possible that a worker has already completed the task, but no status
       update was collected from the worker while it processed the task.
-  * processing: a worker is processing the task.
-  * processed: a worker has completed processing the task, but it is not ready
-      to be merged into the session storage.
-  * pending_merge: the task has been processed and is ready to be merged with
-      the session storage.
-  * merging: tasks that are being merged by the engine.
 
   Once the engine reports that a task is completely merged, it is removed
   from the task manager.
@@ -127,6 +132,8 @@ class TaskManager(object):
   # Context manager 'lock' doesn't implement __enter__ and __exit__.
   # pylint: disable=not-context-manager
 
+  _MAXIMUM_RETRY_COUNT = 2
+
   # Consider a task inactive after 5 minutes of no activity.
   _TASK_INACTIVE_TIME = 5.0 * 60.0
 
@@ -134,6 +141,7 @@ class TaskManager(object):
     """Initializes a task manager."""
     super(TaskManager, self).__init__()
     self._lock = threading.Lock()
+    self._number_of_retry_tasks = 0
 
     # This dictionary maps task identifiers to tasks that have been abandoned,
     # as no worker has reported processing the task in the expected interval.
@@ -203,9 +211,8 @@ class TaskManager(object):
           no abandoned tasks that should be retried.
     """
     for task in self._tasks_abandoned.values():
-      # Only retry abandoned tasks that are yet to be retried and
-      # are not themselves retries of another task.
-      if not (task.retried or task.original_task_identifier):
+      if (not task.retry_task_identifier and
+          task.retry_count < self._MAXIMUM_RETRY_COUNT):
         return task
 
     return None
@@ -232,16 +239,6 @@ class TaskManager(object):
     """
     return bool(self._GetTaskPendingRetry())
 
-  def _QueueTask(self, task):
-    """Queues a task.
-
-    This method does not lock the manager and should be called by a method
-    holding the manager lock.
-    Args:
-      task (Task): task to queue.
-    """
-    self._tasks_queued[task.identifier] = task
-    self._total_number_of_tasks += 1
 
   def _UpdateLastestProcessingTime(self, task):
     """Updates the last processing time of the task manager from the task.
@@ -255,6 +252,30 @@ class TaskManager(object):
     self._latest_task_processing_time = max(
         self._latest_task_processing_time, task.last_processing_time)
 
+  def CheckTaskToMerge(self, task):
+    """Checks if the task should be merged.
+
+    Args:
+      task (Task): task.
+
+    Returns:
+      bool: True if the task should be merged.
+
+    Raises:
+      KeyError: if the task was not queued, processing or abandoned.
+    """
+    with self._lock:
+      is_abandoned = task.identifier in self._tasks_abandoned
+      is_processing = task.identifier in self._tasks_processing
+      is_queued = task.identifier in self._tasks_queued
+
+      if not is_queued and not is_processing and not is_abandoned:
+        raise KeyError('Status of task {0:s} is unknown.'.format(
+            task.identifier))
+
+      return is_queued or is_processing or (
+          is_abandoned and not task.retry_task_identifier)
+
   def CreateRetryTask(self):
     """Creates a task that to retry a previously abandoned task.
 
@@ -267,11 +288,17 @@ class TaskManager(object):
       if not abandoned_task:
         return None
 
-      retry_task = abandoned_task.CreateRetry()
+      # The abandoned task is kept in _tasks_abandoned so it can be still
+      # identified in CheckTaskToMerge and UpdateTaskAsPendingMerge.
+
+      retry_task = abandoned_task.CreateRetryTask()
       logger.debug('Retrying task {0:s} as {1:s}.'.format(
           abandoned_task.identifier, retry_task.identifier))
 
-      self._QueueTask(retry_task)
+      self._tasks_queued[retry_task.identifier] = retry_task
+      self._number_of_retry_tasks += 1
+      self._total_number_of_tasks += 1
+
       return retry_task
 
   # TODO: add support for task types.
@@ -289,7 +316,8 @@ class TaskManager(object):
     logger.debug('Created task: {0:s}.'.format(task.identifier))
 
     with self._lock:
-      self._QueueTask(task)
+      self._tasks_queued[task.identifier] = task
+      self._total_number_of_tasks += 1
 
     return task
 
@@ -300,28 +328,29 @@ class TaskManager(object):
 
     Args:
       task (Task): task.
+
+    Raises:
+      KeyError: if the task was not merging or a retried task was not abandoned.
     """
     with self._lock:
-      if task.identifier in self._tasks_merging:
-        del self._tasks_merging[task.identifier]
-        logger.debug('Task {0:s} is complete.'.format(task.identifier))
+      if task.identifier not in self._tasks_merging:
+        raise KeyError('Task {0:s} was not merging.'.format(task.identifier))
 
-      if task.identifier in self._tasks_pending_merge:
-        logger.debug('Task {0:s} completed while pending merge.'.format(
-            task.identifier))
-        return
+      del self._tasks_merging[task.identifier]
 
-      if task.identifier in self._tasks_processing:
-        del self._tasks_processing[task.identifier]
-        logger.debug('Task {0:s} completed from processing.'.format(
-            task.identifier))
-        return
+      abandoned_task_identifier = task.original_task_identifier
+      while abandoned_task_identifier:
+        abandoned_task = self._tasks_abandoned.get(
+            abandoned_task_identifier, None)
+        if not abandoned_task:
+          raise KeyError('Task {0:s} was not abandoned.'.format(
+              abandoned_task_identifier))
 
-      if task.identifier in self._tasks_queued:
-        del self._tasks_queued[task.identifier]
-        logger.debug('Task {0:s} is completed from queued.'.format(
-            task.identifier))
-        return
+        del self._tasks_abandoned[abandoned_task_identifier]
+
+        abandoned_task_identifier = abandoned_task.original_task_identifier
+
+      logger.debug('Completed task {0:s}.'.format(task.identifier))
 
   def GetFailedTasks(self):
     """Retrieves all failed tasks.
@@ -336,7 +365,7 @@ class TaskManager(object):
 
     with self._lock:
       return [task for task in self._tasks_abandoned.values()
-              if not task.retried]
+              if not task.retry_task_identifier]
 
   def GetProcessedTaskByIdentifier(self, task_identifier):
     """Retrieves a task that has been processed.
@@ -380,19 +409,6 @@ class TaskManager(object):
 
     return status
 
-  def GetTasksCheckMerge(self):
-    """Retrieves the tasks that need to be checked if they are ready for merge.
-
-    Returns:
-      list[Task]: tasks that are being processed by workers or that have been
-          abandoned.
-    """
-    with self._lock:
-      tasks_list = list(self._tasks_processing.values())
-      tasks_list.extend(self._tasks_queued.values())
-      tasks_list.extend(self._tasks_abandoned.values())
-    return tasks_list
-
   def GetTaskPendingMerge(self, current_task):
     """Retrieves the first task that is pending merge or has a higher priority.
 
@@ -416,6 +432,7 @@ class TaskManager(object):
 
     with self._lock:
       next_task = self._tasks_pending_merge.PopTask()
+
     self._tasks_merging[next_task.identifier] = next_task
     return next_task
 
@@ -474,37 +491,41 @@ class TaskManager(object):
       task (Task): task.
 
     Raises:
-      KeyError: if the task was not processing or abandoned.
+      KeyError: if the task was not queued, processing or abandoned, or
+          the task was abandoned and retried.
     """
     with self._lock:
-      is_processing = task.identifier in self._tasks_processing
       is_abandoned = task.identifier in self._tasks_abandoned
+      is_processing = task.identifier in self._tasks_processing
       is_queued = task.identifier in self._tasks_queued
 
-      if not (is_queued or is_abandoned or is_processing):
+      if not is_queued and not is_processing and not is_abandoned:
         raise KeyError('Status of task {0:s} is unknown.'.format(
             task.identifier))
+
+      if is_abandoned and task.retry_task_identifier:
+        raise KeyError('Unable to merge a task {0:s} with retry task.'.format(
+            task.identifier))
+
+      if is_queued:
+        logger.debug('Task {0:s} was queued, now merging.'.format(
+            task.identifier))
+        del self._tasks_queued[task.identifier]
+
+      if is_processing:
+        logger.debug('Task {0:s} was processing, now merging.'.format(
+            task.identifier))
+        del self._tasks_processing[task.identifier]
+
+      if is_abandoned:
+        logger.debug('Task {0:s} was abandoned, now merging.'.format(
+            task.identifier))
+        del self._tasks_abandoned[task.identifier]
 
       self._tasks_pending_merge.PushTask(task)
 
       task.UpdateProcessingTime()
       self._UpdateLastestProcessingTime(task)
-
-      if is_queued:
-        del self._tasks_queued[task.identifier]
-
-      if is_processing:
-        del self._tasks_processing[task.identifier]
-
-      if is_abandoned:
-        del self._tasks_abandoned[task.identifier]
-
-    if is_abandoned:
-      logger.warning(
-          'Previously abandoned task {0:s} is now pending merge.'.format(
-              task.identifier))
-    else:
-      logger.debug('Task {0:s} is pending merge.'.format(task.identifier))
 
   def UpdateTaskAsProcessingByIdentifier(self, task_identifier):
     """Updates the task manager to reflect the task is processing.

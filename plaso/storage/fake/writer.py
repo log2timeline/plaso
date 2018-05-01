@@ -425,6 +425,21 @@ class FakeStorageWriter(interface.StorageWriter):
 
     # TODO: implement.
 
+  def RemoveProcessedTaskStorage(self, task):
+    """Removes a processed task storage.
+
+    Args:
+      task (Task): task.
+
+    Raises:
+      IOError: if the task storage does not exist.
+    """
+    if task.identifier not in self._task_storage_writers:
+      raise IOError('Storage writer for task: {0:s} does not exist.'.format(
+          task.identifier))
+
+    del self._task_storage_writers[task.identifier]
+
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.
 

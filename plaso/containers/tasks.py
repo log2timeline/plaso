@@ -8,6 +8,7 @@ import uuid
 
 from plaso.containers import interface
 from plaso.containers import manager
+from plaso.lib import definitions
 
 
 class Task(interface.AttributeContainer):
@@ -27,12 +28,13 @@ class Task(interface.AttributeContainer):
       processed as number of milliseconds since January 1, 1970, 00:00:00 UTC.
     merge_priority (int): priority used for the task storage file merge, where
         a lower value indicates a higher priority to merge.
-    original_task_identifier (str): the identifier of the task that this task
-        is an attempt to retry, or None if this task isn't a retry.
+    original_task_identifier (str): the identifier of the task of which this
+        task is a retry or None if not set.
     path_spec (dfvfs.PathSpec): path specification.
-    retried (bool): True if this task been retried.
-    session_identifier (str): the identifier of the session the task
-        is part of.
+    retry_count (int): number of times the task has been retried.
+    retry_task_identifier (str): identifier of the retry task, when the task
+        is being retried or None if not set.
+    session_identifier (str): the identifier of the session the task is part of.
     start_time (int): time that the task was started. Contains the number
         of micro seconds since January 1, 1970, 00:00:00 UTC.
     storage_file_size (int): size of the storage file in bytes.
@@ -55,9 +57,10 @@ class Task(interface.AttributeContainer):
     self.merge_priority = None
     self.original_task_identifier = None
     self.path_spec = None
-    self.retried = False
+    self.retry_count = 0
+    self.retry_task_identifier = None
     self.session_identifier = session_identifier
-    self.start_time = int(time.time() * 1000000)
+    self.start_time = int(time.time() * definitions.MICROSECONDS_PER_SECOND)
     self.storage_file_size = None
 
   # This method is necessary for heap sort.
@@ -72,17 +75,22 @@ class Task(interface.AttributeContainer):
     """
     return self.identifier < other.identifier
 
-  def CreateRetry(self):
-    """Creates a new task that's an attempt to retry the original task.
+  def CreateRetryTask(self):
+    """Creates a new task to retry the existing task.
 
     Returns:
-      Task: a task that's a retry of the existing task.
+      task (Task): a task to retry of the existing task.
     """
-    self.retried = True
-    retry_task = Task(self.session_identifier)
-    retry_task.path_spec = self.path_spec
+    retry_task = Task(session_identifier=self.session_identifier)
+    retry_task.file_entry_type = self.file_entry_type
     retry_task.merge_priority = self.merge_priority
     retry_task.original_task_identifier = self.identifier
+    retry_task.path_spec = self.path_spec
+    retry_task.retry_count = self.retry_count + 1
+    retry_task.storage_file_size = self.storage_file_size
+
+    self.retry_task_identifier = retry_task.identifier
+
     return retry_task
 
   def CreateTaskCompletion(self):
@@ -91,7 +99,8 @@ class Task(interface.AttributeContainer):
     Returns:
       TaskCompletion: task completion attribute container.
     """
-    self.completion_time = int(time.time() * 1000000)
+    self.completion_time = int(
+        time.time() * definitions.MICROSECONDS_PER_SECOND)
 
     task_completion = TaskCompletion()
     task_completion.aborted = self.aborted
@@ -114,7 +123,8 @@ class Task(interface.AttributeContainer):
 
   def UpdateProcessingTime(self):
     """Updates the processing time to now."""
-    self.last_processing_time = int(time.time() * 1000000)
+    self.last_processing_time = int(
+        time.time() * definitions.MICROSECONDS_PER_SECOND)
 
 
 class TaskCompletion(interface.AttributeContainer):

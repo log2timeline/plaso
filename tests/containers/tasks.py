@@ -29,7 +29,7 @@ class TaskTest(shared_test_lib.BaseTestCase):
     expected_dict = {
         'aborted': False,
         'identifier': task.identifier,
-        'retried': False,
+        'retry_count': 0,
         'session_identifier': task.session_identifier,
         'start_time': task.start_time}
 
@@ -37,17 +37,17 @@ class TaskTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(test_dict, expected_dict)
 
-  def testCreateRetry(self):
-    """Tests the CreateRetry function."""
+  def testCreateRetryTask(self):
+    """Tests the CreateRetryTask function."""
     session_identifier = '{0:s}'.format(uuid.uuid4().hex)
     task = tasks.Task(session_identifier=session_identifier)
     task.path_spec = 'test_pathspec_value'
-    retry_task = task.CreateRetry()
 
-    self.assertEqual(task.path_spec, retry_task.path_spec)
-    self.assertNotEqual(task.identifier, retry_task.identifier)
-    self.assertTrue(task.retried)
-    self.assertEqual(task.identifier, retry_task.original_task_identifier)
+    retry_task = task.CreateRetryTask()
+    self.assertNotEqual(retry_task.identifier, task.identifier)
+    self.assertEqual(retry_task.retry_count, 1)
+    self.assertEqual(retry_task.identifier, task.retry_task_identifier)
+    self.assertEqual(retry_task.path_spec, task.path_spec)
 
   def testCreateTaskCompletion(self):
     """Tests the CreateTaskCompletion function."""
