@@ -543,4 +543,4 @@ class TaskManager(object):
         return
 
     # If we get here, we don't know what state the tasks is in, so raise.
-    task_abandoned KeyError('Status of task {0:s} is unknown.'.format(task_identifier))
+    raise KeyError('Status of task {0:s} is unknown.'.format(task_identifier))
