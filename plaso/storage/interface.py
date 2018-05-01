@@ -960,8 +960,8 @@ class StorageWriter(object):
       EventObject: event.
     """
 
-  def FinalizeProcessedTaskStorage(self, unused_task):
-    """Finalizes a proccessed a task storage.
+  def FinalizeTaskStorage(self, unused_task):
+    """Finalizes a proccessed task storage.
 
     Args:
       task (Task): task.
@@ -1440,8 +1440,8 @@ class StorageFileWriter(StorageWriter):
 
     return self._storage_file.GetSortedEvents(time_range=time_range)
 
-  def FinalizeProcessedTaskStorage(self, task):
-    """Finalized a proccessed a task storage.
+  def FinalizeTaskStorage(self, task):
+    """Finalized a proccessed task storage.
 
     Moves the task storage file from its temporary directory to the processed
     directory.

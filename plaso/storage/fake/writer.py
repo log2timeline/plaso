@@ -363,8 +363,8 @@ class FakeStorageWriter(interface.StorageWriter):
 
     return iter(event_heap.PopEvents())
 
-  def FinalizeProcessedTaskStorage(self, task):
-    """Finalized a proccessed a task storage.
+  def FinalizeTaskStorage(self, task):
+    """Finalizes a processed task storage.
 
     Args:
       task (Task): task.

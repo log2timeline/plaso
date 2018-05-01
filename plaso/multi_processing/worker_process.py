@@ -294,7 +294,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       storage_writer.Close()
 
     try:
-      self._storage_writer.FinalizeProcessedTaskStorage(task)
+      self._storage_writer.FinalizeTaskStorage(task)
     except IOError:
       pass
 

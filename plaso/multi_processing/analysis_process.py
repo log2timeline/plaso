@@ -201,7 +201,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
         storage_writer.SetStorageProfiler(None)
 
     try:
-      self._storage_writer.FinalizeProcessedTaskStorage(task)
+      self._storage_writer.FinalizeTaskStorage(task)
     except IOError:
       pass
 
