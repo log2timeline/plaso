@@ -47,7 +47,7 @@ class TimesketchTestConfig(object):
   flush_interval = 1000
 
 
-@unittest.skipIf(timesketch_out == None, 'missing timesketch')
+@unittest.skipIf(timesketch_out is None, 'missing timesketch')
 class TimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for the Timesketch output module."""
 
