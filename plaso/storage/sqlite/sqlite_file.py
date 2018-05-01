@@ -62,6 +62,12 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       _CONTAINER_TYPE_TASK_COMPLETION,
       _CONTAINER_TYPE_TASK_START)
 
+  # Container types that are referenced from other container types.
+  _REFERENCED_CONTAINER_TYPES = (
+      _CONTAINER_TYPE_EVENT,
+      _CONTAINER_TYPE_EVENT_DATA,
+      _CONTAINER_TYPE_EVENT_SOURCE)
+
   _CREATE_METADATA_TABLE_QUERY = (
       'CREATE TABLE metadata (key TEXT, value TEXT);')
 
@@ -121,8 +127,6 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
     self.storage_type = storage_type
 
-    # TODO: initialize next_sequence_number on read
-
   def _AddAttributeContainer(self, container_type, attribute_container):
     """Adds an attribute container.
 
@@ -133,8 +137,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     Raises:
       IOError: if the attribute container cannot be serialized.
     """
-    container_list = self._GetSerializedAttributeContainerList(
-        container_type)
+    container_list = self._GetSerializedAttributeContainerList(container_type)
 
     identifier = identifiers.SQLTableIdentifier(
         container_type, container_list.next_sequence_number + 1)
@@ -396,6 +399,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     if container_type == self._CONTAINER_TYPE_EVENT:
       if not self._serialized_event_heap.data_size:
         return
+
       number_of_attribute_containers = (
           self._serialized_event_heap.number_of_events)
 
@@ -967,6 +971,13 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     last_session_completion = self._CountStoredAttributeContainers(
         self._CONTAINER_TYPE_SESSION_COMPLETION)
+
+    # Initialize next_sequence_number based on the file contents so that
+    # SQLTableIdentifier points to the correct attribute container.
+    for container_type in self._REFERENCED_CONTAINER_TYPES:
+      container_list = self._GetSerializedAttributeContainerList(container_type)
+      container_list.next_sequence_number = (
+          self._CountStoredAttributeContainers(container_type))
 
     # TODO: handle open sessions.
     if last_session_start != last_session_completion:
