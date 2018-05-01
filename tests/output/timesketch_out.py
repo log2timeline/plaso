@@ -24,7 +24,7 @@ from tests.output import test_lib
 # Mock the imports if timesketch is not available. If timesketch is
 # not available the timesketch attribute is set to None in the
 # output module.
-if timesketch_out.timesketch:
+if timesketch_out.timesketch is None:
   timesketch_mock = Mock()
   timesketch_mock.create_app = MagicMock()
 
