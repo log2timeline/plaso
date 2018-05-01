@@ -44,6 +44,7 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-dfwinreg
                       python-dpkt
                       python-efilter
+                      python-elasticsearch
                       python-future
                       python-hachoir-core
                       python-hachoir-metadata
