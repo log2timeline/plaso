@@ -87,9 +87,6 @@ def Main():
     data = genfromtxt(
         csv_file, delimiter='\t', dtype=None, names=names, skip_header=1)
 
-    processing_time = {}
-    processing_duration = {}
-
     label = os.path.basename(csv_file)
     label = label.replace('tasks-', '').replace('.csv.gz', '')
 
