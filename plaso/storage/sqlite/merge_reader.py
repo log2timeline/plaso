@@ -29,6 +29,10 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
   _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
   _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
 
+  # Specific container types reference other container types, such as event
+  # referencing event data, therefore the order here should be to list
+  # containter that are referenced by other types before container type that
+  # reference other types.
   _CONTAINER_TYPES = (
       _CONTAINER_TYPE_EVENT_SOURCE,
       _CONTAINER_TYPE_EVENT_DATA,
