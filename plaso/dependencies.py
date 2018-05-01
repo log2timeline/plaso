@@ -32,7 +32,7 @@ PYTHON_DEPENDENCIES = {
     'dfwinreg': ('__version__', '20170521', None, True),
     'dpkt': ('__version__', '1.8', None, True),
     'efilter': ('', '1.5', None, True),
-    'elasticsearch-py': ('__versionstr__', '5.4.0', '5.5.1', True),
+    'elasticsearch': ('__versionstr__', '5.4.0', '5.5.1', True),
     'future': ('__version__', '0.16.0', None, True),
     'hachoir_core': ('__version__', '1.3.3', None, False),
     'hachoir_metadata': ('__version__', '1.3.3', None, False),
