@@ -976,8 +976,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     # SQLTableIdentifier points to the correct attribute container.
     for container_type in self._REFERENCED_CONTAINER_TYPES:
       container_list = self._GetSerializedAttributeContainerList(container_type)
-      container_list.next_sequence_number = self._CountStoredAttributeContainers(
-          container_type)
+      container_list.next_sequence_number = (
+          self._CountStoredAttributeContainers(container_type))
 
     # TODO: handle open sessions.
     if last_session_start != last_session_completion:
