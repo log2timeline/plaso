@@ -43,6 +43,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._event_documents = []
     self._flush_interval = self._DEFAULT_FLUSH_INTERVAL
     self._host = None
+    self._index = None
     self._index_name = None
     self._mappings = {}
     self._number_of_buffered_events = 0
@@ -59,7 +60,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
       elastic_http_auth = (self._username, self._password)
 
     self._client = Elasticsearch(elastic_hosts, http_auth=elastic_http_auth)
-    self._index = self._EnsureIndexExists(index_name, mapping)
+    self._index = self._EnsureIndexExists(self._index_name, self._mappings)
 
     logger.debug('Connected to Elasticsearch server: {0:s} port: {1:d}.'.format(
         self._host, self._port))
@@ -250,7 +251,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     """
     self._host = server
     self._port = port
-    logger.debug('Elasticsearch server: {0:s} port: {1:d}'.format(host, port))
+    logger.debug('Elasticsearch server: {0:s} port: {1:d}'.format(server, port))
 
   def SetUsername(self, username):
     """Sets the username.
