@@ -28,7 +28,11 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
   NAME = 'elastic_shared'
 
   _DEFAULT_DOCUMENT_TYPE = 'plaso_event'
+
   _DEFAULT_FLUSH_INTERVAL = 1000
+
+  # Number of seconds to wait before a request to Elasticsearch is timed out.
+  _DEFAULT_REQUEST_TIMEOUT = 300
 
   def __init__(self, output_mediator):
     """Initializes an Elasticsearch output module.
@@ -95,7 +99,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     try:
       self._client.bulk(
           body=self._event_documents, doc_type=self._document_type,
-          index=self._index)
+          index=self._index, request_timeout=self._DEFAULT_REQUEST_TIMEOUT)
 
     except ValueError as exception:
       # Ignore problematic events
