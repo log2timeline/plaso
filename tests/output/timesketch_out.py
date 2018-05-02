@@ -78,7 +78,7 @@ class TimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
   # TODO: test SetFlushInterval function
   # TODO: test SetIndexName function
   # TODO: test SetTimelineName function
-  # TODO: test SetUserName function
+  # TODO: test SetTimelineOwner function
   # TODO: test WriteEventBody function
   # TODO: test WriteHeader function
 

@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import logging
-
 try:
   from flask import current_app
   import timesketch
@@ -14,17 +12,12 @@ try:
 except ImportError:
   timesketch = None
 
-from plaso.output import interface
 from plaso.output import logger
 from plaso.output import manager
-from plaso.output.elastic import ElasticSearchHelper
-
-# Configure Elasticsearch logger
-elastic_logger = logging.getLogger('elasticsearch')
-elastic_logger.propagate = False
+from plaso.output import shared_elastic
 
 
-class TimesketchOutputModule(interface.OutputModule):
+class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
   """Output module for Timesketch."""
 
   NAME = 'timesketch'
@@ -37,23 +30,14 @@ class TimesketchOutputModule(interface.OutputModule):
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfvfs.
     """
-    super(TimesketchOutputModule, self).__init__(output_mediator)
-    self._doc_type = None
-    self._elastic = None
-    self._flush_interval = None
-    self._host = None
-    self._index_name = None
-    self._mapping = None
-    self._port = None
-    self._timesketch = timesketch.create_app()
-    self._username = None
-
     hostname = self._output_mediator.GetStoredHostname()
     if hostname:
-      logger.info('Hostname: {0:s}'.format(hostname))
-      self._timeline_name = hostname
-    else:
-      self._timeline_name = None
+      logger.debug('Hostname: {0:s}'.format(hostname))
+
+    super(TimesketchOutputModule, self).__init__(output_mediator)
+    self._timeline_name = hostname
+    self._timeline_owner = None
+    self._timesketch = timesketch.create_app()
 
   def Close(self):
     """Closes the connection to TimeSketch Elasticsearch database.
@@ -61,7 +45,8 @@ class TimesketchOutputModule(interface.OutputModule):
     Sends the remaining events for indexing and removes the processing status on
     the Timesketch search index object.
     """
-    self._elastic.AddEvent(None, force_flush=True)
+    super(TimesketchOutputModule, self).Close()
+
     with self._timesketch.app_context():
       search_index = SearchIndex.query.filter_by(
           index_name=self._index_name).first()
@@ -70,7 +55,7 @@ class TimesketchOutputModule(interface.OutputModule):
       db_session.commit()
 
   def GetMissingArguments(self):
-    """Return a list of arguments that are missing from the input.
+    """Retrieves a list of arguments that are missing from the input.
 
     Returns:
       list[str]: names of arguments that are required by the module and have
@@ -79,33 +64,6 @@ class TimesketchOutputModule(interface.OutputModule):
     if not self._timeline_name:
       return ['timeline_name']
     return []
-
-  def SetDocType(self, doc_type):
-    """Sets the Elasticsearch document type.
-
-    Args:
-      doc_type (str): document type.
-    """
-    self._doc_type = doc_type
-    logger.info('Document type: {0:s}'.format(self._doc_type))
-
-  def SetFlushInterval(self, flush_interval):
-    """Sets the flush interval.
-
-    Args:
-      flush_interval (int): flush interval.
-    """
-    self._flush_interval = flush_interval
-    logger.info('Flush interval: {0:d}'.format(self._flush_interval))
-
-  def SetIndexName(self, index_name):
-    """Sets the index name.
-
-    Args:
-      index_name (str): index name.
-    """
-    self._index_name = index_name
-    logger.info('Index name: {0:s}'.format(self._index_name))
 
   def SetTimelineName(self, timeline_name):
     """Sets the timeline name.
@@ -116,33 +74,25 @@ class TimesketchOutputModule(interface.OutputModule):
     self._timeline_name = timeline_name
     logger.info('Timeline name: {0:s}'.format(self._timeline_name))
 
-  def SetUserName(self, username):
+  def SetTimelineOwner(self, username):
     """Sets the username of the user that should own the timeline.
 
     Args:
       username (str): username.
     """
-    self._username = username
-    logger.info('Owner of the timeline: {0:s}'.format(self._username))
-
-  def WriteEventBody(self, event):
-    """Writes the body of an event to the output.
-
-    Args:
-      event (EventObject): event.
-    """
-    self._elastic.AddEvent(event)
+    self._timeline_owner = username
+    logger.info('Owner of the timeline: {0:s}'.format(self._timeline_owner))
 
   def WriteHeader(self):
-    """Setup the Elasticsearch index and the Timesketch database object.
+    """Sets up the Elasticsearch index and the Timesketch database object.
 
     Creates the Elasticsearch index with Timesketch specific settings and the
     Timesketch SearchIndex database object.
     """
-    # This cannot be static because we use the value of self._doc_type from
-    # arguments.
-    _document_mapping = {
-        self._doc_type: {
+    # This cannot be static because we use the value of self._document_type
+    # from arguments.
+    self._mappings = {
+        self._document_type: {
             'properties': {
                 'timesketch_label': {
                     'type': 'nested'
@@ -153,19 +103,17 @@ class TimesketchOutputModule(interface.OutputModule):
 
     # Get Elasticsearch host and port from Timesketch configuration.
     with self._timesketch.app_context():
-      _host = current_app.config['ELASTIC_HOST']
-      _port = current_app.config['ELASTIC_PORT']
+      self._host = current_app.config['ELASTIC_HOST']
+      self._port = current_app.config['ELASTIC_PORT']
 
-    self._elastic = ElasticSearchHelper(
-        self._output_mediator, _host, _port, self._flush_interval,
-        self._index_name, _document_mapping, self._doc_type)
+    self._Connect()
 
     user = None
-    if self._username:
-      user = User.query.filter_by(username=self._username).first()
+    if self._timeline_owner:
+      user = User.query.filter_by(username=self._timeline_owner).first()
       if not user:
         raise RuntimeError(
-            'Unknown Timesketch user: {0:s}'.format(self._username))
+            'Unknown Timesketch user: {0:s}'.format(self._timeline_owner))
     else:
       logger.warning('Timeline will be visible to all Timesketch users')
 
@@ -190,7 +138,7 @@ class TimesketchOutputModule(interface.OutputModule):
       db_session.add(search_index)
       db_session.commit()
 
-    logger.info('Adding events to Timesketch.')
+    logger.debug('Adding events to Timesketch.')
 
 
 manager.OutputManager.RegisterOutput(
