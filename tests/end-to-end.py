@@ -84,6 +84,64 @@ class TestCase(object):
     self._test_sources_path = test_sources_path
     self._tools_path = tools_path
 
+  def _CompareOutputFile(self, test_definition, temp_directory):
+    """Compares the output file with a reference output file.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+      temp_directory (str): name of a temporary directory.
+
+    Returns:
+      bool: True if he output files are identical.
+    """
+    output_file_path = os.path.join(temp_directory, test_definition.output_file)
+
+    # TODO: add support to compare output by SHA-256.
+
+    result = False
+    if test_definition.reference_output_file:
+      reference_output_file_path = test_definition.reference_output_file
+      if self._test_references_path:
+        reference_output_file_path = os.path.join(
+            self._test_references_path, reference_output_file_path)
+
+      if not os.path.exists(reference_output_file_path):
+        logging.error('No such reference output file: {0:s}'.format(
+            reference_output_file_path))
+        return False
+
+      with open(reference_output_file_path, 'r') as reference_output_file:
+        with open(output_file_path, 'r') as output_file:
+          # Hack to remove paths in the output that are different when running
+          # the tests under UNIX and Windows.
+          reference_output_list = [
+              line.decode('utf-8').replace('/tmp/test/test_data/', '')
+              for line in reference_output_file.readlines()]
+          output_list = [
+              line.decode('utf-8').replace('/tmp/test/test_data/', '')
+              for line in output_file.readlines()]
+          output_list = [
+              line.replace('C:\\tmp\\test\\test_data\\', '')
+              for line in output_list]
+          output_list = [
+              line.replace('C:\\\\tmp\\\\test\\\\test_data\\\\', '')
+              for line in output_list]
+          differences = list(difflib.unified_diff(
+              reference_output_list, output_list,
+              fromfile=reference_output_file_path, tofile=output_file_path))
+
+      if differences:
+        differences_output = []
+        for difference in differences:
+          differences_output.append(difference)
+        differences_output = '\n'.join(differences_output)
+        logging.error('Differences: {0:s}'.format(differences_output))
+
+      if not differences:
+        result = True
+
+    return result
+
   def _InitializeLog2TimelinePath(self):
     """Initializes the location of log2timeline."""
     for filename in (
@@ -713,6 +771,10 @@ class ExtractAndOutputTestCase(TestCase):
         test_definition.name, 'profiling_options', default=[],
         split_string=True)
 
+    test_definition.reference_output_file = (
+        test_definition_reader.GetConfigValue(
+            test_definition.name, 'reference_output_file'))
+
     test_definition.reference_storage_file = (
         test_definition_reader.GetConfigValue(
             test_definition.name, 'reference_storage_file'))
@@ -762,6 +824,11 @@ class ExtractAndOutputTestCase(TestCase):
       # Check if the resulting storage file can be read with psort.
       if not self._RunPsort(test_definition, temp_directory, storage_file):
         return False
+
+      # Compare output file with a reference output file.
+      if test_definition.output_file and test_definition.reference_output_file:
+        if not self._CompareOutputFile(test_definition, temp_directory):
+          return False
 
     return True
 
@@ -882,6 +949,10 @@ class ExtractAndOutputWithPstealTestCase(TestCase):
         test_definition.name, 'profiling_options', default=[],
         split_string=True)
 
+    test_definition.reference_output_file = (
+        test_definition_reader.GetConfigValue(
+            test_definition.name, 'reference_output_file'))
+
     test_definition.reference_storage_file = (
         test_definition_reader.GetConfigValue(
             test_definition.name, 'reference_storage_file'))
@@ -916,6 +987,11 @@ class ExtractAndOutputWithPstealTestCase(TestCase):
       if not self._RunPsteal(
           test_definition, temp_directory, storage_file, source_path):
         return False
+
+      # Compare output file with a reference output file.
+      if test_definition.output_file and test_definition.reference_output_file:
+        if not self._CompareOutputFile(test_definition, temp_directory):
+          return False
 
     return True
 
@@ -1173,6 +1249,123 @@ class ImageExportTestCase(TestCase):
     return True
 
 
+class MultiExtractAndOutputTestCase(ExtractAndOutputTestCase):
+  """Extract multiple times with the same storage file and output test case.
+
+  The multi extract and output test case runs log2timeline to extract data
+  from a source, specified by the test definition, multiple times with the
+  same storage file. After the data has been extracted pinfo and psort are
+  run to read from the resulting storage file.
+  """
+
+  NAME = 'multi_extract_and_output'
+
+  def ReadAttributes(self, test_definition_reader, test_definition):
+    """Reads the test definition attributes into to the test definition.
+
+    Args:
+      test_definition_reader (TestDefinitionReader): test definition reader.
+      test_definition (TestDefinition): test definition.
+
+    Returns:
+      bool: True if the read was successful.
+    """
+    test_definition.extract_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'extract_options', default=[], split_string=True)
+
+    test_definition.logging_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'logging_options', default=[], split_string=True)
+
+    test_definition.output_file = test_definition_reader.GetConfigValue(
+        test_definition.name, 'output_file')
+
+    test_definition.output_format = test_definition_reader.GetConfigValue(
+        test_definition.name, 'output_format')
+
+    test_definition.output_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'output_options', default=[], split_string=True)
+
+    test_definition.profiling_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'profiling_options', default=[],
+        split_string=True)
+
+    test_definition.reference_output_file = (
+        test_definition_reader.GetConfigValue(
+            test_definition.name, 'reference_output_file'))
+
+    test_definition.reference_storage_file = (
+        test_definition_reader.GetConfigValue(
+            test_definition.name, 'reference_storage_file'))
+
+    test_definition.source1 = test_definition_reader.GetConfigValue(
+        test_definition.name, 'source1')
+
+    test_definition.source2 = test_definition_reader.GetConfigValue(
+        test_definition.name, 'source2')
+
+    return True
+
+  def Run(self, test_definition):
+    """Runs the test case with the parameters specified by the test definition.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+
+    Returns:
+      bool: True if the test ran successfully.
+    """
+    source1_path = test_definition.source1
+    if self._test_sources_path:
+      source1_path = os.path.join(self._test_sources_path, source1_path)
+
+    if not os.path.exists(source1_path):
+      logging.error('No such source: {0:s}'.format(source1_path))
+      return False
+
+    source2_path = test_definition.source2
+    if self._test_sources_path:
+      source2_path = os.path.join(self._test_sources_path, source2_path)
+
+    if not os.path.exists(source2_path):
+      logging.error('No such source: {0:s}'.format(source2_path))
+      return False
+
+    with TempDirectory() as temp_directory:
+      storage_file = os.path.join(
+          temp_directory, '{0:s}.plaso'.format(test_definition.name))
+
+      # Extract events with log2timeline.
+      if not self._RunLog2Timeline(
+          test_definition, temp_directory, storage_file, source1_path):
+        return False
+
+      if not self._RunLog2Timeline(
+          test_definition, temp_directory, storage_file, source2_path):
+        return False
+
+      # Check if the resulting storage file can be read with pinfo.
+      if not self._RunPinfo(
+          test_definition, temp_directory, storage_file):
+        return False
+
+      # Compare storage file with a reference storage file.
+      if test_definition.reference_storage_file:
+        if not self._RunPinfoCompare(
+            test_definition, temp_directory, storage_file):
+          return False
+
+      # Check if the resulting storage file can be read with psort.
+      if not self._RunPsort(test_definition, temp_directory, storage_file):
+        return False
+
+      # Compare output file with a reference output file.
+      if test_definition.output_file and test_definition.reference_output_file:
+        if not self._CompareOutputFile(test_definition, temp_directory):
+          return False
+
+    return True
+
+
 class OutputTestCase(TestCase):
   """Output test case.
 
@@ -1181,10 +1374,6 @@ class OutputTestCase(TestCase):
   """
 
   NAME = 'output'
-
-  _SUPPORTED_OUTPUT_FORMATS = frozenset([
-      'dynamic', 'json', 'json_line', 'l2tcsv', 'l2ttln', 'rawpy',
-      'tln'])
 
   def __init__(
       self, tools_path, test_sources_path, test_references_path,
@@ -1202,69 +1391,6 @@ class OutputTestCase(TestCase):
         tools_path, test_sources_path, test_references_path,
         test_results_path, debug_output=debug_output)
     self._InitializePsortPath()
-
-  def _CompareOutputFile(self, test_definition, temp_directory):
-    """Compares the output file with a reference output file.
-
-    Args:
-      test_definition (TestDefinition): test definition.
-      temp_directory (str): name of a temporary directory.
-
-    Returns:
-      bool: True if he output files are identical.
-    """
-    if test_definition.output_format not in self._SUPPORTED_OUTPUT_FORMATS:
-      logging.error('Unsupported output format: {0:s}'.format(
-          test_definition.output_format))
-      return False
-
-    output_file_path = os.path.join(temp_directory, test_definition.output_file)
-
-    # TODO: add support to compare output by SHA-256.
-
-    result = False
-    if test_definition.reference_output_file:
-      reference_output_file_path = test_definition.reference_output_file
-      if self._test_references_path:
-        reference_output_file_path = os.path.join(
-            self._test_references_path, reference_output_file_path)
-
-      if not os.path.exists(reference_output_file_path):
-        logging.error('No such reference output file: {0:s}'.format(
-            reference_output_file_path))
-        return False
-
-      with open(reference_output_file_path, 'r') as reference_output_file:
-        with open(output_file_path, 'r') as output_file:
-          # Hack to remove paths in the output that are different when running
-          # the tests under UNIX and Windows.
-          reference_output_list = [
-              line.decode('utf-8').replace('/tmp/test/test_data/', '')
-              for line in reference_output_file.readlines()]
-          output_list = [
-              line.decode('utf-8').replace('/tmp/test/test_data/', '')
-              for line in output_file.readlines()]
-          output_list = [
-              line.replace('C:\\tmp\\test\\test_data\\', '')
-              for line in output_list]
-          output_list = [
-              line.replace('C:\\\\tmp\\\\test\\\\test_data\\\\', '')
-              for line in output_list]
-          differences = list(difflib.unified_diff(
-              reference_output_list, output_list,
-              fromfile=reference_output_file_path, tofile=output_file_path))
-
-      if differences:
-        differences_output = []
-        for difference in differences:
-          differences_output.append(difference)
-        differences_output = '\n'.join(differences_output)
-        logging.error('Differences: {0:s}'.format(differences_output))
-
-      if not differences:
-        result = True
-
-    return result
 
   def _RunPsort(self, test_definition, temp_directory, storage_file):
     """Runs psort with the output options specified by the test definition.
@@ -1393,7 +1519,8 @@ class OutputTestCase(TestCase):
 
 TestCasesManager.RegisterTestCases([
     ExtractAndOutputTestCase, ExtractAndOutputWithPstealTestCase,
-    ExtractAndTagTestCase, ImageExportTestCase, OutputTestCase])
+    ExtractAndTagTestCase, ImageExportTestCase, MultiExtractAndOutputTestCase,
+    OutputTestCase])
 
 
 def Main():
