@@ -8,7 +8,11 @@
 # Exit on error.
 set -e;
 
-if test "${TARGET}" = "pylint";
+if test "${TARGET}" = "jenkins";
+then
+	./config/jenkins/linux/run_end_to_end_tests.sh;
+
+elif test "${TARGET}" = "pylint";
 then
 	pylint --version
 
