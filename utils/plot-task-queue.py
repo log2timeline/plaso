@@ -12,7 +12,6 @@ from __future__ import print_function
 
 import argparse
 import glob
-import gzip
 import os
 import sys
 
@@ -30,7 +29,7 @@ def Main():
       'Plots memory usage from profiling data.'))
 
   argument_parser.add_argument(
-      '--output', dest='output_file', default=str, help=(
+      '--output', dest='output_file', type=str, help=(
           'path of the output file to write the graph to instead of using '
           'interactive mode. The output format deduced from the extension '
           'of the filename.'))
@@ -46,13 +45,11 @@ def Main():
     return False
 
   names = ['time', 'queued', 'processing', 'to_merge', 'abandoned', 'total']
-  types = ['float', 'int', 'int', 'int', 'int', 'int']
 
   glob_expression = os.path.join(options.profile_path, 'task_queue-*.csv.gz')
   for csv_file in glob.glob(glob_expression):
-    with gzip.open(csv_file, 'rb') as file_object:
-      data = genfromtxt(
-          file_object, delimiter='\t', dtype=types, names=names, skip_header=1)
+    data = genfromtxt(
+        csv_file, delimiter='\t', dtype=None, names=names, skip_header=1)
 
     pyplot.plot(data['time'], data['queued'], label='queued')
     pyplot.plot(data['time'], data['processing'], label='processing')
