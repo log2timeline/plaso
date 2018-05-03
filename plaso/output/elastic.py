@@ -5,11 +5,7 @@ from __future__ import unicode_literals
 
 from plaso.output import logger
 from plaso.output import manager
-
-try:
-  from plaso.output import shared_elastic
-except ImportError:
-  shared_elastic = None
+from plaso.output import shared_elastic
 
 
 class ElasticsearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
@@ -77,4 +73,4 @@ class ElasticsearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
 
 
 manager.OutputManager.RegisterOutput(
-    ElasticsearchOutputModule, disabled=shared_elastic is None)
+    ElasticsearchOutputModule, disabled=shared_elastic.elasticsearch is None)

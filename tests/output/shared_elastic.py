@@ -53,6 +53,7 @@ class TestElasticsearchOutputModule(
     self._client = MagicMock()
 
 
+@unittest.skipIf(shared_elastic.elasticsearch is None, 'missing elasticsearch')
 class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for SharedElasticsearchOutputModule."""
 

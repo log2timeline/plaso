@@ -12,6 +12,7 @@ except ImportError:
   from unittest.mock import MagicMock
 
 from plaso.output import elastic
+from plaso.output import shared_elastic
 
 from tests.output import test_lib
 
@@ -24,6 +25,7 @@ class TestElasticsearchOutputModule(elastic.ElasticsearchOutputModule):
     self._client = MagicMock()
 
 
+@unittest.skipIf(shared_elastic.elasticsearch is None, 'missing elasticsearch')
 class ElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for the Elasticsearch output module."""
 

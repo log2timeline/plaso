@@ -18,9 +18,11 @@ from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import logger
 
+
 # Configure the Elasticsearch logger.
-elastic_logger = logging.getLogger('elasticsearch.trace')
-elastic_logger.setLevel(logging.WARNING)
+if elasticsearch:
+  elastic_logger = logging.getLogger('elasticsearch.trace')
+  elastic_logger.setLevel(logging.WARNING)
 
 
 class SharedElasticsearchOutputModule(interface.OutputModule):

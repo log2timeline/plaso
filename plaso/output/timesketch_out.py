@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 try:
   from flask import current_app
   import timesketch
-  from timesketch.models import db_session
+  from timesketch.models import db_session as timesketch_db_session
   from timesketch.models import sketch as timesketch_sketch
   from timesketch.models import user as timesketch_user
 except ImportError:
@@ -30,7 +30,7 @@ class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfvfs.
     """
-    hostname = self._output_mediator.GetStoredHostname()
+    hostname = output_mediator.GetStoredHostname()
     if hostname:
       logger.debug('Hostname: {0:s}'.format(hostname))
 
@@ -51,8 +51,8 @@ class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
       search_index = timesketch_sketch.SearchIndex.query.filter_by(
           index_name=self._index_name).first()
       search_index.status.remove(search_index.status[0])
-      db_session.add(search_index)
-      db_session.commit()
+      timesketch_db_session.add(search_index)
+      timesketch_db_session.commit()
 
   def GetMissingArguments(self):
     """Retrieves a list of arguments that are missing from the input.
@@ -138,11 +138,11 @@ class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
       search_index.set_status('processing')
 
       # Save the mapping object to the Timesketch database.
-      db_session.add(search_index)
-      db_session.commit()
+      timesketch_db_session.add(search_index)
+      timesketch_db_session.commit()
 
     logger.debug('Adding events to Timesketch.')
 
 
-manager.OutputManager.RegisterOutput(
-    TimesketchOutputModule, disabled=timesketch is None)
+manager.OutputManager.RegisterOutput(TimesketchOutputModule, disabled=(
+    shared_elastic.elasticsearch is None or timesketch is None))
