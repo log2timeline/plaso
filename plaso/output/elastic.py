@@ -3,14 +3,16 @@
 
 from __future__ import unicode_literals
 
-from elasticsearch import Elasticsearch
-
 from plaso.output import logger
 from plaso.output import manager
-from plaso.output import shared_elastic
+
+try:
+  from plaso.output import shared_elastic
+except ImportError:
+  shared_elastic = None
 
 
-class ElasticSearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
+class ElasticsearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
   """Output module for Elasticsearch."""
 
   NAME = 'elastic'
@@ -26,7 +28,7 @@ class ElasticSearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfvfs.
     """
-    super(ElasticSearchOutputModule, self).__init__(output_mediator)
+    super(ElasticsearchOutputModule, self).__init__(output_mediator)
     self._raw_fields = False
 
   def SetRawFields(self, raw_fields):
@@ -40,8 +42,11 @@ class ElasticSearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
       raw_fields (bool): True if raw (non-analyzed) fields should be added.
     """
     self._raw_fields = raw_fields
-    logger.info('Elasticsearch adding raw (non-analyzed) fields: {0:s}'.format(
-        ', '.join(raw_fields)))
+
+    if raw_fields:
+      logger.debug('Elasticsearch adding raw (non-analyzed) fields.')
+    else:
+      logger.debug('Elasticsearch not adding raw (non-analyzed) fields.')
 
   def WriteHeader(self):
     """Connects to the Elasticsearch server and creates the index."""
@@ -68,8 +73,8 @@ class ElasticSearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
 
     self._Connect()
 
-    self.CreateIndexIfNotExists(self._index_name, mappings)
+    self._CreateIndexIfNotExists(self._index_name, mappings)
 
 
 manager.OutputManager.RegisterOutput(
-    ElasticSearchOutputModule, disabled=Elasticsearch is None)
+    ElasticsearchOutputModule, disabled=shared_elastic is None)

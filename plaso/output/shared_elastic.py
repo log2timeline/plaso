@@ -7,8 +7,11 @@ import logging
 
 from dfvfs.serializer.json_serializer import JsonPathSpecSerializer
 
-import elasticsearch
-from elasticsearch.exceptions import ConnectionError as ElasticConnectionError
+try:
+  import elasticsearch
+  from elasticsearch.exceptions import ConnectionError as ElasticConnectionError
+except ImportError:
+  elasticsearch = None
 
 from plaso.lib import errors
 from plaso.lib import timelib
