@@ -7,8 +7,8 @@ try:
   from flask import current_app
   import timesketch
   from timesketch.models import db_session
-  from timesketch.models.sketch import SearchIndex
-  from timesketch.models.user import User
+  from timesketch.models import sketch as timesketch_sketch
+  from timesketch.models import user as timesketch_user
 except ImportError:
   timesketch = None
 
@@ -48,7 +48,7 @@ class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
     super(TimesketchOutputModule, self).Close()
 
     with self._timesketch.app_context():
-      search_index = SearchIndex.query.filter_by(
+      search_index = timesketch_sketch.SearchIndex.query.filter_by(
           index_name=self._index_name).first()
       search_index.status.remove(search_index.status[0])
       db_session.add(search_index)
@@ -91,7 +91,7 @@ class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
     """
     # This cannot be static because we use the value of self._document_type
     # from arguments.
-    self._mappings = {
+    mappings = {
         self._document_type: {
             'properties': {
                 'timesketch_label': {
@@ -108,9 +108,12 @@ class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
 
     self._Connect()
 
+    self._CreateIndexIfNotExists(self._index_name, mappings)
+
     user = None
     if self._timeline_owner:
-      user = User.query.filter_by(username=self._timeline_owner).first()
+      user = timesketch_user.User.query.filter_by(
+          username=self._timeline_owner).first()
       if not user:
         raise RuntimeError(
             'Unknown Timesketch user: {0:s}'.format(self._timeline_owner))
@@ -118,7 +121,7 @@ class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
       logger.warning('Timeline will be visible to all Timesketch users')
 
     with self._timesketch.app_context():
-      search_index = SearchIndex.get_or_create(
+      search_index = timesketch_sketch.SearchIndex.get_or_create(
           name=self._timeline_name, description=self._timeline_name, user=user,
           index_name=self._index_name)
 

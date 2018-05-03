@@ -19,13 +19,19 @@ from plaso.output import shared_elastic
 from tests.output import test_lib
 
 
-class ElasticTestEvent(events.EventObject):
-  """Simplified EventObject for testing."""
+class TestEvent(events.EventObject):
+  """Event for testing."""
+
   DATA_TYPE = 'syslog:line'
 
   def __init__(self, event_timestamp):
-    """Initialize event with data."""
-    super(ElasticTestEvent, self).__init__()
+    """Initializes an event.
+
+    Args:
+      timestamp (int): timestamp, which contains the number of microseconds
+          since January 1, 1970, 00:00:00 UTC.
+    """
+    super(TestEvent, self).__init__()
     self.display_name = 'log/syslog.1'
     self.filename = 'log/syslog.1'
     self.hostname = 'ubuntu'
@@ -38,29 +44,83 @@ class ElasticTestEvent(events.EventObject):
     self.timestamp = event_timestamp
 
 
+class TestElasticsearchOutputModule(
+    shared_elastic.SharedElasticsearchOutputModule):
+  """Elasticsearch output module for testing."""
+
+  def _Connect(self):
+    """Connects to an Elasticsearch server."""
+    self._client = MagicMock()
+
+
 class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for SharedElasticsearchOutputModule."""
 
   # pylint: disable=protected-access
 
-  # TODO: improve test coverage
-  # shared_elastic.Elasticsearch = MagicMock()
+  def _CreateTestEvent(self):
+    """Creates an event for testing.
 
-  def testGetSanitizedEventValues(self):
-    """Tests the _GetSanitizedEventValues function."""
+    Returns:
+      EventObject: event.
+    """
     event_tag = events.EventTag()
     event_tag.AddLabel('Test')
 
     event_timestamp = timelib.Timestamp.CopyFromString(
         '2012-06-27 18:17:01+00:00')
-    event = ElasticTestEvent(event_timestamp)
+    event = TestEvent(event_timestamp)
     event.tag = event_tag
 
-    output_mediator = self._CreateOutputMediator()
-    output_module = shared_elastic.SharedElasticsearchOutputModule(
-        output_mediator)
+    return event
 
-    expected_dict = {
+  def testConnect(self):
+    """Tests the _Connect function."""
+    output_mediator = self._CreateOutputMediator()
+    output_module = TestElasticsearchOutputModule(output_mediator)
+
+    self.assertIsNone(output_module._client)
+
+    output_module._Connect()
+
+    self.assertIsNotNone(output_module._client)
+
+  def testCreateIndexIfNotExists(self):
+    """Tests the _CreateIndexIfNotExists function."""
+    output_mediator = self._CreateOutputMediator()
+    output_module = TestElasticsearchOutputModule(output_mediator)
+
+    output_module._Connect()
+    output_module._CreateIndexIfNotExists('test', {})
+
+  def testFlushEvents(self):
+    """Tests the _FlushEvents function."""
+    output_mediator = self._CreateOutputMediator()
+    output_module = TestElasticsearchOutputModule(output_mediator)
+
+    output_module._Connect()
+    output_module._CreateIndexIfNotExists('test', {})
+
+    event = self._CreateTestEvent()
+    output_module._InsertEvent(event)
+
+    self.assertEqual(len(output_module._event_documents), 2)
+    self.assertEqual(output_module._number_of_buffered_events, 1)
+
+    output_module._FlushEvents()
+
+    self.assertEqual(len(output_module._event_documents), 0)
+    self.assertEqual(output_module._number_of_buffered_events, 0)
+
+  def testGetSanitizedEventValues(self):
+    """Tests the _GetSanitizedEventValues function."""
+    output_mediator = self._CreateOutputMediator()
+    output_module = TestElasticsearchOutputModule(output_mediator)
+
+    event = self._CreateTestEvent()
+    event_values = output_module._GetSanitizedEventValues(event)
+
+    expected_event_values = {
         'data_type': 'syslog:line',
         'datetime': '2012-06-27T18:17:01+00:00',
         'display_name': 'log/syslog.1',
@@ -74,13 +134,141 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
         'tag': ['Test'],
         'text': ('Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
                  'session\n closed for user root)'),
-        'timestamp': event_timestamp,
+        'timestamp': 1340821021000000,
         'timestamp_desc': 'Content Modification Time',
     }
 
-    event_values = output_module._GetSanitizedEventValues(event)
     self.assertIsInstance(event_values, dict)
-    self.assertDictContainsSubset(expected_dict, event_values)
+    self.assertDictContainsSubset(expected_event_values, event_values)
+
+  def testInsertEvent(self):
+    """Tests the _InsertEvent function."""
+    event = self._CreateTestEvent()
+
+    output_mediator = self._CreateOutputMediator()
+    output_module = TestElasticsearchOutputModule(output_mediator)
+
+    output_module._Connect()
+    output_module._CreateIndexIfNotExists('test', {})
+
+    self.assertEqual(len(output_module._event_documents), 0)
+    self.assertEqual(output_module._number_of_buffered_events, 0)
+
+    output_module._InsertEvent(event)
+
+    self.assertEqual(len(output_module._event_documents), 2)
+    self.assertEqual(output_module._number_of_buffered_events, 1)
+
+    output_module._InsertEvent(event)
+
+    self.assertEqual(len(output_module._event_documents), 4)
+    self.assertEqual(output_module._number_of_buffered_events, 2)
+
+    output_module._InsertEvent(event, force_flush=True)
+
+    self.assertEqual(len(output_module._event_documents), 0)
+    self.assertEqual(output_module._number_of_buffered_events, 0)
+
+  def testClose(self):
+    """Tests the Close function."""
+    output_mediator = self._CreateOutputMediator()
+    output_module = TestElasticsearchOutputModule(output_mediator)
+
+    output_module._Connect()
+
+    self.assertIsNotNone(output_module._client)
+
+    output_module.Close()
+
+    self.assertIsNone(output_module._client)
+
+  def testSetDocumentType(self):
+    """Tests the SetDocumentType function."""
+    output_mediator = self._CreateOutputMediator()
+    output_module = TestElasticsearchOutputModule(output_mediator)
+
+    self.assertEqual(
+        output_module._document_type, output_module._DEFAULT_DOCUMENT_TYPE)
+
+    output_module.SetDocumentType('test_document_type')
+
+    self.assertEqual(output_module._document_type, 'test_document_type')
+
+  def testSetFlushInterval(self):
+    """Tests the SetFlushInterval function."""
+    output_mediator = self._CreateOutputMediator()
+    output_module = TestElasticsearchOutputModule(output_mediator)
+
+    self.assertEqual(
+        output_module._flush_interval, output_module._DEFAULT_FLUSH_INTERVAL)
+
+    output_module.SetFlushInterval(1234)
+
+    self.assertEqual(output_module._flush_interval, 1234)
+
+  def testSetIndexName(self):
+    """Tests the SetIndexName function."""
+    output_mediator = self._CreateOutputMediator()
+    output_module = TestElasticsearchOutputModule(output_mediator)
+
+    self.assertIsNone(output_module._index_name)
+
+    output_module.SetIndexName('test_index')
+
+    self.assertEqual(output_module._index_name, 'test_index')
+
+  def testSetPassword(self):
+    """Tests the SetPassword function."""
+    output_mediator = self._CreateOutputMediator()
+    output_module = TestElasticsearchOutputModule(output_mediator)
+
+    self.assertIsNone(output_module._password)
+
+    output_module.SetPassword('test_password')
+
+    self.assertEqual(output_module._password, 'test_password')
+
+  def testSetServerInformation(self):
+    """Tests the SetServerInformation function."""
+    output_mediator = self._CreateOutputMediator()
+    output_module = TestElasticsearchOutputModule(output_mediator)
+
+    self.assertIsNone(output_module._host)
+    self.assertIsNone(output_module._port)
+
+    output_module.SetServerInformation('127.0.0.1', 1234)
+
+    self.assertEqual(output_module._host, '127.0.0.1')
+    self.assertEqual(output_module._port, 1234)
+
+  def testSetUsername(self):
+    """Tests the SetUsername function."""
+    output_mediator = self._CreateOutputMediator()
+    output_module = TestElasticsearchOutputModule(output_mediator)
+
+    self.assertIsNone(output_module._username)
+
+    output_module.SetUsername('test_username')
+
+    self.assertEqual(output_module._username, 'test_username')
+
+  def testWriteEventBody(self):
+    """Tests the WriteEventBody function."""
+    event = self._CreateTestEvent()
+
+    output_mediator = self._CreateOutputMediator()
+    output_module = TestElasticsearchOutputModule(output_mediator)
+
+    output_module._Connect()
+    output_module._CreateIndexIfNotExists('test', {})
+
+    self.assertEqual(len(output_module._event_documents), 0)
+    self.assertEqual(output_module._number_of_buffered_events, 0)
+
+    output_module.WriteEventBody(event)
+
+    self.assertEqual(len(output_module._event_documents), 2)
+    self.assertEqual(output_module._number_of_buffered_events, 1)
 
 
 if __name__ == '__main__':

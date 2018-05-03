@@ -41,15 +41,17 @@ class ElasticSearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
     """
     self._raw_fields = raw_fields
     logger.info('Elasticsearch adding raw (non-analyzed) fields: {0:s}'.format(
-        ', '.join(self._raw_fields)))
+        ', '.join(raw_fields)))
 
   def WriteHeader(self):
     """Connects to the Elasticsearch server and creates the index."""
-    if self._raw_fields:
-      if self._document_type not in self._mappings:
-        self._mappings[self._document_type] = {}
+    mappings = {}
 
-      _raw_field_mapping = [{
+    if self._raw_fields:
+      if self._document_type not in mappings:
+        mappings[self._document_type] = {}
+
+      mappings[self._document_type]['dynamic_templates'] = [{
           'strings': {
               'match_mapping_type': 'string',
               'mapping': {
@@ -63,10 +65,10 @@ class ElasticSearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
               }
           }
       }]
-      self._mappings[self._document_type]['dynamic_templates'] = (
-          _raw_field_mapping)
 
     self._Connect()
+
+    self.CreateIndexIfNotExists(self._index_name, mappings)
 
 
 manager.OutputManager.RegisterOutput(

@@ -7,7 +7,7 @@ import logging
 
 from dfvfs.serializer.json_serializer import JsonPathSpecSerializer
 
-from elasticsearch import Elasticsearch
+import elasticsearch
 from elasticsearch.exceptions import ConnectionError as ElasticConnectionError
 
 from plaso.lib import errors
@@ -47,9 +47,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._event_documents = []
     self._flush_interval = self._DEFAULT_FLUSH_INTERVAL
     self._host = None
-    self._index = None
     self._index_name = None
-    self._mappings = {}
     self._number_of_buffered_events = 0
     self._password = None
     self._port = None
@@ -63,21 +61,18 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     if self._username is not None:
       elastic_http_auth = (self._username, self._password)
 
-    self._client = Elasticsearch(elastic_hosts, http_auth=elastic_http_auth)
-    self._index = self._EnsureIndexExists(self._index_name, self._mappings)
+    self._client = elasticsearch.Elasticsearch(
+        elastic_hosts, http_auth=elastic_http_auth)
 
     logger.debug('Connected to Elasticsearch server: {0:s} port: {1:d}.'.format(
         self._host, self._port))
 
-  def _EnsureIndexExists(self, index_name, mappings):
-    """Creates an Elasticsearch index.
+  def _CreateIndexIfNotExists(self, index_name, mappings):
+    """Creates an Elasticsearch index if it not already exists.
 
     Args:
       index_name (str): mame of the index.
-      mappings (str): mappings of the index.
-
-    Returns:
-      str: name of the index.
+      mappings (dict[str, object]): mappings of the index.
 
     Raises:
       RuntimeError: if the Elasticsearch index cannot be created.
@@ -92,14 +87,16 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
           'Unable to create Elasticsearch index with error: {0!s}'.format(
               exception))
 
-    return index_name
-
-  def _FlushEventsToElasticSearch(self):
+  def _FlushEvents(self):
     """Inserts the buffered event documents into Elasticsearch."""
     try:
+      # pylint: disable=unexpected-keyword-arg
+      # pylint does not recognizes request_timeout as a valid kwarg. According
+      # to http://elasticsearch-py.readthedocs.io/en/master/api.html#timeout
+      # it should be supported.
       self._client.bulk(
           body=self._event_documents, doc_type=self._document_type,
-          index=self._index, request_timeout=self._DEFAULT_REQUEST_TIMEOUT)
+          index=self._index_name, request_timeout=self._DEFAULT_REQUEST_TIMEOUT)
 
     except ValueError as exception:
       # Ignore problematic events
@@ -125,10 +122,14 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
     Returns:
       dict[str, object]: sanitized event values.
+
+    Raises:
+      NoFormatterFound: if no event formatter can be found to match the data
+          type in the event.
     """
     event_values = {}
     for attribute_name, attribute_value in event.GetAttributes():
-      # Ignore the regvalue attribute as it cause issues when indexing
+      # Ignore the regvalue attribute as it cause issues when indexing.
       if attribute_name == 'regvalue':
         continue
 
@@ -140,7 +141,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
           continue
       event_values[attribute_name] = attribute_value
 
-    # Add string representation of the timestamp
+    # Add a string representation of the timestamp.
     try:
       attribute_value = timelib.Timestamp.RoundToSeconds(event.timestamp)
     except TypeError as exception:
@@ -155,9 +156,10 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
     message, _ = self._output_mediator.GetFormattedMessages(event)
     if message is None:
+      data_type = getattr(event, 'data_type', 'UNKNOWN')
       raise errors.NoFormatterFound(
-          'Unable to find event formatter for: {0:s}.'.format(
-              getattr(event, 'data_type', 'UNKNOWN')))
+          'Unable to find event formatter for: {0:s}.'.format(data_type))
+
     event_values['message'] = message
 
     # Tags needs to be a list for Elasticsearch to index correctly.
@@ -170,9 +172,10 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     source_short, source = self._output_mediator.GetFormattedSources(
         event)
     if source is None or source_short is None:
+      data_type = getattr(event, 'data_type', 'UNKNOWN')
       raise errors.NoFormatterFound(
-          'Unable to find event formatter for: {0:s}.'.format(
-              getattr(event, 'data_type', 'UNKNOWN')))
+          'Unable to find event formatter for: {0:s}.'.format(data_type))
+
     event_values['source_short'] = source_short
     event_values['source_long'] = source
 
@@ -192,7 +195,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     """
     if event:
       event_document = {'index': {
-          '_index': self._index, '_type': self._document_type}}
+          '_index': self._index_name, '_type': self._document_type}}
       event_values = self._GetSanitizedEventValues(event)
 
       self._event_documents.append(event_document)
@@ -200,7 +203,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
       self._number_of_buffered_events += 1
 
     if force_flush or self._number_of_buffered_events > self._flush_interval:
-      self._FlushEventsToElasticSearch()
+      self._FlushEvents()
 
   def Close(self):
     """Closes connection to Elasticsearch.
@@ -208,6 +211,8 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     Inserts any remaining buffered event documents.
     """
     self._InsertEvent(None, force_flush=True)
+
+    self._client = None
 
   def SetDocumentType(self, document_type):
     """Sets the document type.
