@@ -4,11 +4,9 @@
 
 from __future__ import unicode_literals
 
-import os
 import unittest
 
 from plaso.analysis import tagging
-from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.containers import events
 
@@ -35,10 +33,6 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
   """Tests the tagging analysis plugin."""
 
   # pylint: disable=protected-access
-
-  _INVALID_TEST_TAG_FILE_NAME = os.path.join(
-      'tagging_file', 'invalid_syntax.txt')
-  _TEST_TAG_FILE_NAME = os.path.join('tagging_file', 'valid.txt')
 
   _TEST_EVENTS = [
       {'event_type': 'prefetch',
@@ -101,7 +95,7 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
       event = self._CreateTestEventObject(event_dictionary)
       test_events.append(event)
 
-    test_file = self._GetTestFilePath([self._TEST_TAG_FILE_NAME])
+    test_file = self._GetTestFilePath(['tagging_file', 'valid.txt'])
     plugin = tagging.TaggingAnalysisPlugin()
     plugin.SetAndLoadTagFile(test_file)
 
@@ -128,24 +122,6 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
     self.assertIn('login_attempt', labels)
     # This is from a rule using the "contains" operator
     self.assertIn('text_contains', labels)
-
-  @shared_test_lib.skipUnlessHasTestFile([
-      'tagging_file', 'invalid_syntax.txt'])
-  @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'valid.txt'])
-  def testParseTaggingFile(self):
-    """Tests the _ParseTaggingFile function."""
-    plugin = tagging.TaggingAnalysisPlugin()
-    test_path = self._GetTestFilePath([self._TEST_TAG_FILE_NAME])
-
-    tag_expression = plugin._ParseTaggingFile(test_path)
-    self.assertEqual(len(tag_expression.children), 5)
-
-    plugin = tagging.TaggingAnalysisPlugin()
-
-    test_path = self._GetTestFilePath([self._INVALID_TEST_TAG_FILE_NAME])
-
-    with self.assertRaises(errors.TaggingFileError):
-      plugin._ParseTaggingFile(test_path)
 
 
 if __name__ == '__main__':
