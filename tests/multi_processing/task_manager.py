@@ -158,7 +158,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_abandoned), 0)
     self.assertEqual(len(manager._tasks_pending_merge), 0)
 
-    manager._task_last_processing_time -= (
+    manager._latest_task_processing_time -= (
         2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
 
     manager._AbandonQueuedTasks()
@@ -182,7 +182,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_queued), 1)
     self.assertEqual(len(manager._tasks_abandoned), 0)
 
-    manager._task_last_processing_time -= (
+    manager._latest_task_processing_time -= (
         2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
 
     manager._AbandonQueuedTasks()
@@ -229,7 +229,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_queued), 1)
     self.assertEqual(len(manager._tasks_abandoned), 0)
 
-    manager._task_last_processing_time -= (
+    manager._latest_task_processing_time -= (
         2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
 
     manager._AbandonQueuedTasks()
@@ -276,7 +276,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_queued), 1)
     self.assertEqual(len(manager._tasks_abandoned), 0)
 
-    manager._task_last_processing_time -= (
+    manager._latest_task_processing_time -= (
         2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
 
     manager._AbandonQueuedTasks()
@@ -433,7 +433,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_abandoned), 0)
     self.assertEqual(len(manager._tasks_pending_merge), 2)
 
-    manager._task_last_processing_time -= (
+    manager._latest_task_processing_time -= (
         2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
 
     manager._AbandonQueuedTasks()
