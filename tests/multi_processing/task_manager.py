@@ -138,8 +138,8 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_abandoned), 1)
     self.assertEqual(len(manager._tasks_pending_merge), 0)
 
-  def testAbandonInactiveQueuedTasks(self):
-    """Tests the _AbandonInactiveQueuedTasks function."""
+  def testAbandonQueuedTasks(self):
+    """Tests the _AbandonQueuedTasks function."""
     manager = task_manager.TaskManager()
 
     task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
@@ -151,7 +151,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_abandoned), 0)
     self.assertEqual(len(manager._tasks_pending_merge), 0)
 
-    manager._AbandonInactiveQueuedTasks()
+    manager._AbandonQueuedTasks()
 
     self.assertEqual(len(manager._tasks_queued), 1)
     self.assertEqual(len(manager._tasks_processing), 0)
@@ -161,7 +161,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     manager._task_last_processing_time -= (
         2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
 
-    manager._AbandonInactiveQueuedTasks()
+    manager._AbandonQueuedTasks()
 
     self.assertEqual(len(manager._tasks_queued), 0)
     self.assertEqual(len(manager._tasks_processing), 0)
@@ -185,7 +185,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     manager._task_last_processing_time -= (
         2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
 
-    manager._AbandonInactiveQueuedTasks()
+    manager._AbandonQueuedTasks()
 
     self.assertEqual(len(manager._tasks_queued), 0)
     self.assertEqual(len(manager._tasks_abandoned), 1)
@@ -211,7 +211,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
 
     # TODO: test True condition.
 
-  # TODO: add tests for _UpdateLastProcessingTime
+  # TODO: add tests for _UpdateLastestProcessingTime
 
   def testCreateRetryTask(self):
     """Tests the CreateRetryTask function."""
@@ -232,7 +232,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     manager._task_last_processing_time -= (
         2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
 
-    manager._AbandonInactiveQueuedTasks()
+    manager._AbandonQueuedTasks()
 
     result_task = manager.CreateRetryTask()
     self.assertIsNotNone(result_task)
@@ -279,7 +279,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     manager._task_last_processing_time -= (
         2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
 
-    manager._AbandonInactiveQueuedTasks()
+    manager._AbandonQueuedTasks()
 
     self.assertEqual(len(manager._tasks_queued), 0)
     self.assertEqual(len(manager._tasks_abandoned), 1)
@@ -436,7 +436,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     manager._task_last_processing_time -= (
         2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
 
-    manager._AbandonInactiveQueuedTasks()
+    manager._AbandonQueuedTasks()
 
     self.assertEqual(len(manager._tasks_queued), 0)
     self.assertEqual(len(manager._tasks_processing), 0)

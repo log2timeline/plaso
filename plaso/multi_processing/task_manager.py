@@ -119,8 +119,8 @@ class TaskManager(object):
   * not abandoned;
   * abandoned, but need to be retried.
 
-  Tasks are considered "failed" when they were abandoned and do not have
-  a corresponding retry task.
+  Abandoned tasks without corresponding retry tasks are considered "failed"
+  when the foreman is done processing.
   """
 
   # Stop pylint from reporting:
@@ -141,7 +141,7 @@ class TaskManager(object):
 
     # The latest processing time observed in a task. This value is set to
     # the current time to not have to handle None as a special case.
-    self._task_last_processing_time = int(
+    self._latest_task_processing_time = int(
         time.time() * definitions.MICROSECONDS_PER_SECOND)
 
     # This dictionary maps task identifiers to tasks that are being merged
@@ -180,22 +180,17 @@ class TaskManager(object):
           self._tasks_abandoned[task_identifier] = task
           del self._tasks_processing[task_identifier]
 
-  def _AbandonInactiveQueuedTasks(self):
-    """Marks queued tasks abandoned if all queued tasks exceed inactive time.
+  def _AbandonQueuedTasks(self):
+    """Marks queued tasks abandoned.
 
     This method does not lock the manager and should be called by a method
     holding the manager lock.
     """
-    if self._tasks_queued:
-      inactive_time = time.time() - self._TASK_INACTIVE_TIME
-      inactive_time = int(inactive_time * definitions.MICROSECONDS_PER_SECOND)
+    for task_identifier, task in iter(self._tasks_queued.items()):
+      logger.debug('Abandoned queued task: {0:s}.'.format(task_identifier))
 
-      if self._task_last_processing_time < inactive_time:
-        for task_identifier, task in iter(self._tasks_queued.items()):
-          logger.debug('Abandoned queued task: {0:s}.'.format(task_identifier))
-
-          self._tasks_abandoned[task_identifier] = task
-          del self._tasks_queued[task_identifier]
+      self._tasks_abandoned[task_identifier] = task
+      del self._tasks_queued[task_identifier]
 
   def _GetTaskPendingRetry(self):
     """Retrieves an abandoned task that should be retried.
@@ -248,7 +243,7 @@ class TaskManager(object):
     self._tasks_queued[task.identifier] = task
     self._total_number_of_tasks += 1
 
-  def _UpdateLastProcessingTime(self, task):
+  def _UpdateLastestProcessingTime(self, task):
     """Updates the last processing time of the task manager from the task.
 
     This method does not lock the manager and should be called by a method
@@ -257,8 +252,8 @@ class TaskManager(object):
     Args:
       task (Task): task to update the processing time of.
     """
-    self._task_last_processing_time = max(
-        self._task_last_processing_time, task.last_processing_time)
+    self._latest_task_processing_time = max(
+        self._latest_task_processing_time, task.last_processing_time)
 
   def CreateRetryTask(self):
     """Creates a task that to retry a previously abandoned task.
@@ -336,6 +331,8 @@ class TaskManager(object):
     Returns:
       list[Task]: tasks.
     """
+    # TODO: add check to determine foreman is done processing.
+
     with self._lock:
       return [task for task in self._tasks_abandoned.values()
               if not task.retried]
@@ -446,10 +443,19 @@ class TaskManager(object):
 
       # It is possible that a worker has processed a task and the foreman has
       # not been informed about it, since there is no feedback from the worker
-      # when it pops a task from the queue. Hence we check for tasks that we
-      # believe are queued that might need to be marked as abandoned, as all
-      # the workers are idle for longer than the task inactive time (timeout).
-      self._AbandonInactiveQueuedTasks()
+      # when it pops a task from the queue.
+
+      # If we believe all the workers are idle for longer than the task
+      # inactive time (timeout) abandon all queued tasks. This ensures
+      # that processing actually stops when the foreman never gets an
+      # update to from a worker.
+
+      if self._tasks_queued:
+        inactive_time = time.time() - self._TASK_INACTIVE_TIME
+        inactive_time = int(inactive_time * definitions.MICROSECONDS_PER_SECOND)
+
+        if self._latest_task_processing_time < inactive_time:
+          self._AbandonQueuedTasks()
 
       if self._tasks_queued:
         return True
@@ -481,7 +487,7 @@ class TaskManager(object):
       self._tasks_pending_merge.PushTask(task)
 
       task.UpdateProcessingTime()
-      self._UpdateLastProcessingTime(task)
+      self._UpdateLastestProcessingTime(task)
 
       if is_queued:
         del self._tasks_queued[task.identifier]
@@ -512,7 +518,7 @@ class TaskManager(object):
       task_processing = self._tasks_processing.get(task_identifier, None)
       if task_processing:
         task_processing.UpdateProcessingTime()
-        self._UpdateLastProcessingTime(task_processing)
+        self._UpdateLastestProcessingTime(task_processing)
         return
 
       task_queued = self._tasks_queued.get(task_identifier, None)
@@ -523,7 +529,7 @@ class TaskManager(object):
         del self._tasks_queued[task_identifier]
 
         task_queued.UpdateProcessingTime()
-        self._UpdateLastProcessingTime(task_queued)
+        self._UpdateLastestProcessingTime(task_queued)
         return
 
       task_abandoned = self._tasks_abandoned.get(task_identifier, None)
@@ -534,7 +540,7 @@ class TaskManager(object):
             task_identifier))
 
         task_abandoned.UpdateProcessingTime()
-        self._UpdateLastProcessingTime(task_abandoned)
+        self._UpdateLastestProcessingTime(task_abandoned)
         return
 
       if task_identifier in self._tasks_pending_merge:
