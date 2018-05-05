@@ -153,16 +153,6 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
 
     manager._AbandonQueuedTasks()
 
-    self.assertEqual(len(manager._tasks_queued), 1)
-    self.assertEqual(len(manager._tasks_processing), 0)
-    self.assertEqual(len(manager._tasks_abandoned), 0)
-    self.assertEqual(len(manager._tasks_pending_merge), 0)
-
-    manager._latest_task_processing_time -= (
-        2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
-
-    manager._AbandonQueuedTasks()
-
     self.assertEqual(len(manager._tasks_queued), 0)
     self.assertEqual(len(manager._tasks_processing), 0)
     self.assertEqual(len(manager._tasks_abandoned), 1)
