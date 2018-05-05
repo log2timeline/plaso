@@ -37,7 +37,7 @@ matrix:
     os: osx
     osx_image: xcode9.2
     language: generic
-  - env: [TARGET="jenkins", JOB_NAME="travis"]
+  - env: TARGET="jenkins"
     os: linux
     dist: trusty
     sudo: required
