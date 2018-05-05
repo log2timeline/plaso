@@ -329,7 +329,7 @@ class StorageMediaTool(tools.CLITool):
           defined as: "all".
 
     Returns:
-      list[int|str]: partition numbers or 'all' to represent all available
+      list[int|str]: partition numbers or "all" to represent all available
           partitions.
 
     Raises:
@@ -640,7 +640,7 @@ class StorageMediaTool(tools.CLITool):
       volume_identifiers (list[str]): allowed volume identifiers.
 
     Returns:
-      str: partition identifier or 'all'.
+      str: partition identifier or "all".
 
     Raises:
       SourceScannerError: if the source cannot be processed.
