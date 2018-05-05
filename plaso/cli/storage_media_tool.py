@@ -329,7 +329,8 @@ class StorageMediaTool(tools.CLITool):
           defined as: "all".
 
     Returns:
-      list[int]: partition numbers.
+      list[int|str]: partition numbers or 'all' to represent all available
+          partitions.
 
     Raises:
       BadConfigOption: if the partitions string is invalid.
