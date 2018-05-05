@@ -1013,7 +1013,7 @@ class StorageMediaTool(tools.CLITool):
             'partitions can be defined as: "3..5". Multiple partitions can '
             'be defined as: "1,3,5" (a list of comma separated values). '
             'Ranges and lists can also be combined as: "1,3..5". The first '
-            'partition is 1. All partition can be defined as: "all".'))
+            'partition is 1. All partitions can be defined as: "all".'))
 
     argument_group.add_argument(
         '--offset', dest='image_offset', action='store', default=None,

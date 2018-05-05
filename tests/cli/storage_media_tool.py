@@ -50,54 +50,40 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       '                        with care.',
       ''])
 
-  _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = '\n'.join([
-      'usage: storage_media_tool_test.py [--partition PARTITION]',
-      '                                  [--partitions PARTITIONS]',
-      '                                  [--offset IMAGE_OFFSET]',
-      '                                  [--ob IMAGE_OFFSET_BYTES]',
-      '                                  [--sector_size BYTES_PER_SECTOR]',
-      '',
-      'Test argument parser.',
-      '',
-      'optional arguments:',
-      ('  --ob IMAGE_OFFSET_BYTES, --offset_bytes IMAGE_OFFSET_BYTES, '
-       '--offset_bytes IMAGE_OFFSET_BYTES'),
-      ('                        The offset of the volume within the storage '
-       'media'),
-      '                        image in number of bytes.',
-      '  --offset IMAGE_OFFSET',
-      ('                        The offset of the volume within the storage '
-       'media'),
-      ('                        image in number of sectors. A sector is 512 '
-       'bytes in'),
-      ('                        size by default this can be overwritten with '
-       'the'),
-      '                        --sector_size option.',
-      '  --partition PARTITION',
-      ('                        Choose a partition number from a disk image. '
-       'This'),
-      ('                        partition number should correspond to the '
-       'partition'),
-      ('                        number on the disk image, starting from '
-       'partition 1.'),
-      '                        All partitions can be defined as: "all".',
-      '  --partitions PARTITIONS',
-      ('                        Define partitions that need to be processed. '
-       'A range'),
-      ('                        of partitions can be defined as: "3..5". '
-       'Multiple'),
-      ('                        partitions can be defined as: "1,3,5" (a'
-       ' list of comma'),
-      ('                        separated values). Ranges and lists can '
-       'also be'),
-      ('                        combined as: "1,3..5". The first partition '
-       'is 1. All'),
-      '                        partition can be defined as: "all".',
-      '  --sector_size BYTES_PER_SECTOR, --sector-size BYTES_PER_SECTOR',
-      ('                        The number of bytes per sector, which is 512 '
-       'by'),
-      '                        default.',
-      ''])
+  _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = """\
+usage: storage_media_tool_test.py [--partition PARTITION]
+                                  [--partitions PARTITIONS]
+                                  [--offset IMAGE_OFFSET]
+                                  [--ob IMAGE_OFFSET_BYTES]
+                                  [--sector_size BYTES_PER_SECTOR]
+
+Test argument parser.
+
+optional arguments:
+  --ob IMAGE_OFFSET_BYTES, --offset_bytes IMAGE_OFFSET_BYTES, --offset_bytes IMAGE_OFFSET_BYTES
+                        The offset of the volume within the storage media
+                        image in number of bytes.
+  --offset IMAGE_OFFSET
+                        The offset of the volume within the storage media
+                        image in number of sectors. A sector is 512 bytes in
+                        size by default this can be overwritten with the
+                        --sector_size option.
+  --partition PARTITION
+                        Choose a partition number from a disk image. This
+                        partition number should correspond to the partition
+                        number on the disk image, starting from partition 1.
+                        All partitions can be defined as: "all".
+  --partitions PARTITIONS
+                        Define partitions that need to be processed. A range
+                        of partitions can be defined as: "3..5". Multiple
+                        partitions can be defined as: "1,3,5" (a list of comma
+                        separated values). Ranges and lists can also be
+                        combined as: "1,3..5". The first partition is 1. All
+                        partitions can be defined as: "all".
+  --sector_size BYTES_PER_SECTOR, --sector-size BYTES_PER_SECTOR
+                        The number of bytes per sector, which is 512 by
+                        default.
+"""
 
   _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = '\n'.join([
       'usage: storage_media_tool_test.py [--no_vss] [--vss_only]',
