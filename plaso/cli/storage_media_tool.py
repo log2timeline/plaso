@@ -332,7 +332,7 @@ class StorageMediaTool(tools.CLITool):
       list[str]: partitions.
 
     Raises:
-      BadConfigOption: if the partitions option is invalid.
+      BadConfigOption: if the partitions string is invalid.
     """
     if not partitions:
       return []
