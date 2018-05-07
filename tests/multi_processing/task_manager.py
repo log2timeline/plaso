@@ -288,7 +288,6 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_queued), 1)
     self.assertEqual(len(manager._tasks_abandoned), 0)
 
-    self.assertEqual(manager._number_of_retry_tasks, 0)
     self.assertEqual(manager._total_number_of_tasks, 1)
 
     retry_task = manager.CreateRetryTask()
@@ -307,7 +306,6 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_queued), 1)
     self.assertEqual(len(manager._tasks_abandoned), 1)
 
-    self.assertEqual(manager._number_of_retry_tasks, 1)
     self.assertEqual(manager._total_number_of_tasks, 2)
 
   def testCreateTask(self):
