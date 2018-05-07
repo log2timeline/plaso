@@ -74,7 +74,7 @@ class PlistParserTest(test_lib.ParserTestCase):
     parser = plist.PlistParser()
 
     with self.assertRaises(errors.UnableToParseFile):
-      storage_writer = self._ParseFile(['truncated.plist'], parser)
+      self._ParseFile(['truncated.plist'], parser)
 
 
 if __name__ == '__main__':
