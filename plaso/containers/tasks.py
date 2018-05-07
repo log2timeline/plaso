@@ -76,7 +76,10 @@ class Task(interface.AttributeContainer):
     return self.identifier < other.identifier
 
   def CreateRetryTask(self):
-    """Creates a new task to retry the existing task.
+    """Creates a new task to retry a previously abandoned task.
+
+    A retry task is essentially a copy of the abandoned task with a different
+    identifier and specific information about the retry.
 
     Returns:
       task (Task): a task to retry of the existing task.

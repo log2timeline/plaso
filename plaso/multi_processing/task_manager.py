@@ -142,7 +142,6 @@ class TaskManager(object):
     """Initializes a task manager."""
     super(TaskManager, self).__init__()
     self._lock = threading.Lock()
-    self._number_of_retry_tasks = 0
 
     # This dictionary maps task identifiers to tasks that have been abandoned,
     # as no worker has reported processing the task in the expected interval.
@@ -297,7 +296,6 @@ class TaskManager(object):
           abandoned_task.identifier, retry_task.identifier))
 
       self._tasks_queued[retry_task.identifier] = retry_task
-      self._number_of_retry_tasks += 1
       self._total_number_of_tasks += 1
 
       return retry_task
@@ -505,7 +503,7 @@ class TaskManager(object):
             task.identifier))
 
       if is_abandoned and task.retry_task_identifier:
-        raise KeyError('Unable to merge a task {0:s} with retry task.'.format(
+        raise KeyError('Will not merge a task {0:s} with retry task.'.format(
             task.identifier))
 
       if is_queued:
