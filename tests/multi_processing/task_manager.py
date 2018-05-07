@@ -10,6 +10,7 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.containers import tasks
+from plaso.lib import definitions
 from plaso.multi_processing import task_manager
 
 from tests import test_lib as shared_test_lib
@@ -128,8 +129,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_pending_merge), 0)
 
     task.last_processing_time -= (
-        2 * manager._PROCESSING_TASK_INACTIVE_TIME *
-        manager._MICROSECONDS_PER_SECOND)
+        2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
 
     manager._AbandonInactiveProcessingTasks()
 
@@ -138,8 +138,8 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_abandoned), 1)
     self.assertEqual(len(manager._tasks_pending_merge), 0)
 
-  def testAbandonInactiveQueuedTasks(self):
-    """Tests the _AbandonInactiveQueuedTasks function."""
+  def testAbandonQueuedTasks(self):
+    """Tests the _AbandonQueuedTasks function."""
     manager = task_manager.TaskManager()
 
     task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
@@ -151,23 +151,37 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_abandoned), 0)
     self.assertEqual(len(manager._tasks_pending_merge), 0)
 
-    manager._AbandonInactiveQueuedTasks()
-
-    self.assertEqual(len(manager._tasks_queued), 1)
-    self.assertEqual(len(manager._tasks_processing), 0)
-    self.assertEqual(len(manager._tasks_abandoned), 0)
-    self.assertEqual(len(manager._tasks_pending_merge), 0)
-
-    task.start_time -= (
-        2 * manager._QUEUED_TASK_INACTIVE_TIME *
-        manager._MICROSECONDS_PER_SECOND)
-
-    manager._AbandonInactiveQueuedTasks()
+    manager._AbandonQueuedTasks()
 
     self.assertEqual(len(manager._tasks_queued), 0)
     self.assertEqual(len(manager._tasks_processing), 0)
     self.assertEqual(len(manager._tasks_abandoned), 1)
     self.assertEqual(len(manager._tasks_pending_merge), 0)
+
+  def testGetTaskPendingRetry(self):
+    """Tests the _GetTaskPendingRetry function."""
+    manager = task_manager.TaskManager()
+    task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
+
+    self.assertEqual(len(manager._tasks_queued), 1)
+    self.assertEqual(len(manager._tasks_abandoned), 0)
+
+    result_task = manager._GetTaskPendingRetry()
+    self.assertIsNone(result_task)
+
+    self.assertEqual(len(manager._tasks_queued), 1)
+    self.assertEqual(len(manager._tasks_abandoned), 0)
+
+    manager._latest_task_processing_time -= (
+        2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
+
+    manager._AbandonQueuedTasks()
+
+    self.assertEqual(len(manager._tasks_queued), 0)
+    self.assertEqual(len(manager._tasks_abandoned), 1)
+
+    result_task = manager._GetTaskPendingRetry()
+    self.assertEqual(result_task, task)
 
   def testHasTasksPendingMerge(self):
     """Tests the _HasTasksPendingMerge function."""
@@ -187,12 +201,31 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
 
     # TODO: test True condition.
 
+  # TODO: add tests for _UpdateLastestProcessingTime
+
   def testCreateRetryTask(self):
     """Tests the CreateRetryTask function."""
     manager = task_manager.TaskManager()
+    manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
+
+    self.assertEqual(len(manager._tasks_queued), 1)
+    self.assertEqual(len(manager._tasks_abandoned), 0)
+
+    self.assertEqual(manager._total_number_of_tasks, 1)
+
+    retry_task = manager.CreateRetryTask()
+    self.assertIsNone(retry_task)
+
+    self.assertEqual(len(manager._tasks_queued), 1)
+    self.assertEqual(len(manager._tasks_abandoned), 0)
+
+    manager._latest_task_processing_time -= (
+        2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
+
+    manager._AbandonQueuedTasks()
 
     result_task = manager.CreateRetryTask()
-    self.assertIsNone(result_task)
+    self.assertIsNotNone(result_task)
 
     # TODO: improve test coverage.
 
@@ -222,14 +255,27 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
 
     # TODO: improve test coverage.
 
-  def testGetAbandonedTasks(self):
-    """Tests the GetAbandonedTasks function."""
+  def testGetFailedTasks(self):
+    """Tests the GetFailedTasks function."""
     manager = task_manager.TaskManager()
+    task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
 
-    result_tasks = manager.GetAbandonedTasks()
+    result_tasks = manager.GetFailedTasks()
     self.assertEqual(result_tasks, [])
 
-    # TODO: improve test coverage.
+    self.assertEqual(len(manager._tasks_queued), 1)
+    self.assertEqual(len(manager._tasks_abandoned), 0)
+
+    manager._latest_task_processing_time -= (
+        2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
+
+    manager._AbandonQueuedTasks()
+
+    self.assertEqual(len(manager._tasks_queued), 0)
+    self.assertEqual(len(manager._tasks_abandoned), 1)
+
+    result_tasks = manager.GetFailedTasks()
+    self.assertEqual(result_tasks, [task])
 
   def testGetStatusInformation(self):
     """Tests the GetStatusInformation function."""
@@ -377,11 +423,10 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_abandoned), 0)
     self.assertEqual(len(manager._tasks_pending_merge), 2)
 
-    task.start_time -= (
-        2 * manager._QUEUED_TASK_INACTIVE_TIME *
-        manager._MICROSECONDS_PER_SECOND)
+    manager._latest_task_processing_time -= (
+        2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
 
-    manager._AbandonInactiveQueuedTasks()
+    manager._AbandonQueuedTasks()
 
     self.assertEqual(len(manager._tasks_queued), 0)
     self.assertEqual(len(manager._tasks_processing), 0)
@@ -518,39 +563,6 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     merging_task = manager.GetTaskPendingMerge(small_task)
     self.assertEqual(merging_task, small_task)
     self.assertEqual(manager._tasks_merging.keys(), [small_task.identifier])
-
-  def testTaskAbandonment(self):
-    """Tests the abandoning and adoption of tasks"""
-    manager = task_manager.TaskManager()
-    task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
-    self.assertEqual(manager.GetAbandonedTasks(), [])
-    self.assertTrue(manager.HasPendingTasks())
-    self.assertIsNone(manager.CreateRetryTask())
-
-    manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
-
-    inactive_time = 2 * manager._PROCESSING_TASK_INACTIVE_TIME
-    task.last_processing_time = (
-        int(time.time() - inactive_time) * manager._MICROSECONDS_PER_SECOND)
-
-    # HasPendingTasks is responsible for marking tasks as abandoned, and it
-    # should still return True if the task is abandoned, as it needs to be
-    # retried.
-    self.assertTrue(manager.HasPendingTasks())
-    abandoned_tasks = manager.GetAbandonedTasks()
-    self.assertIn(task, abandoned_tasks)
-
-    retry_task = manager.CreateRetryTask()
-    self.assertIsNotNone(retry_task)
-    self.assertEqual(task.identifier, retry_task.original_task_identifier)
-    self.assertTrue(task.retried)
-    manager.CompleteTask(retry_task)
-
-    manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
-    self.assertEqual(manager.GetAbandonedTasks(), [])
-    self.assertTrue(manager.HasPendingTasks())
-
-  # TODO: Add tests for updating tasks.
 
 
 if __name__ == '__main__':
