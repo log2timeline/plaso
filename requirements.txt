@@ -8,7 +8,7 @@ binplist >= 0.1.4
 certifi >= 2016.9.26
 chardet >= 2.0.1
 construct >= 2.5.2,<= 2.5.3
-dfdatetime >= 20180324
+dfdatetime >= 20180501
 dfvfs >= 20180326
 dfwinreg >= 20170521
 dpkt >= 1.8
