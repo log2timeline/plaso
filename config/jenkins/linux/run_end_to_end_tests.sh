@@ -12,7 +12,7 @@ CONFIGURATION_FILE="${CONFIGURATION}.ini";
 SOURCES_DIRECTORY="/media/greendale_images";
 REFERENCES_DIRECTORY="/media/greendale_images";
 
-RESULTS_DIRECTORY="plaso_out";
+RESULTS_DIRECTORY="plaso-out";
 
 ./config/linux/gift_ppa_install.sh include-test;
 
@@ -39,13 +39,13 @@ PYTHONPATH=. ./tests/end-to-end.py --config ${CONFIGURATION_FILE} --sources-dire
 
 PID_COMMAND=$!;
 
-echo "End-to-end tests stared (PID: ${PID_COMMAND})";
+echo "End-to-end tests started (PID: ${PID_COMMAND})";
 
 wait ${PID_COMMAND};
 
 RESULT=$?;
 
-# On Travis-Ci print the stdout and stderr output to troubleshoot potential issues.
+# On Travis-CI print the stdout and stderr output to troubleshoot potential issues.
 if test ${CONFIGURATION} = 'travis';
 then
 	for FILE in `find ${RESULTS_DIRECTORY} -name \*.out -type f`;
