@@ -49,9 +49,31 @@ class TaskTest(shared_test_lib.BaseTestCase):
     self.assertTrue(task.retried)
     self.assertEqual(task.identifier, retry_task.original_task_identifier)
 
-  # TODO: add tests for CreateTaskCompletion
-  # TODO: add tests for CreateTaskStart
-  # TODO: add tests for UpdateProcessingTime
+  def testCreateTaskCompletion(self):
+    """Tests the CreateTaskCompletion function."""
+    session_identifier = '{0:s}'.format(uuid.uuid4().hex)
+    task = tasks.Task(session_identifier=session_identifier)
+
+    task_completion = task.CreateTaskCompletion()
+    self.assertIsNotNone(task_completion)
+
+  def testCreateTaskStart(self):
+    """Tests the CreateTaskStart function."""
+    session_identifier = '{0:s}'.format(uuid.uuid4().hex)
+    task = tasks.Task(session_identifier=session_identifier)
+
+    task_start = task.CreateTaskStart()
+    self.assertIsNotNone(task_start)
+
+  def testUpdateProcessingTime(self):
+    """Tests the UpdateProcessingTime function."""
+    session_identifier = '{0:s}'.format(uuid.uuid4().hex)
+    task = tasks.Task(session_identifier=session_identifier)
+
+    self.assertIsNone(task.last_processing_time)
+
+    task.UpdateProcessingTime()
+    self.assertIsNotNone(task.last_processing_time)
 
 
 class TaskCompletionTest(shared_test_lib.BaseTestCase):
