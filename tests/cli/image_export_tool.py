@@ -255,8 +255,8 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
     expected_output = b'\n'.join([
         b'Filters:',
-        (b'\tctime between 2012-05-25T15:59:00+00:00 and '
-         b'2012-05-25T15:59:20+00:00'),
+        (b'\tctime between 2012-05-25 15:59:00.000000 and '
+         b'2012-05-25 15:59:20.000000'),
         b''])
     output = output_writer.ReadOutput()
     self.assertEqual(output, expected_output)

@@ -138,10 +138,10 @@ class DateTimeFileEntryFilterTest(shared_test_lib.BaseTestCase):
     test_filter.Print(output_writer)
 
     expected_output = [
-        (b'\tctime between 2012-05-25T15:59:20+00:00 and '
-         b'2012-05-25T15:59:25+00:00'),
-        b'\tatime after 2012-05-25T15:59:25+00:00',
-        b'\tmtime before 2012-05-25T15:59:20+00:00',
+        (b'\tctime between 2012-05-25 15:59:20.000000 and '
+         b'2012-05-25 15:59:25.000000'),
+        b'\tatime after 2012-05-25 15:59:25.000000',
+        b'\tmtime before 2012-05-25 15:59:20.000000',
         b'']
 
     output = output_writer.ReadOutput()
