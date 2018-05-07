@@ -326,7 +326,8 @@ class TaskManager(object):
   def GetFailedTasks(self):
     """Retrieves all failed tasks.
 
-    Failed tasks are tasks that were abandoned and have not been retried.
+    Failed tasks are tasks that were abandoned and have not been retried
+    once the foreman is done processing.
 
     Returns:
       list[Task]: tasks.
@@ -448,7 +449,7 @@ class TaskManager(object):
       # If we believe all the workers are idle for longer than the task
       # inactive time (timeout) abandon all queued tasks. This ensures
       # that processing actually stops when the foreman never gets an
-      # update to from a worker.
+      # update from a worker.
 
       if self._tasks_queued:
         inactive_time = time.time() - self._TASK_INACTIVE_TIME
