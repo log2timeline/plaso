@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
+from plaso.lib import errors
 from plaso.parsers import plist
 # Register all plugins.
 from plaso.parsers import plist_plugins  # pylint: disable=unused-import
@@ -66,6 +67,14 @@ class PlistParserTest(test_lib.ParserTestCase):
         'LastNameUpdate'])
     self.assertTrue(expected_keys == set(keys))
     self.assertEqual(3, len(set(keys)))
+
+  @shared_test_lib.skipUnlessHasTestFile(['truncated.plist'])
+  def testParseWithTruncatedFile(self):
+    """Tests the Parse function on a truncated plist file."""
+    parser = plist.PlistParser()
+
+    with self.assertRaises(errors.UnableToParseFile):
+      storage_writer = self._ParseFile(['truncated.plist'], parser)
 
 
 if __name__ == '__main__':
