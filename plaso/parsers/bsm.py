@@ -15,7 +15,6 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import logger
 from plaso.parsers import manager
@@ -1054,7 +1053,7 @@ class BSMParser(interface.FileObjectParser):
       # TODO: if this timestamp is useful, it must be extracted as a separate
       # event object.
       timestamp = token.microseconds + (
-          token.timestamp * timelib.Timestamp.MICRO_SECONDS_PER_SECOND)
+          token.timestamp * definitions.MICROSECONDS_PER_SECOND)
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
       date_time_string = date_time.CopyToDateTimeString()

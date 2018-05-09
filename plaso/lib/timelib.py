@@ -19,6 +19,7 @@ import time
 import dateutil.parser
 import pytz
 
+from plaso.lib import definitions
 from plaso.lib import errors
 
 
@@ -45,31 +46,10 @@ class Timestamp(object):
 
     The timestamp is not necessarily in UTC.
   """
-  # The minimum timestamp in seconds.
-  TIMESTAMP_MIN_SECONDS = -(((1 << 63) - 1) / 1000000)
-
-  # The maximum timestamp in seconds.
-  TIMESTAMP_MAX_SECONDS = ((1 << 63) - 1) / 1000000
-
-  # The minimum timestamp in micro seconds.
-  TIMESTAMP_MIN_MICRO_SECONDS = -((1 << 63) - 1)
-
-  # The maximum timestamp in micro seconds.
-  TIMESTAMP_MAX_MICRO_SECONDS = (1 << 63) - 1
-
   # Timestamp that represents the timestamp representing not
   # a date and time value.
   # TODO: replace this with a real None implementation.
   NONE_TIMESTAMP = 0
-
-  # The number of micro seconds per second.
-  MICRO_SECONDS_PER_SECOND = 1000000
-
-  # The number of microseconds per minute.
-  MICROSECONDS_PER_MINUTE = (60 * MICRO_SECONDS_PER_SECOND)
-
-  # The multiplication factor to change milliseconds to micro seconds.
-  MILLI_SECONDS_TO_MICRO_SECONDS = 1000
 
   @classmethod
   def CopyFromString(cls, time_string):
@@ -294,43 +274,7 @@ class Timestamp(object):
       The timestamp which is an integer containing the number of seconds
       since January 1, 1970, 00:00:00 UTC.
     """
-    return timestamp // cls.MICRO_SECONDS_PER_SECOND
-
-  @classmethod
-  def FromPosixTime(cls, posix_time):
-    """Converts a POSIX timestamp into a timestamp.
-
-    The POSIX time is a signed 32-bit or 64-bit value containing:
-      seconds since 1970-01-01 00:00:00
-
-    Args:
-      posix_time: The POSIX timestamp.
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
-    """
-    if (posix_time < cls.TIMESTAMP_MIN_SECONDS or
-        posix_time > cls.TIMESTAMP_MAX_SECONDS):
-      return 0
-    return int(posix_time) * cls.MICRO_SECONDS_PER_SECOND
-
-  @classmethod
-  def FromPythonDatetime(cls, datetime_object):
-    """Converts a Python datetime object into a timestamp.
-
-    Args:
-      datetime_object: The datetime object (instance of datetime.datetime).
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
-    """
-    if not isinstance(datetime_object, datetime.datetime):
-      return 0
-
-    posix_time = int(calendar.timegm(datetime_object.utctimetuple()))
-    return cls.FromPosixTime(posix_time) + datetime_object.microsecond
+    return timestamp // definitions.MICROSECONDS_PER_SECOND
 
   @classmethod
   def FromTimeString(
@@ -377,7 +321,9 @@ class Timestamp(object):
     else:
       datetime_object = timezone.localize(datetime_object)
 
-    return cls.FromPythonDatetime(datetime_object)
+    posix_time = int(calendar.timegm(datetime_object.utctimetuple()))
+    timestamp = posix_time * definitions.MICROSECONDS_PER_SECOND
+    return timestamp + datetime_object.microsecond
 
   @classmethod
   def GetNow(cls):
@@ -414,18 +360,18 @@ class Timestamp(object):
       # for UTC and will raise.
       datetime_delta = timezone.utcoffset(datetime_object, is_dst=is_dst)
       seconds_delta = int(datetime_delta.total_seconds())
-      timestamp -= seconds_delta * cls.MICRO_SECONDS_PER_SECOND
+      timestamp -= seconds_delta * definitions.MICROSECONDS_PER_SECOND
 
     return timestamp
 
   @classmethod
   def RoundToSeconds(cls, timestamp):
     """Takes a timestamp value and rounds it to a second precision."""
-    leftovers = timestamp % cls.MICRO_SECONDS_PER_SECOND
+    leftovers = timestamp % definitions.MICROSECONDS_PER_SECOND
     scrubbed = timestamp - leftovers
-    rounded = round(float(leftovers) / cls.MICRO_SECONDS_PER_SECOND)
+    rounded = round(float(leftovers) / definitions.MICROSECONDS_PER_SECOND)
 
-    return int(scrubbed + rounded * cls.MICRO_SECONDS_PER_SECOND)
+    return int(scrubbed + rounded * definitions.MICROSECONDS_PER_SECOND)
 
 
 def GetCurrentYear():

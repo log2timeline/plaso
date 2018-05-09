@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import calendar
 import datetime
 import logging
 import re
@@ -10,8 +11,7 @@ import re
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 
-# TODO: Changes this so it becomes an attribute instead of having backend
-# load a front-end library.
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import objectfilter
 from plaso.lib import py2to3
@@ -293,7 +293,9 @@ class DateCompareObject(object):
             self.text))
 
     elif isinstance(data, datetime.datetime):
-      self.data = timelib.Timestamp.FromPythonDatetime(data)
+      posix_time = int(calendar.timegm(data.utctimetuple()))
+      self.data = (
+          posix_time * definitions.MICROSECONDS_PER_SECOND) + data.microsecond
       self.text = '{0!s}'.format(data)
 
     elif isinstance(data, DateCompareObject):
