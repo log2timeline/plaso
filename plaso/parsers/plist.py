@@ -36,12 +36,11 @@ class PlistParser(interface.FileObjectParser):
 
   _plugin_classes = {}
 
-  def GetTopLevel(self, file_object, file_name=''):
+  def GetTopLevel(self, file_object):
     """Returns the deserialized content of a plist as a dictionary object.
 
     Args:
       file_object (dfvfs.FileIO): a file-like object to parse.
-      file_name (str): name of the file-like object.
 
     Returns:
       dict[str, object]: contents of the plist.
@@ -54,27 +53,8 @@ class PlistParser(interface.FileObjectParser):
 
     except (biplist.InvalidPlistException,
             biplist.NotBinaryPlistException) as exception:
-      if not isinstance(exception, py2to3.BYTES_TYPE):
-        error_string = str(exception).decode('utf8', errors='replace')
-      else:
-        error_string = exception
-
       raise errors.UnableToParseFile(
-          'File is not a plist file: {0:s}'.format(error_string))
-
-    except (
-        AttributeError, LookupError, ValueError, binascii.Error) as exception:
-      raise errors.UnableToParseFile(
-          'Unable to parse XML file, reason: {0:s}'.format(exception))
-
-    except OverflowError as exception:
-      raise errors.UnableToParseFile(
-          'Unable to parse: {0:s} with error: {1!s}'.format(
-              file_name, exception))
-
-    if not top_level_object:
-      raise errors.UnableToParseFile(
-          'File is not a plist: missing top level object')
+          'Unable to parse plist with error: {0!s}'.format(exception))
 
     return top_level_object
 
