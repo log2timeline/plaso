@@ -325,14 +325,15 @@ class StorageMediaTool(tools.CLITool):
       partitions (str): partitions. A range of partitions can be defined
           as: "3..5". Multiple partitions can be defined as: "1,3,5" (a list
           of comma separated values). Ranges and lists can also be combined
-          as: "1,3..5". The first partition is 1. All partition can be
+          as: "1,3..5". The first partition is 1. All partitions can be
           defined as: "all".
 
     Returns:
-      list[str]: partitions.
+      list[int|str]: partition numbers or "all" to represent all available
+          partitions.
 
     Raises:
-      BadConfigOption: if the partitions option is invalid.
+      BadConfigOption: if the partitions string is invalid.
     """
     if not partitions:
       return []
@@ -639,7 +640,7 @@ class StorageMediaTool(tools.CLITool):
       volume_identifiers (list[str]): allowed volume identifiers.
 
     Returns:
-      str: partition identifier or 'all'.
+      str: partition identifier or "all".
 
     Raises:
       SourceScannerError: if the source cannot be processed.
@@ -1013,7 +1014,7 @@ class StorageMediaTool(tools.CLITool):
             'partitions can be defined as: "3..5". Multiple partitions can '
             'be defined as: "1,3,5" (a list of comma separated values). '
             'Ranges and lists can also be combined as: "1,3..5". The first '
-            'partition is 1. All partition can be defined as: "all".'))
+            'partition is 1. All partitions can be defined as: "all".'))
 
     argument_group.add_argument(
         '--offset', dest='image_offset', action='store', default=None,
