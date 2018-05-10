@@ -105,8 +105,6 @@ class TaskManager(object):
 
   * abandoned: a task assumed to be abandoned because a tasks that has been
       queued or was processing exceeds the maximum inactive time.
-  * completed: a task that has successfully been merged. The task manager will
-      stop tracking completed tasks.
   * merging: a task that is being merged by the engine.
   * pending_merge: the task has been processed and is ready to be merged with
       the session storage.
