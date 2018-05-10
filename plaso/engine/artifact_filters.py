@@ -65,7 +65,7 @@ class ArtifactDefinitionsFilterHelper(object):
     if (len(self._artifacts) == 1 and
             self._artifacts[0] in self.STANDARD_OS_FILTERS):
       for definition in self._artifacts_registry.GetDefinitions():
-        if self._filters[0].lower() in (
+        if self._artifacts[0].lower() in (
             os.lower() for os in definition.supported_os):
           artifact_defintions.append(definition)
     else:
