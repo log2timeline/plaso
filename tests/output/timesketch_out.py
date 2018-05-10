@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for the Timesketch output class."""
+"""Tests for the Timesketch output module."""
 
 from __future__ import unicode_literals
 
@@ -39,7 +39,7 @@ if timesketch_out.timesketch is None:
 
 
 class TimesketchTestConfig(object):
-  """Config object for the tests."""
+  """Configuration for the tests."""
   timeline_name = 'Test'
   output_format = 'timesketch'
   index = ''
@@ -47,30 +47,40 @@ class TimesketchTestConfig(object):
   flush_interval = 1000
 
 
+@unittest.skipIf(timesketch_out is None, 'missing timesketch')
 class TimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
-  """Tests for the Timesketch output class."""
+  """Tests for the Timesketch output module."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    output_mediator = self._CreateOutputMediator()
-    self._timesketch_output = timesketch_out.TimesketchOutputModule(
-        output_mediator)
-
+  # TODO: test Close function
 
   def testMissingParameters(self):
     """Tests the GetMissingArguments function."""
-    self.assertListEqual(
-        self._timesketch_output.GetMissingArguments(), ['timeline_name'])
+    output_mediator = self._CreateOutputMediator()
+    output_module = timesketch_out.TimesketchOutputModule(output_mediator)
+
+    missing_arguments = output_module.GetMissingArguments()
+    self.assertEqual(missing_arguments, ['timeline_name'])
 
     config = TimesketchTestConfig()
 
-    self._timesketch_output.SetIndexName(config.index)
-    self._timesketch_output.SetFlushInterval(config.flush_interval)
-    self.assertListEqual(
-        self._timesketch_output.GetMissingArguments(), ['timeline_name'])
+    output_module.SetIndexName(config.index)
+    output_module.SetFlushInterval(config.flush_interval)
 
-    self._timesketch_output.SetTimelineName(config.timeline_name)
-    self.assertListEqual(self._timesketch_output.GetMissingArguments(), [])
+    missing_arguments = output_module.GetMissingArguments()
+    self.assertEqual(missing_arguments, ['timeline_name'])
+
+    output_module.SetTimelineName(config.timeline_name)
+
+    missing_arguments = output_module.GetMissingArguments()
+    self.assertEqual(missing_arguments, [])
+
+  # TODO: test SetDocType function
+  # TODO: test SetFlushInterval function
+  # TODO: test SetIndexName function
+  # TODO: test SetTimelineName function
+  # TODO: test SetUserName function
+  # TODO: test WriteEventBody function
+  # TODO: test WriteHeader function
 
 
 if __name__ == '__main__':

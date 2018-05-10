@@ -45,6 +45,7 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python-dfwinreg
                       python-dpkt
                       python-efilter
+                      python-elasticsearch
                       python-hachoir-core
                       python-hachoir-metadata
                       python-hachoir-parser
