@@ -117,48 +117,5 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
     # Three key paths found
     self.assertEqual(len(key_paths), 3)
 
-
-  def testBuildRegistryFindSpecs(self):
-    """Tests the BuildFindSpecs function for registry artifacts."""
-    knowledge_base = knowledge_base_engine.KnowledgeBase()
-
-    artifact_definitions = ['TestRegistry']
-    registry = artifacts_registry.ArtifactDefinitionsRegistry()
-    reader = artifacts_reader.YamlArtifactsReader()
-
-    registry.ReadFromDirectory(reader, self._GetTestFilePath(['artifacts']))
-
-    test_filter_file = artifact_filters.ArtifactDefinitionsFilterHelper(
-        registry, artifact_definitions, knowledge_base)
-
-    test_filter_file.BuildFindSpecs(environment_variables=None)
-    find_specs = knowledge_base.GetValue(
-      artifact_filters.ArtifactDefinitionsFilterHelper.ARTIFACT_FILTERS)
-
-    self.assertEqual(
-        len(find_specs[artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY]), 1)
-
-    win_registry_reader = (
-        windows_registry_parser.FileObjectWinRegistryFileReader())
-
-    file_entry = self._GetTestFileEntry(['SYSTEM'])
-    file_object = file_entry.GetFileObject()
-
-    registry_file = win_registry_reader.Open(file_object)
-
-    win_registry = dfwinreg_registry.WinRegistry()
-    key_path_prefix = win_registry.GetRegistryFileMapping(registry_file)
-    registry_file.SetKeyPathPrefix(key_path_prefix)
-    win_registry.MapFile(key_path_prefix, registry_file)
-
-    searcher = dfwinreg_registry_searcher.WinRegistrySearcher(win_registry)
-    key_paths = list(searcher.Find(find_specs=find_specs[
-        artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY]))
-
-    self.assertIsNotNone(key_paths)
-
-    # Three key paths found
-    self.assertEqual(len(key_paths), 3)
-
 if __name__ == '__main__':
   unittest.main()

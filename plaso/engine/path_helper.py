@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+import re
+
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.lib import py2to3
@@ -23,6 +25,8 @@ class PathHelper(object):
     Returns:
       str: expanded Windows path.
     """
+    #TODO: Add support for items such as %%users.localappdata%%
+
     if environment_variables is None:
       environment_variables = []
 
@@ -42,8 +46,18 @@ class PathHelper(object):
           not path_segment.endswith('%')):
         continue
 
-      lookup_key = path_segment.upper()[1:-1]
+      check_for_drive_letter = False
+      if path_segment.upper().startswith('%%ENVIRON_'):
+        lookup_key = path_segment.upper()[10:-2]
+        check_for_drive_letter = True
+      else:
+        lookup_key = path_segment.upper()[1:-1]
       path_segments[index] = lookup_table.get(lookup_key, path_segment)
+
+      if check_for_drive_letter:
+        # Remove the drive letter.
+        if len(path_segments[index]) >= 2 and path_segments[index][1] == ':':
+          _, _, path_segments[index] = path_segments[index].rpartition(':')
 
     return '\\'.join(path_segments)
 
@@ -133,3 +147,26 @@ class PathHelper(object):
       location = location[len(mount_path):]
 
     return location
+
+  @classmethod
+  def ExpandUserHomeDirPath(cls, path, user_accounts):
+    """Expands a path to contain all users home directories.
+
+    Args:
+      path (str): Windows path with environment variables.
+      user_accounts (list[UserAccountArtifact]): user accounts.
+
+    Returns:
+      list [str]: paths returned for user accounts.
+    """
+
+    user_paths = []
+    if path.upper().startswith('%%USERS.HOMEDIR%%'):
+      regex = re.compile(re.escape('%%users.homedir%%'))
+      for user_account in user_accounts:
+        new_path = regex.sub(user_account.user_directory, path)
+        user_paths.append(new_path)
+    else:
+      user_paths = [path]
+
+    return user_paths
