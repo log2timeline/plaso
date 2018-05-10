@@ -22,7 +22,7 @@ class ElasticSearchOutputArgumentsHelperTest(
   # pylint: disable=no-member,protected-access
 
   _EXPECTED_OUTPUT = """\
-usage: cli_helper.py [--index_name INDEX_NAME] [--doc_type DOC_TYPE]
+usage: cli_helper.py [--index_name INDEX_NAME] [--doc_type DOCUMENT_TYPE]
                      [--flush_interval FLUSH_INTERVAL] [--raw_fields]
                      [--elastic_user ELASTIC_USER] [--server HOSTNAME]
                      [--port PORT]
@@ -30,7 +30,8 @@ usage: cli_helper.py [--index_name INDEX_NAME] [--doc_type DOC_TYPE]
 Test argument parser.
 
 optional arguments:
-  --doc_type DOC_TYPE   Name of the document type that will be used in
+  --doc_type DOCUMENT_TYPE
+                        Name of the document type that will be used in
                         ElasticSearch.
   --elastic_user ELASTIC_USER
                         Username to use for Elasticsearch authentication.
@@ -63,7 +64,7 @@ optional arguments:
     options = cli_test_lib.TestOptions()
 
     output_mediator = self._CreateOutputMediator()
-    output_module = elastic.ElasticSearchOutputModule(output_mediator)
+    output_module = elastic.ElasticsearchOutputModule(output_mediator)
     elastic_output.ElasticSearchOutputArgumentsHelper.ParseOptions(
         options, output_module)
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Defines the shared code for 4n6time output modules."""
+"""Shared functionality for 4n6time output modules."""
 
 from __future__ import unicode_literals
 
@@ -9,10 +9,10 @@ from plaso.lib import timelib
 from plaso.output import interface
 
 
-# pylint: disable=abstract-method
-
 class Shared4n6TimeOutputModule(interface.OutputModule):
-  """Class defining the base 4n6time output module."""
+  """Shared functionality for an 4n6time output module."""
+
+  # pylint: disable=abstract-method
 
   NAME = '4n6time_shared'
 

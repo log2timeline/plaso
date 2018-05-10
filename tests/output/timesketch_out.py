@@ -7,11 +7,6 @@ from __future__ import unicode_literals
 import unittest
 
 try:
-  from mock import Mock
-except ImportError:
-  from unittest.mock import Mock
-
-try:
   from mock import MagicMock
 except ImportError:
   from unittest.mock import MagicMock
@@ -19,23 +14,6 @@ except ImportError:
 from plaso.output import timesketch_out
 
 from tests.output import test_lib
-
-
-# Mock the imports if timesketch is not available. If timesketch is
-# not available the timesketch attribute is set to None in the
-# output module.
-if timesketch_out.timesketch is None:
-  timesketch_mock = Mock()
-  timesketch_mock.create_app = MagicMock()
-
-  # Mock out all imports.
-  timesketch_out.timesketch = timesketch_mock
-  timesketch_out.elastic_exceptions = Mock()
-  timesketch_out.current_app = MagicMock()
-  timesketch_out.ElasticSearchDataStore = Mock()
-  timesketch_out.db_sessions = Mock()
-  timesketch_out.SearchIndex = Mock()
-  timesketch_out.User = Mock()
 
 
 class TimesketchTestConfig(object):
@@ -47,16 +25,37 @@ class TimesketchTestConfig(object):
   flush_interval = 1000
 
 
-@unittest.skipIf(timesketch_out is None, 'missing timesketch')
+class TestTimesketchOutputModule(timesketch_out.TimesketchOutputModule):
+  """Timesketch output module for testing."""
+
+  def _Connect(self):
+    """Connects to an Elasticsearch server."""
+    self._client = MagicMock()
+
+
+@unittest.skipIf(timesketch_out.timesketch is None, 'missing timesketch')
 class TimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for the Timesketch output module."""
 
-  # TODO: test Close function
+  # pylint: disable=protected-access
+
+  def testClose(self):
+    """Tests the Close function."""
+    output_mediator = self._CreateOutputMediator()
+    output_module = TestTimesketchOutputModule(output_mediator)
+
+    output_module._Connect()
+
+    self.assertIsNotNone(output_module._client)
+
+    output_module.Close()
+
+    self.assertIsNone(output_module._client)
 
   def testMissingParameters(self):
     """Tests the GetMissingArguments function."""
     output_mediator = self._CreateOutputMediator()
-    output_module = timesketch_out.TimesketchOutputModule(output_mediator)
+    output_module = TestTimesketchOutputModule(output_mediator)
 
     missing_arguments = output_module.GetMissingArguments()
     self.assertEqual(missing_arguments, ['timeline_name'])
@@ -74,13 +73,38 @@ class TimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
     missing_arguments = output_module.GetMissingArguments()
     self.assertEqual(missing_arguments, [])
 
-  # TODO: test SetDocType function
-  # TODO: test SetFlushInterval function
-  # TODO: test SetIndexName function
-  # TODO: test SetTimelineName function
-  # TODO: test SetUserName function
-  # TODO: test WriteEventBody function
-  # TODO: test WriteHeader function
+  def testSetTimelineName(self):
+    """Tests the SetTimelineName function."""
+    output_mediator = self._CreateOutputMediator()
+    output_module = TestTimesketchOutputModule(output_mediator)
+
+    self.assertIsNone(output_module._timeline_name)
+
+    output_module.SetTimelineName('test')
+
+    self.assertEqual(output_module._timeline_name, 'test')
+
+  def testSetTimelineOwner(self):
+    """Tests the SetTimelineOwner function."""
+    output_mediator = self._CreateOutputMediator()
+    output_module = TestTimesketchOutputModule(output_mediator)
+
+    self.assertIsNone(output_module._timeline_owner)
+
+    output_module.SetTimelineOwner('test_username')
+
+    self.assertEqual(output_module._timeline_owner, 'test_username')
+
+  def testWriteHeader(self):
+    """Tests the WriteHeader function."""
+    output_mediator = self._CreateOutputMediator()
+    output_module = TestTimesketchOutputModule(output_mediator)
+
+    self.assertIsNone(output_module._client)
+
+    output_module.WriteHeader()
+
+    self.assertIsNotNone(output_module._client)
 
 
 if __name__ == '__main__':
