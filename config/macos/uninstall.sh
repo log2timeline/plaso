@@ -8,7 +8,7 @@
 EXIT_SUCCESS=0;
 EXIT_FAILURE=1;
 
-DEPENDENCIES="PyYAML XlsxWriter artifacts backports.lzma bencode binplist certifi chardet construct dateutil dfdatetime dfvfs dfwinreg dpkt efilter future hachoir-core hachoir-metadata hachoir-parser idna libbde libesedb libevt libevtx libewf libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm pefile psutil pycrypto pyparsing pysqlite pytsk3 pytz pyzmq requests six urllib3 yara-python";
+DEPENDENCIES="PyYAML XlsxWriter artifacts backports.lzma bencode binplist certifi chardet construct dateutil dfdatetime dfvfs dfwinreg dpkt efilter elasticsearch-py future hachoir-core hachoir-metadata hachoir-parser idna libbde libesedb libevt libevtx libewf libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm pefile psutil pycrypto pyparsing pysqlite pytsk3 pytz pyzmq requests six urllib3 yara-python";
 
 SCRIPT_NAME=`basename $0`;
 DEPENDENCIES_ONLY=0;

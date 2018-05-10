@@ -19,8 +19,7 @@ from plaso.output import elastic
 from tests.output import test_lib
 
 
-if not elastic.Elasticsearch:
-  elastic.Elasticsearch = MagicMock()
+elastic.Elasticsearch = MagicMock()
 
 
 class ElasticTestEvent(events.EventObject):
@@ -42,10 +41,28 @@ class ElasticTestEvent(events.EventObject):
     self.timestamp = event_timestamp
 
 
+# TODO: test ElasticSearchHelper
+# TODO: test AddEvent function
+# TODO: test _EnsureIndexExists function
+# TODO: test _GetSanitizedEventValues function
+# TODO: test _FlushEventsToElasticSearch function
+
+
 class ElasticSearchHelperTest(test_lib.OutputModuleTestCase):
   """Tests for the Elasticsearch helper class."""
 
   # pylint: disable=protected-access
+
+  # TODO: test Close function
+  # TODO: test SetServerInformation function
+  # TODO: test SetFlushInterval function
+  # TODO: test SetIndexName function
+  # TODO: test SetDocType function
+  # TODO: test SetRawFields function
+  # TODO: test SetElasticUser function
+  # TODO: test SetElasticPassword function
+  # TODO: test WriteEventBody function
+  # TODO: test WriteHeader function
 
   def testEventToDict(self):
     """Tests the _EventToDict function."""
