@@ -18,7 +18,7 @@ class TimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
   CATEGORY = 'output'
   DESCRIPTION = 'Argument helper for the timesketch output module.'
 
-  _DEFAULT_DOC_TYPE = 'plaso_event'
+  _DEFAULT_DOCUMENT_TYPE = 'plaso_event'
   _DEFAULT_FLUSH_INTERVAL = 1000
   _DEFAULT_NAME = ''
   _DEFAULT_USERNAME = None
@@ -57,8 +57,8 @@ class TimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
             'to Elasticsearch.'))
 
     argument_group.add_argument(
-        '--doc_type', dest='doc_type', type=str,
-        action='store', default=cls._DEFAULT_DOC_TYPE, help=(
+        '--doc_type', dest='document_type', type=str,
+        action='store', default=cls._DEFAULT_DOCUMENT_TYPE, help=(
             'Name of the document type that will be used in ElasticSearch.'))
 
     argument_group.add_argument(
@@ -83,9 +83,9 @@ class TimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           'Output module is not an instance of TimesketchOutputModule')
 
-    doc_type = cls._ParseStringOption(
-        options, 'doc_time', default_value=cls._DEFAULT_DOC_TYPE)
-    output_module.SetDocType(doc_type)
+    document_type = cls._ParseStringOption(
+        options, 'document_type', default_value=cls._DEFAULT_DOCUMENT_TYPE)
+    output_module.SetDocumentType(document_type)
 
     flush_interval = cls._ParseNumericOption(
         options, 'flush_interval', default_value=cls._DEFAULT_FLUSH_INTERVAL)
@@ -101,7 +101,7 @@ class TimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
 
     username = cls._ParseStringOption(
         options, 'username', default_value=cls._DEFAULT_USERNAME)
-    output_module.SetUserName(username)
+    output_module.SetTimelineOwner(username)
 
 
 manager.ArgumentHelperManager.RegisterHelper(TimesketchOutputArgumentsHelper)

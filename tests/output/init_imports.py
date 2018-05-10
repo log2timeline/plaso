@@ -16,7 +16,7 @@ class OutputImportTest(test_lib.ImportCheckTestCase):
   _OUTPUT_PATH = os.path.join(os.getcwd(), 'plaso', 'output')
   _IGNORABLE_FILES = frozenset([
       'logger.py', 'manager.py', 'mediator.py', 'interface.py',
-      'shared_4n6time.py'])
+      'shared_4n6time.py', 'shared_elastic.py'])
 
   def testOutputModulesImported(self):
     """Tests that all output modules are imported."""
