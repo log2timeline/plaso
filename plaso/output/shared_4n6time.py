@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-from dfdatetime import posix_time as dfdatetime_posix_time
-
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
