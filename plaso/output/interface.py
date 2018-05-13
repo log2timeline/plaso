@@ -85,10 +85,10 @@ class OutputModule(object):
 
   @abc.abstractmethod
   def WriteEventBody(self, event):
-    """Writes the body of an event to the output.
+    """Writes event values to the output.
 
     Args:
-      event (EventObject): event.
+      event (EventObject): event that contains the event values.
     """
 
   def WriteEventEnd(self):

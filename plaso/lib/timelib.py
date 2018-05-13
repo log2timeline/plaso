@@ -263,20 +263,6 @@ class Timestamp(object):
     return datetime_object.isoformat()
 
   @classmethod
-  def CopyToPosix(cls, timestamp):
-    """Converts microsecond timestamps to POSIX timestamps.
-
-    Args:
-      timestamp: The timestamp which is an integer containing the number
-                 of micro seconds since January 1, 1970, 00:00:00 UTC.
-
-    Returns:
-      The timestamp which is an integer containing the number of seconds
-      since January 1, 1970, 00:00:00 UTC.
-    """
-    return timestamp // definitions.MICROSECONDS_PER_SECOND
-
-  @classmethod
   def FromTimeString(
       cls, time_string, dayfirst=False, gmt_as_timezone=True,
       timezone=pytz.UTC):
