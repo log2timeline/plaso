@@ -6,6 +6,8 @@ For documentation on the TLN format see: http://forensicswiki.org/wiki/TLN
 
 from __future__ import unicode_literals
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.lib import timelib
@@ -124,21 +126,19 @@ class TLNOutputModule(TLNBaseOutputModule):
   _HEADER = 'Time|Source|Host|User|Description\n'
 
   def WriteEventBody(self, event):
-    """Writes the body of an event object to the output.
+    """Writes event values to the output.
 
     Args:
-      event (EventObject): event.
+      event (EventObject): event that contains the event values.
     """
     if not hasattr(event, 'timestamp'):
       return
 
-    try:
-      posix_timestamp = timelib.Timestamp.CopyToPosix(event.timestamp)
-    except (OverflowError, ValueError) as exception:
-      self._ReportEventError(event, (
-          'unable to copy timestamp: {0!s} to a posix value '
-          'with error: {1!s}. Defaulting to: "0"').format(
-              event.timestamp, exception))
+    # TODO: preserve dfdatetime as an object.
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=event.timestamp)
+    posix_timestamp = date_time.CopyToPosixTimestamp()
+    if not posix_timestamp:
       posix_timestamp = 0
 
     source = self._FormatSource(event)
@@ -198,13 +198,11 @@ class L2TTLNOutputModule(TLNBaseOutputModule):
     if not hasattr(event, 'timestamp'):
       return
 
-    try:
-      posix_timestamp = timelib.Timestamp.CopyToPosix(event.timestamp)
-    except (OverflowError, ValueError) as exception:
-      self._ReportEventError(event, (
-          'unable to copy timestamp: {0!s} to a posix value '
-          'with error: {1!s}. Defaulting to: "0"').format(
-              event.timestamp, exception))
+    # TODO: preserve dfdatetime as an object.
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=event.timestamp)
+    posix_timestamp = date_time.CopyToPosixTimestamp()
+    if not posix_timestamp:
       posix_timestamp = 0
 
     source = self._FormatSource(event)

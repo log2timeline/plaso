@@ -205,13 +205,6 @@ class TimeLibTest(unittest.TestCase):
         2013, 3, 14, 21, 20, 8, 850041, tzinfo=timezone)
     self.assertEqual(datetime_object, expected_datetime_object)
 
-  def testCopyToPosix(self):
-    """Test converting microseconds to seconds."""
-    timestamp = timelib.Timestamp.CopyFromString('2013-10-01 12:00:00')
-    expected_posixtime, _ = divmod(timestamp, 1000000)
-    posixtime = timelib.Timestamp.CopyToPosix(timestamp)
-    self.assertEqual(posixtime, expected_posixtime)
-
   def testTimestampFromTimeString(self):
     """The the FromTimeString function."""
     # Test daylight savings.
