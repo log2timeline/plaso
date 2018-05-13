@@ -81,10 +81,11 @@ class Task(interface.AttributeContainer):
     """
     retry_task = Task(session_identifier=self.session_identifier)
     retry_task.file_entry_type = self.file_entry_type
-    retry_task.has_retry = True
     retry_task.merge_priority = self.merge_priority
     retry_task.path_spec = self.path_spec
     retry_task.storage_file_size = self.storage_file_size
+
+    self.has_retry = True
 
     return retry_task
 
