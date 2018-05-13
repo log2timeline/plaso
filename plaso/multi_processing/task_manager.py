@@ -323,7 +323,7 @@ class TaskManager(object):
       task (Task): task.
 
     Raises:
-      KeyError: if the task was not merging or a retried task was not abandoned.
+      KeyError: if the task was not merging.
     """
     with self._lock:
       if task.identifier not in self._tasks_merging:
@@ -336,8 +336,8 @@ class TaskManager(object):
   def GetFailedTasks(self):
     """Retrieves all failed tasks.
 
-    Failed tasks are tasks that were abandoned and have not been retried
-    once the foreman is done processing.
+    Failed tasks are tasks that were abandoned and have no retry task once
+    the foreman is done processing.
 
     Returns:
       list[Task]: tasks.
@@ -473,7 +473,7 @@ class TaskManager(object):
 
     Raises:
       KeyError: if the task was not queued, processing or abandoned, or
-          the task was abandoned and retried.
+          the task was abandoned and has a retry task.
     """
     with self._lock:
       is_abandoned = task.identifier in self._tasks_abandoned

@@ -429,7 +429,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_processing), 0)
     self.assertEqual(len(manager._tasks_pending_merge), 0)
     self.assertEqual(len(manager._tasks_merging), 0)
-    self.assertEqual(len(manager._tasks_abandoned), 0)
+    self.assertEqual(len(manager._tasks_abandoned), 1)
 
   def testGetFailedTasks(self):
     """Tests the GetFailedTasks function."""
