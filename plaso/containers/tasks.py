@@ -31,8 +31,6 @@ class Task(interface.AttributeContainer):
     merge_priority (int): priority used for the task storage file merge, where
         a lower value indicates a higher priority to merge.
     path_spec (dfvfs.PathSpec): path specification.
-    retry_task_identifier (str): identifier of the retry task, when the task
-        is being retried or None if not set.
     session_identifier (str): the identifier of the session the task is part of.
     start_time (int): time that the task was started. Contains the number
         of micro seconds since January 1, 1970, 00:00:00 UTC.
@@ -56,7 +54,6 @@ class Task(interface.AttributeContainer):
     self.last_processing_time = None
     self.merge_priority = None
     self.path_spec = None
-    self.retry_task_identifier = None
     self.session_identifier = session_identifier
     self.start_time = int(time.time() * definitions.MICROSECONDS_PER_SECOND)
     self.storage_file_size = None
@@ -88,8 +85,6 @@ class Task(interface.AttributeContainer):
     retry_task.merge_priority = self.merge_priority
     retry_task.path_spec = self.path_spec
     retry_task.storage_file_size = self.storage_file_size
-
-    self.retry_task_identifier = retry_task.identifier
 
     return retry_task
 

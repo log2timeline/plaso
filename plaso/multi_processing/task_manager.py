@@ -268,8 +268,7 @@ class TaskManager(object):
         raise KeyError('Status of task {0:s} is unknown.'.format(
             task.identifier))
 
-      return is_queued or is_processing or (
-          is_abandoned and not task.retry_task_identifier)
+      return is_queued or is_processing or is_abandoned and not task.has_retry
 
   def CreateRetryTask(self):
     """Creates a task that to retry a previously abandoned task.
@@ -347,7 +346,7 @@ class TaskManager(object):
 
     with self._lock:
       return [task for task in self._tasks_abandoned.values()
-              if not task.retry_task_identifier]
+              if not task.has_retry]
 
   def GetProcessedTaskByIdentifier(self, task_identifier):
     """Retrieves a task that has been processed.
@@ -485,7 +484,7 @@ class TaskManager(object):
         raise KeyError('Status of task {0:s} is unknown.'.format(
             task.identifier))
 
-      if is_abandoned and task.retry_task_identifier:
+      if is_abandoned and task.has_retry:
         raise KeyError('Will not merge a task {0:s} with retry task.'.format(
             task.identifier))
 
