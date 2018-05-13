@@ -43,6 +43,7 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-dfvfs
                       python-dfwinreg
                       python-dpkt
+                      python-dtfabric
                       python-efilter
                       python-elasticsearch
                       python-future

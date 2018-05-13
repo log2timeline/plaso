@@ -44,6 +44,7 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python-dfvfs
                       python-dfwinreg
                       python-dpkt
+                      python-dtfabric
                       python-efilter
                       python-elasticsearch
                       python-hachoir-core

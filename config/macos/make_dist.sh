@@ -8,7 +8,7 @@
 EXIT_SUCCESS=0;
 EXIT_FAILURE=1;
 
-DEPENDENCIES="PyYAML XlsxWriter artifacts backports.lzma bencode binplist certifi chardet construct dateutil dfdatetime dfvfs dfwinreg dpkt efilter elasticsearch-py future hachoir-core hachoir-metadata hachoir-parser idna libbde libesedb libevt libevtx libewf libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm pefile psutil pycrypto pyparsing pysqlite pytsk3 pytz pyzmq requests six urllib3 yara-python";
+DEPENDENCIES="PyYAML XlsxWriter artifacts backports.lzma bencode binplist certifi chardet construct dateutil dfdatetime dfvfs dfwinreg dpkt dtfabric efilter elasticsearch-py future hachoir-core hachoir-metadata hachoir-parser idna libbde libesedb libevt libevtx libewf libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm pefile psutil pycrypto pyparsing pysqlite pytsk3 pytz pyzmq requests six urllib3 yara-python";
 
 MACOS_VERSION=`sw_vers -productVersion | awk -F '.' '{print $1 "." $2}'`;
 
