@@ -23,9 +23,9 @@ except ImportError:
 
 
 if sys.version_info[0] < 3:
-  STRING_TYPES = (basestring, )  # pylint: disable=undefined-variable
+  BYTES_TYPE = str
 else:
-  STRING_TYPES = (str, )
+  BYTES_TYPE = bytes
 
 # Since os.path.abspath() uses the current working directory (cwd)
 # os.path.abspath(__file__) will point to a different location if
@@ -388,9 +388,12 @@ class TestDefinitionReader(object):
       raise RuntimeError('Missing configuration parser.')
 
     try:
-      value = self._config_parser.get(section_name, value_name).decode('utf-8')
+      value = self._config_parser.get(section_name, value_name)
     except configparser.NoOptionError:
       value = None
+
+    if isinstance(value, BYTES_TYPE):
+      value = value.decode('utf-8')
 
     if split_string and value:
       options = []
