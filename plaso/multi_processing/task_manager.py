@@ -131,8 +131,6 @@ class TaskManager(object):
   # Context manager 'lock' doesn't implement __enter__ and __exit__.
   # pylint: disable=not-context-manager
 
-  _MAXIMUM_RETRY_COUNT = 2
-
   # Consider a task inactive after 5 minutes of no activity.
   _TASK_INACTIVE_TIME = 5.0 * 60.0
 
@@ -209,8 +207,7 @@ class TaskManager(object):
           no abandoned tasks that should be retried.
     """
     for task in self._tasks_abandoned.values():
-      if (not task.retry_task_identifier and
-          task.retry_count < self._MAXIMUM_RETRY_COUNT):
+      if not task.has_retry:
         return task
 
     return None
@@ -239,7 +236,7 @@ class TaskManager(object):
 
 
   def _UpdateLastestProcessingTime(self, task):
-    """Updates the last processing time of the task manager from the task.
+    """Updates the latest processing time of the task manager from the task.
 
     This method does not lock the manager and should be called by a method
     holding the manager lock.
@@ -334,18 +331,6 @@ class TaskManager(object):
         raise KeyError('Task {0:s} was not merging.'.format(task.identifier))
 
       del self._tasks_merging[task.identifier]
-
-      abandoned_task_identifier = task.original_task_identifier
-      while abandoned_task_identifier:
-        abandoned_task = self._tasks_abandoned.get(
-            abandoned_task_identifier, None)
-        if not abandoned_task:
-          raise KeyError('Task {0:s} was not abandoned.'.format(
-              abandoned_task_identifier))
-
-        del self._tasks_abandoned[abandoned_task_identifier]
-
-        abandoned_task_identifier = abandoned_task.original_task_identifier
 
       logger.debug('Completed task {0:s}.'.format(task.identifier))
 

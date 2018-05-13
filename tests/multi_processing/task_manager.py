@@ -269,7 +269,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     result = manager.CheckTaskToMerge(task)
     self.assertFalse(result)
 
-    # Test with missing task.
+    # Test status of task is unknown.
     del manager._tasks_abandoned[task.identifier]
 
     self.assertEqual(len(manager._tasks_queued), 1)
@@ -645,7 +645,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_pending_merge), 3)
     self.assertEqual(len(manager._tasks_abandoned), 0)
 
-    # Test with missing task.
+    # Test status of task is unknown.
     task = tasks.Task()
     task.storage_file_size = 10
 
@@ -735,7 +735,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_pending_merge), 1)
     self.assertEqual(len(manager._tasks_abandoned), 0)
 
-    # Indicate to the task manager that an unknown task is pending merge.
+    # Test status of task is unknown.
     task = tasks.Task()
 
     with self.assertRaises(KeyError):

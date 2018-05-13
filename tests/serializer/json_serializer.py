@@ -400,8 +400,8 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     expected_task_dict = {
         'aborted': False,
+        'has_retry': False,
         'identifier': task.identifier,
-        'retry_count': 0,
         'session_identifier': session_identifier,
         'start_time': task.start_time
     }
