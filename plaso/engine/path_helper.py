@@ -150,7 +150,7 @@ class PathHelper(object):
 
   @classmethod
   def ExpandUserHomeDirPath(cls, path, user_accounts):
-    """Expands a path to contain all users home directories.
+    """Expands a Windows path to contain all user home directories.
 
     Args:
       path (str): Windows path with environment variables.
