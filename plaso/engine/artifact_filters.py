@@ -108,7 +108,7 @@ class ArtifactDefinitionsFilterHelper(object):
 
   def BuildFindSpecsFromFileArtifact(
       self, path_entry, separator, environment_variables, find_specs):
-    """Build find specification from a FILE artifact type.
+    """Build find specifications from a FILE artifact type.
 
     Args:
       path_entry (str):  Current file system path to add.
@@ -165,7 +165,7 @@ class ArtifactDefinitionsFilterHelper(object):
 
   def BuildFindSpecsFromRegistryArtifact(
       self, key_entry, find_specs):
-    """Build find specification from a Windows registry artifact type.
+    """Build find specifications from a Windows registry artifact type.
 
     Args:
       key_entry (str):  Current file system key to add.
@@ -203,12 +203,12 @@ class ArtifactDefinitionsFilterHelper(object):
   def _ExpandRecursiveGlobs(self, path):
     """Expand recursive like globs present in an artifact path.
 
-    If a path ends in '**', with up two optional digits such as '**10',
-    the '**' will match all files and zero or more directories and
-    subdirectories from the specified path recursively. The optional digits
-    provide the depth to which the recursion should continue.  By default
-    recursion depth is 10 directories.  If the pattern is followed by a ‘/’
-    or '\', only directories and subdirectories match.
+    If a path ends in '**', with up to two optional digits such as '**10',
+    the '**' will recursively match all files and zero or more directories
+    from the specified path. The optional digits indicate the recursion depth.
+    By default recursion depth is 10 directories.
+    If the glob is followed by a ‘/’ or '\', only directories and
+    subdirectories will be matched.
 
     Args:
       path (str):  String path to be expanded.
@@ -240,7 +240,7 @@ class ArtifactDefinitionsFilterHelper(object):
       path (str):  Path to append wildcards to.
 
     Returns:
-      path list[str]: Paths expanded with wildcards.
+      paths list[str]: Paths expanded with wildcards.
     """
     paths = []
     if '\\' in path:
