@@ -575,6 +575,8 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
 
     # TODO: improve test coverage for abandoned and retry task.
 
+  # TODO: add tests for RemoveTask
+
   def testUpdateTaskAsPendingMerge(self):
     """Tests the UpdateTaskAsPendingMerge function."""
     manager = task_manager.TaskManager()

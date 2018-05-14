@@ -465,6 +465,28 @@ class TaskManager(object):
     # There are no tasks pending any work.
     return False
 
+  def RemoveTask(self, task):
+    """Removes an abandoned task.
+
+    Args:
+      task (Task): task.
+
+    Raises:
+      KeyError: if the task was not abandoned or the task was abandoned and
+          was not retried.
+    """
+    with self._lock:
+      if task.identifier not in self._tasks_abandoned:
+        raise KeyError('Task {0:s} was not abandoned.'.format(task.identifier))
+
+      if not task.has_retry:
+        raise KeyError('Will not remove a task {0:s} without retry task.'.format(
+            task.identifier))
+
+      del self._tasks_abandoned[task.identifier]
+
+      logger.debug('Removed task {0:s}.'.format(task.identifier))
+
   def UpdateTaskAsPendingMerge(self, task):
     """Updates the task manager to reflect the task is ready to be merged.
 

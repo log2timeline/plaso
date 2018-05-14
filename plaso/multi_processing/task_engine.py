@@ -204,6 +204,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         to_merge = self._task_manager.CheckTaskToMerge(task)
         if not to_merge:
           storage_writer.RemoveProcessedTaskStorage(task)
+          self._task_manager.RemoveTask(task)
         else:
           storage_writer.PrepareMergeTaskStorage(task)
           self._task_manager.UpdateTaskAsPendingMerge(task)
