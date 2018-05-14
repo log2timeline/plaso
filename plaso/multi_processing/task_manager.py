@@ -480,8 +480,9 @@ class TaskManager(object):
         raise KeyError('Task {0:s} was not abandoned.'.format(task.identifier))
 
       if not task.has_retry:
-        raise KeyError('Will not remove a task {0:s} without retry task.'.format(
-            task.identifier))
+        raise KeyError(
+            'Will not remove a task {0:s} without retry task.'.format(
+                task.identifier))
 
       del self._tasks_abandoned[task.identifier]
 
