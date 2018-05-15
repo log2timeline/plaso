@@ -204,12 +204,12 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     result = manager._HasTasksPendingRetry()
     self.assertTrue(result)
 
-  def testUpdateLastestProcessingTime(self):
-    """Tests the _UpdateLastestProcessingTime function."""
+  def testUpdateLatestProcessingTime(self):
+    """Tests the _UpdateLatestProcessingTime function."""
     manager = task_manager.TaskManager()
     task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
 
-    manager._UpdateLastestProcessingTime(task)
+    manager._UpdateLatestProcessingTime(task)
 
   def testCheckTaskToMerge(self):
     """Tests the CheckTaskToMerge function."""

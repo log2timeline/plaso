@@ -234,8 +234,7 @@ class TaskManager(object):
     """
     return bool(self._GetTaskPendingRetry())
 
-
-  def _UpdateLastestProcessingTime(self, task):
+  def _UpdateLatestProcessingTime(self, task):
     """Updates the latest processing time of the task manager from the task.
 
     This method does not lock the manager and should be called by a method
@@ -529,7 +528,7 @@ class TaskManager(object):
       self._tasks_pending_merge.PushTask(task)
 
       task.UpdateProcessingTime()
-      self._UpdateLastestProcessingTime(task)
+      self._UpdateLatestProcessingTime(task)
 
   def UpdateTaskAsProcessingByIdentifier(self, task_identifier):
     """Updates the task manager to reflect the task is processing.
@@ -544,7 +543,7 @@ class TaskManager(object):
       task_processing = self._tasks_processing.get(task_identifier, None)
       if task_processing:
         task_processing.UpdateProcessingTime()
-        self._UpdateLastestProcessingTime(task_processing)
+        self._UpdateLatestProcessingTime(task_processing)
         return
 
       task_queued = self._tasks_queued.get(task_identifier, None)
@@ -555,7 +554,7 @@ class TaskManager(object):
         del self._tasks_queued[task_identifier]
 
         task_queued.UpdateProcessingTime()
-        self._UpdateLastestProcessingTime(task_queued)
+        self._UpdateLatestProcessingTime(task_queued)
         return
 
       task_abandoned = self._tasks_abandoned.get(task_identifier, None)
@@ -566,7 +565,7 @@ class TaskManager(object):
             task_identifier))
 
         task_abandoned.UpdateProcessingTime()
-        self._UpdateLastestProcessingTime(task_abandoned)
+        self._UpdateLatestProcessingTime(task_abandoned)
         return
 
       if task_identifier in self._tasks_pending_merge:
