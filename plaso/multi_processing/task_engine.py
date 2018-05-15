@@ -201,8 +201,13 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       try:
         task = self._task_manager.GetProcessedTaskByIdentifier(task_identifier)
 
-        storage_writer.PrepareMergeTaskStorage(task)
-        self._task_manager.UpdateTaskAsPendingMerge(task)
+        to_merge = self._task_manager.CheckTaskToMerge(task)
+        if not to_merge:
+          storage_writer.RemoveProcessedTaskStorage(task)
+          self._task_manager.RemoveTask(task)
+        else:
+          storage_writer.PrepareMergeTaskStorage(task)
+          self._task_manager.UpdateTaskAsPendingMerge(task)
 
       except KeyError:
         logger.error(
