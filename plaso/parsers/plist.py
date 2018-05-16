@@ -6,12 +6,10 @@ Plaso's engine calls PlistParser when it encounters Plist files to be processed.
 
 from __future__ import unicode_literals
 
-import binascii
 
 import biplist
 
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.parsers import interface
 from plaso.parsers import logger
 from plaso.parsers import manager
@@ -83,7 +81,7 @@ class PlistParser(interface.FileObjectParser):
 
     top_level_object = None
     try:
-      top_level_object = self.GetTopLevel(file_object, filename)
+      top_level_object = self.GetTopLevel(file_object)
     except errors.UnableToParseFile:
       raise
 
