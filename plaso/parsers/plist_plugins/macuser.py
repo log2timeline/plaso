@@ -134,7 +134,7 @@ class MacUserPlugin(interface.PlistPlugin):
           try:
             plist_file = biplist.readPlist(fake_file)
           except biplist.InvalidPlistException:
-            plist_file = dict()
+            plist_file = {}
           salted_hash = plist_file.get('SALTED-SHA512-PBKDF2', None)
           if salted_hash:
             password_hash = '$ml${0:d}${1:s}${2:s}'.format(

@@ -12,7 +12,7 @@ class PlistFile(object):
   """Class that defines a plist file.
 
   Attributes:
-    root_key: the plist root key (instance of plistlib._InternalDict).
+    root_key (dict): the plist root key.
   """
 
   def __init__(self):
@@ -24,17 +24,19 @@ class PlistFile(object):
     """Retrieves a plist value by path.
 
     Args:
-      path_segments: a list of path segments strings relative from the root
-                     of the plist.
+      path_segments (list[str]): path segment strings relative to the root
+          of the plist.
 
     Returns:
-      The value of the key specified by the path or None.
+      object: The value of the key specified by the path or None.
     """
     key = self.root_key
     for path_segment in path_segments:
-      # pylint: disable=protected-access
-      if isinstance(key, (dict, plistlib._InternalDict)):
-        key = key.get(path_segment)
+      if isinstance(key, dict):
+        try:
+          key = key[path_segment]
+        except KeyError:
+          return None
 
       elif isinstance(key, list):
         try:
@@ -56,7 +58,7 @@ class PlistFile(object):
     """Reads a plist from a file-like object.
 
     Args:
-      file_object: the file-like object.
+      file_object (dfvfs.FileIO): a file-like object containing plist data.
 
     Raises:
       IOError: if the plist file-like object cannot be read.
