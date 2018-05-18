@@ -44,11 +44,11 @@ class PlistParserTest(test_lib.ParserTestCase):
 
     expected_timestamps = frozenset([
         1345251192528750, 1351827808261762, 1345251268370453,
-        1351818803000000, 1351819298997672, 1351818797324095,
-        1301012201414766, 1302199013524275, 1341957900020116,
-        1350666391557044, 1350666385239661, 1341957896010535])
+        1351818803000000, 1351819298997673, 1351818797324095,
+        1301012201414766, 1302199013524275, 1341957900020117,
+        1350666391557044, 1350666385239662, 1341957896010535])
 
-    self.assertTrue(set(expected_timestamps) == set(timestamps))
+    self.assertEqual(set(expected_timestamps), set(timestamps))
     self.assertEqual(12, len(set(timestamps)))
 
     expected_roots = frozenset([

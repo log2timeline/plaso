@@ -33,7 +33,7 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-artifacts
                       python-backports.lzma
                       python-bencode
-                      python-binplist
+                      python-biplist
                       python-certifi
                       python-chardet
                       python-construct
