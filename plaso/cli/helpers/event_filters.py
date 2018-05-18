@@ -20,7 +20,8 @@ class EventFiltersArgumentsHelper(interface.ArgumentsHelper):
   NAME = 'event_filters'
   DESCRIPTION = 'Event filters command line arguments.'
 
-  _DOCUMENTATION_URL = 'https://github.com/log2timeline/plaso/wiki/Filters'
+  _DOCUMENTATION_URL = (
+      'https://github.com/log2timeline/plaso/wiki/Event-filters')
 
   @classmethod
   def AddArguments(cls, argument_group):
