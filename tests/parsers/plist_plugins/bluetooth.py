@@ -13,7 +13,7 @@ from tests import test_lib as shared_test_lib
 from tests.parsers.plist_plugins import test_lib
 
 
-class TestBtPlugin(test_lib.PlistPluginTestCase):
+class TestBluetoothPlugin(test_lib.PlistPluginTestCase):
   """Tests for the Bluetooth plist plugin."""
 
   @shared_test_lib.skipUnlessHasTestFile(['plist_binary'])
@@ -43,12 +43,12 @@ class TestBtPlugin(test_lib.PlistPluginTestCase):
     self.assertEqual(len(timestamps), 14)
 
     expected_timestamps = frozenset([
-        1341957896010535, 1341957896010535, 1350666385239661, 1350666391557044,
-        1341957900020116, 1302199013524275, 1301012201414766, 1351818797324095,
-        1351818797324095, 1351819298997672, 1351818803000000, 1351827808261762,
+        1341957896010535, 1341957896010535, 1350666385239662, 1350666391557044,
+        1341957900020117, 1302199013524275, 1301012201414766, 1351818797324095,
+        1351818797324095, 1351819298997673, 1351818803000000, 1351827808261762,
         1345251268370453, 1345251192528750])
 
-    self.assertTrue(set(timestamps) == expected_timestamps)
+    self.assertEqual(frozenset(timestamps), expected_timestamps)
 
     # Ensure two paired devices are matched.
     self.assertEqual(len(paired_events), 2)

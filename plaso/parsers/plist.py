@@ -6,12 +6,10 @@ Plaso's engine calls PlistParser when it encounters Plist files to be processed.
 
 from __future__ import unicode_literals
 
-import binascii
 
-from binplist import binplist
+import biplist
 
 from plaso.lib import errors
-from plaso.lib import py2to3
 from plaso.parsers import interface
 from plaso.parsers import logger
 from plaso.parsers import manager
@@ -21,7 +19,7 @@ class PlistParser(interface.FileObjectParser):
   """Parses binary and text plist plist files.
 
   The Plaso engine calls parsers by their Parse() method. This parser's
-  Parse() has GetTopLevel() which deserializes plist files using the binplist
+  Parse() has GetTopLevel() which deserializes plist files using the biplist
   library and calls plugins (PlistPlugin) registered through the
   interface by their Process() to produce event objects.
 
@@ -36,12 +34,11 @@ class PlistParser(interface.FileObjectParser):
 
   _plugin_classes = {}
 
-  def GetTopLevel(self, file_object, file_name=''):
+  def GetTopLevel(self, file_object):
     """Returns the deserialized content of a plist as a dictionary object.
 
     Args:
       file_object (dfvfs.FileIO): a file-like object to parse.
-      file_name (str): name of the file-like object.
 
     Returns:
       dict[str, object]: contents of the plist.
@@ -49,40 +46,13 @@ class PlistParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    # Note that binplist.readPlist does not seek to offset 0.
     try:
-      top_level_object = binplist.readPlist(file_object)
+      top_level_object = biplist.readPlist(file_object)
 
-    except binplist.FormatError as exception:
-      if not isinstance(exception, py2to3.BYTES_TYPE):
-        error_string = str(exception).decode('utf8', errors='replace')
-      else:
-        error_string = exception
-
+    except (biplist.InvalidPlistException,
+            biplist.NotBinaryPlistException) as exception:
       raise errors.UnableToParseFile(
-          'File is not a plist file: {0:s}'.format(error_string))
-
-    except (
-        AttributeError, LookupError, ValueError, binascii.Error) as exception:
-      raise errors.UnableToParseFile(
-          'Unable to parse XML file, reason: {0:s}'.format(exception))
-
-    except OverflowError as exception:
-      raise errors.UnableToParseFile(
-          'Unable to parse: {0:s} with error: {1!s}'.format(
-              file_name, exception))
-
-    if not top_level_object:
-      raise errors.UnableToParseFile(
-          'File is not a plist: missing top level object')
-
-    # Since we are using readPlist from binplist now instead of manually
-    # opening  the binary plist file we loose this option. Keep it commented
-    # out for now but this needs to be tested a bit more.
-    # TODO: Re-evaluate if we can delete this or still require it.
-    #if bpl.is_corrupt:
-    #  logger.warning(
-    #      'Corruption detected in binary plist: {0:s}'.format(file_name))
+          'Unable to parse plist with error: {0!s}'.format(exception))
 
     return top_level_object
 
@@ -111,7 +81,7 @@ class PlistParser(interface.FileObjectParser):
 
     top_level_object = None
     try:
-      top_level_object = self.GetTopLevel(file_object, filename)
+      top_level_object = self.GetTopLevel(file_object)
     except errors.UnableToParseFile:
       raise
 
