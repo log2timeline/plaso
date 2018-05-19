@@ -1,4 +1,4 @@
-0!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """This file contains tests for the task manager."""
 
