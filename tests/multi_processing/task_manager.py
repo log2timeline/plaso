@@ -757,6 +757,8 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
   def testUpdateTaskAsProcessingByIdentifier(self):
     """Tests the UpdateTaskAsProcessingByIdentifier function."""
     manager = task_manager.TaskManager()
+
+    # Test with queued task.
     task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
     self.assertIsNone(task.last_processing_time)
 
@@ -791,7 +793,24 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     # Check if the last processing time was updated.
     self.assertGreater(task.last_processing_time, last_processing_time)
 
-    # TODO: test abandoned task
+    # Test with abandoned task.
+    task.last_processing_time -= (
+        2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
+
+    manager._AbandonInactiveProcessingTasks()
+
+    self.assertEqual(len(manager._tasks_queued), 0)
+    self.assertEqual(len(manager._tasks_processing), 0)
+    self.assertEqual(len(manager._tasks_pending_merge), 0)
+    self.assertEqual(len(manager._tasks_abandoned), 1)
+
+    # Indicate to the task manager that the task is still processing.
+    manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
+
+    self.assertEqual(len(manager._tasks_queued), 0)
+    self.assertEqual(len(manager._tasks_processing), 1)
+    self.assertEqual(len(manager._tasks_pending_merge), 0)
+    self.assertEqual(len(manager._tasks_abandoned), 0)
 
     # Indicate to the task manager that the task is pending merge.
     task.storage_file_size = 10
