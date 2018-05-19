@@ -12,8 +12,8 @@ matrix:
 install:
 - cmd: '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x86 /release'
 - ps: "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12"
-- ps: (new-object net.webclient).DownloadFile('https://www.sqlite.org/2018/sqlite-dll-win32-x86-3220000.zip', 'C:\Projects\sqlite-dll-win32-x86-3220000.zip')
-- ps: $Output = Invoke-Expression -Command "& 'C:\\Program Files\\7-Zip\\7z.exe' -y -oC:\\Projects\\ x C:\\Projects\\sqlite-dll-win32-x86-3220000.zip 2>&1"
+- ps: (new-object net.webclient).DownloadFile('https://www.sqlite.org/2018/sqlite-dll-win32-x86-3230100.zip', 'C:\Projects\sqlite-dll-win32-x86-3230100.zip')
+- ps: $Output = Invoke-Expression -Command "& 'C:\\Program Files\\7-Zip\\7z.exe' -y -oC:\\Projects\\ x C:\\Projects\\sqlite-dll-win32-x86-3230100.zip 2>&1"
 - cmd: copy C:\Projects\sqlite3.dll C:\Python27\DLLs\
 - cmd: "%PYTHON%\\python.exe -m pip install --upgrade pip"
 - cmd: "%PYTHON%\\Scripts\\pip.exe install pywin32 WMI"
