@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+0!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """This file contains tests for the task manager."""
 
@@ -617,7 +617,42 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
 
     # TODO: improve test coverage for abandoned and retry task.
 
-  # TODO: add tests for RemoveTask
+  def testRemoveTask(self):
+    """Tests the RemoveTask function."""
+    manager = task_manager.TaskManager()
+
+    # Test with queued task.
+    task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
+    task.storage_file_size = 10
+
+    self.assertEqual(len(manager._tasks_queued), 1)
+    self.assertEqual(len(manager._tasks_processing), 0)
+    self.assertEqual(len(manager._tasks_pending_merge), 0)
+    self.assertEqual(len(manager._tasks_abandoned), 0)
+
+    with self.assertRaises(KeyError):
+      manager.RemoveTask(task)
+
+    # Test with abandoned task that was not retried (has no retry task).
+    manager._AbandonQueuedTasks()
+
+    self.assertEqual(len(manager._tasks_queued), 0)
+    self.assertEqual(len(manager._tasks_processing), 0)
+    self.assertEqual(len(manager._tasks_pending_merge), 0)
+    self.assertEqual(len(manager._tasks_abandoned), 1)
+
+    with self.assertRaises(KeyError):
+      manager.RemoveTask(task)
+
+    # Test with abandoned task that was retried (has retry task).
+    task.has_retry = True
+
+    manager.RemoveTask(task)
+
+    self.assertEqual(len(manager._tasks_queued), 0)
+    self.assertEqual(len(manager._tasks_processing), 0)
+    self.assertEqual(len(manager._tasks_pending_merge), 0)
+    self.assertEqual(len(manager._tasks_abandoned), 0)
 
   def testUpdateTaskAsPendingMerge(self):
     """Tests the UpdateTaskAsPendingMerge function."""
