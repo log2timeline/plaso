@@ -166,9 +166,6 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_queued), 1)
     self.assertEqual(len(manager._tasks_abandoned), 0)
 
-    manager._latest_task_processing_time -= (
-        2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
-
     manager._AbandonQueuedTasks()
 
     self.assertEqual(len(manager._tasks_queued), 0)
@@ -450,7 +447,52 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     result_tasks = manager.GetFailedTasks()
     self.assertEqual(result_tasks, [task])
 
-  # TODO: add tests for GetProcessedTaskByIdentifier
+  def testGetProcessedTaskByIdentifier(self):
+    """Tests the GetProcessedTaskByIdentifier function."""
+    manager = task_manager.TaskManager()
+
+    # Test with queued task.
+    task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
+    task.storage_file_size = 10
+
+    self.assertEqual(len(manager._tasks_queued), 1)
+    self.assertEqual(len(manager._tasks_processing), 0)
+    self.assertEqual(len(manager._tasks_pending_merge), 0)
+    self.assertEqual(len(manager._tasks_abandoned), 0)
+
+    processed_task = manager.GetProcessedTaskByIdentifier(task.identifier)
+    self.assertEqual(processed_task, task)
+
+    # Test with processing task.
+    manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
+
+    self.assertEqual(len(manager._tasks_queued), 0)
+    self.assertEqual(len(manager._tasks_processing), 1)
+    self.assertEqual(len(manager._tasks_pending_merge), 0)
+    self.assertEqual(len(manager._tasks_abandoned), 0)
+
+    processed_task = manager.GetProcessedTaskByIdentifier(task.identifier)
+    self.assertEqual(processed_task, task)
+
+    # Test with abandoned task.
+    task.last_processing_time -= (
+        2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
+
+    manager._AbandonInactiveProcessingTasks()
+
+    self.assertEqual(len(manager._tasks_queued), 0)
+    self.assertEqual(len(manager._tasks_processing), 0)
+    self.assertEqual(len(manager._tasks_pending_merge), 0)
+    self.assertEqual(len(manager._tasks_abandoned), 1)
+
+    processed_task = manager.GetProcessedTaskByIdentifier(task.identifier)
+    self.assertEqual(processed_task, task)
+
+    # Test status of task is unknown.
+    task = tasks.Task()
+
+    with self.assertRaises(KeyError):
+      manager.GetProcessedTaskByIdentifier(task.identifier)
 
   def testGetStatusInformation(self):
     """Tests the GetStatusInformation function."""
@@ -628,9 +670,6 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_processing), 0)
     self.assertEqual(len(manager._tasks_pending_merge), 2)
     self.assertEqual(len(manager._tasks_abandoned), 0)
-
-    manager._latest_task_processing_time -= (
-        2 * manager._TASK_INACTIVE_TIME * definitions.MICROSECONDS_PER_SECOND)
 
     manager._AbandonQueuedTasks()
 
