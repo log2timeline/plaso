@@ -12,6 +12,7 @@ try:
 except ImportError:
   hpy = None
 
+from plaso.containers import tasks
 from plaso.engine import configurations
 from plaso.engine import processing_status
 from plaso.engine import profilers
@@ -215,6 +216,28 @@ class TaskQueueProfilerTest(shared_test_lib.BaseTestCase):
 
       for _ in range(5):
         test_profiler.Sample(task_status)
+        time.sleep(0.01)
+
+      test_profiler.Stop()
+
+
+class TasksProfilerTest(shared_test_lib.BaseTestCase):
+  """Tests for the tasks profiler."""
+
+  def testSample(self):
+    """Tests the Sample function."""
+    profiling_configuration = configurations.ProfilingConfiguration()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      profiling_configuration.directory = temp_directory
+
+      test_profiler = profilers.TasksProfiler('test', profiling_configuration)
+
+      test_profiler.Start()
+
+      for _ in range(5):
+        task = tasks.Task()
+        test_profiler.Sample(task, 'queued')
         time.sleep(0.01)
 
       test_profiler.Stop()

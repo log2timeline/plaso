@@ -83,6 +83,11 @@ class ProfilingConfigurationTest(unittest.TestCase):
     configuration = configurations.ProfilingConfiguration()
     self.assertFalse(configuration.HaveProfileTaskQueue())
 
+  def testHaveProfileTasks(self):
+    """Tests the HaveProfileTasks function."""
+    configuration = configurations.ProfilingConfiguration()
+    self.assertFalse(configuration.HaveProfileTasks())
+
 
 class ProcessingConfigurationTest(unittest.TestCase):
   """Tests the processing configuration settings."""

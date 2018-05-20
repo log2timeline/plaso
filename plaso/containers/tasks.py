@@ -27,7 +27,7 @@ class Task(interface.AttributeContainer):
         task was created, False otherwise.
     identifier (str): unique identifier of the task.
     last_processing_time (int): the last time the task was marked as being
-      processed as number of milliseconds since January 1, 1970, 00:00:00 UTC.
+        processed as number of milliseconds since January 1, 1970, 00:00:00 UTC.
     merge_priority (int): priority used for the task storage file merge, where
         a lower value indicates a higher priority to merge.
     path_spec (dfvfs.PathSpec): path specification.

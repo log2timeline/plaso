@@ -671,6 +671,10 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_pending_merge), 0)
     self.assertEqual(len(manager._tasks_abandoned), 0)
 
+  # TODO: add tests for SampleTaskStatus
+  # TODO: add tests for StartProfiling
+  # TODO: add tests for StopProfiling
+
   def testUpdateTaskAsPendingMerge(self):
     """Tests the UpdateTaskAsPendingMerge function."""
     manager = task_manager.TaskManager()

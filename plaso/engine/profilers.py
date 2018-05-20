@@ -259,3 +259,23 @@ class TaskQueueProfiler(SampleFileProfiler):
         tasks_status.number_of_abandoned_tasks,
         tasks_status.total_number_of_tasks)
     self._sample_file.write(sample)
+
+
+class TasksProfiler(SampleFileProfiler):
+  """The tasks profiler."""
+
+  _FILENAME_PREFIX = 'tasks'
+
+  _FILE_HEADER = 'Time\tIdentifier\tStatus\n'
+
+  def Sample(self, task, status):
+    """Takes a sample of the status of a task for profiling.
+
+    Args:
+      task (Task): a task.
+      status (str): status.
+    """
+    sample_time = time.time()
+    sample = '{0:f}\t{1:s}\t{2:s}\n'.format(
+        sample_time, task.identifier, status)
+    self._sample_file.write(sample)

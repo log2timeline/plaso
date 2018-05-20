@@ -201,10 +201,15 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       try:
         task = self._task_manager.GetProcessedTaskByIdentifier(task_identifier)
 
+        self._task_manager.SampleTaskStatus(task, 'processed')
+
         to_merge = self._task_manager.CheckTaskToMerge(task)
         if not to_merge:
           storage_writer.RemoveProcessedTaskStorage(task)
+
           self._task_manager.RemoveTask(task)
+          self._task_manager.SampleTaskStatus(task, 'removed_processed')
+
         else:
           storage_writer.PrepareMergeTaskStorage(task)
           self._task_manager.UpdateTaskAsPendingMerge(task)
@@ -235,10 +240,16 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._merge_task_on_hold = self._merge_task
           self._storage_merge_reader_on_hold = self._storage_merge_reader
 
+          self._task_manager.SampleTaskStatus(
+              self._merge_task_on_hold, 'merge_on_hold')
+
         self._merge_task = task
         try:
           self._storage_merge_reader = storage_writer.StartMergeTaskStorage(
               task)
+
+          self._task_manager.SampleTaskStatus(task, 'merge_started')
+
         except IOError as exception:
           logger.error((
               'Unable to merge results of task: {0:s} '
@@ -260,20 +271,24 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       if fully_merged:
         try:
           self._task_manager.CompleteTask(self._merge_task)
+
         except KeyError as exception:
           logger.error(
               'Unable to complete task: {0:s} with error: {1!s}'.format(
                   self._merge_task.identifier, exception))
 
-        if self._storage_merge_reader_on_hold:
+        if not self._storage_merge_reader_on_hold:
+          self._merge_task = None
+          self._storage_merge_reader = None
+        else:
           self._merge_task = self._merge_task_on_hold
           self._storage_merge_reader = self._storage_merge_reader_on_hold
 
           self._merge_task_on_hold = None
           self._storage_merge_reader_on_hold = None
-        else:
-          self._merge_task = None
-          self._storage_merge_reader = None
+
+          self._task_manager.SampleTaskStatus(
+              self._merge_task, 'merge_resumed')
 
       self._status = definitions.PROCESSING_STATUS_RUNNING
       self._number_of_produced_errors = storage_writer.number_of_errors
@@ -421,11 +436,18 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           if self._guppy_memory_profiler:
             self._guppy_memory_profiler.Sample()
 
-        if task and self._ScheduleTask(task):
-          logger.debug(
-              'Scheduled task {0:s} for path specification {1:s}'.format(
-                  task.identifier, task.path_spec.comparable))
-          task = None
+        if task:
+          if self._ScheduleTask(task):
+            logger.debug(
+                'Scheduled task {0:s} for path specification {1:s}'.format(
+                    task.identifier, task.path_spec.comparable))
+
+            self._task_manager.SampleTaskStatus(task, 'scheduled')
+
+            task = None
+
+          else:
+            self._task_manager.SampleTaskStatus(task, 'schedule_attempted')
 
         self._MergeTaskStorage(storage_writer)
 
@@ -769,6 +791,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._task_queue_port = self._task_queue.port
 
     self._StartProfiling(self._processing_configuration.profiling)
+    self._task_manager.StartProfiling(
+        self._processing_configuration.profiling, self._name)
 
     if self._serializers_profiler:
       storage_writer.SetSerializersProfiler(self._serializers_profiler)
@@ -818,6 +842,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       if self._storage_profiler:
         storage_writer.SetStorageProfiler(None)
 
+      self._task_manager.StopProfiling()
       self._StopProfiling()
 
     try:
