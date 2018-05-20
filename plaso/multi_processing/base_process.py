@@ -58,6 +58,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     self._serializers_profiler = None
     self._status_is_running = False
     self._storage_profiler = None
+    self._tasks_profiler = None
 
     if self._processing_configuration:
       self._debug_output = self._processing_configuration.debug_output
@@ -204,6 +205,10 @@ class MultiProcessBaseProcess(multiprocessing.Process):
           self._name, configuration)
       self._storage_profiler.Start()
 
+    if configuration.HaveProfileTasks():
+      self._tasks_profiler = profilers.TasksProfiler(self._name, configuration)
+      self._tasks_profiler.Start()
+
   def _StopProcessStatusRPCServer(self):
     """Stops the process status RPC server."""
     if not self._rpc_server:
@@ -242,6 +247,10 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     if self._storage_profiler:
       self._storage_profiler.Stop()
       self._storage_profiler = None
+
+    if self._tasks_profiler:
+      self._tasks_profiler.Stop()
+      self._tasks_profiler = None
 
   def _WaitForStatusNotRunning(self):
     """Waits for the status is running to change to false."""

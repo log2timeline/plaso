@@ -26,7 +26,8 @@ class ProfilingArgumentsHelper(interface.ArgumentsHelper):
       'processing': 'Profile CPU time of processing phases',
       'serializers': 'Profile CPU time of serialization',
       'storage': 'Profile storage reads and writes',
-      'task_queue': 'Profile task queue status (multi-processing only)'}
+      'task_queue': 'Profile task queue status (multi-processing only)',
+      'tasks': 'Profile the status of tasks (multi-processing only)'}
 
   if engine.BaseEngine.SupportsGuppyMemoryProfiling():
     PROFILERS_INFORMATION['guppy'] = (
@@ -94,7 +95,6 @@ class ProfilingArgumentsHelper(interface.ArgumentsHelper):
         unsupported_profilers = ', '.join(unsupported_profilers)
         raise errors.BadConfigOption(
             'Unsupported profilers: {0:s}'.format(unsupported_profilers))
-
 
     profiling_directory = getattr(options, 'profiling_directory', None)
     if profiling_directory and not os.path.isdir(profiling_directory):

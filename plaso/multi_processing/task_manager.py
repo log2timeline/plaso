@@ -13,6 +13,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from plaso.containers import tasks
 from plaso.lib import definitions
 from plaso.engine import processing_status
+from plaso.engine import profilers
 from plaso.multi_processing import logger
 
 
@@ -163,6 +164,8 @@ class TaskManager(object):
     # being processed by a worker.
     self._tasks_processing = {}
 
+    self._tasks_profiler = None
+
     # TODO: implement a limit on the number of tasks.
     self._total_number_of_tasks = 0
 
@@ -180,6 +183,8 @@ class TaskManager(object):
         if task.last_processing_time < inactive_time:
           logger.debug('Abandoned processing task: {0:s}.'.format(
               task_identifier))
+
+          self.SampleTaskStatus(task, 'abandoned_processing')
 
           self._tasks_abandoned[task_identifier] = task
           del self._tasks_processing[task_identifier]
@@ -291,6 +296,8 @@ class TaskManager(object):
       self._tasks_queued[retry_task.identifier] = retry_task
       self._total_number_of_tasks += 1
 
+      self.SampleTaskStatus(retry_task, 'created_retry')
+
       return retry_task
 
   # TODO: add support for task types.
@@ -311,6 +318,8 @@ class TaskManager(object):
       self._tasks_queued[task.identifier] = task
       self._total_number_of_tasks += 1
 
+      self.SampleTaskStatus(task, 'created')
+
     return task
 
   def CompleteTask(self, task):
@@ -327,6 +336,8 @@ class TaskManager(object):
     with self._lock:
       if task.identifier not in self._tasks_merging:
         raise KeyError('Task {0:s} was not merging.'.format(task.identifier))
+
+      self.SampleTaskStatus(task, 'completed')
 
       del self._tasks_merging[task.identifier]
 
@@ -487,6 +498,37 @@ class TaskManager(object):
 
       logger.debug('Removed task {0:s}.'.format(task.identifier))
 
+  def SampleTaskStatus(self, task, status):
+    """Takes a sample of the status of the task for profiling.
+
+    Args:
+      task (Task): a task.
+      status (str): status.
+    """
+    if self._tasks_profiler:
+      self._tasks_profiler.Sample(task, status)
+
+  def StartProfiling(self, configuration, identifier):
+    """Starts profiling.
+
+    Args:
+      configuration (ProfilingConfiguration): profiling configuration.
+      identifier (str): identifier of the profiling session used to create
+          the sample filename.
+    """
+    if not configuration:
+      return
+
+    if configuration.HaveProfileTasks():
+      self._tasks_profiler = profilers.TasksProfiler(identifier, configuration)
+      self._tasks_profiler.Start()
+
+  def StopProfiling(self):
+    """Stops profiling."""
+    if self._tasks_profiler:
+      self._tasks_profiler.Stop()
+      self._tasks_profiler = None
+
   def UpdateTaskAsPendingMerge(self, task):
     """Updates the task manager to reflect the task is ready to be merged.
 
@@ -526,6 +568,8 @@ class TaskManager(object):
         del self._tasks_abandoned[task.identifier]
 
       self._tasks_pending_merge.PushTask(task)
+
+      self.SampleTaskStatus(task, 'pending_merge')
 
       task.UpdateProcessingTime()
       self._UpdateLatestProcessingTime(task)
