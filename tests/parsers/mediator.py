@@ -181,17 +181,17 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer = fake_writer.FakeStorageWriter(session)
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
-    event = events.EventObject()
+    event_with_timestamp = events.EventObject()
+    event_with_timestamp.timestamp = fake_time.FakeTime()
     event_data = events.EventData()
 
-    with self.assertRaises(errors.InvalidEvent):
-      parsers_mediator.ProduceEventWithEventData(event, event_data)
-
-    event.timestamp = fake_time.FakeTime()
-
-    parsers_mediator.ProduceEventWithEventData(event, event_data)
-
+    parsers_mediator.ProduceEventWithEventData(event_with_timestamp, event_data)
     self.assertEqual(1, storage_writer.number_of_events)
+
+    event_without_timestamp = events.EventObject()
+    with self.assertRaises(errors.InvalidEvent):
+      parsers_mediator.ProduceEventWithEventData(
+          event_without_timestamp, event_data)
 
   # TODO: add tests for ProduceExtractionError.
   # TODO: add tests for RemoveEventAttribute.
