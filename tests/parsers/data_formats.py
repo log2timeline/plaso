@@ -1,0 +1,177 @@
+# -*- coding: utf-8 -*-
+"""Tests for binary data format and file."""
+
+from __future__ import unicode_literals
+
+import io
+import unittest
+
+from dtfabric import errors as dtfabric_errors
+from dtfabric.runtime import data_maps as dtfabric_data_maps
+from dtfabric.runtime import fabric as dtfabric_fabric
+
+from plaso.lib import errors
+from plaso.parsers import data_formats
+
+from tests import test_lib
+
+
+class ErrorBytesIO(io.BytesIO):
+  """Bytes IO that errors."""
+
+  # The following methods are part of the file-like object interface.
+  # pylint: disable=invalid-name
+
+  def read(self, size=None):  # pylint: disable=unused-argument
+    """Reads bytes.
+
+    Args:
+      size (Optional[int]): number of bytes to read, where None represents
+          all remaining bytes.
+
+    Returns:
+      bytes: bytes read.
+
+    Raises:
+      IOError: for testing.
+    """
+    raise IOError('Unable to read for testing purposes.')
+
+
+class ErrorDataTypeMap(dtfabric_data_maps.DataTypeMap):
+  """Data type map that errors."""
+
+  def FoldByteStream(self, unused_mapped_value, **unused_kwargs):
+    """Folds the data type into a byte stream.
+
+    Args:
+      mapped_value (object): mapped value.
+
+    Returns:
+      bytes: byte stream.
+
+    Raises:
+      FoldingError: if the data type definition cannot be folded into
+          the byte stream.
+    """
+    raise dtfabric_errors.FoldingError(
+        'Unable to fold to byte stream for testing purposes.')
+
+  def MapByteStream(self, unused_byte_stream, **unused_kwargs):
+    """Maps the data type on a byte stream.
+
+    Args:
+      byte_stream (bytes): byte stream.
+
+    Returns:
+      object: mapped value.
+
+    Raises:
+      dtfabric.MappingError: if the data type definition cannot be mapped on
+          the byte stream.
+    """
+    raise dtfabric_errors.MappingError(
+        'Unable to map byte stream for testing purposes.')
+
+
+class BinaryDataFormatTest(test_lib.BaseTestCase):
+  """Binary data format tests."""
+
+  # pylint: disable=protected-access
+
+  _DATA_TYPE_FABRIC_DEFINITION = b'\n'.join([
+      b'name: uint32',
+      b'type: integer',
+      b'attributes:',
+      b'  format: unsigned',
+      b'  size: 4',
+      b'  units: bytes',
+      b'---',
+      b'name: point3d',
+      b'type: structure',
+      b'attributes:',
+      b'  byte_order: little-endian',
+      b'members:',
+      b'- name: x',
+      b'  data_type: uint32',
+      b'- name: y',
+      b'  data_type: uint32',
+      b'- name: z',
+      b'  data_type: uint32'])
+
+  _DATA_TYPE_FABRIC = dtfabric_fabric.DataTypeFabric(
+      yaml_definition=_DATA_TYPE_FABRIC_DEFINITION)
+
+  _POINT3D = _DATA_TYPE_FABRIC.CreateDataTypeMap('point3d')
+
+  _POINT3D_SIZE = _POINT3D.GetByteSize()
+
+  def testReadData(self):
+    """Tests the _ReadData function."""
+    parser = data_formats.DataFormatParser()
+
+    file_object = io.BytesIO(
+        b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00')
+
+    parser._ReadData(file_object, 0, self._POINT3D_SIZE, 'point3d')
+
+    # Test with missing file-like object.
+    with self.assertRaises(ValueError):
+      parser._ReadData(None, 0, self._POINT3D_SIZE, 'point3d')
+
+    # Test with file-like object with insufficient data.
+    file_object = io.BytesIO(
+        b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00')
+
+    with self.assertRaises(errors.ParseError):
+      parser._ReadData(file_object, 0, self._POINT3D_SIZE, 'point3d')
+
+    # Test with file-like object that raises an IOError.
+    file_object = ErrorBytesIO(
+        b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00')
+
+    with self.assertRaises(errors.ParseError):
+      parser._ReadData(file_object, 0, self._POINT3D_SIZE, 'point3d')
+
+  def testReadStructure(self):
+    """Tests the _ReadStructure function."""
+    parser = data_formats.DataFormatParser()
+
+    file_object = io.BytesIO(
+        b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00')
+
+    parser._ReadStructure(
+        file_object, 0, self._POINT3D_SIZE, self._POINT3D, 'point3d')
+
+  # TODO: add tests for _ReadStructureWithSizeHint.
+
+  def testReadStructureFromByteStream(self):
+    """Tests the _ReadStructureFromByteStream function."""
+    parser = data_formats.DataFormatParser()
+
+    parser._ReadStructureFromByteStream(
+        b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00', 0,
+        self._POINT3D, 'point3d')
+
+    # Test with missing byte stream.
+    with self.assertRaises(ValueError):
+      parser._ReadStructureFromByteStream(
+          None, 0, self._POINT3D, 'point3d')
+
+    # Test with missing data map type.
+    with self.assertRaises(ValueError):
+      parser._ReadStructureFromByteStream(
+          b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00', 0, None,
+          'point3d')
+
+    # Test with data type map that raises an dtfabric.MappingError.
+    data_type_map = ErrorDataTypeMap(None)
+
+    with self.assertRaises(errors.ParseError):
+      parser._ReadStructureFromByteStream(
+          b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00', 0,
+          data_type_map, 'point3d')
+
+
+if __name__ == '__main__':
+  unittest.main()
