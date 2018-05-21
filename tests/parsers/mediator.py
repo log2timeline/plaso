@@ -176,6 +176,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
   # TODO: add tests for ProduceEventSource.
 
   def testProduceEventWithEventData(self):
+    """Tests the ProduceEventWithEventData method."""
     session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter(session)
     parsers_mediator = self._CreateParserMediator(storage_writer)
