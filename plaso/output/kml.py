@@ -49,7 +49,7 @@ class KMLOutputModule(interface.LinearOutputModule):
           point_xml_element, 'coordinates')
       coordinates_xml_element.text = '{0!s},{1!s}'.format(longitude, latitude)
 
-      # Note that ElementTree.tostring() will appopriately escape
+      # Note that ElementTree.tostring() will appropriately escape
       # the input data.
       xml_string = ElementTree.tostring(placemark_xml_element)
 

@@ -195,7 +195,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
     Args:
       event (EventObject): event.
-      force_flush (bool): True if buffered event docuements should be inserted
+      force_flush (bool): True if buffered event documents should be inserted
           into Elasticsearch.
     """
     if event:

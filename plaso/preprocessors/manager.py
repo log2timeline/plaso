@@ -249,7 +249,7 @@ class PreprocessPluginsManager(object):
     """Registers preprocess plugin classes.
 
     Args:
-      plugin_classes (list[type]): preprocess plugin classses.
+      plugin_classes (list[type]): preprocess plugin classes.
 
     Raises:
       KeyError: if plugin class is already set for the corresponding name.

@@ -30,7 +30,7 @@ class SRUMNetworkDataUsageEventFormatter(interface.ConditionalEventFormatter):
       'Bytes received: {bytes_received}',
       'Bytes sent: {bytes_sent}',
       'Interface LUID: {interface_luid}',
-      'User identifer: {user_identifier}']
+      'User identifier: {user_identifier}']
 
   FORMAT_STRING_SHORT_PIECES = [
       '{application}']
