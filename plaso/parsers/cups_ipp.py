@@ -188,7 +188,7 @@ class CupsIppParser(data_formats.DataFormatParser):
       file_offset = file_object.tell()
       try:
         value = self._ReadStructureFromByteStream(
-            attribute.value_data, file_offset, self._INTEGER_VALUE, 
+            attribute.value_data, file_offset, self._INTEGER_VALUE,
             'integer value')
       except (ValueError, errors.ParseError) as exception:
         raise errors.ParseError(
@@ -297,7 +297,8 @@ class CupsIppParser(data_formats.DataFormatParser):
       raise errors.UnableToParseFile(
           'Unable to parse CUPS IPP header with error: {0!s}'.format(exception))
 
-    format_version = '{0:d}.{1:d}'.format( header.major_version, header.minor_version)
+    format_version = '{0:d}.{1:d}'.format(
+        header.major_version, header.minor_version)
     if format_version not in self._SUPPORTED_FORMAT_VERSIONS:
       raise errors.UnableToParseFile(
           '[{0:s}] Unsupported format version {1:s}.'.format(
