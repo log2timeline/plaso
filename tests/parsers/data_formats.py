@@ -97,7 +97,19 @@ class BinaryDataFormatTest(test_lib.BaseTestCase):
       b'- name: y',
       b'  data_type: uint32',
       b'- name: z',
-      b'  data_type: uint32'])
+      b'  data_type: uint32',
+      b'---',
+      b'name: shape3d',
+      b'type: structure',
+      b'attributes:',
+      b'  byte_order: little-endian',
+      b'members:',
+      b'- name: number_of_points',
+      b'  data_type: uint32',
+      b'- name: points',
+      b'  type: sequence',
+      b'  element_data_type: point3d',
+      b'  number_of_elements: shape3d.number_of_points'])
 
   _DATA_TYPE_FABRIC = dtfabric_fabric.DataTypeFabric(
       yaml_definition=_DATA_TYPE_FABRIC_DEFINITION)
@@ -105,6 +117,8 @@ class BinaryDataFormatTest(test_lib.BaseTestCase):
   _POINT3D = _DATA_TYPE_FABRIC.CreateDataTypeMap('point3d')
 
   _POINT3D_SIZE = _POINT3D.GetByteSize()
+
+  _SHAPE3D = _DATA_TYPE_FABRIC.CreateDataTypeMap('shape3d')
 
   def testReadData(self):
     """Tests the _ReadData function."""
@@ -143,7 +157,18 @@ class BinaryDataFormatTest(test_lib.BaseTestCase):
     parser._ReadStructure(
         file_object, 0, self._POINT3D_SIZE, self._POINT3D, 'point3d')
 
-  # TODO: add tests for _ReadStructureWithSizeHint.
+  def testReadStructureWithSizeHint(self):
+    """Tests the _ReadStructureWithSizeHint function."""
+    parser = data_formats.DataFormatParser()
+
+    file_object = io.BytesIO(
+        b'\x03\x00\x00\x00'
+        b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00'
+        b'\x04\x00\x00\x00\x05\x00\x00\x00\x06\x00\x00\x00'
+        b'\x06\x00\x00\x00\x07\x00\x00\x00\x08\x00\x00\x00')
+
+    parser._ReadStructureWithSizeHint(
+        file_object, 0, self._SHAPE3D, 'shape3d')
 
   def testReadStructureFromByteStream(self):
     """Tests the _ReadStructureFromByteStream function."""
