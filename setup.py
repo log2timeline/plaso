@@ -203,6 +203,7 @@ setup(
     include_package_data=True,
     package_data={
         'plaso.parsers': ['*.yaml'],
+        'plaso.parsers.winreg_plugins': ['*.yaml'],
     },
     scripts=glob.glob(os.path.join('tools', '*.py')),
     data_files=[
