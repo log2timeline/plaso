@@ -475,7 +475,7 @@ class ParserMediator(object):
     Raises:
       InvalidEvent: if the event has no timestamp set.
     """
-    if not event.timestamp:
+    if event.timestamp is None:
       raise errors_lib.InvalidEvent('Event must have a timestamp set.')
 
     event_data_hash = event_data.GetAttributeValuesHash()
