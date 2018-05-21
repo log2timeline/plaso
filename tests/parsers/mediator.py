@@ -6,11 +6,15 @@ from __future__ import unicode_literals
 
 import unittest
 
+from dfdatetime import fake_time
+
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.containers import events
 from plaso.containers import sessions
+from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.engine import configurations
 from plaso.storage.fake import writer as fake_writer
@@ -169,10 +173,25 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
   # TODO: add tests for GetParserChain.
   # TODO: add tests for PopFromParserChain.
   # TODO: add tests for ProcessEvent.
-  # TODO: add tests for ProduceEvent.
-  # TODO: add tests for ProduceEvents.
   # TODO: add tests for ProduceEventSource.
-  # TODO: add tests for ProduceEventWithEventData.
+
+  def testProduceEventWithEventData(self):
+    session = sessions.Session()
+    storage_writer = fake_writer.FakeStorageWriter(session)
+    parsers_mediator = self._CreateParserMediator(storage_writer)
+
+    event = events.EventObject()
+    event_data = events.EventData()
+
+    with self.assertRaises(errors.InvalidEvent):
+      parsers_mediator.ProduceEventWithEventData(event, event_data)
+
+    event.timestamp = fake_time.FakeTime()
+
+    parsers_mediator.ProduceEventWithEventData(event, event_data)
+
+    self.assertEqual(1, storage_writer.number_of_events)
+
   # TODO: add tests for ProduceExtractionError.
   # TODO: add tests for RemoveEventAttribute.
 
