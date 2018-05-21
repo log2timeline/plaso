@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The CUPS IPP Control Files Parser.
+"""The CUPS IPP files parser.
 
 CUPS IPP version 1.0:
 * http://tools.ietf.org/html/rfc2565
@@ -17,24 +17,22 @@ CUPS IPP version 1.1:
 
 CUPS IPP version 2.0:
 * N/A
-
-Also see:
-* https://github.com/libyal/assorted/blob/master/documentation/
-  CUPS%20Internet%20Printing%20Protocol%20format.asciidoc
 """
 
 from __future__ import unicode_literals
 
-import construct
+import os
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import rfc2579_date_time as dfdatetime_rfc2579_date_time
+
+from dtfabric.runtime import fabric as dtfabric_fabric
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import interface
+from plaso.parsers import data_formats
 from plaso.parsers import logger
 from plaso.parsers import manager
 
@@ -81,105 +79,39 @@ class CupsIppEventData(events.EventData):
     self.user = None
 
 
-class CupsIppParser(interface.FileObjectParser):
-  """Parser for CUPS IPP files. """
+class CupsIppParser(data_formats.DataFormatParser):
+  """Parser for CUPS IPP files."""
 
   NAME = 'cups_ipp'
   DESCRIPTION = 'Parser for CUPS IPP files.'
 
-  # INFO:
-  # For each file, we have only one document with three different timestamps:
-  # Created, process and finished.
-  # Format:
-  # [HEADER: MAGIC + KNOWN_TYPE][GROUP A]...[GROUP Z][GROUP_END: 0x03]
-  # GROUP: [GROUP ID][PAIR A]...[PAIR Z] where [PAIR: NAME + VALUE]
-  #   GROUP ID: [1byte ID]
-  #   PAIR: [TagID][\x00][Name][Value])
-  #     TagID: 1 byte integer with the type of "Value".
-  #     Name: [Length][Text][\00]
-  #       Name can be empty when the name has more than one value.
-  #       Example: family name "lopez mata" with more than one surname.
-  #       Type_Text + [0x06, family, 0x00] + [0x05, lopez, 0x00] +
-  #       Type_Text + [0x00, 0x00] + [0x04, mata, 0x00]
-  #     Value: can be integer, boolean, or text provided by TagID.
-  #       If boolean, Value: [\x01][0x00(False)] or [\x01(True)]
-  #       If integer, Value: [\x04][Integer]
-  #       If text,    Value: [Length text][Text][\00]
+  _DATA_TYPE_FABRIC_DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'cups_ipp.yaml')
 
-  # Magic number that identify the CUPS IPP supported version.
-  IPP_MAJOR_VERSION = 2
-  IPP_MINOR_VERSION = 0
-  # Supported Operation ID.
-  IPP_OP_ID = 5
+  with open(_DATA_TYPE_FABRIC_DEFINITION_FILE, 'rb') as file_object:
+    _DATA_TYPE_FABRIC_DEFINITION = file_object.read()
 
-  # CUPS IPP File header.
-  CUPS_IPP_HEADER = construct.Struct(
-      'cups_ipp_header_struct',
-      construct.UBInt8('major_version'),
-      construct.UBInt8('minor_version'),
-      construct.UBInt16('operation_id'),
-      construct.UBInt32('request_id'))
+  _DATA_TYPE_FABRIC = dtfabric_fabric.DataTypeFabric(
+      yaml_definition=_DATA_TYPE_FABRIC_DEFINITION)
 
-  # Group ID that indicates the end of the IPP Control file.
-  GROUP_END = 3
-  # Identification Groups.
-  GROUP_LIST = [1, 2, 4, 5, 6, 7]
+  _HEADER = _DATA_TYPE_FABRIC.CreateDataTypeMap('cups_ipp_header')
 
-  # Type ID, per cups source file ipp-support.c.
-  TYPE_GENERAL_INTEGER = 0x20
-  TYPE_INTEGER = 0x21
-  TYPE_BOOL = 0x22
-  TYPE_ENUMERATION = 0x23
-  TYPE_DATETIME = 0x31
+  _HEADER_SIZE = _HEADER.GetByteSize()
 
-  # Type of values that can be extracted.
-  INTEGER_8 = construct.UBInt8('integer')
-  INTEGER_32 = construct.UBInt32('integer')
-  TEXT = construct.PascalString(
-      'text',
-      length_field=construct.UBInt8('length'))
-  BOOLEAN = construct.Struct(
-      'boolean_value',
-      construct.Padding(1),
-      INTEGER_8)
-  INTEGER = construct.Struct(
-      'integer_value',
-      construct.Padding(1),
-      INTEGER_32)
+  _TAG_VALUE = _DATA_TYPE_FABRIC.CreateDataTypeMap('int8')
+  _TAG_VALUE_SIZE = _TAG_VALUE.GetByteSize()
 
-  # This is an RFC2579 datetime.
-  DATETIME = construct.Struct(
-      'datetime',
-      construct.Padding(1),
-      construct.UBInt16('year'),
-      construct.UBInt8('month'),
-      construct.UBInt8('day'),
-      construct.UBInt8('hour'),
-      construct.UBInt8('minutes'),
-      construct.UBInt8('seconds'),
-      construct.UBInt8('deciseconds'),
-      construct.String('direction_from_utc', length=1, encoding='ascii'),
-      construct.UBInt8('hours_from_utc'),
-      construct.UBInt8('minutes_from_utc'),
-  )
+  _ATTRIBUTE = _DATA_TYPE_FABRIC.CreateDataTypeMap('cups_ipp_attribute')
 
-  # Name of the pair.
-  PAIR_NAME = construct.Struct(
-      'pair_name',
-      TEXT,
-      construct.Padding(1))
+  _DATETIME_VALUE = _DATA_TYPE_FABRIC.CreateDataTypeMap(
+      'cups_ipp_datetime_value')
 
-  # Specific CUPS IPP to generic name.
-  _NAME_PAIR_TRANSLATION = {
-      'com.apple.print.JobInfo.PMApplicationName': 'application',
-      'com.apple.print.JobInfo.PMJobOwner': 'owner',
-      'DestinationPrinterID': 'printer_id',
-      'document-format': 'doc_type',
-      'job-name': 'job_name',
-      'job-originating-host-name': 'computer_name',
-      'job-originating-user-name': 'user',
-      'job-uuid': 'job_id',
-      'printer-uri': 'uri'}
+  _INTEGER_VALUE = _DATA_TYPE_FABRIC.CreateDataTypeMap('int32be')
+
+  _SUPPORTED_FORMAT_VERSIONS = ('1.0', '1.1', '2.0')
+
+  # TODO: add descriptive names.
+  _DELIMITER_TAGS = (0x01, 0x02, 0x04, 0x05)
 
   _DATE_TIME_VALUES = {
       'date-time-at-creation': definitions.TIME_DESCRIPTION_CREATION,
@@ -193,6 +125,22 @@ class CupsIppParser(interface.FileObjectParser):
 
   _DATE_TIME_VALUE_NAMES = list(_DATE_TIME_VALUES.keys())
   _DATE_TIME_VALUE_NAMES.extend(list(_POSIX_TIME_VALUES.keys()))
+
+  _ATTRIBUTE_NAME_TRANSLATION = {
+      'com.apple.print.JobInfo.PMApplicationName': 'application',
+      'com.apple.print.JobInfo.PMJobOwner': 'owner',
+      'DestinationPrinterID': 'printer_id',
+      'document-format': 'doc_type',
+      'job-name': 'job_name',
+      'job-originating-host-name': 'computer_name',
+      'job-originating-user-name': 'user',
+      'job-uuid': 'job_id',
+      'printer-uri': 'uri'}
+
+  def __init__(self):
+    """Initializes a CUPS IPP file parser."""
+    super(CupsIppParser, self).__init__()
+    self._last_charset_attribute = 'ascii'
 
   def _GetStringValue(self, data_dict, name, default_value=None):
     """Retrieves a specific string value from the data dict.
@@ -214,123 +162,153 @@ class CupsIppParser(interface.FileObjectParser):
 
     return ', '.join(values)
 
-  def _ReadPair(self, parser_mediator, file_object):
-    """Reads an attribute name and value pair from a CUPS IPP event.
+  def _ParseAttribute(self, file_object):
+    """Parses a CUPS IPP attribute from a file-like object.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): file-like object.
 
     Returns:
-      tuple: contains:
+      tuple[str, object]: attribute name and value.
 
-        str: name or None.
-        str: value or None.
+    Raises:
+      ParseError: if the attribute cannot be parsed.
     """
-    # Pair = Type ID + Name + Value.
-    try:
-      # Can be:
-      #   Group ID + IDtag = Group ID (1byte) + Tag ID (1byte) + '0x00'.
-      #   IDtag = Tag ID (1byte) + '0x00'.
-      type_id = self.INTEGER_8.parse_stream(file_object)
-      if type_id == self.GROUP_END:
-        return None, None
-
-      elif type_id in self.GROUP_LIST:
-        # If it is a group ID we must read the next byte that contains
-        # the first TagID.
-        type_id = self.INTEGER_8.parse_stream(file_object)
-
-      # 0x00 separator character.
-      self.INTEGER_8.parse_stream(file_object)
-
-    except (IOError, construct.FieldError) as exception:
-      parser_mediator.ProduceExtractionError(
-          'unable to parse pair identifier with error: {0!s}'.format(
-              exception))
-      return None, None
-
-    # Name = Length name + name + 0x00
-    try:
-      pair_name = self.PAIR_NAME.parse_stream(file_object)
-    except (IOError, construct.FieldError) as exception:
-      parser_mediator.ProduceExtractionError(
-          'unable to parse pair name with error: {0!s}'.format(exception))
-      return None, None
+    file_offset = file_object.tell()
 
     try:
-      name = pair_name.text.decode('utf-8')
-    except UnicodeDecodeError as exception:
-      parser_mediator.ProduceExtractionError(
-          'unable to decode pair name with error: {0!s}'.format(exception))
-      return None, None
+      attribute, _ = self._ReadStructureWithSizeHint(
+          file_object, file_offset, self._ATTRIBUTE, 'attribute')
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError(
+          'Unable to parse attribute with error: {0!s}'.format(exception))
 
-    # Value: can be integer, boolean or text select by Type ID.
-    if type_id in (
-        self.TYPE_GENERAL_INTEGER, self.TYPE_INTEGER, self.TYPE_ENUMERATION):
-      value_structure = self.INTEGER
-    elif type_id == self.TYPE_BOOL:
-      value_structure = self.BOOLEAN
-    elif type_id == self.TYPE_DATETIME:
-      value_structure = self.DATETIME
-    else:
-      value_structure = self.TEXT
-
-    try:
-      value = value_structure.parse_stream(file_object)
-    except (IOError, construct.FieldError) as exception:
-      parser_mediator.ProduceExtractionError(
-          'unable to parse value with error: {0!s}'.format(exception))
-      return None, None
-
-    if type_id in (
-        self.TYPE_GENERAL_INTEGER, self.TYPE_INTEGER, self.TYPE_ENUMERATION):
-      value = value.integer
-
-    elif type_id == self.TYPE_BOOL:
-      value = bool(value.integer)
-
-    elif type_id == self.TYPE_DATETIME:
-      rfc2579_date_time_tuple = (
-          value.year, value.month, value.day, value.hour,
-          value.minutes, value.seconds, value.deciseconds,
-          value.direction_from_utc, value.hours_from_utc,
-          value.minutes_from_utc)
-      value = dfdatetime_rfc2579_date_time.RFC2579DateTime(
-          rfc2579_date_time_tuple=rfc2579_date_time_tuple)
-
-    else:
+    value = None
+    if attribute.tag_value in (0x21, 0x23):
+      file_offset = file_object.tell()
       try:
-        value = value.decode('utf-8')
-      except UnicodeDecodeError as exception:
-        parser_mediator.ProduceExtractionError(
-            'unable to decode value with error: {0!s}'.format(exception))
-        return None, None
+        value = self._ReadStructureFromByteStream(
+            attribute.value_data, file_offset, self._INTEGER_VALUE, 
+            'integer value')
+      except (ValueError, errors.ParseError) as exception:
+        raise errors.ParseError(
+            'Unable to parse integer value with error: {0!s}'.format(exception))
 
-    return name, value
+    elif attribute.tag_value == 0x22:
+      if attribute.value_data == b'\x00':
+        value = False
+      elif attribute.value_data == b'\x01':
+        value = True
+      else:
+        raise errors.ParseError('Unsupported boolean value.')
 
-  def _ReadPairs(self, parser_mediator, file_object):
-    """Reads the attribute name and value pairs from a CUPS IPP event.
+    elif attribute.tag_value == 0x31:
+      value = self._ParseDateTimeValue(attribute.value_data)
+
+    elif attribute.tag_value in (0x41, 0x42):
+      value = attribute.value_data.decode(self._last_charset_attribute)
+
+    elif attribute.tag_value in (0x44, 0x45, 0x46, 0x47, 0x48, 0x49):
+      value = attribute.value_data.decode('ascii')
+
+      if attribute.tag_value == 0x47:
+        self._last_charset_attribute = value
+
+    else:
+      value = attribute.value_data
+
+    return attribute.name, value
+
+  def _ParseAttributesGroup(self, file_object):
+    """Parses a CUPS IPP attributes group from a file-like object.
+
+    Args:
+      file_object (dfvfs.FileIO): file-like object.
+
+    Yields:
+      tuple[str, object]: attribute name and value.
+
+    Raises:
+      ParseError: if the attributes group cannot be parsed.
+    """
+    tag_value = 0
+
+    while tag_value != 0x03:
+      file_offset = file_object.tell()
+      tag_value = self._ReadStructure(
+          file_object, file_offset, self._TAG_VALUE_SIZE, self._TAG_VALUE,
+          'tag value')
+
+      if tag_value < 0x10:
+        if tag_value != 0x03 and tag_value not in self._DELIMITER_TAGS:
+          raise errors.ParseError((
+              'Unsupported attributes groups start tag value: '
+              '0x{0:02x}.').format(tag_value))
+
+      else:
+        file_object.seek(file_offset, os.SEEK_SET)
+
+        yield self._ParseAttribute(file_object)
+
+  def _ParseDateTimeValue(self, byte_stream):
+    """Parses a CUPS IPP RFC2579 date-time value from a byte stream.
+
+    Args:
+      byte_stream (bytes): byte stream.
+
+    Returns:
+      dfdatetime.RFC2579DateTime: RFC2579 date-time stored in the value.
+
+    Raises:
+      ParseError: when the RFC2579 date-time value cannot be parsed.
+    """
+    file_offset = file_object.tell()
+
+    try:
+      value = self._ReadStructureFromByteStream(
+          file_object, file_offset, self._DATETIME_VALUE, 'date-time value')
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError(
+          'Unable to parse datetime value with error: {0!s}'.format(exception))
+
+    rfc2579_date_time_tuple = (
+        value.year, value.month, value.day,
+        value.hours, value.minutes, value.seconds, value.deciseconds,
+        value.direction_from_utc, value.hours_from_utc, value.minutes_from_utc)
+    return dfdatetime_rfc2579_date_time.RFC2579DateTime(
+        rfc2579_date_time_tuple=rfc2579_date_time_tuple)
+
+  def _ParseHeader(self, parser_mediator, file_object):
+    """Parses a CUPS IPP header from a file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): file-like object.
 
-    Returns:
-      dict[str, list[str]]: values per name.
+    Raises:
+      UnableToParseFile: when the header cannot be parsed.
     """
-    data_dict = {}
+    try:
+      header = self._ReadStructure(
+          file_object, 0, self._HEADER_SIZE, self._HEADER, 'header')
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.UnableToParseFile(
+          'Unable to parse CUPS IPP header with error: {0!s}'.format(exception))
 
-    name, value = self._ReadPair(parser_mediator, file_object)
-    while name or value:
-      # Translate the known "name" CUPS IPP to a generic name value.
-      pretty_name = self._NAME_PAIR_TRANSLATION.get(name, name)
-      data_dict.setdefault(pretty_name, []).append(value)
-      name, value = self._ReadPair(parser_mediator, file_object)
+    format_version = '{0:d}.{1:d}'.format( header.major_version, header.minor_version)
+    if format_version not in self._SUPPORTED_FORMAT_VERSIONS:
+      raise errors.UnableToParseFile(
+          '[{0:s}] Unsupported format version {1:s}.'.format(
+              self.NAME, format_version))
 
-    return data_dict
+    if header.operation_identifier != 5:
+      # TODO: generate ExtractionWarning instead of printing debug output.
+      display_name = parser_mediator.GetDisplayName()
+      logger.debug((
+          '[{0:s}] Non-standard operation identifier: 0x{1:08x} in file header '
+          'of: {2:s}.').format(
+              self.NAME, header.operation_identifier, display_name))
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a CUPS IPP file-like object.
@@ -343,34 +321,24 @@ class CupsIppParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    try:
-      header = self.CUPS_IPP_HEADER.parse_stream(file_object)
-    except (IOError, construct.FieldError) as exception:
-      raise errors.UnableToParseFile(
-          'Unable to parse CUPS IPP Header with error: {0!s}'.format(
-              exception))
+    self._ParseHeader(parser_mediator, file_object)
 
-    if (header.major_version != self.IPP_MAJOR_VERSION or
-        header.minor_version != self.IPP_MINOR_VERSION):
-      raise errors.UnableToParseFile(
-          '[{0:s}] Unsupported version number.'.format(self.NAME))
-
-    if header.operation_id != self.IPP_OP_ID:
-      # Warn if the operation ID differs from the standard one. We should be
-      # able to parse the file nonetheless.
-      logger.debug(
-          '[{0:s}] Unsupported operation identifier in file: {1:s}.'.format(
-              self.NAME, parser_mediator.GetDisplayName()))
-
-    data_dict = self._ReadPairs(parser_mediator, file_object)
-
+    data_dict = {}
     time_dict = {}
 
-    for name in self._DATE_TIME_VALUE_NAMES:
-      value = data_dict.get(name, None)
-      if value is not None:
-        time_dict[name] = value
-        del data_dict[name]
+    try:
+      for name, value in self._ParseAttributesGroup(file_object):
+        name = self._ATTRIBUTE_NAME_TRANSLATION.get(name, name)
+
+        if name in self._DATE_TIME_VALUE_NAMES:
+          time_dict.setdefault(name, []).append(value)
+        else:
+          data_dict.setdefault(name, []).append(value)
+
+    except (ValueError, errors.ParseError) as exception:
+      parser_mediator.ProduceExtractionError(
+          'unable to parse attributes with error: {0!s}'.format(exception))
+      return
 
     event_data = CupsIppEventData()
     event_data.application = self._GetStringValue(data_dict, 'application')
@@ -386,14 +354,12 @@ class CupsIppParser(interface.FileObjectParser):
     event_data.uri = self._GetStringValue(data_dict, 'uri')
 
     for name, usage in iter(self._DATE_TIME_VALUES.items()):
-      time_values = time_dict.get(name, [])
-      for date_time in time_values:
+      for date_time in time_dict.get(name, []):
         event = time_events.DateTimeValuesEvent(date_time, usage)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
     for name, usage in iter(self._POSIX_TIME_VALUES.items()):
-      time_values = time_dict.get(name, [])
-      for time_value in time_values:
+      for time_value in time_dict.get(name, []):
         date_time = dfdatetime_posix_time.PosixTime(timestamp=time_value)
         event = time_events.DateTimeValuesEvent(date_time, usage)
         parser_mediator.ProduceEventWithEventData(event, event_data)
