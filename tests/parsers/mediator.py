@@ -179,6 +179,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     """Tests the ProduceEventWithEventData method."""
     session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer.Open()
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
     event_with_timestamp = events.EventObject()
