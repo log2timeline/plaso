@@ -203,7 +203,8 @@ class CupsIppParser(data_formats.DataFormatParser):
         raise errors.ParseError('Unsupported boolean value.')
 
     elif attribute.tag_value == 0x31:
-      value = self._ParseDateTimeValue(attribute.value_data)
+      # TODO: correct file offset to point to the start of value_data.
+      value = self._ParseDateTimeValue(attribute.value_data, file_offset)
 
     elif attribute.tag_value in (0x41, 0x42):
       value = attribute.value_data.decode(self._last_charset_attribute)
@@ -250,11 +251,13 @@ class CupsIppParser(data_formats.DataFormatParser):
 
         yield self._ParseAttribute(file_object)
 
-  def _ParseDateTimeValue(self, byte_stream):
+  def _ParseDateTimeValue(self, byte_stream, file_offset):
     """Parses a CUPS IPP RFC2579 date-time value from a byte stream.
 
     Args:
       byte_stream (bytes): byte stream.
+      file_offset (int): offset of the data relative from the start of
+          the file-like object.
 
     Returns:
       dfdatetime.RFC2579DateTime: RFC2579 date-time stored in the value.
@@ -262,11 +265,9 @@ class CupsIppParser(data_formats.DataFormatParser):
     Raises:
       ParseError: when the RFC2579 date-time value cannot be parsed.
     """
-    file_offset = file_object.tell()
-
     try:
       value = self._ReadStructureFromByteStream(
-          file_object, file_offset, self._DATETIME_VALUE, 'date-time value')
+          byte_stream, file_offset, self._DATETIME_VALUE, 'date-time value')
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
           'Unable to parse datetime value with error: {0!s}'.format(exception))
