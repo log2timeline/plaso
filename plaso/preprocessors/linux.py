@@ -155,9 +155,15 @@ class LinuxSystemdOperatingSystemPlugin(
 
     product_values = {}
     for line in text_file_object.readlines():
+      line = line.strip()
+
+      # Ignore lines that do not define a key value pair.
+      if '=' not in line:
+        continue
+
       key, value = line.split('=')
-      key = key.strip().upper()
-      value = value.strip().strip('"')
+      key = key.upper()
+      value = value.strip('"')
       product_values[key] = value
 
     if not knowledge_base.GetValue('operating_system_product'):
