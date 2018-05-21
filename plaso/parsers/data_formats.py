@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import abc
 import os
 
 from dtfabric import errors as dtfabric_errors
@@ -150,3 +151,15 @@ class DataFormatParser(interface.FileObjectParser):
       raise errors.ParseError((
           'Unable to map {0:s} data at offset: 0x{1:08x} with error: '
           '{2!s}').format(description, file_offset, exception))
+
+  @abc.abstractmethod
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a file-like object.
+
+    Args:
+      parser_mediator (ParserMediator): a parser mediator.
+      file_object (dvfvs.FileIO): a file-like object to parse.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """

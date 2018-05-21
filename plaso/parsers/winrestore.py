@@ -8,7 +8,6 @@ import os
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
-from dtfabric import errors as dtfabric_errors
 from dtfabric.runtime import fabric as dtfabric_fabric
 
 from plaso.containers import events
@@ -66,37 +65,6 @@ class RestorePointLogParser(data_formats.DataFormatParser):
       'rp_log_file_footer')
 
   _FILE_FOOTER_SIZE = _FILE_FOOTER.GetByteSize()
-
-  def _ReadFileFooter(self, file_object):
-    """Reads the file footer.
-
-    Args:
-      file_object (dfvfs.FileIO): file-like object.
-
-    Raises:
-      ParseError: if the file footer cannot be read.
-    """
-    file_offset = self._file_size - 8
-    file_footer = self._ReadStructure(
-        file_object, file_offset, self._FILE_FOOTER_SIZE, self._FILE_FOOTER,
-        'file footer')
-
-  def ReadFileObject(self, file_object):
-    """Reads a Windows Restore Point rp.log file-like object.
-
-    Args:
-      file_object (file): file-like object.
-
-    Raises:
-      ParseError: if the file cannot be read.
-    """
-    self._ReadFileHeader(file_object)
-
-    data_size = (self._file_size - 8) - file_object.tell()
-    data = file_object.read(data_size)
-    self._DebugPrintData('Unknown1', data)
-
-    self._ReadFileFooter(file_object)
 
   def ParseFileObject(self, parser_mediator, file_object, **unused_kwargs):
     """Parses a Windows Restore Point (rp.log) log file-like object.
