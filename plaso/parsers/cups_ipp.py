@@ -323,6 +323,8 @@ class CupsIppParser(data_formats.DataFormatParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
+    self._last_charset_attribute = 'ascii'
+
     self._ParseHeader(parser_mediator, file_object)
 
     data_dict = {}
