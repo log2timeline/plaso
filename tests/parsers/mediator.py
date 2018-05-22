@@ -187,7 +187,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     event_data = events.EventData()
 
     parsers_mediator.ProduceEventWithEventData(event_with_timestamp, event_data)
-    self.assertEqual(1, storage_writer.number_of_events)
+    self.assertEqual(storage_writer.number_of_events, 1)
 
     event_without_timestamp = events.EventObject()
     with self.assertRaises(errors.InvalidEvent):
