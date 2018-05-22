@@ -16,12 +16,12 @@ class SafaryCookieFormatterTest(test_lib.EventFormatterTestCase):
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = safari_cookies.SafaryCookieFormatter()
+    event_formatter = safari_cookies.SafariCookieFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = safari_cookies.SafaryCookieFormatter()
+    event_formatter = safari_cookies.SafariCookieFormatter()
 
     expected_attribute_names = [
         'url',

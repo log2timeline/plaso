@@ -126,8 +126,8 @@ BSM_ERRORS = {
     209: 'BADMACHO',
     210: 'POLICY'}
 
-# BSM network protocols. The informations comes from OpenBSD project,
-# it might not be exacly.
+# BSM network protocols. The information comes from OpenBSD project,
+# so it might not be directly applicable to MacOS.
 BSM_PROTOCOLS = {
     0: 'UNSPEC',
     1: 'LOCAL',
