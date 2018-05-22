@@ -23,6 +23,8 @@ class ConnectionError(Error):  # pylint: disable=redefined-builtin
 class HeapFull(Error):
   """Class that implements a heap full exception."""
 
+class InvalidEvent(Error):
+  """Error indicating an event is malformed."""
 
 class MalformedQueryError(Error):
   """Raised when an objectfilter query is malformed."""
