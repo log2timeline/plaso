@@ -101,7 +101,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """
     file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
     if not file_object:
-      return
+      return None
 
     try:
       file_object.seek(0, os.SEEK_SET)
