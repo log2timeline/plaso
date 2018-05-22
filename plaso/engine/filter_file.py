@@ -83,7 +83,7 @@ class FilterFile(object):
 
         if not line.startswith('/'):
           logger.warning((
-              'The path filter must be defined as an abolute path: '
+              'The path filter must be defined as an absolute path: '
               '{0:s}').format(line))
           continue
 

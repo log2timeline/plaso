@@ -83,7 +83,7 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
         'Application: DiagTrack '
         'Bytes sent: 2076 '
         'Interface LUID: 1689399632855040 '
-        'User identifer: S-1-5-18')
+        'User identifier: S-1-5-18')
 
     expected_short_message = 'DiagTrack'
 

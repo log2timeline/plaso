@@ -34,11 +34,11 @@ class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
           'artifact: {1:s}.'.format(
               type(value_data), self.ARTIFACT_DEFINITION_NAME))
 
-    evironment_variable = artifacts.EnvironmentVariableArtifact(
+    environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name=self._NAME, value=value_data)
 
     try:
-      knowledge_base.AddEnvironmentVariable(evironment_variable)
+      knowledge_base.AddEnvironmentVariable(environment_variable)
     except KeyError:
       # TODO: add and store preprocessing errors.
       pass
@@ -274,7 +274,7 @@ class WindowsUserAccountsPlugin(
   def _GetUsernameFromProfilePath(self, path):
     """Retrieves the username from a Windows profile path.
 
-    Trailing path path segment are igored.
+    Trailing path path segment are ignored.
 
     Args:
       path (str): a Windows path with '\\' as path segment separator.

@@ -29,10 +29,9 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
   _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
   _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
 
-  # Specific container types reference other container types, such as event
-  # referencing event data, therefore the order here should be to list
-  # containter that are referenced by other types before container type that
-  # reference other types.
+  # Some container types reference other container types, such as event
+  # referencing event_data. Container types in this tuple must be ordered after
+  # all the container types they reference.
   _CONTAINER_TYPES = (
       _CONTAINER_TYPE_EVENT_SOURCE,
       _CONTAINER_TYPE_EVENT_DATA,
@@ -76,10 +75,10 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
     self._event_data_identifier_mappings = {}
     self._path = path
 
-    # Create a runtime lookup table for the add container type method this
-    # approach prevents having to create a series of if-else check for the
-    # container types. Also we need to generate the table at runtime seeing
-    # there are no forard function declarations in Python.
+    # Create a runtime lookup table for the add container type method. This
+    # prevents having to create a series of if-else checks for container types.
+    # The table is generated at runtime as there are no forward function
+    # declarations in Python.
     for container_type, method_name in self._ADD_CONTAINER_TYPE_METHODS.items():
       method = getattr(self, method_name, None)
       if not method:

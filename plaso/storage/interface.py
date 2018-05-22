@@ -961,7 +961,7 @@ class StorageWriter(object):
     """
 
   def FinalizeTaskStorage(self, unused_task):
-    """Finalizes a proccessed task storage.
+    """Finalizes a processed task storage.
 
     Args:
       task (Task): task.
@@ -1411,7 +1411,7 @@ class StorageFileWriter(StorageWriter):
     return event_source
 
   def GetProcessedTaskIdentifiers(self):
-    """Identifers for tasks which have been processed.
+    """Identifiers for tasks which have been processed.
 
     Returns:
       list[str]: task identifiers that are processed.
@@ -1452,7 +1452,7 @@ class StorageFileWriter(StorageWriter):
     return self._storage_file.GetSortedEvents(time_range=time_range)
 
   def FinalizeTaskStorage(self, task):
-    """Finalized a proccessed task storage.
+    """Finalizes a processed task storage.
 
     Moves the task storage file from its temporary directory to the processed
     directory.
