@@ -12,6 +12,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from plaso.containers import errors
 from plaso.engine import path_helper
 from plaso.engine import profilers
+from plaso.lib import errors as errors_lib
 from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.parsers import logger
@@ -470,7 +471,13 @@ class ParserMediator(object):
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+
+    Raises:
+      InvalidEvent: if the event has no timestamp set.
     """
+    if event.timestamp is None:
+      raise errors_lib.InvalidEvent('Event must have a timestamp set.')
+
     event_data_hash = event_data.GetAttributeValuesHash()
     if event_data_hash != self._last_event_data_hash:
       # Make a copy of the event data before adding additional values.
