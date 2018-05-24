@@ -683,6 +683,29 @@ class StorageFileTestCase(TestCase):
 
     return result
 
+  @abc.abstractmethod
+  def ReadAttributes(self, test_definition_reader, test_definition):
+    """Reads the test definition attributes into to the test definition.
+
+    Args:
+      test_definition_reader (TestDefinitionReader): test definition reader.
+      test_definition (TestDefinition): test definition.
+
+    Returns:
+      bool: True if the read was successful.
+    """
+
+  @abc.abstractmethod
+  def Run(self, test_definition):
+    """Runs the test case with the parameters specified by the test definition.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+
+    Returns:
+      bool: True if the test ran successfully.
+    """
+
 
 class ExtractAndOutputTestCase(StorageFileTestCase):
   """Extract and output test case.
@@ -1489,10 +1512,12 @@ class MultiAnalyzeAndOutputTestCase(AnalyzeAndOutputTestCase):
       bool: True if the read was successful.
     """
     test_definition.analysis_options1 = test_definition_reader.GetConfigValue(
-        test_definition.name, 'analysis_options1', default=[], split_string=True)
+        test_definition.name, 'analysis_options1', default=[],
+        split_string=True)
 
     test_definition.analysis_options2 = test_definition_reader.GetConfigValue(
-        test_definition.name, 'analysis_options2', default=[], split_string=True)
+        test_definition.name, 'analysis_options2', default=[],
+        split_string=True)
 
     test_definition.logging_options = test_definition_reader.GetConfigValue(
         test_definition.name, 'logging_options', default=[], split_string=True)
