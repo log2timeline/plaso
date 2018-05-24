@@ -15,7 +15,6 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.parsers import data_formats
-from plaso.parsers import logger
 from plaso.parsers import manager
 
 
@@ -159,7 +158,7 @@ class UtmpParser(data_formats.DataFormatParser):
       parser_mediator.ProduceExtractionError('unable to unpack IP address')
       ip_address = None
 
-    # TODO: add termination status. 
+    # TODO: add termination status.
     # TODO: rename event data attributes to match data definition.
     event_data = UtmpEventData()
     event_data.computer_name = hostname
