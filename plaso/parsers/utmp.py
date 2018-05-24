@@ -6,15 +6,15 @@ from __future__ import unicode_literals
 import os
 import socket
 
-import construct
-
 from dfdatetime import posix_time as dfdatetime_posix_time
+
+from dtfabric.runtime import fabric as dtfabric_fabric
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import interface
+from plaso.parsers import data_formats
 from plaso.parsers import logger
 from plaso.parsers import manager
 
@@ -48,33 +48,31 @@ class UtmpEventData(events.EventData):
     self.user = None
 
 
-class UtmpParser(interface.FileObjectParser):
+class UtmpParser(data_formats.DataFormatParser):
   """Parser for Linux/Unix UTMP files."""
 
   NAME = 'utmp'
   DESCRIPTION = 'Parser for Linux/Unix UTMP files.'
 
-  LINUX_UTMP_ENTRY = construct.Struct(
-      'utmp_linux',
-      construct.ULInt32('type'),
-      construct.ULInt32('pid'),
-      construct.String('terminal', 32),
-      construct.ULInt32('terminal_id'),
-      construct.String('username', 32),
-      construct.String('hostname', 256),
-      construct.ULInt16('termination'),
-      construct.ULInt16('exit'),
-      construct.ULInt32('session'),
-      construct.ULInt32('timestamp'),
-      construct.ULInt32('microseconds'),
-      construct.ULInt32('address_a'),
-      construct.ULInt32('address_b'),
-      construct.ULInt32('address_c'),
-      construct.ULInt32('address_d'),
-      construct.Padding(20))
+  _DATA_TYPE_FABRIC_DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'utmp.yaml')
 
-  LINUX_UTMP_ENTRY_SIZE = LINUX_UTMP_ENTRY.sizeof()
+  with open(_DATA_TYPE_FABRIC_DEFINITION_FILE, 'rb') as file_object:
+    _DATA_TYPE_FABRIC_DEFINITION = file_object.read()
 
+  _DATA_TYPE_FABRIC = dtfabric_fabric.DataTypeFabric(
+      yaml_definition=_DATA_TYPE_FABRIC_DEFINITION)
+
+  _UTMP_ENTRY = _DATA_TYPE_FABRIC.CreateDataTypeMap('utmp_entry')
+
+  _UTMP_ENTRY_SIZE = _UTMP_ENTRY.GetByteSize()
+
+  _EMPTY_IP_ADDRESS = (
+      b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+
+  _SUPPORTED_TYPES = frozenset(range(0, 10))
+
+  # TODO: move to formatter
   STATUS_TYPE = {
       0: 'EMPTY',
       1: 'RUN_LVL',
@@ -87,111 +85,95 @@ class UtmpParser(interface.FileObjectParser):
       8: 'DEAD_PROCESS',
       9: 'ACCOUNTING'}
 
-  # Set a default test value for few fields, this is supposed to be a text
-  # that is highly unlikely to be seen in a terminal field, or a username field.
-  # It is important that this value does show up in such fields, but otherwise
-  # it can be a free flowing text field.
-  _DEFAULT_TEST_VALUE = 'Ekki Fraedilegur Moguleiki, thetta er bull ! = + _<>'
-
-  def _GetTextFromNullTerminatedString(
-      self, null_terminated_string, default_string='N/A'):
-    """Get a UTF-8 text from a raw null terminated string.
-
-    Args:
-      null_terminated_string: Raw string terminated with null character.
-      default_string: The default string returned if the parser fails.
-
-    Returns:
-      A decoded UTF-8 string or if unable to decode, the supplied default
-      string.
-    """
-    text, _, _ = null_terminated_string.partition(b'\x00')
-    try:
-      text = text.decode('utf-8')
-    except UnicodeDecodeError:
-      logger.warning(
-          '[UTMP] Decode UTF8 failed, the message string may be cut short.')
-      text = text.decode('utf-8', 'ignore')
-    if not text:
-      return default_string
-    return text
-
-  def _ReadEntry(self, parser_mediator, file_object):
+  def _ReadEntry(self, parser_mediator, file_object, file_offset):
     """Reads an UTMP entry.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): a file-like object.
+      file_offset (int): offset of the data relative from the start of
+          the file-like object.
 
     Returns:
-      bool: True if the UTMP entry was successfully read.
+      tuple: contains:
+
+        int: timestamp, which contains the number of microseconds
+            since January 1, 1970, 00:00:00 UTC.
+        UtmpEventData: event data of the UTMP entry read.
+
+    Raises:
+      ParseError: if the entry cannot be parsed.
     """
-    offset = file_object.tell()
-    data = file_object.read(self.LINUX_UTMP_ENTRY_SIZE)
-    if not data or len(data) != self.LINUX_UTMP_ENTRY_SIZE:
-      return False
+    encoding = parser_mediator.codepage or 'utf8'
 
     try:
-      entry = self.LINUX_UTMP_ENTRY.parse(data)
-    except (IOError, construct.FieldError):
-      logger.warning((
-          'UTMP entry at 0x{0:x} couldn\'t be parsed.').format(offset))
-      return False
+      entry = self._ReadStructure(
+          file_object, file_offset, self._UTMP_ENTRY_SIZE, self._UTMP_ENTRY,
+          'entry')
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError((
+          'Unable to parse UTMP entry at offset: 0x{0:08x} with error: '
+          '{1!s}.').format(file_offset, exception))
 
-    user = self._GetTextFromNullTerminatedString(entry.username)
-    terminal = self._GetTextFromNullTerminatedString(entry.terminal)
+    if entry.type not in self._SUPPORTED_TYPES:
+      raise errors.UnableToParseFile('Unsupported type: {0:d}'.format(
+          entry.type))
+
+    try:
+      username = entry.username.rstrip(b'\x00')
+      username = username.decode(encoding)
+    except UnicodeDecodeError:
+      parser_mediator.ProduceExtractionError('unable to decode username string')
+      username = None
+
+    try:
+      terminal = entry.terminal.rstrip(b'\x00')
+      terminal = terminal.decode(encoding)
+    except UnicodeDecodeError:
+      parser_mediator.ProduceExtractionError('unable to decode terminal string')
+      terminal = None
+
     if terminal == '~':
       terminal = 'system boot'
-    computer_name = self._GetTextFromNullTerminatedString(entry.hostname)
-    if computer_name == 'N/A' or computer_name == ':0':
-      computer_name = 'localhost'
+
+    try:
+      hostname = entry.hostname.rstrip(b'\x00')
+      hostname = hostname.decode(encoding)
+    except UnicodeDecodeError:
+      parser_mediator.ProduceExtractionError('unable to decode hostname string')
+      hostname = None
+
+    if not hostname or hostname == ':0':
+      hostname = 'localhost'
+
+    # TODO: move to formatter
     status = self.STATUS_TYPE.get(entry.type, 'N/A')
 
-    if entry.address_b:
-      ip_address = '{0:d}.{1:d}.{2:d}.{3:d}'.format(
-          entry.address_a, entry.address_b, entry.address_c, entry.address_d)
-    else:
-      try:
-        ip_address = socket.inet_ntoa(
-            construct.ULInt32('int').build(entry.address_a))
-        if ip_address == '0.0.0.0':
-          ip_address = 'localhost'
-      except (IOError, construct.FieldError, socket.error):
-        ip_address = 'N/A'
+    try:
+      if entry.ip_address[4:] == self._EMPTY_IP_ADDRESS[4:]:
+        ip_address = socket.inet_ntop(socket.AF_INET, entry.ip_address[:4])
+      else:
+        ip_address = socket.inet_ntop(socket.AF_INET6, entry.ip_address)
+    except socket.error:
+      parser_mediator.ProduceExtractionError('unable to unpack IP address')
+      ip_address = None
 
+    # TODO: add termination status. 
+    # TODO: rename event data attributes to match data definition.
     event_data = UtmpEventData()
-    event_data.computer_name = computer_name
-    event_data.exit = entry.exit
+    event_data.computer_name = hostname
+    event_data.exit = entry.exit_status
     event_data.ip_address = ip_address
     event_data.pid = entry.pid
     event_data.status = status
-    event_data.terminal_id = entry.terminal_id
+    event_data.terminal_id = entry.terminal_identifier
     event_data.terminal = terminal
-    event_data.user = user
+    event_data.user = username
 
-    timestamp = (entry.timestamp * 1000000) + entry.microseconds
-    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-        timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_START)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    return True
-
-  def _VerifyTextField(self, text):
-    """Check if a byte stream is a null terminated string.
-
-    Args:
-      event_object: text field from the structure.
-
-    Returns:
-      bool: True if it is a null terminated string, False otherwise.
-    """
-    _, _, null_chars = text.partition(b'\x00')
-    if not null_chars:
-      return False
-    return len(null_chars) == null_chars.count(b'\x00')
+    timestamp = entry.microseconds + (
+        entry.timestamp * definitions.MICROSECONDS_PER_SECOND)
+    return timestamp, event_data
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses an UTMP file-like object.
@@ -204,50 +186,47 @@ class UtmpParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
+    file_offset = 0
+
     try:
-      structure = self.LINUX_UTMP_ENTRY.parse_stream(file_object)
-    except (IOError, construct.FieldError) as exception:
+      timestamp, event_data = self._ReadEntry(
+          parser_mediator, file_object, file_offset)
+    except errors.ParseError as exception:
       raise errors.UnableToParseFile(
-          'Unable to parse UTMP Header with error: {0!s}'.format(exception))
+          'Unable to parse UTMP header with error: {0!s}'.format(exception))
 
-    if structure.type not in self.STATUS_TYPE:
-      raise errors.UnableToParseFile((
-          'Not an UTMP file, unknown type '
-          '[{0:d}].').format(structure.type))
-
-    if not self._VerifyTextField(structure.terminal):
+    if not event_data.user:
       raise errors.UnableToParseFile(
-          'Not an UTMP file, unknown terminal.')
+          'Unable to parse UTMP header with error: missing username')
 
-    if not self._VerifyTextField(structure.username):
+    if not timestamp:
       raise errors.UnableToParseFile(
-          'Not an UTMP file, unknown username.')
+          'Unable to parse UTMP header with error: missing timestamp')
 
-    if not self._VerifyTextField(structure.hostname):
-      raise errors.UnableToParseFile(
-          'Not an UTMP file, unknown hostname.')
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=timestamp)
+    event = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_START)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    # Check few values.
-    terminal = self._GetTextFromNullTerminatedString(
-        structure.terminal, self._DEFAULT_TEST_VALUE)
-    if terminal == self._DEFAULT_TEST_VALUE:
-      raise errors.UnableToParseFile(
-          'Not an UTMP file, no terminal set.')
+    file_offset += self._UTMP_ENTRY_SIZE
+    file_size = file_object.get_size()
 
-    username = self._GetTextFromNullTerminatedString(
-        structure.username, self._DEFAULT_TEST_VALUE)
+    while file_offset < file_size:
+      try:
+        timestamp, event_data = self._ReadEntry(
+            parser_mediator, file_object, file_offset)
+      except errors.ParseError as exception:
+        # Note that the utmp file can contain trailing data.
+        break
 
-    if username == self._DEFAULT_TEST_VALUE:
-      raise errors.UnableToParseFile(
-          'Not an UTMP file, no username set.')
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_START)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    if not structure.timestamp:
-      raise errors.UnableToParseFile(
-          'Not an UTMP file, no timestamp set in the first record.')
-
-    file_object.seek(0, os.SEEK_SET)
-    while self._ReadEntry(parser_mediator, file_object):
-      pass
+      file_offset += self._UTMP_ENTRY_SIZE
 
 
 manager.ParsersManager.RegisterParser(UtmpParser)
