@@ -3,15 +3,21 @@
 
 from __future__ import unicode_literals
 
+import os
+
 import construct
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
+from dtfabric.runtime import fabric as dtfabric_fabric
+
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import binary
 from plaso.lib import definitions
+from plaso.lib import errors
+from plaso.parsers import data_formats
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -39,26 +45,36 @@ class WinRecycleBinEventData(events.EventData):
     self.short_filename = None
 
 
-class WinRecycleBinParser(interface.FileObjectParser):
+class WinRecycleBinParser(data_formats.DataFormatParser):
   """Parses the Windows $Recycle.Bin $I files."""
 
   NAME = 'recycle_bin'
   DESCRIPTION = 'Parser for Windows $Recycle.Bin $I files.'
 
-  _FILE_HEADER_STRUCT = construct.Struct(
-      'file_header',
-      construct.ULInt64('format_version'),
-      construct.ULInt64('file_size'),
-      construct.ULInt64('deletion_time'))
+  _DATA_TYPE_FABRIC_DEFINITION_FILE = os.path.join(
+      os.path.dirname(__file__), 'recycler.yaml')
 
-  _FILENAME_V2_STRUCT = construct.Struct(
-      'filename_v2',
-      construct.ULInt32('number_of_characters'),
-      construct.String(
-          'string', lambda ctx: ctx.number_of_characters * 2))
+  with open(_DATA_TYPE_FABRIC_DEFINITION_FILE, 'rb') as file_object:
+    _DATA_TYPE_FABRIC_DEFINITION = file_object.read()
 
-  def _ReadFilename(self, parser_mediator, file_object, format_version):
-    """Reads the filename.
+  _DATA_TYPE_FABRIC = dtfabric_fabric.DataTypeFabric(
+      yaml_definition=_DATA_TYPE_FABRIC_DEFINITION)
+
+  _FILE_HEADER = _DATA_TYPE_FABRIC.CreateDataTypeMap(
+      'recycle_bin_metadata_file_header')
+
+  _FILE_HEADER_SIZE = _FILE_HEADER.GetByteSize()
+
+  _UTF16LE_STRING = _DATA_TYPE_FABRIC.CreateDataTypeMap(
+      'utf16le_string')
+
+  _UTF16LE_STRING_WITH_SIZE = _DATA_TYPE_FABRIC.CreateDataTypeMap(
+      'utf16le_string_with_size')
+
+  _SUPPORTED_FORMAT_VERSIONS = (1, 2)
+
+  def _ParseOriginalFilename(self, parser_mediator, file_object, format_version):
+    """Parses the original filename.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -68,58 +84,74 @@ class WinRecycleBinParser(interface.FileObjectParser):
 
     Returns:
       str: filename or None on error.
+
+    Raises:
+      ParseError: if the original filename cannot be read.
     """
+    file_offset = file_object.tell()
+
     if format_version == 1:
-      return binary.ReadUTF16Stream(file_object)
+      data_map = self._UTF16LE_STRING
+      data_map_description = 'UTF-16 little-endian string'
+    else:
+      data_map = self._UTF16LE_STRING_WITH_SIZE
+      data_map_description = 'UTF-16 little-endian string with size'
 
     try:
-      filename_struct = self._FILENAME_V2_STRUCT.parse_stream(file_object)
+      original_filename, _ = self._ReadStructureWithSizeHint(
+          file_object, file_offset, data_map, data_map_description)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError(
+          'Unable to parse original filename with error: {0!s}'.format(
+              exception))
 
-    except (IOError, construct.FieldError) as exception:
-      parser_mediator.ProduceExtractionError(
-          'unable to parse filename with error: {0!s}'.format(exception))
-      return None
+    if format_version == 1:
+      return original_filename.rstrip(b'\x00')
 
-    return binary.ReadUTF16(filename_struct.string)
+    return original_filename.string.rstrip(b'\x00')
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
-    """Parses a Windows RecycleBin $Ixx file-like object.
+    """Parses a Windows Recycle.Bin metadata ($I) file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
     # We may have to rely on filenames since this header is very generic.
 
     # TODO: Rethink this and potentially make a better test.
     filename = parser_mediator.GetFilename()
     if not filename.startswith('$I'):
-      return
+      raise errors.UnableToParseFile('Filename must start with $I.')
 
     try:
-      header_struct = self._FILE_HEADER_STRUCT.parse_stream(file_object)
-    except (IOError, construct.FieldError) as exception:
-      parser_mediator.ProduceExtractionError(
-          'unable to parse file header with error: {0!s}'.format(exception))
-      return
+      file_header = self._ReadStructure(
+          file_object, 0, self._FILE_HEADER_SIZE, self._FILE_HEADER,
+          'file header')
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.UnableToParseFile((
+          'Unable to parse Windows Recycle.Bin metadata file header with '
+          'error: {0!s}').format(exception))
 
-    if header_struct.format_version not in (1, 2):
-      parser_mediator.ProduceExtractionError(
-          'unsupported format version: {0:d}.'.format(
-              header_struct.format_version))
-      return
+    if file_header.format_version not in self._SUPPORTED_FORMAT_VERSIONS:
+      raise errors.UnableToParseFile(
+          'Unsupported format version: {0:d}.'.format(
+              file_header.format_version))
 
-    if header_struct.deletion_time == 0:
+    if file_header.deletion_time == 0:
       date_time = dfdatetime_semantic_time.SemanticTime('Not set')
     else:
       date_time = dfdatetime_filetime.Filetime(
-          timestamp=header_struct.deletion_time)
+          timestamp=file_header.deletion_time)
 
     event_data = WinRecycleBinEventData()
-    event_data.original_filename = self._ReadFilename(
-        parser_mediator, file_object, header_struct.format_version)
-    event_data.file_size = header_struct.file_size
+    event_data.original_filename = self._ParseOriginalFilename(
+        parser_mediator, file_object, file_header.format_version)
+    event_data.file_size = file_header.original_file_size
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_DELETED)
