@@ -14,7 +14,7 @@ class AttributeContainersManager(object):
     """Deregisters an attribute container class.
 
     The attribute container classes are identified based on their lower case
-    containter type.
+    container type.
 
     Args:
       attribute_container_class (type): attribute container class.

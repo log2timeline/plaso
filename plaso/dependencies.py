@@ -21,7 +21,7 @@ import re
 PYTHON_DEPENDENCIES = {
     'artifacts': ('__version__', '20170818', None, True),
     'bencode': ('', '', None, True),
-    'binplist': ('__version__', '0.1.4', None, True),
+    'biplist': ('', '1.0.3', None, True),
     'certifi': ('__version__', '2016.9.26', None, True),
     'chardet': ('__version__', '2.0.1', None, True),
     'construct': ('__version__', '2.5.2', '2.5.3', True),
@@ -225,7 +225,7 @@ def _ImportPythonModule(module_name):
   try:
     module_object = list(map(__import__, [module_name]))[0]
   except ImportError:
-    return
+    return None
 
   # If the module name contains dots get the upper most module object.
   if '.' in module_name:

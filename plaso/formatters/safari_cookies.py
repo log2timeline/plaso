@@ -8,7 +8,7 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class SafaryCookieFormatter(interface.ConditionalEventFormatter):
+class SafariCookieFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Safari Binary Cookie file entry event."""
 
   DATA_TYPE = 'safari:cookie:entry'
@@ -66,4 +66,4 @@ class SafaryCookieFormatter(interface.ConditionalEventFormatter):
     return self._ConditionalFormatMessages(event_values)
 
 
-manager.FormattersManager.RegisterFormatter(SafaryCookieFormatter)
+manager.FormattersManager.RegisterFormatter(SafariCookieFormatter)

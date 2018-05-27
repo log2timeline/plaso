@@ -12,7 +12,7 @@ from tests import test_lib as shared_test_lib
 
 
 class EnvironmentVariableArtifactTest(shared_test_lib.BaseTestCase):
-  """Tests for the environment variable aritifact."""
+  """Tests for the environment variable artifact."""
 
   # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):
@@ -33,7 +33,7 @@ class EnvironmentVariableArtifactTest(shared_test_lib.BaseTestCase):
 
 
 class HostnameArtifactTest(shared_test_lib.BaseTestCase):
-  """Tests for the hostname aritifact."""
+  """Tests for the hostname artifact."""
 
   # TODO: replace by GetAttributeNames test
   def testCopyToDict(self):

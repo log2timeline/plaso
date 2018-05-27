@@ -35,6 +35,30 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
     self._fields = self._DEFAULT_FIELDS
     self._set_status = None
 
+  def _FormatDateTime(self, event):
+    """Formats the date and time.
+
+    Args:
+      event (EventObject): event.
+
+    Returns:
+      str: date and time string or "N/A" if no event timestamp is available.
+    """
+    if not event.timestamp:
+      return 'N/A'
+
+    datetime_object = timelib.Timestamp.CopyToDatetime(
+        event.timestamp, self._output_mediator.timezone)
+    if not datetime_object:
+      self._ReportEventError(event, (
+          'unable to copy timestamp: {0:d} to datetime object.'))
+      return 'N/A'
+
+    return '{0:04d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}'.format(
+        datetime_object.year, datetime_object.month, datetime_object.day,
+        datetime_object.hour, datetime_object.minute,
+        datetime_object.second)
+
   def _GetSanitizedEventValues(self, event):
     """Sanitizes the event for use in 4n6time.
 
@@ -65,14 +89,7 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
       raise errors.NoFormatterFound(
           'Unable to find event formatter for: {0:s}.'.format(data_type))
 
-    datetime_object = None
-    if event.timestamp is not None:
-      datetime_object = timelib.Timestamp.CopyToDatetime(
-          event.timestamp, self._output_mediator.timezone)
-      if not datetime_object:
-        self._ReportEventError(event, (
-            'unable to copy timestamp: {0:d} to datetime object.'))
-        return None
+    datetime_string = self._FormatDateTime(event)
 
     format_variables = self._output_mediator.GetFormatStringAttributeNames(
         event)
@@ -95,14 +112,6 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
       inode = getattr(event.pathspec, 'inode', '-')
     if inode is None:
       inode = '-'
-
-    datetime_string = 'N/A'
-    if datetime_object:
-      datetime_string = (
-          '{0:04d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}'.format(
-              datetime_object.year, datetime_object.month, datetime_object.day,
-              datetime_object.hour, datetime_object.minute,
-              datetime_object.second))
 
     tags = None
     if getattr(event, 'tag', None):

@@ -264,6 +264,9 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     """
     logger.debug('Started processing task: {0:s}.'.format(task.identifier))
 
+    if self._tasks_profiler:
+      self._tasks_profiler.Sample(task, 'processing_started')
+
     self._task = task
 
     storage_writer = self._storage_writer.CreateTaskStorage(task)
@@ -299,6 +302,9 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       pass
 
     self._task = None
+
+    if self._tasks_profiler:
+      self._tasks_profiler.Sample(task, 'processing_completed')
 
     logger.debug('Completed processing task: {0:s}.'.format(task.identifier))
 

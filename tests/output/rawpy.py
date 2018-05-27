@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for the "raw" (or native) Python output modulr."""
+"""Tests for the "raw" (or native) Python output module."""
 
 from __future__ import unicode_literals
 

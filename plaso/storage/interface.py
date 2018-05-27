@@ -961,7 +961,7 @@ class StorageWriter(object):
     """
 
   def FinalizeTaskStorage(self, unused_task):
-    """Finalizes a proccessed task storage.
+    """Finalizes a processed task storage.
 
     Args:
       task (Task): task.
@@ -998,6 +998,17 @@ class StorageWriter(object):
       knowledge_base (KnowledgeBase): is used to store the preprocessing
           information.
     """
+
+  def RemoveProcessedTaskStorage(self, unused_task):
+    """Removes a processed task storage.
+
+    Args:
+      task (Task): task.
+
+    Raises:
+      NotImplementedError: since there is no implementation.
+    """
+    raise NotImplementedError()
 
   @abc.abstractmethod
   def SetSerializersProfiler(self, serializers_profiler):
@@ -1400,7 +1411,7 @@ class StorageFileWriter(StorageWriter):
     return event_source
 
   def GetProcessedTaskIdentifiers(self):
-    """Identifers for tasks which have been processed.
+    """Identifiers for tasks which have been processed.
 
     Returns:
       list[str]: task identifiers that are processed.
@@ -1441,7 +1452,7 @@ class StorageFileWriter(StorageWriter):
     return self._storage_file.GetSortedEvents(time_range=time_range)
 
   def FinalizeTaskStorage(self, task):
-    """Finalized a proccessed task storage.
+    """Finalizes a processed task storage.
 
     Moves the task storage file from its temporary directory to the processed
     directory.
@@ -1464,7 +1475,7 @@ class StorageFileWriter(StorageWriter):
     except OSError as exception:
       raise IOError((
           'Unable to rename task storage file: {0:s} with error: '
-          '{1:s}').format(storage_file_path, exception))
+          '{1!s}').format(storage_file_path, exception))
 
   def Open(self):
     """Opens the storage writer.
@@ -1515,7 +1526,7 @@ class StorageFileWriter(StorageWriter):
     except OSError as exception:
       raise IOError((
           'Unable to rename task storage file: {0:s} with error: '
-          '{1:s}').format(processed_storage_file_path, exception))
+          '{1!s}').format(processed_storage_file_path, exception))
 
   def ReadPreprocessingInformation(self, knowledge_base):
     """Reads preprocessing information.
@@ -1535,6 +1546,28 @@ class StorageFileWriter(StorageWriter):
       raise IOError('Unable to read from closed storage writer.')
 
     return self._storage_file.ReadPreprocessingInformation(knowledge_base)
+
+  def RemoveProcessedTaskStorage(self, task):
+    """Removes a processed task storage.
+
+    Args:
+      task (Task): task.
+
+    Raises:
+      IOError: if the storage type is not supported or
+          if the storage file cannot be removed.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError('Unsupported storage type.')
+
+    processed_storage_file_path = self._GetProcessedStorageFilePath(task)
+
+    try:
+      os.remove(processed_storage_file_path)
+    except OSError as exception:
+      raise IOError((
+          'Unable to remove task storage file: {0:s} with error: '
+          '{1!s}').format(processed_storage_file_path, exception))
 
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.

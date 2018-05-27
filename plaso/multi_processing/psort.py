@@ -602,7 +602,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     """Merges an event tag with the last stored event tag.
 
     If there is an existing event the provided event tag is updated with
-    the contents of the existing one. Afterwhich the event tag index is updated.
+    the contents of the existing one. After which the event tag index is
+    updated.
 
     Args:
       storage_writer (StorageWriter): storage writer.

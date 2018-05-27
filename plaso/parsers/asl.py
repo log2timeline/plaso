@@ -26,7 +26,7 @@ class ASLEventData(events.EventData):
     computer_name (str): name of the host.
     extra_information (str): extra fields associated to the event.
     facility (str): facility.
-    group_id (int): group identifer (GID).
+    group_id (int): group identifier (GID).
     level (str): level of criticality of the event.
     message_id (int): message identifier.
     message (str): message of the event.
