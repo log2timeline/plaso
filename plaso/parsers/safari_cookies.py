@@ -93,12 +93,11 @@ class BinaryCookieParser(data_formats.DataFormatParser):
     self._cookie_plugins = (
         cookie_plugins_manager.CookiePluginsManager.GetPlugins())
 
-  def _ParsePage(self, parser_mediator, page_number, page_data):
+  def _ParsePage(self, parser_mediator, page_data):
     """Parses a page.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
-      page_number (int): page number.
       page_data (bytes): page data.
 
     Raises:
@@ -110,8 +109,6 @@ class BinaryCookieParser(data_formats.DataFormatParser):
       raise errors.ParseError((
           'Unable to map page header data at offset: 0x{0:08x} with error: '
           '{1!s}').format(file_offset, exception))
-
-    page_header_data_size = 8 + (4 * page_header.number_of_records)
 
     for record_offset in page_header.offsets:
       if parser_mediator.abort:
@@ -266,17 +263,17 @@ class BinaryCookieParser(data_formats.DataFormatParser):
           'Unable to map page sizes data at offset: 0x{0:08x} with error: '
           '{1!s}').format(file_offset, exception))
 
-    for index, page_size in enumerate(page_sizes_array):
+    for page_number, page_size in enumerate(page_sizes_array):
       if parser_mediator.abort:
         break
 
       page_data = file_object.read(page_size)
       if len(page_data) != page_size:
         parser_mediator.ProduceExtractionError(
-            'unable to read page: {0:d}'.format(index))
+            'unable to read page: {0:d}'.format(page_number))
         break
 
-      self._ParsePage(parser_mediator, index, page_data)
+      self._ParsePage(parser_mediator, page_data)
 
     # TODO: check file footer.
 
