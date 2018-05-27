@@ -190,6 +190,9 @@ class UtmpParser(data_formats.DataFormatParser):
     file_size = file_object.get_size()
 
     while file_offset < file_size:
+      if parser_mediator.abort:
+        break
+
       try:
         timestamp, event_data = self._ReadEntry(
             parser_mediator, file_object, file_offset)
