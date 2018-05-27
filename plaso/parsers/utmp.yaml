@@ -65,7 +65,7 @@ members:
 - name: microseconds
   data_type: int32
 - name: ip_address
-  type: stream
+  type: sequence
   element_data_type: byte
   number_of_elements: 16
 - name: unknown1

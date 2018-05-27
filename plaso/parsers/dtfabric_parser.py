@@ -80,6 +80,33 @@ class DtFabricBaseParser(interface.FileObjectParser):
     self._data_type_maps = {}
     self._fabric = self._ReadDefinitionFile(self._DEFINITION_FILE)
 
+  def _FormatPackedIPv4Address(self, packed_ip_address):
+    """Formats a packed IPv4 address as a human readable string.
+
+    Args:
+      packed_ip_address (list[int]): packed IPv4 address.
+
+    Returns:
+      str: human readable IPv4 address.
+    """
+    return '.'.join(['{0:d}'.format(octet) for octet in packed_ip_address[:4]])
+
+  def _FormatPackedIPv6Address(self, packed_ip_address):
+    """Formats a packed IPv6 address as a human readable string.
+
+    Args:
+      packed_ip_address (list[int]): packed IPv6 address.
+
+    Returns:
+      str: human readable IPv6 address.
+    """
+    # Note that socket.inet_ntop() is not supported on Windows.
+    octet_pairs = zip(packed_ip_address[0::2], packed_ip_address[1::2])
+    octet_pairs = [octet1 << 8 | octet2 for octet1, octet2 in octet_pairs]
+    # TODO: omit ":0000" from the string.
+    return ':'.join([
+        '{0:04x}'.format(octet_pair) for octet_pair in octet_pairs])
+
   def _GetDataTypeMap(self, name):
     """Retrieves a data type map defined by the definition file.
 

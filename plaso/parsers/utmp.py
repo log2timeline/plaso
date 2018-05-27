@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import os
-import socket
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -66,8 +65,7 @@ class UtmpParser(data_formats.DataFormatParser):
 
   _UTMP_ENTRY_SIZE = _UTMP_ENTRY.GetByteSize()
 
-  _EMPTY_IP_ADDRESS = (
-      b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+  _EMPTY_IP_ADDRESS = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
   _SUPPORTED_TYPES = frozenset(range(0, 10))
 
@@ -149,14 +147,10 @@ class UtmpParser(data_formats.DataFormatParser):
     # TODO: move to formatter
     status = self.STATUS_TYPE.get(entry.type, 'N/A')
 
-    try:
-      if entry.ip_address[4:] == self._EMPTY_IP_ADDRESS[4:]:
-        ip_address = socket.inet_ntop(socket.AF_INET, entry.ip_address[:4])
-      else:
-        ip_address = socket.inet_ntop(socket.AF_INET6, entry.ip_address)
-    except socket.error:
-      parser_mediator.ProduceExtractionError('unable to unpack IP address')
-      ip_address = None
+    if entry.ip_address[4:] == self._EMPTY_IP_ADDRESS[4:]:
+      ip_address = self._FormatPackedIPv4Address(entry.ip_address[:4])
+    else:
+      ip_address = self._FormatPackedIPv6Address(entry.ip_address)
 
     # TODO: add termination status.
     # TODO: rename event data attributes to match data definition.
