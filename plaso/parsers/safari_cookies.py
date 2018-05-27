@@ -93,11 +93,36 @@ class BinaryCookieParser(data_formats.DataFormatParser):
     self._cookie_plugins = (
         cookie_plugins_manager.CookiePluginsManager.GetPlugins())
 
-  def _ParsePage(self, parser_mediator, page_data):
+  def _ParseCString(self, page_data, string_offset):
+    """Parses a C string from the page data.
+
+    Args:
+      page_data (bytes): page data.
+      string_offset (int): offset of the string relative to the start
+          of the page.
+
+    Returns:
+      str: string.
+
+    Raises:
+      ParseError: when the string cannot be parsed.
+    """
+    try:
+      value_string = self._CSTRING.MapByteStream(page_data[string_offset:])
+    except dtfabric_errors.MappingError as exception:
+      raise errors.ParseError((
+          'Unable to map string data at offset: 0x{0:08x} with error: '
+          '{1!s}').format(string_offset, exception))
+
+    return value_string.rstrip(b'\x00')
+
+  def _ParsePage(self, parser_mediator, file_offset, page_data):
     """Parses a page.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
+      file_offset (int): offset of the data relative from the start of
+          the file-like object.
       page_data (bytes): page data.
 
     Raises:
@@ -122,7 +147,7 @@ class BinaryCookieParser(data_formats.DataFormatParser):
     Args:
       parser_mediator (ParserMediator): parser mediator.
       page_data (bytes): page data.
-      record_offset (int): offset of the cookie record relative to the start
+      record_offset (int): offset of the record relative to the start
           of the page.
 
     Raises:
@@ -141,19 +166,19 @@ class BinaryCookieParser(data_formats.DataFormatParser):
 
     if record_header.url_offset:
       data_offset = record_offset + record_header.url_offset
-      event_data.url = self._ParseString(page_data, data_offset)
+      event_data.url = self._ParseCString(page_data, data_offset)
 
     if record_header.name_offset:
       data_offset = record_offset + record_header.name_offset
-      event_data.cookie_name = self._ParseString(page_data, data_offset)
+      event_data.cookie_name = self._ParseCString(page_data, data_offset)
 
     if record_header.path_offset:
       data_offset = record_offset + record_header.path_offset
-      event_data.path = self._ParseString(page_data, data_offset)
+      event_data.path = self._ParseCString(page_data, data_offset)
 
     if record_header.value_offset:
       data_offset = record_offset + record_header.value_offset
-      event_data.cookie_value = self._ParseString(page_data, data_offset)
+      event_data.cookie_value = self._ParseCString(page_data, data_offset)
 
     if record_header.creation_time:
       date_time = dfdatetime_cocoa_time.CocoaTime(
@@ -188,28 +213,6 @@ class BinaryCookieParser(data_formats.DataFormatParser):
         parser_mediator.ProduceExtractionError(
             'plugin: {0:s} unable to parse cookie with error: {1!s}'.format(
                 plugin.NAME, exception))
-
-  def _ParseString(self, page_data, string_offset):
-    """Parses a string from the page data.
-
-    Args:
-      page_data (bytes): page data.
-      string_offset (int): string offset.
-
-    Returns:
-      str: string.
-
-    Raises:
-      ParseError: when the string cannot be parsed.
-    """
-    try:
-      value_string = self._CSTRING.MapByteStream(page_data[string_offset:])
-    except dtfabric_errors.MappingError as exception:
-      raise errors.ParseError((
-          'Unable to map string data at offset: 0x{0:08x} with error: '
-          '{1!s}').format(string_offset, exception))
-
-    return value_string.rstrip(b'\x00')
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -246,6 +249,8 @@ class BinaryCookieParser(data_formats.DataFormatParser):
     if file_header.signature != self._SIGNATURE:
       raise errors.UnableToParseFile('Unsupported file signature.')
 
+    file_offset += self._FILE_HEADER_SIZE
+
     # TODO: move page sizes array into file header, this will require dtFabric
     # to compare signature as part of data map.
     page_sizes_data_size = file_header.number_of_pages * 4
@@ -263,6 +268,8 @@ class BinaryCookieParser(data_formats.DataFormatParser):
           'Unable to map page sizes data at offset: 0x{0:08x} with error: '
           '{1!s}').format(file_offset, exception))
 
+    file_offset += page_sizes_data_size
+
     for page_number, page_size in enumerate(page_sizes_array):
       if parser_mediator.abort:
         break
@@ -273,7 +280,9 @@ class BinaryCookieParser(data_formats.DataFormatParser):
             'unable to read page: {0:d}'.format(page_number))
         break
 
-      self._ParsePage(parser_mediator, page_data)
+      self._ParsePage(parser_mediator, file_offset, page_data)
+
+      file_offset += page_size
 
     # TODO: check file footer.
 
