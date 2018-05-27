@@ -10,30 +10,19 @@ from artifacts import definitions as artifact_types
 
 from dfvfs.helpers import file_system_searcher
 from dfwinreg import registry_searcher
-
 from plaso.engine import path_helper
 
 class ArtifactDefinitionsFilterHelper(object):
-  """Helper to create filters based on artifact defintions.
+  """Helper to create filters based on artifact definitions.
 
-  Builds extraction and parsing filters from forensic artifact definitions.
+  Builds extraction filters from forensic artifact definitions.
 
   For more information about Forensic Artifacts see:
   https://github.com/ForensicArtifacts/artifacts/blob/master/docs/Artifacts%20definition%20format%20and%20style%20guide.asciidoc
   """
 
   ARTIFACT_FILTERS = 'ARTIFACT_FILTERS'
-  COMPATIBLE_DFWINREG_KEYS = frozenset([
-      'HKEY_LOCAL_MACHINE',
-      'HKEY_LOCAL_MACHINE\\SYSTEM',
-      'HKEY_LOCAL_MACHINE\\SOFTWARE',
-      'HKEY_LOCAL_MACHINE\\SAM',
-      'HKEY_LOCAL_MACHINE\\SECURITY'])
-  STANDARD_OS_FILTERS = frozenset([
-      'windows',
-      'linux',
-      'darwin'])
-  RECURSIVE_GLOB_LIMIT = 10
+  _COMPATIBLE_DFWINREG_KEYS = ('HKEY_LOCAL_MACHINE')
 
   def __init__(self, artifacts_registry, artifacts, knowledge_base):
     """Initializes an artifact definitions filter helper.
@@ -51,7 +40,7 @@ class ArtifactDefinitionsFilterHelper(object):
     self._knowledge_base = knowledge_base
 
   def BuildFindSpecs(self, environment_variables=None):
-    """Build find specification from a forensic artifact definitions.
+    """Builds find specification from a forensic artifact definitions.
 
     Args:
       environment_variables (Optional[list[EnvironmentVariableArtifact]]):
@@ -59,27 +48,19 @@ class ArtifactDefinitionsFilterHelper(object):
     """
     find_specs = {}
 
-    artifact_defintions = []
-    # Check if single operating system type has been provided, in that case
-    # process all artifact types for that OS.
-    if (len(self._artifacts) == 1 and
-            self._artifacts[0] in self.STANDARD_OS_FILTERS):
-      for definition in self._artifacts_registry.GetDefinitions():
-        if self._artifacts[0].lower() in (
-            os.lower() for os in definition.supported_os):
-          artifact_defintions.append(definition)
-    else:
-      for artifact_filter in self._artifacts:
-        if self._artifacts_registry.GetDefinitionByName(artifact_filter):
-          artifact_defintions.append(
-            self._artifacts_registry.GetDefinitionByName(artifact_filter))
+    artifact_definitions = []
+    for artifact_filter in self._artifacts:
+      if self._artifacts_registry.GetDefinitionByName(artifact_filter):
+        artifact_definitions.append(
+          self._artifacts_registry.GetDefinitionByName(artifact_filter))
 
-    for definition in artifact_defintions:
+    for definition in artifact_definitions:
       for source in definition.sources:
         if source.type_indicator == artifact_types.TYPE_INDICATOR_FILE:
           for path_entry in source.paths:
             self.BuildFindSpecsFromFileArtifact(
-              path_entry, source.separator, environment_variables, find_specs)
+              path_entry, source.separator, environment_variables,
+              self._knowledge_base.user_accounts, find_specs)
         elif (source.type_indicator ==
               artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY):
           keys = set(source.keys)
@@ -90,24 +71,26 @@ class ArtifactDefinitionsFilterHelper(object):
         elif (source.type_indicator ==
               artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_VALUE):
           # TODO: Handle Registry Values Once Supported in dfwinreg.
+          # https://github.com/log2timeline/dfwinreg/issues/98
           logging.warning(('Unable to handle Registry Value, extracting '
-                           'key only: {0:s} ').format(source.key_value_pairs))
+                           'key only: "{0:s}"').format(source.key_value_pairs))
 
           for key_pair in source.key_value_pairs:
             keys = set()
             keys.add(key_pair.get('key'))
             for key_entry in keys:
               if self._CheckKeyCompatibility(key_entry):
-                self.BuildFindSpecsFromRegistryArtifact(
-                  key_entry, find_specs)
+                self.BuildFindSpecsFromRegistryArtifact(key_entry, find_specs)
         else:
           logging.warning(('Unable to handle artifact, plaso does not '
-                           'support: {0:s} ').format(source.type_indicator))
+                           'support: "{0:s}"').format(source.type_indicator))
 
     self._knowledge_base.SetValue(self.ARTIFACT_FILTERS, find_specs)
 
+  @classmethod
   def BuildFindSpecsFromFileArtifact(
-      self, path_entry, separator, environment_variables, find_specs):
+      self, path_entry, separator, environment_variables, user_accounts,
+      find_specs):
     """Build find specifications from a FILE artifact type.
 
     Args:
@@ -116,38 +99,35 @@ class ArtifactDefinitionsFilterHelper(object):
       separator (str): File system path separator.
       environment_variables list(str):  Environment variable attributes used to
           dynamically populate environment variables in key.
+      user_accounts list(str): Identified user accounts stored in the
+          knowledge base.
       find_specs dict[artifacts.artifact_types]:  Dictionary containing
           find_specs.
     """
-    for glob_path in self._ExpandRecursiveGlobs(path_entry):
-      for path in path_helper.PathHelper.ExpandUserHomeDirPath(
-          glob_path, self._knowledge_base.user_accounts):
+    for glob_path in path_helper.PathHelper.ExpandRecursiveGlobs(
+        path_entry, separator):
+      for path in path_helper.PathHelper.ExpandUserHomeDirectoryPath(
+          glob_path, user_accounts):
         if '%' in path:
           path = path_helper.PathHelper.ExpandWindowsPath(
               path, environment_variables)
 
-        if not path.startswith('/') and not path.startswith('\\'):
+        if not path.startswith(separator):
           logging.warning((
               'The path filter must be defined as an absolute path: '
-              '{0:s}').format(path))
+              '"{0:s}"').format(path))
           continue
 
         # Convert the path filters into a list of path segments and
         # strip the root path segment.
         path_segments = path.split(separator)
 
-        # If the source didn't specify a separator, '/' is returned by
-        # default from ForensicArtifacts, this is sometimes wrong.  Thus,
-        # need to check if '\' characters are still present and split on those.
-        if len(path_segments) == 1 and '\\' in path_segments[0]:
-          logging.warning('Potentially bad separator = {0:s} , trying \'\\\''
-                          .format(separator))
-          path_segments = path.split('\\')
+        # Remove initial root entry
         path_segments.pop(0)
 
         if not path_segments[-1]:
           logging.warning(
-              'Empty last path segment in path filter: {0:s}'.format(path))
+              'Empty last path segment in path filter: "{0:s}"'.format(path))
           path_segments.pop(-1)
 
         try:
@@ -155,27 +135,28 @@ class ArtifactDefinitionsFilterHelper(object):
               location_glob=path_segments, case_sensitive=False)
         except ValueError as exception:
           logging.error((
-              'Unable to build find spec for path: {0:s} with error: {1!s}'
+              'Unable to build find spec for path: "{0:s}" with error: "{1!s}"'
           ).format(path, exception))
           continue
         if artifact_types.TYPE_INDICATOR_FILE not in find_specs:
           find_specs[artifact_types.TYPE_INDICATOR_FILE] = []
-        find_specs[artifact_types.TYPE_INDICATOR_FILE].append(
-            find_spec)
+        find_specs[artifact_types.TYPE_INDICATOR_FILE].append(find_spec)
 
+  @classmethod
   def BuildFindSpecsFromRegistryArtifact(
       self, key_entry, find_specs):
     """Build find specifications from a Windows registry artifact type.
 
     Args:
-      key_entry (str):  Current file system key to add.
+      key_entry (str): Current file system key to add.
       find_specs dict[artifacts.artifact_types]:  Dictionary containing
           find_specs.
     """
-    for key in self._ExpandRecursiveGlobs(key_entry):
+    separator = '\\'
+    for key in path_helper.PathHelper.ExpandRecursiveGlobs(
+        key_entry, separator):
       if '%%' in key:
-        logging.error((
-            'Unable to expand path filter: {0:s}').format(key))
+        logging.error(('Unable to expand path filter: "{0:s}"').format(key))
         continue
       find_spec = registry_searcher.FindSpec(key_path_glob=key)
       if artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY not in find_specs:
@@ -184,76 +165,19 @@ class ArtifactDefinitionsFilterHelper(object):
       find_specs[artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY].append(
           find_spec)
 
-  def _CheckKeyCompatibility(self, key):
-    """Check if a registry key is compatible with dfwinreg.
+  @staticmethod
+  def _CheckKeyCompatibility(key):
+    """Checks if a Windows Registry key is compatible with dfwinreg.
 
     Args:
       key (str):  String key to to check for dfwinreg compatibility.
 
     Returns:
-      (bool): Boolean whether key is compatible or not.
+      (bool): True if key is compatible or False if not.
     """
-    key_path_prefix = key.split('\\')[0]
-    if key_path_prefix.upper() in self.COMPATIBLE_DFWINREG_KEYS:
+    if key.startswith(
+        ArtifactDefinitionsFilterHelper._COMPATIBLE_DFWINREG_KEYS):
       return True
-    logging.warning('Key {0:s}, has a prefix {1:s} that is not supported '
-                    'by dfwinreg presently'.format(key, key_path_prefix))
+    logging.warning('Key "{0:s}", has a prefix that is not supported '
+                    'by dfwinreg presently'.format(key))
     return False
-
-  def _ExpandRecursiveGlobs(self, path):
-    """Expand recursive like globs present in an artifact path.
-
-    If a path ends in '**', with up to two optional digits such as '**10',
-    the '**' will recursively match all files and zero or more directories
-    from the specified path. The optional digits indicate the recursion depth.
-    By default recursion depth is 10 directories.
-    If the glob is followed by a ‘/’ or '\', only directories and
-    subdirectories will be matched.
-
-    Args:
-      path (str):  String path to be expanded.
-
-    Returns:
-      list[str]: String path expanded for each glob.
-    """
-
-    match = re.search(r'(.*)?(\\|/)\*\*(\d{1,2})?(\\|/)?$', path)
-    if match:
-      skip_first = False
-      if match.group(4):
-        skip_first = True
-      if match.group(3):
-        iterations = match.group(3)
-      else:
-        iterations = self.RECURSIVE_GLOB_LIMIT
-        logging.warning('Path {0:s} contains fully recursive glob, limiting '
-                        'to ten levels'.format(path))
-      paths = self._BuildRecursivePaths(match.group(1), iterations, skip_first)
-      return paths
-    else:
-      return [path]
-
-  def _BuildRecursivePaths(self, path, count, skip_first):
-    """Append wildcard entries to end of path.
-
-    Args:
-      path (str):  Path to append wildcards to.
-
-    Returns:
-      paths list[str]: Paths expanded with wildcards.
-    """
-    paths = []
-    if '\\' in path:
-      replacement = '\\*'
-    else:
-      replacement = '/*'
-
-    for iteration in range(count):
-      if skip_first and iteration == 0:
-        continue
-      else:
-        path += replacement
-        paths.append(path)
-      iteration += 1
-
-    return paths

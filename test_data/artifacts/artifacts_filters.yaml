@@ -17,6 +17,7 @@ sources:
   attributes:
     paths:
       - '%%environ_systemdrive%%\test_data\*.evtx'
+      - '%%users.homedir%%\Documents\WindowsPowerShell\profile.ps1'
       - '\test_data\testdir\filter_*.txt'
       - '\does_not_exist\some_file_*.txt'
       - '\globbed\test\path\**\'

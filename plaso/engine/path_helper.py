@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import logging
 import re
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -12,6 +13,8 @@ from plaso.lib import py2to3
 
 class PathHelper(object):
   """Class that implements the path helper."""
+
+  RECURSIVE_GLOB_LIMIT = 10
 
   @classmethod
   def ExpandWindowsPath(cls, path, environment_variables):
@@ -149,8 +152,8 @@ class PathHelper(object):
     return location
 
   @classmethod
-  def ExpandUserHomeDirPath(cls, path, user_accounts):
-    """Expands a Windows path to contain all user home directories.
+  def ExpandUserHomeDirectoryPath(cls, path, user_accounts):
+    """Expands a path to contain all user home directories.
 
     Args:
       path (str): Windows path with environment variables.
@@ -165,8 +168,78 @@ class PathHelper(object):
       regex = re.compile(re.escape('%%users.homedir%%'))
       for user_account in user_accounts:
         new_path = regex.sub(user_account.user_directory, path)
+        # Remove the drive letter, if it exists.
+        if len(new_path) > 2 and new_path[1] == ':':
+          _, _, new_path = new_path.rpartition(':')
         user_paths.append(new_path)
     else:
       user_paths = [path]
 
     return user_paths
+
+  @classmethod
+  def ExpandRecursiveGlobs(cls, path, separator):
+    """Expands recursive like globs present in an artifact path.
+
+    If a path ends in '**', with up to two optional digits such as '**10',
+    the '**' will recursively match all files and zero or more directories
+    from the specified path. The optional digits indicate the recursion depth.
+    By default recursion depth is 10 directories.
+    If the glob is followed by the specified separator, only directories and
+    subdirectories will be matched.
+
+    Args:
+      path (str): Path to be expanded.
+      separator (str): Delimiter for this path from its artifact definition.
+
+    Returns:
+      list[str]: String path expanded for each glob.
+    """
+    glob_regex = r'(.*)?{0}\*\*(\d{{1,2}})?({0})?$'.format(re.escape(separator))
+    match = re.search(glob_regex, path)
+    if match:
+      skip_first = False
+      if match.group(3):
+        skip_first = True
+      if match.group(2):
+        iterations = int(match.group(2))
+      else:
+        iterations = cls.RECURSIVE_GLOB_LIMIT
+        logging.warning('Path "{0:s}" contains fully recursive glob, limiting '
+                        'to 10 levels'.format(path))
+      paths = cls.AppendPathEntries(
+          match.group(1), separator, iterations, skip_first)
+      return paths
+    else:
+      return [path]
+
+  @classmethod
+  def AppendPathEntries(cls, path, separator, count, skip_first):
+    """Appends wildcard entries to end of path.
+
+    Will append wildcard * to given path building a list of strings for "count"
+    iterations, skipping the first directory if skip_first is true.
+
+    Args:
+      path (str): Path to append wildcards to.
+      separator (str): Delimiter for this path from its artifact definition.
+      count (int): Number of entries to be appended.
+      skip_first (bool): Whether or not to skip first entry to append.
+
+
+    Returns:
+      list[str]: Paths that were expanded from the path with wildcards.
+    """
+    paths = []
+    replacement = '{0}*'.format(separator)
+
+    iteration = 0
+    while iteration < count:
+      if skip_first and iteration == 0:
+        path += replacement
+      else:
+        path += replacement
+        paths.append(path)
+      iteration += 1
+
+    return paths
