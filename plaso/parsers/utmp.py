@@ -22,13 +22,13 @@ class UtmpEventData(events.EventData):
 
   Attributes:
     computer_name (str): name of the computer.
-    exit (int): exit status.
+    exit_status (int): exit status.
     ip_address (str): IP address from the connection.
     pid (int): process identifier (PID).
-    status (str): login status.
-    terminal_id (int): inittab identifier.
     terminal (str): type of terminal.
-    user (str): active user name.
+    terminal_identifier (int): inittab identifier.
+    type (int): type of login.
+    username (str): user name.
   """
 
   DATA_TYPE = 'linux:utmp:event'
@@ -37,13 +37,13 @@ class UtmpEventData(events.EventData):
     """Initializes event data."""
     super(UtmpEventData, self).__init__(data_type=self.DATA_TYPE)
     self.computer_name = None
-    self.exit = None
+    self.exit_status = None
     self.ip_address = None
     self.pid = None
-    self.status = None
-    self.terminal_id = None
     self.terminal = None
-    self.user = None
+    self.terminal_identifier = None
+    self.type = None
+    self.username = None
 
 
 class UtmpParser(data_formats.DataFormatParser):
@@ -68,19 +68,6 @@ class UtmpParser(data_formats.DataFormatParser):
   _EMPTY_IP_ADDRESS = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
   _SUPPORTED_TYPES = frozenset(range(0, 10))
-
-  # TODO: move to formatter
-  STATUS_TYPE = {
-      0: 'EMPTY',
-      1: 'RUN_LVL',
-      2: 'BOOT_TIME',
-      3: 'NEW_TIME',
-      4: 'OLD_TIME',
-      5: 'INIT_PROCESS',
-      6: 'LOGIN_PROCESS',
-      7: 'USER_PROCESS',
-      8: 'DEAD_PROCESS',
-      9: 'ACCOUNTING'}
 
   def _ReadEntry(self, parser_mediator, file_object, file_offset):
     """Reads an UTMP entry.
@@ -144,9 +131,6 @@ class UtmpParser(data_formats.DataFormatParser):
     if not hostname or hostname == ':0':
       hostname = 'localhost'
 
-    # TODO: move to formatter
-    status = self.STATUS_TYPE.get(entry.type, 'N/A')
-
     if entry.ip_address[4:] == self._EMPTY_IP_ADDRESS[4:]:
       ip_address = self._FormatPackedIPv4Address(entry.ip_address[:4])
     else:
@@ -156,13 +140,13 @@ class UtmpParser(data_formats.DataFormatParser):
     # TODO: rename event data attributes to match data definition.
     event_data = UtmpEventData()
     event_data.computer_name = hostname
-    event_data.exit = entry.exit_status
+    event_data.exit_status = entry.exit_status
     event_data.ip_address = ip_address
     event_data.pid = entry.pid
-    event_data.status = status
-    event_data.terminal_id = entry.terminal_identifier
     event_data.terminal = terminal
-    event_data.user = username
+    event_data.terminal_identifier = entry.terminal_identifier
+    event_data.type = entry.type
+    event_data.username = username
 
     timestamp = entry.microseconds + (
         entry.timestamp * definitions.MICROSECONDS_PER_SECOND)
@@ -188,7 +172,7 @@ class UtmpParser(data_formats.DataFormatParser):
       raise errors.UnableToParseFile(
           'Unable to parse UTMP header with error: {0!s}'.format(exception))
 
-    if not event_data.user:
+    if not event_data.username:
       raise errors.UnableToParseFile(
           'Unable to parse UTMP header with error: missing username')
 
