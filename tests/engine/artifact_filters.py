@@ -140,15 +140,16 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
     """Tests the _CheckKeyCompatibility function"""
 
     # Compatible Key.
-    key = 'HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control'
+    key = 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control'
     compatible_key = (artifact_filters.ArtifactDefinitionsFilterHelper.
                       _CheckKeyCompatibility(key))
     self.assertTrue(compatible_key)
 
     # NOT a Compatible Key.
-    key = 'HKEY_USERS\S-1-5-18'
-    compatible_key = (artifact_filters.ArtifactDefinitionsFilterHelper.
-                      _CheckKeyCompatibility(key))
+    key = 'HKEY_USERS\\S-1-5-18'
+    compatible_key = (
+        artifact_filters.ArtifactDefinitionsFilterHelper._CheckKeyCompatibility(
+            key))
     self.assertFalse(compatible_key)
 
 
@@ -161,11 +162,12 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
     # Test expansion of environment variables.
     path_entry = '%%environ_systemroot%%\\test_data\\*.evtx'
     environment_variable = [artifacts.EnvironmentVariableArtifact(
-      case_sensitive=False, name='SystemRoot', value='C:\\Windows')]
+        case_sensitive=False, name='SystemRoot', value='C:\\Windows')]
 
     (artifact_filters.ArtifactDefinitionsFilterHelper.
      BuildFindSpecsFromFileArtifact(
-        path_entry, separator, environment_variable, user_accounts, find_specs))
+          path_entry, separator, environment_variable, user_accounts,
+          find_specs))
 
     # Should build 1 find_spec.
     self.assertEqual(len(find_specs[artifact_types.TYPE_INDICATOR_FILE]), 1)
@@ -173,8 +175,8 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
     # Location segments should be equivalent to \Windows\test_data\*.evtx.
     path_segments = ['Windows', 'test\\_data', '.*\\.evtx']
     self.assertEqual(
-      find_specs[artifact_types.TYPE_INDICATOR_FILE][0]._location_segments,
-      path_segments)
+        find_specs[artifact_types.TYPE_INDICATOR_FILE][0]._location_segments,
+        path_segments)
 
 
     # Test expansion of globs.
@@ -182,17 +184,19 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
     path_entry = '\\test_data\\**'
     (artifact_filters.ArtifactDefinitionsFilterHelper.
      BuildFindSpecsFromFileArtifact(
-        path_entry, separator, environment_variable, user_accounts, find_specs))
+          path_entry, separator, environment_variable, user_accounts,
+          find_specs))
 
     # Glob expansion should by default recurse ten levels.
     self.assertEqual(len(find_specs[artifact_types.TYPE_INDICATOR_FILE]), 10)
 
     # Last entry in find_specs list should be 10 levels of depth.
-    path_segments = ['test\\_data', '.*',  '.*',  '.*',  '.*',
-                     '.*',  '.*',  '.*',  '.*',  '.*',  '.*']
+    path_segments = [
+        'test\\_data', '.*', '.*', '.*', '.*', '.*', '.*', '.*', '.*', '.*',
+        '.*']
     self.assertEqual(
-      find_specs[artifact_types.TYPE_INDICATOR_FILE][9]._location_segments,
-      path_segments)
+        find_specs[artifact_types.TYPE_INDICATOR_FILE][9]._location_segments,
+        path_segments)
 
     # Test expansion of user home directories
     find_specs = {}
@@ -200,22 +204,23 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
     testuser1 = artifacts.UserAccountArtifact(
         user_directory='/homes/testuser1', username='testuser1')
     testuser2 = artifacts.UserAccountArtifact(
-      user_directory='/home/testuser2', username='testuser2')
+        user_directory='/home/testuser2', username='testuser2')
     user_accounts = [testuser1, testuser2]
     path_entry = '%%users.homedir%%/.thumbnails/**3'
 
     (artifact_filters.ArtifactDefinitionsFilterHelper.
      BuildFindSpecsFromFileArtifact(
-        path_entry, separator, environment_variable, user_accounts, find_specs))
+          path_entry, separator, environment_variable, user_accounts,
+          find_specs))
 
     # Six total find specs should be created for testuser1 and testuser2.
     self.assertEqual(len(find_specs[artifact_types.TYPE_INDICATOR_FILE]), 6)
 
     # Last entry in find_specs list should be testuser2 with a depth of 3
-    path_segments = ['home', 'testuser2',  '\.thumbnails',  '.*', '.*', '.*']
+    path_segments = ['home', 'testuser2', '\\.thumbnails', '.*', '.*', '.*']
     self.assertEqual(
-      find_specs[artifact_types.TYPE_INDICATOR_FILE][5]._location_segments,
-      path_segments)
+        find_specs[artifact_types.TYPE_INDICATOR_FILE][5]._location_segments,
+        path_segments)
 
 
     # Test Windows path with profile directories and globs with a depth of 4.
@@ -224,22 +229,23 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
     testuser1 = artifacts.UserAccountArtifact(
         user_directory='\\Users\\\\testuser1', username='testuser1')
     testuser2 = artifacts.UserAccountArtifact(
-      user_directory='\\Users\\\\testuser2', username='testuser2')
+        user_directory='\\Users\\\\testuser2', username='testuser2')
     user_accounts = [testuser1, testuser2]
     path_entry = '%%users.homedir%%\\AppData\\**4'
 
     (artifact_filters.ArtifactDefinitionsFilterHelper.
      BuildFindSpecsFromFileArtifact(
-        path_entry, separator, environment_variable, user_accounts, find_specs))
+          path_entry, separator, environment_variable, user_accounts,
+          find_specs))
 
     # Eight find specs should be created for testuser1 and testuser2.
     self.assertEqual(len(find_specs[artifact_types.TYPE_INDICATOR_FILE]), 8)
 
     # Last entry in find_specs list should be testuser2, with a depth of 4.
-    path_segments = ['Users', 'testuser2',  'AppData',  '.*', '.*', '.*', '.*']
+    path_segments = ['Users', 'testuser2', 'AppData', '.*', '.*', '.*', '.*']
     self.assertEqual(
-      find_specs[artifact_types.TYPE_INDICATOR_FILE][7]._location_segments,
-      path_segments)
+        find_specs[artifact_types.TYPE_INDICATOR_FILE][7]._location_segments,
+        path_segments)
 
 
 if __name__ == '__main__':

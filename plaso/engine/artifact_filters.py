@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import logging
-import re
 
 from artifacts import definitions as artifact_types
 
@@ -52,22 +51,22 @@ class ArtifactDefinitionsFilterHelper(object):
     for artifact_filter in self._artifacts:
       if self._artifacts_registry.GetDefinitionByName(artifact_filter):
         artifact_definitions.append(
-          self._artifacts_registry.GetDefinitionByName(artifact_filter))
+            self._artifacts_registry.GetDefinitionByName(artifact_filter))
 
     for definition in artifact_definitions:
       for source in definition.sources:
         if source.type_indicator == artifact_types.TYPE_INDICATOR_FILE:
           for path_entry in source.paths:
             self.BuildFindSpecsFromFileArtifact(
-              path_entry, source.separator, environment_variables,
-              self._knowledge_base.user_accounts, find_specs)
+                path_entry, source.separator, environment_variables,
+                self._knowledge_base.user_accounts, find_specs)
         elif (source.type_indicator ==
               artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY):
           keys = set(source.keys)
           for key_entry in keys:
             if self._CheckKeyCompatibility(key_entry):
               self.BuildFindSpecsFromRegistryArtifact(
-                key_entry, find_specs)
+                  key_entry, find_specs)
         elif (source.type_indicator ==
               artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_VALUE):
           # TODO: Handle Registry Values Once Supported in dfwinreg.
@@ -89,7 +88,7 @@ class ArtifactDefinitionsFilterHelper(object):
 
   @classmethod
   def BuildFindSpecsFromFileArtifact(
-      self, path_entry, separator, environment_variables, user_accounts,
+      cls, path_entry, separator, environment_variables, user_accounts,
       find_specs):
     """Build find specifications from a FILE artifact type.
 
@@ -143,8 +142,7 @@ class ArtifactDefinitionsFilterHelper(object):
         find_specs[artifact_types.TYPE_INDICATOR_FILE].append(find_spec)
 
   @classmethod
-  def BuildFindSpecsFromRegistryArtifact(
-      self, key_entry, find_specs):
+  def BuildFindSpecsFromRegistryArtifact(cls, key_entry, find_specs):
     """Build find specifications from a Windows registry artifact type.
 
     Args:
