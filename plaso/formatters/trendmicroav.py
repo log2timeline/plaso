@@ -36,6 +36,11 @@ SCAN_TYPES = {
     4: "DCS scan"
 }
 
+BLOCK_MODES = {
+    0: "Internal filter",
+    1: "Whitelist only"
+}
+
 
 class OfficeScanVirusDetectionLogEventFormatter(
     interface.ConditionalEventFormatter):
@@ -89,7 +94,6 @@ class OfficeScanVirusDetectionLogEventFormatter(
           'Unsupported data type: {0:s}.'.format(event.data_type))
 
     event_values = event.CopyToDict()
-
     for formattable_value_name, formatter in self.VALUE_FORMATTERS.items():
       if formattable_value_name in event_values:
         value = event_values[formattable_value_name]
@@ -98,5 +102,36 @@ class OfficeScanVirusDetectionLogEventFormatter(
     return self._ConditionalFormatMessages(event_values)
 
 
-manager.FormattersManager.RegisterFormatter(
-    OfficeScanVirusDetectionLogEventFormatter)
+class OfficeScanWebReputationLogEventFormatter(
+    OfficeScanVirusDetectionLogEventFormatter):
+  """Formatter for a Trend Micro Office Scan Virus Detection Log event."""
+
+  DATA_TYPE = 'av:trendmicro:webrep'
+
+  FORMAT_STRING_PIECES = [
+      '{url}',
+      '{ip}',
+      'Group: {group_name}',
+      '{group_code}',
+      'Mode: {block_mode}',
+      'Policy ID: {policy_identifier}',
+      'Credibility rating: {credibility_rating}',
+      'Credibility score: {credibility_score}',
+      'Threshold value: {threshold}',
+      'Accessed by: {application_name}']
+
+  FORMAT_STRING_SHORT_PIECES = [
+      '{url}',
+      '{group_name}']
+
+  VALUE_FORMATTERS = {
+      'block_mode': lambda block_mode: BLOCK_MODES[block_mode]
+  }
+
+  SOURCE_LONG = 'Trend Micro Office Scan Virus Detection Log'
+  SOURCE_SHORT = 'LOG'
+
+
+manager.FormattersManager.RegisterFormatters([
+    OfficeScanVirusDetectionLogEventFormatter,
+    OfficeScanWebReputationLogEventFormatter])

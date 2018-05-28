@@ -58,6 +58,18 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
   # Subclasses must define an integer MIN_COLUMNS value.
   MIN_COLUMNS = None
 
+  # Subclasses must define a list of field names.
+  COLUMNS = ()
+
+  def __init__(self, *args, **kwargs):
+    """Initializes the parser.
+
+    The TrendMicro AV writes a text logfile encoded in the CP1252 charset;
+    unless otherwise specified, the parser class needs to know this.
+    """
+    kwargs.setdefault('encoding', 'cp1252')
+    super(TrendMicroBaseParser, self).__init__(*args, **kwargs)
+
   def _CreateDictReader(self, parser_mediator, line_reader):
     """Iterates over the log lines and provide a reader for the values.
 
@@ -164,6 +176,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
 
     return date_time
 
+
 class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
   """Parses the Trend Micro Office Scan Virus Detection Log."""
 
@@ -174,15 +187,6 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
       'date', 'time', 'threat', 'action', 'scan_type', 'unused1',
       'path', 'filename', 'unused2', 'timestamp', 'unused3', 'unused4']
   MIN_COLUMNS = 8
-
-  def __init__(self, *args, **kwargs):
-    """Initializes the parser.
-
-    The TrendMicro AV writes a text logfile encoded in the CP1252 charset;
-    unless otherwise specified, the parser class needs to know this.
-    """
-    kwargs.setdefault('encoding', 'cp1252')
-    super(OfficeScanVirusDetectionParser, self).__init__(*args, **kwargs)
 
   def ParseRow(self, parser_mediator, row_offset, row):
     """Parses a line of the log file and produces events.
@@ -244,4 +248,112 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
     return True
 
 
-manager.ParsersManager.RegisterParser(OfficeScanVirusDetectionParser)
+class TrendMicroUrlEventData(events.EventData):
+  """Trend Micro Web Reputation Log event data.
+
+  Attributes:
+    block_mode (str): operation mode.
+    url (str): accessed URL.
+    group_code (str): group code.
+    group_name (str): group name.
+    credibility_rating (int): credibility rating.
+    credibility_score (int): credibility score.
+    policy_identifier (int): policy identifier.
+    application_name (str): application name.
+    ip (str): IP address.
+    threshold (int): threshold value.
+  """
+  DATA_TYPE = 'av:trendmicro:webrep'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(TrendMicroUrlEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.block_mode = None
+    self.url = None
+    self.group_code = None
+    self.group_name = None
+    self.credibility_rating = None
+    self.credibility_score = None
+    self.policy_identifier = None
+    self.application_name = None
+    self.ip = None
+    self.threshold = None
+
+
+class OfficeScanWebReputationParser(TrendMicroBaseParser):
+  """Parses the Trend Micro Office Scan Web Reputation detection log."""
+  NAME = 'trendmicro_url'
+  DESCRIPTION = 'Parser for Trend Micro Office Web Reputation log files.'
+
+  COLUMNS = (
+      'date', 'time', 'block_mode', 'url', 'group_code', 'group_name',
+      'credibility_rating', 'policy_identifier', 'application_name',
+      'credibility_score', 'ip', 'threshold', 'timestamp', 'unused')
+
+  MIN_COLUMNS = 12
+
+  def ParseRow(self, parser_mediator, row_offset, row):
+    """Parses a line of the log file and produces events.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row_offset (int): line number of the row.
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
+    """
+
+    timestamp = self._ParseTimestamp(parser_mediator, row)
+
+    if timestamp is None:
+      return
+
+    event_data = TrendMicroUrlEventData()
+    event_data.offset = row_offset
+
+    # Convert and store integer values.
+    for field in (
+        'credibility_rating', 'credibility_score', 'policy_identifier',
+        'threshold', 'block_mode'):
+      setattr(event_data, field, int(row[field]))
+
+    # Store string values.
+    for field in ('url', 'group_name', 'group_code', 'application_name', 'ip'):
+      setattr(event_data, field, row[field])
+
+    event = time_events.DateTimeValuesEvent(
+        timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
+
+  def VerifyRow(self, parser_mediator, row):
+    """Verifies if a line of the file is in the expected format.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (dict[str, str]): fields of a single row, as specified in COLUMNS.
+
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """
+    if len(row) < self.MIN_COLUMNS:
+      return False
+
+    # Check the date format!
+    # If it doesn't parse, then this isn't a Trend Micro AV log.
+    timestamp = self._ConvertToTimestamp(row['date'], row['time'])
+
+    if timestamp is None:
+      return False
+
+    try:
+      if int(row['block_mode']) not in formatter.BLOCK_MODES:
+        return False
+    except ValueError:
+      return False
+
+    return True
+
+
+manager.ParsersManager.RegisterParsers([
+    OfficeScanVirusDetectionParser,
+    OfficeScanWebReputationParser])
