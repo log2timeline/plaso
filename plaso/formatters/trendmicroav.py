@@ -114,11 +114,11 @@ class OfficeScanWebReputationLogEventFormatter(
       'Group: {group_name}',
       '{group_code}',
       'Mode: {block_mode}',
-      'Policy ID: {policy_id}',
-      'Credibility rating: {cred_rating}',
-      'Credibility score: {cred_score}',
+      'Policy ID: {policy_identifier}',
+      'Credibility rating: {credibility_rating}',
+      'Credibility score: {credibility_score}',
       'Threshold value: {threshold}',
-      'Accessed by: {appname}']
+      'Accessed by: {application_name}']
 
   FORMAT_STRING_SHORT_PIECES = [
       '{url}',

@@ -69,7 +69,7 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
     event = events[2]
     self.assertEqual(event.url, 'http://www.eicar.org/download/eicar.com')
     self.assertEqual(event.group_code, '4E')
-    self.assertEqual(event.cred_score, 49)
+    self.assertEqual(event.credibility_score, 49)
 
     expected_message = (
         'http://www.eicar.org/download/eicar.com '

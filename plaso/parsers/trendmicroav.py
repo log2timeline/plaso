@@ -256,10 +256,10 @@ class TrendMicroUrlEventData(events.EventData):
     url (str): accessed URL.
     group_code (str): group code.
     group_name (str): group name.
-    cred_rating (int): credibility rating.
-    cred_score (int): credibility score.
-    policy_id (int): policy ID.
-    appname (str): application name.
+    credibility_rating (int): credibility rating.
+    credibility_score (int): credibility score.
+    policy_identifier (int): policy identifier.
+    application_name (str): application name.
     ip (str): IP address.
     threshold (int): threshold value.
   """
@@ -272,10 +272,10 @@ class TrendMicroUrlEventData(events.EventData):
     self.url = None
     self.group_code = None
     self.group_name = None
-    self.cred_rating = None
-    self.cred_score = None
-    self.policy_id = None
-    self.appname = None
+    self.credibility_rating = None
+    self.credibility_score = None
+    self.policy_identifier = None
+    self.application_name = None
     self.ip = None
     self.threshold = None
 
@@ -287,8 +287,8 @@ class OfficeScanWebReputationParser(TrendMicroBaseParser):
 
   COLUMNS = (
       'date', 'time', 'block_mode', 'url', 'group_code', 'group_name',
-      'cred_rating', 'policy_id', 'appname', 'cred_score', 'ip', 'threshold',
-      'timestamp', 'unused')
+      'credibility_rating', 'policy_identifier', 'application_name',
+      'credibility_score', 'ip', 'threshold', 'timestamp', 'unused')
 
   MIN_COLUMNS = 12
 
@@ -311,12 +311,13 @@ class OfficeScanWebReputationParser(TrendMicroBaseParser):
     event_data.offset = row_offset
 
     # Convert and store integer values.
-    for field in ('cred_rating', 'cred_score', 'policy_id', 'threshold',
-                  'block_mode'):
+    for field in (
+        'credibility_rating', 'credibility_score', 'policy_identifier',
+        'threshold', 'block_mode'):
       setattr(event_data, field, int(row[field]))
 
     # Store string values.
-    for field in ('url', 'group_name', 'group_code', 'appname', 'ip'):
+    for field in ('url', 'group_name', 'group_code', 'application_name', 'ip'):
       setattr(event_data, field, row[field])
 
     event = time_events.DateTimeValuesEvent(
@@ -344,7 +345,6 @@ class OfficeScanWebReputationParser(TrendMicroBaseParser):
     if timestamp is None:
       return False
 
-    # Check the block mode.
     try:
       if int(row['block_mode']) not in formatter.BLOCK_MODES:
         return False
