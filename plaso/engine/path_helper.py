@@ -226,7 +226,6 @@ class PathHelper(object):
       count (int): Number of entries to be appended.
       skip_first (bool): Whether or not to skip first entry to append.
 
-
     Returns:
       list[str]: Paths that were expanded from the path with wildcards.
     """
