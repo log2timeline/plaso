@@ -181,7 +181,6 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
         find_specs[artifact_types.TYPE_INDICATOR_FILE][0]._location_segments,
         path_segments)
 
-
     # Test expansion of globs.
     find_specs = {}
     path_entry = '\\test_data\\**'
