@@ -36,7 +36,7 @@ from plaso import dependencies
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-# needs_sphinx = '1.0'
+needs_sphinx = '1.7'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -48,7 +48,7 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
-    'sphinxcontrib.napoleon'
+    'sphinx.ext.napoleon'
 ]
 
 
@@ -348,7 +348,7 @@ def RunSphinxAPIDoc(_):
   # sys.path.append(os.path.join(os.path.dirname(__file__)))
   current_directory = os.path.abspath(os.path.dirname(__file__))
   module = os.path.join(current_directory,"..","plaso")
-  apidoc.main([None, '-o', current_directory, module, '--force'])
+  apidoc.main(['-o', current_directory, module, '--force'])
 
 def setup(app):
   """Override Sphinx setup to trigger sphinx-apidoc."""
