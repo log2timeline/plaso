@@ -127,25 +127,25 @@ class DtFabricBaseParserTest(test_lib.BaseTestCase):
     file_object = io.BytesIO(
         b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00')
 
-    parser._ReadData(file_object, 0, self._POINT3D_SIZE, 'point3d')
+    parser._ReadData(file_object, 0, self._POINT3D_SIZE)
 
     # Test with missing file-like object.
     with self.assertRaises(ValueError):
-      parser._ReadData(None, 0, self._POINT3D_SIZE, 'point3d')
+      parser._ReadData(None, 0, self._POINT3D_SIZE)
 
     # Test with file-like object with insufficient data.
     file_object = io.BytesIO(
         b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00')
 
     with self.assertRaises(errors.ParseError):
-      parser._ReadData(file_object, 0, self._POINT3D_SIZE, 'point3d')
+      parser._ReadData(file_object, 0, self._POINT3D_SIZE)
 
     # Test with file-like object that raises an IOError.
     file_object = ErrorBytesIO(
         b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00')
 
     with self.assertRaises(errors.ParseError):
-      parser._ReadData(file_object, 0, self._POINT3D_SIZE, 'point3d')
+      parser._ReadData(file_object, 0, self._POINT3D_SIZE)
 
   def testReadStructure(self):
     """Tests the _ReadStructure function."""
@@ -155,7 +155,7 @@ class DtFabricBaseParserTest(test_lib.BaseTestCase):
         b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00')
 
     parser._ReadStructure(
-        file_object, 0, self._POINT3D_SIZE, self._POINT3D, 'point3d')
+        file_object, 0, self._POINT3D_SIZE, self._POINT3D)
 
   def testReadStructureWithSizeHint(self):
     """Tests the _ReadStructureWithSizeHint function."""
@@ -167,8 +167,7 @@ class DtFabricBaseParserTest(test_lib.BaseTestCase):
         b'\x04\x00\x00\x00\x05\x00\x00\x00\x06\x00\x00\x00'
         b'\x06\x00\x00\x00\x07\x00\x00\x00\x08\x00\x00\x00')
 
-    parser._ReadStructureWithSizeHint(
-        file_object, 0, self._SHAPE3D, 'shape3d')
+    parser._ReadStructureWithSizeHint(file_object, 0, self._SHAPE3D)
 
   def testReadStructureFromByteStream(self):
     """Tests the _ReadStructureFromByteStream function."""
@@ -176,18 +175,16 @@ class DtFabricBaseParserTest(test_lib.BaseTestCase):
 
     parser._ReadStructureFromByteStream(
         b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00', 0,
-        self._POINT3D, 'point3d')
+        self._POINT3D)
 
     # Test with missing byte stream.
     with self.assertRaises(ValueError):
-      parser._ReadStructureFromByteStream(
-          None, 0, self._POINT3D, 'point3d')
+      parser._ReadStructureFromByteStream(None, 0, self._POINT3D)
 
     # Test with missing data map type.
     with self.assertRaises(ValueError):
       parser._ReadStructureFromByteStream(
-          b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00', 0, None,
-          'point3d')
+          b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00', 0, None)
 
     # Test with data type map that raises an dtfabric.MappingError.
     data_type_map = ErrorDataTypeMap(None)
@@ -195,7 +192,7 @@ class DtFabricBaseParserTest(test_lib.BaseTestCase):
     with self.assertRaises(errors.ParseError):
       parser._ReadStructureFromByteStream(
           b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00', 0,
-          data_type_map, 'point3d')
+          data_type_map)
 
 
 if __name__ == '__main__':
