@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests for binary data format and file."""
+"""Tests for shared functionality for dtFabric-based data format parsers."""
 
 from __future__ import unicode_literals
 
@@ -11,7 +11,7 @@ from dtfabric.runtime import data_maps as dtfabric_data_maps
 from dtfabric.runtime import fabric as dtfabric_fabric
 
 from plaso.lib import errors
-from plaso.parsers import data_formats
+from plaso.parsers import dtfabric_parser
 
 from tests import test_lib
 
@@ -74,8 +74,8 @@ class ErrorDataTypeMap(dtfabric_data_maps.DataTypeMap):
         'Unable to map byte stream for testing purposes.')
 
 
-class BinaryDataFormatTest(test_lib.BaseTestCase):
-  """Binary data format tests."""
+class DtFabricBaseParserTest(test_lib.BaseTestCase):
+  """Shared functionality for dtFabric-based data format parsers tests."""
 
   # pylint: disable=protected-access
 
@@ -122,7 +122,7 @@ class BinaryDataFormatTest(test_lib.BaseTestCase):
 
   def testReadData(self):
     """Tests the _ReadData function."""
-    parser = data_formats.DataFormatParser()
+    parser = dtfabric_parser.DtFabricBaseParser()
 
     file_object = io.BytesIO(
         b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00')
@@ -149,7 +149,7 @@ class BinaryDataFormatTest(test_lib.BaseTestCase):
 
   def testReadStructure(self):
     """Tests the _ReadStructure function."""
-    parser = data_formats.DataFormatParser()
+    parser = dtfabric_parser.DtFabricBaseParser()
 
     file_object = io.BytesIO(
         b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00')
@@ -159,7 +159,7 @@ class BinaryDataFormatTest(test_lib.BaseTestCase):
 
   def testReadStructureWithSizeHint(self):
     """Tests the _ReadStructureWithSizeHint function."""
-    parser = data_formats.DataFormatParser()
+    parser = dtfabric_parser.DtFabricBaseParser()
 
     file_object = io.BytesIO(
         b'\x03\x00\x00\x00'
@@ -172,7 +172,7 @@ class BinaryDataFormatTest(test_lib.BaseTestCase):
 
   def testReadStructureFromByteStream(self):
     """Tests the _ReadStructureFromByteStream function."""
-    parser = data_formats.DataFormatParser()
+    parser = dtfabric_parser.DtFabricBaseParser()
 
     parser._ReadStructureFromByteStream(
         b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00', 0,

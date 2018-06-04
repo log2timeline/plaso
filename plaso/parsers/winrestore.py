@@ -14,7 +14,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.parsers import data_formats
+from plaso.parsers import dtfabric_parser
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -40,7 +40,7 @@ class RestorePointEventData(events.EventData):
     self.sequence_number = None
 
 
-class RestorePointLogParser(data_formats.DataFormatParser):
+class RestorePointLogParser(dtfabric_parser.DtFabricBaseParser):
   """A parser for Windows Restore Point (rp.log) files."""
 
   NAME = 'rplog'
