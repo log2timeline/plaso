@@ -11,6 +11,7 @@ from dfvfs.helpers import file_system_searcher
 from dfwinreg import registry_searcher
 from plaso.engine import path_helper
 
+
 class ArtifactDefinitionsFilterHelper(object):
   """Helper to create filters based on artifact definitions.
 
