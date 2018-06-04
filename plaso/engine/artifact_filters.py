@@ -32,7 +32,8 @@ class ArtifactDefinitionsFilterHelper(object):
           definitions registry.
       artifacts (list[str]): artifact names to process.
       path (str): path to a file that contains one or more forensic artifacts.
-      knowledge_base (KnowledgeBase): Knowledge base for Log2Timeline.
+      knowledge_base (KnowledgeBase): contains information from the source
+          data needed for filtering.
     """
     super(ArtifactDefinitionsFilterHelper, self).__init__()
     self._artifacts_registry = artifacts_registry
