@@ -92,17 +92,16 @@ class ArtifactDefinitionsFilterHelper(object):
   def BuildFindSpecsFromFileArtifact(
       cls, path_entry, separator, environment_variables, user_accounts,
       find_specs):
-    """Build find specifications from a FILE artifact type.
+    """Builds find specifications from a file artifact definition.
 
     Args:
-      path_entry (str):  Current file system path to add.
-          environment variables.
-      separator (str): File system path separator.
-      environment_variables list(str):  Environment variable attributes used to
+      path_entry (str): current file system path to add.
+      separator (str): file system path segment separator.
+      environment_variables list(str): environment variable attributes used to
           dynamically populate environment variables in key.
-      user_accounts list(str): Identified user accounts stored in the
+      user_accounts (list[str]): identified user accounts stored in the
           knowledge base.
-      find_specs dict[artifacts.artifact_types]:  Dictionary containing
+      find_specs (dict[artifacts.artifact_types]):  Dictionary containing
           find_specs.
     """
     for glob_path in path_helper.PathHelper.ExpandRecursiveGlobs(
