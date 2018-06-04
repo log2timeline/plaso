@@ -30,7 +30,7 @@ class ArtifactDefinitionsFilterHelper(object):
     Args:
       artifacts_registry (artifacts.ArtifactDefinitionsRegistry]): artifact
           definitions registry.
-      artifacts (list[str]): artifact names to process.
+      artifacts (list[str]): artifact names to filter.
       path (str): path to a file that contains one or more forensic artifacts.
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for filtering.
