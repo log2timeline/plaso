@@ -8,8 +8,6 @@ import os
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
-from dtfabric.runtime import fabric as dtfabric_fabric
-
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
@@ -49,22 +47,8 @@ class RestorePointLogParser(dtfabric_parser.DtFabricBaseParser):
   FILTERS = frozenset([
       interface.FileNameFileEntryFilter('rp.log')])
 
-  _DATA_TYPE_FABRIC_DEFINITION_FILE = os.path.join(
+  _DEFINITION_FILE = os.path.join(
       os.path.dirname(__file__), 'winrestore.yaml')
-
-  with open(_DATA_TYPE_FABRIC_DEFINITION_FILE, 'rb') as file_object:
-    _DATA_TYPE_FABRIC_DEFINITION = file_object.read()
-
-  _DATA_TYPE_FABRIC = dtfabric_fabric.DataTypeFabric(
-      yaml_definition=_DATA_TYPE_FABRIC_DEFINITION)
-
-  _FILE_HEADER = _DATA_TYPE_FABRIC.CreateDataTypeMap(
-      'rp_log_file_header')
-
-  _FILE_FOOTER = _DATA_TYPE_FABRIC.CreateDataTypeMap(
-      'rp_log_file_footer')
-
-  _FILE_FOOTER_SIZE = _FILE_FOOTER.GetByteSize()
 
   def ParseFileObject(self, parser_mediator, file_object, **unused_kwargs):
     """Parses a Windows Restore Point (rp.log) log file-like object.
@@ -79,18 +63,22 @@ class RestorePointLogParser(dtfabric_parser.DtFabricBaseParser):
     """
     file_size = file_object.get_size()
 
+    data_type_map = self._GetDataTypeMap('rp_log_file_header')
+
     try:
-      file_header, _ = self._ReadStructureWithSizeHint(
-          file_object, 0, self._FILE_HEADER)
+      file_header, _ = self._ReadStructure(file_object, 0, data_type_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile(
           'Unable to parse file header with error: {0!s}'.format(
               exception))
 
+    data_type_map = self._GetDataTypeMap('rp_log_file_footer')
+
+    file_footer_offset = file_size - data_type_map.GetByteSize()
+
     try:
-      file_footer_offset = file_size - self._FILE_FOOTER_SIZE
-      file_footer = self._ReadStructure(
-          file_object, file_footer_offset, self._FILE_FOOTER)
+      file_footer, _ = self._ReadStructure(
+          file_object, file_footer_offset, data_type_map)
     except (ValueError, errors.ParseError) as exception:
       parser_mediator.ProduceExtractionError(
           'unable to parse file footer with error: {0!s}'.format(exception))
