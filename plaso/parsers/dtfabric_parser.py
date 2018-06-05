@@ -104,13 +104,10 @@ class DtFabricBaseParser(interface.FileObjectParser):
     Returns:
       dtfabric.DataTypeFabric: data type fabric which contains the data format
           data type maps of the data type definition, such as a structure, that
-          can be mapped onto binary data.
-
-    Raises:
-      ValueError: if the path to the dtFabric definition file is missing.
+          can be mapped onto binary data or None if no path is provided.
     """
     if not path:
-      raise ValueError('Missing path of dtFabric definition file.')
+      return None
 
     with open(path, 'rb') as file_object:
       definition = file_object.read()
