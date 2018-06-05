@@ -23,7 +23,9 @@ class DtFabricBaseParser(interface.FileObjectParser):
       file_object (dvfvs.FileIO): a file-like object to parse.
       file_offset (int): offset of the data relative from the start of
           the file-like object.
-      data_size (int): size of the data.
+      data_size (int): size of the data. The resulting data size much match
+          the requested data size so that dtFabric can map the data type
+          definitions onto the byte stream.
 
     Returns:
       bytes: byte stream containing the data.
@@ -55,15 +57,13 @@ class DtFabricBaseParser(interface.FileObjectParser):
 
     return data
 
-  def _ReadStructure(
-      self, file_object, file_offset, data_size, data_type_map):
+  def _ReadStructure(self, file_object, file_offset, data_type_map):
     """Reads a structure.
 
     Args:
       file_object (dvfvs.FileIO): a file-like object to parse.
       file_offset (int): offset of the structure data relative from the start
           of the file-like object.
-      data_size (int): data size of the structure.
       data_type_map (dtfabric.DataTypeMap): data type map of the structure.
 
     Returns:
@@ -73,6 +73,8 @@ class DtFabricBaseParser(interface.FileObjectParser):
       ParseError: if the structure cannot be read.
       ValueError: if file-like object or data type map is missing.
     """
+    data_size = data_type_map.GetByteSize()
+
     data = self._ReadData(file_object, file_offset, data_size)
 
     return self._ReadStructureFromByteStream(data, file_offset, data_type_map)

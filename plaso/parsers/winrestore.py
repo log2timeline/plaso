@@ -90,8 +90,7 @@ class RestorePointLogParser(dtfabric_parser.DtFabricBaseParser):
     try:
       file_footer_offset = file_size - self._FILE_FOOTER_SIZE
       file_footer = self._ReadStructure(
-          file_object, file_footer_offset, self._FILE_FOOTER_SIZE,
-          self._FILE_FOOTER)
+          file_object, file_footer_offset, self._FILE_FOOTER)
     except (ValueError, errors.ParseError) as exception:
       parser_mediator.ProduceExtractionError(
           'unable to parse file footer with error: {0!s}'.format(exception))

@@ -154,8 +154,7 @@ class DtFabricBaseParserTest(test_lib.BaseTestCase):
     file_object = io.BytesIO(
         b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00')
 
-    parser._ReadStructure(
-        file_object, 0, self._POINT3D_SIZE, self._POINT3D)
+    parser._ReadStructure(file_object, 0, self._POINT3D)
 
   def testReadStructureWithSizeHint(self):
     """Tests the _ReadStructureWithSizeHint function."""
