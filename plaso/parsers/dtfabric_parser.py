@@ -95,25 +95,6 @@ class DtFabricBaseParser(interface.FileObjectParser):
 
     return data_type_map
 
-  def _ReadDefinitionFile(self, path):
-    """Reads a dtFabric definition file.
-
-    Args:
-      path (str): path to the dtFabric definition file.
-
-    Returns:
-      dtfabric.DataTypeFabric: data type fabric which contains the data format
-          data type maps of the data type definition, such as a structure, that
-          can be mapped onto binary data or None if no path is provided.
-    """
-    if not path:
-      return None
-
-    with open(path, 'rb') as file_object:
-      definition = file_object.read()
-
-    return dtfabric_fabric.DataTypeFabric(yaml_definition=definition)
-
   def _ReadData(self, file_object, file_offset, data_size):
     """Reads data.
 
@@ -154,6 +135,25 @@ class DtFabricBaseParser(interface.FileObjectParser):
               file_offset, read_error))
 
     return data
+
+  def _ReadDefinitionFile(self, path):
+    """Reads a dtFabric definition file.
+
+    Args:
+      path (str): path to the dtFabric definition file.
+
+    Returns:
+      dtfabric.DataTypeFabric: data type fabric which contains the data format
+          data type maps of the data type definition, such as a structure, that
+          can be mapped onto binary data or None if no path is provided.
+    """
+    if not path:
+      return None
+
+    with open(path, 'rb') as file_object:
+      definition = file_object.read()
+
+    return dtfabric_fabric.DataTypeFabric(yaml_definition=definition)
 
   def _ReadStructureFromByteStream(
       self, byte_stream, file_offset, data_type_map, context=None):

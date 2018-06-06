@@ -79,37 +79,38 @@ class DtFabricBaseParserTest(test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  _DATA_TYPE_FABRIC_DEFINITION = b'\n'.join([
-      b'name: uint32',
-      b'type: integer',
-      b'attributes:',
-      b'  format: unsigned',
-      b'  size: 4',
-      b'  units: bytes',
-      b'---',
-      b'name: point3d',
-      b'type: structure',
-      b'attributes:',
-      b'  byte_order: little-endian',
-      b'members:',
-      b'- name: x',
-      b'  data_type: uint32',
-      b'- name: y',
-      b'  data_type: uint32',
-      b'- name: z',
-      b'  data_type: uint32',
-      b'---',
-      b'name: shape3d',
-      b'type: structure',
-      b'attributes:',
-      b'  byte_order: little-endian',
-      b'members:',
-      b'- name: number_of_points',
-      b'  data_type: uint32',
-      b'- name: points',
-      b'  type: sequence',
-      b'  element_data_type: point3d',
-      b'  number_of_elements: shape3d.number_of_points'])
+  _DATA_TYPE_FABRIC_DEFINITION = b"""\
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: point3d
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: x
+  data_type: uint32
+- name: y
+  data_type: uint32
+- name: z
+  data_type: uint32
+---
+name: shape3d
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: number_of_points
+  data_type: uint32
+- name: points
+  type: sequence
+  element_data_type: point3d
+  number_of_elements: shape3d.number_of_points
+"""
 
   _DATA_TYPE_FABRIC = dtfabric_fabric.DataTypeFabric(
       yaml_definition=_DATA_TYPE_FABRIC_DEFINITION)
@@ -119,6 +120,8 @@ class DtFabricBaseParserTest(test_lib.BaseTestCase):
   _POINT3D_SIZE = _POINT3D.GetByteSize()
 
   _SHAPE3D = _DATA_TYPE_FABRIC.CreateDataTypeMap('shape3d')
+
+  # TODO: add tests for _GetDataTypeMap
 
   def testReadData(self):
     """Tests the _ReadData function."""
@@ -146,6 +149,8 @@ class DtFabricBaseParserTest(test_lib.BaseTestCase):
 
     with self.assertRaises(errors.ParseError):
       parser._ReadData(file_object, 0, self._POINT3D_SIZE)
+
+  # TODO: add tests for _ReadDefinitionFile
 
   def testReadStructureFromByteStream(self):
     """Tests the _ReadStructureFromByteStream function."""
