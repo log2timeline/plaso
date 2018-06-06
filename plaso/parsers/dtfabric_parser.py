@@ -186,7 +186,8 @@ class DtFabricBaseParser(interface.FileObjectParser):
           'Unable to map {0:s} data at offset: 0x{1:08x} with error: '
           '{2!s}').format(data_type_map.name, file_offset, exception))
 
-  def _ReadStructureFromFileObject(self, file_object, file_offset, data_type_map):
+  def _ReadStructureFromFileObject(
+      self, file_object, file_offset, data_type_map):
     """Reads a structure from a file-like object.
 
     If the data type map has a fixed size this method will read the predefined
