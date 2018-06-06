@@ -147,23 +147,6 @@ class DtFabricBaseParserTest(test_lib.BaseTestCase):
     with self.assertRaises(errors.ParseError):
       parser._ReadData(file_object, 0, self._POINT3D_SIZE)
 
-  def testReadStructure(self):
-    """Tests the _ReadStructure function."""
-    parser = dtfabric_parser.DtFabricBaseParser()
-
-    file_object = io.BytesIO(
-        b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00')
-
-    parser._ReadStructure(file_object, 0, self._POINT3D)
-
-    file_object = io.BytesIO(
-        b'\x03\x00\x00\x00'
-        b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00'
-        b'\x04\x00\x00\x00\x05\x00\x00\x00\x06\x00\x00\x00'
-        b'\x06\x00\x00\x00\x07\x00\x00\x00\x08\x00\x00\x00')
-
-    parser._ReadStructure(file_object, 0, self._SHAPE3D)
-
   def testReadStructureFromByteStream(self):
     """Tests the _ReadStructureFromByteStream function."""
     parser = dtfabric_parser.DtFabricBaseParser()
@@ -188,6 +171,23 @@ class DtFabricBaseParserTest(test_lib.BaseTestCase):
       parser._ReadStructureFromByteStream(
           b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00', 0,
           data_type_map)
+
+  def testReadStructureFromFileObject(self):
+    """Tests the _ReadStructureFromFileObject function."""
+    parser = dtfabric_parser.DtFabricBaseParser()
+
+    file_object = io.BytesIO(
+        b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00')
+
+    parser._ReadStructureFromFileObject(file_object, 0, self._POINT3D)
+
+    file_object = io.BytesIO(
+        b'\x03\x00\x00\x00'
+        b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00'
+        b'\x04\x00\x00\x00\x05\x00\x00\x00\x06\x00\x00\x00'
+        b'\x06\x00\x00\x00\x07\x00\x00\x00\x08\x00\x00\x00')
+
+    parser._ReadStructureFromFileObject(file_object, 0, self._SHAPE3D)
 
 
 if __name__ == '__main__':

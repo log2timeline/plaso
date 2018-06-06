@@ -155,7 +155,38 @@ class DtFabricBaseParser(interface.FileObjectParser):
 
     return data
 
-  def _ReadStructure(self, file_object, file_offset, data_type_map):
+  def _ReadStructureFromByteStream(
+      self, byte_stream, file_offset, data_type_map, context=None):
+    """Reads a structure from a byte stream.
+
+    Args:
+      byte_stream (bytes): byte stream.
+      file_offset (int): offset of the structure data relative from the start
+          of the file-like object.
+      data_type_map (dtfabric.DataTypeMap): data type map of the structure.
+      context (Optional[dtfabric.DataTypeMapContext]): data type map context.
+
+    Returns:
+      object: structure values object.
+
+    Raises:
+      ParseError: if the structure cannot be read.
+      ValueError: if file-like object or data type map is missing.
+    """
+    if not byte_stream:
+      raise ValueError('Missing byte stream.')
+
+    if not data_type_map:
+      raise ValueError('Missing data type map.')
+
+    try:
+      return data_type_map.MapByteStream(byte_stream, context=context)
+    except dtfabric_errors.MappingError as exception:
+      raise errors.ParseError((
+          'Unable to map {0:s} data at offset: 0x{1:08x} with error: '
+          '{2!s}').format(data_type_map.name, file_offset, exception))
+
+  def _ReadStructureFromFileObject(self, file_object, file_offset, data_type_map):
     """Reads a structure from a file-like object.
 
     If the data type map has a fixed size this method will read the predefined
@@ -201,37 +232,6 @@ class DtFabricBaseParser(interface.FileObjectParser):
       data_size = data_type_map.GetSizeHint(context=context)
 
     raise errors.ParseError('Unable to read {0:s}'.format(data_type_map.name))
-
-  def _ReadStructureFromByteStream(
-      self, byte_stream, file_offset, data_type_map, context=None):
-    """Reads a structure from a byte stream.
-
-    Args:
-      byte_stream (bytes): byte stream.
-      file_offset (int): offset of the structure data relative from the start
-          of the file-like object.
-      data_type_map (dtfabric.DataTypeMap): data type map of the structure.
-      context (Optional[dtfabric.DataTypeMapContext]): data type map context.
-
-    Returns:
-      object: structure values object.
-
-    Raises:
-      ParseError: if the structure cannot be read.
-      ValueError: if file-like object or data type map is missing.
-    """
-    if not byte_stream:
-      raise ValueError('Missing byte stream.')
-
-    if not data_type_map:
-      raise ValueError('Missing data type map.')
-
-    try:
-      return data_type_map.MapByteStream(byte_stream, context=context)
-    except dtfabric_errors.MappingError as exception:
-      raise errors.ParseError((
-          'Unable to map {0:s} data at offset: 0x{1:08x} with error: '
-          '{2!s}').format(data_type_map.name, file_offset, exception))
 
   @abc.abstractmethod
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):

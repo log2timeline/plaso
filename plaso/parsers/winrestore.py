@@ -66,7 +66,8 @@ class RestorePointLogParser(dtfabric_parser.DtFabricBaseParser):
     data_type_map = self._GetDataTypeMap('rp_log_file_header')
 
     try:
-      file_header, _ = self._ReadStructure(file_object, 0, data_type_map)
+      file_header, _ = self._ReadStructureFromFileObject(
+          file_object, 0, data_type_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile(
           'Unable to parse file header with error: {0!s}'.format(
@@ -77,7 +78,7 @@ class RestorePointLogParser(dtfabric_parser.DtFabricBaseParser):
     file_footer_offset = file_size - data_type_map.GetByteSize()
 
     try:
-      file_footer, _ = self._ReadStructure(
+      file_footer, _ = self._ReadStructureFromFileObject(
           file_object, file_footer_offset, data_type_map)
     except (ValueError, errors.ParseError) as exception:
       parser_mediator.ProduceExtractionError(
