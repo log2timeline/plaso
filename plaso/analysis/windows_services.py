@@ -122,9 +122,9 @@ class WindowsService(yaml.YAMLObject):
     """
     _, _, name = service_event.key_path.rpartition(
         WindowsService._REGISTRY_KEY_PATH_SEPARATOR)
-    service_type = service_event.regvalue.get('Type')
-    image_path = service_event.regvalue.get('ImagePath')
-    start_type = service_event.regvalue.get('Start')
+    service_type = service_event.regvalue.get('Type', '')
+    image_path = service_event.regvalue.get('ImagePath', '')
+    start_type = service_event.regvalue.get('Start', '')
     service_dll = service_event.regvalue.get('ServiceDll', '')
     object_name = service_event.regvalue.get('ObjectName', '')
 

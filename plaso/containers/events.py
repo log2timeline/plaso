@@ -78,6 +78,21 @@ class EventObject(interface.AttributeContainer):
     # TODO: add a solution for event_data_entry_index,
     # event_data_stream_number and event_data_row_identifier
 
+  # This method is necessary for heap sort.
+  def __lt__(self, other):
+    """Compares if the event attribute container is less than the other.
+
+    Events are compared by timestamp.
+
+    Args:
+      other (EventObject): event attribute container to compare to.
+
+    Returns:
+      bool: True if the event  attribute container is less than the other.
+    """
+    return self.timestamp < other.timestamp
+
+
   def GetEventDataIdentifier(self):
     """Retrieves the identifier of the event data associated with the event.
 

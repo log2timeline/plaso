@@ -40,9 +40,9 @@ class _MockNsrlsvrSocket(object):
     self._data = None
 
     if expected_data:
-      return 'OK 1'
+      return b'OK 1'
 
-    return 'OK 0'
+    return b'OK 0'
 
   def sendall(self, data):
     """Mocks the socket.sendall method"""
