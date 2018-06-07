@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import codecs
 import unittest
 
 from plaso.analyzers.hashers import md5
@@ -24,8 +25,9 @@ class MD5Test(test_lib.HasherTestCase):
     self._AssertTestPathStringDigestMatch(hasher, ['empty_file'], expected_md5)
 
     hasher = md5.MD5Hasher()
+    expected_binary_md5 = codecs.decode(expected_md5, 'hex')
     self._AssertTestPathBinaryDigestMatch(
-        hasher, ['empty_file'], expected_md5.decode('hex'))
+        hasher, ['empty_file'], expected_binary_md5)
 
   @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testFileHashMatchesKnownFile(self):
@@ -36,8 +38,9 @@ class MD5Test(test_lib.HasherTestCase):
     self._AssertTestPathStringDigestMatch(hasher, ['ímynd.dd'], expected_md5)
 
     hasher = md5.MD5Hasher()
+    expected_binary_md5 = codecs.decode(expected_md5, 'hex')
     self._AssertTestPathBinaryDigestMatch(
-        hasher, ['ímynd.dd'], expected_md5.decode('hex'))
+        hasher, ['ímynd.dd'], expected_binary_md5)
 
 
 if __name__ == '__main__':
