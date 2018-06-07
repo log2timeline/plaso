@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import os
-
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
@@ -47,8 +45,7 @@ class RestorePointLogParser(dtfabric_parser.DtFabricBaseParser):
   FILTERS = frozenset([
       interface.FileNameFileEntryFilter('rp.log')])
 
-  _DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'winrestore.yaml')
+  _DEFINITION_FILE = 'winrestore.yaml'
 
   def ParseFileObject(self, parser_mediator, file_object, **unused_kwargs):
     """Parses a Windows Restore Point (rp.log) log file-like object.
@@ -63,23 +60,23 @@ class RestorePointLogParser(dtfabric_parser.DtFabricBaseParser):
     """
     file_size = file_object.get_size()
 
-    data_type_map = self._GetDataTypeMap('rp_log_file_header')
+    file_header_map = self._GetDataTypeMap('rp_log_file_header')
 
     try:
       file_header, _ = self._ReadStructureFromFileObject(
-          file_object, 0, data_type_map)
+          file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile(
           'Unable to parse file header with error: {0!s}'.format(
               exception))
 
-    data_type_map = self._GetDataTypeMap('rp_log_file_footer')
+    file_footer_map = self._GetDataTypeMap('rp_log_file_footer')
 
-    file_footer_offset = file_size - data_type_map.GetByteSize()
+    file_footer_offset = file_size - file_footer_map.GetByteSize()
 
     try:
       file_footer, _ = self._ReadStructureFromFileObject(
-          file_object, file_footer_offset, data_type_map)
+          file_object, file_footer_offset, file_footer_map)
     except (ValueError, errors.ParseError) as exception:
       parser_mediator.ProduceExtractionError(
           'unable to parse file footer with error: {0!s}'.format(exception))

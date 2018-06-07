@@ -55,7 +55,7 @@ class DtFabricBaseParser(interface.FileObjectParser):
 
   The corresponding "point3d" Python object would be: point3d(x=1, y=2, z=3)
 
-  A parser that want to implement a dtFabric-based data format parser needs to:
+  A parser that wants to implement a dtFabric-based data format parser needs to:
   * define a definition file and override _DEFINITION_FILE;
   * implement the ParseFileObject method.
 
@@ -64,11 +64,15 @@ class DtFabricBaseParser(interface.FileObjectParser):
   file. Data type maps are cached for reuse.
 
   The _ReadStructure method of this class can be used to read structure data
-  from a file-like object and create a Python object of a data type map.
+  from a file-like object and create a Python object using a data type map.
   """
 
   # The dtFabric definition file, which must be overwritten by a subclass.
   _DEFINITION_FILE = None
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
 
   def __init__(self):
     """Initializes a dtFabric-based data format parser."""
@@ -99,8 +103,8 @@ class DtFabricBaseParser(interface.FileObjectParser):
     """Reads data.
 
     Args:
-      file_object (dvfvs.FileIO): a file-like object to parse.
-      file_offset (int): offset of the data relative from the start of
+      file_object (dvfvs.FileIO): a file-like object to read.
+      file_offset (int): offset of the data relative to the start of
           the file-like object.
       data_size (int): size of the data. The resulting data size much match
           the requested data size so that dtFabric can map the data type
@@ -136,20 +140,21 @@ class DtFabricBaseParser(interface.FileObjectParser):
 
     return data
 
-  def _ReadDefinitionFile(self, path):
+  def _ReadDefinitionFile(self, filename):
     """Reads a dtFabric definition file.
 
     Args:
-      path (str): path to the dtFabric definition file.
+      filename (str): name of the dtFabric definition file.
 
     Returns:
       dtfabric.DataTypeFabric: data type fabric which contains the data format
           data type maps of the data type definition, such as a structure, that
-          can be mapped onto binary data or None if no path is provided.
+          can be mapped onto binary data or None if no filename is provided.
     """
-    if not path:
+    if not filename:
       return None
 
+    path = os.path.join(self._DEFINITION_FILES_PATH, 'winrestore.yaml')
     with open(path, 'rb') as file_object:
       definition = file_object.read()
 
@@ -161,10 +166,13 @@ class DtFabricBaseParser(interface.FileObjectParser):
 
     Args:
       byte_stream (bytes): byte stream.
-      file_offset (int): offset of the structure data relative from the start
+      file_offset (int): offset of the structure data relative to the start
           of the file-like object.
       data_type_map (dtfabric.DataTypeMap): data type map of the structure.
       context (Optional[dtfabric.DataTypeMapContext]): data type map context.
+          The context is used within dtFabric to hold state about how to map
+          the data type definition onto the byte stream. In this class it is
+          used to determine the size of variable size data type definitions.
 
     Returns:
       object: structure values object.
@@ -198,7 +206,7 @@ class DtFabricBaseParser(interface.FileObjectParser):
 
     Args:
       file_object (dvfvs.FileIO): a file-like object to parse.
-      file_offset (int): offset of the structure data relative from the start
+      file_offset (int): offset of the structure data relative to the start
           of the file-like object.
       data_type_map (dtfabric.DataTypeMap): data type map of the structure.
 
