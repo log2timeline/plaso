@@ -92,7 +92,6 @@ class EventObject(interface.AttributeContainer):
     """
     return self.timestamp < other.timestamp
 
-
   def GetEventDataIdentifier(self):
     """Retrieves the identifier of the event data associated with the event.
 
