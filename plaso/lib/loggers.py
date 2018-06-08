@@ -20,7 +20,7 @@ class CompressedFileHandler(logging.FileHandler):
       mode (Optional[str]): file access mode.
       encoding (Optional[str]): encoding of the log lines.
     """
-    if 't' not in mode and encoding:
+    if 't' not in mode and encoding and py2to3.PY_3:
       mode = '{0:s}t'.format(mode)
     super(CompressedFileHandler, self).__init__(
         filename, mode=mode, encoding=encoding, delay=True)
