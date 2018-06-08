@@ -154,7 +154,7 @@ class DtFabricBaseParser(interface.FileObjectParser):
     if not filename:
       return None
 
-    path = os.path.join(self._DEFINITION_FILES_PATH, 'winrestore.yaml')
+    path = os.path.join(self._DEFINITION_FILES_PATH, filename)
     with open(path, 'rb') as file_object:
       definition = file_object.read()
 
