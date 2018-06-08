@@ -21,7 +21,7 @@ def IsText(bytes_in, encoding=None):
   sequence is not text, but a byte sequence.
 
   Args:
-    bytes_in (bytes): byte stream to examine.
+    bytes_in (bytes|str): byte stream to examine.
     encoding (Optional[str]): encoding to test, if not defined ASCII and UTF-8
         are tried.
 
@@ -32,18 +32,20 @@ def IsText(bytes_in, encoding=None):
   # Start with the assumption we are dealing with a text.
   is_ascii = True
 
+  if isinstance(bytes_in, py2to3.UNICODE_TYPE):
+    return is_ascii
+
   # Check if this is ASCII text string.
-  for char in bytes_in:
-    if not 31 < ord(char) < 128:
+  for value in bytes_in:
+    if py2to3.PY_2:
+      value = ord(value)
+    if not 31 < value < 128:
       is_ascii = False
       break
 
   # We have an ASCII string.
   if is_ascii:
     return is_ascii
-
-  if isinstance(bytes_in, py2to3.UNICODE_TYPE):
-    return True
 
   # Check if this is UTF-8
   try:

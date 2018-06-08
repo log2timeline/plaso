@@ -3,7 +3,8 @@
 
 from __future__ import unicode_literals
 
-import binascii
+import codecs
+import itertools
 import logging
 import os
 
@@ -14,11 +15,11 @@ def ByteArrayCopyToString(byte_array, codepage='utf-8'):
   """Copies a UTF-8 encoded byte array into a Unicode string.
 
   Args:
-    byte_array: A byte array containing an UTF-8 encoded string.
-    codepage: The codepage of the byte stream.
+    byte_array (bytes): A byte stream containing an UTF-8 encoded string.
+    codepage (str): The codepage of the byte stream.
 
   Returns:
-    A Unicode string.
+    str: unicode string.
   """
   byte_stream = b''.join(map(chr, byte_array))
   return ByteStreamCopyToString(byte_stream, codepage=codepage)
@@ -28,44 +29,44 @@ def ByteStreamCopyToString(byte_stream, codepage='utf-8'):
   """Copies a UTF-8 encoded byte stream into a Unicode string.
 
   Args:
-    byte_stream: A byte stream containing an UTF-8 encoded string.
-    codepage: The codepage of the byte stream.
+    byte_stream (bytes): A byte stream containing an UTF-8 encoded string.
+    codepage (str): The codepage of the byte stream.
 
   Returns:
-    A Unicode string.
+    str: unicode string.
   """
   try:
-    string = byte_stream.decode(codepage)
+    string = codecs.decode(byte_stream, codepage)
   except UnicodeDecodeError:
     logging.warning(
         'Unable to decode {0:s} formatted byte stream.'.format(codepage))
-    string = byte_stream.decode(codepage, errors='ignore')
+    string = codecs.decode(byte_stream, codepage, errors='ignore')
 
   string, _, _ = string.partition('\x00')
   return string
 
 
-def ByteStreamCopyToUTF16Stream(byte_stream, byte_stream_size=None):
-  """Reads an UTF-16 formatted stream from a byte stream.
+def ByteStreamCopyToUTF16String(byte_stream, byte_stream_size=None):
+  """Reads an UTF-16 formatted string from a byte stream.
 
-  The UTF-16 formatted stream should be terminated by an end-of-string
+  The UTF-16 formatted string should be terminated by an end-of-string
   character (\x00\x00). Otherwise the function reads up to the byte stream size.
 
   Args:
-    byte_stream: The byte stream that contains the UTF-16 formatted stream.
-    byte_stream_size: Optional byte stream size or None if the entire
-                      byte stream should be read.
+    byte_stream (bytes): The byte stream that contains the UTF-16 formatted
+        stream.
+    byte_stream_size (int): Optional byte stream size or None if the entire
+        byte stream should be read.
 
   Returns:
-    String containing the UTF-16 formatted stream.
+    bytes: UTF-16 formatted string.
   """
   byte_stream_index = 0
   if not byte_stream_size:
     byte_stream_size = len(byte_stream)
 
   while byte_stream_index + 1 < byte_stream_size:
-    if (byte_stream[byte_stream_index] == b'\x00' and
-        byte_stream[byte_stream_index + 1] == b'\x00'):
+    if _StreamContainsUTF16NullTerminator(byte_stream, byte_stream_index):
       break
 
     byte_stream_index += 2
@@ -77,17 +78,17 @@ def ReadUTF16Stream(file_object, offset=None, byte_size=0):
   """Reads an UTF-16 formatted stream from a file-like object.
 
   Reads an UTF-16 formatted stream that's terminated by
-  an end-of-string character (\x00\x00) or up to the byte size.
+  an end-of-string terminator (\x00\x00) or up to the byte size.
 
   Args:
     file_object: A file-like object to read the data from.
-    offset: An offset into the file object data, if -1 or not set
-            the current location into the file object data is used.
-    byte_size: Maximum number of bytes to read or 0 if the function
-               should keep reading up to the end of file.
+    offset (int): offset into the file object data, if -1 or not set
+        the current location into the file object data is used.
+    byte_size (int): maximum number of bytes to read or 0 if the function
+        should keep reading up to the end of file.
 
   Returns:
-    An Unicode string.
+    str: Unicode string.
   """
   if offset is not None:
     file_object.seek(offset, os.SEEK_SET)
@@ -121,13 +122,14 @@ def UTF16StreamCopyToString(byte_stream, byte_stream_size=None):
                       should be used.
 
   Returns:
-    An Unicode string.
+    str: Unicode string.
   """
-  utf16_stream = ByteStreamCopyToUTF16Stream(
+  utf16_stream = ByteStreamCopyToUTF16String(
       byte_stream, byte_stream_size=byte_stream_size)
 
   try:
-    return utf16_stream.decode('utf-16-le')
+    string = codecs.decode(utf16_stream, 'utf-16-le')
+    return string
   except (UnicodeDecodeError, UnicodeEncodeError) as exception:
     logging.error('Unable to decode string: {0:s} with error: {1!s}'.format(
         HexifyBuffer(utf16_stream), exception))
@@ -156,15 +158,13 @@ def ArrayOfUTF16StreamCopyToString(byte_stream, byte_stream_size=None):
     byte_stream_size = len(byte_stream)
 
   while byte_stream_index + 1 < byte_stream_size:
-    if (byte_stream[byte_stream_index] == b'\x00' and
-        byte_stream[byte_stream_index + 1] == b'\x00'):
-
+    if _StreamContainsUTF16NullTerminator(byte_stream, byte_stream_index):
       if byte_stream_index - utf16_stream_start <= 2:
         break
 
-      array_of_strings.append(
-          byte_stream[utf16_stream_start:byte_stream_index].decode(
-              'utf-16-le'))
+      byte_string = byte_stream[utf16_stream_start:byte_stream_index]
+      string = codecs.decode(byte_string, 'utf-16-le')
+      array_of_strings.append(string)
       utf16_stream_start = byte_stream_index + 2
 
     byte_stream_index += 2
@@ -180,12 +180,12 @@ def ArrayOfUTF16StreamCopyToStringTable(byte_stream, byte_stream_size=None):
   character (\x00\x00). Otherwise the function reads up to the byte stream size.
 
   Args:
-    byte_stream: The UTF-16 formatted byte stream.
-    byte_stream_size: The byte stream size or None if the entire byte stream
-                      should be used.
+    byte_stream (bytes): The UTF-16 formatted byte stream.
+    byte_stream_size (int): The byte stream size or None if the entire byte
+      stream should be used.
 
   Returns:
-    A dict of Unicode strings with the byte offset as their key.
+    dict[int, str]: unicode strings with the byte offset as their key.
   """
   string_table = {}
   utf16_stream_start = 0
@@ -194,14 +194,13 @@ def ArrayOfUTF16StreamCopyToStringTable(byte_stream, byte_stream_size=None):
     byte_stream_size = len(byte_stream)
 
   while byte_stream_index + 1 < byte_stream_size:
-    if (byte_stream[byte_stream_index] == b'\x00' and
-        byte_stream[byte_stream_index + 1] == b'\x00'):
 
+    if _StreamContainsUTF16NullTerminator(byte_stream, byte_stream_index):
       if byte_stream_index - utf16_stream_start <= 2:
         break
 
-      string = byte_stream[utf16_stream_start:byte_stream_index].decode(
-          'utf-16-le')
+      byte_string = byte_stream[utf16_stream_start:byte_stream_index]
+      string = codecs.decode(byte_string, 'utf-16-le')
       string_table[utf16_stream_start] = string
       utf16_stream_start = byte_stream_index + 2
 
@@ -211,17 +210,24 @@ def ArrayOfUTF16StreamCopyToStringTable(byte_stream, byte_stream_size=None):
 
 
 def ReadUTF16(string_buffer):
-  """Returns a decoded UTF-16 string from a string buffer."""
+  """Returns a decoded UTF-16 string from a string buffer.
+
+  Args:
+    string_buffer(bytes): byte string.
+
+  Returns:
+    str: UTF-16 string.
+  """
   if isinstance(string_buffer, (list, tuple)):
     use_buffer = ''.join(string_buffer)
   else:
     use_buffer = string_buffer
 
-  if not isinstance(use_buffer, py2to3.STRING_TYPES):
+  if not isinstance(use_buffer, py2to3.BYTES_TYPE):
     return ''
 
   try:
-    return use_buffer.decode('utf-16').replace('\x00', '')
+    return codecs.decode(use_buffer,'utf-16').replace('\x00', '')
   except SyntaxError as exception:
     logging.error('Unable to decode string: {0:s} with error: {1!s}.'.format(
         HexifyBuffer(string_buffer), exception))
@@ -229,13 +235,48 @@ def ReadUTF16(string_buffer):
     logging.error('Unable to decode string: {0:s} with error: {1!s}'.format(
         HexifyBuffer(string_buffer), exception))
 
-  return use_buffer.decode('utf-16', errors='ignore').replace('\x00', '')
+  return codecs.decode(
+      use_buffer, 'utf-16', errors='ignore').replace('\x00', '')
 
 
 def HexifyBuffer(string_buffer):
-  """Return a string with the hex representation of a string buffer."""
-  chars = []
-  for char in string_buffer:
-    chars.append(binascii.hexlify(char))
+  """Return a string with the hex representation of a byte string.
 
-  return '\\x{0:s}'.format('\\x'.join(chars))
+  Args:
+    string_buffer(bytes): byte string.
+
+  Returns:
+    str: hex representation of the string buffer.
+  """
+  hex_bytes =  codecs.encode(string_buffer, 'hex')
+  output_string = codecs.decode(hex_bytes, 'utf-8')
+  string_iterators = [iter(output_string)] * 2
+  if py2to3.PY_2:
+    iterators = itertools.izip_longest(*string_iterators)
+  else:
+    iterators = itertools.zip_longest(*string_iterators)
+  groups = list(iterators)
+  output_string = ''.join(['\\x{0:s}{1:s}'.format(group[0], group[1]) for group in groups])
+  return output_string
+
+def _StreamContainsUTF16NullTerminator(byte_stream, offset):
+  """Checks if the given byte string has a UTF-16 null byte at the offset.
+
+  This is a little complicated because of the necessity of supporting Python 2
+  and 3.
+
+  Args:
+    byte_stream (bytes): byte string.
+    offset (int): offset to check.
+
+  Returns:
+    bool: whether there's a UTF-16 null terminator in the stream at the given
+        offset.
+  """
+  byte_1 = byte_stream[offset]
+  byte_2 = byte_stream[offset + 1]
+  if py2to3.PY_2 and (byte_1 == b'\x00' and byte_2 == b'\x00'):
+    return True
+  if py2to3.PY_3 and (byte_1 == 0 and byte_2 == 0):
+    return True
+  return False

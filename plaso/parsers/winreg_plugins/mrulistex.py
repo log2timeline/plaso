@@ -194,7 +194,7 @@ class MRUListExStringPlugin(BaseMRUListExPlugin):
       logger.debug((
           '[{0:s}] Non-string MRUListEx entry value: {1:d} parsed as string '
           'in key: {2:s}.').format(self.NAME, entry_number, registry_key.path))
-      utf16_stream = binary.ByteStreamCopyToUTF16Stream(value.data)
+      utf16_stream = binary.ByteStreamCopyToUTF16String(value.data)
 
       try:
         value_string = utf16_stream.decode('utf-16-le')

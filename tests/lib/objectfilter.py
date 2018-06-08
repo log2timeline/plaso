@@ -197,7 +197,9 @@ class ObjectFilterTest(unittest.TestCase):
         kwargs = {'arguments': test_unit[1],
                   'value_expander': self.value_expander}
         ops = operator(**kwargs)
-        self.assertEqual(test_unit[0], ops.Matches(self.file))
+        self.assertEqual(
+            test_unit[0], ops.Matches(self.file), 'test case {0!s} failed'.format(
+                test_unit))
         if hasattr(ops, 'FlipBool'):
           ops.FlipBool()
           self.assertEqual(not test_unit[0], ops.Matches(self.file))
@@ -377,14 +379,14 @@ class ObjectFilterTest(unittest.TestCase):
     parser = objectfilter.Parser(r'a is "\\xJZ"').Parse()
     self.assertEqual(parser.args[0], r'\xJZ')
     # Standard hex-escape.
-    parser = objectfilter.Parser(r'a is "\x41\x41\x41"').Parse()
+    parser = objectfilter.Parser('a is "\x41\x41\x41"').Parse()
     self.assertEqual(parser.args[0], 'AAA')
     # Hex-escape + a character.
-    parser = objectfilter.Parser(r'a is "\x414"').Parse()
-    self.assertEqual(parser.args[0], r'A4')
+    parser = objectfilter.Parser('a is "\x414"').Parse()
+    self.assertEqual(parser.args[0], 'A4')
     # How to include r'\x41'.
-    parser = objectfilter.Parser(r'a is "\\x41"').Parse()
-    self.assertEqual(parser.args[0], r'\x41')
+    parser = objectfilter.Parser('a is "\\x41"').Parse()
+    self.assertEqual(parser.args[0], '\x41')
 
   def testParse(self):
     # Arguments are either int, float or quoted string.

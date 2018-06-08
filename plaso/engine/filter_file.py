@@ -66,7 +66,7 @@ class FilterFile(object):
         path_attributes[attribute_name] = attribute_value
 
     find_specs = []
-    with open(self._path, 'rb') as file_object:
+    with open(self._path, 'r', encoding='utf-8') as file_object:
       for line in file_object:
         line = line.strip()
         if line.startswith('#'):

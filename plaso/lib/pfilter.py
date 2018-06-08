@@ -320,9 +320,17 @@ class DateCompareObject(object):
     """Less or equal comparison."""
     return self.data <= x
 
+  def __lt__(self, x):
+    """Less comparison"""
+    return self.data < x
+
   def __ge__(self, x):
     """Greater or equal comparison."""
     return self.data >= x
+
+  def __gt__(self, x):
+    """Greater comparison."""
+    return self.data > x
 
   def __eq__(self, x):
     """Check if equal."""
@@ -344,7 +352,7 @@ class BaseParser(objectfilter.Parser):
 
 
 class TimeRangeCache(object):
-  """A class that stores timeranges from filters."""
+  """A class that stores time ranges from filters."""
 
   MAX_INT64 = 2**64-1
 

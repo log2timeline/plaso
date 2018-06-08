@@ -154,7 +154,7 @@ class ParsersManager(object):
 
     Args:
       specification_store (FormatSpecificationStore): format specifications
-          with signaures.
+          with signatures.
 
     Returns:
       pysigscan.scanner: signature scanner.
