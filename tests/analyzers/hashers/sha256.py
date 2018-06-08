@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import codecs
 import unittest
 
 from plaso.analyzers.hashers import sha256
@@ -26,8 +27,9 @@ class SHA256Test(test_lib.HasherTestCase):
         hasher, ['empty_file'], expected_sha256)
 
     hasher = sha256.SHA256Hasher()
+    expected_binary_sha256 = codecs.decode(expected_sha256, 'hex')
     self._AssertTestPathBinaryDigestMatch(
-        hasher, ['empty_file'], expected_sha256.decode('hex'))
+        hasher, ['empty_file'], expected_binary_sha256)
 
   @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testFileHashMatchesKnownFile(self):
@@ -40,8 +42,9 @@ class SHA256Test(test_lib.HasherTestCase):
         hasher, ['ímynd.dd'], expected_sha256)
 
     hasher = sha256.SHA256Hasher()
+    expected_binary_sha256 = codecs.decode(expected_sha256, 'hex')
     self._AssertTestPathBinaryDigestMatch(
-        hasher, ['ímynd.dd'], expected_sha256.decode('hex'))
+        hasher, ['ímynd.dd'], expected_binary_sha256)
 
 
 if __name__ == '__main__':
