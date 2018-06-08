@@ -117,11 +117,11 @@ def GetUnicodeString(string):
     string = [GetUnicodeString(item) for item in string]
     return ''.join(string)
 
-  if isinstance(string, int):
-    string  = str(string)
+  if isinstance(string, py2to3.INTEGER_TYPES):
+    string = str(string)
 
   if not isinstance(string, py2to3.UNICODE_TYPE):
-    return codecs.decode(string, 'utf8', errors='ignore')
+    return codecs.decode(string, 'utf8', 'ignore')
   return string
 
 
@@ -839,7 +839,7 @@ class Parser(lexer.SearchParser):
       hex_string = binascii.unhexlify(hex_string)
       hex_string = codecs.decode(hex_string, 'utf-8')
       self.string += hex_string
-    except (TypeError, binascii.Error) as exception:
+    except (TypeError, binascii.Error):
       raise errors.ParseError('Invalid hex escape {0!s}.'.format(hex_string))
 
   def ContextOperator(self, string='', **unused_kwargs):

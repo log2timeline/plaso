@@ -32,11 +32,12 @@ class CompressedFileHandler(logging.FileHandler):
       file: file-like object of the resulting stream.
     """
     # The gzip module supports directly setting encoding as of Python 3.3.
+    # pylint: disable=unexpected-keyword-arg
     if py2to3.PY_3:
       return gzip.open(
           self.baseFilename, mode=self.mode, encoding=self.encoding)
-    else:
-      return gzip.open(self.baseFilename, self.mode)
+
+    return gzip.open(self.baseFilename, self.mode)
 
 def ConfigureLogging(
     debug_output=False, filename=None, mode='w', quiet_mode=False):

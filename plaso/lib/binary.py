@@ -227,7 +227,7 @@ def ReadUTF16(string_buffer):
     return ''
 
   try:
-    return codecs.decode(use_buffer,'utf-16').replace('\x00', '')
+    return codecs.decode(use_buffer, 'utf-16').replace('\x00', '')
   except SyntaxError as exception:
     logging.error('Unable to decode string: {0:s} with error: {1!s}.'.format(
         HexifyBuffer(string_buffer), exception))
@@ -248,15 +248,18 @@ def HexifyBuffer(string_buffer):
   Returns:
     str: hex representation of the string buffer.
   """
-  hex_bytes =  codecs.encode(string_buffer, 'hex')
+  hex_bytes = codecs.encode(string_buffer, 'hex')
   output_string = codecs.decode(hex_bytes, 'utf-8')
   string_iterators = [iter(output_string)] * 2
+
+  # pylint: disable=no-member
   if py2to3.PY_2:
     iterators = itertools.izip_longest(*string_iterators)
   else:
     iterators = itertools.zip_longest(*string_iterators)
   groups = list(iterators)
-  output_string = ''.join(['\\x{0:s}{1:s}'.format(group[0], group[1]) for group in groups])
+  output_string = ''.join(
+      ['\\x{0:s}{1:s}'.format(group[0], group[1]) for group in groups])
   return output_string
 
 def _StreamContainsUTF16NullTerminator(byte_stream, offset):

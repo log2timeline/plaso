@@ -198,8 +198,8 @@ class ObjectFilterTest(unittest.TestCase):
                   'value_expander': self.value_expander}
         ops = operator(**kwargs)
         self.assertEqual(
-            test_unit[0], ops.Matches(self.file), 'test case {0!s} failed'.format(
-                test_unit))
+            test_unit[0], ops.Matches(self.file),
+            'test case {0!s} failed'.format(test_unit))
         if hasattr(ops, 'FlipBool'):
           ops.FlipBool()
           self.assertEqual(not test_unit[0], ops.Matches(self.file))
