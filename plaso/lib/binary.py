@@ -239,8 +239,8 @@ def ReadUTF16(string_buffer):
       use_buffer, 'utf-16', errors='ignore').replace('\x00', '')
 
 
-def HexifyBuffer(string_buffer):
-  """Return a string with the hex representation of a byte string.
+def HexifyBuffer(byte_stream):
+  """Returns an hexadecimal representation of a byte stream.
 
   Args:
     string_buffer (bytes): byte string.
@@ -248,7 +248,7 @@ def HexifyBuffer(string_buffer):
   Returns:
     str: hex representation of the string buffer.
   """
-  hex_bytes = codecs.encode(string_buffer, 'hex')
+  hex_bytes = codecs.encode(byte_stream, 'hex')
   output_string = codecs.decode(hex_bytes, 'utf-8')
   string_iterators = [iter(output_string)] * 2
 
