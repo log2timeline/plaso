@@ -246,7 +246,7 @@ def HexifyBuffer(byte_stream):
     string_buffer (bytes): byte string.
 
   Returns:
-    str: hex representation of the string buffer.
+    str: hexadecimal representation of the byte stream.
   """
   hex_bytes = codecs.encode(byte_stream, 'hex')
   output_string = codecs.decode(hex_bytes, 'utf-8')
