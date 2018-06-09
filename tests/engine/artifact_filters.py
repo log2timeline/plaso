@@ -82,16 +82,18 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
         environment_variables=[environment_variable])
     find_specs_per_source_type = knowledge_base.GetValue(
         test_filter_file._KNOWLEDGE_BASE_VALUE)
-    find_specs = sorted(find_specs_per_source_type.get(
-        artifact_types.TYPE_INDICATOR_FILE, []))
+    find_specs = find_specs_per_source_type.get(
+        artifact_types.TYPE_INDICATOR_FILE, [])
 
     # Should build 15 FindSpec entries.
     self.assertEqual(len(find_specs), 15)
 
-    # Last entry in find_specs list should be testuser2.
+    # Last find_spec should contain the testuser2 profile path.
+    location_segments = sorted([
+        find_spec._location_segments for find_spec in find_specs])
     path_segments = [
         'Users', 'testuser2', 'Documents', 'WindowsPowerShell', 'profile\\.ps1']
-    self.assertEqual(find_specs[11]._location_segments, path_segments)
+    self.assertEqual(location_segments[2], path_segments)
 
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location='.')
@@ -121,8 +123,8 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     test_filter_file.BuildFindSpecs(environment_variables=None)
     find_specs_per_source_type = knowledge_base.GetValue(
         test_filter_file._KNOWLEDGE_BASE_VALUE)
-    find_specs = sorted(find_specs_per_source_type.get(
-        artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY, []))
+    find_specs = find_specs_per_source_type.get(
+        artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY, [])
 
     self.assertEqual(len(find_specs), 1)
 
