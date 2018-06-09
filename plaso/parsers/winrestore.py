@@ -3,16 +3,14 @@
 
 from __future__ import unicode_literals
 
-import os
-
-import construct
-
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import errors
+from plaso.parsers import dtfabric_parser
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -38,7 +36,7 @@ class RestorePointEventData(events.EventData):
     self.sequence_number = None
 
 
-class RestorePointLogParser(interface.FileObjectParser):
+class RestorePointLogParser(dtfabric_parser.DtFabricBaseParser):
   """A parser for Windows Restore Point (rp.log) files."""
 
   NAME = 'rplog'
@@ -47,18 +45,7 @@ class RestorePointLogParser(interface.FileObjectParser):
   FILTERS = frozenset([
       interface.FileNameFileEntryFilter('rp.log')])
 
-  _FILE_HEADER_STRUCT = construct.Struct(
-      'file_header',
-      construct.ULInt32('event_type'),
-      construct.ULInt32('restore_point_type'),
-      construct.ULInt64('sequence_number'),
-      construct.RepeatUntil(
-          lambda character, ctx: character == b'\x00\x00',
-          construct.Field('description', 2)))
-
-  _FILE_FOOTER_STRUCT = construct.Struct(
-      'file_footer',
-      construct.ULInt64('creation_time'))
+  _DEFINITION_FILE = 'winrestore.yaml'
 
   def ParseFileObject(self, parser_mediator, file_object, **unused_kwargs):
     """Parses a Windows Restore Point (rp.log) log file-like object.
@@ -67,45 +54,49 @@ class RestorePointLogParser(interface.FileObjectParser):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
-    try:
-      file_header_struct = self._FILE_HEADER_STRUCT.parse_stream(file_object)
-    except (IOError, construct.FieldError) as exception:
-      parser_mediator.ProduceExtractionError(
-          'unable to parse file header with error: {0!s}'.format(exception))
-      return
+    file_size = file_object.get_size()
 
-    file_object.seek(-8, os.SEEK_END)
+    file_header_map = self._GetDataTypeMap('rp_log_file_header')
 
     try:
-      file_footer_struct = self._FILE_FOOTER_STRUCT.parse_stream(file_object)
-    except (IOError, construct.FieldError) as exception:
+      file_header, _ = self._ReadStructureFromFileObject(
+          file_object, 0, file_header_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.UnableToParseFile(
+          'Unable to parse file header with error: {0!s}'.format(
+              exception))
+
+    file_footer_map = self._GetDataTypeMap('rp_log_file_footer')
+
+    file_footer_offset = file_size - file_footer_map.GetByteSize()
+
+    try:
+      file_footer, _ = self._ReadStructureFromFileObject(
+          file_object, file_footer_offset, file_footer_map)
+    except (ValueError, errors.ParseError) as exception:
       parser_mediator.ProduceExtractionError(
           'unable to parse file footer with error: {0!s}'.format(exception))
       return
 
-    try:
-      description = b''.join(file_header_struct.description)
-      # The struct includes the end-of-string character that we need
-      # to strip off.
-      description = description.decode('utf16')[:-1]
-    except UnicodeDecodeError as exception:
-      description = ''
-      parser_mediator.ProduceExtractionError((
-          'unable to decode description UTF-16 stream with error: '
-          '{0:s}').format(exception))
+    # The description in the file header includes the end-of-string character
+    # that we need to strip off.
+    description = file_header.description.rstrip('\0')
 
-    if file_footer_struct.creation_time == 0:
+    if file_footer.creation_time == 0:
       date_time = dfdatetime_semantic_time.SemanticTime('Not set')
     else:
       date_time = dfdatetime_filetime.Filetime(
-          timestamp=file_footer_struct.creation_time)
+          timestamp=file_footer.creation_time)
 
     event_data = RestorePointEventData()
     event_data.description = description
-    event_data.restore_point_event_type = file_header_struct.event_type
-    event_data.restore_point_type = file_header_struct.restore_point_type
-    event_data.sequence_number = file_header_struct.sequence_number
+    event_data.restore_point_event_type = file_header.event_type
+    event_data.restore_point_type = file_header.restore_point_type
+    event_data.sequence_number = file_header.sequence_number
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_CREATION)
