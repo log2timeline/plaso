@@ -19,6 +19,125 @@ from tests import test_lib as shared_test_lib
 class PathHelperTest(shared_test_lib.BaseTestCase):
   """Tests for the path helper."""
 
+  def testAppendPathEntries(self):
+    """Tests the AppendPathEntries function."""
+    separator = '\\'
+    path = '\\Windows\\Test'
+
+    # Test depth of ten skipping first entry.
+    # The path will have 9 entries as the default depth for ** is 10, but the
+    # first entry is being skipped.
+    count = 10
+    skip_first = True
+    paths = path_helper.PathHelper.AppendPathEntries(
+        path, separator, count, skip_first)
+
+    # Nine paths returned
+    self.assertEqual(len(paths), 9)
+
+    # Nine paths in total, each one level deeper than the previous.
+    check_paths = sorted([
+        '\\Windows\\Test\\*\\*',
+        '\\Windows\\Test\\*\\*\\*',
+        '\\Windows\\Test\\*\\*\\*\\*',
+        '\\Windows\\Test\\*\\*\\*\\*\\*',
+        '\\Windows\\Test\\*\\*\\*\\*\\*\\*',
+        '\\Windows\\Test\\*\\*\\*\\*\\*\\*\\*',
+        '\\Windows\\Test\\*\\*\\*\\*\\*\\*\\*\\*',
+        '\\Windows\\Test\\*\\*\\*\\*\\*\\*\\*\\*\\*',
+        '\\Windows\\Test\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*'])
+    self.assertEqual(sorted(paths), check_paths)
+
+    # Now test with skip_first set to False, but only a depth of 4.
+    # the path will have a total of 4 entries.
+    count = 4
+    skip_first = False
+    paths = path_helper.PathHelper.AppendPathEntries(
+        path, separator, count, skip_first)
+
+    # Four paths returned
+    self.assertEqual(len(paths), 4)
+
+    # Four paths in total, each one level deeper than the previous.
+    check_paths = sorted([
+        '\\Windows\\Test\\*',
+        '\\Windows\\Test\\*\\*',
+        '\\Windows\\Test\\*\\*\\*',
+        '\\Windows\\Test\\*\\*\\*\\*'])
+    self.assertEqual(sorted(paths), check_paths)
+
+  def testExpandRecursiveGlobs(self):
+    """Tests the _ExpandRecursiveGlobs function."""
+    separator = '/'
+
+    # Test a path with a trailing /, which means first directory is skipped.
+    # The path will have 9 entries as the default depth for ** is 10, but the
+    # first entry is being skipped.
+    path = '/etc/sysconfig/**/'
+    paths = path_helper.PathHelper.ExpandRecursiveGlobs(path, separator)
+
+    # Nine paths returned
+    self.assertEqual(len(paths), 9)
+
+    # Nine paths in total, each one level deeper than the previous.
+    check_paths = sorted([
+        '/etc/sysconfig/*/*',
+        '/etc/sysconfig/*/*/*',
+        '/etc/sysconfig/*/*/*/*',
+        '/etc/sysconfig/*/*/*/*/*',
+        '/etc/sysconfig/*/*/*/*/*/*',
+        '/etc/sysconfig/*/*/*/*/*/*/*',
+        '/etc/sysconfig/*/*/*/*/*/*/*/*',
+        '/etc/sysconfig/*/*/*/*/*/*/*/*/*',
+        '/etc/sysconfig/*/*/*/*/*/*/*/*/*/*'])
+    self.assertEqual(sorted(paths), check_paths)
+
+    # Now test with no trailing separator, but only a depth of 4.
+    # the path will have a total of 4 entries.
+    path = '/etc/sysconfig/**4'
+    paths = path_helper.PathHelper.ExpandRecursiveGlobs(path, separator)
+
+    # Four paths returned
+    self.assertEqual(len(paths), 4)
+
+    # Four paths in total, each one level deeper than the previous.
+    check_paths = sorted([
+        '/etc/sysconfig/*',
+        '/etc/sysconfig/*/*',
+        '/etc/sysconfig/*/*/*',
+        '/etc/sysconfig/*/*/*/*'])
+    self.assertEqual(sorted(paths), check_paths)
+
+  def testExpandUsersHomeDirectoryPath(self):
+    """Tests the ExpandUsersHomeDirectoryPath function."""
+    user_account_artifact1 = artifacts.UserAccountArtifact(
+        user_directory='C:\\Users\\Test1', username='Test1')
+    user_account_artifact2 = artifacts.UserAccountArtifact(
+        user_directory='C:\\Users\\Test2', username='Test2')
+
+    path = '%%users.homedir%%\\Profile'
+    expanded_paths = path_helper.PathHelper.ExpandUsersHomeDirectoryPath(
+        path, [user_account_artifact1, user_account_artifact2])
+
+    expected_expanded_paths = [
+        '\\Users\\Test1\\Profile',
+        '\\Users\\Test2\\Profile']
+    self.assertEqual(expanded_paths, expected_expanded_paths)
+
+    path = 'C:\\Temp'
+    expanded_paths = path_helper.PathHelper.ExpandUsersHomeDirectoryPath(
+        path, [user_account_artifact1, user_account_artifact2])
+
+    expected_expanded_paths = ['\\Temp']
+    self.assertEqual(expanded_paths, expected_expanded_paths)
+
+    path = 'C:\\Temp\\%%users.homedir%%'
+    expanded_paths = path_helper.PathHelper.ExpandUsersHomeDirectoryPath(
+        path, [user_account_artifact1, user_account_artifact2])
+
+    expected_expanded_paths = ['\\Temp\\%%users.homedir%%']
+    self.assertEqual(expanded_paths, expected_expanded_paths)
+
   def testExpandWindowsPath(self):
     """Tests the ExpandWindowsPath function."""
     environment_variable = artifacts.EnvironmentVariableArtifact(
@@ -145,95 +264,6 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     display_name = path_helper.PathHelper.GetRelativePathForPathSpec(
         qcow_path_spec)
     self.assertIsNone(display_name)
-
-  def testAppendPathEntries(self):
-    """Tests the AppendPathEntries function."""
-    separator = '\\'
-    path = '\\Windows\\Test'
-
-    # Test depth of ten skipping first entry.
-    # The path will have 9 entries as the default depth for ** is 10, but the
-    # first entry is being skipped.
-    count = 10
-    skip_first = True
-    paths = path_helper.PathHelper.AppendPathEntries(
-        path, separator, count, skip_first)
-
-    # Nine paths returned
-    self.assertEqual(len(paths), 9)
-
-    # Nine paths in total, each one level deeper than the previous.
-    check_paths = [
-        '\\Windows\\Test\\*\\*',
-        '\\Windows\\Test\\*\\*\\*',
-        '\\Windows\\Test\\*\\*\\*\\*',
-        '\\Windows\\Test\\*\\*\\*\\*\\*',
-        '\\Windows\\Test\\*\\*\\*\\*\\*\\*',
-        '\\Windows\\Test\\*\\*\\*\\*\\*\\*\\*',
-        '\\Windows\\Test\\*\\*\\*\\*\\*\\*\\*\\*',
-        '\\Windows\\Test\\*\\*\\*\\*\\*\\*\\*\\*\\*',
-        '\\Windows\\Test\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*']
-    self.assertItemsEqual(paths, check_paths)
-
-    # Now test with skip_first set to False, but only a depth of 4.
-    # the path will have a total of 4 entries.
-    count = 4
-    skip_first = False
-    paths = path_helper.PathHelper.AppendPathEntries(
-        path, separator, count, skip_first)
-
-    # Four paths returned
-    self.assertEqual(len(paths), 4)
-
-    # Four paths in total, each one level deeper than the previous.
-    check_paths = [
-        '\\Windows\\Test\\*',
-        '\\Windows\\Test\\*\\*',
-        '\\Windows\\Test\\*\\*\\*',
-        '\\Windows\\Test\\*\\*\\*\\*']
-    self.assertItemsEqual(paths, check_paths)
-
-  def testExpandRecursiveGlobs(self):
-    """Tests the _ExpandRecursiveGlobs function."""
-    separator = '/'
-
-    # Test a path with a trailing /, which means first directory is skipped.
-    # The path will have 9 entries as the default depth for ** is 10, but the
-    # first entry is being skipped.
-    path = '/etc/sysconfig/**/'
-    paths = path_helper.PathHelper.ExpandRecursiveGlobs(path, separator)
-
-    # Nine paths returned
-    self.assertEqual(len(paths), 9)
-
-    # Nine paths in total, each one level deeper than the previous.
-    check_paths = [
-        '/etc/sysconfig/*/*',
-        '/etc/sysconfig/*/*/*',
-        '/etc/sysconfig/*/*/*/*',
-        '/etc/sysconfig/*/*/*/*/*',
-        '/etc/sysconfig/*/*/*/*/*/*',
-        '/etc/sysconfig/*/*/*/*/*/*/*',
-        '/etc/sysconfig/*/*/*/*/*/*/*/*',
-        '/etc/sysconfig/*/*/*/*/*/*/*/*/*',
-        '/etc/sysconfig/*/*/*/*/*/*/*/*/*/*']
-    self.assertItemsEqual(paths, check_paths)
-
-    # Now test with no trailing separator, but only a depth of 4.
-    # the path will have a total of 4 entries.
-    path = '/etc/sysconfig/**4'
-    paths = path_helper.PathHelper.ExpandRecursiveGlobs(path, separator)
-
-    # Four paths returned
-    self.assertEqual(len(paths), 4)
-
-    # Four paths in total, each one level deeper than the previous.
-    check_paths = [
-        '/etc/sysconfig/*',
-        '/etc/sysconfig/*/*',
-        '/etc/sysconfig/*/*/*',
-        '/etc/sysconfig/*/*/*/*']
-    self.assertItemsEqual(paths, check_paths)
 
 
 if __name__ == '__main__':
