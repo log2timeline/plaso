@@ -1,0 +1,67 @@
+# Artifact definitions.
+
+name: TestFiles
+doc: Test Doc
+sources:
+- type: FILE
+  attributes:
+    paths: ['%%environ_systemdrive%%\AUTHORS']
+    separator: '\'
+labels: [System]
+supported_os: [Windows]
+---
+name: TestFiles2
+doc: Test Doc2
+sources:
+- type: FILE
+  attributes:
+    paths:
+      - '%%environ_systemdrive%%\test_data\*.evtx'
+      - '%%users.homedir%%\Documents\WindowsPowerShell\profile.ps1'
+      - '\test_data\testdir\filter_*.txt'
+      - '\does_not_exist\some_file_*.txt'
+      - '\globbed\test\path\**\'
+      - 'failing'
+    separator: '\'
+labels: [System]
+supported_os: [Windows]
+---
+name: TestRegistry
+doc: Test Registry Doc
+sources:
+- type: REGISTRY_KEY
+  attributes:
+    keys: ['HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\SecurityProviders\*']
+supported_os: [Windows]
+---
+name: TestRegistryKey
+doc: Test Registry Doc Key
+sources:
+- type: REGISTRY_KEY
+  attributes:
+    keys:
+      - 'HKEY_LOCAL_MACHINE\System\ControlSet001\services\**\'
+      - 'HKEY_LOCAL_MACHINE\System\ControlSet002\services\**\'
+      - 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Enum\USBSTOR'
+      - 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Enum\USBSTOR\**'
+supported_os: [Windows]
+---
+name: TestRegistryValue
+doc: Test Registry Doc Value
+sources:
+- type: REGISTRY_VALUE
+  attributes:
+    key_value_pairs:
+      - {key: 'HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager', value: 'BootExecute'}
+      - {key: 'HKEY_LOCAL_MACHINE\System\ControlSet002\Control\Session Manager', value: 'BootExecute'}
+supported_os: [Windows]
+---
+name: TestFilesImageExport
+doc: Test Doc
+sources:
+- type: FILE
+  attributes:
+    paths: ['\a_directory\*_file']
+    separator: '\'
+labels: [System]
+supported_os: [Windows]
