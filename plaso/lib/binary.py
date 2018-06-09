@@ -15,11 +15,11 @@ def ByteArrayCopyToString(byte_array, codepage='utf-8'):
   """Copies a UTF-8 encoded byte array into a Unicode string.
 
   Args:
-    byte_array (bytes): A byte stream containing an UTF-8 encoded string.
-    codepage (str): The codepage of the byte stream.
+    byte_array (bytes): byte stream containing an UTF-8 encoded string.
+    codepage (Optional[str]): codepage of the byte stream.
 
   Returns:
-    str: unicode string.
+    str: Unicode string.
   """
   byte_stream = b''.join(map(chr, byte_array))
   return ByteStreamCopyToString(byte_stream, codepage=codepage)
@@ -29,11 +29,11 @@ def ByteStreamCopyToString(byte_stream, codepage='utf-8'):
   """Copies a UTF-8 encoded byte stream into a Unicode string.
 
   Args:
-    byte_stream (bytes): A byte stream containing an UTF-8 encoded string.
-    codepage (str): The codepage of the byte stream.
+    byte_stream (bytes): byte stream containing an UTF-8 encoded string.
+    codepage (Optional[str]): codepage of the byte stream.
 
   Returns:
-    str: unicode string.
+    str: Unicode string.
   """
   try:
     string = codecs.decode(byte_stream, codepage)
@@ -47,19 +47,19 @@ def ByteStreamCopyToString(byte_stream, codepage='utf-8'):
 
 
 def ByteStreamCopyToUTF16String(byte_stream, byte_stream_size=None):
-  """Reads an UTF-16 formatted string from a byte stream.
+  """Reads an UTF-16 formatted stream from a byte stream.
 
-  The UTF-16 formatted string should be terminated by an end-of-string
+  The UTF-16 formatted stream should be terminated by an end-of-string
   character (\x00\x00). Otherwise the function reads up to the byte stream size.
 
   Args:
-    byte_stream (bytes): The byte stream that contains the UTF-16 formatted
+    byte_stream (bytes): byte stream that contains the UTF-16 formatted
         stream.
-    byte_stream_size (int): Optional byte stream size or None if the entire
+    byte_stream_size (Optional[int]): byte stream size or None if the entire
         byte stream should be read.
 
   Returns:
-    bytes: UTF-16 formatted string.
+    bytes: UTF-16 formatted stream.
   """
   byte_stream_index = 0
   if not byte_stream_size:
@@ -81,10 +81,10 @@ def ReadUTF16Stream(file_object, offset=None, byte_size=0):
   an end-of-string terminator (\x00\x00) or up to the byte size.
 
   Args:
-    file_object: A file-like object to read the data from.
-    offset (int): offset into the file object data, if -1 or not set
+    file_object (file): file-like object to read the data from.
+    offset (Optional[int]): offset into the file object data, if -1 or not set
         the current location into the file object data is used.
-    byte_size (int): maximum number of bytes to read or 0 if the function
+    byte_size (Optional[int]): maximum number of bytes to read or 0 if the function
         should keep reading up to the end of file.
 
   Returns:
@@ -117,9 +117,9 @@ def UTF16StreamCopyToString(byte_stream, byte_stream_size=None):
   character (\x00\x00). Otherwise the function reads up to the byte stream size.
 
   Args:
-    byte_stream: The UTF-16 formatted byte stream.
-    byte_stream_size: The byte stream size or None if the entire byte stream
-                      should be used.
+    byte_stream (str): UTF-16 formatted byte stream.
+    byte_stream_size (Optional[int]): byte stream size or None if the entire byte stream
+        should be used.
 
   Returns:
     str: Unicode string.
@@ -144,12 +144,12 @@ def ArrayOfUTF16StreamCopyToString(byte_stream, byte_stream_size=None):
   character (\x00\x00). Otherwise the function reads up to the byte stream size.
 
   Args:
-    byte_stream: The UTF-16 formatted byte stream.
-    byte_stream_size: The byte stream size or None if the entire byte stream
-                      should be used.
+    byte_stream (str): UTF-16 formatted byte stream.
+    byte_stream_size (Optional[int]): byte stream size or None if the entire byte stream
+        should be used.
 
   Returns:
-    An array of Unicode strings.
+    list[str]: Unicode strings.
   """
   array_of_strings = []
   utf16_stream_start = 0
@@ -162,8 +162,8 @@ def ArrayOfUTF16StreamCopyToString(byte_stream, byte_stream_size=None):
       if byte_stream_index - utf16_stream_start <= 2:
         break
 
-      byte_string = byte_stream[utf16_stream_start:byte_stream_index]
-      string = codecs.decode(byte_string, 'utf-16-le')
+      utf16_stream = byte_stream[utf16_stream_start:byte_stream_index]
+      string = codecs.decode(utf16_stream, 'utf-16-le')
       array_of_strings.append(string)
       utf16_stream_start = byte_stream_index + 2
 
@@ -185,7 +185,7 @@ def ArrayOfUTF16StreamCopyToStringTable(byte_stream, byte_stream_size=None):
       stream should be used.
 
   Returns:
-    dict[int, str]: unicode strings with the byte offset as their key.
+    dict[int, str]: Unicode strings with their offset in the byte stream as their key.
   """
   string_table = {}
   utf16_stream_start = 0
@@ -199,8 +199,8 @@ def ArrayOfUTF16StreamCopyToStringTable(byte_stream, byte_stream_size=None):
       if byte_stream_index - utf16_stream_start <= 2:
         break
 
-      byte_string = byte_stream[utf16_stream_start:byte_stream_index]
-      string = codecs.decode(byte_string, 'utf-16-le')
+      utf16_stream = byte_stream[utf16_stream_start:byte_stream_index]
+      string = codecs.decode(utf16_stream, 'utf-16-le')
       string_table[utf16_stream_start] = string
       utf16_stream_start = byte_stream_index + 2
 
@@ -216,7 +216,7 @@ def ReadUTF16(string_buffer):
     string_buffer(bytes): byte string.
 
   Returns:
-    str: UTF-16 string.
+    str: Unicode string.
   """
   if isinstance(string_buffer, (list, tuple)):
     use_buffer = ''.join(string_buffer)
@@ -243,7 +243,7 @@ def HexifyBuffer(string_buffer):
   """Return a string with the hex representation of a byte string.
 
   Args:
-    string_buffer(bytes): byte string.
+    string_buffer (bytes): byte string.
 
   Returns:
     str: hex representation of the string buffer.
@@ -262,15 +262,16 @@ def HexifyBuffer(string_buffer):
       ['\\x{0:s}{1:s}'.format(group[0], group[1]) for group in groups])
   return output_string
 
+
 def _StreamContainsUTF16NullTerminator(byte_stream, offset):
-  """Checks if the given byte string has a UTF-16 null byte at the offset.
+  """Checks if the given byte stream has a UTF-16 null character at the offset.
 
   This is a little complicated because of the necessity of supporting Python 2
   and 3.
 
   Args:
     byte_stream (bytes): byte string.
-    offset (int): offset to check.
+    offset (int): byte stream offset to check.
 
   Returns:
     bool: whether there's a UTF-16 null terminator in the stream at the given
