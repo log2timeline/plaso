@@ -3,6 +3,7 @@
 """Installation and deployment script."""
 
 from __future__ import print_function
+
 import glob
 import locale
 import os
@@ -116,25 +117,15 @@ else:
               '%defattr(644,root,root,755)',
               '%doc ACKNOWLEDGEMENTS AUTHORS LICENSE README',
               '%{_prefix}/bin/*.py',
-              '%{_prefix}/lib/python*/site-packages/plaso/*.py',
-              '%{_prefix}/lib/python*/site-packages/plaso/*/*.py',
-              '%{_prefix}/lib/python*/site-packages/plaso/*/*/*.py',
+              '%{_prefix}/lib/python*/site-packages/**/*.py',
+              '%{_prefix}/lib/python*/site-packages/**/*.yaml',
               '%{_prefix}/lib/python*/site-packages/plaso*.egg-info/*',
               '%{_prefix}/share/plaso/*',
               '',
               '%exclude %{_prefix}/share/doc/*',
-              '%exclude %{_prefix}/lib/python*/site-packages/plaso/*.pyc',
-              '%exclude %{_prefix}/lib/python*/site-packages/plaso/*.pyo',
-              ('%exclude %{_prefix}/lib/python*/site-packages/plaso/'
-               '__pycache__/*'),
-              '%exclude %{_prefix}/lib/python*/site-packages/plaso/*/*.pyc',
-              '%exclude %{_prefix}/lib/python*/site-packages/plaso/*/*.pyo',
-              ('%exclude %{_prefix}/lib/python*/site-packages/plaso/*/'
-               '__pycache__/*'),
-              '%exclude %{_prefix}/lib/python*/site-packages/plaso/*/*/*.pyc',
-              '%exclude %{_prefix}/lib/python*/site-packages/plaso/*/*/*.pyo',
-              ('%exclude %{_prefix}/lib/python*/site-packages/plaso/*/*/'
-               '__pycache__/*')]
+              '%exclude %{_prefix}/lib/python*/site-packages/**/*.pyc',
+              '%exclude %{_prefix}/lib/python*/site-packages/**/*.pyo',
+              '%exclude %{_prefix}/lib/python*/site-packages/**/__pycache__/*']
 
           python_spec_file.extend(lines)
           break
@@ -160,23 +151,6 @@ else:
         python_spec_file.append(line)
 
       return python_spec_file
-
-
-def GetScripts():
-  """List up all scripts that should be runable from the command line."""
-  scripts = []
-
-  script_filenames = frozenset([
-      'image_export.py',
-      'log2timeline.py',
-      'pinfo.py',
-      'psort.py',
-      'psteal.py'])
-
-  for filename in script_filenames:
-    scripts.append(os.path.join('tools', filename))
-
-  return scripts
 
 
 if version_tuple[0] == 2:
@@ -211,7 +185,6 @@ setup(
     url='https://github.com/log2timeline/plaso',
     maintainer='Log2Timeline maintainers',
     maintainer_email='log2timeline-maintainers@googlegroups.com',
-    scripts=GetScripts(),
     cmdclass={
         'bdist_msi': BdistMSICommand,
         'bdist_rpm': BdistRPMCommand,
@@ -227,6 +200,12 @@ setup(
     package_dir={
         'plaso': 'plaso',
     },
+    include_package_data=True,
+    package_data={
+        'plaso.parsers': ['*.yaml'],
+        'plaso.parsers.winreg_plugins': ['*.yaml'],
+    },
+    scripts=glob.glob(os.path.join('tools', '*.py')),
     data_files=[
         ('share/plaso', glob.glob(os.path.join('data', '*'))),
         ('share/doc/plaso', [
