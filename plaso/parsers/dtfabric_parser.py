@@ -60,8 +60,8 @@ class DtFabricBaseParser(interface.FileObjectParser):
   * implement the ParseFileObject method.
 
   The _GetDataTypeMap method of this class can be used to retrieve data type
-  maps from the "fabric", collection of the data type definitions in definition
-  file. Data type maps are cached for reuse.
+  maps from the "fabric", which is the collection of the data type definitions
+  in definition file. Data type maps are cached for reuse.
 
   The _ReadStructure method of this class can be used to read structure data
   from a file-like object and create a Python object using a data type map.
