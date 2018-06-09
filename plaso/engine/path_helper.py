@@ -3,13 +3,120 @@
 
 from __future__ import unicode_literals
 
+import re
+
 from dfvfs.lib import definitions as dfvfs_definitions
 
+from plaso.engine import logger
 from plaso.lib import py2to3
 
 
 class PathHelper(object):
   """Class that implements the path helper."""
+
+  _RECURSIVE_GLOB_LIMIT = 10
+
+  @classmethod
+  def AppendPathEntries(cls, path, path_separator, count, skip_first):
+    """Appends wildcard entries to end of path.
+
+    Will append wildcard * to given path building a list of strings for "count"
+    iterations, skipping the first directory if skip_first is true.
+
+    Args:
+      path (str): Path to append wildcards to.
+      path_separator (str): path segment separator.
+      count (int): Number of entries to be appended.
+      skip_first (bool): Whether or not to skip first entry to append.
+
+    Returns:
+      list[str]: Paths that were expanded from the path with wildcards.
+    """
+    paths = []
+    replacement = '{0:s}*'.format(path_separator)
+
+    iteration = 0
+    while iteration < count:
+      if skip_first and iteration == 0:
+        path += replacement
+      else:
+        path += replacement
+        paths.append(path)
+      iteration += 1
+
+    return paths
+
+  @classmethod
+  def ExpandRecursiveGlobs(cls, path, path_separator):
+    """Expands recursive like globs present in an artifact path.
+
+    If a path ends in '**', with up to two optional digits such as '**10',
+    the '**' will recursively match all files and zero or more directories
+    from the specified path. The optional digits indicate the recursion depth.
+    By default recursion depth is 10 directories.
+
+    If the glob is followed by the specified path segment separator, only
+    directories and subdirectories will be matched.
+
+    Args:
+      path (str): path to be expanded.
+      path_separator (str): path segment separator.
+
+    Returns:
+      list[str]: String path expanded for each glob.
+    """
+    glob_regex = r'(.*)?{0}\*\*(\d{{1,2}})?({0})?$'.format(
+        re.escape(path_separator))
+
+    match = re.search(glob_regex, path)
+    if not match:
+      return [path]
+
+    skip_first = False
+    if match.group(3):
+      skip_first = True
+    if match.group(2):
+      iterations = int(match.group(2))
+    else:
+      iterations = cls._RECURSIVE_GLOB_LIMIT
+      logger.warning((
+          'Path "{0:s}" contains fully recursive glob, limiting to 10 '
+          'levels').format(path))
+
+    return cls.AppendPathEntries(
+        match.group(1), path_separator, iterations, skip_first)
+
+  @classmethod
+  def ExpandUsersHomeDirectoryPath(cls, path, user_accounts):
+    """Expands a path to contain all users home or profile directories.
+
+    Expands the GRR artifacts path variable "%%users.homedir%%".
+
+    Args:
+      path (str): Windows path with environment variables.
+      user_accounts (list[UserAccountArtifact]): user accounts.
+
+    Returns:
+      list [str]: paths returned for user accounts without a drive letter.
+    """
+    path_upper_case = path.upper()
+    if not path_upper_case.startswith('%%USERS.HOMEDIR%%'):
+      user_paths = [path]
+    else:
+      regex = re.compile(re.escape('%%users.homedir%%'))
+
+      user_paths = []
+      for user_account in user_accounts:
+        user_path = regex.sub(user_account.user_directory, path, re.IGNORECASE)
+        user_paths.append(user_path)
+
+    # Remove the drive letter, if it exists.
+    for path_index, user_path in enumerate(user_paths):
+      if len(user_path) > 2 and user_path[1] == ':':
+        _, _, user_path = user_path.rpartition(':')
+        user_paths[path_index] = user_path
+
+    return user_paths
 
   @classmethod
   def ExpandWindowsPath(cls, path, environment_variables):
@@ -23,6 +130,8 @@ class PathHelper(object):
     Returns:
       str: expanded Windows path.
     """
+    # TODO: Add support for items such as %%users.localappdata%%
+
     if environment_variables is None:
       environment_variables = []
 
@@ -42,8 +151,19 @@ class PathHelper(object):
           not path_segment.endswith('%')):
         continue
 
-      lookup_key = path_segment.upper()[1:-1]
+      check_for_drive_letter = False
+      path_segment_upper_case = path_segment.upper()
+      if path_segment_upper_case.startswith('%%ENVIRON_'):
+        lookup_key = path_segment_upper_case[10:-2]
+        check_for_drive_letter = True
+      else:
+        lookup_key = path_segment_upper_case[1:-1]
       path_segments[index] = lookup_table.get(lookup_key, path_segment)
+
+      if check_for_drive_letter:
+        # Remove the drive letter.
+        if len(path_segments[index]) >= 2 and path_segments[index][1] == ':':
+          _, _, path_segments[index] = path_segments[index].rpartition(':')
 
     return '\\'.join(path_segments)
 
