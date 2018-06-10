@@ -7,13 +7,11 @@ import os
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
-from dtfabric.runtime import fabric as dtfabric_fabric
-
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import data_formats
+from plaso.parsers import dtfabric_parser
 from plaso.parsers import manager
 
 
@@ -46,24 +44,13 @@ class UtmpEventData(events.EventData):
     self.username = None
 
 
-class UtmpParser(data_formats.DataFormatParser):
+class UtmpParser(dtfabric_parser.DtFabricBaseParser):
   """Parser for Linux/Unix UTMP files."""
 
   NAME = 'utmp'
   DESCRIPTION = 'Parser for Linux/Unix UTMP files.'
 
-  _DATA_TYPE_FABRIC_DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'utmp.yaml')
-
-  with open(_DATA_TYPE_FABRIC_DEFINITION_FILE, 'rb') as file_object:
-    _DATA_TYPE_FABRIC_DEFINITION = file_object.read()
-
-  _DATA_TYPE_FABRIC = dtfabric_fabric.DataTypeFabric(
-      yaml_definition=_DATA_TYPE_FABRIC_DEFINITION)
-
-  _UTMP_ENTRY = _DATA_TYPE_FABRIC.CreateDataTypeMap('utmp_entry')
-
-  _UTMP_ENTRY_SIZE = _UTMP_ENTRY.GetByteSize()
+  _DEFINITION_FILE = 'utmp.yaml'
 
   _EMPTY_IP_ADDRESS = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
@@ -89,12 +76,11 @@ class UtmpParser(data_formats.DataFormatParser):
     Raises:
       ParseError: if the entry cannot be parsed.
     """
-    encoding = parser_mediator.codepage or 'utf8'
+    entry_map = self._GetDataTypeMap('utmp_entry')
 
     try:
-      entry = self._ReadStructure(
-          file_object, file_offset, self._UTMP_ENTRY_SIZE, self._UTMP_ENTRY,
-          'entry')
+      entry, _ = self._ReadStructureFromFileObject(
+          file_object, file_offset, entry_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
           'Unable to parse UTMP entry at offset: 0x{0:08x} with error: '
@@ -103,6 +89,8 @@ class UtmpParser(data_formats.DataFormatParser):
     if entry.type not in self._SUPPORTED_TYPES:
       raise errors.UnableToParseFile('Unsupported type: {0:d}'.format(
           entry.type))
+
+    encoding = parser_mediator.codepage or 'utf8'
 
     try:
       username = entry.username.rstrip(b'\x00')
