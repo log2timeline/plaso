@@ -3,21 +3,17 @@
 
 from __future__ import unicode_literals
 
-import os
-
 import construct
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
-
-from dtfabric.runtime import fabric as dtfabric_fabric
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import binary
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.parsers import data_formats
+from plaso.parsers import dtfabric_parser
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -45,40 +41,20 @@ class WinRecycleBinEventData(events.EventData):
     self.short_filename = None
 
 
-class WinRecycleBinParser(data_formats.DataFormatParser):
+class WinRecycleBinParser(dtfabric_parser.DtFabricBaseParser):
   """Parses the Windows $Recycle.Bin $I files."""
 
   NAME = 'recycle_bin'
   DESCRIPTION = 'Parser for Windows $Recycle.Bin $I files.'
 
-  _DATA_TYPE_FABRIC_DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'recycler.yaml')
-
-  with open(_DATA_TYPE_FABRIC_DEFINITION_FILE, 'rb') as file_object:
-    _DATA_TYPE_FABRIC_DEFINITION = file_object.read()
-
-  _DATA_TYPE_FABRIC = dtfabric_fabric.DataTypeFabric(
-      yaml_definition=_DATA_TYPE_FABRIC_DEFINITION)
-
-  _FILE_HEADER = _DATA_TYPE_FABRIC.CreateDataTypeMap(
-      'recycle_bin_metadata_file_header')
-
-  _FILE_HEADER_SIZE = _FILE_HEADER.GetByteSize()
-
-  _UTF16LE_STRING = _DATA_TYPE_FABRIC.CreateDataTypeMap(
-      'utf16le_string')
-
-  _UTF16LE_STRING_WITH_SIZE = _DATA_TYPE_FABRIC.CreateDataTypeMap(
-      'utf16le_string_with_size')
+  _DEFINITION_FILE = 'recycler.yaml'
 
   _SUPPORTED_FORMAT_VERSIONS = (1, 2)
 
-  def _ParseOriginalFilename(self, parser_mediator, file_object, format_version):
+  def _ParseOriginalFilename(self, file_object, format_version):
     """Parses the original filename.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
       file_object (FileIO): file-like object.
       format_version (int): format version.
 
@@ -91,24 +67,22 @@ class WinRecycleBinParser(data_formats.DataFormatParser):
     file_offset = file_object.tell()
 
     if format_version == 1:
-      data_map = self._UTF16LE_STRING
-      data_map_description = 'UTF-16 little-endian string'
+      data_type_map = self._GetDataTypeMap('utf16le_string')
     else:
-      data_map = self._UTF16LE_STRING_WITH_SIZE
-      data_map_description = 'UTF-16 little-endian string with size'
+      data_type_map = self._GetDataTypeMap('utf16le_string_with_size')
 
     try:
-      original_filename, _ = self._ReadStructureWithSizeHint(
-          file_object, file_offset, data_map, data_map_description)
+      original_filename, _ = self._ReadStructureFromFileObject(
+          file_object, file_offset, data_type_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
           'Unable to parse original filename with error: {0!s}'.format(
               exception))
 
     if format_version == 1:
-      return original_filename.rstrip(b'\x00')
+      return original_filename.rstrip('\x00')
 
-    return original_filename.string.rstrip(b'\x00')
+    return original_filename.string.rstrip('\x00')
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows Recycle.Bin metadata ($I) file-like object.
@@ -128,10 +102,11 @@ class WinRecycleBinParser(data_formats.DataFormatParser):
     if not filename.startswith('$I'):
       raise errors.UnableToParseFile('Filename must start with $I.')
 
+    file_header_map = self._GetDataTypeMap('recycle_bin_metadata_file_header')
+
     try:
-      file_header = self._ReadStructure(
-          file_object, 0, self._FILE_HEADER_SIZE, self._FILE_HEADER,
-          'file header')
+      file_header, _ = self._ReadStructureFromFileObject(
+          file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile((
           'Unable to parse Windows Recycle.Bin metadata file header with '
@@ -149,8 +124,14 @@ class WinRecycleBinParser(data_formats.DataFormatParser):
           timestamp=file_header.deletion_time)
 
     event_data = WinRecycleBinEventData()
-    event_data.original_filename = self._ParseOriginalFilename(
-        parser_mediator, file_object, file_header.format_version)
+    try:
+      event_data.original_filename = self._ParseOriginalFilename(
+          file_object, file_header.format_version)
+    except (ValueError, errors.ParseError) as exception:
+      parser_mediator.ProduceExtractionError(
+          'unable to parse original filename with error: {0!s}.'.format(
+              exception))
+
     event_data.file_size = file_header.original_file_size
 
     event = time_events.DateTimeValuesEvent(
