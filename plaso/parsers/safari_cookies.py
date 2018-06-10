@@ -3,14 +3,10 @@
 
 from __future__ import unicode_literals
 
-import os
-
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
-from dtfabric import errors as dtfabric_errors
 from dtfabric.runtime import data_maps as dtfabric_data_maps
-from dtfabric.runtime import fabric as dtfabric_fabric
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -19,7 +15,7 @@ from plaso.lib import definitions
 from plaso.lib import specification
 # Need to register cookie plugins.
 from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
-from plaso.parsers import data_formats
+from plaso.parsers import dtfabric_parser
 from plaso.parsers import manager
 from plaso.parsers.cookie_plugins import manager as cookie_plugins_manager
 
@@ -47,43 +43,13 @@ class SafariBinaryCookieEventData(events.EventData):
     self.url = None
 
 
-class BinaryCookieParser(data_formats.DataFormatParser):
+class BinaryCookieParser(dtfabric_parser.DtFabricBaseParser):
   """Parser for Safari Binary Cookie files."""
 
   NAME = 'binary_cookies'
   DESCRIPTION = 'Parser for Safari Binary Cookie files.'
 
-  _DATA_TYPE_FABRIC_DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'safari_cookies.yaml')
-
-  with open(_DATA_TYPE_FABRIC_DEFINITION_FILE, 'rb') as file_object:
-    _DATA_TYPE_FABRIC_DEFINITION = file_object.read()
-
-  _DATA_TYPE_FABRIC = dtfabric_fabric.DataTypeFabric(
-      yaml_definition=_DATA_TYPE_FABRIC_DEFINITION)
-
-  _FILE_HEADER = _DATA_TYPE_FABRIC.CreateDataTypeMap(
-      'binarycookies_file_header')
-
-  _FILE_HEADER_SIZE = _FILE_HEADER.GetByteSize()
-
-  _PAGE_SIZES = _DATA_TYPE_FABRIC.CreateDataTypeMap(
-      'binarycookies_page_sizes')
-
-  _FILE_FOOTER = _DATA_TYPE_FABRIC.CreateDataTypeMap(
-      'binarycookies_file_footer')
-
-  _FILE_FOOTER_SIZE = _FILE_FOOTER.GetByteSize()
-
-  _PAGE_HEADER = _DATA_TYPE_FABRIC.CreateDataTypeMap(
-      'binarycookies_page_header')
-
-  _RECORD_HEADER = _DATA_TYPE_FABRIC.CreateDataTypeMap(
-      'binarycookies_record_header')
-
-  _RECORD_HEADER_SIZE = _RECORD_HEADER.GetByteSize()
-
-  _CSTRING = _DATA_TYPE_FABRIC.CreateDataTypeMap('cstring')
+  _DEFINITION_FILE = 'safari_cookies.yaml'
 
   _SIGNATURE = b'cook'
 
@@ -107,14 +73,17 @@ class BinaryCookieParser(data_formats.DataFormatParser):
     Raises:
       ParseError: when the string cannot be parsed.
     """
+    cstring_map = self._GetDataTypeMap('cstring')
+
     try:
-      value_string = self._CSTRING.MapByteStream(page_data[string_offset:])
-    except dtfabric_errors.MappingError as exception:
+      value_string = self._ReadStructureFromByteStream(
+          page_data[string_offset:], string_offset, cstring_map)
+    except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
           'Unable to map string data at offset: 0x{0:08x} with error: '
           '{1!s}').format(string_offset, exception))
 
-    return value_string.rstrip(b'\x00')
+    return value_string.rstrip('\x00')
 
   def _ParsePage(self, parser_mediator, file_offset, page_data):
     """Parses a page.
@@ -128,9 +97,12 @@ class BinaryCookieParser(data_formats.DataFormatParser):
     Raises:
       ParseError: when the page cannot be parsed.
     """
+    page_header_map = self._GetDataTypeMap('binarycookies_page_header')
+
     try:
-      page_header = self._PAGE_HEADER.MapByteStream(page_data)
-    except dtfabric_errors.MappingError as exception:
+      page_header = self._ReadStructureFromByteStream(
+          page_data, file_offset, page_header_map)
+    except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
           'Unable to map page header data at offset: 0x{0:08x} with error: '
           '{1!s}').format(file_offset, exception))
@@ -153,10 +125,12 @@ class BinaryCookieParser(data_formats.DataFormatParser):
     Raises:
       ParseError: when the record cannot be parsed.
     """
+    record_header_map = self._GetDataTypeMap('binarycookies_record_header')
+
     try:
-      record_header = self._RECORD_HEADER.MapByteStream(
-          page_data[record_offset:])
-    except dtfabric_errors.MappingError as exception:
+      record_header = self._ReadStructureFromByteStream(
+          page_data[record_offset:], record_offset, record_header_map)
+    except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
           'Unable to map record header data at offset: 0x{0:08x} with error: '
           '{1!s}').format(record_offset, exception))
@@ -236,12 +210,11 @@ class BinaryCookieParser(data_formats.DataFormatParser):
       UnableToParseFile: when the file cannot be parsed, this will signal
           the event extractor to apply other parsers.
     """
-    file_offset = 0
+    file_header_map = self._GetDataTypeMap('binarycookies_file_header')
 
     try:
-      file_header = self._ReadStructure(
-          file_object, file_offset, self._FILE_HEADER_SIZE, self._FILE_HEADER,
-          'file header')
+      file_header, file_header_data_size = self._ReadStructureFromFileObject(
+          file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile(
           'Unable to read file header with error: {0!s}.'.format(exception))
@@ -249,7 +222,7 @@ class BinaryCookieParser(data_formats.DataFormatParser):
     if file_header.signature != self._SIGNATURE:
       raise errors.UnableToParseFile('Unsupported file signature.')
 
-    file_offset += self._FILE_HEADER_SIZE
+    file_offset = file_header_data_size
 
     # TODO: move page sizes array into file header, this will require dtFabric
     # to compare signature as part of data map.
@@ -260,10 +233,12 @@ class BinaryCookieParser(data_formats.DataFormatParser):
     context = dtfabric_data_maps.DataTypeMapContext(values={
         'binarycookies_file_header': file_header})
 
+    page_sizes_map = self._GetDataTypeMap('binarycookies_page_sizes')
+
     try:
-      page_sizes_array = self._PAGE_SIZES.MapByteStream(
-          page_sizes_data, context=context)
-    except dtfabric_errors.MappingError as exception:
+      page_sizes_array = self._ReadStructureFromByteStream(
+          page_sizes_data, file_offset, page_sizes_map, context=context)
+    except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
           'Unable to map page sizes data at offset: 0x{0:08x} with error: '
           '{1!s}').format(file_offset, exception))

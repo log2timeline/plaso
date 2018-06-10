@@ -46,7 +46,8 @@ attributes:
   units: bytes
 ---
 name: cstring
-type: stream
+type: string
+encoding: ascii
 element_data_type: byte
 elements_terminator: "\x00"
 ---
