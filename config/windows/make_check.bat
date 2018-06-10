@@ -6,5 +6,5 @@ dist\plaso\log2timeline.exe --info
 dist\plaso\pinfo.exe -v test_data\psort_test.json.plaso
 dist\plaso\psort.exe
 
-dist\plaso\log2timeline.exe dist\plaso\test.plaso test_data
+dist\plaso\log2timeline.exe dist\test.plaso test_data
 
