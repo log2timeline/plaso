@@ -187,9 +187,24 @@ rm -Force dist\plaso\licenses\LICENSE.mock
 rm -Force dist\plaso\licenses\LICENSE.pbr
 
 # Copy the artifacts yaml files
-git.exe clone https://github.com/ForensicArtifacts/artifacts dist\artifacts
+git.exe clone https://github.com/ForensicArtifacts/artifacts.git dist\artifacts
 mkdir dist\plaso\artifacts
-xcopy /q /y dist\artifacts\data\* dist\plaso\artifacts
+xcopy /q /y dist\artifacts\data\*.yaml dist\plaso\artifacts
+
+# Copy the dfVFS yaml (dtFabric definition) files
+git.exe clone https://github.com/ForensicArtifacts/dfvfs.git dist\dfvfs
+mkdir dist\plaso\dfvfs\lib
+xcopy /q /y dist\dfvfs\dfvfs\lib\*.yaml dist\plaso\dfvfs\lib
+
+# Copy the dfWinReg yaml (dtFabric definition) files
+git.exe clone https://github.com/ForensicArtifacts/dfwinreg.git dist\dfwinreg
+mkdir dist\plaso\dfwinreg
+xcopy /q /y dist\dfwinreg\dfwinreg\*.yaml dist\plaso\dfwinreg
+
+# Copy the plaso yaml (dtFabric definition) files
+xcopy /q /y parsers\*.yaml dist\plaso\plaso\parsers
+xcopy /q /y parsers\olecf_plugins\*.yaml dist\plaso\plaso\parsers\olecf_plugins
+xcopy /q /y parsers\winreg_plugins\*.yaml dist\plaso\plaso\parsers\winreg_plugins
 
 # Makes plaso-<version>-<architecture>.zip
 Add-Type -assembly "system.io.compression.filesystem"
