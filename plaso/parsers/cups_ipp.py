@@ -26,13 +26,11 @@ import os
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import rfc2579_date_time as dfdatetime_rfc2579_date_time
 
-from dtfabric.runtime import fabric as dtfabric_fabric
-
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import data_formats
+from plaso.parsers import dtfabric_parser
 from plaso.parsers import logger
 from plaso.parsers import manager
 
@@ -79,34 +77,13 @@ class CupsIppEventData(events.EventData):
     self.user = None
 
 
-class CupsIppParser(data_formats.DataFormatParser):
+class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
   """Parser for CUPS IPP files."""
 
   NAME = 'cups_ipp'
   DESCRIPTION = 'Parser for CUPS IPP files.'
 
-  _DATA_TYPE_FABRIC_DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'cups_ipp.yaml')
-
-  with open(_DATA_TYPE_FABRIC_DEFINITION_FILE, 'rb') as file_object:
-    _DATA_TYPE_FABRIC_DEFINITION = file_object.read()
-
-  _DATA_TYPE_FABRIC = dtfabric_fabric.DataTypeFabric(
-      yaml_definition=_DATA_TYPE_FABRIC_DEFINITION)
-
-  _HEADER = _DATA_TYPE_FABRIC.CreateDataTypeMap('cups_ipp_header')
-
-  _HEADER_SIZE = _HEADER.GetByteSize()
-
-  _TAG_VALUE = _DATA_TYPE_FABRIC.CreateDataTypeMap('int8')
-  _TAG_VALUE_SIZE = _TAG_VALUE.GetByteSize()
-
-  _ATTRIBUTE = _DATA_TYPE_FABRIC.CreateDataTypeMap('cups_ipp_attribute')
-
-  _DATETIME_VALUE = _DATA_TYPE_FABRIC.CreateDataTypeMap(
-      'cups_ipp_datetime_value')
-
-  _INTEGER_VALUE = _DATA_TYPE_FABRIC.CreateDataTypeMap('int32be')
+  _DEFINITION_FILE = 'cups_ipp.yaml'
 
   _SUPPORTED_FORMAT_VERSIONS = ('1.0', '1.1', '2.0')
 
@@ -175,10 +152,11 @@ class CupsIppParser(data_formats.DataFormatParser):
       ParseError: if the attribute cannot be parsed.
     """
     file_offset = file_object.tell()
+    attribute_map = self._GetDataTypeMap('cups_ipp_attribute')
 
     try:
-      attribute, _ = self._ReadStructureWithSizeHint(
-          file_object, file_offset, self._ATTRIBUTE, 'attribute')
+      attribute, _ = self._ReadStructureFromFileObject(
+          file_object, file_offset, attribute_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
           'Unable to parse attribute with error: {0!s}'.format(exception))
@@ -186,10 +164,11 @@ class CupsIppParser(data_formats.DataFormatParser):
     value = None
     if attribute.tag_value in (0x21, 0x23):
       file_offset = file_object.tell()
+      integer_map = self._GetDataTypeMap('int32be')
+
       try:
         value = self._ReadStructureFromByteStream(
-            attribute.value_data, file_offset, self._INTEGER_VALUE,
-            'integer value')
+            attribute.value_data, file_offset, integer_map)
       except (ValueError, errors.ParseError) as exception:
         raise errors.ParseError(
             'Unable to parse integer value with error: {0!s}'.format(exception))
@@ -236,9 +215,10 @@ class CupsIppParser(data_formats.DataFormatParser):
 
     while tag_value != 0x03:
       file_offset = file_object.tell()
-      tag_value = self._ReadStructure(
-          file_object, file_offset, self._TAG_VALUE_SIZE, self._TAG_VALUE,
-          'tag value')
+      tag_value_map = self._GetDataTypeMap('int8')
+
+      tag_value, _ = self._ReadStructureFromFileObject(
+          file_object, file_offset, tag_value_map)
 
       if tag_value < 0x10:
         if tag_value != 0x03 and tag_value not in self._DELIMITER_TAGS:
@@ -265,9 +245,11 @@ class CupsIppParser(data_formats.DataFormatParser):
     Raises:
       ParseError: when the RFC2579 date-time value cannot be parsed.
     """
+    datetime_value_map = self._GetDataTypeMap('cups_ipp_datetime_value')
+
     try:
       value = self._ReadStructureFromByteStream(
-          byte_stream, file_offset, self._DATETIME_VALUE, 'date-time value')
+          byte_stream, file_offset, datetime_value_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
           'Unable to parse datetime value with error: {0!s}'.format(exception))
@@ -290,12 +272,14 @@ class CupsIppParser(data_formats.DataFormatParser):
     Raises:
       UnableToParseFile: when the header cannot be parsed.
     """
+    header_map = self._GetDataTypeMap('cups_ipp_header')
+
     try:
-      header = self._ReadStructure(
-          file_object, 0, self._HEADER_SIZE, self._HEADER, 'header')
+      header, _ = self._ReadStructureFromFileObject(file_object, 0, header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile(
-          'Unable to parse CUPS IPP header with error: {0!s}'.format(exception))
+          '[{0:s}] Unable to parse header with error: {1!s}'.format(
+              self.NAME, exception))
 
     format_version = '{0:d}.{1:d}'.format(
         header.major_version, header.minor_version)
