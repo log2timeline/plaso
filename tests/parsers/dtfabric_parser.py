@@ -123,14 +123,14 @@ members:
 
   def testFormatPackedIPv4Address(self):
     """Tests the _FormatPackedIPv4Address function."""
-    parser = data_formats.DataFormatParser()
+    parser = dtfabric_parser.DtFabricBaseParser()
 
     ip_address = parser._FormatPackedIPv4Address([0xc0, 0xa8, 0xcc, 0x62])
     self.assertEqual(ip_address, '192.168.204.98')
 
   def testFormatPackedIPv6Address(self):
     """Tests the _FormatPackedIPv6Address function."""
-    parser = data_formats.DataFormatParser()
+    parser = dtfabric_parser.DtFabricBaseParser()
 
     ip_address = parser._FormatPackedIPv6Address([
         0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x00,

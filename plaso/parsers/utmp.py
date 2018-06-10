@@ -174,7 +174,7 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
         date_time, definitions.TIME_DESCRIPTION_START)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    file_offset += self._UTMP_ENTRY_SIZE
+    file_offset = file_object.tell()
     file_size = file_object.get_size()
 
     while file_offset < file_size:
@@ -194,7 +194,7 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
           date_time, definitions.TIME_DESCRIPTION_START)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-      file_offset += self._UTMP_ENTRY_SIZE
+      file_offset = file_object.tell()
 
 
 manager.ParsersManager.RegisterParser(UtmpParser)
