@@ -14,7 +14,7 @@ class CircularBufferTest(unittest.TestCase):
 
   def testBuffer(self):
     """Tests the circular buffer."""
-    items = range(1, 11)
+    items = list(range(1, 11))
 
     circular_buffer = bufferlib.CircularBuffer(10)
 
@@ -41,13 +41,13 @@ class CircularBufferTest(unittest.TestCase):
 
     self.assertIsNone(circular_buffer.GetCurrent())
 
-    items = range(1, 51)
+    items = list(range(1, 51))
     for item in items:
       circular_buffer.Append(item)
       self.assertEqual(circular_buffer.GetCurrent(), item)
       self.assertEqual(circular_buffer.size, 10)
 
-    expected_items = range(41, 51)
+    expected_items = list(range(41, 51))
     items = list(circular_buffer)
     self.assertEqual(items, expected_items)
 
