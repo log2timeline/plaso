@@ -109,21 +109,20 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
               self.NAME, extension_identifier))
       return None
 
-    first_line, _, _ = page_content.partition(b'\n')
+    first_line, _, _ = page_content.partition('\n')
     match = self._TITLE_RE.search(first_line)
     name = None
     if match:
       title = match.group(1)
-      if title.startswith(b'Chrome Web Store - '):
+      if title.startswith('Chrome Web Store - '):
         name = title[19:]
-      elif title.endswith(b'- Chrome Web Store'):
+      elif title.endswith('- Chrome Web Store'):
         name = title[:-19]
 
     if not name:
       self._extensions[extension_identifier] = 'UNKNOWN'
       return None
 
-    name = name.decode('utf-8', errors='replace')
     self._extensions[extension_identifier] = name
     return name
 
@@ -199,12 +198,11 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
       else:
         user = 'Not found ({0:s})'.format(filename)
 
-    extension = self._GetTitleFromChromeWebStore(extension_identifier)
-    if not extension:
-      extension = extension_identifier
+    extension_string = self._GetTitleFromChromeWebStore(extension_identifier)
+    if not extension_string:
+      extension_string = extension_identifier
 
     self._results.setdefault(user, [])
-    extension_string = extension.decode('utf-8', errors='ignore')
     if (extension_string, extension_identifier) not in self._results[user]:
       self._results[user].append((extension_string, extension_identifier))
 

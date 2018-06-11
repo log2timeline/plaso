@@ -57,7 +57,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
           'Unable to connect to nsrlsvr with error: {0!s}.'.format(exception))
 
   def _QueryHash(self, nsrl_socket, digest):
-    """Queries nsrlsvr for a specfic hash.
+    """Queries nsrlsvr for a specific hash.
 
     Args:
       nsrl_socket (socket._socketobject): socket of connection to nsrlsvr.
