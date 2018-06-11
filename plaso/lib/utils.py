@@ -9,10 +9,10 @@ from plaso.lib import py2to3
 
 
 def IsText(bytes_in, encoding=None):
-  """Examine the bytes in and determine if they are indicative of a text.
+  """Examine the bytes in and determine if they are indicative of text.
 
   Parsers need quick and at least semi reliable method of discovering whether
-  or not a particular byte stream is a text or resembles text or not. This can
+  or not a particular byte stream is text or resembles text or not. This can
   be used in text parsers to determine if a file is a text file or not for
   instance.
 
@@ -29,23 +29,23 @@ def IsText(bytes_in, encoding=None):
     bool: True if the bytes stream contains text.
   """
   # TODO: Improve speed and accuracy of this method.
-  # Start with the assumption we are dealing with a text.
-  is_ascii = True
+  # Start with the assumption we are dealing with text.
+  is_text = True
 
   if isinstance(bytes_in, py2to3.UNICODE_TYPE):
-    return is_ascii
+    return is_text
 
   # Check if this is ASCII text string.
   for value in bytes_in:
     if py2to3.PY_2:
       value = ord(value)
     if not 31 < value < 128:
-      is_ascii = False
+      is_text = False
       break
 
   # We have an ASCII string.
-  if is_ascii:
-    return is_ascii
+  if is_text:
+    return is_text
 
   # Check if this is UTF-8
   try:

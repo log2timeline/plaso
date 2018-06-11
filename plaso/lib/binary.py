@@ -78,7 +78,7 @@ def ReadUTF16Stream(file_object, offset=None, byte_size=0):
   """Reads an UTF-16 formatted stream from a file-like object.
 
   Reads an UTF-16 formatted stream that's terminated by
-  an end-of-string terminator (\x00\x00) or up to the byte size.
+  an end-of-string character (\x00\x00) or up to the byte size.
 
   Args:
     file_object (file): file-like object to read the data from.
@@ -239,16 +239,16 @@ def ReadUTF16(string_buffer):
       use_buffer, 'utf-16', errors='ignore').replace('\x00', '')
 
 
-def HexifyBuffer(byte_stream):
-  """Returns an hexadecimal representation of a byte stream.
+def HexifyBuffer(byte_sequence):
+  """Returns an hexadecimal representation of a byte sequence.
 
   Args:
-    string_buffer (bytes): byte string.
+    byte_sequence (bytes): byte sequence.
 
   Returns:
     str: hexadecimal representation of the byte stream.
   """
-  hex_bytes = codecs.encode(byte_stream, 'hex')
+  hex_bytes = codecs.encode(byte_sequence, 'hex')
   output_string = codecs.decode(hex_bytes, 'utf-8')
   string_iterators = [iter(output_string)] * 2
 
@@ -279,8 +279,8 @@ def _StreamContainsUTF16NullTerminator(byte_stream, offset):
   """
   byte_1 = byte_stream[offset]
   byte_2 = byte_stream[offset + 1]
-  if py2to3.PY_2 and (byte_1 == b'\x00' and byte_2 == b'\x00'):
+  if py2to3.PY_2 and byte_1 == b'\x00' and byte_2 == b'\x00':
     return True
-  if py2to3.PY_3 and (byte_1 == 0 and byte_2 == 0):
+  if py2to3.PY_3 and byte_1 == 0 and byte_2 == 0:
     return True
   return False

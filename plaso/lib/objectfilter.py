@@ -111,18 +111,25 @@ from plaso.lib import py2to3
 # pylint: disable=attribute-defined-outside-init
 # pylint: disable=missing-docstring
 
-def GetUnicodeString(string):
-  """Converts the string to Unicode if necessary."""
-  if isinstance(string, list):
-    string = [GetUnicodeString(item) for item in string]
-    return ''.join(string)
+def GetUnicodeString(value):
+  """Attempts to convert the argument to a Unicode string.
+  
+  Args:
+    value (list|int|bytes): value to convert.
 
-  if isinstance(string, py2to3.INTEGER_TYPES):
-    string = str(string)
+  Returns:
+    str: string representation of the argument.
+  """
+  if isinstance(value, list):
+    value = [GetUnicodeString(item) for item in value]
+    return ''.join(value)
 
-  if not isinstance(string, py2to3.UNICODE_TYPE):
-    return codecs.decode(string, 'utf8', 'ignore')
-  return string
+  if isinstance(value, py2to3.INTEGER_TYPES):
+    value = '{0:d}'.format(value)
+
+  if not isinstance(value, py2to3.UNICODE_TYPE):
+    return codecs.decode(value, 'utf8', 'ignore')
+  return value
 
 
 class InvalidNumberOfOperands(errors.Error):

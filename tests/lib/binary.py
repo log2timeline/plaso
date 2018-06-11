@@ -171,8 +171,8 @@ class BinaryTests(shared_test_lib.BaseTestCase):
 
       self.assertEqual(string_table, expected_string_table)
 
-  def testStringParsing(self):
-    """Test parsing an ASCII string."""
+  def testReadUTF16(self):
+    """Test reading a UTF-16 string."""
     self.assertEqual(binary.ReadUTF16(self._ascii_string_1), 'Whatis')
 
     self.assertEqual(binary.ReadUTF16(self._ascii_string_2), 'What is this?')
