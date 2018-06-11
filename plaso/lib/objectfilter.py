@@ -113,7 +113,7 @@ from plaso.lib import py2to3
 
 def GetUnicodeString(value):
   """Attempts to convert the argument to a Unicode string.
-  
+
   Args:
     value (list|int|bytes|str): value to convert.
 
