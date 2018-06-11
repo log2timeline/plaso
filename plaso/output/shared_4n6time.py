@@ -3,9 +3,10 @@
 
 from __future__ import unicode_literals
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.lib import timelib
 from plaso.output import interface
 
 
@@ -47,17 +48,16 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
     if not event.timestamp:
       return 'N/A'
 
-    datetime_object = timelib.Timestamp.CopyToDatetime(
-        event.timestamp, self._output_mediator.timezone)
-    if not datetime_object:
-      self._ReportEventError(event, (
-          'unable to copy timestamp: {0:d} to datetime object.'))
-      return 'N/A'
+    # TODO: preserve dfdatetime as an object.
+    # TODO: add support for self._output_mediator.timezone
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=event.timestamp)
+
+    year, month, day_of_month = date_time.GetDate()
+    hours, minutes, seconds = date_time.GetTimeOfDay()
 
     return '{0:04d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}'.format(
-        datetime_object.year, datetime_object.month, datetime_object.day,
-        datetime_object.hour, datetime_object.minute,
-        datetime_object.second)
+        year, month, day_of_month, hours, minutes, seconds)
 
   def _GetSanitizedEventValues(self, event):
     """Sanitizes the event for use in 4n6time.

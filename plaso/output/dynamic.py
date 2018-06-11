@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.lib import timelib
@@ -57,20 +59,13 @@ class DynamicFieldsHelper(object):
     Returns:
       str: date field.
     """
-    try:
-      date_use = timelib.Timestamp.CopyToDatetime(
-          event.timestamp, self._output_mediator.timezone,
-          raise_error=True)
-    except (OverflowError, ValueError) as exception:
-      self._ReportEventError(event, (
-          'unable to copy timestamp: {0!s} to a human readable date '
-          'with error: {1!s}. Defaulting to: "0000-00-00"').format(
-              event.timestamp, exception))
+    # TODO: preserve dfdatetime as an object.
+    # TODO: add support for self._output_mediator.timezone
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=event.timestamp)
 
-      return '0000-00-00'
-
-    return '{0:04d}-{1:02d}-{2:02d}'.format(
-        date_use.year, date_use.month, date_use.day)
+    year, month, day_of_month = date_time.GetDate()
+    return '{0:04d}-{1:02d}-{2:02d}'.format(year, month, day_of_month)
 
   def _FormatDateTime(self, event):
     """Formats the date and time in ISO 8601 format.
@@ -243,20 +238,13 @@ class DynamicFieldsHelper(object):
     Returns:
       str: time field.
     """
-    try:
-      date_use = timelib.Timestamp.CopyToDatetime(
-          event.timestamp, self._output_mediator.timezone,
-          raise_error=True)
-    except (OverflowError, ValueError) as exception:
-      self._ReportEventError(event, (
-          'unable to copy timestamp: {0!s} to a human readable time '
-          'with error: {1!s}. Defaulting to: "00:00:00"').format(
-              event.timestamp, exception))
+    # TODO: preserve dfdatetime as an object.
+    # TODO: add support for self._output_mediator.timezone
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=event.timestamp)
 
-      return '00:00:00'
-
-    return '{0:02d}:{1:02d}:{2:02d}'.format(
-        date_use.hour, date_use.minute, date_use.second)
+    hours, minutes, seconds = date_time.GetTimeOfDay()
+    return '{0:02d}:{1:02d}:{2:02d}'.format(hours, minutes, seconds)
 
   def _FormatTimestampDescription(self, event):
     """Formats the timestamp description.
