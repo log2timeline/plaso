@@ -115,7 +115,7 @@ def GetUnicodeString(value):
   """Attempts to convert the argument to a Unicode string.
   
   Args:
-    value (list|int|bytes): value to convert.
+    value (list|int|bytes|str): value to convert.
 
   Returns:
     str: string representation of the argument.

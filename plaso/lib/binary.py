@@ -145,8 +145,8 @@ def ArrayOfUTF16StreamCopyToString(byte_stream, byte_stream_size=None):
 
   Args:
     byte_stream (str): UTF-16 formatted byte stream.
-    byte_stream_size (Optional[int]): byte stream size or None if the entire byte stream
-        should be used.
+    byte_stream_size (Optional[int]): byte stream size or None if the entire
+        byte stream should be used.
 
   Returns:
     list[str]: Unicode strings.
