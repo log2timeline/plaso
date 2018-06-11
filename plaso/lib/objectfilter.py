@@ -99,6 +99,7 @@ from __future__ import unicode_literals
 
 import abc
 import binascii
+import codecs
 import logging
 import re
 
@@ -110,11 +111,25 @@ from plaso.lib import py2to3
 # pylint: disable=attribute-defined-outside-init
 # pylint: disable=missing-docstring
 
-def GetUnicodeString(string):
-  """Converts the string to Unicode if necessary."""
-  if not isinstance(string, py2to3.UNICODE_TYPE):
-    return str(string).decode('utf8', errors='ignore')
-  return string
+def GetUnicodeString(value):
+  """Attempts to convert the argument to a Unicode string.
+
+  Args:
+    value (list|int|bytes|str): value to convert.
+
+  Returns:
+    str: string representation of the argument.
+  """
+  if isinstance(value, list):
+    value = [GetUnicodeString(item) for item in value]
+    return ''.join(value)
+
+  if isinstance(value, py2to3.INTEGER_TYPES):
+    value = '{0:d}'.format(value)
+
+  if not isinstance(value, py2to3.UNICODE_TYPE):
+    return codecs.decode(value, 'utf8', 'ignore')
+  return value
 
 
 class InvalidNumberOfOperands(errors.Error):
@@ -255,6 +270,7 @@ class GenericBinaryOperator(BinaryOperator):
   def Matches(self, obj):
     key = self.left_operand
     values = self.value_expander.Expand(obj, key)
+    values = list(values)
     if values and self.Operate(values):
       return self.bool_value
     return not self.bool_value
@@ -818,7 +834,7 @@ class Parser(lexer.SearchParser):
       ParseError: When the escaped string is not one of [\'"rnbt]
     """
     if match.group(1) in '\\\'"rnbt\\.ws':
-      self.string += string.decode('string_escape')
+      self.string += codecs.decode(string, 'unicode_escape')
     else:
       raise errors.ParseError('Invalid escape character {0:s}.'.format(string))
 
@@ -827,9 +843,11 @@ class Parser(lexer.SearchParser):
     logging.debug('HexEscape matched {0:s}.'.format(string))
     hex_string = match.group(1)
     try:
-      self.string += binascii.unhexlify(hex_string)
-    except TypeError:
-      raise errors.ParseError('Invalid hex escape {0:s}.'.format(string))
+      hex_string = binascii.unhexlify(hex_string)
+      hex_string = codecs.decode(hex_string, 'utf-8')
+      self.string += hex_string
+    except (TypeError, binascii.Error):
+      raise errors.ParseError('Invalid hex escape {0!s}.'.format(hex_string))
 
   def ContextOperator(self, string='', **unused_kwargs):
     self.stack.append(self.context_cls(string[1:]))
@@ -842,7 +860,7 @@ class Parser(lexer.SearchParser):
 
     length = len(self.stack)
     while length > 1:
-      # Precendence order
+      # Precedence order
       self._CombineParenthesis()
       self._CombineBinaryExpressions('and')
       self._CombineBinaryExpressions('or')
@@ -879,7 +897,7 @@ class Parser(lexer.SearchParser):
         self.stack[i-1] = None
         self.stack[i+1] = None
 
-    self.stack = filter(None, self.stack)
+    self.stack = list(filter(None, self.stack))
 
   def _CombineContext(self):
     # Context can merge from item 0
@@ -891,7 +909,7 @@ class Parser(lexer.SearchParser):
         self.stack[i-1].SetExpression(expression)
         self.stack[i] = None
 
-    self.stack = filter(None, self.stack)
+    self.stack = list(filter(None, self.stack))
 
 
 ### FILTER IMPLEMENTATIONS

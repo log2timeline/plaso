@@ -473,7 +473,7 @@ class SearchParser(Lexer):
         self.stack[i-1] = None
         self.stack[i+1] = None
 
-    self.stack = filter(None, self.stack)
+    self.stack = list(filter(None, self.stack))
 
   def _CombineParenthesis(self):
     """Combine parenthesis."""
@@ -483,7 +483,7 @@ class SearchParser(Lexer):
         self.stack[i] = None
         self.stack[i+2] = None
 
-    self.stack = filter(None, self.stack)
+    self.stack = list(filter(None, self.stack))
 
   def Reduce(self):
     """Reduce the token stack into an AST."""

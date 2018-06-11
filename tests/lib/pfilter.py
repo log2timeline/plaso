@@ -37,14 +37,16 @@ class PFilterTest(unittest.TestCase):
     matcher = my_parser.Compile(
         pfilter.PlasoAttributeFilterImplementation)
 
-    self.assertEqual(result, matcher.Matches(event))
+    self.assertEqual(
+        result, matcher.Matches(event),
+        'query {0:s} failed with event {1!s}'.format(query, event.CopyToDict()))
 
   def testPlasoEvents(self):
     """Test plaso EventObjects, both Python and Protobuf version.
 
     These are more plaso specific tests than the more generic object filter
     ones. It will create an event object that stores some attributes. These
-    objects will then be serialzed and all tests run against both the Python
+    objects will then be serialized and all tests run against both the Python
     objects as well as the serialized ones.
     """
     event = events.EventObject()

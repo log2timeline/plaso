@@ -171,27 +171,27 @@ class BinaryTests(shared_test_lib.BaseTestCase):
 
       self.assertEqual(string_table, expected_string_table)
 
-  def testStringParsing(self):
-    """Test parsing the ASCII string."""
+  def testReadUTF16(self):
+    """Test reading a UTF-16 string."""
     self.assertEqual(binary.ReadUTF16(self._ascii_string_1), 'Whatis')
 
     self.assertEqual(binary.ReadUTF16(self._ascii_string_2), 'What is this?')
 
-    uni_text = binary.ReadUTF16(self._unicode_string_1)
-    self.assertEqual(uni_text, 'þrándur')
+    unicode_text = binary.ReadUTF16(self._unicode_string_1)
+    self.assertEqual(unicode_text, 'þrándur')
 
   def testHex(self):
     """Test the hexadecimal representation of data."""
     hex_string_1 = binary.HexifyBuffer(self._ascii_string_1)
     hex_compare = (
-        b'\\x57\\x00\\x68\\x00\\x61\\x00\\x74\\x00\\x00\\x00\\x69\\x00'
-        b'\\x73\\x00')
+        '\\x57\\x00\\x68\\x00\\x61\\x00\\x74\\x00\\x00\\x00\\x69\\x00'
+        '\\x73\\x00')
     self.assertEqual(hex_string_1, hex_compare)
 
     hex_string_2 = binary.HexifyBuffer(self._unicode_string_1)
     hex_compare_unicode = (
-        b'\\xff\\xfe\\xfe\\x00\\x72\\x00\\xe1\\x00\\x6e\\x00\\x64\\x00'
-        b'\\x75\\x00\\x72\\x00')
+        '\\xff\\xfe\\xfe\\x00\\x72\\x00\\xe1\\x00\\x6e\\x00\\x64\\x00'
+        '\\x75\\x00\\x72\\x00')
 
     self.assertEqual(hex_string_2, hex_compare_unicode)
 

@@ -152,7 +152,8 @@ class FormatSpecificationStore(object):
     """Retrieves a specification mapped to a signature identifier.
 
     Args:
-      identifier (str): unique signature identifier for a specification store.
+      signature_identifier (str): unique signature identifier for a
+          specification store.
 
     Returns:
       FormatSpecification: format specification or None if the signature
