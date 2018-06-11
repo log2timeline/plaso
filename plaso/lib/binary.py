@@ -84,8 +84,8 @@ def ReadUTF16Stream(file_object, offset=None, byte_size=0):
     file_object (file): file-like object to read the data from.
     offset (Optional[int]): offset into the file object data, if -1 or not set
         the current location into the file object data is used.
-    byte_size (Optional[int]): maximum number of bytes to read or 0 if the function
-        should keep reading up to the end of file.
+    byte_size (Optional[int]): maximum number of bytes to read or 0 if the
+        function should keep reading up to the end of file.
 
   Returns:
     str: Unicode string.
@@ -117,9 +117,9 @@ def UTF16StreamCopyToString(byte_stream, byte_stream_size=None):
   character (\x00\x00). Otherwise the function reads up to the byte stream size.
 
   Args:
-    byte_stream (str): UTF-16 formatted byte stream.
-    byte_stream_size (Optional[int]): byte stream size or None if the entire byte stream
-        should be used.
+    byte_stream (bytes): UTF-16 formatted byte stream.
+    byte_stream_size (Optional[int]): byte stream size or None if the entire
+        byte stream should be used.
 
   Returns:
     str: Unicode string.
@@ -185,7 +185,8 @@ def ArrayOfUTF16StreamCopyToStringTable(byte_stream, byte_stream_size=None):
       stream should be used.
 
   Returns:
-    dict[int, str]: Unicode strings with their offset in the byte stream as their key.
+    dict[int, str]: Unicode strings with their offset in the byte stream as
+        their key.
   """
   string_table = {}
   utf16_stream_start = 0
