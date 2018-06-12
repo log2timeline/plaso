@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+import codecs
+
 import yara
 
 from plaso.cli import tools
@@ -56,6 +58,7 @@ class YaraRulesArgumentsHelper(interface.ArgumentsHelper):
       try:
         with open(path, 'rb') as rules_file:
           yara_rules_string = rules_file.read()
+          yara_rules_string = codecs.decode(yara_rules_string, 'utf-8')
 
       except IOError as exception:
         raise errors.BadConfigObject(
