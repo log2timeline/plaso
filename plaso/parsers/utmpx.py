@@ -3,19 +3,14 @@
 
 from __future__ import unicode_literals
 
-# TODO: Add support for other implementations than MacOS.
-#       The parser should be checked against IOS UTMPX file.
-
-import construct
-
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import interface
-from plaso.parsers import logger
+from plaso.lib import specification
+from plaso.parsers import dtfabric_parser
 from plaso.parsers import manager
 
 
@@ -23,10 +18,12 @@ class UtmpxMacOSEventData(events.EventData):
   """MacOS utmpx event data.
 
   Attributes:
-    computer_name (str): name of the host or IP address.
-    status_type (int): terminal status type.
+    hostname (str): hostname or IP address.
+    pid (int): process identifier (PID).
     terminal (str): name of the terminal.
-    user (str): active user name.
+    terminal_identifier (int): inittab identifier.
+    type (int): type of login.
+    username (str): user name.
   """
 
   DATA_TYPE = 'mac:utmpx:event'
@@ -34,128 +31,113 @@ class UtmpxMacOSEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(UtmpxMacOSEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.computer_name = None
-    self.status_type = None
+    self.hostname = None
+    self.pid = None
     self.terminal = None
-    self.user = None
+    self.terminal_identifier = None
+    self.type = None
+    self.username = None
 
 
-class UtmpxParser(interface.FileObjectParser):
-  """Parser for UTMPX files."""
+class UtmpxParser(dtfabric_parser.DtFabricBaseParser):
+  """Parser for Mac OS X 10.5 utmpx files."""
 
   NAME = 'utmpx'
-  DESCRIPTION = 'Parser for UTMPX files.'
+  DESCRIPTION = 'Parser for Mac OS X 10.5 utmpx files.'
 
-  # INFO: Type is suppose to be a short (2 bytes),
-  # however if we analyze the file it is always
-  # byte follow by 3 bytes with \x00 value.
-  _UTMPX_ENTRY = construct.Struct(
-      'utmpx_mac',
-      construct.String('user', 256),
-      construct.ULInt32('id'),
-      construct.String('tty_name', 32),
-      construct.ULInt32('pid'),
-      construct.ULInt16('status_type'),
-      construct.ULInt16('unknown'),
-      construct.ULInt32('timestamp'),
-      construct.ULInt32('microseconds'),
-      construct.String('hostname', 256),
-      construct.Padding(64))
+  _DEFINITION_FILE = 'utmp.yaml'
 
-  _UTMPX_ENTRY_SIZE = _UTMPX_ENTRY.sizeof()
+  _SUPPORTED_TYPES = frozenset(range(0, 12))
 
-  _STATUS_TYPE_SIGNATURE = 10
+  _FILE_HEADER_USERNAME = 'utmpx-1.00'
+  _FILE_HEADER_TYPE = 10
 
-  def _ReadEntry(self, parser_mediator, file_object):
-    """Reads an UTMPX entry.
+  def _ReadEntry(self, parser_mediator, file_object, file_offset):
+    """Reads an utmpx entry.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): a file-like object.
+      file_offset (int): offset of the data relative from the start of
+          the file-like object.
 
     Returns:
-      bool: True if the UTMPX entry was successfully read.
+      tuple: contains:
+
+        int: timestamp, which contains the number of microseconds
+            since January 1, 1970, 00:00:00 UTC.
+        UtmpxMacOSEventData: event data of the utmpx entry read.
+
+    Raises:
+      ParseError: if the entry cannot be parsed.
     """
-    data = file_object.read(self._UTMPX_ENTRY_SIZE)
-    if len(data) != self._UTMPX_ENTRY_SIZE:
-      return False
+    entry_map = self._GetDataTypeMap('macosx_utmpx_entry')
 
     try:
-      entry_struct = self._UTMPX_ENTRY.parse(data)
-    except (IOError, construct.FieldError) as exception:
-      logger.warning(
-          'Unable to parse MacOS UTMPX entry with error: {0!s}'.format(
-              exception))
-      return False
+      entry, _ = self._ReadStructureFromFileObject(
+          file_object, file_offset, entry_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError((
+          'Unable to parse utmpx entry at offset: 0x{0:08x} with error: '
+          '{1!s}.').format(file_offset, exception))
 
-    user, _, _ = entry_struct.user.partition(b'\x00')
-    if not user:
-      user = 'N/A'
+    if entry.type not in self._SUPPORTED_TYPES:
+      raise errors.UnableToParseFile('Unsupported type: {0:d}'.format(
+          entry.type))
 
-    terminal, _, _ = entry_struct.tty_name.partition(b'\x00')
-    if not terminal:
-      terminal = 'N/A'
+    encoding = parser_mediator.codepage or 'utf8'
 
-    computer_name, _, _ = entry_struct.hostname.partition(b'\x00')
-    if not computer_name:
-      computer_name = 'localhost'
+    try:
+      username = entry.username.split(b'\x00')[0]
+      username = username.decode(encoding)
+    except UnicodeDecodeError:
+      parser_mediator.ProduceExtractionError('unable to decode username string')
+      username = None
+
+    try:
+      terminal = entry.terminal.split(b'\x00')[0]
+      terminal = terminal.decode(encoding)
+    except UnicodeDecodeError:
+      parser_mediator.ProduceExtractionError('unable to decode terminal string')
+      terminal = None
+
+    if terminal == '~':
+      terminal = 'system boot'
+
+    try:
+      hostname = entry.hostname.split(b'\x00')[0]
+      hostname = hostname.decode(encoding)
+    except UnicodeDecodeError:
+      parser_mediator.ProduceExtractionError('unable to decode hostname string')
+      hostname = None
+
+    if not hostname:
+      hostname = 'localhost'
 
     event_data = UtmpxMacOSEventData()
-    event_data.computer_name = computer_name
-    event_data.offset = file_object.tell()
-    event_data.status_type = entry_struct.status_type
+    event_data.hostname = hostname
+    event_data.pid = entry.pid
+    event_data.offset = file_offset
     event_data.terminal = terminal
-    event_data.user = user
+    event_data.terminal_identifier = entry.terminal_identifier
+    event_data.type = entry.type
+    event_data.username = username
 
-    timestamp = (entry_struct.timestamp * 1000000) + entry_struct.microseconds
-    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-        timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_START)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    timestamp = entry.microseconds + (
+        entry.timestamp * definitions.MICROSECONDS_PER_SECOND)
+    return timestamp, event_data
 
-    return True
-
-  def _VerifyStructure(self, file_object):
-    """Verify that we are dealing with an UTMPX entry.
-
-    Args:
-      file_object (dfvfs.FileIO): a file-like object.
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification.
 
     Returns:
-      bool: True if it is a UTMPX entry or False otherwise.
+      FormatSpecification: format specification.
     """
-    # First entry is a SIGNAL entry of the file ("header").
-    try:
-      header_struct = self._UTMPX_ENTRY.parse_stream(file_object)
-    except (IOError, construct.FieldError):
-      return False
-    user, _, _ = header_struct.user.partition(b'\x00')
-
-    # The UTMPX_ENTRY structure will often successfully compile on various
-    # structures, such as binary plist files, and thus we need to do some
-    # additional validation. The first one is to check if the user name
-    # can be converted into a Unicode string, otherwise we can assume
-    # we are dealing with non UTMPX data.
-    try:
-      user.decode('utf-8')
-    except UnicodeDecodeError:
-      return False
-
-    if user != b'utmpx-1.00':
-      return False
-    if header_struct.status_type != self._STATUS_TYPE_SIGNATURE:
-      return False
-    if (header_struct.timestamp != 0 or header_struct.microseconds != 0 or
-        header_struct.pid != 0):
-      return False
-    tty_name, _, _ = header_struct.tty_name.partition(b'\x00')
-    hostname, _, _ = header_struct.hostname.partition(b'\x00')
-    if tty_name or hostname:
-      return False
-
-    return True
+    format_specification = specification.FormatSpecification(cls.NAME)
+    format_specification.AddNewSignature(b'utmpx-1.00\x00', offset=0)
+    return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses an UTMPX file-like object.
@@ -168,12 +150,45 @@ class UtmpxParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    if not self._VerifyStructure(file_object):
-      raise errors.UnableToParseFile(
-          'The file is not an UTMPX file.')
+    file_offset = 0
 
-    while self._ReadEntry(parser_mediator, file_object):
-      pass
+    try:
+      timestamp, event_data = self._ReadEntry(
+          parser_mediator, file_object, file_offset)
+    except errors.ParseError as exception:
+      raise errors.UnableToParseFile(
+          'Unable to parse utmpx file header with error: {0!s}'.format(
+              exception))
+
+    if event_data.username != self._FILE_HEADER_USERNAME:
+      raise errors.UnableToParseFile(
+          'Unable to parse utmpx file header with error: unsupported username')
+
+    if event_data.type != self._FILE_HEADER_TYPE:
+      raise errors.UnableToParseFile(
+          'Unable to parse utmp file header with error: unsupported type of '
+          'login')
+
+    file_offset = file_object.tell()
+    file_size = file_object.get_size()
+
+    while file_offset < file_size:
+      if parser_mediator.abort:
+        break
+
+      try:
+        timestamp, event_data = self._ReadEntry(
+            parser_mediator, file_object, file_offset)
+      except errors.ParseError as exception:
+        break
+
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_START)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+      file_offset = file_object.tell()
 
 
 manager.ParsersManager.RegisterParser(UtmpxParser)
