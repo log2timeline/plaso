@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import binascii
+import codecs
 import collections
 import json
 
@@ -81,9 +82,11 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
         * a list.
     """
     if isinstance(attribute_value, py2to3.BYTES_TYPE):
+      encoded_value = binascii.b2a_qp(attribute_value)
+      encoded_value = codecs.decode(encoded_value, 'ascii')
       attribute_value = {
           '__type__': 'bytes',
-          'stream': '{0:s}'.format(binascii.b2a_qp(attribute_value))
+          'stream': '{0:s}'.format(encoded_value)
       }
 
     elif isinstance(attribute_value, (list, tuple)):
