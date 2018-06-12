@@ -192,12 +192,12 @@ mkdir dist\plaso\artifacts
 xcopy /q /y dist\artifacts\data\*.yaml dist\plaso\artifacts
 
 # Copy the dfVFS yaml (dtFabric definition) files
-git.exe clone https://github.com/ForensicArtifacts/dfvfs.git dist\dfvfs
+git.exe clone https://github.com/log2timeline/dfvfs.git dist\dfvfs
 mkdir dist\plaso\dfvfs\lib
 xcopy /q /y dist\dfvfs\dfvfs\lib\*.yaml dist\plaso\dfvfs\lib
 
 # Copy the dfWinReg yaml (dtFabric definition) files
-git.exe clone https://github.com/ForensicArtifacts/dfwinreg.git dist\dfwinreg
+git.exe clone https://github.com/log2timeline/dfwinreg.git dist\dfwinreg
 mkdir dist\plaso\dfwinreg
 xcopy /q /y dist\dfwinreg\dfwinreg\*.yaml dist\plaso\dfwinreg
 
