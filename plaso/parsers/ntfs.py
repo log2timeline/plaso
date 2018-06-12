@@ -314,7 +314,8 @@ class NTFSUsnJrnlParser(dtfabric_parser.DtFabricBaseParser):
 
   _DEFINITION_FILE = 'ntfs.yaml'
 
-  # TODO: add support for USN_RECORD_V3 when actually seen to be used.
+  # TODO: add support for USN_RECORD_V3 and USN_RECORD_V4 when actually
+  # seen to be used.
 
   def _ParseUSNChangeJournal(self, parser_mediator, usn_change_journal):
     """Parses an USN change journal.
@@ -344,6 +345,7 @@ class NTFSUsnJrnlParser(dtfabric_parser.DtFabricBaseParser):
             'Unable to parse USN record at offset: 0x{0:08x} with error: '
             '{1!s}').format(current_offset, exception))
 
+      # Per MSDN we need to use name offset for forward compatibily.
       name_offset = usn_record.name_offset - 60
       utf16_stream = usn_record.name[name_offset:usn_record.name_size]
 
