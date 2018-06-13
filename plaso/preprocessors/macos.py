@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import abc
-import plistlib
 
 from plaso.containers import artifacts
 from plaso.lib import errors
@@ -243,7 +242,7 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
       file_entry (dfvfs.FileEntry): file entry of the plist.
 
     Returns:
-      plistlib._InternalDict: plist root key.
+      dict: plist root key.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
