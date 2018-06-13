@@ -34,7 +34,7 @@ class PlistFileArtifactPreprocessorPlugin(
     the matches list.
 
     Args:
-      key (plistlib._InternalDict): plist key.
+      key (dict): plist key.
       names (list[str]): names of the keys to match.
       matches (list[str]): keys with matching names.
     """
@@ -42,8 +42,7 @@ class PlistFileArtifactPreprocessorPlugin(
       if name in names:
         matches.append((name, subkey))
 
-      # pylint: disable=protected-access
-      if isinstance(subkey, plistlib._InternalDict):
+      if isinstance(subkey, dict):
         self._FindKeys(subkey, names, matches)
 
   def _ParseFileData(self, knowledge_base, file_object):
