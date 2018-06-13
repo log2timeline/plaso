@@ -14,11 +14,11 @@ from tests.parsers import test_lib
 
 
 class UtmpParserTest(test_lib.ParserTestCase):
-  """The unit test for UTMP parser."""
+  """The unit test for utmp parser."""
 
   @shared_test_lib.skipUnlessHasTestFile(['utmp'])
   def testParseUtmpFile(self):
-    """Tests the Parse function for an UTMP file."""
+    """Tests the Parse function on a utmp file."""
     parser = utmp.UtmpParser()
     storage_writer = self._ParseFile(['utmp'], parser)
 
@@ -28,62 +28,62 @@ class UtmpParserTest(test_lib.ParserTestCase):
 
     event = events[0]
     self.assertEqual(event.terminal, 'system boot')
-    self.assertEqual(event.status, 'BOOT_TIME')
+    self.assertEqual(event.type, 2)
 
     event = events[1]
-    self.assertEqual(event.status, 'RUN_LVL')
+    self.assertEqual(event.type, 1)
 
     event = events[2]
 
     self.CheckTimestamp(event.timestamp, '2013-12-13 14:45:09.000000')
 
-    self.assertEqual(event.user, 'LOGIN')
+    self.assertEqual(event.username, 'LOGIN')
     self.assertEqual(event.computer_name, 'localhost')
     self.assertEqual(event.terminal, 'tty4')
-    self.assertEqual(event.status, 'LOGIN_PROCESS')
-    self.assertEqual(event.exit, 0)
+    self.assertEqual(event.type, 6)
+    self.assertEqual(event.exit_status, 0)
     self.assertEqual(event.pid, 1115)
-    self.assertEqual(event.terminal_id, 52)
+    self.assertEqual(event.terminal_identifier, 52)
+
     expected_message = (
         'User: LOGIN '
         'Computer Name: localhost '
         'Terminal: tty4 '
         'PID: 1115 '
-        'Terminal_ID: 52 '
+        'Terminal identifier: 52 '
         'Status: LOGIN_PROCESS '
-        'IP Address: localhost '
-        'Exit: 0')
-    expected_short_message = (
-        'User: LOGIN')
+        'IP Address: 0.0.0.0 '
+        'Exit status: 0')
+    expected_short_message = 'User: LOGIN'
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[12]
 
     self.CheckTimestamp(event.timestamp, '2013-12-18 22:46:56.305504')
 
-    self.assertEqual(event.user, 'moxilo')
+    self.assertEqual(event.username, 'moxilo')
     self.assertEqual(event.computer_name, 'localhost')
     self.assertEqual(event.terminal, 'pts/4')
-    self.assertEqual(event.status, 'USER_PROCESS')
-    self.assertEqual(event.exit, 0)
+    self.assertEqual(event.type, 7)
+    self.assertEqual(event.exit_status, 0)
     self.assertEqual(event.pid, 2684)
-    self.assertEqual(event.terminal_id, 13359)
+    self.assertEqual(event.terminal_identifier, 13359)
+
     expected_message = (
         'User: moxilo '
         'Computer Name: localhost '
         'Terminal: pts/4 '
         'PID: 2684 '
-        'Terminal_ID: 13359 '
+        'Terminal identifier: 13359 '
         'Status: USER_PROCESS '
-        'IP Address: localhost '
-        'Exit: 0')
-    expected_short_message = (
-        'User: moxilo')
+        'IP Address: 0.0.0.0 '
+        'Exit status: 0')
+    expected_short_message = 'User: moxilo'
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
   @shared_test_lib.skipUnlessHasTestFile(['wtmp.1'])
   def testParseWtmpFile(self):
-    """Tests the Parse function for an WTMP file."""
+    """Tests the Parse function on a wtmp file."""
     parser = utmp.UtmpParser()
     storage_writer = self._ParseFile(['wtmp.1'], parser)
 
@@ -95,25 +95,25 @@ class UtmpParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2011-12-01 17:36:38.432935')
 
-    self.assertEqual(event.user, 'userA')
+    self.assertEqual(event.username, 'userA')
     self.assertEqual(event.computer_name, '10.10.122.1')
     self.assertEqual(event.terminal, 'pts/32')
-    self.assertEqual(event.status, 'USER_PROCESS')
+    self.assertEqual(event.type, 7)
     self.assertEqual(event.ip_address, '10.10.122.1')
-    self.assertEqual(event.exit, 0)
+    self.assertEqual(event.exit_status, 0)
     self.assertEqual(event.pid, 20060)
-    self.assertEqual(event.terminal_id, 842084211)
+    self.assertEqual(event.terminal_identifier, 842084211)
+
     expected_message = (
         'User: userA '
         'Computer Name: 10.10.122.1 '
         'Terminal: pts/32 '
         'PID: 20060 '
-        'Terminal_ID: 842084211 '
+        'Terminal identifier: 842084211 '
         'Status: USER_PROCESS '
         'IP Address: 10.10.122.1 '
-        'Exit: 0')
-    expected_short_message = (
-        'User: userA')
+        'Exit status: 0')
+    expected_short_message = 'User: userA'
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 

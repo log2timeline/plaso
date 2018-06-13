@@ -24,14 +24,14 @@ class UtmpSessionFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = utmp.UtmpSessionFormatter()
 
     expected_attribute_names = [
-        'user',
+        'username',
         'computer_name',
         'terminal',
         'pid',
-        'terminal_id',
+        'terminal_identifier',
         'status',
         'ip_address',
-        'exit']
+        'exit_status']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
