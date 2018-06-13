@@ -29,20 +29,20 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
 
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
-    expected_header = b'{'
+    expected_header = '{'
 
     self._output_module.WriteHeader()
 
-    header = self._output_writer.ReadOutput()
+    header = self._output_writer.ReadOutputString()
     self.assertEqual(header, expected_header)
 
   def testWriteFooter(self):
     """Tests the WriteFooter function."""
-    expected_footer = b'}'
+    expected_footer = '}'
 
     self._output_module.WriteFooter()
 
-    footer = self._output_writer.ReadOutput()
+    footer = self._output_writer.ReadOutputString()
     self.assertEqual(footer, expected_footer)
 
   def testWriteEventBody(self):
@@ -87,7 +87,7 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
             'username': 'root',
         }
     }
-    event_body = self._output_writer.ReadOutput()
+    event_body = self._output_writer.ReadOutputString()
 
     # We need to compare dicts since we cannot determine the order
     # of values in the string.

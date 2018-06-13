@@ -58,12 +58,12 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
     expected_header = (
-        b'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
-        b'version,filename,inode,notes,format,extra\n')
+        'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
+        'version,filename,inode,notes,format,extra\n')
 
     self._formatter.WriteHeader()
 
-    header = self._output_writer.ReadOutput()
+    header = self._output_writer.ReadOutputString()
     self.assertEqual(header, expected_header)
 
   def testWriteEventBody(self):
@@ -80,18 +80,18 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
     self._formatter.WriteEventBody(event)
 
     expected_event_body = (
-        b'06/27/2012,18:17:01,UTC,M...,LOG,Syslog,Content Modification Time,-,'
-        b'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
-        b'closed for user root),Reporter <CRON> PID: 8442 '
-        b'(pam_unix(cron:session): session closed for user root),'
-        b'2,log/syslog.1,-,Malware Printed,'
-        b'-,my_number: 123; some_additional_foo: True\n')
+        '06/27/2012,18:17:01,UTC,M...,LOG,Syslog,Content Modification Time,-,'
+        'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
+        'closed for user root),Reporter <CRON> PID: 8442 '
+        '(pam_unix(cron:session): session closed for user root),'
+        '2,log/syslog.1,-,Malware Printed,'
+        '-,my_number: 123; some_additional_foo: True\n')
 
-    event_body = self._output_writer.ReadOutput()
+    event_body = self._output_writer.ReadOutputString()
     self.assertEqual(event_body, expected_event_body)
 
     # Ensure that the only commas returned are the 16 delimiters.
-    self.assertEqual(event_body.count(b','), 16)
+    self.assertEqual(event_body.count(','), 16)
 
     formatters_manager.FormattersManager.DeregisterFormatter(
         L2TTestEventFormatter)

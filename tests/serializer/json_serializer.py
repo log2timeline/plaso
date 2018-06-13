@@ -149,6 +149,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     expected_event_object.empty_string = ''
     expected_event_object.zero_integer = 0
     expected_event_object.integer = 34
+    expected_event_object.float = -122.082203542683
     expected_event_object.string = 'Normal string'
     expected_event_object.unicode_string = 'And I am a unicorn.'
     expected_event_object.my_list = ['asf', 4234, 2, 54, 'asf']
@@ -178,6 +179,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         'data_type': 'test:event2',
         'empty_string': '',
         'integer': 34,
+        'float': -122.082203542683,
         'my_dict': {
             'a': 'not b',
             'an': [234, 32],

@@ -47,30 +47,30 @@ class LinearOutputModuleTest(test_lib.OutputModuleTestCase):
     output_module.WriteFooter()
 
     expected_output = (
-        b'<EventFile>\n'
-        b'<Event>\n'
-        b'\t<Date>03/01/2012</Date>\n'
-        b'\t<Time>123456</Time>\n'
-        b'\t<Entry>My Event Is Now!</Entry>\n'
-        b'</Event>\n'
-        b'<Event>\n'
-        b'\t<Date>03/01/2012</Date>\n'
-        b'\t<Time>123458</Time>\n'
-        b'\t<Entry>There is no tomorrow.</Entry>\n'
-        b'</Event>\n'
-        b'<Event>\n'
-        b'\t<Date>03/01/2012</Date>\n'
-        b'\t<Time>123462</Time>\n'
-        b'\t<Entry>Tomorrow is now.</Entry>\n'
-        b'</Event>\n'
-        b'<Event>\n'
-        b'\t<Date>03/01/2012</Date>\n'
-        b'\t<Time>123489</Time>\n'
-        b'\t<Entry>This is just some stuff to fill the line.</Entry>\n'
-        b'</Event>\n'
-        b'</EventFile>\n')
+        '<EventFile>\n'
+        '<Event>\n'
+        '\t<Date>03/01/2012</Date>\n'
+        '\t<Time>123456</Time>\n'
+        '\t<Entry>My Event Is Now!</Entry>\n'
+        '</Event>\n'
+        '<Event>\n'
+        '\t<Date>03/01/2012</Date>\n'
+        '\t<Time>123458</Time>\n'
+        '\t<Entry>There is no tomorrow.</Entry>\n'
+        '</Event>\n'
+        '<Event>\n'
+        '\t<Date>03/01/2012</Date>\n'
+        '\t<Time>123462</Time>\n'
+        '\t<Entry>Tomorrow is now.</Entry>\n'
+        '</Event>\n'
+        '<Event>\n'
+        '\t<Date>03/01/2012</Date>\n'
+        '\t<Time>123489</Time>\n'
+        '\t<Entry>This is just some stuff to fill the line.</Entry>\n'
+        '</Event>\n'
+        '</EventFile>\n')
 
-    output = output_writer.ReadOutput()
+    output = output_writer.ReadOutputString()
     self.assertEqual(output, expected_output)
 
   def testOutputList(self):

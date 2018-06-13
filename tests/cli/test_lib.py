@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import argparse
+import codecs
 import io
 import operator
 import os
@@ -44,7 +45,7 @@ class TestOutputWriter(tools.FileObjectOutputWriter):
     self._read_offset = 0
 
   def ReadOutput(self):
-    """Reads the newly added output data.
+    """Reads the newly added output data as bytes.
 
     Returns:
       bytes: encoded output data.
@@ -52,6 +53,19 @@ class TestOutputWriter(tools.FileObjectOutputWriter):
     self._file_object.seek(self._read_offset, os.SEEK_SET)
     output_data = self._file_object.read()
     self._read_offset = self._file_object.tell()
+
+    return output_data
+
+  def ReadOutputString(self):
+    """Reads the newly added output data as a string.
+
+    Returns:
+      str: output data.
+    """
+    self._file_object.seek(self._read_offset, os.SEEK_SET)
+    output_data = self._file_object.read()
+    self._read_offset = self._file_object.tell()
+    output_data = codecs.decode(output_data, self._encoding)
 
     return output_data
 
