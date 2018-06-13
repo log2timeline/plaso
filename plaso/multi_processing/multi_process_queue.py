@@ -5,8 +5,9 @@ from __future__ import unicode_literals
 
 # We need to check that we aren't asking for a bigger queue than the
 # platform supports, which requires access to this protected module.
-import _multiprocessing
 import multiprocessing
+import _multiprocessing
+
 
 # The 'Queue' module was renamed to 'queue' in Python 3
 try:
