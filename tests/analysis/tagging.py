@@ -74,18 +74,18 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
       EventObject: event with the appropriate attributes for testing.
     """
     if event_attributes['event_type'] == 'prefetch':
-      event_object = TestPrefetchEvent()
+      event = TestPrefetchEvent()
     elif event_attributes['event_type'] == 'chrome_download':
-      event_object = TestChromeDownloadEvent()
+      event = TestChromeDownloadEvent()
     elif event_attributes['event_type'] == 'evt':
-      event_object = TestEvtRecordEvent()
+      event = TestEvtRecordEvent()
     else:
-      event_object = events.EventObject()
+      event = events.EventObject()
 
-    event_object.timestamp = event_attributes['timestamp']
+    event.timestamp = event_attributes['timestamp']
     for key, value in iter(event_attributes['attributes'].items()):
-      setattr(event_object, key, value)
-    return event_object
+      setattr(event, key, value)
+    return event
 
   @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'valid.txt'])
   def testExamineEventAndCompileReport(self):

@@ -7,10 +7,11 @@ http://forensicswiki.org/wiki/L2T_CSV
 
 from __future__ import unicode_literals
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import py2to3
-from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import logger
 from plaso.output import manager
@@ -110,8 +111,10 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
       raise errors.NoFormatterFound(
           'Unable to find event formatter for: {0:s}.'.format(data_type))
 
-    date_use = timelib.Timestamp.CopyToDatetime(
-        event.timestamp, self._output_mediator.timezone)
+    # TODO: preserve dfdatetime as an object.
+    # TODO: add support for self._output_mediator.timezone
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=event.timestamp)
 
     format_variables = self._output_mediator.GetFormatStringAttributeNames(
         event)
@@ -158,10 +161,11 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     if not notes:
       notes.append('-')
 
-    date_string = '{0:02d}/{1:02d}/{2:04d}'.format(
-        date_use.month, date_use.day, date_use.year)
-    time_string = '{0:02d}:{1:02d}:{2:02d}'.format(
-        date_use.hour, date_use.minute, date_use.second)
+    year, month, day_of_month = date_time.GetDate()
+    date_string = '{0:02d}/{1:02d}/{2:04d}'.format(month, day_of_month, year)
+
+    hours, minutes, seconds = date_time.GetTimeOfDay()
+    time_string = '{0:02d}:{1:02d}:{2:02d}'.format(hours, minutes, seconds)
 
     output_values = [
         date_string,
