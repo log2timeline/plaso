@@ -166,6 +166,7 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
   # that original buffer size (to test if the buffer is correctly
   # filled).
 
+
 class BinaryDSVReaderTest(shared_test_lib.BaseTestCase):
   """Tests for the binary delimited separated values reader."""
 
@@ -190,11 +191,11 @@ class BinaryDSVReaderTest(shared_test_lib.BaseTestCase):
       rows.append(row)
 
     self.assertEqual(len(rows), 5)
-    self.assertEqual(rows[0], [b'place' ,b'user',b'password'])
-    self.assertEqual(rows[1], [b'bank' ,b'joesmith',b'superrich'])
-    self.assertEqual(rows[2], [b'alarm system',b'-',b'1234'])
-    self.assertEqual(rows[3], [b'treasure chest',b'-',b'1111'])
-    self.assertEqual(rows[4], [b'uber secret laire',b'admin',b'admin'])
+    self.assertEqual(rows[0], [b'place', b'user', b'password'])
+    self.assertEqual(rows[1], [b'bank', b'joesmith', b'superrich'])
+    self.assertEqual(rows[2], [b'alarm system', b'-', b'1234'])
+    self.assertEqual(rows[3], [b'treasure chest', b'-', b'1111'])
+    self.assertEqual(rows[4], [b'uber secret laire', b'admin', b'admin'])
 
 
 if __name__ == '__main__':

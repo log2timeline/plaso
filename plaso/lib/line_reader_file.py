@@ -166,6 +166,7 @@ class BinaryLineReader(object):
     """
     return self._current_offset
 
+
 class BinaryDSVReader(object):
   """Basic reader for delimiter separated text files of unknown encoding.
 
