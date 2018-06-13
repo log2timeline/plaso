@@ -291,4 +291,3 @@ class TasksProfiler(SampleFileProfiler):
     sample = '{0:f}\t{1:s}\t{2:s}\n'.format(
         sample_time, task.identifier, status)
     self._Write(sample)
-
