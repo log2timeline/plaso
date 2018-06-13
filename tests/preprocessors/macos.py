@@ -9,6 +9,8 @@ import unittest
 from dfvfs.helpers import fake_file_system_builder
 from dfvfs.path import fake_path_spec
 
+from plaso.preprocessors import macos
+
 from tests import test_lib as shared_test_lib
 from tests.preprocessors import test_lib
 
