@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import codecs
 import gzip
 import os
 import time
@@ -17,7 +18,7 @@ class CPUTimeMeasurement(object):
   """The CPU time measurement.
 
   Attributes:
-    sample_start_time (float): start sample time or None if not set.
+    start_sample_time (float): start sample time or None if not set.
     total_cpu_time (float): total CPU time or None if not set.
   """
 
@@ -48,7 +49,9 @@ class SampleFileProfiler(object):
   _FILE_HEADER = None
 
   def __init__(self, identifier, configuration):
-    """Initializes the sample file profiler.
+    """Initializes a sample file profiler.
+
+    Sample files are gzip compressed UTF-8 encoded CSV files.
 
     Args:
       identifier (str): identifier of the profiling session used to create
@@ -62,6 +65,15 @@ class SampleFileProfiler(object):
     self._sample_file = None
     self._start_time = None
 
+  def _Write(self, content):
+    """Writes a string to the sample file.
+
+    Args:
+      content (str): content to write to the sample file.
+    """
+    sample_bytes = codecs.encode(content, 'utf-8')
+    self._sample_file.write(sample_bytes)
+
   @classmethod
   def IsSupported(cls):
     """Determines if the profiler is supported.
@@ -73,13 +85,13 @@ class SampleFileProfiler(object):
 
   def Start(self):
     """Starts the profiler."""
-    filename = '{0:s}-{1:s}.csv.gz'.format(
+    filename = '{0!s}-{1:s}.csv.gz'.format(
         self._FILENAME_PREFIX, self._identifier)
     if self._path:
       filename = os.path.join(self._path, filename)
 
     self._sample_file = gzip.open(filename, 'wb')
-    self._sample_file.write(self._FILE_HEADER)
+    self._Write(self._FILE_HEADER)
 
     self._start_time = time.time()
 
@@ -120,7 +132,7 @@ class CPUTimeProfiler(SampleFileProfiler):
       sample = '{0:f}\t{1:s}\t{2:f}\n'.format(
           measurements.start_sample_time, profile_name,
           measurements.total_cpu_time)
-      self._sample_file.write(sample)
+      self._Write(sample)
 
 
 class GuppyMemoryProfiler(object):
@@ -199,7 +211,7 @@ class MemoryProfiler(SampleFileProfiler):
     sample_time = time.time()
     sample = '{0:f}\t{1:s}\t{2:d}\n'.format(
         sample_time, profile_name, used_memory)
-    self._sample_file.write(sample)
+    self._Write(sample)
 
 
 class ProcessingProfiler(CPUTimeProfiler):
@@ -234,7 +246,7 @@ class StorageProfiler(SampleFileProfiler):
     sample_time = time.time()
     sample = '{0:f}\t{1:s}\t{2:s}\t{3:d}\t{4:d}\n'.format(
         sample_time, operation, description, data_size, compressed_data_size)
-    self._sample_file.write(sample)
+    self._Write(sample)
 
 
 class TaskQueueProfiler(SampleFileProfiler):
@@ -258,7 +270,7 @@ class TaskQueueProfiler(SampleFileProfiler):
         tasks_status.number_of_tasks_pending_merge,
         tasks_status.number_of_abandoned_tasks,
         tasks_status.total_number_of_tasks)
-    self._sample_file.write(sample)
+    self._Write(sample)
 
 
 class TasksProfiler(SampleFileProfiler):
@@ -278,4 +290,5 @@ class TasksProfiler(SampleFileProfiler):
     sample_time = time.time()
     sample = '{0:f}\t{1:s}\t{2:s}\n'.format(
         sample_time, task.identifier, status)
-    self._sample_file.write(sample)
+    self._Write(sample)
+
