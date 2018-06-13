@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 import uuid
 
-import construct
 import pyfsntfs  # pylint: disable=wrong-import-order
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -16,7 +15,9 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.lib import specification
+from plaso.parsers import dtfabric_parser
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -303,7 +304,7 @@ class NTFSMFTParser(interface.FileObjectParser):
     mft_metadata_file.close()
 
 
-class NTFSUsnJrnlParser(interface.FileObjectParser):
+class NTFSUsnJrnlParser(dtfabric_parser.DtFabricBaseParser):
   """Parses a NTFS USN change journal."""
 
   _INITIAL_FILE_OFFSET = None
@@ -311,24 +312,10 @@ class NTFSUsnJrnlParser(interface.FileObjectParser):
   NAME = 'usnjrnl'
   DESCRIPTION = 'Parser for NTFS USN change journal ($UsnJrnl).'
 
-  _USN_RECORD_V2 = construct.Struct(
-      'usn_record_v2',
-      construct.ULInt32('size'),
-      construct.ULInt16('major_version'),
-      construct.ULInt16('minor_version'),
-      construct.ULInt64('file_reference'),
-      construct.ULInt64('parent_file_reference'),
-      construct.ULInt64('update_sequence_number'),
-      construct.ULInt64('update_date_time'),
-      construct.ULInt32('update_reason_flags'),
-      construct.ULInt32('update_source_flags'),
-      construct.ULInt32('security_descriptor_identifier'),
-      construct.ULInt32('file_attribute_flags'),
-      construct.ULInt16('name_size'),
-      construct.ULInt16('name_offset'),
-      construct.String('name', lambda ctx: ctx.size - 60))
+  _DEFINITION_FILE = 'ntfs.yaml'
 
-  # TODO: add support for USN_RECORD_V3 when actually seen to be used.
+  # TODO: add support for USN_RECORD_V3 and USN_RECORD_V4 when actually
+  # seen to be used.
 
   def _ParseUSNChangeJournal(self, parser_mediator, usn_change_journal):
     """Parses an USN change journal.
@@ -337,25 +324,30 @@ class NTFSUsnJrnlParser(interface.FileObjectParser):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       usn_change_journal (pyfsntsfs.usn_change_journal): USN change journal.
+
+    Raises:
+      ParseError: if an USN change journal record cannot be parsed.
     """
     if not usn_change_journal:
       return
+
+    usn_record_map = self._GetDataTypeMap('usn_record_v2')
 
     usn_record_data = usn_change_journal.read_usn_record()
     while usn_record_data:
       current_offset = usn_change_journal.get_offset()
 
       try:
-        usn_record_struct = self._USN_RECORD_V2.parse(usn_record_data)
-      except (IOError, construct.FieldError) as exception:
-        parser_mediator.ProduceExtractionError((
-            'unable to parse USN record at offset: 0x{0:08x} '
-            'with error: {1!s}').format(current_offset, exception))
-        continue
+        usn_record = self._ReadStructureFromByteStream(
+            usn_record_data, current_offset, usn_record_map)
+      except (ValueError, errors.ParseError) as exception:
+        raise errors.ParseError((
+            'Unable to parse USN record at offset: 0x{0:08x} with error: '
+            '{1!s}').format(current_offset, exception))
 
-      name_offset = usn_record_struct.name_offset - 60
-      utf16_stream = usn_record_struct.name[
-          name_offset:usn_record_struct.name_size]
+      # Per MSDN we need to use name offset for forward compatibily.
+      name_offset = usn_record.name_offset - 60
+      utf16_stream = usn_record.name[name_offset:usn_record.name_size]
 
       try:
         name_string = utf16_stream.decode('utf-16-le')
@@ -367,21 +359,20 @@ class NTFSUsnJrnlParser(interface.FileObjectParser):
             'with "?" or "\\ufffd".').format(exception))
 
       event_data = NTFSUSNChangeEventData()
-      event_data.file_attribute_flags = usn_record_struct.file_attribute_flags
-      event_data.file_reference = usn_record_struct.file_reference
+      event_data.file_attribute_flags = usn_record.file_attribute_flags
+      event_data.file_reference = usn_record.file_reference
       event_data.filename = name_string
       event_data.offset = current_offset
-      event_data.parent_file_reference = usn_record_struct.parent_file_reference
-      event_data.update_reason_flags = usn_record_struct.update_reason_flags
-      event_data.update_sequence_number = (
-          usn_record_struct.update_sequence_number)
-      event_data.update_source_flags = usn_record_struct.update_source_flags
+      event_data.parent_file_reference = usn_record.parent_file_reference
+      event_data.update_reason_flags = usn_record.update_reason_flags
+      event_data.update_sequence_number = usn_record.update_sequence_number
+      event_data.update_source_flags = usn_record.update_source_flags
 
-      if not usn_record_struct.update_date_time:
+      if not usn_record.update_date_time:
         date_time = dfdatetime_semantic_time.SemanticTime('Not set')
       else:
         date_time = dfdatetime_filetime.Filetime(
-            timestamp=usn_record_struct.update_date_time)
+            timestamp=usn_record.update_date_time)
 
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
