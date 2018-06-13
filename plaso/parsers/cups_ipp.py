@@ -87,8 +87,52 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
 
   _SUPPORTED_FORMAT_VERSIONS = ('1.0', '1.1', '2.0')
 
-  # TODO: add descriptive names.
-  _DELIMITER_TAGS = (0x01, 0x02, 0x04, 0x05)
+  _DELIMITER_TAG_OPERATION_ATTRIBUTES = 0x01
+  _DELIMITER_TAG_JOB_ATTRIBUTES = 0x02
+  _DELIMITER_TAG_END_OF_ATTRIBUTES = 0x03
+  _DELIMITER_TAG_PRINTER_ATTRIBUTES = 0x04
+  _DELIMITER_TAG_UNSUPPORTED_ATTRIBUTES = 0x05
+
+  _DELIMITER_TAGS = frozenset([
+      _DELIMITER_TAG_OPERATION_ATTRIBUTES,
+      _DELIMITER_TAG_JOB_ATTRIBUTES,
+      _DELIMITER_TAG_PRINTER_ATTRIBUTES,
+      _DELIMITER_TAG_UNSUPPORTED_ATTRIBUTES])
+
+  _TAG_VALUE_INTEGER = 0x21
+  _TAG_VALUE_BOOLEAN = 0x22
+  _TAG_VALUE_ENUM = 0x23
+
+  _TAG_VALUE_DATE_TIME = 0x31
+  _TAG_VALUE_RESOLUTION = 0x32
+
+  _TAG_VALUE_TEXT_WITHOUT_LANGUAGE = 0x41
+  _TAG_VALUE_NAME_WITHOUT_LANGUAGE = 0x42
+
+  _TAG_VALUE_KEYWORD = 0x44
+  _TAG_VALUE_URI = 0x45
+  _TAG_VALUE_URI_SCHEME = 0x46
+  _TAG_VALUE_CHARSET = 0x47
+  _TAG_VALUE_NATURAL_LANGUAGE = 0x48
+  _TAG_VALUE_MEDIA_TYPE = 0x49
+
+  _INTEGER_TAG_VALUES = frozenset([
+      _TAG_VALUE_INTEGER, _TAG_VALUE_ENUM])
+
+  _ASCII_STRING_VALUES = frozenset([
+      _TAG_VALUE_KEYWORD,
+      _TAG_VALUE_URI,
+      _TAG_VALUE_URI_SCHEME,
+      _TAG_VALUE_CHARSET,
+      _TAG_VALUE_NATURAL_LANGUAGE,
+      _TAG_VALUE_MEDIA_TYPE])
+
+  _INTEGER_TAG_VALUES = frozenset([
+      _TAG_VALUE_INTEGER, _TAG_VALUE_ENUM])
+
+  _STRING_WITHOUT_LANGUAGE_VALUES = frozenset([
+      _TAG_VALUE_TEXT_WITHOUT_LANGUAGE,
+      _TAG_VALUE_NAME_WITHOUT_LANGUAGE])
 
   _DATE_TIME_VALUES = {
       'date-time-at-creation': definitions.TIME_DESCRIPTION_CREATION,
@@ -162,36 +206,24 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
           'Unable to parse attribute with error: {0!s}'.format(exception))
 
     value = None
-    if attribute.tag_value in (0x21, 0x23):
-      file_offset = file_object.tell()
-      integer_map = self._GetDataTypeMap('int32be')
+    if attribute.tag_value in self._INTEGER_TAG_VALUES:
+      # TODO: correct file offset to point to the start of value_data.
+      value = self._ParseIntegerValue(attribute.value_data, file_offset)
 
-      try:
-        value = self._ReadStructureFromByteStream(
-            attribute.value_data, file_offset, integer_map)
-      except (ValueError, errors.ParseError) as exception:
-        raise errors.ParseError(
-            'Unable to parse integer value with error: {0!s}'.format(exception))
+    elif attribute.tag_value == self._TAG_VALUE_BOOLEAN:
+      value = self._ParseBooleanValue(attribute.value_data)
 
-    elif attribute.tag_value == 0x22:
-      if attribute.value_data == b'\x00':
-        value = False
-      elif attribute.value_data == b'\x01':
-        value = True
-      else:
-        raise errors.ParseError('Unsupported boolean value.')
-
-    elif attribute.tag_value == 0x31:
+    elif attribute.tag_value == self._TAG_VALUE_DATE_TIME:
       # TODO: correct file offset to point to the start of value_data.
       value = self._ParseDateTimeValue(attribute.value_data, file_offset)
 
-    elif attribute.tag_value in (0x41, 0x42):
+    elif attribute.tag_value in self._STRING_WITHOUT_LANGUAGE_VALUES:
       value = attribute.value_data.decode(self._last_charset_attribute)
 
-    elif attribute.tag_value in (0x44, 0x45, 0x46, 0x47, 0x48, 0x49):
+    elif attribute.tag_value in self._ASCII_STRING_VALUES:
       value = attribute.value_data.decode('ascii')
 
-      if attribute.tag_value == 0x47:
+      if attribute.tag_value == self._TAG_VALUE_CHARSET:
         self._last_charset_attribute = value
 
     else:
@@ -213,30 +245,50 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
     """
     tag_value = 0
 
-    while tag_value != 0x03:
+    while tag_value != self._DELIMITER_TAG_END_OF_ATTRIBUTES:
       file_offset = file_object.tell()
       tag_value_map = self._GetDataTypeMap('int8')
 
       tag_value, _ = self._ReadStructureFromFileObject(
           file_object, file_offset, tag_value_map)
 
-      if tag_value < 0x10:
-        if tag_value != 0x03 and tag_value not in self._DELIMITER_TAGS:
-          raise errors.ParseError((
-              'Unsupported attributes groups start tag value: '
-              '0x{0:02x}.').format(tag_value))
-
-      else:
+      if tag_value >= 0x10:
         file_object.seek(file_offset, os.SEEK_SET)
 
         yield self._ParseAttribute(file_object)
+
+      elif (tag_value != self._DELIMITER_TAG_END_OF_ATTRIBUTES and
+            tag_value not in self._DELIMITER_TAGS):
+        raise errors.ParseError((
+            'Unsupported attributes groups start tag value: '
+            '0x{0:02x}.').format(tag_value))
+
+  def _ParseBooleanValue(self, byte_stream):
+    """Parses a boolean value.
+
+    Args:
+      byte_stream (bytes): byte stream.
+
+    Returns:
+      bool: boolean value.
+
+    Raises:
+      ParseError: when the boolean value cannot be parsed.
+    """
+    if byte_stream == b'\x00':
+      return False
+
+    if byte_stream == b'\x01':
+      return True
+
+    raise errors.ParseError('Unsupported boolean value.')
 
   def _ParseDateTimeValue(self, byte_stream, file_offset):
     """Parses a CUPS IPP RFC2579 date-time value from a byte stream.
 
     Args:
       byte_stream (bytes): byte stream.
-      file_offset (int): offset of the data relative from the start of
+      file_offset (int): offset of the attribute data relative to the start of
           the file-like object.
 
     Returns:
@@ -260,6 +312,29 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
         value.direction_from_utc, value.hours_from_utc, value.minutes_from_utc)
     return dfdatetime_rfc2579_date_time.RFC2579DateTime(
         rfc2579_date_time_tuple=rfc2579_date_time_tuple)
+
+  def _ParseIntegerValue(self, byte_stream, file_offset):
+    """Parses an integer value.
+
+    Args:
+      byte_stream (bytes): byte stream.
+      file_offset (int): offset of the attribute data relative to the start of
+          the file-like object.
+
+    Returns:
+      int: integer value.
+
+    Raises:
+      ParseError: when the integer value cannot be parsed.
+    """
+    data_type_map = self._GetDataTypeMap('int32be')
+
+    try:
+      return self._ReadStructureFromByteStream(
+          byte_stream, file_offset, data_type_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError(
+          'Unable to parse integer value with error: {0!s}'.format(exception))
 
   def _ParseHeader(self, parser_mediator, file_object):
     """Parses a CUPS IPP header from a file-like object.

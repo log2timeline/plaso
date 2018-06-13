@@ -1,7 +1,7 @@
 name: cups_ipp
 type: format
 description: CUPS Internet Printing Protocol (IPP) format
-urls: ['https://github.com/libyal/dtformats/blob/master/documentation/CUPS%20Internet%20Printing%20Protocol%20format.asciidoc']
+urls: ['https://github.com/libyal/dtformats/blob/master/documentation/CUPS%20Internet%20Printing%20Protocol%20(IPP)%20format.asciidoc']
 ---
 name: char
 type: character
