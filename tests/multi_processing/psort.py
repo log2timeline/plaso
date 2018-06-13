@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import codecs
 import os
 import shutil
 import unittest
@@ -513,7 +514,8 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     lines = []
     output = output_writer.ReadOutput()
-    for line in output.split(b'\n'):
+    output = codecs.decode(output, 'utf-8')
+    for line in output.split('\n'):
       lines.append(line)
 
     self.assertEqual(len(lines), 22)

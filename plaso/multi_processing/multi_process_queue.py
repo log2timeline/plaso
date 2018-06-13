@@ -3,6 +3,9 @@
 
 from __future__ import unicode_literals
 
+# We need to check that we aren't asking for a bigger queue than the
+# platform supports, which requires access to this protected module.
+import _multiprocessing
 import multiprocessing
 
 # The 'Queue' module was renamed to 'queue' in Python 3
@@ -35,9 +38,9 @@ class MultiProcessingQueue(plaso_queue.Queue):
     # where 0 represents unlimited.
 
     # We need to check that we aren't asking for a bigger queue than the
-    # platform supports, which requires access to this protected member.
+    # platform supports, which requires access to this internal value.
     # pylint: disable=no-member,protected-access
-    queue_max_length = multiprocessing._multiprocessing.SemLock.SEM_VALUE_MAX
+    queue_max_length = _multiprocessing.SemLock.SEM_VALUE_MAX
     # pylint: enable=no-member,protected-access
 
     if maximum_number_of_queued_items > queue_max_length:
