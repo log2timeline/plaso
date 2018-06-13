@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 import os
+import codecs
 import tempfile
 import unittest
 
@@ -21,15 +22,15 @@ class ObjectFilterTest(test_lib.FilterTestCase):
     """Creates a filter file and compiles the filter based on the file.
 
     Args:
-      test_filter: the test filter object (instance of FilterObject).
-      content: the content of the filter file.
+      test_filter (FilterObject): the test filter object).
+      content(str): the content of the filter file.
     """
     # The temporary file needs to be closed to make sure the content
     # was been written.
-    temporary_file_path = ''
     with tempfile.NamedTemporaryFile(delete=False) as temporary_file:
       temporary_file_path = temporary_file.name
-      temporary_file.write(content)
+      content_bytes = codecs.encode(content, 'utf-8')
+      temporary_file.write(content_bytes)
 
     try:
       test_filter.CompileFilter(temporary_file_path)
