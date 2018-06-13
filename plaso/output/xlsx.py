@@ -13,10 +13,11 @@ except ImportError:
   xlsxwriter = None
 
 from plaso.lib import py2to3
-from plaso.lib import timelib
 from plaso.output import dynamic
 from plaso.output import interface
 from plaso.output import manager
+
+import pytz
 
 
 class XLSXOutputModule(interface.OutputModule):
@@ -65,14 +66,16 @@ class XLSXOutputModule(interface.OutputModule):
       event (EventObject): event.
 
     Returns:
-      datetime.datetime:str: date and time value or a string containing
+      datetime.datetime|str: date and time value or a string containing
           "ERROR" on OverflowError.
     """
     try:
-      timestamp = timelib.Timestamp.CopyToDatetime(
-          event.timestamp, self._output_mediator.timezone, raise_error=True)
+      datetime_object = datetime.datetime(
+          1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
+      datetime_object += datetime.timedelta(microseconds=event.timestamp)
+      datetime_object.astimezone(self._output_mediator.timezone)
 
-      return timestamp.replace(tzinfo=None)
+      return datetime_object.replace(tzinfo=None)
 
     except (OverflowError, ValueError) as exception:
       self._ReportEventError(event, (
