@@ -14,11 +14,11 @@ from tests.parsers import test_lib
 
 
 class UtmpParserTest(test_lib.ParserTestCase):
-  """The unit test for UTMP parser."""
+  """The unit test for utmp parser."""
 
   @shared_test_lib.skipUnlessHasTestFile(['utmp'])
   def testParseUtmpFile(self):
-    """Tests the Parse function on an UTMP file."""
+    """Tests the Parse function on a utmp file."""
     parser = utmp.UtmpParser()
     storage_writer = self._ParseFile(['utmp'], parser)
 
@@ -83,7 +83,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
 
   @shared_test_lib.skipUnlessHasTestFile(['wtmp.1'])
   def testParseWtmpFile(self):
-    """Tests the Parse function on a WTMP file."""
+    """Tests the Parse function on a wtmp file."""
     parser = utmp.UtmpParser()
     storage_writer = self._ParseFile(['wtmp.1'], parser)
 

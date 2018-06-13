@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Parser for Linux UTMP files."""
+"""Parser for Linux utmp files."""
 
 from __future__ import unicode_literals
 
@@ -14,7 +14,7 @@ from plaso.parsers import manager
 
 
 class UtmpEventData(events.EventData):
-  """UTMP event data.
+  """utmp event data.
 
   Attributes:
     computer_name (str): name of the computer.
@@ -43,10 +43,10 @@ class UtmpEventData(events.EventData):
 
 
 class UtmpParser(dtfabric_parser.DtFabricBaseParser):
-  """Parser for Linux/Unix UTMP files."""
+  """Parser for Linux/Unix utmp files."""
 
   NAME = 'utmp'
-  DESCRIPTION = 'Parser for Linux/Unix UTMP files.'
+  DESCRIPTION = 'Parser for Linux/Unix utmp files.'
 
   _DEFINITION_FILE = 'utmp.yaml'
 
@@ -55,13 +55,13 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
   _SUPPORTED_TYPES = frozenset(range(0, 10))
 
   def _ReadEntry(self, parser_mediator, file_object, file_offset):
-    """Reads an UTMP entry.
+    """Reads an utmp entry.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): a file-like object.
-      file_offset (int): offset of the data relative from the start of
+      file_offset (int): offset of the data relative to the start of
           the file-like object.
 
     Returns:
@@ -69,7 +69,7 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
 
         int: timestamp, which contains the number of microseconds
             since January 1, 1970, 00:00:00 UTC.
-        UtmpEventData: event data of the UTMP entry read.
+        UtmpEventData: event data of the utmp entry read.
 
     Raises:
       ParseError: if the entry cannot be parsed.
@@ -81,14 +81,14 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
           file_object, file_offset, entry_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
-          'Unable to parse UTMP entry at offset: 0x{0:08x} with error: '
+          'Unable to parse utmp entry at offset: 0x{0:08x} with error: '
           '{1!s}.').format(file_offset, exception))
 
     if entry.type not in self._SUPPORTED_TYPES:
       raise errors.UnableToParseFile('Unsupported type: {0:d}'.format(
           entry.type))
 
-    encoding = parser_mediator.codepage or 'utf8'
+    encoding = parser_mediator.codepage or 'utf-8'
 
     try:
       username = entry.username.rstrip(b'\x00')
@@ -139,7 +139,7 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
     return timestamp, event_data
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
-    """Parses an UTMP file-like object.
+    """Parses an utmp file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -156,15 +156,15 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
           parser_mediator, file_object, file_offset)
     except errors.ParseError as exception:
       raise errors.UnableToParseFile(
-          'Unable to parse UTMP header with error: {0!s}'.format(exception))
+          'Unable to parse utmp header with error: {0!s}'.format(exception))
 
     if not event_data.username:
       raise errors.UnableToParseFile(
-          'Unable to parse UTMP header with error: missing username')
+          'Unable to parse utmp header with error: missing username')
 
     if not timestamp:
       raise errors.UnableToParseFile(
-          'Unable to parse UTMP header with error: missing timestamp')
+          'Unable to parse utmp header with error: missing timestamp')
 
     date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
         timestamp=timestamp)
@@ -182,7 +182,7 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
       try:
         timestamp, event_data = self._ReadEntry(
             parser_mediator, file_object, file_offset)
-      except errors.ParseError as exception:
+      except errors.ParseError:
         # Note that the utmp file can contain trailing data.
         break
 
