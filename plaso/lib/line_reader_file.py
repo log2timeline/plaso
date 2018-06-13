@@ -188,7 +188,7 @@ class BinaryDSVReader(object):
     """Returns separated values.
 
     Yields:
-      tuple(bytes): lines of encoded bytes.
+      list(bytes): lines of encoded bytes.
     """
     line = self._line_reader.readline()
     while line:
