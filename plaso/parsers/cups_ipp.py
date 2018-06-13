@@ -243,11 +243,11 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
     Raises:
       ParseError: if the attributes group cannot be parsed.
     """
+    tag_value_map = self._GetDataTypeMap('int8')
     tag_value = 0
 
     while tag_value != self._DELIMITER_TAG_END_OF_ATTRIBUTES:
       file_offset = file_object.tell()
-      tag_value_map = self._GetDataTypeMap('int8')
 
       tag_value, _ = self._ReadStructureFromFileObject(
           file_object, file_offset, tag_value_map)
