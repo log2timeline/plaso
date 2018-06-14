@@ -148,38 +148,37 @@ class WinRecyclerInfo2Parser(dtfabric_parser.DtFabricBaseParser):
   _RECORD_INDEX_OFFSET = 0x104
   _UNICODE_FILENAME_OFFSET = 0x118
 
-  def _ParseFileEntry(
-      self, parser_mediator, file_object, file_entry_offset, file_entry_size):
-    """Parses an INFO-2 file entry.
+  def _ParseInfo2Record(
+      self, parser_mediator, file_object, record_offset, record_size):
+    """Parses an INFO-2 record.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): file-like object.
-      file_entry_offset (int): file entry offset.
-      file_entry_size (int): file entry size.
+      record_offset (int): record offset.
+      record_size (int): record size.
 
     Raises:
-      ParseError: if the file entry cannot be read.
+      ParseError: if the record cannot be read.
     """
-    file_entry_data = self._ReadData(
-        file_object, file_entry_offset, file_entry_size)
+    record_data = self._ReadData(file_object, record_offset, record_size)
 
-    data_type_map = self._GetDataTypeMap('recycler_info2_file_entry')
+    record_map = self._GetDataTypeMap('recycler_info2_file_entry')
 
     try:
-      file_entry = self._ReadStructureFromByteStream(
-          file_entry_data, file_entry_offset, data_type_map)
+      record = self._ReadStructureFromByteStream(
+          record_data, record_offset, record_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
-          'Unable to map file entry data at offset: 0x{0:08x} with error: '
-          '{1!s}').format(file_entry_offset, exception))
+          'Unable to map record data at offset: 0x{0:08x} with error: '
+          '{1!s}').format(record_offset, exception))
 
     codepage = parser_mediator.codepage or 'ascii'
 
     # The original filename can contain remnant data after the end-of-string
     # character.
-    ascii_filename = file_entry.original_filename.split(b'\x00')[0]
+    ascii_filename = record.original_filename.split(b'\x00')[0]
 
     try:
       ascii_filename = ascii_filename.decode(codepage)
@@ -190,33 +189,33 @@ class WinRecyclerInfo2Parser(dtfabric_parser.DtFabricBaseParser):
           'unable to decode original filename.')
 
     unicode_filename = None
-    if file_entry_size > 280:
-      file_entry_offset += 280
-      data_type_map = self._GetDataTypeMap(
+    if record_size > 280:
+      record_offset += 280
+      utf16_string_map = self._GetDataTypeMap(
           'recycler_info2_file_entry_utf16le_string')
 
       try:
         unicode_filename = self._ReadStructureFromByteStream(
-            file_entry_data[280:], file_entry_offset, data_type_map)
+            record_data[280:], record_offset, utf16_string_map)
       except (ValueError, errors.ParseError) as exception:
         raise errors.ParseError((
-            'Unable to map file entry data at offset: 0x{0:08x} with error: '
-            '{1!s}').format(file_entry_offset, exception))
+            'Unable to map record data at offset: 0x{0:08x} with error: '
+            '{1!s}').format(record_offset, exception))
 
       unicode_filename = unicode_filename.rstrip('\x00')
 
-    if file_entry.deletion_time == 0:
+    if record.deletion_time == 0:
       date_time = dfdatetime_semantic_time.SemanticTime('Not set')
     else:
       date_time = dfdatetime_filetime.Filetime(
-          timestamp=file_entry.deletion_time)
+          timestamp=record.deletion_time)
 
     event_data = WinRecycleBinEventData()
-    event_data.drive_number = file_entry.drive_number
+    event_data.drive_number = record.drive_number
     event_data.original_filename = unicode_filename or ascii_filename
-    event_data.file_size = file_entry.original_file_size
-    event_data.offset = file_entry_offset
-    event_data.record_index = file_entry.index
+    event_data.file_size = record.original_file_size
+    event_data.offset = record_offset
+    event_data.record_index = record.index
 
     if ascii_filename != unicode_filename:
       event_data.short_filename = ascii_filename
@@ -268,7 +267,7 @@ class WinRecyclerInfo2Parser(dtfabric_parser.DtFabricBaseParser):
     file_size = file_object.get_size()
 
     while file_offset < file_size:
-      self._ParseFileEntry(
+      self._ParseInfo2Record(
           parser_mediator, file_object, file_offset, file_entry_size)
 
       file_offset += file_entry_size
