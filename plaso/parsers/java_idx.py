@@ -9,8 +9,6 @@ from __future__ import unicode_literals
 #    This needs to be researched further, as that field may not always
 #    be present. 6.02 files will currently return 'Unknown'.
 
-import os
-
 from dfdatetime import java_time as dfdatetime_java_time
 
 from plaso.containers import events
