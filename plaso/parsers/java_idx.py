@@ -11,8 +11,6 @@ from __future__ import unicode_literals
 
 import os
 
-import construct
-
 from dfdatetime import java_time as dfdatetime_java_time
 
 from plaso.containers import events
@@ -20,7 +18,7 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.lib import timelib
-from plaso.parsers import interface
+from plaso.parsers import dtfabric_parser
 from plaso.parsers import manager
 
 
@@ -43,8 +41,8 @@ class JavaIDXEventData(events.EventData):
     self.url = None
 
 
-class JavaIDXParser(interface.FileObjectParser):
-  """Parse Java WebStart Cache IDX files for download events.
+class JavaIDXParser(dtfabric_parser.DtFabricBaseParser):
+  """Parser for Java WebStart Cache IDX files.
 
   There are five structures defined. 6.02 files had one generic section
   that retained all data. From 6.03, the file went to a multi-section
@@ -61,56 +59,9 @@ class JavaIDXParser(interface.FileObjectParser):
   NAME = 'java_idx'
   DESCRIPTION = 'Parser for Java WebStart Cache IDX files.'
 
-  IDX_SHORT_STRUCT = construct.Struct(
-      'magic',
-      construct.UBInt8('busy'),
-      construct.UBInt8('incomplete'),
-      construct.UBInt32('idx_version'))
+  _DEFINITION_FILE = 'java_idx.yaml'
 
-  IDX_602_STRUCT = construct.Struct(
-      'IDX_602_Full',
-      construct.UBInt16('null_space'),
-      construct.UBInt8('shortcut'),
-      construct.UBInt32('content_length'),
-      construct.UBInt64('last_modified_date'),
-      construct.UBInt64('expiration_date'),
-      construct.PascalString(
-          'version_string', length_field=construct.UBInt16('length')),
-      construct.PascalString(
-          'url', length_field=construct.UBInt16('length')),
-      construct.PascalString(
-          'namespace', length_field=construct.UBInt16('length')),
-      construct.UBInt32('FieldCount'))
-
-  IDX_605_SECTION_ONE_STRUCT = construct.Struct(
-      'IDX_605_Section1',
-      construct.UBInt8('shortcut'),
-      construct.UBInt32('content_length'),
-      construct.UBInt64('last_modified_date'),
-      construct.UBInt64('expiration_date'),
-      construct.UBInt64('validation_date'),
-      construct.UBInt8('signed'),
-      construct.UBInt32('sec2len'),
-      construct.UBInt32('sec3len'),
-      construct.UBInt32('sec4len'))
-
-  IDX_605_SECTION_TWO_STRUCT = construct.Struct(
-      'IDX_605_Section2',
-      construct.PascalString(
-          'version', length_field=construct.UBInt16('length')),
-      construct.PascalString(
-          'url', length_field=construct.UBInt16('length')),
-      construct.PascalString(
-          'namespec', length_field=construct.UBInt16('length')),
-      construct.PascalString(
-          'ip_address', length_field=construct.UBInt16('length')),
-      construct.UBInt32('FieldCount'))
-
-  # Java uses Pascal-style strings, but with a 2-byte length field.
-  JAVA_READUTF_STRING = construct.Struct(
-      'Java.ReadUTF',
-      construct.PascalString(
-          'string', length_field=construct.UBInt16('length')))
+  _SUPPORTED_FORMAT_VERSIONS = (602, 603, 604, 605)
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Java WebStart Cache IDX file-like object.
@@ -122,101 +73,108 @@ class JavaIDXParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_object.seek(0, os.SEEK_SET)
+    file_header_map = self._GetDataTypeMap('java_idx_file_header')
+
     try:
-      magic = self.IDX_SHORT_STRUCT.parse_stream(file_object)
-    except (IOError, construct.FieldError) as exception:
+      file_header, file_offset = self._ReadStructureFromFileObject(
+          file_object, 0, file_header_map)
+    except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile(
-          'Unable to parse Java IDX file with error: {0!s}.'.format(exception))
+          'Unable to parse file header with error: {0!s}'.format(
+              exception))
 
-    # Fields magic.busy and magic.incomplete are normally 0x00. They
-    # are set to 0x01 if the file is currently being downloaded. Logic
-    # checks for > 1 to avoid a race condition and still reject any
-    # file with other data.
-    # Field magic.idx_version is the file version, of which only
-    # certain versions are supported.
-    if magic.busy > 1 or magic.incomplete > 1:
-      raise errors.UnableToParseFile('Not a valid Java IDX file')
+    if not file_header.format_version in self._SUPPORTED_FORMAT_VERSIONS:
+      raise errors.UnableToParseFile('Unsupported format version.')
 
-    if not magic.idx_version in [602, 603, 604, 605]:
-      raise errors.UnableToParseFile('Not a valid Java IDX file')
+    if file_header.format_version == 602:
+      section1_map = self._GetDataTypeMap('java_idx_602_section1')
+    elif file_header.format_version in (603, 604):
+      section1_map = self._GetDataTypeMap('java_idx_603_section1')
+    elif file_header.format_version == 605:
+      section1_map = self._GetDataTypeMap('java_idx_605_section1')
 
-    # Obtain the relevant values from the file. The last modified date
-    # denotes when the file was last modified on the HOST. For example,
-    # when the file was uploaded to a web server.
-    if magic.idx_version == 602:
-      section_one = self.IDX_602_STRUCT.parse_stream(file_object)
-      last_modified_date = section_one.last_modified_date
-      url = section_one.url
-      ip_address = 'Unknown'
-      http_header_count = section_one.FieldCount
-    elif magic.idx_version in [603, 604, 605]:
+    try:
+      section1, data_size = self._ReadStructureFromFileObject(
+          file_object, file_offset, section1_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.UnableToParseFile((
+          'Unable to parse section 1 (format version: {0:d}) with error: '
+          '{1!s}').format(file_header.format_version, exception))
 
-      # IDX 6.03 and 6.04 have two unused bytes before the structure.
-      if magic.idx_version in [603, 604]:
-        file_object.read(2)
+    file_offset += data_size
 
-      # IDX 6.03, 6.04, and 6.05 files use the same structures for the
-      # remaining data.
-      section_one = self.IDX_605_SECTION_ONE_STRUCT.parse_stream(file_object)
-      last_modified_date = section_one.last_modified_date
-      if file_object.get_size() > 128:
-        file_object.seek(128, os.SEEK_SET)  # Static offset for section 2.
-        section_two = self.IDX_605_SECTION_TWO_STRUCT.parse_stream(file_object)
-        url = section_two.url
-        ip_address = section_two.ip_address
-        http_header_count = section_two.FieldCount
-      else:
-        url = 'Unknown'
-        ip_address = 'Unknown'
-        http_header_count = 0
+    if file_header.format_version == 602:
+      section2_map = self._GetDataTypeMap('java_idx_602_section2')
+    elif file_header.format_version in (603, 604, 605):
+      file_offset = 128
+      section2_map = self._GetDataTypeMap('java_idx_603_section2')
 
-    # File offset is now just prior to HTTP headers. Make sure there
-    # are headers, and then parse them to retrieve the download date.
-    download_date = None
-    for field in range(0, http_header_count):
-      field = self.JAVA_READUTF_STRING.parse_stream(file_object)
-      value = self.JAVA_READUTF_STRING.parse_stream(file_object)
-      if field.string == 'date':
-        # Time string "should" be in UTC or have an associated time zone
-        # information in the string itself. If that is not the case then
-        # there is no reliable method for plaso to determine the proper
-        # timezone, so the assumption is that it is UTC.
-        try:
-          download_date = timelib.Timestamp.FromTimeString(
-              value.string, gmt_as_timezone=False)
-        except errors.TimestampError:
-          download_date = None
-          parser_mediator.ProduceExtractionError(
-              'Unable to parse time value: {0:s}'.format(value.string))
+    try:
+      section2, data_size = self._ReadStructureFromFileObject(
+          file_object, file_offset, section2_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.UnableToParseFile((
+          'Unable to parse section 2 (format version: {0:d}) with error: '
+          '{1!s}').format(file_header.format_version, exception))
 
-    if not url or not ip_address:
-      raise errors.UnableToParseFile(
-          'Unexpected Error: URL or IP address not found in file.')
+    file_offset += data_size
+
+    if not section2.url:
+      raise errors.UnableToParseFile('URL not found in file.')
+
+    date_http_header = None
+    for _ in range(section2.number_of_http_headers):
+      http_header_map = self._GetDataTypeMap('java_idx_http_header')
+      try:
+        http_header, data_size = self._ReadStructureFromFileObject(
+            file_object, file_offset, http_header_map)
+      except (ValueError, errors.ParseError) as exception:
+        parser_mediator.ProduceExtractionError(
+            'Unable to parse HTTP header value at offset: 0x{0:08x}'.format(
+                file_offset))
+        break
+
+      file_offset += data_size
+
+      if http_header.name == 'date':
+        date_http_header = http_header
+        break
 
     event_data = JavaIDXEventData()
-    event_data.idx_version = magic.idx_version
-    event_data.ip_address = ip_address
-    event_data.url = url
+    event_data.idx_version = file_header.format_version
+    event_data.ip_address = getattr(section2, 'ip_address', None)
+    event_data.url = section2.url
 
-    date_time = dfdatetime_java_time.JavaTime(timestamp=last_modified_date)
-    # TODO: Move the timestamp description into eventdata.
+    date_time = dfdatetime_java_time.JavaTime(
+        timestamp=section1.modification_time)
+    # TODO: Move the timestamp description into definitions.
     event = time_events.DateTimeValuesEvent(date_time, 'File Hosted Date')
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    if section_one:
-      expiration_date = section_one.get('expiration_date', None)
-      if expiration_date:
-        date_time = dfdatetime_java_time.JavaTime(
-            timestamp=expiration_date)
-        event = time_events.DateTimeValuesEvent(
-            date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
-        parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    if download_date:
-      event = time_events.TimestampEvent(
-          download_date, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
+    if section1.expiration_time:
+      date_time = dfdatetime_java_time.JavaTime(
+          timestamp=section1.expiration_time)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    if date_http_header:
+      # A HTTP header date and string "should" be in UTC or have an associated
+      # time zone information in the string itself. If that is not the case
+      # then there is no reliable method for plaso to determine the proper
+      # time zone, so the assumption is that it is UTC.
+      try:
+        download_date = timelib.Timestamp.FromTimeString(
+            date_http_header.value, gmt_as_timezone=False)
+      except errors.TimestampError:
+        parser_mediator.ProduceExtractionError(
+            'Unable to parse date HTTP header value: {0:s}'.format(
+                date_http_header.value))
+
+      if download_date:
+        event = time_events.TimestampEvent(
+            download_date, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 manager.ParsersManager.RegisterParser(JavaIDXParser)
