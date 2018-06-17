@@ -50,7 +50,8 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
 
     # Test event object without geo-location.
     self._output_module.WriteEventBody(self._event_object)
-    self.assertEqual(self._output_writer.ReadOutputString(), '')
+    expected_event_body = self._output_writer.ReadOutputString()
+    self.assertEqual(expected_event_body, '')
 
     # Test event object with geo-location.
     self._event_object.latitude = 37.4222899014
