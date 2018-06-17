@@ -44,9 +44,9 @@ class CPUTimeMeasurement(object):
 class SampleFileProfiler(object):
   """Shared functionality for sample file-based profilers."""
 
-  _FILENAME_PREFIX = None
+  _FILENAME_PREFIX = ''
 
-  _FILE_HEADER = None
+  _FILE_HEADER = ''
 
   def __init__(self, identifier, configuration):
     """Initializes a sample file profiler.
@@ -65,7 +65,7 @@ class SampleFileProfiler(object):
     self._sample_file = None
     self._start_time = None
 
-  def _Write(self, content):
+  def _WritesString(self, content):
     """Writes a string to the sample file.
 
     Args:
@@ -85,13 +85,13 @@ class SampleFileProfiler(object):
 
   def Start(self):
     """Starts the profiler."""
-    filename = '{0!s}-{1:s}.csv.gz'.format(
+    filename = '{0:s}-{1:s}.csv.gz'.format(
         self._FILENAME_PREFIX, self._identifier)
     if self._path:
       filename = os.path.join(self._path, filename)
 
     self._sample_file = gzip.open(filename, 'wb')
-    self._Write(self._FILE_HEADER)
+    self._WritesString(self._FILE_HEADER)
 
     self._start_time = time.time()
 
@@ -132,7 +132,7 @@ class CPUTimeProfiler(SampleFileProfiler):
       sample = '{0:f}\t{1:s}\t{2:f}\n'.format(
           measurements.start_sample_time, profile_name,
           measurements.total_cpu_time)
-      self._Write(sample)
+      self._WritesString(sample)
 
 
 class GuppyMemoryProfiler(object):
@@ -211,7 +211,7 @@ class MemoryProfiler(SampleFileProfiler):
     sample_time = time.time()
     sample = '{0:f}\t{1:s}\t{2:d}\n'.format(
         sample_time, profile_name, used_memory)
-    self._Write(sample)
+    self._WritesString(sample)
 
 
 class ProcessingProfiler(CPUTimeProfiler):
@@ -246,7 +246,7 @@ class StorageProfiler(SampleFileProfiler):
     sample_time = time.time()
     sample = '{0:f}\t{1:s}\t{2:s}\t{3:d}\t{4:d}\n'.format(
         sample_time, operation, description, data_size, compressed_data_size)
-    self._Write(sample)
+    self._WritesString(sample)
 
 
 class TaskQueueProfiler(SampleFileProfiler):
@@ -270,7 +270,7 @@ class TaskQueueProfiler(SampleFileProfiler):
         tasks_status.number_of_tasks_pending_merge,
         tasks_status.number_of_abandoned_tasks,
         tasks_status.total_number_of_tasks)
-    self._Write(sample)
+    self._WritesString(sample)
 
 
 class TasksProfiler(SampleFileProfiler):
@@ -290,4 +290,4 @@ class TasksProfiler(SampleFileProfiler):
     sample_time = time.time()
     sample = '{0:f}\t{1:s}\t{2:s}\n'.format(
         sample_time, task.identifier, status)
-    self._Write(sample)
+    self._WritesString(sample)
