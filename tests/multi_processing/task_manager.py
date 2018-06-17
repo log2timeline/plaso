@@ -205,6 +205,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     """Tests the _UpdateLatestProcessingTime function."""
     manager = task_manager.TaskManager()
     task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
+    task.last_processing_time = 0
 
     manager._UpdateLatestProcessingTime(task)
 
