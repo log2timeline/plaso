@@ -33,7 +33,7 @@ class PlistFileArtifactPreprocessorPlugin(
     the matches list.
 
     Args:
-      key (dict): plist key.
+      key (dict[str, object]): plist key.
       names (list[str]): names of the keys to match.
       matches (list[str]): keys with matching names.
     """
@@ -242,7 +242,7 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
       file_entry (dfvfs.FileEntry): file entry of the plist.
 
     Returns:
-      dict: plist root key.
+      dict[str, object]: plist root key.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.

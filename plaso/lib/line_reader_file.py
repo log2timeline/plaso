@@ -7,7 +7,12 @@ import os
 
 
 class BinaryLineReader(object):
-  """Line reader for binary file-like objects."""
+  """Line reader for binary file-like objects.
+
+  Attributes:
+    end_of_line (bytes): byte sequence that separates lines from each other.
+
+  """
 
   # The size of the lines buffer.
   _LINES_BUFFER_SIZE = 1024 * 1024
@@ -70,12 +75,18 @@ class BinaryLineReader(object):
 
     Returns:
       bytes: line of text.
+
+    Raises:
+      ValueError: if the specified size is less than zero or greater
+          than the maximum size allowed.
     """
     if size is not None and size < 0:
       raise ValueError('Invalid size value smaller than zero.')
 
     if size is not None and size > self._MAXIMUM_READ_BUFFER_SIZE:
-      raise ValueError('Invalid size value exceeds maximum.')
+      raise ValueError(
+          'Invalid size value exceeds maximum value {0:d}.'.format(
+                self._MAXIMUM_READ_BUFFER_SIZE))
 
     if not self._lines:
       if self._lines_buffer_offset >= self._file_object_size:
@@ -171,7 +182,7 @@ class BinaryDSVReader(object):
   """Basic reader for delimiter separated text files of unknown encoding.
 
   This is used for reading data from text files where the content is unknown, or
-  possibly mixed.
+  possibly using a mixed encoding.
   """
 
   def __init__(self, binary_line_reader, delimiter):
@@ -186,18 +197,16 @@ class BinaryDSVReader(object):
     self._delimiter = delimiter
 
   def __iter__(self):
-    """Returns separated values.
+    """Iterates over delimiter separates values.
 
     Yields:
       list(bytes): lines of encoded bytes.
     """
-    line = self._line_reader.readline()
-    while line:
+    for line in self._line_reader.readlines():
       fields = line.split(self._delimiter)
 
-      # Strip off the end-of-line character, to match Python 2 CSV
+      # Strip off the end-of-line indicator, to match Python 2 CSV
       # library behavior.
       fields[-1] = fields[-1].strip(self._line_reader.end_of_line)
 
       yield fields
-      line = self._line_reader.readline()

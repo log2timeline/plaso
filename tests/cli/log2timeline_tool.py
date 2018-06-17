@@ -103,7 +103,7 @@ optional arguments:
     Args:
       output (bytes): tool output.
       expected_output (list[str]): expected tool output.
-      encoding (optional[str]): encoding of the output.
+      encoding (Optional[str]): encoding of the output.
     """
     output = codecs.decode(output, encoding)
     output = output.split('\n')

@@ -170,16 +170,13 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
 class BinaryDSVReaderTest(shared_test_lib.BaseTestCase):
   """Tests for the binary delimited separated values reader."""
 
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    self._resolver_context = context.Context()
-
   @shared_test_lib.skipUnlessHasTestFile(['password.csv'])
   def testIterator(self):
     """Tests the iterator functionality."""
     test_file = self._GetTestFilePath(['password.csv'])
     test_path_spec = os_path_spec.OSPathSpec(location=test_file)
 
+    self._resolver_context = context.Context()
     file_object = os_file_io.OSFile(self._resolver_context)
     file_object.open(test_path_spec)
     line_reader = line_reader_file.BinaryLineReader(file_object)

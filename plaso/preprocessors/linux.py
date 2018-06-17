@@ -237,7 +237,7 @@ class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
     line_reader = line_reader_file.BinaryLineReader(file_object)
 
     try:
-      reader = line_reader_file.BinaryDSVReader(line_reader, delimiter=b':')
+      reader = line_reader_file.BinaryDSVReader(line_reader, b':')
     except csv.Error as exception:
       raise errors.PreProcessFail(
           'Unable to read: {0:s} with error: {1!s}'.format(
