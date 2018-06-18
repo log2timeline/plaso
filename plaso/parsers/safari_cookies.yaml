@@ -68,16 +68,6 @@ type: sequence
 element_data_type: uint32be
 number_of_elements: binarycookies_file_header.number_of_pages
 ---
-name: binarycookies_file_footer
-type: structure
-attributes:
-  byte_order: big-endian
-members:
-- name: unknown1
-  type: stream
-  element_data_type: byte
-  number_of_elements: 8
----
 name: binarycookies_page_header
 type: structure
 attributes:
