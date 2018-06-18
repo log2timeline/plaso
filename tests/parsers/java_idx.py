@@ -31,14 +31,10 @@ class IDXTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2010-05-05 01:34:19.720000')
 
-    idx_version_expected = 602
-    self.assertEqual(event.idx_version, idx_version_expected)
+    self.assertEqual(event.idx_version, 602)
 
-    ip_address_expected = 'Unknown'
-    self.assertEqual(event.ip_address, ip_address_expected)
-
-    url_expected = 'http://www.gxxxxx.com/a/java/xxz.jar'
-    self.assertEqual(event.url, url_expected)
+    expected_url = 'http://www.gxxxxx.com/a/java/xxz.jar'
+    self.assertEqual(event.url, expected_url)
 
     description_expected = 'File Hosted Date'
     self.assertEqual(event.timestamp_desc, description_expected)
@@ -48,9 +44,10 @@ class IDXTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2010-05-05 03:52:31.000000')
 
-    self.assertEqual(event.idx_version, idx_version_expected)
-    self.assertEqual(event.ip_address, ip_address_expected)
-    self.assertEqual(event.url, url_expected)
+    self.assertEqual(event.idx_version, 602)
+
+    expected_url = 'http://www.gxxxxx.com/a/java/xxz.jar'
+    self.assertEqual(event.url, expected_url)
 
     description_expected = definitions.TIME_DESCRIPTION_FILE_DOWNLOADED
     self.assertEqual(event.timestamp_desc, description_expected)
@@ -69,16 +66,13 @@ class IDXTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2001-07-26 05:00:00.000000')
 
-    idx_version_expected = 605
-    self.assertEqual(event.idx_version, idx_version_expected)
+    self.assertEqual(event.idx_version, 605)
+    self.assertEqual(event.ip_address, '10.7.119.10')
 
-    ip_address_expected = '10.7.119.10'
-    self.assertEqual(event.ip_address, ip_address_expected)
-
-    url_expected = (
+    expected_url = (
         'http://xxxxc146d3.gxhjxxwsf.xx:82/forum/dare.php?'
         'hsh=6&key=b30xxxx1c597xxxx15d593d3f0xxx1ab')
-    self.assertEqual(event.url, url_expected)
+    self.assertEqual(event.url, expected_url)
 
     description_expected = 'File Hosted Date'
     self.assertEqual(event.timestamp_desc, description_expected)
@@ -88,9 +82,13 @@ class IDXTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2013-01-13 16:22:01.000000')
 
-    self.assertEqual(event.idx_version, idx_version_expected)
-    self.assertEqual(event.ip_address, ip_address_expected)
-    self.assertEqual(event.url, url_expected)
+    self.assertEqual(event.idx_version, 605)
+    self.assertEqual(event.ip_address, '10.7.119.10')
+
+    expected_url = (
+        'http://xxxxc146d3.gxhjxxwsf.xx:82/forum/dare.php?'
+        'hsh=6&key=b30xxxx1c597xxxx15d593d3f0xxx1ab')
+    self.assertEqual(event.url, expected_url)
 
     description_expected = definitions.TIME_DESCRIPTION_FILE_DOWNLOADED
     self.assertEqual(event.timestamp_desc, description_expected)
