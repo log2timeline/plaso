@@ -6,6 +6,8 @@ updated, and when files match the virus database."""
 
 from __future__ import unicode_literals
 
+import codecs
+
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
@@ -137,8 +139,10 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
     # This file can have a UTF-8 byte-order-marker at the beginning of
     # the first row.
     # TODO: Find out all the code pages this can have.  Asked McAfee 10/31.
-    if row['date'][0:3] == b'\xef\xbb\xbf':
-      row['date'] = row['date'][3:]
+    byte_order_mark = codecs.decode(b'\xef\xbb\xbf', parser_mediator.codepage)
+    byte_order_mark_length = len(byte_order_mark)
+    if row['date'].startswith(byte_order_mark):
+      row['date'] = row['date'][byte_order_mark_length:]
       self._encoding = 'utf-8'
 
     # Check the date format!

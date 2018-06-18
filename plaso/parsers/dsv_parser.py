@@ -7,6 +7,8 @@ import abc
 import csv
 import sys
 
+from dfvfs.helpers import text_file
+
 from plaso.lib import errors
 from plaso.lib import line_reader_file
 from plaso.lib import py2to3
@@ -87,23 +89,18 @@ class DSVParser(interface.FileObjectParser):
 
     return row
 
-  def _CreateDictReader(self, parser_mediator, line_reader):
+  def _CreateDictReader(self, line_reader):
     """Returns a reader that processes each row and yields dictionaries.
 
     csv.DictReader does this job well for single-character delimiters; parsers
     that need multi-character delimiters need to override this method.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
       line_reader (iter): yields lines from a file-like object.
 
     Returns:
       iter: a reader of dictionaries, as returned by csv.DictReader().
     """
-    if not self._encoding:
-      self._encoding = parser_mediator.codepage
-
     delimiter = self.DELIMITER
     quotechar = self.QUOTE_CHAR
     magic_test_string = self._MAGIC_TEST_STRING
@@ -147,13 +144,19 @@ class DSVParser(interface.FileObjectParser):
           '[{0:s}] Unable to parse DSV file: {1:s} size of file exceeds '
           'maximum supported size').format(self.NAME, display_name))
 
-    line_reader = line_reader_file.BinaryLineReader(file_object)
+    if not self._encoding:
+      self._encoding = parser_mediator.codepage
+
+    if py2to3.PY_3:
+      line_reader = text_file.TextFile(file_object, encoding=self._encoding)
+    else:
+      line_reader = line_reader_file.BinaryLineReader(file_object)
 
     # If we specifically define a number of lines we should skip, do that here.
     for _ in range(0, self.NUMBER_OF_HEADER_LINES):
       line_reader.readline()
 
-    reader = self._CreateDictReader(parser_mediator, line_reader)
+    reader = self._CreateDictReader(line_reader)
 
     row_offset = line_reader.tell()
     try:

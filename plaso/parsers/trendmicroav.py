@@ -70,23 +70,16 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
     kwargs.setdefault('encoding', 'cp1252')
     super(TrendMicroBaseParser, self).__init__(*args, **kwargs)
 
-  def _CreateDictReader(self, parser_mediator, line_reader):
+  def _CreateDictReader(self, line_reader):
     """Iterates over the log lines and provide a reader for the values.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
       line_reader (iter): yields each line in the log file.
 
     Yields:
       A dictionary of column values keyed by column header.
     """
     for line in line_reader:
-      try:
-        line = line.decode(self._encoding)
-      except UnicodeDecodeError as exception:
-        raise errors.UnableToParseFile(
-            "Unexpected binary content in file: {0:s}".format(exception))
       stripped_line = line.strip()
       values = stripped_line.split(self.DELIMITER)
       if len(values) < self.MIN_COLUMNS:
