@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# pylint: disable=invalid-name
 """Script to plot tasks from profiling data.
 
 This script requires the matplotlib and numpy Python modules.
@@ -15,8 +14,9 @@ import glob
 import os
 import sys
 
+import numpy  # pylint: disable=import-error
+
 from matplotlib import pyplot  # pylint: disable=import-error
-from numpy import genfromtxt  # pylint: disable=import-error
 
 
 class TaskMeasurements(object):
@@ -83,11 +83,12 @@ def Main():
   measurements = {}
 
   glob_expression = os.path.join(options.profile_path, 'tasks-*.csv.gz')
-  for csv_file in glob.glob(glob_expression):
-    data = genfromtxt(
-        csv_file, delimiter='\t', dtype=None, names=names, skip_header=1)
+  for csv_file_name in glob.glob(glob_expression):
+    data = numpy.genfromtxt(
+        csv_file_name, delimiter='\t', dtype=None, encoding='utf-8',
+        names=names, skip_header=1)
 
-    label = os.path.basename(csv_file)
+    label = os.path.basename(csv_file_name)
     label = label.replace('tasks-', '').replace('.csv.gz', '')
 
     for time, identifier, status in data:
