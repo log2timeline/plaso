@@ -56,6 +56,7 @@ class TestOutputWriter(tools.FileObjectOutputWriter):
 
     return output_data
 
+  # TODO: refactor this method https://github.com/log2timeline/plaso/issues/1963
   def ReadOutputString(self):
     """Reads the newly added output data as a string.
 
