@@ -3,10 +3,6 @@
 
 from __future__ import unicode_literals
 
-import os
-
-import construct
-
 from dfdatetime import delphi_date_time as dfdatetime_delphi_date_time
 
 from plaso.containers import events
@@ -14,8 +10,7 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.lib import timelib
-from plaso.lib import utils
-from plaso.parsers import interface
+from plaso.parsers import dtfabric_parser
 from plaso.parsers import manager
 
 
@@ -40,10 +35,10 @@ class PlsRecallEventData(events.EventData):
     self.username = None
 
 
-class PlsRecallParser(interface.FileObjectParser):
+class PlsRecallParser(dtfabric_parser.DtFabricBaseParser):
   """Parse PL/SQL Recall files.
 
-  Parser is based on:
+  This parser is based on the Delphi definition of the data type:
 
     TRecallRecord = packed record
       Sequence: Integer;
@@ -57,7 +52,11 @@ class PlsRecallParser(interface.FileObjectParser):
     time zone information.
   """
 
-  _INITIAL_FILE_OFFSET = None
+  NAME = 'pls_recall'
+  DESCRIPTION = 'Parser for PL/SQL Recall files.'
+
+  _DEFINITION_FILE = 'pls_recall.yaml'
+
   _PLS_KEYWORD = frozenset([
       'begin', 'commit', 'create', 'declare', 'drop', 'end', 'exception',
       'execute', 'insert', 'replace', 'rollback', 'select', 'set',
@@ -66,16 +65,35 @@ class PlsRecallParser(interface.FileObjectParser):
   # 6 * 365 * 24 * 60 * 60 * 1000000.
   _SIX_YEARS_IN_MICRO_SECONDS = 189216000000000
 
-  NAME = 'pls_recall'
-  DESCRIPTION = 'Parser for PL/SQL Recall files.'
+  def _VerifyRecord(self, pls_record):
+    """Verifies a PLS Recall record.
 
-  _PLS_RECALL_RECORD = construct.Struct(
-      'PL/SQL_Recall',
-      construct.ULInt32('Sequence'),
-      construct.LFloat64('TimeStamp'),
-      construct.String('Username', 31, None, b'\x00'),
-      construct.String('Database', 81, None, b'\x00'),
-      construct.String('Query', 4001, None, b'\x00'))
+    Args:
+      pls_record (pls_recall_record): a PLS Recall record to verify.
+
+    Returns:
+      bool: True if this is a valid PLS Recall record, False otherwise.
+    """
+    # Verify that the timestamp is no more than six years into the future.
+    # Six years is an arbitrary time length just to evaluate the timestamp
+    # against some value. There is no guarantee that this will catch everything.
+    # TODO: Add a check for similarly valid value back in time. Maybe if it the
+    # timestamp is before 1980 we are pretty sure it is invalid?
+    # TODO: This is a very flaky assumption. Find a better one.
+    future_timestamp = (
+        timelib.Timestamp.GetNow() + self._SIX_YEARS_IN_MICRO_SECONDS)
+
+    if pls_record.last_written_time > future_timestamp:
+      return False
+
+    # Take the first word from the query field and attempt to match that against
+    # known query keywords.
+    first_word, _, _ = pls_record.query.partition(b' ')
+
+    if first_word.lower() not in self._PLS_KEYWORD:
+      return False
+
+    return True
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a PLSRecall.dat file-like object.
@@ -88,93 +106,40 @@ class PlsRecallParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    try:
-      is_pls = self.VerifyFile(file_object)
-    except (IOError, construct.FieldError) as exception:
-      raise errors.UnableToParseFile((
-          'Not a PLSrecall File, unable to parse.'
-          'with error: {0!s}').format(exception))
+    file_offset = 0
+    file_size = file_object.get_size()
+    record_map = self._GetDataTypeMap('pls_recall_record')
 
-    if not is_pls:
-      raise errors.UnableToParseFile(
-          'Not a PLSRecall File, unable to parse.')
+    while file_offset < file_size:
+      try:
+        pls_record, record_data_size = self._ReadStructureFromFileObject(
+            file_object, file_offset, record_map)
+      except (ValueError, errors.ParseError) as exception:
+        if file_offset == 0:
+          raise errors.UnableToParseFile('Unable to parse first record.')
 
-    file_object.seek(0, os.SEEK_SET)
-    pls_record = self._PLS_RECALL_RECORD.parse_stream(file_object)
+        parser_mediator.ProduceExtractionError((
+            'unable to parse record at offset: 0x{0:08x} with error: '
+            '{1!s}').format(file_offset, exception))
+        break
 
-    while pls_record:
+      if file_offset == 0 and not self._VerifyRecord(pls_record):
+        raise errors.UnableToParseFile('Verification of first record failed.')
+
       event_data = PlsRecallEventData()
-
-      event_data.database_name = pls_record.Database
-      event_data.sequence_number = pls_record.Sequence
-      event_data.query = pls_record.Query
-      event_data.username = pls_record.Username
+      event_data.database_name = pls_record.database_name.rstrip('\x00')
+      event_data.sequence_number = pls_record.sequence_number
+      event_data.offset = file_offset
+      event_data.query = pls_record.query.rstrip('\x00')
+      event_data.username = pls_record.username.rstrip('\x00')
 
       date_time = dfdatetime_delphi_date_time.DelphiDateTime(
-          timestamp=pls_record.TimeStamp)
+          timestamp=pls_record.last_written_time)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-      try:
-        pls_record = self._PLS_RECALL_RECORD.parse_stream(file_object)
-      except construct.FieldError:
-        # The code has reached the end of file (EOF).
-        break
-
-  def VerifyFile(self, file_object):
-    """Check if the file is a PLSRecall.dat file.
-
-    Args:
-      file_object (dfvfs.FileIO): a file-like object.
-
-    Returns:
-      bool: True if this is a valid PLSRecall.dat file, False otherwise.
-    """
-    file_object.seek(0, os.SEEK_SET)
-
-    # The file consists of PL/SQL structures that are equal
-    # size (4125 bytes) TRecallRecord records. It should be
-    # noted that the query value is free form.
-    try:
-      structure = self._PLS_RECALL_RECORD.parse_stream(file_object)
-    except (IOError, construct.FieldError):
-      return False
-
-    # Verify that the timestamp is no more than six years into the future.
-    # Six years is an arbitrary time length just to evaluate the timestamp
-    # against some value. There is no guarantee that this will catch everything.
-    # TODO: Add a check for similarly valid value back in time. Maybe if it the
-    # timestamp is before 1980 we are pretty sure it is invalid?
-    # TODO: This is a very flaky assumption. Find a better one.
-    future_timestamp = (
-        timelib.Timestamp.GetNow() + self._SIX_YEARS_IN_MICRO_SECONDS)
-
-    if structure.TimeStamp > future_timestamp:
-      return False
-
-    # TODO: Add other verification checks here. For instance make sure
-    # that the query actually looks like a SQL query. This structure produces a
-    # lot of false positives and thus we need to add additional verification to
-    # make sure we are not parsing non-PLSRecall files.
-    # Another check might be to make sure the username looks legitimate, or the
-    # sequence number, or the database name.
-    # For now we just check if all three fields pass our "is this a text" test.
-    if not utils.IsText(structure.Username):
-      return False
-    if not utils.IsText(structure.Query):
-      return False
-    if not utils.IsText(structure.Database):
-      return False
-
-    # Take the first word from the query field and attempt to match that against
-    # allowed queries.
-    first_word, _, _ = structure.Query.partition(b' ')
-
-    if first_word.lower() not in self._PLS_KEYWORD:
-      return False
-
-    return True
+      file_offset += record_data_size
 
 
 manager.ParsersManager.RegisterParser(PlsRecallParser)
