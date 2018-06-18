@@ -121,6 +121,7 @@ class PlsRecallParser(dtfabric_parser.DtFabricBaseParser):
         parser_mediator.ProduceExtractionError((
             'unable to parse record at offset: 0x{0:08x} with error: '
             '{1!s}').format(file_offset, exception))
+        break
 
       if file_offset == 0 and not self._VerifyRecord(pls_record):
         raise errors.UnableToParseFile('Verification of first record failed.')
