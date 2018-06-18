@@ -44,9 +44,12 @@ class CPUTimeMeasurement(object):
 class SampleFileProfiler(object):
   """Shared functionality for sample file-based profilers."""
 
-  _FILENAME_PREFIX = ''
 
-  _FILE_HEADER = ''
+  # This constant must be overriden by subclasses.
+  _FILENAME_PREFIX = None
+
+  # This constant must be overriden by subclasses.
+  _FILE_HEADER = None
 
   def __init__(self, identifier, configuration):
     """Initializes a sample file profiler.
@@ -71,8 +74,8 @@ class SampleFileProfiler(object):
     Args:
       content (str): content to write to the sample file.
     """
-    sample_bytes = codecs.encode(content, 'utf-8')
-    self._sample_file.write(sample_bytes)
+    content_bytes = codecs.encode(content, 'utf-8')
+    self._sample_file.write(content_bytes)
 
   @classmethod
   def IsSupported(cls):
