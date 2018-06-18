@@ -182,7 +182,7 @@ class DtFabricBaseParser(interface.FileObjectParser):
       return None
 
     path = os.path.join(self._DEFINITION_FILES_PATH, filename)
-    with open(path, 'r') as file_object:
+    with open(path, 'rb') as file_object:
       definition = file_object.read()
 
     return dtfabric_fabric.DataTypeFabric(yaml_definition=definition)
