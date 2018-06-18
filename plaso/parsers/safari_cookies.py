@@ -3,10 +3,10 @@
 
 from __future__ import unicode_literals
 
-import construct
-
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
+
+from dtfabric.runtime import data_maps as dtfabric_data_maps
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -15,7 +15,7 @@ from plaso.lib import definitions
 from plaso.lib import specification
 # Need to register cookie plugins.
 from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
-from plaso.parsers import interface
+from plaso.parsers import dtfabric_parser
 from plaso.parsers import manager
 from plaso.parsers.cookie_plugins import manager as cookie_plugins_manager
 
@@ -43,41 +43,15 @@ class SafariBinaryCookieEventData(events.EventData):
     self.url = None
 
 
-class BinaryCookieParser(interface.FileObjectParser):
+class BinaryCookieParser(dtfabric_parser.DtFabricBaseParser):
   """Parser for Safari Binary Cookie files."""
 
   NAME = 'binary_cookies'
   DESCRIPTION = 'Parser for Safari Binary Cookie files.'
 
-  _FILE_HEADER = construct.Struct(
-      'file_header',
-      construct.Bytes('signature', 4),
-      construct.UBInt32('number_of_pages'),
-      construct.Array(
-          lambda ctx: ctx.number_of_pages,
-          construct.UBInt32('page_sizes')))
+  _DEFINITION_FILE = 'safari_cookies.yaml'
 
-  _COOKIE_RECORD = construct.Struct(
-      'cookie_record',
-      construct.ULInt32('size'),
-      construct.Bytes('unknown_1', 4),
-      construct.ULInt32('flags'),
-      construct.Bytes('unknown_2', 4),
-      construct.ULInt32('url_offset'),
-      construct.ULInt32('name_offset'),
-      construct.ULInt32('path_offset'),
-      construct.ULInt32('value_offset'),
-      construct.Bytes('end_of_cookie', 8),
-      construct.LFloat64('expiration_date'),
-      construct.LFloat64('creation_date'))
-
-  _PAGE_HEADER = construct.Struct(
-      'page_header',
-      construct.Bytes('header', 4),
-      construct.ULInt32('number_of_records'),
-      construct.Array(
-          lambda ctx: ctx.number_of_records,
-          construct.ULInt32('offsets')))
+  _SIGNATURE = b'cook'
 
   def __init__(self):
     """Initializes a parser object."""
@@ -85,62 +59,111 @@ class BinaryCookieParser(interface.FileObjectParser):
     self._cookie_plugins = (
         cookie_plugins_manager.CookiePluginsManager.GetPlugins())
 
-  def _ParseCookieRecord(self, parser_mediator, page_data, page_offset):
-    """Parses a cookie record
+  def _ParseCString(self, page_data, string_offset):
+    """Parses a C string from the page data.
+
+    Args:
+      page_data (bytes): page data.
+      string_offset (int): offset of the string relative to the start
+          of the page.
+
+    Returns:
+      str: string.
+
+    Raises:
+      ParseError: when the string cannot be parsed.
+    """
+    cstring_map = self._GetDataTypeMap('cstring')
+
+    try:
+      value_string = self._ReadStructureFromByteStream(
+          page_data[string_offset:], string_offset, cstring_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError((
+          'Unable to map string data at offset: 0x{0:08x} with error: '
+          '{1!s}').format(string_offset, exception))
+
+    return value_string.rstrip('\x00')
+
+  def _ParsePage(self, parser_mediator, file_offset, page_data):
+    """Parses a page.
+
+    Args:
+      parser_mediator (ParserMediator): parser mediator.
+      file_offset (int): offset of the data relative from the start of
+          the file-like object.
+      page_data (bytes): page data.
+
+    Raises:
+      ParseError: when the page cannot be parsed.
+    """
+    page_header_map = self._GetDataTypeMap('binarycookies_page_header')
+
+    try:
+      page_header = self._ReadStructureFromByteStream(
+          page_data, file_offset, page_header_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError((
+          'Unable to map page header data at offset: 0x{0:08x} with error: '
+          '{1!s}').format(file_offset, exception))
+
+    for record_offset in page_header.offsets:
+      if parser_mediator.abort:
+        break
+
+      self._ParseRecord(parser_mediator, page_data, record_offset)
+
+  def _ParseRecord(self, parser_mediator, page_data, record_offset):
+    """Parses a record from the page data.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
       page_data (bytes): page data.
-      page_offset (int): offset of the cookie record relative to the start
+      record_offset (int): offset of the record relative to the start
           of the page.
+
+    Raises:
+      ParseError: when the record cannot be parsed.
     """
+    record_header_map = self._GetDataTypeMap('binarycookies_record_header')
+
     try:
-      cookie = self._COOKIE_RECORD.parse(page_data[page_offset:])
-    except construct.FieldError:
-      message = 'Unable to read cookie record at offset: {0:d}'.format(
-          page_offset)
-      parser_mediator.ProduceExtractionError(message)
-      return
-
-    # The offset is determined by the range between the start of the current
-    # offset until the start of the next offset. Thus we need to determine
-    # the proper ordering of the offsets, since they are not always in the
-    # same ordering.
-    offset_dict = {
-        cookie.url_offset: 'url', cookie.name_offset: 'name',
-        cookie.value_offset: 'value', cookie.path_offset: 'path'}
-
-    offsets = sorted(offset_dict.keys())
-    offsets.append(cookie.size + page_offset)
-
-    # TODO: Find a better approach to parsing the data than this.
-    data_dict = {}
-    for current_offset in range(0, len(offsets) - 1):
-      # Get the current offset and the offset for the next entry.
-      start, end = offsets[current_offset:current_offset+2]
-      value = offset_dict.get(offsets[current_offset])
-      # Read the data.
-      data_all = page_data[start + page_offset:end + page_offset]
-      data, _, _ = data_all.partition(b'\x00')
-      data_dict[value] = data
+      record_header = self._ReadStructureFromByteStream(
+          page_data[record_offset:], record_offset, record_header_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError((
+          'Unable to map record header data at offset: 0x{0:08x} with error: '
+          '{1!s}').format(record_offset, exception))
 
     event_data = SafariBinaryCookieEventData()
-    event_data.cookie_name = data_dict.get('name')
-    event_data.cookie_value = data_dict.get('value')
-    event_data.flags = cookie.flags
-    event_data.path = data_dict.get('path')
-    event_data.url = data_dict.get('url')
+    event_data.flags = record_header.flags
 
-    if cookie.creation_date:
+    if record_header.url_offset:
+      data_offset = record_offset + record_header.url_offset
+      event_data.url = self._ParseCString(page_data, data_offset)
+
+    if record_header.name_offset:
+      data_offset = record_offset + record_header.name_offset
+      event_data.cookie_name = self._ParseCString(page_data, data_offset)
+
+    if record_header.path_offset:
+      data_offset = record_offset + record_header.path_offset
+      event_data.path = self._ParseCString(page_data, data_offset)
+
+    if record_header.value_offset:
+      data_offset = record_offset + record_header.value_offset
+      event_data.cookie_value = self._ParseCString(page_data, data_offset)
+
+    if record_header.creation_time:
       date_time = dfdatetime_cocoa_time.CocoaTime(
-          timestamp=cookie.creation_date)
+          timestamp=record_header.creation_time)
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    if cookie.expiration_date:
+    if record_header.expiration_time:
       date_time = dfdatetime_cocoa_time.CocoaTime(
-          timestamp=cookie.expiration_date)
+          timestamp=record_header.expiration_time)
     else:
       date_time = dfdatetime_semantic_time.SemanticTime('Not set')
 
@@ -165,31 +188,6 @@ class BinaryCookieParser(interface.FileObjectParser):
             'plugin: {0:s} unable to parse cookie with error: {1!s}'.format(
                 plugin.NAME, exception))
 
-  def _ParsePage(self, parser_mediator, page_number, page_data):
-    """Parses a page.
-
-    Args:
-      parser_mediator (ParserMediator): parser mediator.
-      page_number (int): page number.
-      page_data (bytes): page data.
-    """
-    try:
-      page_header = self._PAGE_HEADER.parse(page_data)
-    except construct.FieldError:
-      # TODO: add offset
-      parser_mediator.ProduceExtractionError(
-          'unable to read header of page: {0:d} at offset: 0x{1:08x}'.format(
-              page_number, 0))
-      return
-
-    for page_offset in page_header.offsets:
-      if parser_mediator.abort:
-        break
-
-      self._ParseCookieRecord(parser_mediator, page_data, page_offset)
-
-    # TODO: check footer.
-
   @classmethod
   def GetFormatSpecification(cls):
     """Retrieves the format specification for parser selection.
@@ -212,28 +210,56 @@ class BinaryCookieParser(interface.FileObjectParser):
       UnableToParseFile: when the file cannot be parsed, this will signal
           the event extractor to apply other parsers.
     """
+    file_header_map = self._GetDataTypeMap('binarycookies_file_header')
+
     try:
-      file_header = self._FILE_HEADER.parse_stream(file_object)
-    except (IOError, construct.ArrayError, construct.FieldError) as exception:
-      parser_mediator.ProduceExtractionError(
-          'unable to read file header with error: {0!s}.'.format(exception))
-      raise errors.UnableToParseFile()
+      file_header, file_header_data_size = self._ReadStructureFromFileObject(
+          file_object, 0, file_header_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.UnableToParseFile(
+          'Unable to read file header with error: {0!s}.'.format(exception))
 
-    if file_header.signature != b'cook':
-      parser_mediator.ProduceExtractionError('unsupported file signature.')
-      raise errors.UnableToParseFile()
+    if file_header.signature != self._SIGNATURE:
+      raise errors.UnableToParseFile('Unsupported file signature.')
 
-    for index, page_size in enumerate(file_header.page_sizes):
+    file_offset = file_header_data_size
+
+    # TODO: move page sizes array into file header, this will require dtFabric
+    # to compare signature as part of data map.
+    page_sizes_data_size = file_header.number_of_pages * 4
+
+    page_sizes_data = file_object.read(page_sizes_data_size)
+
+    context = dtfabric_data_maps.DataTypeMapContext(values={
+        'binarycookies_file_header': file_header})
+
+    page_sizes_map = self._GetDataTypeMap('binarycookies_page_sizes')
+
+    try:
+      page_sizes_array = self._ReadStructureFromByteStream(
+          page_sizes_data, file_offset, page_sizes_map, context=context)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError((
+          'Unable to map page sizes data at offset: 0x{0:08x} with error: '
+          '{1!s}').format(file_offset, exception))
+
+    file_offset += page_sizes_data_size
+
+    for page_number, page_size in enumerate(page_sizes_array):
       if parser_mediator.abort:
         break
 
       page_data = file_object.read(page_size)
       if len(page_data) != page_size:
         parser_mediator.ProduceExtractionError(
-            'unable to read page: {0:d}'.format(index))
+            'unable to read page: {0:d}'.format(page_number))
         break
 
-      self._ParsePage(parser_mediator, index, page_data)
+      self._ParsePage(parser_mediator, file_offset, page_data)
+
+      file_offset += page_size
+
+    # TODO: check file footer.
 
 
 manager.ParsersManager.RegisterParser(BinaryCookieParser)
