@@ -75,7 +75,8 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       file_object (file): file-like object.
-      record_offset (int): offset of the record relative to the start of the file.
+      record_offset (int): offset of the record relative to the start of
+          the file.
 
     Returns:
       int: next record offset.
