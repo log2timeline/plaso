@@ -514,6 +514,8 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     lines = []
     output = output_writer.ReadOutput()
+    # TODO: add test output writer that produces strings also see:
+    # https://github.com/log2timeline/plaso/issues/1963
     output = codecs.decode(output, 'utf-8')
     for line in output.split('\n'):
       lines.append(line)
