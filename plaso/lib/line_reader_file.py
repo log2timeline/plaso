@@ -11,7 +11,6 @@ class BinaryLineReader(object):
 
   Attributes:
     end_of_line (bytes): byte sequence that separates lines from each other.
-
   """
 
   # The size of the lines buffer.
@@ -86,7 +85,7 @@ class BinaryLineReader(object):
     if size is not None and size > self._MAXIMUM_READ_BUFFER_SIZE:
       raise ValueError(
           'Invalid size value exceeds maximum value {0:d}.'.format(
-                self._MAXIMUM_READ_BUFFER_SIZE))
+              self._MAXIMUM_READ_BUFFER_SIZE))
 
     if not self._lines:
       if self._lines_buffer_offset >= self._file_object_size:
