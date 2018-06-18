@@ -3,16 +3,14 @@
 
 from __future__ import unicode_literals
 
-import construct
-
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import binary
 from plaso.lib import definitions
-from plaso.parsers import interface
+from plaso.lib import errors
+from plaso.parsers import dtfabric_parser
 from plaso.parsers import manager
 
 
@@ -39,120 +37,118 @@ class WinRecycleBinEventData(events.EventData):
     self.short_filename = None
 
 
-class WinRecycleBinParser(interface.FileObjectParser):
+class WinRecycleBinParser(dtfabric_parser.DtFabricBaseParser):
   """Parses the Windows $Recycle.Bin $I files."""
 
   NAME = 'recycle_bin'
   DESCRIPTION = 'Parser for Windows $Recycle.Bin $I files.'
 
-  _FILE_HEADER_STRUCT = construct.Struct(
-      'file_header',
-      construct.ULInt64('format_version'),
-      construct.ULInt64('file_size'),
-      construct.ULInt64('deletion_time'))
+  _DEFINITION_FILE = 'recycler.yaml'
 
-  _FILENAME_V2_STRUCT = construct.Struct(
-      'filename_v2',
-      construct.ULInt32('number_of_characters'),
-      construct.String(
-          'string', lambda ctx: ctx.number_of_characters * 2))
+  _SUPPORTED_FORMAT_VERSIONS = (1, 2)
 
-  def _ReadFilename(self, parser_mediator, file_object, format_version):
-    """Reads the filename.
+  def _ParseOriginalFilename(self, file_object, format_version):
+    """Parses the original filename.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
       file_object (FileIO): file-like object.
       format_version (int): format version.
 
     Returns:
       str: filename or None on error.
+
+    Raises:
+      ParseError: if the original filename cannot be read.
     """
+    file_offset = file_object.tell()
+
     if format_version == 1:
-      return binary.ReadUTF16Stream(file_object)
+      data_type_map = self._GetDataTypeMap(
+          'recycle_bin_metadata_utf16le_string')
+    else:
+      data_type_map = self._GetDataTypeMap(
+          'recycle_bin_metadata_utf16le_string_with_size')
 
     try:
-      filename_struct = self._FILENAME_V2_STRUCT.parse_stream(file_object)
+      original_filename, _ = self._ReadStructureFromFileObject(
+          file_object, file_offset, data_type_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError(
+          'Unable to parse original filename with error: {0!s}'.format(
+              exception))
 
-    except (IOError, construct.FieldError) as exception:
-      parser_mediator.ProduceExtractionError(
-          'unable to parse filename with error: {0!s}'.format(exception))
-      return None
+    if format_version == 1:
+      return original_filename.rstrip('\x00')
 
-    return binary.ReadUTF16(filename_struct.string)
+    return original_filename.string.rstrip('\x00')
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
-    """Parses a Windows RecycleBin $Ixx file-like object.
+    """Parses a Windows Recycle.Bin metadata ($I) file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
     # We may have to rely on filenames since this header is very generic.
 
     # TODO: Rethink this and potentially make a better test.
     filename = parser_mediator.GetFilename()
     if not filename.startswith('$I'):
-      return
+      raise errors.UnableToParseFile('Filename must start with $I.')
+
+    file_header_map = self._GetDataTypeMap('recycle_bin_metadata_file_header')
 
     try:
-      header_struct = self._FILE_HEADER_STRUCT.parse_stream(file_object)
-    except (IOError, construct.FieldError) as exception:
-      parser_mediator.ProduceExtractionError(
-          'unable to parse file header with error: {0!s}'.format(exception))
-      return
+      file_header, _ = self._ReadStructureFromFileObject(
+          file_object, 0, file_header_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.UnableToParseFile((
+          'Unable to parse Windows Recycle.Bin metadata file header with '
+          'error: {0!s}').format(exception))
 
-    if header_struct.format_version not in (1, 2):
-      parser_mediator.ProduceExtractionError(
-          'unsupported format version: {0:d}.'.format(
-              header_struct.format_version))
-      return
+    if file_header.format_version not in self._SUPPORTED_FORMAT_VERSIONS:
+      raise errors.UnableToParseFile(
+          'Unsupported format version: {0:d}.'.format(
+              file_header.format_version))
 
-    if header_struct.deletion_time == 0:
+    if file_header.deletion_time == 0:
       date_time = dfdatetime_semantic_time.SemanticTime('Not set')
     else:
       date_time = dfdatetime_filetime.Filetime(
-          timestamp=header_struct.deletion_time)
+          timestamp=file_header.deletion_time)
 
     event_data = WinRecycleBinEventData()
-    event_data.original_filename = self._ReadFilename(
-        parser_mediator, file_object, header_struct.format_version)
-    event_data.file_size = header_struct.file_size
+    try:
+      event_data.original_filename = self._ParseOriginalFilename(
+          file_object, file_header.format_version)
+    except (ValueError, errors.ParseError) as exception:
+      parser_mediator.ProduceExtractionError(
+          'unable to parse original filename with error: {0!s}.'.format(
+              exception))
+
+    event_data.file_size = file_header.original_file_size
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_DELETED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-class WinRecyclerInfo2Parser(interface.FileObjectParser):
+class WinRecyclerInfo2Parser(dtfabric_parser.DtFabricBaseParser):
   """Parses the Windows Recycler INFO2 file."""
 
   NAME = 'recycle_bin_info2'
   DESCRIPTION = 'Parser for Windows Recycler INFO2 files.'
 
-  _FILE_HEADER_STRUCT = construct.Struct(
-      'file_header',
-      construct.ULInt32('unknown1'),
-      construct.ULInt32('unknown2'),
-      construct.ULInt32('unknown3'),
-      construct.ULInt32('record_size'),
-      construct.ULInt32('unknown4'))
-
-  _RECYCLER_RECORD_STRUCT = construct.Struct(
-      'recycler_record',
-      construct.ULInt32('index'),
-      construct.ULInt32('drive_number'),
-      construct.ULInt64('deletion_time'),
-      construct.ULInt32('file_size'))
-
-  _ASCII_STRING = construct.CString('string')
+  _DEFINITION_FILE = 'recycler.yaml'
 
   _RECORD_INDEX_OFFSET = 0x104
   _UNICODE_FILENAME_OFFSET = 0x118
 
-  def _ParseRecord(
+  def _ParseInfo2Record(
       self, parser_mediator, file_object, record_offset, record_size):
     """Parses an INFO-2 record.
 
@@ -162,55 +158,67 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): file-like object.
       record_offset (int): record offset.
       record_size (int): record size.
+
+    Raises:
+      ParseError: if the record cannot be read.
     """
-    record_data = file_object.read(record_size)
+    record_data = self._ReadData(file_object, record_offset, record_size)
+
+    record_map = self._GetDataTypeMap('recycler_info2_file_entry')
 
     try:
-      ascii_filename = self._ASCII_STRING.parse(record_data)
+      record = self._ReadStructureFromByteStream(
+          record_data, record_offset, record_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError((
+          'Unable to map record data at offset: 0x{0:08x} with error: '
+          '{1!s}').format(record_offset, exception))
 
-    except (IOError, construct.FieldError) as exception:
-      parser_mediator.ProduceExtractionError((
-          'unable to parse recycler ASCII filename at offset: 0x{0:08x} '
-          'with error: {1!s}').format(record_offset, exception))
+    codepage = parser_mediator.codepage or 'ascii'
+
+    # The original filename can contain remnant data after the end-of-string
+    # character.
+    ascii_filename = record.original_filename.split(b'\x00')[0]
 
     try:
-      recycler_record_struct = self._RECYCLER_RECORD_STRUCT.parse(
-          record_data[self._RECORD_INDEX_OFFSET:])
-    except (IOError, construct.FieldError) as exception:
-      parser_mediator.ProduceExtractionError((
-          'unable to parse recycler index record at offset: 0x{0:08x} '
-          'with error: {1!s}').format(
-              record_offset + self._RECORD_INDEX_OFFSET, exception))
+      ascii_filename = ascii_filename.decode(codepage)
+    except UnicodeDecodeError:
+      ascii_filename = ascii_filename.decode(codepage, errors='replace')
+
+      parser_mediator.ProduceExtractionError(
+          'unable to decode original filename.')
 
     unicode_filename = None
-    if record_size == 800:
-      unicode_filename = binary.ReadUTF16(
-          record_data[self._UNICODE_FILENAME_OFFSET:])
+    if record_size > 280:
+      record_offset += 280
+      utf16_string_map = self._GetDataTypeMap(
+          'recycler_info2_file_entry_utf16le_string')
 
-    ascii_filename = None
-    if ascii_filename and parser_mediator.codepage:
       try:
-        ascii_filename = ascii_filename.decode(parser_mediator.codepage)
-      except UnicodeDecodeError:
-        ascii_filename = ascii_filename.decode(
-            parser_mediator.codepage, errors='replace')
+        unicode_filename = self._ReadStructureFromByteStream(
+            record_data[280:], record_offset, utf16_string_map)
+      except (ValueError, errors.ParseError) as exception:
+        raise errors.ParseError((
+            'Unable to map record data at offset: 0x{0:08x} with error: '
+            '{1!s}').format(record_offset, exception))
 
-    elif ascii_filename:
-      ascii_filename = repr(ascii_filename)
+      unicode_filename = unicode_filename.rstrip('\x00')
 
-    if recycler_record_struct.deletion_time == 0:
+    if record.deletion_time == 0:
       date_time = dfdatetime_semantic_time.SemanticTime('Not set')
     else:
       date_time = dfdatetime_filetime.Filetime(
-          timestamp=recycler_record_struct.deletion_time)
+          timestamp=record.deletion_time)
 
     event_data = WinRecycleBinEventData()
-    event_data.drive_number = recycler_record_struct.drive_number
+    event_data.drive_number = record.drive_number
     event_data.original_filename = unicode_filename or ascii_filename
-    event_data.file_size = recycler_record_struct.file_size
+    event_data.file_size = record.original_file_size
     event_data.offset = record_offset
-    event_data.record_index = recycler_record_struct.index
-    event_data.short_filename = ascii_filename
+    event_data.record_index = record.index
+
+    if ascii_filename != unicode_filename:
+      event_data.short_filename = ascii_filename
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_DELETED)
@@ -223,6 +231,9 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): file-like object.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
     """
     # Since this header value is really generic it is hard not to use filename
     # as an indicator too.
@@ -232,31 +243,34 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
     if not filename.startswith('INFO2'):
       return
 
-    try:
-      file_header_struct = self._FILE_HEADER_STRUCT.parse_stream(file_object)
-    except (construct.FieldError, IOError) as exception:
-      parser_mediator.ProduceExtractionError(
-          'unable to parse file header with error: {0!s}'.format(exception))
-      return
+    file_header_map = self._GetDataTypeMap('recycler_info2_file_header')
 
-    if file_header_struct.unknown1 != 5:
+    try:
+      file_header, _ = self._ReadStructureFromFileObject(
+          file_object, 0, file_header_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.UnableToParseFile((
+          'Unable to parse Windows Recycler INFO2 file header with '
+          'error: {0!s}').format(exception))
+
+    if file_header.unknown1 != 5:
       parser_mediator.ProduceExtractionError('unsupported format signature.')
       return
 
-    record_size = file_header_struct.record_size
-    if record_size not in (280, 800):
+    file_entry_size = file_header.file_entry_size
+    if file_entry_size not in (280, 800):
       parser_mediator.ProduceExtractionError(
-          'unsupported record size: {0:d}'.format(record_size))
+          'unsupported file entry size: {0:d}'.format(file_entry_size))
       return
 
-    record_offset = self._FILE_HEADER_STRUCT.sizeof()
+    file_offset = file_object.get_offset()
     file_size = file_object.get_size()
 
-    while record_offset < file_size:
-      self._ParseRecord(
-          parser_mediator, file_object, record_offset, record_size)
+    while file_offset < file_size:
+      self._ParseInfo2Record(
+          parser_mediator, file_object, file_offset, file_entry_size)
 
-      record_offset += record_size
+      file_offset += file_entry_size
 
 
 manager.ParsersManager.RegisterParsers([
