@@ -185,13 +185,14 @@ class DSVParser(interface.FileObjectParser):
             '[{0:s}] Unable to parse DSV file: {1:s}. Signature '
             'mismatch.').format(self.NAME, display_name))
 
+    row = self._ConvertRowToUnicode(parser_mediator, row)
+
     if not self.VerifyRow(parser_mediator, row):
       display_name = parser_mediator.GetDisplayName()
       raise errors.UnableToParseFile((
           '[{0:s}] Unable to parse DSV file: {1:s}. Verification '
           'failed.').format(self.NAME, display_name))
 
-    row = self._ConvertRowToUnicode(parser_mediator, row)
     self.ParseRow(parser_mediator, row_offset, row)
     row_offset = line_reader.tell()
 

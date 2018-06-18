@@ -80,6 +80,11 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
       A dictionary of column values keyed by column header.
     """
     for line in line_reader:
+      try:
+        line = line.decode(self._encoding)
+      except UnicodeDecodeError as exception:
+        raise errors.UnableToParseFile(
+            "Unexpected binary content in file: {0:s}".format(exception))
       stripped_line = line.strip()
       values = stripped_line.split(self.DELIMITER)
       if len(values) < self.MIN_COLUMNS:
