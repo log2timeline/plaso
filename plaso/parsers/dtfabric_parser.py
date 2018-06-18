@@ -182,7 +182,7 @@ class DtFabricBaseParser(interface.FileObjectParser):
       return None
 
     path = os.path.join(self._DEFINITION_FILES_PATH, filename)
-    with open(path, 'rb') as file_object:
+    with open(path, 'r') as file_object:
       definition = file_object.read()
 
     return dtfabric_fabric.DataTypeFabric(yaml_definition=definition)
@@ -217,9 +217,12 @@ class DtFabricBaseParser(interface.FileObjectParser):
     try:
       return data_type_map.MapByteStream(byte_stream, context=context)
     except dtfabric_errors.MappingError as exception:
+      map_name = data_type_map.name
+      if not map_name:
+        map_name = ''
       raise errors.ParseError((
           'Unable to map {0:s} data at offset: 0x{1:08x} with error: '
-          '{2!s}').format(data_type_map.name, file_offset, exception))
+          '{2!s}').format(map_name, file_offset, exception))
 
   def _ReadStructureFromFileObject(
       self, file_object, file_offset, data_type_map):
