@@ -116,9 +116,6 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
   _TAG_VALUE_NATURAL_LANGUAGE = 0x48
   _TAG_VALUE_MEDIA_TYPE = 0x49
 
-  _INTEGER_TAG_VALUES = frozenset([
-      _TAG_VALUE_INTEGER, _TAG_VALUE_ENUM])
-
   _ASCII_STRING_VALUES = frozenset([
       _TAG_VALUE_KEYWORD,
       _TAG_VALUE_URI,
