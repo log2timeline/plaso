@@ -220,7 +220,7 @@ class DtFabricBaseParser(interface.FileObjectParser):
             dtfabric_errors.MappingError) as exception:
       raise errors.ParseError((
           'Unable to map {0:s} data at offset: 0x{1:08x} with error: '
-          '{2!s}').format(data_type_map.name, file_offset, exception))
+          '{2!s}').format(data_type_map.name or '', file_offset, exception))
 
   def _ReadStructureFromFileObject(
       self, file_object, file_offset, data_type_map):
