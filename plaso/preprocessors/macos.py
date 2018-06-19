@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import abc
-import plistlib
 
 from plaso.containers import artifacts
 from plaso.lib import errors
@@ -34,7 +33,7 @@ class PlistFileArtifactPreprocessorPlugin(
     the matches list.
 
     Args:
-      key (plistlib._InternalDict): plist key.
+      key (dict[str, object]): plist key.
       names (list[str]): names of the keys to match.
       matches (list[str]): keys with matching names.
     """
@@ -42,8 +41,7 @@ class PlistFileArtifactPreprocessorPlugin(
       if name in names:
         matches.append((name, subkey))
 
-      # pylint: disable=protected-access
-      if isinstance(subkey, plistlib._InternalDict):
+      if isinstance(subkey, dict):
         self._FindKeys(subkey, names, matches)
 
   def _ParseFileData(self, knowledge_base, file_object):
@@ -244,7 +242,7 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
       file_entry (dfvfs.FileEntry): file entry of the plist.
 
     Returns:
-      plistlib._InternalDict: plist root key.
+      dict[str, object]: plist root key.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
