@@ -179,15 +179,20 @@ class TaskManager(object):
       inactive_time = time.time() - self._TASK_INACTIVE_TIME
       inactive_time = int(inactive_time * definitions.MICROSECONDS_PER_SECOND)
 
+      # Abandon all tasks after they're identified so as not to modify the
+      # dict while iterating over it.
+      tasks_to_abandon = []
       for task_identifier, task in iter(self._tasks_processing.items()):
         if task.last_processing_time < inactive_time:
           logger.debug('Abandoned processing task: {0:s}.'.format(
               task_identifier))
 
           self.SampleTaskStatus(task, 'abandoned_processing')
+          tasks_to_abandon.append((task_identifier, task))
 
-          self._tasks_abandoned[task_identifier] = task
-          del self._tasks_processing[task_identifier]
+      for task_identifier, task in tasks_to_abandon:
+        self._tasks_abandoned[task_identifier] = task
+        del self._tasks_processing[task_identifier]
 
   def _AbandonQueuedTasks(self):
     """Marks queued tasks abandoned.
