@@ -167,5 +167,33 @@ class BinaryLineReaderTest(shared_test_lib.BaseTestCase):
   # filled).
 
 
+class BinaryDSVReaderTest(shared_test_lib.BaseTestCase):
+  """Tests for the binary delimited separated values reader."""
+
+  @shared_test_lib.skipUnlessHasTestFile(['password.csv'])
+  def testIterator(self):
+    """Tests the iterator functionality."""
+    test_file = self._GetTestFilePath(['password.csv'])
+    test_path_spec = os_path_spec.OSPathSpec(location=test_file)
+
+    resolver_context = context.Context()
+    file_object = os_file_io.OSFile(resolver_context)
+    file_object.open(test_path_spec)
+    line_reader = line_reader_file.BinaryLineReader(file_object)
+
+    dsv_reader = line_reader_file.BinaryDSVReader(line_reader, delimiter=b',')
+
+    rows = []
+    for row in dsv_reader:
+      rows.append(row)
+
+    self.assertEqual(len(rows), 5)
+    self.assertEqual(rows[0], [b'place', b'user', b'password'])
+    self.assertEqual(rows[1], [b'bank', b'joesmith', b'superrich'])
+    self.assertEqual(rows[2], [b'alarm system', b'-', b'1234'])
+    self.assertEqual(rows[3], [b'treasure chest', b'-', b'1111'])
+    self.assertEqual(rows[4], [b'uber secret laire', b'admin', b'admin'])
+
+
 if __name__ == '__main__':
   unittest.main()
