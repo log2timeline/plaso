@@ -49,6 +49,7 @@ class SampleFileProfilerTest(shared_test_lib.BaseTestCase):
       test_profiler = profilers.SampleFileProfiler(
           'test', profiling_configuration)
 
+      test_profiler._FILENAME_PREFIX = 'test'
       test_profiler._FILE_HEADER = 'test'
 
       test_profiler.Start()
