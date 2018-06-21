@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# pylint: disable=invalid-name
-"""Script to plot task queue from profiling data.
+"""Script to plot memory usage from profiling data.
 
 This script requires the matplotlib and numpy Python modules.
 """
@@ -15,8 +14,9 @@ import glob
 import os
 import sys
 
+import numpy  # pylint: disable=import-error
+
 from matplotlib import pyplot  # pylint: disable=import-error
-from numpy import genfromtxt  # pylint: disable=import-error
 
 
 def Main():
@@ -44,24 +44,27 @@ def Main():
     print('No such directory: {0:s}'.format(options.profile_path))
     return False
 
-  names = ['time', 'queued', 'processing', 'to_merge', 'abandoned', 'total']
+  names = ['time', 'name', 'memory']
 
-  glob_expression = os.path.join(options.profile_path, 'task_queue-*.csv.gz')
-  for csv_file in glob.glob(glob_expression):
-    data = genfromtxt(
-        csv_file, delimiter='\t', dtype=None, names=names, skip_header=1)
+  glob_expression = os.path.join(options.profile_path, 'memory-*.csv.gz')
+  for csv_file_name in glob.glob(glob_expression):
+    if csv_file_name.endswith('-parsers.csv.gz'):
+      continue
 
-    pyplot.plot(data['time'], data['queued'], label='queued')
-    pyplot.plot(data['time'], data['processing'], label='processing')
-    pyplot.plot(data['time'], data['to_merge'], label='to merge')
-    pyplot.plot(data['time'], data['abandoned'], label='abandoned')
+    data = numpy.genfromtxt(
+        csv_file_name, delimiter='\t', dtype=None, encoding='utf-8',
+        names=names, skip_header=1)
 
-  pyplot.title('Number of tasks over time')
+    label = os.path.basename(csv_file_name)
+    label = label.replace('memory-', '').replace('.csv.gz', '')
+    pyplot.plot(data['time'], data['memory'], label=label)
+
+  pyplot.title('Memory usage over time')
 
   pyplot.xlabel('Time')
   pyplot.xscale('linear')
 
-  pyplot.ylabel('Number of tasks')
+  pyplot.ylabel('Used memory')
   pyplot.yscale('linear')
 
   pyplot.legend()
