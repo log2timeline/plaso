@@ -81,5 +81,31 @@ class PyparsingConstantsTest(test_lib.ParserTestCase):
           'a9', parseAll=True)
 
 
+class PyparsingSingleLineTextParserTest(unittest.TestCase):
+  """Tests for the single line PyParsing-based text parser."""
+
+  def testIsText(self):
+    """Tests the IsText function."""
+    parser = text_parser.PyparsingSingleLineTextParser()
+
+    bytes_in = b'this is My Weird ASCII and non whatever string.'
+    self.assertTrue(parser.IsText(bytes_in))
+
+    bytes_in = 'Plaso Síar Og Raðar Þessu'
+    self.assertTrue(parser.IsText(bytes_in))
+
+    bytes_in = b'\x01\\62LSO\xFF'
+    self.assertFalse(parser.IsText(bytes_in))
+
+    bytes_in = b'T\x00h\x00i\x00s\x00\x20\x00'
+    self.assertTrue(parser.IsText(bytes_in))
+
+    bytes_in = b'Ascii\x00'
+    self.assertTrue(parser.IsText(bytes_in))
+
+    bytes_in = b'Ascii Open then...\x00\x99\x23'
+    self.assertFalse(parser.IsText(bytes_in))
+
+
 if __name__ == '__main__':
   unittest.main()
