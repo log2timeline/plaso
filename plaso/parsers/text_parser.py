@@ -15,6 +15,7 @@ import pyparsing
 from dfvfs.helpers import text_file
 
 from plaso.lib import errors
+from plaso.lib import py2to3
 from plaso.parsers import interface
 from plaso.parsers import logger
 
