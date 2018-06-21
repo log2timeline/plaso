@@ -74,12 +74,12 @@ class ASLFormatter(interface.ConditionalEventFormatter):
 
     # If no rights are assigned the value is 0xffffffff (-1).
     read_uid = event_values.get('read_uid', None)
-    if read_uid == 0xffffffff:
+    if read_uid == -1:
       event_values['read_uid'] = 'ALL'
 
     # If no rights are assigned the value is 0xffffffff (-1).
     read_gid = event_values.get('read_gid', None)
-    if read_gid == 0xffffffff:
+    if read_gid == -1:
       event_values['read_gid'] = 'ALL'
 
     # TODO: get the real name for the user of the group having the uid or gid.

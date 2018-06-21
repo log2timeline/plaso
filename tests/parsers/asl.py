@@ -39,7 +39,7 @@ class ASLParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.user_sid, '205')
     self.assertEqual(event.group_id, 205)
     self.assertEqual(event.read_uid, 205)
-    self.assertEqual(event.read_gid, 0xffffffff)
+    self.assertEqual(event.read_gid, -1)
     self.assertEqual(event.level, 4)
 
     # Note that "compatiblity" is spelt incorrectly in the actual message being
