@@ -69,7 +69,7 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
   _STRING_OFFSET_MSB = 1 << 63
 
   def _ParseRecord(self, parser_mediator, file_object, record_offset):
-    """Parses a record.
+    """Parses a record and produces events.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -90,11 +90,11 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
     record_strings_data = self._ReadData(
         file_object, record_strings_data_offset, record_strings_data_size)
 
-    data_type_map = self._GetDataTypeMap('asl_record')
+    record_map = self._GetDataTypeMap('asl_record')
 
     try:
       record, record_data_size = self._ReadStructureFromFileObject(
-          file_object, record_offset, data_type_map)
+          file_object, record_offset, record_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile((
           'Unable to parse record at offset: 0x{0:08x} with error: '
@@ -120,7 +120,9 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
     additional_data_size = record.data_size + 6 - record_data_size
 
     if additional_data_size % 8 != 0:
-      raise errors.ParseError('Invalid record additional data size.')
+      raise errors.ParseError(
+          'Invalid record additional data size: {0:d}.'.format(
+              additional_data_size))
 
     additional_data = self._ReadData(
         file_object, file_offset, additional_data_size)
@@ -177,7 +179,7 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
     return record.next_record_offset
 
   def _ParseRecordExtraField(self, byte_stream, file_offset):
-    """Parses a record extra filed.
+    """Parses a record extra field.
 
     Args:
       byte_stream (bytes): byte stream.
@@ -190,11 +192,11 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
     Raises:
       ParseError: if the record extra field cannot be parsed.
     """
-    data_type_map = self._GetDataTypeMap('asl_record_extra_field')
+    extra_field_map = self._GetDataTypeMap('asl_record_extra_field')
 
     try:
       record_extra_field = self._ReadStructureFromByteStream(
-          byte_stream, file_offset, data_type_map)
+          byte_stream, file_offset, extra_field_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
           'Unable to parse record extra field at offset: 0x{0:08x} with error: '
@@ -242,11 +244,11 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
                 exception))
 
     data_offset = string_offset - record_strings_data_offset
-    data_type_map = self._GetDataTypeMap('asl_record_string')
+    record_string_map = self._GetDataTypeMap('asl_record_string')
 
     try:
       record_string = self._ReadStructureFromByteStream(
-          record_strings_data[data_offset:], string_offset, data_type_map)
+          record_strings_data[data_offset:], string_offset, record_string_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
           'Unable to parse record string at offset: 0x{0:08x} with error: '
@@ -276,11 +278,11 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    data_type_map = self._GetDataTypeMap('asl_file_header')
+    file_header_map = self._GetDataTypeMap('asl_file_header')
 
     try:
       file_header, _ = self._ReadStructureFromFileObject(
-          file_object, 0, data_type_map)
+          file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile(
           'Unable to parse file header with error: {0!s}'.format(
