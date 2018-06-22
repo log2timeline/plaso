@@ -70,7 +70,7 @@ class LinearOutputModuleTest(test_lib.OutputModuleTestCase):
         '</Event>\n'
         '</EventFile>\n')
 
-    output = output_writer.ReadOutputString()
+    output = output_writer.ReadOutput()
     self.assertEqual(output, expected_output)
 
   def testOutputList(self):

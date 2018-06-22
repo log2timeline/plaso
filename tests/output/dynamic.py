@@ -58,7 +58,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
         'display_name,tag\n')
 
     output_module.WriteHeader()
-    header = output_writer.ReadOutputString()
+    header = output_writer.ReadOutput()
     self.assertEqual(header, expected_header)
 
     output_mediator = self._CreateOutputMediator()
@@ -70,7 +70,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
 
     expected_header = 'date,time,message,hostname,filename,some_stuff\n'
     output_module.WriteHeader()
-    header = output_writer.ReadOutputString()
+    header = output_writer.ReadOutput()
     self.assertEqual(header, expected_header)
 
     output_mediator = self._CreateOutputMediator()
@@ -83,7 +83,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
 
     expected_header = 'date@time@message@hostname@filename@some_stuff\n'
     output_module.WriteHeader()
-    header = output_writer.ReadOutputString()
+    header = output_writer.ReadOutput()
     self.assertEqual(header, expected_header)
 
   def testWriteEventBody(self):
@@ -106,7 +106,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     expected_header = (
         'date,time,timezone,macb,source,sourcetype,type,user,host,'
         'message_short,message,filename,inode,notes,format,extra\n')
-    header = output_writer.ReadOutputString()
+    header = output_writer.ReadOutput()
     self.assertEqual(header, expected_header)
 
     output_module.WriteEventBody(event_object)
@@ -116,7 +116,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
         'closed for user root),Reporter <CRON> PID: 8442 '
         '(pam_unix(cron:session): session closed for user root),log/syslog.1'
         ',-,-,-,-\n')
-    event_body = output_writer.ReadOutputString()
+    event_body = output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
 
     output_mediator = self._CreateOutputMediator()
@@ -128,7 +128,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
 
     expected_header = 'datetime,nonsense,hostname,message\n'
     output_module.WriteHeader()
-    header = output_writer.ReadOutputString()
+    header = output_writer.ReadOutput()
     self.assertEqual(header, expected_header)
 
     expected_event_body = (
@@ -136,7 +136,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
         ' (pam_unix(cron:session): session closed for user root)\n')
 
     output_module.WriteEventBody(event_object)
-    event_body = output_writer.ReadOutputString()
+    event_body = output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
 
     formatters_manager.FormattersManager.DeregisterFormatter(

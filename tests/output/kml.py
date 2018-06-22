@@ -33,7 +33,7 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
 
     self._output_module.WriteHeader()
 
-    header = self._output_writer.ReadOutputString()
+    header = self._output_writer.ReadOutput()
     self.assertEqual(header, expected_header)
 
   def testWriteFooter(self):
@@ -42,7 +42,7 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
 
     self._output_module.WriteFooter()
 
-    footer = self._output_writer.ReadOutputString()
+    footer = self._output_writer.ReadOutput()
     self.assertEqual(footer, expected_footer)
 
   def testWriteEventBody(self):
@@ -50,14 +50,14 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
 
     # Test event object without geo-location.
     self._output_module.WriteEventBody(self._event_object)
-    event_body = self._output_writer.ReadOutputString()
+    event_body = self._output_writer.ReadOutput()
     self.assertEqual(event_body, '')
 
     # Test event object with geo-location.
     self._event_object.latitude = 37.4222899014
     self._event_object.longitude = -122.082203543
     self._output_module.WriteEventBody(self._event_object)
-    event_body = self._output_writer.ReadOutputString()
+    event_body = self._output_writer.ReadOutput()
 
     if sys.platform.startswith('win'):
       # The dict comparison is very picky on Windows hence we

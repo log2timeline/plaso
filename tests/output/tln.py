@@ -30,7 +30,7 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
     self._output_module.WriteHeader()
 
-    header = self._output_writer.ReadOutputString()
+    header = self._output_writer.ReadOutput()
     self.assertEqual(header, expected_header)
 
   def testWriteEventBody(self):
@@ -45,7 +45,7 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
         'Reporter <CRON> PID:  8442  (pam_unix(cron:session): '
         'session closed for user root)\n')
 
-    event_body = self._output_writer.ReadOutputString()
+    event_body = self._output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
 
     self.assertEqual(event_body.count('|'), 4)
@@ -71,7 +71,7 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
     self._output_module.WriteHeader()
 
-    header = self._output_writer.ReadOutputString()
+    header = self._output_writer.ReadOutput()
     self.assertEqual(header, expected_header)
 
   def testWriteEventBody(self):
@@ -87,7 +87,7 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
         'session closed for user root)'
         '|UTC|File: OS: /var/log/syslog.1 inode: 12345678\n')
 
-    event_body = self._output_writer.ReadOutputString()
+    event_body = self._output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
 
     self.assertEqual(event_body.count('|'), 6)

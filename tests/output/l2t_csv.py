@@ -63,7 +63,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
 
     self._formatter.WriteHeader()
 
-    header = self._output_writer.ReadOutputString()
+    header = self._output_writer.ReadOutput()
     self.assertEqual(header, expected_header)
 
   def testWriteEventBody(self):
@@ -87,7 +87,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         '2,log/syslog.1,-,Malware Printed,'
         '-,my_number: 123; some_additional_foo: True\n')
 
-    event_body = self._output_writer.ReadOutputString()
+    event_body = self._output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
 
     # Ensure that the only commas returned are the 16 delimiters.

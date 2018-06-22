@@ -26,7 +26,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     output_module.WriteEventBody(event_object)
     output_module.WriteFooter()
 
-    output = output_writer.ReadOutputString()
+    output = output_writer.ReadOutput()
     self.assertEqual('', output)
 
 

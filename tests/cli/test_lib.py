@@ -40,25 +40,20 @@ class TestOutputWriter(tools.FileObjectOutputWriter):
     Args:
       encoding (Optional[str]): output encoding.
     """
-    file_object = io.BytesIO()
+    file_object = io.StringIO()
     super(TestOutputWriter, self).__init__(file_object, encoding=encoding)
     self._read_offset = 0
 
-  def ReadOutput(self):
-    """Reads the newly added output data as bytes.
+  def Write(self, string):
+    """Writes a string to the output.
 
-    Returns:
-      bytes: encoded output data.
+    Args:
+      string (str): output.
     """
-    self._file_object.seek(self._read_offset, os.SEEK_SET)
-    output_data = self._file_object.read()
-    self._read_offset = self._file_object.tell()
+    self._file_object.write(string)
 
-    return output_data
-
-  # TODO: refactor this method https://github.com/log2timeline/plaso/issues/1963
-  def ReadOutputString(self):
-    """Reads the newly added output data as a string.
+  def ReadOutput(self):
+    """Reads all output added since the last call to ReadOutput.
 
     Returns:
       str: output data.
@@ -66,7 +61,6 @@ class TestOutputWriter(tools.FileObjectOutputWriter):
     self._file_object.seek(self._read_offset, os.SEEK_SET)
     output_data = self._file_object.read()
     self._read_offset = self._file_object.tell()
-    output_data = codecs.decode(output_data, self._encoding)
 
     return output_data
 

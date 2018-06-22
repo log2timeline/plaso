@@ -61,7 +61,7 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
         'session\n'
         ' closed for user root)\n').format(expected_os_location)
 
-    event_body = self._output_writer.ReadOutputString()
+    event_body = self._output_writer.ReadOutput()
 
     # Compare the output as list of lines which makes it easier to spot
     # differences.
