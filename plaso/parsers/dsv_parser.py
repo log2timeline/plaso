@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 import abc
 import csv
-import sys
 
 from dfvfs.helpers import text_file
 
@@ -105,7 +104,7 @@ class DSVParser(interface.FileObjectParser):
     quotechar = self.QUOTE_CHAR
     magic_test_string = self._MAGIC_TEST_STRING
     # Python 3 csv module requires arguments to constructor to be of type str.
-    if sys.version_info[0] >= 3:
+    if py2to3.PY_3:
       delimiter = delimiter.decode(self._encoding)
       quotechar = quotechar.decode(self._encoding)
       magic_test_string = magic_test_string.decode(self._encoding)
@@ -144,6 +143,8 @@ class DSVParser(interface.FileObjectParser):
           '[{0:s}] Unable to parse DSV file: {1:s} size of file exceeds '
           'maximum supported size').format(self.NAME, display_name))
 
+    # TODO: Replace this with detection of the file encoding via byte-order
+    # marks. #1971.
     if not self._encoding:
       self._encoding = parser_mediator.codepage
 

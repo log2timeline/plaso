@@ -26,7 +26,7 @@ class MactimeEventData(events.EventData):
     filename (str): name of the file.
     inode (int): "inode" of the file. Note that inode is an overloaded term
         in the context of mactime and used for MFT entry index values as well.
-    md5 (str): MD5 hash of the file content.
+    md5 (str): MD5 hash of the file content, formatted as a hexadecimal string.
     mode_as_string (str): protection mode.
     offset (int): number of the corresponding line.
     size (int): size of the file content.
