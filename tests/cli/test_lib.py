@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import argparse
-import codecs
 import io
 import operator
 import os
