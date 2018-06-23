@@ -13,7 +13,7 @@ from tests.parsers import test_lib
 
 
 class TestDSVParser(dsv_parser.DSVParser):
-  """Delimiter seperated values (DSV) parser parser for testing.
+  """Delimiter separated values (DSV) parser parser for testing.
 
   Attribute:
     row_offsets[list[int]: offsets of the rows extracted by the DSV parser.
@@ -56,7 +56,7 @@ class TestDSVParser(dsv_parser.DSVParser):
 
 
 class DSVParserTest(test_lib.ParserTestCase):
-  """Tests the delimiter seperated values (DSV) parser."""
+  """Tests the delimiter separated values (DSV) parser."""
 
   # pylint: disable=protected-access
 

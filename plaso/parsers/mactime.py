@@ -26,7 +26,7 @@ class MactimeEventData(events.EventData):
     filename (str): name of the file.
     inode (int): "inode" of the file. Note that inode is an overloaded term
         in the context of mactime and used for MFT entry index values as well.
-    md5_hash (str): MD5 hash of the file content.
+    md5 (str): MD5 hash of the file content, formatted as a hexadecimal string.
     mode_as_string (str): protection mode.
     offset (int): number of the corresponding line.
     size (int): size of the file content.
@@ -154,7 +154,7 @@ class MactimeParser(dsv_parser.DSVParser):
     # MD5|name|inode|mode_as_string|UID|GID|size|atime|mtime|ctime|crtime
     # 0|/lost+found|11|d/drwx------|0|0|12288|1337961350|1337961350|1337961350|0
 
-    if row['md5'] != b'0' and not self._MD5_RE.match(row['md5']):
+    if row['md5'] != '0' and not self._MD5_RE.match(row['md5']):
       return False
 
     # Check if the following columns contain a base 10 integer value if set.
