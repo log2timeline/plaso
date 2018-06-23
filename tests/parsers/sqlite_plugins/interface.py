@@ -4,12 +4,12 @@
 
 from __future__ import unicode_literals
 
-import sys
 import unittest
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import interface
 
@@ -78,7 +78,7 @@ class TestSQLitePlugin(interface.SQLitePlugin):
 
     # If Python 2 is used field3 needs to be converted to a string
     # because it is a read-write buffer.
-    if sys.version_info[0] < 3:
+    if py2to3.PY_2 and field3:
       field3 = str(field3)
 
     self.results.append((field1, field2, field3))
@@ -109,17 +109,17 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
         ['wal_database.db'], plugin, wal_path=wal_file)
 
     expected_results = [
-        ('Committed Text 1', 1, b'None'),
-        ('Committed Text 2', 2, b'None'),
-        ('Modified Committed Text 3', 4, b'None'),
-        ('Committed Text 4', 5, b'None'),
-        ('Committed Text 5', 7, b'None'),
-        ('Committed Text 6', 8, b'None'),
-        ('Committed Text 7', 9, b'None'),
+        ('Committed Text 1', 1, None),
+        ('Committed Text 2', 2, None),
+        ('Modified Committed Text 3', 4, None),
+        ('Committed Text 4', 5, None),
+        ('Committed Text 5', 7, None),
+        ('Committed Text 6', 8, None),
+        ('Committed Text 7', 9, None),
         ('Unhashable Row 1', 10, b'Binary Text!\x01\x02\x03'),
         ('Unhashable Row 2', 11, b'More Binary Text!\x01\x02\x03'),
-        ('New Text 1', 12, b'None'),
-        ('New Text 2', 13, b'None')]
+        ('New Text 1', 12, None),
+        ('New Text 2', 13, None)]
 
     self.assertEqual(plugin.results, expected_results)
 
@@ -130,15 +130,15 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
     self._ParseDatabaseFileWithPlugin(['wal_database.db'], plugin)
 
     expected_results = [
-        ('Committed Text 1', 1, b'None'),
-        ('Committed Text 2', 2, b'None'),
-        ('Deleted Text 1', 3, b'None'),
-        ('Committed Text 3', 4, b'None'),
-        ('Committed Text 4', 5, b'None'),
-        ('Deleted Text 2', 6, b'None'),
-        ('Committed Text 5', 7, b'None'),
-        ('Committed Text 6', 8, b'None'),
-        ('Committed Text 7', 9, b'None'),
+        ('Committed Text 1', 1, None),
+        ('Committed Text 2', 2, None),
+        ('Deleted Text 1', 3, None),
+        ('Committed Text 3', 4, None),
+        ('Committed Text 4', 5, None),
+        ('Deleted Text 2', 6, None),
+        ('Committed Text 5', 7, None),
+        ('Committed Text 6', 8, None),
+        ('Committed Text 7', 9, None),
         ('Unhashable Row 1', 10, b'Binary Text!\x01\x02\x03')]
 
     self.assertEqual(plugin.results, expected_results)

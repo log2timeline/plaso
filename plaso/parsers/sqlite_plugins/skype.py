@@ -55,7 +55,7 @@ class SkypeAccountEventData(events.EventData):
 
 
 class SkypeSMSEventData(events.EventData):
-  """SKype SMS event data.
+  """Skype SMS event data.
 
   Attributes:
     number (str): phone number where the SMS was sent.
@@ -103,7 +103,7 @@ class SkypeTransferFileEventData(events.EventData):
     destination (str): account that received the file.
     source (str): account that sent the file.
     transferred_filename (str): name of the file transferred.
-    transferred_file_path (str): path of the file transferred.
+    transferred_filepath (str): path of the file transferred.
     transferred_filesize (int): size of the file transferred.
   """
 
@@ -446,7 +446,7 @@ class SkypePlugin(interface.SQLitePlugin):
 
     display_name = self._GetRowValue(query_hash, row, 'given_displayname')
     fullname = self._GetRowValue(query_hash, row, 'fullname')
-    username = '{0:s} <{1:s}>'.format(fullname, display_name)
+    username = '{0!s} <{1!s}>'.format(fullname, display_name)
 
     event_data = SkypeAccountEventData()
     event_data.country = self._GetRowValue(query_hash, row, 'country')

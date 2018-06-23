@@ -3,12 +3,7 @@
 
 from __future__ import unicode_literals
 
-import sys
-
-if sys.version_info[0] < 3:
-  import urllib as urlparse
-else:
-  from urllib import parse as urlparse  # pylint: disable=no-name-in-module
+import codecs
 
 # pylint: disable=wrong-import-position
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -17,9 +12,14 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import py2to3
 from plaso.parsers.cookie_plugins import interface
 from plaso.parsers.cookie_plugins import manager
 
+if py2to3.PY_2:
+  import urllib as urlparse
+else:
+  from urllib import parse as urlparse  # pylint: disable=no-name-in-module
 
 # TODO: determine if __utmc always 0?
 
@@ -89,7 +89,7 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
-      cookie_data (bytes): cookie data.
+      cookie_data (str): cookie data.
       url (str): URL or path where the cookie got set.
     """
     fields = cookie_data.split('.')
@@ -355,7 +355,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
-      cookie_data (bytes): cookie data.
+      cookie_data (str): cookie data.
       url (str): URL or path where the cookie got set.
     """
     fields = cookie_data.split('.')
@@ -410,29 +410,27 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
       for variable in extra_variables:
         key, _, value = variable.partition('=')
 
-        # Cookies can have a variety of different encodings, usually ASCII or
-        # UTF-8, and values may additionally be URL encoded. urllib only
-        # correctly url-decodes ASCII strings, so we'll convert our string
-        # to ASCII first.
-        try:
-          ascii_value = value.encode('ascii')
-        except UnicodeEncodeError:
-          ascii_value = value.encode('ascii', errors='replace')
-          parser_mediator.ProduceExtractionError(
-              'Cookie contains non 7-bit ASCII characters, which have been '
-              'replaced with a "?".')
+        if isinstance(value, py2to3.UNICODE_TYPE) and py2to3.PY_2:
+          try:
+            value = codecs.decode(value, 'ascii')
+          except UnicodeEncodeError:
+            value = codecs.decode(value, 'ascii', errors='replace')
+            parser_mediator.ProduceExtractionError(
+                'Cookie contains non 7-bit ASCII characters, which have been '
+                'replaced with a "?".')
 
-        utf_stream = urlparse.unquote(ascii_value)
+        value = urlparse.unquote(value)
 
-        try:
-          value_line = utf_stream.decode('utf-8')
-        except UnicodeDecodeError:
-          value_line = utf_stream.decode('utf-8', errors='replace')
-          parser_mediator.ProduceExtractionError(
-              'Cookie value did not decode to Unicode string. Non UTF-8 '
-              'characters have been replaced.')
+        if py2to3.PY_2:
+          try:
+            value = codecs.encode(value, 'utf-8')
+          except UnicodeDecodeError:
+            value = codecs.encode(value, 'utf-8', errors='replace')
+            parser_mediator.ProduceExtractionError(
+                'Cookie value did not decode to Unicode string. Non UTF-8 '
+                'characters have been replaced.')
 
-        extra_attributes[key] = value_line
+        extra_attributes[key] = value
 
     if last_visit_posix_time is not None:
       date_time = dfdatetime_posix_time.PosixTime(
