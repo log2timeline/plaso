@@ -290,6 +290,12 @@ class BaseEngine(object):
           name or artifact names listed directly, comma separated.
        filter_file_path (str): Path of filter file.
        knowledge_base (KnowledgeBase): Knowledge base.
+
+    Returns:
+      list[dfvfs.FindSpec]: find specifications for the file source type.
+
+    Raises:
+      RuntimeError: if no valid FindSpecs are built.
     """
 
     environment_variables = knowledge_base.GetEnvironmentVariables()
@@ -307,8 +313,8 @@ class BaseEngine(object):
       find_specs = filter_file_object.BuildFindSpecs(
           environment_variables=environment_variables)
 
-    # if not find_specs:
-    #   raise RuntimeError('Error processing filters, no valid specifications'
-    #                      'built.')
+    if find_specs is None:
+      raise RuntimeError('Error processing filters, no valid specifications'
+                         'built.')
 
     return find_specs

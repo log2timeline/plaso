@@ -97,8 +97,6 @@ optional arguments:
       artifact_filters.ArtifactFiltersArgumentsHelper.ParseOptions(
           options, None)
 
-    # TODO: improve test coverage.
-
 
 if __name__ == '__main__':
   unittest.main()
