@@ -40,13 +40,13 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.event_type, 'audit crash recovery (45029)')
 
     expected_extra_tokens = {
-        'BSM_TOKEN_PATH': {
+        'AUT_PATH': {
             'path': '/var/audit/20131104171720.crash_recovery'},
-        'BSM_TOKEN_RETURN32': {
+        'AUT_RETURN32': {
             'call_status': 0,
             'error': 'Success',
             'token_status': 0},
-        'BSM_TOKEN_TEXT': {
+        'AUT_TEXT': {
             'text': 'launchctl::Audit recovery'}}
 
     self.assertEqual(event.extra_tokens, expected_extra_tokens)
@@ -65,12 +65,12 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.event_type, 'user authentication (45023)')
 
     expected_extra_tokens = {
-        'BSM_TOKEN_RETURN32': {
+        'AUT_RETURN32': {
             'call_status': 5000,
             'error': 'UNKNOWN',
             'token_status': 255},
 
-        'BSM_TOKEN_SUBJECT32': {
+        'AUT_SUBJECT32': {
             'aid': -1,
             'egid': 92,
             'euid': 92,
@@ -81,7 +81,7 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
             'terminal_port': 143,
             'uid': 92},
 
-        'BSM_TOKEN_TEXT': {
+        'AUT_TEXT': {
             'text': ('Verify password for record type Users \'moxilo\' node '
                      '\'/Local/Default\'')}}
 
@@ -100,11 +100,11 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.event_type, 'SecSrvr AuthEngine (45025)')
     expected_extra_tokens = {
-        'BSM_TOKEN_RETURN32': {
+        'AUT_RETURN32': {
             'call_status': 0,
             'error': 'Success',
             'token_status': 0},
-        'BSM_TOKEN_SUBJECT32': {
+        'AUT_SUBJECT32': {
             'aid': -1,
             'egid': 0,
             'euid': 0,
@@ -114,7 +114,7 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
             'terminal_ip': '0.0.0.0',
             'terminal_port': 67,
             'uid': 0},
-        'BSM_TOKEN_TEXT': {
+        'AUT_TEXT': {
             'text': 'system.login.done'}}
     self.assertEqual(event.extra_tokens, expected_extra_tokens)
 
@@ -132,19 +132,19 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.event_type, 'session end (44903)')
 
     expected_extra_tokens = {
-        'BSM_TOKEN_ARG32': {
+        'AUT_ARG32': {
             'is': 12288,
             'num_arg': 3,
             'string': 'am_failure'},
-        'BSM_TOKEN_ARG64': {
+        'AUT_ARG64': {
             'is': 0,
             'num_arg': 1,
             'string': 'sflags'},
-        'BSM_TOKEN_RETURN32': {
+        'AUT_RETURN32': {
             'call_status': 0,
             'error': 'Success',
             'token_status': 0},
-        'BSM_TOKEN_SUBJECT32': {
+        'AUT_SUBJECT32': {
             'aid': -1,
             'egid': 0,
             'euid': 0,
@@ -181,30 +181,30 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
     events = list(storage_writer.GetEvents())
 
     expected_extra_tokens = [
-        {'BSM_TOKEN_ARG32': {
+        {'AUT_ARG32': {
             'is': 2882400000,
             'num_arg': 3,
             'string': 'test_arg32_token'}},
-        {'BSM_TOKEN_DATA':{
+        {'AUT_DATA':{
             'data': 'SomeData',
             'format': 'String'}},
-        {'BSM_TOKEN_FILE': {
+        {'AUT_OTHER_FILE32': {
             'string': 'test',
             'timestamp': '1970-01-01 20:42:45.000424'}},
-        {'BSM_TOKEN_IN_ADDR': {
+        {'AUT_IN_ADDR': {
             'ip': '192.168.100.15'}},
-        {'BSM_TOKEN_IP': {
+        {'AUT_IP': {
             'IPv4_Header': '400000145478000040010000c0a8649bc0a86e30'}},
-        {'BSM_TOKEN_IPC': {
+        {'AUT_IPC': {
             'object_id': 305419896,
             'object_type': 1}},
-        {'BSM_TOKEN_IPORT': {
+        {'AUT_IPORT': {
             'port_number': 20480}},
-        {'BSM_TOKEN_OPAQUE': {
+        {'AUT_OPAQUE': {
             'data': 'aabbccdd'}},
-        {'BSM_TOKEN_PATH': {
+        {'AUT_PATH': {
             'path': '/test/this/is/a/test'}},
-        {'BSM_TOKEN_PROCESS32': {
+        {'AUT_PROCESS32': {
             'aid': 305419896,
             'egid': 591751049,
             'euid': 19088743,
@@ -214,7 +214,7 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
             'terminal_ip': '127.0.0.1',
             'terminal_port': 374945606,
             'uid': -1737075662}},
-        {'BSM_TOKEN_PROCESS64': {
+        {'AUT_PROCESS64': {
             'aid': 305419896,
             'egid': 591751049,
             'euid': 19088743,
@@ -224,18 +224,18 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
             'terminal_ip': '127.0.0.1',
             'terminal_port': 374945606,
             'uid': -1737075662}},
-        {'BSM_TOKEN_RETURN32': {
+        {'AUT_RETURN32': {
             'call_status': 305419896,
             'error': 'Invalid argument',
             'token_status': 22}},
-        {'BSM_TOKEN_SEQ': {
+        {'AUT_SEQ': {
             'sequence_number': 305419896}},
-        {'BSM_TOKEN_SOCKET_EX':{
+        {'AUT_SOCKET_EX':{
             'from': '127.0.0.1',
             'from_port': 0,
             'to': '127.0.0.1',
             'to_port': 0}},
-        {'BSM_TOKEN_SUBJECT32': {
+        {'AUT_SUBJECT32': {
             'aid': 305419896,
             'egid': 591751049,
             'euid': 19088743,
@@ -245,7 +245,7 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
             'terminal_ip': '127.0.0.1',
             'terminal_port': 374945606,
             'uid': -1737075662}},
-        {'BSM_TOKEN_SUBJECT32_EX': {
+        {'AUT_SUBJECT32_EX': {
             'aid': 305419896,
             'egid': 591751049,
             'euid': 19088743,
@@ -255,9 +255,9 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
             'terminal_ip': 'fe80:0000:0000:0000:0000:0000:0000:0001',
             'terminal_port': 374945606,
             'uid': -1737075662}},
-        {'BSM_TOKEN_TEXT': 'This is a test.'},
-        {'BSM_TOKEN_ZONENAME': 'testzone'},
-        {'BSM_TOKEN_RETURN32': {
+        {'AUT_TEXT': 'This is a test.'},
+        {'AUT_ZONENAME': 'testzone'},
+        {'AUT_RETURN32': {
             'call_status': -1,
             'error':
             'Argument list too long',
