@@ -144,10 +144,12 @@ class DSVParser(interface.FileObjectParser):
           'maximum supported size').format(self.NAME, display_name))
 
     # TODO: Replace this with detection of the file encoding via byte-order
-    # marks. #1971.
+    # marks. Also see: https://github.com/log2timeline/plaso/issues/1971
     if not self._encoding:
       self._encoding = parser_mediator.codepage
 
+    # The Python 2 csv module reads bytes and the Python 3 csv module Unicode
+    # reads strings.
     if py2to3.PY_3:
       line_reader = text_file.TextFile(file_object, encoding=self._encoding)
     else:
