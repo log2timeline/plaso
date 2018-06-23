@@ -237,7 +237,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
   _ENCODING = None
 
-  _EMPTY_LINES = frozenset([b'\n', b'\r', b'\r\n'])
+  _EMPTY_LINES = frozenset(['\n', '\r', '\r\n'])
 
   # Allow for a maximum of 40 empty lines before we bail out.
   _MAXIMUM_DEPTH = 40
