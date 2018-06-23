@@ -211,6 +211,15 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
     elif token_type == 0x2f:
       return {'sequence_number': token_data.sequence_number}
 
+    # elif token_type in (0x31, 0x3e, 0x73):
+    #   return {
+    #       'mode': token_data.file_mode,
+    #       'uid': token_data.user_identifier,
+    #       'gid': token_data.group_identifier,
+    #       'system_id': token_data.file_system_id,
+    #       'node_id': token_data.file_system_node_id,
+    #       'device': token_data.device}
+
     # elif token_type in (0x3c, 0x3d):
     #   arguments = []
     #   for _ in range(0, token):
@@ -261,16 +270,7 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
     #       'net_type': token.net_type,
     #       'address': ip_address}
 
-    # elif token_type in self._BSM_ATTR_TOKEN_TYPES:
-    #   return {bsm_type: {
-    #       'mode': token.file_mode,
-    #       'uid': token.uid,
-    #       'gid': token.gid,
-    #       'system_id': token.file_system_id,
-    #       'node_id': token.file_system_node_id,
-    #       'device': token.device}}
-
-    # elif bsm_type == 'BSM_TOKEN_GROUPS':
+    # elif token_type in (0x34, 0x3b):
     #   arguments = []
     #   for _ in range(token):
     #     arguments.append(
