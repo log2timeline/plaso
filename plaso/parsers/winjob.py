@@ -3,19 +3,15 @@
 
 from __future__ import unicode_literals
 
-import os
-
 from dfdatetime import definitions as dfdatetime_definitions
 from dfdatetime import systemtime as dfdatetime_systemtime
 from dfdatetime import time_elements as dfdatetime_time_elements
-
-from dtfabric.runtime import fabric as dtfabric_fabric
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.parsers import data_formats
+from plaso.parsers import dtfabric_parser
 from plaso.parsers import manager
 
 
@@ -44,28 +40,13 @@ class WinJobEventData(events.EventData):
     self.working_directory = None
 
 
-class WinJobParser(data_formats.DataFormatParser):
+class WinJobParser(dtfabric_parser.DtFabricBaseParser):
   """Parse Windows Scheduled Task files for job events."""
 
   NAME = 'winjob'
   DESCRIPTION = 'Parser for Windows Scheduled Task job (or At-job) files.'
 
-  _DATA_TYPE_FABRIC_DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'winjob.yaml')
-
-  with open(_DATA_TYPE_FABRIC_DEFINITION_FILE, 'rb') as file_object:
-    _DATA_TYPE_FABRIC_DEFINITION = file_object.read()
-
-  _DATA_TYPE_FABRIC = dtfabric_fabric.DataTypeFabric(
-      yaml_definition=_DATA_TYPE_FABRIC_DEFINITION)
-
-  _FIXED_LENGTH_DATA_SECTION = _DATA_TYPE_FABRIC.CreateDataTypeMap(
-      'job_fixed_length_data_section')
-
-  _FIXED_LENGTH_DATA_SECTION_SIZE = _FIXED_LENGTH_DATA_SECTION.GetByteSize()
-
-  _VARIABLE_LENGTH_DATA_SECTION = _DATA_TYPE_FABRIC.CreateDataTypeMap(
-      'job_variable_length_data_section')
+  _DEFINITION_FILE = 'winjob.yaml'
 
   _EMPTY_SYSTEM_TIME_TUPLE = (0, 0, 0, 0, 0, 0, 0, 0)
 
@@ -92,13 +73,13 @@ class WinJobParser(data_formats.DataFormatParser):
     """
     event_data = WinJobEventData()
     event_data.application = (
-        variable_length_section.application_name.string.rstrip('\x00'))
-    event_data.comment = variable_length_section.comment.string.rstrip('\x00')
+        variable_length_section.application_name.rstrip('\x00'))
+    event_data.comment = variable_length_section.comment.rstrip('\x00')
     event_data.parameters = (
-        variable_length_section.parameters.string.rstrip('\x00'))
-    event_data.username = variable_length_section.author.string.rstrip('\x00')
+        variable_length_section.parameters.rstrip('\x00'))
+    event_data.username = variable_length_section.author.rstrip('\x00')
     event_data.working_directory = (
-        variable_length_section.working_directory.string.rstrip('\x00'))
+        variable_length_section.working_directory.rstrip('\x00'))
 
     return event_data
 
@@ -205,12 +186,12 @@ class WinJobParser(data_formats.DataFormatParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_offset = 0
+    fixed_section_data_map = self._GetDataTypeMap(
+        'job_fixed_length_data_section')
 
     try:
-      fixed_length_section = self._ReadStructure(
-          file_object, file_offset, self._FIXED_LENGTH_DATA_SECTION_SIZE,
-          self._FIXED_LENGTH_DATA_SECTION, 'fixed-length data section')
+      fixed_length_section, file_offset = self._ReadStructureFromFileObject(
+          file_object, 0, fixed_section_data_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile(
           'Unable to parse fixed-length data section with error: {0!s}'.format(
@@ -226,17 +207,18 @@ class WinJobParser(data_formats.DataFormatParser):
           'Unsupported format version in: {0:d}'.format(
               fixed_length_section.format_version))
 
-    file_offset += self._FIXED_LENGTH_DATA_SECTION_SIZE
-    data_size = file_object.get_size() - file_offset
+    variable_section_data_map = self._GetDataTypeMap(
+        'job_variable_length_data_section')
 
     try:
-      variable_length_section = self._ReadStructure(
-          file_object, file_offset, data_size,
-          self._VARIABLE_LENGTH_DATA_SECTION, 'variable-length data section')
+      variable_length_section, data_size = self._ReadStructureFromFileObject(
+          file_object, file_offset, variable_section_data_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile((
           'Unable to parse variable-length data section with error: '
           '{0!s}').format(exception))
+
+    file_offset += data_size
 
     event_data = self._ParseEventData(variable_length_section)
 
@@ -246,7 +228,19 @@ class WinJobParser(data_formats.DataFormatParser):
           date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    for trigger in variable_length_section.triggers.triggers_array:
+    trigger_data_map = self._GetDataTypeMap('job_trigger')
+
+    for trigger_index in range(0, variable_length_section.number_of_triggers):
+      try:
+        trigger, data_size = self._ReadStructureFromFileObject(
+            file_object, file_offset, trigger_data_map)
+      except (ValueError, errors.ParseError) as exception:
+        raise errors.UnableToParseFile((
+            'Unable to parse trigger: {0:d} with error: {2!s}').format(
+                trigger_index, exception))
+
+      file_offset += data_size
+
       event_data.trigger_type = trigger.trigger_type
 
       date_time = self._ParseTriggerStartTime(parser_mediator, trigger)

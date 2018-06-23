@@ -88,46 +88,6 @@ members:
 - name: last_run_time
   data_type: system_time
 ---
-name: job_string
-type: structure
-urls: ["https://msdn.microsoft.com/en-us/library/cc248301.aspx"]
-attributes:
-  byte_order: little-endian
-members:
-- name: number_of_characters
-  data_type: uint16
-- name: string
-  type: string
-  encoding: utf-16-le
-  element_data_type: wchar16
-  number_of_elements: job_string.number_of_characters
----
-name: job_user_data
-type: structure
-urls: ["https://msdn.microsoft.com/en-us/library/cc248306.aspx"]
-attributes:
-  byte_order: little-endian
-members:
-- name: size
-  data_type: uint16
-- name: stream
-  type: stream
-  element_data_type: byte
-  elements_data_size: job_user_data.size
----
-name: job_reserved_data
-type: structure
-urls: ["https://msdn.microsoft.com/en-us/library/cc248307.aspx"]
-attributes:
-  byte_order: little-endian
-members:
-- name: size
-  data_type: uint16
-- name: stream
-  type: stream
-  element_data_type: byte
-  elements_data_size: job_reserved_data.size
----
 name: job_trigger_date
 type: structure
 members:
@@ -182,18 +142,6 @@ members:
 - name: trigger_reserved3
   data_type: uint16
 ---
-name: job_triggers
-type: structure
-attributes:
-  byte_order: little-endian
-members:
-- name: number_of_triggers
-  data_type: uint16
-- name: triggers_array
-  type: sequence
-  element_data_type: job_trigger
-  number_of_elements: job_triggers.number_of_triggers
----
 name: job_variable_length_data_section
 type: structure
 urls: ["https://msdn.microsoft.com/en-us/library/cc248287.aspx"]
@@ -202,19 +150,52 @@ attributes:
 members:
 - name: running_instance_count
   data_type: uint16
+- name: application_name_size
+  data_type: uint16
 - name: application_name
-  data_type: job_string
+  type: string
+  encoding: utf-16-le
+  element_data_type: wchar16
+  number_of_elements: job_variable_length_data_section.application_name_size
+- name: parameters_size
+  data_type: uint16
 - name: parameters
-  data_type: job_string
+  type: string
+  encoding: utf-16-le
+  element_data_type: wchar16
+  number_of_elements: job_variable_length_data_section.parameters_size
+- name: working_directory_size
+  data_type: uint16
 - name: working_directory
-  data_type: job_string
+  type: string
+  encoding: utf-16-le
+  element_data_type: wchar16
+  number_of_elements: job_variable_length_data_section.working_directory_size
+- name: author_size
+  data_type: uint16
 - name: author
-  data_type: job_string
+  type: string
+  encoding: utf-16-le
+  element_data_type: wchar16
+  number_of_elements: job_variable_length_data_section.author_size
+- name: comment_size
+  data_type: uint16
 - name: comment
-  data_type: job_string
+  type: string
+  encoding: utf-16-le
+  element_data_type: wchar16
+  number_of_elements: job_variable_length_data_section.comment_size
+- name: user_data_size
+  data_type: uint16
 - name: user_data
-  data_type: job_user_data
+  type: stream
+  element_data_type: byte
+  elements_data_size: job_variable_length_data_section.user_data_size
+- name: reserved_data_size
+  data_type: uint16
 - name: reserved_data
-  data_type: job_reserved_data
-- name: triggers
-  data_type: job_triggers
+  type: stream
+  element_data_type: byte
+  elements_data_size: job_variable_length_data_section.reserved_data_size
+- name: number_of_triggers
+  data_type: uint16
