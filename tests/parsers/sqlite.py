@@ -57,7 +57,7 @@ class SQLiteParserTest(test_lib.ParserTestCase):
       # Also, Field3 needs to be converted to a string if Python 2 is used
       # because it is a read-write buffer.
       field3 = row['Field3']
-      if py2to3.PY_2 and field3:
+      if py2to3.PY_2 and field3 is not None:
         field3 = str(field3)
       row_results.append((
           row['Field1'], row['Field2'], field3))

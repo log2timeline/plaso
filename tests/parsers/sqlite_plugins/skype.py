@@ -38,7 +38,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['skype_main.db'], plugin)
 
-    # self.assertEqual(storage_writer.number_of_events, 24)
+    self.assertEqual(storage_writer.number_of_events, 24)
 
     events = list(storage_writer.GetEvents())
 
