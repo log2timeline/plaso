@@ -261,8 +261,6 @@ class WinRegistryParser(interface.FileObjectParser):
         win_registry.MapFile(key_path_prefix, registry_file)
         self._ParseKeysFromFindSpecs(
             parser_mediator, win_registry, registry_find_specs)
-        # TODO: Confirm why this is necessary.
-        win_registry._registry_files.clear()
       except IOError as exception:
         parser_mediator.ProduceExtractionError('{0:s}'.format(exception))
     else:

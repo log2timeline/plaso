@@ -288,7 +288,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
   # TODO: merge with collector and/or engine.
   def _ExtractWithFilter(
       self, source_path_specs, destination_path, output_writer,
-      artifacts_registry, artifact_filters_path, filter_file_path,
+      artifacts_registry, artifact_filters, filter_file,
       skip_duplicates=True):
     """Extracts files using a filter expression.
 
@@ -301,10 +301,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       output_writer (CLIOutputWriter): output writer.
       artifacts_registry (artifacts.ArtifactDefinitionsRegistry]): artifact
           definitions registry.
-      artifact_filters_path (str): path of the file that contains the
-          names of the artifacts filter definitions or definitions directly
-          listed comma separated.
-      filter_file_path (str): path of the file that contains the filter.
+      artifact_filters (list[str]): Names of artifact definitions that are
+          used for filtering file system and Windows Registry key paths.
+      filter_file (str): path of the file that contains the filter file path
+          filters.
       skip_duplicates (Optional[bool]): True if files with duplicate content
           should be skipped.
     """
@@ -321,7 +321,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           'Extracting file entries from: {0:s}\n'.format(display_name))
 
       find_specs = engine.BaseEngine.BuildFilterFindSpecs(artifacts_registry,
-        artifact_filters_path, filter_file_path, self._knowledge_base)
+          self._knowledge_base, artifact_filters, filter_file)
 
       searcher = file_system_searcher.FileSystemSearcher(
           file_system, mount_point)

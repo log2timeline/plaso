@@ -166,16 +166,16 @@ class BaseEngine(object):
 
   @classmethod
   def CreateSession(
-      cls, artifact_filters=None, command_line_arguments=None,
-      debug_mode=False, filter_file=None, preferred_encoding='utf-8',
+      cls, artifact_filters_names=None, command_line_arguments=None,
+      debug_mode=False, filter_file_path=None, preferred_encoding='utf-8',
       preferred_time_zone=None, preferred_year=None):
     """Creates a session attribute container.
 
     Args:
-      artifact_filters (Optional[str]): Artifact filters definitions.
+      artifact_filters_names (Optional[str]): Artifact filters definitions.
       command_line_arguments (Optional[str]): the command line arguments.
       debug_mode (bool): True if debug mode was enabled.
-      filter_file (Optional[str]): path to a file with find specifications.
+      filter_file_path (Optional[str]): path to a file with find specifications.
       preferred_encoding (Optional[str]): preferred encoding.
       preferred_time_zone (Optional[str]): preferred time zone.
       preferred_year (Optional[int]): preferred year.
@@ -185,10 +185,10 @@ class BaseEngine(object):
     """
     session = sessions.Session()
 
-    session.artifact_filters = artifact_filters
+    session.artifact_filters = artifact_filters_names
     session.command_line_arguments = command_line_arguments
     session.debug_mode = debug_mode
-    session.filter_file = filter_file
+    session.filter_file = filter_file_path
     session.preferred_encoding = preferred_encoding
     session.preferred_time_zone = preferred_time_zone
     session.preferred_year = preferred_year
@@ -281,15 +281,14 @@ class BaseEngine(object):
 
   @classmethod
   def BuildFilterFindSpecs(
-      self, artifacts_registry, artifact_filter_names, filter_file_path,
-      knowledge_base):
-    """Get Find Specs from artifacts or filter file if available.
+      cls, artifacts_registry, knowledge_base_object,
+      artifact_filter_names=None, filter_file_path=None):
+    """Build Find Specs from artifacts or filter file if available.
 
     Args:
-       artifact_filters (str): Path to file listing artifact filters by
-          name or artifact names listed directly, comma separated.
-       filter_file_path (str): Path of filter file.
-       knowledge_base (KnowledgeBase): Knowledge base.
+       knowledge_base_object (KnowledgeBase): Knowledge base.
+       artifact_filter_names (Optional list[str]): Artifact filter names.
+       filter_file_path (Optional [str]): Path of filter file.
 
     Returns:
       list[dfvfs.FindSpec]: find specifications for the file source type.
@@ -298,14 +297,14 @@ class BaseEngine(object):
       RuntimeError: if no valid FindSpecs are built.
     """
 
-    environment_variables = knowledge_base.GetEnvironmentVariables()
+    environment_variables = knowledge_base_object.GetEnvironmentVariables()
     find_specs = None
     if artifact_filter_names:
       artifact_filters_object = (
         artifact_filters.ArtifactDefinitionsFilterHelper(
-            artifacts_registry, artifact_filter_names, knowledge_base))
+            artifacts_registry, artifact_filter_names, knowledge_base_object))
       artifact_filters_object.BuildFindSpecs(environment_variables)
-      find_specs = knowledge_base.GetValue(
+      find_specs = knowledge_base_object.GetValue(
           artifact_filters_object.KNOWLEDGE_BASE_VALUE)[
               artifact_types.TYPE_INDICATOR_FILE]
     elif filter_file_path:
@@ -313,7 +312,7 @@ class BaseEngine(object):
       find_specs = filter_file_object.BuildFindSpecs(
           environment_variables=environment_variables)
 
-    if find_specs is None:
+    if (artifact_filter_names or filter_file_path) and not find_specs:
       raise RuntimeError('Error processing filters, no valid specifications'
                          'built.')
 

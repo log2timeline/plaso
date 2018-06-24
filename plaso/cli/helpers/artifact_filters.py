@@ -87,7 +87,8 @@ class ArtifactFiltersArgumentsHelper(interface.ArgumentsHelper):
 
     if artifact_filters_file and os.path.isfile(artifact_filters_file):
       with open(artifact_filters_file) as file_object:
-        artifact_filters = file_object.read().splitlines()
+        file_content = file_object.read()
+        artifact_filters = file_content.splitlines()
     elif artifact_filters:
       artifact_filters = [name.strip() for name in artifact_filters.split(',')]
 

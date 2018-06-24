@@ -420,8 +420,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
     filter_find_specs = engine.BaseEngine.BuildFilterFindSpecs(
-      configuration.artifacts_registry, configuration.artifact_filters,
-      configuration.filter_file, extraction_engine.knowledge_base)
+        configuration.artifacts_registry, extraction_engine.knowledge_base,
+        configuration.artifact_filters, configuration.filter_file)
 
     processing_status = None
     if single_process_mode:

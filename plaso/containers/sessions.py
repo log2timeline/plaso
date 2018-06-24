@@ -19,8 +19,8 @@ class Session(interface.AttributeContainer):
     aborted (bool): True if the session was aborted.
     analysis_reports_counter (collections.Counter): number of analysis reports
         per analysis plugin.
-    artifact_filters (str): Names of artifact definitions
-        that are used for filtering file system and Windows Registry key paths.
+    artifact_filters (list[str]): Names of artifact definitions that are
+        used for filtering file system and Windows Registry key paths.
     command_line_arguments (str): command line arguments.
     completion_time (int): time that the session was completed. Contains the
         number of micro seconds since January 1, 1970, 00:00:00 UTC.
@@ -189,7 +189,8 @@ class SessionStart(interface.AttributeContainer):
   """Session start attribute container.
 
   Attributes:
-    artifact_filters (str):  names of artifact definitions.
+    artifact_filters (list[str]): Names of artifact definitions that are
+        used for filtering file system and Windows Registry key paths.
     command_line_arguments (str): command line arguments.
     debug_mode (bool): True if debug mode was enabled.
     enabled_parser_names (list[str]): parser and parser plugin names that

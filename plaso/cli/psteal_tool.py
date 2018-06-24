@@ -19,7 +19,6 @@ from plaso.cli import extraction_tool
 from plaso.cli import logger
 from plaso.cli import status_view
 from plaso.cli import tool_options
-from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import engine
@@ -321,8 +320,8 @@ class PstealTool(
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
     filter_find_specs = engine.BaseEngine.BuildFilterFindSpecs(
-      configuration.artifacts_registry, configuration.artifact_filters,
-      configuration.filter_file, extraction_engine.knowledge_base)
+        configuration.artifacts_registry, extraction_engine.knowledge_base,
+        configuration.artifact_filters, configuration.filter_file)
 
     processing_status = None
     if single_process_mode:

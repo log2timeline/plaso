@@ -29,19 +29,20 @@ class ArtifactDefinitionsFilterHelper(object):
       'HKEY_LOCAL_MACHINE\\SAM',
       'HKEY_LOCAL_MACHINE\\SECURITY'])
 
-  def __init__(self, artifacts_registry, artifact_definitions, knowledge_base):
+  def __init__(self, artifacts_registry, artifact_filters, knowledge_base):
     """Initializes an artifact definitions filter helper.
 
     Args:
       artifacts_registry (artifacts.ArtifactDefinitionsRegistry]): artifact
           definitions registry.
-      artifact_definitions (list[str]): artifact definition names to filter.
+      artifact_filters (list[str]): Names of artifact definitions that are
+          used for filtering file system and Windows Registry key paths.
       path (str): path to a file that contains one or more artifact definitions.
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for filtering.
     """
     super(ArtifactDefinitionsFilterHelper, self).__init__()
-    self._artifacts = artifact_definitions
+    self._artifacts = artifact_filters
     self._artifacts_registry = artifacts_registry
     self._knowledge_base = knowledge_base
 
