@@ -10,6 +10,7 @@ import unittest
 
 from plaso.output import rawpy
 
+from tests.cli import test_lib as cli_test_lib
 from tests.output import test_lib
 
 
@@ -19,7 +20,7 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
   def setUp(self):
     """Makes preparations before running an individual test."""
     output_mediator = self._CreateOutputMediator()
-    self._output_writer = test_lib.TestOutputWriter()
+    self._output_writer = cli_test_lib.TestOutputWriter()
     self._output_module = rawpy.NativePythonOutputModule(output_mediator)
     self._output_module.SetOutputWriter(self._output_writer)
     self._event_object = test_lib.TestEventObject()

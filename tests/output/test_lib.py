@@ -3,13 +3,11 @@
 
 from __future__ import unicode_literals
 
-import io
 import os
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
-from plaso.cli import tools
 from plaso.containers import events
 from plaso.engine import knowledge_base
 from plaso.formatters import interface as formatters_interface
@@ -91,40 +89,6 @@ class TestOutputModule(interface.LinearOutputModule):
   def WriteHeader(self):
     """Writes the header to the output."""
     self._output_writer.Write('<EventFile>\n')
-
-
-class TestOutputWriter(tools.FileObjectOutputWriter):
-  """Class that implements a test output writer."""
-
-  def __init__(self, encoding='utf-8'):
-    """Initializes the output writer object.
-
-    Args:
-      encoding (Optional[str]): output encoding.
-    """
-    file_object = io.StringIO()
-    super(TestOutputWriter, self).__init__(file_object, encoding=encoding)
-    self._read_offset = 0
-
-  def Write(self, string):
-    """Writes a string to the output.
-
-    Args:
-      string (str): output.
-    """
-    self._file_object.write(string)
-
-  def ReadOutput(self):
-    """Reads all output added since the last call to ReadOutput.
-
-    Returns:
-      str: output data.
-    """
-    self._file_object.seek(self._read_offset, os.SEEK_SET)
-    output_data = self._file_object.read()
-    self._read_offset = self._file_object.tell()
-
-    return output_data
 
 
 class OutputModuleTestCase(shared_test_lib.BaseTestCase):

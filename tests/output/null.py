@@ -8,6 +8,7 @@ import unittest
 
 from plaso.output import null
 
+from tests.cli import test_lib as cli_test_lib
 from tests.output import test_lib
 
 
@@ -18,7 +19,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     """Tests that nothing is output by the null output module."""
     event_object = test_lib.TestEventObject
     output_mediator = self._CreateOutputMediator()
-    output_writer = test_lib.TestOutputWriter()
+    output_writer = cli_test_lib.TestOutputWriter()
     output_module = null.NullOutputModule(output_mediator)
 
     output_module.WriteHeader()
