@@ -383,10 +383,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._output_writer.Write('Processing started.\n')
 
     session = engine.BaseEngine.CreateSession(
-        artifact_filters=self._artifact_filters,
+        artifact_filter_names=self._artifact_filters,
         command_line_arguments=self._command_line_arguments,
         debug_mode=self._debug_mode,
-        filter_file=self._filter_file,
+        filter_file_path=self._filter_file,
         preferred_encoding=self.preferred_encoding,
         preferred_time_zone=self._preferred_time_zone,
         preferred_year=self._preferred_year)

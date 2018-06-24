@@ -166,7 +166,7 @@ class BaseEngine(object):
 
   @classmethod
   def CreateSession(
-      cls, artifact_filters_names=None, command_line_arguments=None,
+      cls, artifact_filter_names=None, command_line_arguments=None,
       debug_mode=False, filter_file_path=None, preferred_encoding='utf-8',
       preferred_time_zone=None, preferred_year=None):
     """Creates a session attribute container.
@@ -185,7 +185,7 @@ class BaseEngine(object):
     """
     session = sessions.Session()
 
-    session.artifact_filters = artifact_filters_names
+    session.artifact_filters = artifact_filter_names
     session.command_line_arguments = command_line_arguments
     session.debug_mode = debug_mode
     session.filter_file = filter_file_path
