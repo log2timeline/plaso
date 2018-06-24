@@ -189,7 +189,7 @@ class SessionStart(interface.AttributeContainer):
   """Session start attribute container.
 
   Attributes:
-    artifact_filters (list[str]): Names of artifact definitions that are
+    artifact_filters (list[str]): names of artifact definitions that are
         used for filtering file system and Windows Registry key paths.
     command_line_arguments (str): command line arguments.
     debug_mode (bool): True if debug mode was enabled.

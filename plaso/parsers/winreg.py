@@ -208,7 +208,7 @@ class WinRegistryParser(interface.FileObjectParser):
       find_specs (dfwinreg.FindSpecs): Keys to search for.
     """
     searcher = dfwinreg_registry_searcher.WinRegistrySearcher(win_registry)
-    for registry_key_path in list(searcher.Find(find_specs=find_specs)):
+    for registry_key_path in iter(searcher.Find(find_specs=find_specs)):
       if parser_mediator.abort:
         break
 
@@ -249,12 +249,8 @@ class WinRegistryParser(interface.FileObjectParser):
       registry_find_specs = find_specs.get(
           artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY)
 
-    key_path_compatible = False
-
-    if (key_path_prefix.upper() in
-        (artifact_filters.ArtifactDefinitionsFilterHelper.
-         COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES)):
-      key_path_compatible = True
+    key_path_compatible = (artifact_filters.ArtifactDefinitionsFilterHelper.
+                           CheckKeyCompatibility(key_path_prefix))
 
     if registry_find_specs and key_path_compatible:
       try:
@@ -272,5 +268,6 @@ class WinRegistryParser(interface.FileObjectParser):
         self._ParseRecurseKeys(parser_mediator, root_key)
       except IOError as exception:
         parser_mediator.ProduceExtractionError('{0:s}'.format(exception))
+
 
 manager.ParsersManager.RegisterParser(WinRegistryParser)

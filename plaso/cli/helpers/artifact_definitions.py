@@ -65,7 +65,6 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
       BadConfigObject: when the configuration object is of the wrong type.
       BadConfigOption: if the required artifact definitions are not defined.
     """
-
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
           'Configuration object is not an instance of CLITool')
@@ -99,17 +98,15 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
     custom_artifacts_path = getattr(
         options, 'custom_artifact_definitions_path', None)
 
+    if custom_artifacts_path and not os.path.isfile(custom_artifacts_path):
+      raise errors.BadConfigOption(
+          'No such artifacts filter file: {0:s}.'.format(custom_artifacts_path))
+
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
 
     try:
       registry.ReadFromDirectory(reader, artifacts_path)
-      if custom_artifacts_path and os.path.isfile(custom_artifacts_path):
-        registry.ReadFromFile(reader, custom_artifacts_path)
-      elif custom_artifacts_path and not os.path.isfile(custom_artifacts_path):
-        raise errors.BadConfigOption(
-            'No such artifacts filter file: {0:s}.'.format(
-                custom_artifacts_path))
 
     except (KeyError, artifacts_errors.FormatError) as exception:
       raise errors.BadConfigOption((
@@ -121,7 +118,18 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
         raise errors.BadConfigOption(
             'Missing required artifact definition: {0:s}'.format(name))
 
-    setattr(configuration_object, '_artifacts_registry', registry)
+    if custom_artifacts_path:
+      try:
+        registry.ReadFromFile(reader, custom_artifacts_path)
+
+      except (KeyError, artifacts_errors.FormatError) as exception:
+        raise errors.BadConfigOption((
+            'Unable to read artifact definitions from: {0:s} with error: '
+            '{1!s}').format(custom_artifacts_path, exception))
+
+    setattr(configuration_object, '_artifact_definitions_path', artifacts_path)
+    setattr(
+        configuration_object, '_custom_artifacts_path', custom_artifacts_path)
 
 
 manager.ArgumentHelperManager.RegisterHelper(ArtifactDefinitionsArgumentsHelper)

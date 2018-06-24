@@ -319,9 +319,15 @@ class PstealTool(
     self._SetExtractionParsersAndPlugins(configuration, session)
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
+    artifact_filters = getattr(configuration, '_artifact_filters', None)
+    artifact_definitions_path = getattr(
+        configuration, '_artifact_definitions_path', None)
+    custom_artifacts_path = getattr(
+        configuration, '_custom_artifacts_path', None)
     filter_find_specs = engine.BaseEngine.BuildFilterFindSpecs(
-        configuration.artifacts_registry, extraction_engine.knowledge_base,
-        configuration.artifact_filters, configuration.filter_file)
+        artifact_definitions_path, custom_artifacts_path,
+        extraction_engine.knowledge_base, artifact_filters,
+        configuration.filter_file)
 
     processing_status = None
     if single_process_mode:

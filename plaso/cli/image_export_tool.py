@@ -73,8 +73,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     super(ImageExportTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._abort = False
+    self._artifact_definitions_path = None
     self._artifact_filters = None
     self._artifacts_registry = None
+    self._custom_artifacts_path = None
     self._destination_path = None
     self._digests = {}
     self._filter_collection = file_entry_filters.FileEntryFilterCollection()
@@ -288,8 +290,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
   # TODO: merge with collector and/or engine.
   def _ExtractWithFilter(
       self, source_path_specs, destination_path, output_writer,
-      artifacts_registry, artifact_filters, filter_file,
-      skip_duplicates=True):
+      artifact_filters, filter_file, artifact_definitions_path,
+      custom_artifacts_path, skip_duplicates=True):
     """Extracts files using a filter expression.
 
     This method runs the file extraction process on the image and
@@ -299,9 +301,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       source_path_specs (list[dfvfs.PathSpec]): path specifications to extract.
       destination_path (str): path where the extracted files should be stored.
       output_writer (CLIOutputWriter): output writer.
-      artifacts_registry (artifacts.ArtifactDefinitionsRegistry]): artifact
-          definitions registry.
-      artifact_filters (list[str]): Names of artifact definitions that are
+       artifact_definitions_path (str): path to artifact definitions file.
+       custom_artifacts_path (str): path to custom artifact definitions file.
+      artifact_filters (list[str]): names of artifact definitions that are
           used for filtering file system and Windows Registry key paths.
       filter_file (str): path of the file that contains the filter file path
           filters.
@@ -320,13 +322,13 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       output_writer.Write(
           'Extracting file entries from: {0:s}\n'.format(display_name))
 
-      find_specs = engine.BaseEngine.BuildFilterFindSpecs(
-          artifacts_registry, self._knowledge_base, artifact_filters,
-          filter_file)
+      filter_find_specs = engine.BaseEngine.BuildFilterFindSpecs(
+          artifact_definitions_path, custom_artifacts_path,
+          self._knowledge_base, artifact_filters, filter_file)
 
       searcher = file_system_searcher.FileSystemSearcher(
           file_system, mount_point)
-      for path_spec in searcher.Find(find_specs=find_specs):
+      for path_spec in searcher.Find(find_specs=filter_find_specs):
         self._ExtractFileEntry(
             path_spec, destination_path, output_writer,
             skip_duplicates=skip_duplicates)
@@ -757,8 +759,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     if self._artifact_filters or self._filter_file:
       self._ExtractWithFilter(
           self._source_path_specs, self._destination_path, self._output_writer,
-          self._artifacts_registry, self._artifact_filters,
-          self._filter_file, skip_duplicates=self._skip_duplicates)
+          self._artifact_filters, self._filter_file,
+          self._artifact_definitions_path, self._custom_artifacts_path,
+          skip_duplicates=self._skip_duplicates)
     else:
       self._Extract(
           self._source_path_specs, self._destination_path, self._output_writer,

@@ -135,7 +135,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         parser.Parse(parser_mediator, file_object)
       finally:
         # Check if file_object is open as dfwinreg will have closed file_object.
-        if file_object._is_open:
+        # TODO: Fix once Issue #306 addressed in DFVFS
+        if file_object._is_open: # pylint: disable=protected-access
           file_object.close()
 
     else:

@@ -22,8 +22,7 @@ class ArtifactDefinitionsFilterHelper(object):
 
   KNOWLEDGE_BASE_VALUE = 'ARTIFACT_FILTERS'
 
-  COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES = frozenset([
-      'HKEY_LOCAL_MACHINE',
+  _COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES = frozenset([
       'HKEY_LOCAL_MACHINE\\SYSTEM',
       'HKEY_LOCAL_MACHINE\\SOFTWARE',
       'HKEY_LOCAL_MACHINE\\SAM',
@@ -35,7 +34,7 @@ class ArtifactDefinitionsFilterHelper(object):
     Args:
       artifacts_registry (artifacts.ArtifactDefinitionsRegistry]): artifact
           definitions registry.
-      artifact_filters (list[str]): Names of artifact definitions that are
+      artifact_filters (list[str]): names of artifact definitions that are
           used for filtering file system and Windows Registry key paths.
       path (str): path to a file that contains one or more artifact definitions.
       knowledge_base (KnowledgeBase): contains information from the source
@@ -46,7 +45,8 @@ class ArtifactDefinitionsFilterHelper(object):
     self._artifacts_registry = artifacts_registry
     self._knowledge_base = knowledge_base
 
-  def _CheckKeyCompatibility(self, key_path):
+  @staticmethod
+  def CheckKeyCompatibility(key_path):
     """Checks if a Windows Registry key path is supported by dfWinReg.
 
     Args:
@@ -55,7 +55,9 @@ class ArtifactDefinitionsFilterHelper(object):
     Returns:
       bool: True if key is compatible or False if not.
     """
-    for key_path_prefix in self.COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES:
+    for key_path_prefix in (
+        ArtifactDefinitionsFilterHelper._COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES):
+      key_path = key_path.upper()
       if key_path.startswith(key_path_prefix):
         return True
 
@@ -97,7 +99,7 @@ class ArtifactDefinitionsFilterHelper(object):
           # TODO: move source.keys iteration into
           # BuildFindSpecsFromRegistryArtifact.
           for key_path in set(source.keys):
-            if self._CheckKeyCompatibility(key_path):
+            if self.CheckKeyCompatibility(key_path):
               find_specs = self.BuildFindSpecsFromRegistryArtifact(key_path)
               find_specs_per_source_type[
                   artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY].extend(
@@ -115,7 +117,7 @@ class ArtifactDefinitionsFilterHelper(object):
           # BuildFindSpecsFromRegistryArtifact.
           for key_path in set([
               key_value['key'] for key_value in source.key_value_pairs]):
-            if self._CheckKeyCompatibility(key_path):
+            if self.CheckKeyCompatibility(key_path):
               find_specs = self.BuildFindSpecsFromRegistryArtifact(key_path)
               find_specs_per_source_type[
                   artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY].extend(

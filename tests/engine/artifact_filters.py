@@ -150,19 +150,19 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(key_paths), 3)
 
   def testCheckKeyCompatibility(self):
-    """Tests the _CheckKeyCompatibility function"""
+    """Tests the CheckKeyCompatibility function"""
     knowledge_base = knowledge_base_engine.KnowledgeBase()
     test_filter_file = self._CreateTestArtifactDefinitionsFilterHelper(
         [], knowledge_base)
 
     # Compatible Key.
     key_path = 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control'
-    compatible_key = test_filter_file._CheckKeyCompatibility(key_path)
+    compatible_key = test_filter_file.CheckKeyCompatibility(key_path)
     self.assertTrue(compatible_key)
 
     # NOT a Compatible Key.
     key_path = 'HKEY_USERS\\S-1-5-18'
-    compatible_key = test_filter_file._CheckKeyCompatibility(key_path)
+    compatible_key = test_filter_file.CheckKeyCompatibility(key_path)
     self.assertFalse(compatible_key)
 
   def testBuildFindSpecsFromFileArtifact(self):

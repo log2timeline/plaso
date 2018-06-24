@@ -65,7 +65,6 @@ class ArtifactFiltersArgumentsHelper(interface.ArgumentsHelper):
       BadConfigObject: when the configuration object is of the wrong type.
       BadConfigOption: if the required artifact definitions are not defined.
     """
-
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(
           'Configuration object is not an instance of CLITool')

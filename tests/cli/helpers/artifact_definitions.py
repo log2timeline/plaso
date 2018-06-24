@@ -62,7 +62,7 @@ optional arguments:
 
     artifact_definitions.ArtifactDefinitionsArgumentsHelper.ParseOptions(
         options, test_tool)
-    self.assertIsNotNone(test_tool._artifacts_registry)
+    self.assertIsNotNone(test_tool._artifact_definitions_path)
 
     with self.assertRaises(errors.BadConfigObject):
       artifact_definitions.ArtifactDefinitionsArgumentsHelper.ParseOptions(
