@@ -30,7 +30,7 @@ class TestOptions(object):
   """Class to define test options."""
 
 
-class TestOutputWriter(tools.FileObjectOutputWriter):
+class TestBinaryOutputWriter(tools.FileObjectOutputWriter):
   """Class that implements a test output writer."""
 
   def __init__(self, encoding='utf-8'):
@@ -39,23 +39,15 @@ class TestOutputWriter(tools.FileObjectOutputWriter):
     Args:
       encoding (Optional[str]): output encoding.
     """
-    file_object = io.StringIO()
-    super(TestOutputWriter, self).__init__(file_object, encoding=encoding)
+    file_object = io.BytesIO()
+    super(TestBinaryOutputWriter, self).__init__(file_object, encoding=encoding)
     self._read_offset = 0
-
-  def Write(self, string):
-    """Writes a string to the output.
-
-    Args:
-      string (str): output.
-    """
-    self._file_object.write(string)
 
   def ReadOutput(self):
     """Reads all output added since the last call to ReadOutput.
 
     Returns:
-      str: output data.
+      bytes: output data.
     """
     self._file_object.seek(self._read_offset, os.SEEK_SET)
     output_data = self._file_object.read()

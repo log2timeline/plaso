@@ -191,7 +191,7 @@ optional arguments:
 
   def testListLanguageIdentifiers(self):
     """Tests the ListLanguageIdentifiers function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = psort_tool.PsortTool(output_writer=output_writer)
 
     test_tool.ListLanguageIdentifiers()
@@ -218,7 +218,7 @@ optional arguments:
 
   def testParseArguments(self):
     """Tests the ParseArguments function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = psort_tool.PsortTool(output_writer=output_writer)
 
     result = test_tool.ParseArguments()
@@ -229,7 +229,7 @@ optional arguments:
 
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = psort_tool.PsortTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -254,7 +254,7 @@ optional arguments:
   def testProcessStorageWithMissingParameters(self):
     """Tests the ProcessStorage function with parameters missing."""
     input_reader = TestInputReader()
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = psort_tool.PsortTool(
         input_reader=input_reader, output_writer=output_writer)
 

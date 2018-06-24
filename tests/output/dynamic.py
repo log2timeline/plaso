@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
+import tests.output.test_lib
 from plaso.containers import events
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
@@ -50,7 +51,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
   def testHeader(self):
     """Tests the WriteHeader function."""
     output_mediator = self._CreateOutputMediator()
-    output_writer = cli_test_lib.TestOutputWriter()
+    output_writer = tests.output.test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
     output_module.SetOutputWriter(output_writer)
     expected_header = (
@@ -62,7 +63,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(header, expected_header)
 
     output_mediator = self._CreateOutputMediator()
-    output_writer = cli_test_lib.TestOutputWriter()
+    output_writer = tests.output.test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
     output_module.SetFields([
         'date', 'time', 'message', 'hostname', 'filename', 'some_stuff'])
@@ -74,7 +75,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(header, expected_header)
 
     output_mediator = self._CreateOutputMediator()
-    output_writer = cli_test_lib.TestOutputWriter()
+    output_writer = tests.output.test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
     output_module.SetFields([
         'date', 'time', 'message', 'hostname', 'filename', 'some_stuff'])
@@ -94,7 +95,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     event_object = TestEvent()
 
     output_mediator = self._CreateOutputMediator()
-    output_writer = cli_test_lib.TestOutputWriter()
+    output_writer = tests.output.test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
     output_module.SetFields([
         'date', 'time', 'timezone', 'macb', 'source', 'sourcetype',
@@ -120,7 +121,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(event_body, expected_event_body)
 
     output_mediator = self._CreateOutputMediator()
-    output_writer = cli_test_lib.TestOutputWriter()
+    output_writer = tests.output.test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
     output_module.SetFields([
         'datetime', 'nonsense', 'hostname', 'message'])

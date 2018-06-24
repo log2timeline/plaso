@@ -8,7 +8,6 @@ import unittest
 
 from plaso.output import manager
 
-from tests.cli import test_lib as cli_test_lib
 from tests.output import test_lib
 
 
@@ -38,7 +37,7 @@ class LinearOutputModuleTest(test_lib.OutputModuleTestCase):
         TestEvent(123489, 'This is just some stuff to fill the line.')]
 
     output_mediator = self._CreateOutputMediator()
-    output_writer = cli_test_lib.TestOutputWriter()
+    output_writer = test_lib.TestOutputWriter()
     output_module = test_lib.TestOutputModule(output_mediator)
     output_module.SetOutputWriter(output_writer)
     output_module.WriteHeader()

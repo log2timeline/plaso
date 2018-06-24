@@ -13,7 +13,6 @@ from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.output import l2t_csv
 
-from tests.cli import test_lib as cli_test_lib
 from tests.output import test_lib
 
 
@@ -51,7 +50,7 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
   def setUp(self):
     """Makes preparations before running an individual test."""
     output_mediator = self._CreateOutputMediator()
-    self._output_writer = cli_test_lib.TestOutputWriter()
+    self._output_writer = test_lib.TestOutputWriter()
     self._formatter = l2t_csv.L2TCSVOutputModule(output_mediator)
     self._formatter.SetOutputWriter(self._output_writer)
 
