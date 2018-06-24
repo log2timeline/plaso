@@ -17,12 +17,12 @@ class UtmpEventData(events.EventData):
   """utmp event data.
 
   Attributes:
-    computer_name (str): name of the computer.
     exit_status (int): exit status.
+    hostname (str): hostname or IP address.
     ip_address (str): IP address from the connection.
     pid (int): process identifier (PID).
-    terminal (str): type of terminal.
     terminal_identifier (int): inittab identifier.
+    terminal (str): type of terminal.
     type (int): type of login.
     username (str): user name.
   """
@@ -32,21 +32,21 @@ class UtmpEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(UtmpEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.computer_name = None
     self.exit_status = None
+    self.hostname = None
     self.ip_address = None
     self.pid = None
-    self.terminal = None
     self.terminal_identifier = None
+    self.terminal = None
     self.type = None
     self.username = None
 
 
 class UtmpParser(dtfabric_parser.DtFabricBaseParser):
-  """Parser for Linux/Unix utmp files."""
+  """Parser for Linux libc6 utmp files."""
 
   NAME = 'utmp'
-  DESCRIPTION = 'Parser for Linux/Unix utmp files.'
+  DESCRIPTION = 'Parser for Linux libc6 utmp files.'
 
   _DEFINITION_FILE = 'utmp.yaml'
 
@@ -74,7 +74,7 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
     Raises:
       ParseError: if the entry cannot be parsed.
     """
-    entry_map = self._GetDataTypeMap('utmp_entry')
+    entry_map = self._GetDataTypeMap('linux_libc6_utmp_entry')
 
     try:
       entry, _ = self._ReadStructureFromFileObject(
@@ -91,14 +91,14 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
     encoding = parser_mediator.codepage or 'utf-8'
 
     try:
-      username = entry.username.rstrip(b'\x00')
+      username = entry.username.split(b'\x00')[0]
       username = username.decode(encoding)
     except UnicodeDecodeError:
       parser_mediator.ProduceExtractionError('unable to decode username string')
       username = None
 
     try:
-      terminal = entry.terminal.rstrip(b'\x00')
+      terminal = entry.terminal.split(b'\x00')[0]
       terminal = terminal.decode(encoding)
     except UnicodeDecodeError:
       parser_mediator.ProduceExtractionError('unable to decode terminal string')
@@ -108,7 +108,7 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
       terminal = 'system boot'
 
     try:
-      hostname = entry.hostname.rstrip(b'\x00')
+      hostname = entry.hostname.split(b'\x00')[0]
       hostname = hostname.decode(encoding)
     except UnicodeDecodeError:
       parser_mediator.ProduceExtractionError('unable to decode hostname string')
@@ -123,11 +123,11 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
       ip_address = self._FormatPackedIPv6Address(entry.ip_address)
 
     # TODO: add termination status.
-    # TODO: rename event data attributes to match data definition.
     event_data = UtmpEventData()
-    event_data.computer_name = hostname
+    event_data.hostname = hostname
     event_data.exit_status = entry.exit_status
     event_data.ip_address = ip_address
+    event_data.offset = file_offset
     event_data.pid = entry.pid
     event_data.terminal = terminal
     event_data.terminal_identifier = entry.terminal_identifier
@@ -156,15 +156,16 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
           parser_mediator, file_object, file_offset)
     except errors.ParseError as exception:
       raise errors.UnableToParseFile(
-          'Unable to parse utmp header with error: {0!s}'.format(exception))
+          'Unable to parse first utmp entry with error: {0!s}'.format(
+              exception))
 
     if not event_data.username:
       raise errors.UnableToParseFile(
-          'Unable to parse utmp header with error: missing username')
+          'Unable to parse first utmp entry with error: missing username')
 
     if not timestamp:
       raise errors.UnableToParseFile(
-          'Unable to parse utmp header with error: missing timestamp')
+          'Unable to parse first utmp entry with error: missing timestamp')
 
     date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
         timestamp=timestamp)

@@ -25,7 +25,7 @@ class UtmpSessionFormatterTest(test_lib.EventFormatterTestCase):
 
     expected_attribute_names = [
         'username',
-        'computer_name',
+        'hostname',
         'terminal',
         'pid',
         'terminal_identifier',
