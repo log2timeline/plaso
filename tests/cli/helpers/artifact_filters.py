@@ -71,7 +71,7 @@ optional arguments:
     artifact_filters.ArtifactFiltersArgumentsHelper.ParseOptions(
         options, test_tool)
 
-    self.assertListEqual(test_tool._artifact_filters, expected_output)
+    self.assertItemsEqual(test_tool._artifact_filters, expected_output)
 
     options.artifact_filters_file = self._GetTestFilePath(
         ['artifacts', 'artifact_names'])
@@ -84,9 +84,9 @@ optional arguments:
 
     options.artifact_filters = None
     artifact_filters.ArtifactFiltersArgumentsHelper.ParseOptions(
-      options, test_tool)
+        options, test_tool)
 
-    self.assertListEqual(test_tool._artifact_filters, expected_output)
+    self.assertItemsEqual(test_tool._artifact_filters, expected_output)
 
     options.file_filter = self._GetTestFilePath(['testdir', 'filter2.txt'])
     with self.assertRaises(errors.BadConfigOption):

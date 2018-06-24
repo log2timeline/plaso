@@ -108,7 +108,8 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
         registry.ReadFromFile(reader, custom_artifacts_path)
       elif custom_artifacts_path and not os.path.isfile(custom_artifacts_path):
         raise errors.BadConfigOption(
-          'No such artifacts filter file: {0:s}.'.format(custom_artifacts_path))
+            'No such artifacts filter file: {0:s}.'.format(
+                custom_artifacts_path))
 
     except (KeyError, artifacts_errors.FormatError) as exception:
       raise errors.BadConfigOption((

@@ -320,8 +320,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       output_writer.Write(
           'Extracting file entries from: {0:s}\n'.format(display_name))
 
-      find_specs = engine.BaseEngine.BuildFilterFindSpecs(artifacts_registry,
-          self._knowledge_base, artifact_filters, filter_file)
+      find_specs = engine.BaseEngine.BuildFilterFindSpecs(
+          artifacts_registry, self._knowledge_base, artifact_filters,
+          filter_file)
 
       searcher = file_system_searcher.FileSystemSearcher(
           file_system, mount_point)

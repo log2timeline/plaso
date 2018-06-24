@@ -301,8 +301,8 @@ class BaseEngine(object):
     find_specs = None
     if artifact_filter_names:
       artifact_filters_object = (
-        artifact_filters.ArtifactDefinitionsFilterHelper(
-            artifacts_registry, artifact_filter_names, knowledge_base_object))
+          artifact_filters.ArtifactDefinitionsFilterHelper(
+              artifacts_registry, artifact_filter_names, knowledge_base_object))
       artifact_filters_object.BuildFindSpecs(environment_variables)
       find_specs = knowledge_base_object.GetValue(
           artifact_filters_object.KNOWLEDGE_BASE_VALUE)[

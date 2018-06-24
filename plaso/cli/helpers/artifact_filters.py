@@ -84,7 +84,6 @@ class ArtifactFiltersArgumentsHelper(interface.ArgumentsHelper):
       raise errors.BadConfigOption(
           'Please do not specify both artifact definitions and legacy filters.')
 
-
     if artifact_filters_file and os.path.isfile(artifact_filters_file):
       with open(artifact_filters_file) as file_object:
         file_content = file_object.read()

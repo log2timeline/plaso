@@ -242,7 +242,7 @@ class WinRegistryParser(interface.FileObjectParser):
       return
 
     find_specs = parser_mediator.knowledge_base.GetValue(
-      artifact_filters.ArtifactDefinitionsFilterHelper.KNOWLEDGE_BASE_VALUE)
+        artifact_filters.ArtifactDefinitionsFilterHelper.KNOWLEDGE_BASE_VALUE)
 
     registry_find_specs = None
     if find_specs:
@@ -252,8 +252,8 @@ class WinRegistryParser(interface.FileObjectParser):
     key_path_compatible = False
 
     if (key_path_prefix.upper() in
-      (artifact_filters.ArtifactDefinitionsFilterHelper.
-          COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES)):
+        (artifact_filters.ArtifactDefinitionsFilterHelper.
+         COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES)):
       key_path_compatible = True
 
     if registry_find_specs and key_path_compatible:
@@ -266,8 +266,8 @@ class WinRegistryParser(interface.FileObjectParser):
     else:
       if registry_find_specs and not key_path_compatible:
         logger.warning('Artifacts Registry Filters are not supported for '
-                        'the registry prefix {0:s}. '
-                        'Parsing entire file.'.format(key_path_prefix))
+                       'the registry prefix {0:s}. '
+                       'Parsing entire file.'.format(key_path_prefix))
       try:
         self._ParseRecurseKeys(parser_mediator, root_key)
       except IOError as exception:

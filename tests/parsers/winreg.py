@@ -126,8 +126,8 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     test_filter_file.BuildFindSpecs(environment_variables=None)
 
     find_specs = {
-      test_filter_file.KNOWLEDGE_BASE_VALUE : knowledge_base.GetValue(
-        test_filter_file.KNOWLEDGE_BASE_VALUE)}
+        test_filter_file.KNOWLEDGE_BASE_VALUE : knowledge_base.GetValue(
+            test_filter_file.KNOWLEDGE_BASE_VALUE)}
     storage_writer = self._ParseFile(['SYSTEM'], parser,
                                      knowledge_base_values=find_specs)
 
