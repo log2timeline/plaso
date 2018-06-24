@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-import tests.cli.test_lib
 from plaso.containers import events
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
