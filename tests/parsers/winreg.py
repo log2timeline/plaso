@@ -154,7 +154,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     self.assertEqual(parser_chains.get(parser_chain, 0), 5)
 
     # There will be 4 Windows boot execute chains for key_value pairs:
-    # {key: 'HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager', 
+    # {key: 'HKEY_LOCAL_MACHINE\System\ControlSet001\Control\Session Manager',
     #     value: 'BootExecute'}
     # {key: 'HKEY_LOCAL_MACHINE\System\ControlSet002\Control\Session Manager',
     #     value: 'BootExecute'}
