@@ -247,13 +247,9 @@ def RecurseKey(recur_item, depth=15, key_path=''):
         yield key
     return
 
-  if not hasattr(recur_item, 'iteritems'):
+  if not hasattr(recur_item, 'items'):
     return
 
-  # TODO determine if recur_item is a plistlib._InternalDict to determine
-  # if recur_item.iteritems() should be replaced with iter(recur_item.items()).
-  # Note that testing breaks when explicitly only allowing
-  # plistlib._InternalDict.
   for subkey, value in iter(recur_item.items()):
     yield key_path, subkey, value
 
