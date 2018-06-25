@@ -354,7 +354,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
   def testInternalExportEvents(self):
     """Tests the _ExportEvents function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    output_writer = cli_test_lib.TestOutputWriter()
+    output_writer = cli_test_lib.TestBinaryOutputWriter()
 
     formatter_mediator = formatters_mediator.FormatterMediator()
 
@@ -387,7 +387,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
   def testInternalExportEventsDeduplicate(self):
     """Tests the _ExportEvents function with deduplication."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    output_writer = cli_test_lib.TestOutputWriter()
+    output_writer = cli_test_lib.TestBinaryOutputWriter()
 
     formatter_mediator = formatters_mediator.FormatterMediator()
 
@@ -490,7 +490,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     storage_file_path = self._GetTestFilePath(['psort_test.plaso'])
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    output_writer = cli_test_lib.TestOutputWriter()
+    output_writer = cli_test_lib.TestBinaryOutputWriter()
 
     formatter_mediator = formatters_mediator.FormatterMediator()
     formatter_mediator.SetPreferredLanguageIdentifier('en-US')
