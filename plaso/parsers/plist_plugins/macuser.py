@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 # TODO: Only plists from MacOS 10.8 and 10.9 were tested. Look at other
 #       versions as well.
 
-import binascii
+import codecs
 
 from xml.etree import ElementTree
 
@@ -137,10 +137,12 @@ class MacUserPlugin(interface.PlistPlugin):
             plist_file = {}
           salted_hash = plist_file.get('SALTED-SHA512-PBKDF2', None)
           if salted_hash:
+            salt_hex_bytes = codecs.encode(salted_hash['salt'], 'hex')
+            salt_string = codecs.decode(salt_hex_bytes, 'ascii')
+            entropy_hex_bytes = codecs.encode(salted_hash['entropy'], 'hex')
+            entropy_string = codecs.decode(entropy_hex_bytes, 'ascii')
             password_hash = '$ml${0:d}${1:s}${2:s}'.format(
-                salted_hash['iterations'],
-                binascii.hexlify(salted_hash['salt']),
-                binascii.hexlify(salted_hash['entropy']))
+                salted_hash['iterations'], salt_string, entropy_string)
           else:
             password_hash = 'N/A'
 

@@ -79,7 +79,6 @@ class PlistParser(interface.FileObjectParser):
       raise errors.UnableToParseFile(
           'File size: {0:d} bytes is larger than 50 MB.'.format(file_size))
 
-    top_level_object = None
     try:
       top_level_object = self.GetTopLevel(file_object)
     except errors.UnableToParseFile:
