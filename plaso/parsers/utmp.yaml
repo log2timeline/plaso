@@ -31,7 +31,7 @@ attributes:
   size: 4
   units: bytes
 ---
-name: utmp_entry
+name: linux_libc6_utmp_entry
 type: structure
 attributes:
   byte_order: little-endian
@@ -72,3 +72,37 @@ members:
   type: stream
   element_data_type: byte
   number_of_elements: 20
+---
+name: macosx_utmpx_entry
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: username
+  type: stream
+  element_data_type: byte
+  number_of_elements: 256
+- name: terminal_identifier
+  data_type: uint32
+- name: terminal
+  type: stream
+  element_data_type: byte
+  number_of_elements: 32
+- name: pid
+  data_type: uint32
+- name: type
+  data_type: int16
+- name: unknown1
+  data_type: int16
+- name: timestamp
+  data_type: int32
+- name: microseconds
+  data_type: int32
+- name: hostname
+  type: stream
+  element_data_type: byte
+  number_of_elements: 256
+- name: unknown2
+  type: stream
+  element_data_type: byte
+  number_of_elements: 64
