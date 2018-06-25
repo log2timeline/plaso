@@ -15,7 +15,7 @@ class UtmpSessionFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_PIECES = [
       'User: {username}',
-      'Computer Name: {computer_name}',
+      'Hostname: {hostname}',
       'Terminal: {terminal}',
       'PID: {pid}',
       'Terminal identifier: {terminal_identifier}',
@@ -23,7 +23,10 @@ class UtmpSessionFormatter(interface.ConditionalEventFormatter):
       'IP Address: {ip_address}',
       'Exit status: {exit_status}']
 
-  FORMAT_STRING_SHORT_PIECES = ['User: {username}']
+  FORMAT_STRING_SHORT_PIECES = [
+      'User: {username}',
+      'PID: {pid}',
+      'Status: {status}']
 
   SOURCE_LONG = 'UTMP session'
   SOURCE_SHORT = 'LOG'

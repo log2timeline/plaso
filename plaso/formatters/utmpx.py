@@ -14,12 +14,17 @@ class UtmpxSessionFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'mac:utmpx:event'
 
   FORMAT_STRING_PIECES = [
-      'User: {user}',
+      'User: {username}',
       'Status: {status}',
-      'Computer Name: {computer_name}',
-      'Terminal: {terminal}']
+      'Hostname: {hostname}',
+      'Terminal: {terminal}',
+      'PID: {pid}',
+      'Terminal identifier: {terminal_identifier}']
 
-  FORMAT_STRING_SHORT_PIECES = ['User: {user}']
+  FORMAT_STRING_SHORT_PIECES = [
+      'User: {username}',
+      'PID: {pid}',
+      'Status: {status}']
 
   SOURCE_LONG = 'UTMPX session'
   SOURCE_SHORT = 'LOG'
@@ -60,12 +65,13 @@ class UtmpxSessionFormatter(interface.ConditionalEventFormatter):
 
     event_values = event.CopyToDict()
 
-    status_type = event_values.get('status_type', None)
-    if status_type is not None:
-      event_values['status'] = self._STATUS_TYPES.get(
-          status_type, '{0:d}'.format(status_type))
+    login_type = event_values.get('type', None)
+    if login_type is None:
+      status = 'N/A'
     else:
-      event_values['status'] = 'N/A'
+      status = self._STATUS_TYPES.get(login_type, 'UNKNOWN')
+
+    event_values['status'] = status
 
     return self._ConditionalFormatMessages(event_values)
 
