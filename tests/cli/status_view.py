@@ -47,7 +47,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
 
   def testPrintExtractionStatusUpdateLinear(self):
     """Tests the PrintExtractionStatusUpdateLinear function."""
-    output_writer = test_lib.TestOutputWriter()
+    output_writer = test_lib.TestBinaryOutputWriter()
 
     test_view = status_view.StatusView(output_writer, 'test_tool')
     test_view.SetSourceInformation(
@@ -78,7 +78,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
 
   def testPrintExtractionStatusUpdateWindow(self):
     """Tests the _PrintExtractionStatusUpdateWindow function."""
-    output_writer = test_lib.TestOutputWriter()
+    output_writer = test_lib.TestBinaryOutputWriter()
 
     test_view = status_view.StatusView(output_writer, 'test_tool')
     test_view.SetSourceInformation(
@@ -164,7 +164,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
 
   def testPrintExtractionStatusHeader(self):
     """Tests the PrintExtractionStatusHeader function."""
-    output_writer = test_lib.TestOutputWriter()
+    output_writer = test_lib.TestBinaryOutputWriter()
 
     test_view = status_view.StatusView(output_writer, 'test_tool')
     test_view.SetSourceInformation(

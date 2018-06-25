@@ -143,7 +143,7 @@ optional arguments:
 
   def testListTimeZones(self):
     """Tests the ListTimeZones function."""
-    output_writer = test_lib.TestOutputWriter()
+    output_writer = test_lib.TestBinaryOutputWriter()
     cli_tool = tools.CLITool(output_writer=output_writer)
 
     cli_tool.ListTimeZones()
@@ -160,7 +160,7 @@ optional arguments:
 
   def testParseNumericOption(self):
     """Tests the ParseNumericOption function."""
-    output_writer = test_lib.TestOutputWriter()
+    output_writer = test_lib.TestBinaryOutputWriter()
     cli_tool = tools.CLITool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -234,7 +234,7 @@ optional arguments:
 
   def testPrintSeparatorLine(self):
     """Tests the PrintSeparatorLine function."""
-    output_writer = test_lib.TestOutputWriter()
+    output_writer = test_lib.TestBinaryOutputWriter()
     cli_tool = tools.CLITool(output_writer=output_writer)
 
     cli_tool.PrintSeparatorLine()
@@ -312,7 +312,7 @@ class FileObjectOutputWriterTest(unittest.TestCase):
 
   def testWriteAscii(self):
     """Tests the Write function with ASCII encoding."""
-    output_writer = test_lib.TestOutputWriter(encoding='ascii')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='ascii')
 
     output_writer.Write('A first string\n')
     string = output_writer.ReadOutput()
@@ -336,7 +336,7 @@ class FileObjectOutputWriterTest(unittest.TestCase):
 
   def testWriteUtf8(self):
     """Tests the Write function with UTF-8 encoding."""
-    output_writer = test_lib.TestOutputWriter()
+    output_writer = test_lib.TestBinaryOutputWriter()
 
     output_writer.Write('A first string\n')
     string = output_writer.ReadOutput()

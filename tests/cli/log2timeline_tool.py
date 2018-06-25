@@ -95,17 +95,16 @@ optional arguments:
                         system CPUs minus one].
 """)
 
-  def _CheckOutput(self, output, expected_output, encoding='utf-8'):
+  def _CheckOutput(self, output, expected_output):
     """Compares the output against the expected output.
 
     The actual processing time is ignored, since it can vary.
 
     Args:
-      output (bytes): tool output.
+      output (str): tool output.
       expected_output (list[str]): expected tool output.
       encoding (Optional[str]): encoding of the output.
     """
-    output = codecs.decode(output, encoding)
     output = output.split('\n')
 
     self.assertEqual(output[:3], expected_output[:3])
