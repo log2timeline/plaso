@@ -2,8 +2,7 @@
 """Parser for Windows IIS Log file.
 
 More documentation on fields can be found here:
-http://www.microsoft.com/technet/prodtechnol/WindowsServer2003/Library/
-IIS/676400bc-8969-4aa7-851a-9319490a9bbb.mspx?mfr=true
+https://msdn.microsoft.com/en-us/library/ms525807(v=vs.90).aspx
 """
 
 from __future__ import unicode_literals
@@ -135,7 +134,12 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       ('logline', LOG_LINE_6_0)]
 
   # Define a signature value for the log file.
-  _SIGNATURE = b'#Software: Microsoft Internet Information Services'
+  _SIGNATURE = '#Software: Microsoft Internet Information Services'
+
+  # Per https://msdn.microsoft.com/en-us/library/ms525807(v=vs.90).aspx:
+  # "log file format(s) are all ASCII text formats (unless UTF-8 is enabled for
+  #  your Web sites)
+  _ENCODING = 'utf-8'
 
   def __init__(self):
     """Initializes a parser object."""
