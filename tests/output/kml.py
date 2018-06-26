@@ -28,8 +28,8 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
     expected_header = (
-        b'<?xml version="1.0" encoding="utf-8"?>'
-        b'<kml xmlns="http://www.opengis.net/kml/2.2"><Document>')
+        '<?xml version="1.0" encoding="utf-8"?>'
+        '<kml xmlns="http://www.opengis.net/kml/2.2"><Document>')
 
     self._output_module.WriteHeader()
 
@@ -38,7 +38,7 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
 
   def testWriteFooter(self):
     """Tests the WriteFooter function."""
-    expected_footer = b'</Document></kml>'
+    expected_footer = '</Document></kml>'
 
     self._output_module.WriteFooter()
 
@@ -50,11 +50,12 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
 
     # Test event object without geo-location.
     self._output_module.WriteEventBody(self._event_object)
-    self.assertEqual(self._output_writer.ReadOutput(), b'')
+    event_body = self._output_writer.ReadOutput()
+    self.assertEqual(event_body, '')
 
     # Test event object with geo-location.
-    self._event_object.latitude = 37.42228990140251
-    self._event_object.longitude = -122.082203542683
+    self._event_object.latitude = 37.4222899014
+    self._event_object.longitude = -122.082203543
     self._output_module.WriteEventBody(self._event_object)
     event_body = self._output_writer.ReadOutput()
 
@@ -68,35 +69,35 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
           os.path.sep, os.path.join('cases', 'image.dd'))
 
     expected_event_body = (
-        b'<Placemark><name>PLACEHOLDER FOR EVENT IDENTIFIER</name><description>'
-        b'+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-'
-        b'+-+-+-+-+-+-\n'
-        b'[Timestamp]:\n'
-        b'  2012-06-27T18:17:01+00:00\n'
-        b'[Pathspec]:\n'
-        b'  type: OS, location: {0:s}\n'
-        b'  type: TSK, inode: 15, location: /var/log/syslog.1\n'
-        b'  \n'
-        b'\n'
-        b'[Reserved attributes]:\n'
-        b'  {{data_type}} test:output\n'
-        b'  {{display_name}} OS: /var/log/syslog.1\n'
-        b'  {{hostname}} ubuntu\n'
-        b'  {{inode}} 12345678\n'
-        b'  {{timestamp}} 1340821021000000\n'
-        b'  {{username}} root\n'
-        b'\n'
-        b'[Additional attributes]:\n'
-        b'  {{latitude}} 37.4222899014\n'
-        b'  {{longitude}} -122.082203543\n'
-        b'  {{text}} Reporter &lt;CRON&gt; PID: |8442| '
-        b'(pam_unix(cron:session): session\n'
-        b' closed for user root)\n'
-        b'</description>'
-        b'<Point><coordinates>-122.082203543,37.4222899014</coordinates>'
-        b'</Point></Placemark>').format(expected_os_location)
+        '<Placemark><name>PLACEHOLDER FOR EVENT IDENTIFIER</name><description>'
+        '+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-'
+        '+-+-+-+-+-+-\n'
+        '[Timestamp]:\n'
+        '  2012-06-27T18:17:01+00:00\n'
+        '[Pathspec]:\n'
+        '  type: OS, location: {0:s}\n'
+        '  type: TSK, inode: 15, location: /var/log/syslog.1\n'
+        '  \n'
+        '\n'
+        '[Reserved attributes]:\n'
+        '  {{data_type}} test:output\n'
+        '  {{display_name}} OS: /var/log/syslog.1\n'
+        '  {{hostname}} ubuntu\n'
+        '  {{inode}} 12345678\n'
+        '  {{timestamp}} 1340821021000000\n'
+        '  {{username}} root\n'
+        '\n'
+        '[Additional attributes]:\n'
+        '  {{latitude}} 37.4222899014\n'
+        '  {{longitude}} -122.082203543\n'
+        '  {{text}} Reporter &lt;CRON&gt; PID: |8442| '
+        '(pam_unix(cron:session): session\n'
+        ' closed for user root)\n'
+        '</description>'
+        '<Point><coordinates>-122.082203543,37.4222899014</coordinates>'
+        '</Point></Placemark>').format(expected_os_location)
 
-    self.assertEqual(event_body.split(b'\n'), expected_event_body.split(b'\n'))
+    self.assertEqual(event_body.split('\n'), expected_event_body.split('\n'))
 
 
 if __name__ == '__main__':

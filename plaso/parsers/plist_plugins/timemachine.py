@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+import codecs
+
 import construct
 
 from plaso.containers import plist_event
@@ -55,6 +57,7 @@ class TimeMachinePlugin(interface.PlistPlugin):
       alias = destination.get('BackupAlias', '<ALIAS>')
       try:
         alias = self.TM_BACKUP_ALIAS.parse(alias).value
+        alias = codecs.decode(alias, 'utf-8')
       except construct.FieldError:
         alias = 'Unknown alias'
 

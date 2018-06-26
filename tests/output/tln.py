@@ -26,7 +26,7 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
-    expected_header = b'Time|Source|Host|User|Description\n'
+    expected_header = 'Time|Source|Host|User|Description\n'
 
     self._output_module.WriteHeader()
 
@@ -41,14 +41,14 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
     self._output_module.WriteEventBody(self._event_object)
 
     expected_event_body = (
-        b'1340821021|LOG|ubuntu|root|2012-06-27T18:17:01+00:00; UNKNOWN; '
-        b'Reporter <CRON> PID:  8442  (pam_unix(cron:session): '
-        b'session closed for user root)\n')
+        '1340821021|LOG|ubuntu|root|2012-06-27T18:17:01+00:00; UNKNOWN; '
+        'Reporter <CRON> PID:  8442  (pam_unix(cron:session): '
+        'session closed for user root)\n')
 
     event_body = self._output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
 
-    self.assertEqual(event_body.count(b'|'), 4)
+    self.assertEqual(event_body.count('|'), 4)
 
     formatters_manager.FormattersManager.DeregisterFormatter(
         test_lib.TestEventFormatter)
@@ -67,7 +67,7 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
-    expected_header = b'Time|Source|Host|User|Description|TZ|Notes\n'
+    expected_header = 'Time|Source|Host|User|Description|TZ|Notes\n'
 
     self._output_module.WriteHeader()
 
@@ -82,15 +82,15 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
     self._output_module.WriteEventBody(self._event_object)
 
     expected_event_body = (
-        b'1340821021|LOG|ubuntu|root|2012-06-27T18:17:01+00:00; UNKNOWN; '
-        b'Reporter <CRON> PID:  8442  (pam_unix(cron:session): '
-        b'session closed for user root)'
-        b'|UTC|File: OS: /var/log/syslog.1 inode: 12345678\n')
+        '1340821021|LOG|ubuntu|root|2012-06-27T18:17:01+00:00; UNKNOWN; '
+        'Reporter <CRON> PID:  8442  (pam_unix(cron:session): '
+        'session closed for user root)'
+        '|UTC|File: OS: /var/log/syslog.1 inode: 12345678\n')
 
     event_body = self._output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
 
-    self.assertEqual(event_body.count(b'|'), 6)
+    self.assertEqual(event_body.count('|'), 6)
 
     formatters_manager.FormattersManager.DeregisterFormatter(
         test_lib.TestEventFormatter)
