@@ -410,6 +410,9 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
       for variable in extra_variables:
         key, _, value = variable.partition('=')
 
+        # Urllib2 in Python2 requires a str argument, not unicode. We thus need
+        # to convert the 'value' argument to str and back again, but only in
+        # Python 2.
         if isinstance(value, py2to3.UNICODE_TYPE) and py2to3.PY_2:
           try:
             value = codecs.decode(value, 'ascii')

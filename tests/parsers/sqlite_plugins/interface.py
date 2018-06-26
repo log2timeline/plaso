@@ -78,7 +78,7 @@ class TestSQLitePlugin(interface.SQLitePlugin):
 
     # If Python 2 is used field3 needs to be converted to a string
     # because it is a read-write buffer.
-    if py2to3.PY_2 and field3:
+    if py2to3.PY_2 and field3 is not None:
       field3 = str(field3)
 
     self.results.append((field1, field2, field3))
