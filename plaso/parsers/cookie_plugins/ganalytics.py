@@ -410,9 +410,9 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
       for variable in extra_variables:
         key, _, value = variable.partition('=')
 
-        # Urllib2 in Python2 requires a str argument, not unicode. We thus need
-        # to convert the 'value' argument to str and back again, but only in
-        # Python 2.
+        # Urllib2 in Python 2 requires a 'str' argument, not 'unicode'. We thus
+        # need to convert the value argument to 'str" and back again, but only
+        # in Python 2.
         if isinstance(value, py2to3.UNICODE_TYPE) and py2to3.PY_2:
           try:
             value = codecs.decode(value, 'ascii')
@@ -430,7 +430,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
           except UnicodeDecodeError:
             value = codecs.encode(value, 'utf-8', errors='replace')
             parser_mediator.ProduceExtractionError(
-                'Cookie value did not decode to Unicode string. Non UTF-8 '
+                'Cookie value did not contain a Unicode string. Non UTF-8 '
                 'characters have been replaced.')
 
         extra_attributes[key] = value
