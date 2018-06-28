@@ -312,51 +312,29 @@ class FileObjectOutputWriterTest(unittest.TestCase):
 
   def testWriteAscii(self):
     """Tests the Write function with ASCII encoding."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='ascii')
+    output_writer = test_lib.TestOutputWriter(encoding='ascii')
 
     output_writer.Write('A first string\n')
     string = output_writer.ReadOutput()
-    self.assertEqual(string, b'A first string\n')
-
-    # Byte string with ASCII characters.
-    output_writer.Write(b'A 2nd string\n')
-    string = output_writer.ReadOutput()
-    self.assertEqual(string, b'A 2nd string\n')
+    self.assertEqual(string, 'A first string\n')
 
     # Unicode string with non-ASCII characters.
     output_writer.Write('þriðja string\n')
     string = output_writer.ReadOutput()
-    self.assertEqual(string, b'?ri?ja string\n')
-
-    # Byte string with non-ASCII characters.
-    with self.assertRaises(UnicodeDecodeError):
-      # This fails because the byte string cannot be converted to
-      # a Unicode string before the call to encode().
-      output_writer.Write(b'\xc3\xberi\xc3\xb0ja string\n')
+    self.assertEqual(string, '?ri?ja string\n')
 
   def testWriteUtf8(self):
     """Tests the Write function with UTF-8 encoding."""
-    output_writer = test_lib.TestBinaryOutputWriter()
+    output_writer = test_lib.TestOutputWriter()
 
     output_writer.Write('A first string\n')
     string = output_writer.ReadOutput()
-    self.assertEqual(string, b'A first string\n')
-
-    # Byte string with ASCII characters.
-    output_writer.Write(b'A 2nd string\n')
-    string = output_writer.ReadOutput()
-    self.assertEqual(string, b'A 2nd string\n')
+    self.assertEqual(string, 'A first string\n')
 
     # Unicode string with non-ASCII characters.
     output_writer.Write('þriðja string\n')
     string = output_writer.ReadOutput()
-    self.assertEqual(string, b'\xc3\xberi\xc3\xb0ja string\n')
-
-    # Byte string with non-ASCII characters.
-    with self.assertRaises(UnicodeDecodeError):
-      # This fails because the byte string cannot be converted to
-      # a Unicode string before the call to encode().
-      output_writer.Write(b'\xc3\xberi\xc3\xb0ja string\n')
+    self.assertEqual(string, 'þriðja string\n')
 
 
 if __name__ == '__main__':

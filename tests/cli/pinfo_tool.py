@@ -36,7 +36,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testCompareStores(self):
     """Tests the CompareStores function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
     test_file1 = self._GetTestFilePath(['psort_test.plaso'])
@@ -51,7 +51,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     self.assertTrue(test_tool.CompareStores())
 
     output = output_writer.ReadOutput()
-    self.assertEqual(output, b'Storage files are identical.\n')
+    self.assertEqual(output, 'Storage files are identical.\n')
 
     options = test_lib.TestOptions()
     options.compare_storage_file = test_file1
@@ -62,7 +62,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     self.assertFalse(test_tool.CompareStores())
 
     output = output_writer.ReadOutput()
-    self.assertEqual(output, b'Storage files are different.\n')
+    self.assertEqual(output, 'Storage files are different.\n')
 
   def testParseArguments(self):
     """Tests the ParseArguments function."""
@@ -78,7 +78,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.plaso'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -96,7 +96,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.plaso'])
   def testPrintStorageInformationAsText(self):
     """Tests the _PrintStorageInformationAsText function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
     test_filename = 'pinfo_test.plaso'
@@ -199,11 +199,11 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     expected_output = output_writer.ReadOutput()
 
     expected_output = (
-        b'{0:s}'
-        b'No errors stored.\n'
-        b'\n'
-        b'No analysis reports stored.\n'
-        b'\n').format(expected_output)
+        '{0:s}'
+        'No errors stored.\n'
+        '\n'
+        'No analysis reports stored.\n'
+        '\n').format(expected_output)
 
     test_file = self._GetTestFilePath([test_filename])
 
@@ -219,7 +219,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 
     # Compare the output as list of lines which makes it easier to spot
     # differences.
-    self.assertEqual(output.split(b'\n'), expected_output.split(b'\n'))
+    self.assertEqual(output.split('\n'), expected_output.split('\n'))
 
   @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.plaso'])
   def testPrintStorageInformationAsJSON(self):
@@ -228,7 +228,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     session_identifier = 'd280b33c845b4e8bb3d0b33da11b180b'
     session_start_time = timelib.Timestamp.CopyFromString(
         '2017-12-28 20:06:34.578880')
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
     test_file = self._GetTestFilePath([test_filename])
 

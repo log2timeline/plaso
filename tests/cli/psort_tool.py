@@ -191,7 +191,7 @@ optional arguments:
 
   def testListLanguageIdentifiers(self):
     """Tests the ListLanguageIdentifiers function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psort_tool.PsortTool(output_writer=output_writer)
 
     test_tool.ListLanguageIdentifiers()
@@ -200,11 +200,11 @@ optional arguments:
 
     number_of_tables = 0
     lines = []
-    for line in output.split(b'\n'):
+    for line in output.split('\n'):
       line = line.strip()
       lines.append(line)
 
-      if line.startswith(b'*****') and line.endswith(b'*****'):
+      if line.startswith('*****') and line.endswith('*****'):
         number_of_tables += 1
 
     self.assertIn('Language identifiers', lines[1])
@@ -213,12 +213,12 @@ optional arguments:
 
     self.assertEqual(number_of_tables, 1)
 
-    expected_line = b'en : English'
+    expected_line = 'en : English'
     self.assertIn(expected_line, lines)
 
   def testParseArguments(self):
     """Tests the ParseArguments function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psort_tool.PsortTool(output_writer=output_writer)
 
     result = test_tool.ParseArguments()
@@ -254,7 +254,7 @@ optional arguments:
   def testProcessStorageWithMissingParameters(self):
     """Tests the ProcessStorage function with parameters missing."""
     input_reader = TestInputReader()
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psort_tool.PsortTool(
         input_reader=input_reader, output_writer=output_writer)
 
@@ -275,7 +275,7 @@ optional arguments:
       test_tool.ParseOptions(options)
       test_tool.ProcessStorage()
 
-      with open(temp_file_name, 'rb') as file_object:
+      with open(temp_file_name, 'r') as file_object:
         for line in file_object.readlines():
           lines.append(line.strip())
 

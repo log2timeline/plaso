@@ -81,7 +81,7 @@ class TimesketchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
       username (str): username.
     """
     self._timeline_owner = username
-    logger.info('Owner of the timeline: {0:s}'.format(self._timeline_owner))
+    logger.info('Owner of the timeline: {0!s}'.format(self._timeline_owner))
 
   def WriteHeader(self):
     """Sets up the Elasticsearch index and the Timesketch database object.

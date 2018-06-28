@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import abc
+import codecs
 import datetime
 import locale
 import sys
@@ -359,11 +360,11 @@ class CLITool(object):
         encoding = self.preferred_encoding
 
       try:
-        argument_value = argument_value.decode(encoding)
+        argument_value = codecs.decode(argument_value, encoding)
       except UnicodeDecodeError as exception:
         raise errors.BadConfigOption((
             'Unable to convert option: {0:s} to Unicode with error: '
-            '{1:s}.').format(argument_name, exception))
+            '{1!s}.').format(argument_name, exception))
 
     elif not isinstance(argument_value, py2to3.UNICODE_TYPE):
       raise errors.BadConfigOption(
@@ -499,6 +500,7 @@ class FileObjectOutputWriter(CLIOutputWriter):
     try:
       # Note that encode() will first convert string into a Unicode string
       # if necessary.
+      codecs.encode(string, self._encoding, errors=self._errors)
       encoded_string = string.encode(self._encoding, errors=self._errors)
     except UnicodeEncodeError:
       if self._errors == 'strict':

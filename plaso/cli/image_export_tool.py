@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import argparse
+import codecs
 import os
 import textwrap
 
@@ -490,33 +491,30 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """
     specification_store = specification.FormatSpecificationStore()
 
-    with open(path, 'rb') as file_object:
+    with open(path, 'r') as file_object:
       for line in file_object.readlines():
         line = line.strip()
-        if not line or line.startswith(b'#'):
+        if not line or line.startswith('#'):
           continue
 
         try:
           identifier, offset, pattern = line.split()
         except ValueError:
-          logger.error('[skipping] invalid line: {0:s}'.format(
-              line.decode('utf-8')))
+          logger.error('[skipping] invalid line: {0:s}'.format(line))
           continue
 
         try:
           offset = int(offset, 10)
         except ValueError:
-          logger.error('[skipping] invalid offset in line: {0:s}'.format(
-              line.decode('utf-8')))
+          logger.error('[skipping] invalid offset in line: {0:s}'.format(line))
           continue
 
         try:
-          pattern = pattern.decode('string_escape')
+          pattern = codecs.decode(pattern, 'unicode_escape')
         # ValueError is raised e.g. when the patterns contains "\xg1".
         except ValueError:
           logger.error(
-              '[skipping] invalid pattern in line: {0:s}'.format(
-                  line.decode('utf-8')))
+              '[skipping] invalid pattern in line: {0:s}'.format(line))
           continue
 
         format_specification = specification.FormatSpecification(identifier)

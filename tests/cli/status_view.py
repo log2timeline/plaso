@@ -28,13 +28,13 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     The actual processing time is ignored, since it can vary.
 
     Args:
-      output (bytes): tool output.
-      expected_output (list[bytes]): expected tool output.
+      output (str): tool output.
+      expected_output (list[str]): expected tool output.
     """
-    output = output.split(b'\n')
+    output = output.split('\n')
 
     self.assertEqual(output[:4], expected_output[:4])
-    self.assertTrue(output[4].startswith(b'Processing time\t: '))
+    self.assertTrue(output[4].startswith('Processing time\t: '))
     self.assertEqual(output[5:], expected_output[5:])
 
   # TODO: add tests for _ClearScreen
@@ -47,7 +47,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
 
   def testPrintExtractionStatusUpdateLinear(self):
     """Tests the PrintExtractionStatusUpdateLinear function."""
-    output_writer = test_lib.TestBinaryOutputWriter()
+    output_writer = test_lib.TestOutputWriter()
 
     test_view = status_view.StatusView(output_writer, 'test_tool')
     test_view.SetSourceInformation(
@@ -61,7 +61,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     test_view._PrintExtractionStatusUpdateLinear(process_status)
 
     output = output_writer.ReadOutput()
-    self.assertEqual(output, b'')
+    self.assertEqual(output, '')
 
     process_status.UpdateWorkerStatus(
         'w_identifier', 'w_status', 123, 0,
@@ -78,7 +78,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
 
   def testPrintExtractionStatusUpdateWindow(self):
     """Tests the _PrintExtractionStatusUpdateWindow function."""
-    output_writer = test_lib.TestBinaryOutputWriter()
+    output_writer = test_lib.TestOutputWriter()
 
     test_view = status_view.StatusView(output_writer, 'test_tool')
     test_view.SetSourceInformation(
@@ -92,34 +92,34 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     test_view._PrintExtractionStatusUpdateWindow(process_status)
 
     table_header = (
-        b'Identifier      '
-        b'PID     '
-        b'Status          '
-        b'Memory          '
-        b'Sources         '
-        b'Events          '
-        b'File')
+        'Identifier      '
+        'PID     '
+        'Status          '
+        'Memory          '
+        'Sources         '
+        'Events          '
+        'File')
 
     if not sys.platform.startswith('win'):
-      table_header = b'\x1b[1m{0:s}\x1b[0m'.format(table_header)
+      table_header = '\x1b[1m{0:s}\x1b[0m'.format(table_header)
 
     expected_output = [
-        b'plaso - test_tool version {0:s}'.format(plaso.__version__),
-        b'',
-        b'Source path\t: /test/source/path',
-        b'Source type\t: directory',
-        b'Processing time\t: 00:00:00',
-        b'',
+        'plaso - test_tool version {0:s}'.format(plaso.__version__),
+        '',
+        'Source path\t: /test/source/path',
+        'Source type\t: directory',
+        'Processing time\t: 00:00:00',
+        '',
         table_header,
-        (b'f_identifier    '
-         b'123     '
-         b'f_status        '
-         b'0 B             '
-         b'29 (29)         '
-         b'456 (456)       '
-         b'f_test_file'),
-        b'',
-        b'']
+        ('f_identifier    '
+         '123     '
+         'f_status        '
+         '0 B             '
+         '29 (29)         '
+         '456 (456)       '
+         'f_test_file'),
+        '',
+        '']
 
     output = output_writer.ReadOutput()
     self._CheckOutput(output, expected_output)
@@ -131,29 +131,29 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     test_view._PrintExtractionStatusUpdateWindow(process_status)
 
     expected_output = [
-        b'plaso - test_tool version {0:s}'.format(plaso.__version__),
-        b'',
-        b'Source path\t: /test/source/path',
-        b'Source type\t: directory',
-        b'Processing time\t: 00:00:00',
-        b'',
+        'plaso - test_tool version {0:s}'.format(plaso.__version__),
+        '',
+        'Source path\t: /test/source/path',
+        'Source type\t: directory',
+        'Processing time\t: 00:00:00',
+        '',
         table_header,
-        (b'f_identifier    '
-         b'123     '
-         b'f_status        '
-         b'0 B             '
-         b'29 (29)         '
-         b'456 (456)       '
-         b'f_test_file'),
-        (b'w_identifier    '
-         b'123     '
-         b'w_status        '
-         b'0 B             '
-         b'2 (2)           '
-         b'4 (4)           '
-         b'w_test_file'),
-        b'',
-        b'']
+        ('f_identifier    '
+         '123     '
+         'f_status        '
+         '0 B             '
+         '29 (29)         '
+         '456 (456)       '
+         'f_test_file'),
+        ('w_identifier    '
+         '123     '
+         'w_status        '
+         '0 B             '
+         '2 (2)           '
+         '4 (4)           '
+         'w_test_file'),
+        '',
+        '']
 
     output = output_writer.ReadOutput()
     self._CheckOutput(output, expected_output)
@@ -164,7 +164,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
 
   def testPrintExtractionStatusHeader(self):
     """Tests the PrintExtractionStatusHeader function."""
-    output_writer = test_lib.TestBinaryOutputWriter()
+    output_writer = test_lib.TestOutputWriter()
 
     test_view = status_view.StatusView(output_writer, 'test_tool')
     test_view.SetSourceInformation(
