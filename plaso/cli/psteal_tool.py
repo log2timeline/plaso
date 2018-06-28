@@ -22,7 +22,6 @@ from plaso.cli import tool_options
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import engine
-from plaso.engine import filter_file
 from plaso.engine import knowledge_base
 from plaso.engine import single_process as single_process_engine
 from plaso.lib import errors
@@ -273,7 +272,9 @@ class PstealTool(
 
     self._status_view.SetMode(self._status_view_mode)
     self._status_view.SetSourceInformation(
-        self._source_path, source_type, filter_file=self._filter_file)
+        self._source_path, source_type,
+        artifact_filters=self._artifact_filters,
+        filter_file=self._filter_file)
 
     status_update_callback = (
         self._status_view.GetExtractionStatusUpdateCallback())
@@ -283,8 +284,9 @@ class PstealTool(
     self._output_writer.Write('Processing started.\n')
 
     session = engine.BaseEngine.CreateSession(
+        artifact_filter_names=self._artifact_filters,
         command_line_arguments=self._command_line_arguments,
-        filter_file=self._filter_file,
+        filter_file_path=self._filter_file,
         preferred_encoding=self.preferred_encoding,
         preferred_time_zone=self._preferred_time_zone,
         preferred_year=self._preferred_year)
@@ -317,13 +319,15 @@ class PstealTool(
     self._SetExtractionParsersAndPlugins(configuration, session)
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
-    filter_find_specs = None
-    if configuration.filter_file:
-      environment_variables = (
-          extraction_engine.knowledge_base.GetEnvironmentVariables())
-      filter_file_object = filter_file.FilterFile(configuration.filter_file)
-      filter_find_specs = filter_file_object.BuildFindSpecs(
-          environment_variables=environment_variables)
+    artifact_filters = getattr(configuration, '_artifact_filters', None)
+    artifact_definitions_path = getattr(
+        configuration, '_artifact_definitions_path', None)
+    custom_artifacts_path = getattr(
+        configuration, '_custom_artifacts_path', None)
+    filter_find_specs = engine.BaseEngine.BuildFilterFindSpecs(
+        artifact_definitions_path, custom_artifacts_path,
+        extraction_engine.knowledge_base, artifact_filters,
+        configuration.filter_file)
 
     processing_status = None
     if single_process_mode:
@@ -450,7 +454,8 @@ class PstealTool(
     self._ParseTimezoneOption(options)
 
     argument_helper_names = [
-        'artifact_definitions', 'hashers', 'language', 'parsers']
+        'artifact_definitions', 'custom_artifact_definitions',
+        'hashers', 'language', 'parsers']
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=argument_helper_names)
 

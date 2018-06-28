@@ -3,17 +3,27 @@
 
 from __future__ import unicode_literals
 
+import os
+
+from artifacts import definitions as artifact_types
+from artifacts import errors as artifacts_errors
+from artifacts import reader as artifacts_reader
+from artifacts import registry as artifacts_registry
+
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import sessions
+from plaso.engine import artifact_filters
+from plaso.engine import filter_file
 from plaso.engine import knowledge_base
 from plaso.engine import logger
 from plaso.engine import processing_status
 from plaso.engine import profilers
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.preprocessors import manager as preprocess_manager
 
 
@@ -162,15 +172,18 @@ class BaseEngine(object):
 
   @classmethod
   def CreateSession(
-      cls, command_line_arguments=None, debug_mode=False,
-      filter_file=None, preferred_encoding='utf-8',
+      cls, artifact_filter_names=None, command_line_arguments=None,
+      debug_mode=False, filter_file_path=None, preferred_encoding='utf-8',
       preferred_time_zone=None, preferred_year=None):
     """Creates a session attribute container.
 
     Args:
+      artifact_filter_names (Optional list[str]): names of artifact definitions
+          that are used for filtering file system and Windows Registry
+          key paths.
       command_line_arguments (Optional[str]): the command line arguments.
       debug_mode (bool): True if debug mode was enabled.
-      filter_file (Optional[str]): path to a file with find specifications.
+      filter_file_path (Optional[str]): path to a file with find specifications.
       preferred_encoding (Optional[str]): preferred encoding.
       preferred_time_zone (Optional[str]): preferred time zone.
       preferred_year (Optional[int]): preferred year.
@@ -180,9 +193,10 @@ class BaseEngine(object):
     """
     session = sessions.Session()
 
+    session.artifact_filters = artifact_filter_names
     session.command_line_arguments = command_line_arguments
     session.debug_mode = debug_mode
-    session.filter_file = filter_file
+    session.filter_file = filter_file_path
     session.preferred_encoding = preferred_encoding
     session.preferred_time_zone = preferred_time_zone
     session.preferred_year = preferred_year
@@ -225,12 +239,13 @@ class BaseEngine(object):
     return file_system, mount_point
 
   def PreprocessSources(
-      self, artifacts_registry, source_path_specs, resolver_context=None):
+      self, artifacts_registry_object, source_path_specs,
+      resolver_context=None):
     """Preprocesses the sources.
 
     Args:
-      artifacts_registry (artifacts.ArtifactDefinitionsRegistry]): artifact
-          definitions registry.
+      artifacts_registry_object (artifacts.ArtifactDefinitionsRegistry]):
+          artifact definitions registry.
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
       resolver_context (Optional[dfvfs.Context]): resolver context.
@@ -251,7 +266,8 @@ class BaseEngine(object):
         operating_system = self._DetermineOperatingSystem(searcher)
         if operating_system != definitions.OPERATING_SYSTEM_UNKNOWN:
           preprocess_manager.PreprocessPluginsManager.RunPlugins(
-              artifacts_registry, file_system, mount_point, self.knowledge_base)
+              artifacts_registry_object, file_system, mount_point,
+              self.knowledge_base)
 
           detected_operating_systems.append(operating_system)
 
@@ -272,3 +288,93 @@ class BaseEngine(object):
       bool: True if memory profiling with guppy is supported.
     """
     return profilers.GuppyMemoryProfiler.IsSupported()
+
+  @classmethod
+  def BuildFilterFindSpecs(
+      cls, artifact_defintions_path, custom_artifacts_path,
+      knowledge_base_object, artifact_filter_names=None, filter_file_path=None):
+    """Builds find specifications from artifacts or filter file if available.
+
+    Args:
+       knowledge_base_object (KnowledgeBase): knowledge base.
+       artifact_filter_names (Optional list[str]): names of artifact
+          definitions that are used for filtering file system and Windows
+          Registry key paths.
+       filter_file_path (Optional [str]): Path of filter file.
+
+    Returns:
+      list[dfvfs.FindSpec]: find specifications for the file source type.
+
+    Raises:
+      RuntimeError: if no valid FindSpecs are built.
+    """
+    environment_variables = knowledge_base_object.GetEnvironmentVariables()
+    find_specs = None
+    if artifact_filter_names:
+      artifacts_registry_object = cls.BuildArtifactsRegistry(
+          artifact_defintions_path, custom_artifacts_path)
+      artifact_filters_object = (
+          artifact_filters.ArtifactDefinitionsFilterHelper(
+              artifacts_registry_object, artifact_filter_names,
+              knowledge_base_object))
+      artifact_filters_object.BuildFindSpecs(environment_variables)
+      find_specs = knowledge_base_object.GetValue(
+          artifact_filters_object.KNOWLEDGE_BASE_VALUE)[
+              artifact_types.TYPE_INDICATOR_FILE]
+    elif filter_file_path:
+      filter_file_object = filter_file.FilterFile(filter_file_path)
+      find_specs = filter_file_object.BuildFindSpecs(
+          environment_variables=environment_variables)
+
+    if (artifact_filter_names or filter_file_path) and not find_specs:
+      raise RuntimeError(
+          'Error processing filters, no valid specifications built.')
+
+    return find_specs
+
+  @classmethod
+  def BuildArtifactsRegistry(
+      cls, artifacts_definitions_path, custom_artifacts_path):
+    """Build Find Specs from artifacts or filter file if available.
+
+    Args:
+       artifact_definitions_path (str): path to artifact definitions file.
+       custom_artifacts_path (str): path to custom artifact definitions file.
+
+    Returns:
+      artifacts.ArtifactDefinitionsRegistry: artifact definitions registry.
+
+    Raises:
+      RuntimeError: if no valid FindSpecs are built.
+    """
+    if artifacts_definitions_path and not os.path.isdir(
+        artifacts_definitions_path):
+      raise errors.BadConfigOption(
+          'No such artifacts filter file: {0:s}.'.format(
+              artifacts_definitions_path))
+
+    if custom_artifacts_path and not os.path.isfile(custom_artifacts_path):
+      raise errors.BadConfigOption(
+          'No such artifacts filter file: {0:s}.'.format(custom_artifacts_path))
+
+    registry = artifacts_registry.ArtifactDefinitionsRegistry()
+    reader = artifacts_reader.YamlArtifactsReader()
+
+    try:
+      registry.ReadFromDirectory(reader, artifacts_definitions_path)
+
+    except (KeyError, artifacts_errors.FormatError) as exception:
+      raise errors.BadConfigOption((
+          'Unable to read artifact definitions from: {0:s} with error: '
+          '{1!s}').format(artifacts_definitions_path, exception))
+
+    if custom_artifacts_path:
+      try:
+        registry.ReadFromFile(reader, custom_artifacts_path)
+
+      except (KeyError, artifacts_errors.FormatError) as exception:
+        raise errors.BadConfigOption((
+            'Unable to read artifact definitions from: {0:s} with error: '
+            '{1!s}').format(custom_artifacts_path, exception))
+
+    return registry
