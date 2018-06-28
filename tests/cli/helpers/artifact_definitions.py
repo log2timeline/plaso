@@ -22,12 +22,18 @@ class ArtifactDefinitionsArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--artifact_definitions PATH]
+                     [--custom_artifact_definitions PATH]
 
 Test argument parser.
 
 optional arguments:
   --artifact_definitions PATH, --artifact-definitions PATH
                         Path to a directory containing artifact definitions,
+                        which are .yaml files. Artifact definitions can be
+                        used to describe and quickly collect data of interest,
+                        such as specific files or Windows Registry keys.
+  --custom_artifact_definitions PATH, --custom-artifact-definitions PATH
+                        Path to a file containing custom artifact definitions,
                         which are .yaml files. Artifact definitions can be
                         used to describe and quickly collect data of interest,
                         such as specific files or Windows Registry keys.
@@ -56,7 +62,7 @@ optional arguments:
 
     artifact_definitions.ArtifactDefinitionsArgumentsHelper.ParseOptions(
         options, test_tool)
-    self.assertIsNotNone(test_tool._artifacts_registry)
+    self.assertIsNotNone(test_tool._artifact_definitions_path)
 
     with self.assertRaises(errors.BadConfigObject):
       artifact_definitions.ArtifactDefinitionsArgumentsHelper.ParseOptions(
