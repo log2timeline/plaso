@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 
 import argparse
-import codecs
 import os
 import platform
 import unittest
