@@ -500,8 +500,7 @@ class FileObjectOutputWriter(CLIOutputWriter):
     try:
       # Note that encode() will first convert string into a Unicode string
       # if necessary.
-      codecs.encode(string, self._encoding, errors=self._errors)
-      encoded_string = string.encode(self._encoding, errors=self._errors)
+      encoded_string = codecs.encode(string, self._encoding, self._errors)
     except UnicodeEncodeError:
       if self._errors == 'strict':
         logger.error(
@@ -511,7 +510,7 @@ class FileObjectOutputWriter(CLIOutputWriter):
             '"\\ufffd".')
         self._errors = 'replace'
 
-      encoded_string = string.encode(self._encoding, errors=self._errors)
+      encoded_string = codecs.encode(string, self._encoding, self._errors)
 
     self._file_object.write(encoded_string)
 

@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import io
 import os
 import unittest
 
@@ -415,10 +416,11 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
       expected_output_file_name = self._GetTestFilePath(
           ['end_to_end', 'dynamic.log'])
-      with open(expected_output_file_name, 'r') as file_object:
+      with io.open(
+          expected_output_file_name, 'rt', encoding='utf-8') as file_object:
         expected_output = file_object.read()
 
-      with open(options.write, 'r') as file_object:
+      with io.open(options.write, 'rt', encoding='utf-8') as file_object:
         result_output = file_object.read()
 
       expected_output = sorted(expected_output.split('\n'))

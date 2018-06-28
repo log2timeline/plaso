@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import argparse
 import codecs
+import io
 import os
 import textwrap
 
@@ -25,6 +26,7 @@ from plaso.engine import path_helper
 from plaso.filters import file_entry as file_entry_filters
 from plaso.lib import errors
 from plaso.lib import loggers
+from plaso.lib import py2to3
 from plaso.lib import specification
 from plaso.preprocessors import manager as preprocess_manager
 
@@ -61,6 +63,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
   # TODO: remove this redirect.
   _SOURCE_OPTION = 'image'
+
+  _SPECIFICATION_FILE_ENCODING = 'utf-8'
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
@@ -491,7 +495,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """
     specification_store = specification.FormatSpecificationStore()
 
-    with open(path, 'r') as file_object:
+    with io.open(
+        path, 'r', encoding=self._SPECIFICATION_FILE_ENCODING) as file_object:
       for line in file_object.readlines():
         line = line.strip()
         if not line or line.startswith('#'):
@@ -510,7 +515,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           continue
 
         try:
-          pattern = codecs.decode(pattern, 'unicode_escape')
+          if py2to3.PY_2:
+            pattern = codecs.decode(pattern, 'string_escape')
+          else:
+            pattern = codecs.escape_decode(pattern)[0]
         # ValueError is raised e.g. when the patterns contains "\xg1".
         except ValueError:
           logger.error(
