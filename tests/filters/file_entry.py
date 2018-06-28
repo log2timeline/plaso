@@ -122,7 +122,7 @@ class DateTimeFileEntryFilterTest(shared_test_lib.BaseTestCase):
 
   def testPrint(self):
     """Tests the Print function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = cli_test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_filter = file_entry_filters.DateTimeFileEntryFilter()
 
     test_filter.AddDateTimeRange(
@@ -188,7 +188,7 @@ class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
 
   def testPrint(self):
     """Tests the Print function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = cli_test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_filter = file_entry_filters.ExtensionsFileEntryFilter(['exe', 'pdf'])
 
     test_filter.Print(output_writer)
@@ -246,7 +246,7 @@ class NamesFileEntryFilterTest(shared_test_lib.BaseTestCase):
 
   def testPrint(self):
     """Tests the Print function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = cli_test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_filter = file_entry_filters.NamesFileEntryFilter(['myfile'])
 
     test_filter.Print(output_writer)
@@ -329,7 +329,7 @@ class SignaturesFileEntryFilterTest(shared_test_lib.BaseTestCase):
 
   def testPrint(self):
     """Tests the Print function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = cli_test_lib.TestBinaryOutputWriter(encoding='utf-8')
 
     specification_store = specification.FormatSpecificationStore()
     specification_store.AddNewSpecification('7z')

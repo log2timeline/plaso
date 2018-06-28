@@ -140,22 +140,14 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     self._last_month = time_elements_tuple[1]
 
     # If the actual entry is a repeated entry, we take the basic information
-    # from the previous entry, but using the timestmap from the actual entry.
+    # from the previous entry, but use the timestamp from the actual entry.
     if key == 'logline':
       self._previous_structure = structure
     else:
       structure = self._previous_structure
 
-    # Pyparsing reads in RAW, but the text is in UTF8.
-    try:
-      action = structure.action.decode('utf-8')
-    except UnicodeDecodeError:
-      logger.warning(
-          'Decode UTF8 failed, the message string may be cut short.')
-      action = structure.action.decode('utf-8', 'ignore')
-
     event_data = MacAppFirewallLogEventData()
-    event_data.action = action
+    event_data.action = structure.action
     event_data.agent = structure.agent
     event_data.computer_name = structure.computer_name
     # Due to the use of CharsNotIn pyparsing structure contains whitespaces

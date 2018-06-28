@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import codecs
 import json
 import os
 
@@ -88,6 +89,8 @@ class DockerJSONParser(interface.FileObjectParser):
   NAME = 'dockerjson'
   DESCRIPTION = 'Parser for JSON Docker files.'
 
+  _ENCODING = 'utf-8'
+
   def _GetIDFromPath(self, parser_mediator):
     """Extracts a container or a graph ID from a JSON file's path.
 
@@ -115,7 +118,10 @@ class DockerJSONParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file is not a valid layer config file.
     """
-    json_dict = json.load(file_object)
+    file_content = file_object.read()
+    file_content = codecs.decode(file_content, self._ENCODING)
+
+    json_dict = json.loads(file_content)
 
     if 'docker_version' not in json_dict:
       raise errors.UnableToParseFile(
@@ -151,7 +157,10 @@ class DockerJSONParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file is not a valid container config file.
     """
-    json_dict = json.load(file_object)
+    file_content = file_object.read()
+    file_content = codecs.decode(file_content, self._ENCODING)
+
+    json_dict = json.loads(file_content)
 
     if 'Driver' not in json_dict:
       raise errors.UnableToParseFile(

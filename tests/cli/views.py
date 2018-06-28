@@ -59,7 +59,7 @@ class CLITableViewTests(shared_test_lib.BaseTestCase):
 
   def testWrite(self):
     """Tests the Write function."""
-    output_writer = test_lib.TestOutputWriter()
+    output_writer = test_lib.TestBinaryOutputWriter()
 
     # Table with columns.
     table_view = views.CLITableView(
@@ -127,7 +127,7 @@ class CLITabularTableView(shared_test_lib.BaseTestCase):
 
   def testWrite(self):
     """Tests the Write function."""
-    output_writer = test_lib.TestOutputWriter()
+    output_writer = test_lib.TestBinaryOutputWriter()
 
     table_view = views.CLITabularTableView(
         column_names=['Name', 'Description'])
@@ -154,7 +154,7 @@ class MarkdownTableViewTests(shared_test_lib.BaseTestCase):
 
   def testWrite(self):
     """Tests the Write function."""
-    output_writer = test_lib.TestOutputWriter()
+    output_writer = test_lib.TestBinaryOutputWriter()
 
     # Table with columns.
     table_view = views.MarkdownTableView(
