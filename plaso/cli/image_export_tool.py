@@ -301,8 +301,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       source_path_specs (list[dfvfs.PathSpec]): path specifications to extract.
       destination_path (str): path where the extracted files should be stored.
       output_writer (CLIOutputWriter): output writer.
-       artifact_definitions_path (str): path to artifact definitions file.
-       custom_artifacts_path (str): path to custom artifact definitions file.
+      artifact_definitions_path (str): path to artifact definitions file.
+      custom_artifacts_path (str): path to custom artifact definitions file.
       artifact_filters (list[str]): names of artifact definitions that are
           used for filtering file system and Windows Registry key paths.
       filter_file (str): path of the file that contains the filter file path
