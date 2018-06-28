@@ -293,7 +293,7 @@ class BaseEngine(object):
   def BuildFilterFindSpecs(
       cls, artifact_defintions_path, custom_artifacts_path,
       knowledge_base_object, artifact_filter_names=None, filter_file_path=None):
-    """Build Find Specs from artifacts or filter file if available.
+    """Builds find specifications from artifacts or filter file if available.
 
     Args:
        knowledge_base_object (KnowledgeBase): knowledge base.
