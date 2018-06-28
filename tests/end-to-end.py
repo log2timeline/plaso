@@ -75,101 +75,10 @@ class TestCase(object):
     """
     super(TestCase, self).__init__()
     self._debug_output = debug_output
-    self._log2timeline_path = None
-    self._pinfo_path = None
-    self._psort_path = None
-    self._psteal_path = None
     self._test_references_path = test_references_path
     self._test_results_path = test_results_path
     self._test_sources_path = test_sources_path
     self._tools_path = tools_path
-
-  def _CompareOutputFile(self, test_definition, temp_directory):
-    """Compares the output file with a reference output file.
-
-    Args:
-      test_definition (TestDefinition): test definition.
-      temp_directory (str): name of a temporary directory.
-
-    Returns:
-      bool: True if he output files are identical.
-    """
-    output_file_path = os.path.join(temp_directory, test_definition.output_file)
-
-    # TODO: add support to compare output by SHA-256.
-
-    result = False
-    if test_definition.reference_output_file:
-      reference_output_file_path = test_definition.reference_output_file
-      if self._test_references_path:
-        reference_output_file_path = os.path.join(
-            self._test_references_path, reference_output_file_path)
-
-      if not os.path.exists(reference_output_file_path):
-        logging.error('No such reference output file: {0:s}'.format(
-            reference_output_file_path))
-        return False
-
-      with open(reference_output_file_path, 'r') as reference_output_file:
-        with open(output_file_path, 'r') as output_file:
-          # Hack to remove paths in the output that are different when running
-          # the tests under UNIX and Windows.
-          reference_output_list = [
-              line.decode('utf-8').replace('/tmp/test/test_data/', '')
-              for line in reference_output_file.readlines()]
-          output_list = [
-              line.decode('utf-8').replace('/tmp/test/test_data/', '')
-              for line in output_file.readlines()]
-          output_list = [
-              line.replace('C:\\tmp\\test\\test_data\\', '')
-              for line in output_list]
-          output_list = [
-              line.replace('C:\\\\tmp\\\\test\\\\test_data\\\\', '')
-              for line in output_list]
-          differences = list(difflib.unified_diff(
-              reference_output_list, output_list,
-              fromfile=reference_output_file_path, tofile=output_file_path))
-
-      if differences:
-        differences_output = []
-        for difference in differences:
-          differences_output.append(difference)
-        differences_output = '\n'.join(differences_output)
-        logging.error('Differences: {0:s}'.format(differences_output))
-
-      if not differences:
-        result = True
-
-    return result
-
-  def _InitializeLog2TimelinePath(self):
-    """Initializes the location of log2timeline."""
-    for filename in (
-        'log2timeline.exe', 'log2timeline.sh', 'log2timeline.py'):
-      self._log2timeline_path = os.path.join(self._tools_path, filename)
-      if os.path.exists(self._log2timeline_path):
-        break
-
-  def _InitializePinfoPath(self):
-    """Initializes the location of pinfo."""
-    for filename in ('pinfo.exe', 'pinfo.sh', 'pinfo.py'):
-      self._pinfo_path = os.path.join(self._tools_path, filename)
-      if os.path.exists(self._pinfo_path):
-        break
-
-  def _InitializePsortPath(self):
-    """Initializes the location of psort."""
-    for filename in ('psort.exe', 'psort.sh', 'psort.py'):
-      self._psort_path = os.path.join(self._tools_path, filename)
-      if os.path.exists(self._psort_path):
-        break
-
-  def _InitializePstealPath(self):
-    """Initializes the location of psteal."""
-    for filename in ('psteal.exe', 'psteal.sh', 'psteal.py'):
-      self._psteal_path = os.path.join(self._tools_path, filename)
-      if os.path.exists(self._psteal_path):
-        break
 
   def _RunCommand(self, command, stdout=None, stderr=None):
     """Runs a command.
@@ -534,15 +443,8 @@ class TestLauncher(object):
     return failed_tests
 
 
-class ExtractAndOutputTestCase(TestCase):
-  """Extract and output test case.
-
-  The extract and output test case runs log2timeline to extract data
-  from a source, specified by the test definition. After the data has been
-  extracted pinfo and psort are run to read from the resulting storage file.
-  """
-
-  NAME = 'extract_and_output'
+class StorageFileTestCase(TestCase):
+  """Shared functionality for plaso test cases that involve storage files."""
 
   def __init__(
       self, tools_path, test_sources_path, test_references_path,
@@ -556,61 +458,83 @@ class ExtractAndOutputTestCase(TestCase):
       test_results_path (str): path to store test results.
       debug_output (Optional[bool]): True if debug output should be generated.
     """
-    super(ExtractAndOutputTestCase, self).__init__(
+    super(StorageFileTestCase, self).__init__(
         tools_path, test_sources_path, test_references_path,
         test_results_path, debug_output=debug_output)
-    self._InitializeLog2TimelinePath()
-    self._InitializePinfoPath()
-    self._InitializePsortPath()
+    self._pinfo_path = None
+    self._psort_path = None
 
-  def _RunLog2Timeline(
-      self, test_definition, temp_directory, storage_file, source_path):
-    """Runs log2timeline with the parameters specified by the test definition.
+  def _CompareOutputFile(self, test_definition, temp_directory):
+    """Compares the output file with a reference output file.
 
     Args:
       test_definition (TestDefinition): test definition.
       temp_directory (str): name of a temporary directory.
-      storage_file (str): path of the storage file.
-      source_path (str): path of the source.
 
     Returns:
-      bool: True if log2timeline ran successfully.
+      bool: True if he output files are identical.
     """
-    extract_options = ['--status-view=none']
-    extract_options.extend(test_definition.extract_options)
+    output_file_path = os.path.join(temp_directory, test_definition.output_file)
 
-    logging_options = [
-        option.replace('%command%', 'log2timeline')
-        for option in test_definition.logging_options]
+    # TODO: add support to compare output by SHA-256.
 
-    stdout_file = os.path.join(
-        temp_directory, '{0:s}-log2timeline.out'.format(test_definition.name))
-    stderr_file = os.path.join(
-        temp_directory, '{0:s}-log2timeline.err'.format(test_definition.name))
-    command = [self._log2timeline_path]
-    command.extend(extract_options)
-    command.extend(logging_options)
-    command.extend(test_definition.profiling_options)
-    command.extend([storage_file, source_path])
+    result = False
+    if test_definition.reference_output_file:
+      reference_output_file_path = test_definition.reference_output_file
+      if self._test_references_path:
+        reference_output_file_path = os.path.join(
+            self._test_references_path, reference_output_file_path)
 
-    with open(stdout_file, 'w') as stdout:
-      with open(stderr_file, 'w') as stderr:
-        result = self._RunCommand(command, stdout=stdout, stderr=stderr)
+      if not os.path.exists(reference_output_file_path):
+        logging.error('No such reference output file: {0:s}'.format(
+            reference_output_file_path))
+        return False
 
-    if self._debug_output:
-      with open(stderr_file, 'rb') as file_object:
-        output_data = file_object.read()
-        print(output_data)
+      with open(reference_output_file_path, 'r') as reference_output_file:
+        with open(output_file_path, 'r') as output_file:
+          # Hack to remove paths in the output that are different when running
+          # the tests under UNIX and Windows.
+          reference_output_list = [
+              line.decode('utf-8').replace('/tmp/test/test_data/', '')
+              for line in reference_output_file.readlines()]
+          output_list = [
+              line.decode('utf-8').replace('/tmp/test/test_data/', '')
+              for line in output_file.readlines()]
+          output_list = [
+              line.replace('C:\\tmp\\test\\test_data\\', '')
+              for line in output_list]
+          output_list = [
+              line.replace('C:\\\\tmp\\\\test\\\\test_data\\\\', '')
+              for line in output_list]
+          differences = list(difflib.unified_diff(
+              reference_output_list, output_list,
+              fromfile=reference_output_file_path, tofile=output_file_path))
 
-    if os.path.exists(storage_file):
-      shutil.copy(storage_file, self._test_results_path)
+      if differences:
+        differences_output = []
+        for difference in differences:
+          differences_output.append(difference)
+        differences_output = '\n'.join(differences_output)
+        logging.error('Differences: {0:s}'.format(differences_output))
 
-    if os.path.exists(stdout_file):
-      shutil.copy(stdout_file, self._test_results_path)
-    if os.path.exists(stderr_file):
-      shutil.copy(stderr_file, self._test_results_path)
+      if not differences:
+        result = True
 
     return result
+
+  def _InitializePinfoPath(self):
+    """Initializes the location of pinfo."""
+    for filename in ('pinfo.exe', 'pinfo.sh', 'pinfo.py'):
+      self._pinfo_path = os.path.join(self._tools_path, filename)
+      if os.path.exists(self._pinfo_path):
+        break
+
+  def _InitializePsortPath(self):
+    """Initializes the location of psort."""
+    for filename in ('psort.exe', 'psort.sh', 'psort.py'):
+      self._psort_path = os.path.join(self._tools_path, filename)
+      if os.path.exists(self._psort_path):
+        break
 
   def _RunPinfo(self, test_definition, temp_directory, storage_file):
     """Runs pinfo on the storage file.
@@ -689,27 +613,41 @@ class ExtractAndOutputTestCase(TestCase):
 
     return result
 
-  def _RunPsort(self, test_definition, temp_directory, storage_file):
+  def _RunPsort(
+      self, test_definition, temp_directory, storage_file,
+      analysis_options=None, output_options=None):
     """Runs psort with the output options specified by the test definition.
 
     Args:
       test_definition (TestDefinition): test definition.
       temp_directory (str): name of a temporary directory.
       storage_file (str): path of the storage file.
+      analysis_options (Optional[str]): analysis options.
+      output_options (Optional[str]): output options.
 
     Returns:
       bool: True if psort ran successfully.
     """
-    output_options = test_definition.output_options
+    analysis_options = analysis_options or []
+    output_options = output_options or []
 
-    if test_definition.output_format:
-      output_options.extend(['-o', test_definition.output_format])
+    output_format = test_definition.output_format or 'null'
+
+    if '-o' not in output_options and '--output-format' not in output_options:
+      output_options.extend(['--output-format', output_format])
 
     output_file_path = None
-    if test_definition.output_file:
-      output_file_path = os.path.join(
-          temp_directory, test_definition.output_file)
-    output_options.extend(['-w', output_file_path])
+    if output_format != 'null':
+      output_file = getattr(test_definition, 'output_file', None)
+      if output_file:
+        output_file_path = os.path.join(temp_directory, output_file)
+        output_options.extend(['-w', output_file_path])
+
+    output_options.append(storage_file)
+
+    output_filter = getattr(test_definition, 'output_filter', None)
+    if output_filter:
+      output_options.append(output_filter)
 
     logging_options = [
         option.replace('%command%', 'psort')
@@ -721,10 +659,10 @@ class ExtractAndOutputTestCase(TestCase):
         temp_directory, '{0:s}-psort.err'.format(test_definition.name))
 
     command = [self._psort_path]
+    command.extend(analysis_options)
     command.extend(output_options)
     command.extend(logging_options)
     command.extend(test_definition.profiling_options)
-    command.append(storage_file)
 
     with open(stdout_file, 'w') as stdout:
       with open(stderr_file, 'w') as stderr:
@@ -737,6 +675,118 @@ class ExtractAndOutputTestCase(TestCase):
 
     if output_file_path and os.path.exists(output_file_path):
       shutil.copy(output_file_path, self._test_results_path)
+
+    if os.path.exists(stdout_file):
+      shutil.copy(stdout_file, self._test_results_path)
+    if os.path.exists(stderr_file):
+      shutil.copy(stderr_file, self._test_results_path)
+
+    return result
+
+  @abc.abstractmethod
+  def ReadAttributes(self, test_definition_reader, test_definition):
+    """Reads the test definition attributes into to the test definition.
+
+    Args:
+      test_definition_reader (TestDefinitionReader): test definition reader.
+      test_definition (TestDefinition): test definition.
+
+    Returns:
+      bool: True if the read was successful.
+    """
+
+  @abc.abstractmethod
+  def Run(self, test_definition):
+    """Runs the test case with the parameters specified by the test definition.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+
+    Returns:
+      bool: True if the test ran successfully.
+    """
+
+
+class ExtractAndOutputTestCase(StorageFileTestCase):
+  """Extract and output test case.
+
+  The extract and output test case runs log2timeline to extract data
+  from a source, specified by the test definition. After the data has been
+  extracted pinfo and psort are run to read from the resulting storage file.
+  """
+
+  NAME = 'extract_and_output'
+
+  def __init__(
+      self, tools_path, test_sources_path, test_references_path,
+      test_results_path, debug_output=False):
+    """Initializes a test case.
+
+    Args:
+      tools_path (str): path to the plaso tools.
+      test_sources_path (str): path to the test sources.
+      test_references_path (str): path to the test references.
+      test_results_path (str): path to store test results.
+      debug_output (Optional[bool]): True if debug output should be generated.
+    """
+    super(ExtractAndOutputTestCase, self).__init__(
+        tools_path, test_sources_path, test_references_path,
+        test_results_path, debug_output=debug_output)
+    self._log2timeline_path = None
+
+    self._InitializeLog2TimelinePath()
+    self._InitializePinfoPath()
+    self._InitializePsortPath()
+
+  def _InitializeLog2TimelinePath(self):
+    """Initializes the location of log2timeline."""
+    for filename in (
+        'log2timeline.exe', 'log2timeline.sh', 'log2timeline.py'):
+      self._log2timeline_path = os.path.join(self._tools_path, filename)
+      if os.path.exists(self._log2timeline_path):
+        break
+
+  def _RunLog2Timeline(
+      self, test_definition, temp_directory, storage_file, source_path):
+    """Runs log2timeline with the parameters specified by the test definition.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+      temp_directory (str): name of a temporary directory.
+      storage_file (str): path of the storage file.
+      source_path (str): path of the source.
+
+    Returns:
+      bool: True if log2timeline ran successfully.
+    """
+    extract_options = ['--status-view=none']
+    extract_options.extend(test_definition.extract_options)
+
+    logging_options = [
+        option.replace('%command%', 'log2timeline')
+        for option in test_definition.logging_options]
+
+    stdout_file = os.path.join(
+        temp_directory, '{0:s}-log2timeline.out'.format(test_definition.name))
+    stderr_file = os.path.join(
+        temp_directory, '{0:s}-log2timeline.err'.format(test_definition.name))
+    command = [self._log2timeline_path]
+    command.extend(extract_options)
+    command.extend(logging_options)
+    command.extend(test_definition.profiling_options)
+    command.extend([storage_file, source_path])
+
+    with open(stdout_file, 'w') as stdout:
+      with open(stderr_file, 'w') as stderr:
+        result = self._RunCommand(command, stdout=stdout, stderr=stderr)
+
+    if self._debug_output:
+      with open(stderr_file, 'rb') as file_object:
+        output_data = file_object.read()
+        print(output_data)
+
+    if os.path.exists(storage_file):
+      shutil.copy(storage_file, self._test_results_path)
 
     if os.path.exists(stdout_file):
       shutil.copy(stdout_file, self._test_results_path)
@@ -825,7 +875,9 @@ class ExtractAndOutputTestCase(TestCase):
           return False
 
       # Check if the resulting storage file can be read with psort.
-      if not self._RunPsort(test_definition, temp_directory, storage_file):
+      if not self._RunPsort(
+          test_definition, temp_directory, source_path,
+          output_options=test_definition.output_options):
         return False
 
       # Compare output file with a reference output file.
@@ -836,7 +888,7 @@ class ExtractAndOutputTestCase(TestCase):
     return True
 
 
-class ExtractAndOutputWithPstealTestCase(TestCase):
+class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
   """Extract and output with psteal test case.
 
   The extract and output test case runs psteal to extract data from a source,
@@ -860,7 +912,16 @@ class ExtractAndOutputWithPstealTestCase(TestCase):
     super(ExtractAndOutputWithPstealTestCase, self).__init__(
         tools_path, test_sources_path, test_references_path,
         test_results_path, debug_output=debug_output)
+    self._psteal_path = None
+
     self._InitializePstealPath()
+
+  def _InitializePstealPath(self):
+    """Initializes the location of psteal."""
+    for filename in ('psteal.exe', 'psteal.sh', 'psteal.py'):
+      self._psteal_path = os.path.join(self._tools_path, filename)
+      if os.path.exists(self._psteal_path):
+        break
 
   def _RunPsteal(
       self, test_definition, temp_directory, storage_file, source_path):
@@ -1009,59 +1070,6 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
 
   NAME = 'extract_and_tag'
 
-  def _RunPsortWithTaggingOptions(
-      self, test_definition, temp_directory, storage_file):
-    """Runs psort with the tagging options specified by the test definition.
-
-    Args:
-      test_definition (TestDefinition): test definition.
-      temp_directory (str): name of a temporary directory.
-      storage_file (str): path of the storage file.
-
-    Returns:
-      bool: True if psort ran successfully.
-    """
-    tagging_file_path = test_definition.tagging_file
-    if self._test_sources_path:
-      tagging_file_path = os.path.join(
-          self._test_sources_path, tagging_file_path)
-
-    # TODO: determine why --analysis=tagging fails.
-    tagging_options = [
-        '--analysis', 'tagging', '--output-format=null', '--tagging-file',
-        tagging_file_path]
-
-    logging_options = [
-        option.replace('%command%', 'psort')
-        for option in test_definition.logging_options]
-
-    stdout_file = os.path.join(
-        temp_directory, '{0:s}-psort-tagging.out'.format(test_definition.name))
-    stderr_file = os.path.join(
-        temp_directory, '{0:s}-psort-tagging.err'.format(test_definition.name))
-
-    command = [self._psort_path]
-    command.extend(tagging_options)
-    command.extend(logging_options)
-    command.extend(test_definition.profiling_options)
-    command.append(storage_file)
-
-    with open(stdout_file, 'w') as stdout:
-      with open(stderr_file, 'w') as stderr:
-        result = self._RunCommand(command, stdout=stdout, stderr=stderr)
-
-    if self._debug_output:
-      with open(stderr_file, 'rb') as file_object:
-        output_data = file_object.read()
-        print(output_data)
-
-    if os.path.exists(stdout_file):
-      shutil.copy(stdout_file, self._test_results_path)
-    if os.path.exists(stderr_file):
-      shutil.copy(stderr_file, self._test_results_path)
-
-    return result
-
   def ReadAttributes(self, test_definition_reader, test_definition):
     """Reads the test definition attributes into to the test definition.
 
@@ -1108,12 +1116,24 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
         return False
 
       # Add tags to the resulting storage file with psort.
-      if not self._RunPsortWithTaggingOptions(
-          test_definition, temp_directory, storage_file):
+      tagging_file_path = test_definition.tagging_file
+      if self._test_sources_path:
+        tagging_file_path = os.path.join(
+            self._test_sources_path, tagging_file_path)
+
+      analysis_options = [
+          '--analysis', 'tagging', '--tagging-file', tagging_file_path]
+      output_options = ['--output-format', 'null']
+
+      if not self._RunPsort(
+          test_definition, temp_directory, source_path,
+          analysis_options=analysis_options, output_options=output_options):
         return False
 
       # Check if the resulting storage file can be read with psort.
-      if not self._RunPsort(test_definition, temp_directory, storage_file):
+      if not self._RunPsort(
+          test_definition, temp_directory, source_path,
+          output_options=test_definition.output_options):
         return False
 
     return True
@@ -1358,7 +1378,9 @@ class MultiExtractAndOutputTestCase(ExtractAndOutputTestCase):
           return False
 
       # Check if the resulting storage file can be read with psort.
-      if not self._RunPsort(test_definition, temp_directory, storage_file):
+      if not self._RunPsort(
+          test_definition, temp_directory, storage_file,
+          output_options=test_definition.output_options):
         return False
 
       # Compare output file with a reference output file.
@@ -1369,7 +1391,209 @@ class MultiExtractAndOutputTestCase(ExtractAndOutputTestCase):
     return True
 
 
-class OutputTestCase(TestCase):
+class AnalyzeAndOutputTestCase(StorageFileTestCase):
+  """Analyze and output test case.
+
+  The analyze and output test case runs psort on a storage file with specific
+  analysis and output options.
+  """
+
+  NAME = 'analyze_and_output'
+
+  def __init__(
+      self, tools_path, test_sources_path, test_references_path,
+      test_results_path, debug_output=False):
+    """Initializes a test case.
+
+    Args:
+      tools_path (str): path to the plaso tools.
+      test_sources_path (str): path to the test sources.
+      test_references_path (str): path to the test references.
+      test_results_path (str): path to store test results.
+      debug_output (Optional[bool]): True if debug output should be generated.
+    """
+    super(AnalyzeAndOutputTestCase, self).__init__(
+        tools_path, test_sources_path, test_references_path,
+        test_results_path, debug_output=debug_output)
+    self._InitializePsortPath()
+
+  def ReadAttributes(self, test_definition_reader, test_definition):
+    """Reads the test definition attributes into to the test definition.
+
+    Args:
+      test_definition_reader (TestDefinitionReader): test definition reader.
+      test_definition (TestDefinition): test definition.
+
+    Returns:
+      bool: True if the read was successful.
+    """
+    test_definition.analysis_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'analysis_options', default=[], split_string=True)
+
+    test_definition.logging_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'logging_options', default=[], split_string=True)
+
+    test_definition.output_file = test_definition_reader.GetConfigValue(
+        test_definition.name, 'output_file')
+
+    test_definition.output_filter = test_definition_reader.GetConfigValue(
+        test_definition.name, 'output_filter', default='')
+
+    test_definition.output_format = test_definition_reader.GetConfigValue(
+        test_definition.name, 'output_format')
+
+    test_definition.output_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'output_options', default=[], split_string=True)
+
+    test_definition.profiling_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'profiling_options', default=[],
+        split_string=True)
+
+    test_definition.reference_output_file = (
+        test_definition_reader.GetConfigValue(
+            test_definition.name, 'reference_output_file'))
+
+    test_definition.source = test_definition_reader.GetConfigValue(
+        test_definition.name, 'source')
+
+    return True
+
+  def Run(self, test_definition):
+    """Runs the test case with the parameters specified by the test definition.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+
+    Returns:
+      bool: True if the test ran successfully.
+    """
+    source_path = test_definition.source
+    if self._test_sources_path:
+      source_path = os.path.join(self._test_sources_path, source_path)
+
+    if not os.path.exists(source_path):
+      logging.error('No such source: {0:s}'.format(source_path))
+      return False
+
+    with TempDirectory() as temp_directory:
+      # Run psort with both analysis and output options.
+      if not self._RunPsort(
+          test_definition, temp_directory, source_path,
+          analysis_options=test_definition.analysis_options,
+          output_options=test_definition.output_options):
+        return False
+
+      # Compare output file with a reference output file.
+      if test_definition.output_file and test_definition.reference_output_file:
+        if not self._CompareOutputFile(test_definition, temp_directory):
+          return False
+
+    return True
+
+
+class MultiAnalyzeAndOutputTestCase(AnalyzeAndOutputTestCase):
+  """Analyzes multiple times with the same storage file and output test case.
+
+  The multi analysis and output test case runs psort analysis modules multiple
+  times with the same storage file. After the analysis modules have run psort is
+  run to read from the resulting storage file.
+  """
+
+  NAME = 'multi_analyze_and_output'
+
+  def ReadAttributes(self, test_definition_reader, test_definition):
+    """Reads the test definition attributes into to the test definition.
+
+    Args:
+      test_definition_reader (TestDefinitionReader): test definition reader.
+      test_definition (TestDefinition): test definition.
+
+    Returns:
+      bool: True if the read was successful.
+    """
+    test_definition.analysis_options1 = test_definition_reader.GetConfigValue(
+        test_definition.name, 'analysis_options1', default=[],
+        split_string=True)
+
+    test_definition.analysis_options2 = test_definition_reader.GetConfigValue(
+        test_definition.name, 'analysis_options2', default=[],
+        split_string=True)
+
+    test_definition.logging_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'logging_options', default=[], split_string=True)
+
+    test_definition.output_file = test_definition_reader.GetConfigValue(
+        test_definition.name, 'output_file')
+
+    test_definition.output_filter = test_definition_reader.GetConfigValue(
+        test_definition.name, 'output_filter', default='')
+
+    test_definition.output_format = test_definition_reader.GetConfigValue(
+        test_definition.name, 'output_format')
+
+    test_definition.output_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'output_options', default=[], split_string=True)
+
+    test_definition.profiling_options = test_definition_reader.GetConfigValue(
+        test_definition.name, 'profiling_options', default=[],
+        split_string=True)
+
+    test_definition.reference_output_file = (
+        test_definition_reader.GetConfigValue(
+            test_definition.name, 'reference_output_file'))
+
+    test_definition.source = test_definition_reader.GetConfigValue(
+        test_definition.name, 'source')
+
+    return True
+
+  def Run(self, test_definition):
+    """Runs the test case with the parameters specified by the test definition.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+
+    Returns:
+      bool: True if the test ran successfully.
+    """
+    source_path = test_definition.source
+    if self._test_sources_path:
+      source_path = os.path.join(self._test_sources_path, source_path)
+
+    if not os.path.exists(source_path):
+      logging.error('No such source: {0:s}'.format(source_path))
+      return False
+
+    with TempDirectory() as temp_directory:
+      # Run psort with the first set of analysis options.
+      if not self._RunPsort(
+          test_definition, temp_directory, source_path,
+          analysis_options=test_definition.analysis_options1):
+        return False
+
+      # Run psort with the second set of analysis options.
+      if not self._RunPsort(
+          test_definition, temp_directory, source_path,
+          analysis_options=test_definition.analysis_options2):
+        return False
+
+      # Run psort with the output options.
+      if not self._RunPsort(
+          test_definition, temp_directory, source_path,
+          output_options=test_definition.output_options):
+        return False
+
+      # Compare output file with a reference output file.
+      if test_definition.output_file and test_definition.reference_output_file:
+        if not self._CompareOutputFile(test_definition, temp_directory):
+          return False
+
+    return True
+
+
+# TODO: This class is kept for backwards compatibility. For new tests use
+# AnalyzeAndOutputTestCase instead.
+class OutputTestCase(StorageFileTestCase):
   """Output test case.
 
   The output test case runs psort on a storage file to its various
@@ -1394,64 +1618,6 @@ class OutputTestCase(TestCase):
         tools_path, test_sources_path, test_references_path,
         test_results_path, debug_output=debug_output)
     self._InitializePsortPath()
-
-  def _RunPsort(self, test_definition, temp_directory, storage_file):
-    """Runs psort with the output options specified by the test definition.
-
-    Args:
-      test_definition (TestDefinition): test definition.
-      temp_directory (str): name of a temporary directory.
-      storage_file (str): path of the storage file.
-
-    Returns:
-      bool: True if psort ran successfully.
-    """
-    output_options = test_definition.output_options
-
-    if test_definition.output_format:
-      output_options.extend(['-o', test_definition.output_format])
-
-    output_file_path = None
-    if test_definition.output_file:
-      output_file_path = os.path.join(
-          temp_directory, test_definition.output_file)
-      output_options.extend(['-w', output_file_path])
-    output_options.append(storage_file)
-    if test_definition.output_filter:
-      output_options.append(test_definition.output_filter)
-
-    logging_options = [
-        option.replace('%command%', 'psort')
-        for option in test_definition.logging_options]
-
-    stdout_file = os.path.join(
-        temp_directory, '{0:s}-psort.out'.format(test_definition.name))
-    stderr_file = os.path.join(
-        temp_directory, '{0:s}-psort.err'.format(test_definition.name))
-
-    command = [self._psort_path]
-    command.extend(output_options)
-    command.extend(logging_options)
-    command.extend(test_definition.profiling_options)
-
-    with open(stdout_file, 'w') as stdout:
-      with open(stderr_file, 'w') as stderr:
-        result = self._RunCommand(command, stdout=stdout, stderr=stderr)
-
-    if self._debug_output:
-      with open(stderr_file, 'rb') as file_object:
-        output_data = file_object.read()
-        print(output_data)
-
-    if output_file_path and os.path.exists(output_file_path):
-      shutil.copy(output_file_path, self._test_results_path)
-
-    if os.path.exists(stdout_file):
-      shutil.copy(stdout_file, self._test_results_path)
-    if os.path.exists(stderr_file):
-      shutil.copy(stderr_file, self._test_results_path)
-
-    return result
 
   def ReadAttributes(self, test_definition_reader, test_definition):
     """Reads the test definition attributes into to the test definition.
@@ -1509,7 +1675,10 @@ class OutputTestCase(TestCase):
       return False
 
     with TempDirectory() as temp_directory:
-      if not self._RunPsort(test_definition, temp_directory, source_path):
+      # Run psort with the output options.
+      if not self._RunPsort(
+          test_definition, temp_directory, source_path,
+          output_options=test_definition.output_options):
         return False
 
       # Compare output file with a reference output file.
@@ -1521,9 +1690,10 @@ class OutputTestCase(TestCase):
 
 
 TestCasesManager.RegisterTestCases([
-    ExtractAndOutputTestCase, ExtractAndOutputWithPstealTestCase,
-    ExtractAndTagTestCase, ImageExportTestCase, MultiExtractAndOutputTestCase,
-    OutputTestCase])
+    AnalyzeAndOutputTestCase, ExtractAndOutputTestCase,
+    ExtractAndOutputWithPstealTestCase, ExtractAndTagTestCase,
+    ImageExportTestCase, MultiAnalyzeAndOutputTestCase,
+    MultiExtractAndOutputTestCase, OutputTestCase])
 
 
 def Main():
