@@ -51,10 +51,10 @@ class TestOutputWriter(tools.FileObjectOutputWriter):
     """
     # To mimic the behavior of the parent FileObjectOutputWriter, we encode the
     # provided string into the specified encoding, replacing invalid characters.
-    byte_string = string.encode(self._encoding, errors='replace')
-    final_string = byte_string.decode(self._encoding, errors='strict')
+    byte_stream = string.encode(self._encoding, errors='replace')
+    string = byte_stream.decode(self._encoding, errors='strict')
 
-    self._file_object.write(final_string)
+    self._file_object.write(string)
 
   def ReadOutput(self):
     """Reads all output added since the last call to ReadOutput.

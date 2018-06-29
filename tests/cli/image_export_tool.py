@@ -378,7 +378,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       filter_file = os.path.join(temp_directory, 'filter.txt')
-      with open(filter_file, 'w') as file_object:
+      with open(filter_file, 'wt', encoding='utf-8') as file_object:
         file_object.write('/a_directory/.+_file\n')
 
       options.file_filter = filter_file

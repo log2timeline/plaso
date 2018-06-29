@@ -557,7 +557,7 @@ class HTTPHashAnalyzer(HashAnalyzer):
       response.raise_for_status()
 
     except requests.ConnectionError as exception:
-      error_string = 'Unable to connect to {0:s}: {1!s}'.format(
+      error_string = 'Unable to connect to {0:s} with error: {1!s}'.format(
           url, exception)
       raise errors.ConnectionError(error_string)
 

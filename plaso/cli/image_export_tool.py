@@ -515,9 +515,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           continue
 
         try:
-          if py2to3.PY_2:
-            pattern = codecs.decode(pattern, 'string_escape')
-          else:
+            # TODO: find another way to do this that doesn't use an undocumented
+            # API.
             pattern = codecs.escape_decode(pattern)[0]
         # ValueError is raised e.g. when the patterns contains "\xg1".
         except ValueError:

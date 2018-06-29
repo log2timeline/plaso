@@ -3,7 +3,7 @@
 
 from __future__ import unicode_literals
 
-import codecs
+import io
 
 import yara
 
@@ -56,9 +56,8 @@ class YaraRulesArgumentsHelper(interface.ArgumentsHelper):
     path = getattr(options, 'yara_rules_path', None)
     if path:
       try:
-        with open(path, 'rb') as rules_file:
+        with io.open(path, 'rt', encoding='utf-8') as rules_file:
           yara_rules_string = rules_file.read()
-          yara_rules_string = codecs.decode(yara_rules_string, 'utf-8')
 
       except IOError as exception:
         raise errors.BadConfigObject(

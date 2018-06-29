@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 import argparse
+import io
 import os
 import unittest
 
@@ -253,8 +254,9 @@ optional arguments:
 
   def testProcessStorageWithMissingParameters(self):
     """Tests the ProcessStorage function with parameters missing."""
+    encoding='utf-8'
     input_reader = TestInputReader()
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding=encoding)
     test_tool = psort_tool.PsortTool(
         input_reader=input_reader, output_writer=output_writer)
 
@@ -275,7 +277,7 @@ optional arguments:
       test_tool.ParseOptions(options)
       test_tool.ProcessStorage()
 
-      with open(temp_file_name, 'r') as file_object:
+      with io.open(temp_file_name, 'rt', encoding=encoding) as file_object:
         for line in file_object.readlines():
           lines.append(line.strip())
 

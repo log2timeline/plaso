@@ -54,6 +54,8 @@ class CLITool(object):
     preferred_encoding = locale.getpreferredencoding()
     if not preferred_encoding:
       preferred_encoding = self._PREFERRED_ENCODING
+    elif isinstance(preferred_encoding, py2to3.BYTES_TYPE):
+      preferred_encoding = preferred_encoding.decode('utf-8')
 
     if not input_reader:
       input_reader = StdinInputReader(encoding=preferred_encoding)
