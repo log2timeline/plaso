@@ -42,7 +42,7 @@ class ArtifactFiltersArgumentsHelper(interface.ArgumentsHelper):
 
     argument_group.add_argument(
         '--artifact_filters_file', '--artifact-filters_file',
-        dest='artifact_filters', type=str, default=None,
+        dest='artifact_filters_file', type=str, default=None,
         action='store', help=(
             'Names of forensic artifact definitions, provided in a file with '
             'one artifact name per line. Forensic artifacts are stored in '

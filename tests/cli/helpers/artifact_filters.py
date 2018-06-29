@@ -21,7 +21,7 @@ class ArtifactFiltersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--artifact_filters ARTIFACT_FILTERS]
-                     [--artifact_filters_file ARTIFACT_FILTERS]
+                     [--artifact_filters_file ARTIFACT_FILTERS_FILE]
 
 Test argument parser.
 
@@ -36,7 +36,7 @@ optional arguments:
                         can be used to describe and quickly collect data of
                         interest, such as specific files or Windows Registry
                         keys.
-  --artifact_filters_file ARTIFACT_FILTERS, --artifact-filters_file ARTIFACT_FILTERS
+  --artifact_filters_file ARTIFACT_FILTERS_FILE, --artifact-filters_file ARTIFACT_FILTERS_FILE
                         Names of forensic artifact definitions, provided in a
                         file with one artifact name per line. Forensic
                         artifacts are stored in .yaml files that are directly
