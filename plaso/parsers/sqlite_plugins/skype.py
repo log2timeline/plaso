@@ -446,6 +446,9 @@ class SkypePlugin(interface.SQLitePlugin):
 
     display_name = self._GetRowValue(query_hash, row, 'given_displayname')
     fullname = self._GetRowValue(query_hash, row, 'fullname')
+
+    # TODO: Move this to the formatter, and ensure username is rendered
+    # properly when fullname and/or display_name is None.
     username = '{0!s} <{1!s}>'.format(fullname, display_name)
 
     event_data = SkypeAccountEventData()
