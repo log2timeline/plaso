@@ -163,6 +163,144 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
 
   _TRAILER_TOKEN_SIGNATURE = 0xb105
 
+  def _FormatDataToken(self, token_data):
+    """Formats a data token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_data): AUT_DATA token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    format_string = bsmtoken.BSM_TOKEN_DATA_PRINT.get(
+        token_data.data_format, 'UNKNOWN')
+
+    if token_data.data_format == 4:
+      data = bytes(bytearray(token_data.data)).split(b'\x00')[0]
+      data = data.decode('utf-8')
+    else:
+      data = ''.join(['{0:02x}'.format(byte) for byte in token_data.data])
+    return {
+        'format': format_string,
+        'data': data}
+
+  def _FormatIPCToken(self, token_data):
+    """Formats an IPC token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_ipc): AUT_IPC token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {
+        'object_type': token_data.object_type,
+        'object_id': token_data.object_identifier}
+
+  def _FormatOpaqueToken(self, token_data):
+    """Formats an opaque token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_opaque): AUT_OPAQUE token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    data = ''.join(['{0:02x}'.format(byte) for byte in token_data.data])
+    return {'data': data}
+
+  def _FormatOtherFileToken(self, token_data):
+    """Formats an other file token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_other_file32): AUT_OTHER_FILE32 token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    # TODO: if this timestamp is useful, it must be extracted as a separate
+    # event object.
+    timestamp = token_data.microseconds + (
+        token_data.timestamp * definitions.MICROSECONDS_PER_SECOND)
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=timestamp)
+    date_time_string = date_time.CopyToDateTimeString()
+
+    return {
+        'string': token_data.name.rstrip('\x00'),
+        'timestamp': date_time_string}
+
+  def _FormatPathToken(self, token_data):
+    """Formats a path token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_path): AUT_PATH token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {'path': token_data.path.rstrip('\x00')}
+
+  def _FormatReturnOrExitToken(self, token_data):
+    """Formats a return or exit token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_exit|bsm_token_data_return32|
+                  bsm_token_data_return64): AUT_EXIT, AUT_RETURN32 or
+          AUT_RETURN64 token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    error_string = bsmtoken.BSM_ERRORS.get(token_data.status, 'UNKNOWN')
+    return {
+        'error': error_string,
+        'token_status': token_data.status,
+        'call_status': token_data.return_value}
+
+  def _FormatSubjectOrProcessToken(self, token_type, token_data):
+    """Formats a subject or process token as a dictionary of values.
+
+    Args:
+      token_type (int): token type.
+      token_data (bsm_token_data_subject32|bsm_token_data_subject32_ex|
+                  bsm_token_data_subject64|bsm_token_data_subject64_ex):
+          AUT_SUBJECT32, AUT_PROCESS32, AUT_SUBJECT32_EX, AUT_PROCESS32_EX,
+          AUT_SUBJECT64, AUT_PROCESS64, AUT_SUBJECT64_EX or AUT_PROCESS64_EX
+          token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    if token_type in (0x24, 0x26, 0x75, 0x77) or token_data.net_type == 4:
+      ip_address = self._FormatPackedIPv4Address(token_data.ip_address)
+    elif token_data.net_type == 16:
+      ip_address = self._FormatPackedIPv6Address(token_data.ip_address)
+    else:
+      ip_address = 'unknown'
+
+    return {
+        'aid': token_data.audit_user_identifier,
+        'euid': token_data.effective_user_identifier,
+        'egid': token_data.effective_group_identifier,
+        'uid': token_data.real_user_identifier,
+        'gid': token_data.real_group_identifier,
+        'pid': token_data.process_identifier,
+        'session_id': token_data.session_identifier,
+        'terminal_port': token_data.terminal_port,
+        'terminal_ip': ip_address}
+
+  def _FormatTextToken(self, token_data):
+    """Formats a text token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_text): AUT_TEXT token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {'text': token_data.text.rstrip('\x00')}
+
   def _FormatTokenData(self, token_type, token_data):
     """Formats the token data as a dictionary of values.
 
@@ -174,71 +312,28 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
       dict[str, str]: token values.
     """
     if token_type == 0x11:
-      # TODO: if this timestamp is useful, it must be extracted as a separate
-      # event object.
-      timestamp = token_data.microseconds + (
-          token_data.timestamp * definitions.MICROSECONDS_PER_SECOND)
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=timestamp)
-      date_time_string = date_time.CopyToDateTimeString()
-
-      return {
-          'string': token_data.name.rstrip('\x00'),
-          'timestamp': date_time_string}
+      return self._FormatOtherFileToken(token_data)
 
     elif token_type == 0x21:
-      format_string = bsmtoken.BSM_TOKEN_DATA_PRINT.get(
-          token_data.data_format, 'UNKNOWN')
-
-      if token_data.data_format == 4:
-        data = bytes(bytearray(token_data.data)).split(b'\x00')[0]
-        data = data.decode('utf-8')
-      else:
-        data = ''.join(['{0:02x}'.format(byte) for byte in token_data.data])
-      return {
-          'format': format_string,
-          'data': data}
+      return self._FormatDataToken(token_data)
 
     elif token_type == 0x22:
-      return {
-          'object_type': token_data.object_type,
-          'object_id': token_data.object_identifier}
+      return self._FormatIPCToken(token_data)
 
     elif token_type == 0x23:
-      return {'path': token_data.path.rstrip('\x00')}
+      return self._FormatPathToken(token_data)
 
     elif token_type in (0x24, 0x26, 0x75, 0x77, 0x7a, 0x7b, 0x7c, 0x7d):
-      if token_type in (0x24, 0x26, 0x75, 0x77) or token_data.net_type == 4:
-        ip_address = self._FormatPackedIPv4Address(token_data.ip_address)
-      elif token_data.net_type == 16:
-        ip_address = self._FormatPackedIPv6Address(token_data.ip_address)
-      else:
-        ip_address = 'unknown'
-
-      return {
-          'aid': token_data.audit_user_identifier,
-          'euid': token_data.effective_user_identifier,
-          'egid': token_data.effective_group_identifier,
-          'uid': token_data.real_user_identifier,
-          'gid': token_data.real_group_identifier,
-          'pid': token_data.process_identifier,
-          'session_id': token_data.session_identifier,
-          'terminal_port': token_data.terminal_port,
-          'terminal_ip': ip_address}
+      return self._FormatSubjectOrProcessToken(token_type, token_data)
 
     elif token_type in (0x27, 0x52, 0x72):
-      error_string = bsmtoken.BSM_ERRORS.get(token_data.status, 'UNKNOWN')
-      return {
-          'error': error_string,
-          'token_status': token_data.status,
-          'call_status': token_data.return_value}
+      return self._FormatReturnOrExitToken(token_data)
 
     elif token_type == 0x28:
-      return {'text': token_data.text.rstrip('\x00')}
+      return self._FormatTextToken(token_data)
 
     elif token_type == 0x29:
-      data = ''.join(['{0:02x}'.format(byte) for byte in token_data.data])
-      return {'data': data}
+      return self._FormatOpaqueToken(token_data)
 
     elif token_type == 0x2a:
       ip_address = self._FormatPackedIPv4Address(token_data.ip_address)
