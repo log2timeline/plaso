@@ -127,7 +127,6 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
             'Unable to read artifact definitions from: {0:s} with error: '
             '{1!s}').format(custom_artifacts_path, exception))
 
-    setattr(configuration_object, '_artifacts_registry', registry)
     setattr(configuration_object, '_artifact_definitions_path', artifacts_path)
     setattr(
         configuration_object, '_custom_artifacts_path', custom_artifacts_path)
