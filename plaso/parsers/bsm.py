@@ -163,6 +163,39 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
 
   _TRAILER_TOKEN_SIGNATURE = 0xb105
 
+  def _FormatArgToken(self, token_data):
+    """Formats an argument token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_arg32|bsm_token_data_arg64): AUT_ARG32 or
+          AUT_ARG64 token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {
+        'string': token_data.argument_value.rstrip('\x00'),
+        'num_arg': token_data.argument_index,
+        'is': token_data.argument_name}
+
+  def _FormatAttrToken(self, token_data):
+    """Formats an attribute token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_attr32|bsm_token_data_attr64): AUT_ATTR32 or
+          AUT_ATTR64 token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {
+        'mode': token_data.file_mode,
+        'uid': token_data.user_identifier,
+        'gid': token_data.group_identifier,
+        'system_id': token_data.file_system_identifier,
+        'node_id': token_data.file_identifier,
+        'device': token_data.device}
+
   def _FormatDataToken(self, token_data):
     """Formats a data token as a dictionary of values.
 
@@ -184,6 +217,53 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
         'format': format_string,
         'data': data}
 
+  def _FormatInAddrExToken(self, token_data):
+    """Formats an extended IPv4 address token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_in_addr_ex): AUT_IN_ADDR_EX token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    protocol = bsmtoken.BSM_PROTOCOLS.get(token_data.net_type, 'UNKNOWN')
+    if token_data.net_type == 4:
+      ip_address = self._FormatPackedIPv6Address(token_data.ip_address[:4])
+    elif token_data.net_type == 16:
+      ip_address = self._FormatPackedIPv6Address(token_data.ip_address)
+    return {
+        'protocols': protocol,
+        'net_type': token_data.net_type,
+        'address': ip_address}
+
+  def _FormatInAddrToken(self, token_data):
+    """Formats an IPv4 address token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_in_addr): AUT_IN_ADDR token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    ip_address = self._FormatPackedIPv4Address(token_data.ip_address)
+    return {'ip': ip_address}
+
+  def _FormatIPCPermToken(self, token_data):
+    """Formats an IPC permissions token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_ipc_perm): AUT_IPC_PERM token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {
+        'user_id': token_data.user_identifier,
+        'group_id': token_data.group_identifier,
+        'creator_user_id': token_data.creator_user_identifier,
+        'creator_group_id': token_data.creator_group_identifier,
+        'access': token_data.access_mode}
+
   def _FormatIPCToken(self, token_data):
     """Formats an IPC token as a dictionary of values.
 
@@ -196,6 +276,29 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
     return {
         'object_type': token_data.object_type,
         'object_id': token_data.object_identifier}
+
+  def _FormatIPortToken(self, token_data):
+    """Formats an IP port token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_iport): AUT_IPORT token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {'port_number': token_data.port_number}
+
+  def _FormatIPToken(self, token_data):
+    """Formats an IPv4 packet header token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_ip): AUT_IP token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    data = ''.join(['{0:02x}'.format(byte) for byte in token_data.data])
+    return {'IPv4_Header': data}
 
   def _FormatOpaqueToken(self, token_data):
     """Formats an opaque token as a dictionary of values.
@@ -257,6 +360,80 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
         'error': error_string,
         'token_status': token_data.status,
         'call_status': token_data.return_value}
+
+  def _FormatSeqToken(self, token_data):
+    """Formats a sequence token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_seq): AUT_SEQ token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {'sequence_number': token_data.sequence_number}
+
+  def _FormatSocketExToken(self, token_data):
+    """Formats an extended socket token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_socket_ex): AUT_SOCKET_EX token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    if token_data.socket_domain == 10:
+      local_ip_address = self._FormatPackedIPv6Address(
+          token_data.local_ip_address)
+      remote_ip_address = self._FormatPackedIPv6Address(
+          token_data.remote_ip_address)
+    else:
+      local_ip_address = self._FormatPackedIPv4Address(
+          token_data.local_ip_address)
+      remote_ip_address = self._FormatPackedIPv4Address(
+          token_data.remote_ip_address)
+
+    return {
+        'from': local_ip_address,
+        'from_port': token_data.local_port,
+        'to': remote_ip_address,
+        'to_port': token_data.remote_port}
+
+  def _FormatSocketInetToken(self, token_type, token_data):
+    """Formats an Internet socket token as a dictionary of values.
+
+    Args:
+      token_type (int): token type.
+      token_data (bsm_token_data_sockinet32|bsm_token_data_sockinet64):
+          AUT_SOCKINET32 or AUT_SOCKINET128 token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    protocol = bsmtoken.BSM_PROTOCOLS.get(token_data.socket_family, 'UNKNOWN')
+    if token_type == 0x80:
+      ip_address = self._FormatPackedIPv4Address(token_data.ip_addresss)
+    elif token_type == 0x81:
+      ip_address = self._FormatPackedIPv6Address(token_data.ip_addresss)
+    return {
+        'protocols': protocol,
+        'family': token_data.socket_family,
+        'port': token_data.port_number,
+        'address': ip_address}
+
+  def _FormatSocketUnixToken(self, token_type, token_data):
+    """Formats an Unix socket token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_sockunix): AUT_SOCKUNIX token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    protocol = bsmtoken.BSM_PROTOCOLS.get(token_data.socket_family, 'UNKNOWN')
+    return {
+        'protocols': protocol,
+        'family': token_data.socket_family,
+        'path': token_data.socket_path}
 
   def _FormatSubjectOrProcessToken(self, token_type, token_data):
     """Formats a subject or process token as a dictionary of values.
@@ -336,32 +513,22 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
       return self._FormatOpaqueToken(token_data)
 
     elif token_type == 0x2a:
-      ip_address = self._FormatPackedIPv4Address(token_data.ip_address)
-      return {'ip': ip_address}
+      return self._FormatInAddrToken(token_data)
 
     elif token_type == 0x2b:
-      data = ''.join(['{0:02x}'.format(byte) for byte in token_data.data])
-      return {'IPv4_Header': data}
+      return self._FormatIPToken(token_data)
 
     elif token_type == 0x2c:
-      return {'port_number': token_data.port_number}
+      return self._FormatIPortToken(token_data)
 
     elif token_type in (0x2d, 0x71):
-      return {
-          'string': token_data.argument_value.rstrip('\x00'),
-          'num_arg': token_data.argument_index,
-          'is': token_data.argument_name}
+      return self._FormatArgToken(token_data)
 
     elif token_type == 0x2f:
-      return {'sequence_number': token_data.sequence_number}
+      return self._FormatSeqToken(token_data)
 
     elif token_type == 0x32:
-      return {
-          'user_id': token_data.user_identifier,
-          'group_id': token_data.group_identifier,
-          'creator_user_id': token_data.creator_user_identifier,
-          'creator_group_id': token_data.creator_group_identifier,
-          'access': token_data.access_mode}
+      return self._FormatIPCPermToken(token_data)
 
     # elif token_type in (0x34, 0x3b):
     #   arguments = []
@@ -380,66 +547,35 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
     #   return {'arguments': ' '.join(arguments)}
 
     elif token_type in (0x3e, 0x73):
-      return {
-          'mode': token_data.file_mode,
-          'uid': token_data.user_identifier,
-          'gid': token_data.group_identifier,
-          'system_id': token_data.file_system_identifier,
-          'node_id': token_data.file_identifier,
-          'device': token_data.device}
+      return self._FormatAttrToken(token_data)
 
     elif token_type == 0x60:
-      return {'name': token_data.name.rstrip('\x00')}
-
-    elif token_type == 0x7f:
-      if token_data.socket_domain == 10:
-        local_ip_address = self._FormatPackedIPv6Address(
-            token_data.local_ip_address)
-        remote_ip_address = self._FormatPackedIPv6Address(
-            token_data.remote_ip_address)
-      else:
-        local_ip_address = self._FormatPackedIPv4Address(
-            token_data.local_ip_address)
-        remote_ip_address = self._FormatPackedIPv4Address(
-            token_data.remote_ip_address)
-
-      return {
-          'from': local_ip_address,
-          'from_port': token_data.local_port,
-          'to': remote_ip_address,
-          'to_port': token_data.remote_port}
+      return self._FormatZonenameToken(token_data)
 
     elif token_type == 0x7e:
-      protocol = bsmtoken.BSM_PROTOCOLS.get(token_data.net_type, 'UNKNOWN')
-      if token_data.net_type == 4:
-        ip_address = self._FormatPackedIPv6Address(token_data.ip_address[:4])
-      elif token_data.net_type == 16:
-        ip_address = self._FormatPackedIPv6Address(token_data.ip_address)
-      return {
-          'protocols': protocol,
-          'net_type': token_data.net_type,
-          'address': ip_address}
+      return self._FormatInAddrExToken(token_data)
+
+    elif token_type == 0x7f:
+      return self._FormatSocketExToken(token_data)
 
     elif token_type in (0x80, 0x81):
-      protocol = bsmtoken.BSM_PROTOCOLS.get(token_data.socket_family, 'UNKNOWN')
-      if token_type == 0x80:
-        ip_address = self._FormatPackedIPv4Address(token_data.ip_addresss)
-      elif token_type == 0x81:
-        ip_address = self._FormatPackedIPv6Address(token_data.ip_addresss)
-      return {
-          'protocols': protocol,
-          'family': token_data.socket_family,
-          'port': token_data.port_number,
-          'address': ip_address}
+      return self._FormatSocketInetToken(token_type, token_data)
 
     elif token_type == 0x82:
-      protocol = bsmtoken.BSM_PROTOCOLS.get(token_data.socket_family, 'UNKNOWN')
-      return {
-          'protocols': protocol,
-          'family': token_data.socket_family,
-          'path': token_data.socket_path}
+      return self._FormatSocketUnixToken(token_data)
 
     return {}
+
+  def _FormatZonenameToken(self, token_data):
+    """Formats a time zone name token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_zonename): AUT_ZONENAME token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {'name': token_data.name.rstrip('\x00')}
 
   def _ParseRecord(self, parser_mediator, file_object):
     """Parses an event record.
