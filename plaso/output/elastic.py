@@ -58,8 +58,8 @@ class ElasticsearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
               'mapping': {
                   'fields': {
                       'raw': {
-                          'type': 'text',
-                          'index': 'not_analyzed',
+                          'type': 'keyword',
+                          'index': 'false',
                           'ignore_above': self._ELASTIC_ANALYZER_STRING_LIMIT
                       }
                   }
