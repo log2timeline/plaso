@@ -65,8 +65,8 @@ class WinJobParser(dtfabric_parser.DtFabricBaseParser):
     """Parses the event data form a variable-length data section.
 
     Args:
-      variable_length_section (job_fixed_length_data_section): a variable-length
-          data section.
+      variable_length_section (job_variable_length_data_section): a
+          Windows Scheduled Task job variable-length data section.
 
     Returns:
       WinJobEventData: event data of the job file.
@@ -89,8 +89,8 @@ class WinJobParser(dtfabric_parser.DtFabricBaseParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      fixed_length_section (job_fixed_length_data_section): a fixed-length
-          data section.
+      fixed_length_section (job_fixed_length_data_section): a Windows
+          Scheduled Task job fixed-length data section.
 
     Returns:
       dfdatetime.DateTimeValues: last run date and time or None if not
@@ -246,13 +246,15 @@ class WinJobParser(dtfabric_parser.DtFabricBaseParser):
       date_time = self._ParseTriggerStartTime(parser_mediator, trigger)
       if date_time:
         event = time_events.DateTimeValuesEvent(
-            date_time, 'Scheduled to start', time_zone=parser_mediator.timezone)
+            date_time, definitions.TIME_DESCRIPTION_SCHEDULED_TO_START,
+            time_zone=parser_mediator.timezone)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       date_time = self._ParseTriggerEndTime(parser_mediator, trigger)
       if date_time:
         event = time_events.DateTimeValuesEvent(
-            date_time, 'Scheduled to end', time_zone=parser_mediator.timezone)
+            date_time, definitions.TIME_DESCRIPTION_SCHEDULED_TO_START,
+            time_zone=parser_mediator.timezone)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
     # TODO: create a timeless event object if last_run_time and
