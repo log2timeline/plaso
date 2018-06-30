@@ -254,7 +254,7 @@ optional arguments:
 
   def testProcessStorageWithMissingParameters(self):
     """Tests the ProcessStorage function with parameters missing."""
-    encoding='utf-8'
+    encoding = 'utf-8'
     input_reader = TestInputReader()
     output_writer = test_lib.TestOutputWriter(encoding=encoding)
     test_tool = psort_tool.PsortTool(

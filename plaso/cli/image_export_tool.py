@@ -26,7 +26,6 @@ from plaso.engine import path_helper
 from plaso.filters import file_entry as file_entry_filters
 from plaso.lib import errors
 from plaso.lib import loggers
-from plaso.lib import py2to3
 from plaso.lib import specification
 from plaso.preprocessors import manager as preprocess_manager
 
@@ -522,9 +521,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           continue
 
         try:
-            # TODO: find another way to do this that doesn't use an undocumented
-            # API.
-            pattern = codecs.escape_decode(pattern)[0]
+          # TODO: find another way to do this that doesn't use an undocumented
+          # API.
+          pattern = codecs.escape_decode(pattern)[0]
         # ValueError is raised e.g. when the patterns contains "\xg1".
         except ValueError:
           logger.error(
