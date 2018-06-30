@@ -42,8 +42,8 @@ class ArtifactFiltersArgumentsHelper(interface.ArgumentsHelper):
 
     argument_group.add_argument(
         '--artifact_filters_file', '--artifact-filters_file',
-        dest='artifact_filters', type=str, default=None,
-        action='store', help=(
+        dest='artifact_filters_file_path', type=str, default=None,
+        metavar='PATH', action='store', help=(
             'Names of forensic artifact definitions, provided in a file with '
             'one artifact name per line. Forensic artifacts are stored in '
             '.yaml files that are directly pulled from the artifact '
