@@ -120,6 +120,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
     options.source = 'source'
     # Test when the output file is missing.
     expected_error = 'Output format: dynamic requires an output file'

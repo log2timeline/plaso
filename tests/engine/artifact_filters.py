@@ -81,7 +81,7 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     test_filter_file.BuildFindSpecs(
         environment_variables=[environment_variable])
     find_specs_per_source_type = knowledge_base.GetValue(
-        test_filter_file._KNOWLEDGE_BASE_VALUE)
+        test_filter_file.KNOWLEDGE_BASE_VALUE)
     find_specs = find_specs_per_source_type.get(
         artifact_types.TYPE_INDICATOR_FILE, [])
 
@@ -122,7 +122,7 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
 
     test_filter_file.BuildFindSpecs(environment_variables=None)
     find_specs_per_source_type = knowledge_base.GetValue(
-        test_filter_file._KNOWLEDGE_BASE_VALUE)
+        test_filter_file.KNOWLEDGE_BASE_VALUE)
     find_specs = find_specs_per_source_type.get(
         artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY, [])
 
@@ -150,19 +150,19 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(key_paths), 3)
 
   def testCheckKeyCompatibility(self):
-    """Tests the _CheckKeyCompatibility function"""
+    """Tests the CheckKeyCompatibility function"""
     knowledge_base = knowledge_base_engine.KnowledgeBase()
     test_filter_file = self._CreateTestArtifactDefinitionsFilterHelper(
         [], knowledge_base)
 
     # Compatible Key.
     key_path = 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control'
-    compatible_key = test_filter_file._CheckKeyCompatibility(key_path)
+    compatible_key = test_filter_file.CheckKeyCompatibility(key_path)
     self.assertTrue(compatible_key)
 
     # NOT a Compatible Key.
     key_path = 'HKEY_USERS\\S-1-5-18'
-    compatible_key = test_filter_file._CheckKeyCompatibility(key_path)
+    compatible_key = test_filter_file.CheckKeyCompatibility(key_path)
     self.assertFalse(compatible_key)
 
   def testBuildFindSpecsFromFileArtifact(self):

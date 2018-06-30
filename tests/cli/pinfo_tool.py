@@ -185,6 +185,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     table_view.AddRow(['Enabled parser and plugins', enabled_parser_names])
     table_view.AddRow(['Preferred encoding', 'UTF-8'])
     table_view.AddRow(['Debug mode', 'False'])
+    table_view.AddRow(['Artifact filters', 'N/A'])
     table_view.AddRow(['Filter file', 'N/A'])
     table_view.Write(output_writer)
 

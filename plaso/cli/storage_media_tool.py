@@ -63,6 +63,9 @@ class StorageMediaTool(tools.CLITool):
     """
     super(StorageMediaTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
+    self._custom_artifacts_path = None
+    self._artifact_definitions_path = None
+    self._artifact_filters = None
     self._credentials = []
     self._credential_configurations = []
     self._filter_file = None

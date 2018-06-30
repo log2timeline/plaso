@@ -3,6 +3,7 @@
 
 from plaso.cli.helpers import analysis_plugins
 from plaso.cli.helpers import artifact_definitions
+from plaso.cli.helpers import artifact_filters
 from plaso.cli.helpers import data_location
 from plaso.cli.helpers import date_filters
 from plaso.cli.helpers import dynamic_output

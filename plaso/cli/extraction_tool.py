@@ -16,6 +16,7 @@ from plaso.cli import storage_media_tool
 from plaso.cli import tool_options
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import configurations
+from plaso.engine import engine
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import manager as parsers_manager
@@ -75,6 +76,7 @@ class ExtractionTool(
     """
     # TODO: pass preferred_encoding.
     configuration = configurations.ProcessingConfiguration()
+    configuration.artifact_filters = self._artifact_filters
     configuration.credentials = self._credential_configurations
     configuration.debug_output = self._debug_mode
     configuration.event_extraction.text_prepend = self._text_prepend
@@ -166,8 +168,10 @@ class ExtractionTool(
     logger.debug('Starting preprocessing.')
 
     try:
+      artifacts_registry = engine.BaseEngine.BuildArtifactsRegistry(
+          self._artifact_definitions_path, self._custom_artifacts_path)
       extraction_engine.PreprocessSources(
-          self._artifacts_registry, self._source_path_specs,
+          artifacts_registry, self._source_path_specs,
           resolver_context=self._resolver_context)
 
     except IOError as exception:
