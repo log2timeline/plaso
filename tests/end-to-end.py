@@ -185,7 +185,7 @@ class TestCasesManager(object):
             test_results_path, debug_output=debug_output)
 
       if not test_case_object:
-        return
+        return None
 
       cls._test_case_objects[name] = test_case_object
 
