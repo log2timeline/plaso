@@ -4,6 +4,8 @@
 from __future__ import unicode_literals
 
 import argparse
+import codecs
+import io
 import os
 import textwrap
 
@@ -60,6 +62,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
   # TODO: remove this redirect.
   _SOURCE_OPTION = 'image'
+
+  _SPECIFICATION_FILE_ENCODING = 'utf-8'
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
@@ -497,33 +501,33 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """
     specification_store = specification.FormatSpecificationStore()
 
-    with open(path, 'rb') as file_object:
+    with io.open(
+        path, 'rt', encoding=self._SPECIFICATION_FILE_ENCODING) as file_object:
       for line in file_object.readlines():
         line = line.strip()
-        if not line or line.startswith(b'#'):
+        if not line or line.startswith('#'):
           continue
 
         try:
           identifier, offset, pattern = line.split()
         except ValueError:
-          logger.error('[skipping] invalid line: {0:s}'.format(
-              line.decode('utf-8')))
+          logger.error('[skipping] invalid line: {0:s}'.format(line))
           continue
 
         try:
           offset = int(offset, 10)
         except ValueError:
-          logger.error('[skipping] invalid offset in line: {0:s}'.format(
-              line.decode('utf-8')))
+          logger.error('[skipping] invalid offset in line: {0:s}'.format(line))
           continue
 
         try:
-          pattern = pattern.decode('string_escape')
+          # TODO: find another way to do this that doesn't use an undocumented
+          # API.
+          pattern = codecs.escape_decode(pattern)[0]
         # ValueError is raised e.g. when the patterns contains "\xg1".
         except ValueError:
           logger.error(
-              '[skipping] invalid pattern in line: {0:s}'.format(
-                  line.decode('utf-8')))
+              '[skipping] invalid pattern in line: {0:s}'.format(line))
           continue
 
         format_specification = specification.FormatSpecification(identifier)

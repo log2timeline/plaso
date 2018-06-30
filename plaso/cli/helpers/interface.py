@@ -84,7 +84,7 @@ class ArgumentsHelper(object):
       except UnicodeDecodeError as exception:
         raise errors.BadConfigOption((
             'Unable to convert option: {0:s} to Unicode with error: '
-            '{1:s}.').format(argument_name, exception))
+            '{1!s}.').format(argument_name, exception))
 
     elif not isinstance(argument_value, py2to3.UNICODE_TYPE):
       raise errors.BadConfigOption(
