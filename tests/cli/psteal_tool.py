@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import io
 import os
 import unittest
 
@@ -37,13 +38,13 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     The actual processing time is ignored, since it can vary.
 
     Args:
-      output (bytes): tool output.
-      expected_output (list[bytes]): expected tool output.
+      output (str): tool output.
+      expected_output (list[str]): expected tool output.
     """
-    output = output.split(b'\n')
+    output = output.split('\n')
 
     self.assertEqual(output[:3], expected_output[:3])
-    self.assertTrue(output[3].startswith(b'Processing time\t: '))
+    self.assertTrue(output[3].startswith('Processing time\t: '))
     self.assertEqual(output[4:], expected_output[4:])
 
   def testGenerateStorageFileName(self):
@@ -89,7 +90,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testFailWhenOutputAlreadyExists(self):
     """Test to make sure the tool raises when the output file already exists."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -115,7 +116,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['testdir'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -163,7 +164,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
   def testParseArguments(self):
     """Tests the ParseArguments function"""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     # Test ParseArguments with no output file nor source.
@@ -177,7 +178,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['testdir'])
   def testExtractEventsFromSourceDirectory(self):
     """Tests the ExtractEventsFromSources function on a directory."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -195,15 +196,15 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       test_tool.ExtractEventsFromSources()
 
       expected_output = [
-          b'',
-          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
-          b'Source type\t: directory',
-          b'Processing time\t: 00:00:00',
-          b'',
-          b'Processing started.',
-          b'Processing completed.',
-          b'',
-          b'']
+          '',
+          'Source path\t: {0:s}'.format(options.source),
+          'Source type\t: directory',
+          'Processing time\t: 00:00:00',
+          '',
+          'Processing started.',
+          'Processing completed.',
+          '',
+          '']
 
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
@@ -215,7 +216,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     # TODO: added for testing.
     dfvfs_resolver.Resolver.key_chain.Empty()
 
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -234,15 +235,15 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       test_tool.ExtractEventsFromSources()
 
       expected_output = [
-          b'',
-          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
-          b'Source type\t: storage media image',
-          b'Processing time\t: 00:00:00',
-          b'',
-          b'Processing started.',
-          b'Processing completed.',
-          b'',
-          b'']
+          '',
+          'Source path\t: {0:s}'.format(options.source),
+          'Source type\t: storage media image',
+          'Processing time\t: 00:00:00',
+          '',
+          'Processing started.',
+          'Processing completed.',
+          '',
+          '']
 
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
@@ -251,7 +252,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testExtractEventsFromSourcesImage(self):
     """Tests the ExtractEventsFromSources function on a single partition."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -269,15 +270,15 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       test_tool.ExtractEventsFromSources()
 
       expected_output = [
-          b'',
-          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
-          b'Source type\t: storage media image',
-          b'Processing time\t: 00:00:00',
-          b'',
-          b'Processing started.',
-          b'Processing completed.',
-          b'',
-          b'']
+          '',
+          'Source path\t: {0:s}'.format(options.source),
+          'Source type\t: storage media image',
+          'Processing time\t: 00:00:00',
+          '',
+          'Processing started.',
+          'Processing completed.',
+          '',
+          '']
 
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
@@ -286,7 +287,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['multi_partition_image.vmdk'])
   def testExtractEventsFromSourcePartitionedImage(self):
     """Tests the ExtractEventsFromSources function on a partitioned image."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -306,15 +307,15 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       test_tool.ExtractEventsFromSources()
 
       expected_output = [
-          b'',
-          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
-          b'Source type\t: storage media image',
-          b'Processing time\t: 00:00:00',
-          b'',
-          b'Processing started.',
-          b'Processing completed.',
-          b'',
-          b'']
+          '',
+          'Source path\t: {0:s}'.format(options.source),
+          'Source type\t: storage media image',
+          'Processing time\t: 00:00:00',
+          '',
+          'Processing started.',
+          'Processing completed.',
+          '',
+          '']
 
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
@@ -323,7 +324,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testExtractEventsFromSourceVSSImage(self):
     """Tests the ExtractEventsFromSources function on an image with VSS."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -343,19 +344,19 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       test_tool.ExtractEventsFromSources()
 
       expected_output = [
-          b'',
-          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
-          b'Source type\t: storage media image',
-          b'Processing time\t: 00:00:00',
-          b'',
-          b'Processing started.',
-          b'Processing completed.',
-          b'',
-          b'Number of errors encountered while extracting events: 1.',
-          b'',
-          b'Use pinfo to inspect errors in more detail.',
-          b'',
-          b'']
+          '',
+          'Source path\t: {0:s}'.format(options.source),
+          'Source type\t: storage media image',
+          'Processing time\t: 00:00:00',
+          '',
+          'Processing started.',
+          'Processing completed.',
+          '',
+          'Number of errors encountered while extracting events: 1.',
+          '',
+          'Use pinfo to inspect errors in more detail.',
+          '',
+          '']
 
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
@@ -364,7 +365,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['System.evtx'])
   def testExtractEventsFromSourceSingleFile(self):
     """Tests the ExtractEventsFromSources function on a single file."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -382,15 +383,15 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       test_tool.ExtractEventsFromSources()
 
       expected_output = [
-          b'',
-          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
-          b'Source type\t: single file',
-          b'Processing time\t: 00:00:00',
-          b'',
-          b'Processing started.',
-          b'Processing completed.',
-          b'',
-          b'']
+          '',
+          'Source path\t: {0:s}'.format(options.source),
+          'Source type\t: single file',
+          'Processing time\t: 00:00:00',
+          '',
+          'Processing started.',
+          'Processing completed.',
+          '',
+          '']
 
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
@@ -400,7 +401,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['end_to_end', 'dynamic.log'])
   def testProcessStorage(self):
     """Test the AnalyzeEvents function"""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -416,14 +417,15 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
       expected_output_file_name = self._GetTestFilePath(
           ['end_to_end', 'dynamic.log'])
-      with open(expected_output_file_name, 'rb') as file_object:
+      with io.open(
+          expected_output_file_name, 'rt', encoding='utf-8') as file_object:
         expected_output = file_object.read()
 
-      with open(options.write, 'rb') as file_object:
+      with io.open(options.write, 'rt', encoding='utf-8') as file_object:
         result_output = file_object.read()
 
-      expected_output = sorted(expected_output.split(b'\n'))
-      result_output = sorted(result_output.split(b'\n'))
+      expected_output = sorted(expected_output.split('\n'))
+      result_output = sorted(result_output.split('\n'))
       self.assertEqual(expected_output, result_output)
 
     output = output_writer.ReadOutput()

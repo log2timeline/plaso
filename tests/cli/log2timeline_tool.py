@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 
 import argparse
-import codecs
 import os
 import platform
 import unittest
@@ -103,7 +102,6 @@ optional arguments:
     Args:
       output (str): tool output.
       expected_output (list[str]): expected tool output.
-      encoding (Optional[str]): encoding of the output.
     """
     output = output.split('\n')
 
@@ -532,7 +530,6 @@ optional arguments:
     test_tool.ShowInfo()
 
     output = output_writer.ReadOutput()
-    output = codecs.decode(output, self._OUTPUT_ENCODING)
 
     section_headings = [
         'Hashers', 'Parsers', 'Parser Plugins', 'Parser Presets',

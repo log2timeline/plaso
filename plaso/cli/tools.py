@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import abc
+import codecs
 import datetime
 import locale
 import sys
@@ -53,6 +54,8 @@ class CLITool(object):
     preferred_encoding = locale.getpreferredencoding()
     if not preferred_encoding:
       preferred_encoding = self._PREFERRED_ENCODING
+    elif isinstance(preferred_encoding, py2to3.BYTES_TYPE):
+      preferred_encoding = preferred_encoding.decode('utf-8')
 
     if not input_reader:
       input_reader = StdinInputReader(encoding=preferred_encoding)
@@ -359,11 +362,11 @@ class CLITool(object):
         encoding = self.preferred_encoding
 
       try:
-        argument_value = argument_value.decode(encoding)
+        argument_value = codecs.decode(argument_value, encoding)
       except UnicodeDecodeError as exception:
         raise errors.BadConfigOption((
             'Unable to convert option: {0:s} to Unicode with error: '
-            '{1:s}.').format(argument_name, exception))
+            '{1!s}.').format(argument_name, exception))
 
     elif not isinstance(argument_value, py2to3.UNICODE_TYPE):
       raise errors.BadConfigOption(
@@ -499,7 +502,7 @@ class FileObjectOutputWriter(CLIOutputWriter):
     try:
       # Note that encode() will first convert string into a Unicode string
       # if necessary.
-      encoded_string = string.encode(self._encoding, errors=self._errors)
+      encoded_string = codecs.encode(string, self._encoding, self._errors)
     except UnicodeEncodeError:
       if self._errors == 'strict':
         logger.error(
@@ -509,7 +512,7 @@ class FileObjectOutputWriter(CLIOutputWriter):
             '"\\ufffd".')
         self._errors = 'replace'
 
-      encoded_string = string.encode(self._encoding, errors=self._errors)
+      encoded_string = codecs.encode(string, self._encoding, self._errors)
 
     self._file_object.write(encoded_string)
 

@@ -17,6 +17,7 @@ from plaso.engine import knowledge_base
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import loggers
+from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.serializer import json_serializer
 from plaso.storage import factory as storage_factory
@@ -353,6 +354,10 @@ class PinfoTool(
       command_line_arguments = session.command_line_arguments or 'N/A'
       parser_filter_expression = session.parser_filter_expression or 'N/A'
       preferred_encoding = session.preferred_encoding or 'N/A'
+      # Workaround for some older Plaso releases writing preferred encoding as
+      # bytes.
+      if isinstance(preferred_encoding, py2to3.BYTES_TYPE):
+        preferred_encoding = preferred_encoding.decode('utf-8')
       artifact_filters = session.artifact_filters or 'N/A'
       filter_file = session.filter_file or 'N/A'
 

@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import io
 import os
 import unittest
 
@@ -95,7 +96,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testExtractDataStream(self):
     """Tests the _ExtractDataStream function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool()
 
     test_path = self._GetTestFilePath(['ímynd.dd'])
@@ -113,7 +114,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testExtractFileEntry(self):
     """Tests the _ExtractFileEntry function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool()
 
     test_path = self._GetTestFilePath(['ímynd.dd'])
@@ -181,7 +182,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
   def testListSignatureIdentifiers(self):
     """Tests the ListSignatureIdentifiers function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     test_tool._data_location = self._TEST_DATA_PATH
@@ -189,19 +190,19 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     test_tool.ListSignatureIdentifiers()
 
     expected_output = (
-        b'Available signature identifiers:\n'
-        b'7z, bzip2, esedb, evt, evtx, ewf_e01, ewf_l01, exe_mz, gzip, lnk, '
-        b'msiecf, nk2,\n'
-        b'olecf, olecf_beta, pdf, pff, qcow, rar, regf, tar, tar_old, '
-        b'vhdi_footer,\n'
-        b'vhdi_header, wtcdb_cache, wtcdb_index, zip\n'
-        b'\n')
+        'Available signature identifiers:\n'
+        '7z, bzip2, esedb, evt, evtx, ewf_e01, ewf_l01, exe_mz, gzip, lnk, '
+        'msiecf, nk2,\n'
+        'olecf, olecf_beta, pdf, pff, qcow, rar, regf, tar, tar_old, '
+        'vhdi_footer,\n'
+        'vhdi_header, wtcdb_cache, wtcdb_index, zip\n'
+        '\n')
 
     output = output_writer.ReadOutput()
 
     # Compare the output as list of lines which makes it easier to spot
     # differences.
-    self.assertEqual(output.split(b'\n'), expected_output.split(b'\n'))
+    self.assertEqual(output.split('\n'), expected_output.split('\n'))
 
     test_tool._data_location = self._GetTestFilePath(['tmp'])
 
@@ -210,7 +211,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
   def testParseArguments(self):
     """Tests the ParseArguments function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     result = test_tool.ParseArguments()
@@ -221,7 +222,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -240,7 +241,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['image.qcow2'])
   def testPrintFilterCollection(self):
     """Tests the PrintFilterCollection function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -253,17 +254,17 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
     test_tool.PrintFilterCollection()
 
-    expected_output = b'\n'.join([
-        b'Filters:',
-        (b'\tctime between 2012-05-25 15:59:00.000000 and '
-         b'2012-05-25 15:59:20.000000'),
-        b''])
+    expected_output = '\n'.join([
+        'Filters:',
+        ('\tctime between 2012-05-25 15:59:00.000000 and '
+         '2012-05-25 15:59:20.000000'),
+        ''])
     output = output_writer.ReadOutput()
     self.assertEqual(output, expected_output)
 
   def testProcessSourcesWithImage(self):
     """Tests the ProcessSources function on a single partition image."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -278,12 +279,12 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
       test_tool.ProcessSources()
 
-      expected_output = b'\n'.join([
-          b'Export started.',
-          b'Extracting file entries.',
-          b'Export completed.',
-          b'',
-          b''])
+      expected_output = '\n'.join([
+          'Export started.',
+          'Extracting file entries.',
+          'Export completed.',
+          '',
+          ''])
 
       output = output_writer.ReadOutput()
       self.assertEqual(output, expected_output)
@@ -291,7 +292,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['image.qcow2'])
   def testProcessSourcesExtractWithDateTimeFilter(self):
     """Tests the ProcessSources function with a date time filter."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -317,7 +318,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['image.qcow2'])
   def testProcessSourcesExtractWithExtensionsFilter(self):
     """Tests the ProcessSources function with an extensions filter."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -342,7 +343,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['image.qcow2'])
   def testProcessSourcesExtractWithNamesFilter(self):
     """Tests the ProcessSources function with a names filter."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -368,7 +369,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['image.qcow2'])
   def testProcessSourcesExtractWithFilter(self):
     """Tests the ProcessSources function with a filter file."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -378,8 +379,8 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       filter_file = os.path.join(temp_directory, 'filter.txt')
-      with open(filter_file, 'wb') as file_object:
-        file_object.write(b'/a_directory/.+_file\n')
+      with io.open(filter_file, 'wt', encoding='utf-8') as file_object:
+        file_object.write('/a_directory/.+_file\n')
 
       options.file_filter = filter_file
       options.path = temp_directory
@@ -430,7 +431,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['syslog_image.dd'])
   def testProcessSourcesExtractWithSignaturesFilter(self):
     """Tests the ProcessSources function with a signatures filter."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()

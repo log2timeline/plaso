@@ -265,7 +265,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     """
     self._host = server
     self._port = port
-    logger.debug('Elasticsearch server: {0:s} port: {1:d}'.format(server, port))
+    logger.debug('Elasticsearch server: {0!s} port: {1:d}'.format(server, port))
 
   def SetUsername(self, username):
     """Sets the username.
@@ -274,7 +274,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
       username (str): username to authenticate with.
     """
     self._username = username
-    logger.debug('Elasticsearch username: {0:s}'.format(username))
+    logger.debug('Elasticsearch username: {0!s}'.format(username))
 
   def WriteEventBody(self, event):
     """Writes an event to the output.

@@ -414,7 +414,7 @@ class SearchParser(Lexer):
              Where match.group(1) contains the escaped code.
     """
     if match.group(1) in '\'"rnbt':
-      self.string += string.decode('string_escape')
+      self.string += string.decode('unicode_escape')
     else:
       self.string += string
 

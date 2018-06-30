@@ -40,7 +40,7 @@ class AnalysisPluginOptionsTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'valid.txt'])
   def testCreateAnalysisPlugins(self):
     """Tests the _CreateAnalysisPlugins function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = TestToolWithAnalysisPluginOptions(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -60,7 +60,7 @@ class AnalysisPluginOptionsTest(test_lib.CLIToolTestCase):
 
   def testListAnalysisPlugins(self):
     """Tests the ListAnalysisPlugins function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = TestToolWithAnalysisPluginOptions(output_writer=output_writer)
 
     test_tool.ListAnalysisPlugins()
@@ -69,11 +69,11 @@ class AnalysisPluginOptionsTest(test_lib.CLIToolTestCase):
 
     number_of_tables = 0
     lines = []
-    for line in output.split(b'\n'):
+    for line in output.split('\n'):
       line = line.strip()
       lines.append(line)
 
-      if line.startswith(b'*****') and line.endswith(b'*****'):
+      if line.startswith('*****') and line.endswith('*****'):
         number_of_tables += 1
 
     self.assertIn('Analysis Plugins', lines[1])
@@ -83,7 +83,7 @@ class AnalysisPluginOptionsTest(test_lib.CLIToolTestCase):
     self.assertEqual(number_of_tables, 1)
 
     expected_line = (
-        b'browser_search : Analyze browser search entries from events.')
+        'browser_search : Analyze browser search entries from events.')
     self.assertIn(expected_line, lines)
 
 
@@ -97,7 +97,7 @@ class HashersOptionsTest(test_lib.CLIToolTestCase):
 
   def testListHashers(self):
     """Tests the ListHashers function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = TestToolWithHashersOptions(output_writer=output_writer)
 
     test_tool.ListHashers()
@@ -106,11 +106,11 @@ class HashersOptionsTest(test_lib.CLIToolTestCase):
 
     number_of_tables = 0
     lines = []
-    for line in output.split(b'\n'):
+    for line in output.split('\n'):
       line = line.strip()
       lines.append(line)
 
-      if line.startswith(b'*****') and line.endswith(b'*****'):
+      if line.startswith('*****') and line.endswith('*****'):
         number_of_tables += 1
 
     self.assertIn('Hashers', lines[1])
@@ -119,7 +119,7 @@ class HashersOptionsTest(test_lib.CLIToolTestCase):
 
     self.assertEqual(number_of_tables, 1)
 
-    expected_line = b'md5 : Calculates an MD5 digest hash over input data.'
+    expected_line = 'md5 : Calculates an MD5 digest hash over input data.'
     self.assertIn(expected_line, lines)
 
 
@@ -146,7 +146,7 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
 
   def testListOutputModules(self):
     """Tests the ListOutputModules function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = TestToolWithOutputModuleOptions(output_writer=output_writer)
 
     test_tool.ListOutputModules()
@@ -155,11 +155,11 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
 
     number_of_tables = 0
     lines = []
-    for line in output.split(b'\n'):
+    for line in output.split('\n'):
       line = line.strip()
       lines.append(line)
 
-      if line.startswith(b'*****') and line.endswith(b'*****'):
+      if line.startswith('*****') and line.endswith('*****'):
         number_of_tables += 1
 
     self.assertIn('Output Modules', lines[1])
@@ -176,7 +176,7 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
       expected_number_of_tables += 1
 
     self.assertEqual(number_of_tables, expected_number_of_tables)
-    expected_line = b'rawpy : "raw" (or native) Python output.'
+    expected_line = 'rawpy : "raw" (or native) Python output.'
     self.assertIn(expected_line, lines)
 
 
@@ -202,7 +202,7 @@ class ParsersOptionsTest(test_lib.CLIToolTestCase):
 
   def testListParsersAndPlugins(self):
     """Tests the ListParsersAndPlugins function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = TestToolWithParsersOptions(output_writer=output_writer)
 
     test_tool.ListParsersAndPlugins()
@@ -211,11 +211,11 @@ class ParsersOptionsTest(test_lib.CLIToolTestCase):
 
     number_of_tables = 0
     lines = []
-    for line in output.split(b'\n'):
+    for line in output.split('\n'):
       line = line.strip()
       lines.append(line)
 
-      if line.startswith(b'*****') and line.endswith(b'*****'):
+      if line.startswith('*****') and line.endswith('*****'):
         number_of_tables += 1
 
     self.assertIn('Parsers', lines[1])
@@ -224,32 +224,32 @@ class ParsersOptionsTest(test_lib.CLIToolTestCase):
 
     self.assertEqual(number_of_tables, 9)
 
-    expected_line = b'filestat : Parser for file system stat information.'
+    expected_line = 'filestat : Parser for file system stat information.'
     self.assertIn(expected_line, lines)
 
-    expected_line = b'bencode_utorrent : Parser for uTorrent bencoded files.'
+    expected_line = 'bencode_utorrent : Parser for uTorrent bencoded files.'
     self.assertIn(expected_line, lines)
 
     expected_line = (
-        b'msie_webcache : Parser for MSIE WebCache ESE database files.')
+        'msie_webcache : Parser for MSIE WebCache ESE database files.')
     self.assertIn(expected_line, lines)
 
-    expected_line = b'olecf_default : Parser for a generic OLECF item.'
+    expected_line = 'olecf_default : Parser for a generic OLECF item.'
     self.assertIn(expected_line, lines)
 
-    expected_line = b'plist_default : Parser for plist files.'
+    expected_line = 'plist_default : Parser for plist files.'
     self.assertIn(expected_line, lines)
 
     # Note that the expected line is truncated by the cell wrapping in
     # the table.
     expected_line = (
-        b'chrome_27_history : Parser for Google Chrome 27 - 67 history SQLite')
+        'chrome_27_history : Parser for Google Chrome 27 - 67 history SQLite')
     self.assertIn(expected_line, lines)
 
-    expected_line = b'ssh : Parser for SSH syslog entries.'
+    expected_line = 'ssh : Parser for SSH syslog entries.'
     self.assertIn(expected_line, lines)
 
-    expected_line = b'winreg_default : Parser for Registry data.'
+    expected_line = 'winreg_default : Parser for Registry data.'
     self.assertIn(expected_line, lines)
 
 
@@ -265,19 +265,19 @@ class ProfilingOptionsTest(test_lib.CLIToolTestCase):
 
   def testListProfilers(self):
     """Tests the ListProfilers function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = TestToolWithProfilingOptions(output_writer=output_writer)
 
     test_tool.ListProfilers()
 
     string = output_writer.ReadOutput()
     expected_string = (
-        b'\n'
-        b'********************************** Profilers '
-        b'***********************************\n'
-        b'       Name : Description\n'
-        b'----------------------------------------'
-        b'----------------------------------------\n')
+        '\n'
+        '********************************** Profilers '
+        '***********************************\n'
+        '       Name : Description\n'
+        '----------------------------------------'
+        '----------------------------------------\n')
     self.assertTrue(string.startswith(expected_string))
 
 
