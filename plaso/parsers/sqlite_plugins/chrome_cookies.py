@@ -20,7 +20,7 @@ class ChromeCookieEventData(events.EventData):
 
   Attributes:
     cookie_name (str): name of the cookie.
-    hostname (str): hostname of host that set the cookie value.
+    host (str): hostname of host that set the cookie value.
     httponly (bool): True if the cookie cannot be accessed through client
         side script.
     path (str): path where the cookie got set.
@@ -28,7 +28,7 @@ class ChromeCookieEventData(events.EventData):
     secure (bool): True if the cookie should only be transmitted over a
         secure channel.
     url (str): URL or path where the cookie got set.
-    value (str): value of the cookie.
+    data (str): value of the cookie.
   """
 
   DATA_TYPE = 'chrome:cookie:entry'
