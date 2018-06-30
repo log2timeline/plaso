@@ -353,6 +353,7 @@ class PinfoTool(
 
       command_line_arguments = session.command_line_arguments or 'N/A'
       parser_filter_expression = session.parser_filter_expression or 'N/A'
+      preferred_encoding = session.preferred_encoding or 'N/A'
       # Workaround for some older Plaso releases writing preferred encoding as
       # bytes.
       if isinstance(preferred_encoding, py2to3.BYTES_TYPE):
