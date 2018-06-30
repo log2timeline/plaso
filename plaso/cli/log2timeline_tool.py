@@ -419,15 +419,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._SetExtractionParsersAndPlugins(configuration, session)
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
-    artifact_filters = getattr(configuration, '_artifact_filters', None)
-    artifact_definitions_path = getattr(
-        configuration, '_artifact_definitions_path', None)
-    custom_artifacts_path = getattr(
-        configuration, '_custom_artifacts_path', None)
     filter_find_specs = engine.BaseEngine.BuildFilterFindSpecs(
-        artifact_definitions_path, custom_artifacts_path,
-        extraction_engine.knowledge_base, artifact_filters,
-        configuration.filter_file)
+        self._artifact_definitions_path, self._custom_artifacts_path,
+        extraction_engine.knowledge_base, self._artifact_filters,
+        self._filter_file)
 
     processing_status = None
     if single_process_mode:
