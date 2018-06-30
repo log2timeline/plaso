@@ -502,7 +502,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     specification_store = specification.FormatSpecificationStore()
 
     with io.open(
-        path, 'r', encoding=self._SPECIFICATION_FILE_ENCODING) as file_object:
+        path, 'rt', encoding=self._SPECIFICATION_FILE_ENCODING) as file_object:
       for line in file_object.readlines():
         line = line.strip()
         if not line or line.startswith('#'):
