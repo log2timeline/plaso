@@ -21,9 +21,10 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     """Tests the Process function on a Skype History database file.
 
       The History file contains 24 events:
-      4 call events
+      3 call events
       4 transfers file events
-      1 sms events
+      1 sms event
+      1 account event
       15 chat events
 
       Events used:
@@ -45,6 +46,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     number_of_files = 0
     number_of_sms = 0
     number_of_chats = 0
+    number_of_account_events = 0
     for event in events:
       if event.data_type == 'skype:event:call':
         number_of_calls += 1
@@ -54,6 +56,8 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
         number_of_sms += 1
       if event.data_type == 'skype:event:chat':
         number_of_chats += 1
+      if event.data_type == 'skype:event:account':
+        number_of_account_events += 1
 
     self.assertEqual(number_of_files, 4)
     self.assertEqual(number_of_sms, 1)

@@ -175,11 +175,11 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
       if format_version == 5:
         path_segments = value_name.split('\\')
 
-        for segment_index in range(0, len(path_segments)):
+        for segment_index, path_segment in enumerate(path_segments):
           # Remove the { } from the path segment to get the GUID.
           guid = path_segments[segment_index][1:-1]
           path_segments[segment_index] = known_folder_ids.PATHS.get(
-              guid, path_segments[segment_index])
+              guid, path_segment)
 
         value_name = '\\'.join(path_segments)
         # Check if we might need to substitute values.

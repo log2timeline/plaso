@@ -38,7 +38,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
     self.CheckTimestamp(event.timestamp, '2013-12-13 14:45:09.000000')
 
     self.assertEqual(event.username, 'LOGIN')
-    self.assertEqual(event.computer_name, 'localhost')
+    self.assertEqual(event.hostname, 'localhost')
     self.assertEqual(event.terminal, 'tty4')
     self.assertEqual(event.type, 6)
     self.assertEqual(event.exit_status, 0)
@@ -47,14 +47,17 @@ class UtmpParserTest(test_lib.ParserTestCase):
 
     expected_message = (
         'User: LOGIN '
-        'Computer Name: localhost '
+        'Hostname: localhost '
         'Terminal: tty4 '
         'PID: 1115 '
         'Terminal identifier: 52 '
         'Status: LOGIN_PROCESS '
         'IP Address: 0.0.0.0 '
         'Exit status: 0')
-    expected_short_message = 'User: LOGIN'
+    expected_short_message = (
+        'User: LOGIN '
+        'PID: 1115 '
+        'Status: LOGIN_PROCESS')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[12]
@@ -62,7 +65,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
     self.CheckTimestamp(event.timestamp, '2013-12-18 22:46:56.305504')
 
     self.assertEqual(event.username, 'moxilo')
-    self.assertEqual(event.computer_name, 'localhost')
+    self.assertEqual(event.hostname, 'localhost')
     self.assertEqual(event.terminal, 'pts/4')
     self.assertEqual(event.type, 7)
     self.assertEqual(event.exit_status, 0)
@@ -71,14 +74,17 @@ class UtmpParserTest(test_lib.ParserTestCase):
 
     expected_message = (
         'User: moxilo '
-        'Computer Name: localhost '
+        'Hostname: localhost '
         'Terminal: pts/4 '
         'PID: 2684 '
         'Terminal identifier: 13359 '
         'Status: USER_PROCESS '
         'IP Address: 0.0.0.0 '
         'Exit status: 0')
-    expected_short_message = 'User: moxilo'
+    expected_short_message = (
+        'User: moxilo '
+        'PID: 2684 '
+        'Status: USER_PROCESS')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
   @shared_test_lib.skipUnlessHasTestFile(['wtmp.1'])
@@ -96,7 +102,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
     self.CheckTimestamp(event.timestamp, '2011-12-01 17:36:38.432935')
 
     self.assertEqual(event.username, 'userA')
-    self.assertEqual(event.computer_name, '10.10.122.1')
+    self.assertEqual(event.hostname, '10.10.122.1')
     self.assertEqual(event.terminal, 'pts/32')
     self.assertEqual(event.type, 7)
     self.assertEqual(event.ip_address, '10.10.122.1')
@@ -106,14 +112,17 @@ class UtmpParserTest(test_lib.ParserTestCase):
 
     expected_message = (
         'User: userA '
-        'Computer Name: 10.10.122.1 '
+        'Hostname: 10.10.122.1 '
         'Terminal: pts/32 '
         'PID: 20060 '
         'Terminal identifier: 842084211 '
         'Status: USER_PROCESS '
         'IP Address: 10.10.122.1 '
         'Exit status: 0')
-    expected_short_message = 'User: userA'
+    expected_short_message = (
+        'User: userA '
+        'PID: 20060 '
+        'Status: USER_PROCESS')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 

@@ -70,12 +70,10 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
     kwargs.setdefault('encoding', 'cp1252')
     super(TrendMicroBaseParser, self).__init__(*args, **kwargs)
 
-  def _CreateDictReader(self, parser_mediator, line_reader):
+  def _CreateDictReader(self, line_reader):
     """Iterates over the log lines and provide a reader for the values.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
       line_reader (iter): yields each line in the log file.
 
     Yields:

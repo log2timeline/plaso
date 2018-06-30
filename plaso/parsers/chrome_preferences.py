@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import codecs
 import json
 import os
 
@@ -99,6 +100,8 @@ class ChromePreferencesParser(interface.FileObjectParser):
   DESCRIPTION = 'Parser for Chrome Preferences files.'
 
   REQUIRED_KEYS = frozenset(['browser', 'extensions'])
+
+  _ENCODING = 'utf-8'
 
   # TODO site_engagement & ssl_cert_decisions
   _EXCEPTIONS_KEYS = frozenset([
@@ -204,18 +207,20 @@ class ChromePreferencesParser(interface.FileObjectParser):
               self.NAME, parser_mediator.GetDisplayName()))
 
     file_object.seek(0, os.SEEK_SET)
+    file_content = file_object.read()
+    file_content = codecs.decode(file_content, self._ENCODING)
 
     # Second pass to verify it's valid JSON
     try:
-      json_dict = json.load(file_object)
+      json_dict = json.loads(file_content)
     except ValueError as exception:
       raise errors.UnableToParseFile((
-          '[{0:s}] Unable to parse file {1:s} as JSON: {2:s}').format(
+          '[{0:s}] Unable to parse file {1:s} as JSON: {2!s}').format(
               self.NAME, parser_mediator.GetDisplayName(), exception))
     except IOError as exception:
       raise errors.UnableToParseFile((
           '[{0:s}] Unable to open file {1:s} for parsing as'
-          'JSON: {2:s}').format(
+          'JSON: {2!s}').format(
               self.NAME, parser_mediator.GetDisplayName(), exception))
 
     # Third pass to verify the file has the correct keys in it for Preferences

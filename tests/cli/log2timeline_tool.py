@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 import argparse
+import codecs
 import os
 import platform
 import unittest
@@ -29,6 +30,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
   # pylint: disable=protected-access
 
   _BDE_PASSWORD = 'bde-TEST'
+  _OUTPUT_ENCODING = 'utf-8'
 
   if resource is None:
     _EXPECTED_PROCESSING_OPTIONS = ("""\
@@ -99,13 +101,14 @@ optional arguments:
     The actual processing time is ignored, since it can vary.
 
     Args:
-      output (bytes): tool output.
-      expected_output (list[bytes]): expected tool output.
+      output (str): tool output.
+      expected_output (list[str]): expected tool output.
+      encoding (Optional[str]): encoding of the output.
     """
-    output = output.split(b'\n')
+    output = output.split('\n')
 
     self.assertEqual(output[:3], expected_output[:3])
-    self.assertTrue(output[3].startswith(b'Processing time\t: '))
+    self.assertTrue(output[3].startswith('Processing time\t: '))
     self.assertEqual(output[4:], expected_output[4:])
 
   # TODO: add tests for _CheckStorageFile
@@ -153,7 +156,7 @@ optional arguments:
 
   def testParseArguments(self):
     """Tests the ParseArguments function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     result = test_tool.ParseArguments()
@@ -165,7 +168,7 @@ optional arguments:
   @shared_test_lib.skipUnlessHasTestFile(['testdir'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -197,7 +200,7 @@ optional arguments:
 
   def testExtractEventsFromSourcesOnDirectory(self):
     """Tests the ExtractEventsFromSources function on a directory."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -216,22 +219,22 @@ optional arguments:
       test_tool.ExtractEventsFromSources()
 
       expected_output = [
-          b'',
-          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
-          b'Source type\t: directory',
-          b'Processing time\t: 00:00:00',
-          b'',
-          b'Processing started.',
-          b'Processing completed.',
-          b'',
-          b'']
+          '',
+          'Source path\t: {0:s}'.format(options.source),
+          'Source type\t: directory',
+          'Processing time\t: 00:00:00',
+          '',
+          'Processing started.',
+          'Processing completed.',
+          '',
+          '']
 
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
   def testExtractEventsFromSourcesOnBDEImage(self):
     """Tests the ExtractEventsFromSources function on BDE image."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -251,22 +254,22 @@ optional arguments:
       test_tool.ExtractEventsFromSources()
 
       expected_output = [
-          b'',
-          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
-          b'Source type\t: storage media image',
-          b'Processing time\t: 00:00:00',
-          b'',
-          b'Processing started.',
-          b'Processing completed.',
-          b'',
-          b'']
+          '',
+          'Source path\t: {0:s}'.format(options.source),
+          'Source type\t: storage media image',
+          'Processing time\t: 00:00:00',
+          '',
+          'Processing started.',
+          'Processing completed.',
+          '',
+          '']
 
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
   def testExtractEventsFromSourcesImage(self):
     """Tests the ExtractEventsFromSources function on single partition image."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -285,22 +288,22 @@ optional arguments:
       test_tool.ExtractEventsFromSources()
 
       expected_output = [
-          b'',
-          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
-          b'Source type\t: storage media image',
-          b'Processing time\t: 00:00:00',
-          b'',
-          b'Processing started.',
-          b'Processing completed.',
-          b'',
-          b'']
+          '',
+          'Source path\t: {0:s}'.format(options.source),
+          'Source type\t: storage media image',
+          'Processing time\t: 00:00:00',
+          '',
+          'Processing started.',
+          'Processing completed.',
+          '',
+          '']
 
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
   def testExtractEventsFromSourcesPartitionedImage(self):
     """Tests the ExtractEventsFromSources function on multi partition image."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -321,22 +324,22 @@ optional arguments:
       test_tool.ExtractEventsFromSources()
 
       expected_output = [
-          b'',
-          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
-          b'Source type\t: storage media image',
-          b'Processing time\t: 00:00:00',
-          b'',
-          b'Processing started.',
-          b'Processing completed.',
-          b'',
-          b'']
+          '',
+          'Source path\t: {0:s}'.format(options.source),
+          'Source type\t: storage media image',
+          'Processing time\t: 00:00:00',
+          '',
+          'Processing started.',
+          'Processing completed.',
+          '',
+          '']
 
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
   def testExtractEventsFromSourcesOnVSSImage(self):
     """Tests the ExtractEventsFromSources function on VSS image."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -356,26 +359,26 @@ optional arguments:
       test_tool.ExtractEventsFromSources()
 
       expected_output = [
-          b'',
-          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
-          b'Source type\t: storage media image',
-          b'Processing time\t: 00:00:00',
-          b'',
-          b'Processing started.',
-          b'Processing completed.',
-          b'',
-          b'Number of errors encountered while extracting events: 1.',
-          b'',
-          b'Use pinfo to inspect errors in more detail.',
-          b'',
-          b'']
+          '',
+          'Source path\t: {0:s}'.format(options.source),
+          'Source type\t: storage media image',
+          'Processing time\t: 00:00:00',
+          '',
+          'Processing started.',
+          'Processing completed.',
+          '',
+          'Number of errors encountered while extracting events: 1.',
+          '',
+          'Use pinfo to inspect errors in more detail.',
+          '',
+          '']
 
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
   def testExtractEventsFromSourcesOnFile(self):
     """Tests the ExtractEventsFromSources function on a file."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -394,15 +397,15 @@ optional arguments:
       test_tool.ExtractEventsFromSources()
 
       expected_output = [
-          b'',
-          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
-          b'Source type\t: single file',
-          b'Processing time\t: 00:00:00',
-          b'',
-          b'Processing started.',
-          b'Processing completed.',
-          b'',
-          b'']
+          '',
+          'Source path\t: {0:s}'.format(options.source),
+          'Source type\t: single file',
+          'Processing time\t: 00:00:00',
+          '',
+          'Processing started.',
+          'Processing completed.',
+          '',
+          '']
 
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
@@ -413,7 +416,7 @@ optional arguments:
       'not supported on Windows Subsystem for Linux')
   def testExtractEventsFromSourcesOnLinkToDirectory(self):
     """Tests the ExtractEventsFromSources function on a symlink to directory."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -432,15 +435,15 @@ optional arguments:
       test_tool.ExtractEventsFromSources()
 
       expected_output = [
-          b'',
-          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
-          b'Source type\t: directory',
-          b'Processing time\t: 00:00:00',
-          b'',
-          b'Processing started.',
-          b'Processing completed.',
-          b'',
-          b'']
+          '',
+          'Source path\t: {0:s}'.format(options.source),
+          'Source type\t: directory',
+          'Processing time\t: 00:00:00',
+          '',
+          'Processing started.',
+          'Processing completed.',
+          '',
+          '']
 
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
@@ -451,7 +454,7 @@ optional arguments:
       'not supported on Windows Subsystem for Linux')
   def testExtractEventsFromSourcesOnLinkToFile(self):
     """Tests the ExtractEventsFromSources function on a symlink to file."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -470,22 +473,22 @@ optional arguments:
       test_tool.ExtractEventsFromSources()
 
       expected_output = [
-          b'',
-          b'Source path\t: {0:s}'.format(options.source.encode('utf-8')),
-          b'Source type\t: single file',
-          b'Processing time\t: 00:00:00',
-          b'',
-          b'Processing started.',
-          b'Processing completed.',
-          b'',
-          b'']
+          '',
+          'Source path\t: {0:s}'.format(options.source),
+          'Source type\t: single file',
+          'Processing time\t: 00:00:00',
+          '',
+          'Processing started.',
+          'Processing completed.',
+          '',
+          '']
 
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
   def testExtractEventsFromSourcesWithFilestat(self):
     """Tests the ExtractEventsFromSources function with filestat parser."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -518,7 +521,7 @@ optional arguments:
 
   def testShowInfo(self):
     """Tests the output of the tool in info mode."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -529,6 +532,7 @@ optional arguments:
     test_tool.ShowInfo()
 
     output = output_writer.ReadOutput()
+    output = codecs.decode(output, self._OUTPUT_ENCODING)
 
     section_headings = [
         'Hashers', 'Parsers', 'Parser Plugins', 'Parser Presets',

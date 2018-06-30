@@ -36,7 +36,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testCompareStores(self):
     """Tests the CompareStores function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
     test_file1 = self._GetTestFilePath(['psort_test.plaso'])
@@ -66,7 +66,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 
   def testParseArguments(self):
     """Tests the ParseArguments function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
     result = test_tool.ParseArguments()
@@ -78,7 +78,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.plaso'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -96,7 +96,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['pinfo_test.plaso'])
   def testPrintStorageInformationAsText(self):
     """Tests the _PrintStorageInformationAsText function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
     test_filename = 'pinfo_test.plaso'
@@ -185,6 +185,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     table_view.AddRow(['Enabled parser and plugins', enabled_parser_names])
     table_view.AddRow(['Preferred encoding', 'UTF-8'])
     table_view.AddRow(['Debug mode', 'False'])
+    table_view.AddRow(['Artifact filters', 'N/A'])
     table_view.AddRow(['Filter file', 'N/A'])
     table_view.Write(output_writer)
 
@@ -228,7 +229,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     session_identifier = 'd280b33c845b4e8bb3d0b33da11b180b'
     session_start_time = timelib.Timestamp.CopyFromString(
         '2017-12-28 20:06:34.578880')
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
     test_file = self._GetTestFilePath([test_filename])
 

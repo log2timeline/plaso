@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import codecs
 import os
 import shutil
 import unittest
@@ -353,7 +354,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
   def testInternalExportEvents(self):
     """Tests the _ExportEvents function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    output_writer = cli_test_lib.TestOutputWriter()
+    output_writer = cli_test_lib.TestBinaryOutputWriter()
 
     formatter_mediator = formatters_mediator.FormatterMediator()
 
@@ -386,7 +387,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
   def testInternalExportEventsDeduplicate(self):
     """Tests the _ExportEvents function with deduplication."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    output_writer = cli_test_lib.TestOutputWriter()
+    output_writer = cli_test_lib.TestBinaryOutputWriter()
 
     formatter_mediator = formatters_mediator.FormatterMediator()
 
@@ -489,7 +490,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     storage_file_path = self._GetTestFilePath(['psort_test.plaso'])
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    output_writer = cli_test_lib.TestOutputWriter()
+    output_writer = cli_test_lib.TestBinaryOutputWriter()
 
     formatter_mediator = formatters_mediator.FormatterMediator()
     formatter_mediator.SetPreferredLanguageIdentifier('en-US')
@@ -513,7 +514,10 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     lines = []
     output = output_writer.ReadOutput()
-    for line in output.split(b'\n'):
+    # TODO: add test output writer that produces strings also see:
+    # https://github.com/log2timeline/plaso/issues/1963
+    output = codecs.decode(output, 'utf-8')
+    for line in output.split('\n'):
       lines.append(line)
 
     self.assertEqual(len(lines), 22)

@@ -7,7 +7,11 @@ import os
 
 
 class BinaryLineReader(object):
-  """Line reader for binary file-like objects."""
+  """Line reader for binary file-like objects.
+
+  Attributes:
+    end_of_line (bytes): byte sequence that separates lines from each other.
+  """
 
   # The size of the lines buffer.
   _LINES_BUFFER_SIZE = 1024 * 1024
@@ -25,8 +29,8 @@ class BinaryLineReader(object):
     super(BinaryLineReader, self).__init__()
     self._file_object = file_object
     self._file_object_size = file_object.get_size()
-    self._end_of_line = end_of_line
-    self._end_of_line_length = len(self._end_of_line)
+    self.end_of_line = end_of_line
+    self._end_of_line_length = len(self.end_of_line)
     self._lines = []
     self._lines_buffer = b''
     self._lines_buffer_offset = 0
@@ -70,12 +74,18 @@ class BinaryLineReader(object):
 
     Returns:
       bytes: line of text.
+
+    Raises:
+      ValueError: if the specified size is less than zero or greater
+          than the maximum size allowed.
     """
     if size is not None and size < 0:
       raise ValueError('Invalid size value smaller than zero.')
 
     if size is not None and size > self._MAXIMUM_READ_BUFFER_SIZE:
-      raise ValueError('Invalid size value exceeds maximum.')
+      raise ValueError(
+          'Invalid size value exceeds maximum value {0:d}.'.format(
+              self._MAXIMUM_READ_BUFFER_SIZE))
 
     if not self._lines:
       if self._lines_buffer_offset >= self._file_object_size:
@@ -93,16 +103,16 @@ class BinaryLineReader(object):
 
       self._lines_buffer_offset += len(read_buffer)
 
-      self._lines = read_buffer.split(self._end_of_line)
+      self._lines = read_buffer.split(self.end_of_line)
       if self._lines_buffer:
         self._lines[0] = b''.join([self._lines_buffer, self._lines[0]])
         self._lines_buffer = b''
 
-      if read_buffer[self._end_of_line_length:] != self._end_of_line:
+      if read_buffer[self._end_of_line_length:] != self.end_of_line:
         self._lines_buffer = self._lines.pop()
 
       for index, line in enumerate(self._lines):
-        self._lines[index] = b''.join([line, self._end_of_line])
+        self._lines[index] = b''.join([line, self.end_of_line])
 
       if (self._lines_buffer and
           self._lines_buffer_offset >= self._file_object_size):
@@ -165,3 +175,37 @@ class BinaryLineReader(object):
       int: current offset into the file-like object.
     """
     return self._current_offset
+
+
+class BinaryDSVReader(object):
+  """Basic reader for delimiter separated text files of unknown encoding.
+
+  This is used for reading data from text files where the content is unknown, or
+  possibly using a mixed encoding.
+  """
+
+  def __init__(self, binary_line_reader, delimiter):
+    """Initializes the delimited separated values reader.
+
+    Args:
+      binary_line_reader (BinaryLineReader): a binary file reader
+      delimiter (bytes): field delimiter.
+    """
+    super(BinaryDSVReader, self).__init__()
+    self._line_reader = binary_line_reader
+    self._delimiter = delimiter
+
+  def __iter__(self):
+    """Iterates over delimiter separates values.
+
+    Yields:
+      list(bytes): lines of encoded bytes.
+    """
+    for line in self._line_reader.readlines():
+      fields = line.split(self._delimiter)
+
+      # Strip off the end-of-line indicator, to match Python 2 CSV
+      # library behavior.
+      fields[-1] = fields[-1].strip(self._line_reader.end_of_line)
+
+      yield fields

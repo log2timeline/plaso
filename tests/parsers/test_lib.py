@@ -134,7 +134,10 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       try:
         parser.Parse(parser_mediator, file_object)
       finally:
-        file_object.close()
+        # Check if file_object is open as dfwinreg will have closed file_object.
+        # TODO: Fix once Issue #306 addressed in DFVFS
+        if file_object._is_open:  # pylint: disable=protected-access
+          file_object.close()
 
     else:
       self.fail('Got unsupported parser type: {0:s}'.format(type(parser)))

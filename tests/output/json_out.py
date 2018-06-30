@@ -29,7 +29,7 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
 
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
-    expected_header = b'{'
+    expected_header = '{'
 
     self._output_module.WriteHeader()
 
@@ -38,7 +38,7 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
 
   def testWriteFooter(self):
     """Tests the WriteFooter function."""
-    expected_footer = b'}'
+    expected_footer = '}'
 
     self._output_module.WriteFooter()
 

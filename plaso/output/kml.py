@@ -8,6 +8,7 @@ three-dimensional Earth browsers.
 
 from __future__ import unicode_literals
 
+import codecs
 from xml.etree import ElementTree
 
 from plaso.output import interface
@@ -53,7 +54,7 @@ class KMLOutputModule(interface.LinearOutputModule):
       # the input data.
       xml_string = ElementTree.tostring(placemark_xml_element)
 
-      output_text = xml_string.encode(self._output_mediator.encoding)
+      output_text = codecs.decode(xml_string, self._output_mediator.encoding)
       self._output_writer.Write(output_text)
 
   def WriteHeader(self):
@@ -62,14 +63,12 @@ class KMLOutputModule(interface.LinearOutputModule):
         '<?xml version="1.0" encoding="{0:s}"?>'
         '<kml xmlns="http://www.opengis.net/kml/2.2"><Document>'.format(
             self._output_mediator.encoding))
-    output_text = xml_string.encode(self._output_mediator.encoding)
-    self._output_writer.Write(output_text)
+    self._output_writer.Write(xml_string)
 
   def WriteFooter(self):
     """Writes the footer to the output."""
     xml_string = '</Document></kml>'
-    output_text = xml_string.encode(self._output_mediator.encoding)
-    self._output_writer.Write(output_text)
+    self._output_writer.Write(xml_string)
 
 
 manager.OutputManager.RegisterOutput(KMLOutputModule)

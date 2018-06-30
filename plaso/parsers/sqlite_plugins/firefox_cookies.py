@@ -24,7 +24,7 @@ class FirefoxCookieEventData(events.EventData):
     data (str): cookie data.
     httponly (bool): True if the cookie cannot be accessed through client
         side script.
-    hostname (str): hostname of host that set the cookie value.
+    host (str): hostname of host that set the cookie value.
     path (str): URI of the page that set the cookie.
     secure (bool): True if the cookie should only be transmitted over a secure
         channel.

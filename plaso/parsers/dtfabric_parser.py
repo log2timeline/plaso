@@ -216,10 +216,11 @@ class DtFabricBaseParser(interface.FileObjectParser):
 
     try:
       return data_type_map.MapByteStream(byte_stream, context=context)
-    except dtfabric_errors.MappingError as exception:
+    except (dtfabric_errors.ByteStreamTooSmallError,
+            dtfabric_errors.MappingError) as exception:
       raise errors.ParseError((
           'Unable to map {0:s} data at offset: 0x{1:08x} with error: '
-          '{2!s}').format(data_type_map.name, file_offset, exception))
+          '{2!s}').format(data_type_map.name or '', file_offset, exception))
 
   def _ReadStructureFromFileObject(
       self, file_object, file_offset, data_type_map):
@@ -257,12 +258,17 @@ class DtFabricBaseParser(interface.FileObjectParser):
 
       try:
         context = dtfabric_data_maps.DataTypeMapContext()
-        structure_values_object = self._ReadStructureFromByteStream(
-            data, file_offset, data_type_map, context=context)
+        structure_values_object = data_type_map.MapByteStream(
+            data, context=context)
         return structure_values_object, data_size
 
       except dtfabric_errors.ByteStreamTooSmallError:
         pass
+
+      except dtfabric_errors.MappingError as exception:
+        raise errors.ParseError((
+            'Unable to map {0:s} data at offset: 0x{1:08x} with error: '
+            '{2!s}').format(data_type_map.name, file_offset, exception))
 
       last_data_size = data_size
       data_size = data_type_map.GetSizeHint(context=context)

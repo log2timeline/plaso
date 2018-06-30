@@ -98,11 +98,9 @@ class Sqlite3DatabaseFile(object):
     # TODO: have a look at https://docs.python.org/2/library/
     # sqlite3.html#sqlite3.Row.
     for row in self._cursor:
-      values = {}
-      for column_index in range(0, len(column_names)):
-        column_name = column_names[column_index]
-        values[column_name] = row[column_index]
-      yield values
+      yield {
+          column_name: row[column_index]
+          for column_index, column_name in enumerate(column_names)}
 
   def Open(self, filename, read_only=False):
     """Opens the database file.

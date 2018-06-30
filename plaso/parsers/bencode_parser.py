@@ -76,7 +76,7 @@ class BencodeParser(interface.FileObjectParser):
       try:
         plugin.UpdateChainAndProcess(parser_mediator, data=data_object)
       except errors.WrongBencodePlugin as exception:
-        logger.debug('[{0:s}] wrong plugin: {1:s}'.format(
+        logger.debug('[{0:s}] wrong plugin: {1!s}'.format(
             self.NAME, exception))
 
 

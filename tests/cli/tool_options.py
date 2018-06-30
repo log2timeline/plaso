@@ -40,7 +40,7 @@ class AnalysisPluginOptionsTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['tagging_file', 'valid.txt'])
   def testCreateAnalysisPlugins(self):
     """Tests the _CreateAnalysisPlugins function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = TestToolWithAnalysisPluginOptions(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -60,7 +60,7 @@ class AnalysisPluginOptionsTest(test_lib.CLIToolTestCase):
 
   def testListAnalysisPlugins(self):
     """Tests the ListAnalysisPlugins function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = TestToolWithAnalysisPluginOptions(output_writer=output_writer)
 
     test_tool.ListAnalysisPlugins()
@@ -97,7 +97,7 @@ class HashersOptionsTest(test_lib.CLIToolTestCase):
 
   def testListHashers(self):
     """Tests the ListHashers function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = TestToolWithHashersOptions(output_writer=output_writer)
 
     test_tool.ListHashers()
@@ -146,7 +146,7 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
 
   def testListOutputModules(self):
     """Tests the ListOutputModules function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = TestToolWithOutputModuleOptions(output_writer=output_writer)
 
     test_tool.ListOutputModules()
@@ -202,7 +202,7 @@ class ParsersOptionsTest(test_lib.CLIToolTestCase):
 
   def testListParsersAndPlugins(self):
     """Tests the ListParsersAndPlugins function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = TestToolWithParsersOptions(output_writer=output_writer)
 
     test_tool.ListParsersAndPlugins()
@@ -243,7 +243,7 @@ class ParsersOptionsTest(test_lib.CLIToolTestCase):
     # Note that the expected line is truncated by the cell wrapping in
     # the table.
     expected_line = (
-        b'chrome_27_history : Parser for Google Chrome 27 - 65 history SQLite')
+        b'chrome_27_history : Parser for Google Chrome 27 - 67 history SQLite')
     self.assertIn(expected_line, lines)
 
     expected_line = b'ssh : Parser for SSH syslog entries.'
@@ -265,7 +265,7 @@ class ProfilingOptionsTest(test_lib.CLIToolTestCase):
 
   def testListProfilers(self):
     """Tests the ListProfilers function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = TestToolWithProfilingOptions(output_writer=output_writer)
 
     test_tool.ListProfilers()

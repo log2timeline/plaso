@@ -89,7 +89,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testFailWhenOutputAlreadyExists(self):
     """Test to make sure the tool raises when the output file already exists."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -115,10 +115,11 @@ class PstealToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['testdir'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
     options.source = 'source'
     # Test when the output file is missing.
     expected_error = 'Output format: dynamic requires an output file'
@@ -162,7 +163,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
   def testParseArguments(self):
     """Tests the ParseArguments function"""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     # Test ParseArguments with no output file nor source.
@@ -176,7 +177,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['testdir'])
   def testExtractEventsFromSourceDirectory(self):
     """Tests the ExtractEventsFromSources function on a directory."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -214,7 +215,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     # TODO: added for testing.
     dfvfs_resolver.Resolver.key_chain.Empty()
 
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -250,7 +251,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testExtractEventsFromSourcesImage(self):
     """Tests the ExtractEventsFromSources function on a single partition."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -285,7 +286,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['multi_partition_image.vmdk'])
   def testExtractEventsFromSourcePartitionedImage(self):
     """Tests the ExtractEventsFromSources function on a partitioned image."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -322,7 +323,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testExtractEventsFromSourceVSSImage(self):
     """Tests the ExtractEventsFromSources function on an image with VSS."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -363,7 +364,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['System.evtx'])
   def testExtractEventsFromSourceSingleFile(self):
     """Tests the ExtractEventsFromSources function on a single file."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()
@@ -399,7 +400,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['end_to_end', 'dynamic.log'])
   def testProcessStorage(self):
     """Test the AnalyzeEvents function"""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
     options = test_lib.TestOptions()

@@ -39,33 +39,33 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
           os.path.sep, os.path.join('cases', 'image.dd'))
 
     expected_event_body = (
-        b'+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-'
-        b'+-+-+-+-+-+-\n'
-        b'[Timestamp]:\n'
-        b'  2012-06-27T18:17:01+00:00\n'
-        b'[Pathspec]:\n'
-        b'  type: OS, location: {0:s}\n'
-        b'  type: TSK, inode: 15, location: /var/log/syslog.1\n'
-        b'  \n'
-        b'\n'
-        b'[Reserved attributes]:\n'
-        b'  {{data_type}} test:output\n'
-        b'  {{display_name}} OS: /var/log/syslog.1\n'
-        b'  {{hostname}} ubuntu\n'
-        b'  {{inode}} 12345678\n'
-        b'  {{timestamp}} 1340821021000000\n'
-        b'  {{username}} root\n'
-        b'\n'
-        b'[Additional attributes]:\n'
-        b'  {{text}} Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
-        b'session\n'
-        b' closed for user root)\n').format(expected_os_location)
+        '+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-'
+        '+-+-+-+-+-+-\n'
+        '[Timestamp]:\n'
+        '  2012-06-27T18:17:01+00:00\n'
+        '[Pathspec]:\n'
+        '  type: OS, location: {0:s}\n'
+        '  type: TSK, inode: 15, location: /var/log/syslog.1\n'
+        '  \n'
+        '\n'
+        '[Reserved attributes]:\n'
+        '  {{data_type}} test:output\n'
+        '  {{display_name}} OS: /var/log/syslog.1\n'
+        '  {{hostname}} ubuntu\n'
+        '  {{inode}} 12345678\n'
+        '  {{timestamp}} 1340821021000000\n'
+        '  {{username}} root\n'
+        '\n'
+        '[Additional attributes]:\n'
+        '  {{text}} Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
+        'session\n'
+        ' closed for user root)\n').format(expected_os_location)
 
     event_body = self._output_writer.ReadOutput()
 
     # Compare the output as list of lines which makes it easier to spot
     # differences.
-    self.assertEqual(event_body.split(b'\n'), expected_event_body.split(b'\n'))
+    self.assertEqual(event_body.split('\n'), expected_event_body.split('\n'))
 
 
 if __name__ == '__main__':

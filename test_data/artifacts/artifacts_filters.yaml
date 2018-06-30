@@ -40,10 +40,9 @@ sources:
 - type: REGISTRY_KEY
   attributes:
     keys:
-      - 'HKEY_LOCAL_MACHINE\System\ControlSet001\services\**\'
-      - 'HKEY_LOCAL_MACHINE\System\ControlSet002\services\**\'
+      - 'HKEY_LOCAL_MACHINE\System\ControlSet001\services\**'
+      - 'HKEY_LOCAL_MACHINE\System\ControlSet002\services\**'
       - 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Enum\USBSTOR'
-      - 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Enum\USBSTOR\**'
 supported_os: [Windows]
 ---
 name: TestRegistryValue
