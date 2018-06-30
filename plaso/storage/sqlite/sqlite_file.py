@@ -79,7 +79,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
   _CREATE_EVENT_TABLE_QUERY = (
       'CREATE TABLE {0:s} ('
       '_identifier INTEGER PRIMARY KEY AUTOINCREMENT,'
-      '_timestamp INTEGER,'
+      '_timestamp BIGINT,'
       '_data {1:s});')
 
   _HAS_TABLE_QUERY = (
