@@ -59,7 +59,7 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python2-future
                       python2-idna
                       python2-pyparsing
-                      python2-pysqlite
+                      python2-sqlite3dbm
                       python2-urllib3
                       python2-yara
                       python2-zmq
