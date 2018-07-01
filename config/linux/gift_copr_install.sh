@@ -52,7 +52,6 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python-hachoir-parser
                       python-pefile
                       python-psutil
-                      python-pysqlite
                       python-pytsk3
                       python-requests
                       python-six
@@ -60,6 +59,7 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python2-future
                       python2-idna
                       python2-pyparsing
+                      python2-pysqlite
                       python2-urllib3
                       python2-yara
                       python2-zmq
