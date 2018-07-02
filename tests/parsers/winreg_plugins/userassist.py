@@ -71,7 +71,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
     self.CheckTimestamp(event.timestamp, '2009-08-04 15:11:22.811068')
     self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_EXECUTED)
 
     expected_value_name = 'UEME_RUNPIDL:%csidl2%\\MSN.lnk'
     self.assertEqual(event.value_name, expected_value_name)
@@ -113,7 +113,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
 
     self.CheckTimestamp(event.timestamp, '2010-11-10 07:49:37.078068')
     self.assertEqual(
-        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_EXECUTED)
 
     expected_value_name = 'Microsoft.Windows.GettingStarted'
     self.assertEqual(event.value_name, expected_value_name)
