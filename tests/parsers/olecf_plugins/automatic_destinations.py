@@ -25,6 +25,11 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     storage_writer = self._ParseOLECFFileWithPlugin(
         ['1b4dd67f29cb1962.automaticDestinations-ms'], plugin)
 
+    # Number of events:
+    # olecf:dest_list:entry: 11
+    # windows:lnk:link 33
+    # windows:distributed_link_tracking:creation: 44
+
     self.assertEqual(storage_writer.number_of_events, 88)
 
     events = list(storage_writer.GetEvents())
