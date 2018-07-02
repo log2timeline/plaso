@@ -44,6 +44,8 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
+    self.assertEqual(event.pin_status, 0xffffffff)
+
     expected_message = (
         'Entry: 11 '
         'Pin status: Unpinned '
@@ -130,6 +132,8 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     self.CheckTimestamp(event.timestamp, '2016-01-17 13:08:08.247505')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
+
+    self.assertEqual(event.pin_status, 0xffffffff)
 
     expected_message = (
         'Entry: 2 '
