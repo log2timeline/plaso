@@ -202,9 +202,12 @@ mkdir dist\plaso\dfwinreg
 xcopy /q /y dist\dfwinreg\dfwinreg\*.yaml dist\plaso\dfwinreg
 
 # Copy the plaso yaml (dtFabric definition) files
-xcopy /q /y parsers\*.yaml dist\plaso\plaso\parsers
-xcopy /q /y parsers\olecf_plugins\*.yaml dist\plaso\plaso\parsers\olecf_plugins
-xcopy /q /y parsers\winreg_plugins\*.yaml dist\plaso\plaso\parsers\winreg_plugins
+mkdir dist\plaso\plaso\parsers
+mkdir dist\plaso\plaso\parsers\olecf_plugins
+mkdir dist\plaso\plaso\parsers\winreg_plugins
+xcopy /q /y plaso\parsers\*.yaml dist\plaso\plaso\parsers
+xcopy /q /y plaso\parsers\olecf_plugins\*.yaml dist\plaso\plaso\parsers\olecf_plugins
+xcopy /q /y plaso\parsers\winreg_plugins\*.yaml dist\plaso\plaso\parsers\winreg_plugins
 
 # Makes plaso-<version>-<architecture>.zip
 Add-Type -assembly "system.io.compression.filesystem"
