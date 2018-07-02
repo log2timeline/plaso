@@ -11,9 +11,9 @@ from dtfabric.runtime import data_maps as dtfabric_data_maps
 from dtfabric.runtime import fabric as dtfabric_fabric
 
 from plaso.lib import errors
-from plaso.parsers.winreg_plugins import dtfabric_plugin
+from plaso.parsers.olecf_plugins import dtfabric_plugin
 
-from tests.parsers.winreg_plugins import test_lib
+from tests.parsers.olecf_plugins import test_lib
 
 
 class ErrorBytesIO(io.BytesIO):
@@ -74,7 +74,7 @@ class ErrorDataTypeMap(dtfabric_data_maps.DataTypeMap):
         'Unable to map byte stream for testing purposes.')
 
 
-class DtFabricBaseWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
+class DtFabricBaseOLECFPluginTest(test_lib.OLECFPluginTestCase):
   """Shared functionality for dtFabric-based data format plugins tests."""
 
   # pylint: disable=protected-access
@@ -125,7 +125,7 @@ members:
 
   def testReadData(self):
     """Tests the _ReadData function."""
-    parser = dtfabric_parser.DtFabricBaseParser()
+    parser = dtfabric_plugin.DtFabricBaseOLECFPlugin()
 
     file_object = io.BytesIO(
         b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00')
@@ -154,7 +154,7 @@ members:
 
   def testReadStructureFromByteStream(self):
     """Tests the _ReadStructureFromByteStream function."""
-    parser = dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin()
+    parser = dtfabric_plugin.DtFabricBaseOLECFPlugin()
 
     parser._ReadStructureFromByteStream(
         b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00', 0,
@@ -179,7 +179,7 @@ members:
 
   def testReadStructureFromFileObject(self):
     """Tests the _ReadStructureFromFileObject function."""
-    parser = dtfabric_parser.DtFabricBaseParser()
+    parser = dtfabric_plugin.DtFabricBaseOLECFPlugin()
 
     file_object = io.BytesIO(
         b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00')
