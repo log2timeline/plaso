@@ -63,7 +63,7 @@ class OLECFDestListEntryFormatter(interface.ConditionalEventFormatter):
     event_values = event.CopyToDict()
 
     pin_status = event_values.get('pin_status', 0)
-    if pin_status == 0xffffffff:
+    if pin_status == -1:
       event_values['pin_status'] = 'Unpinned'
     else:
       event_values['pin_status'] = 'Pinned'
