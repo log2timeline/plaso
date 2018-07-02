@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Shared functionality for dtFabric-based data format parsers."""
+"""Shared functionality for dtFabric-based data format Registry plugins."""
 
 from __future__ import unicode_literals
 
