@@ -1,4 +1,6 @@
 usr/lib/python2*/dist-packages/plaso/*.py
 usr/lib/python2*/dist-packages/plaso/*/*.py
+usr/lib/python2*/dist-packages/plaso/*/*.yaml
 usr/lib/python2*/dist-packages/plaso/*/*/*.py
+usr/lib/python2*/dist-packages/plaso/*/*/*.yaml
 usr/lib/python2*/dist-packages/plaso*.egg-info/*
