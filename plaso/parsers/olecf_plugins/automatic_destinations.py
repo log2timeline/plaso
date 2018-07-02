@@ -5,8 +5,6 @@ from __future__ import unicode_literals
 
 import re
 
-import construct
-
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import uuid_time as dfdatetime_uuid_time
@@ -19,7 +17,6 @@ from plaso.lib import definitions
 from plaso.parsers import olecf
 from plaso.parsers import winlnk
 from plaso.parsers.olecf_plugins import dtfabric_plugin
-from plaso.parsers.olecf_plugins import interface
 
 
 class AutomaticDestinationsDestListEntryEventData(events.EventData):
