@@ -25,6 +25,11 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     storage_writer = self._ParseOLECFFileWithPlugin(
         ['1b4dd67f29cb1962.automaticDestinations-ms'], plugin)
 
+    # Number of events:
+    # olecf:dest_list:entry: 11
+    # windows:lnk:link 33
+    # windows:distributed_link_tracking:creation: 44
+
     self.assertEqual(storage_writer.number_of_events, 88)
 
     events = list(storage_writer.GetEvents())
@@ -38,6 +43,8 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     self.CheckTimestamp(event.timestamp, '2012-04-01 13:52:38.997538')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
+
+    self.assertEqual(event.pin_status, -1)
 
     expected_message = (
         'Entry: 11 '
@@ -110,6 +117,10 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     storage_writer = self._ParseOLECFFileWithPlugin(
         ['9d1f905ce5044aee.automaticDestinations-ms'], plugin)
 
+    # Number of events:
+    # olecf:dest_list:entry: 2
+    # windows:lnk:link 2
+
     self.assertEqual(storage_writer.number_of_events, 4)
 
     events = list(storage_writer.GetEvents())
@@ -125,6 +136,8 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     self.CheckTimestamp(event.timestamp, '2016-01-17 13:08:08.247505')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
+
+    self.assertEqual(event.pin_status, -1)
 
     expected_message = (
         'Entry: 2 '

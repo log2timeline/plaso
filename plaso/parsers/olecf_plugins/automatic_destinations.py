@@ -4,9 +4,6 @@
 from __future__ import unicode_literals
 
 import re
-import uuid
-
-import construct
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
@@ -15,12 +12,11 @@ from dfdatetime import uuid_time as dfdatetime_uuid_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.containers import windows_events
-from plaso.lib import binary
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.parsers import olecf
 from plaso.parsers import winlnk
-from plaso.parsers.olecf_plugins import interface
+from plaso.parsers.olecf_plugins import dtfabric_plugin
 
 
 class AutomaticDestinationsDestListEntryEventData(events.EventData):
@@ -55,7 +51,7 @@ class AutomaticDestinationsDestListEntryEventData(events.EventData):
     self.pin_status = None
 
 
-class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
+class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
   """Plugin that parses an .automaticDestinations-ms OLECF file."""
 
   NAME = 'olecf_automatic_destinations'
@@ -63,75 +59,27 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
 
   REQUIRED_ITEMS = frozenset(['DestList'])
 
+  _DEFINITION_FILE = 'automatic_destinations.yaml'
+
   _RE_LNK_ITEM_NAME = re.compile(r'^[1-9a-f][0-9a-f]*$')
 
   # We cannot use the parser registry here since winlnk could be disabled.
   # TODO: see if there is a more elegant solution for this.
   _WINLNK_PARSER = winlnk.WinLnkParser()
 
-  _DEST_LIST_STREAM_HEADER = construct.Struct(
-      'dest_list_stream_header',
-      construct.ULInt32('format_version'),
-      construct.ULInt32('number_of_entries'),
-      construct.ULInt32('number_of_pinned_entries'),
-      construct.Padding(4),
-      construct.ULInt32('last_entry_number'),
-      construct.Padding(4),
-      construct.ULInt32('last_revision_number'),
-      construct.Padding(4))
-
-  _DEST_LIST_STREAM_HEADER_SIZE = _DEST_LIST_STREAM_HEADER.sizeof()
-
-  # Using Construct's utf-16 encoding here will create strings with their
-  # end-of-string characters exposed. Instead the strings are read as
-  # binary strings and converted using ReadUTF16().
-  _DEST_LIST_STREAM_ENTRY_V1 = construct.Struct(
-      'dest_list_stream_entry_v1',
-      construct.Padding(8),
-      construct.Bytes('droid_volume_identifier', 16),
-      construct.Bytes('droid_file_identifier', 16),
-      construct.Bytes('birth_droid_volume_identifier', 16),
-      construct.Bytes('birth_droid_file_identifier', 16),
-      construct.String('hostname', 16),
-      construct.ULInt32('entry_number'),
-      construct.Padding(8),
-      construct.ULInt64('last_modification_time'),
-      construct.ULInt32('pin_status'),
-      construct.ULInt16('path_size'),
-      construct.String('path', lambda ctx: ctx.path_size * 2))
-
-  _DEST_LIST_STREAM_ENTRY_V3 = construct.Struct(
-      'dest_list_stream_entry_v3',
-      construct.Padding(8),
-      construct.Bytes('droid_volume_identifier', 16),
-      construct.Bytes('droid_file_identifier', 16),
-      construct.Bytes('birth_droid_volume_identifier', 16),
-      construct.Bytes('birth_droid_file_identifier', 16),
-      construct.String('hostname', 16),
-      construct.ULInt32('entry_number'),
-      construct.Padding(8),
-      construct.ULInt64('last_modification_time'),
-      construct.ULInt32('pin_status'),
-      construct.Padding(16),
-      construct.ULInt16('path_size'),
-      construct.String('path', lambda ctx: ctx.path_size * 2),
-      construct.Padding(4))
-
   def _ParseDistributedTrackingIdentifier(
-      self, parser_mediator, uuid_data, origin):
+      self, parser_mediator, uuid_object, origin):
     """Extracts data from a Distributed Tracking identifier.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      uuid_data (bytes): UUID data of the Distributed Tracking identifier.
+      uuid_object (uuid.UUID): UUID of the Distributed Tracking identifier.
       origin (str): origin of the event (event source).
 
     Returns:
       str: UUID string of the Distributed Tracking identifier.
     """
-    uuid_object = uuid.UUID(bytes_le=uuid_data)
-
     if uuid_object.version == 1:
       event_data = windows_events.WindowsDistributedLinkTrackingEventData(
           uuid_object, origin)
@@ -149,34 +97,37 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       olecf_item (pyolecf.item): OLECF item.
+
+    Raises:
+      UnableToParseFile: if the DestList cannot be parsed.
     """
+    header_map = self._GetDataTypeMap('dest_list_header')
+
     try:
-      header = self._DEST_LIST_STREAM_HEADER.parse_stream(olecf_item)
-    except (IOError, construct.FieldError) as exception:
+      header, entry_offset = self._ReadStructureFromFileObject(
+          olecf_item, 0, header_map)
+    except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile(
           'Unable to parse DestList header with error: {0!s}'.format(
               exception))
 
-    if header.format_version not in (1, 3, 4):
+    if header.format_version == 1:
+      entry_map = self._GetDataTypeMap('dest_list_entry_v1')
+    elif header.format_version in (3, 4):
+      entry_map = self._GetDataTypeMap('dest_list_entry_v3')
+    else:
       parser_mediator.ProduceExtractionError(
           'unsupported format version: {0:d}.'.format(header.format_version))
+      return
 
-    if header.format_version == 1:
-      dest_list_stream_entry = self._DEST_LIST_STREAM_ENTRY_V1
-    elif header.format_version in (3, 4):
-      dest_list_stream_entry = self._DEST_LIST_STREAM_ENTRY_V3
-
-    entry_offset = olecf_item.get_offset()
     while entry_offset < olecf_item.size:
       try:
-        entry = dest_list_stream_entry.parse_stream(olecf_item)
-      except (IOError, construct.FieldError) as exception:
+        entry, entry_data_size = self._ReadStructureFromFileObject(
+            olecf_item, entry_offset, entry_map)
+      except (ValueError, errors.ParseError) as exception:
         raise errors.UnableToParseFile(
             'Unable to parse DestList entry with error: {0!s}'.format(
                 exception))
-
-      if not entry:
-        break
 
       display_name = 'DestList entry at offset: 0x{0:08x}'.format(entry_offset)
 
@@ -236,17 +187,16 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
       event_data.droid_file_identifier = droid_file_identifier
       event_data.droid_volume_identifier = droid_volume_identifier
       event_data.entry_number = entry.entry_number
-      event_data.hostname = binary.ByteStreamCopyToString(
-          entry.hostname, codepage='ascii')
+      event_data.hostname = entry.hostname.rstrip('\x00')
       event_data.offset = entry_offset
-      event_data.path = binary.UTF16StreamCopyToString(entry.path)
+      event_data.path = entry.path.rstrip('\x00')
       event_data.pin_status = entry.pin_status
 
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-      entry_offset = olecf_item.get_offset()
+      entry_offset += entry_data_size
 
   def Process(self, parser_mediator, root_item=None, **kwargs):
     """Parses an OLECF file.
