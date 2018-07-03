@@ -89,6 +89,9 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
           artifacts_path = os.path.join('/usr', 'local', 'share', 'artifacts')
 
       if not os.path.exists(artifacts_path):
+        artifacts_path = os.path.join('/', 'share', 'artifacts')
+
+      if not os.path.exists(artifacts_path):
         artifacts_path = None
 
     if not artifacts_path or not os.path.exists(artifacts_path):
