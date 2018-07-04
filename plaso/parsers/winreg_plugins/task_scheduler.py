@@ -9,6 +9,7 @@ from plaso.containers import events
 from plaso.containers import windows_events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
