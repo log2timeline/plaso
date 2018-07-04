@@ -1,4 +1,4 @@
-name: systemitime_structure
+name: systemtime_structure
 type: format
 description: Windows SYSTEMTIME structure
 urls: ["https://msdn.microsoft.com/en-us/library/windows/desktop/ms724950(v=vs.85).aspx"]
