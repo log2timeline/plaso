@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import construct
-
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
@@ -12,6 +10,7 @@ from plaso.containers import windows_events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import winreg
+from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -32,7 +31,8 @@ class TaskCacheEventData(events.EventData):
     self.task_identifier = None
 
 
-class TaskCachePlugin(interface.WindowsRegistryPlugin):
+class TaskCacheWindowsRegistryPlugin(
+    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
   """Plugin that parses a Task Cache key."""
 
   NAME = 'windows_task_cache'
@@ -47,26 +47,7 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
       'https://github.com/libyal/winreg-kb/blob/master/documentation/'
       'Task%20Scheduler%20Keys.asciidoc')]
 
-  _DYNAMIC_INFO_STRUCT = construct.Struct(
-      'dynamic_info_record',
-      construct.ULInt32('unknown1'),
-      construct.ULInt64('last_registered_time'),
-      construct.ULInt64('launch_time'),
-      construct.ULInt32('unknown2'),
-      construct.ULInt32('unknown3'))
-
-  _DYNAMIC_INFO_STRUCT_SIZE = _DYNAMIC_INFO_STRUCT.sizeof()
-
-  _DYNAMIC_INFO2_STRUCT = construct.Struct(
-      'dynamic_info2_record',
-      construct.ULInt32('unknown1'),
-      construct.ULInt64('last_registered_time'),
-      construct.ULInt64('launch_time'),
-      construct.ULInt32('unknown2'),
-      construct.ULInt32('unknown3'),
-      construct.ULInt64('unknown_time'))
-
-  _DYNAMIC_INFO2_STRUCT_SIZE = _DYNAMIC_INFO2_STRUCT.sizeof()
+  _DEFINITION_FILE = 'task_scheduler.yaml'
 
   def _GetIdValue(self, registry_key):
     """Retrieves the Id value from Task Cache Tree key.
@@ -122,20 +103,23 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
         guid_string = id_value.GetDataAsObject()
         task_guids[guid_string] = value_key.name
 
+    dynamic_info_map = self._GetDataTypeMap('dynamic_info_record')
+    dynamic_info2_map = self._GetDataTypeMap('dynamic_info2_record')
+
+    dynamic_info_size = dynamic_info_map.GetByteSize()
+    dynamic_info2_size = dynamic_info2_map.GetByteSize()
+
     for sub_key in tasks_key.GetSubkeys():
       dynamic_info_value = sub_key.GetValueByName('DynamicInfo')
       if not dynamic_info_value:
         continue
 
+      dynamic_info_record_map = None
       dynamic_info_value_data_size = len(dynamic_info_value.data)
-      if dynamic_info_value_data_size == self._DYNAMIC_INFO_STRUCT_SIZE:
-        dynamic_info_struct = self._DYNAMIC_INFO_STRUCT.parse(
-            dynamic_info_value.data)
-
-      elif dynamic_info_value_data_size == self._DYNAMIC_INFO2_STRUCT_SIZE:
-        dynamic_info_struct = self._DYNAMIC_INFO_STRUCT.parse(
-            dynamic_info_value.data)
-
+      if dynamic_info_value_data_size == dynamic_info_size:
+        dynamic_info_record_map = dynamic_info_map
+      elif dynamic_info_value_data_size == dynamic_info2_size:
+        dynamic_info_record_map = dynamic_info2_map
       else:
         if not dynamic_info_size_error_reported:
           parser_mediator.ProduceExtractionError(
@@ -143,6 +127,14 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
                   dynamic_info_value_data_size))
           dynamic_info_size_error_reported = True
         continue
+
+      try:
+        dynamic_info_record = self._ReadStructureFromByteStream(
+            dynamic_info_value.data, 0, dynamic_info_record_map)
+      except (ValueError, errors.ParseError) as exception:
+        parser_mediator.ProduceExtractionError(
+            'unable to parse DynamicInfo record with error: {0!s}.'.format(
+                exception))
 
       name = task_guids.get(sub_key.name, sub_key.name)
 
@@ -163,7 +155,7 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
       event_data.task_name = name
       event_data.task_identifier = sub_key.name
 
-      last_registered_time = dynamic_info_struct.get('last_registered_time')
+      last_registered_time = dynamic_info_record.last_registered_time
       if last_registered_time:
         # Note this is likely either the last registered time or
         # the update time.
@@ -172,7 +164,7 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
             date_time, 'Last registered time')
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-      launch_time = dynamic_info_struct.get('launch_time')
+      launch_time = dynamic_info_record.launch_time
       if launch_time:
         # Note this is likely the launch time.
         date_time = dfdatetime_filetime.Filetime(timestamp=launch_time)
@@ -180,7 +172,7 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
             date_time, 'Launch time')
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-      unknown_time = dynamic_info_struct.get('unknown_time')
+      unknown_time = getattr(dynamic_info_record, 'unknown_time', None)
       if unknown_time:
         date_time = dfdatetime_filetime.Filetime(timestamp=unknown_time)
         event = time_events.DateTimeValuesEvent(
@@ -190,4 +182,4 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
     # TODO: Add support for the Triggers value.
 
 
-winreg.WinRegistryParser.RegisterPlugin(TaskCachePlugin)
+winreg.WinRegistryParser.RegisterPlugin(TaskCacheWindowsRegistryPlugin)
