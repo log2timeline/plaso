@@ -77,6 +77,10 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
       artifacts_path = os.path.dirname(data_location)
       artifacts_path = os.path.join(artifacts_path, 'artifacts')
 
+      if not os.path.exists(artifacts_path) and 'VIRTUAL_ENV' in os.environ:
+        artifacts_path = os.path.join(
+            os.environ['VIRTUAL_ENV'], 'share', 'artifacts')
+
       if not os.path.exists(artifacts_path):
         artifacts_path = os.path.join(sys.prefix, 'share', 'artifacts')
       if not os.path.exists(artifacts_path):
