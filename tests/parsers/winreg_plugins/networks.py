@@ -17,7 +17,7 @@ from plaso.parsers.winreg_plugins import networks
 from tests.parsers.winreg_plugins import test_lib
 
 
-class NetworksPluginTest(test_lib.RegistryPluginTestCase):
+class NetworksWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Networks Windows Registry plugin."""
 
   def _CreateTestKey(self, key_path, time_string):
@@ -191,7 +191,7 @@ class NetworksPluginTest(test_lib.RegistryPluginTestCase):
 
   def testFilters(self):
     """Tests the FILTERS class attribute."""
-    plugin = networks.NetworksPlugin()
+    plugin = networks.NetworksWindowsRegistryPlugin()
 
     key_path = (
         'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\'
@@ -207,7 +207,7 @@ class NetworksPluginTest(test_lib.RegistryPluginTestCase):
     time_string = '2013-01-30 10:47:57'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    plugin = networks.NetworksPlugin()
+    plugin = networks.NetworksWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
     self.assertEqual(storage_writer.number_of_events, 4)
