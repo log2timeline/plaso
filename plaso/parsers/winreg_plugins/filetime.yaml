@@ -6,6 +6,7 @@ urls: ["https://msdn.microsoft.com/en-us/library/windows/desktop/ms724284(v=vs.8
 name: filetime
 type: integer
 attributes:
+  byte_order: little-endian
   format: unsigned
-  size: 4
+  size: 8
   units: bytes

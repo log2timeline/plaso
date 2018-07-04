@@ -3,15 +3,15 @@
 
 from __future__ import unicode_literals
 
-import construct
-
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers import winreg
+from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -33,7 +33,8 @@ class ShutdownWindowsRegistryEventData(events.EventData):
     self.value_name = None
 
 
-class ShutdownPlugin(interface.WindowsRegistryPlugin):
+class ShutdownWindowsRegistryPlugin(
+    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
   """Windows Registry plugin for parsing the last shutdown time of a system."""
 
   NAME = 'windows_shutdown'
@@ -43,7 +44,39 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Windows')])
 
-  _UINT64_STRUCT = construct.ULInt64('value')
+  _DEFINITION_FILE = 'filetime.yaml'
+
+  def _ParseFiletime(self, byte_stream):
+    """Parses a FILETIME date and time value from a byte stream.
+
+    Args:
+      byte_stream (bytes): byte stream.
+
+    Returns:
+      dfdatetime.Filetime: FILETIME date and time value or None if no
+          value is set.
+
+    Raises:
+      ParseError: if the FILETIME could not be parsed.
+    """
+    filetime_map = self._GetDataTypeMap('filetime')
+
+    try:
+      filetime = self._ReadStructureFromByteStream(
+          byte_stream, 0, filetime_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError(
+          'Unable to parse FILETIME value with error: {0!s}'.format(
+              exception))
+
+    if filetime == 0:
+      return None
+
+    try:
+      return dfdatetime_filetime.Filetime(timestamp=filetime)
+    except ValueError:
+      raise errors.ParseError(
+          'Invalid FILETIME value: 0x{0:08x}'.format(filetime))
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a ShutdownTime Windows Registry value.
@@ -57,20 +90,16 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
     if not shutdown_value:
       return
 
-    # Directly parse the Windows Registry value data in case it is defined
-    # as binary data.
     try:
-      timestamp = self._UINT64_STRUCT.parse(shutdown_value.data)
-    except construct.FieldError as exception:
-      timestamp = None
+      date_time = self._ParseFiletime(shutdown_value.data)
+    except errors.ParseError as exception:
       parser_mediator.ProduceExtractionError(
           'unable to determine shutdown timestamp with error: {0!s}'.format(
               exception))
+      return
 
-    if not timestamp:
+    if not date_time:
       date_time = dfdatetime_semantic_time.SemanticTime('Not set')
-    else:
-      date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
 
     event_data = ShutdownWindowsRegistryEventData()
     event_data.key_path = registry_key.path
@@ -82,4 +111,4 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(ShutdownPlugin)
+winreg.WinRegistryParser.RegisterPlugin(ShutdownWindowsRegistryPlugin)
