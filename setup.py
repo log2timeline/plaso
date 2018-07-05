@@ -195,7 +195,6 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
     ],
-    zip_safe=False,
     packages=find_packages('.', exclude=[
         'docs', 'tests', 'tests.*', 'tools', 'utils']),
     package_dir={
@@ -204,12 +203,15 @@ setup(
     include_package_data=True,
     package_data={
         'plaso.parsers': ['*.yaml'],
+        'plaso.parsers.olecf_plugins': ['*.yaml'],
         'plaso.parsers.winreg_plugins': ['*.yaml'],
     },
+    zip_safe=False,
     scripts=glob.glob(os.path.join('tools', '*.py')),
     data_files=[
-        ('share/plaso', glob.glob(os.path.join('data', '*'))),
+        ('share/plaso', glob.glob(
+            os.path.join('data', '*'))),
         ('share/doc/plaso', [
-            'AUTHORS', 'ACKNOWLEDGEMENTS', 'LICENSE', 'README']),
+            'ACKNOWLEDGEMENTS', 'AUTHORS', 'LICENSE', 'README']),
     ],
 )
