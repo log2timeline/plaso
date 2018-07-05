@@ -389,7 +389,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     event_index = 9
     event = events[event_index]
 
-    self.CheckTimestamp(event.timestamp, '2012-04-04 01:46:37.932965')
+    self.CheckTimestamp(event.timestamp, '2012-04-04 01:46:37.932964')
 
     self.assertEqual(event.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,

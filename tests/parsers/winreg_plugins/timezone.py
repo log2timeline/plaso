@@ -171,7 +171,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
     event = events[0]
 
-    self.CheckTimestamp(event.timestamp, '2012-03-11 07:00:00.000643')
+    self.CheckTimestamp(event.timestamp, '2012-03-11 07:00:00.000642')
 
     expected_message = (
         '[{0:s}] '
