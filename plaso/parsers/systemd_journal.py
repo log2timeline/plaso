@@ -50,7 +50,8 @@ class SystemdJournalParser(interface.FileObjectParser):
 
   DESCRIPTION = 'Parser for Systemd Journal files.'
 
-  _OBJECT_COMPRESSED_FLAG = 0x00000001
+  _OBJECT_COMPRESSED_FLAG_XZ = 1
+  _OBJECT_COMPRESSED_FLAG_LZ4 = 2
 
   # Unfortunately this doesn't help us knowing about the "dirtiness" or
   # "corrupted" file state.
@@ -204,8 +205,12 @@ class SystemdJournalParser(interface.FileObjectParser):
               object_header.type))
 
     event_data = file_object.read(payload_size - self._DATA_OBJECT_SIZE)
-    if object_header.flags & self._OBJECT_COMPRESSED_FLAG:
+    if object_header.flags & self._OBJECT_COMPRESSED_FLAG_XZ:
       event_data = lzma.decompress(event_data)
+    if object_header.flags & self._OBJECT_COMPRESSED_FLAG_LZ4:
+      # TODO : implement lz4 decompression
+      event_data = event_data.decode('utf-8', 'replace')
+
 
     event_string = event_data.decode('utf-8')
     event_key, event_value = event_string.split('=', 1)
