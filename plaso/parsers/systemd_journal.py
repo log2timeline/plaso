@@ -43,6 +43,15 @@ class SystemdJournalEventData(events.EventData):
     self.reporter = None
 
 
+# TODO: remove once #2004 is pushed
+class SystemdDirtyJournalEventData(SystemdJournalEventData):
+  """Systemd 'dirty' journal event data.
+
+  Generated when a decompression error was encountered.
+  """
+  DATA_TYPE = 'systemd:journal:dirty'
+
+
 class SystemdJournalParser(interface.FileObjectParser):
   """Parses Systemd Journal files."""
 
@@ -191,7 +200,7 @@ class SystemdJournalParser(interface.FileObjectParser):
       offset (int): offset to the DATA object.
 
     Returns:
-      tuple[str, str]: key and value of this item.
+      tuple[str, str, bool]: key and value of this item, with a 'dirty' bit.
 
     Raises:
       ParseError: When an unexpected object type is parsed.
@@ -204,17 +213,23 @@ class SystemdJournalParser(interface.FileObjectParser):
           'Expected an object of type DATA, but got {0:s}'.format(
               object_header.type))
 
+    dirty = False
     event_data = file_object.read(payload_size - self._DATA_OBJECT_SIZE)
     if object_header.flags & self._OBJECT_COMPRESSED_FLAG_XZ:
       event_data = lzma.decompress(event_data)
-    if object_header.flags & self._OBJECT_COMPRESSED_FLAG_LZ4:
-      # TODO : implement lz4 decompression
-      event_data = event_data.decode('utf-8', 'replace')
+      event_string = event_data.decode('utf-8')
+    elif object_header.flags & self._OBJECT_COMPRESSED_FLAG_LZ4:
+      # TODO: implement proper LZ4 decompression (see PR #2004)
+      dirty = True
+      event_string = event_data.decode('utf-8', 'ignore')
+      pos = event_string.index('MESSAGE=')
+      if pos >= 0:
+        event_string = 'MESSAGE=' + event_string[pos+8:]
+    else:
+      event_string = event_data.decode('utf-8')
 
-
-    event_string = event_data.decode('utf-8')
     event_key, event_value = event_string.split('=', 1)
-    return (event_key, event_value)
+    return (event_key, event_value, dirty)
 
   def _ParseJournalEntry(self, parser_mediator, file_object, offset):
     """Parses a Systemd journal ENTRY object.
@@ -240,12 +255,17 @@ class SystemdJournalParser(interface.FileObjectParser):
               object_header.type))
 
     fields = {}
+    dirty = False
     for item in entry_object.object_items:
       if item.object_offset < self._max_journal_file_offset:
         raise errors.ParseError(
             'object offset should be after hash tables ({0:d} < {1:d})'.format(
                 offset, self._max_journal_file_offset))
-      key, value = self._ParseItem(file_object, item.object_offset)
+      # TODO: remove the dirty variable once #2004 is pushed
+      key, value, _dirty = self._ParseItem(file_object, item.object_offset)
+      # We parse a lot of items for one event, we need to remember if one of the
+      # parsed item was dirty.
+      dirty = dirty or _dirty
       fields[key] = value
 
     reporter = fields.get('SYSLOG_IDENTIFIER', None)
@@ -254,7 +274,12 @@ class SystemdJournalParser(interface.FileObjectParser):
     else:
       pid = None
 
-    event_data = SystemdJournalEventData()
+    # TODO: remove the dirty variable once #2004 is pushed
+    if dirty:
+      event_data = SystemdDirtyJournalEventData()
+    else:
+      event_data = SystemdJournalEventData()
+
     event_data.body = fields['MESSAGE']
     event_data.hostname = fields['_HOSTNAME']
     event_data.pid = pid

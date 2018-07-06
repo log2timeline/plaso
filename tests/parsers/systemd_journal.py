@@ -47,6 +47,40 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     expected_short_message = '{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
+  def testParseLZ4(self):
+    """Tests the Parse function on a journal with LZ4 compressed events."""
+    parser = systemd_journal.SystemdJournalParser()
+    storage_writer = self._ParseFile([
+        'systemd', 'journal', 'system.journal.lz4'], parser)
+
+    self.assertEqual(storage_writer.number_of_events, 85)
+
+    events = list(storage_writer.GetEvents())
+
+    event = events[0]
+
+    self.CheckTimestamp(event.timestamp, '2018-07-03 15:00:16.682340')
+
+    expected_message = 'testlol [systemd, pid: 822] Reached target Paths.'
+    self._TestGetMessageStrings(event, expected_message, expected_message)
+
+    # This event uses LZ4 compressed data
+    event = events[84]
+
+    self.CheckTimestamp(event.timestamp, '2018-07-03 15:19:04.667807')
+
+    # We don't suport lz4 decompression yet. So the output is slightly borked.
+    expected_message = (
+        # source: https://github.com/systemd/systemd/issues/6237
+        'testlol [test, pid: 34757]  textual user names.  Yes, as you found out'
+        ' 0day is not a valid username. I wonder which tool permitted you to '
+        'create it in the first place. Note thatc\x00\x03\x3d\x00ing'
+        ' numeric.\x00,characters is done on purpose: to avoid ambiguities '
+        'betweenJ\x00\x7fUID and\x00Pames.'
+    )
+    expected_short_message = '{0:s}...'.format(expected_message[:77])
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+
   def testParseDirty(self):
     """Tests the Parse function on a 'dirty' journal file."""
     storage_writer = self._CreateStorageWriter()
