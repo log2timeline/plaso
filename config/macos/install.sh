@@ -10,7 +10,7 @@ EXIT_FAILURE=1;
 
 DEPENDENCIES="PyYAML XlsxWriter artifacts backports.lzma bencode biplist certifi chardet construct dateutil dfdatetime dfvfs dfwinreg dpkt dtfabric efilter elasticsearch-py future hachoir-core hachoir-metadata hachoir-parser idna libbde libesedb libevt libevtx libewf libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm pefile psutil pycrypto pyparsing pysqlite pytsk3 pytz pyzmq requests six urllib3 yara-python";
 
-SCRIPT_NAME=`basename $0`;
+SCRIPT_NAME=$(basename $0);
 DEPENDENCIES_ONLY=0;
 SHOW_HELP=0;
 
@@ -74,16 +74,20 @@ echo "Installing dependencies.";
 
 for PACKAGE_NAME in ${DEPENDENCIES};
 do
-  sudo installer -target / -pkg "${VOLUME_NAME}/packages/${PACKAGE_NAME}";
+  for PACKAGE in $(find ${VOLUME_NAME} -name "${PACKAGE_NAME}-*.pkg");
+  do
+    FILENAME=$(basename ${PACKAGE});
+    sudo installer -target / -pkg "${VOLUME_NAME}/packages/${FILENAME}";
+  done
 done
 
 # If the --only-dependencies option was passed to the installer script
 # the plaso package is not installed.
-if && test ${DEPENDENCIES_ONLY} -ne 0;
+if test ${DEPENDENCIES_ONLY} -eq 0;
 then
   echo "Installing plaso.";
 
-  sudo installer -target / -pkg "${VOLUME_NAME}/packages/plaso-@VERSION@.pkg";
+  sudo installer -target / -pkg "${VOLUME_NAME}/packages/python-plaso-@VERSION@.pkg";
 fi
 
 echo "Done.";
