@@ -30,6 +30,8 @@ class ParserMediator(object):
         information is then used by the foreman to detect workers that are
         not responding (stalled).
   """
+  _INT64_MIN = -1 << 63
+  _INT64_MAX = (1 << 63) - 1
 
   def __init__(
       self, storage_writer, knowledge_base, preferred_year=None,
@@ -473,10 +475,13 @@ class ParserMediator(object):
       event_data (EventData): event data.
 
     Raises:
-      InvalidEvent: if the event has no timestamp set.
+      InvalidEvent: if the event timestamp value is not set or out of bounds.
     """
     if event.timestamp is None:
-      raise errors_lib.InvalidEvent('Event must have a timestamp set.')
+      raise errors_lib.InvalidEvent('Event timestamp value not set.')
+
+    if event.timestamp < self._INT64_MIN or event.timestamp > self._INT64_MAX:
+      raise errors_lib.InvalidEvent('Event timestamp value out of bounds.')
 
     event_data_hash = event_data.GetAttributeValuesHash()
     if event_data_hash != self._last_event_data_hash:
