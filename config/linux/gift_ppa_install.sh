@@ -42,7 +42,6 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-dfdatetime
                       python-dfvfs
                       python-dfwinreg
-                      python-dpkt
                       python-dtfabric
                       python-efilter
                       python-elasticsearch
