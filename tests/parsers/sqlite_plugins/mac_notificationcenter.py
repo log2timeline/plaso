@@ -33,21 +33,21 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     self.assertEqual(event.message, "KeePassXC can now be run")
-    self.assertEqual(event.appName, "com.google.santagui")
+    self.assertEqual(event.bundle_name, "com.google.santagui")
 
     event = events[2]
     self.CheckTimestamp(event.timestamp, '2018-05-02 11:13:21.531085')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     self.assertEqual(event.title, "Drive File Stream")
-    self.assertEqual(event.appName, "com.google.drivefs")
+    self.assertEqual(event.bundle_name, "com.google.drivefs")
 
     event = events[5]
     self.CheckTimestamp(event.timestamp, '2018-05-16 16:38:04.686080')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     self.assertEqual(event.message, "PyCharm can now be run")
-    self.assertEqual(event.appName, "com.google.santagui")
+    self.assertEqual(event.bundle_name, "com.google.santagui")
 
 
 if __name__ == '__main__':

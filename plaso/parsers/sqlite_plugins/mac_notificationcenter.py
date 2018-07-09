@@ -31,9 +31,13 @@ class MacNotificationCenterEventData(events.EventData):
   """ MacOS NotificationCenter database event data
 
   Attributes:
-    appName (str): name of the application that generated the notification
-    dDate (): date and time notification has been delivered
-    dataBlob(blob): binary blob containing plist file
+    bundle_name (str): name of the application's bundle that generated the notification
+    identity (str):
+    message (str):
+    presented (int): either 1 or 0 if the notification has been shown to the user.
+                      Research on the full meaning of this still ongoing
+    subtitle (str):
+    title (str):
   """
 
   DATA_TYPE = 'mac:notificationcenter:db'
@@ -41,7 +45,7 @@ class MacNotificationCenterEventData(events.EventData):
   def __init__(self):
     """Initialize event data."""
     super(MacNotificationCenterEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.appName = None
+    self.bundle_name = None
     self.identity = None
     self.message = None
     self.presented = None
@@ -55,8 +59,8 @@ class MacNotificationCenterPlugin(interface.SQLitePlugin):
   NAME = 'mac_notificationcenter'
   DESCRIPTION = 'Parser for the Notification Center SQLite database'
 
-  QUERIES = [('SELECT a.identifier AS appName, '
-              'r.data AS dataBlob, r.delivered_date AS dDate,'
+  QUERIES = [('SELECT a.identifier AS bundle_name, '
+              'r.data AS dataBlob, r.delivered_date AS timestamp,'
               'r.presented AS presented '
               'FROM app a, record r '
               'WHERE a.app_id = r.app_id', 'ParseNotificationcenterRow')]
@@ -95,12 +99,12 @@ class MacNotificationCenterPlugin(interface.SQLitePlugin):
     query_hash = hash(query)
 
     event_data = MacNotificationCenterEventData()
-    event_data.appName = self._GetRowValue(query_hash, row, 'appName')
+    event_data.bundle_name = self._GetRowValue(query_hash, row, 'bundle_name')
     event_data.presented = self._GetRowValue(query_hash, row, 'presented')
 
     # full_biplist is the entire blob content as stored in the sqlite record
-    # plist is the subsection 'req' containing the extra info about the nofitication entry
     full_biplist = readPlistFromString(self._GetRowValue(query_hash, row, 'dataBlob'))
+    # plist is the subsection 'req' containing the extra info about the notification entry
     plist = full_biplist['req']
 
     event_data.title = plist['titl']
@@ -111,7 +115,7 @@ class MacNotificationCenterPlugin(interface.SQLitePlugin):
     if 'iden' in plist.keys():
       event_data.identity = plist['iden']
 
-    timestamp = self._GetRowValue(query_hash, row, 'dDate')
+    timestamp = self._GetRowValue(query_hash, row, 'timestamp')
     date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_CREATION)
