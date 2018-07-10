@@ -32,12 +32,12 @@ class MacNotificationCenterEventData(events.EventData):
 
   Attributes:
     bundle_name (str): name of the application's bundle that generated the notification
-    identity (str):
-    message (str):
+    identity (str): optional.
+    message (str): body of the notification message
     presented (int): either 1 or 0 if the notification has been shown to the user.
                       Research on the full meaning of this still ongoing
-    subtitle (str):
-    title (str):
+    subtitle (str): optional.
+    title (str): Usually is the name of the application that generated the notification. Eventually the name of the sender of the notification
   """
 
   DATA_TYPE = 'mac:notificationcenter:db'
