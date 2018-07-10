@@ -328,7 +328,7 @@ class SystemdJournalParser(interface.FileObjectParser):
         self._ParseJournalEntry(parser_mediator, file_object, entry_offset)
       except errors.ParseError as exception:
         parser_mediator.ProduceExtractionError((
-            'Unable to complete parsing journal file: {0:s} at offset '
+            'Unable to complete parsing journal file: {0!s} at offset '
             '0x{1:08x}').format(exception, entry_offset))
         return
       except construct.ConstructError as exception:

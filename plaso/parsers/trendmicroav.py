@@ -9,6 +9,8 @@ Currently only the first log is supported.
 
 from __future__ import unicode_literals
 
+import codecs
+
 from dfdatetime import definitions as dfdatetime_definitions
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -17,6 +19,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.lib import py2to3
 from plaso.formatters import trendmicroav as formatter
 from plaso.parsers import dsv_parser
 from plaso.parsers import manager
@@ -80,11 +83,12 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
       A dictionary of column values keyed by column header.
     """
     for line in line_reader:
-      try:
-        line = line.decode(self._encoding)
-      except UnicodeDecodeError as exception:
-        raise errors.UnableToParseFile(
-            "Unexpected binary content in file: {0:s}".format(exception))
+      if isinstance(line, py2to3.BYTES_TYPE):
+        try:
+          line = codecs.decode(line, self._encoding)
+        except UnicodeDecodeError as exception:
+          raise errors.UnableToParseFile(
+              "Unexpected binary content in file: {0:s}".format(exception))
       stripped_line = line.strip()
       values = stripped_line.split(self.DELIMITER)
       if len(values) < self.MIN_COLUMNS:
