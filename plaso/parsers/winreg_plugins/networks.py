@@ -5,14 +5,14 @@ from __future__ import unicode_literals
 
 import binascii
 
-import construct
-
 from dfdatetime import systemtime as dfdatetime_systemtime
 
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers import winreg
+from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -40,7 +40,8 @@ class WindowsRegistryNetworkEventData(events.EventData):
     self.ssid = None
 
 
-class NetworksPlugin(interface.WindowsRegistryPlugin):
+class NetworksWindowsRegistryPlugin(
+    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
   """Windows Registry plugin for parsing the NetworkList key."""
 
   NAME = 'networks'
@@ -51,23 +52,14 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
           'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion'
           '\\NetworkList')])
 
+  _DEFINITION_FILE = 'systemtime.yaml'
+
   _CONNECTION_TYPE = {
       0x06: 'Wired',
       0x17: '3g',
       0x47: 'Wireless'}
 
   _EMPTY_SYSTEM_TIME_TUPLE = (0, 0, 0, 0, 0, 0, 0, 0)
-
-  _SYSTEMTIME_STRUCT = construct.Struct(
-      'systemtime',
-      construct.ULInt16('year'),
-      construct.ULInt16('month'),
-      construct.ULInt16('day_of_week'),
-      construct.ULInt16('day_of_month'),
-      construct.ULInt16('hours'),
-      construct.ULInt16('minutes'),
-      construct.ULInt16('seconds'),
-      construct.ULInt16('milliseconds'))
 
   def _GetNetworkInfo(self, signatures_key):
     """Retrieves the network info within the signatures subkey.
@@ -76,8 +68,8 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
       signatures_key (dfwinreg.WinRegistryKey): a Windows Registry key.
 
     Returns:
-      A dictionary containing tuples (default_gateway_mac, dns_suffix) hashed
-      by profile guid.
+      dict[str, tuple]: a tuple of default_gateway_mac and dns_suffix per
+          profile identifier (GUID).
     """
     network_info = {}
     for category in signatures_key.GetSubkeys():
@@ -106,6 +98,44 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
         network_info[profile_guid] = (default_gateway_mac, dns_suffix)
 
     return network_info
+
+  def _ParseSystemTime(self, byte_stream):
+    """Parses a SYSTEMTIME date and time value from a byte stream.
+
+    Args:
+      byte_stream (bytes): byte stream.
+
+    Returns:
+      dfdatetime.Systemtime: SYSTEMTIME date and time value or None if no
+          value is set.
+
+    Raises:
+      ParseError: if the SYSTEMTIME could not be parsed.
+    """
+    systemtime_map = self._GetDataTypeMap('systemtime')
+
+    try:
+      systemtime = self._ReadStructureFromByteStream(
+          byte_stream, 0, systemtime_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError(
+          'Unable to parse SYSTEMTIME value with error: {0!s}'.format(
+              exception))
+
+    system_time_tuple = (
+        systemtime.year, systemtime.month, systemtime.weekday,
+        systemtime.day_of_month, systemtime.hours, systemtime.minutes,
+        systemtime.seconds, systemtime.milliseconds)
+
+    if system_time_tuple == self._EMPTY_SYSTEM_TIME_TUPLE:
+      return None
+
+    try:
+      return dfdatetime_systemtime.Systemtime(
+          system_time_tuple=system_time_tuple)
+    except ValueError:
+      raise errors.ParseError(
+          'Invalid SYSTEMTIME value: {0!s}'.format(system_time_tuple))
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
@@ -151,30 +181,12 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
       date_created_value = subkey.GetValueByName('DateCreated')
       if date_created_value:
         try:
-          systemtime_struct = self._SYSTEMTIME_STRUCT.parse(
-              date_created_value.data)
-        except construct.ConstructError as exception:
-          systemtime_struct = None
+          date_time = self._ParseSystemTime(date_created_value.data)
+        except errors.ParseError as exception:
+          date_time = None
           parser_mediator.ProduceExtractionError(
               'unable to parse date created with error: {0!s}'.format(
                   exception))
-
-        system_time_tuple = self._EMPTY_SYSTEM_TIME_TUPLE
-        if systemtime_struct:
-          system_time_tuple = (
-              systemtime_struct.year, systemtime_struct.month,
-              systemtime_struct.day_of_week, systemtime_struct.day_of_month,
-              systemtime_struct.hours, systemtime_struct.minutes,
-              systemtime_struct.seconds, systemtime_struct.milliseconds)
-
-        date_time = None
-        if system_time_tuple != self._EMPTY_SYSTEM_TIME_TUPLE:
-          try:
-            date_time = dfdatetime_systemtime.Systemtime(
-                system_time_tuple=system_time_tuple)
-          except ValueError:
-            parser_mediator.ProduceExtractionError(
-                'invalid system time: {0!s}'.format(system_time_tuple))
 
         if date_time:
           event = time_events.DateTimeValuesEvent(
@@ -184,30 +196,12 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
       date_last_connected_value = subkey.GetValueByName('DateLastConnected')
       if date_last_connected_value:
         try:
-          systemtime_struct = self._SYSTEMTIME_STRUCT.parse(
-              date_last_connected_value.data)
-        except construct.ConstructError as exception:
-          systemtime_struct = None
+          date_time = self._ParseSystemTime(date_last_connected_value.data)
+        except errors.ParseError as exception:
+          date_time = None
           parser_mediator.ProduceExtractionError(
               'unable to parse date last connected with error: {0!s}'.format(
                   exception))
-
-        system_time_tuple = self._EMPTY_SYSTEM_TIME_TUPLE
-        if systemtime_struct:
-          system_time_tuple = (
-              systemtime_struct.year, systemtime_struct.month,
-              systemtime_struct.day_of_week, systemtime_struct.day_of_month,
-              systemtime_struct.hours, systemtime_struct.minutes,
-              systemtime_struct.seconds, systemtime_struct.milliseconds)
-
-        date_time = None
-        if system_time_tuple != self._EMPTY_SYSTEM_TIME_TUPLE:
-          try:
-            date_time = dfdatetime_systemtime.Systemtime(
-                system_time_tuple=system_time_tuple)
-          except ValueError:
-            parser_mediator.ProduceExtractionError(
-                'invalid system time: {0!s}'.format(system_time_tuple))
 
         if date_time:
           event = time_events.DateTimeValuesEvent(
@@ -215,4 +209,4 @@ class NetworksPlugin(interface.WindowsRegistryPlugin):
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(NetworksPlugin)
+winreg.WinRegistryParser.RegisterPlugin(NetworksWindowsRegistryPlugin)
