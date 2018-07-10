@@ -13,12 +13,12 @@ from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
-class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
+class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Task Cache key Windows Registry plugin."""
 
   def testFilters(self):
     """Tests the FILTERS class attribute."""
-    plugin = task_scheduler.TaskCachePlugin()
+    plugin = task_scheduler.TaskCacheWindowsRegistryPlugin()
 
     key_path = (
         'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\'
@@ -38,7 +38,7 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin = task_scheduler.TaskCachePlugin()
+    plugin = task_scheduler.TaskCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
