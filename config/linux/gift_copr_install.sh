@@ -43,7 +43,6 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python-dfdatetime
                       python-dfvfs
                       python-dfwinreg
-                      python-dpkt
                       python-dtfabric
                       python-efilter
                       python-elasticsearch
