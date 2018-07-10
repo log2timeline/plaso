@@ -157,7 +157,7 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
     file_offset = 0
     file_size = file_object.get_size()
     try:
-      page_header, header_size  = self._ReadStructureFromFileObject(
+      page_header, header_size = self._ReadStructureFromFileObject(
           file_object, file_offset, page_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile(
