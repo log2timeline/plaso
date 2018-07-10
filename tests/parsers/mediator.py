@@ -14,6 +14,8 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import events
 from plaso.containers import sessions
+from plaso.containers import time_events
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.engine import configurations
@@ -182,8 +184,9 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     storage_writer.Open()
     parsers_mediator = self._CreateParserMediator(storage_writer)
 
-    event_with_timestamp = events.EventObject()
-    event_with_timestamp.timestamp = fake_time.FakeTime()
+    date_time = fake_time.FakeTime()
+    event_with_timestamp = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
     event_data = events.EventData()
 
     parsers_mediator.ProduceEventWithEventData(event_with_timestamp, event_data)
