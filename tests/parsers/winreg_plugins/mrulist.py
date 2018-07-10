@@ -16,7 +16,7 @@ from plaso.parsers.winreg_plugins import mrulist
 from tests.parsers.winreg_plugins import test_lib
 
 
-class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
+class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the string MRUList plugin."""
 
   def _CreateTestKey(self, key_path, time_string):
@@ -35,7 +35,7 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
         'MRU', key_path=key_path, last_written_time=filetime.timestamp,
         offset=1456)
 
-    value_data = 'acb'.encode('utf_16_le')
+    value_data = b'a\x00c\x00b\x00\x00\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'MRUList', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=123)
@@ -63,7 +63,7 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
 
   def testFilters(self):
     """Tests the FILTERS class attribute."""
-    plugin = mrulist.MRUListStringPlugin()
+    plugin = mrulist.MRUListStringWindowsRegistryPlugin()
 
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\'
@@ -98,7 +98,7 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
     time_string = '2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    plugin = mrulist.MRUListStringPlugin()
+    plugin = mrulist.MRUListStringWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
     self.assertEqual(storage_writer.number_of_events, 1)
@@ -123,7 +123,8 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
-class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
+class TestMRUListShellItemListWindowsRegistryPlugin(
+    test_lib.RegistryPluginTestCase):
   """Tests for the shell item list MRUList plugin."""
 
   def _CreateTestKey(self, key_path, time_string):
@@ -142,7 +143,7 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
         'DesktopStreamMRU', key_path=key_path,
         last_written_time=filetime.timestamp, offset=1456)
 
-    value_data = 'a'.encode('utf_16_le')
+    value_data = b'a\x00\x00\x00'
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'MRUList', data=value_data, data_type=dfwinreg_definitions.REG_SZ,
         offset=123)
@@ -172,7 +173,7 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
 
   def testFilters(self):
     """Tests the FILTERS class attribute."""
-    plugin = mrulist.MRUListShellItemListPlugin()
+    plugin = mrulist.MRUListShellItemListWindowsRegistryPlugin()
 
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
@@ -189,7 +190,7 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
     time_string = '2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    plugin = mrulist.MRUListShellItemListPlugin()
+    plugin = mrulist.MRUListShellItemListWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
     self.assertEqual(storage_writer.number_of_events, 5)
