@@ -233,7 +233,7 @@ class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
         date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
 
       event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LAST_EXECUTED)
+          date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
