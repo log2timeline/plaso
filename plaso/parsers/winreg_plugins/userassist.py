@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+import codecs
+
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
@@ -137,7 +139,9 @@ class UserAssistPlugin(dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
 
     for registry_value in count_subkey.GetValues():
       try:
-        value_name = registry_value.name.decode('rot-13')
+        # Note that Python 2 codecs.decode() does not support keyword arguments
+        # such as encodings='rot-13'.
+        value_name = codecs.decode(registry_value.name, 'rot-13')
       except UnicodeEncodeError as exception:
         logger.debug((
             'Unable to decode UserAssist string: {0:s} with error: {1!s}.\n'
