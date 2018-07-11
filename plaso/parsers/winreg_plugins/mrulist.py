@@ -10,7 +10,6 @@ from dtfabric.runtime import data_maps as dtfabric_data_maps
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
-from plaso.lib import binary
 from plaso.lib import errors
 from plaso.parsers import logger
 from plaso.parsers import winreg
@@ -195,17 +194,18 @@ class MRUListStringWindowsRegistryPlugin(BaseMRUListWindowsRegistryPlugin):
       logger.debug((
           '[{0:s}] Non-string MRUList entry value: {1:s} parsed as string '
           'in key: {2:s}.').format(self.NAME, entry_letter, registry_key.path))
-      utf16_stream = binary.ByteStreamCopyToUTF16String(value.data)
+
+      utf16le_string_map = self._GetDataTypeMap('utf16le_string')
 
       try:
-        value_string = utf16_stream.decode('utf-16-le')
-      except UnicodeDecodeError as exception:
-        value_string = binary.HexifyBuffer(utf16_stream)
-        logger.warning((
-            '[{0:s}] Unable to decode UTF-16 stream: {1:s} in MRUList entry '
-            'value: {2:s} in key: {3:s} with error: {4!s}').format(
-                self.NAME, value_string, entry_letter, registry_key.path,
-                exception))
+        value_string = self._ReadStructureFromByteStream(
+            value.data, 0, utf16le_string_map)
+      except (ValueError, errors.ParseError) as exception:
+        parser_mediator.ProduceExtractionError((
+            'unable to parse MRUList entry value: {0:s} with error: '
+            '{1!s}').format(entry_letter, exception))
+
+      value_string = value_string.rstrip('\x00')
 
     return value_string
 

@@ -47,7 +47,7 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         offset=1892)
     registry_key.AddValue(registry_value)
 
-    value_data = 'c:/evil.exe'.encode('utf_16_le')
+    value_data = 'c:/evil.exe\x00'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'b', data=value_data, data_type=dfwinreg_definitions.REG_BINARY,
         offset=612)
