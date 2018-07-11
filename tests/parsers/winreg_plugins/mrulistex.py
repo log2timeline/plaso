@@ -37,7 +37,8 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         last_written_time=filetime.timestamp, offset=1456)
 
     # The order is: 201
-    value_data = b'\x02\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00'
+    value_data = (
+        b'\x02\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\xff\xff\xff\xff')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         'MRUListEx', data=value_data,
         data_type=dfwinreg_definitions.REG_BINARY, offset=123)
@@ -49,7 +50,7 @@ class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         offset=1892)
     registry_key.AddValue(registry_value)
 
-    value_data = 'c:\\evil.exe'.encode('utf_16_le')
+    value_data = 'c:\\evil.exe\x00'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
         '1', data=value_data, data_type=dfwinreg_definitions.REG_BINARY,
         offset=612)

@@ -201,6 +201,8 @@ class MRUListExStringWindowsRegistryPlugin(BaseMRUListExWindowsRegistryPlugin):
             'unable to parse MRUListEx entry value: {0:d} with error: '
             '{1!s}').format(entry_number, exception))
 
+      value_string = value_string.rstrip('\x00')
+
     return value_string
 
   # pylint: disable=arguments-differ
@@ -351,6 +353,8 @@ class MRUListExStringAndShellItemWindowsRegistryPlugin(
             '{1!s}').format(entry_number, exception))
         return value_string
 
+      path = path.rstrip('\x00')
+
       shell_item_data = value.data[context.byte_size:]
 
       if not shell_item_data:
@@ -445,6 +449,8 @@ class MRUListExStringAndShellItemListWindowsRegistryPlugin(
             'unable to parse MRUListEx entry value: {0:d} with error: '
             '{1!s}').format(entry_number, exception))
         return value_string
+
+      path = path.rstrip('\x00')
 
       shell_item_list_data = value.data[context.byte_size:]
 
