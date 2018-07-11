@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import binascii
-
 from dfdatetime import systemtime as dfdatetime_systemtime
 
 from plaso.containers import events
