@@ -81,9 +81,9 @@ class NetworksWindowsRegistryPlugin(
         default_gateway_mac_value = signature.GetValueByName(
             'DefaultGatewayMac')
         if default_gateway_mac_value:
-          default_gateway_mac = default_gateway_mac_value.GetDataAsObject()
           default_gateway_mac = ':'.join([
-              '{0:02x}'.format(octet) for octet in default_gateway_mac])
+              '{0:02x}'.format(ord(octet))
+              for octet in default_gateway_mac_value.data])
         else:
           default_gateway_mac = None
 
