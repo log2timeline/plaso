@@ -17,7 +17,7 @@ from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
-class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
+class TestMRUListExStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the string MRUListEx plugin."""
 
   def _CreateTestKey(self, key_path, time_string):
@@ -65,7 +65,7 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
 
   def testFilters(self):
     """Tests the FILTERS class attribute."""
-    plugin = mrulistex.MRUListExStringPlugin()
+    plugin = mrulistex.MRUListExStringWindowsRegistryPlugin()
 
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\'
@@ -104,7 +104,7 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
     time_string = '2012-08-28 09:23:49.002031'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    plugin = mrulistex.MRUListExStringPlugin()
+    plugin = mrulistex.MRUListExStringWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
     self.assertEqual(storage_writer.number_of_events, 1)
@@ -130,12 +130,13 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
-class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
+class TestMRUListExShellItemListWindowsRegistryPlugin(
+    test_lib.RegistryPluginTestCase):
   """Tests for the shell item list MRUListEx plugin."""
 
   def testFilters(self):
     """Tests the FILTERS class attribute."""
-    plugin = mrulistex.MRUListExShellItemListPlugin()
+    plugin = mrulistex.MRUListExShellItemListWindowsRegistryPlugin()
 
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
@@ -160,7 +161,7 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin = mrulistex.MRUListExShellItemListPlugin()
+    plugin = mrulistex.MRUListExShellItemListWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
@@ -209,12 +210,13 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
-class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
+class TestMRUListExStringAndShellItemWindowsRegistryPlugin(
+    test_lib.RegistryPluginTestCase):
   """Tests for the string and shell item MRUListEx plugin."""
 
   def testFilters(self):
     """Tests the FILTERS class attribute."""
-    plugin = mrulistex.MRUListExStringAndShellItemPlugin()
+    plugin = mrulistex.MRUListExStringAndShellItemWindowsRegistryPlugin()
 
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
@@ -234,7 +236,7 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin = mrulistex.MRUListExStringAndShellItemPlugin()
+    plugin = mrulistex.MRUListExStringAndShellItemWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
@@ -299,13 +301,13 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
-class TestMRUListExStringAndShellItemListPlugin(
+class TestMRUListExStringAndShellItemListWindowsRegistryPlugin(
     test_lib.RegistryPluginTestCase):
   """Tests for the string and shell item list MRUListEx plugin."""
 
   def testFilters(self):
     """Tests the FILTERS class attribute."""
-    plugin = mrulistex.MRUListExStringAndShellItemListPlugin()
+    plugin = mrulistex.MRUListExStringAndShellItemListWindowsRegistryPlugin()
 
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
@@ -325,7 +327,7 @@ class TestMRUListExStringAndShellItemListPlugin(
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin = mrulistex.MRUListExStringAndShellItemListPlugin()
+    plugin = mrulistex.MRUListExStringAndShellItemListWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
