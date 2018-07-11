@@ -5,6 +5,8 @@ from __future__ import unicode_literals
 
 import abc
 
+from dtfabric.runtime import data_maps as dtfabric_data_maps
+
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
@@ -91,8 +93,11 @@ class BaseMRUListWindowsRegistryPlugin(
 
     mrulist_entries_map = self._GetDataTypeMap('mrulist_entries')
 
+    context = dtfabric_data_maps.DataTypeMapContext(values={
+        'data_size': len(mrulist_value.data)})
+
     return self._ReadStructureFromByteStream(
-        mrulist_value.data, 0, mrulist_entries_map)
+        mrulist_value.data, 0, mrulist_entries_map, context=context)
 
   def _ParseMRUListKey(self, parser_mediator, registry_key, codepage='cp1252'):
     """Extract event objects from a MRUList Registry key.
@@ -114,10 +119,19 @@ class BaseMRUListWindowsRegistryPlugin(
       return
 
     values_dict = {}
+    found_terminator = False
     for entry_index, entry_letter in enumerate(mrulist):
       # The MRU list is terminated with '\0' (0x0000).
       if entry_letter == 0:
         break
+
+      if found_terminator:
+        parser_mediator.ProduceExtractionError((
+            'found additional MRUList entries after terminator in key: '
+            '{0:s}.').format(registry_key.path))
+
+        # Only create one parser error per terminator.
+        found_terminator = False
 
       entry_letter = chr(entry_letter)
 

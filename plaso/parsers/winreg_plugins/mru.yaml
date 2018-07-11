@@ -34,13 +34,13 @@ name: mrulist_entries
 type: sequence
 description: MRUList entries
 element_data_type: uint16
-elements_terminator: 0
+elements_data_size: data_size
 ---
 name: mrulistex_entries
 type: sequence
 description: MRUListEx entries
 element_data_type: int32
-elements_terminator: -1
+elements_data_size: data_size
 ---
 name: utf16le_string
 type: string
