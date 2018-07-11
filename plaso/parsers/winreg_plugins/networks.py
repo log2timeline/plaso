@@ -84,8 +84,8 @@ class NetworksWindowsRegistryPlugin(
             'DefaultGatewayMac')
         if default_gateway_mac_value:
           default_gateway_mac = default_gateway_mac_value.GetDataAsObject()
-          default_gateway_mac = ':'.join(
-              map(binascii.hexlify, default_gateway_mac))
+          default_gateway_mac = ':'.join([
+              '{0:02x}'.format(octet) for octet in default_gateway_mac])
         else:
           default_gateway_mac = None
 
