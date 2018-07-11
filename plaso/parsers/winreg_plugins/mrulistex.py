@@ -351,7 +351,7 @@ class MRUListExStringAndShellItemWindowsRegistryPlugin(
             '{1!s}').format(entry_number, exception))
         return value_string
 
-      shell_item_data = value.data[context.byte_size]
+      shell_item_data = value.data[context.byte_size:]
 
       if not shell_item_data:
         parser_mediator.ProduceExtractionError((
@@ -446,7 +446,7 @@ class MRUListExStringAndShellItemListWindowsRegistryPlugin(
             '{1!s}').format(entry_number, exception))
         return value_string
 
-      shell_item_list_data = value.data[context.byte_size]
+      shell_item_list_data = value.data[context.byte_size:]
 
       if not shell_item_list_data:
         parser_mediator.ProduceExtractionError((
