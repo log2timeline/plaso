@@ -9,6 +9,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
+from plaso.lib import py2to3
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
@@ -82,8 +83,8 @@ class NetworksWindowsRegistryPlugin(
             'DefaultGatewayMac')
         if default_gateway_mac_value:
           default_gateway_mac = ':'.join([
-              '{0:02x}'.format(ord(octet))
-              for octet in default_gateway_mac_value.data])
+              '{0:02x}'.format(octet)
+              for octet in bytearray(default_gateway_mac_value.data)])
         else:
           default_gateway_mac = None
 
