@@ -54,7 +54,7 @@ class BaseMRUListWindowsRegistryPlugin(
 
   _SOURCE_APPEND = ': MRU List'
 
-  _DEFINITION_FILE = 'mrulist.yaml'
+  _DEFINITION_FILE = 'mru.yaml'
 
   @abc.abstractmethod
   def _ParseMRUListEntryValue(
@@ -81,18 +81,18 @@ class BaseMRUListWindowsRegistryPlugin(
            the MRUList value.
 
     Returns:
-      mru_list_entries: MRUList entries or None if not available.
+      mrulist_entries: MRUList entries or None if not available.
     """
-    mru_list_value = registry_key.GetValueByName('MRUList')
+    mrulist_value = registry_key.GetValueByName('MRUList')
 
     # The key exists but does not contain a value named "MRUList".
-    if not mru_list_value:
+    if not mrulist_value:
       return None
 
-    mru_list_entries_map = self._GetDataTypeMap('mru_list_entries')
+    mrulist_entries_map = self._GetDataTypeMap('mrulist_entries')
 
     return self._ReadStructureFromByteStream(
-        mru_list_value.data, 0, mru_list_entries_map)
+        mrulist_value.data, 0, mrulist_entries_map)
 
   def _ParseMRUListKey(self, parser_mediator, registry_key, codepage='cp1252'):
     """Extract event objects from a MRUList Registry key.
@@ -104,19 +104,18 @@ class BaseMRUListWindowsRegistryPlugin(
       codepage (Optional[str]): extended ASCII string codepage.
     """
     try:
-      mru_list = self._ParseMRUListValue(registry_key)
+      mrulist = self._ParseMRUListValue(registry_key)
     except (ValueError, errors.ParseError) as exception:
       parser_mediator.ProduceExtractionError(
           'unable to parse MRUList value with error: {0!s}'.format(exception))
       return
 
-    if not mru_list:
+    if not mrulist:
       return
 
     values_dict = {}
-    for entry_index, entry_letter in enumerate(mru_list):
-      # TODO: detect if list ends prematurely.
-      # MRU lists are terminated with \0 (0x0000).
+    for entry_index, entry_letter in enumerate(mrulist):
+      # The MRU list is terminated with '\0' (0x0000).
       if entry_letter == 0:
         break
 
