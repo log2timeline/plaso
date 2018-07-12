@@ -169,10 +169,7 @@ class EventExtractor(object):
           parser_mediator, parser, file_entry, file_object=file_object)
 
     finally:
-      # Check if file_object is open as dfwinreg will have closed file_object.
-      # TODO: Fix once Issue #306 addressed in DFVFS
-      if file_object._is_open:  # pylint: disable=protected-access
-        file_object.close()
+      file_object.close()
 
   def _ParseFileEntryWithParser(
       self, parser_mediator, parser, file_entry, file_object=None):
@@ -325,10 +322,7 @@ class EventExtractor(object):
             file_object=file_object)
 
     finally:
-      # Check if file_object is open as dfwinreg will have closed file_object.
-      # TODO: Fix once Issue #306 addressed in DFVFS
-      if file_object._is_open:  # pylint: disable=protected-access
-        file_object.close()
+      file_object.close()
 
   def ParseFileEntryMetadata(self, parser_mediator, file_entry):
     """Parses the file entry metadata e.g. file system data.
