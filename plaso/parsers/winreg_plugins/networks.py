@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import binascii
-
 from dfdatetime import systemtime as dfdatetime_systemtime
 
 from plaso.containers import events
@@ -83,9 +81,9 @@ class NetworksWindowsRegistryPlugin(
         default_gateway_mac_value = signature.GetValueByName(
             'DefaultGatewayMac')
         if default_gateway_mac_value:
-          default_gateway_mac = default_gateway_mac_value.GetDataAsObject()
-          default_gateway_mac = ':'.join(
-              map(binascii.hexlify, default_gateway_mac))
+          default_gateway_mac = ':'.join([
+              '{0:02x}'.format(octet)
+              for octet in bytearray(default_gateway_mac_value.data)])
         else:
           default_gateway_mac = None
 
