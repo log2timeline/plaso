@@ -5,15 +5,15 @@ from __future__ import unicode_literals
 
 import abc
 
-import construct
-
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.lib import binary
+from plaso.lib import errors
 from plaso.parsers import logger
 from plaso.parsers import winreg
 from plaso.parsers.shared import shell_items
+from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -48,12 +48,13 @@ class MRUListStringRegistryKeyFilter(
     return super(MRUListStringRegistryKeyFilter, self).Match(registry_key)
 
 
-class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
+class BaseMRUListWindowsRegistryPlugin(
+    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
   """Class for common MRUList Windows Registry plugin functionality."""
 
-  _MRULIST_STRUCT = construct.Range(1, 500, construct.ULInt16('entry_letter'))
-
   _SOURCE_APPEND = ': MRU List'
+
+  _DEFINITION_FILE = 'mru.yaml'
 
   @abc.abstractmethod
   def _ParseMRUListEntryValue(
@@ -80,23 +81,18 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
            the MRUList value.
 
     Returns:
-      generator: MRUList value generator, which returns the MRU index number
-          and entry value.
+      mrulist_entries: MRUList entries or None if not available.
     """
-    mru_list_value = registry_key.GetValueByName('MRUList')
+    mrulist_value = registry_key.GetValueByName('MRUList')
 
     # The key exists but does not contain a value named "MRUList".
-    if not mru_list_value:
-      return enumerate([])
+    if not mrulist_value:
+      return None
 
-    try:
-      mru_list = self._MRULIST_STRUCT.parse(mru_list_value.data)
-    except construct.FieldError:
-      logger.warning('[{0:s}] Unable to parse the MRU key: {1:s}'.format(
-          self.NAME, registry_key.path))
-      return enumerate([])
+    mrulist_entries_map = self._GetDataTypeMap('mrulist_entries')
 
-    return enumerate(mru_list)
+    return self._ReadStructureFromByteStream(
+        mrulist_value.data, 0, mrulist_entries_map)
 
   def _ParseMRUListKey(self, parser_mediator, registry_key, codepage='cp1252'):
     """Extract event objects from a MRUList Registry key.
@@ -107,10 +103,19 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       codepage (Optional[str]): extended ASCII string codepage.
     """
+    try:
+      mrulist = self._ParseMRUListValue(registry_key)
+    except (ValueError, errors.ParseError) as exception:
+      parser_mediator.ProduceExtractionError(
+          'unable to parse MRUList value with error: {0!s}'.format(exception))
+      return
+
+    if not mrulist:
+      return
+
     values_dict = {}
-    for entry_index, entry_letter in self._ParseMRUListValue(registry_key):
-      # TODO: detect if list ends prematurely.
-      # MRU lists are terminated with \0 (0x0000).
+    for entry_index, entry_letter in enumerate(mrulist):
+      # The MRU list is terminated with '\0' (0x0000).
       if entry_letter == 0:
         break
 
@@ -136,7 +141,7 @@ class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-class MRUListStringPlugin(BaseMRUListPlugin):
+class MRUListStringWindowsRegistryPlugin(BaseMRUListWindowsRegistryPlugin):
   """Windows Registry plugin to parse a string MRUList."""
 
   NAME = 'mrulist_string'
@@ -165,9 +170,9 @@ class MRUListStringPlugin(BaseMRUListPlugin):
 
     value = registry_key.GetValueByName('{0:s}'.format(entry_letter))
     if value is None:
-      logger.debug(
-          '[{0:s}] Missing MRUList entry value: {1:s} in key: {2:s}.'.format(
-              self.NAME, entry_letter, registry_key.path))
+      parser_mediator.ProduceExtractionError(
+          'missing MRUList value: {0:s} in key: {1:s}.'.format(
+              entry_letter, registry_key.path))
 
     elif value.DataIsString():
       value_string = value.GetDataAsObject()
@@ -204,7 +209,8 @@ class MRUListStringPlugin(BaseMRUListPlugin):
     self._ParseMRUListKey(parser_mediator, registry_key, codepage=codepage)
 
 
-class MRUListShellItemListPlugin(BaseMRUListPlugin):
+class MRUListShellItemListWindowsRegistryPlugin(
+    BaseMRUListWindowsRegistryPlugin):
   """Windows Registry plugin to parse a shell item list MRUList."""
 
   NAME = 'mrulist_shell_item_list'
@@ -239,14 +245,14 @@ class MRUListShellItemListPlugin(BaseMRUListPlugin):
 
     value = registry_key.GetValueByName('{0:s}'.format(entry_letter))
     if value is None:
-      logger.debug(
-          '[{0:s}] Missing MRUList entry value: {1:s} in key: {2:s}.'.format(
-              self.NAME, entry_letter, registry_key.path))
+      parser_mediator.ProduceExtractionError(
+          'missing MRUList value: {0:s} in key: {1:s}.'.format(
+              entry_letter, registry_key.path))
 
     elif not value.DataIsBinaryData():
-      logger.debug((
-          '[{0:s}] Non-binary MRUList entry value: {1:s} in key: '
-          '{2:s}.').format(self.NAME, entry_letter, registry_key.path))
+      parser_mediator.ProduceExtractionError(
+          'Non-binary MRUList entry value: {1:s} in key: {2:s}.'.format(
+              entry_letter, registry_key.path))
 
     elif value.data:
       shell_items_parser = shell_items.ShellItemsParser(registry_key.path)
@@ -273,4 +279,5 @@ class MRUListShellItemListPlugin(BaseMRUListPlugin):
 
 
 winreg.WinRegistryParser.RegisterPlugins([
-    MRUListStringPlugin, MRUListShellItemListPlugin])
+    MRUListStringWindowsRegistryPlugin,
+    MRUListShellItemListWindowsRegistryPlugin])
