@@ -81,7 +81,7 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
 
     Returns:
       tuple: containing:
-        construct.Container: parsed record structure.
+        dls_page_header: parsed record structure.
         int: header size
 
     Raises:
@@ -104,7 +104,7 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
     """Builds an FseventsdData object from a parsed structure.
 
     Args:
-      record (construct.Container): parsed record structure.
+      record (dls_record_v1|dls_record_v2): parsed record structure.
 
     Returns:
       FseventsdEventData: event data attribute container.
