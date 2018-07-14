@@ -101,6 +101,7 @@ class WindowsRegistryListEventData(events.EventData):
 
   Attributes:
     key_path (str): Windows Registry key path.
+    known_folder_identifier (str): known folder identifier.
     list_name (str): name of the list.
     list_values (str): values in the list.
     value_name (str): Windows Registry value name.
@@ -111,6 +112,7 @@ class WindowsRegistryListEventData(events.EventData):
     """Initializes event data."""
     super(WindowsRegistryListEventData, self).__init__(data_type=self.DATA_TYPE)
     self.key_path = None
+    self.known_folder_identifier = None
     self.list_name = None
     self.list_values = None
     self.value_name = None
