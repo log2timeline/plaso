@@ -53,8 +53,8 @@ class WindowsRegistryListEventDataTest(shared_test_lib.BaseTestCase):
     attribute_container = windows_events.WindowsRegistryListEventData()
 
     expected_attribute_names = [
-        'data_type', 'key_path', 'list_name', 'list_values', 'offset',
-        'query', 'value_name']
+        'data_type', 'key_path', 'known_folder_identifier', 'list_name',
+        'list_values', 'offset', 'query', 'value_name']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 
