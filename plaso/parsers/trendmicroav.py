@@ -127,7 +127,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
     if timestamp is not None:
       try:
         timestamp = int(timestamp, 10)
-      except (ValueError, TypeError) as exception:
+      except (ValueError, TypeError):
         parser_mediator.ProduceExtractionError(
             'Invalid timestamp value: {0!s}'.format(timestamp))
 
@@ -210,17 +210,26 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
     """
 
     timestamp = self._ParseTimestamp(parser_mediator, row)
-
     if timestamp is None:
       return
 
+    try:
+      action = int(row['action'], 10)
+    except (ValueError, TypeError):
+      action = None
+
+    try:
+      scan_type = int(row['scan_type'], 10)
+    except (ValueError, TypeError):
+      scan_type = None
+      
     event_data = TrendMicroAVEventData()
-    event_data.offset = row_offset
-    event_data.threat = row['threat']
-    event_data.action = int(row['action'])
-    event_data.path = row['path']
+    event_data.action = action
     event_data.filename = row['filename']
-    event_data.scan_type = int(row['scan_type'])
+    event_data.offset = row_offset
+    event_data.path = row['path']
+    event_data.scan_type = scan_type
+    event_data.threat = row['threat']
 
     event = time_events.DateTimeValuesEvent(
         timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
@@ -249,13 +258,12 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
 
     # Check that the action value is plausible
     try:
-      action = int(row['action'])
-    except ValueError:
-      return False
-    if action not in formatter.SCAN_RESULTS:
+      action = int(row['action'], 10)
+    except (ValueError, TypeError):
       return False
 
-    # All checks passed.
+    if action not in formatter.SCAN_RESULTS:
+      return False
     return True
 
 
@@ -312,9 +320,7 @@ class OfficeScanWebReputationParser(TrendMicroBaseParser):
       row_offset (int): line number of the row.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
-
     timestamp = self._ParseTimestamp(parser_mediator, row)
-
     if timestamp is None:
       return
 
@@ -325,7 +331,11 @@ class OfficeScanWebReputationParser(TrendMicroBaseParser):
     for field in (
         'credibility_rating', 'credibility_score', 'policy_identifier',
         'threshold', 'block_mode'):
-      setattr(event_data, field, int(row[field]))
+      try:
+        value = int(row[field], 10)
+      except (ValueError, TypeError):
+        value = None
+      setattr(event_data, field, value)
 
     # Store string values.
     for field in ('url', 'group_name', 'group_code', 'application_name', 'ip'):
@@ -357,11 +367,12 @@ class OfficeScanWebReputationParser(TrendMicroBaseParser):
       return False
 
     try:
-      if int(row['block_mode']) not in formatter.BLOCK_MODES:
-        return False
-    except ValueError:
+      block_mode = int(row['block_mode'], 10)
+    except (ValueError, TypeError):
       return False
 
+    if block_mode not in formatter.BLOCK_MODES:
+      return False
     return True
 
 
