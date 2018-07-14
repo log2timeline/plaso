@@ -8,6 +8,7 @@ import uuid
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers import winreg
 from plaso.parsers.shared import shell_items
 from plaso.parsers.winreg_plugins import dtfabric_plugin
@@ -66,7 +67,7 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
 
     if header.format_version not in (1, 9, 12, 19):
       parser_mediator.ProduceExtractionError(
-          'unsupported format version: {0:d}'.format(format_version))
+          'unsupported format version: {0:d}'.format(header.format_version))
       return
 
     known_folder_identifier = None
