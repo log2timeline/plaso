@@ -3,17 +3,19 @@
 
 from __future__ import unicode_literals
 
-import construct
+import uuid
 
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.shared import shell_items
+from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 
 
-class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
+class ExplorerProgramsCacheWindowsRegistryPlugin(
+    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
   """Class that parses the Explorer ProgramsCache Registry data."""
 
   NAME = 'explorer_programscache'
@@ -31,17 +33,7 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
       ('https://github.com/libyal/winreg-kb/blob/master/documentation/'
        'Programs%20Cache%20values.asciidoc')]
 
-  _HEADER_STRUCT = construct.Struct(
-      'programscache_header',
-      construct.ULInt32('format_version'))
-
-  _ENTRY_HEADER_STRUCT = construct.Struct(
-      'programscache_entry_header',
-      construct.ULInt32('data_size'))
-
-  _ENTRY_FOOTER_STRUCT = construct.Struct(
-      'programscache_entry_footer',
-      construct.Byte('sentinel'))
+  _DEFINITION_FILE = 'programscache.yaml'
 
   def _ParseValueData(self, parser_mediator, registry_key, registry_value):
     """Extracts event objects from a Explorer ProgramsCache value data.
@@ -51,65 +43,76 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
           and other components, such as storage and dfvfs.
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       registry_value (dfwinreg.WinRegistryValue): Windows Registry value.
+
+    Raises:
+      ParseError: if the value data could not be parsed.
     """
     value_data = registry_value.data
-    if len(value_data) < 4:
+
+    value_data_size = len(value_data)
+    if value_data_size < 4:
       return
 
+    header_map = self._GetDataTypeMap('programscache_header')
+
     try:
-      header_struct = self._HEADER_STRUCT.parse(value_data)
-    except construct.FieldError as exception:
+      header = self._ReadStructureFromByteStream(
+          value_data, 0, header_map)
+    except (ValueError, errors.ParseError) as exception:
       parser_mediator.ProduceExtractionError(
-          'unable to parse header with error: {0!s}'.format(
+          'unable to parse header value with error: {0!s}'.format(
               exception))
       return
 
-    format_version = header_struct.get('format_version')
-    if format_version not in (0x01, 0x09, 0x0c, 0x13):
+    if header.format_version not in (1, 9, 12, 19):
       parser_mediator.ProduceExtractionError(
-          'unsupported format version: 0x{0:08x}'.format(format_version))
+          'unsupported format version: {0:d}'.format(format_version))
       return
 
-    if format_version == 0x01:
+    known_folder_identifier = None
+    if header.format_version == 1:
       value_data_offset = 8
 
-    elif format_version == 0x09:
+    elif header.format_version == 9:
       value_data_offset = 6
 
-    else:
-      # TODO: get known folder identifier?
+    elif header.format_version in (12, 19):
+      known_folder_identifier = uuid.UUID(bytes_le=value_data[4:20])
       value_data_offset = 20
 
-    if format_version == 0x09:
-      sentinel = 0
-    else:
+    entry_header_map = self._GetDataTypeMap('programscache_entry_header')
+    entry_footer_map = self._GetDataTypeMap('programscache_entry_footer')
+
+    sentinel = 0
+    if header.format_version != 9:
       try:
-        entry_footer_struct = self._ENTRY_FOOTER_STRUCT.parse(
-            value_data[value_data_offset:])
-      except construct.FieldError as exception:
+        entry_footer = self._ReadStructureFromByteStream(
+            value_data[value_data_offset:], value_data_offset, entry_footer_map)
+      except (ValueError, errors.ParseError) as exception:
         parser_mediator.ProduceExtractionError((
             'unable to parse sentinel at offset: 0x{0:08x} '
             'with error: {1!s}').format(value_data_offset, exception))
         return
 
-      value_data_offset += self._ENTRY_FOOTER_STRUCT.sizeof()
+      value_data_offset += entry_footer_map.GetByteSize()
 
-      sentinel = entry_footer_struct.get('sentinel')
+      sentinel = entry_footer.sentinel
 
     link_targets = []
     while sentinel in (0x00, 0x01):
+      if value_data_offset >= value_data_size:
+        break
+
       try:
-        entry_header_struct = self._ENTRY_HEADER_STRUCT.parse(
-            value_data[value_data_offset:])
-      except construct.FieldError as exception:
+        entry_header = self._ReadStructureFromByteStream(
+            value_data[value_data_offset:], value_data_offset, entry_header_map)
+      except (ValueError, errors.ParseError) as exception:
         parser_mediator.ProduceExtractionError((
             'unable to parse entry header at offset: 0x{0:08x} '
             'with error: {1!s}').format(value_data_offset, exception))
         break
 
-      value_data_offset += self._ENTRY_HEADER_STRUCT.sizeof()
-
-      entry_data_size = entry_header_struct.get('data_size')
+      value_data_offset += entry_header_map.GetByteSize()
 
       display_name = '{0:s} {1:s}'.format(
           registry_key.path, registry_value.name)
@@ -122,25 +125,29 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
       link_target = shell_items_parser.CopyToPath()
       link_targets.append(link_target)
 
-      value_data_offset += entry_data_size
+      value_data_offset += entry_header.data_size
 
       try:
-        entry_footer_struct = self._ENTRY_FOOTER_STRUCT.parse(
-            value_data[value_data_offset:])
-      except construct.FieldError as exception:
+        entry_footer = self._ReadStructureFromByteStream(
+            value_data[value_data_offset:], value_data_offset, entry_footer_map)
+      except (ValueError, errors.ParseError) as exception:
         parser_mediator.ProduceExtractionError((
             'unable to parse entry footer at offset: 0x{0:08x} '
             'with error: {1!s}').format(value_data_offset, exception))
-        break
+        return
 
-      value_data_offset += self._ENTRY_FOOTER_STRUCT.sizeof()
+      value_data_offset += entry_footer_map.GetByteSize()
 
-      sentinel = entry_footer_struct.get('sentinel')
+      sentinel = entry_footer.sentinel
 
     # TODO: recover remaining items.
 
+    if known_folder_identifier:
+      known_folder_identifier = '{0!s}'.format(known_folder_identifier)
+
     event_data = windows_events.WindowsRegistryListEventData()
     event_data.key_path = registry_key.path
+    event_data.known_folder_identifier = known_folder_identifier
     event_data.list_name = registry_value.name
     event_data.list_values = ' '.join([
         '{0:d}: {1:s}'.format(index, link_target)
@@ -194,4 +201,5 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-winreg.WinRegistryParser.RegisterPlugin(ExplorerProgramsCachePlugin)
+winreg.WinRegistryParser.RegisterPlugin(
+    ExplorerProgramsCacheWindowsRegistryPlugin)
