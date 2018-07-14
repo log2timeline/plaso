@@ -30,9 +30,10 @@ class TrendMicroAVEventData(events.EventData):
 
   Attributes:
     action (str): action.
-    threat (str): threat.
     filename (str): filename.
+    path (str): path.
     scan_type (str): scan_type.
+    threat (str): threat.
   """
 
   DATA_TYPE = 'av:trendmicro:scan'
@@ -40,20 +41,20 @@ class TrendMicroAVEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(TrendMicroAVEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.threat = None
     self.action = None
-    self.path = None
     self.filename = None
+    self.path = None
     self.scan_type = None
+    self.threat = None
 
 
 # pylint: disable=abstract-method
 class TrendMicroBaseParser(dsv_parser.DSVParser):
   """Common code for parsing Trend Micro log files.
 
-    The file format is reminiscent of CSV, but is not quite the same; the
-    delimiter is a three-character sequence and there is no provision for
-    quoting or escaping.
+  The file format is reminiscent of CSV, but is not quite the same; the
+  delimiter is a three-character sequence and there is no provision for
+  quoting or escaping.
   """
 
   DELIMITER = '<;>'
@@ -64,14 +65,14 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
   # Subclasses must define a list of field names.
   COLUMNS = ()
 
-  def __init__(self, *args, **kwargs):
-    """Initializes the parser.
-
-    The TrendMicro AV writes a text logfile encoded in the CP1252 charset;
-    unless otherwise specified, the parser class needs to know this.
+  def __init__(self, encoding='cp1252'):
+    """Initializes a parsing Trend Micro log file parser.
+    
+    Args:
+      encoding (Optional[str]): encoding used in the DSV file, where None
+          indicates the codepage of the parser mediator should be used.
     """
-    kwargs.setdefault('encoding', 'cp1252')
-    super(TrendMicroBaseParser, self).__init__(*args, **kwargs)
+    super(TrendMicroBaseParser, self).__init__(encoding=encoding)
 
   def _CreateDictReader(self, line_reader):
     """Iterates over the log lines and provide a reader for the values.
@@ -80,7 +81,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
       line_reader (iter): yields each line in the log file.
 
     Yields:
-      A dictionary of column values keyed by column header.
+      dict[str, str]: column values keyed by column header.
     """
     for line in line_reader:
       if isinstance(line, py2to3.BYTES_TYPE):
@@ -88,23 +89,29 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
           line = codecs.decode(line, self._encoding)
         except UnicodeDecodeError as exception:
           raise errors.UnableToParseFile(
-              "Unexpected binary content in file: {0:s}".format(exception))
+              'Unexpected binary content in file: {0!s}'.format(exception))
+
       stripped_line = line.strip()
       values = stripped_line.split(self.DELIMITER)
-      if len(values) < self.MIN_COLUMNS:
+      number_of_values = len(values)
+      number_of_columns = len(self.COLUMNS)
+
+      if number_of_values < self.MIN_COLUMNS:
         raise errors.UnableToParseFile(
-            "Expected at least {0:d} values, found {1:d}".format(
-                self.MIN_COLUMNS, len(values)))
-      if len(values) > len(self.COLUMNS):
+            'Expected at least {0:d} values, found {1:d}'.format(
+                self.MIN_COLUMNS, number_of_values))
+
+      if number_of_values > number_of_columns:
         raise errors.UnableToParseFile(
-            "Expected at most {0:d} values, found {1:d}".format(
-                len(self.COLUMNS), len(values)))
-      yield dict(zip(self.COLUMNS, values))
+            'Expected at most {0:d} values, found {1:d}'.format(
+                number_of_columns, number_of_values))
+
+        yield dict(zip(self.COLUMNS, values))
 
   def _ParseTimestamp(self, parser_mediator, row):
     """Provides a timestamp for the given row.
 
-    If the Trend Micro log comes from a version that provides a Unix timestamp,
+    If the Trend Micro log comes from a version that provides a POSIX timestamp,
     use that directly; it provides the advantages of UTC and of second
     precision. Otherwise fall back onto the local-timezone date and time.
 
@@ -114,24 +121,25 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
 
     Returns:
-      dfdatetime.interface.DateTimeValue: the parsed timestamp.
+      dfdatetime.interface.DateTimeValue: date and time value.
     """
-    if 'timestamp' in row:
+    timstamp = row.get('timestamp', None)
+    if timestamp is not None:
       try:
-        return dfdatetime_posix_time.PosixTime(timestamp=int(row['timestamp']))
-      except ValueError as exception:
+        timestamp = int(timestamp, 10)
+      except (ValueError, TypeError) as exception:
         parser_mediator.ProduceExtractionError(
-            'Log line has a timestamp field: [{0:s}], but it is invalid: {1:s}'
-            .format(repr(row['timestamp']), exception))
+            'Invalid timestamp value: {0!s}'.format(timestamp))
 
-    # The Unix timestamp is not available; parse the local date and time.
+      return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+
+    # The timestamp is not available; parse the local date and time instead.
     try:
       return self._ConvertToTimestamp(row['date'], row['time'])
     except ValueError as exception:
-      parser_mediator.ProduceExtractionError(
-          'Unable to parse time string: [{0:s} {1:s}] with error {2:s}'
-          .format(repr(row['date']), repr(row['time']), exception))
-
+      parser_mediator.ProduceExtractionError((
+          'Unable to parse time string: [{0:s} {1:s}] with error'
+          '{2!s}').format(repr(row['date']), repr(row['time']), exception))
 
   def _ConvertToTimestamp(self, date, time):
     """Converts date and time strings into a timestamp.
@@ -150,12 +158,13 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
       dfdatetime_time_elements.TimestampElements: the parsed timestamp.
 
     Raises:
-      ValueError: if the date/time values cannot be parsed.
+      ValueError: if the date and time values cannot be parsed.
     """
     # Check that the strings have the correct length.
     if len(date) != 8:
       raise ValueError('date has wrong length: len({0!s}) != 8'.format(
           repr(date)))
+
     if len(time) < 3 or len(time) > 4:
       raise ValueError('time has wrong length: len({0!s}) not in (3, 4)'.format(
           repr(time)))
