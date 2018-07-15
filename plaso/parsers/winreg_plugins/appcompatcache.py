@@ -169,7 +169,7 @@ class AppCompatCacheWindowsRegistryPlugin(
 
     Args:
       format_type (int): format type.
-      value_data (bytess): value data.
+      value_data (bytes): value data.
       cached_entry_offset (int): offset of the first cached entry data
           relative to the start of the value data.
 
@@ -243,7 +243,7 @@ class AppCompatCacheWindowsRegistryPlugin(
 
     Args:
       format_type (int): format type.
-      value_data (bytess): value data.
+      value_data (bytes): value data.
       cached_entry_offset (int): offset of the first cached entry data
           relative to the start of the value data.
 
@@ -412,7 +412,7 @@ class AppCompatCacheWindowsRegistryPlugin(
 
     Args:
       format_type (int): format type.
-      value_data (bytess): value data.
+      value_data (bytes): value data.
 
     Returns:
       AppCompatCacheHeader: header.
