@@ -10,7 +10,6 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.parsers import logger
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 from plaso.parsers.winreg_plugins import dtfabric_plugin
@@ -360,7 +359,7 @@ class AppCompatCacheWindowsRegistryPlugin(
 
       try:
         timestamp = self._ReadStructureFromByteStream(
-            remaining_data[0:8], 0, data_type_map)
+            remaining_data[0:8], cached_entry_data_offset, data_type_map)
       except (ValueError, errors.ParseError) as exception:
         raise errors.ParseError((
             'Unable to parse last modification time value with error: '
@@ -387,11 +386,12 @@ class AppCompatCacheWindowsRegistryPlugin(
       data_type_map = self._GetDataTypeMap('uint32le')
 
       try:
-        data_size = data_type_map.MapByteStream(remaining_data[8:12])
-      except (
-          dtfabric_errors.ByteStreamTooSmallError,
-          dtfabric_errors.MappingError) as exception:
-        raise errors.ParseError(exception)
+        data_size = self._ReadStructureFromByteStream(
+            remaining_data[8:12], cached_entry_data_offset + 8, data_type_map)
+      except (ValueError, errors.ParseError) as exception:
+        raise errors.ParseError(
+            'Unable to parse data size value with error: {0!s}'.format(
+                exception))
 
     if path_offset > 0 and path_size > 0:
       path_size += path_offset
@@ -446,24 +446,6 @@ class AppCompatCacheWindowsRegistryPlugin(
         self._FORMAT_TYPE_XP, self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA,
         self._FORMAT_TYPE_7, self._FORMAT_TYPE_10):
       cache_header.number_of_cached_entries = header.number_of_cached_entries
-
-    if format_type == self._FORMAT_TYPE_XP:
-      data_offset = 16
-      number_of_lru_entries = header.number_of_lru_entries
-      if number_of_lru_entries > 0 and number_of_lru_entries <= 96:
-        data_type_map = self._GetDataTypeMap('uint32le')
-
-        for lru_entry_index in range(number_of_lru_entries):
-          try:
-            lru_entry = self._ReadStructureFromByteStream(
-                value_data[data_offset:data_offset + 4], data_offset,
-                data_type_map)
-          except (ValueError, errors.ParseError) as exception:
-            raise errors.ParseError(
-                'Unable to parse LRU entry value with error: {0!s}'.format(
-                    exception))
-
-          data_offset += 4
 
     self._cached_entry_data_type_map = None
 
