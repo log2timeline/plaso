@@ -32,12 +32,14 @@ from plaso.formatters import fseventsd
 from plaso.formatters import ganalytics
 from plaso.formatters import gdrive
 from plaso.formatters import gdrive_synclog
+from plaso.formatters import googlehangouts_messages
 from plaso.formatters import hachoir
 from plaso.formatters import iis
 from plaso.formatters import imessage
 from plaso.formatters import ipod
 from plaso.formatters import java_idx
 from plaso.formatters import kik_ios
+from plaso.formatters import kodi
 from plaso.formatters import ls_quarantine
 from plaso.formatters import mac_appfirewall
 from plaso.formatters import mac_document_versions
@@ -92,5 +94,6 @@ from plaso.formatters import winregservice
 from plaso.formatters import winrestore
 from plaso.formatters import xchatlog
 from plaso.formatters import xchatscrollback
+from plaso.formatters import xiaomi_mifit
 from plaso.formatters import zeitgeist
 from plaso.formatters import zsh_extended_history
