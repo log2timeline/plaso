@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file contains a parser for the Kodi MyVideos.db
 
-Kodi Videos are stored in a database called MyVideos.db
+Kodi Videos events are stored in a database called MyVideos.db
 """
 
 from __future__ import unicode_literals

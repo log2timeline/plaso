@@ -22,5 +22,4 @@ from plaso.parsers.sqlite_plugins import mackeeper_cache
 from plaso.parsers.sqlite_plugins import safari
 from plaso.parsers.sqlite_plugins import skype
 from plaso.parsers.sqlite_plugins import twitter_ios
-from plaso.parsers.sqlite_plugins import xiaomi_mifit
 from plaso.parsers.sqlite_plugins import zeitgeist

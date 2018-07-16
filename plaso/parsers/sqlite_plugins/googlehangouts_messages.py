@@ -2,7 +2,7 @@
 """This file contains a parser for the Google Hangouts Active Conversations DB.
 
 /data/com.google.android.talk/databases/babel.db
-This SQLite database is the conversation database for active conversations,
+This SQLite database is the conversation database for conversations,
  participant names, messages, and information about the Google Hangout event.
  There can be multiple babel.db databases, and each database name will be
  followed by an integer starting with 0 (e.g., babel0.db,babel1.db,babel3.db)..
