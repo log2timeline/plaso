@@ -27,7 +27,7 @@ class KodiEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(KodiEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.fileName = None
+    self.filename = None
 
 class KodiPlugin(interface.SQLitePlugin):
   """Parser for Kodi Video databases."""
@@ -169,7 +169,7 @@ class KodiPlugin(interface.SQLitePlugin):
     query_hash = hash(query)
 
     event_data = KodiEventData()
-    event_data.fileName = self._GetRowValue(query_hash, row, 'strFilename')
+    event_data.filename = self._GetRowValue(query_hash, row, 'strFilename')
     event_data.query = query
 
     timestamp = self._GetRowValue(query_hash, row, 'lastPlayed').encode('utf-8')
