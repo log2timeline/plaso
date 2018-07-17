@@ -27,6 +27,7 @@ class KodiEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(KodiEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.FileName = None
 
 class KodiPlugin(interface.SQLitePlugin):
   """Parser for Kodi Video databases."""
