@@ -38,7 +38,7 @@ class GoogleHangoutsMessageData(events.EventData):
     self.sender = None
     self.body = None
     self.read = None
-    self.gmsgtype = None
+    self.gmsg_type = None
 
 
 class GoogleHangoutsMessagePlugin(interface.SQLitePlugin):
@@ -283,7 +283,7 @@ class GoogleHangoutsMessagePlugin(interface.SQLitePlugin):
     query_hash = hash(query)
 
     msg_read = self._GetRowValue(query_hash, row, 'status')
-    msg_type = self._GetRowValue(query_hash, row, 'type')
+    gmsg_type = self._GetRowValue(query_hash, row, 'type')
 
     event_data = GoogleHangoutsMessageData()
     event_data.sender = self._GetRowValue(query_hash, row, 'full_name')
