@@ -37,8 +37,8 @@ class GoogleHangoutsMessageData(events.EventData):
     super(GoogleHangoutsMessageData, self).__init__(data_type=self.DATA_TYPE)
     self.sender = None
     self.body = None
-    self.read = None
-    self.msgtype = None
+    self.msg_type = None
+    self.msg_read = None
 
 
 class GoogleHangoutsMessagePlugin(interface.SQLitePlugin):
