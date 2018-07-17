@@ -843,7 +843,7 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
           'INTEGER DEFAULT 0 NOT NULL,segment_id INTEGER,visit_duration '
           'INTEGER DEFAULT 0 NOT NULL)')}
 
-  # Observed in Chrome 67.0.3396.99 meta.version 39
+  # Observed in Linux Chrome 67.0.3396.99 meta.version 39
   _SCHEMA_67_2 = {
       'downloads': (
           'CREATE TABLE downloads (id INTEGER PRIMARY KEY,current_path '
@@ -899,7 +899,7 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
           'INTEGER DEFAULT 0 NOT NULL,segment_id INTEGER,visit_duration '
           'INTEGER DEFAULT 0 NOT NULL)')}
 
-  # Observed in Chrome 67.0.3396.99 meta.version 39
+  # Observed in MacOS Chrome 67.0.3396.99 meta.version 39
   _SCHEMA_67_3 = {
       'downloads': (
           'CREATE TABLE downloads (id INTEGER PRIMARY KEY,guid VARCHAR NOT '
