@@ -94,6 +94,5 @@ from plaso.formatters import winregservice
 from plaso.formatters import winrestore
 from plaso.formatters import xchatlog
 from plaso.formatters import xchatscrollback
-from plaso.formatters import xiaomi_mifit
 from plaso.formatters import zeitgeist
 from plaso.formatters import zsh_extended_history

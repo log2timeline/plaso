@@ -26,7 +26,7 @@ class GoogleHangoutsMessageData(events.EventData):
     sender (str): Name with the sender.
     body (str): content of the SMS text message.
     read (str): message read status, either Read or Unread.
-    msgtype (str): message type, either Sent or Received.
+    gmsgtype (str): message type, either Sent or Received.
     time (integer) : time message was recieved
   """
 
@@ -38,7 +38,7 @@ class GoogleHangoutsMessageData(events.EventData):
     self.sender = None
     self.body = None
     self.read = None
-    self.msgtype = None
+    self.gmsgtype = None
 
 
 class GoogleHangoutsMessagePlugin(interface.SQLitePlugin):
@@ -291,7 +291,7 @@ class GoogleHangoutsMessagePlugin(interface.SQLitePlugin):
     event_data.offset = self._GetRowValue(query_hash, row, '_id')
     event_data.query = query
     event_data.msg_read = self.MSG_READ.get(msg_read, 'UNKNOWN')
-    event_data.msg_type = self.MSG_TYPE.get(msg_type, 'UNKNOWN')
+    event_data.gmsg_type = self.MSG_TYPE.get(msg_type, 'UNKNOWN')
 
     timestamp = self._GetRowValue(query_hash, row, 'timestamp')
     date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(timestamp=timestamp)
