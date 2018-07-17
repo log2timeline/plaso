@@ -294,8 +294,9 @@ class GoogleHangoutsMessagePlugin(interface.SQLitePlugin):
     event_data.msg_type = self.MSG_TYPE.get(msg_type, 'UNKNOWN')
 
     timestamp = self._GetRowValue(query_hash, row, 'timestamp')
-    date_time =
-    dfdatetime_posix_time.PosixTimeInMicroseconds(timestamp=timestamp)
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+         timestamp=timestamp)
+
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_CREATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
