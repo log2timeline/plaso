@@ -55,7 +55,7 @@ class GoogleHangoutsMessagePlugin(interface.SQLitePlugin):
        'ParseMessagesRow')]
 
   # The required tables.
-  REQUIRED_TABLES = frozenset([ 'messages', 'blocked_people', 'participants'])
+  REQUIRED_TABLES = frozenset(['messages', 'blocked_people', 'participants'])
 
   SCHEMAS = [{
       'android_metadata': (
