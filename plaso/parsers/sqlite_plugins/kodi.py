@@ -33,7 +33,7 @@ class KodiPlugin(interface.SQLitePlugin):
   """Parser for Kodi Video databases."""
 
   NAME = 'kodi'
-  DESCRIPTION = 'Parser for kodi myvideos database files.'
+  DESCRIPTION = 'Parser for kodi myvideos db files.'
 
   # Define the needed queries.
   QUERIES = [
