@@ -49,8 +49,9 @@ class GoogleHangoutsMessagePlugin(interface.SQLitePlugin):
 
   # Define the needed queries.
   QUERIES = [
-      ('SELECT messages._id, participants.full_name, text, messages.timestamp, status, type FROM messages '
-      'INNER JOIN participants ON messages.author_chat_id=participants.chat_id;',
+      ('SELECT messages._id, participants.full_name, text, messages.timestamp,'
+      'status, type FROM messages INNER JOIN participants ON '
+      'messages.author_chat_id=participants.chat_id;',
        'ParseMessagesRow')]
 
   # The required tables.

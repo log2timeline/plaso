@@ -173,7 +173,7 @@ class KodiPlugin(interface.SQLitePlugin):
     event_data.query = query
 
     timestamp = self._GetRowValue(query_hash, row, 'lastPlayed').encode('utf-8')
-    date_time= dfdatetime_time_elements.TimeElements()
+    date_time = dfdatetime_time_elements.TimeElements()
     date_time.CopyFromDateTimeString(timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
