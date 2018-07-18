@@ -18,6 +18,8 @@ attributes:
 ---
 name: firefox_cache1_record_header
 type: structure
+attributes:
+  byte_order: big-endian
 members:
 - name: major_format_version
   data_type: uint16
@@ -42,6 +44,8 @@ members:
 ---
 name: firefox_cache2_record_header
 type: structure
+attributes:
+  byte_order: big-endian
 members:
 - name: major_format_version
   data_type: uint32
