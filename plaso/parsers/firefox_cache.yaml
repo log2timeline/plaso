@@ -1,0 +1,59 @@
+name: firefox_cache
+type: format
+description: Mozilla Firefox version 1 and 2 cache file format
+---
+name: uint16
+type: integer
+attributes:
+  format: unsigned
+  size: 2
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: firefox_cache1_record_header
+type: structure
+members:
+- name: major_format_version
+  data_type: uint16
+- name: minor_format_version
+  data_type: uint16
+- name: location
+  data_type: uint32
+- name: fetch_count
+  data_type: uint32
+- name: last_fetched_time
+  data_type: uint32
+- name: last_modified_time
+  data_type: uint32
+- name: expiration_time
+  data_type: uint32
+- name: cached_data_size
+  data_type: uint32
+- name: request_size
+  data_type: uint32
+- name: info_size
+  data_type: uint32
+---
+name: firefox_cache2_record_header
+type: structure
+members:
+- name: major_format_version
+  data_type: uint32
+- name: fetch_count
+  data_type: uint32
+- name: last_fetched_time
+  data_type: uint32
+- name: last_modified_time
+  data_type: uint32
+- name: frequency
+  data_type: uint32
+- name: expiration_time
+  data_type: uint32
+- name: request_size
+  data_type: uint32

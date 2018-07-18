@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 import collections
 import os
 
-import construct
 import pyparsing
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -15,6 +14,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.parsers import dtfabric_parser
 from plaso.parsers import interface
 from plaso.parsers import logger
 from plaso.parsers import manager
@@ -57,7 +57,7 @@ class FirefoxCacheEventData(events.EventData):
     self.version = None
 
 
-class BaseFirefoxCacheParser(interface.FileObjectParser):
+class BaseFirefoxCacheParser(dtfabric_parser.DtFabricBaseParser):
   """Parses Firefox cache files."""
 
   # pylint: disable=abstract-method
@@ -72,9 +72,16 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
     """Extract relevant information from HTTP header.
 
     Args:
-      header_data: binary string containing the HTTP header data.
-      offset: the offset of the cache record.
-      display_name: the display name.
+      header_data (bytes): HTTP header data.
+      offset (int): offset of the cache record, relative to the start of
+          the Firefox cache file.
+      display_name (str): display name of the Firefox cache file.
+
+    Returns:
+      tuple: contains:
+
+        str: HTTP request method or None if the value cannot be extracted.
+        str: HTTP response code or None if the value cannot be extracted.
     """
     try:
       http_header_start = header_data.index(b'request-method')
@@ -133,11 +140,10 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
     """Determines whether the cache record header is valid.
 
     Args:
-      cache_record_header: the cache record header (instance of
-                           construct.Struct).
+      cache_record_header (construct.Struct): cache record header.
 
     Returns:
-      A boolean value indicating the cache record header is valid.
+      bool: True if the cache record header is valid.
     """
     return (
         cache_record_header.request_size > 0 and
@@ -154,6 +160,8 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
   DESCRIPTION = (
       'Parser for Firefox Cache version 1 files (Firefox 31 or earlier).')
 
+  _DEFINITION_FILE = 'firefox_cache.yaml'
+
   _CACHE_VERSION = 1
 
   # Initial size of Firefox 4 and later cache files.
@@ -161,21 +169,6 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
 
   # Smallest possible block size in Firefox cache files.
   _MINUMUM_BLOCK_SIZE = 256
-
-  _CACHE_RECORD_HEADER_STRUCT = construct.Struct(
-      'record_header',
-      construct.UBInt16('major'),
-      construct.UBInt16('minor'),
-      construct.UBInt32('location'),
-      construct.UBInt32('fetch_count'),
-      construct.UBInt32('last_fetched'),
-      construct.UBInt32('last_modified'),
-      construct.UBInt32('expire_time'),
-      construct.UBInt32('data_size'),
-      construct.UBInt32('request_size'),
-      construct.UBInt32('info_size'))
-
-  _CACHE_RECORD_HEADER_SIZE = _CACHE_RECORD_HEADER_STRUCT.sizeof()
 
   # TODO: change into regexp.
   _CACHE_FILENAME = (
@@ -278,20 +271,29 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
 
     Returns:
       tuple: contains:
+
         construct.Stuct: cache record header structure.
         FirefoxCacheEventData: event data.
+
+    Raises:
+      ParseError: if the cache record header cannot be parsed.
+      IOError: if the cache record header cannot be validated.
     """
-    offset = file_object.get_offset()
+    file_offset = file_object.get_offset()
+
+    record_header_map = self._GetDataTypeMap('firefox_cache1_record_header')
 
     try:
-      cache_record_header = self._CACHE_RECORD_HEADER_STRUCT.parse_stream(
-          file_object)
-    except (IOError, construct.FieldError):
-      raise IOError('Unable to parse stream.')
+      cache_record_header, header_data_size = self._ReadStructureFromFileObject(
+          file_object, file_offset, record_header_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError(
+          'Unable to parse Firefox record header with error: {0!s}'.format(
+              exception))
 
     if not self._ValidateCacheRecordHeader(cache_record_header):
       # Move reader to next candidate block.
-      file_offset = block_size - self._CACHE_RECORD_HEADER_SIZE
+      file_offset = block_size - header_data_size
       file_object.seek(file_offset, os.SEEK_CUR)
       raise IOError('Not a valid Firefox cache record.')
 
@@ -373,24 +375,13 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
   DESCRIPTION = (
       'Parser for Firefox Cache version 2 files (Firefox 32 or later).')
 
+  _DEFINITION_FILE = 'firefox_cache.yaml'
+
   _CACHE_VERSION = 2
 
   # Cache 2 filenames are SHA-1 hex digests.
   # TODO: change into regexp.
   _CACHE_FILENAME = pyparsing.Word(pyparsing.hexnums, exact=40)
-
-  # The last four bytes of a file gives the size of the cached content.
-  _LENGTH = construct.UBInt32('length')
-
-  _CACHE_RECORD_HEADER_STRUCT = construct.Struct(
-      'record_header',
-      construct.UBInt32('major'),
-      construct.UBInt32('fetch_count'),
-      construct.UBInt32('last_fetched'),
-      construct.UBInt32('last_modified'),
-      construct.UBInt32('frequency'),
-      construct.UBInt32('expire_time'),
-      construct.UBInt32('request_size'))
 
   _CHUNK_SIZE = 512 * 1024
 
@@ -401,14 +392,23 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
      https://github.com/JamesHabben/FirefoxCache2
 
     Args:
-      file_object: The file containing the cache record.
+      file_object (dfvfs.FileIO): a file-like object.
+
+    Raises:
+      IOError: if the start of the cache file metadata could not be determined.
     """
     file_object.seek(-4, os.SEEK_END)
+    file_offset = file_object.tell()
+
+    length_map = self._GetDataTypeMap('uint32')
 
     try:
-      length = self._LENGTH.parse_stream(file_object)
-    except (IOError, construct.FieldError):
-      raise IOError('Could not find metadata offset in Firefox cache file.')
+      length, _ = self._ReadStructureFromFileObject(
+          file_object, file_offset, length_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.UnableToParseFile(
+          'Unable to parse metadata length with error: {0!s}'.format(
+              exception))
 
     # Firefox splits the content into chunks.
     hash_chunks, remainder = divmod(length, self._CHUNK_SIZE)
@@ -422,16 +422,13 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
     """Parses a Firefox cache file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    # TODO: determine if the minimum file size is really 4 bytes.
-    if file_object.get_size() < 4:
-      raise errors.UnableToParseFile('Not a Firefox cache2 file.')
-
     filename = parser_mediator.GetFilename()
     try:
       # Match cache2 filename (SHA-1 hex of cache record key).
@@ -439,8 +436,11 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
     except pyparsing.ParseException:
       raise errors.UnableToParseFile('Not a Firefox cache2 file.')
 
-    if file_object.get_size() == 0:
-      raise errors.UnableToParseFile('Empty file.')
+    # TODO: determine if the minimum file size is really 4 bytes.
+    file_size = file_object.get_size()
+    if file_size < 4:
+      raise errors.UnableToParseFile(
+          'File size too small for Firefox cache2 file.')
 
     meta_start = self._GetStartOfMetadata(file_object)
 
@@ -450,11 +450,15 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
     # the cached content.
     file_object.seek(4, os.SEEK_CUR)
 
+    record_header_map = self._GetDataTypeMap('firefox_cache1_record_header')
+
     try:
-      cache_record_header = self._CACHE_RECORD_HEADER_STRUCT.parse_stream(
-          file_object)
-    except (IOError, construct.FieldError):
-      raise errors.UnableToParseFile('Not a Firefox cache2 file.')
+      cache_record_header, _ = self._ReadStructureFromFileObject(
+          file_object, file_offset, record_header_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.UnableToParseFile(
+          'Unable to parse Firefox record header with error: {0!s}'.format(
+              exception))
 
     if not self._ValidateCacheRecordHeader(cache_record_header):
       raise errors.UnableToParseFile('Not a valid Firefox cache2 record.')
