@@ -51,8 +51,8 @@ class GoogleHangoutsMessagePlugin(interface.SQLitePlugin):
   QUERIES = [
       ('SELECT messages._id, participants.full_name, text, messages.timestamp,'
       'status, type FROM messages INNER JOIN participants ON '
-      'messages.author_chat_id=participants.chat_id;',
-       'ParseMessagesRow')]
+       'messages.author_chat_id=participants.chat_id;',
+        'ParseMessagesRow')]
 
   # The required tables.
   REQUIRED_TABLES = frozenset(['messages', 'blocked_people', 'participants'])
@@ -295,7 +295,7 @@ class GoogleHangoutsMessagePlugin(interface.SQLitePlugin):
 
     timestamp = self._GetRowValue(query_hash, row, 'timestamp')
     date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-         timestamp=timestamp)
+        timestamp=timestamp)
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_CREATION)
