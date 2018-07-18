@@ -44,7 +44,7 @@ class KodiPlugin(interface.SQLitePlugin):
   REQUIRED_TABLES = frozenset(['files'])
 
   SCHEMAS = [{
-        'actor': (
+      'actor': (
           'CREATE TABLE actor ( actor_id INTEGER PRIMARY KEY, name TEXT, '
           'art_urls TEXT )'),
       'actor_link': (
