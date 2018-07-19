@@ -30,4 +30,14 @@ class SystemdJournalEventFormatter(interface.ConditionalEventFormatter):
   SOURCE_SHORT = 'LOG'
 
 
-manager.FormattersManager.RegisterFormatter(SystemdJournalEventFormatter)
+# TODO: remove when PR #2004 is pushed
+class SystemdJournalDirtyEventFormatter(SystemdJournalEventFormatter):
+  """Formatter for a Systemd journal dirty event."""
+
+  DATA_TYPE = 'systemd:journal:dirty'
+
+  SOURCE_LONG = 'systemd-journal-dirty'
+
+
+manager.FormattersManager.RegisterFormatters([
+    SystemdJournalEventFormatter, SystemdJournalDirtyEventFormatter])
