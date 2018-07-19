@@ -9,6 +9,13 @@ attributes:
   size: 2
   units: bytes
 ---
+name: int32
+type: integer
+attributes:
+  format: signed
+  size: 4
+  units: bytes
+---
 name: uint32
 type: integer
 attributes:
@@ -28,7 +35,7 @@ members:
 - name: location
   data_type: uint32
 - name: fetch_count
-  data_type: uint32
+  data_type: int32
 - name: last_fetched_time
   data_type: uint32
 - name: last_modified_time
