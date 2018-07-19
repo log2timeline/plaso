@@ -416,16 +416,6 @@ class StorageMediaTool(tools.CLITool):
     partitions = getattr(options, 'partitions', None)
     self._partitions = self._ParsePartitionsString(partitions)
 
-    partition = getattr(options, 'partition', None)
-
-    if self._partitions and partition is not None:
-      raise errors.BadConfigOption((
-          'Option "--partition" can not be used in combination '
-          'with "--partitions".'))
-
-    if not self._partitions and partition is not None:
-      self._partitions = self._ParsePartitionsString(partition)
-
     image_offset_bytes = getattr(options, 'image_offset_bytes', None)
 
     if self._partitions and image_offset_bytes is not None:
@@ -939,7 +929,6 @@ class StorageMediaTool(tools.CLITool):
     """Scans a VSS volume scan node for volume and file systems.
 
     Args:
-      scan_context (dfvfs.SourceScannerContext): source scanner context.
       volume_scan_node (dfvfs.SourceScanNode): volume scan node.
       selected_vss_stores (list[str]): selected VSS store identifiers.
 
@@ -1003,21 +992,13 @@ class StorageMediaTool(tools.CLITool):
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
-        '--partition', dest='partition', action='store', type=str,
-        default=None, help=(
-            'Choose a partition number from a disk image. This partition '
-            'number should correspond to the partition number on the disk '
-            'image, starting from partition 1. All partitions can be '
-            'defined as: "all".'))
-
-    argument_group.add_argument(
-        '--partitions', dest='partitions', action='store', type=str,
-        default=None, help=(
-            'Define partitions that need to be processed. A range of '
+        '--partitions', '--partition', dest='partitions', action='store',
+        type=str, default=None, help=(
+            'Define partitions to be processed. A range of '
             'partitions can be defined as: "3..5". Multiple partitions can '
             'be defined as: "1,3,5" (a list of comma separated values). '
             'Ranges and lists can also be combined as: "1,3..5". The first '
-            'partition is 1. All partitions can be defined as: "all".'))
+            'partition is 1. All partitions can be specified with: "all".'))
 
     argument_group.add_argument(
         '--offset', dest='image_offset', action='store', default=None,
