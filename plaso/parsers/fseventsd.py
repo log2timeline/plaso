@@ -77,7 +77,8 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
 
     Args:
       file_object (file): file-like object to read the header from.
-      offset (int): offset of the beginning of the header.
+      offset (int): offset to the beginning of the header relative to the
+          start of the file-like object.
 
     Returns:
       tuple: containing:
@@ -93,10 +94,11 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
           file_object, offset, page_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile(
-          'Unable to parse page header with error: {0!s}'.format(
-              exception))
+          'Unable to parse page header at file offset {0:d} '
+          'with error: {1!s}'.format(offset, exception))
     if page_header.signature not in self._DLS_SIGNATURES:
-      raise errors.UnableToParseFile('Invalid file signature')
+      raise errors.UnableToParseFile(
+          'Invalid page header signature at file offset {0:d}'.format(offset))
 
     return page_header, page_size
 
@@ -154,7 +156,7 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
       UnableToParseFile: when the header cannot be parsed.
     """
     page_header_map = self._GetDataTypeMap('dls_page_header')
-    file_offset = 0
+    file_offset = self._INITIAL_FILE_OFFSET
     file_size = file_object.get_size()
     try:
       page_header, header_size = self._ReadStructureFromFileObject(
@@ -198,9 +200,10 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
             file_object, file_offset, record_map)
         file_offset += record_length
       except (ValueError, errors.ParseError) as exception:
-        raise errors.UnableToParseFile(
+        parser_mediator.ProduceExtractionError(
             'Unable to parse page record with error: {0!s}'.format(
                 exception))
+        break
 
       event_data = self._BuildEventData(record)
       parser_mediator.ProduceEventWithEventData(event, event_data)
