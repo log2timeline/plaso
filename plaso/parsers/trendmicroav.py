@@ -67,7 +67,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
 
   def __init__(self, encoding='cp1252'):
     """Initializes a parsing Trend Micro log file parser.
-    
+
     Args:
       encoding (Optional[str]): encoding used in the DSV file, where None
           indicates the codepage of the parser mediator should be used.
@@ -106,7 +106,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
             'Expected at most {0:d} values, found {1:d}'.format(
                 number_of_columns, number_of_values))
 
-        yield dict(zip(self.COLUMNS, values))
+      yield dict(zip(self.COLUMNS, values))
 
   def _ParseTimestamp(self, parser_mediator, row):
     """Provides a timestamp for the given row.
@@ -123,7 +123,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
     Returns:
       dfdatetime.interface.DateTimeValue: date and time value.
     """
-    timstamp = row.get('timestamp', None)
+    timestamp = row.get('timestamp', None)
     if timestamp is not None:
       try:
         timestamp = int(timestamp, 10)
@@ -222,7 +222,7 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
       scan_type = int(row['scan_type'], 10)
     except (ValueError, TypeError):
       scan_type = None
-      
+
     event_data = TrendMicroAVEventData()
     event_data.action = action
     event_data.filename = row['filename']
@@ -256,7 +256,7 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
     if timestamp is None:
       return False
 
-    # Check that the action value is plausible
+    # Check that the action value is plausible.
     try:
       action = int(row['action'], 10)
     except (ValueError, TypeError):
