@@ -414,8 +414,10 @@ class SQLiteParser(interface.FileEntryParser):
           continue
 
         schema_match = plugin.CheckSchema(database)
-
         if plugin.REQUIRES_SCHEMA_MATCH and not schema_match:
+          parser_mediator.ProduceExtractionError((
+              'plugin: {0:s} found required tables but not a matching '
+              'schema').format(plugin.NAME))
           continue
 
         parser_mediator.SetFileEntry(file_entry)
