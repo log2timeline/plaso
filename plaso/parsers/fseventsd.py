@@ -161,7 +161,7 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
       UnableToParseFile: when the header cannot be parsed.
     """
     page_header_map = self._GetDataTypeMap('dls_page_header')
-    
+
     try:
       page_header, file_offset = self._ReadStructureFromFileObject(
           file_object, 0, page_header_map)
