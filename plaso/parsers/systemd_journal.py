@@ -177,7 +177,7 @@ class SystemdJournalParser(interface.FileObjectParser):
     object_header_data = file_object.read(self._OBJECT_HEADER_SIZE)
     object_header = self._OBJECT_HEADER.parse(object_header_data)
     payload_size = object_header.size - self._OBJECT_HEADER_SIZE
-    return (object_header, payload_size)
+    return object_header, payload_size
 
   def _ParseItem(self, file_object, offset):
     """Parses a Systemd journal DATA object.
@@ -209,7 +209,7 @@ class SystemdJournalParser(interface.FileObjectParser):
 
     event_string = event_data.decode('utf-8')
     event_key, event_value = event_string.split('=', 1)
-    return (event_key, event_value)
+    return event_key, event_value
 
   def _ParseJournalEntry(self, parser_mediator, file_object, offset):
     """Parses a Systemd journal ENTRY object.
