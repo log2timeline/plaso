@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import os
 
 import construct
-import lz4
+import lz4.block
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
