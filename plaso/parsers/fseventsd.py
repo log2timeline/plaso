@@ -117,7 +117,7 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
     """
     event_data = FseventsdEventData()
     event_data.path = record.path
-    event_data.flags = record.flags
+    event_data.flags = record.event_flags
     event_data.event_identifier = record.event_identifier
     # Node identifier is only set in DLS V2 records.
     event_data.node_identifier = getattr(record, 'node_identifier', None)
