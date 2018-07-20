@@ -77,7 +77,7 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
 
     Args:
       file_object (file): file-like object to read the header from.
-      page_offset (int): offset of the start of the page (header, relative
+      page_offset (int): offset of the start of the page header, relative
           to the start of the file.
 
     Returns:
