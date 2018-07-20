@@ -89,7 +89,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
           line = codecs.decode(line, self._encoding)
         except UnicodeDecodeError as exception:
           raise errors.UnableToParseFile(
-              'Unexpected binary content in file: {0!s}'.format(exception))
+              'Unable decode line with error: {0!s}'.format(exception))
 
       stripped_line = line.strip()
       values = stripped_line.split(self.DELIMITER)
@@ -129,7 +129,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
         timestamp = int(timestamp, 10)
       except (ValueError, TypeError):
         parser_mediator.ProduceExtractionError(
-            'Invalid timestamp value: {0!s}'.format(timestamp))
+            'Unable to parse timestamp value: {0!s}'.format(timestamp))
 
       return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
 
@@ -138,7 +138,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
       return self._ConvertToTimestamp(row['date'], row['time'])
     except ValueError as exception:
       parser_mediator.ProduceExtractionError((
-          'Unable to parse time string: [{0:s} {1:s}] with error'
+          'Unable to parse time string: "{0:s} {1:s}" with error: '
           '{2!s}').format(repr(row['date']), repr(row['time']), exception))
 
   def _ConvertToTimestamp(self, date, time):
@@ -162,12 +162,12 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
     """
     # Check that the strings have the correct length.
     if len(date) != 8:
-      raise ValueError('date has wrong length: len({0!s}) != 8'.format(
-          repr(date)))
+      raise ValueError(
+          'Unsupported length of date string: {0!s}'.format(repr(date)))
 
     if len(time) < 3 or len(time) > 4:
-      raise ValueError('time has wrong length: len({0!s}) not in (3, 4)'.format(
-          repr(time)))
+      raise ValueError(
+          'Unsupported length of time string: {0!s}'.format(repr(time)))
 
     # Extract the date.
     year = int(date[:4])
@@ -208,7 +208,6 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
       row_offset (int): line number of the row.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
-
     timestamp = self._ParseTimestamp(parser_mediator, row)
     if timestamp is None:
       return
