@@ -170,13 +170,19 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
           'Unsupported length of time string: {0!s}'.format(repr(time)))
 
     # Extract the date.
-    year = int(date[:4])
-    month = int(date[4:6])
-    day = int(date[6:8])
+    try:
+      year = int(date[:4], 10)
+      month = int(date[4:6], 10)
+      day = int(date[6:8], 10)
+    except (TypeError, ValueError):
+      raise ValueError('Unable to parse date string: {0!s}'.format(repr(date)))
 
     # Extract the time. Note that a single-digit hour value has no leading zero.
-    hour = int(time[:-2])
-    minutes = int(time[-2:])
+    try:
+      hour = int(time[:-2], 10)
+      minutes = int(time[-2:], 10)
+    except (TypeError, ValueError):
+      raise ValueError('Unable to parse time string: {0!s}'.format(repr(date)))
 
     time_elements_tuple = (year, month, day, hour, minutes, 0)
     date_time = dfdatetime_time_elements.TimeElements(
