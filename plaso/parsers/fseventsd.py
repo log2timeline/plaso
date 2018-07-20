@@ -196,6 +196,7 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
           parser_mediator.ProduceExtractionError(
               'Unable to parse page header with error: {0!s}'.format(
                   exception))
+          break
 
           current_page_end += page_header.page_size
           file_offset += header_size
