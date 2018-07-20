@@ -51,8 +51,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       ''])
 
   _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = """\
-usage: storage_media_tool_test.py [--partition PARTITION]
-                                  [--partitions PARTITIONS]
+usage: storage_media_tool_test.py [--partitions PARTITIONS]
                                   [--offset IMAGE_OFFSET]
                                   [--ob IMAGE_OFFSET_BYTES]
                                   [--sector_size BYTES_PER_SECTOR]
@@ -68,18 +67,13 @@ optional arguments:
                         image in number of sectors. A sector is 512 bytes in
                         size by default this can be overwritten with the
                         --sector_size option.
-  --partition PARTITION
-                        Choose a partition number from a disk image. This
-                        partition number should correspond to the partition
-                        number on the disk image, starting from partition 1.
-                        All partitions can be defined as: "all".
-  --partitions PARTITIONS
-                        Define partitions that need to be processed. A range
-                        of partitions can be defined as: "3..5". Multiple
+  --partitions PARTITIONS, --partition PARTITIONS
+                        Define partitions to be processed. A range of
+                        partitions can be defined as: "3..5". Multiple
                         partitions can be defined as: "1,3,5" (a list of comma
                         separated values). Ranges and lists can also be
                         combined as: "1,3..5". The first partition is 1. All
-                        partitions can be defined as: "all".
+                        partitions can be specified with: "all".
   --sector_size BYTES_PER_SECTOR, --sector-size BYTES_PER_SECTOR
                         The number of bytes per sector, which is 512 by
                         default.
@@ -394,15 +388,6 @@ optional arguments:
     options.partitions = 'all'
 
     test_tool._ParseStorageMediaImageOptions(options)
-
-    # Test if 'partition' option raises in combination with
-    # 'partitions' option.
-    options = test_lib.TestOptions()
-    options.partitions = 'all'
-    options.partition = '1'
-
-    with self.assertRaises(errors.BadConfigOption):
-      test_tool._ParseStorageMediaImageOptions(options)
 
     # Test if 'image_offset_bytes' option raises in combination with
     # 'partitions' option.
