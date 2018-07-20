@@ -31,27 +31,27 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
 
   _FLAG_VALUES = {
       0x00000000: 'None',
-      0x00000001: 'IsDirectory',
-      0x00000002: 'Mount',
-      0x00000004: 'Unmount',
-      0x00000020: 'EndOfTransaction',
-      0x00000800: 'LastHardLinkRemoved',
-      0x00001000: 'IsHardLink',
-      0x00004000: 'IsSymbolicLink',
-      0x00008000: 'IsFile',
-      0x00010000: 'PermissionChanged',
-      0x00020000: 'ExtendedAttributeModified',
-      0x00040000: 'ExtendedAttributeRemoved',
-      0x00100000: 'DocumentRevision',
-      0x00400000: 'ItemCloned',
-      0x01000000: 'Created',
-      0x02000000: 'Removed',
-      0x04000000: 'InodeMetadataModified',
-      0x08000000: 'Renamed',
-      0x10000000: 'Modified',
-      0x20000000: 'Exchange',
-      0x40000000: 'FinderInfoModified',
-      0x80000000: 'DirectoryCreated'}
+      0x00000001: 'Created',
+      0x00000002: 'Removed',
+      0x00000004: 'InodeMetadataModified',
+      0x00000008: 'Renamed',
+      0x00000010: 'Modified',
+      0x00000020: 'Exchange',
+      0x00000040: 'FinderInfoModified',
+      0x00000080: 'DirectoryCreated',
+      0x00000100: 'PermissionChanged',
+      0x00000200: 'ExtendedAttributeModified',
+      0x00000400: 'ExtendedAttributeRemoved',
+      0x00001000: 'DocumentRevision',
+      0x00004000: 'ItemCloned',
+      0x00080000: 'LastHardLinkRemoved',
+      0x00100000: 'IsHardLink',
+      0x00400000: 'IsSymbolicLink',
+      0x00800000: 'IsFile',
+      0x01000000: 'IsDirectory',
+      0x02000000: 'Mount',
+      0x04000000: 'Unmount',
+      0x20000000: 'EndOfTransaction'}
 
   def _GetFlagValues(self, flags):
     """Determines which events are indicated by a set of fsevents flags.
@@ -90,7 +90,7 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
 
     event_values = event.CopyToDict()
     flags = event_values['flags']
-    event_values['hex_flags'] = '0x{0:X}'.format(flags)
+    event_values['hex_flags'] = '0x{0:08x}'.format(flags)
     event_values['flag_values'] = self._GetFlagValues(flags)
 
     return self._ConditionalFormatMessages(event_values)

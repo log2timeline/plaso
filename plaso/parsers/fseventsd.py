@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import construct
-
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -14,7 +12,7 @@ from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import specification
-from plaso.parsers import interface
+from plaso.parsers import dtfabric_parser
 from plaso.parsers import manager
 
 
@@ -40,7 +38,7 @@ class FseventsdEventData(events.EventData):
     self.path = None
 
 
-class FseventsdParser(interface.FileObjectParser):
+class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
   """Parser for fseventsd files.
 
   This parser supports both version 1 and version 2 fseventsd files.
@@ -54,28 +52,13 @@ class FseventsdParser(interface.FileObjectParser):
   # The version 1 format was used in Mac OS X 10.5 (Leopard) through macOS 10.12
   # (Sierra).
   _DLS_V1_SIGNATURE = b'1SLD'
-  _DLS_RECORD_V1 = construct.Struct(
-      'dls_record_v1',
-      construct.CString('path'),
-      construct.ULInt64('event_identifier'),
-      construct.UBInt32('flags'))
 
   # The version 2 format was introduced in MacOS High Sierra (10.13).
   _DLS_V2_SIGNATURE = b'2SLD'
-  _DLS_RECORD_V2 = construct.Struct(
-      'dls_record_v2',
-      construct.CString('path'),
-      construct.ULInt64('event_identifier'),
-      construct.UBInt32('flags'),
-      construct.ULInt64('node_identifier'))
 
   _DLS_SIGNATURES = [_DLS_V1_SIGNATURE, _DLS_V2_SIGNATURE]
 
-  _DLS_PAGE_HEADER = construct.Struct(
-      'dls_header',
-      construct.OneOf(construct.Bytes('signature', 4), _DLS_SIGNATURES),
-      construct.Padding(4),
-      construct.ULInt32('page_size'))
+  _DEFINITION_FILE = 'fseventsd.yaml'
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -89,35 +72,52 @@ class FseventsdParser(interface.FileObjectParser):
     format_specification.AddNewSignature(cls._DLS_V2_SIGNATURE, offset=0)
     return format_specification
 
-  def _ParseDLSPageHeader(self, file_object):
+  def _ParseDLSPageHeader(self, file_object, page_offset):
     """Parses a DLS page header from a file-like object.
 
     Args:
       file_object (file): file-like object to read the header from.
+      page_offset (int): offset of the start of the page header, relative
+          to the start of the file.
 
     Returns:
-      construct.Container: parsed record structure.
+      tuple: containing:
+
+        dls_page_header: parsed record structure.
+        int: header size.
 
     Raises:
-      UnableToParseFile: when the header cannot be parsed.
+      ParseError: when the header cannot be parsed.
     """
+    page_header_map = self._GetDataTypeMap('dls_page_header')
+
     try:
-      return self._DLS_PAGE_HEADER.parse_stream(file_object)
-    except construct.ConstructError:
-      raise errors.UnableToParseFile('Unable to parse DLS header from file')
+      page_header, page_size = self._ReadStructureFromFileObject(
+          file_object, page_offset, page_header_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError(
+          'Unable to parse page header at offset: 0x{0:08x} '
+          'with error: {1!s}'.format(page_offset, exception))
+
+    if page_header.signature not in self._DLS_SIGNATURES:
+      raise errors.UnableToParseFile(
+          'Unsupported page header signature at offset: 0x{0:08x}'.format(
+              page_offset))
+
+    return page_header, page_size
 
   def _BuildEventData(self, record):
     """Builds an FseventsdData object from a parsed structure.
 
     Args:
-      record (construct.Container): parsed record structure.
+      record (dls_record_v1|dls_record_v2): parsed record structure.
 
     Returns:
       FseventsdEventData: event data attribute container.
     """
     event_data = FseventsdEventData()
     event_data.path = record.path
-    event_data.flags = record.flags
+    event_data.flags = record.event_flags
     event_data.event_identifier = record.event_identifier
     # Node identifier is only set in DLS V2 records.
     event_data.node_identifier = getattr(record, 'node_identifier', None)
@@ -143,11 +143,12 @@ class FseventsdParser(interface.FileObjectParser):
       dfdatetime.DateTimeValues: parent modification time, or None if not
           available.
     """
-    parent_path_spec = gzip_file_entry.path_spec.parent
     parent_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-        parent_path_spec)
-    time_values = parent_file_entry.modification_time
-    return time_values
+        gzip_file_entry.path_spec.parent)
+    if not parent_file_entry:
+      return None
+
+    return parent_file_entry.modification_time
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses an fseventsd file.
@@ -159,8 +160,21 @@ class FseventsdParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the header cannot be parsed.
     """
-    page_header = self._ParseDLSPageHeader(file_object)
+    page_header_map = self._GetDataTypeMap('dls_page_header')
+
+    try:
+      page_header, file_offset = self._ReadStructureFromFileObject(
+          file_object, 0, page_header_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.UnableToParseFile(
+          'Unable to parse page header with error: {0!s}'.format(
+              exception))
+
+    if page_header.signature not in self._DLS_SIGNATURES:
+      raise errors.UnableToParseFile('Invalid file signature')
+
     current_page_end = page_header.page_size
+
     file_entry = parser_mediator.GetFileEntry()
     date_time = self._GetParentModificationTime(file_entry)
     # TODO: Change this to use a more representative time definition (time span)
@@ -172,15 +186,36 @@ class FseventsdParser(interface.FileObjectParser):
       timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
     event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
 
-    while file_object.get_offset() < file_object.get_size():
-      if file_object.get_offset() >= current_page_end:
-        page_header = self._ParseDLSPageHeader(file_object)
+    file_size = file_object.get_size()
+    while file_offset < file_size:
+      if file_offset >= current_page_end:
+        try:
+          page_header, header_size = self._ParseDLSPageHeader(
+              file_object, file_offset)
+        except errors.ParseError as exception:
+          parser_mediator.ProduceExtractionError(
+              'Unable to parse page header with error: {0!s}'.format(
+                  exception))
+          break
+
         current_page_end += page_header.page_size
+        file_offset += header_size
         continue
+
       if page_header.signature == self._DLS_V1_SIGNATURE:
-        record = self._DLS_RECORD_V1.parse_stream(file_object)
+        record_map = self._GetDataTypeMap('dls_record_v1')
       else:
-        record = self._DLS_RECORD_V2.parse_stream(file_object)
+        record_map = self._GetDataTypeMap('dls_record_v2')
+
+      try:
+        record, record_length = self._ReadStructureFromFileObject(
+            file_object, file_offset, record_map)
+        file_offset += record_length
+      except (ValueError, errors.ParseError) as exception:
+        parser_mediator.ProduceExtractionError(
+            'Unable to parse page record with error: {0!s}'.format(
+                exception))
+        break
 
       event_data = self._BuildEventData(record)
       parser_mediator.ProduceEventWithEventData(event, event_data)
