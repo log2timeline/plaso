@@ -44,7 +44,7 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.path, '.Spotlight-V100/Store-V1')
     self.assertEqual(event.event_identifier, 47747061)
-    self.assertEqual(event.flags, 0x80000001)
+    self.assertEqual(event.flags, 0x01000080)
 
     os_file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
     expected_time = os_file_entry.modification_time
@@ -54,7 +54,7 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
     expected_message = (
         '.Spotlight-V100/Store-V1 '
         'Flag Values: IsDirectory, DirectoryCreated '
-        'Flags: 0x80000001 Event Identifier: 47747061')
+        'Flags: 0x01000080 Event Identifier: 47747061')
     expected_short_message = (
         '.Spotlight-V100/Store-V1 IsDirectory, DirectoryCreated')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
@@ -83,7 +83,7 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.path, 'Hi, Sierra')
     self.assertEqual(event.event_identifier, 1706838)
-    self.assertEqual(event.flags, 0x8000001)
+    self.assertEqual(event.flags, 0x01000008)
 
     os_file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
     expected_time = os_file_entry.modification_time
@@ -91,7 +91,7 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
-        'Hi, Sierra Flag Values: IsDirectory, Renamed Flags: 0x8000001 '
+        'Hi, Sierra Flag Values: IsDirectory, Renamed Flags: 0x01000008 '
         'Event Identifier: 1706838')
     expected_short_message = 'Hi, Sierra IsDirectory, Renamed'
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
