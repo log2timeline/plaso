@@ -198,9 +198,8 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
                   exception))
           break
 
-          current_page_end += page_header.page_size
-          file_offset += header_size
-
+        current_page_end += page_header.page_size
+        file_offset += header_size
         continue
 
       if page_header.signature == self._DLS_V1_SIGNATURE:
