@@ -72,33 +72,37 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
     format_specification.AddNewSignature(cls._DLS_V2_SIGNATURE, offset=0)
     return format_specification
 
-  def _ParseDLSPageHeader(self, file_object, offset):
+  def _ParseDLSPageHeader(self, file_object, page_offset):
     """Parses a DLS page header from a file-like object.
 
     Args:
       file_object (file): file-like object to read the header from.
-      offset (int): offset to the beginning of the header relative to the
-          start of the file-like object.
+      page_offset (int): offset of the start of the page (header, relative
+          to the start of the file.
 
     Returns:
       tuple: containing:
+
         dls_page_header: parsed record structure.
-        int: header size
+        int: header size.
 
     Raises:
-      UnableToParseFile: when the header cannot be parsed.
+      ParseError: when the header cannot be parsed.
     """
     page_header_map = self._GetDataTypeMap('dls_page_header')
+
     try:
       page_header, page_size = self._ReadStructureFromFileObject(
-          file_object, offset, page_header_map)
+          file_object, page_offset, page_header_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile(
-          'Unable to parse page header at file offset {0:d} '
-          'with error: {1!s}'.format(offset, exception))
+      raise errors.ParseError(
+          'Unable to parse page header at offset: 0x{0:08x} '
+          'with error: {1!s}'.format(page_offset, exception))
+
     if page_header.signature not in self._DLS_SIGNATURES:
       raise errors.UnableToParseFile(
-          'Invalid page header signature at file offset {0:d}'.format(offset))
+          'Unsupported page header signature at offset: 0x{0:08x}'.format(
+              page_offset))
 
     return page_header, page_size
 
@@ -139,11 +143,12 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
       dfdatetime.DateTimeValues: parent modification time, or None if not
           available.
     """
-    parent_path_spec = gzip_file_entry.path_spec.parent
     parent_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-        parent_path_spec)
-    time_values = parent_file_entry.modification_time
-    return time_values
+        gzip_file_entry.path_spec.parent)
+    if not parent_file_entry:
+      return None
+
+    return parent_file_entry.modification_time
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses an fseventsd file.
@@ -156,11 +161,10 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
       UnableToParseFile: when the header cannot be parsed.
     """
     page_header_map = self._GetDataTypeMap('dls_page_header')
-    file_offset = self._INITIAL_FILE_OFFSET
-    file_size = file_object.get_size()
+    
     try:
-      page_header, header_size = self._ReadStructureFromFileObject(
-          file_object, file_offset, page_header_map)
+      page_header, file_offset = self._ReadStructureFromFileObject(
+          file_object, 0, page_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile(
           'Unable to parse page header with error: {0!s}'.format(
@@ -169,7 +173,6 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
     if page_header.signature not in self._DLS_SIGNATURES:
       raise errors.UnableToParseFile('Invalid file signature')
 
-    file_offset += header_size
     current_page_end = page_header.page_size
 
     file_entry = parser_mediator.GetFileEntry()
@@ -183,13 +186,22 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
       timestamp_description = definitions.TIME_DESCRIPTION_NOT_A_TIME
     event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
 
+    file_size = file_object.get_size()
     while file_offset < file_size:
       if file_offset >= current_page_end:
-        page_header, header_size = self._ParseDLSPageHeader(
-            file_object, file_offset)
-        current_page_end += page_header.page_size
-        file_offset += header_size
+        try:
+          page_header, header_size = self._ParseDLSPageHeader(
+              file_object, file_offset)
+        except errors.ParseError as exception:
+          parser_mediator.ProduceExtractionError(
+              'Unable to parse page header with error: {0!s}'.format(
+                  exception))
+
+          current_page_end += page_header.page_size
+          file_offset += header_size
+
         continue
+
       if page_header.signature == self._DLS_V1_SIGNATURE:
         record_map = self._GetDataTypeMap('dls_record_v1')
       else:
