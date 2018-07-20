@@ -114,9 +114,8 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     errors = list(storage_writer.GetErrors())
     error = errors[0]
     expected_error_message = (
-        'Unable to complete parsing journal file: '
-        'object offset should be after hash tables (4308912 < 2527472) at '
-        'offset 0x0041bfb0')
+        'Unable to parse journal entry at offset: 0x0041bfb0 with error: '
+        'object offset should be after hash tables (4308912 < 2527472)')
     self.assertEqual(error.message, expected_error_message)
 
 

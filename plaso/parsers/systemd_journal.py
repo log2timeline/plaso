@@ -187,7 +187,7 @@ class SystemdJournalParser(interface.FileObjectParser):
     object_header_data = file_object.read(self._OBJECT_HEADER_SIZE)
     object_header = self._OBJECT_HEADER.parse(object_header_data)
     payload_size = object_header.size - self._OBJECT_HEADER_SIZE
-    return (object_header, payload_size)
+    return object_header, payload_size
 
   def _ParseItem(self, file_object, offset):
     """Parses a Systemd journal DATA object.
@@ -213,14 +213,14 @@ class SystemdJournalParser(interface.FileObjectParser):
           'Expected an object of type DATA, but got {0:s}'.format(
               object_header.type))
 
-    dirty = False
+    is_dirty = False
     event_data = file_object.read(payload_size - self._DATA_OBJECT_SIZE)
     if object_header.flags & self._OBJECT_COMPRESSED_FLAG_XZ:
       event_data = lzma.decompress(event_data)
       event_string = event_data.decode('utf-8')
     elif object_header.flags & self._OBJECT_COMPRESSED_FLAG_LZ4:
       # TODO: implement proper LZ4 decompression (see PR #2004)
-      dirty = True
+      is_dirty = True
       event_string = event_data.decode('utf-8', 'ignore')
       pos = event_string.index('MESSAGE=')
       if pos >= 0:
@@ -229,7 +229,7 @@ class SystemdJournalParser(interface.FileObjectParser):
       event_string = event_data.decode('utf-8')
 
     event_key, event_value = event_string.split('=', 1)
-    return (event_key, event_value, dirty)
+    return event_key, event_value, is_dirty
 
   def _ParseJournalEntry(self, parser_mediator, file_object, offset):
     """Parses a Systemd journal ENTRY object.
@@ -358,13 +358,14 @@ class SystemdJournalParser(interface.FileObjectParser):
         self._ParseJournalEntry(parser_mediator, file_object, entry_offset)
       except errors.ParseError as exception:
         parser_mediator.ProduceExtractionError((
-            'Unable to complete parsing journal file: {0:s} at offset '
-            '0x{1:08x}').format(exception, entry_offset))
+            'Unable to parse journal entry at offset: 0x{0:08x} with '
+            'error: {1!s}').format(entry_offset, exception))
         return
+
       except construct.ConstructError as exception:
         raise errors.UnableToParseFile((
             'Unable to parse journal header at offset: 0x{0:08x} with '
-            'error: {1:s}').format(entry_offset, exception))
+            'error: {1!s}').format(entry_offset, exception))
 
 
 manager.ParsersManager.RegisterParser(SystemdJournalParser)
