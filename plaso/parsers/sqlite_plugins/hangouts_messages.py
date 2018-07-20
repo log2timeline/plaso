@@ -19,33 +19,32 @@ from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class GoogleHangoutsMessageData(events.EventData):
+class HangoutsMessageData(events.EventData):
   """GoogleHangouts Message event data.
 
   Attributes:
     sender (str): Name with the sender.
     body (str): content of the SMS text message.
-    read (str): message read status, either Read or Unread.
-    msgtype (str): message type, either Sent or Received.
-    time (integer) : time message was recieved
+    message_status (int): message status.
+    message_type (int): message type.
   """
 
-  DATA_TYPE = 'android:messaging:googlehangouts'
+  DATA_TYPE = 'android:messaging:hangouts'
 
   def __init__(self):
     """Initializes event data."""
-    super(GoogleHangoutsMessageData, self).__init__(data_type=self.DATA_TYPE)
-    self.sender = None
+    super(HangoutsMessageData, self).__init__(data_type=self.DATA_TYPE)
     self.body = None
-    self.msg_type = None
-    self.msg_read = None
+    self.message_status = None
+    self.message_type = None
+    self.sender = None
 
 
-class GoogleHangoutsMessagePlugin(interface.SQLitePlugin):
+class HangoutsMessagePlugin(interface.SQLitePlugin):
   """Parser for Google Hangouts databases."""
 
-  NAME = 'googlehangouts_messages'
-  DESCRIPTION = 'Parser for GoogleHangouts Messages SQLite database files.'
+  NAME = 'hangouts_messages'
+  DESCRIPTION = 'Parser for Google Hangouts Messages SQLite database files.'
 
   # Define the needed queries.
   QUERIES = [
@@ -262,13 +261,6 @@ class GoogleHangoutsMessagePlugin(interface.SQLitePlugin):
           'logging_id TEXT, affinity_score REAL DEFAULT (0.0), '
           'is_in_same_domain INT DEFAULT (0))')}]
 
-  # TODO: Move this functionality to the formatter.
-  MSG_TYPE = {
-      1: 'SENT',
-      2: 'RECIEVED'}
-  MSG_READ = {
-      0: 'UNREAD',
-      4: 'READ'}
 
   def ParseMessagesRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses an Messages row.
@@ -281,16 +273,13 @@ class GoogleHangoutsMessagePlugin(interface.SQLitePlugin):
     """
     query_hash = hash(query)
 
-    msg_read = self._GetRowValue(query_hash, row, 'status')
-    msg_type = self._GetRowValue(query_hash, row, 'type')
-
-    event_data = GoogleHangoutsMessageData()
+    event_data = HangoutsMessageData()
     event_data.sender = self._GetRowValue(query_hash, row, 'full_name')
     event_data.body = self._GetRowValue(query_hash, row, 'text')
     event_data.offset = self._GetRowValue(query_hash, row, '_id')
     event_data.query = query
-    event_data.msg_read = self.MSG_READ.get(msg_read, 'UNKNOWN')
-    event_data.msg_type = self.MSG_TYPE.get(msg_type, 'UNKNOWN')
+    event_data.message_status = self._GetRowValue(query_hash, row, 'status')
+    event_data.message_type = self._GetRowValue(query_hash, row, 'type')
 
     timestamp = self._GetRowValue(query_hash, row, 'timestamp')
     date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
@@ -300,4 +289,4 @@ class GoogleHangoutsMessagePlugin(interface.SQLitePlugin):
         date_time, definitions.TIME_DESCRIPTION_CREATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-sqlite.SQLiteParser.RegisterPlugin(GoogleHangoutsMessagePlugin)
+sqlite.SQLiteParser.RegisterPlugin(HangoutsMessagePlugin)

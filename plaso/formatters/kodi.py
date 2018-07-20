@@ -13,9 +13,10 @@ class KodiFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'kodi:videos:viewing'
 
   FORMAT_STRING_PIECES = [
-      'Video: {fileName}']
+      'Video: {filename}',
+      'Play Count: {play_count}']
 
-  FORMAT_STRING_SHORT_PIECES = ['{fileName}']
+  FORMAT_STRING_SHORT_PIECES = ['{filename}']
 
   SOURCE_LONG = 'Kodi Video Viewed'
   SOURCE_SHORT = 'KODI'

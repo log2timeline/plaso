@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file contains a parser for the Kodi MyVideos.db
 
-Kodi Videos events are stored in a database called MyVideos.db
+Kodi videos events are stored in a database called MyVideos.db
 """
 
 from __future__ import unicode_literals
@@ -15,25 +15,27 @@ from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class KodiEventData(events.EventData):
+class KodiVideoEventData(events.EventData):
   """Kodi event data.
 
   Attributes:
-    fileName (str): Video FileName Viewed
+    filename (str): video filename.
+    play_count (int): number of times the video has been played.
   """
 
   DATA_TYPE = 'kodi:videos:viewing'
 
   def __init__(self):
     """Initializes event data."""
-    super(KodiEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(KodiVideoEventData, self).__init__(data_type=self.DATA_TYPE)
     self.filename = None
+    self.play_count = None
 
-class KodiPlugin(interface.SQLitePlugin):
+class KodiMyVideosPlugin(interface.SQLitePlugin):
   """Parser for Kodi Video databases."""
 
   NAME = 'kodi'
-  DESCRIPTION = 'Parser for kodi myvideos db files.'
+  DESCRIPTION = 'Parser for Kodi MyVideos.db files.'
 
   # Define the needed queries.
   QUERIES = [
@@ -168,15 +170,16 @@ class KodiPlugin(interface.SQLitePlugin):
     """
     query_hash = hash(query)
 
-    event_data = KodiEventData()
+    event_data = KodiVideoEventData()
     event_data.filename = self._GetRowValue(query_hash, row, 'strFilename')
+    event_data.play_count = self._GetRowValue(query_hash, row, 'playCount')
     event_data.query = query
 
-    timestamp = self._GetRowValue(query_hash, row, 'lastPlayed').encode('utf-8')
+    timestamp = self._GetRowValue(query_hash, row, 'lastPlayed')
     date_time = dfdatetime_time_elements.TimeElements()
     date_time.CopyFromDateTimeString(timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-sqlite.SQLiteParser.RegisterPlugin(KodiPlugin)
+sqlite.SQLiteParser.RegisterPlugin(KodiMyVideosPlugin)
