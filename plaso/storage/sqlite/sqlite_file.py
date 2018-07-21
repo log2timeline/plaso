@@ -218,6 +218,36 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       raise IOError('Unsupported storage type: {0:s}'.format(
           storage_type))
 
+  def _CountStoredAttributeContainers(self, container_type):
+    """Counts the number of attribute containers of the given type.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      int: number of attribute containers of the given type.
+
+    Raises:
+      ValueError: if an unsupported container_type is provided.
+    """
+    if not container_type in self._CONTAINER_TYPES:
+      raise ValueError('Attribute container type {0:s} is not supported'.format(
+          container_type))
+
+    if not self._HasTable(self._CONTAINER_TYPE_ANALYSIS_REPORT):
+      return 0
+
+    # Note that this is SQLite specific, and will give inaccurate results if
+    # there are DELETE commands run on the table. The Plaso SQLite storage
+    # implementation does not run any DELETE commands.
+    query = 'SELECT MAX(_ROWID_) FROM {0:s} LIMIT 1'.format(container_type)
+    self._cursor.execute(query)
+    row = self._cursor.fetchone()
+    if not row:
+      return 0
+
+    return row[0] or 0
+
   def _GetAttributeContainerByIndex(self, container_type, index):
     """Retrieves a specific attribute container.
 
@@ -227,11 +257,19 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Returns:
       AttributeContainer: attribute container or None if not available.
+
+    Raises:
+      IOError: when there is an error querying the storage file.
     """
     sequence_number = index + 1
     query = 'SELECT _data FROM {0:s} WHERE rowid = {1:d}'.format(
         container_type, sequence_number)
-    self._cursor.execute(query)
+
+    try:
+      self._cursor.execute(query)
+    except sqlite3.OperationalError as exception:
+      raise IOError('Unable to query storage file with error: {0!s}'.format(
+          exception))
 
     row = self._cursor.fetchone()
     if row:
@@ -266,9 +304,12 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       attribute_container.SetIdentifier(identifier)
     return attribute_container
 
+  # TODO: determine if this method should account for non-stored attribute
+  # containers or that it is better to rename the method to
+  # _GetStoredAttributeContainers.
   def _GetAttributeContainers(
       self, container_type, filter_expression=None, order_by=None):
-    """Retrieves attribute containers.
+    """Retrieves a specific type of stored attribute containers.
 
     Args:
       container_type (str): attribute container type.
@@ -277,6 +318,9 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Yields:
       AttributeContainer: attribute container.
+
+    Raises:
+      IOError: when there is an error querying the storage file.
     """
     query = 'SELECT _identifier, _data FROM {0:s}'.format(container_type)
     if filter_expression:
@@ -287,7 +331,11 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     # Use a local cursor to prevent another query interrupting the generator.
     cursor = self._connection.cursor()
 
-    cursor.execute(query)
+    try:
+      cursor.execute(query)
+    except sqlite3.OperationalError as exception:
+      raise IOError('Unable to query storage file with error: {0!s}'.format(
+          exception))
 
     row = cursor.fetchone()
     while row:
@@ -309,8 +357,11 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
       row = cursor.fetchone()
 
+  # TODO: determine if this method should account for non-stored attribute
+  # containers or that it is better to rename the method to
+  # _HasStoredAttributeContainers.
   def _HasAttributeContainers(self, container_type):
-    """Determines if a store contains a specific type of attribute containers.
+    """Determines if store contains a specific type of attribute containers.
 
     Args:
       container_type (str): attribute container type.
@@ -473,36 +524,6 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     key = 'storage_type'
     value = self.storage_type
     self._cursor.execute(query, (key, value))
-
-  def _CountStoredAttributeContainers(self, container_type):
-    """Counts the number of attribute containers of the given type.
-
-    Args:
-      container_type (str): attribute container type.
-
-    Returns:
-      int: number of attribute containers of the given type.
-
-    Raises:
-      ValueError: if an unsupported container_type is provided.
-    """
-    if not container_type in self._CONTAINER_TYPES:
-      raise ValueError('Attribute container type {0:s} is not supported'.format(
-          container_type))
-
-    if not self._HasTable(self._CONTAINER_TYPE_ANALYSIS_REPORT):
-      return 0
-
-    # Note that this is SQLite specific, and will give inaccurate results if
-    # there are DELETE commands run on the table. The Plaso SQLite storage
-    # implementation does not run any DELETE commands.
-    query = 'SELECT MAX(_ROWID_) FROM {0:s} LIMIT 1'.format(container_type)
-    self._cursor.execute(query)
-    row = self._cursor.fetchone()
-    if not row:
-      return 0
-
-    return row[0] or 0
 
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
