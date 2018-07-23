@@ -277,7 +277,7 @@ class SystemdJournalParser(interface.FileObjectParser):
       offset (int): offset of the ENTRY_ARRAY object.
 
     Returns:
-      list[dict]: every ENTRY objects offsets.
+      list[int]: every ENTRY objects offsets.
 
     Raises:
       ParseError: When an unexpected object type is parsed.
@@ -291,8 +291,8 @@ class SystemdJournalParser(interface.FileObjectParser):
               object_header.type))
 
     next_array_offset = self._ULInt64.parse_stream(file_object)
-    entry_offests_numbers, _ = divmod((payload_size - 8), 8)
-    for entry_offset in range(entry_offests_numbers):
+    entry_offsets_numbers, _ = divmod((payload_size - 8), 8)
+    for entry_offset in range(entry_offsets_numbers):
       entry_offset = self._ULInt64.parse_stream(file_object)
       if entry_offset != 0:
         entry_offsets.append(entry_offset)

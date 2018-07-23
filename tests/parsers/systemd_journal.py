@@ -70,6 +70,8 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     self.CheckTimestamp(event.timestamp, '2018-07-03 15:19:04.667807')
 
     # source: https://github.com/systemd/systemd/issues/6237
+    # The text used in the test message was triplicated to make it long enough
+    # to trigger the LZ4 compression.
     expected_message = (
         'testlol [test, pid: 34757]  textual user names.'+
         ('  Yes, as you found out 0day is not a valid username. I wonder which '
