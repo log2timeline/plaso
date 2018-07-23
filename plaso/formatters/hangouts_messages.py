@@ -18,7 +18,7 @@ _MESSAGE_STATUSES = {
 
 
 class HangoutsFormatter(interface.ConditionalEventFormatter):
-  """Formatter for an Google MSG event."""
+  """Formatter for an Hangouts message event."""
 
   DATA_TYPE = 'android:messaging:hangouts'
 
