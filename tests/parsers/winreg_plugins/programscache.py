@@ -14,12 +14,13 @@ from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
-class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
+class ExplorerProgramCacheWindowsRegistryPluginTest(
+    test_lib.RegistryPluginTestCase):
   """Tests for the Explorer ProgramsCache Windows Registry plugin."""
 
   def testFilters(self):
     """Tests the FILTERS class attribute."""
-    plugin = programscache.ExplorerProgramsCachePlugin()
+    plugin = programscache.ExplorerProgramsCacheWindowsRegistryPlugin()
 
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
@@ -44,7 +45,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin = programscache.ExplorerProgramsCachePlugin()
+    plugin = programscache.ExplorerProgramsCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
@@ -143,7 +144,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin = programscache.ExplorerProgramsCachePlugin()
+    plugin = programscache.ExplorerProgramsCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
