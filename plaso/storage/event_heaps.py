@@ -20,6 +20,7 @@ class BaseEventHeap(object):
     """int: number of serialized events on the heap."""
     return len(self._heap)
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def PopEvent(self):
     """Pops an event from the heap.

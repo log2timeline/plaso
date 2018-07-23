@@ -44,7 +44,7 @@ class SelectiveLexer(lexer.Lexer):
     """Initializes a selective lexer.
 
     Args:
-      data: optional initial data to be processed by the lexer.
+      data (str): optional initial data to be processed by the lexer.
     """
     super(SelectiveLexer, self).__init__(data=data)
     self.fields = []
@@ -159,7 +159,7 @@ class DynamicFilter(event_filter.EventObjectFilter):
     with selective field selection.
 
     Args:
-      filter_expression: string that contains the filter expression.
+      filter_expression (str): filter expression.
 
     Raises:
       WrongPlugin: if the filter could not be compiled.

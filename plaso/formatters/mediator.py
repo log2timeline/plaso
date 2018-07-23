@@ -25,7 +25,7 @@ class FormatterMediator(object):
     """Initializes a formatter mediator object.
 
     Args:
-      data_location: the path of the formatter data files.
+      data_location (str): path of the formatter data files.
     """
     super(FormatterMediator, self).__init__()
     self._data_location = data_location
@@ -90,7 +90,7 @@ class FormatterMediator(object):
 
     Raises:
       KeyError: if the language identifier is not defined.
-      TypeError: if the language identifier is not a string type.
+      ValueError: if the language identifier is not a string type.
     """
     if not isinstance(language_identifier, py2to3.STRING_TYPES):
       raise ValueError('Language identifier is not a string.')

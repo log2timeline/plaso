@@ -12,6 +12,7 @@ class BaseHasher(object):
   NAME = 'base_hasher'
   DESCRIPTION = 'Calculates a digest hash over input data.'
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def GetBinaryDigest(self):
     """Retrieves the digest of the hash function as a binary string.
@@ -21,6 +22,7 @@ class BaseHasher(object):
           Update().
     """
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def GetStringDigest(self):
     """Retrieves the digest of the hash function expressed as a Unicode string.
@@ -30,6 +32,7 @@ class BaseHasher(object):
           Update(). The string consists of printable Unicode characters.
     """
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def Update(self, data):
     """Updates the current state of the hasher with a new block of data.
@@ -38,5 +41,5 @@ class BaseHasher(object):
     concatenation of the arguments.
 
     Args:
-      data(bytes): data with which to update the context of the hasher.
+      data (bytes): data with which to update the context of the hasher.
     """

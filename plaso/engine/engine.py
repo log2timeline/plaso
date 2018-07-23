@@ -178,7 +178,7 @@ class BaseEngine(object):
     """Creates a session attribute container.
 
     Args:
-      artifact_filter_names (Optional list[str]): names of artifact definitions
+      artifact_filter_names (Optional[list(str)]): names of artifact definitions
           that are used for filtering file system and Windows Registry
           key paths.
       command_line_arguments (Optional[str]): the command line arguments.
@@ -244,7 +244,7 @@ class BaseEngine(object):
     """Preprocesses the sources.
 
     Args:
-      artifacts_registry_object (artifacts.ArtifactDefinitionsRegistry]):
+      artifacts_registry_object (artifacts.ArtifactDefinitionsRegistry):
           artifact definitions registry.
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
@@ -291,16 +291,18 @@ class BaseEngine(object):
 
   @classmethod
   def BuildFilterFindSpecs(
-      cls, artifact_defintions_path, custom_artifacts_path,
+      cls, artifact_definitions_path, custom_artifacts_path,
       knowledge_base_object, artifact_filter_names=None, filter_file_path=None):
     """Builds find specifications from artifacts or filter file if available.
 
     Args:
+       artifact_definitions_path (str): path to artifact definitions file.
+       custom_artifacts_path (str): path to custom artifact definitions file.
        knowledge_base_object (KnowledgeBase): knowledge base.
-       artifact_filter_names (Optional list[str]): names of artifact
+       artifact_filter_names (Optional[list(str)]): names of artifact
           definitions that are used for filtering file system and Windows
           Registry key paths.
-       filter_file_path (Optional [str]): Path of filter file.
+       filter_file_path (Optional[str]): Path of filter file.
 
     Returns:
       list[dfvfs.FindSpec]: find specifications for the file source type.
@@ -312,7 +314,7 @@ class BaseEngine(object):
     find_specs = None
     if artifact_filter_names:
       artifacts_registry_object = cls.BuildArtifactsRegistry(
-          artifact_defintions_path, custom_artifacts_path)
+          artifact_definitions_path, custom_artifacts_path)
       artifact_filters_object = (
           artifact_filters.ArtifactDefinitionsFilterHelper(
               artifacts_registry_object, artifact_filter_names,
@@ -334,7 +336,7 @@ class BaseEngine(object):
 
   @classmethod
   def BuildArtifactsRegistry(
-      cls, artifacts_definitions_path, custom_artifacts_path):
+      cls, artifact_definitions_path, custom_artifacts_path):
     """Build Find Specs from artifacts or filter file if available.
 
     Args:
@@ -347,11 +349,11 @@ class BaseEngine(object):
     Raises:
       RuntimeError: if no valid FindSpecs are built.
     """
-    if artifacts_definitions_path and not os.path.isdir(
-        artifacts_definitions_path):
+    if artifact_definitions_path and not os.path.isdir(
+        artifact_definitions_path):
       raise errors.BadConfigOption(
           'No such artifacts filter file: {0:s}.'.format(
-              artifacts_definitions_path))
+              artifact_definitions_path))
 
     if custom_artifacts_path and not os.path.isfile(custom_artifacts_path):
       raise errors.BadConfigOption(
@@ -361,12 +363,12 @@ class BaseEngine(object):
     reader = artifacts_reader.YamlArtifactsReader()
 
     try:
-      registry.ReadFromDirectory(reader, artifacts_definitions_path)
+      registry.ReadFromDirectory(reader, artifact_definitions_path)
 
     except (KeyError, artifacts_errors.FormatError) as exception:
       raise errors.BadConfigOption((
           'Unable to read artifact definitions from: {0:s} with error: '
-          '{1!s}').format(artifacts_definitions_path, exception))
+          '{1!s}').format(artifact_definitions_path, exception))
 
     if custom_artifacts_path:
       try:

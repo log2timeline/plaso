@@ -17,7 +17,7 @@ class NativePythonFormatterHelper(object):
     """Retrieves a string representation of the event object.
 
     Returns:
-      A Unicode string containing the string representation of the event object.
+      str: string representation of the event object.
     """
     time_string = timelib.Timestamp.CopyToIsoFormat(event_object.timestamp)
 

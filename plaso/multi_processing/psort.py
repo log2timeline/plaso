@@ -224,6 +224,10 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           should be run and their names.
       event_filter (Optional[FilterObject]): event filter.
 
+    Returns:
+      collections.Counter: counter containing information about the events
+          processed and filtered.
+
     Raises:
       RuntimeError: if a non-recoverable situation is encountered.
     """

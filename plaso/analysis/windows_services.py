@@ -274,8 +274,8 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
     """Sets the output format of the generated report.
 
     Args:
-      output_format: The format the the plugin should used to produce its
-                     output, as a string.
+      output_format (str): The format the the plugin should used to produce its
+                     output.
     """
     self._output_format = output_format
 

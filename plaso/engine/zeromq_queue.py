@@ -97,6 +97,8 @@ class ZeroMQQueue(plaso_queue.Queue):
     Args:
       zmq_socket (zmq.Socket): used to the send the item.
       item (object): sent on the queue. Will be pickled prior to sending.
+      block (Optional[bool]): whether the push should be performed in blocking
+          or non-block mode.
 
     Returns:
       bool: whether the item was sent successfully.
@@ -290,6 +292,7 @@ class ZeroMQQueue(plaso_queue.Queue):
     """
     return False
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def PushItem(self, item, block=True):
     """Pushes an item on to the queue.
@@ -338,10 +341,12 @@ class ZeroMQPullQueue(ZeroMQQueue):
       object: item from the queue.
 
     Raises:
+      KeyboardInterrupt: if the process is sent a KeyboardInterrupt while
+          popping an item.
       QueueEmpty: If the queue is empty, and no item could be popped within the
           queue timeout.
       RuntimeError: if closed or terminate event is missing.
-      zmq.error.ZMQError: If a ZeroMQ error occurs.
+      zmq.error.ZMQError: if a ZeroMQ error occurs.
     """
     if not self._zmq_socket:
       self._CreateZMQSocket()

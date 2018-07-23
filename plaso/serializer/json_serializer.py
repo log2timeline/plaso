@@ -69,17 +69,16 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
 
     return json_dict
 
+  # pylint: disable=missing-return-type-doc
   @classmethod
   def _ConvertAttributeValueToDict(cls, attribute_value):
     """Converts an attribute value into a JSON dictionary.
 
     Args:
-      attribute_value: an attribute value.
+      attribute_value (object): an attribute value.
 
     Returns:
-      The JSON serialized object which can be:
-        * a dictionary;
-        * a list.
+      dict|list: The JSON serialized object which can be a dictionary or a list.
     """
     if isinstance(attribute_value, py2to3.BYTES_TYPE):
       encoded_value = binascii.b2a_qp(attribute_value)
@@ -155,6 +154,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
 
     return json_dict
 
+  # pylint: disable=missing-return-type-doc
   @classmethod
   def _ConvertDictToObject(cls, json_dict):
     """Converts a JSON dict into an object.
@@ -177,11 +177,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       json_dict (dict[str, object]): JSON serialized objects.
 
     Returns:
-      A deserialized object which can be:
-        * an attribute container (instance of AttributeContainer);
-        * a dictionary;
-        * a list;
-        * a tuple.
+      AttributeContainer|dict|list|tuple: deserialized object.
 
     Raises:
       ValueError: if the class type or container type is not supported.
@@ -278,7 +274,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     """Converts a JSON list into an object.
 
     Args:
-      json_list: a list of the JSON serialized objects.
+      json_list (list[object]): list of the JSON serialized objects.
 
     Returns:
       list[object]: a deserialized list.
@@ -383,7 +379,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     """Reads an attribute container from serialized form.
 
     Args:
-      json_string: a JSON string containing the serialized form.
+      json_string (str): JSON string containing the serialized form.
 
     Returns:
       AttributeContainer: attribute container or None.

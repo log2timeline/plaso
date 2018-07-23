@@ -426,7 +426,7 @@ class EventExtractionWorker(object):
     """Determines if the file entry is a metadata file.
 
     Args:
-      file_entry: a file entry object (instance of dfvfs.FileEntry).
+      file_entry (dfvfs.FileEntry): a file entry object.
 
     Returns:
       bool: True if the file entry is a metadata file.

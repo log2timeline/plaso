@@ -67,7 +67,6 @@ class CustomDestinationsParser(interface.FileObjectParser):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       file_entry (dfvfs.FileEntry): a file entry.
-      file_object (dfvfs.FileIO): a file-like object.
       remaining_file_size (int): size of the data remaining in the
           .customDestinations-ms file.
 

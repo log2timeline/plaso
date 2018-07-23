@@ -357,8 +357,7 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      cache (SQLiteCache): cache which contains cached results from querying
-          the downloads table.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
     """
     query_hash = hash(query)

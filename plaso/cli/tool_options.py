@@ -116,6 +116,9 @@ class OutputModuleOptions(object):
 
     Returns:
       OutputModule: output module.
+
+    Raises:
+      RuntimeError: if the output module cannot be created.
     """
     formatter_mediator = formatters_mediator.FormatterMediator(
         data_location=self._data_location)

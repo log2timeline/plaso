@@ -9,6 +9,7 @@ BencodePlugin defines the attributes necessary for registration, discovery
 and operation of plugins for bencoded files which will be used by
 BencodeParser.
 """
+# pylint: disable=missing-type-doc,missing-return-type-doc,missing-yield-type-doc
 
 from __future__ import unicode_literals
 
