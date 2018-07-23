@@ -69,15 +69,15 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2018-07-03 15:19:04.667807')
 
-    # We don't suport lz4 decompression yet. So the output is slightly borked.
+    # source: https://github.com/systemd/systemd/issues/6237
+    # The text used in the test message was triplicated to make it long enough
+    # to trigger the LZ4 compression.
     expected_message = (
-        # source: https://github.com/systemd/systemd/issues/6237
-        'testlol [test, pid: 34757]  textual user names.  Yes, as you found out'
-        ' 0day is not a valid username. I wonder which tool permitted you to '
-        'create it in the first place. Note thatc\x00\x03\x3d\x00ing'
-        ' numeric.\x00,characters is done on purpose: to avoid ambiguities '
-        'betweenJ\x00\x7fUID and\x00Pames.'
-    )
+        'testlol [test, pid: 34757]  textual user names.'+
+        ('  Yes, as you found out 0day is not a valid username. I wonder which '
+         'tool permitted you to create it in the first place. Note that not '
+         'permitting numeric first characters is done on purpose: to avoid '
+         'ambiguities between numeric UID and textual user names.'*3))
     expected_short_message = '{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
