@@ -8,6 +8,7 @@ from dtfabric.runtime import data_maps as dtfabric_data_maps
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers.shared import shell_items
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import dtfabric_plugin
