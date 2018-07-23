@@ -70,7 +70,7 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
           analysis plugins and other components, such as storage and dfvfs.
 
     Returns:
-      The analysis report (instance of AnalysisReport).
+      AnalysisReport: the analysis report.
     """
     lines_of_text = ['Listing domains visited by all users']
     for domain in sorted(self._domains):

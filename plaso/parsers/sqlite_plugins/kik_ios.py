@@ -19,7 +19,7 @@ from plaso.parsers.sqlite_plugins import interface
 class KikIOSMessageEventData(events.EventData):
   """Kik message event data.
 
-  Args:
+  Attributes:
     body (str): content of the message.
     message_status (str): message status, such as:
         read, unread, not sent, delivered, etc.

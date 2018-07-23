@@ -229,6 +229,7 @@ class FileEntryParser(BaseParser):
     finally:
       parser_mediator.PopFromParserChain()
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def ParseFileEntry(self, parser_mediator, file_entry, **kwargs):
     """Parses a file entry.
@@ -271,6 +272,7 @@ class FileObjectParser(BaseParser):
     finally:
       parser_mediator.PopFromParserChain()
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a file-like object.

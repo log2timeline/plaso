@@ -4,6 +4,7 @@
 This lexer is originally copied from the GRR project:
 https://code.google.com/p/grr
 """
+# pylint: disable=missing-type-doc,missing-return-type-doc,missing-return-doc
 
 from __future__ import unicode_literals
 

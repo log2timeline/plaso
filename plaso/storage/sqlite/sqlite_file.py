@@ -380,7 +380,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       table_name (str): name of the table.
 
     Returns:
-      True if the table exists, false otherwise.
+      bool: True if the table exists, false otherwise.
     """
     query = self._HAS_TABLE_QUERY.format(table_name)
 
@@ -388,11 +388,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     return bool(self._cursor.fetchone())
 
   def _ReadStorageMetadata(self):
-    """Reads the storage metadata.
-
-    Returns:
-      bool: True if the storage metadata was read.
-    """
+    """Reads the storage metadata."""
     query = 'SELECT key, value FROM metadata'
     self._cursor.execute(query)
 
@@ -734,7 +730,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
   def GetEventData(self):
     """Retrieves the event data.
 
-    Yields:
+    Returns:
       generator(EventData): event data generator.
     """
     return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT_DATA)
@@ -766,7 +762,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
   def GetEventSources(self):
     """Retrieves the event sources.
 
-    Yields:
+    Returns:
       generator(EventSource): event source generator.
     """
     return self._GetAttributeContainers(self._CONTAINER_TYPE_EVENT_SOURCE)

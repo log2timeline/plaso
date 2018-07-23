@@ -16,6 +16,7 @@ class BaseWindowsRegistryKeyFilter(object):
     """List of key paths defined by the filter."""
     return []
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def Match(self, registry_key):
     """Determines if a Windows Registry key matches the filter.
@@ -130,7 +131,7 @@ class WindowsRegistryKeyPathPrefixFilter(BaseWindowsRegistryKeyFilter):
     """Initializes a Windows Registry key filter.
 
     Args:
-      key_path_prefix: the key path prefix.
+      key_path_prefix (str): the key path prefix.
     """
     super(WindowsRegistryKeyPathPrefixFilter, self).__init__()
     self._key_path_prefix = key_path_prefix
@@ -154,7 +155,7 @@ class WindowsRegistryKeyPathSuffixFilter(BaseWindowsRegistryKeyFilter):
     """Initializes a Windows Registry key filter.
 
     Args:
-      key_path_suffix: the key path suffix.
+      key_path_suffix (str): the key path suffix.
     """
     super(WindowsRegistryKeyPathSuffixFilter, self).__init__()
     self._key_path_suffix = key_path_suffix

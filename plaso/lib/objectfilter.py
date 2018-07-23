@@ -110,6 +110,7 @@ from plaso.lib import py2to3
 
 # pylint: disable=attribute-defined-outside-init
 # pylint: disable=missing-docstring
+# pylint: disable=missing-type-doc,missing-yield-type-doc
 
 def GetUnicodeString(value):
   """Attempts to convert the argument to a Unicode string.

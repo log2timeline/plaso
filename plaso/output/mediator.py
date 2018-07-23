@@ -78,9 +78,10 @@ class OutputMediator(object):
       event (EventObject): event.
 
     Returns:
-      A tuple containing the formatted message string and short message string.
-      If no event formatter to match the event can be found the function
-      returns a tuple of None, None.
+      tuple(str, str)|tuple(None, None): A tuple containing the formatted
+          message string and short message string. If no event formatter to
+          match the event can be found the function returns a tuple of
+          None, None.
     """
     event_formatter = self.GetEventFormatter(event)
     if not event_formatter:
@@ -95,9 +96,9 @@ class OutputMediator(object):
       event (EventObject): event.
 
     Returns:
-      A tuple of the short and long source string. If no event formatter
-      to match the event can be found the function returns a tuple
-      of None, None.
+      tuple(str, str)|tuple(None, None): A tuple of the short and long source
+          string. If no event formatter to match the event can be found the
+          function returns a tuple of None, None.
     """
     event_formatter = self.GetEventFormatter(event)
     if not event_formatter:
@@ -105,6 +106,7 @@ class OutputMediator(object):
 
     return event_formatter.GetSources(event)
 
+  # pylint: disable=missing-return-type-doc
   def GetFormatStringAttributeNames(self, event):
     """Retrieves the attribute names in the format string.
 
@@ -112,8 +114,8 @@ class OutputMediator(object):
       event (EventObject): event.
 
     Returns:
-      A list containing the attribute names. If no event formatter to match
-      the event can be found the function returns None.
+      list(str)|None: list containing the attribute names. If no event formatter
+          to match the event can be found the function returns None.
     """
     event_formatter = self.GetEventFormatter(event)
     if not event_formatter:

@@ -89,7 +89,7 @@ class SerializedAttributeContainerList(object):
     self.data_size += len(serialized_data)
     self.next_sequence_number += 1
 
-
+# pylint: disable=redundant-returns-doc,redundant-yields-doc
 class BaseStore(object):
   """Storage interface."""
 
@@ -356,6 +356,9 @@ class BaseStorageFile(BaseStore):
 
     Returns:
       AttributeContainer: attribute container or None.
+
+    Raises:
+      IOError: if the serialized data cannot be decoded.
     """
     if not serialized_data:
       return None
@@ -515,6 +518,9 @@ class StorageFileMergeReader(StorageMergeReader):
 
     Returns:
       AttributeContainer: attribute container or None.
+
+    Raises:
+      IOError: if the serialized data cannot be decoded.
     """
     if not serialized_data:
       return None
@@ -534,7 +540,7 @@ class StorageFileMergeReader(StorageMergeReader):
 
     return attribute_container
 
-
+# pylint: disable=redundant-returns-doc,redundant-yields-doc
 class StorageReader(object):
   """Storage reader interface."""
 
@@ -796,7 +802,7 @@ class StorageFileReader(StorageReader):
       knowledge_base (KnowledgeBase): is used to store the preprocessing
           information.
     """
-    return self._storage_file.ReadPreprocessingInformation(knowledge_base)
+    self._storage_file.ReadPreprocessingInformation(knowledge_base)
 
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.
@@ -814,7 +820,7 @@ class StorageFileReader(StorageReader):
     """
     self._storage_file.SetStorageProfiler(storage_profiler)
 
-
+# pylint: disable=redundant-returns-doc,redundant-yields-doc
 class StorageWriter(object):
   """Storage writer interface.
 
@@ -893,6 +899,7 @@ class StorageWriter(object):
   def Close(self):
     """Closes the storage writer."""
 
+  # pylint: disable=differing-type-doc,missing-type-doc,differing-param-doc
   def CreateTaskStorage(self, unused_task):
     """Creates a task storage.
 
@@ -960,6 +967,7 @@ class StorageWriter(object):
       EventObject: event.
     """
 
+  # pylint: disable=differing-type-doc,missing-type-doc,differing-param-doc
   def FinalizeTaskStorage(self, unused_task):
     """Finalizes a processed task storage.
 
@@ -975,6 +983,7 @@ class StorageWriter(object):
   def Open(self):
     """Opens the storage writer."""
 
+  # pylint: disable=differing-type-doc,missing-type-doc,differing-param-doc
   def PrepareMergeTaskStorage(self, unused_task):
     """Prepares a task storage for merging.
 
@@ -999,6 +1008,7 @@ class StorageWriter(object):
           information.
     """
 
+  # pylint: disable=differing-type-doc,missing-type-doc,differing-param-doc
   def RemoveProcessedTaskStorage(self, unused_task):
     """Removes a processed task storage.
 
@@ -1152,7 +1162,7 @@ class StorageFileWriter(StorageWriter):
     """Updates the counters.
 
     Args:
-      event: an event (instance of EventObject).
+      event (EventObject): event.
     """
     self._session.parsers_counter['total'] += 1
 
@@ -1545,7 +1555,7 @@ class StorageFileWriter(StorageWriter):
     if not self._storage_file:
       raise IOError('Unable to read from closed storage writer.')
 
-    return self._storage_file.ReadPreprocessingInformation(knowledge_base)
+    self._storage_file.ReadPreprocessingInformation(knowledge_base)
 
   def RemoveProcessedTaskStorage(self, task):
     """Removes a processed task storage.

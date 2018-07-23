@@ -33,9 +33,10 @@ class BaseCookiePlugin(plugins.BasePlugin):
     """Extract and return EventObjects from the data structure.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      cookie_data: Optional cookie data, as a byte string.
-      url: Optional URL or path where the cookie got set.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      cookie_data (Optional[bytes]): cookie data, as a byte sequence.
+      url (Optional[str]): URL or path where the cookie was set.
     """
 
   # pylint: disable=arguments-differ
@@ -43,14 +44,15 @@ class BaseCookiePlugin(plugins.BasePlugin):
     """Determine if this is the right plugin for this cookie.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      cookie_name: The name of the cookie value.
-      cookie_data: The cookie data, as a byte string.
-      url: The full URL or path where the cookie got set.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      cookie_name (str): the name of the cookie value.
+      cookie_data (bytes): the cookie data, as a byte sequence.
+      url (str): the full URL or path where the cookie was set.
 
     Raises:
       errors.WrongPlugin: If the cookie name differs from the one
-                          supplied in COOKIE_NAME.
+          supplied in COOKIE_NAME.
       ValueError: If cookie_name or cookie_data are not set.
     """
     if cookie_name is None or cookie_data is None:

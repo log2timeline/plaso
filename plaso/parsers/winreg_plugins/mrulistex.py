@@ -67,6 +67,7 @@ class BaseMRUListExWindowsRegistryPlugin(
 
   _DEFINITION_FILE = 'mru.yaml'
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def _ParseMRUListExEntryValue(
       self, parser_mediator, registry_key, entry_index, entry_number, **kwargs):

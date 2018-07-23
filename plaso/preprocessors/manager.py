@@ -185,7 +185,7 @@ class PreprocessPluginsManager(object):
     """Deregisters an preprocess plugin class.
 
     Args:
-      preprocess_plugin (type): preprocess plugin class.
+      plugin_class (type): preprocess plugin class.
 
     Raises:
       KeyError: if plugin class is not set for the corresponding name.

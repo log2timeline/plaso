@@ -28,6 +28,7 @@ class BaseAnalyzer(object):
       data(bytes): block of data to process.
     """
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def GetResults(self):
     """Retrieves the results of the analysis.

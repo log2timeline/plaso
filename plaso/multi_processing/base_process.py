@@ -46,6 +46,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     self._guppy_memory_profiler = None
     self._log_filename = None
     self._memory_profiler = None
+    self._name = None
     self._original_sigsegv_handler = None
     # TODO: check if this can be replaced by self.pid or does this only apply
     # to the parent process?
@@ -78,6 +79,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     """str: process name."""
     return self._name
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def _GetStatus(self):
     """Returns status information.
@@ -108,6 +110,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     """
     return
 
+  # pylint: disable=differing-param-doc,missing-type-doc,differing-type-doc
   def _SigSegvHandler(self, unused_signal_number, unused_stack_frame):
     """Signal handler for the SIGSEGV signal.
 
@@ -123,6 +126,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
       signal.signal(signal.SIGSEGV, self._original_sigsegv_handler)
       os.kill(self._pid, signal.SIGSEGV)
 
+  # pylint: disable=differing-param-doc,missing-type-doc,differing-type-doc
   def _SigTermHandler(self, unused_signal_number, unused_stack_frame):
     """Signal handler for the SIGTERM signal.
 

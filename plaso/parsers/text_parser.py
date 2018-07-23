@@ -26,6 +26,7 @@ from plaso.parsers import logger
 
 
 # TODO: determine if this method should be merged with PyParseIntCast.
+
 def ConvertTokenToInteger(unused_string, unused_location, tokens):
   """Pyparsing parse action callback to convert a token into an integer value.
 
