@@ -72,6 +72,7 @@ class OfficeScanVirusDetectionLogEventFormatter(
       'action': lambda action: SCAN_RESULTS[action],
   }
 
+  # pylint: disable=differing-param-doc,differing-type-doc,missing-type-doc
   def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 

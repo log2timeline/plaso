@@ -110,6 +110,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     """
     return
 
+  # pylint: disable=differing-param-doc,missing-type-doc,differing-type-doc
   def _SigSegvHandler(self, unused_signal_number, unused_stack_frame):
     """Signal handler for the SIGSEGV signal.
 
@@ -125,6 +126,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
       signal.signal(signal.SIGSEGV, self._original_sigsegv_handler)
       os.kill(self._pid, signal.SIGSEGV)
 
+  # pylint: disable=differing-param-doc,missing-type-doc,differing-type-doc
   def _SigTermHandler(self, unused_signal_number, unused_stack_frame):
     """Signal handler for the SIGTERM signal.
 

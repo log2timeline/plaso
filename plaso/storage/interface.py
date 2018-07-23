@@ -899,6 +899,7 @@ class StorageWriter(object):
   def Close(self):
     """Closes the storage writer."""
 
+  # pylint: disable=differing-type-doc,missing-type-doc,differing-param-doc
   def CreateTaskStorage(self, unused_task):
     """Creates a task storage.
 
@@ -966,6 +967,7 @@ class StorageWriter(object):
       EventObject: event.
     """
 
+  # pylint: disable=differing-type-doc,missing-type-doc,differing-param-doc
   def FinalizeTaskStorage(self, unused_task):
     """Finalizes a processed task storage.
 
@@ -981,6 +983,7 @@ class StorageWriter(object):
   def Open(self):
     """Opens the storage writer."""
 
+  # pylint: disable=differing-type-doc,missing-type-doc,differing-param-doc
   def PrepareMergeTaskStorage(self, unused_task):
     """Prepares a task storage for merging.
 
@@ -1005,6 +1008,7 @@ class StorageWriter(object):
           information.
     """
 
+  # pylint: disable=differing-type-doc,missing-type-doc,differing-param-doc
   def RemoveProcessedTaskStorage(self, unused_task):
     """Removes a processed task storage.
 

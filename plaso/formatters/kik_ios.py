@@ -45,6 +45,7 @@ class KikIOSMessageFormatter(interface.ConditionalEventFormatter):
       94: 'read after offline'
   }
 
+  # pylint: disable=differing-param-doc,differing-type-doc,missing-type-doc
   def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 

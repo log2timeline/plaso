@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """The cookie plugins manager object."""
+# pylint: disable=redundant-returns-doc
 
 from __future__ import unicode_literals
 
