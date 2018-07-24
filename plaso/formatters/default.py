@@ -14,7 +14,6 @@ class DefaultFormatter(interface.EventFormatter):
   FORMAT_STRING = '<WARNING DEFAULT FORMATTER> Attributes: {attribute_driven}'
   FORMAT_STRING_SHORT = '<DEFAULT> {attribute_driven}'
 
-  # pylint: disable=differing-param-doc,differing-type-doc,missing-type-doc
   def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 

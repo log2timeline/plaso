@@ -55,7 +55,6 @@ class WinRecyclerFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'Recycle Bin'
   SOURCE_SHORT = 'RECBIN'
 
-  # pylint: disable=differing-param-doc,differing-type-doc,missing-type-doc
   def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 

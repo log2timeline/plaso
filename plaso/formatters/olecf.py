@@ -41,7 +41,6 @@ class OLECFDestListEntryFormatter(interface.ConditionalEventFormatter):
       'Pin status: {pin_status}',
       'Path: {path}']
 
-  # pylint: disable=differing-param-doc,differing-type-doc,missing-type-doc
   def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 
@@ -141,7 +140,6 @@ class OLECFSummaryInfoFormatter(interface.ConditionalEventFormatter):
       0x00000008: 'Locked for annotations',
   }
 
-  # pylint: disable=differing-param-doc,differing-type-doc,missing-type-doc
   def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 

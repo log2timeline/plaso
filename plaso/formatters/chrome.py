@@ -85,7 +85,6 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
       4: 'SOURCE_IE_IMPORTED',
       5: 'SOURCE_SAFARI_IMPORTED'}
 
-  # pylint: disable=differing-param-doc,differing-type-doc,missing-type-doc
   def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 

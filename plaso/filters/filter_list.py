@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """List of object-filters."""
-# pylint: disable=missing-type-doc,missing-return-type-doc
 
 from __future__ import unicode_literals
 

@@ -39,7 +39,6 @@ class RestorePointInfoFormatter(interface.ConditionalEventFormatter):
       13: 'CANCELLED_OPERATION',
   }
 
-  # pylint: disable=differing-param-doc,differing-type-doc,missing-type-doc
   def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 

@@ -88,7 +88,6 @@ class FirefoxPageVisitFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'Firefox History'
   SOURCE_SHORT = 'WEBHIST'
 
-  # pylint: disable=differing-param-doc,differing-type-doc,missing-type-doc
   def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 

@@ -268,7 +268,6 @@ class DynamicFieldsHelper(object):
     """
     return self._output_mediator.GetUsername(event)
 
-  # pylint: disable=differing-type-doc,missing-type-doc,differing-param-doc
   def _FormatZone(self, unused_event):
     """Formats the time zone.
 

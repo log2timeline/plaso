@@ -403,7 +403,6 @@ class FakeStorageWriter(interface.StorageWriter):
       raise IOError('Storage writer for task: {0:s} does not exist.'.format(
           task.identifier))
 
-  # pylint: disable=differing-type-doc,missing-type-doc,differing-param-doc
   def ReadPreprocessingInformation(self, unused_knowledge_base):
     """Reads preprocessing information.
 
@@ -457,7 +456,6 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     pass
 
-  # pylint: disable=differing-type-doc,missing-type-doc,differing-param-doc
   def WritePreprocessingInformation(self, unused_knowledge_base):
     """Writes preprocessing information.
 

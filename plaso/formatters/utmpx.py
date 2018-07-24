@@ -44,7 +44,6 @@ class UtmpxSessionFormatter(interface.ConditionalEventFormatter):
       10: 'SIGNATURE',
       11: 'SHUTDOWN_TIME'}
 
-  # pylint: disable=differing-param-doc,differing-type-doc,missing-type-doc
   def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 
