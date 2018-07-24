@@ -20,6 +20,7 @@ from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.unix import bsmtoken
 
+# pylint: disable=missing-type-doc,missing-return-type-doc
 
 # Note that we're using Array and a helper function here instead of
 # PascalString because the latter seems to break pickling on Windows.

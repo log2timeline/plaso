@@ -12,6 +12,7 @@ from plaso.lib import errors
 class BaseFileEntryFilter(object):
   """File entry filter interface."""
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def Match(self, file_entry):
     """Determines if a file entry matches the filter.
@@ -129,6 +130,7 @@ class BaseParser(object):
       self._plugins.append(plugin_object)
 
   # TODO: move this to a filter.
+  # pylint: disable=redundant-returns-doc
   @classmethod
   def GetFormatSpecification(cls):
     """Retrieves the format specification.

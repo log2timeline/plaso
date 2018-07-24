@@ -56,6 +56,7 @@ class XLSXOutputModule(interface.OutputModule):
     self._timestamp_format = self._DEFAULT_TIMESTAMP_FORMAT
     self._workbook = None
 
+  # Pylint has trouble parsing the return type.
   # pylint: disable=missing-return-type-doc
   def _FormatDateTime(self, event):
     """Formats the date to a datetime object without timezone information.

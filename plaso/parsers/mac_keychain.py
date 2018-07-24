@@ -233,13 +233,12 @@ class KeychainParser(interface.FileObjectParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      file_entry (dfvfs.FileEntry): a file entry object.
       file_object (dfvfs.FileIO): a file-like object.
       record (construct.Struct): record header structure.
       record_offset (int): offset of the start of the record.
 
     Returns:
-      A tuple containing:
+      tuple: containing:
         ssgp_hash: Hash of the encrypted data (passwd, cert, note).
         creation_time (dfdatetime.TimeElements): entry creation time or None.
         last_modification_time ((dfdatetime.TimeElements): entry last

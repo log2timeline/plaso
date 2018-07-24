@@ -80,13 +80,12 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
         date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  # pylint: disable=differing-type-doc,missing-type-doc,differing-param-doc
   def VerifyStructure(self, unused_parser_mediator, lines):
     """Verifies that this is a bash history file.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+      unused_parser_mediator (ParserMediator): mediates interactions between
+          parsers and other components, such as storage and dfvfs.
       lines (str): one or more lines from the text file.
 
     Returns:

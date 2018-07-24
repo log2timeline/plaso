@@ -338,8 +338,8 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     """Verifies that this is a syslog-formatted file.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+      unused_parser_mediator (ParserMediator): mediates interactions between
+          parsers and other components, such as storage and dfvfs.
       lines (str): one or more lines from the text file.
 
     Returns:

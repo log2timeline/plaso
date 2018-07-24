@@ -67,6 +67,8 @@ class CustomDestinationsParser(interface.FileObjectParser):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       file_entry (dfvfs.FileEntry): a file entry.
+      file_offset (int): offset to the LNK file, relative to the start of the
+          containing file.
       remaining_file_size (int): size of the data remaining in the
           .customDestinations-ms file.
 

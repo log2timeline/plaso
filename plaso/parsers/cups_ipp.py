@@ -166,6 +166,8 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
     Args:
       data_dict (dict[str, list[str]): values per name.
       name (str): name of the value to retrieve.
+      default_value (str): value to return if the name has no value set in
+          data_dict.
 
     Returns:
       str: value represented as a string.

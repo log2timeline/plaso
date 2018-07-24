@@ -91,18 +91,21 @@ class DockerJSONParser(interface.FileObjectParser):
 
   _ENCODING = 'utf-8'
 
-  def _GetIDFromPath(self, parser_mediator):
+  def _GetIdentifierFromPath(self, parser_mediator):
     """Extracts a container or a graph ID from a JSON file's path.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+
+    Returns:
+        str: container or graph identifier.
     """
     file_entry = parser_mediator.GetFileEntry()
     path = file_entry.path_spec.location
     file_system = file_entry.GetFileSystem()
-    _id = file_system.SplitPath(path)[-2]
-    return _id
+    identifier = file_system.SplitPath(path)[-2]
+    return identifier
 
   def _ParseLayerConfigJSON(self, parser_mediator, file_object):
     """Extracts events from a Docker filesystem layer configuration file.
@@ -136,7 +139,7 @@ class DockerJSONParser(interface.FileObjectParser):
 
       event_data = DockerJSONLayerEventData()
       event_data.command = layer_creation_command
-      event_data.layer_id = self._GetIDFromPath(parser_mediator)
+      event_data.layer_id = self._GetIdentifierFromPath(parser_mediator)
 
       timestamp = timelib.Timestamp.FromTimeString(json_dict['created'])
       event = time_events.TimestampEvent(
@@ -167,7 +170,7 @@ class DockerJSONParser(interface.FileObjectParser):
           'not a valid Docker container configuration file, ' 'missing '
           '\'Driver\' key.')
 
-    container_id_from_path = self._GetIDFromPath(parser_mediator)
+    container_id_from_path = self._GetIdentifierFromPath(parser_mediator)
     container_id_from_json = json_dict.get('ID', None)
     if not container_id_from_json:
       raise errors.UnableToParseFile(
@@ -236,7 +239,7 @@ class DockerJSONParser(interface.FileObjectParser):
           and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): a file-like object.
     """
-    container_id = self._GetIDFromPath(parser_mediator)
+    container_id = self._GetIdentifierFromPath(parser_mediator)
 
     text_file_object = text_file.TextFile(file_object)
     for log_line in text_file_object:
@@ -273,6 +276,7 @@ class DockerJSONParser(interface.FileObjectParser):
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
+      ValueError: if JSON file cannot be decoded.
     """
     # Trivial JSON format check: first character must be an open brace.
     if file_object.read(1) != b'{':

@@ -403,7 +403,6 @@ class FakeStorageWriter(interface.StorageWriter):
       raise IOError('Storage writer for task: {0:s} does not exist.'.format(
           task.identifier))
 
-  # pylint: disable=differing-type-doc,missing-type-doc,differing-param-doc
   def ReadPreprocessingInformation(self, unused_knowledge_base):
     """Reads preprocessing information.
 
@@ -412,7 +411,7 @@ class FakeStorageWriter(interface.StorageWriter):
     for example the user accounts.
 
     Args:
-      knowledge_base (KnowledgeBase): is used to store the preprocessing
+      unused_knowledge_base (KnowledgeBase): is used to store the preprocessing
           information.
 
     Raises:
@@ -457,12 +456,12 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     pass
 
-  # pylint: disable=differing-type-doc,missing-type-doc,differing-param-doc
   def WritePreprocessingInformation(self, unused_knowledge_base):
     """Writes preprocessing information.
 
     Args:
-      knowledge_base (KnowledgeBase): contains the preprocessing information.
+      unused_knowledge_base (KnowledgeBase): is used to store the preprocessing
+          information.
 
     Raises:
       IOError: if the storage type does not support writing preprocessing

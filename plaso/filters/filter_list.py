@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """List of object-filters."""
-# pylint: disable=missing-type-doc,missing-return-type-doc
 
 from __future__ import unicode_literals
 
@@ -12,6 +11,8 @@ import yaml
 from plaso.filters import interface
 from plaso.filters import manager
 from plaso.lib import errors
+
+# pylint: disable=missing-type-doc,missing-return-type-doc
 
 
 class ObjectFilterList(interface.FilterObject):
@@ -119,20 +120,20 @@ class ObjectFilterList(interface.FilterObject):
               results_type))
     self._filter_expression = filter_expression
 
-  def Match(self, event_object):
+  def Match(self, event):
     """Determines if an event object matches the filter.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A boolean value that indicates a match.
+      bool: True if the filter matched.
     """
     if not self.filters:
       return True
 
     for _, matcher, _ in self.filters:
-      if matcher.Matches(event_object):
+      if matcher.Matches(event):
         return True
 
     return False

@@ -143,8 +143,8 @@ class MactimeParser(dsv_parser.DSVParser):
     """Verifies if a line of the file is in the expected format.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+      unused_parser_mediator (ParserMediator): mediates interactions between
+          parsers and other components, such as storage and dfvfs.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
 
     Returns:

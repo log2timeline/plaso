@@ -9,11 +9,12 @@ https://github.com/libyal/libsigscan/wiki/Internals
 
 The scan tree is used in the filter to filter provided paths.
 """
-# pylint: disable=missing-type-doc,missing-return-type-doc
 
 from __future__ import unicode_literals
 
 from plaso.lib import py2to3
+
+# pylint: disable=missing-type-doc,missing-return-type-doc
 
 
 class _PathFilterTable(object):

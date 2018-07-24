@@ -65,8 +65,9 @@ class JavaIDXParser(dtfabric_parser.DtFabricBaseParser):
     """Parses a Java WebStart Cache IDX file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dvfvs.FileIO): a file-like object to parse.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.

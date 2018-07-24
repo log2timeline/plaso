@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """An extension of the objectfilter to provide plaso specific options."""
-# pylint: disable=missing-type-doc,missing-return-type-doc,missing-return-doc
 
 from __future__ import unicode_literals
 
@@ -18,6 +17,8 @@ from plaso.lib import objectfilter
 from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.parsers import presets
+
+# pylint: disable=missing-type-doc,missing-return-type-doc,missing-return-doc
 
 
 class DictObject(object):
