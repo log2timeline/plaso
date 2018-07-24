@@ -4,7 +4,6 @@
 This lexer is originally copied from the GRR project:
 https://code.google.com/p/grr
 """
-# pylint: disable=missing-type-doc,missing-return-type-doc,missing-return-doc
 
 from __future__ import unicode_literals
 
@@ -12,6 +11,8 @@ import logging
 import re
 
 from plaso.lib import errors
+
+# pylint: disable=missing-type-doc,missing-return-type-doc,missing-return-doc
 
 
 class Token(object):

@@ -186,7 +186,7 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): a file-like object.
+      key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
 

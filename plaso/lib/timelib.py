@@ -8,7 +8,6 @@ from various formats into number of micro seconds since January 1, 1970,
 It also contains various functions to represent timestamps in a more
 human readable form.
 """
-# pylint: disable=missing-type-doc,missing-return-type-doc
 
 from __future__ import unicode_literals
 
@@ -22,6 +21,9 @@ import pytz
 
 from plaso.lib import definitions
 from plaso.lib import errors
+
+# pylint: disable=missing-type-doc,missing-return-type-doc
+
 
 
 MONTH_DICT = {

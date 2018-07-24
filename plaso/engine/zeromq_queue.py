@@ -292,7 +292,6 @@ class ZeroMQQueue(plaso_queue.Queue):
     """
     return False
 
-  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def PushItem(self, item, block=True):
     """Pushes an item on to the queue.
@@ -306,6 +305,7 @@ class ZeroMQQueue(plaso_queue.Queue):
       QueueAlreadyClosed: If the queue is closed.
     """
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def PopItem(self):
     """Pops an item off the queue.
@@ -315,7 +315,7 @@ class ZeroMQQueue(plaso_queue.Queue):
 
     Raises:
       QueueEmpty: If the queue is empty, and no item could be popped within the
-                  queue timeout.
+          queue timeout.
     """
 
 
@@ -343,7 +343,7 @@ class ZeroMQPullQueue(ZeroMQQueue):
     Raises:
       KeyboardInterrupt: if the process is sent a KeyboardInterrupt while
           popping an item.
-      QueueEmpty: If the queue is empty, and no item could be popped within the
+      QueueEmpty: if the queue is empty, and no item could be popped within the
           queue timeout.
       RuntimeError: if closed or terminate event is missing.
       zmq.error.ZMQError: if a ZeroMQ error occurs.

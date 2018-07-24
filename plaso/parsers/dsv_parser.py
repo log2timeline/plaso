@@ -217,6 +217,7 @@ class DSVParser(interface.FileObjectParser):
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def VerifyRow(self, parser_mediator, row):
     """Verifies if a line of the file is in the expected format.

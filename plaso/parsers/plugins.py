@@ -62,7 +62,8 @@ class BasePlugin(object):
     that can be used to evaluate if the plugin should be run or not.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      unused_parser_mediator (ParserMediator): mediates interactions between
+          parsers and other components, such as storage and dfvfs.
       kwargs: Depending on the plugin they may require different sets of
               arguments to be able to evaluate whether or not this is
               the correct plugin.
@@ -83,7 +84,8 @@ class BasePlugin(object):
     simpler parser API in most cases.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
     """
     parser_mediator.AppendToParserChain(self)
     try:

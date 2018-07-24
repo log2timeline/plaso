@@ -72,9 +72,14 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
     """Extract relevant information from HTTP header.
 
     Args:
-      header_data: binary string containing the HTTP header data.
-      offset: the offset of the cache record.
-      display_name: the display name.
+      header_data (bytes): binary string containing  HTTP header data.
+      offset (int): the offset of the cache record.
+      display_name (str): the display name.
+
+    Returns:
+      tuple: containing:
+        str|None: HTTP request method, or None if not available.
+        str|None: HTTP response code, or None if not available.
     """
     try:
       http_header_start = header_data.index(b'request-method')
@@ -133,11 +138,10 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
     """Determines whether the cache record header is valid.
 
     Args:
-      cache_record_header: the cache record header (instance of
-                           construct.Struct).
+      cache_record_header (construct.Struct): the cache record header.
 
     Returns:
-      A boolean value indicating the cache record header is valid.
+      bool: True if the cache record header is valid.
     """
     return (
         cache_record_header.request_size > 0 and
@@ -193,6 +197,10 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
     Args:
       file_object (dfvfs.FileIO): a file-like object.
       display_name (str): display name.
+
+    Returns:
+      firefox__cache_config: namedtuple containing the block size and first
+          record offset.
 
     Raises:
       UnableToParseFile: if no valid cache record could be found.
@@ -278,8 +286,11 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
 
     Returns:
       tuple: contains:
-        construct.Stuct: cache record header structure.
+        construct.Struct: cache record header structure.
         FirefoxCacheEventData: event data.
+
+    Raises:
+      IOError: if the entry cannot be parsed, or is invalid.
     """
     offset = file_object.get_offset()
 
@@ -401,7 +412,14 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
      https://github.com/JamesHabben/FirefoxCache2
 
     Args:
-      file_object: The file containing the cache record.
+      file_object (dvfvs.FileIO): a file-like object to parse.
+
+    Returns:
+      int: offset of the cache record metadata in the cache file, relative to
+          the start of the file.
+
+    Raises:
+      IOError: if the metadata offset cannot be determined.
     """
     file_object.seek(-4, os.SEEK_END)
 
@@ -422,8 +440,8 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
     """Parses a Firefox cache file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): a parser mediator.
+      file_object (dvfvs.FileIO): a file-like object to parse.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.

@@ -8,7 +8,6 @@ which are designed to process specific data types.
 PlistPlugin defines the attributes necessary for registration, discovery
 and operation of plugins for plist files which will be used by PlistParser.
 """
-# pylint: disable=missing-type-doc,missing-return-type-doc,missing-yield-doc
 
 from __future__ import unicode_literals
 
@@ -17,6 +16,9 @@ import abc
 from plaso.lib import errors
 from plaso.parsers import logger
 from plaso.parsers import plugins
+
+# pylint: disable=missing-type-doc,missing-return-type-doc
+# pylint: disable=missing-yield-doc,missing-yield-type-doc
 
 
 class PlistPlugin(plugins.BasePlugin):

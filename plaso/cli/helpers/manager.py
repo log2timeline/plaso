@@ -11,6 +11,8 @@ class ArgumentHelperManager(object):
 
   _helper_classes = {}
 
+  # Pylint is confused by the format of the argument_group docstring.
+  # pylint: disable=missing-type-doc
   @classmethod
   def AddCommandLineArguments(
       cls, argument_group, category=None, names=None):

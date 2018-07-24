@@ -385,6 +385,8 @@ class ParserMediator(object):
     """Removes the last added parser or parser plugin from the parser chain."""
     self._parser_chain_components.pop()
 
+  # Pylint is confused by the format of the event docstring.
+  # pylint: disable=missing-type-doc
   def ProcessEvent(
       self, event, parser_chain=None, file_entry=None, query=None):
     """Processes an event before it written to the storage.
@@ -395,6 +397,10 @@ class ParserMediator(object):
       file_entry (Optional[dfvfs.FileEntry]): file entry, where None will
           use the current file entry set in the mediator.
       query (Optional[str]): query that was used to obtain the event.
+
+    Raises:
+      KeyError: if there's an attempt to add a duplicate attribute value to the
+          event.
     """
     # TODO: rename this to event.parser_chain or equivalent.
     if not getattr(event, 'parser', None) and parser_chain:

@@ -226,8 +226,8 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     """Verify that this file is a firewall log file.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+      unused_parser_mediator (ParserMediator): mediates interactions between
+          parsers and other components, such as storage and dfvfs.
       line (str): line from a text file.
 
     Returns:

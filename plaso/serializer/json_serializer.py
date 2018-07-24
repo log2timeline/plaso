@@ -69,6 +69,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
 
     return json_dict
 
+  # Pylint is confused by the formatting of the return type.
   # pylint: disable=missing-return-type-doc
   @classmethod
   def _ConvertAttributeValueToDict(cls, attribute_value):
@@ -154,6 +155,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
 
     return json_dict
 
+  # Pylint is confused by the formatting of the return type.
   # pylint: disable=missing-return-type-doc
   @classmethod
   def _ConvertDictToObject(cls, json_dict):

@@ -899,12 +899,11 @@ class StorageWriter(object):
   def Close(self):
     """Closes the storage writer."""
 
-  # pylint: disable=differing-type-doc,missing-type-doc,differing-param-doc
   def CreateTaskStorage(self, unused_task):
     """Creates a task storage.
 
     Args:
-      task (Task): task.
+      unused_task (Task): task.
 
     Returns:
       StorageWriter: storage writer.
@@ -967,12 +966,11 @@ class StorageWriter(object):
       EventObject: event.
     """
 
-  # pylint: disable=differing-type-doc,missing-type-doc,differing-param-doc
   def FinalizeTaskStorage(self, unused_task):
     """Finalizes a processed task storage.
 
     Args:
-      task (Task): task.
+      unused_task (Task): task.
 
     Raises:
       NotImplementedError: since there is no implementation.
@@ -983,12 +981,11 @@ class StorageWriter(object):
   def Open(self):
     """Opens the storage writer."""
 
-  # pylint: disable=differing-type-doc,missing-type-doc,differing-param-doc
   def PrepareMergeTaskStorage(self, unused_task):
     """Prepares a task storage for merging.
 
     Args:
-      task (Task): task.
+      unused_task (Task): task.
 
     Raises:
       NotImplementedError: since there is no implementation.
@@ -1008,12 +1005,11 @@ class StorageWriter(object):
           information.
     """
 
-  # pylint: disable=differing-type-doc,missing-type-doc,differing-param-doc
   def RemoveProcessedTaskStorage(self, unused_task):
     """Removes a processed task storage.
 
     Args:
-      task (Task): task.
+      unused_task (Task): task.
 
     Raises:
       NotImplementedError: since there is no implementation.

@@ -275,6 +275,9 @@ class DataBlockFile(object):
 
     Returns:
       CacheEntry: cache entry.
+
+    Raises:
+      IOError: if the cache entry cannot be parsed.
     """
     self._file_object.seek(block_offset, os.SEEK_SET)
 

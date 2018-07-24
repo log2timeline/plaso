@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file contains a class to provide a parsing framework to plaso.
 
-This class contains a base framework class for parsing fileobjects, and
+This class contains a base framework class for parsing file-like objects, and
 also some implementations that extend it to provide a more comprehensive
 parser.
 """
@@ -31,8 +31,8 @@ def ConvertTokenToInteger(unused_string, unused_location, tokens):
   """Pyparsing parse action callback to convert a token into an integer value.
 
   Args:
-    string (str): original string.
-    location (int): location in the string where the token was found.
+    unused_string (str): original string.
+    unused_location (int): location in the string where the token was found.
     tokens (list[str]): tokens.
 
   Returns:
@@ -64,7 +64,8 @@ def PyParseRangeCheck(lower_bound, upper_bound):
     """Parse the arguments.
 
     Args:
-      location (int): location within the string where the match was made.
+      unused_string (str): original string.
+      unused_location (int): location in the string where the match was made
       tokens (list[str]): tokens.
     """
     try:
@@ -98,8 +99,8 @@ def PyParseIntCast(unused_string, unused_location, tokens):
   them all to an integer value.
 
   Args:
-    string (str): original parsed string.
-    location (int): location within the string where the match was made.
+    unused_string (str): original string.
+    unused_location (int): location in the string where the match was made.
     tokens (list[str]): extracted tokens, where the string to be converted
         is stored.
   """
@@ -131,8 +132,8 @@ def PyParseJoinList(unused_string, unused_location, tokens):
   token.
 
   Args:
-    string (str): original parsed string.
-    location (int): location within the string where the match was made.
+    unused_string (str): original string.
+    unused_location (int): location in the string where the match was made.
     tokens (list[str]): extracted tokens, where the string to be converted
         is stored.
   """
@@ -251,6 +252,8 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     # a structural fix.
     self._line_structures = self.LINE_STRUCTURES
 
+  # Pylint is confused by the formatting of the bytes_in argument.
+  # pylint: disable=missing-type-doc
   def _IsText(self, bytes_in, encoding=None):
     """Examine the bytes in and determine if they are indicative of text.
 
@@ -419,6 +422,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
                 self._current_offset))
         break
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
@@ -433,6 +437,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       structure (pyparsing.ParseResults): tokens from a parsed log line.
     """
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def VerifyStructure(self, parser_mediator, line):
     """Verify the structure of the file and return boolean based on that check.
@@ -678,6 +683,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
         parser_mediator.ProduceExtractionError(
             'unable to read lines with error: {0!s}'.format(exception))
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
@@ -695,7 +701,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       EventObject: event or None.
     """
 
-  # pylint: disable=arguments-differ
+  # pylint: disable=arguments-differ,redundant-returns-doc
   @abc.abstractmethod
   def VerifyStructure(self, parser_mediator, lines):
     """Verify the structure of the file and return boolean based on that check.

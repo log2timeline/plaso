@@ -106,6 +106,7 @@ class OutputMediator(object):
 
     return event_formatter.GetSources(event)
 
+  # Pylint has trouble parsing the return type.
   # pylint: disable=missing-return-type-doc
   def GetFormatStringAttributeNames(self, event):
     """Retrieves the attribute names in the format string.
