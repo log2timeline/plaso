@@ -46,7 +46,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     self._guppy_memory_profiler = None
     self._log_filename = None
     self._memory_profiler = None
-    self._name = None
     self._original_sigsegv_handler = None
     # TODO: check if this can be replaced by self.pid or does this only apply
     # to the parent process?

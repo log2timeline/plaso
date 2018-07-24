@@ -276,7 +276,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     """Converts a JSON list into an object.
 
     Args:
-      json_list: a list of the JSON serialized objects.
+      json_list (list[object]): JSON serialized objects.
 
     Returns:
       list[object]: a deserialized list.
@@ -381,7 +381,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     """Reads an attribute container from serialized form.
 
     Args:
-      json_string: a JSON string containing the serialized form.
+      json_string (str): JSON serialized attribute container.
 
     Returns:
       AttributeContainer: attribute container or None.
