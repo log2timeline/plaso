@@ -49,12 +49,12 @@ class BencodePlugin(plugins.BasePlugin):
     override the depth limit and use _GetKeys to fetch from a deeper level.
 
     Args:
-      data: bencode data in dictionary form.
-      keys: A list of keys that should be returned.
-      depth: Defines how many levels deep to check for a match.
+      data (dict[str, object]): bencode data values.
+      keys (list[str]: keys that should be returned.
+      depth (int): how many levels deep to check for a match.
 
     Returns:
-      A dictionary with just the keys requested.
+      dict: a dictionary with just the keys requested.
     """
     keys = set(keys)
     match = {}
@@ -72,7 +72,7 @@ class BencodePlugin(plugins.BasePlugin):
     return match
 
   def _RecurseKey(self, recur_item, root='', depth=15):
-    """Flattens nested dictionaries and lists by yielding it's values.
+    """Flattens nested dictionaries and lists by yielding their values.
 
     The hierarchy of a bencode file is a series of nested dictionaries and
     lists. This is a helper function helps plugins navigate the structure
@@ -83,12 +83,15 @@ class BencodePlugin(plugins.BasePlugin):
     message is logged indicating which key processing stopped on.
 
     Args:
-      recur_item: An object to be checked for additional nested items.
-      root: The pathname of the current working key.
-      depth: A counter to ensure we stop at the maximum recursion depth.
+      recur_item (object): object to be checked for additional nested items.
+      root (str): the pathname of the current working key.
+      depth (int): a counter to ensure we stop at the maximum recursion depth.
 
     Yields:
-      A tuple of the root, key, and value from a bencoded file.
+      tuple: containing:
+       * str: root
+       * str: key
+       * str: value
     """
     if depth < 1:
       logger.debug('Recursion limit hit for key: {0:s}'.format(root))
@@ -134,8 +137,9 @@ class BencodePlugin(plugins.BasePlugin):
       desc = Short description.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      data: Bencode data in dictionary form.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      data (dict[str, object]): bencode data values.
       match: Optional dictionary containing only the keys selected in the
              BENCODE_KEYS.
     """

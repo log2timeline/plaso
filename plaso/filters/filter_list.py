@@ -12,8 +12,6 @@ from plaso.filters import interface
 from plaso.filters import manager
 from plaso.lib import errors
 
-# pylint: disable=missing-type-doc,missing-return-type-doc
-
 
 class ObjectFilterList(interface.FilterObject):
   """A list of object-filters with additional metadata."""
@@ -32,11 +30,11 @@ class ObjectFilterList(interface.FilterObject):
     http://pyyaml.org/wiki/PyYAMLDocumentation
 
     Args:
-      loader: the YAML loader object (instance of yaml.Loader).
-      node: a YAML node (instance of yaml.TODO).
+      loader (yaml.Loader): the YAML loader object (instance of yaml.Loader).
+      node (yaml.node): a YAML node.
 
     Returns:
-      A Python object or None.
+      object: a Python object or None.
     """
     filename = loader.construct_scalar(node)
     if not os.path.isfile(filename):
@@ -82,7 +80,7 @@ class ObjectFilterList(interface.FilterObject):
     The filter expression contains the name of a YAML file.
 
     Args:
-      filter_expression: string that contains the filter expression.
+      filter_expression (str): filter expression.
 
     Raises:
       WrongPlugin: if the filter could not be compiled.
