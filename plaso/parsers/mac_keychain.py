@@ -239,13 +239,13 @@ class KeychainParser(interface.FileObjectParser):
 
     Returns:
       tuple: containing:
-        ssgp_hash: Hash of the encrypted data (passwd, cert, note).
+        ssgp_hash: hash of the encrypted data (passwd, cert, note).
         creation_time (dfdatetime.TimeElements): entry creation time or None.
-        last_modification_time ((dfdatetime.TimeElements): entry last
+        last_modification_time (dfdatetime.TimeElements): entry last
             modification time or None.
-        text_description: A brief description of the entry.
-        entry_name: Name of the entry
-        account_name: Name of the account.
+        text_description: brief description of the entry.
+        entry_name: name of the entry
+        account_name: name of the account.
     """
     # TODO: reduce number of seeks and/or offset calculations needed
     # for parsing.

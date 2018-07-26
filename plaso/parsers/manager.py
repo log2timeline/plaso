@@ -30,7 +30,7 @@ class ParsersManager(object):
           represents all parsers and plugins.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
 
         * dict[str, BaseParser]: included parsers and plugins by name.
         * dict[str, BaseParser]: excluded parsers and plugins by name.
@@ -211,7 +211,7 @@ class ParsersManager(object):
           where None represents all parsers and plugins.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
 
       * FormatSpecificationStore: format specifications with signaures.
       * list[str[: remaining parser names that do not have a format
@@ -364,7 +364,7 @@ class ParsersManager(object):
           where None represents all parsers and plugins.
 
     Yields:
-      tuple: contains:
+      tuple: containing:
 
       * str: name of the parser:
       * type: parser class (subclass of BaseParser).

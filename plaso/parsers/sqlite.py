@@ -326,7 +326,7 @@ class SQLiteParser(interface.FileEntryParser):
       filename (str): name of the database file entry.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
 
         SQLiteDatabase: a database object with WAL file committed or None
         dfvfs.FileEntry: a file entry object of WAL file or None
@@ -370,7 +370,11 @@ class SQLiteParser(interface.FileEntryParser):
 
   @classmethod
   def GetFormatSpecification(cls):
-    """FormatSpecification: format specification."""
+    """Retrieves the format specification.
+
+    Returns:
+      FormatSpecification: format specification.
+    """
     format_specification = specification.FormatSpecification(cls.NAME)
     format_specification.AddNewSignature(b'SQLite format 3', offset=0)
     return format_specification

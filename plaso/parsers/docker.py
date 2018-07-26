@@ -99,12 +99,13 @@ class DockerJSONParser(interface.FileObjectParser):
           and other components, such as storage and dfvfs.
 
     Returns:
-        str: container or graph identifier.
+      str: container or graph identifier.
     """
     file_entry = parser_mediator.GetFileEntry()
     path = file_entry.path_spec.location
     file_system = file_entry.GetFileSystem()
-    identifier = file_system.SplitPath(path)[-2]
+    path_segments = file_system.SplitPath(path)
+    identifier = path_segments[-2]
     return identifier
 
   def _ParseLayerConfigJSON(self, parser_mediator, file_object):

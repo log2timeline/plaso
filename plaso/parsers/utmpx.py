@@ -63,7 +63,7 @@ class UtmpxParser(dtfabric_parser.DtFabricBaseParser):
           the file-like object.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
 
         int: timestamp, which contains the number of microseconds
             since January 1, 1970, 00:00:00 UTC.

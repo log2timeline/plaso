@@ -349,7 +349,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       resolver_context (dfvfs.Context): resolver context.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
 
         dfvfs.FileSystem: file system.
         dfvfs.PathSpec: mount point path specification that refers

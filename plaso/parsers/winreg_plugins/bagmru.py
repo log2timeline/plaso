@@ -109,7 +109,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
            the MRUListEx value.
 
     Yields:
-      tuple: contains:
+      tuple: containing:
 
         int: MRUListEx index, where 0 is the first index value.
         int: entry number.
