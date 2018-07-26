@@ -102,8 +102,11 @@ class BaseMRUListExWindowsRegistryPlugin(
 
     mrulistex_entries_map = self._GetDataTypeMap('mrulistex_entries')
 
+    context = dtfabric_data_maps.DataTypeMapContext(values={
+        'data_size': len(mrulistex_value.data)})
+
     return self._ReadStructureFromByteStream(
-        mrulistex_value.data, 0, mrulistex_entries_map)
+        mrulistex_value.data, 0, mrulistex_entries_map, context=context)
 
   def _ParseMRUListExKey(
       self, parser_mediator, registry_key, codepage='cp1252'):
@@ -126,10 +129,19 @@ class BaseMRUListExWindowsRegistryPlugin(
       return
 
     values_dict = {}
+    found_terminator = False
     for entry_index, entry_number in enumerate(mrulistex):
       # The MRU list is terminated with -1 (0xffffffff).
       if entry_number == -1:
         break
+
+      if found_terminator:
+        parser_mediator.ProduceExtractionError((
+            'found additional MRUListEx entries after terminator in key: '
+            '{0:s}.').format(registry_key.path))
+
+        # Only create one parser error per terminator.
+        found_terminator = False
 
       value_string = self._ParseMRUListExEntryValue(
           parser_mediator, registry_key, entry_index, entry_number,
