@@ -20,7 +20,7 @@ class TestOutput(interface.OutputModule):
     """Writes the body of an event object to the output.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      unused_event_object: the event object (instance of EventObject).
     """
     pass
 

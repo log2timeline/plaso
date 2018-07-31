@@ -28,8 +28,8 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
     can be assembled.
 
     Args:
-      mediator (AnalysisMediator): mediates interactions between analysis
-          plugins and other components, such as storage and dfvfs.
+      unused_mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
 
     Returns:
       AnalysisReport: analysis report.
@@ -41,9 +41,9 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
     """Analyzes an event.
 
     Args:
-      mediator (AnalysisMediator): mediates interactions between analysis
-          plugins and other components, such as storage and dfvfs.
-      event (EventObject): event.
+      unused_mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
+      unused_event (EventObject): event.
     """
     return
 

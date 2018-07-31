@@ -25,8 +25,9 @@ class TestArtifactPreprocessorPlugin(interface.ArtifactPreprocessorPlugin):
     """Parses artifact value data for a preprocessing attribute.
 
     Args:
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
-      value_data (object): artifact value data.
+      unused_knowledge_base (KnowledgeBase): to fill with preprocessing
+          information.
+      unused_value_data (object): artifact value data.
     """
     return
 

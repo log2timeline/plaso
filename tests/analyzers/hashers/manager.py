@@ -46,7 +46,7 @@ class TestHasher(interface.BaseHasher):
     concatenation of the arguments.
 
     Args:
-      data: a string of data with which to update the context of the hasher.
+      unused_data (bytes): data with which to update the context of the hasher.
     """
     return
 

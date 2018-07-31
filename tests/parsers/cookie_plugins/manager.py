@@ -21,9 +21,10 @@ class TestCookiePlugin(interface.BaseCookiePlugin):
     """Extract and return EventObjects from the data structure.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      cookie_data: Optional cookie data, as a byte string.
-      url: Optional URL or path where the cookie got set.
+      unused_parser_mediator (ParserMediator): mediates interactions between
+          parsers and other components, such as storage and dfvfs.
+      cookie_data (Optional[bytes]): cookie data, as a byte sequence.
+      url (Optional[str]): URL or path where the cookie was set.
     """
     return
 
