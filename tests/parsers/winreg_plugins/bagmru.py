@@ -13,12 +13,12 @@ from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
-class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
+class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the BagMRU plugin."""
 
   def testFilters(self):
     """Tests the FILTERS class attribute."""
-    plugin = bagmru.BagMRUPlugin()
+    plugin = bagmru.BagMRUWindowsRegistryPlugin()
 
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\Shell\\BagMRU')
@@ -54,7 +54,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['NTUSER.DAT'])
   def testProcess(self):
     """Tests the Process function."""
-    plugin = bagmru.BagMRUPlugin()
+    plugin = bagmru.BagMRUWindowsRegistryPlugin()
     test_file_entry = self._GetTestFileEntry(['NTUSER.DAT'])
     key_path = (
         'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\ShellNoRoam\\BagMRU')
