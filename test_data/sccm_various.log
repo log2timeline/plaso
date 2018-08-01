@@ -1,4 +1,4 @@
-﻿<![LOG[+++ Starting Install enforcement for App DT "Application Foo Version 2.2" ApplicationDeliveryType - ScopeId_AD87A846-E6A5-4088-875F-066CF1082D30/DeploymentType_14a11199-ee14-4c06-a5a7-68eadf501337, Revision - 10, ContentPath - C:\Windows\ccmcache\u, Execution Context - System]LOG]!><time="19:33:19.766-330" date="11-28-2014" component="AppEnforce" context="" type="1" thread="8744" file="appprovider.cpp:1702">
+<![LOG[+++ Starting Install enforcement for App DT "Application Foo Version 2.2" ApplicationDeliveryType - ScopeId_AD87A846-E6A5-4088-875F-066CF1082D30/DeploymentType_14a11199-ee14-4c06-a5a7-68eadf501337, Revision - 10, ContentPath - C:\Windows\ccmcache\u, Execution Context - System]LOG]!><time="19:33:19.766-330" date="11-28-2014" component="AppEnforce" context="" type="1" thread="8744" file="appprovider.cpp:1702">
 <![LOG[    A user is logged on to the system.]LOG]!><time="19:33:19.766-330" date="11-28-2014" component="AppEnforce" context="" type="1" thread="8744" file="appprovider.cpp:2083">
 <![LOG[Event object details:
 instance of CCM_InstanceEvent
@@ -82,5 +82,5 @@ sedenceViolations Count=\"0\"/><SupersedesViolations Count=\"0\"/><DependancyVio
 <![LOG[All references to Content 14a11199-ee14-4c06-a5a7-68eadf501337.1 in cache have been removed.                   Content will be Tombstoned.]LOG]!><time="07:03:10.647-330" date="12-23-2014" component="ContentAccess" context="" type="1" thread="6744" file="cachemanager.cpp:767">
 <![LOG[+++ Executing script to discover application. [AppDT Id: ScopeId_4EA97AD6-E7E2-4583-92B9-21F532501337/DeploymentType_14a11199-ee14-4c06-a5a7-68eadf501337, Revision: 6]]LOG]!><time="20:37:41.047-330" date="12-29-2014" component="AppDiscovery" context="" type="1" thread="4772" file="scripthandler.cpp:268">
 <![LOG[Evaluating health check rule {4EA97AD6-E7E2-4583-92B9-21F532501337} : Some Stuff.]LOG]!><time="13:29:43.373-330" date="12-28-2014" component="CcmEval" context="" type="1" thread="3452" file="ccmeval.cpp:200">
-<![LOG[Applying policy Windows/SomeDevices/VI/VS]LOG]!><time="04:20:47.594+480" date="11-26-2014" component="setuppolicyevaluator" context="" type="1" thread="6228" file="policyutil.cpp:5555">
+<![LOG[Applying policy Windows/SomeDevices/VI/VS]LOG]!><time="04:20:47.594-60" date="11-26-2014" component="setuppolicyevaluator" context="" type="1" thread="6228" file="policyutil.cpp:5555">
 <![LOG[Some stuff happened.]LOG]!><time="01:52:13.827+480" date="11-24-2014" component="PeerDPAgent" context="" type="1" thread="2444" file="somefile.cpp:100">

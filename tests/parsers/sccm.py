@@ -45,6 +45,11 @@ class SCCMLogsUnitTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2014-11-23 17:52:13.827000')
 
+    # Test timestamps with 2 digit UTC offset
+    event = events[8]
+
+    self.CheckTimestamp(event.timestamp, '2014-11-26 05:20:47.594000')
+
     # Test full and short message formats.
     event = events[4]
     expected_message = (
