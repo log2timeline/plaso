@@ -235,6 +235,10 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
   # longer line than 400 bytes.
   MAX_LINE_LENGTH = 400
 
+  # The maximum number of consecutive lines that don't match known line
+  # structures to encounter before aborting parsing.
+  MAXIMUM_CONSECUTIVE_LINE_FAILURES = 20
+
   _ENCODING = None
 
   _EMPTY_LINES = frozenset(['\n', '\r', '\r\n'])
@@ -387,6 +391,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     while line:
       if parser_mediator.abort:
         break
+      consecutive_line_failures = 0
       parsed_structure = None
       use_key = None
       # Try to parse the line using all the line structures.
@@ -401,12 +406,19 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
       if parsed_structure:
         self.ParseRecord(parser_mediator, use_key, parsed_structure)
+        consecutive_line_failures = 0
       else:
         if len(line) > 80:
           line = '{0:s}...'.format(line[:77])
         parser_mediator.ProduceExtractionError(
             'unable to parse log line: {0:s} at offset: {1:d}'.format(
                 repr(line), self._current_offset))
+        consecutive_line_failures += 1
+        if (consecutive_line_failures >
+            self.MAXIMUM_CONSECUTIVE_LINE_FAILURES):
+          raise errors.UnableToParseFile(
+              'more than {0:d} consecutive failures to parse lines.'.format(
+                  self.MAXIMUM_CONSECUTIVE_LINE_FAILURES))
 
       self._current_offset = text_file_object.get_offset()
 
@@ -582,6 +594,10 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
 
   BUFFER_SIZE = 2048
 
+  # The maximum number of consecutive lines that don't match known line
+  # structures to encounter before aborting parsing.
+  MAXIMUM_CONSECUTIVE_LINE_FAILURES = 20
+
   def __init__(self):
     """Initializes a parser object."""
     super(PyparsingMultiLineTextParser, self).__init__()
@@ -633,6 +649,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       end = 0
 
       key = None
+      consecutive_line_failures = 0
 
       # Try to parse the line using all the line structures.
       for key, structure in self.LINE_STRUCTURES:
@@ -656,9 +673,10 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       if tokens and start == 0:
         try:
           self.ParseRecord(parser_mediator, key, tokens)
+          consecutive_line_failures = 0
         except (errors.ParseError, errors.TimestampError) as exception:
           parser_mediator.ProduceExtractionError(
-              'unable parse record: {0:s} with error: {1!s}'.format(
+              'unable to parse record: {0:s} with error: {1!s}'.format(
                   key, exception))
 
         self._text_reader.SkipAhead(file_object, end)
@@ -670,7 +688,12 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
             odd_line = '{0:s}...'.format(odd_line[:77])
           parser_mediator.ProduceExtractionError(
               'unable to parse log line: {0:s}'.format(repr(odd_line)))
-
+          consecutive_line_failures += 1
+          if (consecutive_line_failures >
+              self.MAXIMUM_CONSECUTIVE_LINE_FAILURES):
+            raise errors.UnableToParseFile(
+                'more than {0:d} consecutive failures to parse lines.'.format(
+                    self.MAXIMUM_CONSECUTIVE_LINE_FAILURES))
       try:
         self._text_reader.ReadLines(file_object)
       except UnicodeDecodeError as exception:
