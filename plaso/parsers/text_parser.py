@@ -634,8 +634,11 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
 
       key = None
 
+      structures = self.LINE_STRUCTURES
+      index = None
+
       # Try to parse the line using all the line structures.
-      for key, structure in self.LINE_STRUCTURES:
+      for index, (key, structure) in enumerate(structures):
         try:
           structure_generator = structure.scanString(
               self._text_reader.lines, maxMatches=1)
@@ -654,6 +657,12 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
           break
 
       if tokens and start == 0:
+        # Move matching key, structure pair to the front of the list, so that
+        # structures that are more likely to match are tried first.
+        if index != 0:
+          key_structure = structures.pop(index)
+          structures.insert(0, key_structure)
+
         try:
           self.ParseRecord(parser_mediator, key, tokens)
         except (errors.ParseError, errors.TimestampError) as exception:
