@@ -37,10 +37,10 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
   def testParseCache_001(self):
     """Test Firefox 28 cache file _CACHE_001_ parsing."""
     parser = firefox_cache.FirefoxCacheParser()
-    storage_writer = self._ParseFile(
-        ['firefox_cache', 'firefox28', '_CACHE_001_'], parser)
+    storage_writer = self._ParseFile([
+        'firefox_cache', 'firefox28', '_CACHE_001_'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 1665)
+    self.assertEqual(storage_writer.number_of_events, 1668)
 
     events = list(storage_writer.GetEvents())
 
