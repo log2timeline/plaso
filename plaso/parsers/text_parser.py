@@ -27,12 +27,13 @@ from plaso.parsers import logger
 
 # TODO: determine if this method should be merged with PyParseIntCast.
 
-def ConvertTokenToInteger(unused_string, unused_location, tokens):
+# pylint: disable=unused-argument
+def ConvertTokenToInteger(string, location, tokens):
   """Pyparsing parse action callback to convert a token into an integer value.
 
   Args:
-    unused_string (str): original string.
-    unused_location (int): location in the string where the token was found.
+    string (str): original string.
+    location (int): location in the string where the token was found.
     tokens (list[str]): tokens.
 
   Returns:
@@ -60,12 +61,13 @@ def PyParseRangeCheck(lower_bound, upper_bound):
   Returns:
     Function: callback method that can be used by pyparsing setParseAction.
   """
-  def CheckRange(unused_string, unused_location, tokens):
+  # pylint: disable=unused-argument
+  def CheckRange(string, location, tokens):
     """Parse the arguments.
 
     Args:
-      unused_string (str): original string.
-      unused_location (int): location in the string where the match was made
+      string (str): original string.
+      location (int): location in the string where the match was made
       tokens (list[str]): tokens.
     """
     try:
@@ -89,7 +91,7 @@ def PyParseRangeCheck(lower_bound, upper_bound):
   return CheckRange
 
 
-def PyParseIntCast(unused_string, unused_location, tokens):
+def PyParseIntCast(string, location, tokens):
   """Return an integer from a string.
 
   This is a pyparsing callback method that converts the matched
@@ -99,8 +101,8 @@ def PyParseIntCast(unused_string, unused_location, tokens):
   them all to an integer value.
 
   Args:
-    unused_string (str): original string.
-    unused_location (int): location in the string where the match was made.
+    string (str): original string.
+    location (int): location in the string where the match was made.
     tokens (list[str]): extracted tokens, where the string to be converted
         is stored.
   """
@@ -124,7 +126,7 @@ def PyParseIntCast(unused_string, unused_location, tokens):
       tokens[key] = 0
 
 
-def PyParseJoinList(unused_string, unused_location, tokens):
+def PyParseJoinList(string, location, tokens):
   """Return a joined token from a list of tokens.
 
   This is a callback method for pyparsing setParseAction that modifies
@@ -132,8 +134,8 @@ def PyParseJoinList(unused_string, unused_location, tokens):
   token.
 
   Args:
-    unused_string (str): original string.
-    unused_location (int): location in the string where the match was made.
+    string (str): original string.
+    location (int): location in the string where the match was made.
     tokens (list[str]): extracted tokens, where the string to be converted
         is stored.
   """
@@ -253,7 +255,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     self._line_structures = self.LINE_STRUCTURES
 
   # Pylint is confused by the formatting of the bytes_in argument.
-  # pylint: disable=missing-type-doc
+  # pylint: disable=missing-param-doc,missing-type-doc
   def _IsText(self, bytes_in, encoding=None):
     """Examine the bytes in and determine if they are indicative of text.
 
@@ -342,6 +344,8 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
     return line.strip()
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a text file-like object using a pyparsing definition.
 
@@ -595,6 +599,8 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     self._text_reader = EncodedTextReader(
         buffer_size=self.BUFFER_SIZE, encoding=self._ENCODING)
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a text file-like object using a pyparsing definition.
 

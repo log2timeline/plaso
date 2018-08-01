@@ -31,7 +31,7 @@ class FakeMySQLdbConnection(object):
     """
     return FakeMySQLdbCursor()
 
-  def set_character_set(self, unused_character_set):
+  def set_character_set(self, _character_set):
     """Sets the character set.
 
     Args:
@@ -107,8 +107,7 @@ class FakeMySQLdbCursor(object):
 # because they are part of the MySQL database module interface.
 # pylint: disable=invalid-name
 
-def connect(
-    unused_hostname, unused_username, unused_password, unused_database_name):
+def connect(hostname, username, password, database_name):
   """Connects to the MySQL database server.
 
   Args:

@@ -28,6 +28,8 @@ class BaseCookiePlugin(plugins.BasePlugin):
     super(BaseCookiePlugin, self).__init__()
     self.cookie_data = ''
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   @abc.abstractmethod
   def GetEntries(self, parser_mediator, cookie_data=None, url=None, **kwargs):
     """Extract and return EventObjects from the data structure.
@@ -39,7 +41,8 @@ class BaseCookiePlugin(plugins.BasePlugin):
       url (Optional[str]): URL or path where the cookie was set.
     """
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def Process(self, parser_mediator, cookie_name, cookie_data, url, **kwargs):
     """Determine if this is the right plugin for this cookie.
 

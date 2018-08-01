@@ -21,7 +21,8 @@ class AirportPlugin(interface.PlistPlugin):
   PLIST_PATH = 'com.apple.airport.preferences.plist'
   PLIST_KEYS = frozenset(['RememberedNetworks'])
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=arguments-differ,missing-param-doc
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant Airport entries.
 

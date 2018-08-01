@@ -150,6 +150,8 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
 
     return parent_file_entry.modification_time
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses an fseventsd file.
 

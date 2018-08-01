@@ -479,6 +479,8 @@ class KeychainParser(interface.FileObjectParser):
         cls.KEYCHAIN_SIGNATURE, offset=0)
     return format_specification
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a MacOS keychain file-like object.
 

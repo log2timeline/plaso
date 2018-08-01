@@ -212,6 +212,8 @@ class BaseParser(object):
 class FileEntryParser(BaseParser):
   """The file entry parser interface."""
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def Parse(self, parser_mediator, **kwargs):
     """Parsers the file entry and extracts event objects.
 
@@ -231,7 +233,8 @@ class FileEntryParser(BaseParser):
     finally:
       parser_mediator.PopFromParserChain()
 
-  # pylint: disable=redundant-returns-doc
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,redundant-returns-doc
   @abc.abstractmethod
   def ParseFileEntry(self, parser_mediator, file_entry, **kwargs):
     """Parses a file entry.
@@ -252,6 +255,8 @@ class FileObjectParser(BaseParser):
   # file offset seek needs to be performed.
   _INITIAL_FILE_OFFSET = 0
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def Parse(self, parser_mediator, file_object, **kwargs):
     """Parses a single file-like object.
 
@@ -274,7 +279,8 @@ class FileObjectParser(BaseParser):
     finally:
       parser_mediator.PopFromParserChain()
 
-  # pylint: disable=redundant-returns-doc
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,redundant-returns-doc
   @abc.abstractmethod
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a file-like object.

@@ -218,6 +218,7 @@ class PlasoExpression(objectfilter.BasicExpression):
 class ParserList(objectfilter.GenericBinaryOperator):
   """Matches when a parser is inside a predefined list of parsers."""
 
+
   def __init__(self, *children, **kwargs):
     """Construct the parser list and retrieve a list of available parsers."""
     super(ParserList, self).__init__(*children, **kwargs)

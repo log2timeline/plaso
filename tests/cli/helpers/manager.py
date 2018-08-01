@@ -28,7 +28,7 @@ class AnotherTestHelper(interface.ArgumentsHelper):
         default=False, help='The correcto option.')
 
   @classmethod
-  def ParseOptions(cls, options, unused_config_object):
+  def ParseOptions(cls, options, config_object):
     """Parse and validate the configurational options."""
     if not hasattr(options, 'correcto'):
       raise errors.BadConfigOption('Correcto not set.')

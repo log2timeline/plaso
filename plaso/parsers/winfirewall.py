@@ -222,11 +222,12 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     elif key == 'logline':
       self._ParseLogLine(parser_mediator, structure)
 
-  def VerifyStructure(self, unused_parser_mediator, line):
+  # pylint: disable=unused-argument
+  def VerifyStructure(self, parser_mediator, line):
     """Verify that this file is a firewall log file.
 
     Args:
-      unused_parser_mediator (ParserMediator): mediates interactions between
+      parser_mediator (ParserMediator): mediates interactions between
           parsers and other components, such as storage and dfvfs.
       line (str): line from a text file.
 

@@ -216,6 +216,8 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
   # key or value.
   URLS = []
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   @abc.abstractmethod
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
@@ -227,7 +229,8 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
     """
 
   # TODO: merge with UpdateChainAndProcess, also requires changes to tests.
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def Process(self, parser_mediator, registry_key, **kwargs):
     """Processes a Windows Registry key or value.
 
@@ -247,7 +250,8 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
 
     self.ExtractEvents(parser_mediator, registry_key, **kwargs)
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def UpdateChainAndProcess(self, parser_mediator, registry_key, **kwargs):
     """Updates the parser chain and processes a Windows Registry key or value.
 

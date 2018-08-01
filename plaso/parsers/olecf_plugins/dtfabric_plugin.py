@@ -249,7 +249,8 @@ class DtFabricBaseOLECFPlugin(interface.OLECFPlugin):
 
     raise errors.ParseError('Unable to read {0:s}'.format(data_type_map.name))
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   @abc.abstractmethod
   def Process(self, parser_mediator, root_item=None, **kwargs):
     """Parses an OLECF file.

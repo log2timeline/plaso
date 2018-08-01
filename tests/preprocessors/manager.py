@@ -21,7 +21,7 @@ class TestArtifactPreprocessorPlugin(interface.ArtifactPreprocessorPlugin):
 
   ARTIFACT_DEFINITION_NAME = 'TestArtifactDefinition'
 
-  def ParseValueData(self, unused_knowledge_base, unused_value_data):
+  def ParseValueData(self, knowledge_base, value_data):
     """Parses artifact value data for a preprocessing attribute.
 
     Args:

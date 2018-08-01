@@ -21,7 +21,8 @@ class InstallHistoryPlugin(interface.PlistPlugin):
       'date', 'displayName', 'displayVersion', 'processName',
       'packageIdentifiers'])
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def GetEntries(self, parser_mediator, top_level=None, **unused_kwargs):
     """Extracts relevant install history entries.
 

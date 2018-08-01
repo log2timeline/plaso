@@ -23,7 +23,7 @@ from tests.multi_processing import test_lib
 class TestEventExtractionWorker(worker.EventExtractionWorker):
   """Event extraction worker for testing."""
 
-  def ProcessPathSpec(self, unused_mediator, unused_path_spec):
+  def ProcessPathSpec(self, mediator, path_spec):
     """Processes a path specification.
 
     Args:
@@ -37,7 +37,7 @@ class TestEventExtractionWorker(worker.EventExtractionWorker):
 class TestFailureEventExtractionWorker(worker.EventExtractionWorker):
   """Event extraction worker for testing failure."""
 
-  def ProcessPathSpec(self, unused_mediator, unused_path_spec):
+  def ProcessPathSpec(self, mediator, path_spec):
     """Processes a path specification.
 
     Args:

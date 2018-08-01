@@ -137,6 +137,8 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
 
     return None
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseLastVisitedRow(
       self, parser_mediator, query, row, cache=None, database=None,
       **unused_kwargs):
@@ -350,6 +352,8 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
 
   REQUIRES_SCHEMA_MATCH = True
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileDownloadedRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a file downloaded row.
@@ -959,6 +963,8 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
 
   REQUIRES_SCHEMA_MATCH = True
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileDownloadedRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a file downloaded row.

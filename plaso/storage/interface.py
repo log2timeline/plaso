@@ -548,7 +548,8 @@ class StorageReader(object):
     """Make usable with "with" statement."""
     return self
 
-  def __exit__(self, unused_type, unused_value, unused_traceback):
+  # pylint: disable=unused-argument
+  def __exit__(self, exception_type, value, traceback):
     """Make usable with "with" statement."""
     self.Close()
 
@@ -899,11 +900,12 @@ class StorageWriter(object):
   def Close(self):
     """Closes the storage writer."""
 
-  def CreateTaskStorage(self, unused_task):
+  # pylint: disable=unused-argument
+  def CreateTaskStorage(self, task):
     """Creates a task storage.
 
     Args:
-      unused_task (Task): task.
+      task (Task): task.
 
     Returns:
       StorageWriter: storage writer.
@@ -966,11 +968,12 @@ class StorageWriter(object):
       EventObject: event.
     """
 
-  def FinalizeTaskStorage(self, unused_task):
+  # pylint: disable=unused-argument
+  def FinalizeTaskStorage(self, task):
     """Finalizes a processed task storage.
 
     Args:
-      unused_task (Task): task.
+      task (Task): task.
 
     Raises:
       NotImplementedError: since there is no implementation.
@@ -981,11 +984,12 @@ class StorageWriter(object):
   def Open(self):
     """Opens the storage writer."""
 
-  def PrepareMergeTaskStorage(self, unused_task):
+  # pylint: disable=unused-argument
+  def PrepareMergeTaskStorage(self, task):
     """Prepares a task storage for merging.
 
     Args:
-      unused_task (Task): task.
+      task (Task): task.
 
     Raises:
       NotImplementedError: since there is no implementation.
@@ -1005,11 +1009,12 @@ class StorageWriter(object):
           information.
     """
 
-  def RemoveProcessedTaskStorage(self, unused_task):
+  # pylint: disable=unused-argument
+  def RemoveProcessedTaskStorage(self, task):
     """Removes a processed task storage.
 
     Args:
-      unused_task (Task): task.
+      task (Task): task.
 
     Raises:
       NotImplementedError: since there is no implementation.

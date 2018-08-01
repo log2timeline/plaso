@@ -16,7 +16,7 @@ class TestOutput(interface.OutputModule):
   NAME = 'test_output'
   DESCRIPTION = 'This is a test output module.'
 
-  def WriteEventBody(self, unused_event_object):
+  def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
 
     Args:

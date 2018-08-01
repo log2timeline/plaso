@@ -129,6 +129,8 @@ class AndroidSMSPlugin(interface.SQLitePlugin):
       0: 'UNREAD',
       1: 'READ'}
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseSmsRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses an SMS row.
 

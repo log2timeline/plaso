@@ -67,7 +67,6 @@ disable=
     useless-suppression,
     deprecated-pragma,
     no-absolute-import,
-    missing-param-doc,
     metaclass-assignment,
     eq-without-hash,
     fixme,

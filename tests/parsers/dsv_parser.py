@@ -29,7 +29,8 @@ class TestDSVParser(dsv_parser.DSVParser):
     self.row_offsets = []
     self.rows = []
 
-  def ParseRow(self, unused_parser_mediator, row_offset, row):
+  # pylint: disable=unused-argument
+  def ParseRow(self, parser_mediator, row_offset, row):
     """Parses a line of the log file and extract events.
 
     Args:
@@ -41,7 +42,7 @@ class TestDSVParser(dsv_parser.DSVParser):
     self.row_offsets.append(row_offset)
     self.rows.append(row)
 
-  def VerifyRow(self, unused_parser_mediator, unused_row):
+  def VerifyRow(self, parser_mediator, row):
     """Verifies if a line of the file corresponds with the expected format.
 
     Args:

@@ -386,7 +386,7 @@ class ParserMediator(object):
     self._parser_chain_components.pop()
 
   # Pylint is confused by the format of the event docstring.
-  # pylint: disable=missing-type-doc
+  # pylint: disable=missing-param-doc,missing-type-doc
   def ProcessEvent(
       self, event, parser_chain=None, file_entry=None, query=None):
     """Processes an event before it written to the storage.

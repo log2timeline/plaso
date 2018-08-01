@@ -33,7 +33,8 @@ def _BSMTokenGetLength(context):
 # Note that we're using RepeatUntil and a helper function here instead of
 # CString because the latter seems to break pickling on Windows.
 
-def _BSMTokenIsEndOfString(value, unused_context):
+# pylint: disable=unused-argument
+def _BSMTokenIsEndOfString(value, context):
   """Construct context parser helper function to replace lambda."""
   return value == b'\x00'
 
@@ -786,6 +787,8 @@ class BSMParser(interface.FileObjectParser):
       string = byte_stream.decode('utf-8', errors='ignore')
     return string.partition(b'\x00')[0]
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a BSM file-like object.
 

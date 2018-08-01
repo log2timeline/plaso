@@ -919,7 +919,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     """
     return self._HasAttributeContainers(self._CONTAINER_TYPE_EVENT_TAG)
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def Open(self, path=None, read_only=True, **unused_kwargs):
     """Opens the storage.
 

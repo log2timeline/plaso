@@ -46,8 +46,8 @@ class ASLFormatter(interface.ConditionalEventFormatter):
       6 : 'INFO',
       7 : 'DEBUG'}
 
-  # pylint: disable=differing-param-doc,differing-type-doc,missing-type-doc
-  def GetMessages(self, unused_formatter_mediator, event):
+  # pylint: disable=unused-argument
+  def GetMessages(self, formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 
     Args:

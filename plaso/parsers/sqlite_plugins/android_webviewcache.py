@@ -51,6 +51,8 @@ class AndroidWebViewCachePlugin(interface.SQLitePlugin):
           'TEXT, contentlength INTEGER, contentdisposition TEXT, UNIQUE (url) '
           'ON CONFLICT REPLACE)')}]
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a row from the database.
 

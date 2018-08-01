@@ -67,7 +67,8 @@ class BaseMRUListExWindowsRegistryPlugin(
 
   _DEFINITION_FILE = 'mru.yaml'
 
-  # pylint: disable=redundant-returns-doc
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,redundant-returns-doc
   @abc.abstractmethod
   def _ParseMRUListExEntryValue(
       self, parser_mediator, registry_key, entry_index, entry_number, **kwargs):
@@ -164,9 +165,10 @@ class MRUListExStringWindowsRegistryPlugin(BaseMRUListExWindowsRegistryPlugin):
       'http://forensicartifacts.com/2011/02/recentdocs/',
       'https://github.com/libyal/winreg-kb/wiki/MRU-keys']
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def _ParseMRUListExEntryValue(
-      self, parser_mediator, registry_key, entry_index, entry_number,
-      **kwargs):
+      self, parser_mediator, registry_key, entry_index, entry_number, **kwargs):
     """Parses the MRUListEx entry value.
 
     Args:
@@ -206,7 +208,8 @@ class MRUListExStringWindowsRegistryPlugin(BaseMRUListExWindowsRegistryPlugin):
 
     return value_string
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def ExtractEvents(
       self, parser_mediator, registry_key, codepage='cp1252', **kwargs):
     """Extracts events from a Windows Registry key.
@@ -235,7 +238,8 @@ class MRUListExShellItemListWindowsRegistryPlugin(
           'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
           'Explorer\\StreamMRU')])
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def _ParseMRUListExEntryValue(
       self, parser_mediator, registry_key, entry_index, entry_number,
       codepage='cp1252', **kwargs):
@@ -276,7 +280,8 @@ class MRUListExShellItemListWindowsRegistryPlugin(
 
     return value_string
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def ExtractEvents(
       self, parser_mediator, registry_key, codepage='cp1252', **kwargs):
     """Extracts events from a Windows Registry key.
@@ -309,7 +314,8 @@ class MRUListExStringAndShellItemWindowsRegistryPlugin(
           'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
           'Explorer\\RecentDocs')])
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def _ParseMRUListExEntryValue(
       self, parser_mediator, registry_key, entry_index, entry_number,
       codepage='cp1252', **kwargs):
@@ -374,7 +380,8 @@ class MRUListExStringAndShellItemWindowsRegistryPlugin(
 
     return value_string
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def ExtractEvents(
       self, parser_mediator, registry_key, codepage='cp1252', **kwargs):
     """Extracts events from a Windows Registry key.
@@ -406,7 +413,8 @@ class MRUListExStringAndShellItemListWindowsRegistryPlugin(
           'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
           'Explorer\\ComDlg32\\LastVisitedPidlMRU')])
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def _ParseMRUListExEntryValue(
       self, parser_mediator, registry_key, entry_index, entry_number,
       codepage='cp1252', **kwargs):
@@ -471,7 +479,8 @@ class MRUListExStringAndShellItemListWindowsRegistryPlugin(
 
     return value_string
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def ExtractEvents(
       self, parser_mediator, registry_key, codepage='cp1252', **kwargs):
     """Extracts events from a Windows Registry key.

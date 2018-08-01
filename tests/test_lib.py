@@ -150,6 +150,6 @@ class TempDirectory(object):
     self.name = tempfile.mkdtemp()
     return self.name
 
-  def __exit__(self, unused_type, unused_value, unused_traceback):
+  def __exit__(self, type, value, traceback):
     """Make this work with the 'with' statement."""
     shutil.rmtree(self.name, True)

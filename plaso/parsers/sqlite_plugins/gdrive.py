@@ -207,6 +207,8 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     paths.reverse()
     return '/{0:s}/'.format('/'.join(paths))
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseCloudEntryRow(
       self, parser_mediator, query, row, cache=None, database=None,
       **unused_kwargs):
@@ -250,6 +252,8 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseLocalEntryRow(
       self, parser_mediator, query, row, cache=None, database=None,
       **unused_kwargs):

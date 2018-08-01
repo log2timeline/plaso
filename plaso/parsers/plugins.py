@@ -52,7 +52,9 @@ class BasePlugin(object):
     """Return the name of the plugin."""
     return self.NAME
 
-  def Process(self, unused_parser_mediator, **kwargs):
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,unused-argument
+  def Process(self, parser_mediator, **kwargs):
     """Evaluates if this is the correct plugin and processes data accordingly.
 
     The purpose of the process function is to evaluate if this particular
@@ -62,7 +64,7 @@ class BasePlugin(object):
     that can be used to evaluate if the plugin should be run or not.
 
     Args:
-      unused_parser_mediator (ParserMediator): mediates interactions between
+      parser_mediator (ParserMediator): mediates interactions between
           parsers and other components, such as storage and dfvfs.
       kwargs: Depending on the plugin they may require different sets of
               arguments to be able to evaluate whether or not this is
@@ -75,6 +77,8 @@ class BasePlugin(object):
       raise ValueError('Unused keyword arguments: {0:s}.'.format(
           ', '.join(kwargs.keys())))
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def UpdateChainAndProcess(self, parser_mediator, **kwargs):
     """Wrapper for Process() to synchronize the parser chain.
 

@@ -16,8 +16,7 @@ class TestCookiePlugin(interface.BaseCookiePlugin):
   NAME = 'test_cookie_plugin'
   DESCRIPTION = 'Test cookie plugin.'
 
-  def GetEntries(
-      self, unused_parser_mediator, cookie_data=None, url=None, **kwargs):
+  def GetEntries(self, parser_mediator, cookie_data=None, url=None, **kwargs):
     """Extract and return EventObjects from the data structure.
 
     Args:

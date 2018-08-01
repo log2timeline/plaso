@@ -116,6 +116,8 @@ class KikIOSPlugin(interface.SQLitePlugin):
           'INTEGER, Z_OPT INTEGER, ZLOCALFLAGS INTEGER, ZUSER INTEGER, '
           'ZPUBLICMESSAGINGKEY BLOB )')}]
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseMessageRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a message row.
 

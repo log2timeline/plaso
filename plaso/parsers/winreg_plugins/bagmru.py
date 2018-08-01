@@ -203,7 +203,8 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
           parser_mediator, sub_key, parent_path_segments, codepage=codepage)
       parent_path_segments.pop()
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def ExtractEvents(
       self, parser_mediator, registry_key, codepage='cp1252', **kwargs):
     """Extracts events from a Windows Registry key.

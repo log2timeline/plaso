@@ -16,7 +16,7 @@ from tests.cli import test_lib
 class TestBaseTableView(views.BaseTableView):
   """Class that implements a table view for testing."""
 
-  def Write(self, unused_output_writer):
+  def Write(self, output_writer):
     """Writes the table to the output writer.
 
     Args:

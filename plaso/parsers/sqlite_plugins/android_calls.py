@@ -157,6 +157,8 @@ class AndroidCallPlugin(interface.SQLitePlugin):
       2: 'OUTGOING',
       3: 'MISSED'}
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseCallsRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a Call record row.
 

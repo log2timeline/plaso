@@ -370,11 +370,17 @@ class SQLiteParser(interface.FileEntryParser):
 
   @classmethod
   def GetFormatSpecification(cls):
-    """FormatSpecification: format specification."""
+    """Retrieves the format specification.
+
+    Returns:
+      FormatSpecification: a format specification or None if not available.
+    """
     format_specification = specification.FormatSpecification(cls.NAME)
     format_specification.AddNewSignature(b'SQLite format 3', offset=0)
     return format_specification
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileEntry(self, parser_mediator, file_entry, **kwargs):
     """Parses a SQLite database file entry.
 

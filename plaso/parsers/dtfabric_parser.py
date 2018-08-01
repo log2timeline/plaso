@@ -275,6 +275,8 @@ class DtFabricBaseParser(interface.FileObjectParser):
 
     raise errors.ParseError('Unable to read {0:s}'.format(data_type_map.name))
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   @abc.abstractmethod
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a file-like object.

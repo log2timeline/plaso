@@ -101,6 +101,8 @@ class CustomDestinationsParser(interface.FileObjectParser):
 
     return lnk_file_size
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a .customDestinations-ms file-like object.
 

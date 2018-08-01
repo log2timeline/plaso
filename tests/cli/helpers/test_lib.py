@@ -27,7 +27,7 @@ class TestHelper(interface.ArgumentsHelper):
         help='Stuff to insert into the arguments.', dest='dynamic')
 
   @classmethod
-  def ParseOptions(cls, options, unused_config_object):
+  def ParseOptions(cls, options, config_object):
     """Parse and validate the configuration options."""
     if not getattr(options, 'dynamic', ''):
       raise errors.BadConfigOption('Always set this.')

@@ -139,11 +139,12 @@ class MactimeParser(dsv_parser.DSVParser):
       event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def VerifyRow(self, unused_parser_mediator, row):
+  # pylint: disable=unused-argument
+  def VerifyRow(self, parser_mediator, row):
     """Verifies if a line of the file is in the expected format.
 
     Args:
-      unused_parser_mediator (ParserMediator): mediates interactions between
+      parser_mediator (ParserMediator): mediates interactions between
           parsers and other components, such as storage and dfvfs.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
 

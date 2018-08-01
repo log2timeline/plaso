@@ -166,8 +166,8 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
     Args:
       data_dict (dict[str, list[str]): values per name.
       name (str): name of the value to retrieve.
-      default_value (str): value to return if the name has no value set in
-          data_dict.
+      default_value (Optional[object]): value to return if the name has no value
+          set in data_dict.
 
     Returns:
       str: value represented as a string.
@@ -370,6 +370,8 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
           'of: {2:s}.').format(
               self.NAME, header.operation_identifier, display_name))
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a CUPS IPP file-like object.
 

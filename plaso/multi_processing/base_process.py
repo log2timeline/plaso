@@ -110,12 +110,13 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     """
     return
 
-  def _SigSegvHandler(self, unused_signal_number, unused_stack_frame):
+  # pylint: disable=unused-argument
+  def _SigSegvHandler(self, signal_number, stack_frame):
     """Signal handler for the SIGSEGV signal.
 
     Args:
-      unused_signal_number (int): numeric representation of the signal.
-      unused_stack_frame (frame): current stack frame or None.
+      signal_number (int): numeric representation of the signal.
+      stack_frame (frame): current stack frame or None.
     """
     self._OnCriticalError()
 
@@ -125,12 +126,13 @@ class MultiProcessBaseProcess(multiprocessing.Process):
       signal.signal(signal.SIGSEGV, self._original_sigsegv_handler)
       os.kill(self._pid, signal.SIGSEGV)
 
-  def _SigTermHandler(self, unused_signal_number, unused_stack_frame):
+  # pylint: disable=unused-argument
+  def _SigTermHandler(self, signal_number, stack_frame):
     """Signal handler for the SIGTERM signal.
 
     Args:
-      unused_signal_number (int): numeric representation of the signal.
-      unused_stack_frame (frame): current stack frame or None.
+      signal_number (int): numeric representation of the signal.
+      stack_frame (frame): current stack frame or None.
     """
     self.SignalAbort()
 

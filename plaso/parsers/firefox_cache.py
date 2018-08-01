@@ -337,6 +337,8 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
 
     return cache_record_header, event_data
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Firefox cache file-like object.
 
@@ -436,6 +438,8 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
     # Each chunk in the cached record is padded with two bytes.
     return length + (hash_chunks * 2)
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Firefox cache file-like object.
 

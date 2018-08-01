@@ -395,6 +395,8 @@ class ChromeCacheParser(interface.FileEntryParser):
         cache_address = cache_entry.next
         cache_address_chain_length += 1
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileEntry(self, parser_mediator, file_entry, **kwargs):
     """Parses Chrome Cache files.
 
@@ -425,6 +427,8 @@ class ChromeCacheParser(interface.FileEntryParser):
     finally:
       index_file.Close()
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseIndexFile(
       self, parser_mediator, file_system, file_entry, index_file, **kwargs):
     """Parses a Chrome Cache index file object.
@@ -435,6 +439,7 @@ class ChromeCacheParser(interface.FileEntryParser):
       file_system (dfvfs.FileSystem): file system.
       file_entry (dfvfs.FileEntry): file entry.
       index_file (IndexFile): Chrome cache index file.
+      kwargs: keyword arguments to pass to the path specification factory.
     """
     # Build a lookup table for the data block files.
     path_segments = file_system.SplitPath(file_entry.path_spec.location)

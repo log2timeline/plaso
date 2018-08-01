@@ -139,6 +139,8 @@ class UtmpxParser(dtfabric_parser.DtFabricBaseParser):
     format_specification.AddNewSignature(b'utmpx-1.00\x00', offset=0)
     return format_specification
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses an UTMPX file-like object.
 
