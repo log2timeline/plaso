@@ -115,8 +115,8 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     """Signal handler for the SIGSEGV signal.
 
     Args:
-      signal_number (int): numeric representation of the signal.
-      stack_frame (frame): current stack frame or None.
+      unused_signal_number (int): numeric representation of the signal.
+      unused_stack_frame (frame): current stack frame or None.
     """
     self._OnCriticalError()
 
@@ -131,8 +131,8 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     """Signal handler for the SIGTERM signal.
 
     Args:
-      signal_number (int): numeric representation of the signal.
-      stack_frame (frame): current stack frame or None.
+      unused_signal_number (int): numeric representation of the signal.
+      unused_stack_frame (frame): current stack frame or None.
     """
     self.SignalAbort()
 

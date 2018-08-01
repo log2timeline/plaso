@@ -98,7 +98,7 @@ class ZeroMQQueue(plaso_queue.Queue):
       zmq_socket (zmq.Socket): used to the send the item.
       item (object): sent on the queue. Will be pickled prior to sending.
       block (Optional[bool]): whether the push should be performed in blocking
-          or non-block mode.
+          or non-blocking mode.
 
     Returns:
       bool: whether the item was sent successfully.
@@ -299,7 +299,7 @@ class ZeroMQQueue(plaso_queue.Queue):
     Args:
       item (object): item to push on the queue.
       block (Optional[bool]): whether the push should be performed in blocking
-          or non-block mode.
+          or non-blocking mode.
 
     Raises:
       QueueAlreadyClosed: If the queue is closed.
@@ -314,7 +314,7 @@ class ZeroMQQueue(plaso_queue.Queue):
       object: item from the queue.
 
     Raises:
-      QueueEmpty: If the queue is empty, and no item could be popped within the
+      QueueEmpty: if the queue is empty, and no item could be popped within the
           queue timeout.
     """
 
@@ -378,7 +378,7 @@ class ZeroMQPullQueue(ZeroMQQueue):
     Args:
       item (object): item to push on the queue.
       block (Optional[bool]): whether the push should be performed in blocking
-          or non-block mode.
+          or non-blocking mode.
 
     Raises:
       WrongQueueType: As Push is not supported this queue.
@@ -425,7 +425,7 @@ class ZeroMQPushQueue(ZeroMQQueue):
     Args:
       item (object): item to push on the queue.
       block (Optional[bool]): whether the push should be performed in blocking
-          or non-block mode.
+          or non-blocking mode.
 
     Raises:
       KeyboardInterrupt: if the process is sent a KeyboardInterrupt while
@@ -540,7 +540,7 @@ class ZeroMQRequestQueue(ZeroMQQueue):
     Args:
       item (object): item to push on the queue.
       block (Optional[bool]): whether the push should be performed in blocking
-          or non-block mode.
+          or non-blocking mode.
 
     Raises:
       WrongQueueType: As Push is not supported this queue.
@@ -757,7 +757,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
     Args:
       item (object): item to push on the queue.
       block (Optional[bool]): whether the push should be performed in blocking
-          or non-block mode.
+          or non-blocking mode.
 
     Raises:
       QueueAlreadyClosed: If the queue is closed.

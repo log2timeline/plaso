@@ -47,7 +47,7 @@ class ErrorDataTypeMap(dtfabric_data_maps.DataTypeMap):
     """Folds the data type into a byte stream.
 
     Args:
-      mapped_value (object): mapped value.
+      unused_mapped_value (object): mapped value.
 
     Returns:
       bytes: byte stream.
@@ -65,7 +65,7 @@ class ErrorDataTypeMap(dtfabric_data_maps.DataTypeMap):
     """Maps the data type on a byte stream.
 
     Args:
-      byte_stream (bytes): byte stream.
+      unused_byte_stream(bytes): byte stream.
 
     Returns:
       object: mapped value.

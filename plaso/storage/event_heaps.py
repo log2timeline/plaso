@@ -112,7 +112,7 @@ class SerializedEventHeap(object):
     """Pops an event from the heap.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
 
         int: event timestamp or None if the heap is empty
         bytes: serialized event or None if the heap is empty

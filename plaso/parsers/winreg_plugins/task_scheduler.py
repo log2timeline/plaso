@@ -57,7 +57,7 @@ class TaskCacheWindowsRegistryPlugin(
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
 
     Yields:
-      tuple: contains:
+      tuple: containing:
 
         dfwinreg.WinRegistryKey: Windows Registry key.
         dfwinreg.WinRegistryValue: Windows Registry value.

@@ -25,7 +25,6 @@ from plaso.lib import errors
 # pylint: disable=missing-type-doc,missing-return-type-doc
 
 
-
 MONTH_DICT = {
     'jan': 1,
     'feb': 2,

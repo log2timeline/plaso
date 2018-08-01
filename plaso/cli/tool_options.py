@@ -231,7 +231,7 @@ class ParsersOptions(object):
     """Retrieves the parser presets information.
 
     Returns:
-      list[tuple]: contains:
+      list[tuple]: containing:
 
         str: parser preset name
         str: parsers names corresponding to the preset

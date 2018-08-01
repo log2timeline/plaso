@@ -35,7 +35,7 @@ class FakeMySQLdbConnection(object):
     """Sets the character set.
 
     Args:
-      character_set (str): character set.
+      unused_character_set (str): character set.
     """
     return
 
@@ -111,10 +111,10 @@ def connect(hostname, username, password, database_name):
   """Connects to the MySQL database server.
 
   Args:
-    hostname (str): hostname of the server.
-    username (str): username to use to connect to the server.
-    password (str): password to use to connect to the server.
-    database_name (str): name of the database on the server.
+    unused_hostname (str): hostname of the server.
+    unused_username (str): username to use to connect to the server.
+    unused_password (str): password to use to connect to the server.
+    unused_database_name (str): name of the database on the server.
 
   Returns:
     FakeMySQLdbConnection: connection

@@ -120,7 +120,7 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
       text (str): text obtained from the log record.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
 
         nickname (str): nickname.
         text (str): text sent by nickname or service messages.

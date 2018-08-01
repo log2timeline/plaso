@@ -905,7 +905,7 @@ class StorageWriter(object):
     """Creates a task storage.
 
     Args:
-      task (Task): task.
+      unused_task (Task): task.
 
     Returns:
       StorageWriter: storage writer.
@@ -973,7 +973,7 @@ class StorageWriter(object):
     """Finalizes a processed task storage.
 
     Args:
-      task (Task): task.
+      unused_task (Task): task.
 
     Raises:
       NotImplementedError: since there is no implementation.
@@ -989,7 +989,7 @@ class StorageWriter(object):
     """Prepares a task storage for merging.
 
     Args:
-      task (Task): task.
+      unused_task (Task): task.
 
     Raises:
       NotImplementedError: since there is no implementation.
@@ -1014,7 +1014,7 @@ class StorageWriter(object):
     """Removes a processed task storage.
 
     Args:
-      task (Task): task.
+      unused_task (Task): task.
 
     Raises:
       NotImplementedError: since there is no implementation.

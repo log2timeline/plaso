@@ -15,7 +15,7 @@ class TestEventFilter(interface.FilterObject):
     """Compiles the filter expression.
 
     Args:
-      filter_expression: string that contains the filter expression.
+      unused_filter_expression (str): filter expression.
 
     Raises:
       WrongPlugin: if the filter could not be compiled.

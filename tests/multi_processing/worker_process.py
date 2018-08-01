@@ -27,9 +27,9 @@ class TestEventExtractionWorker(worker.EventExtractionWorker):
     """Processes a path specification.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
-      path_spec (dfvfs.PathSpec): path specification.
+      unused_mediator (ParserMediator): mediates interactions between
+          parsers and other components, such as storage and dfvfs.
+      unused_path_spec (dfvfs.PathSpec): path specification.
     """
     pass
 
@@ -41,9 +41,9 @@ class TestFailureEventExtractionWorker(worker.EventExtractionWorker):
     """Processes a path specification.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
-      path_spec (dfvfs.PathSpec): path specification.
+      unused_mediator (ParserMediator): mediates interactions between
+          parsers and other components, such as storage and dfvfs.
+      unused_path_spec (dfvfs.PathSpec): path specification.
 
     Raises:
       dfvfs_errors.CacheFullError: cache full error.

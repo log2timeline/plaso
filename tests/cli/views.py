@@ -20,7 +20,7 @@ class TestBaseTableView(views.BaseTableView):
     """Writes the table to the output writer.
 
     Args:
-      output_writer: the output writer (instance of OutputWriter).
+      unused_output_writer (OutputWriter): output writer.
     """
     return
 

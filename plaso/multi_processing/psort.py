@@ -68,7 +68,7 @@ class PsortEventHeap(object):
       event (EventObject): event.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
 
         str: identifier of the event MACB group or None if the event cannot
             be grouped.
@@ -127,7 +127,7 @@ class PsortEventHeap(object):
     """Pops an event from the heap.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
 
         str: identifier of the event MACB group or None if the event cannot
             be grouped.

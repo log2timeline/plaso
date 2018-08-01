@@ -173,7 +173,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
           a line of a text file.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
         year (int): year.
         month (int): month, where 1 represents January.
         day_of_month (int): day of month, where 1 is the first day of the month.

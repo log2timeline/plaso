@@ -85,8 +85,7 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
       4: 'SOURCE_IE_IMPORTED',
       5: 'SOURCE_SAFARI_IMPORTED'}
 
-  # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event):
+  def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 
     Args:

@@ -273,7 +273,7 @@ class DynamicFieldsHelper(object):
     """Formats the time zone.
 
     Args:
-      event (EventObject): event.
+      unused_event (EventObject): event.
 
     Returns:
       str: time zone field.
