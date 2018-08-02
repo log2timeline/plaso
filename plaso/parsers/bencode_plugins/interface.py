@@ -120,7 +120,7 @@ class BencodePlugin(plugins.BasePlugin):
   # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
   # pylint: disable=missing-param-doc
   @abc.abstractmethod
-  def GetEntries(self, parser_mediator, data=None, match=None, **kwargs):
+  def GetEntries(self, parser_mediator, data=None, **kwargs):
     """Extracts event object from the values of entries within a bencoded file.
 
     This is the main method that a bencode plugin needs to implement.
@@ -141,9 +141,7 @@ class BencodePlugin(plugins.BasePlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      data (dict[str, object]): bencode data values.
-      match: Optional dictionary containing only the keys selected in the
-             BENCODE_KEYS.
+      data (Optional[dict(str, object)]): bencode data values.
     """
 
   # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
@@ -179,6 +177,5 @@ class BencodePlugin(plugins.BasePlugin):
     super(BencodePlugin, self).Process(parser_mediator)
 
     logger.debug('Bencode Plugin Used: {0:s}'.format(self.NAME))
-    match = self._GetKeys(data, self.BENCODE_KEYS, 3)
 
-    self.GetEntries(parser_mediator, data=data, match=match)
+    self.GetEntries(parser_mediator, data=data)

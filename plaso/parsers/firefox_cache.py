@@ -199,7 +199,7 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
       display_name (str): display name.
 
     Returns:
-      firefox__cache_config: namedtuple containing the block size and first
+      firefox_cache_config: namedtuple containing the block size and first
           record offset.
 
     Raises:

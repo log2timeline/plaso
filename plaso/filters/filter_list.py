@@ -12,8 +12,6 @@ from plaso.filters import interface
 from plaso.filters import manager
 from plaso.lib import errors
 
-# pylint: disable=missing-type-doc,missing-return-type-doc
-
 
 class ObjectFilterList(interface.FilterObject):
   """A list of object-filters with additional metadata."""

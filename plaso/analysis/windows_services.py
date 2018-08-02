@@ -275,7 +275,7 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
 
     Args:
       output_format (str): The format the the plugin should used to produce its
-                     output.
+          output.
     """
     self._output_format = output_format
 
