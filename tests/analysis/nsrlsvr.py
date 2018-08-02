@@ -77,6 +77,7 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
        'pathspec': fake_path_spec.FakePathSpec(
            location='C:\\WINDOWS\\system32\\evil.exe')}]
 
+  # pylint: disable=unused-argument
   def _MockCreateConnection(self, connection_information, timeout):
     """Mocks the socket create_connection call
 

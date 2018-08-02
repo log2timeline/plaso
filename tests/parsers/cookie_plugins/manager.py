@@ -16,12 +16,13 @@ class TestCookiePlugin(interface.BaseCookiePlugin):
   NAME = 'test_cookie_plugin'
   DESCRIPTION = 'Test cookie plugin.'
 
+  # pylint: disable=unused-argument
   def GetEntries(self, parser_mediator, cookie_data=None, url=None, **kwargs):
     """Extract and return EventObjects from the data structure.
 
     Args:
-      unused_parser_mediator (ParserMediator): mediates interactions between
-          parsers and other components, such as storage and dfvfs.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       cookie_data (Optional[bytes]): cookie data, as a byte sequence.
       url (Optional[str]): URL or path where the cookie was set.
     """

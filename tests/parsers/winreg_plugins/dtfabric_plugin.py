@@ -29,9 +29,6 @@ class ErrorBytesIO(io.BytesIO):
       size (Optional[int]): number of bytes to read, where None represents
           all remaining bytes.
 
-    Returns:
-      bytes: bytes read.
-
     Raises:
       IOError: for testing.
     """
@@ -47,14 +44,11 @@ class ErrorDataTypeMap(dtfabric_data_maps.DataTypeMap):
     """Folds the data type into a byte stream.
 
     Args:
-      unused_mapped_value (object): mapped value.
+      mapped_value (object): mapped value.
 
-    Returns:
-      bytes: byte stream.
 
     Raises:
-      FoldingError: if the data type definition cannot be folded into
-          the byte stream.
+      FoldingError: for testing.
     """
     raise dtfabric_errors.FoldingError(
         'Unable to fold to byte stream for testing purposes.')
@@ -65,14 +59,10 @@ class ErrorDataTypeMap(dtfabric_data_maps.DataTypeMap):
     """Maps the data type on a byte stream.
 
     Args:
-      unused_byte_stream(bytes): byte stream.
-
-    Returns:
-      object: mapped value.
+      byte_stream(bytes): byte stream.
 
     Raises:
-      dtfabric.MappingError: if the data type definition cannot be mapped on
-          the byte stream.
+      dtfabric.MappingError: for testing.
     """
     raise dtfabric_errors.MappingError(
         'Unable to map byte stream for testing purposes.')

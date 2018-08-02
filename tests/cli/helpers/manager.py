@@ -22,14 +22,31 @@ class AnotherTestHelper(interface.ArgumentsHelper):
 
   @classmethod
   def AddArguments(cls, argument_group):
-    """Add command line arguments to an argument group."""
+    """Adds command line arguments to an argument group.
+
+    This function takes an argument parser or an argument group object and adds
+    to it all the command line arguments this helper supports.
+
+    Args:
+      argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
+          argparse group.
+    """
     argument_group.add_argument(
         '-c', '--correcto', dest='correcto', action='store_true',
         default=False, help='The correcto option.')
 
   @classmethod
-  def ParseOptions(cls, options, config_object):
-    """Parse and validate the configurational options."""
+  def ParseOptions(cls, options, configuration_object):
+    """Parse and validate the configuration options.
+
+    Args:
+      options (argparse.Namespace): parser options.
+      configuration_object (object): object to be configured by the argument
+          helper.
+
+    Raises:
+      BadConfigOption: when a configuration parameter fails validation.
+    """
     if not hasattr(options, 'correcto'):
       raise errors.BadConfigOption('Correcto not set.')
 

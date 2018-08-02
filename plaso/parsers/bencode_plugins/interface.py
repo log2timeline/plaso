@@ -17,8 +17,6 @@ from plaso.lib import errors
 from plaso.parsers import logger
 from plaso.parsers import plugins
 
-# pylint: disable=missing-type-doc,missing-return-type-doc,missing-yield-type-doc
-
 
 class BencodePlugin(plugins.BasePlugin):
   """This is an abstract class from which plugins should be based."""
@@ -50,7 +48,7 @@ class BencodePlugin(plugins.BasePlugin):
 
     Args:
       data (dict[str, object]): bencode data values.
-      keys (list[str]: keys that should be returned.
+      keys (list[str]): keys that should be returned.
       depth (int): how many levels deep to check for a match.
 
     Returns:

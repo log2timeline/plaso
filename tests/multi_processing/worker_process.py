@@ -23,13 +23,14 @@ from tests.multi_processing import test_lib
 class TestEventExtractionWorker(worker.EventExtractionWorker):
   """Event extraction worker for testing."""
 
+  # pylint: disable=unused-argument
   def ProcessPathSpec(self, mediator, path_spec):
     """Processes a path specification.
 
     Args:
-      unused_mediator (ParserMediator): mediates interactions between
-          parsers and other components, such as storage and dfvfs.
-      unused_path_spec (dfvfs.PathSpec): path specification.
+      mediator (ParserMediator): mediates interactions between parsers and
+          other components, such as storage and dfvfs.
+      path_spec (dfvfs.PathSpec): path specification.
     """
     pass
 
@@ -37,13 +38,14 @@ class TestEventExtractionWorker(worker.EventExtractionWorker):
 class TestFailureEventExtractionWorker(worker.EventExtractionWorker):
   """Event extraction worker for testing failure."""
 
+  # pylint: disable=unused-argument
   def ProcessPathSpec(self, mediator, path_spec):
     """Processes a path specification.
 
     Args:
-      unused_mediator (ParserMediator): mediates interactions between
-          parsers and other components, such as storage and dfvfs.
-      unused_path_spec (dfvfs.PathSpec): path specification.
+      mediator (ParserMediator): mediates interactions between parsers and
+          other components, such as storage and dfvfs.
+      path_spec (dfvfs.PathSpec): path specification.
 
     Raises:
       dfvfs_errors.CacheFullError: cache full error.

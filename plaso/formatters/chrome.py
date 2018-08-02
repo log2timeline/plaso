@@ -71,7 +71,7 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
           ('URL what was generated from a replaceable keyword other than the '
            'default search provider')),
       10: ('KEYWORD_GENERATED',
-           ('Corresponds to a visit generated from a KEYWORD'))}
+           'Corresponds to a visit generated from a KEYWORD')}
 
   # The following is the values for the source enum found in the visit_source
   # table and describes where a record originated from (if it originates from a
@@ -85,13 +85,14 @@ class ChromePageVisitedFormatter(interface.ConditionalEventFormatter):
       4: 'SOURCE_IE_IMPORTED',
       5: 'SOURCE_SAFARI_IMPORTED'}
 
-  def GetMessages(self, unused_formatter_mediator, event):
+  # pylint: disable=unused-argument
+  def GetMessages(self, formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 
     Args:
-      formatter_mediator (FormatterMediator): mediates the interactions
-          between formatters and other components, such as storage and Windows
-          EventLog resources.
+      formatter_mediator (FormatterMediator): mediates the interactions between
+          formatters and other components, such as storage and Windows EventLog
+          resources.
       event (EventObject): event.
 
     Returns:

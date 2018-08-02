@@ -9,7 +9,7 @@ import unittest
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
 
-from plaso.engine import knowledge_base
+from plaso.engine import knowledge_base as knowledge_base_library
 from plaso.preprocessors import interface
 from plaso.preprocessors import manager
 
@@ -21,13 +21,14 @@ class TestArtifactPreprocessorPlugin(interface.ArtifactPreprocessorPlugin):
 
   ARTIFACT_DEFINITION_NAME = 'TestArtifactDefinition'
 
+
+  # pylint: disable=unused-argument
   def ParseValueData(self, knowledge_base, value_data):
     """Parses artifact value data for a preprocessing attribute.
 
     Args:
-      unused_knowledge_base (KnowledgeBase): to fill with preprocessing
-          information.
-      unused_value_data (object): artifact value data.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      value_data (object): artifact value data.
     """
     return
 
@@ -45,7 +46,7 @@ class PreprocessPluginsManagerTest(shared_test_lib.BaseTestCase):
     reader = artifacts_reader.YamlArtifactsReader()
     registry.ReadFromDirectory(reader, path)
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
+    knowledge_base_object = knowledge_base_library.KnowledgeBase()
 
     _ = knowledge_base_object
 

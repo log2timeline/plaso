@@ -22,7 +22,7 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
     """Initializes a Windows Registry file reader object.
 
     Args:
-      file_system (dfvfs.FileSytem): file system.
+      file_system (dfvfs.FileSystem): file system.
       mount_point (dfvfs.PathSpec): mount point path specification.
       environment_variables (Optional[list[EnvironmentVariableArtifact]]):
           environment variables.

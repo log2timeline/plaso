@@ -25,22 +25,19 @@ class TestAnalysisPlugin(interface.AnalysisPlugin):
     can be assembled.
 
     Args:
-      unused_mediator (AnalysisMediator): mediates interactions between
-          analysis plugins and other components, such as storage and dfvfs.
-
-    Returns:
-      AnalysisReport: analysis report.
+      mediator (AnalysisMediator): mediates interactions between analysis
+          plugins and other components, such as storage and dfvfs.
     """
     return
 
-  # pylint: disable=arguments-differ
+  # pylint: disable=arguments-differ,unused-argument
   def ExamineEvent(self, mediator, event, **unused_kwargs):
     """Analyzes an event object.
 
     Args:
-      unused_mediator (AnalysisMediator): mediates interactions between
-          analysis plugins and other components, such as storage and dfvfs.
-      unused_event (EventObject): event.
+      mediator (AnalysisMediator): mediates interactions between analysis
+          plugins and other components, such as storage and dfvfs.
+      event (EventObject): event.
     """
     return
 

@@ -29,9 +29,6 @@ class ErrorBytesIO(io.BytesIO):
       size (Optional[int]): number of bytes to read, where None represents
           all remaining bytes.
 
-    Returns:
-      bytes: bytes read.
-
     Raises:
       IOError: for testing.
     """
@@ -42,37 +39,29 @@ class ErrorDataTypeMap(dtfabric_data_maps.DataTypeMap):
   """Data type map that errors."""
 
   # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
+  # pylint: disable=missing-param-doc,unused-argument
   def FoldByteStream(self, mapped_value, **unused_kwargs):
     """Folds the data type into a byte stream.
 
     Args:
-      unused_mapped_value (object): mapped value.
-
-    Returns:
-      bytes: byte stream.
+      mapped_value (object): mapped value.
 
     Raises:
-      FoldingError: if the data type definition cannot be folded into
-          the byte stream.
+      FoldingError: for testing.
     """
     raise dtfabric_errors.FoldingError(
         'Unable to fold to byte stream for testing purposes.')
 
   # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
+  # pylint: disable=missing-param-doc,unused-argument
   def MapByteStream(self, byte_stream, **unused_kwargs):
     """Maps the data type on a byte stream.
 
     Args:
-      unused_byte_stream (bytes): byte stream.
-
-    Returns:
-      object: mapped value.
+      byte_stream (bytes): byte stream.
 
     Raises:
-      dtfabric.MappingError: if the data type definition cannot be mapped on
-          the byte stream.
+      dtfabric.MappingError: for testing.
     """
     raise dtfabric_errors.MappingError(
         'Unable to map byte stream for testing purposes.')

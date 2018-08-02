@@ -34,7 +34,7 @@ class TestDSVParser(dsv_parser.DSVParser):
     """Parses a line of the log file and extract events.
 
     Args:
-      unused_parser_mediator (ParserMediator): mediates interactions between
+      parser_mediator (ParserMediator): mediates interactions between
           parsers and other components, such as storage and dfvfs.
       row_offset (int): offset of the row.
       row (dict[str, str]): fields of a single row, as denoted in COLUMNS.
@@ -42,13 +42,14 @@ class TestDSVParser(dsv_parser.DSVParser):
     self.row_offsets.append(row_offset)
     self.rows.append(row)
 
+  # pylint: disable=unused-argument
   def VerifyRow(self, parser_mediator, row):
     """Verifies if a line of the file corresponds with the expected format.
 
     Args:
-      unused_parser_mediator (ParserMediator): mediates interactions between
+      parser_mediator (ParserMediator): mediates interactions between
           parsers and other components, such as storage and dfvfs.
-      unused_row (dict[str, str]): fields of a single row, as denoted in COLUMNS.
+      row (dict[str, str]): fields of a single row, as denoted in COLUMNS.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.
