@@ -17,12 +17,6 @@ from tests.parsers import test_lib
 class FirefoxCacheParserTest(test_lib.ParserTestCase):
   """A unit test for the FirefoxCacheParser."""
 
-  def _VerifyMajorMinor(self, events):
-    """Verify that valid Firefox cache version is extracted."""
-    for event in events:
-      self.assertEqual(event.major, 1)
-      self.assertEqual(event.minor, 19)
-
   @shared_test_lib.skipUnlessHasTestFile(['firefox_cache', 'invalid_file'])
   def testParseCache_InvalidFile(self):
     """Verify that parser do not accept small, invalid files."""
@@ -62,7 +56,8 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event, expected_message, expected_short_message)
 
-    self._VerifyMajorMinor(events)
+    for event in events:
+      self.assertEqual(event.version, "1.19")
 
   @shared_test_lib.skipUnlessHasTestFile([
       'firefox_cache', 'firefox28', '_CACHE_002_'])
@@ -94,7 +89,8 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2014-04-21 14:10:58.000000')
 
-    self._VerifyMajorMinor(events)
+    for event in events:
+      self.assertEqual(event.version, "1.19")
 
   @shared_test_lib.skipUnlessHasTestFile([
       'firefox_cache', 'firefox28', '_CACHE_003_'])
@@ -116,7 +112,8 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2014-04-21 14:11:07.000000')
 
-    self._VerifyMajorMinor(events)
+    for event in events:
+      self.assertEqual(event.version, "1.19")
 
   @shared_test_lib.skipUnlessHasTestFile([
       'firefox_cache', 'firefox28', 'E8D65m01'])
