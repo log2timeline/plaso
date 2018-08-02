@@ -14,7 +14,6 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import definitions
 from plaso.parsers import dtfabric_parser
-from plaso.parsers import interface
 from plaso.parsers import logger
 from plaso.parsers import manager
 
