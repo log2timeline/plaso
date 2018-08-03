@@ -46,7 +46,8 @@ class MacNotificationCenterEventData(events.EventData):
 
   def __init__(self):
     """Initialize event data."""
-    super(MacNotificationCenterEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(MacNotificationCenterEventData, self).__init__( \
+        data_type=self.DATA_TYPE)
     self.bundle_name = None
     self.identity = None
     self.message = None
@@ -105,7 +106,7 @@ class MacNotificationCenterPlugin(interface.SQLitePlugin):
     event_data.presented = self._GetRowValue(query_hash, row, 'presented')
 
     # full_biplist is the entire blob content as stored in the sqlite record
-    full_biplist = biplist.readPlistFromString(self._GetRowValue(query_hash,
+    full_biplist = biplist.readPlistFromString(self._GetRowValue(query_hash, \
         row, 'dataBlob'))
     # plist is the subsection 'req' containing the extra info about
     # the notification entry
