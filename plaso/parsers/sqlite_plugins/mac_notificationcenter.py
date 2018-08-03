@@ -34,8 +34,8 @@ class MacNotificationCenterEventData(events.EventData):
                       the notification
     identity (str): optional.
     message (str): body of the notification message
-    presented (int): either 1 or 0 if the notification has been shown to the user.
-                      Research on the full meaning of this still ongoing
+    presented (int): either 1 or 0 if the notification has been shown to the
+                      user. Research on the full meaning of this still ongoing
     subtitle (str): optional.
     title (str): Usually is the name of the application that generated the
                     notification. Eventually the name of the sender of the
