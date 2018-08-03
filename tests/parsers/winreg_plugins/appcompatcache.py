@@ -37,11 +37,7 @@ class TestFileEntry(object):
     self.path_spec = fake_path_spec.FakePathSpec(location=name)
 
   def GetStat(self):
-    """Retrieves the stat object.
-
-    Returns:
-      dfvfs.VFSStat: stat object.
-    """
+    """Retrieves the stat object."""
     return
 
 

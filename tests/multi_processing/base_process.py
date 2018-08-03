@@ -16,11 +16,7 @@ class TestProcess(base_process.MultiProcessBaseProcess):
   """Implementation of the multi-processing base process for testing."""
 
   def _GetStatus(self):
-    """Returns status information.
-
-    Returns:
-      dict [str, object]: status attributes, indexed by name.
-    """
+    """Returns status information."""
     # TODO: implement.
     return
 

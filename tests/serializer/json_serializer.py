@@ -32,11 +32,11 @@ class JSONSerializerTestCase(shared_test_lib.BaseTestCase):
     """Tests the ReadSerialized function.
 
     Args:
-      serializer_object: the JSON serializer object.
-      json_dict: the JSON dict.
+      serializer_object (JSONSerializer): the JSON serializer object.
+      json_dict (dict[str, object]): JSON serialized objects.
 
     Returns:
-      The unserialized object.
+      object: unserialized object.
     """
     # We use json.dumps to make sure the dict does not serialize into
     # an invalid JSON string e.g. one that contains string prefixes
@@ -52,12 +52,13 @@ class JSONSerializerTestCase(shared_test_lib.BaseTestCase):
     """Tests the WriteSerialized function.
 
     Args:
-      serializer_object: the JSON serializer object.
-      unserialized_object: the unserialized object.
-      expected_json_dict: the expected JSON dict.
+      serializer_object (JSONSerializer): the JSON serializer object.
+      unserialized_object (object): the unserialized object.
+      expected_json_dict (dict[str, object]): the expected JSON serialized
+          objects.
 
     Returns:
-      The serialized JSON string.
+      str: serialized JSON string.
     """
     json_string = serializer_object.WriteSerialized(unserialized_object)
 

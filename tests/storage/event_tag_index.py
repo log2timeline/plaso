@@ -25,9 +25,6 @@ class EventTagIndexTest(test_lib.StorageTestCase):
 
     Args:
       path (str): path of the storage file.
-
-    Returns:
-      StorageFile: storage file.
     """
     storage_file = sqlite_file.SQLiteStorageFile()
     storage_file.Open(path=path, read_only=False)
