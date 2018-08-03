@@ -81,9 +81,9 @@ class MacNotificationCenterPlugin(interface.SQLitePlugin):
           'CREATE TABLE displayed (app_id INTEGER PRIMARY KEY, list BLOB)'),
       'record': (
           'CREATE TABLE record (rec_id INTEGER PRIMARY KEY, app_id INTEGER, '
-        'uuid BLOB, data BLOB, request_date REAL, request_last_date REAL, '
-        'delivered_date REAL, presented Bool, style INTEGER, '
-        'snooze_fire_date REAL)'),
+          'uuid BLOB, data BLOB, request_date REAL, request_last_date REAL, '
+          'delivered_date REAL, presented Bool, style INTEGER, '
+          'snooze_fire_date REAL)'),
       'requests': (
           'CREATE TABLE requests (app_id INTEGER PRIMARY KEY, list BLOB)'),
       'snoozed': (
