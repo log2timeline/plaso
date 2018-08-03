@@ -18,6 +18,8 @@ class DependencyDefinition(object):
   Attributes:
     dpkg_name (str): name of the dpkg package that provides the dependency.
     is_optional (bool): True if the dependency is optional.
+    l2tbinaries_macos_name (str): name of the l2tbinaries macos package that
+        provides the dependency.
     l2tbinaries_name (str): name of the l2tbinaries package that provides
         the dependency.
     maximum_version (str): maximum supported version.
@@ -38,6 +40,7 @@ class DependencyDefinition(object):
     super(DependencyDefinition, self).__init__()
     self.dpkg_name = None
     self.is_optional = False
+    self.l2tbinaries_macos_name = None
     self.l2tbinaries_name = None
     self.maximum_version = None
     self.minimum_version = None
@@ -54,6 +57,7 @@ class DependencyDefinitionReader(object):
   _VALUE_NAMES = frozenset([
       'dpkg_name',
       'is_optional',
+      'l2tbinaries_macos_name',
       'l2tbinaries_name',
       'maximum_version',
       'minimum_version',
