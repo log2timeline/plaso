@@ -72,22 +72,22 @@ class MacNotificationCenterPlugin(interface.SQLitePlugin):
 
   SCHEMAS = [{
       'app': (
-        'CREATE TABLE app (app_id INTEGER PRIMARY KEY, identifier VARCHAR)'),
+          'CREATE TABLE app (app_id INTEGER PRIMARY KEY, identifier VARCHAR)'),
       'dbinfo': (
-        'CREATE TABLE dbinfo (key VARCHAR, value VARCHAR)'),
+          'CREATE TABLE dbinfo (key VARCHAR, value VARCHAR)'),
       'delivered': (
-        'CREATE TABLE delivered (app_id INTEGER PRIMARY KEY, list BLOB)'),
+          'CREATE TABLE delivered (app_id INTEGER PRIMARY KEY, list BLOB)'),
       'displayed': (
-        'CREATE TABLE displayed (app_id INTEGER PRIMARY KEY, list BLOB)'),
+          'CREATE TABLE displayed (app_id INTEGER PRIMARY KEY, list BLOB)'),
       'record': (
-        'CREATE TABLE record (rec_id INTEGER PRIMARY KEY, app_id INTEGER, '
+          'CREATE TABLE record (rec_id INTEGER PRIMARY KEY, app_id INTEGER, '
         'uuid BLOB, data BLOB, request_date REAL, request_last_date REAL, '
         'delivered_date REAL, presented Bool, style INTEGER, '
         'snooze_fire_date REAL)'),
       'requests': (
-        'CREATE TABLE requests (app_id INTEGER PRIMARY KEY, list BLOB)'),
+          'CREATE TABLE requests (app_id INTEGER PRIMARY KEY, list BLOB)'),
       'snoozed': (
-        'CREATE TABLE snoozed (app_id INTEGER PRIMARY KEY, list BLOB)')}]
+          'CREATE TABLE snoozed (app_id INTEGER PRIMARY KEY, list BLOB)')}]
 
   def ParseNotificationcenterRow(
       self, parser_mediator, query, row, **unused_kwargs):
