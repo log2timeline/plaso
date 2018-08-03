@@ -24,20 +24,22 @@ from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
-from biplist import *
-
+import biplist
 
 class MacNotificationCenterEventData(events.EventData):
   """ MacOS NotificationCenter database event data
 
   Attributes:
-    bundle_name (str): name of the application's bundle that generated the notification
+    bundle_name (str): name of the application's bundle that generated
+                      the notification
     identity (str): optional.
     message (str): body of the notification message
     presented (int): either 1 or 0 if the notification has been shown to the user.
                       Research on the full meaning of this still ongoing
     subtitle (str): optional.
-    title (str): Usually is the name of the application that generated the notification. Eventually the name of the sender of the notification
+    title (str): Usually is the name of the application that generated the
+                    notification. Eventually the name of the sender of the
+                    notification (e.g. in case of chat messages)
   """
 
   DATA_TYPE = 'mac:notificationcenter:db'
@@ -103,8 +105,10 @@ class MacNotificationCenterPlugin(interface.SQLitePlugin):
     event_data.presented = self._GetRowValue(query_hash, row, 'presented')
 
     # full_biplist is the entire blob content as stored in the sqlite record
-    full_biplist = readPlistFromString(self._GetRowValue(query_hash, row, 'dataBlob'))
-    # plist is the subsection 'req' containing the extra info about the notification entry
+    full_biplist = biplist.readPlistFromString(self._GetRowValue(query_hash,
+        row, 'dataBlob'))
+    # plist is the subsection 'req' containing the extra info about
+    # the notification entry
     plist = full_biplist['req']
 
     event_data.title = plist['titl']
