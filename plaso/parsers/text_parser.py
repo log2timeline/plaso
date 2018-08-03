@@ -634,6 +634,8 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     for key, structure in self.LINE_STRUCTURES:
       structure.parseWithTabs()
 
+
+    consecutive_line_failures = 0
     # Read every line in the text file.
     while self._text_reader.lines:
       if parser_mediator.abort:
@@ -645,7 +647,6 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       end = 0
 
       key = None
-      consecutive_line_failures = 0
 
       # Try to parse the line using all the line structures.
       for key, structure in self.LINE_STRUCTURES:
