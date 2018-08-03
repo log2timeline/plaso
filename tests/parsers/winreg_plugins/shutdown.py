@@ -14,12 +14,12 @@ from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
-class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
+class ShutdownWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the LastShutdown value plugin."""
 
   def testFilters(self):
     """Tests the FILTERS class attribute."""
-    plugin = shutdown.ShutdownPlugin()
+    plugin = shutdown.ShutdownWindowsRegistryPlugin()
 
     key_path = 'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\Windows'
     self._AssertFiltersOnKeyPath(plugin, key_path)
@@ -35,7 +35,7 @@ class ShutdownPluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin = shutdown.ShutdownPlugin()
+    plugin = shutdown.ShutdownWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 

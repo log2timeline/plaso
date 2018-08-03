@@ -33,11 +33,13 @@ from plaso.formatters import ganalytics
 from plaso.formatters import gdrive
 from plaso.formatters import gdrive_synclog
 from plaso.formatters import hachoir
+from plaso.formatters import hangouts_messages
 from plaso.formatters import iis
 from plaso.formatters import imessage
 from plaso.formatters import ipod
 from plaso.formatters import java_idx
 from plaso.formatters import kik_ios
+from plaso.formatters import kodi
 from plaso.formatters import ls_quarantine
 from plaso.formatters import mac_appfirewall
 from plaso.formatters import mac_document_versions
@@ -53,11 +55,10 @@ from plaso.formatters import officemru
 from plaso.formatters import olecf
 from plaso.formatters import opera
 from plaso.formatters import oxml
-from plaso.formatters import pcap
 from plaso.formatters import pe
 from plaso.formatters import plist
-from plaso.formatters import popcontest
 from plaso.formatters import pls_recall
+from plaso.formatters import popcontest
 from plaso.formatters import recycler
 from plaso.formatters import safari
 from plaso.formatters import safari_cookies
@@ -69,8 +70,8 @@ from plaso.formatters import shutdown
 from plaso.formatters import skydrivelog
 from plaso.formatters import skype
 from plaso.formatters import sophos_av
-from plaso.formatters import ssh
 from plaso.formatters import srum
+from plaso.formatters import ssh
 from plaso.formatters import symantec
 from plaso.formatters import syslog
 from plaso.formatters import systemd_journal

@@ -5,15 +5,16 @@ from __future__ import unicode_literals
 
 import abc
 
-import construct
+from dtfabric.runtime import data_maps as dtfabric_data_maps
 
 from plaso.containers import time_events
 from plaso.containers import windows_events
+from plaso.lib import errors
 from plaso.lib import definitions
-from plaso.lib import binary
 from plaso.parsers import logger
 from plaso.parsers import winreg
 from plaso.parsers.shared import shell_items
+from plaso.parsers.winreg_plugins import dtfabric_plugin
 from plaso.parsers.winreg_plugins import interface
 
 
@@ -58,13 +59,13 @@ class MRUListExStringRegistryKeyFilter(
     return super(MRUListExStringRegistryKeyFilter, self).Match(registry_key)
 
 
-class BaseMRUListExPlugin(interface.WindowsRegistryPlugin):
+class BaseMRUListExWindowsRegistryPlugin(
+    dtfabric_plugin.DtFabricBaseWindowsRegistryPlugin):
   """Class for common MRUListEx Windows Registry plugin functionality."""
 
-  _MRULISTEX_STRUCT = construct.Range(
-      1, 500, construct.ULInt32('entry_number'))
-
   _SOURCE_APPEND = ': MRUListEx'
+
+  _DEFINITION_FILE = 'mru.yaml'
 
   @abc.abstractmethod
   def _ParseMRUListExEntryValue(
@@ -91,23 +92,21 @@ class BaseMRUListExPlugin(interface.WindowsRegistryPlugin):
            the MRUListEx value.
 
     Returns:
-      generator: MRUListEx value generator, which returns the MRU index number
-          and entry value.
+      mrulistex_entries: MRUListEx entries or None if not available.
     """
-    mru_list_value = registry_key.GetValueByName('MRUListEx')
+    mrulistex_value = registry_key.GetValueByName('MRUListEx')
 
-    # The key exists but does not contain a value named "MRUListEx".
-    if not mru_list_value:
-      return enumerate([])
+    # The key exists but does not contain a value named "MRUList".
+    if not mrulistex_value:
+      return None
 
-    try:
-      mru_list = self._MRULISTEX_STRUCT.parse(mru_list_value.data)
-    except construct.FieldError:
-      logger.warning('[{0:s}] Unable to parse the MRU key: {1:s}'.format(
-          self.NAME, registry_key.path))
-      return enumerate([])
+    mrulistex_entries_map = self._GetDataTypeMap('mrulistex_entries')
 
-    return enumerate(mru_list)
+    context = dtfabric_data_maps.DataTypeMapContext(values={
+        'data_size': len(mrulistex_value.data)})
+
+    return self._ReadStructureFromByteStream(
+        mrulistex_value.data, 0, mrulistex_entries_map, context=context)
 
   def _ParseMRUListExKey(
       self, parser_mediator, registry_key, codepage='cp1252'):
@@ -119,12 +118,30 @@ class BaseMRUListExPlugin(interface.WindowsRegistryPlugin):
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
       codepage (Optional[str]): extended ASCII string codepage.
     """
+    try:
+      mrulistex = self._ParseMRUListExValue(registry_key)
+    except (ValueError, errors.ParseError) as exception:
+      parser_mediator.ProduceExtractionError(
+          'unable to parse MRUListEx value with error: {0!s}'.format(exception))
+      return
+
+    if not mrulistex:
+      return
+
     values_dict = {}
-    for entry_index, entry_number in self._ParseMRUListExValue(registry_key):
-      # TODO: detect if list ends prematurely.
-      # MRU lists are terminated with 0xffffffff (-1).
-      if entry_number == 0xffffffff:
+    found_terminator = False
+    for entry_index, entry_number in enumerate(mrulistex):
+      # The MRU list is terminated with -1 (0xffffffff).
+      if entry_number == -1:
         break
+
+      if found_terminator:
+        parser_mediator.ProduceExtractionError((
+            'found additional MRUListEx entries after terminator in key: '
+            '{0:s}.').format(registry_key.path))
+
+        # Only create one parser error per terminator.
+        found_terminator = False
 
       value_string = self._ParseMRUListExEntryValue(
           parser_mediator, registry_key, entry_index, entry_number,
@@ -146,7 +163,7 @@ class BaseMRUListExPlugin(interface.WindowsRegistryPlugin):
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-class MRUListExStringPlugin(BaseMRUListExPlugin):
+class MRUListExStringWindowsRegistryPlugin(BaseMRUListExWindowsRegistryPlugin):
   """Windows Registry plugin to parse a string MRUListEx."""
 
   NAME = 'mrulistex_string'
@@ -157,11 +174,6 @@ class MRUListExStringPlugin(BaseMRUListExPlugin):
   URLS = [
       'http://forensicartifacts.com/2011/02/recentdocs/',
       'https://github.com/libyal/winreg-kb/wiki/MRU-keys']
-
-  _STRING_STRUCT = construct.Struct(
-      'string_and_shell_item',
-      construct.RepeatUntil(
-          lambda obj, ctx: obj == b'\x00\x00', construct.Field('string', 2)))
 
   def _ParseMRUListExEntryValue(
       self, parser_mediator, registry_key, entry_index, entry_number,
@@ -183,28 +195,25 @@ class MRUListExStringPlugin(BaseMRUListExPlugin):
 
     value = registry_key.GetValueByName('{0:d}'.format(entry_number))
     if value is None:
-      logger.debug(
-          '[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
-              self.NAME, entry_number, registry_key.path))
+      parser_mediator.ProduceExtractionError(
+          'missing MRUListEx value: {0:d} in key: {1:s}.'.format(
+              entry_number, registry_key.path))
 
     elif value.DataIsString():
       value_string = value.GetDataAsObject()
 
     elif value.DataIsBinaryData():
-      logger.debug((
-          '[{0:s}] Non-string MRUListEx entry value: {1:d} parsed as string '
-          'in key: {2:s}.').format(self.NAME, entry_number, registry_key.path))
-      utf16_stream = binary.ByteStreamCopyToUTF16String(value.data)
+      utf16le_string_map = self._GetDataTypeMap('utf16le_string')
 
       try:
-        value_string = utf16_stream.decode('utf-16-le')
-      except UnicodeDecodeError as exception:
-        value_string = binary.HexifyBuffer(utf16_stream)
-        logger.warning((
-            '[{0:s}] Unable to decode UTF-16 stream: {1:s} in MRUListEx entry '
-            'value: {2:d} in key: {3:s} with error: {4!s}').format(
-                self.NAME, value_string, entry_number, registry_key.path,
-                exception))
+        value_string = self._ReadStructureFromByteStream(
+            value.data, 0, utf16le_string_map)
+      except (ValueError, errors.ParseError) as exception:
+        parser_mediator.ProduceExtractionError((
+            'unable to parse MRUListEx entry value: {0:d} with error: '
+            '{1!s}').format(entry_number, exception))
+
+      value_string = value_string.rstrip('\x00')
 
     return value_string
 
@@ -222,7 +231,8 @@ class MRUListExStringPlugin(BaseMRUListExPlugin):
     self._ParseMRUListExKey(parser_mediator, registry_key, codepage=codepage)
 
 
-class MRUListExShellItemListPlugin(BaseMRUListExPlugin):
+class MRUListExShellItemListWindowsRegistryPlugin(
+    BaseMRUListExWindowsRegistryPlugin):
   """Windows Registry plugin to parse a shell item list MRUListEx."""
 
   NAME = 'mrulistex_shell_item_list'
@@ -258,9 +268,9 @@ class MRUListExShellItemListPlugin(BaseMRUListExPlugin):
 
     value = registry_key.GetValueByName('{0:d}'.format(entry_number))
     if value is None:
-      logger.debug(
-          '[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
-              self.NAME, entry_number, registry_key.path))
+      parser_mediator.ProduceExtractionError(
+          'missing MRUListEx value: {0:d} in key: {1:s}.'.format(
+              entry_number, registry_key.path))
 
     elif not value.DataIsBinaryData():
       logger.debug((
@@ -298,7 +308,8 @@ class MRUListExShellItemListPlugin(BaseMRUListExPlugin):
         self._ParseMRUListExKey(parser_mediator, subkey, codepage=codepage)
 
 
-class MRUListExStringAndShellItemPlugin(BaseMRUListExPlugin):
+class MRUListExStringAndShellItemWindowsRegistryPlugin(
+    BaseMRUListExWindowsRegistryPlugin):
   """Windows Registry plugin to parse a string and shell item MRUListEx."""
 
   NAME = 'mrulistex_string_and_shell_item'
@@ -308,12 +319,6 @@ class MRUListExStringAndShellItemPlugin(BaseMRUListExPlugin):
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
           'Explorer\\RecentDocs')])
-
-  _STRING_AND_SHELL_ITEM_STRUCT = construct.Struct(
-      'string_and_shell_item',
-      construct.RepeatUntil(
-          lambda obj, ctx: obj == b'\x00\x00', construct.Field('string', 2)),
-      construct.Anchor('shell_item'))
 
   # pylint: disable=arguments-differ
   def _ParseMRUListExEntryValue(
@@ -337,9 +342,9 @@ class MRUListExStringAndShellItemPlugin(BaseMRUListExPlugin):
 
     value = registry_key.GetValueByName('{0:d}'.format(entry_number))
     if value is None:
-      logger.debug(
-          '[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
-              self.NAME, entry_number, registry_key.path))
+      parser_mediator.ProduceExtractionError(
+          'missing MRUListEx value: {0:d} in key: {1:s}.'.format(
+              entry_number, registry_key.path))
 
     elif not value.DataIsBinaryData():
       logger.debug((
@@ -347,35 +352,36 @@ class MRUListExStringAndShellItemPlugin(BaseMRUListExPlugin):
           '{2:s}.').format(self.NAME, entry_number, registry_key.path))
 
     elif value.data:
-      value_struct = self._STRING_AND_SHELL_ITEM_STRUCT.parse(value.data)
+      utf16le_string_map = self._GetDataTypeMap('utf16le_string')
+
+      context = dtfabric_data_maps.DataTypeMapContext()
 
       try:
-        # The struct includes the end-of-string character that we need
-        # to strip off.
-        path = b''.join(value_struct.string).decode('utf16')[:-1]
-      except UnicodeDecodeError as exception:
-        logger.warning((
-            '[{0:s}] Unable to decode string MRUListEx entry value: {1:d} '
-            'in key: {2:s} with error: {3!s}').format(
-                self.NAME, entry_number, registry_key.path, exception))
-        path = ''
+        path = self._ReadStructureFromByteStream(
+            value.data, 0, utf16le_string_map, context=context)
+      except (ValueError, errors.ParseError) as exception:
+        parser_mediator.ProduceExtractionError((
+            'unable to parse MRUListEx entry value: {0:d} with error: '
+            '{1!s}').format(entry_number, exception))
+        return value_string
 
-      if path:
-        shell_item_list_data = value.data[value_struct.shell_item:]
-        if not shell_item_list_data:
-          logger.debug((
-              '[{0:s}] Missing shell item in MRUListEx entry value: {1:d}'
-              'in key: {2:s}').format(
-                  self.NAME, entry_number, registry_key.path))
-          value_string = 'Path: {0:s}'.format(path)
+      path = path.rstrip('\x00')
 
-        else:
-          shell_items_parser = shell_items.ShellItemsParser(registry_key.path)
-          shell_items_parser.ParseByteStream(
-              parser_mediator, shell_item_list_data, codepage=codepage)
+      shell_item_data = value.data[context.byte_size:]
 
-          value_string = 'Path: {0:s}, Shell item: [{1:s}]'.format(
-              path, shell_items_parser.CopyToPath())
+      if not shell_item_data:
+        parser_mediator.ProduceExtractionError((
+            'missing shell item in MRUListEx value: {0:d} in key: '
+            '{1:s}.').format(entry_number, registry_key.path))
+        value_string = 'Path: {0:s}'.format(path)
+
+      else:
+        shell_items_parser = shell_items.ShellItemsParser(registry_key.path)
+        shell_items_parser.ParseByteStream(
+            parser_mediator, shell_item_data, codepage=codepage)
+
+        value_string = 'Path: {0:s}, Shell item: [{1:s}]'.format(
+            path, shell_items_parser.CopyToPath())
 
     return value_string
 
@@ -399,7 +405,8 @@ class MRUListExStringAndShellItemPlugin(BaseMRUListExPlugin):
         self._ParseMRUListExKey(parser_mediator, subkey, codepage=codepage)
 
 
-class MRUListExStringAndShellItemListPlugin(BaseMRUListExPlugin):
+class MRUListExStringAndShellItemListWindowsRegistryPlugin(
+    BaseMRUListExWindowsRegistryPlugin):
   """Windows Registry plugin to parse a string and shell item list MRUListEx."""
 
   NAME = 'mrulistex_string_and_shell_item_list'
@@ -409,12 +416,6 @@ class MRUListExStringAndShellItemListPlugin(BaseMRUListExPlugin):
       interface.WindowsRegistryKeyPathFilter(
           'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
           'Explorer\\ComDlg32\\LastVisitedPidlMRU')])
-
-  _STRING_AND_SHELL_ITEM_LIST_STRUCT = construct.Struct(
-      'string_and_shell_item',
-      construct.RepeatUntil(
-          lambda obj, ctx: obj == b'\x00\x00', construct.Field('string', 2)),
-      construct.Anchor('shell_item_list'))
 
   # pylint: disable=arguments-differ
   def _ParseMRUListExEntryValue(
@@ -438,9 +439,9 @@ class MRUListExStringAndShellItemListPlugin(BaseMRUListExPlugin):
 
     value = registry_key.GetValueByName('{0:d}'.format(entry_number))
     if value is None:
-      logger.debug(
-          '[{0:s}] Missing MRUListEx entry value: {1:d} in key: {2:s}.'.format(
-              self.NAME, entry_number, registry_key.path))
+      parser_mediator.ProduceExtractionError(
+          'missing MRUListEx value: {0:d} in key: {1:s}.'.format(
+              entry_number, registry_key.path))
 
     elif not value.DataIsBinaryData():
       logger.debug((
@@ -448,35 +449,36 @@ class MRUListExStringAndShellItemListPlugin(BaseMRUListExPlugin):
           '{2:s}.').format(self.NAME, entry_number, registry_key.path))
 
     elif value.data:
-      value_struct = self._STRING_AND_SHELL_ITEM_LIST_STRUCT.parse(value.data)
+      utf16le_string_map = self._GetDataTypeMap('utf16le_string')
+
+      context = dtfabric_data_maps.DataTypeMapContext()
 
       try:
-        # The struct includes the end-of-string character that we need
-        # to strip off.
-        path = b''.join(value_struct.string).decode('utf16')[:-1]
-      except UnicodeDecodeError as exception:
-        logger.warning((
-            '[{0:s}] Unable to decode string MRUListEx entry value: {1:d} '
-            'in key: {2:s} with error: {3!s}').format(
-                self.NAME, entry_number, registry_key.path, exception))
-        path = ''
+        path = self._ReadStructureFromByteStream(
+            value.data, 0, utf16le_string_map, context=context)
+      except (ValueError, errors.ParseError) as exception:
+        parser_mediator.ProduceExtractionError((
+            'unable to parse MRUListEx entry value: {0:d} with error: '
+            '{1!s}').format(entry_number, exception))
+        return value_string
 
-      if path:
-        shell_item_list_data = value.data[value_struct.shell_item_list:]
-        if not shell_item_list_data:
-          logger.debug((
-              '[{0:s}] Missing shell item in MRUListEx entry value: {1:d}'
-              'in key: {2:s}').format(
-                  self.NAME, entry_number, registry_key.path))
-          value_string = 'Path: {0:s}'.format(path)
+      path = path.rstrip('\x00')
 
-        else:
-          shell_items_parser = shell_items.ShellItemsParser(registry_key.path)
-          shell_items_parser.ParseByteStream(
-              parser_mediator, shell_item_list_data, codepage=codepage)
+      shell_item_list_data = value.data[context.byte_size:]
 
-          value_string = 'Path: {0:s}, Shell item path: {1:s}'.format(
-              path, shell_items_parser.CopyToPath())
+      if not shell_item_list_data:
+        parser_mediator.ProduceExtractionError((
+            'missing shell item in MRUListEx value: {0:d} in key: '
+            '{1:s}.').format(entry_number, registry_key.path))
+        value_string = 'Path: {0:s}'.format(path)
+
+      else:
+        shell_items_parser = shell_items.ShellItemsParser(registry_key.path)
+        shell_items_parser.ParseByteStream(
+            parser_mediator, shell_item_list_data, codepage=codepage)
+
+        value_string = 'Path: {0:s}, Shell item path: {1:s}'.format(
+            path, shell_items_parser.CopyToPath())
 
     return value_string
 
@@ -495,5 +497,7 @@ class MRUListExStringAndShellItemListPlugin(BaseMRUListExPlugin):
 
 
 winreg.WinRegistryParser.RegisterPlugins([
-    MRUListExStringPlugin, MRUListExShellItemListPlugin,
-    MRUListExStringAndShellItemPlugin, MRUListExStringAndShellItemListPlugin])
+    MRUListExStringWindowsRegistryPlugin,
+    MRUListExShellItemListWindowsRegistryPlugin,
+    MRUListExStringAndShellItemWindowsRegistryPlugin,
+    MRUListExStringAndShellItemListWindowsRegistryPlugin])

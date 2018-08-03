@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import os
 
 import construct
+import lz4.block
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -50,7 +51,8 @@ class SystemdJournalParser(interface.FileObjectParser):
 
   DESCRIPTION = 'Parser for Systemd Journal files.'
 
-  _OBJECT_COMPRESSED_FLAG = 0x00000001
+  _OBJECT_COMPRESSED_FLAG_XZ = 1
+  _OBJECT_COMPRESSED_FLAG_LZ4 = 2
 
   # Unfortunately this doesn't help us knowing about the "dirtiness" or
   # "corrupted" file state.
@@ -177,7 +179,7 @@ class SystemdJournalParser(interface.FileObjectParser):
     object_header_data = file_object.read(self._OBJECT_HEADER_SIZE)
     object_header = self._OBJECT_HEADER.parse(object_header_data)
     payload_size = object_header.size - self._OBJECT_HEADER_SIZE
-    return (object_header, payload_size)
+    return object_header, payload_size
 
   def _ParseItem(self, file_object, offset):
     """Parses a Systemd journal DATA object.
@@ -204,8 +206,13 @@ class SystemdJournalParser(interface.FileObjectParser):
               object_header.type))
 
     event_data = file_object.read(payload_size - self._DATA_OBJECT_SIZE)
-    if object_header.flags & self._OBJECT_COMPRESSED_FLAG:
+    if object_header.flags & self._OBJECT_COMPRESSED_FLAG_XZ:
       event_data = lzma.decompress(event_data)
+      event_string = event_data.decode('utf-8')
+    elif object_header.flags & self._OBJECT_COMPRESSED_FLAG_LZ4:
+      decompressed_size = construct.ULInt32('size').parse(event_data[0:7])
+      event_data = lz4.block.decompress(
+          event_data[8:], uncompressed_size=decompressed_size)
 
     event_string = event_data.decode('utf-8')
     event_key, event_value = event_string.split('=', 1)
@@ -250,6 +257,7 @@ class SystemdJournalParser(interface.FileObjectParser):
       pid = None
 
     event_data = SystemdJournalEventData()
+
     event_data.body = fields['MESSAGE']
     event_data.hostname = fields['_HOSTNAME']
     event_data.pid = pid
@@ -269,7 +277,7 @@ class SystemdJournalParser(interface.FileObjectParser):
       offset (int): offset of the ENTRY_ARRAY object.
 
     Returns:
-      list[dict]: every ENTRY objects offsets.
+      list[int]: every ENTRY objects offsets.
 
     Raises:
       ParseError: When an unexpected object type is parsed.
@@ -283,8 +291,8 @@ class SystemdJournalParser(interface.FileObjectParser):
               object_header.type))
 
     next_array_offset = self._ULInt64.parse_stream(file_object)
-    entry_offests_numbers, _ = divmod((payload_size - 8), 8)
-    for entry_offset in range(entry_offests_numbers):
+    entry_offsets_numbers, _ = divmod((payload_size - 8), 8)
+    for entry_offset in range(entry_offsets_numbers):
       entry_offset = self._ULInt64.parse_stream(file_object)
       if entry_offset != 0:
         entry_offsets.append(entry_offset)
@@ -328,13 +336,14 @@ class SystemdJournalParser(interface.FileObjectParser):
         self._ParseJournalEntry(parser_mediator, file_object, entry_offset)
       except errors.ParseError as exception:
         parser_mediator.ProduceExtractionError((
-            'Unable to complete parsing journal file: {0:s} at offset '
-            '0x{1:08x}').format(exception, entry_offset))
+            'Unable to parse journal entry at offset: 0x{0:08x} with '
+            'error: {1!s}').format(entry_offset, exception))
         return
+
       except construct.ConstructError as exception:
         raise errors.UnableToParseFile((
             'Unable to parse journal header at offset: 0x{0:08x} with '
-            'error: {1:s}').format(entry_offset, exception))
+            'error: {1!s}').format(entry_offset, exception))
 
 
 manager.ParsersManager.RegisterParser(SystemdJournalParser)

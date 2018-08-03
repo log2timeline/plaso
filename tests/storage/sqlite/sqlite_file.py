@@ -8,6 +8,7 @@ import os
 import unittest
 
 from plaso.containers import errors
+from plaso.containers import events
 from plaso.containers import event_sources
 from plaso.containers import reports
 from plaso.containers import sessions
@@ -24,11 +25,203 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
   # pylint: disable=protected-access
 
-  # TODO: add tests for _AddAttributeContainer
-  # TODO: add tests for _GetAttributeContainer
-  # TODO: add tests for _HasAttributeContainers
-  # TODO: add tests for _HasTable
-  # TODO: add tests for _WriteAttributeContainer
+  def testAddAttributeContainer(self):
+    """Tests the _AddAttributeContainer function."""
+    event_data = events.EventData()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
+
+      storage_file._AddAttributeContainer(
+          storage_file._CONTAINER_TYPE_EVENT_DATA, event_data)
+
+      storage_file.Close()
+
+  def testAddSerializedEvent(self):
+    """Tests the _AddSerializedEvent function."""
+    event = events.EventObject()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
+
+      storage_file._AddSerializedEvent(event)
+
+      storage_file.Close()
+
+  def testCountStoredAttributeContainers(self):
+    """Tests the _CountStoredAttributeContainers function."""
+    event_data = events.EventData()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
+
+      number_of_containers = storage_file._CountStoredAttributeContainers(
+          storage_file._CONTAINER_TYPE_EVENT_DATA)
+      self.assertEqual(number_of_containers, 0)
+
+      storage_file._AddAttributeContainer(
+          storage_file._CONTAINER_TYPE_EVENT_DATA, event_data)
+      storage_file._WriteSerializedAttributeContainerList(
+          storage_file._CONTAINER_TYPE_EVENT_DATA)
+
+      number_of_containers = storage_file._CountStoredAttributeContainers(
+          storage_file._CONTAINER_TYPE_EVENT_DATA)
+      self.assertEqual(number_of_containers, 1)
+
+      with self.assertRaises(ValueError):
+        storage_file._CountStoredAttributeContainers('bogus')
+
+      storage_file.Close()
+
+  # TODO: add tests for _CheckStorageMetadata
+
+  def testGetAttributeContainerByIndex(self):
+    """Tests the _GetAttributeContainerByIndex function."""
+    event_data = events.EventData()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
+
+      container = storage_file._GetAttributeContainerByIndex(
+          storage_file._CONTAINER_TYPE_EVENT_DATA, 0)
+      self.assertIsNone(container)
+
+      storage_file._AddAttributeContainer(
+          storage_file._CONTAINER_TYPE_EVENT_DATA, event_data)
+      storage_file._WriteSerializedAttributeContainerList(
+          storage_file._CONTAINER_TYPE_EVENT_DATA)
+
+      container = storage_file._GetAttributeContainerByIndex(
+          storage_file._CONTAINER_TYPE_EVENT_DATA, 0)
+      self.assertIsNotNone(container)
+
+      with self.assertRaises(IOError):
+        storage_file._GetAttributeContainerByIndex('bogus', 0)
+
+      storage_file.Close()
+
+  def testGetAttributeContainers(self):
+    """Tests the _GetAttributeContainers function."""
+    event_data = events.EventData()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
+
+      containers = list(storage_file._GetAttributeContainers(
+          storage_file._CONTAINER_TYPE_EVENT_DATA))
+      self.assertEqual(len(containers), 0)
+
+      storage_file._AddAttributeContainer(
+          storage_file._CONTAINER_TYPE_EVENT_DATA, event_data)
+      storage_file._WriteSerializedAttributeContainerList(
+          storage_file._CONTAINER_TYPE_EVENT_DATA)
+
+      containers = list(storage_file._GetAttributeContainers(
+          storage_file._CONTAINER_TYPE_EVENT_DATA))
+      self.assertEqual(len(containers), 1)
+
+      with self.assertRaises(IOError):
+        list(storage_file._GetAttributeContainers('bogus'))
+
+      storage_file.Close()
+
+  def testHasAttributeContainers(self):
+    """Tests the _HasAttributeContainers function."""
+    event_data = events.EventData()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
+
+      result = storage_file._HasAttributeContainers(
+          storage_file._CONTAINER_TYPE_EVENT_DATA)
+      self.assertFalse(result)
+
+      storage_file._AddAttributeContainer(
+          storage_file._CONTAINER_TYPE_EVENT_DATA, event_data)
+      storage_file._WriteSerializedAttributeContainerList(
+          storage_file._CONTAINER_TYPE_EVENT_DATA)
+
+      result = storage_file._HasAttributeContainers(
+          storage_file._CONTAINER_TYPE_EVENT_DATA)
+      self.assertTrue(result)
+
+      with self.assertRaises(ValueError):
+        storage_file._HasAttributeContainers('bogus')
+
+      storage_file.Close()
+
+  def testHasTable(self):
+    """Tests the _HasTable function."""
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
+
+      result = storage_file._HasTable(storage_file._CONTAINER_TYPE_EVENT_DATA)
+      self.assertTrue(result)
+
+      result = storage_file._HasTable('bogus')
+      self.assertFalse(result)
+
+      storage_file.Close()
+
+  # TODO: add tests for _ReadStorageMetadata
+
+  def testWriteAttributeContainer(self):
+    """Tests the _WriteAttributeContainer function."""
+    event_data = events.EventData()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
+
+      storage_file._WriteAttributeContainer(event_data)
+
+      storage_file.Close()
+
+  def testWriteSerializedAttributeContainerList(self):
+    """Tests the _WriteSerializedAttributeContainerList function."""
+    event_data = events.EventData()
+    event = events.EventObject()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
+
+      storage_file._AddAttributeContainer(
+          storage_file._CONTAINER_TYPE_EVENT_DATA, event_data)
+      storage_file._WriteSerializedAttributeContainerList(
+          storage_file._CONTAINER_TYPE_EVENT_DATA)
+
+      event.timestamp = 0x7fffffffffffffff
+
+      storage_file._AddSerializedEvent(event)
+      storage_file._WriteSerializedAttributeContainerList(
+          storage_file._CONTAINER_TYPE_EVENT)
+
+      event.timestamp = 0x8000000000000000
+
+      storage_file._AddSerializedEvent(event)
+      with self.assertRaises(OverflowError):
+        storage_file._WriteSerializedAttributeContainerList(
+            storage_file._CONTAINER_TYPE_EVENT)
+
+      storage_file.Close()
+
   # TODO: add tests for _WriteStorageMetadata
 
   def testAddAnalysisReport(self):
@@ -70,6 +263,19 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       for event in test_events:
         storage_file.AddEvent(event)
+
+      storage_file.Close()
+
+  def testAddAddEventData(self):
+    """Tests the AddAddEventData function."""
+    event_data = events.EventData()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, 'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
+
+      storage_file.AddEventData(event_data)
 
       storage_file.Close()
 

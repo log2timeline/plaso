@@ -31,6 +31,7 @@ PYTHON2_DEPENDENCIES="PyYAML
                       libvmdk-python
                       libvshadow-python
                       libvslvm-python
+                      lz4
                       python-XlsxWriter
                       python-artifacts
                       python-backports-lzma
@@ -43,7 +44,6 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python-dfdatetime
                       python-dfvfs
                       python-dfwinreg
-                      python-dpkt
                       python-dtfabric
                       python-efilter
                       python-elasticsearch

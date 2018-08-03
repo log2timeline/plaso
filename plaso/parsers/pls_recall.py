@@ -88,7 +88,7 @@ class PlsRecallParser(dtfabric_parser.DtFabricBaseParser):
 
     # Take the first word from the query field and attempt to match that against
     # known query keywords.
-    first_word, _, _ = pls_record.query.partition(b' ')
+    first_word, _, _ = pls_record.query.partition(' ')
 
     if first_word.lower() not in self._PLS_KEYWORD:
       return False
