@@ -82,7 +82,6 @@ class SelectiveLexer(lexer.Lexer):
 
     Args:
       match (re.MatchObject): a match that contains the filter query.
-
     """
     filter_match = match.group(1)
     if 'LIMIT' in filter_match:
