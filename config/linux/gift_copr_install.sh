@@ -31,7 +31,6 @@ PYTHON2_DEPENDENCIES="PyYAML
                       libvmdk-python
                       libvshadow-python
                       libvslvm-python
-                      lz4
                       python-XlsxWriter
                       python-artifacts
                       python-backports-lzma
@@ -58,6 +57,7 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python2-certifi
                       python2-future
                       python2-idna
+                      python2-lz4
                       python2-pyparsing
                       python2-sqlite3dbm
                       python2-urllib3
