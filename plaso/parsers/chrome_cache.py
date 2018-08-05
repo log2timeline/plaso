@@ -5,8 +5,6 @@ from __future__ import unicode_literals
 
 import os
 
-import construct
-
 from dfdatetime import webkit_time as dfdatetime_webkit_time
 from dfvfs.resolver import resolver as path_spec_resolver
 from dfvfs.path import factory as path_spec_factory
@@ -83,8 +81,8 @@ class CacheEntry(object):
   """Chrome cache entry.
 
   Attributes:
-    creation_time (int): creation time, in number of micro seconds since
-        January 1, 1970, 00:00:00 UTC.
+    creation_time (int): creation time, in number of microseconds since
+        since January 1, 1601, 00:00:00 UTC.
     hash (int): super fast hash of the key.
     key (bytes): key.
     next (int): cache address of the next cache entry.
@@ -107,32 +105,20 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
   """Chrome cache index file parser.
 
   Attributes:
+    creation_time (int): creation time, in number of number of microseconds
+        since January 1, 1601, 00:00:00 UTC.
     index_table (list[CacheAddress]): the cache addresses which are stored in
         the index file.
   """
 
-  _FILE_SIGNATURE = 0xc103cac3
+  _DEFINITION_FILE = 'chrome_cache.yaml'
 
-  _FILE_HEADER = construct.Struct(
-      'chrome_cache_index_file_header',
-      construct.ULInt32('signature'),
-      construct.ULInt16('minor_version'),
-      construct.ULInt16('major_version'),
-      construct.ULInt32('number_of_entries'),
-      construct.ULInt32('stored_data_size'),
-      construct.ULInt32('last_created_file_number'),
-      construct.ULInt32('unknown1'),
-      construct.ULInt32('unknown2'),
-      construct.ULInt32('table_size'),
-      construct.ULInt32('unknown3'),
-      construct.ULInt32('unknown4'),
-      construct.ULInt64('creation_time'),
-      construct.Padding(208))
+  _FILE_SIGNATURE = 0xc103cac3
 
   def __init__(self):
     """Initializes an index file."""
     super(ChromeCacheIndexFileParser, self).__init__()
-    self._creation_time = None
+    self.creation_time = None
     self.index_table = []
 
   def _ParseFileHeader(self, file_object):
@@ -144,29 +130,27 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
     Raises:
       ParseError: if the file header cannot be read.
     """
-    file_object.seek(0, os.SEEK_SET)
+    file_header_map = self._GetDataTypeMap(
+        'chrome_cache_index_file_header')
 
     try:
-      file_header = self._FILE_HEADER.parse_stream(file_object)
-    except construct.FieldError as exception:
-      raise errors.ParseError(
+      file_header, _ = self._ReadStructureFromFileObject(
+          file_object, 0, file_header_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.UnableToParseFile(
           'Unable to parse index file header with error: {0!s}'.format(
               exception))
 
-    signature = file_header.get('signature')
-
-    if signature != self._FILE_SIGNATURE:
+    if file_header.signature != self._FILE_SIGNATURE:
       raise errors.ParseError('Unsupported index file signature')
 
     format_version = '{0:d}.{1:d}'.format(
-        file_header.get('major_version'),
-        file_header.get('minor_version'))
-
+        file_header.major_version, file_header.minor_version)
     if format_version not in ('2.0', '2.1'):
       raise errors.ParseError(
           'Unsupported index file format version: {0:s}'.format(format_version))
 
-    self._creation_time = file_header.get('creation_time')
+    self.creation_time = file_header.creation_time
 
   def _ParseIndexTable(self, file_object):
     """Parses the index table.
@@ -174,14 +158,25 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
     Args:
       file_object (dvfvs.FileIO): a file-like object to parse.
     """
+    cache_address_map = self._GetDataTypeMap('uint32le')
+    file_offset = file_object.get_offset()
+
     cache_address_data = file_object.read(4)
 
     while len(cache_address_data) == 4:
-      value = construct.ULInt32('cache_address').parse(cache_address_data)
+      try:
+        value = self._ReadStructureFromByteStream(
+            cache_address_data, file_offset, cache_address_map)
+      except (ValueError, errors.ParseError) as exception:
+        raise errors.ParseError((
+            'Unable to map cache address at offset: 0x{0:08x} with error: '
+            '{1!s}').format(file_offset, exception))
 
       if value:
         cache_address = CacheAddress(value)
         self.index_table.append(cache_address)
+
+      file_offset += 4
 
       cache_address_data = file_object.read(4)
 
@@ -205,40 +200,9 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
 class ChromeCacheDataBlockFileParser(dtfabric_parser.DtFabricBaseParser):
   """Chrome cache data block file parser."""
 
+  _DEFINITION_FILE = 'chrome_cache.yaml'
+
   _FILE_SIGNATURE = 0xc104cac3
-
-  _FILE_HEADER = construct.Struct(
-      'chrome_cache_data_file_header',
-      construct.ULInt32('signature'),
-      construct.ULInt16('minor_version'),
-      construct.ULInt16('major_version'),
-      construct.ULInt16('file_number'),
-      construct.ULInt16('next_file_number'),
-      construct.ULInt32('block_size'),
-      construct.ULInt32('number_of_entries'),
-      construct.ULInt32('maximum_number_of_entries'),
-      construct.Array(4, construct.ULInt32('emtpy')),
-      construct.Array(4, construct.ULInt32('hints')),
-      construct.ULInt32('updating'),
-      construct.Array(5, construct.ULInt32('user')))
-
-  _CACHE_ENTRY = construct.Struct(
-      'chrome_cache_entry',
-      construct.ULInt32('hash'),
-      construct.ULInt32('next_address'),
-      construct.ULInt32('rankings_node_address'),
-      construct.ULInt32('reuse_count'),
-      construct.ULInt32('refetch_count'),
-      construct.ULInt32('state'),
-      construct.ULInt64('creation_time'),
-      construct.ULInt32('key_size'),
-      construct.ULInt32('long_key_address'),
-      construct.Array(4, construct.ULInt32('data_stream_sizes')),
-      construct.Array(4, construct.ULInt32('data_stream_addresses')),
-      construct.ULInt32('flags'),
-      construct.Padding(16),
-      construct.ULInt32('self_hash'),
-      construct.Array(160, construct.UBInt8('key')))
 
   def _ParseFileHeader(self, file_object):
     """Parses the file header.
@@ -249,33 +213,31 @@ class ChromeCacheDataBlockFileParser(dtfabric_parser.DtFabricBaseParser):
     Raises:
       ParseError: if the file header cannot be read.
     """
-    file_object.seek(0, os.SEEK_SET)
+    file_header_map = self._GetDataTypeMap(
+        'chrome_cache_data_block_file_header')
 
     try:
-      file_header = self._FILE_HEADER.parse_stream(file_object)
-    except construct.FieldError as exception:
-      raise errors.ParseError(
+      file_header, _ = self._ReadStructureFromFileObject(
+          file_object, 0, file_header_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.UnableToParseFile(
           'Unable to parse data block file header with error: {0!s}'.format(
               exception))
 
-    signature = file_header.get('signature')
-
-    if signature != self._FILE_SIGNATURE:
+    if file_header.signature != self._FILE_SIGNATURE:
       raise errors.ParseError('Unsupported data block file signature')
 
     format_version = '{0:d}.{1:d}'.format(
-        file_header.get('major_version'),
-        file_header.get('minor_version'))
-
+        file_header.major_version, file_header.minor_version)
     if format_version not in ('2.0', '2.1'):
       raise errors.ParseError(
           'Unsupported data block file format version: {0:s}'.format(
               format_version))
 
-    block_size = file_header.get('block_size')
-    if block_size not in (256, 1024, 4096):
+    if file_header.block_size not in (256, 1024, 4096):
       raise errors.ParseError(
-          'Unsupported data block file block size: {0:d}'.format(block_size))
+          'Unsupported data block file block size: {0:d}'.format(
+              file_header.block_size))
 
   def ParseCacheEntry(self, file_object, block_offset):
     """Parses a cache entry.
@@ -290,27 +252,25 @@ class ChromeCacheDataBlockFileParser(dtfabric_parser.DtFabricBaseParser):
     Raises:
       ParseError: if the cache entry cannot be read.
     """
-    file_object.seek(block_offset, os.SEEK_SET)
+    cache_entry_map = self._GetDataTypeMap('chrome_cache_entry')
 
     try:
-      cache_entry_struct = self._CACHE_ENTRY.parse_stream(file_object)
-    except construct.FieldError as exception:
-      raise errors.ParseError(
-          'Unable to parse cache entry with error: {0!s}'.format(
-              exception))
+      cache_entry, _ = self._ReadStructureFromFileObject(
+          file_object, block_offset, cache_entry_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.UnableToParseFile((
+          'Unable to parse cache entry at offset: 0x{0:08x} with error: '
+          '{1!s}').format(block_offset, exception))
 
     cache_entry_object = CacheEntry()
 
-    cache_entry_object.hash = cache_entry_struct.get('hash')
-
-    cache_entry_object.next = CacheAddress(
-        cache_entry_struct.get('next_address'))
+    cache_entry_object.hash = cache_entry.hash
+    cache_entry_object.next = CacheAddress(cache_entry.next_address)
     cache_entry_object.rankings_node = CacheAddress(
-        cache_entry_struct.get('rankings_node_address'))
+        cache_entry.rankings_node_address)
+    cache_entry_object.creation_time = cache_entry.creation_time
 
-    cache_entry_object.creation_time = cache_entry_struct.get('creation_time')
-
-    byte_array = cache_entry_struct.get('key')
+    byte_array = cache_entry.key
     byte_string = b''.join(map(chr, byte_array))
     cache_entry_object.key, _, _ = byte_string.partition(b'\x00')
 
@@ -508,6 +468,8 @@ class ChromeCacheParser(interface.FileEntryParser):
       raise errors.UnableToParseFile(
           '[{0:s}] unable to parse index file {1:s} with error: {2!s}'.format(
               self.NAME, display_name, exception))
+
+    # TODO: create event based on index file creation time.
 
     try:
       file_system = file_entry.GetFileSystem()
