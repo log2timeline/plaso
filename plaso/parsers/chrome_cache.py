@@ -88,6 +88,7 @@ class CacheEntry(object):
     hash (int): super fast hash of the key.
     key (bytes): key.
     next (int): cache address of the next cache entry.
+    original_url (str): original URL derived from the key.
     rankings_node (int): cache address of the rankings node.
   """
 
@@ -98,6 +99,7 @@ class CacheEntry(object):
     self.hash = None
     self.key = None
     self.next = None
+    self.original_url = None
     self.rankings_node = None
 
 
@@ -297,21 +299,29 @@ class ChromeCacheDataBlockFileParser(dtfabric_parser.DtFabricBaseParser):
           'Unable to parse cache entry with error: {0!s}'.format(
               exception))
 
-    cache_entry = CacheEntry()
+    cache_entry_object = CacheEntry()
 
-    cache_entry.hash = cache_entry_struct.get('hash')
+    cache_entry_object.hash = cache_entry_struct.get('hash')
 
-    cache_entry.next = CacheAddress(cache_entry_struct.get('next_address'))
-    cache_entry.rankings_node = CacheAddress(cache_entry_struct.get(
-        'rankings_node_address'))
+    cache_entry_object.next = CacheAddress(
+        cache_entry_struct.get('next_address'))
+    cache_entry_object.rankings_node = CacheAddress(
+        cache_entry_struct.get('rankings_node_address'))
 
-    cache_entry.creation_time = cache_entry_struct.get('creation_time')
+    cache_entry_object.creation_time = cache_entry_struct.get('creation_time')
 
     byte_array = cache_entry_struct.get('key')
     byte_string = b''.join(map(chr, byte_array))
-    cache_entry.key, _, _ = byte_string.partition(b'\x00')
+    cache_entry_object.key, _, _ = byte_string.partition(b'\x00')
 
-    return cache_entry
+    try:
+      cache_entry_object.original_url = cache_entry_object.key.decode('ascii')
+    except UnicodeDecodeError:
+      raise errors.ParseError(
+          'Unable to decode original URL in key with error: {0!s}'.format(
+              exception))
+
+    return cache_entry_object
 
   # pylint: disable=unused-argument
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
@@ -367,7 +377,7 @@ class ChromeCacheParser(interface.FileEntryParser):
     # Parse the cache entries in the data block files.
     for cache_address in index_table:
       cache_address_chain_length = 0
-      while cache_address.value != 0x00000000:
+      while cache_address.value != 0:
         if cache_address_chain_length >= 64:
           parser_mediator.ProduceExtractionError(
               'Maximum allowed cache address chain length reached.')
@@ -390,17 +400,8 @@ class ChromeCacheParser(interface.FileEntryParser):
                   exception))
           break
 
-        try:
-          original_url = cache_entry.key.decode('ascii')
-        except UnicodeDecodeError:
-          original_url = cache_entry.key.decode('ascii', errors='replace')
-          parser_mediator.ProduceExtractionError((
-              'unable to decode cache entry key at cache address: '
-              '0x{0:08x}. Characters that cannot be decoded will be '
-              'replaced with "?" or "\\ufffd".').format(cache_address.value))
-
         event_data = ChromeCacheEntryEventData()
-        event_data.original_url = original_url
+        event_data.original_url = cache_entry.original_url
 
         date_time = dfdatetime_webkit_time.WebKitTime(
             timestamp=cache_entry.creation_time)
