@@ -385,13 +385,13 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     if not self.VerifyStructure(parser_mediator, line):
       raise errors.UnableToParseFile('Wrong file structure.')
 
+    consecutive_line_failures = 0
     # Set the offset to the beginning of the file.
     self._current_offset = 0
     # Read every line in the text file.
     while line:
       if parser_mediator.abort:
         break
-      consecutive_line_failures = 0
       parsed_structure = None
       use_key = None
       # Try to parse the line using all the line structures.
@@ -594,10 +594,6 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
 
   BUFFER_SIZE = 2048
 
-  # The maximum number of consecutive lines that don't match known line
-  # structures to encounter before aborting parsing.
-  MAXIMUM_CONSECUTIVE_LINE_FAILURES = 20
-
   def __init__(self):
     """Initializes a parser object."""
     super(PyparsingMultiLineTextParser, self).__init__()
@@ -638,6 +634,8 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     for key, structure in self.LINE_STRUCTURES:
       structure.parseWithTabs()
 
+
+    consecutive_line_failures = 0
     # Read every line in the text file.
     while self._text_reader.lines:
       if parser_mediator.abort:
@@ -649,7 +647,6 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       end = 0
 
       key = None
-      consecutive_line_failures = 0
 
       # Try to parse the line using all the line structures.
       for key, structure in self.LINE_STRUCTURES:
