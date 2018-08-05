@@ -98,9 +98,9 @@ class AppCompatCacheWindowsRegistryPlugin(
       0xbadc0ffe: _FORMAT_TYPE_2003,
       # AppCompatCache format signature used in Windows 7 and 2008 R2.
       0xbadc0fee: _FORMAT_TYPE_7,
-      # AppCompatCache format used in Windows 8.0 and 8.1.
+      # AppCompatCache format signature used in Windows 8.0 and 8.1.
       0x00000080: _FORMAT_TYPE_8,
-      # AppCompatCache format used in Windows 10
+      # AppCompatCache format signatures used in Windows 10
       0x00000030: _FORMAT_TYPE_10,
       0x00000034: _FORMAT_TYPE_10}
 
