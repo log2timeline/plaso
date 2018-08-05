@@ -381,6 +381,8 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     if not self.VerifyStructure(parser_mediator, line):
       raise errors.UnableToParseFile('Wrong file structure.')
 
+    structures = dict(self.LINE_STRUCTURES)
+    index = None
     # Set the offset to the beginning of the file.
     self._current_offset = 0
     # Read every line in the text file.
@@ -390,7 +392,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       parsed_structure = None
       use_key = None
       # Try to parse the line using all the line structures.
-      for key, structure in self.LINE_STRUCTURES:
+      for index, (key, structure) in structures:
         try:
           parsed_structure = structure.parseString(line)
         except pyparsing.ParseException:
@@ -401,6 +403,9 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
       if parsed_structure:
         self.ParseRecord(parser_mediator, use_key, parsed_structure)
+        if index is not None and index != 0:
+          key_structure = structures.pop(index)
+          structures.insert(0, key_structure)
       else:
         if len(line) > 80:
           line = '{0:s}...'.format(line[:77])
@@ -634,7 +639,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
 
       key = None
 
-      structures = self.LINE_STRUCTURES
+      structures = dict(self.LINE_STRUCTURES)
       index = None
 
       # Try to parse the line using all the line structures.
@@ -659,7 +664,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       if tokens and start == 0:
         # Move matching key, structure pair to the front of the list, so that
         # structures that are more likely to match are tried first.
-        if index != 0:
+        if index is not None and index != 0:
           key_structure = structures.pop(index)
           structures.insert(0, key_structure)
 
