@@ -35,7 +35,7 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
         definitions.TIME_DESCRIPTION_CREATION, event.timestamp_desc)
     self.assertEqual(9, event.active_duration_seconds)
     self.assertEqual('ShellActivityMonitor', event.reporting_app)
-    self.assertEqual('c:\\python34\\python.exe', event.package_id)
+    self.assertEqual('c:\\python34\\python.exe', event.package_identifier)
 
     event = events[2]
     self.assertEqual('windows:timeline:user_engaged', event.data_type)
@@ -46,14 +46,14 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
     self.assertEqual('ShellActivityMonitor', event.reporting_app)
     self.assertEqual(
         'c:\\users\\demouser\\appdata\\local\\programs\\python\\python37-32\\'
-        'python.exe', event.package_id)
+        'python.exe', event.package_identifier)
 
     event = events[80]
     self.assertEqual('windows:timeline:generic', event.data_type)
     self.CheckTimestamp(event.timestamp, '2018-07-25 12:04:48.000000')
     self.assertEqual(
         definitions.TIME_DESCRIPTION_CREATION, event.timestamp_desc)
-    self.assertEqual('Microsoft.SkyDrive.Desktop', event.package_id)
+    self.assertEqual('Microsoft.SkyDrive.Desktop', event.package_identifier)
     self.assertEqual('', event.description)
     self.assertEqual('OneDrive', event.application_display_name)
 
@@ -63,7 +63,8 @@ class WindowsTimelineTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         definitions.TIME_DESCRIPTION_CREATION, event.timestamp_desc)
     self.assertEqual(
-        '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\notepad.exe', event.package_id)
+        '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\notepad.exe',
+        event.package_identifier)
     self.assertEqual(
         'C:\\Users\\demouser\\Desktop\\SCHEMA.txt', event.description)
     self.assertEqual('Notepad', event.application_display_name)
