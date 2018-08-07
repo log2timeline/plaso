@@ -270,7 +270,7 @@ class ChromeCacheDataBlockFileParser(dtfabric_parser.DtFabricBaseParser):
     cache_entry_object.creation_time = cache_entry.creation_time
 
     byte_array = cache_entry.key
-    byte_string = b''.join(map(chr, byte_array))
+    byte_string = bytes(bytearray(byte_array))
     cache_entry_object.key, _, _ = byte_string.partition(b'\x00')
 
     try:
