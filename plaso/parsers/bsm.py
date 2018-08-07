@@ -150,6 +150,10 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
       0x2d: 'bsm_token_data_arg32',
       0x2f: 'bsm_token_data_seq',
       0x32: 'bsm_token_data_ipc_perm',
+      0x34: 'bsm_token_data_groups',
+      0x3b: 'bsm_token_data_groups',
+      0x3c: 'bsm_token_data_exec_args',
+      0x3d: 'bsm_token_data_exec_args',
       0x3e: 'bsm_token_data_attr32',
       0x52: 'bsm_token_data_exit',
       0x60: 'bsm_token_data_zonename',
@@ -189,6 +193,10 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
       0x2d: '_FormatArgToken',
       0x2f: '_FormatSeqToken',
       0x32: '_FormatIPCPermToken',
+      0x34: '_FormatGroupsToken',
+      0x3b: '_FormatGroupsToken',
+      0x3c: '_FormatExecArgsToken',
+      0x3d: '_FormatExecArgsToken',
       0x3e: '_FormatAttrToken',
       0x52: '_FormatReturnOrExitToken',
       0x60: '_FormatZonenameToken',
@@ -320,6 +328,34 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
     return {
         'object_type': token_data.object_type,
         'object_id': token_data.object_identifier}
+
+  def _FormatGroupsToken(self, token_data):
+    """Formats a groups token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_groups): AUT_GROUPS or AUT_NEWGROUPS token
+          data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {
+        'number_of_groups': token_data.number_of_groups,
+        'groups': ', '.join(token_data.groups)}
+
+  def _FormatExecArgsToken(self, token_data):
+    """Formats an execution arguments token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_exec_args): AUT_EXEC_ARGS or AUT_EXEC_ENV
+          token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {
+        'number_of_strings': token_data.number_of_strings,
+        'strings': ', '.join(token_data.strings)}
 
   def _FormatIPortToken(self, token_data):
     """Formats an IP port token as a dictionary of values.
@@ -562,7 +598,8 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
       token_data (object): token data.
 
     Returns:
-      dict[str, str]: token values.
+      dict[str, str]: formatted token values or an emtpy dictionary if no
+          formatted token values could be determined.
     """
     token_data_format_function = self._TOKEN_DATA_FORMAT_FUNCTIONS.get(
         token_type)
@@ -570,26 +607,10 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
       token_data_format_function = getattr(
           self, token_data_format_function, None)
 
-    if token_data_format_function:
-      return token_data_format_function(token_data)
+    if not token_data_format_function:
+      return {}
 
-    # elif token_type in (0x34, 0x3b):
-    #   arguments = []
-    #   for _ in range(token):
-    #     arguments.append(
-    #         self._RawToUTF8(
-    #             self.BSM_TOKEN_DATA_INTEGER.parse_stream(file_object)))
-    #   return {bsm_type: ','.join(arguments)}
-
-    # elif token_type in (0x3c, 0x3d):
-    #   arguments = []
-    #   for _ in range(0, token):
-    #     sub_token = self.BSM_TOKEN_EXEC_ARGUMENT.parse_stream(file_object)
-    #     string = self._CopyUtf8ByteArrayToString(sub_token.text)
-    #     arguments.append(string)
-    #   return {'arguments': ' '.join(arguments)}
-
-    return {}
+    return token_data_format_function(token_data)
 
   def _FormatZonenameToken(self, token_data):
     """Formats a time zone name token as a dictionary of values.
@@ -698,6 +719,7 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
     token_type, _ = self._ReadStructureFromFileObject(
         file_object, file_offset, token_type_map)
 
+    # TODO: complete reading bsm_token_data_exec_args
     token_data = None
     token_data_map_name = self._DATA_TYPE_MAP_PER_TOKEN_TYPE.get(
         token_type, None)

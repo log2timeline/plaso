@@ -148,6 +148,14 @@ members:
   element_data_type: byte
   elements_data_size: bsm_token_data_data.number_of_elements
 ---
+name: bsm_token_data_exec_args
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: number_of_strings
+  data_type: uint32
+---
 name: bsm_token_data_exit
 type: structure
 attributes:
@@ -157,6 +165,18 @@ members:
   data_type: uint32
 - name: return_value
   data_type: int32
+---
+name: bsm_token_data_groups
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: number_of_groups
+  data_type: uint32
+- name: groups
+  type: sequence
+  element_data_type: uint32
+  number_of_elements: bsm_token_data_groups.number_of_groups
 ---
 name: bsm_token_data_header32
 type: structure
