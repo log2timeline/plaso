@@ -79,56 +79,54 @@ class BaseFirefoxCacheParser(dtfabric_parser.DtFabricBaseParser):
         str: HTTP request method or None if the value cannot be extracted.
         str: HTTP response code or None if the value cannot be extracted.
     """
+    header_string = header_data.decode('ascii', errors='replace')
+
     try:
-      http_header_start = header_data.index(b'request-method')
+      http_header_start = header_string.index('request-method')
     except ValueError:
-      safe_headers = header_data.decode('ascii', errors='replace')
-      logger.debug('No request method in header: "{0:s}"'.format(
-          safe_headers))
+      logger.debug('No request method in header: "{0:s}"'.format(header_string))
       return None, None
 
     # HTTP request and response headers.
-    http_headers = header_data[http_header_start::]
+    http_headers = header_string[http_header_start::]
 
-    header_parts = http_headers.split(b'\x00')
+    header_parts = http_headers.split('\x00')
 
     # TODO: check len(header_parts).
     request_method = header_parts[1]
 
     if request_method not in self._REQUEST_METHODS:
-      safe_headers = header_data.decode('ascii', errors='replace')
       logger.debug((
           '[{0:s}] {1:s}:{2:d}: Unknown HTTP method \'{3:s}\'. Response '
           'headers: \'{4:s}\'').format(
-              self.NAME, display_name, offset, request_method, safe_headers))
+              self.NAME, display_name, offset, request_method, header_string))
 
     try:
-      response_head_start = http_headers.index(b'response-head')
+      response_head_start = http_headers.index('response-head')
     except ValueError:
-      logger.debug('No response head in header: "{0:s}"'.format(header_data))
+      logger.debug('No response head in header: "{0:s}"'.format(header_string))
       return request_method, None
 
     # HTTP response headers.
     response_head = http_headers[response_head_start::]
 
-    response_head_parts = response_head.split(b'\x00')
+    response_head_parts = response_head.split('\x00')
 
     # Response code, followed by other response header key-value pairs,
     # separated by newline.
     # TODO: check len(response_head_parts).
     response_head_text = response_head_parts[1]
-    response_head_text_parts = response_head_text.split(b'\r\n')
+    response_head_text_parts = response_head_text.split('\r\n')
 
     # The first line contains response code.
     # TODO: check len(response_head_text_parts).
     response_code = response_head_text_parts[0]
 
-    if not response_code.startswith(b'HTTP'):
-      safe_headers = header_data.decode('ascii', errors='replace')
+    if not response_code.startswith('HTTP'):
       logger.debug((
           '[{0:s}] {1:s}:{2:d}: Could not determine HTTP response code. '
           'Response headers: \'{3:s}\'.').format(
-              self.NAME, display_name, offset, safe_headers))
+              self.NAME, display_name, offset, header_string))
 
     return request_method, response_code
 
@@ -486,7 +484,7 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
     event_data.request_size = file_metadata_header.key_size
     event_data.response_code = response_code
     event_data.version = self._CACHE_VERSION
-    event_data.url = url
+    event_data.url = url.decode('ascii', errors='replace')
 
     date_time = dfdatetime_posix_time.PosixTime(
         timestamp=file_metadata_header.last_fetched_time)
