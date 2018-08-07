@@ -44,45 +44,19 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
 
   _DEFINITION_FILE = 'bsm.yaml'
 
-  _DATA_TYPE_MAP_PER_TOKEN_TYPE = {
-      0x11: 'bsm_token_data_other_file32',
-      0x13: 'bsm_token_data_trailer',
-      0x14: 'bsm_token_data_header32',
-      0x15: 'bsm_token_data_header32_ex',
-      0x21: 'bsm_token_data_data',
-      0x22: 'bsm_token_data_ipc',
-      0x23: 'bsm_token_data_path',
-      0x24: 'bsm_token_data_subject32',
-      0x26: 'bsm_token_data_subject32',
-      0x27: 'bsm_token_data_return32',
-      0x28: 'bsm_token_data_text',
-      0x29: 'bsm_token_data_opaque',
-      0x2a: 'bsm_token_data_in_addr',
-      0x2b: 'bsm_token_data_ip',
-      0x2c: 'bsm_token_data_iport',
-      0x2d: 'bsm_token_data_arg32',
-      0x2f: 'bsm_token_data_seq',
-      0x32: 'bsm_token_data_ipc_perm',
-      0x3e: 'bsm_token_data_attr32',
-      0x52: 'bsm_token_data_exit',
-      0x60: 'bsm_token_data_zonename',
-      0x71: 'bsm_token_data_arg64',
-      0x72: 'bsm_token_data_return64',
-      0x73: 'bsm_token_data_attr64',
-      0x74: 'bsm_token_data_header64',
-      0x75: 'bsm_token_data_subject64',
-      0x77: 'bsm_token_data_subject64',
-      0x79: 'bsm_token_data_header64_ex',
-      0x7a: 'bsm_token_data_subject32_ex',
-      0x7b: 'bsm_token_data_subject32_ex',
-      0x7c: 'bsm_token_data_subject64_ex',
-      0x7d: 'bsm_token_data_subject64_ex',
-      0x7e: 'bsm_token_data_in_addr_ex',
-      0x7f: 'bsm_token_data_socket_ex',
-      0x80: 'bsm_token_data_sockinet32',
-      0x81: 'bsm_token_data_sockinet64',
-      0x82: 'bsm_token_data_sockunix',
-  }
+  _TOKEN_TYPE_AUT_TRAILER = 0x13
+  _TOKEN_TYPE_AUT_HEADER32 = 0x14
+  _TOKEN_TYPE_AUT_HEADER32_EX = 0x15
+  _TOKEN_TYPE_AUT_RETURN32 = 0x27
+  _TOKEN_TYPE_AUT_RETURN64 = 0x72
+  _TOKEN_TYPE_AUT_HEADER64 = 0x74
+  _TOKEN_TYPE_AUT_HEADER64_EX = 0x79
+
+  _HEADER_TOKEN_TYPES = frozenset([
+      _TOKEN_TYPE_AUT_HEADER32,
+      _TOKEN_TYPE_AUT_HEADER32_EX,
+      _TOKEN_TYPE_AUT_HEADER64,
+      _TOKEN_TYPE_AUT_HEADER64_EX])
 
   _TOKEN_TYPES = {
       0x00: 'AUT_INVALID',
@@ -157,11 +131,81 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
       0x81: 'AUT_SOCKINET128',
       0x82: 'AUT_SOCKUNIX'}
 
-  _HEADER_TOKEN_TYPES = frozenset([0x14, 0x15, 0x74, 0x79])
-
-  _TRAILER_TOKEN_TYPE = 0x13
+  _DATA_TYPE_MAP_PER_TOKEN_TYPE = {
+      0x11: 'bsm_token_data_other_file32',
+      0x13: 'bsm_token_data_trailer',
+      0x14: 'bsm_token_data_header32',
+      0x15: 'bsm_token_data_header32_ex',
+      0x21: 'bsm_token_data_data',
+      0x22: 'bsm_token_data_ipc',
+      0x23: 'bsm_token_data_path',
+      0x24: 'bsm_token_data_subject32',
+      0x26: 'bsm_token_data_subject32',
+      0x27: 'bsm_token_data_return32',
+      0x28: 'bsm_token_data_text',
+      0x29: 'bsm_token_data_opaque',
+      0x2a: 'bsm_token_data_in_addr',
+      0x2b: 'bsm_token_data_ip',
+      0x2c: 'bsm_token_data_iport',
+      0x2d: 'bsm_token_data_arg32',
+      0x2f: 'bsm_token_data_seq',
+      0x32: 'bsm_token_data_ipc_perm',
+      0x3e: 'bsm_token_data_attr32',
+      0x52: 'bsm_token_data_exit',
+      0x60: 'bsm_token_data_zonename',
+      0x71: 'bsm_token_data_arg64',
+      0x72: 'bsm_token_data_return64',
+      0x73: 'bsm_token_data_attr64',
+      0x74: 'bsm_token_data_header64',
+      0x75: 'bsm_token_data_subject64',
+      0x77: 'bsm_token_data_subject64',
+      0x79: 'bsm_token_data_header64_ex',
+      0x7a: 'bsm_token_data_subject32_ex',
+      0x7b: 'bsm_token_data_subject32_ex',
+      0x7c: 'bsm_token_data_subject64_ex',
+      0x7d: 'bsm_token_data_subject64_ex',
+      0x7e: 'bsm_token_data_in_addr_ex',
+      0x7f: 'bsm_token_data_socket_ex',
+      0x80: 'bsm_token_data_sockinet32',
+      0x81: 'bsm_token_data_sockinet64',
+      0x82: 'bsm_token_data_sockunix',
+  }
 
   _TRAILER_TOKEN_SIGNATURE = 0xb105
+
+  _TOKEN_DATA_FORMAT_FUNCTIONS = {
+      0x11: '_FormatOtherFileToken',
+      0x21: '_FormatDataToken',
+      0x22: '_FormatIPCToken',
+      0x23: '_FormatPathToken',
+      0x24: '_FormatSubjectOrProcessToken',
+      0x26: '_FormatSubjectOrProcessToken',
+      0x27: '_FormatReturnOrExitToken',
+      0x28: '_FormatTextToken',
+      0x29: '_FormatOpaqueToken',
+      0x2a: '_FormatInAddrToken',
+      0x2b: '_FormatIPToken',
+      0x2c: '_FormatIPortToken',
+      0x2d: '_FormatArgToken',
+      0x2f: '_FormatSeqToken',
+      0x32: '_FormatIPCPermToken',
+      0x3e: '_FormatAttrToken',
+      0x52: '_FormatReturnOrExitToken',
+      0x60: '_FormatZonenameToken',
+      0x71: '_FormatArgToken',
+      0x72: '_FormatReturnOrExitToken',
+      0x73: '_FormatAttrToken',
+      0x75: '_FormatSubjectOrProcessToken',
+      0x77: '_FormatSubjectOrProcessToken',
+      0x7a: '_FormatSubjectExOrProcessExToken',
+      0x7b: '_FormatSubjectExOrProcessExToken',
+      0x7c: '_FormatSubjectExOrProcessExToken',
+      0x7d: '_FormatSubjectExOrProcessExToken',
+      0x7e: '_FormatInAddrExToken',
+      0x7f: '_FormatSocketExToken',
+      0x80: '_FormatSocketInet32Token',
+      0x81: '_FormatSocketInet128Token',
+      0x82: '_FormatSocketUnixToken'}
 
   def _FormatArgToken(self, token_data):
     """Formats an argument token as a dictionary of values.
@@ -398,29 +442,41 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
         'to': remote_ip_address,
         'to_port': token_data.remote_port}
 
-  def _FormatSocketInetToken(self, token_type, token_data):
+  def _FormatSocketInet32Token(self, token_data):
     """Formats an Internet socket token as a dictionary of values.
 
     Args:
-      token_type (int): token type.
-      token_data (bsm_token_data_sockinet32|bsm_token_data_sockinet64):
-          AUT_SOCKINET32 or AUT_SOCKINET128 token data.
+      token_data (bsm_token_data_sockinet32): AUT_SOCKINET32 token data.
 
     Returns:
       dict[str, str]: token values.
     """
     protocol = bsmtoken.BSM_PROTOCOLS.get(token_data.socket_family, 'UNKNOWN')
-    if token_type == 0x80:
-      ip_address = self._FormatPackedIPv4Address(token_data.ip_addresss)
-    elif token_type == 0x81:
-      ip_address = self._FormatPackedIPv6Address(token_data.ip_addresss)
+    ip_address = self._FormatPackedIPv4Address(token_data.ip_addresss)
     return {
         'protocols': protocol,
         'family': token_data.socket_family,
         'port': token_data.port_number,
         'address': ip_address}
 
-  def _FormatSocketUnixToken(self, token_type, token_data):
+  def _FormatSocketInet128Token(self, token_data):
+    """Formats an Internet socket token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_sockinet64): AUT_SOCKINET128 token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    protocol = bsmtoken.BSM_PROTOCOLS.get(token_data.socket_family, 'UNKNOWN')
+    ip_address = self._FormatPackedIPv6Address(token_data.ip_addresss)
+    return {
+        'protocols': protocol,
+        'family': token_data.socket_family,
+        'port': token_data.port_number,
+        'address': ip_address}
+
+  def _FormatSocketUnixToken(self, token_data):
     """Formats an Unix socket token as a dictionary of values.
 
     Args:
@@ -435,21 +491,41 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
         'family': token_data.socket_family,
         'path': token_data.socket_path}
 
-  def _FormatSubjectOrProcessToken(self, token_type, token_data):
+  def _FormatSubjectOrProcessToken(self, token_data):
     """Formats a subject or process token as a dictionary of values.
 
     Args:
-      token_type (int): token type.
-      token_data (bsm_token_data_subject32|bsm_token_data_subject32_ex|
-                  bsm_token_data_subject64|bsm_token_data_subject64_ex):
-          AUT_SUBJECT32, AUT_PROCESS32, AUT_SUBJECT32_EX, AUT_PROCESS32_EX,
-          AUT_SUBJECT64, AUT_PROCESS64, AUT_SUBJECT64_EX or AUT_PROCESS64_EX
-          token data.
+      token_data (bsm_token_data_subject32|bsm_token_data_subject64):
+          AUT_SUBJECT32, AUT_PROCESS32, AUT_SUBJECT64 or AUT_PROCESS64 token
+          data.
 
     Returns:
       dict[str, str]: token values.
     """
-    if token_type in (0x24, 0x26, 0x75, 0x77) or token_data.net_type == 4:
+    ip_address = self._FormatPackedIPv4Address(token_data.ip_address)
+    return {
+        'aid': token_data.audit_user_identifier,
+        'euid': token_data.effective_user_identifier,
+        'egid': token_data.effective_group_identifier,
+        'uid': token_data.real_user_identifier,
+        'gid': token_data.real_group_identifier,
+        'pid': token_data.process_identifier,
+        'session_id': token_data.session_identifier,
+        'terminal_port': token_data.terminal_port,
+        'terminal_ip': ip_address}
+
+  def _FormatSubjectExOrProcessExToken(self, token_data):
+    """Formats a subject or process token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_subject32_ex|bsm_token_data_subject64_ex):
+          AUT_SUBJECT32_EX, AUT_PROCESS32_EX, AUT_SUBJECT64_EX or
+          AUT_PROCESS64_EX token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    if token_data.net_type == 4:
       ip_address = self._FormatPackedIPv4Address(token_data.ip_address)
     elif token_data.net_type == 16:
       ip_address = self._FormatPackedIPv6Address(token_data.ip_address)
@@ -488,47 +564,14 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
     Returns:
       dict[str, str]: token values.
     """
-    if token_type == 0x11:
-      return self._FormatOtherFileToken(token_data)
+    token_data_format_function = self._TOKEN_DATA_FORMAT_FUNCTIONS.get(
+        token_type)
+    if token_data_format_function:
+      token_data_format_function = getattr(
+          self, token_data_format_function, None)
 
-    elif token_type == 0x21:
-      return self._FormatDataToken(token_data)
-
-    elif token_type == 0x22:
-      return self._FormatIPCToken(token_data)
-
-    elif token_type == 0x23:
-      return self._FormatPathToken(token_data)
-
-    elif token_type in (0x24, 0x26, 0x75, 0x77, 0x7a, 0x7b, 0x7c, 0x7d):
-      return self._FormatSubjectOrProcessToken(token_type, token_data)
-
-    elif token_type in (0x27, 0x52, 0x72):
-      return self._FormatReturnOrExitToken(token_data)
-
-    elif token_type == 0x28:
-      return self._FormatTextToken(token_data)
-
-    elif token_type == 0x29:
-      return self._FormatOpaqueToken(token_data)
-
-    elif token_type == 0x2a:
-      return self._FormatInAddrToken(token_data)
-
-    elif token_type == 0x2b:
-      return self._FormatIPToken(token_data)
-
-    elif token_type == 0x2c:
-      return self._FormatIPortToken(token_data)
-
-    elif token_type in (0x2d, 0x71):
-      return self._FormatArgToken(token_data)
-
-    elif token_type == 0x2f:
-      return self._FormatSeqToken(token_data)
-
-    elif token_type == 0x32:
-      return self._FormatIPCPermToken(token_data)
+    if token_data_format_function:
+      return token_data_format_function(token_data)
 
     # elif token_type in (0x34, 0x3b):
     #   arguments = []
@@ -545,24 +588,6 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
     #     string = self._CopyUtf8ByteArrayToString(sub_token.text)
     #     arguments.append(string)
     #   return {'arguments': ' '.join(arguments)}
-
-    elif token_type in (0x3e, 0x73):
-      return self._FormatAttrToken(token_data)
-
-    elif token_type == 0x60:
-      return self._FormatZonenameToken(token_data)
-
-    elif token_type == 0x7e:
-      return self._FormatInAddrExToken(token_data)
-
-    elif token_type == 0x7f:
-      return self._FormatSocketExToken(token_data)
-
-    elif token_type in (0x80, 0x81):
-      return self._FormatSocketInetToken(token_type, token_data)
-
-    elif token_type == 0x82:
-      return self._FormatSocketUnixToken(token_data)
 
     return {}
 
@@ -625,14 +650,15 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
 
       file_offset = file_object.tell()
 
-      if token_type == self._TRAILER_TOKEN_TYPE:
+      if token_type == self._TOKEN_TYPE_AUT_TRAILER:
         break
 
       token_type_string = self._TOKEN_TYPES.get(token_type, 'UNKNOWN')
       token_values = self._FormatTokenData(token_type, token_data)
       event_tokens[token_type_string] = token_values
 
-      if token_type in (0x27, 0x72):
+      if token_type in (
+          self._TOKEN_TYPE_AUT_RETURN32, self._TOKEN_TYPE_AUT_RETURN64):
         return_token_values = token_values
 
     if token_data.signature != self._TRAILER_TOKEN_SIGNATURE:
