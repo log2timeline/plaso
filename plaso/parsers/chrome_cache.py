@@ -125,13 +125,12 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
     """Parses the file header.
 
     Args:
-      file_object (dvfvs.FileIO): a file-like object to parse.
+      file_object (dfvfs.FileIO): a file-like object to parse.
 
     Raises:
       ParseError: if the file header cannot be read.
     """
-    file_header_map = self._GetDataTypeMap(
-        'chrome_cache_index_file_header')
+    file_header_map = self._GetDataTypeMap('chrome_cache_index_file_header')
 
     try:
       file_header, _ = self._ReadStructureFromFileObject(
@@ -156,7 +155,7 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
     """Parses the index table.
 
     Args:
-      file_object (dvfvs.FileIO): a file-like object to parse.
+      file_object (dfvfs.FileIO): a file-like object to parse.
     """
     cache_address_map = self._GetDataTypeMap('uint32le')
     file_offset = file_object.get_offset()
@@ -186,7 +185,7 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
 
     Args:
       parser_mediator (ParserMediator): a parser mediator.
-      file_object (dvfvs.FileIO): a file-like object to parse.
+      file_object (dfvfs.FileIO): a file-like object to parse.
 
     Raises:
       ParseError: when the file cannot be parsed.
@@ -208,7 +207,7 @@ class ChromeCacheDataBlockFileParser(dtfabric_parser.DtFabricBaseParser):
     """Parses the file header.
 
     Args:
-      file_object (dvfvs.FileIO): a file-like object to parse.
+      file_object (dfvfs.FileIO): a file-like object to parse.
 
     Raises:
       ParseError: if the file header cannot be read.
@@ -243,7 +242,7 @@ class ChromeCacheDataBlockFileParser(dtfabric_parser.DtFabricBaseParser):
     """Parses a cache entry.
 
     Args:
-      file_object (dvfvs.FileIO): a file-like object to parse.
+      file_object (dfvfs.FileIO): a file-like object to read from.
       block_offset (int): block offset of the cache entry.
 
     Returns:
@@ -276,7 +275,7 @@ class ChromeCacheDataBlockFileParser(dtfabric_parser.DtFabricBaseParser):
 
     try:
       cache_entry_object.original_url = cache_entry_object.key.decode('ascii')
-    except UnicodeDecodeError:
+    except UnicodeDecodeError as exception:
       raise errors.ParseError(
           'Unable to decode original URL in key with error: {0!s}'.format(
               exception))
@@ -289,7 +288,7 @@ class ChromeCacheDataBlockFileParser(dtfabric_parser.DtFabricBaseParser):
 
     Args:
       parser_mediator (ParserMediator): a parser mediator.
-      file_object (dvfvs.FileIO): a file-like object to parse.
+      file_object (dfvfs.FileIO): a file-like object to parse.
 
     Raises:
       ParseError: when the file cannot be parsed.
@@ -391,7 +390,7 @@ class ChromeCacheParser(interface.FileEntryParser):
     for cache_address in index_table:
       if cache_address.filename not in data_block_files:
         # Remove the previous filename from the path segments list and
-        # add one of the data block file.
+        # add one of the data block files.
         path_segments.pop()
         path_segments.append(cache_address.filename)
 
