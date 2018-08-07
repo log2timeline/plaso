@@ -24,21 +24,23 @@ class WindowsTimelineGenericEventData(events.EventData):
 
   Attributes:
     package_id (str): the package ID or path to the executable run. Depending on
-      the program, this either looks like a path (e.g. c:\\python34\\python.exe)
-      or like a package name (e.g. Docker.DockerForWindows.Settings).
+        the program, this either looks like a path
+        (for example, c:\\python34\\python.exe) or like a package name
+        (for example Docker.DockerForWindows.Settings).
     description (str): this is an optional field, used to describe the action in
-      the timeline view, and is usually populated with the path of the file
-      currently open in the program described by package_id. Otherwise empty.
+        the timeline view, and is usually populated with the path of the file
+        currently open in the program described by package_identifier.
+        Otherwise None.
     application_display_name (str): a more human-friendly version of the
-      package_id, e.g. 'Docker for Windows' or 'Microsoft Store'.
+        package_identifier, e.g. 'Docker for Windows' or 'Microsoft Store'.
   """
 
   DATA_TYPE = 'windows:timeline:generic'
 
   def __init__(self):
     """Initialize event data"""
-    super(WindowsTimelineGenericEventData, self).__init__( \
-      data_type=self.DATA_TYPE)
+    super(WindowsTimelineGenericEventData, self).__init__(
+        data_type=self.DATA_TYPE)
     self.package_id = None
     self.description = None
     self.application_display_name = None
@@ -50,22 +52,22 @@ class WindowsTimelineUserEngagedEventData(events.EventData):
   for.
 
   Attributes:
-    package_id (str): the package ID or location of the executable the user
-      interacted with.
+    package_identifier (str): the package ID or location of the executable
+        the user interacted with.
     reporting_app (str): the name of the application that reported the user's
-      interaction. This is the name of a monitoring tool, e.g.
-      ShellActivityMonitor
+        interaction. This is the name of a monitoring tool, e.g.
+        ShellActivityMonitor
     active_duration_seconds (int): the number of seconds the user spent
-      interacting with the program.
+        interacting with the program.
   """
 
   DATA_TYPE = 'windows:timeline:user_engaged'
 
   def __init__(self):
     """Initialize event data"""
-    super(WindowsTimelineUserEngagedEventData, self).__init__( \
-      data_type=self.DATA_TYPE)
-    self.package_id = None
+    super(WindowsTimelineUserEngagedEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.package_identifier = None
     self.reporting_app = None
     self.active_duration_seconds = None
 
@@ -75,14 +77,13 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
   NAME = 'windows_timeline'
   DESCRIPTION = 'Parser for the Windows Timeline SQLite database'
 
-  QUERIES = [(('SELECT StartTime, Payload, PackageName FROM Activity '
-               'INNER JOIN Activity_PackageId ON Activity.Id = '
-               'Activity_PackageId.ActivityId '
-               'WHERE instr(Payload, "UserEngaged") > 0 AND '
-               'Platform = "packageid"'),
-              'ParseUserEngagedRow'),
-             (('SELECT StartTime, Payload, AppId FROM Activity '
-               'WHERE instr(Payload, "UserEngaged") = 0'), 'ParseGenericRow')]
+  QUERIES = [
+      (('SELECT StartTime, Payload, PackageName FROM Activity '
+        'INNER JOIN Activity_PackageId ON Activity.Id = '
+        'Activity_PackageId.ActivityId WHERE instr(Payload, "UserEngaged") > 0'
+        ' AND Platform = "packageid"'), 'ParseUserEngagedRow'),
+      (('SELECT StartTime, Payload, AppId FROM Activity '
+        'WHERE instr(Payload, "UserEngaged") = 0'), 'ParseGenericRow')]
 
   REQUIRED_TABLES = frozenset(['Activity', 'Activity_PackageId'])
 
@@ -138,7 +139,7 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
 
       Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-        and other components, such as storage and dfvfs.
+          and other components, such as storage and dfvfs.
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
@@ -149,23 +150,22 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
     payload_json_string = str(self._GetRowValue(query_hash, row, 'Payload'))
     appid_entries_string = str(self._GetRowValue(query_hash, row, 'AppId'))
 
-    # Both Payload and AppId are serialized as JSON blobs in the DB
+    # Both Payload and AppId are serialized as JSON blobs in the database.
     payload = json.loads(payload_json_string)
     appid_entries = json.loads(appid_entries_string)
 
-    # Attempt to populate the package_id field by checking each of these fields
-    # in the AppId json
-    package_id_locations = ['packageId', 'x_exe_path', 'windows_win32',
-                            'windows_universal', 'alternateId']
+    # Attempt to populate the package_identifier field by checking each of
+    # these fields in the AppId JSON.
+    package_id_locations = [
+        'packageId', 'x_exe_path', 'windows_win32', 'windows_universal',
+        'alternateId']
     for location in package_id_locations:
       for entry in appid_entries:
         if entry['platform'] == location and entry['application'] != '':
           event_data.package_id = entry['application']
           break
-        # We haven't found this field, or the entry wasn't populated. Fall
-        # back to the next option
-      if event_data.package_id != None:
-        # package_id has been populated and we're done
+      if event_data.package_id is None:
+        # package_identifier has been populated and we're done.
         break
 
     if 'description' in payload:
@@ -191,16 +191,17 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-        and other components, such as storage and dfvfs.
+          and other components, such as storage and dfvfs.
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
     query_hash = hash(query)
 
     event_data = WindowsTimelineUserEngagedEventData()
-    event_data.package_id = self._GetRowValue(query_hash, row, 'PackageName')
+    event_data.package_identifier = self._GetRowValue(
+        query_hash, row, 'PackageName')
 
-    # The payload is serialized as a JSON blob in the DB
+    # The payload is serialized as a JSON blob in the database.
     payload_json_string = str(self._GetRowValue(query_hash, row, 'Payload'))
     payload = json.loads(payload_json_string)
 
@@ -209,10 +210,11 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
     if 'activeDurationSeconds' in payload:
       event_data.active_duration_seconds = int(payload['activeDurationSeconds'])
 
-    timestamp = self._GetRowValue(query_hash, row, "StartTime")
+    timestamp = self._GetRowValue(query_hash, row, 'StartTime')
     date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_CREATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
+
 
 sqlite.SQLiteParser.RegisterPlugin(WindowsTimelinePlugin)
