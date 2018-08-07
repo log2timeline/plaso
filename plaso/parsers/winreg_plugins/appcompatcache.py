@@ -607,7 +607,7 @@ class AppCompatCacheWindowsRegistryPlugin(
     cache_header = AppCompatCacheHeader()
     cache_header.header_size = header_data_size
     cache_header.number_of_cached_entries = getattr(
-        header, 'number_of_cached_entries', None)
+        header, 'number_of_cached_entries', 0)
 
     return cache_header
 
