@@ -196,7 +196,8 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
         'total_bytes,state FROM downloads'), 'ParseFileDownloadedRow')]
 
   REQUIRED_TABLES = frozenset([
-      'keyword_search_terms', 'meta', 'urls', 'visits', 'visit_source'])
+      'downloads', 'keyword_search_terms', 'meta', 'urls', 'visits',
+      'visit_source', 'presentation'])
 
   _SCHEMA_8 = {
       'downloads': (
@@ -348,8 +349,6 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
 
   SCHEMAS = [_SCHEMA_8, _SCHEMA_16, _SCHEMA_19, _SCHEMA_20]
 
-  REQUIRES_SCHEMA_MATCH = True
-
   def ParseFileDownloadedRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a file downloaded row.
@@ -357,8 +356,7 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      cache (SQLiteCache): cache which contains cached results from querying
-          the downloads table.
+      query (str): query that created the row.
       row (sqlite3.Row): row.
     """
     query_hash = hash(query)
@@ -384,7 +382,7 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
 
   NAME = 'chrome_27_history'
   DESCRIPTION = (
-      'Parser for Google Chrome 27 - 67 history SQLite database files.')
+      'Parser for Google Chrome 27 and up history SQLite database files.')
 
   QUERIES = [
       (('SELECT urls.id, urls.url, urls.title, urls.visit_count, '
@@ -399,7 +397,8 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
         'downloads_url_chains.id'), 'ParseFileDownloadedRow')]
 
   REQUIRED_TABLES = frozenset([
-      'keyword_search_terms', 'meta', 'urls', 'visits', 'visit_source'])
+      'downloads', 'downloads_url_chains', 'keyword_search_terms', 'meta',
+      'urls', 'visits', 'visit_source'])
 
   _SCHEMA_27 = {
       'downloads': (
@@ -957,8 +956,6 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
   SCHEMAS = [
       _SCHEMA_27, _SCHEMA_31, _SCHEMA_37, _SCHEMA_51, _SCHEMA_58, _SCHEMA_59,
       _SCHEMA_63, _SCHEMA_65, _SCHEMA_67, _SCHEMA_67_2, _SCHEMA_67_3]
-
-  REQUIRES_SCHEMA_MATCH = True
 
   def ParseFileDownloadedRow(
       self, parser_mediator, query, row, **unused_kwargs):
