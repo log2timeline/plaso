@@ -121,11 +121,11 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     self._last_month = 0
     self._year_use = 0
 
-  def _GetAction(self, function, text):
+  def _GetAction(self, action, text):
     """Parse the well known actions for easy reading.
 
     Args:
-      function (str): The function or action called by the agent.
+      action (str): The function or action called by the agent.
       text (str): Mac Wifi log text.
 
     Returns:
@@ -133,11 +133,11 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
            If the action is not known the original log text is returned.
     """
     # TODO: replace "x in y" checks by startswith if possible.
-    if 'airportdProcessDLILEvent' in function:
+    if 'airportdProcessDLILEvent' in action:
       interface = text.split()[0]
       return 'Interface {0:s} turn up.'.format(interface)
 
-    if 'doAutoJoin' in function:
+    if 'doAutoJoin' in action:
       match = self._CONNECTED_RE.match(text)
       if match:
         ssid = match.group(1)[1:-1]
@@ -145,7 +145,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
         ssid = 'Unknown'
       return 'Wifi connected to SSID {0:s}'.format(ssid)
 
-    if 'processSystemPSKAssoc' in function:
+    if 'processSystemPSKAssoc' in action:
       wifi_parameters = self._WIFI_PARAMETERS_RE.search(text)
       if wifi_parameters:
         ssid = wifi_parameters.group(1)
@@ -197,7 +197,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       # Gap detected between years.
       self._year_use += 1
 
-    return (self._year_use, month, day, hours, minutes, seconds, milliseconds)
+    return self._year_use, month, day, hours, minutes, seconds, milliseconds
 
   def _ParseLogLine(self, parser_mediator, key, structure):
     """Parse a single log line and produce an event object.
