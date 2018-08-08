@@ -23,8 +23,8 @@ class WindowsTimelineGenericEventData(events.EventData):
   """Windows Timeline database generic event data.
 
   Attributes:
-    package_id (str): the package ID or path to the executable run. Depending on
-        the program, this either looks like a path
+    package_identifier (str): the package ID or path to the executable run.
+        Depending on the program, this either looks like a path
         (for example, c:\\python34\\python.exe) or like a package name
         (for example Docker.DockerForWindows.Settings).
     description (str): this is an optional field, used to describe the action in
@@ -41,7 +41,7 @@ class WindowsTimelineGenericEventData(events.EventData):
     """Initialize event data"""
     super(WindowsTimelineGenericEventData, self).__init__(
         data_type=self.DATA_TYPE)
-    self.package_id = None
+    self.package_identifier = None
     self.description = None
     self.application_display_name = None
 
@@ -162,9 +162,9 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
     for location in package_id_locations:
       for entry in appid_entries:
         if entry['platform'] == location and entry['application'] != '':
-          event_data.package_id = entry['application']
+          event_data.package_identifier = entry['application']
           break
-      if event_data.package_id is None:
+      if event_data.package_identifier is None:
         # package_identifier has been populated and we're done.
         break
 
