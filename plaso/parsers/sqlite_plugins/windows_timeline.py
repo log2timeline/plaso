@@ -147,10 +147,13 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
 
     event_data = WindowsTimelineGenericEventData()
 
-    payload_json_string = str(self._GetRowValue(query_hash, row, 'Payload'))
-    appid_entries_string = str(self._GetRowValue(query_hash, row, 'AppId'))
+    # Payload is JSON serialized as binary data in a BLOB field, with the text
+    # encoded as UTF-8.
+    payload_json_bytes = bytes(self._GetRowValue(query_hash, row, 'Payload'))
+    payload_json_string = payload_json_bytes.decode('utf-8')
+    # AppId is JSON stored as unicode text.
+    appid_entries_string = self._GetRowValue(query_hash, row, 'AppId')
 
-    # Both Payload and AppId are serialized as JSON blobs in the database.
     payload = json.loads(payload_json_string)
     appid_entries = json.loads(appid_entries_string)
 
@@ -182,7 +185,7 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
     timestamp = self._GetRowValue(query_hash, row, 'StartTime')
     date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_CREATION)
+        date_time, definitions.TIME_DESCRIPTION_START)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseUserEngagedRow(
@@ -201,8 +204,10 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
     event_data.package_identifier = self._GetRowValue(
         query_hash, row, 'PackageName')
 
-    # The payload is serialized as a JSON blob in the database.
-    payload_json_string = str(self._GetRowValue(query_hash, row, 'Payload'))
+    # Payload is JSON serialized as binary data in a BLOB field, with the text
+    # encoded as UTF-8.
+    payload_json_bytes = bytes(self._GetRowValue(query_hash, row, 'Payload'))
+    payload_json_string = payload_json_bytes.decode('utf-8')
     payload = json.loads(payload_json_string)
 
     if 'reportingApp' in payload:
@@ -213,7 +218,7 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
     timestamp = self._GetRowValue(query_hash, row, 'StartTime')
     date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_CREATION)
+        date_time, definitions.TIME_DESCRIPTION_START)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
