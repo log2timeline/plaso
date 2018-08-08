@@ -18,9 +18,9 @@ class BSMEventData(events.EventData):
   """Basic Security Module (BSM) audit event data.
 
   Attributes:
-    event_type (str): text with identifier that represents the type of
-        the event.
-    extra_tokens (dict[str, dict[str, str]]): event extra tokens.
+    event_type (int): identifier that represents the type of the event.
+    extra_tokens (list[dict[str, dict[str, str]]]): event extra tokens, which
+        is a list of dictionaries that contain: {token type: {token values}}
     record_length (int): record length in bytes (trailer number).
     return_value (str): processed return value and exit status.
   """
@@ -645,21 +645,14 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
       raise errors.ParseError('Unsupported format version type: {0:d}'.format(
           token_data.format_version))
 
-    # TODO: move event type string lookup into formatter.
-    event_type_string = bsmtoken.BSM_AUDIT_EVENT.get(
-        token_data.event_type, 'UNKNOWN')
-    event_type = '{0:s} ({1:d})'.format(
-        event_type_string, token_data.event_type)
-
     timestamp = token_data.microseconds + (
         token_data.timestamp * definitions.MICROSECONDS_PER_SECOND)
 
+    event_type = token_data.event_type
     header_record_size = token_data.record_size
     record_end_offset = header_record_offset + header_record_size
 
-    # TODO: make this a list since an event record could contain multiple
-    # tokens of the same type and has no specific order.
-    event_tokens = {}
+    event_tokens = []
     return_token_values = None
 
     file_offset = file_object.tell()
@@ -676,7 +669,7 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
 
       token_type_string = self._TOKEN_TYPES.get(token_type, 'UNKNOWN')
       token_values = self._FormatTokenData(token_type, token_data)
-      event_tokens[token_type_string] = token_values
+      event_tokens.append({token_type_string: token_values})
 
       if token_type in (
           self._TOKEN_TYPE_AUT_RETURN32, self._TOKEN_TYPE_AUT_RETURN64):
