@@ -144,7 +144,7 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
   _INITIAL_CACHE_FILE_SIZE = 4 * 1024 * 1024
 
   # Smallest possible block size in Firefox cache files.
-  _MINUMUM_BLOCK_SIZE = 256
+  _MINIMUM_BLOCK_SIZE = 256
 
   # Name of a cache data file that contains metadata.
   _CACHE_FILENAME_RE = re.compile(r'^[0-9A-Fa-f]{5}m[0-9]{2}$')
@@ -172,7 +172,7 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
 
       try:
         cache_entry, _ = self._ReadCacheEntry(
-            file_object, display_name, self._MINUMUM_BLOCK_SIZE)
+            file_object, display_name, self._MINIMUM_BLOCK_SIZE)
 
         # We have not yet determined the block size, so we use the smallest
         # possible size.
@@ -244,7 +244,7 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
     Returns:
       tuple: contains:
 
-        construct.Stuct: cache record header structure.
+        firefox_cache1_entry_header: cache record header structure.
         FirefoxCacheEventData: event data.
 
     Raises:
@@ -352,7 +352,7 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
             firefox_config.block_size)
 
       except IOError:
-        file_offset = file_object.get_offset() - self._MINUMUM_BLOCK_SIZE
+        file_offset = file_object.get_offset() - self._MINIMUM_BLOCK_SIZE
         logger.debug((
             '[{0:s}] Invalid cache record in file: {1:s} at offset: '
             '{2:d}.').format(self.NAME, display_name, file_offset))
@@ -369,7 +369,7 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
 
   _CACHE_VERSION = 2
 
-  # Cache 2 filenames are SHA-1 hex digests.
+  # Cache version 2 filenames are SHA-1 hex digests.
   _CACHE_FILENAME_RE = re.compile(r'^[0-9A-Fa-f]{40}$')
 
   _CHUNK_SIZE = 512 * 1024
@@ -384,7 +384,7 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
       file_object (dfvfs.FileIO): a file-like object.
 
     Returns:
-      int: offset of the file cache metadata header relative from the start
+      int: offset of the file cache metadata header relative to the start
         of the file.
 
     Raises:
