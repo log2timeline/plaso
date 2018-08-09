@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 from plaso.formatters import interface
 from plaso.formatters import manager
+from plaso.lib import errors
 from plaso.unix import bsmtoken
 
 
@@ -50,9 +51,7 @@ class BSMFormatter(interface.ConditionalEventFormatter):
     event_type = event_values.get('event_type', None)
     if event_type:
       event_values['event_type_string'] = bsmtoken.BSM_AUDIT_EVENT.get(
-        event_type, 'UNKNOWN')
-
-    event_values['linked_path'] = self._GetLinkedPath(event)
+          event_type, 'UNKNOWN')
 
     return self._ConditionalFormatMessages(event_values)
 

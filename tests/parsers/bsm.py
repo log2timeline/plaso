@@ -137,9 +137,9 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
             'num_arg': 1,
             'string': 'sflags'}},
         {'AUT_ARG32': {
-             'is': 12288,
-             'num_arg': 2,
-             'string': 'am_success'}},
+            'is': 12288,
+            'num_arg': 2,
+            'string': 'am_success'}},
         {'AUT_ARG32': {
             'is': 12288,
             'num_arg': 3,
@@ -272,7 +272,7 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
       event = events[event_index]
       expected_extra_tokens_dict = expected_extra_tokens[event_index]
       extra_tokens_dict = getattr(event, 'extra_tokens', {})
-      self.assertEquals(extra_tokens_dict, expected_extra_tokens_dict)
+      self.assertEqual(extra_tokens_dict, expected_extra_tokens_dict)
 
 
 if __name__ == '__main__':
