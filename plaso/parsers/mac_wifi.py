@@ -77,15 +77,19 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       text_parser.PyparsingConstants.TIME_ELEMENTS + pyparsing.Suppress('.') +
       THREE_DIGITS.setResultsName('milliseconds'))
 
-  # Define how a log line should look like.
+  # Log line with a known function name.
   _MAC_WIFI_KNOWN_FUNCTION_LINE = (
       _DATE_TIME.setResultsName('date_time') + _AGENT +
       pyparsing.oneOf(_KNOWN_FUNCTIONS).setResultsName('function') +
       pyparsing.Literal(':') +
       pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
 
+  # Log line with an unknown function name.
   _MAC_WIFI_LINE = (
-      _DATE_TIME.setResultsName('date_time') +
+      _DATE_TIME.setResultsName('date_time') + pyparsing.NotAny(
+          _AGENT +
+          pyparsing.oneOf(_KNOWN_FUNCTIONS) +
+          pyparsing.Literal(':')) +
       pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
 
   _MAC_WIFI_HEADER = (

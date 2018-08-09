@@ -160,7 +160,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       self._ParseFieldsMetadata(structure)
 
   def _ParseFieldsMetadata(self, structure):
-    """Parses the fields metadata.
+    """Parses the fields metadata and updates the log line definition to match.
 
     Args:
       structure (pyparsing.ParseResults): structure parsed from the log file.
@@ -175,9 +175,14 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     for member in fields:
       log_line_structure += self._LOG_LINE_STRUCTURES.get(member, self.URI)
 
+    updated_structures = []
+    for line_structure in self._line_structures:
+      if line_structure[0] != 'logline':
+        updated_structures.append(line_structure)
+    updated_structures.append(('logline', log_line_structure))
     # TODO: self._line_structures is a work-around and this needs
     # a structural fix.
-    self._line_structures[1] = ('logline', log_line_structure)
+    self._line_structures = updated_structures
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parse a single log line and produce an event object.
