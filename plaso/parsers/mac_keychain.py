@@ -239,12 +239,12 @@ class KeychainParser(interface.FileObjectParser):
 
     Returns:
       tuple: containing:
-        bytes: hash of the encrypted data (passwd, cert, note).
+        bytes: hash of the encrypted data (password, cert, note).
         dfdatetime.TimeElements: entry creation time or None.
-        dfdatetime.TimeElements): entry last modification time or None.
+        dfdatetime.TimeElements: entry last modification time or None.
         str: a brief description of the entry.
         str: name of the entry
-        str: Name of the account.
+        str: name of the account.
     """
     # TODO: reduce number of seeks and/or offset calculations needed
     # for parsing.

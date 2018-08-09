@@ -33,7 +33,7 @@ class JSONSerializerTestCase(shared_test_lib.BaseTestCase):
 
     Args:
       serializer_object (JSONSerializer): the JSON serializer object.
-      json_dict (dict[str, object]): JSON serialized objects.
+      json_dict (dict[str, object]): one or more JSON serialized values
 
     Returns:
       object: unserialized object.
@@ -54,8 +54,8 @@ class JSONSerializerTestCase(shared_test_lib.BaseTestCase):
     Args:
       serializer_object (JSONSerializer): the JSON serializer object.
       unserialized_object (object): the unserialized object.
-      expected_json_dict (dict[str, object]): the expected JSON serialized
-          objects.
+      expected_json_dict (dict[str, object]): one or more expected JSON
+          serialized values.
 
     Returns:
       str: serialized JSON string.

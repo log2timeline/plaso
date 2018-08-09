@@ -32,7 +32,8 @@ class _MockNsrlsvrSocket(object):
   # because they are part of the socket interface.
   # pylint: disable=invalid-name
 
-  def recv(self, _buffer_size):
+  # pylint: disable=unused-argument
+  def recv(self, buffer_size):
     """Mocks the socket.recv method."""
     expected_data = (
         self._data == 'QUERY {0:s}\n'.format(NsrlSvrTest.EVENT_1_HASH))

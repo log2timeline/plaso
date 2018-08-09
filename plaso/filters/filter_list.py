@@ -53,7 +53,7 @@ class ObjectFilterList(interface.FilterObject):
     """Parses a single filter entry.
 
     Args:
-      entry (dict[str, dict(str, object)]): dictionary containing one more
+      entry (dict[str, dict[str, object]]): dictionary containing one more
         filter rules and associated metadata.
 
     Raises:

@@ -96,7 +96,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       registry_key (dfwinreg.WinRegistryKey): Windows Registry Key.
       plugin (WindowsRegistryPlugin): Windows Registry plugin.
       file_entry (Optional[dfvfs.FileEntry]): file entry.
-      knowledge_base_values (Optional[dict(str, str)]): knowledge base values.
+      knowledge_base_values (Optional[dict[str, str]]): knowledge base values.
       parser_chain (Optional[str]): parsing chain up to this point.
 
     Returns:

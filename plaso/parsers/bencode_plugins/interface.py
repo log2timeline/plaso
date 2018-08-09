@@ -52,7 +52,7 @@ class BencodePlugin(plugins.BasePlugin):
       depth (int): how many levels deep to check for a match.
 
     Returns:
-      dict: a dictionary with just the keys requested.
+      dict[str, object]: a dictionary with just the keys requested.
     """
     keys = set(keys)
     match = {}
@@ -87,9 +87,9 @@ class BencodePlugin(plugins.BasePlugin):
 
     Yields:
       tuple: containing:
-       * str: root
-       * str: key
-       * str: value
+          str: root
+          str: key
+          str: value
     """
     if depth < 1:
       logger.debug('Recursion limit hit for key: {0:s}'.format(root))
@@ -139,7 +139,7 @@ class BencodePlugin(plugins.BasePlugin):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      data (Optional[dict(str, object)]): bencode data values.
+      data (Optional[dict[str, object]]): bencode data values.
     """
 
   # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.

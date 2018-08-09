@@ -35,7 +35,7 @@ class CookiePluginsManager(object):
     """Retrieves the cookie plugins.
 
     Returns:
-      list(type): list of all cookie plugin objects.
+      list[type]: list of all cookie plugin objects.
     """
     return [plugin_class() for plugin_class in iter(
         cls._plugin_classes.values())]

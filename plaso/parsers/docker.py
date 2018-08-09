@@ -278,7 +278,7 @@ class DockerJSONParser(interface.FileObjectParser):
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
-      ValueError: if JSON file cannot be decoded.
+      ValueError: if the JSON file cannot be decoded.
     """
     # Trivial JSON format check: first character must be an open brace.
     if file_object.read(1) != b'{':

@@ -273,7 +273,7 @@ class ConditionalEventFormatter(EventFormatter):
     """Determines the conditional formatted message strings.
 
     Args:
-      event_values (dict[str, object): event values.
+      event_values (dict[str, object]): event values.
 
     Returns:
       tuple(str, str): formatted message string and short message string.

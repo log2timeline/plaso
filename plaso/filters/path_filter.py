@@ -14,9 +14,9 @@ from __future__ import unicode_literals
 
 from plaso.lib import py2to3
 
+
+# TODO: Update docstrings in this file.
 # pylint: disable=missing-type-doc,missing-return-type-doc
-
-
 class _PathFilterTable(object):
   """Class that implements a path filter table.
 
