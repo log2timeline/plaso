@@ -41,7 +41,7 @@ class TestFileEntry(object):
     return
 
 
-class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
+class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the AppCompatCache Windows Registry plugin."""
 
   _TEST_DATA_XP = bytes(bytearray([
@@ -272,7 +272,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testFilters(self):
     """Tests the FILTERS class attribute."""
-    plugin = appcompatcache.AppCompatCachePlugin()
+    plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
 
     key_path = (
         'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
@@ -291,7 +291,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     test_file_entry = TestFileEntry('SYSTEM-XP')
     registry_key = self._CreateTestKey(
         '2015-06-15 11:53:37.043061', self._TEST_DATA_XP)
-    plugin = appcompatcache.AppCompatCachePlugin()
+    plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
         parser_chain=plugin.plugin_name)
@@ -315,7 +315,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     test_file_entry = TestFileEntry('SYSTEM-Windows2003')
     registry_key = self._CreateTestKey(
         '2015-06-15 11:53:37.043061', self._TEST_DATA_2003)
-    plugin = appcompatcache.AppCompatCachePlugin()
+    plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
         parser_chain=plugin.plugin_name)
@@ -342,7 +342,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     test_file_entry = TestFileEntry('SYSTEM-Vista')
     registry_key = self._CreateTestKey(
         '2015-06-15 11:53:37.043061', self._TEST_DATA_VISTA)
-    plugin = appcompatcache.AppCompatCachePlugin()
+    plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
         parser_chain=plugin.plugin_name)
@@ -373,7 +373,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
-    plugin = appcompatcache.AppCompatCachePlugin()
+    plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
         parser_chain=plugin.plugin_name)
@@ -406,7 +406,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     test_file_entry = TestFileEntry('SYSTEM-Windows8.0')
     registry_key = self._CreateTestKey(
         '2015-06-15 11:53:37.043061', self._TEST_DATA_8_0)
-    plugin = appcompatcache.AppCompatCachePlugin()
+    plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
         parser_chain=plugin.plugin_name)
@@ -430,7 +430,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     test_file_entry = TestFileEntry('SYSTEM-Windows8.1')
     registry_key = self._CreateTestKey(
         '2015-06-15 11:53:37.043061', self._TEST_DATA_8_1)
-    plugin = appcompatcache.AppCompatCachePlugin()
+    plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
         parser_chain=plugin.plugin_name)
@@ -454,7 +454,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     test_file_entry = TestFileEntry('SYSTEM-Windows10')
     registry_key = self._CreateTestKey(
         '2015-06-15 11:53:37.043061', self._TEST_DATA_10)
-    plugin = appcompatcache.AppCompatCachePlugin()
+    plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
         parser_chain=plugin.plugin_name)
@@ -478,7 +478,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     test_file_entry = TestFileEntry('SYSTEM-Windows10-Creator')
     registry_key = self._CreateTestKey(
         '2015-06-15 11:53:37.043061', self._TEST_DATA_10_CREATOR)
-    plugin = appcompatcache.AppCompatCachePlugin()
+    plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry,
         parser_chain=plugin.plugin_name)

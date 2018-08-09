@@ -58,9 +58,9 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
       'year': _FOUR_DIGITS.setResultsName('year'),
       'month': _ONE_OR_TWO_DIGITS.setResultsName('month'),
       'day': _ONE_OR_TWO_DIGITS.setResultsName('day'),
-      'fraction_of_second': pyparsing.Regex(r'\d{3,7}'). setResultsName(
+      'fraction_of_second': pyparsing.Regex(r'\d{3,7}').setResultsName(
           'fraction_of_second'),
-      'utc_offset_minutes': pyparsing.Regex(r'[-+]\d{3}').setResultsName(
+      'utc_offset_minutes': pyparsing.Regex(r'[-+]\d{2,3}').setResultsName(
           'utc_offset_minutes'),
       'date_prefix': pyparsing.Literal('" date="'). setResultsName(
           'date_prefix'),

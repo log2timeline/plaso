@@ -288,7 +288,13 @@ class CLITool(object):
         self._views_format_type, column_names=['Timezone', 'UTC Offset'],
         title='Zones')
     for timezone_name in pytz.all_timezones:
-      local_timezone = pytz.timezone(timezone_name)
+      try:
+        local_timezone = pytz.timezone(timezone_name)
+      except AssertionError as exception:
+        logger.error((
+            'Unable to determine information about timezone: {0:s} with '
+            'error: {1!s}').format(timezone_name, exception))
+        continue
 
       local_date_string = '{0!s}'.format(
           local_timezone.localize(utc_date_time))
