@@ -78,10 +78,10 @@ class OutputMediator(object):
       event (EventObject): event.
 
     Returns:
-      tuple(str, str)|tuple(None, None): A tuple containing the formatted
-          message string and short message string. If no event formatter to
-          match the event can be found the function returns a tuple of
-          None, None.
+      tuple: containing:
+
+        str: full message string or None if no event formatter was found.
+        str: short message string or None if no event formatter was found.
     """
     event_formatter = self.GetEventFormatter(event)
     if not event_formatter:
@@ -96,7 +96,8 @@ class OutputMediator(object):
       event (EventObject): event.
 
     Returns:
-      tuple containing
+      tuple: containing:
+
         str: full source string or None if no event formatter was found.
         str: short source string or None if no event formatter was found.
     """
