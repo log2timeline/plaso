@@ -12,9 +12,9 @@ class WindowsTimelineGenericEventFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'windows:timeline:generic'
 
   FORMAT_STRING_PIECES = [
-    'Application Display Name: {application_display_name}',
-    'Package Identifier: {package_identifier}',
-    'Description: {description}']
+      'Application Display Name: {application_display_name}',
+      'Package Identifier: {package_identifier}',
+      'Description: {description}']
 
   FORMAT_STRING_SHORT_PIECES = ['{package_identifier}']
 
@@ -28,9 +28,9 @@ class WindowsTimelineUserEngagedEventFormatter(
   DATA_TYPE = 'windows:timeline:user_engaged'
 
   FORMAT_STRING_PIECES = [
-    'Package Identifier: {package_identifier}',
-    'Active Duration (seconds): {active_duration_seconds}',
-    'Reporting App: {reporting_app}']
+      'Package Identifier: {package_identifier}',
+      'Active Duration (seconds): {active_duration_seconds}',
+      'Reporting App: {reporting_app}']
 
   FORMAT_STRING_SHORT_PIECES = ['{package_identifier}']
 
@@ -38,5 +38,5 @@ class WindowsTimelineUserEngagedEventFormatter(
   SOURCE_SHORT = 'Windows Timeline'
 
 manager.FormattersManager.RegisterFormatters([
-  WindowsTimelineGenericEventFormatter,
-  WindowsTimelineUserEngagedEventFormatter])
+    WindowsTimelineGenericEventFormatter,
+    WindowsTimelineUserEngagedEventFormatter])
