@@ -8,8 +8,8 @@ import logging
 from dfvfs.serializer.json_serializer import JsonPathSpecSerializer
 
 try:
-  import elasticsearch
-  from elasticsearch.exceptions import ConnectionError as ElasticConnectionError
+  import elasticsearch5 as elasticsearch
+  from elasticsearch5.exceptions import ConnectionError as ElasticConnectionError
 except ImportError:
   elasticsearch = None
 
