@@ -668,7 +668,7 @@ class BSMParser(interface.FileObjectParser):
     except (IOError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError((
           'unable to parse BSM token type at offset: 0x{0:08x} with error: '
-          '{1:s}.').format(record_start_offset, exception))
+          '{1!s}.').format(record_start_offset, exception))
       return False
 
     if token_type not in self._BSM_HEADER_TOKEN_TYPES:
@@ -686,7 +686,7 @@ class BSMParser(interface.FileObjectParser):
     except (IOError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError((
           'unable to parse BSM record at offset: 0x{0:08x} with error: '
-          '{1:s}.').format(record_start_offset, exception))
+          '{1!s}.').format(record_start_offset, exception))
       return False
 
     event_type = bsmtoken.BSM_AUDIT_EVENT.get(

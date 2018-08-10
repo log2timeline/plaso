@@ -87,7 +87,7 @@ class OLECFParser(interface.FileObjectParser):
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionError((
               'plugin: {0:s} unable to parse OLECF file with error: '
-              '{1:s}').format(plugin.NAME, exception))
+              '{1!s}').format(plugin.NAME, exception))
 
       if self._default_plugin and not parser_mediator.abort:
         try:
@@ -97,7 +97,7 @@ class OLECFParser(interface.FileObjectParser):
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionError((
               'plugin: {0:s} unable to parse OLECF file with error: '
-              '{1:s}').format(self._default_plugin.NAME, exception))
+              '{1!s}').format(self._default_plugin.NAME, exception))
 
     finally:
       olecf_file.close()

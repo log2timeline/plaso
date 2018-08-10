@@ -359,7 +359,7 @@ class SQLiteParser(interface.FileEntryParser):
     except (IOError, ValueError, sqlite3.DatabaseError) as exception:
       parser_mediator.ProduceExtractionError((
           'unable to open SQLite database and WAL with error: '
-          '{0:s}').format(exception))
+          '{0!s}').format(exception))
 
       return None, None
 
@@ -431,7 +431,7 @@ class SQLiteParser(interface.FileEntryParser):
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionError((
               'plugin: {0:s} unable to parse SQLite database with error: '
-              '{1:s}').format(plugin.NAME, exception))
+              '{1!s}').format(plugin.NAME, exception))
 
         finally:
           parser_mediator.RemoveEventAttribute('schema_match')
@@ -452,7 +452,7 @@ class SQLiteParser(interface.FileEntryParser):
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionError((
               'plugin: {0:s} unable to parse SQLite database and WAL with '
-              'error: {1:s}').format(plugin.NAME, exception))
+              'error: {1!s}').format(plugin.NAME, exception))
 
         finally:
           parser_mediator.RemoveEventAttribute('schema_match')

@@ -410,7 +410,7 @@ class ChromeCacheParser(interface.FileEntryParser):
         except RuntimeError as exception:
           message = (
               'Unable to open data block file: {0:s} with error: '
-              '{1:s}'.format(kwargs['location'], exception))
+              '{1!s}'.format(kwargs['location'], exception))
           parser_mediator.ProduceExtractionError(message)
           data_block_file_entry = None
 
@@ -429,7 +429,7 @@ class ChromeCacheParser(interface.FileEntryParser):
           except (IOError, errors.ParseError) as exception:
             message = (
                 'Unable to parse data block file: {0:s} with error: '
-                '{1:s}').format(cache_address.filename, exception)
+                '{1!s}').format(cache_address.filename, exception)
             parser_mediator.ProduceExtractionError(message)
             data_block_file_object.close()
             data_block_file_object = None
