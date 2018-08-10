@@ -16,6 +16,7 @@ from __future__ import unicode_literals
 
 
 import binascii
+import codecs
 import os
 
 import construct
@@ -161,7 +162,7 @@ class KeychainParser(interface.FileObjectParser):
       construct.UBInt32('url'))
 
   TEXT = construct.PascalString(
-      'text', length_field=construct.UBInt32('length'))
+      'text', length_field=construct.UBInt32('length'), encoding='utf-8')
 
   TIME = construct.Struct(
       'timestamp',
@@ -173,7 +174,7 @@ class KeychainParser(interface.FileObjectParser):
       construct.String('second', 2),
       construct.Padding(2))
 
-  TYPE_TEXT = construct.String('type', 4)
+  TYPE_TEXT = construct.String('type', 4, encoding='utf-8')
 
   # TODO: add more protocols.
   _PROTOCOL_TRANSLATION_DICT = {
@@ -233,7 +234,6 @@ class KeychainParser(interface.FileObjectParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      file_entry (dfvfs.FileEntry): a file entry object.
       file_object (dfvfs.FileIO): a file-like object.
       record (construct.Struct): record header structure.
       record_offset (int): offset of the start of the record.
@@ -255,6 +255,7 @@ class KeychainParser(interface.FileObjectParser):
     #       the hash. Furthermore The fields are always a multiple of four.
     #       Then if it is not multiple the value is padded by 0x00.
     ssgp_hash = binascii.hexlify(file_object.read(record.ssgp_length)[4:])
+    ssgp_hash = codecs.decode(ssgp_hash, 'ascii')
 
     creation_time = None
 
