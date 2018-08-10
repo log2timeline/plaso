@@ -162,7 +162,7 @@ class KeychainParser(interface.FileObjectParser):
       construct.UBInt32('url'))
 
   TEXT = construct.PascalString(
-      'text', length_field=construct.UBInt32('length'), encoding='utf-8')
+      'text', length_field=construct.UBInt32('length'))
 
   TIME = construct.Struct(
       'timestamp',
@@ -174,7 +174,7 @@ class KeychainParser(interface.FileObjectParser):
       construct.String('second', 2),
       construct.Padding(2))
 
-  TYPE_TEXT = construct.String('type', 4, encoding='utf-8')
+  TYPE_TEXT = construct.String('type', 4)
 
   # TODO: add more protocols.
   _PROTOCOL_TRANSLATION_DICT = {
@@ -318,6 +318,7 @@ class KeychainParser(interface.FileObjectParser):
 
       try:
         text_description = self.TEXT.parse_stream(file_object)
+        text_description = codecs.decode(text_description, 'utf-8')
       except construct.FieldError as exception:
         parser_mediator.ProduceExtractionError(
             'unable to parse text description with error: {0!s}'.format(
@@ -339,6 +340,7 @@ class KeychainParser(interface.FileObjectParser):
 
     try:
       entry_name = self.TEXT.parse_stream(file_object)
+      entry_name = codecs.decode(entry_name, 'utf-8')
     except construct.FieldError as exception:
       entry_name = 'N/A'
       parser_mediator.ProduceExtractionError(
@@ -349,6 +351,7 @@ class KeychainParser(interface.FileObjectParser):
 
     try:
       account_name = self.TEXT.parse_stream(file_object)
+      account_name = codecs.decode(account_name, 'utf-8')
     except construct.FieldError as exception:
       account_name = 'N/A'
       parser_mediator.ProduceExtractionError(
@@ -389,14 +392,17 @@ class KeychainParser(interface.FileObjectParser):
       offset = record_offset + record_header_struct.where - 1
       file_object.seek(offset, os.SEEK_SET)
       where = self.TEXT.parse_stream(file_object)
+      where = codecs.decode(where, 'utf-8')
 
       offset = record_offset + record_header_struct.protocol - 1
       file_object.seek(offset, os.SEEK_SET)
       protocol = self.TYPE_TEXT.parse_stream(file_object)
+      protocol = codecs.decode(protocol, 'utf-8')
 
       offset = record_offset + record_header_struct.type - 1
       file_object.seek(offset, os.SEEK_SET)
       type_protocol = self.TEXT.parse_stream(file_object)
+      type_protocol = codecs.decode(type_protocol, 'utf-8')
       type_protocol = self._PROTOCOL_TRANSLATION_DICT.get(
           type_protocol, type_protocol)
 
@@ -404,6 +410,7 @@ class KeychainParser(interface.FileObjectParser):
         offset = record_offset + record_header_struct.url - 1
         file_object.seek(offset, os.SEEK_SET)
         url = self.TEXT.parse_stream(file_object)
+        url = codecs.decode(url, 'utf-8')
         where = '{0:s}{1:s}'.format(where, url)
 
     # Move to the end of the record.
