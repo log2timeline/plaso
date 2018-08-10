@@ -73,7 +73,7 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
         ['wifi.log'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    # self.assertEqual(storage_writer.number_of_events, 10)
+    self.assertEqual(storage_writer.number_of_events, 10)
 
     events = list(storage_writer.GetEvents())
 
