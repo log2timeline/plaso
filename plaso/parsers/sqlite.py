@@ -359,7 +359,7 @@ class SQLiteParser(interface.FileEntryParser):
     except (IOError, ValueError, sqlite3.DatabaseError) as exception:
       parser_mediator.ProduceExtractionError((
           'unable to open SQLite database and WAL with error: '
-          '{0:s}').format(exception))
+          '{0!s}').format(exception))
 
       return None, None
 
