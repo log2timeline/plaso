@@ -32,7 +32,7 @@ class WindowsTimelineGenericEventData(events.EventData):
         currently open in the program described by package_identifier.
         Otherwise None.
     application_display_name (str): a more human-friendly version of the
-        package_identifier, e.g. 'Docker for Windows' or 'Microsoft Store'.
+        package_identifier, such as 'Docker for Windows' or 'Microsoft Store'.
   """
 
   DATA_TYPE = 'windows:timeline:generic'
