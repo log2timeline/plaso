@@ -135,7 +135,11 @@ class PsortEventHeap(object):
         EventObject: event.
     """
     try:
-      return heapq.heappop(self._heap)
+      macb_group_identifier, content_identifier, event = heapq.heappop(
+          self._heap)
+      if macb_group_identifier == '':
+        macb_group_identifier = None
+      return macb_group_identifier, content_identifier, event
 
     except IndexError:
       return None
