@@ -22,7 +22,7 @@ class WinIISUnitTest(test_lib.ParserTestCase):
     parser = iis.WinIISParser()
     storage_writer = self._ParseFile(['iis.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_events, 11)
+    self.assertEqual(storage_writer.number_of_events, 12)
 
     events = list(storage_writer.GetEvents())
 
@@ -69,6 +69,10 @@ class WinIISUnitTest(test_lib.ParserTestCase):
         '[ 22.22.22.200 > 10.10.10.100 : 80 ]')
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
+
+    event = events[11]
+    expected_query_string = 'ID=ERROR[`cat%20passwd|echo`]'
+    self.assertEqual(expected_query_string, event.cs_uri_query)
 
   @shared_test_lib.skipUnlessHasTestFile(['iis_without_date.log'])
   def testParseWithoutDate(self):
