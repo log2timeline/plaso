@@ -58,6 +58,12 @@ attributes:
   size: 8
   units: bytes
 ---
+name: cstring
+type: string
+encoding: ascii
+element_data_type: char
+elements_terminator: "\x00"
+---
 name: bsm_token_data_arg32
 type: structure
 attributes:
