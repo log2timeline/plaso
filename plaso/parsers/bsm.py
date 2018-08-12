@@ -712,7 +712,6 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
     token_type, _ = self._ReadStructureFromFileObject(
         file_object, file_offset, token_type_map)
 
-    # TODO: complete reading bsm_token_data_exec_args
     token_data = None
     token_data_map_name = self._DATA_TYPE_MAP_PER_TOKEN_TYPE.get(
         token_type, None)
