@@ -704,8 +704,9 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
           the file-like object.
 
     Returns:
-      tuple[int, object]: token type and token data or None if the token
-          type is not supported.
+      tuple: containing:
+        int: token type
+        object: token data or None if the token type is not supported.
     """
     token_type_map = self._GetDataTypeMap('uint8')
 
