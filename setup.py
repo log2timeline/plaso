@@ -5,6 +5,7 @@
 from __future__ import print_function
 
 import glob
+import locale
 import os
 import sys
 
@@ -28,15 +29,28 @@ try:
 except ImportError:
   from distutils.command.sdist import sdist
 
-if sys.version < '2.7':
-  print('Unsupported Python version: {0:s}.'.format(sys.version))
-  print('Supported Python versions are 2.7 or a later 2.x version.')
-  sys.exit(1)
-
-# Change PYTHONPATH to include plaso so that we can get the version.
+# Change PYTHONPATH to include plaso.
 sys.path.insert(0, '.')
 
 import plaso  # pylint: disable=wrong-import-position
+
+
+version_tuple = (sys.version_info[0], sys.version_info[1])
+if version_tuple[0] not in (2, 3):
+  print('Unsupported Python version: {0:s}.'.format(sys.version))
+  sys.exit(1)
+
+elif version_tuple[0] == 2 and version_tuple < (2, 7):
+  print((
+      'Unsupported Python 2 version: {0:s}, version 2.7 or higher '
+      'required.').format(sys.version))
+  sys.exit(1)
+
+elif version_tuple[0] == 3 and version_tuple < (3, 4):
+  print((
+      'Unsupported Python 3 version: {0:s}, version 3.4 or higher '
+      'required.').format(sys.version))
+  sys.exit(1)
 
 
 if not bdist_msi:
@@ -102,9 +116,11 @@ else:
               '%files -n {0:s}-%{{name}}'.format(python_package),
               '%defattr(644,root,root,755)',
               '%doc ACKNOWLEDGEMENTS AUTHORS LICENSE README',
+              '%{_prefix}/bin/*.py',
               '%{_prefix}/lib/python*/site-packages/**/*.py',
               '%{_prefix}/lib/python*/site-packages/**/*.yaml',
               '%{_prefix}/lib/python*/site-packages/plaso*.egg-info/*',
+              '%{_prefix}/share/plaso/*',
               '',
               '%exclude %{_prefix}/share/doc/*',
               '%exclude %{_prefix}/lib/python*/site-packages/**/*.pyc',
@@ -137,8 +153,23 @@ else:
       return python_spec_file
 
 
-plaso_description = (
-    'Super timeline all the things.')
+if version_tuple[0] == 2:
+  encoding = sys.stdin.encoding  # pylint: disable=invalid-name
+
+  # Note that sys.stdin.encoding can be None.
+  if not encoding:
+    encoding = locale.getpreferredencoding()
+
+  # Make sure the default encoding is set correctly otherwise
+  # setup.py sdist will fail to include filenames with Unicode characters.
+  reload(sys)  # pylint: disable=undefined-variable
+
+  sys.setdefaultencoding(encoding)  # pylint: disable=no-member
+
+
+# Unicode in the description will break python-setuptools, hence
+# "Plaso Langar Að Safna Öllu" was removed.
+plaso_description = 'Super timeline all the things'
 
 plaso_long_description = (
     'Plaso (log2timeline) is a framework to create super timelines. Its '
@@ -159,24 +190,26 @@ setup(
         'bdist_rpm': BdistRPMCommand,
         'sdist_test_data': sdist},
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
     ],
     packages=find_packages('.', exclude=[
-        'tests', 'tests.*', 'tools', 'utils']),
+        'docs', 'tests', 'tests.*', 'tools', 'utils']),
     package_dir={
-        'plaso': 'plaso'
+        'plaso': 'plaso',
     },
     include_package_data=True,
     package_data={
-        'plaso': ['*.yaml'],
+        'plaso.parsers': ['*.yaml'],
+        'plaso.parsers.olecf_plugins': ['*.yaml'],
+        'plaso.parsers.winreg_plugins': ['*.yaml'],
     },
     zip_safe=False,
     scripts=glob.glob(os.path.join('tools', '*.py')),
     data_files=[
-        ('share/plaso/data', glob.glob(
+        ('share/plaso', glob.glob(
             os.path.join('data', '*'))),
         ('share/doc/plaso', [
             'ACKNOWLEDGEMENTS', 'AUTHORS', 'LICENSE', 'README']),
