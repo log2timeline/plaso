@@ -26,7 +26,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
 
   NAME = 'elastic'
   CATEGORY = 'output'
-  DESCRIPTION = 'Argument helper for the Elastic Search output module.'
+  DESCRIPTION = 'Argument helper for the Elastic Search output modules.'
 
   _DEFAULT_INDEX_NAME = uuid4().hex
   _DEFAULT_DOCUMENT_TYPE = 'plaso_event'
@@ -81,7 +81,8 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
       BadConfigObject: when the output module object is of the wrong type.
       BadConfigOption: when a configuration parameter fails validation.
     """
-    if not isinstance(output_module, elastic.ElasticsearchOutputModule):
+    if not (isinstance(output_module, elastic.ElasticsearchOutputModule) or
+            isinstance(output_module, elastic.Elasticsearch5OutputModule)):
       raise errors.BadConfigObject(
           'Output module is not an instance of ElasticsearchOutputModule')
 
