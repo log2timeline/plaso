@@ -129,8 +129,8 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     """Parse the well known actions for easy reading.
 
     Args:
-      action (str): The function or action called by the agent.
-      text (str): Mac Wifi log text.
+      action (str): the function or action called by the agent.
+      text (str): mac Wifi log text.
 
     Returns:
        str: a formatted string representing the known (or common) action.
