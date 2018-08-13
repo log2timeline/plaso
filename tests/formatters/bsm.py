@@ -25,6 +25,7 @@ class BSMFormatterTest(test_lib.EventFormatterTestCase):
 
     expected_attribute_names = [
         'event_type',
+        'event_type_string',
         'return_value',
         'extra_tokens']
 
