@@ -263,48 +263,49 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
   _FOUR_DIGITS = text_parser.PyparsingConstants.FOUR_DIGITS
   _TWO_DIGITS = text_parser.PyparsingConstants.TWO_DIGITS
 
-  # Common SDOL (SkyDriveOldLog) pyparsing objects.
-  _SDOL_COLON = pyparsing.Literal(':')
-  _SDOL_EXCLAMATION = pyparsing.Literal('!')
+  # Common pyparsing objects.
+  _COLON = pyparsing.Literal(':')
+  _EXCLAMATION = pyparsing.Literal('!')
 
   # Date and time format used in the header is: DD-MM-YYYY hhmmss.###
   # For example: 08-01-2013 21:22:28.999
-  _SDOL_DATE_TIME = pyparsing.Group(
+  _DATE_TIME = pyparsing.Group(
       _TWO_DIGITS.setResultsName('month') + pyparsing.Suppress('-') +
       _TWO_DIGITS.setResultsName('day_of_month') + pyparsing.Suppress('-') +
       _FOUR_DIGITS.setResultsName('year') +
       text_parser.PyparsingConstants.TIME_MSEC_ELEMENTS).setResultsName(
           'date_time')
 
-  _SDOL_SOURCE_CODE = pyparsing.Combine(
+  _SOURCE_CODE = pyparsing.Combine(
       pyparsing.CharsNotIn(':') +
-      _SDOL_COLON +
+      _COLON +
       text_parser.PyparsingConstants.INTEGER +
-      _SDOL_EXCLAMATION +
+      _EXCLAMATION +
       pyparsing.Word(pyparsing.printables)).setResultsName('source_code')
 
-  _SDOL_LOG_LEVEL = (
+  _LOG_LEVEL = (
       pyparsing.Literal('(').suppress() +
       pyparsing.SkipTo(')').setResultsName('log_level') +
       pyparsing.Literal(')').suppress())
 
-  _SDOL_LINE = (
-      _SDOL_DATE_TIME + _SDOL_SOURCE_CODE + _SDOL_LOG_LEVEL +
-      _SDOL_COLON + pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
+  _LINE = (
+      _DATE_TIME + _SOURCE_CODE + _LOG_LEVEL +
+      _COLON + pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
 
-  # Sometimes the timestamped log line is followed by an empy line,
+  # Sometimes the timestamped log line is followed by an empty line,
   # then by a file name plus other data and finally by another empty
   # line. It could happen that a logline is split in two parts.
   # These lines will not be discarded and an event will be generated
   # ad-hoc (see source), based on the last one if available.
-  _SDOL_NO_HEADER_SINGLE_LINE = (
+  _NO_HEADER_SINGLE_LINE = (
+      pyparsing.NotAny(_DATE_TIME) +
       pyparsing.Optional(pyparsing.Literal('->').suppress()) +
       pyparsing.SkipTo(pyparsing.lineEnd).setResultsName('text'))
 
   # Define the available log line structures.
   LINE_STRUCTURES = [
-      ('logline', _SDOL_LINE),
-      ('no_header_single_line', _SDOL_NO_HEADER_SINGLE_LINE),
+      ('logline', _LINE),
+      ('no_header_single_line', _NO_HEADER_SINGLE_LINE),
   ]
 
   def __init__(self):
@@ -411,7 +412,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
       bool: True if the line is in the expected format, False if not.
     """
     try:
-      structure = self._SDOL_LINE.parseString(line)
+      structure = self._LINE.parseString(line)
     except pyparsing.ParseException:
       logger.debug('Not a SkyDrive old log file')
       return False

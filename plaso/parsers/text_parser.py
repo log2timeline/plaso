@@ -252,7 +252,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     self._current_offset = 0
     # TODO: self._line_structures is a work-around and this needs
     # a structural fix.
-    self._line_structures = self.LINE_STRUCTURES
+    self._line_structures = list(self.LINE_STRUCTURES)
 
   def _IsText(self, bytes_in, encoding=None):
     """Examine the bytes in and determine if they are indicative of text.
@@ -386,6 +386,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       raise errors.UnableToParseFile('Wrong file structure.')
 
     consecutive_line_failures = 0
+    index = None
     # Set the offset to the beginning of the file.
     self._current_offset = 0
     # Read every line in the text file.
@@ -395,7 +396,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       parsed_structure = None
       use_key = None
       # Try to parse the line using all the line structures.
-      for key, structure in self.LINE_STRUCTURES:
+      for index, (key, structure) in enumerate(self._line_structures):
         try:
           parsed_structure = structure.parseString(line)
         except pyparsing.ParseException:
@@ -407,6 +408,9 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       if parsed_structure:
         self.ParseRecord(parser_mediator, use_key, parsed_structure)
         consecutive_line_failures = 0
+        if index is not None and index != 0:
+          key_structure = self._line_structures.pop(index)
+          self._line_structures.insert(0, key_structure)
       else:
         if len(line) > 80:
           line = '{0:s}...'.format(line[:77])
@@ -648,8 +652,10 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
 
       key = None
 
+      index = None
+
       # Try to parse the line using all the line structures.
-      for key, structure in self.LINE_STRUCTURES:
+      for index, (key, structure) in enumerate(self._line_structures):
         try:
           structure_generator = structure.scanString(
               self._text_reader.lines, maxMatches=1)
@@ -668,6 +674,12 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
           break
 
       if tokens and start == 0:
+        # Move matching key, structure pair to the front of the list, so that
+        # structures that are more likely to match are tried first.
+        if index is not None and index != 0:
+          key_structure = self._line_structures.pop(index)
+          self._line_structures.insert(0, key_structure)
+
         try:
           self.ParseRecord(parser_mediator, key, tokens)
           consecutive_line_failures = 0
