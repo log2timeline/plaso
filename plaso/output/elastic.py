@@ -73,7 +73,7 @@ class ElasticsearchOutputModule(shared_elastic.SharedElasticsearchOutputModule):
 
 
 class Elasticsearch5OutputModule(
-      shared_elastic.SharedElasticsearch5OutputModule):
+    shared_elastic.SharedElasticsearch5OutputModule):
   """Output module for Elasticsearch 5."""
 
   NAME = 'elastic5'
@@ -83,13 +83,13 @@ class Elasticsearch5OutputModule(
   _ELASTIC_ANALYZER_STRING_LIMIT = 10922
 
   def __init__(self, output_mediator):
-    """Initializes an Elasticsearch output module.
+    """Initializes an Elasticsearch5 output module.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfvfs.
     """
-    super(ElasticsearchOutputModule, self).__init__(output_mediator)
+    super(Elasticsearch5OutputModule, self).__init__(output_mediator)
     self._raw_fields = False
 
   def SetRawFields(self, raw_fields):

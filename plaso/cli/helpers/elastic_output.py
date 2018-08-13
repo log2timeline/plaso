@@ -81,8 +81,9 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
       BadConfigObject: when the output module object is of the wrong type.
       BadConfigOption: when a configuration parameter fails validation.
     """
-    if not (isinstance(output_module, elastic.ElasticsearchOutputModule) or
-            isinstance(output_module, elastic.Elasticsearch5OutputModule)):
+    elastic_output_modules = (
+        elastic.ElasticsearchOutputModule, elastic.Elasticsearch5OutputModule)
+    if not isinstance(output_module, elastic_output_modules):
       raise errors.BadConfigObject(
           'Output module is not an instance of ElasticsearchOutputModule')
 
