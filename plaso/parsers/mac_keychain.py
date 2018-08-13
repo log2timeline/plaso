@@ -17,9 +17,8 @@ from __future__ import unicode_literals
 
 import binascii
 import codecs
+import collections
 import os
-
-import construct
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
@@ -28,7 +27,7 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import specification
 from plaso.lib import definitions
-from plaso.parsers import interface
+from plaso.parsers import dtfabric_parser
 from plaso.parsers import manager
 
 
@@ -87,94 +86,54 @@ class KeychainApplicationRecordEventData(events.EventData):
     self.text_description = None
 
 
-class KeychainParser(interface.FileObjectParser):
+class KeychainDatabaseColumn(object):
+  """MacOS keychain database column.
+
+  Attributes:
+    attribute_data_type (int): attribute (data) type.
+    attribute_identifier (int): attribute identifier.
+    attribute_name (str): attribute name.
+  """
+
+  def __init__(self):
+    """Initializes a MacOS keychain database column."""
+    super(KeychainDatabaseColumn, self).__init__()
+    self.attribute_data_type = None
+    self.attribute_identifier = None
+    self.attribute_name = None
+
+
+class KeychainDatabaseTable(object):
+  """MacOS keychain database table.
+
+  Attributes:
+    columns (list[KeychainDatabaseColumn]): columns.
+    records (list[dict[str, str]]): records.
+    relation_identifier (int): relation identifier.
+    relation_name (str): relation name.
+  """
+
+  def __init__(self):
+    """Initializes a MacOS keychain database table."""
+    super(KeychainDatabaseTable, self).__init__()
+    self.columns = []
+    self.records = []
+    self.relation_identifier = None
+    self.relation_name = None
+
+
+class KeychainParser(dtfabric_parser.DtFabricBaseParser):
   """Parser for Keychain files."""
 
   NAME = 'mac_keychain'
   DESCRIPTION = 'Parser for MacOS Keychain files.'
 
-  KEYCHAIN_SIGNATURE = b'kych'
-  KEYCHAIN_MAJOR_VERSION = 1
-  KEYCHAIN_MINOR_VERSION = 0
+  _DEFINITION_FILE = 'mac_keychatin.yaml'
 
-  RECORD_TYPE_APPLICATION = 0x80000000
-  RECORD_TYPE_INTERNET = 0x80000001
+  _FILE_SIGNATURE = b'kych'
 
-  # DB HEADER.
-  KEYCHAIN_DB_HEADER = construct.Struct(
-      'db_header',
-      construct.Bytes('signature', 4),
-      construct.UBInt16('major_version'),
-      construct.UBInt16('minor_version'),
-      construct.UBInt32('header_size'),
-      construct.UBInt32('schema_offset'),
-      construct.Padding(4))
-
-  # DB SCHEMA.
-  KEYCHAIN_DB_SCHEMA = construct.Struct(
-      'db_schema',
-      construct.UBInt32('size'),
-      construct.UBInt32('number_of_tables'))
-
-  # For each number_of_tables, the schema has a TABLE_OFFSET with the
-  # offset starting in the DB_SCHEMA.
-  TABLE_OFFSET = construct.UBInt32('table_offset')
-
-  TABLE_HEADER = construct.Struct(
-      'table_header',
-      construct.UBInt32('table_size'),
-      construct.UBInt32('record_type'),
-      construct.UBInt32('number_of_records'),
-      construct.UBInt32('first_record'),
-      construct.UBInt32('index_offset'),
-      construct.Padding(4),
-      construct.UBInt32('recordnumbercount'))
-
-  RECORD_HEADER = construct.Struct(
-      'record_header',
-      construct.UBInt32('entry_length'),
-      construct.Padding(12),
-      construct.UBInt32('ssgp_length'),
-      construct.Padding(4),
-      construct.UBInt32('creation_time'),
-      construct.UBInt32('last_modification_time'),
-      construct.UBInt32('text_description'),
-      construct.Padding(4),
-      construct.UBInt32('comments'),
-      construct.Padding(8),
-      construct.UBInt32('entry_name'),
-      construct.Padding(20),
-      construct.UBInt32('account_name'),
-      construct.Padding(4))
-
-  RECORD_HEADER_APP = construct.Struct(
-      'record_entry_app',
-      RECORD_HEADER,
-      construct.Padding(4))
-
-  RECORD_HEADER_INET = construct.Struct(
-      'record_entry_inet',
-      RECORD_HEADER,
-      construct.UBInt32('where'),
-      construct.UBInt32('protocol'),
-      construct.UBInt32('type'),
-      construct.Padding(4),
-      construct.UBInt32('url'))
-
-  TEXT = construct.PascalString(
-      'text', length_field=construct.UBInt32('length'))
-
-  TIME = construct.Struct(
-      'timestamp',
-      construct.String('year', 4),
-      construct.String('month', 2),
-      construct.String('day', 2),
-      construct.String('hour', 2),
-      construct.String('minute', 2),
-      construct.String('second', 2),
-      construct.Padding(2))
-
-  TYPE_TEXT = construct.String('type', 4)
+  _MAJOR_VERSION = 1
+  _MINOR_VERSION = 0
 
   # TODO: add more protocols.
   _PROTOCOL_TRANSLATION_DICT = {
@@ -183,298 +142,791 @@ class KeychainParser(interface.FileObjectParser):
       'imap': 'imap',
       'http': 'http'}
 
-  def _ReadEntryApplication(self, parser_mediator, file_object):
-    """Extracts the information from an application password entry.
+  # TODO
+
+  _RECORD_TYPE_CSSM_DL_DB_SCHEMA_INFO = 0x00000000
+  _RECORD_TYPE_CSSM_DL_DB_SCHEMA_INDEXES = 0x00000001
+  _RECORD_TYPE_CSSM_DL_DB_SCHEMA_ATTRIBUTES = 0x00000002
+  _RECORD_TYPE_APPLICATION = 0x80000000
+  _RECORD_TYPE_INTERNET = 0x80000001
+
+  _ATTRIBUTE_DATA_READ_FUNCTIONS = {
+      0: '_ReadAttributeValueString',
+      1: '_ReadAttributeValueInteger',
+      2: '_ReadAttributeValueInteger',
+      5: '_ReadAttributeValueDateTime',
+      6: '_ReadAttributeValueBinaryData'}
+
+  def _ReadAttributeValueBinaryData(
+      self, attribute_values_data, record_offset, attribute_values_data_offset,
+      attribute_value_offset, description):
+    """Reads a binary data attribute value.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): a file-like object.
-    """
-    record_offset = file_object.tell()
-    try:
-      record_struct = self.RECORD_HEADER_APP.parse_stream(file_object)
-    except (IOError, construct.FieldError):
-      parser_mediator.ProduceExtractionError(
-          'unable to parse record structure at offset: 0x{0:08x}'.format(
-              record_offset))
-      return
-
-    (ssgp_hash, creation_time, last_modification_time, text_description,
-     comments, entry_name, account_name) = self._ReadEntryHeader(
-         parser_mediator, file_object, record_struct.record_header,
-         record_offset)
-
-    # Move to the end of the record.
-    next_record_offset = (
-        record_offset + record_struct.record_header.entry_length)
-    file_object.seek(next_record_offset, os.SEEK_SET)
-
-    event_data = KeychainApplicationRecordEventData()
-    event_data.account_name = account_name
-    event_data.comments = comments
-    event_data.entry_name = entry_name
-    event_data.ssgp_hash = ssgp_hash
-    event_data.text_description = text_description
-
-    if creation_time:
-      event = time_events.DateTimeValuesEvent(
-          creation_time, definitions.TIME_DESCRIPTION_CREATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    if last_modification_time:
-      event = time_events.DateTimeValuesEvent(
-          last_modification_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-  def _ReadEntryHeader(
-      self, parser_mediator, file_object, record, record_offset):
-    """Read the common record attributes.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): a file-like object.
-      record (construct.Struct): record header structure.
-      record_offset (int): offset of the start of the record.
+      attribute_values_data (bytes): attribute values data.
+      record_offset (int): offset of the record relative to the start of
+          the file.
+      attribute_values_data_offset (int): offset of the attribute values data
+          relative to the start of the record.
+      attribute_value_offset (int): offset of the attribute relative to
+          the start of the record.
+      description (str): description of the attribute value.
 
     Returns:
-      A tuple containing:
-        ssgp_hash: Hash of the encrypted data (passwd, cert, note).
-        creation_time (dfdatetime.TimeElements): entry creation time or None.
-        last_modification_time ((dfdatetime.TimeElements): entry last
-            modification time or None.
-        text_description: A brief description of the entry.
-        entry_name: Name of the entry
-        account_name: Name of the account.
+      bytes: binary data value or None if attribute value offset is not set.
+
+    Raises:
+      ParseError: if the attribute value cannot be read.
     """
-    # TODO: reduce number of seeks and/or offset calculations needed
-    # for parsing.
+    if attribute_value_offset == 0:
+      return None
 
-    # Info: The hash header always start with the string ssgp follow by
-    #       the hash. Furthermore The fields are always a multiple of four.
-    #       Then if it is not multiple the value is padded by 0x00.
-    ssgp_hash = binascii.hexlify(file_object.read(record.ssgp_length)[4:])
-    ssgp_hash = codecs.decode(ssgp_hash, 'ascii')
+    data_type_map = self._GetDataTypeMap('keychain_blob')
 
-    creation_time = None
+    file_offset = (
+        record_offset + attribute_values_data_offset + attribute_value_offset)
 
-    structure_offset = record_offset + record.creation_time - 1
-    file_object.seek(structure_offset, os.SEEK_SET)
+    attribute_value_offset -= attribute_values_data_offset + 1
+    attribute_value_data = attribute_values_data[attribute_value_offset:]
 
     try:
-      time_structure = self.TIME.parse_stream(file_object)
-    except construct.FieldError as exception:
-      time_structure = None
-      parser_mediator.ProduceExtractionError(
-          'unable to parse creation time with error: {0!s}'.format(exception))
+      string_attribute_value = self._ReadStructureFromByteStream(
+          attribute_value_data, file_offset, data_type_map, description)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError((
+          'Unable to map binary data attribute value data at offset: 0x{0:08x} '
+          'with error: {1!s}').format(file_offset, exception))
 
-    if time_structure:
-      time_elements_tuple = (
-          time_structure.year, time_structure.month, time_structure.day,
-          time_structure.hour, time_structure.minute, time_structure.second)
+    return string_attribute_value.blob
 
-      creation_time = dfdatetime_time_elements.TimeElements()
-      try:
-        creation_time.CopyFromStringTuple(
-            time_elements_tuple=time_elements_tuple)
-      except ValueError:
-        creation_time = None
-        parser_mediator.ProduceExtractionError(
-            'invalid creation time value: {0!s}'.format(time_elements_tuple))
+  def _ReadAttributeValueDateTime(
+      self, attribute_values_data, record_offset, attribute_values_data_offset,
+      attribute_value_offset, description):
+    """Reads a date time attribute value.
 
-    last_modification_time = None
+    Args:
+      attribute_values_data (bytes): attribute values data.
+      record_offset (int): offset of the record relative to the start of
+          the file.
+      attribute_values_data_offset (int): offset of the attribute values data
+          relative to the start of the record.
+      attribute_value_offset (int): offset of the attribute relative to
+          the start of the record.
+      description (str): description of the attribute value.
 
-    structure_offset = record_offset + record.last_modification_time - 1
-    file_object.seek(structure_offset, os.SEEK_SET)
+    Returns:
+      str: date and time values.
 
-    try:
-      time_structure = self.TIME.parse_stream(file_object)
-    except construct.FieldError as exception:
-      time_structure = None
-      parser_mediator.ProduceExtractionError(
-          'unable to parse last modification time with error: {0!s}'.format(
-              exception))
+    Raises:
+      ParseError: if the attribute value cannot be read.
+    """
+    if attribute_value_offset == 0:
+      return None
 
-    if time_structure:
-      time_elements_tuple = (
-          time_structure.year, time_structure.month, time_structure.day,
-          time_structure.hour, time_structure.minute, time_structure.second)
+    data_type_map = self._GetDataTypeMap('keychain_date_time')
 
-      last_modification_time = dfdatetime_time_elements.TimeElements()
-      try:
-        last_modification_time.CopyFromStringTuple(
-            time_elements_tuple=time_elements_tuple)
-      except ValueError:
-        last_modification_time = None
-        parser_mediator.ProduceExtractionError(
-            'invalid last modification time value: {0!s}'.format(
-                time_elements_tuple))
+    file_offset = (
+        record_offset + attribute_values_data_offset + attribute_value_offset)
 
-    text_description = 'N/A'
-    if record.text_description:
-      structure_offset = record_offset + record.text_description - 1
-      file_object.seek(structure_offset, os.SEEK_SET)
-
-      try:
-        text_description = self.TEXT.parse_stream(file_object)
-        text_description = codecs.decode(text_description, 'utf-8')
-      except construct.FieldError as exception:
-        parser_mediator.ProduceExtractionError(
-            'unable to parse text description with error: {0!s}'.format(
-                exception))
-
-    comments = 'N/A'
-    if record.comments:
-      structure_offset = record_offset + record.comments - 1
-      file_object.seek(structure_offset, os.SEEK_SET)
-
-      try:
-        comments = self.TEXT.parse_stream(file_object)
-      except construct.FieldError as exception:
-        parser_mediator.ProduceExtractionError(
-            'unable to parse comments with error: {0!s}'.format(exception))
-
-    structure_offset = record_offset + record.entry_name - 1
-    file_object.seek(structure_offset, os.SEEK_SET)
+    attribute_value_offset -= attribute_values_data_offset + 1
+    attribute_value_data = attribute_values_data[attribute_value_offset:]
 
     try:
-      entry_name = self.TEXT.parse_stream(file_object)
-      entry_name = codecs.decode(entry_name, 'utf-8')
-    except construct.FieldError as exception:
-      entry_name = 'N/A'
-      parser_mediator.ProduceExtractionError(
-          'unable to parse entry name with error: {0!s}'.format(exception))
+      date_time_attribute_value = self._ReadStructureFromByteStream(
+          attribute_value_data, file_offset, data_type_map, description)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError((
+          'Unable to map date time attribute value data at offset: 0x{0:08x} '
+          'with error: {1!s}').format(file_offset, exception))
 
-    structure_offset = record_offset + record.account_name - 1
-    file_object.seek(structure_offset, os.SEEK_SET)
+    return date_time_attribute_value.date_time.rstrip('\x00')
+
+  def _ReadAttributeValueInteger(
+      self, attribute_values_data, record_offset, attribute_values_data_offset,
+      attribute_value_offset, description):
+    """Reads an integer attribute value.
+
+    Args:
+      attribute_values_data (bytes): attribute values data.
+      record_offset (int): offset of the record relative to the start of
+          the file.
+      attribute_values_data_offset (int): offset of the attribute values data
+          relative to the start of the record.
+      attribute_value_offset (int): offset of the attribute relative to
+          the start of the record.
+      description (str): description of the attribute value.
+
+    Returns:
+      int: integer value or None if attribute value offset is not set.
+
+    Raises:
+      ParseError: if the attribute value cannot be read.
+    """
+    if attribute_value_offset == 0:
+      return None
+
+    data_type_map = self._GetDataTypeMap('uint32be')
+
+    file_offset = (
+        record_offset + attribute_values_data_offset + attribute_value_offset)
+
+    attribute_value_offset -= attribute_values_data_offset + 1
+    attribute_value_data = attribute_values_data[attribute_value_offset:]
 
     try:
-      account_name = self.TEXT.parse_stream(file_object)
-      account_name = codecs.decode(account_name, 'utf-8')
-    except construct.FieldError as exception:
-      account_name = 'N/A'
-      parser_mediator.ProduceExtractionError(
-          'unable to parse account name with error: {0!s}'.format(exception))
+      return self._ReadStructureFromByteStream(
+          attribute_value_data, file_offset, data_type_map, description)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError((
+          'Unable to map integer attribute value data at offset: 0x{0:08x} '
+          'with error: {1!s}').format(file_offset, exception))
 
-    return (
-        ssgp_hash, creation_time, last_modification_time,
-        text_description, comments, entry_name, account_name)
+  def _ReadAttributeValueString(
+      self, attribute_values_data, record_offset, attribute_values_data_offset,
+      attribute_value_offset, description):
+    """Reads a string attribute value.
 
-  def _ReadEntryInternet(self, parser_mediator, file_object):
-    """Extracts the information from an Internet password entry.
+    Args:
+      attribute_values_data (bytes): attribute values data.
+      record_offset (int): offset of the record relative to the start of
+          the file.
+      attribute_values_data_offset (int): offset of the attribute values data
+          relative to the start of the record.
+      attribute_value_offset (int): offset of the attribute relative to
+          the start of the record.
+      description (str): description of the attribute value.
+
+    Returns:
+      str: string value or None if attribute value offset is not set.
+
+    Raises:
+      ParseError: if the attribute value cannot be read.
+    """
+    if attribute_value_offset == 0:
+      return None
+
+    data_type_map = self._GetDataTypeMap('keychain_string')
+
+    file_offset = (
+        record_offset + attribute_values_data_offset + attribute_value_offset)
+
+    attribute_value_offset -= attribute_values_data_offset + 1
+    attribute_value_data = attribute_values_data[attribute_value_offset:]
+
+    try:
+      string_attribute_value = self._ReadStructureFromByteStream(
+          attribute_value_data, file_offset, data_type_map, description)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError((
+          'Unable to map string attribute value data at offset: 0x{0:08x} '
+          'with error: {1!s}').format(file_offset, exception))
+
+    return string_attribute_value.string
+
+  def _ReadFileHeader(self, file_object):
+    """Reads the file header.
+
+    Args:
+      file_object (file): file-like object.
+
+    Returns:
+      keychain_file_header: file header.
+
+    Raises:
+      ParseError: if the file header cannot be read.
+    """
+    data_type_map = self._GetDataTypeMap('keychain_file_header')
+
+    file_header, _ = self._ReadStructureFromFileObject(
+        file_object, 0, data_type_map, 'file header')
+
+    if file_header.signature != self._FILE_SIGNATURE:
+      raise errors.ParseError('Unsupported file signature.')
+
+    if (file_header.major_version != self._MAJOR_VERSION or
+        file_header.minor_version != self._MINOR_VERSION):
+      raise errors.ParseError('Unsupported format version: {0:s}.{1:s}'.format(
+          file_header.major_version, file_header.minor_version))
+
+    return file_header
+
+  def _ReadRecord(self, tables, file_object, record_offset, record_type):
+    """Reads the record.
+
+    Args:
+      tables (dict[str, KeychainDatabaseTable]): tables per name.
+      file_object (file): file-like object.
+      record_offset (int): offset of the record relative to the start of
+          the file.
+      record_type (int): record type, which should correspond to a relation
+          identifier of a table defined in the schema.
+
+    Raises:
+      ParseError: if the record cannot be read.
+    """
+    table = tables.get(record_type, None)
+    if not table:
+      raise errors.ParseError(
+          'Missing table for relation identifier: 0x{0:08}'.format(record_type))
+
+    record_header = self._ReadRecordHeader(file_object, record_offset)
+
+    record = collections.OrderedDict()
+    if table.columns:
+      attribute_value_offsets = self._ReadRecordAttributeValueOffset(
+          file_object, record_offset + 24, len(table.columns))
+
+      file_offset = file_object.tell()
+      attribute_values_data_offset = file_offset - record_offset
+      attribute_values_data_size = record_header.data_size - (
+          file_offset - record_offset)
+      attribute_values_data = file_object.read(attribute_values_data_size)
+
+      if self._debug:
+        self._DebugPrintData('Attribute values data', attribute_values_data)
+
+      for index, column in enumerate(table.columns):
+        attribute_data_read_function = self._ATTRIBUTE_DATA_READ_FUNCTIONS.get(
+            column.attribute_data_type, None)
+        if attribute_data_read_function:
+          attribute_data_read_function = getattr(
+              self, attribute_data_read_function, None)
+
+        if not attribute_data_read_function:
+          attribute_value = None
+        else:
+          attribute_value = attribute_data_read_function(
+              attribute_values_data, record_offset,
+              attribute_values_data_offset, attribute_value_offsets[index],
+              column.attribute_name)
+
+        record[column.attribute_name] = attribute_value
+
+    table.records.append(record)
+
+  def _ReadRecordAttributeValueOffset(
+      self, file_object, file_offset, number_of_attribute_values):
+    """Reads the record attribute value offsets.
+
+    Args:
+      file_object (file): file-like object.
+      file_offset (int): offset of the record attribute values offsets relative
+          to the start of the file.
+      number_of_attribute_values (int): number of attribute values.
+
+    Returns:
+      keychain_record_attribute_value_offsets: record attribute value offsets.
+
+    Raises:
+      ParseError: if the record attribute value offsets cannot be read.
+    """
+    offsets_data_size = number_of_attribute_values * 4
+
+    offsets_data = file_object.read(offsets_data_size)
+
+    if self._debug:
+      self._DebugPrintData('Attribute value offsets data', offsets_data)
+
+    context = dtfabric_data_maps.DataTypeMapContext(values={
+        'number_of_attribute_values': number_of_attribute_values})
+
+    data_type_map = self._GetDataTypeMap(
+        'keychain_record_attribute_value_offsets')
+
+    try:
+      attribute_value_offsets = self._ReadStructureFromByteStream(
+          offsets_data, file_offset, data_type_map,
+          'record attribute value offsets', context=context)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError((
+          'Unable to map record attribute value offsets data at offset: '
+          '0x{0:08x} with error: {1!s}').format(file_offset, exception))
+
+    if self._debug:
+      for index, attribute_value_offset in enumerate(attribute_value_offsets):
+        description_string = 'Attribute value offset: {0:d}'.format(index)
+        value_string = self._FormatIntegerAsHexadecimal8(attribute_value_offset)
+        self._DebugPrintValue(description_string, value_string)
+
+      self._DebugPrintText('\n')
+
+    return attribute_value_offsets
+
+  def _ReadRecordHeader(self, file_object, record_header_offset):
+    """Reads the record header.
+
+    Args:
+      file_object (file): file-like object.
+      record_header_offset (int): offset of the record header relative to
+          the start of the file.
+
+    Returns:
+      keychain_record_header: record header.
+
+    Raises:
+      ParseError: if the record header cannot be read.
+    """
+    data_type_map = self._GetDataTypeMap('keychain_record_header')
+
+    record_header, _ = self._ReadStructureFromFileObject(
+        file_object, record_header_offset, data_type_map, 'record header')
+
+    return record_header
+
+  def _ReadRecordSchemaAttributes(self, tables, file_object, record_offset):
+    """Reads a schema attributes (CSSM_DL_DB_SCHEMA_ATTRIBUTES) record.
+
+    Args:
+      tables (dict[str, KeychainDatabaseTable]): tables per name.
+      file_object (file): file-like object.
+      record_offset (int): offset of the record relative to the start of
+          the file.
+
+    Raises:
+      ParseError: if the record cannot be read.
+    """
+    record_header = self._ReadRecordHeader(file_object, record_offset)
+
+    attribute_value_offsets = self._ReadRecordAttributeValueOffset(
+        file_object, record_offset + 24, 6)
+
+    file_offset = file_object.tell()
+    attribute_values_data_offset = file_offset - record_offset
+    attribute_values_data_size = record_header.data_size - (
+        file_offset - record_offset)
+    attribute_values_data = file_object.read(attribute_values_data_size)
+
+    if self._debug:
+      self._DebugPrintData('Attribute values data', attribute_values_data)
+
+    relation_identifier = self._ReadAttributeValueInteger(
+        attribute_values_data, record_offset, attribute_values_data_offset,
+        attribute_value_offsets[0], 'relation identifier')
+
+    if self._debug:
+      if relation_identifier is None:
+        value_string = 'NULL'
+      else:
+        table_name = self._TABLE_NAMES.get(relation_identifier, 'UNKNOWN')
+        value_string = '0x{0:08x} ({1:s})'.format(
+            relation_identifier, table_name)
+      self._DebugPrintValue('Relation identifier', value_string)
+
+    attribute_identifier = self._ReadAttributeValueInteger(
+        attribute_values_data, record_offset, attribute_values_data_offset,
+        attribute_value_offsets[1], 'attribute identifier')
+
+    if self._debug:
+      value_string = self._FormatIntegerAsRecordValue(attribute_identifier)
+      self._DebugPrintValue('Attribute identifier', value_string)
+
+    attribute_name_data_type = self._ReadAttributeValueInteger(
+        attribute_values_data, record_offset, attribute_values_data_offset,
+        attribute_value_offsets[2], 'attribute name data type')
+
+    if self._debug:
+      if attribute_name_data_type is None:
+        value_string = 'NULL'
+      else:
+        data_type_string = self._ATTRIBUTE_DATA_TYPES.get(
+            attribute_name_data_type, 'UNKNOWN')
+        value_string = '{0:d} ({1:s})'.format(
+            attribute_name_data_type, data_type_string)
+      self._DebugPrintValue('Attribute name data type', value_string)
+
+    attribute_name = self._ReadAttributeValueString(
+        attribute_values_data, record_offset, attribute_values_data_offset,
+        attribute_value_offsets[3], 'attribute name')
+
+    if self._debug:
+      if attribute_name is None:
+        value_string = 'NULL'
+      else:
+        value_string = attribute_name
+      self._DebugPrintValue('Attribute name', value_string)
+
+    attribute_data_type = self._ReadAttributeValueInteger(
+        attribute_values_data, record_offset, attribute_values_data_offset,
+        attribute_value_offsets[5], 'attribute data type')
+
+    if self._debug:
+      if attribute_data_type is None:
+        value_string = 'NULL'
+      else:
+        data_type_string = self._ATTRIBUTE_DATA_TYPES.get(
+            attribute_data_type, 'UNKNOWN')
+        value_string = '{0:d} ({1:s})'.format(
+            attribute_data_type, data_type_string)
+      self._DebugPrintValue('Attribute data type', value_string)
+
+    if self._debug:
+      self._DebugPrintText('\n')
+
+    table = tables.get(relation_identifier, None)
+    if not table:
+      raise errors.ParseError(
+          'Missing table for relation identifier: 0x{0:08}'.format(
+              relation_identifier))
+
+    if attribute_name is None and attribute_value_offsets[1] != 0:
+      attribute_value_offset = attribute_value_offsets[1]
+      attribute_value_offset -= attribute_values_data_offset + 1
+      attribute_name = attribute_values_data[
+          attribute_value_offset:attribute_value_offset + 4]
+      attribute_name = attribute_name.decode('ascii')
+
+    column = KeychainDatabaseColumn()
+    column.attribute_data_type = attribute_data_type
+    column.attribute_identifier = attribute_identifier
+    column.attribute_name = attribute_name
+
+    table.columns.append(column)
+
+    table = tables.get(self._RECORD_TYPE_CSSM_DL_DB_SCHEMA_ATTRIBUTES, None)
+    if not table:
+      raise errors.ParseError('Missing CSSM_DL_DB_SCHEMA_ATTRIBUTES table.')
+
+    record = collections.OrderedDict({
+        'RelationID': relation_identifier,
+        'AttributeID': attribute_identifier,
+        'AttributeNameFormat': attribute_name_data_type,
+        'AttributeName': attribute_name,
+        'AttributeFormat': attribute_data_type})
+
+    table.records.append(record)
+
+  def _ReadRecordSchemaIndexes(self, tables, file_object, record_offset):
+    """Reads a schema indexes (CSSM_DL_DB_SCHEMA_INDEXES) record.
+
+    Args:
+      tables (dict[str, KeychainDatabaseTable]): tables per name.
+      file_object (file): file-like object.
+      record_offset (int): offset of the record relative to the start of
+          the file.
+
+    Raises:
+      ParseError: if the record cannot be read.
+    """
+    record_header = self._ReadRecordHeader(file_object, record_offset)
+
+    attribute_value_offsets = self._ReadRecordAttributeValueOffset(
+        file_object, record_offset + 24, 5)
+
+    if attribute_value_offsets != (0x2d, 0x31, 0x35, 0x39, 0x3d):
+      raise errors.ParseError('Unuspported record attribute value offsets')
+
+    file_offset = file_object.tell()
+    data_type_map = self._GetDataTypeMap('keychain_record_schema_indexes')
+
+    record_values, _ = self._ReadStructureFromFileObject(
+        file_object, file_offset, data_type_map,
+        'schema indexes record values')
+
+    if self._debug:
+      file_offset = file_object.tell()
+      trailing_data_size = record_header.data_size - (
+          file_offset - record_offset)
+
+      if trailing_data_size == 0:
+        self._DebugPrintText('\n')
+      else:
+        trailing_data = file_object.read(trailing_data_size)
+        self._DebugPrintData('Record trailing data', trailing_data)
+
+    if record_values.relation_identifier not in tables:
+      raise errors.ParseError(
+          'CSSM_DL_DB_SCHEMA_INDEXES defines relation identifier not defined '
+          'in CSSM_DL_DB_SCHEMA_INFO.')
+
+    table = tables.get(self._RECORD_TYPE_CSSM_DL_DB_SCHEMA_INDEXES, None)
+    if not table:
+      raise errors.ParseError('Missing CSSM_DL_DB_SCHEMA_INDEXES table.')
+
+    record = collections.OrderedDict({
+        'RelationID': record_values.relation_identifier,
+        'IndexID': record_values.index_identifier,
+        'AttributeID': record_values.attribute_identifier,
+        'IndexType': record_values.index_type,
+        'IndexedDataLocation': record_values.index_data_location})
+
+    table.records.append(record)
+
+  def _ReadRecordSchemaInformation(self, tables, file_object, record_offset):
+    """Reads a schema information (CSSM_DL_DB_SCHEMA_INFO) record.
+
+    Args:
+      tables (dict[str, KeychainDatabaseTable]): tables per name.
+      file_object (file): file-like object.
+      record_offset (int): offset of the record relative to the start of
+          the file.
+
+    Raises:
+      ParseError: if the record cannot be read.
+    """
+    record_header = self._ReadRecordHeader(file_object, record_offset)
+
+    attribute_value_offsets = self._ReadRecordAttributeValueOffset(
+        file_object, record_offset + 24, 2)
+
+    if attribute_value_offsets != (0x21, 0x25):
+      raise errors.ParseError('Unuspported record attribute value offsets')
+
+    file_offset = file_object.tell()
+    data_type_map = self._GetDataTypeMap('keychain_record_schema_information')
+
+    record_values, _ = self._ReadStructureFromFileObject(
+        file_object, file_offset, data_type_map,
+        'schema information record values')
+
+    relation_name = record_values.relation_name.decode('ascii')
+
+    if self._debug:
+      value_string = '0x{0:08x}'.format(record_values.relation_identifier)
+      self._DebugPrintValue('Relation identifier', value_string)
+
+      value_string = '{0:d}'.format(record_values.relation_name_size)
+      self._DebugPrintValue('Relation name size', value_string)
+
+      self._DebugPrintValue('Relation name', relation_name)
+
+    if self._debug:
+      file_offset = file_object.tell()
+      trailing_data_size = record_header.data_size - (
+          file_offset - record_offset)
+
+      if trailing_data_size == 0:
+        self._DebugPrintText('\n')
+      else:
+        trailing_data = file_object.read(trailing_data_size)
+        self._DebugPrintData('Record trailing data', trailing_data)
+
+    table = KeychainDatabaseTable()
+    table.relation_identifier = record_values.relation_identifier
+    table.relation_name = relation_name
+
+    tables[table.relation_identifier] = table
+
+    table = tables.get(self._RECORD_TYPE_CSSM_DL_DB_SCHEMA_INFO, None)
+    if not table:
+      raise errors.ParseError('Missing CSSM_DL_DB_SCHEMA_INFO table.')
+
+    record = collections.OrderedDict({
+        'RelationID': record_values.relation_identifier,
+        'RelationName': relation_name})
+
+    table.records.append(record)
+
+  def _ReadTablesArray(self, file_object, tables_array_offset):
+    """Reads the tables array.
+
+    Args:
+      file_object (file): file-like object.
+      tables_array_offset (int): offset of the tables array relative to
+          the start of the file.
+
+    Returns:
+      dict[str, KeychainDatabaseTable]: tables per name.
+
+    Raises:
+      ParseError: if the tables array cannot be read.
+    """
+    # TODO: implement https://github.com/libyal/dtfabric/issues/12 and update
+    # keychain_tables_array definition.
+
+    data_type_map = self._GetDataTypeMap('keychain_tables_array')
+
+    tables_array, _ = self._ReadStructureFromFileObject(
+        file_object, tables_array_offset, data_type_map, 'tables array')
+
+    tables = collections.OrderedDict()
+    for table_offset in tables_array.table_offsets:
+      self._ReadTable(tables, file_object, tables_array_offset + table_offset)
+
+    return tables
+
+  def _ReadTable(self, tables, file_object, table_offset):
+    """Reads the table.
+
+    Args:
+      tables (dict[str, KeychainDatabaseTable]): tables per name.
+      file_object (file): file-like object.
+      table_offset (int): offset of the table relative to the start of
+          the file.
+
+    Raises:
+      ParseError: if the table cannot be read.
+    """
+    table_header = self._ReadTableHeader(file_object, table_offset)
+
+    for record_offset in table_header.record_offsets:
+      if record_offset == 0:
+        continue
+
+      record_offset += table_offset
+
+      if table_header.record_type == self._RECORD_TYPE_CSSM_DL_DB_SCHEMA_INFO:
+        self._ReadRecordSchemaInformation(tables, file_object, record_offset)
+      elif table_header.record_type == (
+          self._RECORD_TYPE_CSSM_DL_DB_SCHEMA_INDEXES):
+        self._ReadRecordSchemaIndexes(tables, file_object, record_offset)
+      elif table_header.record_type == (
+          self._RECORD_TYPE_CSSM_DL_DB_SCHEMA_ATTRIBUTES):
+        self._ReadRecordSchemaAttributes(tables, file_object, record_offset)
+      else:
+        self._ReadRecord(
+            tables, file_object, record_offset, table_header.record_type)
+
+    if self._debug:
+      file_offset = file_object.tell()
+      trailing_data_size = table_header.data_size - (file_offset - table_offset)
+
+      if trailing_data_size != 0:
+        trailing_data = file_object.read(trailing_data_size)
+        self._DebugPrintData('Table trailing data', trailing_data)
+
+  def _ReadTableHeader(self, file_object, table_header_offset):
+    """Reads the table header.
+
+    Args:
+      file_object (file): file-like object.
+      tables_header_offset (int): offset of the tables header relative to
+          the start of the file.
+
+    Returns:
+      keychain_table_header: table header.
+
+    Raises:
+      ParseError: if the table header cannot be read.
+    """
+    data_type_map = self._GetDataTypeMap('keychain_table_header')
+
+    table_header, _ = self._ReadStructureFromFileObject(
+        file_object, table_header_offset, data_type_map, 'table header')
+
+    return table_header
+
+  def _ParseDateTimeValue(self, parser_mediator, date_time_value):
+    """Parses a date time value.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): a file-like object.
+      date_time_value (str): date time value
+          (CSSM_DB_ATTRIBUTE_FORMAT_TIME_DATE) in the format: "YYYYMMDDhhmmssZ".
+
+    Returns:
+      dfdatetime.TimeElements: date and time extracted from the value or None
+          if the value does not represent a valid string.
     """
-    record_offset = file_object.tell()
+    if date_time_value[14] != 'Z':
+      parser_mediator.ProduceExtractionError(
+          'invalid date and time value: {0!s}'.format(date_time_value))
+      return None
+
     try:
-      record_header_struct = self.RECORD_HEADER_INET.parse_stream(file_object)
-    except (IOError, construct.FieldError):
-      parser_mediator.ProduceExtractionError((
-          'unable to parse record header structure at offset: '
-          '0x{0:08x}').format(record_offset))
-      return
+      year = int(date_time_value[0:4], 10)
+      month = int(date_time_value[4:6], 10)
+      day_of_month = int(date_time_value[6:8], 10)
+      hours = int(date_time_value[8:10], 10)
+      minutes = int(date_time_value[10:12], 10)
+      seconds = int(date_time_value[12:14], 10)
+    except (TypeError, ValueError):
+      parser_mediator.ProduceExtractionError(
+          'invalid date and time value: {0!s}'.format(date_time_value))
+      return None
 
-    (ssgp_hash, creation_time, last_modification_time, text_description,
-     comments, entry_name, account_name) = self._ReadEntryHeader(
-         parser_mediator, file_object, record_header_struct.record_header,
-         record_offset)
+    time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
 
-    if not record_header_struct.where:
-      where = 'N/A'
-      protocol = 'N/A'
-      type_protocol = 'N/A'
+    date_time = dfdatetime_time_elements.TimeElements()
+    try:
+      date_time.CopyFromStringTuple(time_elements_tuple=time_elements_tuple)
+    except ValueError:
+      parser_mediator.ProduceExtractionError(
+          'invalid date and time value: {0!s}'.format(date_time_value))
+      return None
 
-    else:
-      offset = record_offset + record_header_struct.where - 1
-      file_object.seek(offset, os.SEEK_SET)
-      where = self.TEXT.parse_stream(file_object)
-      where = codecs.decode(where, 'utf-8')
+    return date_time
 
-      offset = record_offset + record_header_struct.protocol - 1
-      file_object.seek(offset, os.SEEK_SET)
-      protocol = self.TYPE_TEXT.parse_stream(file_object)
-      protocol = codecs.decode(protocol, 'utf-8')
+  def _ParseBinaryDataAsString(self, parser_mediator, binary_data_value):
+    """Parses a binary data value as string
 
-      offset = record_offset + record_header_struct.type - 1
-      file_object.seek(offset, os.SEEK_SET)
-      type_protocol = self.TEXT.parse_stream(file_object)
-      type_protocol = codecs.decode(type_protocol, 'utf-8')
-      type_protocol = self._PROTOCOL_TRANSLATION_DICT.get(
-          type_protocol, type_protocol)
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      binary_data_value (bytes): binary data value
+          (CSSM_DB_ATTRIBUTE_FORMAT_BLOB)
 
-      if record_header_struct.url:
-        offset = record_offset + record_header_struct.url - 1
-        file_object.seek(offset, os.SEEK_SET)
-        url = self.TEXT.parse_stream(file_object)
-        url = codecs.decode(url, 'utf-8')
-        where = '{0:s}{1:s}'.format(where, url)
+    Returns:
+      str: binary data value formatted as a string or None if no string could
+          be extracted.
+    """
+    try:
+      return binary_data_value.decode('utf-8')
+    except UnicodeDecodeError:
+      parser_mediator.ProduceExtractionError(
+          'invalid binary data string value: {0:s}'.format(
+              repr(binary_data_value)))
+      return None
 
-    # Move to the end of the record.
-    next_record_offset = (
-        record_offset + record_header_struct.record_header.entry_length)
-    file_object.seek(next_record_offset, os.SEEK_SET)
+  def _ParseApplicationRecord(self, parser_mediator, record):
+    """Extracts the information from an application password record.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      record (dict[str, object]): database record.
+    """
+    event_data = KeychainApplicationRecordEventData()
+    event_data.account_name = self._ParseBinaryDataAsString(record['acct'])
+    event_data.comments = self._ParseBinaryDataAsString(record['crtr'])
+    event_data.entry_name = self._ParseBinaryDataAsString(record['PrintName'])
+    event_data.text_description = self._ParseBinaryDataAsString(record['desc'])
+
+    date_time = self._ParseDateTimeValue(record['cdat'])
+    if date_time:
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_CREATION)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    date_time = self._ParseDateTimeValue(record['mdat'])
+    if date_time:
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+  def _ReadEntryInternet(self, parser_mediator, record):
+    """Extracts the information from an Internet password record.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      record (dict[str, object]): database record.
+    """
+    protocol_string = codecs.decode('{0:08x}'.format(record['ptcl']), 'hex')
 
     event_data = KeychainInternetRecordEventData()
-    event_data.account_name = account_name
-    event_data.comments = comments
-    event_data.entry_name = entry_name
+    event_data.account_name = self._ParseBinaryDataAsString(record['acct'])
+    event_data.comments = self._ParseBinaryDataAsString(record['crtr'])
+    event_data.entry_name = self._ParseBinaryDataAsString(record['PrintName'])
     event_data.protocol = protocol
     event_data.ssgp_hash = ssgp_hash
-    event_data.text_description = text_description
-    event_data.type_protocol = type_protocol
+    event_data.text_description = self._ParseBinaryDataAsString(record['desc'])
+    event_data.type_protocol = self._ParseBinaryDataAsString(record['ptcl'])
+    event_data.type_protocol = self._PROTOCOL_TRANSLATION_DICT.get(
+        protocol_string, protocol_string)
     event_data.where = where
 
-    if creation_time:
+    date_time = self._ParseDateTimeValue(record['cdat'])
+    if date_time:
       event = time_events.DateTimeValuesEvent(
-          creation_time, definitions.TIME_DESCRIPTION_CREATION)
+          date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    if last_modification_time:
+    date_time = self._ParseDateTimeValue(record['mdat'])
+    if date_time:
       event = time_events.DateTimeValuesEvent(
-          last_modification_time, definitions.TIME_DESCRIPTION_MODIFICATION)
+          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
-
-  def _ReadTableOffsets(self, parser_mediator, file_object):
-    """Reads the table offsets.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): a file-like object.
-
-    Returns:
-      list[int]: table offsets.
-    """
-    # INFO: The HEADER KEYCHAIN:
-    # [DBHEADER] + [DBSCHEMA] + [OFFSET TABLE A] + ... + [OFFSET TABLE Z]
-    # Where the table offset is relative to the first byte of the DB Schema,
-    # then we must add to this offset the size of the [DBHEADER].
-    # Read the database schema and extract the offset for all the tables.
-    # They are ordered by file position from the top to the bottom of the file.
-    table_offsets = []
-
-    try:
-      db_schema_struct = self.KEYCHAIN_DB_SCHEMA.parse_stream(file_object)
-    except (IOError, construct.FieldError):
-      parser_mediator.ProduceExtractionError(
-          'unable to parse database schema structure')
-      return []
-
-    for index in range(db_schema_struct.number_of_tables):
-      try:
-        table_offset = self.TABLE_OFFSET.parse_stream(file_object)
-      except (IOError, construct.FieldError):
-        parser_mediator.ProduceExtractionError(
-            'unable to parse table offsets: {0:d}'.format(index))
-        return []
-
-      table_offsets.append(table_offset + self.KEYCHAIN_DB_HEADER.sizeof())
-
-    return table_offsets
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -484,8 +936,7 @@ class KeychainParser(interface.FileObjectParser):
       FormatSpecification: format specification.
     """
     format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(
-        cls.KEYCHAIN_SIGNATURE, offset=0)
+    format_specification.AddNewSignature(cls._FILE_SIGNATURE, offset=0)
     return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
@@ -499,47 +950,23 @@ class KeychainParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
+
     try:
-      db_header = self.KEYCHAIN_DB_HEADER.parse_stream(file_object)
-    except (IOError, construct.FieldError):
+      file_header = self._ReadFileHeader(file_object)
+    except (ValueError, errors.ParseError) as exception:
       raise errors.UnableToParseFile('Unable to parse file header.')
 
-    if db_header.signature != self.KEYCHAIN_SIGNATURE:
-      raise errors.UnableToParseFile('Not a MacOS keychain file.')
+    tables = self._ReadTablesArray(file_object, file_header.tables_array_offset)
 
-    if (db_header.major_version != self.KEYCHAIN_MAJOR_VERSION or
-        db_header.minor_version != self.KEYCHAIN_MINOR_VERSION):
-      parser_mediator.ProduceExtractionError(
-          'unsupported format version: {0:s}.{1:s}'.format(
-              db_header.major_version, db_header.minor_version))
-      return
+    table = tables.get(self._RECORD_TYPE_APPLICATION, None)
+    if table:
+      for record in table.records:
+        self._ReadEntryApplication(parser_mediator, record)
 
-    # TODO: document format and determine if -1 offset correction is needed.
-    table_offsets = self._ReadTableOffsets(parser_mediator, file_object)
-    for table_offset in table_offsets:
-      # Skipping X bytes, unknown data at this point.
-      file_object.seek(table_offset, os.SEEK_SET)
-
-      try:
-        table = self.TABLE_HEADER.parse_stream(file_object)
-      except (IOError, construct.FieldError):
-        parser_mediator.ProduceExtractionError(
-            'unable to parse table structure at offset: 0x{0:08x}'.format(
-                table_offset))
-        continue
-
-      # Table_offset: absolute byte in the file where the table starts.
-      # table.first_record: first record in the table, relative to the
-      #                     first byte of the table.
-      file_object.seek(table_offset + table.first_record, os.SEEK_SET)
-
-      if table.record_type == self.RECORD_TYPE_INTERNET:
-        for _ in range(table.number_of_records):
-          self._ReadEntryInternet(parser_mediator, file_object)
-
-      elif table.record_type == self.RECORD_TYPE_APPLICATION:
-        for _ in range(table.number_of_records):
-          self._ReadEntryApplication(parser_mediator, file_object)
+    table = tables.get(self._RECORD_TYPE_INTERNET, None)
+    if table:
+      for record in table.records:
+        self._ReadEntryInternet(parser_mediator, record)
 
 
 manager.ParsersManager.RegisterParser(KeychainParser)
