@@ -22,6 +22,8 @@ import os
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
+from dtfabric.runtime import data_maps as dtfabric_data_maps
+
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
@@ -39,7 +41,6 @@ class KeychainInternetRecordEventData(events.EventData):
     comments (str): comments added by the user.
     entry_name (str): name of the entry.
     protocol (str): internet protocol used, for example "https".
-    ssgp_hash (str): hexadecimal values from the password / cert hash.
     text_description (str): description.
     type_protocol (str): sub-protocol used, for example "form".
     where (str): domain name or IP where the password is used.
@@ -55,7 +56,6 @@ class KeychainInternetRecordEventData(events.EventData):
     self.comments = None
     self.entry_name = None
     self.protocol = None
-    self.ssgp_hash = None
     self.text_description = None
     self.type_protocol = None
     self.where = None
@@ -69,7 +69,6 @@ class KeychainApplicationRecordEventData(events.EventData):
     account_name (str): name of the account.
     comments (str): comments added by the user.
     entry_name (str): name of the entry.
-    ssgp_hash (str): hexadecimal values from the password / cert hash.
     text_description (str): description.
   """
 
@@ -82,7 +81,6 @@ class KeychainApplicationRecordEventData(events.EventData):
     self.account_name = None
     self.comments = None
     self.entry_name = None
-    self.ssgp_hash = None
     self.text_description = None
 
 
@@ -128,7 +126,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
   NAME = 'mac_keychain'
   DESCRIPTION = 'Parser for MacOS Keychain files.'
 
-  _DEFINITION_FILE = 'mac_keychatin.yaml'
+  _DEFINITION_FILE = 'mac_keychain.yaml'
 
   _FILE_SIGNATURE = b'kych'
 
@@ -147,8 +145,8 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
   _RECORD_TYPE_CSSM_DL_DB_SCHEMA_INFO = 0x00000000
   _RECORD_TYPE_CSSM_DL_DB_SCHEMA_INDEXES = 0x00000001
   _RECORD_TYPE_CSSM_DL_DB_SCHEMA_ATTRIBUTES = 0x00000002
-  _RECORD_TYPE_APPLICATION = 0x80000000
-  _RECORD_TYPE_INTERNET = 0x80000001
+  _RECORD_TYPE_APPLICATION_PASSWORD = 0x80000000
+  _RECORD_TYPE_INTERNET_PASSWORD = 0x80000001
 
   _ATTRIBUTE_DATA_READ_FUNCTIONS = {
       0: '_ReadAttributeValueString',
@@ -159,7 +157,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
   def _ReadAttributeValueBinaryData(
       self, attribute_values_data, record_offset, attribute_values_data_offset,
-      attribute_value_offset, description):
+      attribute_value_offset):
     """Reads a binary data attribute value.
 
     Args:
@@ -170,7 +168,6 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
           relative to the start of the record.
       attribute_value_offset (int): offset of the attribute relative to
           the start of the record.
-      description (str): description of the attribute value.
 
     Returns:
       bytes: binary data value or None if attribute value offset is not set.
@@ -191,7 +188,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
     try:
       string_attribute_value = self._ReadStructureFromByteStream(
-          attribute_value_data, file_offset, data_type_map, description)
+          attribute_value_data, file_offset, data_type_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
           'Unable to map binary data attribute value data at offset: 0x{0:08x} '
@@ -201,7 +198,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
   def _ReadAttributeValueDateTime(
       self, attribute_values_data, record_offset, attribute_values_data_offset,
-      attribute_value_offset, description):
+      attribute_value_offset):
     """Reads a date time attribute value.
 
     Args:
@@ -212,7 +209,6 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
           relative to the start of the record.
       attribute_value_offset (int): offset of the attribute relative to
           the start of the record.
-      description (str): description of the attribute value.
 
     Returns:
       str: date and time values.
@@ -233,7 +229,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
     try:
       date_time_attribute_value = self._ReadStructureFromByteStream(
-          attribute_value_data, file_offset, data_type_map, description)
+          attribute_value_data, file_offset, data_type_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
           'Unable to map date time attribute value data at offset: 0x{0:08x} '
@@ -243,7 +239,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
   def _ReadAttributeValueInteger(
       self, attribute_values_data, record_offset, attribute_values_data_offset,
-      attribute_value_offset, description):
+      attribute_value_offset):
     """Reads an integer attribute value.
 
     Args:
@@ -254,7 +250,6 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
           relative to the start of the record.
       attribute_value_offset (int): offset of the attribute relative to
           the start of the record.
-      description (str): description of the attribute value.
 
     Returns:
       int: integer value or None if attribute value offset is not set.
@@ -275,7 +270,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
     try:
       return self._ReadStructureFromByteStream(
-          attribute_value_data, file_offset, data_type_map, description)
+          attribute_value_data, file_offset, data_type_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
           'Unable to map integer attribute value data at offset: 0x{0:08x} '
@@ -283,7 +278,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
   def _ReadAttributeValueString(
       self, attribute_values_data, record_offset, attribute_values_data_offset,
-      attribute_value_offset, description):
+      attribute_value_offset):
     """Reads a string attribute value.
 
     Args:
@@ -294,7 +289,6 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
           relative to the start of the record.
       attribute_value_offset (int): offset of the attribute relative to
           the start of the record.
-      description (str): description of the attribute value.
 
     Returns:
       str: string value or None if attribute value offset is not set.
@@ -315,7 +309,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
     try:
       string_attribute_value = self._ReadStructureFromByteStream(
-          attribute_value_data, file_offset, data_type_map, description)
+          attribute_value_data, file_offset, data_type_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
           'Unable to map string attribute value data at offset: 0x{0:08x} '
@@ -338,15 +332,15 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     data_type_map = self._GetDataTypeMap('keychain_file_header')
 
     file_header, _ = self._ReadStructureFromFileObject(
-        file_object, 0, data_type_map, 'file header')
+        file_object, 0, data_type_map)
 
     if file_header.signature != self._FILE_SIGNATURE:
       raise errors.ParseError('Unsupported file signature.')
 
-    if (file_header.major_version != self._MAJOR_VERSION or
-        file_header.minor_version != self._MINOR_VERSION):
+    if (file_header.major_format_version != self._MAJOR_VERSION or
+        file_header.minor_format_version != self._MINOR_VERSION):
       raise errors.ParseError('Unsupported format version: {0:s}.{1:s}'.format(
-          file_header.major_version, file_header.minor_version))
+          file_header.major_format_version, file_header.minor_format_version))
 
     return file_header
 
@@ -382,9 +376,6 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
           file_offset - record_offset)
       attribute_values_data = file_object.read(attribute_values_data_size)
 
-      if self._debug:
-        self._DebugPrintData('Attribute values data', attribute_values_data)
-
       for index, column in enumerate(table.columns):
         attribute_data_read_function = self._ATTRIBUTE_DATA_READ_FUNCTIONS.get(
             column.attribute_data_type, None)
@@ -397,8 +388,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
         else:
           attribute_value = attribute_data_read_function(
               attribute_values_data, record_offset,
-              attribute_values_data_offset, attribute_value_offsets[index],
-              column.attribute_name)
+              attribute_values_data_offset, attribute_value_offsets[index])
 
         record[column.attribute_name] = attribute_value
 
@@ -424,9 +414,6 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
     offsets_data = file_object.read(offsets_data_size)
 
-    if self._debug:
-      self._DebugPrintData('Attribute value offsets data', offsets_data)
-
     context = dtfabric_data_maps.DataTypeMapContext(values={
         'number_of_attribute_values': number_of_attribute_values})
 
@@ -435,20 +422,11 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
     try:
       attribute_value_offsets = self._ReadStructureFromByteStream(
-          offsets_data, file_offset, data_type_map,
-          'record attribute value offsets', context=context)
+          offsets_data, file_offset, data_type_map, context=context)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
           'Unable to map record attribute value offsets data at offset: '
           '0x{0:08x} with error: {1!s}').format(file_offset, exception))
-
-    if self._debug:
-      for index, attribute_value_offset in enumerate(attribute_value_offsets):
-        description_string = 'Attribute value offset: {0:d}'.format(index)
-        value_string = self._FormatIntegerAsHexadecimal8(attribute_value_offset)
-        self._DebugPrintValue(description_string, value_string)
-
-      self._DebugPrintText('\n')
 
     return attribute_value_offsets
 
@@ -469,7 +447,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     data_type_map = self._GetDataTypeMap('keychain_record_header')
 
     record_header, _ = self._ReadStructureFromFileObject(
-        file_object, record_header_offset, data_type_map, 'record header')
+        file_object, record_header_offset, data_type_map)
 
     return record_header
 
@@ -496,71 +474,27 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
         file_offset - record_offset)
     attribute_values_data = file_object.read(attribute_values_data_size)
 
-    if self._debug:
-      self._DebugPrintData('Attribute values data', attribute_values_data)
-
     relation_identifier = self._ReadAttributeValueInteger(
         attribute_values_data, record_offset, attribute_values_data_offset,
-        attribute_value_offsets[0], 'relation identifier')
-
-    if self._debug:
-      if relation_identifier is None:
-        value_string = 'NULL'
-      else:
-        table_name = self._TABLE_NAMES.get(relation_identifier, 'UNKNOWN')
-        value_string = '0x{0:08x} ({1:s})'.format(
-            relation_identifier, table_name)
-      self._DebugPrintValue('Relation identifier', value_string)
+        attribute_value_offsets[0])
 
     attribute_identifier = self._ReadAttributeValueInteger(
         attribute_values_data, record_offset, attribute_values_data_offset,
-        attribute_value_offsets[1], 'attribute identifier')
-
-    if self._debug:
-      value_string = self._FormatIntegerAsRecordValue(attribute_identifier)
-      self._DebugPrintValue('Attribute identifier', value_string)
+        attribute_value_offsets[1])
 
     attribute_name_data_type = self._ReadAttributeValueInteger(
         attribute_values_data, record_offset, attribute_values_data_offset,
-        attribute_value_offsets[2], 'attribute name data type')
-
-    if self._debug:
-      if attribute_name_data_type is None:
-        value_string = 'NULL'
-      else:
-        data_type_string = self._ATTRIBUTE_DATA_TYPES.get(
-            attribute_name_data_type, 'UNKNOWN')
-        value_string = '{0:d} ({1:s})'.format(
-            attribute_name_data_type, data_type_string)
-      self._DebugPrintValue('Attribute name data type', value_string)
+        attribute_value_offsets[2])
 
     attribute_name = self._ReadAttributeValueString(
         attribute_values_data, record_offset, attribute_values_data_offset,
-        attribute_value_offsets[3], 'attribute name')
+        attribute_value_offsets[3])
 
-    if self._debug:
-      if attribute_name is None:
-        value_string = 'NULL'
-      else:
-        value_string = attribute_name
-      self._DebugPrintValue('Attribute name', value_string)
+    # TODO: handle attribute_value_offsets[4]
 
     attribute_data_type = self._ReadAttributeValueInteger(
         attribute_values_data, record_offset, attribute_values_data_offset,
-        attribute_value_offsets[5], 'attribute data type')
-
-    if self._debug:
-      if attribute_data_type is None:
-        value_string = 'NULL'
-      else:
-        data_type_string = self._ATTRIBUTE_DATA_TYPES.get(
-            attribute_data_type, 'UNKNOWN')
-        value_string = '{0:d} ({1:s})'.format(
-            attribute_data_type, data_type_string)
-      self._DebugPrintValue('Attribute data type', value_string)
-
-    if self._debug:
-      self._DebugPrintText('\n')
+        attribute_value_offsets[5])
 
     table = tables.get(relation_identifier, None)
     if not table:
@@ -619,19 +553,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     data_type_map = self._GetDataTypeMap('keychain_record_schema_indexes')
 
     record_values, _ = self._ReadStructureFromFileObject(
-        file_object, file_offset, data_type_map,
-        'schema indexes record values')
-
-    if self._debug:
-      file_offset = file_object.tell()
-      trailing_data_size = record_header.data_size - (
-          file_offset - record_offset)
-
-      if trailing_data_size == 0:
-        self._DebugPrintText('\n')
-      else:
-        trailing_data = file_object.read(trailing_data_size)
-        self._DebugPrintData('Record trailing data', trailing_data)
+        file_object, file_offset, data_type_map)
 
     if record_values.relation_identifier not in tables:
       raise errors.ParseError(
@@ -675,30 +597,9 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     data_type_map = self._GetDataTypeMap('keychain_record_schema_information')
 
     record_values, _ = self._ReadStructureFromFileObject(
-        file_object, file_offset, data_type_map,
-        'schema information record values')
+        file_object, file_offset, data_type_map)
 
     relation_name = record_values.relation_name.decode('ascii')
-
-    if self._debug:
-      value_string = '0x{0:08x}'.format(record_values.relation_identifier)
-      self._DebugPrintValue('Relation identifier', value_string)
-
-      value_string = '{0:d}'.format(record_values.relation_name_size)
-      self._DebugPrintValue('Relation name size', value_string)
-
-      self._DebugPrintValue('Relation name', relation_name)
-
-    if self._debug:
-      file_offset = file_object.tell()
-      trailing_data_size = record_header.data_size - (
-          file_offset - record_offset)
-
-      if trailing_data_size == 0:
-        self._DebugPrintText('\n')
-      else:
-        trailing_data = file_object.read(trailing_data_size)
-        self._DebugPrintData('Record trailing data', trailing_data)
 
     table = KeychainDatabaseTable()
     table.relation_identifier = record_values.relation_identifier
@@ -736,7 +637,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     data_type_map = self._GetDataTypeMap('keychain_tables_array')
 
     tables_array, _ = self._ReadStructureFromFileObject(
-        file_object, tables_array_offset, data_type_map, 'tables array')
+        file_object, tables_array_offset, data_type_map)
 
     tables = collections.OrderedDict()
     for table_offset in tables_array.table_offsets:
@@ -776,14 +677,6 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
         self._ReadRecord(
             tables, file_object, record_offset, table_header.record_type)
 
-    if self._debug:
-      file_offset = file_object.tell()
-      trailing_data_size = table_header.data_size - (file_offset - table_offset)
-
-      if trailing_data_size != 0:
-        trailing_data = file_object.read(trailing_data_size)
-        self._DebugPrintData('Table trailing data', trailing_data)
-
   def _ReadTableHeader(self, file_object, table_header_offset):
     """Reads the table header.
 
@@ -801,7 +694,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     data_type_map = self._GetDataTypeMap('keychain_table_header')
 
     table_header, _ = self._ReadStructureFromFileObject(
-        file_object, table_header_offset, data_type_map, 'table header')
+        file_object, table_header_offset, data_type_map)
 
     return table_header
 
@@ -858,8 +751,11 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
     Returns:
       str: binary data value formatted as a string or None if no string could
-          be extracted.
+          be extracted or binary data value is None (NULL).
     """
+    if not binary_data_value:
+      return None
+
     try:
       return binary_data_value.decode('utf-8')
     except UnicodeDecodeError:
@@ -868,7 +764,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
               repr(binary_data_value)))
       return None
 
-  def _ParseApplicationRecord(self, parser_mediator, record):
+  def _ParseApplicationPasswordRecord(self, parser_mediator, record):
     """Extracts the information from an application password record.
 
     Args:
@@ -877,24 +773,28 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
       record (dict[str, object]): database record.
     """
     event_data = KeychainApplicationRecordEventData()
-    event_data.account_name = self._ParseBinaryDataAsString(record['acct'])
-    event_data.comments = self._ParseBinaryDataAsString(record['crtr'])
-    event_data.entry_name = self._ParseBinaryDataAsString(record['PrintName'])
-    event_data.text_description = self._ParseBinaryDataAsString(record['desc'])
+    event_data.account_name = self._ParseBinaryDataAsString(
+        parser_mediator, record['acct'])
+    event_data.comments = self._ParseBinaryDataAsString(
+        parser_mediator, record['crtr'])
+    event_data.entry_name = self._ParseBinaryDataAsString(
+        parser_mediator, record['PrintName'])
+    event_data.text_description = self._ParseBinaryDataAsString(
+        parser_mediator, record['desc'])
 
-    date_time = self._ParseDateTimeValue(record['cdat'])
+    date_time = self._ParseDateTimeValue(parser_mediator, record['cdat'])
     if date_time:
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    date_time = self._ParseDateTimeValue(record['mdat'])
+    date_time = self._ParseDateTimeValue(parser_mediator, record['mdat'])
     if date_time:
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def _ReadEntryInternet(self, parser_mediator, record):
+  def _ParseInternetPasswordRecord(self, parser_mediator, record):
     """Extracts the information from an Internet password record.
 
     Args:
@@ -905,24 +805,28 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     protocol_string = codecs.decode('{0:08x}'.format(record['ptcl']), 'hex')
 
     event_data = KeychainInternetRecordEventData()
-    event_data.account_name = self._ParseBinaryDataAsString(record['acct'])
-    event_data.comments = self._ParseBinaryDataAsString(record['crtr'])
-    event_data.entry_name = self._ParseBinaryDataAsString(record['PrintName'])
-    event_data.protocol = protocol
-    event_data.ssgp_hash = ssgp_hash
-    event_data.text_description = self._ParseBinaryDataAsString(record['desc'])
-    event_data.type_protocol = self._ParseBinaryDataAsString(record['ptcl'])
+    event_data.account_name = self._ParseBinaryDataAsString(
+        parser_mediator, record['acct'])
+    event_data.comments = self._ParseBinaryDataAsString(
+        parser_mediator, record['crtr'])
+    event_data.entry_name = self._ParseBinaryDataAsString(
+        parser_mediator, record['PrintName'])
+    event_data.protocol = self._ParseBinaryDataAsString(
+        parser_mediator, record['srvr'])
+    event_data.text_description = self._ParseBinaryDataAsString(
+        parser_mediator, record['desc'])
     event_data.type_protocol = self._PROTOCOL_TRANSLATION_DICT.get(
         protocol_string, protocol_string)
-    event_data.where = where
+    event_data.where = self._ParseBinaryDataAsString(
+        parser_mediator, record['sdmn'])
 
-    date_time = self._ParseDateTimeValue(record['cdat'])
+    date_time = self._ParseDateTimeValue(parser_mediator, record['cdat'])
     if date_time:
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    date_time = self._ParseDateTimeValue(record['mdat'])
+    date_time = self._ParseDateTimeValue(parser_mediator, record['mdat'])
     if date_time:
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
@@ -950,7 +854,6 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-
     try:
       file_header = self._ReadFileHeader(file_object)
     except (ValueError, errors.ParseError) as exception:
@@ -958,15 +861,15 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
     tables = self._ReadTablesArray(file_object, file_header.tables_array_offset)
 
-    table = tables.get(self._RECORD_TYPE_APPLICATION, None)
+    table = tables.get(self._RECORD_TYPE_APPLICATION_PASSWORD, None)
     if table:
       for record in table.records:
-        self._ReadEntryApplication(parser_mediator, record)
+        self._ParseApplicationPasswordRecord(parser_mediator, record)
 
-    table = tables.get(self._RECORD_TYPE_INTERNET, None)
+    table = tables.get(self._RECORD_TYPE_INTERNET_PASSWORD, None)
     if table:
       for record in table.records:
-        self._ReadEntryInternet(parser_mediator, record)
+        self._ParseInternetPasswordRecord(parser_mediator, record)
 
 
 manager.ParsersManager.RegisterParser(KeychainParser)
