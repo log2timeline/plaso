@@ -40,7 +40,7 @@ PYTHON_DEPENDENCIES = {
     'idna': ('', '2.5', None, True),
     'lz4': ('', '0.10.0', None, False),
     'lzma': ('__version__', '', None, False),
-    'pefile': ('__version__', '2017.5.26', None, True),
+    'pefile': ('__version__', '2018.8.8', None, True),
     'psutil': ('__version__', '5.4.3', None, True),
     'pybde': ('get_version()', '20140531', None, True),
     'pyesedb': ('get_version()', '20150409', None, True),
