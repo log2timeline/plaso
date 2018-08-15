@@ -118,7 +118,7 @@ class MacNotificationCenterPlugin(interface.SQLitePlugin):
     except (biplist.InvalidPlistException, KeyError) as exception:
       parser_mediator.ProduceExtractionError(
           'unable to read plist from database with error: {0!s}'.format(
-                exception))
+              exception))
       return
 
     event_data.title = req.get('titl', None)
