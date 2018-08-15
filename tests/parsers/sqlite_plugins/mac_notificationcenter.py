@@ -32,7 +32,7 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
     self.CheckTimestamp(event.timestamp, '2018-05-02 10:59:18.930156')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    self.assertEqual(event.message, "KeePassXC can now be run")
+    self.assertEqual(event.body, "KeePassXC can now be run")
     self.assertEqual(event.bundle_name, "com.google.santagui")
 
     event = events[2]
@@ -46,7 +46,7 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
     self.CheckTimestamp(event.timestamp, '2018-05-16 16:38:04.686080')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    self.assertEqual(event.message, "PyCharm can now be run")
+    self.assertEqual(event.body, "PyCharm can now be run")
     self.assertEqual(event.bundle_name, "com.google.santagui")
 
 
