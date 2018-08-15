@@ -41,6 +41,7 @@ class KeychainInternetRecordEventData(events.EventData):
     comments (str): comments added by the user.
     entry_name (str): name of the entry.
     protocol (str): internet protocol used, for example "https".
+    ssgp_hash (str): password / cert hash formatted as an hexadecimal string.
     text_description (str): description.
     type_protocol (str): sub-protocol used, for example "form".
     where (str): domain name or IP where the password is used.
@@ -56,6 +57,7 @@ class KeychainInternetRecordEventData(events.EventData):
     self.comments = None
     self.entry_name = None
     self.protocol = None
+    self.ssgp_hash = None
     self.text_description = None
     self.type_protocol = None
     self.where = None
@@ -811,6 +813,8 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
         parser_mediator, record['PrintName'])
     event_data.protocol = self._PROTOCOL_TRANSLATION_DICT.get(
         protocol_string, protocol_string)
+    event_data.ssgp_hash = self._ParseBinaryDataAsString(
+        parser_mediator, record['Label'])
     event_data.text_description = self._ParseBinaryDataAsString(
         parser_mediator, record['desc'])
     event_data.type_protocol = self._ParseBinaryDataAsString(
