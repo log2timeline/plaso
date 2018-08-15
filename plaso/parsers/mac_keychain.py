@@ -617,34 +617,6 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
     table.records.append(record)
 
-  def _ReadTablesArray(self, file_object, tables_array_offset):
-    """Reads the tables array.
-
-    Args:
-      file_object (file): file-like object.
-      tables_array_offset (int): offset of the tables array relative to
-          the start of the file.
-
-    Returns:
-      dict[str, KeychainDatabaseTable]: tables per name.
-
-    Raises:
-      ParseError: if the tables array cannot be read.
-    """
-    # TODO: implement https://github.com/libyal/dtfabric/issues/12 and update
-    # keychain_tables_array definition.
-
-    data_type_map = self._GetDataTypeMap('keychain_tables_array')
-
-    tables_array, _ = self._ReadStructureFromFileObject(
-        file_object, tables_array_offset, data_type_map)
-
-    tables = collections.OrderedDict()
-    for table_offset in tables_array.table_offsets:
-      self._ReadTable(tables, file_object, tables_array_offset + table_offset)
-
-    return tables
-
   def _ReadTable(self, tables, file_object, table_offset):
     """Reads the table.
 
@@ -698,6 +670,34 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
     return table_header
 
+  def _ReadTablesArray(self, file_object, tables_array_offset):
+    """Reads the tables array.
+
+    Args:
+      file_object (file): file-like object.
+      tables_array_offset (int): offset of the tables array relative to
+          the start of the file.
+
+    Returns:
+      dict[str, KeychainDatabaseTable]: tables per name.
+
+    Raises:
+      ParseError: if the tables array cannot be read.
+    """
+    # TODO: implement https://github.com/libyal/dtfabric/issues/12 and update
+    # keychain_tables_array definition.
+
+    data_type_map = self._GetDataTypeMap('keychain_tables_array')
+
+    tables_array, _ = self._ReadStructureFromFileObject(
+        file_object, tables_array_offset, data_type_map)
+
+    tables = collections.OrderedDict()
+    for table_offset in tables_array.table_offsets:
+      self._ReadTable(tables, file_object, tables_array_offset + table_offset)
+
+    return tables
+
   def _ParseDateTimeValue(self, parser_mediator, date_time_value):
     """Parses a date time value.
 
@@ -730,15 +730,13 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
     time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
 
-    date_time = dfdatetime_time_elements.TimeElements()
     try:
-      date_time.CopyFromStringTuple(time_elements_tuple=time_elements_tuple)
-    except ValueError:
+      return dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
+    except ValueError as exception:
       parser_mediator.ProduceExtractionError(
           'invalid date and time value: {0!s}'.format(date_time_value))
       return None
-
-    return date_time
 
   def _ParseBinaryDataAsString(self, parser_mediator, binary_data_value):
     """Parses a binary data value as string
@@ -811,14 +809,14 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
         parser_mediator, record['crtr'])
     event_data.entry_name = self._ParseBinaryDataAsString(
         parser_mediator, record['PrintName'])
-    event_data.protocol = self._ParseBinaryDataAsString(
-        parser_mediator, record['srvr'])
+    event_data.protocol = self._PROTOCOL_TRANSLATION_DICT.get(
+        protocol_string, protocol_string)
     event_data.text_description = self._ParseBinaryDataAsString(
         parser_mediator, record['desc'])
-    event_data.type_protocol = self._PROTOCOL_TRANSLATION_DICT.get(
-        protocol_string, protocol_string)
+    event_data.type_protocol = self._ParseBinaryDataAsString(
+        parser_mediator, record['atyp'])
     event_data.where = self._ParseBinaryDataAsString(
-        parser_mediator, record['sdmn'])
+        parser_mediator, record['srvr'])
 
     date_time = self._ParseDateTimeValue(parser_mediator, record['cdat'])
     if date_time:
