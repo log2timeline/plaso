@@ -368,16 +368,20 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     record_header = self._ReadRecordHeader(file_object, record_offset)
 
     record = collections.OrderedDict()
+
     if table.columns:
       attribute_value_offsets = self._ReadRecordAttributeValueOffset(
           file_object, record_offset + 24, len(table.columns))
 
-      file_offset = file_object.tell()
-      attribute_values_data_offset = file_offset - record_offset
-      attribute_values_data_size = record_header.data_size - (
-          file_offset - record_offset)
-      attribute_values_data = file_object.read(attribute_values_data_size)
+    file_offset = file_object.tell()
+    record_data_offset = file_offset - record_offset
+    record_data_size = record_header.data_size - (file_offset - record_offset)
+    record_data = file_object.read(record_data_size)
 
+    if record_header.key_data_size > 0:
+      record['_key_'] = record_data[:record_header.key_data_size]
+
+    if table.columns:
       for index, column in enumerate(table.columns):
         attribute_data_read_function = self._ATTRIBUTE_DATA_READ_FUNCTIONS.get(
             column.attribute_data_type, None)
@@ -389,8 +393,8 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
           attribute_value = None
         else:
           attribute_value = attribute_data_read_function(
-              attribute_values_data, record_offset,
-              attribute_values_data_offset, attribute_value_offsets[index])
+              record_data, record_offset, record_data_offset,
+              attribute_value_offsets[index])
 
         record[column.attribute_name] = attribute_value
 
@@ -771,7 +775,16 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       record (dict[str, object]): database record.
+
+    Raises:
+      ParseError: if Internet password record cannot be parsed.
     """
+    key = record.get('_key_', None)
+    if not key or not key.startswith(b'ssgp'):
+      raise errors.ParseError((
+          'Unsupported application password record key value does not start '
+          'with: "ssgp".'))
+
     event_data = KeychainApplicationRecordEventData()
     event_data.account_name = self._ParseBinaryDataAsString(
         parser_mediator, record['acct'])
@@ -779,6 +792,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
         parser_mediator, record['crtr'])
     event_data.entry_name = self._ParseBinaryDataAsString(
         parser_mediator, record['PrintName'])
+    event_data.ssgp_hash = codecs.encode(key[4:], 'hex')
     event_data.text_description = self._ParseBinaryDataAsString(
         parser_mediator, record['desc'])
 
@@ -801,7 +815,16 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       record (dict[str, object]): database record.
+
+    Raises:
+      ParseError: if Internet password record cannot be parsed.
     """
+    key = record.get('_key_', None)
+    if not key or not key.startswith(b'ssgp'):
+      raise errors.ParseError((
+          'Unsupported Internet password record key value does not start '
+          'with: "ssgp".'))
+
     protocol_string = codecs.decode('{0:08x}'.format(record['ptcl']), 'hex')
 
     event_data = KeychainInternetRecordEventData()
@@ -813,8 +836,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
         parser_mediator, record['PrintName'])
     event_data.protocol = self._PROTOCOL_TRANSLATION_DICT.get(
         protocol_string, protocol_string)
-    event_data.ssgp_hash = self._ParseBinaryDataAsString(
-        parser_mediator, record['Label'])
+    event_data.ssgp_hash = codecs.encode(key[4:], 'hex')
     event_data.text_description = self._ParseBinaryDataAsString(
         parser_mediator, record['desc'])
     event_data.type_protocol = self._ParseBinaryDataAsString(
