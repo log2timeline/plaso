@@ -70,7 +70,8 @@ members:
 - name: size
   data_type: uint32
 - name: string
-  type: stream
+  type: string
+  encoding: ascii
   element_data_type: char
   number_of_elements: keychain_string.size
 ---
