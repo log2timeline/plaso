@@ -302,7 +302,10 @@ class SymantecParser(dsv_parser.DSVParser):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    time_elements_tuple = self._GetTimeElementsTuple(row['time'])
+    try:
+      time_elements_tuple = self._GetTimeElementsTuple(row['time'])
+    except (TypeError, ValueError):
+      return False
 
     try:
       dfdatetime_time_elements.TimeElements(
