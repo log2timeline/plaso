@@ -15,10 +15,8 @@ from __future__ import unicode_literals
 #       indicates which specific tool, or all, is able to use this entry.
 
 
-import binascii
 import codecs
 import collections
-import os
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
@@ -71,6 +69,7 @@ class KeychainApplicationRecordEventData(events.EventData):
     account_name (str): name of the account.
     comments (str): comments added by the user.
     entry_name (str): name of the entry.
+    ssgp_hash (str): password / cert hash formatted as an hexadecimal string.
     text_description (str): description.
   """
 
@@ -83,6 +82,7 @@ class KeychainApplicationRecordEventData(events.EventData):
     self.account_name = None
     self.comments = None
     self.entry_name = None
+    self.ssgp_hash = None
     self.text_description = None
 
 
@@ -547,7 +547,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     Raises:
       ParseError: if the record cannot be read.
     """
-    record_header = self._ReadRecordHeader(file_object, record_offset)
+    _ = self._ReadRecordHeader(file_object, record_offset)
 
     attribute_value_offsets = self._ReadRecordAttributeValueOffset(
         file_object, record_offset + 24, 5)
@@ -591,7 +591,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     Raises:
       ParseError: if the record cannot be read.
     """
-    record_header = self._ReadRecordHeader(file_object, record_offset)
+    _ = self._ReadRecordHeader(file_object, record_offset)
 
     attribute_value_offsets = self._ReadRecordAttributeValueOffset(
         file_object, record_offset + 24, 2)
@@ -739,7 +739,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     try:
       return dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
-    except ValueError as exception:
+    except ValueError:
       parser_mediator.ProduceExtractionError(
           'invalid date and time value: {0!s}'.format(date_time_value))
       return None
@@ -880,7 +880,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     """
     try:
       file_header = self._ReadFileHeader(file_object)
-    except (ValueError, errors.ParseError) as exception:
+    except (ValueError, errors.ParseError):
       raise errors.UnableToParseFile('Unable to parse file header.')
 
     tables = self._ReadTablesArray(file_object, file_header.tables_array_offset)
