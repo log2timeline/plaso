@@ -135,7 +135,11 @@ class PsortEventHeap(object):
         EventObject: event.
     """
     try:
-      return heapq.heappop(self._heap)
+      macb_group_identifier, content_identifier, event = heapq.heappop(
+          self._heap)
+      if macb_group_identifier == '':
+        macb_group_identifier = None
+      return macb_group_identifier, content_identifier, event
 
     except IndexError:
       return None
@@ -161,7 +165,7 @@ class PsortEventHeap(object):
 
     # We can ignore the timestamp here because the psort engine only stores
     # events with the same timestamp in the event heap.
-    heap_values = (macb_group_identifier, content_identifier, event)
+    heap_values = (macb_group_identifier or '', content_identifier, event)
     heapq.heappush(self._heap, heap_values)
 
 
