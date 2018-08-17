@@ -34,11 +34,10 @@ class MacNotificationCenterEventData(events.EventData):
     body (str): body of the notification message
     bundle_name (str): name of the application's bundle that generated
         the notification.
-    identity (str): optional.
     presented (int): either 1 or 0 if the notification has been shown to the
         user.
-    subtitle (str): optional.
-    title (str): usually the name of the application that generated the
+    subtitle (str): optional. Subtitle   of the notification message.
+    title (str): title of the message. Usually the name of the application that generated the
         notification. Occasionally the name of the sender of the notification
         for example, in case of chat messages.
   """
@@ -51,7 +50,6 @@ class MacNotificationCenterEventData(events.EventData):
         data_type=self.DATA_TYPE)
     self.body = None
     self.bundle_name = None
-    self.identity = None
     self.presented = None
     self.subtitle = None
     self.title = None

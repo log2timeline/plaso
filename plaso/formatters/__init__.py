@@ -44,6 +44,7 @@ from plaso.formatters import ls_quarantine
 from plaso.formatters import mac_appfirewall
 from plaso.formatters import mac_document_versions
 from plaso.formatters import mac_keychain
+from plaso.formatters import mac_notificationcenter
 from plaso.formatters import mac_securityd
 from plaso.formatters import mac_wifi
 from plaso.formatters import mackeeper_cache

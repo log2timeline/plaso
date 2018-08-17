@@ -34,6 +34,15 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     self.assertEqual(event.body, "KeePassXC can now be run")
     self.assertEqual(event.bundle_name, "com.google.santagui")
+    expected_message = (
+        'Notification title "Santa" '
+        ' '
+        'registered by com.google.santagui.  '
+        'Delivery status "1",  '
+        'with the following content: "KeePassXC can now be run"')
+    expected_short_message = (
+        'Notification title "Santa"')
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[2]
     self.CheckTimestamp(event.timestamp, '2018-05-02 11:13:21.531085')
@@ -41,6 +50,15 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     self.assertEqual(event.title, "Drive File Stream")
     self.assertEqual(event.bundle_name, "com.google.drivefs")
+    expected_message = (
+        'Notification title "Drive File Stream" '
+        ' '
+        'registered by com.google.drivefs.  '
+        'Delivery status "1",  '
+        'with the following content: "Drive File Stream is loading your files…"')
+    expected_short_message = (
+        'Notification title "Drive File Stream"')
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[5]
     self.CheckTimestamp(event.timestamp, '2018-05-16 16:38:04.686080')
@@ -48,7 +66,15 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     self.assertEqual(event.body, "PyCharm can now be run")
     self.assertEqual(event.bundle_name, "com.google.santagui")
-
+    expected_message = (
+        'Notification title "Santa" '
+        ' '
+        'registered by com.google.santagui.  '
+        'Delivery status "1",  '
+        'with the following content: "PyCharm can now be run"')
+    expected_short_message = (
+        'Notification title "Santa"')
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 if __name__ == '__main__':
   unittest.main()
