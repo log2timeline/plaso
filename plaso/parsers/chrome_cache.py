@@ -193,7 +193,7 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
     try:
       self._ParseFileHeader(file_object)
     except errors.ParseError as exception:
-      raise errors.UnableToParseFile(
+      raise errors.ParseError(
           'Unable to parse index file header with error: {0!s}'.format(
               exception))
     # Skip over the LRU data, which is 112 bytes in size.
