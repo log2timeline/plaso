@@ -8,4 +8,4 @@ of log2timeline.
 
 from __future__ import unicode_literals
 
-__version__ = '20180703'
+__version__ = '20180817'

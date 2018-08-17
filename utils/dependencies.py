@@ -27,6 +27,7 @@ class DependencyDefinition(object):
     name (str): name of (the Python module that provides) the dependency.
     pypi_name (str): name of the PyPI package that provides the dependency.
     python2_only (bool): True if the dependency is only supported by Python 2.
+    python3_only (bool): True if the dependency is only supported by Python 3.
     rpm_name (str): name of the rpm package that provides the dependency.
     version_property (str): name of the version attribute or function.
   """
@@ -47,6 +48,7 @@ class DependencyDefinition(object):
     self.name = name
     self.pypi_name = None
     self.python2_only = False
+    self.python3_only = False
     self.rpm_name = None
     self.version_property = None
 
@@ -63,6 +65,7 @@ class DependencyDefinitionReader(object):
       'minimum_version',
       'pypi_name',
       'python2_only',
+      'python3_only',
       'rpm_name',
       'version_property'])
 
