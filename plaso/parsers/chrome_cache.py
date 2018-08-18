@@ -136,7 +136,7 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
       file_header, _ = self._ReadStructureFromFileObject(
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile(
+      raise errors.ParseError(
           'Unable to parse index file header with error: {0!s}'.format(
               exception))
 
@@ -156,6 +156,9 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
 
     Args:
       file_object (dfvfs.FileIO): a file-like object to parse.
+
+    Raises:
+      ParseError: if the index table cannot be read.
     """
     cache_address_map = self._GetDataTypeMap('uint32le')
     file_offset = file_object.get_offset()
@@ -193,7 +196,7 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
     try:
       self._ParseFileHeader(file_object)
     except errors.ParseError as exception:
-      raise errors.UnableToParseFile(
+      raise errors.ParseError(
           'Unable to parse index file header with error: {0!s}'.format(
               exception))
     # Skip over the LRU data, which is 112 bytes in size.
@@ -224,7 +227,7 @@ class ChromeCacheDataBlockFileParser(dtfabric_parser.DtFabricBaseParser):
       file_header, _ = self._ReadStructureFromFileObject(
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile(
+      raise errors.ParseError(
           'Unable to parse data block file header with error: {0!s}'.format(
               exception))
 
