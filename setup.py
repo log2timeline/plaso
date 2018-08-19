@@ -207,7 +207,7 @@ setup(
         'plaso.parsers.winreg_plugins': ['*.yaml'],
     },
     zip_safe=False,
-    scripts=glob.glob(os.path.join('tools', '*.py')),
+    scripts=glob.glob(os.path.join('tools', '[!_]*.py')),
     data_files=[
         ('share/plaso', glob.glob(
             os.path.join('data', '*'))),
