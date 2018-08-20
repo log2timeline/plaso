@@ -22,6 +22,7 @@ from plaso.containers import artifacts
 from plaso.engine import artifact_filters
 from plaso.engine import knowledge_base as knowledge_base_engine
 from plaso.parsers import winreg as windows_registry_parser
+from plaso.lib import py2to3
 
 from tests import test_lib as shared_test_lib
 
@@ -187,6 +188,10 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
 
     # Location segments should be equivalent to \Windows\test_data\*.evtx.
     path_segments = ['Windows', 'test\\_data', '.*\\.evtx']
+    # Underscores are not escaped in regular expressions in Python 3.3+.
+    # See https://bugs.python.org/issue2650.
+    if py2to3.PY_3:
+      path_segments[1] = 'test_data'
     self.assertEqual(find_specs[0]._location_segments, path_segments)
 
     # Test expansion of globs.
@@ -201,6 +206,10 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     path_segments = [
         'test\\_data', '.*', '.*', '.*', '.*', '.*', '.*', '.*', '.*', '.*',
         '.*']
+    # Underscores are not escaped in regular expressions in Python 3.3+.
+    # See https://bugs.python.org/issue2650.
+    if py2to3.PY_3:
+      path_segments[0] = 'test_data'
     self.assertEqual(find_specs[9]._location_segments, path_segments)
 
     # Test expansion of user home directories
