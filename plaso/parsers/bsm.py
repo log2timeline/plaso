@@ -1,13 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Basic Security Module Parser."""
+"""Basic Security Module (BSM) event auditing file parser."""
 
 from __future__ import unicode_literals
-
-import binascii
-import os
-import socket
-
-import construct
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -15,47 +9,18 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.parsers import interface
-from plaso.parsers import logger
+from plaso.parsers import dtfabric_parser
 from plaso.parsers import manager
 from plaso.unix import bsmtoken
 
 
-# Note that we're using Array and a helper function here instead of
-# PascalString because the latter seems to break pickling on Windows.
-
-def _BSMTokenGetLength(context):
-  """Construct context parser helper function to replace lambda."""
-  return context.length
-
-
-# Note that we're using RepeatUntil and a helper function here instead of
-# CString because the latter seems to break pickling on Windows.
-
-def _BSMTokenIsEndOfString(value, unused_context):
-  """Construct context parser helper function to replace lambda."""
-  return value == b'\x00'
-
-
-# Note that we're using Switch and a helper function here instead of
-# IfThenElse because the latter seems to break pickling on Windows.
-
-def _BSMTokenGetNetType(context):
-  """Construct context parser helper function to replace lambda."""
-  return context.net_type
-
-
-def _BSMTokenGetSocketDomain(context):
-  """Construct context parser helper function to replace lambda."""
-  return context.socket_domain
-
-
 class BSMEventData(events.EventData):
-  """BSM event data.
+  """Basic Security Module (BSM) audit event data.
 
   Attributes:
-    event_type (str): text with ID that represents the type of the event.
-    extra_tokens (dict): event extra tokens.
+    event_type (int): identifier that represents the type of the event.
+    extra_tokens (list[dict[str, dict[str, str]]]): event extra tokens, which
+        is a list of dictionaries that contain: {token type: {token values}}
     record_length (int): record length in bytes (trailer number).
     return_value (str): processed return value and exit status.
   """
@@ -71,719 +36,693 @@ class BSMEventData(events.EventData):
     self.return_value = None
 
 
-class BSMParser(interface.FileObjectParser):
+class BSMParser(dtfabric_parser.DtFabricBaseParser):
   """Parser for BSM files."""
 
   NAME = 'bsm_log'
   DESCRIPTION = 'Parser for BSM log files.'
 
-  # BSM supported version (0x0b = 11).
-  AUDIT_HEADER_VERSION = 11
-
-  # Magic Trail Header.
-  BSM_TOKEN_TRAILER_MAGIC = b'b105'
-
-  # IP Version constants.
-  AU_IPv4 = 4
-  AU_IPv6 = 16
-
-  IPV4_STRUCT = construct.UBInt32('ipv4')
-
-  IPV6_STRUCT = construct.Struct(
-      'ipv6',
-      construct.UBInt64('high'),
-      construct.UBInt64('low'))
-
-  # Tested structures.
-  # INFO: I have omitted the ID in the structures declaration.
-  #       I used the BSM_TYPE first to read the ID, and then, the structure.
-  # Tokens always start with an ID value that identifies their token
-  # type and subsequent structure.
-  _BSM_TOKEN = construct.UBInt8('token_id')
-
-  # Data type structures.
-  BSM_TOKEN_DATA_CHAR = construct.String('value', 1)
-  BSM_TOKEN_DATA_SHORT = construct.UBInt16('value')
-  BSM_TOKEN_DATA_INTEGER = construct.UBInt32('value')
-
-  # Common structure used by other structures.
-  # audit_uid: integer, uid that generates the entry.
-  # effective_uid: integer, the permission user used.
-  # effective_gid: integer, the permission group used.
-  # real_uid: integer, user id of the user that execute the process.
-  # real_gid: integer, group id of the group that execute the process.
-  # pid: integer, identification number of the process.
-  # session_id: unknown, need research.
-  BSM_TOKEN_SUBJECT_SHORT = construct.Struct(
-      'subject_data',
-      construct.UBInt32('audit_uid'),
-      construct.UBInt32('effective_uid'),
-      construct.UBInt32('effective_gid'),
-      construct.UBInt32('real_uid'),
-      construct.UBInt32('real_gid'),
-      construct.UBInt32('pid'),
-      construct.UBInt32('session_id'))
-
-  # Common structure used by other structures.
-  # Identify the kind of inet (IPv4 or IPv6)
-  # TODO: instead of 16, AU_IPv6 must be used.
-  BSM_IP_TYPE_SHORT = construct.Struct(
-      'bsm_ip_type_short',
-      construct.UBInt32('net_type'),
-      construct.Switch(
-          'ip_addr',
-          _BSMTokenGetNetType,
-          {16: IPV6_STRUCT},
-          default=IPV4_STRUCT))
-
-  # Initial fields structure used by header structures.
-  # length: integer, the length of the entry, equal to trailer (doc: length).
-  # version: integer, version of BSM (AUDIT_HEADER_VERSION).
-  # event_type: integer, the type of event (/etc/security/audit_event).
-  # modifier: integer, unknown, need research (It is always 0).
-  BSM_HEADER = construct.Struct(
-      'bsm_header',
-      construct.UBInt32('length'),
-      construct.UBInt8('version'),
-      construct.UBInt16('event_type'),
-      construct.UBInt16('modifier'))
-
-  # First token of one entry.
-  # timestamp: unsigned integer, number of seconds since
-  #            January 1, 1970 00:00:00 UTC.
-  # microseconds: unsigned integer, number of micro seconds.
-  BSM_HEADER32 = construct.Struct(
-      'bsm_header32',
-      BSM_HEADER,
-      construct.UBInt32('timestamp'),
-      construct.UBInt32('microseconds'))
-
-  BSM_HEADER64 = construct.Struct(
-      'bsm_header64',
-      BSM_HEADER,
-      construct.UBInt64('timestamp'),
-      construct.UBInt64('microseconds'))
-
-  BSM_HEADER32_EX = construct.Struct(
-      'bsm_header32_ex',
-      BSM_HEADER,
-      BSM_IP_TYPE_SHORT,
-      construct.UBInt32('timestamp'),
-      construct.UBInt32('microseconds'))
-
-  # Token TEXT, provides extra information.
-  BSM_TOKEN_TEXT = construct.Struct(
-      'bsm_token_text',
-      construct.UBInt16('length'),
-      construct.Array(_BSMTokenGetLength, construct.UBInt8('text')))
-
-  # Path of the executable.
-  BSM_TOKEN_PATH = BSM_TOKEN_TEXT
-
-  # Identified the end of the record (follow by TRAILER).
-  # status: integer that identifies the status of the exit (BSM_ERRORS).
-  # return: returned value from the operation.
-  BSM_TOKEN_RETURN32 = construct.Struct(
-      'bsm_token_return32',
-      construct.UBInt8('status'),
-      construct.UBInt32('return_value'))
-
-  BSM_TOKEN_RETURN64 = construct.Struct(
-      'bsm_token_return64',
-      construct.UBInt8('status'),
-      construct.UBInt64('return_value'))
-
-  # Identified the number of bytes that was written.
-  # magic: 2 bytes that identifies the TRAILER (BSM_TOKEN_TRAILER_MAGIC).
-  # length: integer that has the number of bytes from the entry size.
-  BSM_TOKEN_TRAILER = construct.Struct(
-      'bsm_token_trailer',
-      construct.UBInt16('magic'),
-      construct.UBInt32('record_length'))
-
-  # A 32-bits argument.
-  # num_arg: the number of the argument.
-  # name_arg: the argument's name.
-  # text: the string value of the argument.
-  BSM_TOKEN_ARGUMENT32 = construct.Struct(
-      'bsm_token_argument32',
-      construct.UBInt8('num_arg'),
-      construct.UBInt32('name_arg'),
-      construct.UBInt16('length'),
-      construct.Array(_BSMTokenGetLength, construct.UBInt8('text')))
-
-  # A 64-bits argument.
-  # num_arg: integer, the number of the argument.
-  # name_arg: text, the argument's name.
-  # text: the string value of the argument.
-  BSM_TOKEN_ARGUMENT64 = construct.Struct(
-      'bsm_token_argument64',
-      construct.UBInt8('num_arg'),
-      construct.UBInt64('name_arg'),
-      construct.UBInt16('length'),
-      construct.Array(_BSMTokenGetLength, construct.UBInt8('text')))
-
-  # Identify an user.
-  # terminal_id: unknown, research needed.
-  # terminal_addr: unknown, research needed.
-  BSM_TOKEN_SUBJECT32 = construct.Struct(
-      'bsm_token_subject32',
-      BSM_TOKEN_SUBJECT_SHORT,
-      construct.UBInt32('terminal_port'),
-      IPV4_STRUCT)
-
-  # Identify an user using a extended Token.
-  # terminal_port: unknown, need research.
-  # net_type: unknown, need research.
-  BSM_TOKEN_SUBJECT32_EX = construct.Struct(
-      'bsm_token_subject32_ex',
-      BSM_TOKEN_SUBJECT_SHORT,
-      construct.UBInt32('terminal_port'),
-      BSM_IP_TYPE_SHORT)
-
-  # au_to_opaque // AUT_OPAQUE
-  BSM_TOKEN_OPAQUE = BSM_TOKEN_TEXT
-
-  # au_to_seq // AUT_SEQ
-  BSM_TOKEN_SEQUENCE = BSM_TOKEN_DATA_INTEGER
-
-  # Program execution with options.
-  # For each argument we are going to have a string+ "\x00".
-  # Example: [00 00 00 02][41 42 43 00 42 42 00]
-  #          2 Arguments, Arg1: [414243] Arg2: [4242].
-  BSM_TOKEN_EXEC_ARGUMENTS = construct.UBInt32('number_arguments')
-
-  BSM_TOKEN_EXEC_ARGUMENT = construct.Struct(
-      'bsm_token_exec_argument',
-      construct.RepeatUntil(
-          _BSMTokenIsEndOfString, construct.StaticField("text", 1)))
-
-  # au_to_in_addr // AUT_IN_ADDR:
-  BSM_TOKEN_ADDR = IPV4_STRUCT
-
-  # au_to_in_addr_ext // AUT_IN_ADDR_EX:
-  BSM_TOKEN_ADDR_EXT = construct.Struct(
-      'bsm_token_addr_ext',
-      construct.UBInt32('net_type'),
-      IPV6_STRUCT)
-
-  # au_to_ip // AUT_IP:
-  # TODO: parse this header in the correct way.
-  BSM_TOKEN_IP = construct.String('binary_ipv4_add', 20)
-
-  # au_to_ipc // AUT_IPC:
-  BSM_TOKEN_IPC = construct.Struct(
-      'bsm_token_ipc',
-      construct.UBInt8('object_type'),
-      construct.UBInt32('object_id'))
-
-  # au_to_ipc_perm // au_to_ipc_perm
-  BSM_TOKEN_IPC_PERM = construct.Struct(
-      'bsm_token_ipc_perm',
-      construct.UBInt32('user_id'),
-      construct.UBInt32('group_id'),
-      construct.UBInt32('creator_user_id'),
-      construct.UBInt32('creator_group_id'),
-      construct.UBInt32('access_mode'),
-      construct.UBInt32('slot_seq'),
-      construct.UBInt32('key'))
-
-  # au_to_iport // AUT_IPORT:
-  BSM_TOKEN_PORT = construct.UBInt16('port_number')
-
-  # au_to_file // AUT_OTHER_FILE32:
-  BSM_TOKEN_FILE = construct.Struct(
-      'bsm_token_file',
-      construct.UBInt32('timestamp'),
-      construct.UBInt32('microseconds'),
-      construct.UBInt16('length'),
-      construct.Array(_BSMTokenGetLength, construct.UBInt8('text')))
-
-  # au_to_subject64 // AUT_SUBJECT64:
-  BSM_TOKEN_SUBJECT64 = construct.Struct(
-      'bsm_token_subject64',
-      BSM_TOKEN_SUBJECT_SHORT,
-      construct.UBInt64('terminal_port'),
-      IPV4_STRUCT)
-
-  # au_to_subject64_ex // AU_IPv4:
-  BSM_TOKEN_SUBJECT64_EX = construct.Struct(
-      'bsm_token_subject64_ex',
-      BSM_TOKEN_SUBJECT_SHORT,
-      construct.UBInt32('terminal_port'),
-      construct.UBInt32('terminal_type'),
-      BSM_IP_TYPE_SHORT)
-
-  # au_to_process32 // AUT_PROCESS32:
-  BSM_TOKEN_PROCESS32 = construct.Struct(
-      'bsm_token_process32',
-      BSM_TOKEN_SUBJECT_SHORT,
-      construct.UBInt32('terminal_port'),
-      IPV4_STRUCT)
-
-  # au_to_process64 // AUT_PROCESS32:
-  BSM_TOKEN_PROCESS64 = construct.Struct(
-      'bsm_token_process64',
-      BSM_TOKEN_SUBJECT_SHORT,
-      construct.UBInt64('terminal_port'),
-      IPV4_STRUCT)
-
-  # au_to_process32_ex // AUT_PROCESS32_EX:
-  BSM_TOKEN_PROCESS32_EX = construct.Struct(
-      'bsm_token_process32_ex',
-      BSM_TOKEN_SUBJECT_SHORT,
-      construct.UBInt32('terminal_port'),
-      BSM_IP_TYPE_SHORT)
-
-  # au_to_process64_ex // AUT_PROCESS64_EX:
-  BSM_TOKEN_PROCESS64_EX = construct.Struct(
-      'bsm_token_process64_ex',
-      BSM_TOKEN_SUBJECT_SHORT,
-      construct.UBInt64('terminal_port'),
-      BSM_IP_TYPE_SHORT)
-
-  # au_to_sock_inet32 // AUT_SOCKINET32:
-  BSM_TOKEN_AUT_SOCKINET32 = construct.Struct(
-      'bsm_token_aut_sockinet32',
-      construct.UBInt16('net_type'),
-      construct.UBInt16('port_number'),
-      IPV4_STRUCT)
-
-  # Info: checked against the source code of XNU, but not against
-  #       real BSM file.
-  BSM_TOKEN_AUT_SOCKINET128 = construct.Struct(
-      'bsm_token_aut_sockinet128',
-      construct.UBInt16('net_type'),
-      construct.UBInt16('port_number'),
-      IPV6_STRUCT)
-
-  INET6_ADDR_TYPE = construct.Struct(
-      'addr_type',
-      construct.UBInt16('ip_type'),
-      construct.UBInt16('source_port'),
-      construct.UBInt64('saddr_high'),
-      construct.UBInt64('saddr_low'),
-      construct.UBInt16('destination_port'),
-      construct.UBInt64('daddr_high'),
-      construct.UBInt64('daddr_low'))
-
-  INET4_ADDR_TYPE = construct.Struct(
-      'addr_type',
-      construct.UBInt16('ip_type'),
-      construct.UBInt16('source_port'),
-      construct.UBInt32('source_address'),
-      construct.UBInt16('destination_port'),
-      construct.UBInt32('destination_address'))
-
-  # au_to_socket_ex // AUT_SOCKET_EX
-  # TODO: Change the 26 for unixbsm.BSM_PROTOCOLS.INET6.
-  BSM_TOKEN_AUT_SOCKINET32_EX = construct.Struct(
-      'bsm_token_aut_sockinet32_ex',
-      construct.UBInt16('socket_domain'),
-      construct.UBInt16('socket_type'),
-      construct.Switch(
-          'structure_addr_port',
-          _BSMTokenGetSocketDomain,
-          {26: INET6_ADDR_TYPE},
-          default=INET4_ADDR_TYPE))
-
-  # au_to_sock_unix // AUT_SOCKUNIX
-  BSM_TOKEN_SOCKET_UNIX = construct.Struct(
-      'bsm_token_au_to_sock_unix',
-      construct.UBInt16('family'),
-      construct.RepeatUntil(
-          _BSMTokenIsEndOfString,
-          construct.StaticField("path", 1)))
-
-  # au_to_data // au_to_data
-  # how to print: bsmtoken.BSM_TOKEN_DATA_PRINT.
-  # type: bsmtoken.BSM_TOKEN_DATA_TYPE.
-  # unit_count: number of type values.
-  # BSM_TOKEN_DATA has a end field = type * unit_count
-  BSM_TOKEN_DATA = construct.Struct(
-      'bsm_token_data',
-      construct.UBInt8('how_to_print'),
-      construct.UBInt8('data_type'),
-      construct.UBInt8('unit_count'))
-
-  # au_to_attr32 // AUT_ATTR32
-  BSM_TOKEN_ATTR32 = construct.Struct(
-      'bsm_token_attr32',
-      construct.UBInt32('file_mode'),
-      construct.UBInt32('uid'),
-      construct.UBInt32('gid'),
-      construct.UBInt32('file_system_id'),
-      construct.UBInt64('file_system_node_id'),
-      construct.UBInt32('device'))
-
-  # au_to_attr64 // AUT_ATTR64
-  BSM_TOKEN_ATTR64 = construct.Struct(
-      'bsm_token_attr64',
-      construct.UBInt32('file_mode'),
-      construct.UBInt32('uid'),
-      construct.UBInt32('gid'),
-      construct.UBInt32('file_system_id'),
-      construct.UBInt64('file_system_node_id'),
-      construct.UBInt64('device'))
-
-  # au_to_exit // AUT_EXIT
-  BSM_TOKEN_EXIT = construct.Struct(
-      'bsm_token_exit',
-      construct.UBInt32('status'),
-      construct.UBInt32('return_value'))
-
-  # au_to_newgroups // AUT_NEWGROUPS
-  # INFO: we must read BSM_TOKEN_DATA_INTEGER for each group.
-  BSM_TOKEN_GROUPS = construct.UBInt16('group_number')
-
-  # au_to_exec_env == au_to_exec_args
-  BSM_TOKEN_EXEC_ENV = BSM_TOKEN_EXEC_ARGUMENTS
-
-  # au_to_zonename //AUT_ZONENAME
-  BSM_TOKEN_ZONENAME = BSM_TOKEN_TEXT
-
-  # Token ID.
-  # List of valid Token_ID.
-  # Token_ID -> (NAME_STRUCTURE, STRUCTURE)
-  # Only the checked structures are been added to the valid structures lists.
-  _BSM_TOKEN_TYPES = {
-      17: ('BSM_TOKEN_FILE', BSM_TOKEN_FILE),
-      19: ('BSM_TOKEN_TRAILER', BSM_TOKEN_TRAILER),
-      20: ('BSM_HEADER32', BSM_HEADER32),
-      21: ('BSM_HEADER64', BSM_HEADER64),
-      33: ('BSM_TOKEN_DATA', BSM_TOKEN_DATA),
-      34: ('BSM_TOKEN_IPC', BSM_TOKEN_IPC),
-      35: ('BSM_TOKEN_PATH', BSM_TOKEN_PATH),
-      36: ('BSM_TOKEN_SUBJECT32', BSM_TOKEN_SUBJECT32),
-      38: ('BSM_TOKEN_PROCESS32', BSM_TOKEN_PROCESS32),
-      39: ('BSM_TOKEN_RETURN32', BSM_TOKEN_RETURN32),
-      40: ('BSM_TOKEN_TEXT', BSM_TOKEN_TEXT),
-      41: ('BSM_TOKEN_OPAQUE', BSM_TOKEN_OPAQUE),
-      42: ('BSM_TOKEN_ADDR', BSM_TOKEN_ADDR),
-      43: ('BSM_TOKEN_IP', BSM_TOKEN_IP),
-      44: ('BSM_TOKEN_PORT', BSM_TOKEN_PORT),
-      45: ('BSM_TOKEN_ARGUMENT32', BSM_TOKEN_ARGUMENT32),
-      47: ('BSM_TOKEN_SEQUENCE', BSM_TOKEN_SEQUENCE),
-      96: ('BSM_TOKEN_ZONENAME', BSM_TOKEN_ZONENAME),
-      113: ('BSM_TOKEN_ARGUMENT64', BSM_TOKEN_ARGUMENT64),
-      114: ('BSM_TOKEN_RETURN64', BSM_TOKEN_RETURN64),
-      116: ('BSM_HEADER32_EX', BSM_HEADER32_EX),
-      119: ('BSM_TOKEN_PROCESS64', BSM_TOKEN_PROCESS64),
-      122: ('BSM_TOKEN_SUBJECT32_EX', BSM_TOKEN_SUBJECT32_EX),
-      127: ('BSM_TOKEN_AUT_SOCKINET32_EX', BSM_TOKEN_AUT_SOCKINET32_EX),
-      128: ('BSM_TOKEN_AUT_SOCKINET32', BSM_TOKEN_AUT_SOCKINET32)}
-
-  # Untested structures.
-  # When not tested structure is found, we try to parse using also
-  # these structures.
-  BSM_TYPE_LIST_NOT_TESTED = {
-      49: ('BSM_TOKEN_ATTR', BSM_TOKEN_ATTR32),
-      50: ('BSM_TOKEN_IPC_PERM', BSM_TOKEN_IPC_PERM),
-      52: ('BSM_TOKEN_GROUPS', BSM_TOKEN_GROUPS),
-      59: ('BSM_TOKEN_GROUPS', BSM_TOKEN_GROUPS),
-      60: ('BSM_TOKEN_EXEC_ARGUMENTS', BSM_TOKEN_EXEC_ARGUMENTS),
-      61: ('BSM_TOKEN_EXEC_ENV', BSM_TOKEN_EXEC_ENV),
-      62: ('BSM_TOKEN_ATTR32', BSM_TOKEN_ATTR32),
-      82: ('BSM_TOKEN_EXIT', BSM_TOKEN_EXIT),
-      115: ('BSM_TOKEN_ATTR64', BSM_TOKEN_ATTR64),
-      117: ('BSM_TOKEN_SUBJECT64', BSM_TOKEN_SUBJECT64),
-      123: ('BSM_TOKEN_PROCESS32_EX', BSM_TOKEN_PROCESS32_EX),
-      124: ('BSM_TOKEN_PROCESS64_EX', BSM_TOKEN_PROCESS64_EX),
-      125: ('BSM_TOKEN_SUBJECT64_EX', BSM_TOKEN_SUBJECT64_EX),
-      126: ('BSM_TOKEN_ADDR_EXT', BSM_TOKEN_ADDR_EXT),
-      129: ('BSM_TOKEN_AUT_SOCKINET128', BSM_TOKEN_AUT_SOCKINET128),
-      130: ('BSM_TOKEN_SOCKET_UNIX', BSM_TOKEN_SOCKET_UNIX)}
-
-  MESSAGE_CAN_NOT_SAVE = (
-      'Plaso: some tokens from this entry can not be saved. Entry at 0x{0:X} '
-      'with unknown token id "0x{1:X}".')
-
-  # BSM token types:
-  # https://github.com/openbsm/openbsm/blob/master/sys/bsm/audit_record.h
-  _BSM_TOKEN_TYPE_ARGUMENT32 = 45
-  _BSM_TOKEN_TYPE_ARGUMENT64 = 113
-  _BSM_TOKEN_TYPE_ATTR = 49
-  _BSM_TOKEN_TYPE_ATTR32 = 62
-  _BSM_TOKEN_TYPE_ATTR64 = 115
-  _BSM_TOKEN_TYPE_EXEC_ARGUMENTS = 60
-  _BSM_TOKEN_TYPE_EXEC_ENV = 61
-  _BSM_TOKEN_TYPE_EXIT = 82
-  _BSM_TOKEN_TYPE_HEADER32 = 20
-  _BSM_TOKEN_TYPE_HEADER32_EX = 116
-  _BSM_TOKEN_TYPE_HEADER64 = 21
-  _BSM_TOKEN_TYPE_PATH = 35
-  _BSM_TOKEN_TYPE_PROCESS32 = 38
-  _BSM_TOKEN_TYPE_PROCESS32_EX = 123
-  _BSM_TOKEN_TYPE_PROCESS64 = 119
-  _BSM_TOKEN_TYPE_PROCESS64_EX = 124
-  _BSM_TOKEN_TYPE_RETURN32 = 39
-  _BSM_TOKEN_TYPE_RETURN64 = 114
-  _BSM_TOKEN_TYPE_SUBJECT32 = 36
-  _BSM_TOKEN_TYPE_SUBJECT32_EX = 122
-  _BSM_TOKEN_TYPE_SUBJECT64 = 117
-  _BSM_TOKEN_TYPE_SUBJECT64_EX = 125
-  _BSM_TOKEN_TYPE_TEXT = 40
-  _BSM_TOKEN_TYPE_ZONENAME = 96
-
-  _BSM_ARGUMENT_TOKEN_TYPES = (
-      _BSM_TOKEN_TYPE_ARGUMENT32,
-      _BSM_TOKEN_TYPE_ARGUMENT64)
-
-  _BSM_ATTR_TOKEN_TYPES = (
-      _BSM_TOKEN_TYPE_ATTR,
-      _BSM_TOKEN_TYPE_ATTR32,
-      _BSM_TOKEN_TYPE_ATTR64)
-
-  _BSM_EXEV_TOKEN_TYPES = (
-      _BSM_TOKEN_TYPE_EXEC_ARGUMENTS,
-      _BSM_TOKEN_TYPE_EXEC_ENV)
-
-  _BSM_HEADER_TOKEN_TYPES = (
-      _BSM_TOKEN_TYPE_HEADER32,
-      _BSM_TOKEN_TYPE_HEADER32_EX,
-      _BSM_TOKEN_TYPE_HEADER64)
-
-  _BSM_PROCESS_TOKEN_TYPES = (
-      _BSM_TOKEN_TYPE_PROCESS32,
-      _BSM_TOKEN_TYPE_PROCESS64)
-
-  _BSM_PROCESS_EX_TOKEN_TYPES = (
-      _BSM_TOKEN_TYPE_PROCESS32_EX,
-      _BSM_TOKEN_TYPE_PROCESS64_EX)
-
-  _BSM_RETURN_TOKEN_TYPES = (
-      _BSM_TOKEN_TYPE_EXIT,
-      _BSM_TOKEN_TYPE_RETURN32,
-      _BSM_TOKEN_TYPE_RETURN64)
-
-  _BSM_SUBJECT_TOKEN_TYPES = (
-      _BSM_TOKEN_TYPE_SUBJECT32,
-      _BSM_TOKEN_TYPE_SUBJECT64)
-
-  _BSM_SUBJECT_EX_TOKEN_TYPES = (
-      _BSM_TOKEN_TYPE_SUBJECT32_EX,
-      _BSM_TOKEN_TYPE_SUBJECT64_EX)
-
-  _BSM_UTF8_BYTE_ARRAY_TOKEN_TYPES = (
-      _BSM_TOKEN_TYPE_PATH,
-      _BSM_TOKEN_TYPE_TEXT,
-      _BSM_TOKEN_TYPE_ZONENAME)
-
-  def __init__(self):
-    """Initializes a parser object."""
-    super(BSMParser, self).__init__()
-    # Create the dictionary with all token IDs: tested and untested.
-    self._bsm_type_list_all = self._BSM_TOKEN_TYPES.copy()
-    self._bsm_type_list_all.update(self.BSM_TYPE_LIST_NOT_TESTED)
-
-  def _CopyByteArrayToBase16String(self, byte_array):
-    """Copies a byte array into a base-16 encoded Unicode string.
+  _DEFINITION_FILE = 'bsm.yaml'
+
+  _TOKEN_TYPE_AUT_TRAILER = 0x13
+  _TOKEN_TYPE_AUT_HEADER32 = 0x14
+  _TOKEN_TYPE_AUT_HEADER32_EX = 0x15
+  _TOKEN_TYPE_AUT_RETURN32 = 0x27
+  _TOKEN_TYPE_AUT_RETURN64 = 0x72
+  _TOKEN_TYPE_AUT_HEADER64 = 0x74
+  _TOKEN_TYPE_AUT_HEADER64_EX = 0x79
+
+  _HEADER_TOKEN_TYPES = frozenset([
+      _TOKEN_TYPE_AUT_HEADER32,
+      _TOKEN_TYPE_AUT_HEADER32_EX,
+      _TOKEN_TYPE_AUT_HEADER64,
+      _TOKEN_TYPE_AUT_HEADER64_EX])
+
+  _TOKEN_TYPES = {
+      0x00: 'AUT_INVALID',
+      0x11: 'AUT_OTHER_FILE32',
+      0x12: 'AUT_OHEADER',
+      0x13: 'AUT_TRAILER',
+      0x14: 'AUT_HEADER32',
+      0x15: 'AUT_HEADER32_EX',
+      0x21: 'AUT_DATA',
+      0x22: 'AUT_IPC',
+      0x23: 'AUT_PATH',
+      0x24: 'AUT_SUBJECT32',
+      0x25: 'AUT_XATPATH',
+      0x26: 'AUT_PROCESS32',
+      0x27: 'AUT_RETURN32',
+      0x28: 'AUT_TEXT',
+      0x29: 'AUT_OPAQUE',
+      0x2a: 'AUT_IN_ADDR',
+      0x2b: 'AUT_IP',
+      0x2c: 'AUT_IPORT',
+      0x2d: 'AUT_ARG32',
+      0x2e: 'AUT_SOCKET',
+      0x2f: 'AUT_SEQ',
+      0x30: 'AUT_ACL',
+      0x31: 'AUT_ATTR',
+      0x32: 'AUT_IPC_PERM',
+      0x33: 'AUT_LABEL',
+      0x34: 'AUT_GROUPS',
+      0x35: 'AUT_ACE',
+      0x36: 'AUT_SLABEL',
+      0x37: 'AUT_CLEAR',
+      0x38: 'AUT_PRIV',
+      0x39: 'AUT_UPRIV',
+      0x3a: 'AUT_LIAISON',
+      0x3b: 'AUT_NEWGROUPS',
+      0x3c: 'AUT_EXEC_ARGS',
+      0x3d: 'AUT_EXEC_ENV',
+      0x3e: 'AUT_ATTR32',
+      0x3f: 'AUT_UNAUTH',
+      0x40: 'AUT_XATOM',
+      0x41: 'AUT_XOBJ',
+      0x42: 'AUT_XPROTO',
+      0x43: 'AUT_XSELECT',
+      0x44: 'AUT_XCOLORMAP',
+      0x45: 'AUT_XCURSOR',
+      0x46: 'AUT_XFONT',
+      0x47: 'AUT_XGC',
+      0x48: 'AUT_XPIXMAP',
+      0x49: 'AUT_XPROPERTY',
+      0x4a: 'AUT_XWINDOW',
+      0x4b: 'AUT_XCLIENT',
+      0x51: 'AUT_CMD',
+      0x52: 'AUT_EXIT',
+      0x60: 'AUT_ZONENAME',
+      0x70: 'AUT_HOST',
+      0x71: 'AUT_ARG64',
+      0x72: 'AUT_RETURN64',
+      0x73: 'AUT_ATTR64',
+      0x74: 'AUT_HEADER64',
+      0x75: 'AUT_SUBJECT64',
+      0x76: 'AUT_SERVER64',
+      0x77: 'AUT_PROCESS64',
+      0x78: 'AUT_OTHER_FILE64',
+      0x79: 'AUT_HEADER64_EX',
+      0x7a: 'AUT_SUBJECT32_EX',
+      0x7b: 'AUT_PROCESS32_EX',
+      0x7c: 'AUT_SUBJECT64_EX',
+      0x7d: 'AUT_PROCESS64_EX',
+      0x7e: 'AUT_IN_ADDR_EX',
+      0x7f: 'AUT_SOCKET_EX',
+      0x80: 'AUT_SOCKINET32',
+      0x81: 'AUT_SOCKINET128',
+      0x82: 'AUT_SOCKUNIX'}
+
+  _DATA_TYPE_MAP_PER_TOKEN_TYPE = {
+      0x11: 'bsm_token_data_other_file32',
+      0x13: 'bsm_token_data_trailer',
+      0x14: 'bsm_token_data_header32',
+      0x15: 'bsm_token_data_header32_ex',
+      0x21: 'bsm_token_data_data',
+      0x22: 'bsm_token_data_ipc',
+      0x23: 'bsm_token_data_path',
+      0x24: 'bsm_token_data_subject32',
+      0x26: 'bsm_token_data_subject32',
+      0x27: 'bsm_token_data_return32',
+      0x28: 'bsm_token_data_text',
+      0x29: 'bsm_token_data_opaque',
+      0x2a: 'bsm_token_data_in_addr',
+      0x2b: 'bsm_token_data_ip',
+      0x2c: 'bsm_token_data_iport',
+      0x2d: 'bsm_token_data_arg32',
+      0x2f: 'bsm_token_data_seq',
+      0x32: 'bsm_token_data_ipc_perm',
+      0x34: 'bsm_token_data_groups',
+      0x3b: 'bsm_token_data_groups',
+      0x3c: 'bsm_token_data_exec_args',
+      0x3d: 'bsm_token_data_exec_args',
+      0x3e: 'bsm_token_data_attr32',
+      0x52: 'bsm_token_data_exit',
+      0x60: 'bsm_token_data_zonename',
+      0x71: 'bsm_token_data_arg64',
+      0x72: 'bsm_token_data_return64',
+      0x73: 'bsm_token_data_attr64',
+      0x74: 'bsm_token_data_header64',
+      0x75: 'bsm_token_data_subject64',
+      0x77: 'bsm_token_data_subject64',
+      0x79: 'bsm_token_data_header64_ex',
+      0x7a: 'bsm_token_data_subject32_ex',
+      0x7b: 'bsm_token_data_subject32_ex',
+      0x7c: 'bsm_token_data_subject64_ex',
+      0x7d: 'bsm_token_data_subject64_ex',
+      0x7e: 'bsm_token_data_in_addr_ex',
+      0x7f: 'bsm_token_data_socket_ex',
+      0x80: 'bsm_token_data_sockinet32',
+      0x81: 'bsm_token_data_sockinet64',
+      0x82: 'bsm_token_data_sockunix',
+  }
+
+  _TRAILER_TOKEN_SIGNATURE = 0xb105
+
+  _TOKEN_DATA_FORMAT_FUNCTIONS = {
+      0x11: '_FormatOtherFileToken',
+      0x21: '_FormatDataToken',
+      0x22: '_FormatIPCToken',
+      0x23: '_FormatPathToken',
+      0x24: '_FormatSubjectOrProcessToken',
+      0x26: '_FormatSubjectOrProcessToken',
+      0x27: '_FormatReturnOrExitToken',
+      0x28: '_FormatTextToken',
+      0x29: '_FormatOpaqueToken',
+      0x2a: '_FormatInAddrToken',
+      0x2b: '_FormatIPToken',
+      0x2c: '_FormatIPortToken',
+      0x2d: '_FormatArgToken',
+      0x2f: '_FormatSeqToken',
+      0x32: '_FormatIPCPermToken',
+      0x34: '_FormatGroupsToken',
+      0x3b: '_FormatGroupsToken',
+      0x3c: '_FormatExecArgsToken',
+      0x3d: '_FormatExecArgsToken',
+      0x3e: '_FormatAttrToken',
+      0x52: '_FormatReturnOrExitToken',
+      0x60: '_FormatZonenameToken',
+      0x71: '_FormatArgToken',
+      0x72: '_FormatReturnOrExitToken',
+      0x73: '_FormatAttrToken',
+      0x75: '_FormatSubjectOrProcessToken',
+      0x77: '_FormatSubjectOrProcessToken',
+      0x7a: '_FormatSubjectExOrProcessExToken',
+      0x7b: '_FormatSubjectExOrProcessExToken',
+      0x7c: '_FormatSubjectExOrProcessExToken',
+      0x7d: '_FormatSubjectExOrProcessExToken',
+      0x7e: '_FormatInAddrExToken',
+      0x7f: '_FormatSocketExToken',
+      0x80: '_FormatSocketInet32Token',
+      0x81: '_FormatSocketInet128Token',
+      0x82: '_FormatSocketUnixToken'}
+
+  def _FormatArgToken(self, token_data):
+    """Formats an argument token as a dictionary of values.
 
     Args:
-      byte_array (bytes): A byte array.
+      token_data (bsm_token_data_arg32|bsm_token_data_arg64): AUT_ARG32 or
+          AUT_ARG64 token data.
 
     Returns:
-      str: a base-16 encoded Unicode string.
+      dict[str, str]: token values.
     """
-    return ''.join(['{0:02x}'.format(byte) for byte in byte_array])
+    return {
+        'string': token_data.argument_value.rstrip('\x00'),
+        'num_arg': token_data.argument_index,
+        'is': token_data.argument_name}
 
-  def _CopyUtf8ByteArrayToString(self, byte_array):
-    """Copies a UTF-8 encoded byte array into a Unicode string.
+  def _FormatAttrToken(self, token_data):
+    """Formats an attribute token as a dictionary of values.
 
     Args:
-      byte_array (bytes): A byte array containing an UTF-8 encoded string.
+      token_data (bsm_token_data_attr32|bsm_token_data_attr64): AUT_ATTR32 or
+          AUT_ATTR64 token data.
 
     Returns:
-      str: A Unicode string.
+      dict[str, str]: token values.
     """
-    byte_stream = b''.join(map(chr, byte_array))
+    return {
+        'mode': token_data.file_mode,
+        'uid': token_data.user_identifier,
+        'gid': token_data.group_identifier,
+        'system_id': token_data.file_system_identifier,
+        'node_id': token_data.file_identifier,
+        'device': token_data.device}
 
-    try:
-      string = byte_stream.decode('utf-8')
-    except UnicodeDecodeError:
-      logger.warning('Unable to decode UTF-8 formatted byte array.')
-      string = byte_stream.decode('utf-8', errors='ignore')
-
-    string, _, _ = string.partition(b'\x00')
-    return string
-
-  def _IPv4Format(self, address):
-    """Formats an IPv4 address as a human readable string.
+  def _FormatDataToken(self, token_data):
+    """Formats a data token as a dictionary of values.
 
     Args:
-      address (int): IPv4 address.
+      token_data (bsm_token_data_data): AUT_DATA token data.
 
     Returns:
-      str: human readable string of IPv4 address in 4 octet representation:
-          "1.2.3.4".
+      dict[str, str]: token values.
     """
-    ipv4_string = self.IPV4_STRUCT.build(address)
-    return socket.inet_ntoa(ipv4_string)
+    format_string = bsmtoken.BSM_TOKEN_DATA_PRINT.get(
+        token_data.data_format, 'UNKNOWN')
 
-  def _IPv6Format(self, high, low):
-    """Formats an IPv6 address as a human readable string.
+    if token_data.data_format == 4:
+      data = bytes(bytearray(token_data.data)).split(b'\x00')[0]
+      data = data.decode('utf-8')
+    else:
+      data = ''.join(['{0:02x}'.format(byte) for byte in token_data.data])
+    return {
+        'format': format_string,
+        'data': data}
+
+  def _FormatInAddrExToken(self, token_data):
+    """Formats an extended IPv4 address token as a dictionary of values.
 
     Args:
-      high (int): upper 64-bit part of the IPv6 address.
-      low (int): lower 64-bit part of the IPv6 address.
+      token_data (bsm_token_data_in_addr_ex): AUT_IN_ADDR_EX token data.
 
     Returns:
-      str: human readable string of IPv6 address.
+      dict[str, str]: token values.
     """
-    ipv6_string = self.IPV6_STRUCT.build(
-        construct.Container(high=high, low=low))
-    # socket.inet_ntop not supported in Windows.
-    if hasattr(socket, 'inet_ntop'):
-      return socket.inet_ntop(socket.AF_INET6, ipv6_string)
+    protocol = bsmtoken.BSM_PROTOCOLS.get(token_data.net_type, 'UNKNOWN')
+    if token_data.net_type == 4:
+      ip_address = self._FormatPackedIPv6Address(token_data.ip_address[:4])
+    elif token_data.net_type == 16:
+      ip_address = self._FormatPackedIPv6Address(token_data.ip_address)
+    return {
+        'protocols': protocol,
+        'net_type': token_data.net_type,
+        'address': ip_address}
 
-    # TODO: this approach returns double "::", illegal IPv6 addr.
-    str_address = binascii.hexlify(ipv6_string)
-    address = []
-    blank = False
-    for pos in range(0, len(str_address), 4):
-      if str_address[pos:pos + 4] == '0000':
-        if not blank:
-          address.append('')
-          blank = True
-      else:
-        blank = False
-        address.append(str_address[pos:pos + 4].lstrip('0'))
-    return ':'.join(address)
+  def _FormatInAddrToken(self, token_data):
+    """Formats an IPv4 address token as a dictionary of values.
 
-  def _ParseBSMEvent(self, parser_mediator, file_object):
-    """Parses a BSM entry (BSMEvent) from the file-like object.
+    Args:
+      token_data (bsm_token_data_in_addr): AUT_IN_ADDR token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    ip_address = self._FormatPackedIPv4Address(token_data.ip_address)
+    return {'ip': ip_address}
+
+  def _FormatIPCPermToken(self, token_data):
+    """Formats an IPC permissions token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_ipc_perm): AUT_IPC_PERM token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {
+        'user_id': token_data.user_identifier,
+        'group_id': token_data.group_identifier,
+        'creator_user_id': token_data.creator_user_identifier,
+        'creator_group_id': token_data.creator_group_identifier,
+        'access': token_data.access_mode}
+
+  def _FormatIPCToken(self, token_data):
+    """Formats an IPC token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_ipc): AUT_IPC token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {
+        'object_type': token_data.object_type,
+        'object_id': token_data.object_identifier}
+
+  def _FormatGroupsToken(self, token_data):
+    """Formats a groups token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_groups): AUT_GROUPS or AUT_NEWGROUPS token
+          data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {
+        'number_of_groups': token_data.number_of_groups,
+        'groups': ', '.join(token_data.groups)}
+
+  def _FormatExecArgsToken(self, token_data):
+    """Formats an execution arguments token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_exec_args): AUT_EXEC_ARGS or AUT_EXEC_ENV
+          token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {
+        'number_of_strings': token_data.number_of_strings,
+        'strings': ', '.join(token_data.strings)}
+
+  def _FormatIPortToken(self, token_data):
+    """Formats an IP port token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_iport): AUT_IPORT token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {'port_number': token_data.port_number}
+
+  def _FormatIPToken(self, token_data):
+    """Formats an IPv4 packet header token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_ip): AUT_IP token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    data = ''.join(['{0:02x}'.format(byte) for byte in token_data.data])
+    return {'IPv4_Header': data}
+
+  def _FormatOpaqueToken(self, token_data):
+    """Formats an opaque token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_opaque): AUT_OPAQUE token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    data = ''.join(['{0:02x}'.format(byte) for byte in token_data.data])
+    return {'data': data}
+
+  def _FormatOtherFileToken(self, token_data):
+    """Formats an other file token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_other_file32): AUT_OTHER_FILE32 token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    # TODO: if this timestamp is useful, it must be extracted as a separate
+    # event object.
+    timestamp = token_data.microseconds + (
+        token_data.timestamp * definitions.MICROSECONDS_PER_SECOND)
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=timestamp)
+    date_time_string = date_time.CopyToDateTimeString()
+
+    return {
+        'string': token_data.name.rstrip('\x00'),
+        'timestamp': date_time_string}
+
+  def _FormatPathToken(self, token_data):
+    """Formats a path token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_path): AUT_PATH token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {'path': token_data.path.rstrip('\x00')}
+
+  def _FormatReturnOrExitToken(self, token_data):
+    """Formats a return or exit token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_exit|bsm_token_data_return32|
+                  bsm_token_data_return64): AUT_EXIT, AUT_RETURN32 or
+          AUT_RETURN64 token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    error_string = bsmtoken.BSM_ERRORS.get(token_data.status, 'UNKNOWN')
+    return {
+        'error': error_string,
+        'token_status': token_data.status,
+        'call_status': token_data.return_value}
+
+  def _FormatSeqToken(self, token_data):
+    """Formats a sequence token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_seq): AUT_SEQ token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {'sequence_number': token_data.sequence_number}
+
+  def _FormatSocketExToken(self, token_data):
+    """Formats an extended socket token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_socket_ex): AUT_SOCKET_EX token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    if token_data.socket_domain == 10:
+      local_ip_address = self._FormatPackedIPv6Address(
+          token_data.local_ip_address)
+      remote_ip_address = self._FormatPackedIPv6Address(
+          token_data.remote_ip_address)
+    else:
+      local_ip_address = self._FormatPackedIPv4Address(
+          token_data.local_ip_address)
+      remote_ip_address = self._FormatPackedIPv4Address(
+          token_data.remote_ip_address)
+
+    return {
+        'from': local_ip_address,
+        'from_port': token_data.local_port,
+        'to': remote_ip_address,
+        'to_port': token_data.remote_port}
+
+  def _FormatSocketInet32Token(self, token_data):
+    """Formats an Internet socket token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_sockinet32): AUT_SOCKINET32 token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    protocol = bsmtoken.BSM_PROTOCOLS.get(token_data.socket_family, 'UNKNOWN')
+    ip_address = self._FormatPackedIPv4Address(token_data.ip_addresss)
+    return {
+        'protocols': protocol,
+        'family': token_data.socket_family,
+        'port': token_data.port_number,
+        'address': ip_address}
+
+  def _FormatSocketInet128Token(self, token_data):
+    """Formats an Internet socket token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_sockinet64): AUT_SOCKINET128 token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    protocol = bsmtoken.BSM_PROTOCOLS.get(token_data.socket_family, 'UNKNOWN')
+    ip_address = self._FormatPackedIPv6Address(token_data.ip_addresss)
+    return {
+        'protocols': protocol,
+        'family': token_data.socket_family,
+        'port': token_data.port_number,
+        'address': ip_address}
+
+  def _FormatSocketUnixToken(self, token_data):
+    """Formats an Unix socket token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_sockunix): AUT_SOCKUNIX token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    protocol = bsmtoken.BSM_PROTOCOLS.get(token_data.socket_family, 'UNKNOWN')
+    return {
+        'protocols': protocol,
+        'family': token_data.socket_family,
+        'path': token_data.socket_path}
+
+  def _FormatSubjectOrProcessToken(self, token_data):
+    """Formats a subject or process token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_subject32|bsm_token_data_subject64):
+          AUT_SUBJECT32, AUT_PROCESS32, AUT_SUBJECT64 or AUT_PROCESS64 token
+          data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    ip_address = self._FormatPackedIPv4Address(token_data.ip_address)
+    return {
+        'aid': token_data.audit_user_identifier,
+        'euid': token_data.effective_user_identifier,
+        'egid': token_data.effective_group_identifier,
+        'uid': token_data.real_user_identifier,
+        'gid': token_data.real_group_identifier,
+        'pid': token_data.process_identifier,
+        'session_id': token_data.session_identifier,
+        'terminal_port': token_data.terminal_port,
+        'terminal_ip': ip_address}
+
+  def _FormatSubjectExOrProcessExToken(self, token_data):
+    """Formats a subject or process token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_subject32_ex|bsm_token_data_subject64_ex):
+          AUT_SUBJECT32_EX, AUT_PROCESS32_EX, AUT_SUBJECT64_EX or
+          AUT_PROCESS64_EX token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    if token_data.net_type == 4:
+      ip_address = self._FormatPackedIPv4Address(token_data.ip_address)
+    elif token_data.net_type == 16:
+      ip_address = self._FormatPackedIPv6Address(token_data.ip_address)
+    else:
+      ip_address = 'unknown'
+
+    return {
+        'aid': token_data.audit_user_identifier,
+        'euid': token_data.effective_user_identifier,
+        'egid': token_data.effective_group_identifier,
+        'uid': token_data.real_user_identifier,
+        'gid': token_data.real_group_identifier,
+        'pid': token_data.process_identifier,
+        'session_id': token_data.session_identifier,
+        'terminal_port': token_data.terminal_port,
+        'terminal_ip': ip_address}
+
+  def _FormatTextToken(self, token_data):
+    """Formats a text token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_text): AUT_TEXT token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {'text': token_data.text.rstrip('\x00')}
+
+  def _FormatTokenData(self, token_type, token_data):
+    """Formats the token data as a dictionary of values.
+
+    Args:
+      token_type (int): token type.
+      token_data (object): token data.
+
+    Returns:
+      dict[str, str]: formatted token values or an emtpy dictionary if no
+          formatted token values could be determined.
+    """
+    token_data_format_function = self._TOKEN_DATA_FORMAT_FUNCTIONS.get(
+        token_type)
+    if token_data_format_function:
+      token_data_format_function = getattr(
+          self, token_data_format_function, None)
+
+    if not token_data_format_function:
+      return {}
+
+    return token_data_format_function(token_data)
+
+  def _FormatZonenameToken(self, token_data):
+    """Formats a time zone name token as a dictionary of values.
+
+    Args:
+      token_data (bsm_token_data_zonename): AUT_ZONENAME token data.
+
+    Returns:
+      dict[str, str]: token values.
+    """
+    return {'name': token_data.name.rstrip('\x00')}
+
+  def _ParseRecord(self, parser_mediator, file_object):
+    """Parses an event record.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): a file-like object.
+      file_object (dfvfs.FileIO): file-like object.
 
-    Returns:
-      bool: True if the BSM entry was parsed.
+    Raises:
+      ParseError: if the event record cannot be read.
     """
-    record_start_offset = file_object.tell()
+    header_record_offset = file_object.tell()
+    token_type, token_data = self._ParseToken(file_object, header_record_offset)
 
-    try:
-      token_type = self._BSM_TOKEN.parse_stream(file_object)
-    except (IOError, construct.FieldError) as exception:
-      parser_mediator.ProduceExtractionError((
-          'unable to parse BSM token type at offset: 0x{0:08x} with error: '
-          '{1!s}.').format(record_start_offset, exception))
-      return False
+    if token_type not in self._HEADER_TOKEN_TYPES:
+      raise errors.ParseError(
+          'Unsupported header token type: 0x{0:02x}'.format(token_type))
 
-    if token_type not in self._BSM_HEADER_TOKEN_TYPES:
-      parser_mediator.ProduceExtractionError(
-          'unsupported token type: {0:d} at offset: 0x{1:08x}.'.format(
-              token_type, record_start_offset))
-      # TODO: if it is a MacOS, search for the trailer magic value
-      #       as a end of the entry can be a possibility to continue.
-      return False
+    if token_data.format_version != 11:
+      raise errors.ParseError('Unsupported format version type: {0:d}'.format(
+          token_data.format_version))
 
-    _, record_structure = self._BSM_TOKEN_TYPES.get(token_type, ('', None))
+    timestamp = token_data.microseconds + (
+        token_data.timestamp * definitions.MICROSECONDS_PER_SECOND)
 
-    try:
-      token = record_structure.parse_stream(file_object)
-    except (IOError, construct.FieldError) as exception:
-      parser_mediator.ProduceExtractionError((
-          'unable to parse BSM record at offset: 0x{0:08x} with error: '
-          '{1!s}.').format(record_start_offset, exception))
-      return False
+    event_type = token_data.event_type
+    header_record_size = token_data.record_size
+    record_end_offset = header_record_offset + header_record_size
 
-    event_type = bsmtoken.BSM_AUDIT_EVENT.get(
-        token.bsm_header.event_type, 'UNKNOWN')
-    event_type = '{0:s} ({1:d})'.format(
-        event_type, token.bsm_header.event_type)
+    event_tokens = []
+    return_token_values = None
 
-    timestamp = (token.timestamp * 1000000) + token.microseconds
-    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-        timestamp=timestamp)
+    file_offset = file_object.tell()
+    while file_offset < record_end_offset:
+      token_type, token_data = self._ParseToken(file_object, file_offset)
+      if not token_data:
+        raise errors.ParseError('Unsupported token type: 0x{0:02x}'.format(
+            token_type))
 
-    record_length = token.bsm_header.length
-    record_end_offset = record_start_offset + record_length
+      file_offset = file_object.tell()
 
-    # A dict of tokens that has the entry.
-    extra_tokens = {}
+      if token_type == self._TOKEN_TYPE_AUT_TRAILER:
+        break
 
-    # Read until we reach the end of the record.
-    while file_object.tell() < record_end_offset:
-      # Check if it is a known token.
-      try:
-        token_type = self._BSM_TOKEN.parse_stream(file_object)
-      except (IOError, construct.FieldError):
-        logger.warning(
-            'Unable to parse the Token ID at position: {0:d}'.format(
-                file_object.tell()))
-        return False
+      token_type_string = self._TOKEN_TYPES.get(token_type, 'UNKNOWN')
+      token_values = self._FormatTokenData(token_type, token_data)
+      event_tokens.append({token_type_string: token_values})
 
-      _, record_structure = self._BSM_TOKEN_TYPES.get(token_type, ('', None))
+      if token_type in (
+          self._TOKEN_TYPE_AUT_RETURN32, self._TOKEN_TYPE_AUT_RETURN64):
+        return_token_values = token_values
 
-      if not record_structure:
-        pending = record_end_offset - file_object.tell()
-        new_extra_tokens = self.TryWithUntestedStructures(
-            file_object, token_type, pending)
-        extra_tokens.update(new_extra_tokens)
-      else:
-        token = record_structure.parse_stream(file_object)
-        new_extra_tokens = self.FormatToken(token_type, token, file_object)
-        extra_tokens.update(new_extra_tokens)
+    if token_data.signature != self._TRAILER_TOKEN_SIGNATURE:
+      raise errors.ParseError('Unsupported signature in trailer token.')
 
-    if file_object.tell() > record_end_offset:
-      logger.warning(
-          'Token ID {0:d} not expected at position 0x{1:08x}.'
-          'Jumping for the next entry.'.format(
-              token_type, file_object.tell()))
-      try:
-        file_object.seek(
-            record_end_offset - file_object.tell(), os.SEEK_CUR)
-      except (IOError, construct.FieldError) as exception:
-        logger.warning(
-            'Unable to jump to next entry with error: {0!s}'.format(exception))
-        return False
+    if token_data.record_size != header_record_size:
+      raise errors.ParseError(
+          'Mismatch of event record size between header and trailer token.')
 
     event_data = BSMEventData()
-    if parser_mediator.operating_system == definitions.OPERATING_SYSTEM_MACOS:
-      # BSM can be in more than one OS: BSD, Solaris and MacOS.
-      # In MacOS the last two tokens are the return status and the trailer.
-      return_value = extra_tokens.get('BSM_TOKEN_RETURN32')
-      if not return_value:
-        return_value = extra_tokens.get('BSM_TOKEN_RETURN64')
-      if not return_value:
-        return_value = 'UNKNOWN'
-
-      event_data.return_value = return_value
-
     event_data.event_type = event_type
-    event_data.extra_tokens = extra_tokens
-    event_data.offset = record_start_offset
-    event_data.record_length = record_length
+    event_data.extra_tokens = event_tokens
+    event_data.offset = header_record_offset
+    event_data.record_length = header_record_size
+    event_data.return_value = return_token_values
 
-    # TODO: check why trailer was passed to event in original while
-    # event was expecting record length.
-    # if extra_tokens:
-    #   trailer = extra_tokens.get('BSM_TOKEN_TRAILER', 'unknown')
-
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_CREATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    return True
-
-  def _RawToUTF8(self, byte_stream):
-    """Copies a UTF-8 byte stream into a Unicode string.
+  def _ParseToken(self, file_object, file_offset):
+    """Parses a token.
 
     Args:
-      byte_stream (bytes): byte stream containing an UTF-8 encoded string.
+      file_object (dfvfs.FileIO): file-like object.
+      file_offset (int): offset of the token relative to the start of
+          the file-like object.
 
     Returns:
-      str: A Unicode string.
+      tuple: containing:
+        int: token type
+        object: token data or None if the token type is not supported.
     """
-    try:
-      string = byte_stream.decode('utf-8')
-    except UnicodeDecodeError:
-      logger.warning(
-          'Decode UTF8 failed, the message string may be cut short.')
-      string = byte_stream.decode('utf-8', errors='ignore')
-    return string.partition(b'\x00')[0]
+    token_type_map = self._GetDataTypeMap('uint8')
+
+    token_type, _ = self._ReadStructureFromFileObject(
+        file_object, file_offset, token_type_map)
+
+    token_data = None
+    token_data_map_name = self._DATA_TYPE_MAP_PER_TOKEN_TYPE.get(
+        token_type, None)
+    if token_data_map_name:
+      token_data_map = self._GetDataTypeMap(token_data_map_name)
+
+      token_data, _ = self._ReadStructureFromFileObject(
+          file_object, file_offset + 1, token_data_map)
+
+    return token_type, token_data
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a BSM file-like object.
@@ -796,393 +735,20 @@ class BSMParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    try:
-      is_bsm = self.VerifyFile(parser_mediator, file_object)
-    except (IOError, construct.FieldError) as exception:
-      raise errors.UnableToParseFile(
-          'Unable to parse BSM file with error: {0!s}'.format(exception))
-
-    if not is_bsm:
-      raise errors.UnableToParseFile('Not a BSM File, unable to parse.')
-
-    file_object.seek(0, os.SEEK_SET)
-
-    while self._ParseBSMEvent(parser_mediator, file_object):
-      pass
-
-  def VerifyFile(self, parser_mediator, file_object):
-    """Check if the file is a BSM file.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): a file-like object.
-
-    Returns:
-      bool: True if this is a valid BSM file, False otherwise.
-    """
-    # First part of the entry is always a Header.
-    try:
-      token_type = self._BSM_TOKEN.parse_stream(file_object)
-    except (IOError, construct.FieldError):
-      return False
-
-    if token_type not in self._BSM_HEADER_TOKEN_TYPES:
-      return False
-
-    _, record_structure = self._BSM_TOKEN_TYPES.get(token_type, ('', None))
-
-    try:
-      header = record_structure.parse_stream(file_object)
-    except (IOError, construct.FieldError):
-      return False
-
-    if header.bsm_header.version != self.AUDIT_HEADER_VERSION:
-      return False
-
-    try:
-      token_identifier = self._BSM_TOKEN.parse_stream(file_object)
-    except (IOError, construct.FieldError):
-      return False
-
-    # If is MacOS BSM file, next entry is a  text token indicating
-    # if it is a normal start or it is a recovery track.
-    if parser_mediator.operating_system == definitions.OPERATING_SYSTEM_MACOS:
-      token_type, record_structure = self._BSM_TOKEN_TYPES.get(
-          token_identifier, ('', None))
-
-      if not record_structure:
-        return False
-
-      if token_type != 'BSM_TOKEN_TEXT':
-        logger.warning('It is not a valid first entry for MacOS BSM.')
-        return False
-
+    file_offset = file_object.get_offset()
+    file_size = file_object.get_size()
+    while file_offset < file_size:
       try:
-        token = record_structure.parse_stream(file_object)
-      except (IOError, construct.FieldError):
-        return False
+        self._ParseRecord(parser_mediator, file_object)
+      except errors.ParseError as exception:
+        if file_offset == 0:
+          raise errors.UnableToParseFile(
+              'Unable to parse first event record with error: {0!s}'.format(
+                  exception))
 
-      text = self._CopyUtf8ByteArrayToString(token.text)
-      if (text != 'launchctl::Audit startup' and
-          text != 'launchctl::Audit recovery'):
-        logger.warning('It is not a valid first entry for MacOS BSM.')
-        return False
+        # TODO: skip to next event record.
 
-    return True
-
-  def TryWithUntestedStructures(self, file_object, token_id, pending):
-    """Try to parse the pending part of the entry using untested structures.
-
-    Args:
-      file_object: BSM file.
-      token_id: integer with the id that comes from the unknown token.
-      pending: pending length of the entry.
-
-    Returns:
-      A list of extra tokens data that can be parsed using non-tested
-      structures. A message indicating that a structure cannot be parsed
-      is added for unparsed structures or None on error.
-    """
-    # Data from the unknown structure.
-    start_position = file_object.tell()
-    start_token_id = token_id
-    extra_tokens = {}
-
-    # Read all the "pending" bytes.
-    try:
-      if token_id in self._bsm_type_list_all:
-        token = self._bsm_type_list_all[token_id][1].parse_stream(file_object)
-        new_extra_tokens = self.FormatToken(token_id, token, file_object)
-        extra_tokens.update(new_extra_tokens)
-        while file_object.tell() < (start_position + pending):
-          # Check if it is a known token.
-          try:
-            token_id = self._BSM_TOKEN.parse_stream(file_object)
-          except (IOError, construct.FieldError):
-            logger.warning(
-                'Unable to parse the Token ID at position: {0:d}'.format(
-                    file_object.tell()))
-            return None
-          if token_id not in self._bsm_type_list_all:
-            break
-          token = self._bsm_type_list_all[token_id][1].parse_stream(file_object)
-          new_extra_tokens = self.FormatToken(token_id, token, file_object)
-          extra_tokens.update(new_extra_tokens)
-    except (IOError, construct.FieldError):
-      token_id = 255
-
-    next_entry = (start_position + pending)
-    if file_object.tell() != next_entry:
-      # Unknown Structure.
-      logger.warning('Unknown Token at "0x{0:X}", ID: {1} (0x{2:X})'.format(
-          start_position - 1, token_id, token_id))
-      # TODO: another way to save this information must be found.
-      extra_tokens.update(
-          {'message': self.MESSAGE_CAN_NOT_SAVE.format(
-              start_position - 1, start_token_id)})
-      # Move to next entry.
-      file_object.seek(next_entry - file_object.tell(), os.SEEK_CUR)
-      # It returns null list because it doesn't know which structure was
-      # the incorrect structure that makes that it can arrive to the spected
-      # end of the entry.
-      return {}
-    return extra_tokens
-
-  def FormatToken(self, token_id, token, file_object):
-    """Parse the Token depending of the type of the structure.
-
-    Args:
-      token_id (int): identification of the token_type.
-      token (structure): token struct to parse.
-      file_object: BSM file.
-
-    Returns:
-      (dict): parsed Token values.
-
-    Keys for returned dictionary are token name like BSM_TOKEN_SUBJECT32.
-    Values of this dictionary are key-value pairs like terminal_ip:127.0.0.1.
-    """
-    if token_id not in self._bsm_type_list_all:
-      return {}
-
-    bsm_type, _ = self._bsm_type_list_all.get(token_id, ['', ''])
-
-    if token_id in self._BSM_UTF8_BYTE_ARRAY_TOKEN_TYPES:
-      try:
-        string = self._CopyUtf8ByteArrayToString(token.text)
-      except TypeError:
-        string = 'Unknown'
-      return {bsm_type: string}
-
-    elif token_id in self._BSM_RETURN_TOKEN_TYPES:
-      return {bsm_type: {
-          'error': bsmtoken.BSM_ERRORS.get(token.status, 'Unknown'),
-          'token_status': token.status,
-          'call_status': token.return_value
-      }}
-
-    elif token_id in self._BSM_SUBJECT_TOKEN_TYPES:
-      return {bsm_type: {
-          'aid': token.subject_data.audit_uid,
-          'euid': token.subject_data.effective_uid,
-          'egid': token.subject_data.effective_gid,
-          'uid': token.subject_data.real_uid,
-          'gid': token.subject_data.real_gid,
-          'pid': token.subject_data.pid,
-          'session_id': token.subject_data.session_id,
-          'terminal_port': token.terminal_port,
-          'terminal_ip': self._IPv4Format(token.ipv4)
-      }}
-
-    elif token_id in self._BSM_SUBJECT_EX_TOKEN_TYPES:
-      if token.bsm_ip_type_short.net_type == self.AU_IPv6:
-        ip = self._IPv6Format(
-            token.bsm_ip_type_short.ip_addr.high,
-            token.bsm_ip_type_short.ip_addr.low)
-      elif token.bsm_ip_type_short.net_type == self.AU_IPv4:
-        ip = self._IPv4Format(token.bsm_ip_type_short.ip_addr)
-      else:
-        ip = 'unknown'
-      return {bsm_type: {
-          'aid': token.subject_data.audit_uid,
-          'euid': token.subject_data.effective_uid,
-          'egid': token.subject_data.effective_gid,
-          'uid': token.subject_data.real_uid,
-          'gid': token.subject_data.real_gid,
-          'pid': token.subject_data.pid,
-          'session_id': token.subject_data.session_id,
-          'terminal_port': token.terminal_port,
-          'terminal_ip': ip
-      }}
-
-    elif token_id in self._BSM_ARGUMENT_TOKEN_TYPES:
-      string = self._CopyUtf8ByteArrayToString(token.text)
-      return {bsm_type: {
-          'string': string,
-          'num_arg': token.num_arg,
-          'is': token.name_arg}}
-
-    elif token_id in self._BSM_EXEV_TOKEN_TYPES:
-      arguments = []
-      for _ in range(0, token):
-        sub_token = self.BSM_TOKEN_EXEC_ARGUMENT.parse_stream(file_object)
-        string = self._CopyUtf8ByteArrayToString(sub_token.text)
-        arguments.append(string)
-      return {bsm_type: ' '.join(arguments)}
-
-    elif bsm_type == 'BSM_TOKEN_AUT_SOCKINET32':
-      return {bsm_type: {
-          'protocols':
-          bsmtoken.BSM_PROTOCOLS.get(token.net_type, 'UNKNOWN'),
-          'net_type': token.net_type,
-          'port': token.port_number,
-          'address': self._IPv4Format(token.ipv4)
-      }}
-
-    elif bsm_type == 'BSM_TOKEN_AUT_SOCKINET128':
-      return {bsm_type: {
-          'protocols':
-          bsmtoken.BSM_PROTOCOLS.get(token.net_type, 'UNKNOWN'),
-          'net_type': token.net_type,
-          'port': token.port_number,
-          'address': self._IPv6Format(token.ipv6.high, token.ipv6.low)
-      }}
-
-    elif bsm_type == 'BSM_TOKEN_ADDR':
-      return {bsm_type: self._IPv4Format(token)}
-
-    elif bsm_type == 'BSM_TOKEN_IP':
-      return {'IPv4_Header': '0x{0:s}]'.format(token.encode('hex'))}
-
-    elif bsm_type == 'BSM_TOKEN_ADDR_EXT':
-      return {bsm_type: {
-          'protocols':
-          bsmtoken.BSM_PROTOCOLS.get(token.net_type, 'UNKNOWN'),
-          'net_type': token.net_type,
-          'address': self._IPv6Format(token.ipv6.high, token.ipv6.low)
-      }}
-
-    elif bsm_type == 'BSM_TOKEN_PORT':
-      return {bsm_type: token}
-
-    elif bsm_type == 'BSM_TOKEN_TRAILER':
-      return {bsm_type: token.record_length}
-
-    elif bsm_type == 'BSM_TOKEN_FILE':
-      # TODO: if this timestamp is useful, it must be extracted as a separate
-      # event object.
-      timestamp = token.microseconds + (
-          token.timestamp * definitions.MICROSECONDS_PER_SECOND)
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=timestamp)
-      date_time_string = date_time.CopyToDateTimeString()
-
-      string = self._CopyUtf8ByteArrayToString(token.text)
-      return {bsm_type: {'string': string, 'timestamp': date_time_string}}
-
-    elif bsm_type == 'BSM_TOKEN_IPC':
-      return {bsm_type: {
-          'object_type': token.object_type,
-          'object_id': token.object_id
-      }}
-
-    elif token_id in self._BSM_PROCESS_TOKEN_TYPES:
-      return {bsm_type: {
-          'aid': token.subject_data.audit_uid,
-          'euid': token.subject_data.effective_uid,
-          'egid': token.subject_data.effective_gid,
-          'uid': token.subject_data.real_uid,
-          'gid': token.subject_data.real_gid,
-          'pid': token.subject_data.pid,
-          'session_id': token.subject_data.session_id,
-          'terminal_port': token.terminal_port,
-          'terminal_ip': self._IPv4Format(token.ipv4)
-      }}
-
-    elif token_id in self._BSM_PROCESS_EX_TOKEN_TYPES:
-      if token.bsm_ip_type_short.net_type == self.AU_IPv6:
-        ip = self._IPv6Format(
-            token.bsm_ip_type_short.ip_addr.high,
-            token.bsm_ip_type_short.ip_addr.low)
-      elif token.bsm_ip_type_short.net_type == self.AU_IPv4:
-        ip = self._IPv4Format(token.bsm_ip_type_short.ip_addr)
-      else:
-        ip = 'unknown'
-      return {bsm_type: {
-          'aid': token.subject_data.audit_uid,
-          'euid': token.subject_data.effective_uid,
-          'egid': token.subject_data.effective_gid,
-          'uid': token.subject_data.real_uid,
-          'gid': token.subject_data.real_gid,
-          'pid': token.subject_data.pid,
-          'session_id': token.subject_data.session_id,
-          'terminal_port': token.terminal_port,
-          'terminal_ip': ip
-      }}
-
-    elif bsm_type == 'BSM_TOKEN_DATA':
-      data = []
-      data_type = bsmtoken.BSM_TOKEN_DATA_TYPE.get(token.data_type, '')
-
-      if data_type == 'AUR_CHAR':
-        for _ in range(token.unit_count):
-          data.append(self.BSM_TOKEN_DATA_CHAR.parse_stream(file_object))
-
-      elif data_type == 'AUR_SHORT':
-        for _ in range(token.unit_count):
-          data.append(self.BSM_TOKEN_DATA_SHORT.parse_stream(file_object))
-
-      elif data_type == 'AUR_INT32':
-        for _ in range(token.unit_count):
-          data.append(self.BSM_TOKEN_DATA_INTEGER.parse_stream(file_object))
-
-      else:
-        data.append('Unknown type data')
-
-      # TODO: the data when it is string ends with ".", HW a space is return
-      #       after uses the UTF-8 conversion.
-      return {bsm_type: {
-          'format': bsmtoken.BSM_TOKEN_DATA_PRINT[token.how_to_print],
-          'data':
-          '{0}'.format(self._RawToUTF8(''.join(map(str, data))))
-      }}
-
-    elif token_id in self._BSM_ATTR_TOKEN_TYPES:
-      return {bsm_type: {
-          'mode': token.file_mode,
-          'uid': token.uid,
-          'gid': token.gid,
-          'system_id': token.file_system_id,
-          'node_id': token.file_system_node_id,
-          'device': token.device}}
-
-    elif bsm_type == 'BSM_TOKEN_GROUPS':
-      arguments = []
-      for _ in range(token):
-        arguments.append(
-            self._RawToUTF8(
-                self.BSM_TOKEN_DATA_INTEGER.parse_stream(file_object)))
-      return {bsm_type: ','.join(arguments)}
-
-    elif bsm_type == 'BSM_TOKEN_AUT_SOCKINET32_EX':
-      if bsmtoken.BSM_PROTOCOLS.get(token.socket_domain, '') == 'INET6':
-        saddr = self._IPv6Format(
-            token.structure_addr_port.saddr_high,
-            token.structure_addr_port.saddr_low)
-        daddr = self._IPv6Format(
-            token.structure_addr_port.daddr_high,
-            token.structure_addr_port.daddr_low)
-      else:
-        saddr = self._IPv4Format(token.structure_addr_port.source_address)
-        daddr = self._IPv4Format(token.structure_addr_port.destination_address)
-
-      return {bsm_type:{
-          'from': saddr,
-          'from_port': token.structure_addr_port.source_port,
-          'to': daddr,
-          'to_port': token.structure_addr_port.destination_port}}
-
-    elif bsm_type == 'BSM_TOKEN_IPC_PERM':
-      return {bsm_type: {
-          'user_id': token.user_id,
-          'group_id': token.group_id,
-          'creator_user_id': token.creator_user_id,
-          'creator_group_id': token.creator_group_id,
-          'access': token.access_mode}}
-
-    elif bsm_type == 'BSM_TOKEN_SOCKET_UNIX':
-      string = self._CopyUtf8ByteArrayToString(token.path)
-      return {bsm_type: {'family': token.family, 'path': string}}
-
-    elif bsm_type == 'BSM_TOKEN_OPAQUE':
-      string = self._CopyByteArrayToBase16String(token.text)
-      return {bsm_type: string}
-
-    elif bsm_type == 'BSM_TOKEN_SEQUENCE':
-      return {bsm_type: token}
-
-    return {}
+      file_offset = file_object.get_offset()
 
 
 manager.ParsersManager.RegisterParser(BSMParser)

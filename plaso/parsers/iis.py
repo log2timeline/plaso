@@ -60,7 +60,17 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Word(pyparsing.nums, min=1, max=6).setParseAction(
           text_parser.ConvertTokenToInteger) | BLANK)
 
-  URI = pyparsing.Word(pyparsing.alphanums + '/.?&+;_=()-:,%') | BLANK
+  _URI_SAFE_CHARACTERS = '/.?&+;_=()-:,%'
+  _URI_UNSAFE_CHARACTERS = '{}|\\^~[]`'
+
+  URI = pyparsing.Word(pyparsing.alphanums + _URI_SAFE_CHARACTERS) | BLANK
+
+  # Per https://blogs.iis.net/nazim/use-of-special-characters-like-in-an-iis-url
+  # IIS does not require the a query comply with RFC1738 restrictions on valid
+  # URI characters
+  QUERY = (pyparsing.Word(
+      pyparsing.alphanums + _URI_SAFE_CHARACTERS + _URI_UNSAFE_CHARACTERS) |
+           BLANK)
 
   DATE_TIME = (
       text_parser.PyparsingConstants.DATE_ELEMENTS +
@@ -104,7 +114,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
   _LOG_LINE_STRUCTURES['cs-method'] = WORD.setResultsName('http_method')
   _LOG_LINE_STRUCTURES['cs-uri-stem'] = URI.setResultsName(
       'requested_uri_stem')
-  _LOG_LINE_STRUCTURES['cs-uri-query'] = URI.setResultsName('cs_uri_query')
+  _LOG_LINE_STRUCTURES['cs-uri-query'] = QUERY.setResultsName('cs_uri_query')
   _LOG_LINE_STRUCTURES['s-port'] = PORT.setResultsName('dest_port')
   _LOG_LINE_STRUCTURES['cs-username'] = WORD.setResultsName('cs_username')
   _LOG_LINE_STRUCTURES['c-ip'] = IP_ADDRESS.setResultsName('source_ip')
@@ -160,7 +170,7 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
       self._ParseFieldsMetadata(structure)
 
   def _ParseFieldsMetadata(self, structure):
-    """Parses the fields metadata.
+    """Parses the fields metadata and updates the log line definition to match.
 
     Args:
       structure (pyparsing.ParseResults): structure parsed from the log file.
@@ -175,9 +185,14 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     for member in fields:
       log_line_structure += self._LOG_LINE_STRUCTURES.get(member, self.URI)
 
+    updated_structures = []
+    for line_structure in self._line_structures:
+      if line_structure[0] != 'logline':
+        updated_structures.append(line_structure)
+    updated_structures.append(('logline', log_line_structure))
     # TODO: self._line_structures is a work-around and this needs
     # a structural fix.
-    self._line_structures[1] = ('logline', log_line_structure)
+    self._line_structures = updated_structures
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parse a single log line and produce an event object.

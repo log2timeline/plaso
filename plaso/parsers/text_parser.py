@@ -252,7 +252,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     self._current_offset = 0
     # TODO: self._line_structures is a work-around and this needs
     # a structural fix.
-    self._line_structures = self.LINE_STRUCTURES
+    self._line_structures = list(self.LINE_STRUCTURES)
 
   def _IsText(self, bytes_in, encoding=None):
     """Examine the bytes in and determine if they are indicative of text.
@@ -386,6 +386,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       raise errors.UnableToParseFile('Wrong file structure.')
 
     consecutive_line_failures = 0
+    index = None
     # Set the offset to the beginning of the file.
     self._current_offset = 0
     # Read every line in the text file.
@@ -395,7 +396,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       parsed_structure = None
       use_key = None
       # Try to parse the line using all the line structures.
-      for key, structure in self.LINE_STRUCTURES:
+      for index, (key, structure) in enumerate(self._line_structures):
         try:
           parsed_structure = structure.parseString(line)
         except pyparsing.ParseException:
@@ -407,6 +408,9 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       if parsed_structure:
         self.ParseRecord(parser_mediator, use_key, parsed_structure)
         consecutive_line_failures = 0
+        if index is not None and index != 0:
+          key_structure = self._line_structures.pop(index)
+          self._line_structures.insert(0, key_structure)
       else:
         if len(line) > 80:
           line = '{0:s}...'.format(line[:77])
@@ -464,29 +468,18 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 class EncodedTextReader(object):
   """Encoded text reader."""
 
-  def __init__(self, buffer_size=2048, encoding=None):
-    """Initializes the encoded test reader object.
+  def __init__(self, encoding, buffer_size=2048):
+    """Initializes the encoded text reader object.
 
     Args:
+      encoding (str): encoding.
       buffer_size (Optional[int]): buffer size.
-      encoding (Optional[str]): encoding.
     """
     super(EncodedTextReader, self).__init__()
-    self._buffer = b''
+    self._buffer = ''
     self._buffer_size = buffer_size
     self._current_offset = 0
     self._encoding = encoding
-
-    if self._encoding:
-      self._new_line = '\n'.encode(self._encoding)
-      self._carriage_return = '\r'.encode(self._encoding)
-    else:
-      self._new_line = b'\n'
-      self._carriage_return = b'\r'
-
-    self._new_line_length = len(self._new_line)
-    self._carriage_return_length = len(self._carriage_return)
-
     self.lines = ''
 
   def _ReadLine(self, file_object):
@@ -499,33 +492,24 @@ class EncodedTextReader(object):
       str: line read from the file-like object.
     """
     if len(self._buffer) < self._buffer_size:
-      self._buffer = b''.join([
-          self._buffer, file_object.read(self._buffer_size)])
+      content = file_object.read(self._buffer_size)
+      content = content.decode(self._encoding)
+      self._buffer = ''.join([self._buffer, content])
 
-    line, new_line, self._buffer = self._buffer.partition(self._new_line)
+    line, new_line, self._buffer = self._buffer.partition('\n')
     if not line and not new_line:
       line = self._buffer
-      self._buffer = b''
+      self._buffer = ''
 
     self._current_offset += len(line)
 
     # Strip carriage returns from the text.
-    if line.endswith(self._carriage_return):
-      line = line[:-self._carriage_return_length]
+    if line.endswith('\r'):
+      line = line[:-len('\r')]
 
     if new_line:
-      line = b''.join([line, self._new_line])
-      self._current_offset += self._new_line_length
-
-    # If a parser specifically indicates specific encoding we need
-    # to handle the buffer as it is an encoded string.
-    # If it fails we fail back to the original raw string.
-    if self._encoding:
-      try:
-        line = line.decode(self._encoding)
-      except UnicodeDecodeError:
-        # TODO: it might be better to raise here.
-        pass
+      line = ''.join([line, '\n'])
+      self._current_offset += len('\n')
 
     return line
 
@@ -564,9 +548,8 @@ class EncodedTextReader(object):
 
   def Reset(self):
     """Resets the encoded text reader."""
-    self._buffer = b''
+    self._buffer = ''
     self._current_offset = 0
-
     self.lines = ''
 
   def SkipAhead(self, file_object, number_of_characters):
@@ -598,8 +581,6 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     """Initializes a parser object."""
     super(PyparsingMultiLineTextParser, self).__init__()
     self._buffer_size = self.BUFFER_SIZE
-    self._text_reader = EncodedTextReader(
-        buffer_size=self.BUFFER_SIZE, encoding=self._ENCODING)
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a text file-like object using a pyparsing definition.
@@ -615,18 +596,19 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     if not self.LINE_STRUCTURES:
       raise errors.UnableToParseFile('Missing line structures.')
 
-    self._text_reader.Reset()
+    encoding = self._ENCODING or parser_mediator.codepage
+    text_reader = EncodedTextReader(
+        encoding, buffer_size=self.BUFFER_SIZE)
+
+    text_reader.Reset()
 
     try:
-      self._text_reader.ReadLines(file_object)
+      text_reader.ReadLines(file_object)
     except UnicodeDecodeError as exception:
       raise errors.UnableToParseFile(
           'Not a text file, with error: {0!s}'.format(exception))
 
-    if not self._IsText(self._text_reader.lines):
-      raise errors.UnableToParseFile('Not a text file, unable to proceed.')
-
-    if not self.VerifyStructure(parser_mediator, self._text_reader.lines):
+    if not self.VerifyStructure(parser_mediator, text_reader.lines):
       raise errors.UnableToParseFile('Wrong file structure.')
 
     # Using parseWithTabs() overrides Pyparsing's default replacement of tabs
@@ -637,7 +619,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
 
     consecutive_line_failures = 0
     # Read every line in the text file.
-    while self._text_reader.lines:
+    while text_reader.lines:
       if parser_mediator.abort:
         break
 
@@ -648,11 +630,13 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
 
       key = None
 
+      index = None
+
       # Try to parse the line using all the line structures.
-      for key, structure in self.LINE_STRUCTURES:
+      for index, (key, structure) in enumerate(self._line_structures):
         try:
           structure_generator = structure.scanString(
-              self._text_reader.lines, maxMatches=1)
+              text_reader.lines, maxMatches=1)
           parsed_structure = next(structure_generator, None)
         except pyparsing.ParseException:
           parsed_structure = None
@@ -668,6 +652,12 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
           break
 
       if tokens and start == 0:
+        # Move matching key, structure pair to the front of the list, so that
+        # structures that are more likely to match are tried first.
+        if index is not None and index != 0:
+          key_structure = self._line_structures.pop(index)
+          self._line_structures.insert(0, key_structure)
+
         try:
           self.ParseRecord(parser_mediator, key, tokens)
           consecutive_line_failures = 0
@@ -676,10 +666,10 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
               'unable to parse record: {0:s} with error: {1!s}'.format(
                   key, exception))
 
-        self._text_reader.SkipAhead(file_object, end)
+        text_reader.SkipAhead(file_object, end)
 
       else:
-        odd_line = self._text_reader.ReadLine(file_object)
+        odd_line = text_reader.ReadLine(file_object)
         if odd_line:
           if len(odd_line) > 80:
             odd_line = '{0:s}...'.format(odd_line[:77])
@@ -692,7 +682,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
                 'more than {0:d} consecutive failures to parse lines.'.format(
                     self.MAXIMUM_CONSECUTIVE_LINE_FAILURES))
       try:
-        self._text_reader.ReadLines(file_object)
+        text_reader.ReadLines(file_object)
       except UnicodeDecodeError as exception:
         parser_mediator.ProduceExtractionError(
             'unable to read lines with error: {0!s}'.format(exception))

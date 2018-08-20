@@ -5,6 +5,8 @@ from __future__ import unicode_literals
 
 from plaso.formatters import interface
 from plaso.formatters import manager
+from plaso.lib import errors
+from plaso.unix import bsmtoken
 
 
 class BSMFormatter(interface.ConditionalEventFormatter):
@@ -13,7 +15,8 @@ class BSMFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'bsm:event'
 
   FORMAT_STRING_PIECES = [
-      'Type: {event_type}',
+      'Type: {event_type_string}',
+      '({event_type})',
       'Return: {return_value}',
       'Information: {extra_tokens}']
 
@@ -23,6 +26,34 @@ class BSMFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'BSM entry'
   SOURCE_SHORT = 'LOG'
+
+  def GetMessages(self, unused_formatter_mediator, event):
+    """Determines the formatted message strings for an event object.
+
+    Args:
+      formatter_mediator (FormatterMediator): mediates the interactions between
+          formatters and other components, such as storage and Windows EventLog
+          resources.
+      event (EventObject): event.
+
+    Returns:
+      tuple(str, str): formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
+    """
+    if self.DATA_TYPE != event.data_type:
+      raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
+          event.data_type))
+
+    event_values = event.CopyToDict()
+
+    event_type = event_values.get('event_type', None)
+    if event_type:
+      event_values['event_type_string'] = bsmtoken.BSM_AUDIT_EVENT.get(
+          event_type, 'UNKNOWN')
+
+    return self._ConditionalFormatMessages(event_values)
 
 
 manager.FormattersManager.RegisterFormatter(BSMFormatter)

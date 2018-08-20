@@ -66,7 +66,8 @@ class WinEVTXFormatter(interface.ConditionalEventFormatter):
 
     message_strings = []
     for string in strings:
-      message_strings.append('\'{0:s}\''.format(string))
+      if string:
+        message_strings.append('\'{0:s}\''.format(string))
     message_string = ', '.join(message_strings)
     event_values['strings'] = '[{0:s}]'.format(message_string)
 

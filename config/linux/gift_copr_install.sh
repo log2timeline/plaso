@@ -46,6 +46,7 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python-dtfabric
                       python-efilter
                       python-elasticsearch
+                      python-elasticsearch5
                       python-hachoir-core
                       python-hachoir-metadata
                       python-hachoir-parser
