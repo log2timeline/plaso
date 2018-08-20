@@ -273,7 +273,9 @@ class DtFabricBaseParser(interface.FileObjectParser):
       last_data_size = data_size
       data_size = data_type_map.GetSizeHint(context=context)
 
-    raise errors.ParseError('Unable to read {0:s}'.format(data_type_map.name))
+    raise errors.ParseError(
+        'Unable to read {0:s} at offset: 0x{1:08x}'.format(
+            data_type_map.name, file_offset))
 
   # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
   # pylint: disable=missing-param-doc

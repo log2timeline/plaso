@@ -166,7 +166,7 @@ class DSVParser(interface.FileObjectParser):
     row_offset = line_reader.tell()
     try:
       row = next(reader)
-    except (StopIteration, csv.Error) as exception:
+    except (StopIteration, csv.Error, UnicodeDecodeError) as exception:
       display_name = parser_mediator.GetDisplayName()
       raise errors.UnableToParseFile(
           '[{0:s}] Unable to parse DSV file: {1:s} with error: {2!s}.'.format(

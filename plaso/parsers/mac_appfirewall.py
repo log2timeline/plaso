@@ -197,7 +197,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     except pyparsing.ParseException as exception:
       logger.debug((
           'Unable to parse file as a Mac AppFirewall log file with error: '
-          '{0:s}').format(exception))
+          '{0!s}').format(exception))
       return False
 
     if structure.action != 'creating /var/log/appfirewall.log':
