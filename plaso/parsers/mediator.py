@@ -166,7 +166,7 @@ class ParserMediator(object):
     except ValueError as exception:
       logger.error((
           'Unable to determine earliest year from file stat information with '
-          'error: {0:s}').format(exception))
+          'error: {0!s}').format(exception))
       return None
 
   def _GetInode(self, inode_value):

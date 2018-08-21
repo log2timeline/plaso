@@ -130,7 +130,7 @@ class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
 
       raise errors.PreProcessFail((
           'Unable to retrieve file entry: {0:s} with error: '
-          '{1:s}').format(relative_path, exception))
+          '{1!s}').format(relative_path, exception))
 
     self._ParseFileEntry(knowledge_base, file_entry)
 
@@ -237,7 +237,7 @@ class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
           except IOError as exception:
             raise errors.PreProcessFail((
                 'Unable to retrieve Windows Registry key: {0:s} with error: '
-                '{1:s}').format(key_path, exception))
+                '{1!s}').format(key_path, exception))
 
           if registry_key:
             value_name = key_value_pair.get('value', None)

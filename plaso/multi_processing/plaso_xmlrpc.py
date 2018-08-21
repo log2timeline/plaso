@@ -47,7 +47,8 @@ class XMLRPCClient(rpc.RPCClient):
     except (
         expat.ExpatError, SocketServer.socket.error,
         xmlrpclib.Fault) as exception:
-      logger.warning('Error while making RPC call: {0:s}'.format(exception))
+      logger.warning('Unable to make RPC call with error: {0!s}'.format(
+          exception))
       return None
 
   def Close(self):
