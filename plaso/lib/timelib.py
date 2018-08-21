@@ -239,7 +239,7 @@ class Timestamp(object):
 
       logging.error((
           'Unable to copy {0:d} to a datetime object with error: '
-          '{1:s}').format(timestamp, exception))
+          '{1!s}').format(timestamp, exception))
 
     return datetime_object
 

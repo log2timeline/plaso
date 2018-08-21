@@ -82,7 +82,7 @@ class EventFormatter(object):
 
       error_message = (
           'unable to format string: "{0:s}" event object is missing required '
-          'attributes: {1:s}').format(format_string, exception)
+          'attributes: {1!s}').format(format_string, exception)
       error_message = (
           'Event: {0:s} data type: {1:s} display name: {2:s} '
           'parser chain: {3:s} with error: {4:s}').format(
@@ -102,7 +102,7 @@ class EventFormatter(object):
       event_identifier = event_values.get('uuid', 'N/A')
       parser_chain = event_values.get('parser', 'N/A')
 
-      error_message = 'Unicode decode error: {0:s}'.format(exception)
+      error_message = 'Unicode decode error: {0!s}'.format(exception)
       error_message = (
           'Event: {0:s} data type: {1:s} display name: {2:s} '
           'parser chain: {3:s} with error: {4:s}').format(
