@@ -75,7 +75,7 @@ class SantaDiskMountsFormatterTest(test_lib.EventFormatterTestCase):
         'action',
         'mount',
         'serial',
-        'dmgpath']
+        'dmg_path']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

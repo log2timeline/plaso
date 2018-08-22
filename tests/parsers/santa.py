@@ -78,12 +78,12 @@ class SantaUnitTest(test_lib.ParserTestCase):
     self.assertEqual(event.action, 'DISKAPPEAR')
     self.assertEqual(event.mount, '')
     self.assertEqual(event.volume, 'Skype')
-    self.assertEqual(event.bsdname, 'disk2s1')
+    self.assertEqual(event.bsd_name, 'disk2s1')
     self.assertEqual(event.fs, 'hfs')
     self.assertEqual(event.model, 'Apple Disk Image')
     self.assertEqual(event.serial, '')
     self.assertEqual(event.bus, 'Virtual Interface')
-    self.assertEqual(event.dmgpath,
+    self.assertEqual(event.dmg_path,
                      '/Users/qwerty/Downloads/Skype-8.28.0.41.dmg')
     self.assertEqual(event.appearance, '2018-08-19T03:17:28.983Z')
 

@@ -19,22 +19,22 @@ class SantaExecutionEventData(events.EventData):
   """Santa execution event data.
 
   Attributes:
-    action (str): String indicating the action recorded by Santa.
-    decision (str): String indicating if the process was allowed or blocked.
-    reason (str): Reason behind santa decision to execute or block a process.
-    process_hash (str): Sha256 hash for the executed process.
-    certificate_hash (str): Sha256 hash for the certificate associated with the
+    action (str): action recorded by Santa.
+    decision (str): if the process was allowed or blocked.
+    reason (str): reason behind santa decision to execute or block a process.
+    process_hash (str): SHA256 hash for the executed process.
+    certificate_hash (str): SHA256 hash for the certificate associated with the
         executed process.
-    certificate_common_name (str): Certificate common name.
-    pid (str): Process id for the process.
-    ppid (str): Parent process id for the executed process.
-    uid (str): User id associated with the executed process.
-    user (str): User name associated with the executed process.
-    gid (str): Group id associated with the executed process.
+    certificate_common_name (str): certificate common name.
+    pid (str): process id for the process.
+    ppid (str): parent process id for the executed process.
+    uid (str): user id associated with the executed process.
+    user (str): user name associated with the executed process.
+    gid (str): group id associated with the executed process.
     group (str): group name associated with the executed process.
-    mode (str): Santa execution mode i.e Monitor, Lockdown.
-    process_path (str): Process file path.
-    process_arguments (str): Executed process with its arguments.
+    mode (str): Santa execution mode, for example Monitor or Lockdown.
+    process_path (str): process file path.
+    process_arguments (str): executed process with its arguments.
   """
 
   DATA_TYPE = 'santa:execution'
@@ -64,20 +64,20 @@ class SantaFileSystemEventData(events.EventData):
   """Santa file system event data.
 
   Attributes:
-    action (str): String indicating the event type recorded by Santa.
-    file_path (str): File path and name for WRITE/DELETE events.
-    file_new_path (str): New file path and name for RENAME events.
-    pid (str): Process id for the process.
-    ppid (str): Parent process id for the executed process.
-    process (str):Process name.
-    process_path (str): Process file path.
-    uid (str): User id associated with the executed process.
-    user (str): User name associated with the executed process.
-    gid (str): Group id associated with the executed process.
+    action (str): event type recorded by Santa.
+    file_path (str): file path and name for WRITE/DELETE events.
+    file_new_path (str): new file path and name for RENAME events.
+    pid (str): process id for the process.
+    ppid (str): parent process id for the executed process.
+    process (str): process name.
+    process_path (str): process file path.
+    uid (str): user id associated with the executed process.
+    user (str): user name associated with the executed process.
+    gid (str): group id associated with the executed process.
     group (str): group name associated with the executed process.
   """
 
-  DATA_TYPE = 'santa:fsevent'
+  DATA_TYPE = 'santa:file_system_event'
 
   def __init__(self):
     """Initializes event data."""
@@ -99,16 +99,16 @@ class SantaMountEventData(events.EventData):
   """Santa mount event data.
 
   Attributes:
-    action (str): String indicating the event type recorded by Santa.
-    mount (str): Disk mount point.
-    volume (str): Disk volume name.
-    bsdname (str): Disk BSD name.
-    fs (str): Disk volume kind.
-    model (str): Disk model.
-    serial (str): Disk serial.
-    bus (str): Device protocol.
-    dmgpath (str): DMG file path.
-    appearance (str): Disk appearance date.
+    action (str): event type recorded by Santa.
+    mount (str): disk mount point.
+    volume (str): disk volume name.
+    bsd_name (str): disk BSD name.
+    fs (str): disk volume kind.
+    model (str): disk model.
+    serial (str): disk serial.
+    bus (str): device protocol.
+    dmg_path (str): DMG file path.
+    appearance (str): disk appearance date.
   """
 
   DATA_TYPE = 'santa:diskmount'
@@ -119,12 +119,12 @@ class SantaMountEventData(events.EventData):
     self.action = None
     self.mount = None
     self.volume = None
-    self.bsdname = None
+    self.bsd_name = None
     self.fs = None
     self.model = None
     self.serial = None
     self.bus = None
-    self.dmgpath = None
+    self.dmg_path = None
     self.appearance = None
 
 
@@ -184,9 +184,9 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
                _SKIP_SEP.setResultsName('mount') + _SEP_TOKEN,
       'volume': pyparsing.Suppress('volume=') +
                 _SKIP_SEP.setResultsName('volume') + _SEP_TOKEN,
-      'bsdname': pyparsing.Suppress('bsdname=') +
-                 (_SKIP_SEP | _SKIP_END).setResultsName('bsdname') +
-                 pyparsing.Optional(_SEP_TOKEN),
+      'bsd_name': pyparsing.Suppress('bsdname=') +
+                  (_SKIP_SEP | _SKIP_END).setResultsName('bsd_name') +
+                  pyparsing.Optional(_SEP_TOKEN),
       'fs': pyparsing.Suppress('fs=') + _SKIP_SEP.setResultsName('fs') +
             _SEP_TOKEN,
       'model': pyparsing.Suppress('model=') +
@@ -195,8 +195,8 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
                 _SKIP_SEP.setResultsName('serial') + _SEP_TOKEN,
       'bus': pyparsing.Suppress('bus=') + _SKIP_SEP.setResultsName('bus') +
              _SEP_TOKEN,
-      'dmgpath': pyparsing.Suppress('dmgpath=') +
-                 _SKIP_SEP.setResultsName('dmgpath') + _SEP_TOKEN,
+      'dmg_path': pyparsing.Suppress('dmgpath=') +
+                  _SKIP_SEP.setResultsName('dmg_path') + _SEP_TOKEN,
       'appearance': pyparsing.Suppress('appearance=') +
                     _SKIP_END.setResultsName('appearance')
   }
@@ -210,7 +210,7 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal(':') +
       pyparsing.Word(pyparsing.nums, exact=2) + pyparsing.Literal('.') +
       pyparsing.Word(pyparsing.nums, exact=3) + pyparsing.Literal('Z') +
-      pyparsing.Suppress(']'), joinString='', adjacent=True)
+      pyparsing.Suppress(']'))
 
   _VERIFICATION_REGEX = re.compile(
       r'^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\] [EACWNID] santad:')
@@ -268,12 +268,12 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Literal('DISKAPPEAR').setResultsName('action') + _SEP_TOKEN +
       _PYPARSING_COMPONENTS['mount'] +
       _PYPARSING_COMPONENTS['volume'] +
-      _PYPARSING_COMPONENTS['bsdname'] +
+      _PYPARSING_COMPONENTS['bsd_name'] +
       _PYPARSING_COMPONENTS['fs'] +
       _PYPARSING_COMPONENTS['model'] +
       _PYPARSING_COMPONENTS['serial'] +
       _PYPARSING_COMPONENTS['bus'] +
-      _PYPARSING_COMPONENTS['dmgpath'] +
+      _PYPARSING_COMPONENTS['dmg_path'] +
       _PYPARSING_COMPONENTS['appearance'])
 
   _DISK_UMOUNT_LINE = (
@@ -283,11 +283,11 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Literal('DISKDISAPPEAR').setResultsName('action') + _SEP_TOKEN +
       _PYPARSING_COMPONENTS['mount'] +
       _PYPARSING_COMPONENTS['volume'] +
-      _PYPARSING_COMPONENTS['bsdname'])
+      _PYPARSING_COMPONENTS['bsd_name'])
 
   LINE_STRUCTURES = [
       ('execution_line', _EXECUTION_LINE),
-      ('fsevent_line', _FILE_OPERATION_LINE),
+      ('file_system_event_line', _FILE_OPERATION_LINE),
       ('mount_line', _DISK_MOUNT_LINE),
       ('umount_line', _DISK_UMOUNT_LINE),
       ('quota_exceeded_line', _QUOTA_EXCEEDED_LINE)]
@@ -344,7 +344,7 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
 
-    if key == 'fsevent_line':
+    if key == 'file_system_event_line':
       event_data = SantaFileSystemEventData()
       event_data.action = structure.action
       event_data.file_path = structure.path
@@ -366,12 +366,12 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       event_data.action = structure.action
       event_data.mount = structure.mount
       event_data.volume = structure.volume
-      event_data.bsdname = structure.bsdname
+      event_data.bsd_name = structure.bsd_name
       event_data.fs = structure.get('fs', None)
       event_data.model = structure.get('model', None)
       event_data.serial = structure.get('serial', None)
       event_data.bus = structure.get('bus', None)
-      event_data.dmgpath = structure.get('dmgpath', None)
+      event_data.dmg_path = structure.get('dmg_path', None)
       event_data.appearance = structure.get('appearance', None)
 
       event = time_events.DateTimeValuesEvent(
@@ -379,13 +379,14 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
 
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def VerifyStructure(self, unused_parser_mediator, line):
+  # pylint: disable=unused-argument
+  def VerifyStructure(self, parser_mediator, line):
     """Verifies that this is a santa log file.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      lines (str): one or more lines from the text file.
+      line (str): line from the text file.
 
     Returns:
       bool: True if this is the correct parser, False otherwise.

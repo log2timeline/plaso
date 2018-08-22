@@ -30,7 +30,7 @@ class SantaExecutionFormatter(interface.ConditionalEventFormatter):
 class SantaFileSystemFormatter(interface.ConditionalEventFormatter):
   """Formatter for a santa file system event."""
 
-  DATA_TYPE = 'santa:fsevent'
+  DATA_TYPE = 'santa:file_system_event'
 
   FORMAT_STRING_PIECES = [
       'Santa {action} event',
@@ -56,7 +56,7 @@ class SantaDiskMountsFormatter(interface.ConditionalEventFormatter):
       'Santa {action}',
       'on ({mount})',
       'serial: ({serial})',
-      'for ({dmgpath})'
+      'for ({dmg_path})'
   ]
 
   FORMAT_STRING_SHORT_PIECES = [
