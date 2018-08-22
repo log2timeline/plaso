@@ -361,18 +361,40 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_WRITTEN)
 
-    if key in ('mount_line', 'umount_line'):
+    if key == 'umount_line':
       event_data = SantaMountEventData()
       event_data.action = structure.action
       event_data.mount = structure.mount
       event_data.volume = structure.volume
       event_data.bsd_name = structure.bsd_name
-      event_data.fs = structure.get('fs', None)
-      event_data.model = structure.get('model', None)
-      event_data.serial = structure.get('serial', None)
-      event_data.bus = structure.get('bus', None)
-      event_data.dmg_path = structure.get('dmg_path', None)
-      event_data.appearance = structure.get('appearance', None)
+
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
+
+    if key == 'mount_line':
+      event_data = SantaMountEventData()
+      event_data.action = structure.action
+      event_data.mount = structure.mount
+      event_data.volume = structure.volume
+      event_data.bsd_name = structure.bsd_name
+      event_data.fs = structure.fs
+      event_data.model = structure.model
+      event_data.serial = structure.serial
+      event_data.bus = structure.bus
+      event_data.dmg_path = structure.dmg_path
+      event_data.appearance = structure.appearance
+
+      if event_data.appearance:
+        new_date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
+
+        try:
+          new_date_time.CopyFromStringISO8601(event_data.appearance)
+          new_event = time_events.DateTimeValuesEvent(
+              new_date_time, definitions.TIME_DESCRIPTION_FIRST_CONNECTED)
+          parser_mediator.ProduceEventWithEventData(new_event, event_data)
+        except ValueError:
+          parser_mediator.ProduceExtractionError(
+              'invalid date time value: {0:s}'.format(event_data.appearance))
 
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_WRITTEN)

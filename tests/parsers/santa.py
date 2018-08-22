@@ -22,15 +22,17 @@ class SantaUnitTest(test_lib.ParserTestCase):
     parser = santa.SantaParser()
     storage_writer = self._ParseFile(['santa.log'], parser)
 
-    # Test file contains 194 lines, 3 lines should be skipped in the results.
-    self.assertEqual(storage_writer.number_of_events, 191)
+    # Test file contains 194 lines
+    # - 3 lines should be skipped in the results.
+    # - 17 new events should be added from existing lines.
+    self.assertEqual(storage_writer.number_of_events, 208)
 
     # The order in which DSVParser generates events is nondeterministic
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
     # Execution event with quarantine url.
-    event = events[35]
+    event = events[46]
     self.CheckTimestamp(event.timestamp, '2018-08-19 03:17:55.765000')
     self.assertEqual(
         event.quarantine_url,
@@ -46,7 +48,7 @@ class SantaUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     # File operation event log
-    event = events[142]
+    event = events[159]
     self.CheckTimestamp(event.timestamp, '2018-08-19 04:02:47.911000')
 
     # Test common fields in file operation event.
@@ -70,11 +72,11 @@ class SantaUnitTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    # Test the third event.
-    event = events[27]
+    # Disk mounts event log.
+    event = events[38]
     self.CheckTimestamp(event.timestamp, '2018-08-19 03:17:29.036000')
 
-    # Test common fields in file operation event.
+    # Test common fields in file Disk mounts event.
     self.assertEqual(event.action, 'DISKAPPEAR')
     self.assertEqual(event.mount, '')
     self.assertEqual(event.volume, 'Skype')
@@ -85,13 +87,18 @@ class SantaUnitTest(test_lib.ParserTestCase):
     self.assertEqual(event.bus, 'Virtual Interface')
     self.assertEqual(event.dmg_path,
                      '/Users/qwerty/Downloads/Skype-8.28.0.41.dmg')
-    self.assertEqual(event.appearance, '2018-08-19T03:17:28.983Z')
+    self.assertEqual(event.appearance, '2018-08-19T03:17:28.982Z')
 
     expected_message = (
         'Santa DISKAPPEAR for (/Users/qwerty/Downloads/Skype-8.28.0.41.dmg)')
     expected_short_message = 'DISKAPPEAR Skype'
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
+
+    # Test Disk event created from appearance timestamp.
+    event = events[35]
+    self.CheckTimestamp(event.timestamp, '2018-08-19 03:17:28.982000')
+    self.assertEqual(event.timestamp_desc, 'First Connection Time')
 
 
 if __name__ == '__main__':
