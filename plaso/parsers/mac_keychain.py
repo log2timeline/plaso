@@ -3,18 +3,6 @@
 
 from __future__ import unicode_literals
 
-# INFO: Only supports internet and application passwords,
-#       because it is the only data that contains timestamp events.
-#       Keychain can also store "secret notes". These notes are stored
-#       in the same type than the application format, then, they are already
-#       supported. The stored wifi are also application passwords.
-
-# TODO: the AccessControl for each entry has not been implemented. Until now,
-#       I know that the AccessControl from Internet and App password are stored
-#       using other tables (Symmetric, certificates, etc). Access Control
-#       indicates which specific tool, or all, is able to use this entry.
-
-
 import codecs
 import collections
 
@@ -39,7 +27,8 @@ class KeychainInternetRecordEventData(events.EventData):
     comments (str): comments added by the user.
     entry_name (str): name of the entry.
     protocol (str): internet protocol used, for example "https".
-    ssgp_hash (str): password / cert hash formatted as an hexadecimal string.
+    ssgp_hash (str): password/certificate hash formatted as an hexadecimal
+        string.
     text_description (str): description.
     type_protocol (str): sub-protocol used, for example "form".
     where (str): domain name or IP where the password is used.
@@ -551,7 +540,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
         file_object, record_offset + 24, 5)
 
     if attribute_value_offsets != (0x2d, 0x31, 0x35, 0x39, 0x3d):
-      raise errors.ParseError('Unuspported record attribute value offsets')
+      raise errors.ParseError('Unsupported record attribute value offsets')
 
     file_offset = file_object.tell()
     data_type_map = self._GetDataTypeMap('keychain_record_schema_indexes')
@@ -595,7 +584,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
         file_object, record_offset + 24, 2)
 
     if attribute_value_offsets != (0x21, 0x25):
-      raise errors.ParseError('Unuspported record attribute value offsets')
+      raise errors.ParseError('Unsupported record attribute value offsets')
 
     file_offset = file_object.tell()
     data_type_map = self._GetDataTypeMap('keychain_record_schema_information')
@@ -658,7 +647,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
 
     Args:
       file_object (file): file-like object.
-      tables_header_offset (int): offset of the tables header relative to
+      table_header_offset (int): offset of the tables header relative to
           the start of the file.
 
     Returns:
