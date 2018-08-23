@@ -142,8 +142,6 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
       'imap': 'imap',
       'http': 'http'}
 
-  # TODO
-
   _RECORD_TYPE_CSSM_DL_DB_SCHEMA_INFO = 0x00000000
   _RECORD_TYPE_CSSM_DL_DB_SCHEMA_INDEXES = 0x00000001
   _RECORD_TYPE_CSSM_DL_DB_SCHEMA_ATTRIBUTES = 0x00000002
@@ -350,7 +348,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     """Reads the record.
 
     Args:
-      tables (dict[str, KeychainDatabaseTable]): tables per name.
+      tables (dict[int, KeychainDatabaseTable]): tables per identifier.
       file_object (file): file-like object.
       record_offset (int): offset of the record relative to the start of
           the file.
@@ -461,7 +459,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     """Reads a schema attributes (CSSM_DL_DB_SCHEMA_ATTRIBUTES) record.
 
     Args:
-      tables (dict[str, KeychainDatabaseTable]): tables per name.
+      tables (dict[int, KeychainDatabaseTable]): tables per identifier.
       file_object (file): file-like object.
       record_offset (int): offset of the record relative to the start of
           the file.
@@ -539,7 +537,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     """Reads a schema indexes (CSSM_DL_DB_SCHEMA_INDEXES) record.
 
     Args:
-      tables (dict[str, KeychainDatabaseTable]): tables per name.
+      tables (dict[int, KeychainDatabaseTable]): tables per identifier.
       file_object (file): file-like object.
       record_offset (int): offset of the record relative to the start of
           the file.
@@ -583,7 +581,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     """Reads a schema information (CSSM_DL_DB_SCHEMA_INFO) record.
 
     Args:
-      tables (dict[str, KeychainDatabaseTable]): tables per name.
+      tables (dict[int, KeychainDatabaseTable]): tables per identifier.
       file_object (file): file-like object.
       record_offset (int): offset of the record relative to the start of
           the file.
@@ -627,7 +625,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     """Reads the table.
 
     Args:
-      tables (dict[str, KeychainDatabaseTable]): tables per name.
+      tables (dict[int, KeychainDatabaseTable]): tables per identifier.
       file_object (file): file-like object.
       table_offset (int): offset of the table relative to the start of
           the file.
@@ -685,7 +683,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
           the start of the file.
 
     Returns:
-      dict[str, KeychainDatabaseTable]: tables per name.
+      dict[int, KeychainDatabaseTable]: tables per identifier.
 
     Raises:
       ParseError: if the tables array cannot be read.
