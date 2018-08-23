@@ -58,7 +58,8 @@ class KeychainApplicationRecordEventData(events.EventData):
     account_name (str): name of the account.
     comments (str): comments added by the user.
     entry_name (str): name of the entry.
-    ssgp_hash (str): password / cert hash formatted as an hexadecimal string.
+    ssgp_hash (str): password/certificate hash formatted as an hexadecimal
+        string.
     text_description (str): description.
   """
 
