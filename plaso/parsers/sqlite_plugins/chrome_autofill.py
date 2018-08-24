@@ -8,7 +8,6 @@ Web Data.
 from __future__ import unicode_literals
 
 from dfdatetime import posix_time as dfdatetime_posix_time
-from dfdatetime import webkit_time as dfdatetime_webkit_time
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -59,6 +58,8 @@ class ChromeAutofillPlugin(interface.SQLitePlugin):
           'date_last_used INTEGER DEFAULT 0, count INTEGER DEFAULT 1, '
           'PRIMARY KEY (name, value));)')}]
 
+  REQUIRES_SCHEMA_MATCH = False
+
   def ParseAutofillRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses an autofill entry row.
@@ -90,7 +91,8 @@ class ChromeAutofillPlugin(interface.SQLitePlugin):
       timestamp = self._GetRowValue(query_hash, row, 'date_last_used')
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_CREATION)
+          date_time, definitions.TIME_DESCRIPTION_LAST_USED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
+
 
 sqlite.SQLiteParser.RegisterPlugin(ChromeAutofillPlugin)

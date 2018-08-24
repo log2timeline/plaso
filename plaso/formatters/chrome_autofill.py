@@ -13,13 +13,14 @@ class ChromeAutofillFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = 'chrome:autofill:entry'
 
   FORMAT_STRING_PIECES = [
-      '{field_name}',
-      '{value}',
-      '{usage_count}']
+      'Form field name: {field_name}',
+      'Entered value: {value}',
+      'Times used: {usage_count}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      '{field_name}',
-      '{value}']
+      '{field_name}:',
+      '{value}',
+      '({usage_count})']
 
   SOURCE_LONG = 'Chrome Autofill'
   SOURCE_SHORT = 'WEBHIST'
