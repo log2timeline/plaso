@@ -16,18 +16,17 @@ class TwitterAndroidContactEventData(events.EventData):
   """Twitter on Android contact event data.
 
   Attributes:
-    TODO: fill
-    id (int):
-    user_id (int):
-    username (str):
-    name (str):
-    description (str):
-    web_url (str):
-    location (str):
-    followers (int):
-    friends (int):
-    statuses (int):
-    image_url (str):
+    id (int): contact row id.
+    user_id (int): twitter account id.
+    username (str): twitter account handler.
+    name (str): twitter account name.
+    description (str): twitter account profile description.
+    web_url (str): twitter account profile url content.
+    location (str): twitter account profile location content.
+    followers (int): number of followers.
+    friends (int): number of following.
+    statuses (int): twitter account number of tweets.
+    image_url (str): profile picture url.
   """
 
   DATA_TYPE = 'twitter:android:contact'
@@ -53,13 +52,12 @@ class TwitterAndroidStatusEventData(events.EventData):
   """Twitter on Android status event data.
 
   Attributes:
-    TODO: fill
-    id (int):
-    author_id (int):
-    username (str):
-    content (str):
-    favorited (int):
-    retweeted (int):
+    id (int): status row id.
+    author_id (int): twitter account id.
+    username (str): twitter account handler.
+    content (str): status content.
+    favorited (int): favorited flag as 0/1 value.
+    retweeted (int): retweeted flag as 0/1 value.
   """
 
   DATA_TYPE = 'twitter:android:status'
