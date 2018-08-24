@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for the Google Chrome extension activity database plugin."""
+"""Tests for the Google Chrome autofill entries database plugin."""
 
 from __future__ import unicode_literals
 
