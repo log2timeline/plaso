@@ -63,6 +63,7 @@ from plaso.formatters import recycler
 from plaso.formatters import safari
 from plaso.formatters import safari_cookies
 from plaso.formatters import sam_users
+from plaso.formatters import santa
 from plaso.formatters import sccm
 from plaso.formatters import selinux
 from plaso.formatters import shell_items
