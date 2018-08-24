@@ -71,7 +71,6 @@ class JavaIDXParser(dtfabric_parser.DtFabricBaseParser):
           and other components, such as storage and dfvfs.
       file_object (dvfvs.FileIO): a file-like object to parse.
 
-
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """

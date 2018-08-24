@@ -114,7 +114,7 @@ class OutputMediator(object):
       event (EventObject): event.
 
     Returns:
-      list(str): list containing the attribute names. If no event formatter to
+      list[str]: list containing the attribute names. If no event formatter to
           match the event can be found the function returns None.
     """
     event_formatter = self.GetEventFormatter(event)

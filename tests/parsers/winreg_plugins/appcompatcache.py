@@ -38,7 +38,7 @@ class TestFileEntry(object):
 
   def GetStat(self):
     """Retrieves the stat object."""
-    return
+    return None
 
 
 class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):

@@ -178,7 +178,7 @@ class BaseEngine(object):
     """Creates a session attribute container.
 
     Args:
-      artifact_filter_names (Optional[list(str)]): names of artifact definitions
+      artifact_filter_names (Optional[list[str]]): names of artifact definitions
           that are used for filtering file system and Windows Registry
           key paths.
       command_line_arguments (Optional[str]): the command line arguments.
@@ -299,7 +299,7 @@ class BaseEngine(object):
        artifact_definitions_path (str): path to artifact definitions file.
        custom_artifacts_path (str): path to custom artifact definitions file.
        knowledge_base_object (KnowledgeBase): knowledge base.
-       artifact_filter_names (Optional[list(str)]): names of artifact
+       artifact_filter_names (Optional[list[str]]): names of artifact
           definitions that are used for filtering file system and Windows
           Registry key paths.
        filter_file_path (Optional[str]): Path of filter file.

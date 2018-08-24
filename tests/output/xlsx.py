@@ -67,7 +67,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
       filename (str): The file path of the XLSX document to parse.
 
     Returns:
-      list(list[str]): A list of lists representing the rows of the first sheet.
+      list[list[str]]: A list of lists representing the rows of the first sheet.
 
     Raises:
       ValueError: if the sheet cannot be found, or a string cannot be read.
