@@ -32,8 +32,8 @@ class ChromeAutofillEventData(events.EventData):
     super(ChromeAutofillEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.field_name = None
-    self.value = None
     self.usage_count = None
+    self.value = None
 
 
 class ChromeAutofillPlugin(interface.SQLitePlugin):
@@ -48,8 +48,7 @@ class ChromeAutofillPlugin(interface.SQLitePlugin):
         'autofill.value, autofill.count FROM autofill ORDER BY date_created'),
        'ParseAutofillRow')]
 
-  REQUIRED_TABLES = frozenset([
-      'autofill'])
+  REQUIRED_TABLES = frozenset(['autofill'])
 
   SCHEMAS = [{
       'autofill': (
@@ -57,8 +56,6 @@ class ChromeAutofillPlugin(interface.SQLitePlugin):
           'value_lower VARCHAR, date_created INTEGER DEFAULT 0, '
           'date_last_used INTEGER DEFAULT 0, count INTEGER DEFAULT 1, '
           'PRIMARY KEY (name, value));)')}]
-
-  REQUIRES_SCHEMA_MATCH = False
 
   def ParseAutofillRow(
       self, parser_mediator, query, row, **unused_kwargs):

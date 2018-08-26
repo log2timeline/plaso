@@ -17,7 +17,7 @@ from tests.parsers.sqlite_plugins import test_lib
 class ChromeAutofillPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Google Chrome autofill entries database plugin."""
 
-  @shared_test_lib.skipUnlessHasTestFile(['Extension Activity'])
+  @shared_test_lib.skipUnlessHasTestFile(['Web Data'])
   def testProcess(self):
     """Tests the Process function on a Chrome autofill entries database."""
     plugin = chrome_autofill.ChromeAutofillPlugin()
