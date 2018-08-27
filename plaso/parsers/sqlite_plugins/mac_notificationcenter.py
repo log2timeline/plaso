@@ -122,7 +122,6 @@ class MacNotificationCenterPlugin(interface.SQLitePlugin):
     event_data.title = req.get('titl', None)
     event_data.subtitle = req.get('subt', None)
     event_data.body = req.get('body', None)
-    event_data.identity = req.get('iden', None)
 
     timestamp = self._GetRowValue(query_hash, row, 'timestamp')
     date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)

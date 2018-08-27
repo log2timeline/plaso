@@ -55,7 +55,8 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
         ' '
         'registered by com.google.drivefs.  '
         'Delivery status "1",  '
-        'with the following content: "Drive File Stream is loading your files…"')
+        'with the following content: "Drive File Stream is loading your'
+        ' files…"')
     expected_short_message = (
         'Notification title "Drive File Stream"')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
