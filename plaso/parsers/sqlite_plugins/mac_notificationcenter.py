@@ -37,9 +37,9 @@ class MacNotificationCenterEventData(events.EventData):
     presented (int): either 1 or 0 if the notification has been shown to the
         user.
     subtitle (str): optional. Subtitle   of the notification message.
-    title (str): title of the message. Usually the name of the application that generated the
-        notification. Occasionally the name of the sender of the notification
-        for example, in case of chat messages.
+    title (str): title of the message. Usually the name of the application
+        that generated the notification. Occasionally the name of the sender
+        of the notification for example, in case of chat messages.
   """
 
   DATA_TYPE = 'mac:notificationcenter:db'
