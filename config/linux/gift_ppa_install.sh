@@ -45,6 +45,7 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-dtfabric
                       python-efilter
                       python-elasticsearch
+                      python-elasticsearch5
                       python-future
                       python-hachoir-core
                       python-hachoir-metadata

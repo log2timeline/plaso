@@ -214,7 +214,7 @@ class WinEvtParser(interface.FileObjectParser):
       except IOError as exception:
         parser_mediator.ProduceExtractionError((
             'unable to parse recovered event record: {0:d} with error: '
-            '{1:s}').format(record_index, exception))
+            '{1!s}').format(record_index, exception))
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows EventLog (EVT) file-like object.

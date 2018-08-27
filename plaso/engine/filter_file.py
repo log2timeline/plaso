@@ -78,7 +78,7 @@ class FilterFile(object):
           except KeyError as exception:
             logger.error((
                 'Unable to expand path filter: {0:s} with error: '
-                '{1:s}').format(line, exception))
+                '{1!s}').format(line, exception))
             continue
 
         if not line.startswith('/'):

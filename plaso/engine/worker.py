@@ -578,7 +578,7 @@ class EventExtractionWorker(object):
       except dfvfs_errors.BackEndError as exception:
         error_message = (
             'unable to process directory entry: {0:s} with error: '
-            '{1:s}').format(sub_file_entry.name, exception)
+            '{1!s}').format(sub_file_entry.name, exception)
         mediator.ProduceExtractionError(
             error_message, path_spec=file_entry.path_spec)
         continue

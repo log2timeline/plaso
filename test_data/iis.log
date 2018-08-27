@@ -13,3 +13,4 @@
 2013-07-30 00:00:08 SOME1234NAME 10.10.10.100 GET /some/image/path/something.jpg - 80 - 22.22.22.200 Mozilla/5.0+(Windows+NT+5.1;+rv:10.0)+Gecko/20100101+Firefox/10.0 200 0 0
 2013-07-30 00:00:12 SOME1234NAME 10.10.10.100 GET / - 80 - 22.22.22.200 Mozilla/5.0+(iPhone;+CPU+iPhone+OS+6_1_3+like+Mac+OS+X)+AppleWebKit/536.26+(KHTML,+like+Gecko)+Mobile/10B329 302 0 0
 2013-07-30 00:00:13 SOME1234NAME 10.10.10.100 POST /some/image/path/something.jpg requesttimeout=500 80 - 22.22.22.200 Mozilla/4.0+(compatible;+MSIE+8.0;+Windows+NT+6.1;+Trident/4.0;+SLCC2;+.NET+CLR+2.0.50727;+.NET+CLR+3.5.30729;+.NET+CLR+3.0.30729;+Media+Center+PC+6.0;+.NET+CLR+1.1.4322;+.NET4.0C;+.NET4.0E;+InfoPath.2) 302 0 0
+2015-10-16 13:01:02 SOME1234NAME 10.10.10.100 GET /foo/bar/baz.asp ID=ERROR[`cat%20passwd|echo`] 443 - 222.222.222.222 - 500 0 0

@@ -1,0 +1,187 @@
+name: keychain
+type: format
+description: MacOS keychain database file format.
+urls: ["https://github.com/libyal/dtformats/blob/master/documentation/MacOS%20keychain%20database%20file%20format.asciidoc"]
+---
+name: byte
+type: integer
+attributes:
+  format: unsigned
+  size: 1
+  units: bytes
+---
+name: char
+type: integer
+attributes:
+  format: signed
+  size: 1
+  units: bytes
+---
+name: uint16
+type: integer
+attributes:
+  format: unsigned
+  size: 2
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: uint32be
+type: integer
+attributes:
+  byte_order: big-endian
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: keychain_blob
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: size
+  data_type: uint32
+- name: blob
+  type: stream
+  element_data_type: char
+  number_of_elements: keychain_blob.size
+---
+name: keychain_date_time
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: date_time
+  type: string
+  encoding: ascii
+  element_data_type: char
+  number_of_elements: 16
+---
+name: keychain_string
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: size
+  data_type: uint32
+- name: string
+  type: string
+  encoding: ascii
+  element_data_type: char
+  number_of_elements: keychain_string.size
+---
+name: keychain_file_header
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: signature
+  type: stream
+  element_data_type: byte
+  elements_data_size: 4
+- name: major_format_version
+  data_type: uint16
+- name: minor_format_version
+  data_type: uint16
+- name: data_size
+  data_type: uint32
+- name: tables_array_offset
+  data_type: uint32
+- name: unknown1
+  data_type: uint32
+---
+name: keychain_tables_array
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: data_size
+  data_type: uint32
+- name: number_of_tables
+  data_type: uint32
+- name: table_offsets
+  type: sequence
+  element_data_type: uint32be
+  number_of_elements: keychain_tables_array.number_of_tables
+---
+name: keychain_table_header
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: data_size
+  data_type: uint32
+- name: record_type
+  data_type: uint32
+- name: number_of_records
+  data_type: uint32
+- name: records_array_offset
+  data_type: uint32
+- name: unknown1
+  data_type: uint32
+- name: unknown2
+  data_type: uint32
+- name: number_of_record_offsets
+  data_type: uint32
+- name: record_offsets
+  type: sequence
+  element_data_type: uint32be
+  number_of_elements: keychain_table_header.number_of_record_offsets
+---
+name: keychain_record_header
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: data_size
+  data_type: uint32
+- name: record_index
+  data_type: uint32
+- name: unknown2
+  data_type: uint32
+- name: unknown3
+  data_type: uint32
+- name: key_data_size
+  data_type: uint32
+- name: unknown4
+  data_type: uint32
+---
+name: keychain_record_attribute_value_offsets
+type: sequence
+element_data_type: uint32be
+number_of_elements: number_of_attribute_values
+---
+name: keychain_record_schema_indexes
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: relation_identifier
+  data_type: uint32
+- name: index_identifier
+  data_type: uint32
+- name: attribute_identifier
+  data_type: uint32
+- name: index_type
+  data_type: uint32
+- name: index_data_location
+  data_type: uint32
+---
+name: keychain_record_schema_information
+type: structure
+attributes:
+  byte_order: big-endian
+members:
+- name: relation_identifier
+  data_type: uint32
+- name: relation_name_size
+  data_type: uint32
+- name: relation_name
+  type: stream
+  element_data_type: char
+  number_of_elements: keychain_record_schema_information.relation_name_size

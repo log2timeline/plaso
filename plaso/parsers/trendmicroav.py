@@ -256,7 +256,10 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
 
     # Check the date format!
     # If it doesn't parse, then this isn't a Trend Micro AV log.
-    timestamp = self._ConvertToTimestamp(row['date'], row['time'])
+    try:
+      timestamp = self._ConvertToTimestamp(row['date'], row['time'])
+    except (ValueError, TypeError):
+      return False
 
     if timestamp is None:
       return False
@@ -366,7 +369,10 @@ class OfficeScanWebReputationParser(TrendMicroBaseParser):
 
     # Check the date format!
     # If it doesn't parse, then this isn't a Trend Micro AV log.
-    timestamp = self._ConvertToTimestamp(row['date'], row['time'])
+    try:
+      timestamp = self._ConvertToTimestamp(row['date'], row['time'])
+    except ValueError:
+      return False
 
     if timestamp is None:
       return False

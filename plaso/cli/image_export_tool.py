@@ -461,7 +461,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     except IOError as exception:
       raise IOError((
           'Unable to read format specification file: {0:s} with error: '
-          '{1:s}').format(path, exception))
+          '{1!s}').format(path, exception))
 
     signature_identifiers = signature_identifiers.lower()
     signature_identifiers = [
@@ -614,7 +614,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     except IOError as exception:
       raise errors.BadConfigOption((
           'Unable to read format specification file: {0:s} with error: '
-          '{1:s}').format(path, exception))
+          '{1!s}').format(path, exception))
 
     identifiers = []
     for format_specification in specification_store.specifications:

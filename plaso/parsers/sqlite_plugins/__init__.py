@@ -7,6 +7,7 @@ from plaso.parsers.sqlite_plugins import android_webview
 from plaso.parsers.sqlite_plugins import android_webviewcache
 from plaso.parsers.sqlite_plugins import appusage
 from plaso.parsers.sqlite_plugins import chrome
+from plaso.parsers.sqlite_plugins import chrome_autofill
 from plaso.parsers.sqlite_plugins import chrome_cookies
 from plaso.parsers.sqlite_plugins import chrome_extension_activity
 from plaso.parsers.sqlite_plugins import firefox
@@ -23,4 +24,5 @@ from plaso.parsers.sqlite_plugins import mackeeper_cache
 from plaso.parsers.sqlite_plugins import safari
 from plaso.parsers.sqlite_plugins import skype
 from plaso.parsers.sqlite_plugins import twitter_ios
+from plaso.parsers.sqlite_plugins import windows_timeline
 from plaso.parsers.sqlite_plugins import zeitgeist
