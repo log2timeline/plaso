@@ -218,7 +218,7 @@ class WinLnkParser(interface.FileObjectParser):
       except (TypeError, ValueError) as exception:
         parser_mediator.ProduceExtractionError((
             'unable to read birth droid file identifier with error: '
-            '{0:s}.').format(exception))
+            '{0!s}.').format(exception))
 
     lnk_file.close()
 

@@ -214,7 +214,7 @@ class WinEvtParser(interface.FileObjectParser):
       except IOError as exception:
         parser_mediator.ProduceExtractionError((
             'unable to parse recovered event record: {0:d} with error: '
-            '{1:s}').format(record_index, exception))
+            '{1!s}').format(record_index, exception))
 
   # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
   # pylint: disable=missing-param-doc

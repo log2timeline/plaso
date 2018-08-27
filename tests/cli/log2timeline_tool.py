@@ -511,7 +511,7 @@ optional arguments:
       except IOError as exception:
         self.fail((
             'Unable to open storage file after processing with error: '
-            '{0:s}.').format(exception))
+            '{0!s}.').format(exception))
 
       # There should be 3 filestat and 3 pe parser generated events.
       events = list(storage_file.GetSortedEvents())

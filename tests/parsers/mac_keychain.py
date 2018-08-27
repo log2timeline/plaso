@@ -38,7 +38,6 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
     expected_ssgp = (
         'b8e44863af1cb0785b89681d22e2721997ccfb8adb8853e726aff94c8830b05a')
     self.assertEqual(event.ssgp_hash, expected_ssgp)
-    self.assertEqual(event.text_description, 'N/A')
     expected_message = 'Name: Secret Application Account: moxilo'
     expected_short_message = 'Secret Application'
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
@@ -74,7 +73,6 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.where, 'plaso.kiddaland.net')
     self.assertEqual(event.protocol, 'http')
     self.assertEqual(event.type_protocol, 'dflt')
-    self.assertEqual(event.text_description, 'N/A')
 
     expected_message = (
         'Name: plaso.kiddaland.net '

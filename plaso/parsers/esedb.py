@@ -98,7 +98,7 @@ class ESEDBParser(interface.FileObjectParser):
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionError((
               'plugin: {0:s} unable to parse ESE database with error: '
-              '{1:s}').format(plugin.NAME, exception))
+              '{1!s}').format(plugin.NAME, exception))
 
     finally:
       # TODO: explicitly clean up cache.

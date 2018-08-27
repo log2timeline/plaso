@@ -542,7 +542,7 @@ class PathSpecExtractor(object):
       except (
           IOError, dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
           dfvfs_errors.PathSpecError) as exception:
-        logger.warning('{0:s}'.format(exception))
+        logger.warning('{0!s}'.format(exception))
 
   def _ExtractPathSpecsFromFile(self, file_entry):
     """Extracts path specification from a file.
@@ -616,7 +616,7 @@ class PathSpecExtractor(object):
     except (
         dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
         dfvfs_errors.PathSpecError) as exception:
-      logger.warning('{0:s}'.format(exception))
+      logger.warning('{0!s}'.format(exception))
 
     finally:
       file_system.Close()

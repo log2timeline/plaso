@@ -15,6 +15,7 @@ from plaso.formatters import bencode_parser
 from plaso.formatters import bsm
 from plaso.formatters import ccleaner
 from plaso.formatters import chrome
+from plaso.formatters import chrome_autofill
 from plaso.formatters import chrome_cache
 from plaso.formatters import chrome_cookies
 from plaso.formatters import chrome_extension_activity
@@ -63,6 +64,7 @@ from plaso.formatters import recycler
 from plaso.formatters import safari
 from plaso.formatters import safari_cookies
 from plaso.formatters import sam_users
+from plaso.formatters import santa
 from plaso.formatters import sccm
 from plaso.formatters import selinux
 from plaso.formatters import shell_items

@@ -117,11 +117,11 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
         'olecf', 'openxml', 'opera_global', 'opera_typed_history', 'pe',
         'plist/safari_history', 'prefetch', 'sccm', 'skydrive_log',
         'skydrive_log_old', 'sqlite/chrome_27_history',
-        'sqlite/chrome_8_history', 'sqlite/chrome_cookies',
-        'sqlite/chrome_extension_activity', 'sqlite/firefox_cookies',
-        'sqlite/firefox_downloads', 'sqlite/firefox_history',
-        'sqlite/google_drive', 'sqlite/skype', 'symantec_scanlog', 'usnjrnl',
-        'winfirewall', 'winjob', 'winreg']
+        'sqlite/chrome_8_history', 'sqlite/chrome_autofill',
+        'sqlite/chrome_cookies', 'sqlite/chrome_extension_activity',
+        'sqlite/firefox_cookies', 'sqlite/firefox_downloads',
+        'sqlite/firefox_history', 'sqlite/google_drive', 'sqlite/skype',
+        'symantec_scanlog', 'usnjrnl', 'winfirewall', 'winjob', 'winreg']
 
     parser_names = manager.ParsersManager._GetParsersFromPresetCategory(
         'win_gen')
