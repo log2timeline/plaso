@@ -357,7 +357,8 @@ class TwitterAndroidPlugin(interface.SQLitePlugin):
     event_data = TwitterAndroidStatusEventData()
     event_data.query = query
     event_data.identifier = self._GetRowValue(query_hash, row, '_id')
-    event_data.author_identifier = self._GetRowValue(query_hash, row, 'author_id')
+    event_data.author_identifier = self._GetRowValue(
+        query_hash, row, 'author_id')
     event_data.username = self._GetRowValue(query_hash, row, 'username')
     event_data.content = self._GetRowValue(query_hash, row, 'content')
     event_data.favorited = self._GetRowValue(query_hash, row, 'favorited')
