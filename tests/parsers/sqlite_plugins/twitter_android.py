@@ -39,10 +39,10 @@ class TwitterAndroidTest(test_lib.SQLitePluginTestCase):
         '@CarolMovie wins BEST PICTURE at #NYFCC!!! CONGRATS #TeamCarol!!! '
         'Love love! #carolfilm https://t.co/ycy9cHPLZ7')
 
-    self.assertEqual(event.author_id, 2730978846)
+    self.assertEqual(event.author_identifier, 2730978846)
     self.assertEqual(event.content, expected_content)
     self.assertEqual(event.favorited, 0)
-    self.assertEqual(event.id, 4)
+    self.assertEqual(event.identifier, 4)
     self.assertEqual(event.retweeted, 0)
     self.assertEqual(event.username, 'CarolMovieFans')
 
@@ -80,8 +80,8 @@ class TwitterAndroidTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
-    self.assertEqual(event.id, 62)
-    self.assertEqual(event.user_id, 14995801)
+    self.assertEqual(event.identifier, 62)
+    self.assertEqual(event.user_identifier, 14995801)
     self.assertEqual(event.username, 'timbuk2')
     self.assertEqual(event.name, 'Timbuk2')
 

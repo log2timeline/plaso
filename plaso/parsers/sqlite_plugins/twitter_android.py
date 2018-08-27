@@ -16,8 +16,8 @@ class TwitterAndroidContactEventData(events.EventData):
   """Twitter on Android contact event data.
 
   Attributes:
-    id (int): contact row id.
-    user_id (int): twitter account id.
+    identifier (int): contact row id.
+    user_identifier (int): twitter account id.
     username (str): twitter account handler.
     name (str): twitter account name.
     description (str): twitter account profile description.
@@ -35,8 +35,8 @@ class TwitterAndroidContactEventData(events.EventData):
     """Initializes event data."""
     super(TwitterAndroidContactEventData,
           self).__init__(data_type=self.DATA_TYPE)
-    self.id = None
-    self.user_id = None
+    self.identifier = None
+    self.user_identifier = None
     self.username = None
     self.name = None
     self.description = None
@@ -52,8 +52,8 @@ class TwitterAndroidStatusEventData(events.EventData):
   """Twitter on Android status event data.
 
   Attributes:
-    id (int): status row id.
-    author_id (int): twitter account id.
+    identifier (int): status row identifier.
+    author_identifier (int): twitter account identifier.
     username (str): twitter account handler.
     content (str): status content.
     favorited (int): favorited flag as 0/1 value.
@@ -66,8 +66,8 @@ class TwitterAndroidStatusEventData(events.EventData):
     """Initializes event data."""
     super(TwitterAndroidStatusEventData,
           self).__init__(data_type=self.DATA_TYPE)
-    self.id = None
-    self.author_id = None
+    self.identifier = None
+    self.author_identifier = None
     self.username = None
     self.content = None
     self.favorited = None
@@ -109,18 +109,7 @@ class TwitterAndroidPlugin(interface.SQLitePlugin):
         'web_url, location, followers, friends, statuses, image_url, updated, '
         'friendship_time FROM users'), 'ParseContactRow')]
 
-  REQUIRED_TABLES = frozenset([
-      'activities', 'ads_account_permissions', 'android_metadata',
-      'business_profiles', 'card_state', 'category_timestamp', 'clusters',
-      'conversation_entries', 'conversation_participants', 'conversations',
-      'cursors', 'dismiss_info', 'feedback_action', 'list_mapping', 'locations',
-      'moments', 'moments_guide', 'moments_guide_categories',
-      'moments_guide_user_states', 'moments_pages', 'moments_sections',
-      'moments_visit_badge', 'news', 'notifications', 'one_click',
-      'order_history', 'promoted_retry', 'prompts', 'rankings',
-      'search_queries', 'search_results', 'search_suggestion_metadata',
-      'status_groups', 'status_metadata', 'statuses', 'stories', 'timeline',
-      'tokens', 'topics', 'user_groups', 'user_metadata', 'users'])
+  REQUIRED_TABLES = frozenset(['search_queries', 'statuses', 'users'])
 
   SCHEMAS = [{
       'activities': (
@@ -137,7 +126,7 @@ class TwitterAndroidPlugin(interface.SQLitePlugin):
       'android_metadata': (
           'CREATE TABLE android_metadata (locale TEXT)'),
       'business_profiles': (
-          'CREATE TABLE business_profiles (_id INTEGER PRIMARY KEY,user_id '
+          'CREATE TABLE business_profiles (_id INTEGER PRIMARY KEY,user_identifier '
           'INT UNIQUE NOT NULL,business_profile BLOB,last_synced INT NOT '
           'NULL)'),
       'card_state': (
@@ -154,11 +143,11 @@ class TwitterAndroidPlugin(interface.SQLitePlugin):
       'conversation_entries': (
           'CREATE TABLE conversation_entries (_id INTEGER PRIMARY '
           'KEY,entry_id INT UNIQUE NOT NULL,sort_entry_id INT UNIQUE NOT '
-          'NULL,conversation_id TEXT,user_id INT,created INT,entry_type '
+          'NULL,conversation_id TEXT,user_identifier INT,created INT,entry_type '
           'INT,data BLOB,request_id TEXT)'),
       'conversation_participants': (
           'CREATE TABLE conversation_participants (_id INTEGER PRIMARY '
-          'KEY,conversation_id TEXT NOT NULL,user_id TEXT NOT NULL,join_time '
+          'KEY,conversation_id TEXT NOT NULL,user_identifier TEXT NOT NULL,join_time '
           'INT NOT NULL,participant_type INT NOT NULL)'),
       'conversations': (
           'CREATE TABLE conversations (_id INTEGER PRIMARY '
@@ -312,15 +301,15 @@ class TwitterAndroidPlugin(interface.SQLitePlugin):
           'BLOB,ev_content BLOB,ev_hash INT)'),
       'user_groups': (
           'CREATE TABLE user_groups (_id INTEGER PRIMARY KEY,type INT,tag '
-          'INT,rank INT,owner_id INT,user_id INT,is_last INT,pc BLOB,g_flags '
+          'INT,rank INT,owner_id INT,user_identifier INT,is_last INT,pc BLOB,g_flags '
           'INT)'),
       'user_metadata': (
           'CREATE TABLE user_metadata (_id INTEGER PRIMARY KEY,owner_id INT '
-          'NOT NULL,user_id INT NOT NULL,user_group_type INT NOT '
+          'NOT NULL,user_identifier INT NOT NULL,user_group_type INT NOT '
           'NULL,user_group_tag INT NOT NULL,soc_type INT,soc_name '
           'TEXT,soc_follow_count INT,user_title TEXT,token TEXT)'),
       'users': (
-          'CREATE TABLE users (_id INTEGER PRIMARY KEY,user_id INT UNIQUE NOT '
+          'CREATE TABLE users (_id INTEGER PRIMARY KEY,user_identifier INT UNIQUE NOT '
           'NULL,username TEXT,name TEXT,description TEXT,web_url '
           'TEXT,bg_color INT,location TEXT,structured_location '
           'BLOB,user_flags INT,followers INT,fast_followers INT DEFAULT '
@@ -367,8 +356,8 @@ class TwitterAndroidPlugin(interface.SQLitePlugin):
 
     event_data = TwitterAndroidStatusEventData()
     event_data.query = query
-    event_data.id = self._GetRowValue(query_hash, row, '_id')
-    event_data.author_id = self._GetRowValue(query_hash, row, 'author_id')
+    event_data.identifier = self._GetRowValue(query_hash, row, '_id')
+    event_data.author_identifier = self._GetRowValue(query_hash, row, 'author_id')
     event_data.username = self._GetRowValue(query_hash, row, 'username')
     event_data.content = self._GetRowValue(query_hash, row, 'content')
     event_data.favorited = self._GetRowValue(query_hash, row, 'favorited')
@@ -394,8 +383,8 @@ class TwitterAndroidPlugin(interface.SQLitePlugin):
 
     event_data = TwitterAndroidContactEventData()
     event_data.query = query
-    event_data.id = self._GetRowValue(query_hash, row, '_id')
-    event_data.user_id = self._GetRowValue(query_hash, row, 'user_id')
+    event_data.identifier = self._GetRowValue(query_hash, row, '_id')
+    event_data.user_identifier = self._GetRowValue(query_hash, row, 'user_id')
     event_data.username = self._GetRowValue(query_hash, row, 'username')
     event_data.name = self._GetRowValue(query_hash, row, 'name')
     event_data.description = self._GetRowValue(query_hash, row, 'description')
