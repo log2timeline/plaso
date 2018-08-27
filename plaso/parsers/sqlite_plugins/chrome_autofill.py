@@ -1,0 +1,95 @@
+# -*- coding: utf-8 -*-
+"""Parser for Google Chrome autofill entries.
+
+The Chrome autofill information is stored in SQLite database files named
+Web Data.
+"""
+
+from __future__ import unicode_literals
+
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import events
+from plaso.containers import time_events
+from plaso.lib import definitions
+from plaso.parsers import sqlite
+from plaso.parsers.sqlite_plugins import interface
+
+
+class ChromeAutofillEventData(events.EventData):
+  """Chrome Autofill event data.
+
+  Attributes:
+    field_name (str): name of form field.
+    value (str): value populated in form field.
+    usage_count (int): count of times value has been used in field_name.
+  """
+
+  DATA_TYPE = 'chrome:autofill:entry'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(ChromeAutofillEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.field_name = None
+    self.usage_count = None
+    self.value = None
+
+
+class ChromeAutofillPlugin(interface.SQLitePlugin):
+  """Plugin to parse Chrome Autofill entries from Web Data database files."""
+
+  NAME = 'chrome_autofill'
+  DESCRIPTION = 'Parser for Chrome autofill SQLite database files.'
+
+  # Define the needed queries.
+  QUERIES = [
+      (('SELECT autofill.date_created, autofill.date_last_used, autofill.name, '
+        'autofill.value, autofill.count FROM autofill ORDER BY date_created'),
+       'ParseAutofillRow')]
+
+  REQUIRED_TABLES = frozenset(['autofill'])
+
+  SCHEMAS = [{
+      'autofill': (
+          'CREATE TABLE autofill (name VARCHAR, value VARCHAR, '
+          'value_lower VARCHAR, date_created INTEGER DEFAULT 0, '
+          'date_last_used INTEGER DEFAULT 0, count INTEGER DEFAULT 1, '
+          'PRIMARY KEY (name, value));)')}]
+
+  def ParseAutofillRow(
+      self, parser_mediator, query, row, **unused_kwargs):
+    """Parses an autofill entry row.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      query (str): query that created the row.
+      row (sqlite3.Row): row.
+    """
+    query_hash = hash(query)
+
+    event_data = ChromeAutofillEventData()
+    event_data.field_name = self._GetRowValue(query_hash, row, 'name')
+    event_data.value = self._GetRowValue(query_hash, row, 'value')
+    event_data.usage_count = self._GetRowValue(query_hash, row, 'count')
+    event_data.query = query
+
+    # Create one event for the first time an autofill entry was used
+    timestamp = self._GetRowValue(query_hash, row, 'date_created')
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+    event = time_events.DateTimeValuesEvent(
+        date_time, definitions.TIME_DESCRIPTION_CREATION)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    # If the autofill value has been used more than once, create another
+    # event for the most recent time it was used.
+    if event_data.usage_count > 1:
+      timestamp = self._GetRowValue(query_hash, row, 'date_last_used')
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_LAST_USED)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+
+sqlite.SQLiteParser.RegisterPlugin(ChromeAutofillPlugin)
