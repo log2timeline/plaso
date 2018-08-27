@@ -126,7 +126,7 @@ class TwitterAndroidPlugin(interface.SQLitePlugin):
       'android_metadata': (
           'CREATE TABLE android_metadata (locale TEXT)'),
       'business_profiles': (
-          'CREATE TABLE business_profiles (_id INTEGER PRIMARY KEY,user_identifier '
+          'CREATE TABLE business_profiles (_id INTEGER PRIMARY KEY,user_id '
           'INT UNIQUE NOT NULL,business_profile BLOB,last_synced INT NOT '
           'NULL)'),
       'card_state': (
@@ -143,11 +143,11 @@ class TwitterAndroidPlugin(interface.SQLitePlugin):
       'conversation_entries': (
           'CREATE TABLE conversation_entries (_id INTEGER PRIMARY '
           'KEY,entry_id INT UNIQUE NOT NULL,sort_entry_id INT UNIQUE NOT '
-          'NULL,conversation_id TEXT,user_identifier INT,created INT,entry_type '
+          'NULL,conversation_id TEXT,user_id INT,created INT,entry_type '
           'INT,data BLOB,request_id TEXT)'),
       'conversation_participants': (
           'CREATE TABLE conversation_participants (_id INTEGER PRIMARY '
-          'KEY,conversation_id TEXT NOT NULL,user_identifier TEXT NOT NULL,join_time '
+          'KEY,conversation_id TEXT NOT NULL,user_id TEXT NOT NULL,join_time '
           'INT NOT NULL,participant_type INT NOT NULL)'),
       'conversations': (
           'CREATE TABLE conversations (_id INTEGER PRIMARY '
@@ -301,15 +301,15 @@ class TwitterAndroidPlugin(interface.SQLitePlugin):
           'BLOB,ev_content BLOB,ev_hash INT)'),
       'user_groups': (
           'CREATE TABLE user_groups (_id INTEGER PRIMARY KEY,type INT,tag '
-          'INT,rank INT,owner_id INT,user_identifier INT,is_last INT,pc BLOB,g_flags '
+          'INT,rank INT,owner_id INT,user_id INT,is_last INT,pc BLOB,g_flags '
           'INT)'),
       'user_metadata': (
           'CREATE TABLE user_metadata (_id INTEGER PRIMARY KEY,owner_id INT '
-          'NOT NULL,user_identifier INT NOT NULL,user_group_type INT NOT '
+          'NOT NULL,user_id INT NOT NULL,user_group_type INT NOT '
           'NULL,user_group_tag INT NOT NULL,soc_type INT,soc_name '
           'TEXT,soc_follow_count INT,user_title TEXT,token TEXT)'),
       'users': (
-          'CREATE TABLE users (_id INTEGER PRIMARY KEY,user_identifier INT UNIQUE NOT '
+          'CREATE TABLE users (_id INTEGER PRIMARY KEY,user_id INT UNIQUE NOT '
           'NULL,username TEXT,name TEXT,description TEXT,web_url '
           'TEXT,bg_color INT,location TEXT,structured_location '
           'BLOB,user_flags INT,followers INT,fast_followers INT DEFAULT '
