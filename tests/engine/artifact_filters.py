@@ -188,8 +188,8 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
 
     # Location segments should be equivalent to \Windows\test_data\*.evtx.
     if py2to3.PY_3:
-      # Underscores are not escaped in regular expressions in Python 3.3+.
-      # See https://bugs.python.org/issue2650.
+      # Underscores are not escaped in regular expressions in supported version
+      # of Python 3. See https://bugs.python.org/issue2650.
       path_segments = ['Windows', 'test_data', '.*\\.evtx']
     else:
       path_segments = ['Windows', 'test\\_data', '.*\\.evtx']
