@@ -36,6 +36,7 @@ class TestFileEntry(object):
     self.name = name
     self.path_spec = fake_path_spec.FakePathSpec(location=name)
 
+  # pylint: disable=redundant-returns-doc
   def GetStat(self):
     """Retrieves the stat object.
 
