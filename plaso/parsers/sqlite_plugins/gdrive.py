@@ -173,7 +173,7 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     """Return cloud path given a resource id.
 
     Args:
-      resource_id (str): The resource_id for the file.
+      resource_id (str): resource identifier for the file.
       cache (SQLiteCache): cache.
       database (SQLiteDatabase): database.
 
