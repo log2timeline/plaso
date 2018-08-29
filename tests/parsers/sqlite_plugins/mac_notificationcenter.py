@@ -35,13 +35,13 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event.body, "KeePassXC can now be run")
     self.assertEqual(event.bundle_name, "com.google.santagui")
     expected_message = (
-        'Notification title "Santa" '
+        'Title: Santa'
         ' '
-        'registered by com.google.santagui.  '
-        'Delivery status "1",  '
-        'with the following content: "KeePassXC can now be run"')
+        'registered by: com.google.santagui. '
+        'Presented: Yes, '
+        'Content: KeePassXC can now be run')
     expected_short_message = (
-        'Notification title "Santa"')
+        'Title: Santa, Content: KeePassXC can now be run')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[2]
@@ -51,14 +51,15 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event.title, "Drive File Stream")
     self.assertEqual(event.bundle_name, "com.google.drivefs")
     expected_message = (
-        'Notification title "Drive File Stream" '
+        'Title: Drive File Stream'
         ' '
-        'registered by com.google.drivefs.  '
-        'Delivery status "1",  '
-        'with the following content: "Drive File Stream is loading your'
-        ' files…"')
+        'registered by: com.google.drivefs. '
+        'Presented: Yes, '
+        'Content: Drive File Stream is loading your'
+        ' files…')
     expected_short_message = (
-        'Notification title "Drive File Stream"')
+        'Title: Drive File Stream, Content: Drive File Stream is loading your '
+        'files…')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[5]
@@ -68,13 +69,13 @@ class MacNotificationCenterTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event.body, "PyCharm can now be run")
     self.assertEqual(event.bundle_name, "com.google.santagui")
     expected_message = (
-        'Notification title "Santa" '
+        'Title: Santa'
         ' '
-        'registered by com.google.santagui.  '
-        'Delivery status "1",  '
-        'with the following content: "PyCharm can now be run"')
+        'registered by: com.google.santagui. '
+        'Presented: Yes, '
+        'Content: PyCharm can now be run')
     expected_short_message = (
-        'Notification title "Santa"')
+        'Title: Santa, Content: PyCharm can now be run')
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 if __name__ == '__main__':
