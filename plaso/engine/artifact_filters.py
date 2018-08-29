@@ -138,7 +138,7 @@ class ArtifactDefinitionsFilterHelper(object):
     Args:
       source_path (str): file system path defined by the source.
       path_separator (str): file system path segment separator.
-      environment_variables list(str): environment variable attributes used to
+      environment_variables (list[str]): environment variable attributes used to
           dynamically populate environment variables in key.
       user_accounts (list[str]): identified user accounts stored in the
           knowledge base.

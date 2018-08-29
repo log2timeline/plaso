@@ -21,6 +21,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.containers import artifacts
 from plaso.engine import artifact_filters
 from plaso.engine import knowledge_base as knowledge_base_engine
+from plaso.lib import py2to3
 from plaso.parsers import winreg as windows_registry_parser
 
 from tests import test_lib as shared_test_lib
@@ -186,7 +187,13 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(find_specs), 1)
 
     # Location segments should be equivalent to \Windows\test_data\*.evtx.
-    path_segments = ['Windows', 'test\\_data', '.*\\.evtx']
+    if py2to3.PY_3:
+      # Underscores are not escaped in regular expressions in supported versions
+      # of Python 3. See https://bugs.python.org/issue2650.
+      path_segments = ['Windows', 'test_data', '.*\\.evtx']
+    else:
+      path_segments = ['Windows', 'test\\_data', '.*\\.evtx']
+
     self.assertEqual(find_specs[0]._location_segments, path_segments)
 
     # Test expansion of globs.
@@ -198,9 +205,16 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(find_specs), 10)
 
     # Last entry in find_specs list should be 10 levels of depth.
-    path_segments = [
-        'test\\_data', '.*', '.*', '.*', '.*', '.*', '.*', '.*', '.*', '.*',
-        '.*']
+    if py2to3.PY_3:
+      # Underscores are not escaped in regular expressions in supported versions
+      # of Python 3. See https://bugs.python.org/issue2650
+      path_segments = ['test_data']
+    else:
+      path_segments = ['test\\_data']
+
+    path_segments.extend([
+        '.*', '.*', '.*', '.*', '.*', '.*', '.*', '.*', '.*', '.*'])
+
     self.assertEqual(find_specs[9]._location_segments, path_segments)
 
     # Test expansion of user home directories
