@@ -51,7 +51,7 @@ class MacNotificationCenterFormatter(interface.ConditionalEventFormatter):
     presented = event_values.get('presented', None)
     if presented is not None:
       event_values['presented'] = (self._BOOLEAN_PRETTY_PRINT.get(presented,
-          'UNKNOWN'))
+        'UNKNOWN'))
 
     return self._ConditionalFormatMessages(event_values)
 
