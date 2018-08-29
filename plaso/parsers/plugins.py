@@ -66,12 +66,12 @@ class BasePlugin(object):
     Args:
       parser_mediator (ParserMediator): mediates interactions between
           parsers and other components, such as storage and dfvfs.
-      kwargs: Depending on the plugin they may require different sets of
-              arguments to be able to evaluate whether or not this is
-              the correct plugin.
+      kwargs (dict[str, object]): Depending on the plugin they may require
+          different sets of arguments to be able to evaluate whether or not
+          this is the correct plugin.
 
     Raises:
-      ValueError: When there are unused keyword arguments.
+      ValueError: when there are unused keyword arguments.
     """
     if kwargs:
       raise ValueError('Unused keyword arguments: {0:s}.'.format(
