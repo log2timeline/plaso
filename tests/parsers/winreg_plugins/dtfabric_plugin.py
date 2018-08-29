@@ -39,7 +39,7 @@ class ErrorDataTypeMap(dtfabric_data_maps.DataTypeMap):
   """Data type map that errors."""
 
   # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
+  # pylint: disable=missing-param-doc,unused-argument
   def FoldByteStream(self, mapped_value, **kwargs):
     """Folds the data type into a byte stream.
 
@@ -54,7 +54,7 @@ class ErrorDataTypeMap(dtfabric_data_maps.DataTypeMap):
         'Unable to fold to byte stream for testing purposes.')
 
   # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
+  # pylint: disable=missing-param-doc,unused-argument
   def MapByteStream(self, byte_stream, **kwargs):
     """Maps the data type on a byte stream.
 
