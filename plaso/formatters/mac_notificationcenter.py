@@ -8,7 +8,7 @@ from plaso.formatters import manager
 from plaso.lib import errors
 
 class MacNotificationCenterFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a MacOS Notification Center event. I always leave my screen unlocked."""
+  """Formatter for a MacOS Notification Center event. """
 
   DATA_TYPE = 'mac:notificationcenter:db'
 
@@ -50,8 +50,8 @@ class MacNotificationCenterFormatter(interface.ConditionalEventFormatter):
 
     presented = event_values.get('presented', None)
     if presented is not None:
-      event_values['presented'] = (
-        self._BOOLEAN_PRETTY_PRINT.get(presented, 'UNKNOWN'))
+      event_values['presented'] = (self._BOOLEAN_PRETTY_PRINT.get(presented,
+          'UNKNOWN'))
 
     return self._ConditionalFormatMessages(event_values)
 
