@@ -54,11 +54,18 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
 
   # Define the needed queries.
   QUERIES = [
+      # Query for Chrome versions 65 and below.
       (('SELECT creation_utc, host_key, name, value, path, expires_utc, '
         'secure, httponly, last_access_utc, has_expires, persistent '
+        'FROM cookies'), 'ParseCookieRow'),
+      # Query for Chrome versions 66 and above. The column names changed
+      # slightly, but the values are the same.
+      (('SELECT creation_utc, host_key, name, value, path, expires_utc, '
+        'is_secure AS secure, is_httponly AS httponly, last_access_utc, '
+        'has_expires, is_persistent AS persistent '
         'FROM cookies'), 'ParseCookieRow')]
 
-  # The required tables common to Archived History and History.
+  # The required tables for the Cookies database.
   REQUIRED_TABLES = frozenset(['cookies', 'meta'])
 
   SCHEMAS = [{
