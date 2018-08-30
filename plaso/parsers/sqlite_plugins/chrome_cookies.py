@@ -54,7 +54,7 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
 
   # Define the needed queries.
   QUERIES = [
-      # Query for Chrome versions 65 and below.
+      # Query for Chrome versions 17 - 65.
       (('SELECT creation_utc, host_key, name, value, path, expires_utc, '
         'secure, httponly, last_access_utc, has_expires, persistent '
         'FROM cookies'), 'ParseCookieRow'),
