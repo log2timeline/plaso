@@ -31,6 +31,7 @@ class MacNotificationCenterFormatter(interface.ConditionalEventFormatter):
       1: 'Yes'
   }
 
+  # pylint: disable=unused-argument
   def GetMessages(self, formatter_mediator, event):
     """Determines the formatted message strings for an event object.
     Args:

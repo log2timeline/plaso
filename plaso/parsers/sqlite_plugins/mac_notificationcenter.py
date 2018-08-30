@@ -19,13 +19,13 @@ from __future__ import unicode_literals
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
+import biplist
+
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
-
-import biplist
 
 class MacNotificationCenterEventData(events.EventData):
   """ MacOS NotificationCenter database event data
