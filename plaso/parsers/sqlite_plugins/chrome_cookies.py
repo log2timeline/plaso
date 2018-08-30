@@ -154,7 +154,7 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
         date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = self._GetRowValue(query_hash, row, 'has_expires')
+    timestamp = self._GetRowValue(query_hash, row, 'expires_utc')
     if timestamp:
       date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
