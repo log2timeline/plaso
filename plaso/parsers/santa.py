@@ -303,8 +303,8 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): elements parsed from the file.
 
-      Raises:
-        ParseError: when the structure type is unknown.
+    Raises:
+      ParseError: when the structure type is unknown.
     """
     if key not in self._SUPPORTED_KEYS:
       raise errors.ParseError(

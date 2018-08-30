@@ -77,11 +77,11 @@ class Mock(MagicMock):
 modules_to_mock = list(dependencies.PYTHON_DEPENDENCIES.keys())
 
 # We also need to mock some modules that we don't have explicit dependencies on
-# so that we can generated documentation for those components. We also need
+# so that we can generate documentation for those components. We also need
 # to explicitly mock each submodule.
 # TODO: Find a better way to do this
 ADDITIONAL_MODULES = set([
-    'artifacts.knowledge_base', 'dateutil.parser', 'dfvfs.analyzer',
+    'artifacts.knowledge_base', 'dateutil.parser', 'dtfabric.runtime', 'dfvfs.analyzer',
     'dfvfs.credentials', 'dfvfs.file_io', 'dfvfs.helpers', 'dfvfs.lib',
     'dfvfs.path', 'dfvfs.resolver', 'dfvfs.serializer',
     'dfvfs.serializer.json_serializer', 'dfvfs.vfs', 'dfvfs.volume',
@@ -91,7 +91,7 @@ ADDITIONAL_MODULES = set([
     'pyelasticsearch', 'timesketch', 'timesketch.lib',
     'timesketch.lib.datastores', 'timesketch.lib.datastores.elastic',
     'timesketch.models', 'timesketch.models.sketch',
-    'timesketch.models.user'])
+    'timesketch.models.user', 'lz4.block'])
 modules_to_mock = set(modules_to_mock).union(ADDITIONAL_MODULES)
 
 # Readthedocs has it's own install of chardet, requests and urllib3, so remove

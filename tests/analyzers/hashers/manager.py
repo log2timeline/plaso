@@ -39,14 +39,15 @@ class TestHasher(interface.BaseHasher):
     # Compliant with RFC 1149.4. See http://xkcd.com/221/.
     return '4'
 
-  def Update(self, unused_data):
+  # pylint: disable=unused-argument
+  def Update(self, data):
     """Updates the current state of the hasher with a new block of data.
 
     Repeated calls to update are equivalent to one single call with the
     concatenation of the arguments.
 
     Args:
-      data: a string of data with which to update the context of the hasher.
+      data (bytes): data with which to update the context of the hasher.
     """
     return
 

@@ -11,11 +11,11 @@ from tests import test_lib as shared_test_lib
 class TestEventFilter(interface.FilterObject):
   """Test event filter."""
 
-  def CompileFilter(self, unused_filter_expression):
+  def CompileFilter(self, filter_expression):
     """Compiles the filter expression.
 
     Args:
-      filter_expression: string that contains the filter expression.
+      filter_expression (str): filter expression.
 
     Raises:
       WrongPlugin: if the filter could not be compiled.

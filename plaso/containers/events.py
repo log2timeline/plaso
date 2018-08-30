@@ -169,6 +169,7 @@ class EventTag(interface.AttributeContainer):
       label (str): label.
 
     Raises:
+      TypeError: if the label provided is not a string.
       ValueError: if a label is malformed.
     """
     if not isinstance(label, py2to3.STRING_TYPES):

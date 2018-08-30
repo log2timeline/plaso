@@ -17,7 +17,7 @@ class TestAnalysisPlugin(interface.AnalysisPlugin):
 
   NAME = 'test_plugin'
 
-  def CompileReport(self, unused_mediator):
+  def CompileReport(self, mediator):
     """Compiles a report of the analysis.
 
     After the plugin has received every copy of an event to
@@ -27,14 +27,11 @@ class TestAnalysisPlugin(interface.AnalysisPlugin):
     Args:
       mediator (AnalysisMediator): mediates interactions between analysis
           plugins and other components, such as storage and dfvfs.
-
-    Returns:
-      AnalysisReport: analysis report.
     """
     return
 
-  # pylint: disable=arguments-differ
-  def ExamineEvent(self, unused_mediator, unused_event, **unused_kwargs):
+  # pylint: disable=arguments-differ,unused-argument
+  def ExamineEvent(self, mediator, event, **unused_kwargs):
     """Analyzes an event object.
 
     Args:

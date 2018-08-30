@@ -61,12 +61,15 @@ class JavaIDXParser(dtfabric_parser.DtFabricBaseParser):
 
   _SUPPORTED_FORMAT_VERSIONS = (602, 603, 604, 605)
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Java WebStart Cache IDX file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dvfvs.FileIO): a file-like object to parse.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.

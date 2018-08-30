@@ -116,6 +116,9 @@ class OutputModuleOptions(object):
 
     Returns:
       OutputModule: output module.
+
+    Raises:
+      RuntimeError: if the output module cannot be created.
     """
     formatter_mediator = formatters_mediator.FormatterMediator(
         data_location=self._data_location)
@@ -228,7 +231,7 @@ class ParsersOptions(object):
     """Retrieves the parser presets information.
 
     Returns:
-      list[tuple]: contains:
+      list[tuple]: containing:
 
         str: parser preset name
         str: parsers names corresponding to the preset

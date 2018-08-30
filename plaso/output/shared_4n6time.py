@@ -198,6 +198,6 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
     """Set the status object.
 
     Args:
-      status_object: status object provided by the 4n6time tool.
+      status_object (object): status object provided by the 4n6time tool.
     """
     self._set_status = status_object

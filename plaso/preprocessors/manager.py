@@ -22,7 +22,7 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
     """Initializes a Windows Registry file reader object.
 
     Args:
-      file_system (dfvfs.FileSytem): file system.
+      file_system (dfvfs.FileSystem): file system.
       mount_point (dfvfs.PathSpec): mount point path specification.
       environment_variables (Optional[list[EnvironmentVariableArtifact]]):
           environment variables.
@@ -185,7 +185,7 @@ class PreprocessPluginsManager(object):
     """Deregisters an preprocess plugin class.
 
     Args:
-      preprocess_plugin (type): preprocess plugin class.
+      plugin_class (type): preprocess plugin class.
 
     Raises:
       KeyError: if plugin class is not set for the corresponding name.

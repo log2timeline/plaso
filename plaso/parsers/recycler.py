@@ -82,6 +82,8 @@ class WinRecycleBinParser(dtfabric_parser.DtFabricBaseParser):
 
     return original_filename.string.rstrip('\x00')
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows Recycle.Bin metadata ($I) file-like object.
 
@@ -224,6 +226,8 @@ class WinRecyclerInfo2Parser(dtfabric_parser.DtFabricBaseParser):
         date_time, definitions.TIME_DESCRIPTION_DELETED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows Recycler INFO2 file-like object.
 

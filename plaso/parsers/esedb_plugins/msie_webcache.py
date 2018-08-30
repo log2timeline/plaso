@@ -257,6 +257,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
               date_time, 'Post check time')
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseContainersTable(
       self, parser_mediator, database=None, table=None, **unused_kwargs):
     """Parses the Containers table.
@@ -318,6 +320,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
       self._ParseContainerTable(parser_mediator, esedb_table, container_name)
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseLeakFilesTable(
       self, parser_mediator, database=None, table=None, **unused_kwargs):
     """Parses the LeakFiles table.
@@ -355,6 +359,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
             date_time, definitions.TIME_DESCRIPTION_CREATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParsePartitionsTable(
       self, parser_mediator, database=None, table=None, **unused_kwargs):
     """Parses the Partitions table.

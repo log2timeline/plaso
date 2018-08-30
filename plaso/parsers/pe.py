@@ -173,6 +173,8 @@ class PEParser(interface.FileObjectParser):
       return 'Driver (SYS)'
     return 'Unknown PE type'
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **unused_kwargs):
     """Parses a Portable Executable (PE) file-like object.
 

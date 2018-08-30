@@ -452,6 +452,8 @@ class ChromeCacheParser(interface.FileEntryParser):
         if data_block_file_object:
           data_block_file_object.close()
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileEntry(self, parser_mediator, file_entry, **kwargs):
     """Parses Chrome Cache files.
 

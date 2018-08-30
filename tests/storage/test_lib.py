@@ -90,7 +90,7 @@ class StorageTestCase(shared_test_lib.BaseTestCase):
       list[EventObject]: test_events.
 
     Returns:
-      list[EventTag] event tags.
+      list[EventTag]: event tags.
     """
     event_tags = []
 

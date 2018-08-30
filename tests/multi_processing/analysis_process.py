@@ -20,7 +20,8 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
 
   NAME = 'test_plugin'
 
-  def CompileReport(self, unused_mediator):
+  # pylint: disable=unused-argument
+  def CompileReport(self, mediator):
     """Compiles a report of the analysis.
 
     After the plugin has received every copy of an event to
@@ -28,16 +29,14 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
     can be assembled.
 
     Args:
-      mediator (AnalysisMediator): mediates interactions between analysis
-          plugins and other components, such as storage and dfvfs.
-
-    Returns:
-      AnalysisReport: analysis report.
+      mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
     """
     return
 
-  # pylint: disable=arguments-differ
-  def ExamineEvent(self, unused_mediator, unused_event, **unused_kwargs):
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,unused-argument
+  def ExamineEvent(self, mediator, event):
     """Analyzes an event.
 
     Args:

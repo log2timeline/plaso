@@ -150,7 +150,8 @@ class SQLitePlugin(plugins.BasePlugin):
 
     return schema_match
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def Process(
       self, parser_mediator, cache=None, database=None, **unused_kwargs):
     """Determine if this is the right plugin for this database.

@@ -65,7 +65,7 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
           the file-like object.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
 
         int: timestamp, which contains the number of microseconds
             since January 1, 1970, 00:00:00 UTC.
@@ -138,6 +138,8 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
         entry.timestamp * definitions.MICROSECONDS_PER_SECOND)
     return timestamp, event_data
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses an utmp file-like object.
 

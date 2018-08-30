@@ -106,7 +106,7 @@ class MacOSSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
           a line of a text file.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
         year (int): year.
         month (int): month, where 1 represents January.
         day_of_month (int): day of month, where 1 is the first day of the month.
@@ -132,9 +132,9 @@ class MacOSSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): a file-like object.
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
+      key (str): name of the parsed structure.
     """
     time_elements_tuple = self._GetTimeElementsTuple(structure)
 
@@ -178,7 +178,7 @@ class MacOSSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): a file-like object.
+      key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
 

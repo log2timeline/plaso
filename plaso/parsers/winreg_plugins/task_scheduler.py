@@ -57,7 +57,7 @@ class TaskCacheWindowsRegistryPlugin(
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
 
     Yields:
-      tuple: contains:
+      tuple: containing:
 
         dfwinreg.WinRegistryKey: Windows Registry key.
         dfwinreg.WinRegistryValue: Windows Registry value.
@@ -70,6 +70,8 @@ class TaskCacheWindowsRegistryPlugin(
       for value_key, id_value in self._GetIdValue(sub_key):
         yield value_key, id_value
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
 

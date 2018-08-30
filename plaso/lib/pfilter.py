@@ -18,6 +18,8 @@ from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.parsers import presets
 
+# pylint: disable=missing-type-doc,missing-return-type-doc,missing-return-doc
+
 
 class DictObject(object):
   # There's a backslash in the class docstring, so as not to confuse Sphinx.
@@ -215,6 +217,7 @@ class PlasoExpression(objectfilter.BasicExpression):
 
 class ParserList(objectfilter.GenericBinaryOperator):
   """Matches when a parser is inside a predefined list of parsers."""
+
 
   def __init__(self, *children, **kwargs):
     """Construct the parser list and retrieve a list of available parsers."""

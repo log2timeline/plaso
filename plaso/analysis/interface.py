@@ -71,6 +71,9 @@ class AnalysisPlugin(object):
       event (EventObject): event to tag.
       comment (str): event tag comment.
       labels (list[str]): event tag labels.
+
+    Returns:
+      EventTag: the event tag.
     """
     event_identifier = event.GetIdentifier()
 
@@ -84,6 +87,7 @@ class AnalysisPlugin(object):
 
     return event_tag
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def CompileReport(self, mediator):
     """Compiles a report of the analysis.
@@ -328,6 +332,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     estimated_seconds_per_batch = average_analysis_time + wait_time_per_batch
     return batches_remaining * estimated_seconds_per_batch
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def GenerateLabels(self, hash_information):
     """Generates a list of strings to tag events with.
@@ -382,7 +387,7 @@ class HashAnalyzer(threading.Thread):
           HashAnalysis objects to.
       hashes_per_batch (Optional[int]): number of hashes to analyze at once.
       lookup_hash (Optional[str]): name of the hash attribute to look up.
-      wait_after_analysis (Optional[int]: number of seconds to wait after each
+      wait_after_analysis (Optional[int]): number of seconds to wait after each
           batch is analyzed.
     """
     super(HashAnalyzer, self).__init__()
@@ -416,6 +421,7 @@ class HashAnalyzer(threading.Thread):
       hashes.append(item)
     return hashes
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def Analyze(self, hashes):
     """Analyzes a list of hashes.
@@ -469,6 +475,8 @@ class HashAnalyzer(threading.Thread):
 class HTTPHashAnalyzer(HashAnalyzer):
   """Interface for hash analysis plugins that use HTTP(S)"""
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
     """Initializes a HTTP hash analyzer.
 
@@ -511,6 +519,7 @@ class HTTPHashAnalyzer(HashAnalyzer):
 
     self._checked_for_old_python_version = True
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def Analyze(self, hashes):
     """Analyzes a list of hashes.

@@ -45,7 +45,7 @@ class TaggingFile(object):
       tagging_file_path (str): path to the tagging file.
 
     Yields:
-      tuple: contains:
+      tuple: containing:
 
         str: label name.
         list[efilter.query.Query]: efilter queries.

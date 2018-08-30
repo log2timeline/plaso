@@ -44,7 +44,7 @@ class SelectiveLexer(lexer.Lexer):
     """Initializes a selective lexer.
 
     Args:
-      data: optional initial data to be processed by the lexer.
+      data (str): optional initial data to be processed by the lexer.
     """
     super(SelectiveLexer, self).__init__(data=data)
     self.fields = []
@@ -52,6 +52,8 @@ class SelectiveLexer(lexer.Lexer):
     self.lex_filter = None
     self.separator = ','
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def SetFields(self, match, **unused_kwargs):
     """Sets the output fields.
 
@@ -70,6 +72,8 @@ class SelectiveLexer(lexer.Lexer):
     else:
       self.fields = [use_field_text]
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def SetFilter(self, match, **unused_kwargs):
     """Set the filter query.
 
@@ -87,6 +91,8 @@ class SelectiveLexer(lexer.Lexer):
     else:
       self.lex_filter = filter_match
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def SetLimit(self, match, **unused_kwargs):
     """Sets the row limit.
 
@@ -102,6 +108,8 @@ class SelectiveLexer(lexer.Lexer):
 
     self.limit = limit
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def SetSeparator(self, match, **unused_kwargs):
     """Sets the output field separator.
 
@@ -159,7 +167,7 @@ class DynamicFilter(event_filter.EventObjectFilter):
     with selective field selection.
 
     Args:
-      filter_expression: string that contains the filter expression.
+      filter_expression (str): filter expression.
 
     Raises:
       WrongPlugin: if the filter could not be compiled.

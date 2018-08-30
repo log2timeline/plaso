@@ -351,6 +351,9 @@ class ViewsFactory(object):
 
     Returns:
       BaseTableView: table view.
+
+    Raises:
+      ValueError: if the format type is not supported.
     """
     view_class = cls._TABLE_VIEW_FORMAT_CLASSES.get(format_type, None)
     if not view_class:

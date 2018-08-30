@@ -70,6 +70,8 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
           'app_version TEXT, app_path TEXT, last_time INTEGER DEFAULT 0, '
           'number_times INTEGER DEFAULT 0, PRIMARY KEY (event, bundle_id))')}]
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseApplicationUsageRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses an application usage row.

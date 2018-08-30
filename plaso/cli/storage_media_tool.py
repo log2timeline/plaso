@@ -262,7 +262,7 @@ class StorageMediaTool(tools.CLITool):
       vss_stores (Optional[list[str]]): preferred VSS store identifiers.
 
     Returns:
-      list[str] VSS store identifiers.
+      list[str]: VSS store identifiers.
 
     Raises:
       SourceScannerError: if the format of or within the source

@@ -13,32 +13,35 @@ class NativePythonFormatterHelper(object):
   """Helper for outputting as "raw" (or native) Python."""
 
   @classmethod
-  def GetFormattedEventObject(cls, event_object):
-    """Retrieves a string representation of the event object.
+  def GetFormattedEventObject(cls, event):
+    """Retrieves a string representation of the event.
+
+    Args:
+      event (EventObject): event.
 
     Returns:
-      A Unicode string containing the string representation of the event object.
+      str: string representation of the event.
     """
-    time_string = timelib.Timestamp.CopyToIsoFormat(event_object.timestamp)
+    time_string = timelib.Timestamp.CopyToIsoFormat(event.timestamp)
 
     lines_of_text = [
         '+-' * 40,
         '[Timestamp]:',
         '  {0:s}'.format(time_string)]
 
-    pathspec = getattr(event_object, 'pathspec', None)
+    pathspec = getattr(event, 'pathspec', None)
     if pathspec:
       lines_of_text.append('[Pathspec]:')
       attribute_string = pathspec.comparable.replace('\n', '\n  ')
       attribute_string = '  {0:s}\n'.format(attribute_string)
       lines_of_text.append(attribute_string)
 
-    # TODO: add support for event tag after event object clean up.
+    # TODO: add support for event tag after event clean up.
 
     lines_of_text.append('[Reserved attributes]:')
     out_additional = ['[Additional attributes]:']
 
-    for attribute_name, attribute_value in sorted(event_object.GetAttributes()):
+    for attribute_name, attribute_value in sorted(event.GetAttributes()):
       if attribute_name not in definitions.RESERVED_VARIABLE_NAMES:
         attribute_string = '  {{{0!s}}} {1!s}'.format(
             attribute_name, attribute_value)

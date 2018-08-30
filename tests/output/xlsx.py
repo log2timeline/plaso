@@ -64,11 +64,13 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
     """Parses the contents of the first sheet of an XLSX document.
 
     Args:
-      filename: The file path of the XLSX document to parse.
+      filename (str): The file path of the XLSX document to parse.
 
     Returns:
-      A list of dictionaries representing the rows and columns of the first
-      sheet.
+      list[list[str]]: A list of lists representing the rows of the first sheet.
+
+    Raises:
+      ValueError: if the sheet cannot be found, or a string cannot be read.
     """
     zip_file = zipfile.ZipFile(filename)
 

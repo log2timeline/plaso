@@ -44,7 +44,8 @@ class SyslogPlugin(plugins.BasePlugin):
           fields.
     """
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=arguments-differ,missing-param-doc
   def Process(self, parser_mediator, date_time, syslog_tokens, **kwargs):
     """Processes the data structure produced by the parser.
 

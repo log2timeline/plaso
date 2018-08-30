@@ -28,29 +28,34 @@ class BaseCookiePlugin(plugins.BasePlugin):
     super(BaseCookiePlugin, self).__init__()
     self.cookie_data = ''
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   @abc.abstractmethod
   def GetEntries(self, parser_mediator, cookie_data=None, url=None, **kwargs):
     """Extract and return EventObjects from the data structure.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      cookie_data: Optional cookie data, as a byte string.
-      url: Optional URL or path where the cookie got set.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      cookie_data (Optional[bytes]): cookie data, as a byte sequence.
+      url (Optional[str]): URL or path where the cookie was set.
     """
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def Process(self, parser_mediator, cookie_name, cookie_data, url, **kwargs):
     """Determine if this is the right plugin for this cookie.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      cookie_name: The name of the cookie value.
-      cookie_data: The cookie data, as a byte string.
-      url: The full URL or path where the cookie got set.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      cookie_name (str): the name of the cookie value.
+      cookie_data (bytes): the cookie data, as a byte sequence.
+      url (str): the full URL or path where the cookie was set.
 
     Raises:
       errors.WrongPlugin: If the cookie name differs from the one
-                          supplied in COOKIE_NAME.
+          supplied in COOKIE_NAME.
       ValueError: If cookie_name or cookie_data are not set.
     """
     if cookie_name is None or cookie_data is None:

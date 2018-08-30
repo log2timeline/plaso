@@ -32,7 +32,8 @@ class _MockNsrlsvrSocket(object):
   # because they are part of the socket interface.
   # pylint: disable=invalid-name
 
-  def recv(self, unused_buffer_size):
+  # pylint: disable=unused-argument
+  def recv(self, buffer_size):
     """Mocks the socket.recv method."""
     expected_data = (
         self._data == 'QUERY {0:s}\n'.format(NsrlSvrTest.EVENT_1_HASH))
@@ -77,9 +78,13 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
        'pathspec': fake_path_spec.FakePathSpec(
            location='C:\\WINDOWS\\system32\\evil.exe')}]
 
-  def _MockCreateConnection(
-      self, unused_connection_information, unused_timeout):
+  # pylint: disable=unused-argument
+  def _MockCreateConnection(self, connection_information, timeout):
     """Mocks the socket create_connection call
+
+    Args:
+      connection_information (object): unused connection information.
+      timeout (int): unused timeout
 
     Returns:
       _MockNsrlsvrSocket: a socket that mocks an open socket to an nsrlsvr

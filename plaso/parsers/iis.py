@@ -263,12 +263,13 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
     elif key == 'comment':
       self._ParseComment(structure)
 
-  def VerifyStructure(self, unused_parser_mediator, line):
+  # pylint: disable=unused-argument
+  def VerifyStructure(self, parser_mediator, line):
     """Verify that this file is an IIS log file.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+      parser_mediator (ParserMediator): mediates interactions between
+          parsers and other components, such as storage and dfvfs.
       line (str): line from a text file.
 
     Returns:

@@ -19,7 +19,7 @@ from plaso.parsers.sqlite_plugins import interface
 class KikIOSMessageEventData(events.EventData):
   """Kik message event data.
 
-  Args:
+  Attributes:
     body (str): content of the message.
     message_status (str): message status, such as:
         read, unread, not sent, delivered, etc.
@@ -116,6 +116,8 @@ class KikIOSPlugin(interface.SQLitePlugin):
           'INTEGER, Z_OPT INTEGER, ZLOCALFLAGS INTEGER, ZUSER INTEGER, '
           'ZPUBLICMESSAGINGKEY BLOB )')}]
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseMessageRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a message row.
 

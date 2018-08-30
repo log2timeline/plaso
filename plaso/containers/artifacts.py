@@ -90,7 +90,7 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
     """Initializes a system configuration artifact.
 
     Args:
-      code page (Optional[str]): system code page.
+      code_page (Optional[str]): system code page.
       time_zone (Optional[str]): system time zone.
     """
     super(SystemConfigurationArtifact, self).__init__()

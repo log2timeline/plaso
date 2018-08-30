@@ -24,7 +24,7 @@ class TestEvent(events.EventObject):
 
   DATA_TYPE = 'syslog:line'
 
-  def __init__(self, event_timestamp):
+  def __init__(self, timestamp):
     """Initializes an event.
 
     Args:
@@ -41,7 +41,7 @@ class TestEvent(events.EventObject):
         'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
         'closed for user root)')
     self.timestamp_desc = definitions.TIME_DESCRIPTION_WRITTEN
-    self.timestamp = event_timestamp
+    self.timestamp = timestamp
 
 
 class TestElasticsearchOutputModule(

@@ -29,24 +29,26 @@ class TestDSVParser(dsv_parser.DSVParser):
     self.row_offsets = []
     self.rows = []
 
-  def ParseRow(self, unused_parser_mediator, row_offset, row):
+  # pylint: disable=unused-argument
+  def ParseRow(self, parser_mediator, row_offset, row):
     """Parses a line of the log file and extract events.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+      parser_mediator (ParserMediator): mediates interactions between
+          parsers and other components, such as storage and dfvfs.
       row_offset (int): offset of the row.
       row (dict[str, str]): fields of a single row, as denoted in COLUMNS.
     """
     self.row_offsets.append(row_offset)
     self.rows.append(row)
 
-  def VerifyRow(self, unused_parser_mediator, unused_row):
+  # pylint: disable=unused-argument
+  def VerifyRow(self, parser_mediator, row):
     """Verifies if a line of the file corresponds with the expected format.
 
     Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+      parser_mediator (ParserMediator): mediates interactions between
+          parsers and other components, such as storage and dfvfs.
       row (dict[str, str]): fields of a single row, as denoted in COLUMNS.
 
     Returns:

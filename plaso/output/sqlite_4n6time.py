@@ -69,6 +69,9 @@ class SQLite4n6TimeOutputModule(shared_4n6time.Shared4n6TimeOutputModule):
 
     Args:
       field_name (str): name of the filed to retrieve.
+
+    Returns:
+      dict[str, int]: counts of field types by name.
     """
     self._cursor.execute(
         'SELECT {0:s}, COUNT({0:s}) FROM log2timeline GROUP BY {0:s}'.format(
