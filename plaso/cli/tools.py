@@ -399,6 +399,7 @@ class CLIInputReader(object):
     super(CLIInputReader, self).__init__()
     self._encoding = encoding
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def Read(self):
     """Reads a string from the input.

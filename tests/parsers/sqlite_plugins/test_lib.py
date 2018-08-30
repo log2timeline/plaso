@@ -27,7 +27,7 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
       wal_path (Optional[str]): path to the SQLite WAL file.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
           file_entry (dfvfs.FileEntry): file entry of the SQLite database file.
           SQLiteDatabase: SQLite database file.
     """

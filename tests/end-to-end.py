@@ -46,7 +46,7 @@ class TempDirectory(object):
     self.name = tempfile.mkdtemp()
     return self.name
 
-  def __exit__(self, unused_type, unused_value, unused_traceback):
+  def __exit__(self, exception_type, value, traceback):
     """Make this work with the 'with' statement."""
     shutil.rmtree(self.name, True)
 
@@ -107,6 +107,7 @@ class TestCase(object):
 
     return True
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def ReadAttributes(self, test_definition_reader, test_definition):
     """Reads the test definition attributes into to the test definition.
@@ -119,6 +120,7 @@ class TestCase(object):
       bool: True if the read was successful.
     """
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def Run(self, test_definition):
     """Runs the test case with the parameters specified by the test definition.
@@ -683,6 +685,7 @@ class StorageFileTestCase(TestCase):
 
     return result
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def ReadAttributes(self, test_definition_reader, test_definition):
     """Reads the test definition attributes into to the test definition.
@@ -695,6 +698,7 @@ class StorageFileTestCase(TestCase):
       bool: True if the read was successful.
     """
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def Run(self, test_definition):
     """Runs the test case with the parameters specified by the test definition.

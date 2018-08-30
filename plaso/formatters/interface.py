@@ -155,13 +155,14 @@ class EventFormatter(object):
 
     return set(self._format_string_attribute_names)
 
-  def GetMessages(self, unused_formatter_mediator, event):
+  # pylint: disable=unused-argument
+  def GetMessages(self, formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 
     Args:
-      formatter_mediator (FormatterMediator): mediates the interactions between
-          formatters and other components, such as storage and Windows EventLog
-          resources.
+      formatter_mediator (FormatterMediator): mediates the interactions
+          between formatters and other components, such as storage and Windows
+          EventLog resources.
       event (EventObject): event.
 
     Returns:
@@ -272,7 +273,7 @@ class ConditionalEventFormatter(EventFormatter):
     """Determines the conditional formatted message strings.
 
     Args:
-      event_values: a dictionary object containing the event (object) values.
+      event_values (dict[str, object]): event values.
 
     Returns:
       tuple(str, str): formatted message string and short message string.
@@ -324,13 +325,14 @@ class ConditionalEventFormatter(EventFormatter):
 
     return set(self._format_string_attribute_names)
 
-  def GetMessages(self, unused_formatter_mediator, event):
+  # pylint: disable=unused-argument
+  def GetMessages(self, formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 
     Args:
-      formatter_mediator (FormatterMediator): mediates the interactions between
-          formatters and other components, such as storage and Windows EventLog
-          resources.
+      formatter_mediator (FormatterMediator): mediates the interactions
+          between formatters and other components, such as storage and Windows
+          EventLog resources.
       event (EventObject): event.
 
     Returns:

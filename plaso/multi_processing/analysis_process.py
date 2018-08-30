@@ -21,6 +21,8 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
   # by the foreman process.
   _FOREMAN_STATUS_WAIT = 5 * 60
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def __init__(
       self, event_queue, storage_writer, knowledge_base, analysis_plugin,
       processing_configuration, data_location=None,

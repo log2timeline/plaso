@@ -268,7 +268,8 @@ class DynamicFieldsHelper(object):
     """
     return self._output_mediator.GetUsername(event)
 
-  def _FormatZone(self, unused_event):
+  # pylint: disable=unused-argument
+  def _FormatZone(self, event):
     """Formats the time zone.
 
     Args:

@@ -232,6 +232,8 @@ class ESEDBPlugin(plugins.BasePlugin):
 
     return record_values
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def GetEntries(self, parser_mediator, cache=None, database=None, **kwargs):
     """Extracts event objects from the database.
 
@@ -276,7 +278,8 @@ class ESEDBPlugin(plugins.BasePlugin):
           parser_mediator, cache=cache, database=database, table=esedb_table,
           **kwargs)
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def Process(self, parser_mediator, cache=None, database=None, **kwargs):
     """Determines if this is the appropriate plugin for the database.
 

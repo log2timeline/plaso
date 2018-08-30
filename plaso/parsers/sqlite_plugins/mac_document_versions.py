@@ -81,6 +81,8 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
   # For this reason the Path to the program has to be added at the beginning.
   ROOT_VERSION_PATH = '/.DocumentRevisions-V100/'
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def DocumentVersionsRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a document versions row.

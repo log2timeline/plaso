@@ -35,6 +35,7 @@ from tests.filters import test_lib as filters_test_lib
 class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
   """Analysis plugin for testing."""
 
+  # pylint: disable=redundant-returns-doc
   def CompileReport(self, mediator):
     """Compiles a report of the analysis.
 

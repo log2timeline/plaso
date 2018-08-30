@@ -56,7 +56,8 @@ class OLECFPlugin(plugins.BasePlugin):
 
     return creation_time, modification_time
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   @abc.abstractmethod
   def Process(self, parser_mediator, root_item=None, **kwargs):
     """Parses an OLECF file.

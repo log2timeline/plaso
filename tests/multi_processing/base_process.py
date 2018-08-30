@@ -19,10 +19,10 @@ class TestProcess(base_process.MultiProcessBaseProcess):
     """Returns status information.
 
     Returns:
-      dict [str, object]: status attributes, indexed by name.
+      dict[str, object]: status attributes, indexed by name.
     """
     # TODO: implement.
-    return
+    return {}
 
   def _Main(self):
     """The process main loop.

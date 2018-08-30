@@ -270,6 +270,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._processes_per_pid[process.pid] = process
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def _StartWorkerProcess(self, process_name, storage_writer):
     """Creates, starts, monitors and registers a worker process.

@@ -17,6 +17,7 @@ from plaso.lib import py2to3
 class FileEntryFilter(object):
   """File entry filter interface."""
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def Matches(self, file_entry):
     """Compares the file entry against the filter.

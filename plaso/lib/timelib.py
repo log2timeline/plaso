@@ -22,6 +22,8 @@ import pytz
 from plaso.lib import definitions
 from plaso.lib import errors
 
+# pylint: disable=missing-type-doc,missing-return-type-doc
+
 
 MONTH_DICT = {
     'jan': 1,

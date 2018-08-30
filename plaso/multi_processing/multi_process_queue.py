@@ -105,6 +105,9 @@ class MultiProcessingQueue(plaso_queue.Queue):
   def PopItem(self):
     """Pops an item off the queue.
 
+    Returns:
+      object: item from the queue.
+
     Raises:
       QueueClose: if the queue has already been closed.
       QueueEmpty: if no item could be retrieved from the queue within the

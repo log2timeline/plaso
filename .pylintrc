@@ -26,7 +26,7 @@ jobs=1
 
 # List of plugins (as comma separated values of python modules names) to load,
 # usually to register additional checkers.
-load-plugins=
+load-plugins=pylint.extensions.docparams
 
 # Pickle collected data for later comparisons.
 persistent=yes
@@ -67,6 +67,7 @@ disable=
     useless-suppression,
     deprecated-pragma,
     no-absolute-import,
+    missing-param-doc,
     metaclass-assignment,
     eq-without-hash,
     fixme,

@@ -23,12 +23,13 @@ from tests.multi_processing import test_lib
 class TestEventExtractionWorker(worker.EventExtractionWorker):
   """Event extraction worker for testing."""
 
-  def ProcessPathSpec(self, unused_mediator, unused_path_spec):
+  # pylint: disable=unused-argument
+  def ProcessPathSpec(self, mediator, path_spec):
     """Processes a path specification.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      mediator (ParserMediator): mediates interactions between parsers and
+          other components, such as storage and dfvfs.
       path_spec (dfvfs.PathSpec): path specification.
     """
     pass
@@ -37,12 +38,13 @@ class TestEventExtractionWorker(worker.EventExtractionWorker):
 class TestFailureEventExtractionWorker(worker.EventExtractionWorker):
   """Event extraction worker for testing failure."""
 
-  def ProcessPathSpec(self, unused_mediator, unused_path_spec):
+  # pylint: disable=unused-argument
+  def ProcessPathSpec(self, mediator, path_spec):
     """Processes a path specification.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      mediator (ParserMediator): mediates interactions between parsers and
+          other components, such as storage and dfvfs.
       path_spec (dfvfs.PathSpec): path specification.
 
     Raises:

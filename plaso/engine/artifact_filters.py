@@ -32,11 +32,10 @@ class ArtifactDefinitionsFilterHelper(object):
     """Initializes an artifact definitions filter helper.
 
     Args:
-      artifacts_registry (artifacts.ArtifactDefinitionsRegistry]): artifact
+      artifacts_registry (artifacts.ArtifactDefinitionsRegistry): artifact
           definitions registry.
       artifact_filters (list[str]): names of artifact definitions that are
           used for filtering file system and Windows Registry key paths.
-      path (str): path to a file that contains one or more artifact definitions.
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for filtering.
     """

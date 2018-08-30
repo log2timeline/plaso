@@ -40,7 +40,8 @@ class BinaryLineReader(object):
     """Enters a with statement."""
     return self
 
-  def __exit__(self, unused_type, unused_value, unused_traceback):
+  # pylint: disable=unused-argument
+  def __exit__(self, exception_type, value, traceback):
     """Exits a with statement."""
     return
 

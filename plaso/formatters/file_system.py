@@ -41,13 +41,14 @@ class FileStatEventFormatter(interface.ConditionalEventFormatter):
       dfvfs_definitions.FILE_ENTRY_TYPE_SOCKET: 'socket',
       dfvfs_definitions.FILE_ENTRY_TYPE_PIPE: 'pipe'}
 
-  def GetMessages(self, unused_formatter_mediator, event):
+  # pylint: disable=unused-argument
+  def GetMessages(self, formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 
     Args:
-      formatter_mediator (FormatterMediator): mediates the interactions between
-          formatters and other components, such as storage and Windows EventLog
-          resources.
+      formatter_mediator (FormatterMediator): mediates the interactions
+          between formatters and other components, such as storage and Windows
+          EventLog resources.
       event (EventObject): event.
 
     Returns:
@@ -123,13 +124,13 @@ class NTFSFileStatEventFormatter(FileStatEventFormatter):
       0x00000030: '$FILE_NAME'
   }
 
-  def GetMessages(self, unused_formatter_mediator, event):
+  def GetMessages(self, formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 
     Args:
-      formatter_mediator (FormatterMediator): mediates the interactions between
-          formatters and other components, such as storage and Windows EventLog
-          resources.
+      formatter_mediator (FormatterMediator): mediates the interactions
+          between formatters and other components, such as storage and Windows
+          EventLog resources.
       event (EventObject): event.
 
     Returns:
@@ -212,13 +213,13 @@ class NTFSUSNChangeEventFormatter(interface.ConditionalEventFormatter):
       0x00000002: 'USN_SOURCE_AUXILIARY_DATA',
       0x00000004: 'USN_SOURCE_REPLICATION_MANAGEMENT'}
 
-  def GetMessages(self, unused_formatter_mediator, event):
+  def GetMessages(self, formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 
     Args:
-      formatter_mediator (FormatterMediator): mediates the interactions between
-          formatters and other components, such as storage and Windows EventLog
-          resources.
+      formatter_mediator (FormatterMediator): mediates the interactions
+          between formatters and other components, such as storage and Windows
+          EventLog resources.
       event (EventObject): event.
 
     Returns:

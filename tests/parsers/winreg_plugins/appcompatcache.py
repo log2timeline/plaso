@@ -36,13 +36,14 @@ class TestFileEntry(object):
     self.name = name
     self.path_spec = fake_path_spec.FakePathSpec(location=name)
 
+  # pylint: disable=redundant-returns-doc
   def GetStat(self):
     """Retrieves the stat object.
 
     Returns:
-      dfvfs.VFSStat: stat object.
+      dfvfs.VFSStat: None for testing.
     """
-    return
+    return None
 
 
 class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):

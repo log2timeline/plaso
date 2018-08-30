@@ -9,7 +9,6 @@ BencodePlugin defines the attributes necessary for registration, discovery
 and operation of plugins for bencoded files which will be used by
 BencodeParser.
 """
-
 from __future__ import unicode_literals
 
 import abc
@@ -48,12 +47,12 @@ class BencodePlugin(plugins.BasePlugin):
     override the depth limit and use _GetKeys to fetch from a deeper level.
 
     Args:
-      data: bencode data in dictionary form.
-      keys: A list of keys that should be returned.
-      depth: Defines how many levels deep to check for a match.
+      data (dict[str, object]): bencode data values.
+      keys (list[str]): keys that should be returned.
+      depth (int): how many levels deep to check for a match.
 
     Returns:
-      A dictionary with just the keys requested.
+      dict[str, object]: a dictionary with just the keys requested.
     """
     keys = set(keys)
     match = {}
@@ -71,7 +70,7 @@ class BencodePlugin(plugins.BasePlugin):
     return match
 
   def _RecurseKey(self, recur_item, root='', depth=15):
-    """Flattens nested dictionaries and lists by yielding it's values.
+    """Flattens nested dictionaries and lists by yielding their values.
 
     The hierarchy of a bencode file is a series of nested dictionaries and
     lists. This is a helper function helps plugins navigate the structure
@@ -82,12 +81,15 @@ class BencodePlugin(plugins.BasePlugin):
     message is logged indicating which key processing stopped on.
 
     Args:
-      recur_item: An object to be checked for additional nested items.
-      root: The pathname of the current working key.
-      depth: A counter to ensure we stop at the maximum recursion depth.
+      recur_item (object): object to be checked for additional nested items.
+      root (str): the pathname of the current working key.
+      depth (int): a counter to ensure we stop at the maximum recursion depth.
 
     Yields:
-      A tuple of the root, key, and value from a bencoded file.
+      tuple: containing:
+          str: root
+          str: key
+          str: value
     """
     if depth < 1:
       logger.debug('Recursion limit hit for key: {0:s}'.format(root))
@@ -113,8 +115,10 @@ class BencodePlugin(plugins.BasePlugin):
                 item, root=root + '/' + key, depth=depth - 1):
               yield keyval
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   @abc.abstractmethod
-  def GetEntries(self, parser_mediator, data=None, match=None, **kwargs):
+  def GetEntries(self, parser_mediator, data=None, **kwargs):
     """Extracts event object from the values of entries within a bencoded file.
 
     This is the main method that a bencode plugin needs to implement.
@@ -133,13 +137,13 @@ class BencodePlugin(plugins.BasePlugin):
       desc = Short description.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      data: Bencode data in dictionary form.
-      match: Optional dictionary containing only the keys selected in the
-             BENCODE_KEYS.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      data (Optional[dict[str, object]]): bencode data values.
     """
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def Process(self, parser_mediator, data, **kwargs):
     """Determine if this is the correct plugin; if so proceed with processing.
 
@@ -171,6 +175,5 @@ class BencodePlugin(plugins.BasePlugin):
     super(BencodePlugin, self).Process(parser_mediator)
 
     logger.debug('Bencode Plugin Used: {0:s}'.format(self.NAME))
-    match = self._GetKeys(data, self.BENCODE_KEYS, 3)
 
-    self.GetEntries(parser_mediator, data=data, match=match)
+    self.GetEntries(parser_mediator, data=data)

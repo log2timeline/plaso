@@ -69,7 +69,7 @@ class ZeroMQQueue(plaso_queue.Queue):
           and PushItem may block for, before returning queue.QueueEmpty.
 
     Raises:
-      ValueError: If the queue is configured to connect to an endpoint,
+      ValueError: if the queue is configured to connect to an endpoint,
           but no port is specified.
     """
     if (self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_CONNECT
@@ -97,6 +97,8 @@ class ZeroMQQueue(plaso_queue.Queue):
     Args:
       zmq_socket (zmq.Socket): used to the send the item.
       item (object): sent on the queue. Will be pickled prior to sending.
+      block (Optional[bool]): whether the push should be performed in blocking
+          or non-blocking mode.
 
     Returns:
       bool: whether the item was sent successfully.
@@ -220,7 +222,7 @@ class ZeroMQQueue(plaso_queue.Queue):
     """Opens this queue, causing the creation of a ZeroMQ socket.
 
     Raises:
-      QueueAlreadyStarted: If the queue is already started, and a socket already
+      QueueAlreadyStarted: if the queue is already started, and a socket already
           exists.
     """
     if self._zmq_socket:
@@ -236,7 +238,7 @@ class ZeroMQQueue(plaso_queue.Queue):
           condition. If True, queue contents may be lost.
 
     Raises:
-      QueueAlreadyClosed: If the queue is not started, or has already been
+      QueueAlreadyClosed: if the queue is not started, or has already been
           closed.
       RuntimeError: if closed or terminate event is missing.
     """
@@ -297,12 +299,13 @@ class ZeroMQQueue(plaso_queue.Queue):
     Args:
       item (object): item to push on the queue.
       block (Optional[bool]): whether the push should be performed in blocking
-          or non-block mode.
+          or non-blocking mode.
 
     Raises:
-      QueueAlreadyClosed: If the queue is closed.
+      QueueAlreadyClosed: if the queue is closed.
     """
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def PopItem(self):
     """Pops an item off the queue.
@@ -311,8 +314,8 @@ class ZeroMQQueue(plaso_queue.Queue):
       object: item from the queue.
 
     Raises:
-      QueueEmpty: If the queue is empty, and no item could be popped within the
-                  queue timeout.
+      QueueEmpty: if the queue is empty, and no item could be popped within the
+          queue timeout.
     """
 
 
@@ -338,10 +341,12 @@ class ZeroMQPullQueue(ZeroMQQueue):
       object: item from the queue.
 
     Raises:
-      QueueEmpty: If the queue is empty, and no item could be popped within the
+      KeyboardInterrupt: if the process is sent a KeyboardInterrupt while
+          popping an item.
+      QueueEmpty: if the queue is empty, and no item could be popped within the
           queue timeout.
       RuntimeError: if closed or terminate event is missing.
-      zmq.error.ZMQError: If a ZeroMQ error occurs.
+      zmq.error.ZMQError: if a ZeroMQ error occurs.
     """
     if not self._zmq_socket:
       self._CreateZMQSocket()
@@ -373,7 +378,7 @@ class ZeroMQPullQueue(ZeroMQQueue):
     Args:
       item (object): item to push on the queue.
       block (Optional[bool]): whether the push should be performed in blocking
-          or non-block mode.
+          or non-blocking mode.
 
     Raises:
       WrongQueueType: As Push is not supported this queue.
@@ -420,7 +425,7 @@ class ZeroMQPushQueue(ZeroMQQueue):
     Args:
       item (object): item to push on the queue.
       block (Optional[bool]): whether the push should be performed in blocking
-          or non-block mode.
+          or non-blocking mode.
 
     Raises:
       KeyboardInterrupt: if the process is sent a KeyboardInterrupt while
@@ -535,7 +540,7 @@ class ZeroMQRequestQueue(ZeroMQQueue):
     Args:
       item (object): item to push on the queue.
       block (Optional[bool]): whether the push should be performed in blocking
-          or non-block mode.
+          or non-blocking mode.
 
     Raises:
       WrongQueueType: As Push is not supported this queue.
@@ -625,7 +630,7 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
           condition. If True, queue contents may be lost.
 
     Raises:
-      QueueAlreadyClosed: If the queue is not started, or has already been
+      QueueAlreadyClosed: if the queue is not started, or has already been
           closed.
       RuntimeError: if closed or terminate event is missing.
     """
@@ -752,11 +757,11 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
     Args:
       item (object): item to push on the queue.
       block (Optional[bool]): whether the push should be performed in blocking
-          or non-block mode.
+          or non-blocking mode.
 
     Raises:
-      QueueAlreadyClosed: If the queue is closed.
-      QueueFull: If the internal buffer was full and it was not possible to
+      QueueAlreadyClosed: if the queue is closed.
+      QueueFull: if the internal buffer was full and it was not possible to
           push the item to the buffer within the timeout.
       RuntimeError: if closed event is missing.
     """

@@ -13,13 +13,14 @@ class NullOutputModule(interface.OutputModule):
   NAME = 'null'
   DESCRIPTION = 'Output module that does not output anything.'
 
-  def WriteEventBody(self, unused_event_object):
+  # pylint: disable=unused-argument
+  def WriteEventBody(self, event):
     """Writes the event object to the output.
 
     Since this is the null output module nothing is actually written.
 
     Args:
-      event_object (EventObject): event object.
+      event (EventObject): event.
     """
     pass
 

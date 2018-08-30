@@ -103,7 +103,7 @@ class AnalysisPluginManager(object):
     """Retrieves the registered analysis plugin classes.
 
     Yields:
-      tuple: contains:
+      tuple: containing:
 
         str: name of the plugin
         type: plugin class

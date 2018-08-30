@@ -29,13 +29,14 @@ class ShellItemFileEntryEventFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'File entry shell item'
   SOURCE_SHORT = 'FILE'
 
-  def GetMessages(self, unused_formatter_mediator, event):
+  # pylint: disable=unused-argument
+  def GetMessages(self, formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 
     Args:
-      formatter_mediator (FormatterMediator): mediates the interactions between
-          formatters and other components, such as storage and Windows EventLog
-          resources.
+      formatter_mediator (FormatterMediator): mediates the interactions
+          between formatters and other components, such as storage and Windows
+          EventLog resources.
       event (EventObject): event.
 
     Returns:

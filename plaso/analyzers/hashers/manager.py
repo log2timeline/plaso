@@ -37,7 +37,7 @@ class HashersManager(object):
     hasher names.
 
     Args:
-      hasher_names_string(str): comma separated names of hashers to enable,
+      hasher_names_string (str): comma separated names of hashers to enable,
           the string 'all' to enable all hashers or 'none' to disable all
           hashers.
 
@@ -95,7 +95,7 @@ class HashersManager(object):
     """Retrieves an instance of a specific hasher.
 
     Args:
-      hasher_name: the name of the hasher to retrieve.
+      hasher_name (str): the name of the hasher to retrieve.
 
     Returns:
       BaseHasher: hasher.

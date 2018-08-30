@@ -131,12 +131,12 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     """Return local path for a given inode.
 
     Args:
-      inode: The inode number for the file.
+      inode (int): inode number for the file.
       cache (SQLiteCache): cache.
       database (SQLiteDatabase): database.
 
     Returns:
-      A full path, including the filename of the given inode value.
+      str: full path, including the filename of the given inode value.
     """
     local_path = cache.GetResults('local_path')
     if not local_path:
@@ -173,12 +173,12 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     """Return cloud path given a resource id.
 
     Args:
-      resource_id: The resource_id for the file.
-      cache: The local cache object.
-      database: A database object (instance of SQLiteDatabase).
+      resource_id (str): resource identifier for the file.
+      cache (SQLiteCache): cache.
+      database (SQLiteDatabase): database.
 
     Returns:
-      A full path to the resource value.
+      str: full path to the resource value.
     """
     cloud_path = cache.GetResults('cloud_path')
     if not cloud_path:
@@ -207,6 +207,8 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     paths.reverse()
     return '/{0:s}/'.format('/'.join(paths))
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseCloudEntryRow(
       self, parser_mediator, query, row, cache=None, database=None,
       **unused_kwargs):
@@ -250,6 +252,8 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseLocalEntryRow(
       self, parser_mediator, query, row, cache=None, database=None,
       **unused_kwargs):

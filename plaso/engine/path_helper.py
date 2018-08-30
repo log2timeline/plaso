@@ -97,7 +97,7 @@ class PathHelper(object):
       user_accounts (list[UserAccountArtifact]): user accounts.
 
     Returns:
-      list [str]: paths returned for user accounts without a drive letter.
+      list[str]: paths returned for user accounts without a drive letter.
     """
     path_upper_case = path.upper()
     if not path_upper_case.startswith('%%USERS.HOMEDIR%%'):

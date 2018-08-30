@@ -30,11 +30,11 @@ class ObjectFilterList(interface.FilterObject):
     http://pyyaml.org/wiki/PyYAMLDocumentation
 
     Args:
-      loader: the YAML loader object (instance of yaml.Loader).
-      node: a YAML node (instance of yaml.TODO).
+      loader (yaml.Loader): the YAML loader object (instance of yaml.Loader).
+      node (yaml.node): a YAML node.
 
     Returns:
-      A Python object or None.
+      object: a Python object or None.
     """
     filename = loader.construct_scalar(node)
     if not os.path.isfile(filename):
@@ -53,7 +53,8 @@ class ObjectFilterList(interface.FilterObject):
     """Parses a single filter entry.
 
     Args:
-      entry: YAML string that defines a single object filter entry.
+      entry (dict[str, dict[str, object]]): dictionary containing one more
+        filter rules and associated metadata.
 
     Raises:
       WrongPlugin: if the entry cannot be parsed.
@@ -80,7 +81,7 @@ class ObjectFilterList(interface.FilterObject):
     The filter expression contains the name of a YAML file.
 
     Args:
-      filter_expression: string that contains the filter expression.
+      filter_expression (str): filter expression.
 
     Raises:
       WrongPlugin: if the filter could not be compiled.
@@ -118,20 +119,20 @@ class ObjectFilterList(interface.FilterObject):
               results_type))
     self._filter_expression = filter_expression
 
-  def Match(self, event_object):
+  def Match(self, event):
     """Determines if an event object matches the filter.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A boolean value that indicates a match.
+      bool: True if the filter matched.
     """
     if not self.filters:
       return True
 
     for _, matcher, _ in self.filters:
-      if matcher.Matches(event_object):
+      if matcher.Matches(event):
         return True
 
     return False

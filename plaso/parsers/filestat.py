@@ -71,6 +71,8 @@ class FileStatParser(interface.FileEntryParser):
 
     return type_string
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileEntry(self, parser_mediator, file_entry, **kwargs):
     """Parses a file entry.
 

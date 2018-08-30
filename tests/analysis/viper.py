@@ -48,7 +48,8 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
       'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
       'sha256_hash': _EVENT_1_HASH}]
 
-  def _MockPost(self, unused_url, data=None):
+  # pylint: disable=unused-argument
+  def _MockPost(self, url, data=None):
     """Mock funtion to simulate a Viper API request.
 
     Args:

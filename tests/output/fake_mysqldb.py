@@ -31,7 +31,8 @@ class FakeMySQLdbConnection(object):
     """
     return FakeMySQLdbCursor()
 
-  def set_character_set(self, unused_character_set):
+  # pylint: disable=unused-argument
+  def set_character_set(self, character_set):
     """Sets the character set.
 
     Args:
@@ -72,9 +73,6 @@ class FakeMySQLdbCursor(object):
       args (Optional[object]): sequence or mapping of the parameters to use
           with the query.
 
-    Returns:
-      int: number of rows affected by the query.
-
     Raises:
       ValueError: if the query or query arguments do not match the expected
           values.
@@ -103,12 +101,10 @@ class FakeMySQLdbCursor(object):
     return row
 
 
-# Note: that the following functions do not follow the style guide
+# Note: that the following function does not follow the style guide
 # because they are part of the MySQL database module interface.
-# pylint: disable=invalid-name
-
-def connect(
-    unused_hostname, unused_username, unused_password, unused_database_name):
+# pylint: disable=invalid-name,unused-argument
+def connect(hostname, username, password, database_name):
   """Connects to the MySQL database server.
 
   Args:

@@ -16,6 +16,7 @@ class BaseWindowsRegistryKeyFilter(object):
     """List of key paths defined by the filter."""
     return []
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def Match(self, registry_key):
     """Determines if a Windows Registry key matches the filter.
@@ -130,7 +131,7 @@ class WindowsRegistryKeyPathPrefixFilter(BaseWindowsRegistryKeyFilter):
     """Initializes a Windows Registry key filter.
 
     Args:
-      key_path_prefix: the key path prefix.
+      key_path_prefix (str): the key path prefix.
     """
     super(WindowsRegistryKeyPathPrefixFilter, self).__init__()
     self._key_path_prefix = key_path_prefix
@@ -154,7 +155,7 @@ class WindowsRegistryKeyPathSuffixFilter(BaseWindowsRegistryKeyFilter):
     """Initializes a Windows Registry key filter.
 
     Args:
-      key_path_suffix: the key path suffix.
+      key_path_suffix (str): the key path suffix.
     """
     super(WindowsRegistryKeyPathSuffixFilter, self).__init__()
     self._key_path_suffix = key_path_suffix
@@ -215,6 +216,8 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
   # key or value.
   URLS = []
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   @abc.abstractmethod
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
@@ -226,7 +229,8 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
     """
 
   # TODO: merge with UpdateChainAndProcess, also requires changes to tests.
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def Process(self, parser_mediator, registry_key, **kwargs):
     """Processes a Windows Registry key or value.
 
@@ -246,7 +250,8 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
 
     self.ExtractEvents(parser_mediator, registry_key, **kwargs)
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def UpdateChainAndProcess(self, parser_mediator, registry_key, **kwargs):
     """Updates the parser chain and processes a Windows Registry key or value.
 

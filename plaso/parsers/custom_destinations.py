@@ -67,7 +67,8 @@ class CustomDestinationsParser(interface.FileObjectParser):
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       file_entry (dfvfs.FileEntry): a file entry.
-      file_object (dfvfs.FileIO): a file-like object.
+      file_offset (int): offset to the LNK file, relative to the start of the
+          .customDestinations-ms file.
       remaining_file_size (int): size of the data remaining in the
           .customDestinations-ms file.
 
@@ -100,6 +101,8 @@ class CustomDestinationsParser(interface.FileObjectParser):
 
     return lnk_file_size
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a .customDestinations-ms file-like object.
 

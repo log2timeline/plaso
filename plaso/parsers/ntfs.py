@@ -275,6 +275,8 @@ class NTFSMFTParser(interface.FileObjectParser):
             'unable to parse MFT attribute: {0:d} with error: {1!s}').format(
                 attribute_index, exception))
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a NTFS $MFT metadata file-like object.
 
@@ -380,6 +382,8 @@ class NTFSUsnJrnlParser(dtfabric_parser.DtFabricBaseParser):
 
       usn_record_data = usn_change_journal.read_usn_record()
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a NTFS $UsnJrnl metadata file-like object.
 

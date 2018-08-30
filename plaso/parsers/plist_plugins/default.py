@@ -19,7 +19,8 @@ class DefaultPlugin(interface.PlistPlugin):
   NAME = 'plist_default'
   DESCRIPTION = 'Parser for plist files.'
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def GetEntries(self, parser_mediator, top_level=None, **unused_kwargs):
     """Simple method to exact date values from a Plist.
 
@@ -44,6 +45,8 @@ class DefaultPlugin(interface.PlistPlugin):
       # adjust code when there is a way to map keys to offsets.
 
   # TODO: move this into the parser as with the olecf plugins.
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def Process(self, parser_mediator, plist_name, top_level, **kwargs):
     """Overwrite the default Process function so it always triggers.
 

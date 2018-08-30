@@ -68,7 +68,7 @@ class PsortEventHeap(object):
       event (EventObject): event.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
 
         str: identifier of the event MACB group or None if the event cannot
             be grouped.
@@ -127,7 +127,7 @@ class PsortEventHeap(object):
     """Pops an event from the heap.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
 
         str: identifier of the event MACB group or None if the event cannot
             be grouped.
@@ -227,6 +227,10 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       analysis_plugins (dict[str, AnalysisPlugin]): analysis plugins that
           should be run and their names.
       event_filter (Optional[FilterObject]): event filter.
+
+    Returns:
+      collections.Counter: counter containing information about the events
+          processed and filtered.
 
     Raises:
       RuntimeError: if a non-recoverable situation is encountered.

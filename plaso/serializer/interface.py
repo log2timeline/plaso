@@ -14,6 +14,7 @@ import abc
 class AttributeContainerSerializer(object):
   """Class that implements the attribute container serializer interface."""
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def ReadSerialized(cls, serialized):
     """Reads an attribute container from serialized form.
@@ -25,6 +26,7 @@ class AttributeContainerSerializer(object):
       AttributeContainer: attribute container.
     """
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def WriteSerialized(cls, attribute_container):
     """Writes an attribute container to serialized form.

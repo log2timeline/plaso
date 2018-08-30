@@ -124,7 +124,7 @@ class PopularityContestEventData(events.EventData):
   Attributes:
     mru (str): recently used app/library from package.
     package (str): installed packaged name, which the mru belongs to.
-    tag (str): popularity context tag.
+    record_tag (str): popularity context tag.
   """
 
   DATA_TYPE = 'popularity_contest:log:event'
@@ -188,7 +188,6 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): structure parsed from the log file.
     """
     # Required fields are <mru> and <atime> and we are not interested in

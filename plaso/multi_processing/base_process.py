@@ -78,6 +78,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     """str: process name."""
     return self._name
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def _GetStatus(self):
     """Returns status information.
@@ -108,7 +109,8 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     """
     return
 
-  def _SigSegvHandler(self, unused_signal_number, unused_stack_frame):
+  # pylint: disable=unused-argument
+  def _SigSegvHandler(self, signal_number, stack_frame):
     """Signal handler for the SIGSEGV signal.
 
     Args:
@@ -123,7 +125,8 @@ class MultiProcessBaseProcess(multiprocessing.Process):
       signal.signal(signal.SIGSEGV, self._original_sigsegv_handler)
       os.kill(self._pid, signal.SIGSEGV)
 
-  def _SigTermHandler(self, unused_signal_number, unused_stack_frame):
+  # pylint: disable=unused-argument
+  def _SigTermHandler(self, signal_number, stack_frame):
     """Signal handler for the SIGTERM signal.
 
     Args:

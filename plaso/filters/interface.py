@@ -50,7 +50,7 @@ class FilterObject(object):
     """Retrieves a filter object for a specific filter expression.
 
     Args:
-      filter_expression: string that contains the filter expression.
+      filter_expression (str): filter expression.
 
     Returns:
       object: filter or None.
@@ -73,7 +73,8 @@ class FilterObject(object):
       WrongPlugin: if the filter could not be compiled.
     """
 
-  def Match(self, unused_event):
+  # pylint: disable=unused-argument
+  def Match(self, event):
     """Determines if an event matches the filter.
 
     Args:

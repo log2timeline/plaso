@@ -17,6 +17,7 @@ class RPCClient(object):
   def Close(self):
     """Closes the RPC communication channel to the server."""
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def Open(self, hostname, port):
     """Opens a RPC communication channel to the server.
@@ -37,11 +38,12 @@ class RPCServer(object):
     """Initializes the RPC server object.
 
     Args:
-      callback: the callback function to invoke on get status RPC request.
+      callback (function): callback to invoke on get status RPC request.
     """
     super(RPCServer, self).__init__()
     self._callback = callback
 
+  # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def Start(self, hostname, port):
     """Starts the RPC server.

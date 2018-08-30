@@ -154,6 +154,8 @@ class DtFabricBaseWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
           'Unable to map {0:s} data at offset: 0x{1:08x} with error: '
           '{2!s}').format(data_type_map.name or '', file_offset, exception))
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   @abc.abstractmethod
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.

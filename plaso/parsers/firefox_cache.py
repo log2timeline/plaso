@@ -74,7 +74,7 @@ class BaseFirefoxCacheParser(dtfabric_parser.DtFabricBaseParser):
       display_name (str): display name of the Firefox cache file.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
 
         str: HTTP request method or None if the value cannot be extracted.
         str: HTTP response code or None if the value cannot be extracted.
@@ -160,6 +160,10 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
       file_object (dfvfs.FileIO): a file-like object.
       display_name (str): display name.
 
+    Returns:
+      firefox_cache_config: namedtuple containing the block size and first
+          record offset.
+
     Raises:
       UnableToParseFile: if no valid cache record could be found.
     """
@@ -242,7 +246,7 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
       block_size (int): block size.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
 
         firefox_cache1_entry_header: cache record header structure.
         FirefoxCacheEventData: event data.
@@ -323,6 +327,8 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
         cache_entry_header.last_fetched_time > 0 and
         cache_entry_header.fetch_count > 0)
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Firefox cache file-like object.
 
@@ -431,6 +437,8 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
         cache_file_metadata_header.last_fetched_time > 0 and
         cache_file_metadata_header.fetch_count > 0)
 
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Firefox cache file-like object.
 

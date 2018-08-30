@@ -33,7 +33,8 @@ class SpotlightPlugin(interface.PlistPlugin):
   PLIST_PATH = 'com.apple.spotlight.plist'
   PLIST_KEYS = frozenset(['UserShortcuts'])
 
-  # pylint: disable=arguments-differ
+  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
+  # pylint: disable=missing-param-doc,arguments-differ
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant Spotlight entries.
 

@@ -189,7 +189,7 @@ class SymantecParser(dsv_parser.DSVParser):
       timestamp (str): hexadecimal encoded date and time values.
 
     Returns:
-      tuple: contains:
+      tuple: containing:
         year (int): year.
         month (int): month, where 1 represents January.
         day_of_month (int): day of month, where 1 is the first day of the month.

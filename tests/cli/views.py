@@ -16,11 +16,12 @@ from tests.cli import test_lib
 class TestBaseTableView(views.BaseTableView):
   """Class that implements a table view for testing."""
 
-  def Write(self, unused_output_writer):
+  # pylint: disable=unused-argument
+  def Write(self, output_writer):
     """Writes the table to the output writer.
 
     Args:
-      output_writer: the output writer (instance of OutputWriter).
+      output_writer (OutputWriter): output writer.
     """
     return
 
