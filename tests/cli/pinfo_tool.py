@@ -100,57 +100,60 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
     test_filename = 'pinfo_test.plaso'
-    format_version = '20170707'
-    plaso_version = '20171228'
-    session_identifier = 'd280b33c-845b-4e8b-b3d0-b33da11b180b'
-    session_start_time = '2017-12-28T20:06:34.578880+00:00'
-    session_completion_time = '2017-12-28T20:06:35.367057+00:00'
+    format_version = '20180101'
+    plaso_version = '20180818'
+    session_identifier = '1f390c91-1b18-4086-a3b9-26bb5af2620f'
+    session_start_time = '2018-08-31T14:12:41.882914+00:00'
+    session_completion_time = '2018-08-31T14:12:43.271930+00:00'
 
     command_line_arguments = (
-        './tools/log2timeline.py --partition=all --quiet '
-        'pinfo_test.json.plaso test_data/tsk_volume_system.raw')
+      './tools/log2timeline.py --partition=all --quiet '
+      'pinfo_test.plaso test_data/tsk_volume_system.raw')
 
     enabled_parser_names = ', '.join([
         'amcache', 'android_app_usage', 'asl_log', 'bash', 'bencode',
         'bencode/bencode_transmission', 'bencode/bencode_utorrent',
         'binary_cookies', 'bsm_log', 'chrome_cache', 'chrome_preferences',
         'cups_ipp', 'custom_destinations', 'dockerjson', 'dpkg', 'esedb',
-        'esedb/esedb_file_history', 'esedb/msie_webcache', 'filestat',
-        'firefox_cache', 'firefox_cache2', 'hachoir', 'java_idx', 'lnk',
-        'mac_appfirewall_log', 'mac_keychain', 'mac_securityd', 'mactime',
-        'macwifi', 'mcafee_protection', 'mft', 'msiecf', 'olecf',
-        'olecf/olecf_automatic_destinations', 'olecf/olecf_default',
-        'olecf/olecf_document_summary', 'olecf/olecf_summary', 'openxml',
-        'opera_global', 'opera_typed_history', 'pe', 'plist',
-        'plist/airport', 'plist/apple_id', 'plist/ipod_device',
-        'plist/macosx_bluetooth', 'plist/macosx_install_history',
-        'plist/macuser', 'plist/maxos_software_update',
-        'plist/plist_default', 'plist/safari_history', 'plist/spotlight',
-        'plist/spotlight_volume', 'plist/time_machine', 'pls_recall',
-        'popularity_contest', 'prefetch', 'recycle_bin',
-        'recycle_bin_info2', 'rplog', 'sccm', 'selinux', 'skydrive_log',
-        'skydrive_log_old', 'sophos_av', 'sqlite', 'sqlite/android_calls',
-        'sqlite/android_sms', 'sqlite/android_webview',
-        'sqlite/android_webviewcache', 'sqlite/appusage',
+        'esedb/file_history', 'esedb/msie_webcache', 'esedb/srum', 'filestat',
+        'firefox_cache', 'firefox_cache2', 'fsevents', 'gdrive_synclog',
+        'java_idx', 'lnk', 'mac_appfirewall_log', 'mac_keychain',
+        'mac_securityd', 'mactime', 'macwifi', 'mcafee_protection', 'mft',
+        'msiecf', 'olecf', 'olecf/olecf_automatic_destinations',
+        'olecf/olecf_default', 'olecf/olecf_document_summary',
+        'olecf/olecf_summary', 'openxml', 'opera_global',
+        'opera_typed_history', 'pe', 'plist', 'plist/airport',
+        'plist/apple_id', 'plist/ipod_device', 'plist/macosx_bluetooth',
+        'plist/macosx_install_history', 'plist/macuser',
+        'plist/maxos_software_update', 'plist/plist_default',
+        'plist/safari_history', 'plist/spotlight', 'plist/spotlight_volume',
+        'plist/time_machine', 'pls_recall', 'popularity_contest', 'prefetch',
+        'recycle_bin', 'recycle_bin_info2', 'rplog', 'santa', 'sccm',
+        'selinux', 'skydrive_log', 'skydrive_log_old', 'sophos_av', 'sqlite',
+        'sqlite/android_calls', 'sqlite/android_sms',
+        'sqlite/android_webview', 'sqlite/android_webviewcache',
+        'sqlite/appusage', 'sqlite/chrome_27_history',
+        'sqlite/chrome_8_history', 'sqlite/chrome_autofill',
         'sqlite/chrome_cookies', 'sqlite/chrome_extension_activity',
-        'sqlite/chrome_history', 'sqlite/firefox_cookies',
-        'sqlite/firefox_downloads', 'sqlite/firefox_history',
-        'sqlite/google_drive', 'sqlite/imessage',
-        'sqlite/kik_messenger', 'sqlite/ls_quarantine',
-        'sqlite/mac_document_versions', 'sqlite/mackeeper_cache',
-        'sqlite/skype', 'sqlite/twitter_ios', 'sqlite/zeitgeist',
+        'sqlite/firefox_cookies', 'sqlite/firefox_downloads',
+        'sqlite/firefox_history', 'sqlite/google_drive',
+        'sqlite/hangouts_messages', 'sqlite/imessage', 'sqlite/kik_messenger',
+        'sqlite/kodi', 'sqlite/ls_quarantine', 'sqlite/mac_document_versions',
+        'sqlite/mac_notificationcenter', 'sqlite/mackeeper_cache',
+        'sqlite/safari_history', 'sqlite/skype', 'sqlite/twitter_android',
+        'sqlite/twitter_ios', 'sqlite/windows_timeline', 'sqlite/zeitgeist',
         'symantec_scanlog', 'syslog', 'syslog/cron', 'syslog/ssh',
-        'systemd_journal', 'usnjrnl', 'utmp', 'utmpx', 'winevt',
-        'winevtx', 'winfirewall', 'winiis', 'winjob', 'winreg',
-        'winreg/appcompatcache', 'winreg/bagmru', 'winreg/ccleaner',
-        'winreg/explorer_mountpoints2', 'winreg/explorer_programscache',
-        'winreg/microsoft_office_mru', 'winreg/microsoft_outlook_mru',
-        'winreg/mrulist_shell_item_list', 'winreg/mrulist_string',
-        'winreg/mrulistex_shell_item_list', 'winreg/mrulistex_string',
-        'winreg/mrulistex_string_and_shell_item',
+        'systemd_journal', 'trendmicro_url', 'trendmicro_vd', 'usnjrnl',
+        'utmp', 'utmpx', 'winevt', 'winevtx', 'winfirewall', 'winiis',
+        'winjob', 'winreg', 'winreg/appcompatcache', 'winreg/bagmru',
+        'winreg/ccleaner', 'winreg/explorer_mountpoints2',
+        'winreg/explorer_programscache', 'winreg/microsoft_office_mru',
+        'winreg/microsoft_outlook_mru', 'winreg/mrulist_shell_item_list',
+        'winreg/mrulist_string', 'winreg/mrulistex_shell_item_list',
+        'winreg/mrulistex_string', 'winreg/mrulistex_string_and_shell_item',
         'winreg/mrulistex_string_and_shell_item_list', 'winreg/msie_zone',
         'winreg/mstsc_rdp', 'winreg/mstsc_rdp_mru', 'winreg/network_drives',
-        'winreg/userassist', 'winreg/windows_boot_execute',
+        'winreg/networks', 'winreg/userassist', 'winreg/windows_boot_execute',
         'winreg/windows_boot_verify', 'winreg/windows_run',
         'winreg/windows_sam_users', 'winreg/windows_services',
         'winreg/windows_shutdown', 'winreg/windows_task_cache',
@@ -226,9 +229,9 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
   def testPrintStorageInformationAsJSON(self):
     """Tests the _PrintStorageInformationAsJSON function."""
     test_filename = 'pinfo_test.plaso'
-    session_identifier = 'd280b33c845b4e8bb3d0b33da11b180b'
+    session_identifier = '1f390c911b184086a3b926bb5af2620f'
     session_start_time = timelib.Timestamp.CopyFromString(
-        '2017-12-28 20:06:34.578880')
+        '2018-08-31 14:12:41.882914')
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
     test_file = self._GetTestFilePath([test_filename])
