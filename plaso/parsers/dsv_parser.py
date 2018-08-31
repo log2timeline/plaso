@@ -123,8 +123,6 @@ class DSVParser(interface.FileObjectParser):
     """
     return specification.FormatSpecification(cls.NAME, text_format=True)
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a DSV text file-like object.
 

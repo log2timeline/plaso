@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import os
 import re
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -229,8 +230,9 @@ class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
         else:
           display_name = '# {0:s}'.format(item.name)
 
-        parser_mediator.AppendToParserChain(self)
+        parser_mediator.AppendToParserChain(self._WINLNK_PARSER)
         try:
+          item.seek(0, os.SEEK_SET)
           self._WINLNK_PARSER.ParseFileLNKFile(
               parser_mediator, item, display_name)
         finally:

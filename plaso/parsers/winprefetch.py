@@ -69,8 +69,6 @@ class WinPrefetchParser(interface.FileObjectParser):
     format_specification.AddNewSignature(b'MAM\x04', offset=0)
     return format_specification
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a Windows Prefetch file-like object.
 

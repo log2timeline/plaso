@@ -348,8 +348,6 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
     return line.strip()
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a text file-like object using a pyparsing definition.
 
@@ -592,8 +590,6 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     super(PyparsingMultiLineTextParser, self).__init__()
     self._buffer_size = self.BUFFER_SIZE
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a text file-like object using a pyparsing definition.
 

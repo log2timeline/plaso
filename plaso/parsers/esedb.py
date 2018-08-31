@@ -60,8 +60,6 @@ class ESEDBParser(interface.FileObjectParser):
     format_specification.AddNewSignature(b'\xef\xcd\xab\x89', offset=4)
     return format_specification
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses an ESE database file-like object.
 

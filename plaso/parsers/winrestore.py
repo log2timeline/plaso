@@ -47,8 +47,6 @@ class RestorePointLogParser(dtfabric_parser.DtFabricBaseParser):
 
   _DEFINITION_FILE = 'winrestore.yaml'
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a Windows Restore Point (rp.log) log file-like object.
 

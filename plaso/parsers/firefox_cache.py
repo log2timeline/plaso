@@ -327,8 +327,6 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
         cache_entry_header.last_fetched_time > 0 and
         cache_entry_header.fetch_count > 0)
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a Firefox cache file-like object.
 
@@ -437,8 +435,6 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
         cache_file_metadata_header.last_fetched_time > 0 and
         cache_file_metadata_header.fetch_count > 0)
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a Firefox cache file-like object.
 

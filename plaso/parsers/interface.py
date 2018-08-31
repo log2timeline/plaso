@@ -251,8 +251,6 @@ class FileObjectParser(BaseParser):
   # file offset seek needs to be performed.
   _INITIAL_FILE_OFFSET = 0
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def Parse(self, parser_mediator, file_object):
     """Parses a single file-like object.
 
