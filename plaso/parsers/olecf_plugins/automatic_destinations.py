@@ -229,8 +229,13 @@ class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
         else:
           display_name = '# {0:s}'.format(item.name)
 
-        self._WINLNK_PARSER.Parse(
-            parser_mediator, item, display_name=display_name)
+        parser_mediator.AppendToParserChain(self)
+        try:
+          self._WINLNK_PARSER.ParseFileLNKFile(
+              parser_mediator, item, display_name)
+        finally:
+          parser_mediator.PopFromParserChain()
+
 
         # TODO: check for trailing data?
 

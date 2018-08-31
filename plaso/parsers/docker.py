@@ -264,7 +264,7 @@ class DockerJSONParser(interface.FileObjectParser):
 
   # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
   # pylint: disable=missing-param-doc
-  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+  def ParseFileObject(self, parser_mediator, file_object):
     """Parses various Docker configuration and log files in JSON format.
 
     This methods checks whether the file_object points to a docker JSON config
