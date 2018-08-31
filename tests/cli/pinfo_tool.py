@@ -107,8 +107,8 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     session_completion_time = '2018-08-31T14:12:43.271930+00:00'
 
     command_line_arguments = (
-      './tools/log2timeline.py --partition=all --quiet '
-      'pinfo_test.plaso test_data/tsk_volume_system.raw')
+        './tools/log2timeline.py --partition=all --quiet '
+        'pinfo_test.plaso test_data/tsk_volume_system.raw')
 
     enabled_parser_names = ', '.join([
         'amcache', 'android_app_usage', 'asl_log', 'bash', 'bencode',
