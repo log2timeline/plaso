@@ -60,6 +60,7 @@ class WinEVTXFormatter(interface.ConditionalEventFormatter):
           source_name, message_identifier)
       if message_string:
         try:
+          strings = [string or '' for string in strings]
           event_values['message_string'] = message_string.format(*strings)
         except IndexError:
           pass
