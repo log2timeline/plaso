@@ -153,8 +153,8 @@ class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(event.url, 'http://google.com/gmail/about/')
 
     expected_message = (
-      'http://google.com/gmail/about/ (__utma) '
-      'Flags: [HTTP only] = False [Persistent] = True')
+        'http://google.com/gmail/about/ (__utma) '
+        'Flags: [HTTP only] = False [Persistent] = True')
     expected_short_message = 'google.com (__utma)'
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
@@ -171,8 +171,8 @@ class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
     self.assertTrue(event.persistent)
 
     expected_message = (
-      'http://fbi.gov/ (__cfduid) '
-      'Flags: [HTTP only] = True [Persistent] = True')
+        'http://fbi.gov/ (__cfduid) '
+        'Flags: [HTTP only] = True [Persistent] = True')
     self._TestGetMessageStrings(
         event, expected_message, 'fbi.gov (__cfduid)')
 
