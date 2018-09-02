@@ -175,9 +175,7 @@ class WinJobParser(dtfabric_parser.DtFabricBaseParser):
 
     return date_time
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
-  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+  def ParseFileObject(self, parser_mediator, file_object):
     """Parses a Windows job file-like object.
 
     Args:

@@ -116,21 +116,27 @@ class WinLnkParser(interface.FileObjectParser):
           date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc,arguments-differ
-  def ParseFileObject(
-      self, parser_mediator, file_object, display_name=None, **kwargs):
+  def ParseFileObject(self, parser_mediator, file_object):
     """Parses a Windows Shortcut (LNK) file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): file-like object.
-      display_name (Optional[str]): display name.
     """
-    if not display_name:
-      display_name = parser_mediator.GetDisplayName()
+    display_name = parser_mediator.GetDisplayName()
+    self.ParseFileLNKFile(parser_mediator, file_object, display_name)
 
+  def ParseFileLNKFile(
+      self, parser_mediator, file_object, display_name):
+    """Parses a Windows Shortcut (LNK) file-like object.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
+      display_name (str): display name.
+    """
     lnk_file = pylnk.file()
     lnk_file.set_ascii_codepage(parser_mediator.codepage)
 
