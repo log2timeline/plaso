@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import os
-
 import lz4.block
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -18,6 +16,7 @@ from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import errors
+from plaso.lib import specification
 from plaso.parsers import dtfabric_parser
 from plaso.parsers import manager
 
@@ -305,7 +304,8 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
 
     if file_header.header_size not in self._SUPPORTED_FILE_HEADER_SIZES:
       raise errors.UnableToParseFile(
-          'Unsupported file header size: {0:d}.'.format(file_header.header_size))
+          'Unsupported file header size: {0:d}.'.format(
+              file_header.header_size))
 
     data_hash_table_end_offset = (
         file_header.data_hash_table_offset +
