@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import os
 import re
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -229,8 +230,13 @@ class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
         else:
           display_name = '# {0:s}'.format(item.name)
 
-        self._WINLNK_PARSER.Parse(
-            parser_mediator, item, display_name=display_name)
+        parser_mediator.AppendToParserChain(self._WINLNK_PARSER)
+        try:
+          item.seek(0, os.SEEK_SET)
+          self._WINLNK_PARSER.ParseFileLNKFile(
+              parser_mediator, item, display_name)
+        finally:
+          parser_mediator.PopFromParserChain()
 
         # TODO: check for trailing data?
 

@@ -188,9 +188,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
             date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
-  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+  def ParseFileObject(self, parser_mediator, file_object):
     """Parses a Chrome preferences file-like object.
 
     Args:

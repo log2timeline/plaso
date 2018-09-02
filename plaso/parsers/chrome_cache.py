@@ -182,8 +182,7 @@ class ChromeCacheIndexFileParser(dtfabric_parser.DtFabricBaseParser):
 
       cache_address_data = file_object.read(4)
 
-  # pylint: disable=unused-argument
-  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+  def ParseFileObject(self, parser_mediator, file_object):
     """Parses a file-like object.
 
     Args:
@@ -291,7 +290,7 @@ class ChromeCacheDataBlockFileParser(dtfabric_parser.DtFabricBaseParser):
     return cache_entry_object
 
   # pylint: disable=unused-argument
-  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+  def ParseFileObject(self, parser_mediator, file_object):
     """Parses a file-like object.
 
     Args:
@@ -452,9 +451,7 @@ class ChromeCacheParser(interface.FileEntryParser):
         if data_block_file_object:
           data_block_file_object.close()
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
-  def ParseFileEntry(self, parser_mediator, file_entry, **kwargs):
+  def ParseFileEntry(self, parser_mediator, file_entry):
     """Parses Chrome Cache files.
 
     Args:
@@ -469,7 +466,7 @@ class ChromeCacheParser(interface.FileEntryParser):
 
     file_object = file_entry.GetFileObject()
     try:
-      index_file_parser.ParseFileObject(parser_mediator, file_object, **kwargs)
+      index_file_parser.ParseFileObject(parser_mediator, file_object)
     except (IOError, errors.ParseError) as exception:
       file_object.close()
 

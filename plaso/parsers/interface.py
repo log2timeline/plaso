@@ -212,9 +212,7 @@ class BaseParser(object):
 class FileEntryParser(BaseParser):
   """The file entry parser interface."""
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
-  def Parse(self, parser_mediator, **kwargs):
+  def Parse(self, parser_mediator):
     """Parsers the file entry and extracts event objects.
 
     Args:
@@ -229,14 +227,12 @@ class FileEntryParser(BaseParser):
 
     parser_mediator.AppendToParserChain(self)
     try:
-      self.ParseFileEntry(parser_mediator, file_entry, **kwargs)
+      self.ParseFileEntry(parser_mediator, file_entry)
     finally:
       parser_mediator.PopFromParserChain()
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc,redundant-returns-doc
   @abc.abstractmethod
-  def ParseFileEntry(self, parser_mediator, file_entry, **kwargs):
+  def ParseFileEntry(self, parser_mediator, file_entry):
     """Parses a file entry.
 
     Args:
@@ -255,9 +251,7 @@ class FileObjectParser(BaseParser):
   # file offset seek needs to be performed.
   _INITIAL_FILE_OFFSET = 0
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
-  def Parse(self, parser_mediator, file_object, **kwargs):
+  def Parse(self, parser_mediator, file_object):
     """Parses a single file-like object.
 
     Args:
@@ -275,14 +269,12 @@ class FileObjectParser(BaseParser):
 
     parser_mediator.AppendToParserChain(self)
     try:
-      self.ParseFileObject(parser_mediator, file_object, **kwargs)
+      self.ParseFileObject(parser_mediator, file_object)
     finally:
       parser_mediator.PopFromParserChain()
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc,redundant-returns-doc
   @abc.abstractmethod
-  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+  def ParseFileObject(self, parser_mediator, file_object):
     """Parses a file-like object.
 
     Args:

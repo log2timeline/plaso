@@ -131,9 +131,7 @@ class AmcacheParser(interface.FileObjectParser):
   #     AddNewSignature ->
   #     b'\x41\x00\x6d\x00\x63\x00\x61\x00\x63\x00\x68\x00\x65', offset=88
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
-  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+  def ParseFileObject(self, parser_mediator, file_object):
     """Parses an Amcache.hve file for events.
 
     Args:

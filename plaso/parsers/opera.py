@@ -76,9 +76,7 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
 
   _HEADER_READ_SIZE = 128
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
-  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+  def ParseFileObject(self, parser_mediator, file_object):
     """Parses an Opera typed history file-like object.
 
     Args:
@@ -304,9 +302,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
 
     return True
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
-  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+  def ParseFileObject(self, parser_mediator, file_object):
     """Parses an Opera global history file-like object.
 
     Args:

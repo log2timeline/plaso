@@ -90,8 +90,13 @@ class CustomDestinationsParser(interface.FileObjectParser):
       parser_mediator.ProduceExtractionError(message)
       return 0
 
-    self._WINLNK_PARSER.Parse(
-        parser_mediator, lnk_file_object, display_name=display_name)
+    parser_mediator.AppendToParserChain(self._WINLNK_PARSER)
+    try:
+      lnk_file_object.seek(0, os.SEEK_SET)
+      self._WINLNK_PARSER.ParseFileLNKFile(
+          parser_mediator, lnk_file_object, display_name)
+    finally:
+      parser_mediator.PopFromParserChain()
 
     # We cannot trust the file size in the LNK data so we get the last offset
     # that was read instead.
@@ -101,9 +106,7 @@ class CustomDestinationsParser(interface.FileObjectParser):
 
     return lnk_file_size
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
-  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+  def ParseFileObject(self, parser_mediator, file_object):
     """Parses a .customDestinations-ms file-like object.
 
     Args:
