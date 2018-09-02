@@ -33,13 +33,11 @@ PYTHON2_DEPENDENCIES="PyYAML
                       libvslvm-python
                       python-XlsxWriter
                       python-artifacts
-                      python-backports-lzma
                       python-bencode
                       python-biplist
                       python-chardet
                       python-construct
                       python-crypto
-                      python-dateutil
                       python-dfdatetime
                       python-dfvfs
                       python-dfwinreg
@@ -56,7 +54,9 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python-pytsk3
                       python-requests
                       python-six
+                      python2-backports-lzma
                       python2-certifi
+                      python2-dateutil
                       python2-future
                       python2-idna
                       python2-lz4
