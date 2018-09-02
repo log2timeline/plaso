@@ -238,7 +238,6 @@ class AutomaticDestinationsOLECFPlugin(dtfabric_plugin.DtFabricBaseOLECFPlugin):
         finally:
           parser_mediator.PopFromParserChain()
 
-
         # TODO: check for trailing data?
 
 
