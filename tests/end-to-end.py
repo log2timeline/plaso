@@ -880,7 +880,7 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
 
       # Check if the resulting storage file can be read with psort.
       if not self._RunPsort(
-          test_definition, temp_directory, source_path,
+          test_definition, temp_directory, storage_file,
           output_options=test_definition.output_options):
         return False
 
