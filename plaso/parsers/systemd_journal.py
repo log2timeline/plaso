@@ -253,17 +253,17 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
             'Unable to parse entry item at offset: 0x{0:08x} with error: '
             '{1!s}').format(file_offset, exception))
 
+      file_offset += entry_item_data_size
+
       if entry_item.object_offset < self._maximum_journal_file_offset:
         raise errors.ParseError(
             'object offset should be after hash tables ({0:d} < {1:d})'.format(
-                file_offset, self._maximum_journal_file_offset))
+                entry_item.object_offset, self._maximum_journal_file_offset))
 
       event_data = self._ParseDataObject(file_object, entry_item.object_offset)
       event_string = event_data.decode('utf-8')
       key, value = event_string.split('=', 1)
       fields[key] = value
-
-      file_offset += entry_item_data_size
 
     return fields
 
