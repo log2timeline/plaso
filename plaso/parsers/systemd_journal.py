@@ -81,7 +81,7 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
           of the file-like object.
 
     Returns:
-      systemd_journal_data_object: data object.
+      bytes: data.
 
     Raises:
       ParseError: if the data object cannot be parsed.
@@ -105,7 +105,28 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
       raise errors.ParseError('Unsupported object flags: 0x{0:02x}.'.format(
           data_object.object_flags))
 
-    return data_object
+    # The data is read seperately for performance reasons.
+    data_size = data_object.data_size - 64
+    data = file_object.read(data_size)
+
+    if data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_XZ:
+      data = lzma.decompress(data)
+
+    elif data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_LZ4:
+      uncompressed_size_map = self._GetDataTypeMap('uint32le')
+
+      try:
+        uncompressed_size = self._ReadStructureFromByteStream(
+            data, file_offset + 64, uncompressed_size_map)
+      except (ValueError, errors.ParseError) as exception:
+        raise errors.ParseError((
+            'Unable to parse LZ4 uncompressed size at offset: 0x{0:08x} with '
+            'error: {1!s}').format(file_offset + 64, exception))
+
+      data = lz4.block.decompress(
+          data[8:], uncompressed_size=uncompressed_size)
+
+    return data
 
   def _ParseEntryArrayObject(self, file_object, file_offset):
     """Parses an entry array object.
@@ -245,26 +266,7 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
     Raises:
       ParseError: if the LZ4 uncompressed size cannot be parsed.
     """
-    data_object = self._ParseDataObject(file_object, file_offset)
-
-    event_data = data_object.data
-    if data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_XZ:
-      event_data = lzma.decompress(event_data)
-
-    elif data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_LZ4:
-      uncompressed_size_map = self._GetDataTypeMap('uint32le')
-
-      try:
-        uncompressed_size = self._ReadStructureFromByteStream(
-            event_data, file_offset + 64, uncompressed_size_map)
-      except (ValueError, errors.ParseError) as exception:
-        raise errors.ParseError((
-            'Unable to parse LZ4 uncompressed size at offset: 0x{0:08x} with '
-            'error: {1!s}').format(file_offset + 64, exception))
-
-      event_data = lz4.block.decompress(
-          event_data[8:], uncompressed_size=uncompressed_size)
-
+    event_data = self._ParseDataObject(file_object, file_offset)
     event_string = event_data.decode('utf-8')
     return event_string.split('=', 1)
 
