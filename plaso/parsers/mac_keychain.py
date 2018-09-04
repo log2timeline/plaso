@@ -780,7 +780,8 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
         parser_mediator, record['crtr'])
     event_data.entry_name = self._ParseBinaryDataAsString(
         parser_mediator, record['PrintName'])
-    event_data.ssgp_hash = codecs.encode(key[4:], 'hex')
+    ssgp_hash = codecs.encode(key[4:], 'hex')
+    event_data.ssgp_hash = codecs.decode(ssgp_hash, 'utf-8')
     event_data.text_description = self._ParseBinaryDataAsString(
         parser_mediator, record['desc'])
 
@@ -814,6 +815,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
           'with: "ssgp".'))
 
     protocol_string = codecs.decode('{0:08x}'.format(record['ptcl']), 'hex')
+    protocol_string = codecs.decode(protocol_string, 'utf-8')
 
     event_data = KeychainInternetRecordEventData()
     event_data.account_name = self._ParseBinaryDataAsString(
@@ -824,7 +826,8 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
         parser_mediator, record['PrintName'])
     event_data.protocol = self._PROTOCOL_TRANSLATION_DICT.get(
         protocol_string, protocol_string)
-    event_data.ssgp_hash = codecs.encode(key[4:], 'hex')
+    ssgp_hash = codecs.encode(key[4:], 'hex')
+    event_data.ssgp_hash = codecs.decode(ssgp_hash, 'utf-8')
     event_data.text_description = self._ParseBinaryDataAsString(
         parser_mediator, record['desc'])
     event_data.type_protocol = self._ParseBinaryDataAsString(
