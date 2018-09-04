@@ -236,39 +236,36 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
     """
     entry_object = self._ParseEntryObject(file_object, file_offset)
 
+    # The data is read seperately for performance reasons.
+    entry_item_map = self._GetDataTypeMap('systemd_journal_entry_item')
+
+    file_offset += 64
+    data_end_offset = file_offset + entry_object.data_size - 64
+
     fields = {'real_time': entry_object.real_time}
-    for entry_item in entry_object.entry_items:
+
+    while file_offset < data_end_offset:
+      try:
+        entry_item, entry_item_data_size = self._ReadStructureFromFileObject(
+            file_object, file_offset, entry_item_map)
+      except (ValueError, errors.ParseError) as exception:
+        raise errors.ParseError((
+            'Unable to parse entry item at offset: 0x{0:08x} with error: '
+            '{1!s}').format(file_offset, exception))
+
       if entry_item.object_offset < self._maximum_journal_file_offset:
         raise errors.ParseError(
             'object offset should be after hash tables ({0:d} < {1:d})'.format(
                 file_offset, self._maximum_journal_file_offset))
 
-      key, value = self._ParseJournalEntryItem(
-          file_object, entry_item.object_offset)
+      event_data = self._ParseDataObject(file_object, entry_item.object_offset)
+      event_string = event_data.decode('utf-8')
+      key, value = event_string.split('=', 1)
       fields[key] = value
 
+      file_offset += entry_item_data_size
+
     return fields
-
-  def _ParseJournalEntryItem(self, file_object, file_offset):
-    """Parses a journal entry item.
-
-    This method will read, and decompress if needed, the content of a DATA
-    object.
-
-    Args:
-      file_object (dfvfs.FileIO): a file-like object.
-      file_offset (int): offset of the data object relative to the start
-          of the file-like object.
-
-    Returns:
-      tuple[str, str]: key and value of the journal entry item.
-
-    Raises:
-      ParseError: if the LZ4 uncompressed size cannot be parsed.
-    """
-    event_data = self._ParseDataObject(file_object, file_offset)
-    event_string = event_data.decode('utf-8')
-    return event_string.split('=', 1)
 
   @classmethod
   def GetFormatSpecification(cls):

@@ -130,6 +130,8 @@ members:
   data_type: uint64
 - name: entry_array_offset
   data_type: uint64
+- name: number_of_entries
+  data_type: uint64
 ---
 name: systemd_journal_entry_item
 type: structure
@@ -168,10 +170,6 @@ members:
   elements_data_size: 16
 - name: xor_hash
   data_type: uint64
-- name: entry_items
-  type: sequence
-  element_data_type: systemd_journal_entry_item
-  elements_data_size: systemd_journal_entry_object.data_size - 64
 ---
 name: systemd_journal_entry_array_object
 type: structure
