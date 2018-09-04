@@ -145,6 +145,12 @@ def _CheckPythonModule(
       map(int, _VERSION_SPLIT_REGEX.split(minimum_version)))
 
   if module_version_map < minimum_version_map:
+    if not is_required:
+      print((	
+          '[OPTIONAL]\t{0:s} version: {1!s} is too old, {2!s} or later '	
+          'required.').format(module_name, module_version, minimum_version))	
+      return True
+
     print((
         '[FAILURE]\t{0:s} version: {1!s} is too old, {2!s} or later '
         'required.').format(module_name, module_version, minimum_version))
@@ -154,6 +160,12 @@ def _CheckPythonModule(
     maximum_version_map = list(
         map(int, _VERSION_SPLIT_REGEX.split(maximum_version)))
     if module_version_map > maximum_version_map:
+      if not is_required:	
+        print((	
+            '[OPTIONAL]\t{0:s} version: {1!s} is too recent, {2!s} or earlier '	
+            'required.').format(module_name, module_version, minimum_version))	
+        return True	
+
       print((
           '[FAILURE]\t{0:s} version: {1!s} is too recent, {2!s} or earlier '
           'required.').format(module_name, module_version, maximum_version))
