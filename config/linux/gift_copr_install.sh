@@ -33,13 +33,11 @@ PYTHON2_DEPENDENCIES="PyYAML
                       libvslvm-python
                       python-XlsxWriter
                       python-artifacts
-                      python-backports-lzma
                       python-bencode
                       python-biplist
                       python-chardet
                       python-construct
                       python-crypto
-                      python-dateutil
                       python-dfdatetime
                       python-dfvfs
                       python-dfwinreg
@@ -52,19 +50,21 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python-hachoir-parser
                       python-pefile
                       python-psutil
+                      python-pysqlite
                       python-pytsk3
                       python-requests
                       python-six
+                      python2-backports-lzma
                       python2-certifi
+                      python2-dateutil
                       python2-future
                       python2-idna
                       python2-lz4
                       python2-pyparsing
-                      python2-sqlite3dbm
+                      python2-pytz
                       python2-urllib3
                       python2-yara
-                      python2-zmq
-                      pytz";
+                      python2-zmq";
 
 # Additional dependencies for running plaso tests, alphabetized,
 # one per line.
