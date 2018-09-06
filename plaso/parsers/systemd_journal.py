@@ -105,7 +105,7 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
       raise errors.ParseError('Unsupported object flags: 0x{0:02x}.'.format(
           data_object.object_flags))
 
-    # The data is read seperately for performance reasons.
+    # The data is read separately for performance reasons.
     data_size = data_object.data_size - 64
     data = file_object.read(data_size)
 
@@ -236,7 +236,7 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
     """
     entry_object = self._ParseEntryObject(file_object, file_offset)
 
-    # The data is read seperately for performance reasons.
+    # The data is read separately for performance reasons.
     entry_item_map = self._GetDataTypeMap('systemd_journal_entry_item')
 
     file_offset += 64
