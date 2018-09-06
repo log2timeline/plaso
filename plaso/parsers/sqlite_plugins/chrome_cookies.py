@@ -65,7 +65,7 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
         'has_expires, is_persistent AS persistent '
         'FROM cookies'), 'ParseCookieRow')]
 
-  # The required tables for the Cookies database.
+  # The required tables for the cookies database.
   REQUIRED_TABLES = frozenset(['cookies', 'meta'])
 
   SCHEMAS = [{
@@ -158,7 +158,7 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
     if timestamp:
       date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
-          date_time, 'Cookie Expires')
+          date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     for plugin in self._cookie_plugins:
