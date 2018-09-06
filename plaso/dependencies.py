@@ -28,7 +28,7 @@ PYTHON_DEPENDENCIES = {
     'Crypto': ('__version__', '2.6', None, True),
     'dateutil': ('__version__', '1.5', None, True),
     'dfdatetime': ('__version__', '20180704', None, True),
-    'dfvfs': ('__version__', '20180326', None, True),
+    'dfvfs': ('__version__', '20180831', None, True),
     'dfwinreg': ('__version__', '20180712', None, True),
     'dtfabric': ('__version__', '20180808', None, True),
     'efilter': ('', '1.5', None, True),

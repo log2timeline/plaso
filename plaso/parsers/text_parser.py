@@ -319,12 +319,13 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
     return False
 
-  def _ReadLine(self, text_file_object, max_len=0, depth=0):
+  def _ReadLine(self, text_file_object, max_len=None, depth=0):
     """Reads a line from a text file.
 
     Args:
       text_file_object (dfvfs.TextFile): text file.
-      max_len (Optional[int]): maximum number of bytes a single line can take.
+      max_len (Optional[int]): maximum number of bytes a single line can take,
+          where None means all remaining bytes should be read.
       depth (Optional[int]): number of new lines the parser encountered.
 
     Returns:
@@ -433,7 +434,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       self._current_offset = text_file_object.get_offset()
 
       try:
-        line = self._ReadLine(text_file_object)
+        line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
       except UnicodeDecodeError:
         parser_mediator.ProduceExtractionError(
             'unable to read and decode log line at offset {0:d}'.format(
