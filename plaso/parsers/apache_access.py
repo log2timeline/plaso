@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Apache access log (access.log) parser."""
+"""Apache access log (access.log) parser.
+
+Parser based on the two default apache formats, common and combined log format
+defined in https://httpd.apache.org/docs/2.4/logs.html
+"""
 
 from __future__ import unicode_literals
 

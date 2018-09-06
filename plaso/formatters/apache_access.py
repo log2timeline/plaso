@@ -8,7 +8,7 @@ from plaso.formatters import manager
 
 
 class ApacheAccessFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a apache access event."""
+  """Formatter for a apache access log event."""
 
   DATA_TYPE = 'apache:access'
 

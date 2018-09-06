@@ -14,7 +14,7 @@ from tests.parsers import test_lib
 
 
 class ApacheAccessUnitTest(test_lib.ParserTestCase):
-  """Tests for apache access parser."""
+  """Tests for apache access log parser."""
 
   @shared_test_lib.skipUnlessHasTestFile(['access.log'])
   def testParse(self):

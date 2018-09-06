@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the apache access file event formatter."""
+"""Tests for the apache access log file event formatter."""
 
 from __future__ import unicode_literals
 
@@ -11,7 +11,7 @@ from tests.formatters import test_lib
 
 
 class ApacheAccessFormatterTest(test_lib.EventFormatterTestCase):
-  """Tests for the apache access event formatter."""
+  """Tests for the apache access log event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""
