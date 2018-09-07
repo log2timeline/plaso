@@ -48,14 +48,14 @@ RESULT=$?;
 # On Travis-CI print the stdout and stderr output to troubleshoot potential issues.
 if test ${CONFIGURATION} = 'travis';
 then
-	for FILE in `find ${RESULTS_DIRECTORY} -name \*.out -type f`;
+	for FILE in $(find ${RESULTS_DIRECTORY} -name \*.out -type f);
 	do
 		echo "stdout file: ${FILE}";
 		cat ${FILE};
 		echo "";
 	done
 
-	for FILE in `find ${RESULTS_DIRECTORY} -name \*.err -type f`;
+	for FILE in $(find ${RESULTS_DIRECTORY} -name \*.err -type f);
 	do
 		echo "stderr file: ${FILE}";
 		cat ${FILE};
