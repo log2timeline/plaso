@@ -804,6 +804,7 @@ class StorageMediaTool(tools.CLITool):
       if selected_vss_stores == ['all']:
         # We need to set the stores to cover all vss stores.
         selected_vss_stores = range(1, volume_system.number_of_volumes + 1)
+        selected_vss_stores = list(selected_vss_stores)
 
       if not set(selected_vss_stores).difference(normalized_volume_identifiers):
         break
