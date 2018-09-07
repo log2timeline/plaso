@@ -22,6 +22,7 @@ class ESEDBParserTest(test_lib.ParserTestCase):
     parser = esedb.ESEDBParser()
     storage_writer = self._ParseFile(['Windows.edb'], parser)
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
     # Extensible Storage Engine Database information:
     #     File type:              Database
     #     Created in format:      0x620,17
@@ -29,15 +30,14 @@ class ESEDBParserTest(test_lib.ParserTestCase):
     #     Page size:              32768 bytes
 
     self.assertEqual(storage_writer.number_of_events, 0)
-    self.assertEqual(storage_writer.number_of_errors, 0)
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
     parser = esedb.ESEDBParser()
     parser.ParseFileObject(parser_mediator, None)
 
-    self.assertEqual(storage_writer.number_of_events, 0)
     self.assertEqual(storage_writer.number_of_errors, 1)
+    self.assertEqual(storage_writer.number_of_events, 0)
 
     errors = list(storage_writer.GetErrors())
 

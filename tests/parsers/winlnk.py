@@ -23,6 +23,8 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     parser = winlnk.WinLnkParser()
     storage_writer = self._ParseFile(['example.lnk'], parser)
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
+
     # Link information:
     # 	Creation time			: Jul 13, 2009 23:29:02.849131000 UTC
     # 	Modification time		: Jul 14, 2009 01:39:18.220000000 UTC
@@ -104,6 +106,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     parser = winlnk.WinLnkParser()
     storage_writer = self._ParseFile(['NeroInfoTool.lnk'], parser)
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 20)
 
     events = list(storage_writer.GetEvents())

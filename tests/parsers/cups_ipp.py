@@ -24,6 +24,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     parser = cups_ipp.CupsIppParser()
     storage_writer = self._ParseFile(['mac_cups_ipp'], parser)
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
 
     events = list(storage_writer.GetSortedEvents())

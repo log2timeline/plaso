@@ -29,6 +29,8 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
       if event.data_type == 'safari:cookie:entry':
         cookie_events.append(event)
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
+
     # There should be:
     # * 207 events in total
     # * 182 events from the safari cookie parser

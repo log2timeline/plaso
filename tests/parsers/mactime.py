@@ -23,6 +23,9 @@ class MactimeTest(test_lib.ParserTestCase):
     parser = mactime.MactimeParser()
     storage_writer = self._ParseFile(['mactime.body'], parser)
 
+
+    self.assertEqual(storage_writer.number_of_errors, 0)
+
     # The file contains 13 lines x 4 timestamps per line, which should be
     # 52 events in total. However several of these events have an empty
     # timestamp value and are omitted.

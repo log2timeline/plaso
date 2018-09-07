@@ -26,6 +26,8 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['places.sqlite'], plugin)
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
+
     # The places.sqlite file contains 205 events (1 page visit,
     # 2 x 91 bookmark records, 2 x 3 bookmark annotations,
     # 2 x 8 bookmark folders).
@@ -164,6 +166,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['places_new.sqlite'], plugin)
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
     # The places.sqlite file contains 84 events:
     #     34 page visits.
     #     28 bookmarks
@@ -204,7 +207,7 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['downloads.sqlite'], plugin)
 
-    # The downloads.sqlite file contains 2 events (1 download).
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
 
     events = list(storage_writer.GetEvents())

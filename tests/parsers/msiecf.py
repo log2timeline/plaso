@@ -23,6 +23,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     parser = msiecf.MSIECFParser()
     storage_writer = self._ParseFile(['index.dat'], parser)
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
     # MSIE Cache File information:
     #   Version                         : 5.2
     #   File size                       : 32768 bytes
@@ -92,6 +93,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     """Tests the Parse function with leak and redirected records."""
     parser = msiecf.MSIECFParser()
     storage_writer = self._ParseFile(['nfury_index.dat'], parser)
+    self.assertEqual(storage_writer.number_of_errors, 0)
 
     # MSIE Cache File information:
     #   Version                         : 5.2
