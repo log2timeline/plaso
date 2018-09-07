@@ -24,7 +24,7 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     plugin = srum.SystemResourceUsageMonitorESEDBPlugin()
     storage_writer = self._ParseESEDBFileWithPlugin(['SRUDB.dat'], plugin)
 
-    # Todo: confirm this is working as intended.
+    # Todo: confirm this is working as intended. #2134
     self.assertEqual(storage_writer.number_of_errors, 2)
     self.assertEqual(storage_writer.number_of_events, 18543)
 
