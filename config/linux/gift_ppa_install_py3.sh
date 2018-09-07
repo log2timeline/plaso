@@ -70,9 +70,60 @@ TEST_DEPENDENCIES="python-mock";
 DEVELOPMENT_DEPENDENCIES="python-sphinx
                           pylint";
 
+# Additional dependencies for doing plaso debugging, alphabetized,
+# one per line.
+DEBUG_DEPENDENCIES="libbde-dbg
+                    libbde-python3-dbg
+                    libesedb-dbg
+                    libesedb-python3-dbg
+                    libevt-dbg
+                    libevt-python3-dbg
+                    libevtx-dbg
+                    libevtx-python3-dbg
+                    libewf-dbg
+                    libewf-python3-dbg
+                    libfsntfs-dbg
+                    libfsntfs-python3-dbg
+                    libfvde-dbg
+                    libfvde-python3-dbg
+                    libfwnt-dbg
+                    libfwnt-python3-dbg
+                    libfwsi-dbg
+                    libfwsi-python3-dbg
+                    liblnk-dbg
+                    liblnk-python3-dbg
+                    libmsiecf-dbg
+                    libmsiecf-python3-dbg
+                    libolecf-dbg
+                    libolecf-python3-dbg
+                    libqcow-dbg
+                    libqcow-python3-dbg
+                    libregf-dbg
+                    libregf-python3-dbg
+                    libscca-dbg
+                    libscca-python3-dbg
+                    libsigscan-dbg
+                    libsigscan-python3-dbg
+                    libsmdev-dbg
+                    libsmdev-python3-dbg
+                    libsmraw-dbg
+                    libsmraw-python3-dbg
+                    libvhdi-dbg
+                    libvhdi-python3-dbg
+                    libvmdk-dbg
+                    libvmdk-python3-dbg
+                    libvshadow-dbg
+                    libvshadow-python3-dbg
+                    libvslvm-dbg
+                    libvslvm-python3-dbg";
+
 sudo add-apt-repository ppa:gift/dev -y
 sudo apt-get update -q
 sudo apt-get install -y ${PYTHON3_DEPENDENCIES}
+
+if [[ "$*" =~ "include-debug" ]]; then
+    sudo apt-get install -y ${DEBUG_DEPENDENCIES}
+fi
 
 if [[ "$*" =~ "include-development" ]]; then
     sudo apt-get install -y ${DEVELOPMENT_DEPENDENCIES}
