@@ -31,7 +31,7 @@ then
 	CONFIGURATION_FILE="config/jenkins/greendale/${CONFIGURATION_FILE}";
 fi
 
-PYTHONPATH=. ./utils/check_dependencies.py
+PYTHONPATH=. python3 ./utils/check_dependencies.py
 
 # Start the end-to-end tests in the background so we can capture the PID of
 # the process while the script is running.
