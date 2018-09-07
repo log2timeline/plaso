@@ -21,10 +21,13 @@ try:
 except ImportError:
   import configparser  # pylint: disable=import-error
 
-
 if sys.version_info[0] < 3:
+  PY2 = True
+  PY3 = False
   BYTES_TYPE = str
 else:
+  PY2 = False
+  PY3 = True
   BYTES_TYPE = bytes
 
 # Since os.path.abspath() uses the current working directory (cwd)
@@ -95,14 +98,15 @@ class TestCase(object):
     """
     if command[0].endswith('py'):
       command.insert(0, sys.executable)
-    logging.info('Running: {0:s}'.format(' '.join(command)))
+    command_string = ' '.join(command)
+    logging.info('Running: {0:s}'.format(command_string))
     child = subprocess.Popen(command, stdout=stdout, stderr=stderr)
     child.communicate()
     exit_code = child.returncode
 
     if exit_code != 0:
       logging.error('Running: "{0:s}" failed (exit code {1:d}).'.format(
-          command, exit_code))
+          command_string, exit_code))
       return False
 
     return True
@@ -496,18 +500,21 @@ class StorageFileTestCase(TestCase):
         with open(output_file_path, 'r') as output_file:
           # Hack to remove paths in the output that are different when running
           # the tests under UNIX and Windows.
-          reference_output_list = [
-              line.decode('utf-8').replace('/tmp/test/test_data/', '')
-              for line in reference_output_file.readlines()]
-          output_list = [
-              line.decode('utf-8').replace('/tmp/test/test_data/', '')
-              for line in output_file.readlines()]
-          output_list = [
-              line.replace('C:\\tmp\\test\\test_data\\', '')
-              for line in output_list]
-          output_list = [
-              line.replace('C:\\\\tmp\\\\test\\\\test_data\\\\', '')
-              for line in output_list]
+          reference_output_list = []
+          for line in reference_output_file.readlines():
+            if PY2:
+              line = line.decode('utf-8')
+            line = line.replace('/tmp/test/test_data/', '')
+            reference_output_list.append(line)
+
+          output_list = []
+          for line in output_file:
+            if PY2:
+              line = line.decode('utf-8')
+            line = line.replace('/tmp/test/test_data/', '')
+            line = line.replace('C:\\tmp\\test\\test_data\\', '')
+            line.replace('C:\\\\tmp\\\\test\\\\test_data\\\\', '')
+            output_list.append(line)
           differences = list(difflib.unified_diff(
               reference_output_list, output_list,
               fromfile=reference_output_file_path, tofile=output_file_path))
