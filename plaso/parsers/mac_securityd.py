@@ -34,7 +34,7 @@ class MacOSSecuritydLogEventData(events.EventData):
     sender (str): name of the sender.
   """
 
-  DATA_TYPE = 'mac:securityd:line'
+  DATA_TYPE = 'macos:securityd:line'
 
   def __init__(self):
     """Initializes event data."""

@@ -10,7 +10,7 @@ from plaso.formatters import manager
 class MacWifiLogFormatter(interface.ConditionalEventFormatter):
   """Formatter for a wifi.log file event."""
 
-  DATA_TYPE = 'mac:wifilog:line'
+  DATA_TYPE = 'macos:wifilog:line'
 
   FORMAT_STRING_PIECES = [
       'Action: {action}',

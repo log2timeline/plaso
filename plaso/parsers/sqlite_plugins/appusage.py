@@ -25,7 +25,7 @@ class MacOSApplicationUsageEventData(events.EventData):
     count (int): TODO: number of times what?
   """
 
-  DATA_TYPE = 'macosx:application_usage'
+  DATA_TYPE = 'macos:application_usage'
 
   def __init__(self):
     """Initializes event data."""

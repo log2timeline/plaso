@@ -10,7 +10,7 @@ from plaso.formatters import manager
 class MacDocumentVersionsFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MacOS Document Versions page visited event."""
 
-  DATA_TYPE = 'mac:document_versions:file'
+  DATA_TYPE = 'macos:document_versions:file'
 
   FORMAT_STRING_PIECES = [
       'Version of [{name}]',

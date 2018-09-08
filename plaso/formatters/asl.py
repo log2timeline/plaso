@@ -12,7 +12,7 @@ from plaso.lib import py2to3
 class ASLFormatter(interface.ConditionalEventFormatter):
   """Formatter for an Apple System Log (ASL) log event."""
 
-  DATA_TYPE = 'mac:asl:event'
+  DATA_TYPE = 'macos:asl:event'
 
   FORMAT_STRING_PIECES = [
       'MessageID: {message_id}',

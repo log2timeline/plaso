@@ -11,7 +11,7 @@ from plaso.lib import errors
 class UtmpxSessionFormatter(interface.ConditionalEventFormatter):
   """Formatter for an UTMPX session event."""
 
-  DATA_TYPE = 'mac:utmpx:event'
+  DATA_TYPE = 'macos:utmpx:event'
 
   FORMAT_STRING_PIECES = [
       'User: {username}',

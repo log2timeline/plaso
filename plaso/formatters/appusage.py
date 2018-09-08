@@ -10,7 +10,7 @@ from plaso.formatters import manager
 class ApplicationUsageFormatter(interface.EventFormatter):
   """Formatter for a MacOS Application usage event."""
 
-  DATA_TYPE = 'macosx:application_usage'
+  DATA_TYPE = 'macos:application_usage'
 
   FORMAT_STRING = (
       '{application} v.{app_version} (bundle: {bundle_id}). '

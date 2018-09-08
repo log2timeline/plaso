@@ -31,7 +31,7 @@ class MacWifiLogEventData(events.EventData):
     text (str): log message
   """
 
-  DATA_TYPE = 'mac:wifilog:line'
+  DATA_TYPE = 'macos:wifilog:line'
 
   def __init__(self):
     """Initializes event data."""

@@ -1,5 +1,5 @@
 application_execution
-  data_type is 'macosx:application_usage'
+  data_type is 'macos:application_usage'
   data_type is 'syslog:line' AND body contains 'COMMAND=/bin/launchctl'
 
 application_install
@@ -11,7 +11,7 @@ autorun
 file_download
   data_type is 'chrome:history:file_downloaded'
   timestamp_desc is 'File Downloaded'
-  data_type is 'macosx:lsquarantine'
+  data_type is 'macos:lsquarantine'
 
 device_connection
   data_type is 'ipod:device:entry'

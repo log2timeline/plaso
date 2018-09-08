@@ -10,7 +10,7 @@ from plaso.formatters import manager
 class LSQuarantineFormatter(interface.ConditionalEventFormatter):
   """Formatter for a launch services (LS) quarantine history event."""
 
-  DATA_TYPE = 'macosx:lsquarantine'
+  DATA_TYPE = 'macos:lsquarantine'
 
   FORMAT_STRING_PIECES = [
       '[{agent}]',

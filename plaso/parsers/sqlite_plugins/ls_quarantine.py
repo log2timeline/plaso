@@ -22,7 +22,7 @@ class LsQuarantineEventData(events.EventData):
     user_agent (str): user agent that was used to download the file.
   """
 
-  DATA_TYPE = 'macosx:lsquarantine'
+  DATA_TYPE = 'macos:lsquarantine'
 
   def __init__(self):
     """Initializes event data."""

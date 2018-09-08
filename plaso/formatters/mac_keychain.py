@@ -10,7 +10,7 @@ from plaso.formatters import manager
 class KeychainApplicationRecordFormatter(interface.ConditionalEventFormatter):
   """Formatter for a keychain application record event."""
 
-  DATA_TYPE = 'mac:keychain:application'
+  DATA_TYPE = 'macos:keychain:application'
 
   FORMAT_STRING_PIECES = [
       'Name: {entry_name}',
@@ -25,7 +25,7 @@ class KeychainApplicationRecordFormatter(interface.ConditionalEventFormatter):
 class KeychainInternetRecordFormatter(interface.ConditionalEventFormatter):
   """Formatter for a keychain Internet record event."""
 
-  DATA_TYPE = 'mac:keychain:internet'
+  DATA_TYPE = 'macos:keychain:internet'
 
   FORMAT_STRING_PIECES = [
       'Name: {entry_name}',
