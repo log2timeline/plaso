@@ -54,11 +54,18 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
 
   # Define the needed queries.
   QUERIES = [
+      # Query for Chrome versions 17 - 65.
       (('SELECT creation_utc, host_key, name, value, path, expires_utc, '
         'secure, httponly, last_access_utc, has_expires, persistent '
+        'FROM cookies'), 'ParseCookieRow'),
+      # Query for Chrome versions 66 and above. The column names changed
+      # slightly, but the values are the same.
+      (('SELECT creation_utc, host_key, name, value, path, expires_utc, '
+        'is_secure AS secure, is_httponly AS httponly, last_access_utc, '
+        'has_expires, is_persistent AS persistent '
         'FROM cookies'), 'ParseCookieRow')]
 
-  # The required tables common to Archived History and History.
+  # The required tables for the cookies database.
   REQUIRED_TABLES = frozenset(['cookies', 'meta'])
 
   SCHEMAS = [{
@@ -149,11 +156,11 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
         date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    timestamp = self._GetRowValue(query_hash, row, 'has_expires')
+    timestamp = self._GetRowValue(query_hash, row, 'expires_utc')
     if timestamp:
       date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
-          date_time, 'Cookie Expires')
+          date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     for plugin in self._cookie_plugins:
