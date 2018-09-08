@@ -233,7 +233,7 @@ class DtFabricBaseParser(interface.FileObjectParser):
     successfully mapped onto the byte stream or until an error occurs.
 
     Args:
-      file_object (dvfvs.FileIO): a file-like object to parse.
+      file_object (dfvfs.FileIO): a file-like object to parse.
       file_offset (int): offset of the structure data relative to the start
           of the file-like object.
       data_type_map (dtfabric.DataTypeMap): data type map of the structure.
@@ -247,6 +247,7 @@ class DtFabricBaseParser(interface.FileObjectParser):
       ValueError: if file-like object or data type map is missing.
     """
     context = None
+    data = b''
     last_data_size = 0
 
     data_size = data_type_map.GetByteSize()
@@ -254,7 +255,11 @@ class DtFabricBaseParser(interface.FileObjectParser):
       data_size = data_type_map.GetSizeHint()
 
     while data_size != last_data_size:
-      data = self._ReadData(file_object, file_offset, data_size)
+      read_offset = file_offset + last_data_size
+      read_size = data_size - last_data_size
+      data_segment = self._ReadData(file_object, read_offset, read_size)
+
+      data = b''.join([data, data_segment])
 
       try:
         context = dtfabric_data_maps.DataTypeMapContext()
@@ -283,7 +288,7 @@ class DtFabricBaseParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): a parser mediator.
-      file_object (dvfvs.FileIO): a file-like object to parse.
+      file_object (dfvfs.FileIO): a file-like object to parse.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.

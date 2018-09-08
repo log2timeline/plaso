@@ -11,6 +11,7 @@ try:
 except ImportError:
   systemd_journal = None
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -18,6 +19,8 @@ from tests.parsers import test_lib
 class SystemdJournalParserTest(test_lib.ParserTestCase):
   """Tests for the Systemd Journal parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([
+      'systemd', 'journal', 'system.journal'])
   def testParse(self):
     """Tests the Parse function."""
     parser = systemd_journal.SystemdJournalParser()
@@ -47,6 +50,8 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     expected_short_message = '{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
+  @shared_test_lib.skipUnlessHasTestFile([
+      'systemd', 'journal', 'system.journal.lz4'])
   def testParseLZ4(self):
     """Tests the Parse function on a journal with LZ4 compressed events."""
     parser = systemd_journal.SystemdJournalParser()
@@ -81,6 +86,9 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     expected_short_message = '{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
+  @shared_test_lib.skipUnlessHasTestFile([
+      'systemd', 'journal',
+      'system@00053f9c9a4c1e0e-2e18a70e8b327fed.journalTILDE'])
   def testParseDirty(self):
     """Tests the Parse function on a 'dirty' journal file."""
     storage_writer = self._CreateStorageWriter()
@@ -115,7 +123,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     error = errors[0]
     expected_error_message = (
         'Unable to parse journal entry at offset: 0x0041bfb0 with error: '
-        'object offset should be after hash tables (4308912 < 2527472)')
+        'object offset should be after hash tables (0 < 2527472)')
     self.assertEqual(error.message, expected_error_message)
 
 
