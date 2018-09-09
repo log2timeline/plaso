@@ -23,13 +23,13 @@ class MSIECFParserTest(test_lib.ParserTestCase):
     parser = msiecf.MSIECFParser()
     storage_writer = self._ParseFile(['index.dat'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
     # MSIE Cache File information:
     #   Version                         : 5.2
     #   File size                       : 32768 bytes
     #   Number of items                 : 7
     #   Number of recovered items       : 11
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
     # 7 + 11 records, each with 4 records.
     self.assertEqual(storage_writer.number_of_events, (7 + 11) * 4)
 
