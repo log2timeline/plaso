@@ -23,14 +23,13 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     parser = winevt.WinEvtParser()
     storage_writer = self._ParseFile(['SysEvent.Evt'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
-
     # Windows Event Log (EVT) information:
     #	Version                     : 1.1
     #	Number of records           : 6063
     #	Number of recovered records : 437
     #	Log type                    : System
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, (6063 + 437) * 2)
 
     events = list(storage_writer.GetEvents())
