@@ -15,13 +15,13 @@ from tests.parsers import test_lib
 class BashHistoryTest(test_lib.ParserTestCase):
   """Test for the bash history parser."""
 
-  def _TestEventsFromFile(
-      self, storage_writer, expected_number_of_errors=0):
+  def _TestEventsFromFile(self, storage_writer, expected_number_of_errors=0):
     """Validates that all events are as expected.
 
     Args:
       storage_writer (FakeStorageWriter): storage writer.
-      expected_number_of_errors (Optional[int]): number of expected errors generated.
+      expected_number_of_errors (Optional[int]): number of expected errors
+          generated.
     """
     self.assertEqual(storage_writer.number_of_errors, expected_number_of_errors)
     self.assertEqual(storage_writer.number_of_events, 3)
