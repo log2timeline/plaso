@@ -45,7 +45,7 @@ class BashHistoryTest(test_lib.ParserTestCase):
     """
     parser = bash_history.BashHistoryParser()
     storage_writer = self._ParseFile(['bash_history_desync'], parser)
-    self._TestEventsFromFile(storage_writer, error_count=1)
+    self._TestEventsFromFile(storage_writer, expected_error_count=1)
 
   @shared_test_lib.skipUnlessHasTestFile(['bash_history'])
   def testParsingExtractionSync(self):
