@@ -203,6 +203,7 @@ setup(
     include_package_data=True,
     package_data={
         'plaso.parsers': ['*.yaml'],
+        'plaso.parsers.esedb_plugins': ['*.yaml'],
         'plaso.parsers.olecf_plugins': ['*.yaml'],
         'plaso.parsers.winreg_plugins': ['*.yaml'],
     },

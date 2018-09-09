@@ -3,9 +3,14 @@
 
 from __future__ import unicode_literals
 
-import construct
-import pyesedb  # pylint: disable=wrong-import-order
+import os
 
+import pyesedb
+
+from dtfabric import errors as dtfabric_errors
+from dtfabric.runtime import fabric as dtfabric_fabric
+
+from plaso.lib import errors
 from plaso.parsers import logger
 from plaso.parsers import plugins
 
@@ -37,17 +42,23 @@ class ESEDBPlugin(plugins.BasePlugin):
       pyesedb.column_types.TEXT,
       pyesedb.column_types.LARGE_TEXT])
 
-  _UINT64_BIG_ENDIAN = construct.UBInt64('value')
-  _UINT64_LITTLE_ENDIAN = construct.ULInt64('value')
-
   # Dictionary containing a callback method per table name.
   # E.g. 'SystemIndex_0A': 'ParseSystemIndex_0A'
   REQUIRED_TABLES = {}
   OPTIONAL_TABLES = {}
 
+  # The dtFabric definition file.
+  _DEFINITION_FILE = 'types.yaml'
+
+  # Preserve the absolute path value of __file__ in case it is changed
+  # at run-time.
+  _DEFINITION_FILES_PATH = os.path.dirname(__file__)
+
   def __init__(self):
     """Initializes the ESE database plugin."""
     super(ESEDBPlugin, self).__init__()
+    self._data_type_maps = {}
+    self._fabric = self._ReadDefinitionFile(self._DEFINITION_FILE)
     self._tables = {}
     self._tables.update(self.REQUIRED_TABLES)
     self._tables.update(self.OPTIONAL_TABLES)
@@ -93,12 +104,23 @@ class ESEDBPlugin(plugins.BasePlugin):
           integer.
 
     Returns:
-      int: integer representation of binary data value or None.
-    """
-    if value:
-      return self._UINT64_BIG_ENDIAN.parse(value)
+      int: integer representation of binary data value or None if value is
+          not set.
 
-    return None
+    Raises:
+      ParseError: if the integer value cannot be parsed.
+    """
+    if not value:
+      return None
+
+    integer_map = self._GetDataTypeMap('uint64be')
+
+    try:
+      return self._ReadStructureFromByteStream(value, 0, integer_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError(
+          'Unable to parse integer value with error: {0!s}'.format(
+              exception))
 
   def _ConvertValueBinaryDataToULInt64(self, value):
     """Converts a binary data value into an integer.
@@ -108,12 +130,42 @@ class ESEDBPlugin(plugins.BasePlugin):
           integer.
 
     Returns:
-      int: integer representation of binary data value or None.
-    """
-    if value:
-      return self._UINT64_LITTLE_ENDIAN.parse(value)
+      int: integer representation of binary data value or None if value is
+          not set.
 
-    return None
+    Raises:
+      ParseError: if the integer value cannot be parsed.
+    """
+    if not value:
+      return None
+
+    integer_map = self._GetDataTypeMap('uint64le')
+
+    try:
+      return self._ReadStructureFromByteStream(value, 0, integer_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError(
+          'Unable to parse integer value with error: {0!s}'.format(
+              exception))
+
+  def _GetDataTypeMap(self, name):
+    """Retrieves a data type map defined by the definition file.
+
+    The data type maps are cached for reuse.
+
+    Args:
+      name (str): name of the data type as defined by the definition file.
+
+    Returns:
+      dtfabric.DataTypeMap: data type map which contains a data type definition,
+          such as a structure, that can be mapped onto binary data.
+    """
+    data_type_map = self._data_type_maps.get(name, None)
+    if not data_type_map:
+      data_type_map = self._fabric.CreateDataTypeMap(name)
+      self._data_type_maps[name] = data_type_map
+
+    return data_type_map
 
   def _GetRecordValue(self, record, value_entry):
     """Retrieves a specific value from the record.
@@ -231,6 +283,61 @@ class ESEDBPlugin(plugins.BasePlugin):
       record_values[column_name] = value
 
     return record_values
+
+  def _ReadDefinitionFile(self, filename):
+    """Reads a dtFabric definition file.
+
+    Args:
+      filename (str): name of the dtFabric definition file.
+
+    Returns:
+      dtfabric.DataTypeFabric: data type fabric which contains the data format
+          data type maps of the data type definition, such as a structure, that
+          can be mapped onto binary data or None if no filename is provided.
+    """
+    if not filename:
+      return None
+
+    path = os.path.join(self._DEFINITION_FILES_PATH, filename)
+    with open(path, 'rb') as file_object:
+      definition = file_object.read()
+
+    return dtfabric_fabric.DataTypeFabric(yaml_definition=definition)
+
+  def _ReadStructureFromByteStream(
+      self, byte_stream, file_offset, data_type_map, context=None):
+    """Reads a structure from a byte stream.
+
+    Args:
+      byte_stream (bytes): byte stream.
+      file_offset (int): offset of the structure data relative to the start
+          of the file-like object.
+      data_type_map (dtfabric.DataTypeMap): data type map of the structure.
+      context (Optional[dtfabric.DataTypeMapContext]): data type map context.
+          The context is used within dtFabric to hold state about how to map
+          the data type definition onto the byte stream. In this class it is
+          used to determine the size of variable size data type definitions.
+
+    Returns:
+      object: structure values object.
+
+    Raises:
+      ParseError: if the structure cannot be read.
+      ValueError: if file-like object or data type map is missing.
+    """
+    if not byte_stream:
+      raise ValueError('Missing byte stream.')
+
+    if not data_type_map:
+      raise ValueError('Missing data type map.')
+
+    try:
+      return data_type_map.MapByteStream(byte_stream, context=context)
+    except (dtfabric_errors.ByteStreamTooSmallError,
+            dtfabric_errors.MappingError) as exception:
+      raise errors.ParseError((
+          'Unable to map {0:s} data at offset: 0x{1:08x} with error: '
+          '{2!s}').format(data_type_map.name or '', file_offset, exception))
 
   # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
   # pylint: disable=missing-param-doc
