@@ -63,21 +63,21 @@ then
 
   INSTALLED_FILES=`/usr/sbin/pkgutil --files ${PACKAGE_IDENTIFIER} --only-files`;
 
-  for PATH in ${INSTALLED_FILES};
+  for INSTALLED_FILE in ${INSTALLED_FILES};
   do
-    if test -f ${PATH};
+    if test -f ${INSTALLED_FILE};
     then
-      rm -f ${PATH};
+      rm -f ${INSTALLED_FILE};
     fi
   done
 
   INSTALLED_FILES=`/usr/sbin/pkgutil --files ${PACKAGE_IDENTIFIER} --only-dirs | sort -r`;
 
-  for PATH in ${INSTALLED_FILES};
+  for INSTALLED_FILE in ${INSTALLED_FILES};
   do
-    if test -d ${PATH};
+    if test -d ${INSTALLED_FILE};
     then
-      rmdir ${PATH} 2> /dev/null;
+      rmdir ${INSTALLED_FILE} 2> /dev/null;
     fi
   done
 
@@ -97,21 +97,21 @@ do
 
   INSTALLED_FILES=`/usr/sbin/pkgutil --files ${PACKAGE_IDENTIFIER} --only-files`;
 
-  for PATH in ${INSTALLED_FILES};
+  for INSTALLED_FILE in ${INSTALLED_FILES};
   do
-    if test -f ${PATH};
+    if test -f ${INSTALLED_FILE};
     then
-      rm -f ${PATH};
+      rm -f ${INSTALLED_FILE};
     fi
   done
 
   INSTALLED_FILES=`/usr/sbin/pkgutil --files ${PACKAGE_IDENTIFIER} --only-dirs | sort -r`;
 
-  for PATH in ${INSTALLED_FILES};
+  for INSTALLED_FILE in ${INSTALLED_FILES};
   do
-    if test -d ${PATH};
+    if test -d ${INSTALLED_FILE};
     then
-      rmdir ${PATH} 2> /dev/null;
+      rmdir ${INSTALLED_FILE} 2> /dev/null;
     fi
   done
 
