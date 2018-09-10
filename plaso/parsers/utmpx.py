@@ -26,7 +26,7 @@ class UtmpxMacOSEventData(events.EventData):
     username (str): user name.
   """
 
-  DATA_TYPE = 'mac:utmpx:event'
+  DATA_TYPE = 'macos:utmpx:event'
 
   def __init__(self):
     """Initializes event data."""
@@ -72,7 +72,7 @@ class UtmpxParser(dtfabric_parser.DtFabricBaseParser):
     Raises:
       ParseError: if the entry cannot be parsed.
     """
-    entry_map = self._GetDataTypeMap('macosx_utmpx_entry')
+    entry_map = self._GetDataTypeMap('macos_utmpx_entry')
 
     try:
       entry, _ = self._ReadStructureFromFileObject(

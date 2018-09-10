@@ -23,7 +23,7 @@ class MacDocumentVersionsEventData(events.EventData):
     user_sid (str): identification user ID that open the file.
   """
 
-  DATA_TYPE = 'mac:document_versions:file'
+  DATA_TYPE = 'macos:document_versions:file'
 
   def __init__(self):
     """Initializes event data."""

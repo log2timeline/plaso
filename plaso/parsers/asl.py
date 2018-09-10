@@ -35,7 +35,7 @@ class ASLEventData(events.EventData):
     user_sid (str): user identifier (UID).
   """
 
-  DATA_TYPE = 'mac:asl:event'
+  DATA_TYPE = 'macos:asl:event'
 
   def __init__(self):
     """Initializes event data."""

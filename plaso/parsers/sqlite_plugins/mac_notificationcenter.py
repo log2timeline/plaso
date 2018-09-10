@@ -42,7 +42,7 @@ class MacNotificationCenterEventData(events.EventData):
         of the notification for example, in case of chat messages.
   """
 
-  DATA_TYPE = 'mac:notificationcenter:db'
+  DATA_TYPE = 'macos:notificationcenter:db'
 
   def __init__(self):
     """Initialize event data."""

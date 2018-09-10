@@ -45,7 +45,7 @@ class MacWifiLogFormatterTest(test_lib.EventFormatterTestCase):
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-    event.data_type = 'mac:wifilog:line'
+    event.data_type = 'macos:wifilog:line'
     event.action = 'Interface en0 turn up.'
     event.agent = 'airportd[88]'
     event.function = 'airportdProcessDLILEvent'
@@ -66,7 +66,7 @@ class MacWifiLogFormatterTest(test_lib.EventFormatterTestCase):
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
-    event.data_type = 'mac:wifilog:line'
+    event.data_type = 'macos:wifilog:line'
     event.text = 'test-macbookpro newsyslog[50498]: logfile turned over'
 
     expected_messages = (

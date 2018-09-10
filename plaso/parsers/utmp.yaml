@@ -73,7 +73,7 @@ members:
   element_data_type: byte
   number_of_elements: 20
 ---
-name: macosx_utmpx_entry
+name: macos_utmpx_entry
 type: structure
 attributes:
   byte_order: little-endian

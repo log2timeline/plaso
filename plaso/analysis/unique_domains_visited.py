@@ -30,7 +30,7 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
   _DATATYPES = frozenset([
       'chrome:history:file_downloaded', 'chrome:history:page_visited',
       'firefox:places:page_visited', 'firefox:downloads:download',
-      'macosx:lsquarantine', 'msiecf:redirected', 'msiecf:url',
+      'macos:lsquarantine', 'msiecf:redirected', 'msiecf:url',
       'msie:webcache:container', 'opera:history', 'safari:history:visit'])
 
   def __init__(self):

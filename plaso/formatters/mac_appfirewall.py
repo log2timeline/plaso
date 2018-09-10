@@ -10,7 +10,7 @@ from plaso.formatters import manager
 class MacAppFirewallLogFormatter(interface.ConditionalEventFormatter):
   """Formatter for MacOS appfirewall.log file event."""
 
-  DATA_TYPE = 'mac:appfirewall:line'
+  DATA_TYPE = 'macos:appfirewall:line'
 
   FORMAT_STRING_PIECES = [
       'Computer: {computer_name}',

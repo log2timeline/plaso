@@ -10,7 +10,7 @@ from plaso.formatters import manager
 class MacOSSecuritydLogFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MacOS securityd log event."""
 
-  DATA_TYPE = 'mac:securityd:line'
+  DATA_TYPE = 'macos:securityd:line'
 
   FORMAT_STRING_PIECES = [
       'Sender: {sender}',

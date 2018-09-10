@@ -10,7 +10,7 @@ from plaso.lib import errors
 class MacNotificationCenterFormatter(interface.ConditionalEventFormatter):
   """Formatter for a MacOS Notification Center event. """
 
-  DATA_TYPE = 'mac:notificationcenter:db'
+  DATA_TYPE = 'macos:notificationcenter:db'
 
   FORMAT_STRING_PIECES = [
       'Title: {title}',

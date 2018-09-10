@@ -28,7 +28,7 @@ class MacAppFirewallLogEventData(events.EventData):
     status (str): saved status action.
   """
 
-  DATA_TYPE = 'mac:appfirewall:line'
+  DATA_TYPE = 'macos:appfirewall:line'
 
   def __init__(self):
     """Initializes event data."""

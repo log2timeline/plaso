@@ -34,7 +34,7 @@ class KeychainInternetRecordEventData(events.EventData):
     where (str): domain name or IP where the password is used.
   """
 
-  DATA_TYPE = 'mac:keychain:internet'
+  DATA_TYPE = 'macos:keychain:internet'
 
   def __init__(self):
     """Initializes event data."""
@@ -63,7 +63,7 @@ class KeychainApplicationRecordEventData(events.EventData):
     text_description (str): description.
   """
 
-  DATA_TYPE = 'mac:keychain:application'
+  DATA_TYPE = 'macos:keychain:application'
 
   def __init__(self):
     """Initializes event data."""
