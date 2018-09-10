@@ -1,0 +1,33 @@
+name: float32le
+type: floating-point
+description: 32-bit litte-endian single precision floating-point type
+attributes:
+  byte_order: little-endian
+  size: 4
+  units: bytes
+---
+name: float64le
+type: floating-point
+description: 64-bit litte-endian double precision floating-point type
+attributes:
+  byte_order: little-endian
+  size: 8
+  units: bytes
+---
+name: uint64be
+type: integer
+description: 64-bit big-endian integer type
+attributes:
+  byte_order: big-endian
+  format: unsigned
+  size: 8
+  units: bytes
+---
+name: uint64le
+type: integer
+description: 64-bit little-endian integer type
+attributes:
+  byte_order: little-endian
+  format: unsigned
+  size: 8
+  units: bytes
