@@ -8,7 +8,6 @@ https://github.com/libyal/esedb-kb/blob/master/documentation/
 
 from __future__ import unicode_literals
 
-import construct
 import pyfwnt
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -18,6 +17,7 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers import esedb
 from plaso.parsers.esedb_plugins import interface
 
@@ -173,9 +173,6 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
   _GUID_TABLE_VALUE_MAPPINGS = {
       'TimeStamp': '_ConvertValueBinaryDataToFloatingPointValue'}
 
-  _FLOAT32_LITTLE_ENDIAN = construct.LFloat32('float32')
-  _FLOAT64_LITTLE_ENDIAN = construct.LFloat64('float64')
-
   _APPLICATION_RESOURCE_USAGE_VALUES_MAP = {
       'application': 'AppId',
       'background_bytes_read': 'BackgroundBytesRead',
@@ -224,16 +221,32 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       value (bytes): binary data value containing an ASCII string or None.
 
     Returns:
-      float: floating-point representation of binary data value or None.
-    """
-    if value:
-      value_length = len(value)
-      if value_length == 4:
-        return self._FLOAT32_LITTLE_ENDIAN.parse(value)
-      elif value_length == 8:
-        return self._FLOAT64_LITTLE_ENDIAN.parse(value)
+      float: floating-point representation of binary data value or None if
+          value is not set.
 
-    return None
+    Raises:
+      ParseError: if the floating-point value data size is not supported or
+          if the value cannot be parsed.
+    """
+    if not value:
+      return None
+
+    value_length = len(value)
+    if value_length not in (4, 8):
+      raise errors.ParseError('Unsupported value data size: {0:d}'.format(
+          value_length))
+
+    if value_length == 4:
+      floating_point_map = self._GetDataTypeMap('float32le')
+    elif value_length == 8:
+      floating_point_map = self._GetDataTypeMap('float64le')
+
+    try:
+      return self._ReadStructureFromByteStream(value, 0, floating_point_map)
+    except (ValueError, errors.ParseError) as exception:
+      raise errors.ParseError(
+          'Unable to parse floating-point value with error: {0!s}'.format(
+              exception))
 
   def _GetIdentifierMappings(self, parser_mediator, cache, database):
     """Retrieves the identifier mappings from SruDbIdMapTable table.
