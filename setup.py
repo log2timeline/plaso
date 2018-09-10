@@ -204,6 +204,7 @@ setup(
     package_data={
         'plaso.parsers': ['*.yaml'],
         'plaso.parsers.olecf_plugins': ['*.yaml'],
+        'plaso.parsers.plist_plugins': ['*.yaml'],
         'plaso.parsers.winreg_plugins': ['*.yaml'],
     },
     zip_safe=False,

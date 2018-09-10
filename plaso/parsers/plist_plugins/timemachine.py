@@ -3,18 +3,15 @@
 
 from __future__ import unicode_literals
 
-import codecs
-
-import construct
-
 from plaso.containers import plist_event
 from plaso.containers import time_events
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.parsers import plist
-from plaso.parsers.plist_plugins import interface
+from plaso.parsers.plist_plugins import dtfabric_plugin
 
 
-class TimeMachinePlugin(interface.PlistPlugin):
+class TimeMachinePlugin(dtfabric_plugin.DtFabricBasePlistPlugin):
   """Basic plugin to extract time machine hard disk and the backups.
 
   Further details about the extracted fields:
@@ -34,11 +31,7 @@ class TimeMachinePlugin(interface.PlistPlugin):
   PLIST_PATH = 'com.apple.TimeMachine.plist'
   PLIST_KEYS = frozenset(['Destinations', 'RootVolumeUUID'])
 
-  TM_BACKUP_ALIAS = construct.Struct(
-      'tm_backup_alias',
-      construct.Padding(10),
-      construct.PascalString(
-          'value', length_field=construct.UBInt8('length')))
+  _DEFINITION_FILE = 'timemachine.yaml'
 
   # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
   # pylint: disable=missing-param-doc,arguments-differ
@@ -50,17 +43,24 @@ class TimeMachinePlugin(interface.PlistPlugin):
           and other components, such as storage and dfvfs.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
+    backup_alias_map = self._GetDataTypeMap('timemachine_backup_alias')
+
     destinations = match.get('Destinations', [])
     for destination in destinations:
+      backup_alias_data = destination.get('BackupAlias', b'')
+      try:
+        backup_alias = self._ReadStructureFromByteStream(
+            backup_alias_data, 0, backup_alias_map)
+        alias = backup_alias.string
+
+      except (ValueError, errors.ParseError) as exception:
+        parser_mediator.ProduceExtractionError(
+            'unable to parse backup alias value with error: {0!s}'.format(
+                exception))
+        alias = 'Unknown alias'
+
       destination_identifier = (
           destination.get('DestinationID', None) or 'Unknown device')
-
-      alias = destination.get('BackupAlias', '<ALIAS>')
-      try:
-        alias = self.TM_BACKUP_ALIAS.parse(alias).value
-        alias = codecs.decode(alias, 'utf-8')
-      except construct.FieldError:
-        alias = 'Unknown alias'
 
       event_data = plist_event.PlistTimeEventData()
       event_data.desc = 'TimeMachine Backup in {0:s} ({1:s})'.format(
