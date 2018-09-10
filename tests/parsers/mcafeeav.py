@@ -23,7 +23,7 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['AccessProtectionLog.txt'], parser)
 
-    # The file contains 14 lines which results in 14 events.
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 14)
 
     # The order in which DSVParser generates events is nondeterministic

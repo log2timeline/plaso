@@ -27,6 +27,8 @@ class MactimeTest(test_lib.ParserTestCase):
     # 52 events in total. However several of these events have an empty
     # timestamp value and are omitted.
     # Total entries: 11 * 3 + 2 * 4 = 41
+
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 41)
 
     # The order in which DSVParser generates events is nondeterministic

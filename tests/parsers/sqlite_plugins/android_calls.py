@@ -23,7 +23,7 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['contacts2.db'], plugin)
 
-    # The contacts2 database file contains 5 events (MISSED/OUTGOING/INCOMING).
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
 
     events = list(storage_writer.GetEvents())

@@ -31,6 +31,8 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     # 2 x 8 bookmark folders).
     # However there are three events that do not have a timestamp
     # so the test file will show 202 extracted events.
+
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 202)
 
     events = list(storage_writer.GetEvents())
@@ -169,6 +171,8 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     #     28 bookmarks
     #     14 bookmark folders
     #     8 annotations
+
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 84)
 
     events = list(storage_writer.GetEvents())
@@ -204,7 +208,7 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['downloads.sqlite'], plugin)
 
-    # The downloads.sqlite file contains 2 events (1 download).
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
 
     events = list(storage_writer.GetEvents())

@@ -36,7 +36,7 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
     parser = symantec.SymantecParser()
     storage_writer = self._ParseFile(['Symantec.Log'], parser)
 
-    # The file contains 8 lines which should result in 8 events.
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 8)
 
     # The order in which DSVParser generates events is nondeterministic

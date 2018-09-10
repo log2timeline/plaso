@@ -35,7 +35,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(tsk_path_spec, parser)
 
-    # The TSK file entry has 3 events.
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
 
     events = list(storage_writer.GetEvents())
@@ -70,7 +70,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(zip_path_spec, parser)
 
-    # The ZIP file has 1 event.
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())
@@ -103,7 +103,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser)
 
-    # The gzip file has 1 event.
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())
@@ -138,7 +138,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(tar_path_spec, parser)
 
-    # The tar file has 1 event.
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())
@@ -174,7 +174,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(tar_path_spec, parser)
 
-    # The tar file has 1 event.
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())
@@ -202,7 +202,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser)
 
-    # The gzip file has 1 event.
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())
@@ -240,7 +240,7 @@ class FileStatTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(zip_path_spec, parser)
 
-    # The ZIP file has 1 events.
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())

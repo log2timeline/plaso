@@ -34,6 +34,7 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser)
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 12)
 
     events = list(storage_writer.GetEvents())
@@ -73,6 +74,7 @@ class FSEventsdParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(gzip_path_spec, parser)
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
 
     events = list(storage_writer.GetEvents())
