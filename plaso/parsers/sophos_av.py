@@ -43,6 +43,8 @@ class SophosAVLogParser(text_parser.PyparsingSingleLineTextParser):
 
   _ENCODING = 'utf-16-le'
 
+  MAX_LINE_LENGTH = 4096
+
   _DATE_ELEMENTS = (
       text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName('year') +
       text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('month') +

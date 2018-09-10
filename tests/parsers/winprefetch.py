@@ -23,6 +23,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(['CMD.EXE-087B4001.pf'], parser)
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
 
     events = list(storage_writer.GetEvents())
@@ -109,6 +110,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     parser = winprefetch.WinPrefetchParser()
     storage_writer = self._ParseFile(['PING.EXE-B29F6629.pf'], parser)
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
 
     events = list(storage_writer.GetEvents())
@@ -157,6 +159,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['WUAUCLT.EXE-830BCC14.pf'], parser)
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
 
     events = list(storage_writer.GetEvents())
@@ -224,6 +227,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['TASKHOST.EXE-3AE259FC.pf'], parser)
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
 
     events = list(storage_writer.GetEvents())
@@ -370,6 +374,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['BYTECODEGENERATOR.EXE-C1E9BCE6.pf'], parser)
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 8)
 
     events = list(storage_writer.GetEvents())

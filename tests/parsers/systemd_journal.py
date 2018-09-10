@@ -27,6 +27,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile([
         'systemd', 'journal', 'system.journal'], parser)
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 2101)
 
     events = list(storage_writer.GetEvents())
@@ -58,6 +59,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile([
         'systemd', 'journal', 'system.journal.lz4'], parser)
 
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 85)
 
     events = list(storage_writer.GetEvents())
@@ -103,6 +105,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     parser.ParseFileObject(parser_mediator, file_object)
 
+    self.assertEqual(storage_writer.number_of_errors, 1)
     self.assertEqual(storage_writer.number_of_events, 2211)
 
     events = list(storage_writer.GetEvents())

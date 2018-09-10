@@ -24,7 +24,7 @@ class KodiVideosTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['MyVideos107.db'], plugin)
 
-    # The database file contains 4 events.
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
 
     events = list(storage_writer.GetSortedEvents())

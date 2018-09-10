@@ -24,7 +24,7 @@ class IMessageTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['imessage_chat.db'], plugin)
 
-    # The iMessage database file contains 10 events.
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 10)
 
     events = list(storage_writer.GetEvents())

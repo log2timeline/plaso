@@ -23,7 +23,7 @@ class ApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['application_usage.sqlite'], plugin)
 
-    # The sqlite database contains 5 events.
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
 
     events = list(storage_writer.GetEvents())

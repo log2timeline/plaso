@@ -23,7 +23,7 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
     plugin = safari.SafariHistoryPluginSqlite()
     storage_writer = self._ParseDatabaseFileWithPlugin(['History.db'], plugin)
 
-    # The History file contains 25 events
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 25)
 
     events = list(storage_writer.GetEvents())

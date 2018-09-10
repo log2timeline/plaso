@@ -23,7 +23,7 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['quarantine.db'], plugin)
 
-    # The quarantine database contains 14 events.
+    self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 14)
 
     events = list(storage_writer.GetEvents())
