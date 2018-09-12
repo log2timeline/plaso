@@ -107,12 +107,12 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
           'with error: {1!s}').format(display_name, exception))
 
     if file_header.unknown1 != 2:
-      raise errors.ParseError((
+      raise errors.UnableToParseFile((
           'Unsupported Custom Destination file: {0:s} - invalid unknown1: '
           '{1:d}.').format(display_name, file_header.unknown1))
 
     if file_header.header_values_type > 2:
-      raise errors.ParseError((
+      raise errors.UnableToParseFile((
           'Unsupported Custom Destination file: {0:s} - invalid header value '
           'type: {1:d}.').format(display_name, file_header.header_values_type))
 
@@ -147,7 +147,7 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
         entry_header, entry_data_size = self._ReadStructureFromFileObject(
             file_object, file_offset, entry_header_map)
 
-      except errors.ParseError as exception:
+      except (ValueError, errors.ParseError) as exception:
         if not first_guid_checked:
           raise errors.UnableToParseFile((
               'Invalid Custom Destination file: {0:s} - unable to parse '
