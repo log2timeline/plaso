@@ -136,7 +136,7 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
 
   _ENCODING = 'utf-8'
 
-  MAX_LINE_LENGTH = 4096
+  MAX_LINE_LENGTH = 16384
 
   _SEP_TOKEN = pyparsing.Suppress('|')
   _SKIP_SEP = pyparsing.SkipTo('|')
