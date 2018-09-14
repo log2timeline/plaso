@@ -24,7 +24,6 @@ PYTHON_DEPENDENCIES = {
     'biplist': ('', '1.0.3', None, True),
     'certifi': ('__version__', '2016.9.26', None, True),
     'chardet': ('__version__', '2.0.1', None, True),
-    'construct': ('__version__', '2.5.2', '2.5.3', True),
     'Crypto': ('__version__', '2.6', None, True),
     'dateutil': ('__version__', '1.5', None, True),
     'dfdatetime': ('__version__', '20180704', None, True),

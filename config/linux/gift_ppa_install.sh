@@ -36,7 +36,6 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-biplist
                       python-certifi
                       python-chardet
-                      python-construct
                       python-crypto
                       python-dateutil
                       python-dfdatetime
