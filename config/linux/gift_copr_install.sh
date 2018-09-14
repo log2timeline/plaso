@@ -36,7 +36,6 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python-bencode
                       python-biplist
                       python-chardet
-                      python-construct
                       python-crypto
                       python-dfdatetime
                       python-dfvfs
