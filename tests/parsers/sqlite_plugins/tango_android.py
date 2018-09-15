@@ -47,7 +47,7 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
         event.friend_request_message, 'I am following you on Tango')
 
     expected_message = (
-        'Rouel Henry male birthday: 1980-10-01 Status: Praying! Friend: No '
+        'Rouel Henry male birthday: 1980-10-01 Status: Praying! Friend: False '
         'Request type: outRequest Request message: I am following you on Tango'
     )
 
