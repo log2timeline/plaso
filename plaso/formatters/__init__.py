@@ -79,6 +79,7 @@ from plaso.formatters import ssh
 from plaso.formatters import symantec
 from plaso.formatters import syslog
 from plaso.formatters import systemd_journal
+from plaso.formatters import tango_android
 from plaso.formatters import task_scheduler
 from plaso.formatters import text
 from plaso.formatters import trendmicroav
