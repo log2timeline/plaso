@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import codecs
+from base64 import b64decode as base64_decode
 
 from dfdatetime import java_time as dfdatetime_java_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
@@ -266,7 +267,7 @@ class TangoAndroidProfilePlugin(interface.SQLitePlugin):
 
     first_name = self._GetRowValue(query_hash, row, 'first_name')
     try:
-      decoded_text = first_name.decode('base64')
+      decoded_text = base64_decode(first_name)
       event_data.first_name = codecs.decode(decoded_text, 'utf-8')
     except TypeError:
       event_data.first_name = first_name
@@ -275,7 +276,7 @@ class TangoAndroidProfilePlugin(interface.SQLitePlugin):
 
     last_name = self._GetRowValue(query_hash, row, 'last_name')
     try:
-      decoded_text = last_name.decode('base64')
+      decoded_text = base64_decode(last_name)
       event_data.last_name = codecs.decode(decoded_text, 'utf-8')
     except TypeError:
       event_data.last_name = last_name
@@ -287,7 +288,7 @@ class TangoAndroidProfilePlugin(interface.SQLitePlugin):
 
     status = self._GetRowValue(query_hash, row, 'status')
     try:
-      decoded_text = status.decode('base64')
+      decoded_text = base64_decode(status)
       event_data.status = codecs.decode(decoded_text, 'utf-8')
     except TypeError:
       event_data.status = status
@@ -307,7 +308,7 @@ class TangoAndroidProfilePlugin(interface.SQLitePlugin):
     friend_request_message = self._GetRowValue(
         query_hash, row, 'friend_request_message')
     try:
-      decoded_text = friend_request_message.decode('base64')
+      decoded_text = base64_decode(friend_request_message)
       event_data.friend_request_message = codecs.decode(decoded_text, 'utf-8')
     except TypeError:
       event_data.friend_request_message = friend_request_message
