@@ -104,7 +104,7 @@ class TangoAndroidContactFormatter(interface.ConditionalEventFormatter):
 
   # pylint: disable=unused-argument
   def GetMessages(self, formatter_mediator, event):
-    """Determines the formatted message strings for an event object.
+    """Determines the formatted message strings for an event.
      Args:
        formatter_mediator (FormatterMediator): mediates the interactions between
            formatters and other components, such as storage and Windows EventLog
