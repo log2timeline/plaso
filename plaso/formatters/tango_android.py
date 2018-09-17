@@ -105,17 +105,18 @@ class TangoAndroidContactFormatter(interface.ConditionalEventFormatter):
   # pylint: disable=unused-argument
   def GetMessages(self, formatter_mediator, event):
     """Determines the formatted message strings for an event.
-     Args:
-       formatter_mediator (FormatterMediator): mediates the interactions between
-           formatters and other components, such as storage and Windows EventLog
-           resources.
-       event (EventObject): event.
 
-     Returns:
-       tuple[str, str]: formatted message string and short message string.
+    Args:
+      formatter_mediator (FormatterMediator): mediates the interactions between
+          formatters and other components, such as storage and Windows EventLog
+          resources.
+      event (EventObject): event.
 
-     Raises:
-       WrongFormatter: if the event object cannot be formatted by the formatter.
+    Returns:
+      tuple[str, str]: formatted message string and short message string.
+
+    Raises:
+      WrongFormatter: if the event object cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event.data_type:
       raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
