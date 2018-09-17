@@ -21,7 +21,6 @@ class TangoAndroidMessageEventData(events.EventData):
 
   Attributes:
     message_identifier (int): message identifier.
-    payload (str): base64 encoded binary blob with message metadata.
     direction (int): flag indicating direction of the message.
   """
 
@@ -31,7 +30,6 @@ class TangoAndroidMessageEventData(events.EventData):
     """Initializes event data."""
     super(TangoAndroidMessageEventData, self).__init__(data_type=self.DATA_TYPE)
     self.message_identifier = None
-    self.payload = None
     self.direction = None
 
 
@@ -40,7 +38,6 @@ class TangoAndroidConversationEventData(events.EventData):
 
   Attributes:
     conversation_identifier (int): conversation identifier.
-    payload (str): base64 encoded binary blob with conversation metadata.
   """
 
   DATA_TYPE = 'tango:android:conversation'
@@ -50,7 +47,6 @@ class TangoAndroidConversationEventData(events.EventData):
     super(TangoAndroidConversationEventData,
           self).__init__(data_type=self.DATA_TYPE)
     self.conversation_identifier = None
-    self.payload = None
 
 
 class TangoAndroidContactEventData(events.EventData):
