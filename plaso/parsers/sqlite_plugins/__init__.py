@@ -23,6 +23,7 @@ from plaso.parsers.sqlite_plugins import mac_notificationcenter
 from plaso.parsers.sqlite_plugins import mackeeper_cache
 from plaso.parsers.sqlite_plugins import safari
 from plaso.parsers.sqlite_plugins import skype
+from plaso.parsers.sqlite_plugins import tango_android
 from plaso.parsers.sqlite_plugins import twitter_android
 from plaso.parsers.sqlite_plugins import twitter_ios
 from plaso.parsers.sqlite_plugins import windows_timeline
