@@ -23,6 +23,9 @@ import time
 from mock import Mock as MagicMock
 from sphinx import apidoc
 
+import recommonmark
+from recommonmark.parser import CommonMarkParser
+from recommonmark.transform import AutoStructify
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -121,8 +124,14 @@ napoleon_include_special_with_doc = True
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
-# The suffix of source filenames.
-source_suffix = '.rst'
+# Enable markdown parser.
+source_parsers = {
+    '.md': CommonMarkParser,
+}
+
+# The suffixes of source filenames.
+
+source_suffix = ['.rst', '.md']
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
@@ -348,8 +357,16 @@ def RunSphinxAPIDoc(_):
   # sys.path.append(os.path.join(os.path.dirname(__file__)))
   current_directory = os.path.abspath(os.path.dirname(__file__))
   module = os.path.join(current_directory,"..","plaso")
-  apidoc.main(['-o', current_directory, module, '--force'])
+  api_directory = os.path.join(current_directory, 'sources', 'api')
+  apidoc.main(['-o', api_directory, module, '--force'])
 
 def setup(app):
   """Override Sphinx setup to trigger sphinx-apidoc."""
-  app.connect('builder-inited', RunSphinxAPIDoc)
+  # app.connect('builder-inited', RunSphinxAPIDoc)
+  app.add_config_value('recommonmark_config', {
+#    'enable_auto_toc_tree': True,
+#    'auto_toc_tree_section': 'Contents',
+    'enable_auto_doc_ref': True,
+    'url_resolver': lambda x: x,
+  }, True)
+  app.add_transform(AutoStructify)
