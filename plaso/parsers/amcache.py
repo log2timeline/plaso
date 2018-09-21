@@ -307,7 +307,7 @@ class AmcacheParser(interface.FileObjectParser):
 
     event = time_events.DateTimeValuesEvent(
         filetime.Filetime(amcache_datetime),
-        definitions.TIME_DESCRIPTION_LAST_RUN)
+        definitions.TIME_DESCRIPTION_MODIFICATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if event_data.createdts:
