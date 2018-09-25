@@ -132,7 +132,7 @@ class DSVParser(interface.FileObjectParser):
           over lines in a text file.
 
     Raises:
-      UnableToParseFile: if the file cannot be read with the specfied encoding.
+      UnicodeDecodeError: if the file cannot be read with the specfied encoding.
     """
     # The Python 2 csv module reads bytes and the Python 3 csv module Unicode
     # reads strings.
@@ -144,7 +144,7 @@ class DSVParser(interface.FileObjectParser):
     for _ in range(0, self.NUMBER_OF_HEADER_LINES):
       try:
         line_reader.readline(self._maximum_line_length)
-      except UnicodeDecodeError as exception:
+      except UnicodeDecodeError:
         raise
     return line_reader
 
@@ -199,11 +199,13 @@ class DSVParser(interface.FileObjectParser):
 
     try:
       if not self._HasExpectedLineLength(file_object):
+        display_name = parser_mediator.GetDisplayName()
         raise errors.UnableToParseFile(
             '[{0:s}] Unable to parse DSV file: {1:s} with error: '
             'unexpected line length.'.format(
                 self.NAME, display_name))
-    except UnicodeDecodeError:
+    except UnicodeDecodeError as exception:
+      display_name = parser_mediator.GetDisplayName()
       raise errors.UnableToParseFile(
           '[{0:s}] Unable to parse DSV file: {1:s} with error: {2!s}.'.format(
               self.NAME, display_name, exception))
