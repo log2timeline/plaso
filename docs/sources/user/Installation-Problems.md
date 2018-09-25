@@ -1,3 +1,5 @@
+# Installation Problems
+
 General advice:
 
 * search the contents of this page and troubleshooting pages referenced
@@ -17,9 +19,8 @@ Checking availability and versions of plaso dependencies.
 
 ## Mac OS-X 
 
-See: [Troubleshooting Mac OS X
-](Troubleshooting-Mac-OS-X)
+See: [Troubleshooting Mac OS X](Troubleshooting-MacOS.md)
 
 ## Windows
 
-See: [Troubleshooting Windows](Troubleshooting-Windows)
+See: [Troubleshooting Windows](Troubleshooting-Windows.md)

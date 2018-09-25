@@ -1,10 +1,10 @@
-## Python 3 Guide
+# Python 3 Guide
 
 plaso is Python 3 compatible, but not all of its dependencies are.
 
 This page contains information about which Python language features to use to help plaso to stay Python 2.7 compatible and stay Python 3.4 and later compatible.
 
-### Python
+## Python
 
 See: https://docs.python.org/3/howto/pyporting.html
 

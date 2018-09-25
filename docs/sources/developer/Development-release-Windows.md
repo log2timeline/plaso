@@ -12,7 +12,7 @@ We recommend to configure your editor of choice to use linefeed only and turn of
 git config --global core.autocrlf false
 ```
 
-To be able to run the plaso [development release](Releases-and-roadmap) on Windows you'll have to have installed the [dependencies](Dependencies).
+To be able to run the plaso [development release](Releases-and-roadmap.md) on Windows you'll have to have installed the [dependencies](Dependencies.md).
 
 Check if you have all the dependencies installed and have the right minimum version:
 ```

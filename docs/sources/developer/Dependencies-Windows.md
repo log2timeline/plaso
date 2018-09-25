@@ -8,11 +8,11 @@ There are multiple ways to install the dependencies on Windows:
 
 ## Prepackaged dependencies
 
-Moved to Dependencies#windows
+Moved to Dependencies.md#windows
 
 ## Batch build
 
-Moved to Dependencies#batch-build
+Moved to Dependencies.md#batch-build
 
 ## Manual build
 
@@ -22,7 +22,7 @@ For ease of maintenance the following instructions use as much MSI package files
 
 Alternative installation methods like installing directly from source, using easy_install or pip are [not recommended](https://stackoverflow.com/questions/3220404/why-use-pip-over-easy-install) because when not maintained correctly they can mess up your setup more easily than using MSIs. E.g. easy_installer and pip do not always remove older versions, e.g. when upgrading IPython 0.13 to 1.1, though Python distutil generated MSI packages don't detect and remove previous versions either it is less likely you'll end up with multiple different versions of the same package installed side-by-side.
 
-If you run into problems building, installing or running the dependencies first check: [Troubleshooting](Troubleshooting-Windows).
+If you run into problems building, installing or running the dependencies first check: [Troubleshooting](Troubleshooting-Windows.md).
 
 ### Build essentials
 

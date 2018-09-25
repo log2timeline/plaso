@@ -1,3 +1,5 @@
+# How to write a syslog plugin
+
 ## Locate/create test data
 * Add a test file to the test_data directory
 

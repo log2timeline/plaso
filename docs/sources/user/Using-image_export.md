@@ -1,4 +1,4 @@
-
+# Using image_export.py
 
 **PAGE WIP**
 
@@ -24,7 +24,7 @@ discuss here:
 ```
 -f FILE_FILTER
 ```
-[collection filters](Collection-Filters)
+[collection filters](Collection-Filters.md)
 
 ```
 -x EXTENSIONS, --extensions EXTENSIONS

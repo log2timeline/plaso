@@ -1,4 +1,4 @@
-## Plaso User Guide
+## Plaso Overview
 
 plaso (Plaso Langar Að Safna Öllu) is a Python-based backend engine for the tool log2timeline. 
 
@@ -166,8 +166,8 @@ File System Format support is provided by [dfvfs](https://github.com/log2timelin
 ### Also see
 
 * [Project documentation](http://wiki.log2timeline.net/)
-  * [Developers Guide](Developers-Guide)
-  * [Users Guide](Users-Guide)
+  * [Developers Guide](Developers-Guide.md)
+  * [Users Guide](Users-Guide.md)
 * [Downloads](https://googledrive.com/host/0B30H7z4S52FleW5vUHBnblJfcjg/)
 * Blog: [All things time related....](http://blog.kiddaland.net/)
 * Mailing lists:

@@ -1,10 +1,12 @@
-# Ubuntu
+# Troubleshooting installation issues
 
-Installing the plaso on Ubuntu should be a breeze if you follow the instructions [here](Ubuntu-Packaged-Release), however sometimes there can be conflicting packages installed that cause plaso not to run properly. Most often this is caused by either some unsupported versions of packages being installed or if for some reason some of the dependencies was installed from source at some point and those dependencies are out of date.
+## Ubuntu
+
+Installing the plaso on Ubuntu should be a breeze if you follow the instructions [here](Ubuntu-Packaged-Release.md), however sometimes there can be conflicting packages installed that cause plaso not to run properly. Most often this is caused by either some unsupported versions of packages being installed or if for some reason some of the dependencies was installed from source at some point and those dependencies are out of date.
 
 If you are having trouble getting plaso to run on your computer after following the installation instructions one of the best first steps is to check if all dependencies are met. One way of doing that is to download the check dependency script and run it.
 
-```
+```bash
 $ wget https://raw.githubusercontent.com/log2timeline/plaso/master/utils/check_dependencies.py
 $ python check_dependencies.py
 ```
@@ -24,7 +26,7 @@ An `[ERROR]` status indicates that the version of the dependency is not supporte
 
 First make sure all currently installed packages are up-to-date by running:
 
-```
+```bash
 $ sudo apt-get update
 $ sudo apt-get upgrade
 ```
@@ -56,7 +58,7 @@ The Python module can originate from another Debian package or from a source ins
 
 To find out which package a Python module belongs to run:
 
-```
+```bash
 $ dpkg -S /usr/lib/python2.7/dist-packages/pyewf.so
 libewf-python: /usr/lib/python2.7/dist-packages/pyewf.so
 ```
@@ -76,14 +78,14 @@ Out[3]: '/usr/lib/python2.7/dist-packages/pyparsing.pyc'
 
 In this case the Python module is the ".pyc" file, which is not included in the dpkg package:
 
-```
+```bash
 $ dpkg -S /usr/lib/python2.7/dist-packages/pyparsing.pyc
 dpkg-query: no path found matching pattern /usr/lib/python2.7/dist-packages/pyparsing.pyc
 ```
 
 ".pyc" is a "compiled" version of the Python code ".py", these are typically not distributed by packages but generated on your system at installation or first execution time. Therefore in order to find out which package this Python module belongs to remove the final "c" so it becomes ".py" instead of ".pyc", e.g.:
 
-```
+```bash
 $ dpkg -S /usr/lib/python2.7/dist-packages/pyparsing.py
 python-pyparsing: /usr/lib/python2.7/dist-packages/pyparsing.py
 ```
@@ -164,7 +166,7 @@ TypeError: __call__() takes exactly 2 arguments (1 given)
 
 This is indicative that you are running an old version of pyparsing. Please make sure you are using the latest version, see what is available using:
 
-```
+```bash
 $ apt-cache policy python-pyparsing
 ```
 
@@ -178,13 +180,13 @@ See for instance [this issue](https://github.com/log2timeline/plaso/issues/301).
 
 The solution here is to remove the **libewf2** package from the system and replace it by **libewf** and **libewf2** packages from the GIFT PPA.
 
-```
+```bash
 $ sudo apt-get remove libewf2
 ```
 
 Note that this may remove other packages as well that depend on **libewf2**, which are likely to be out dated as well.
 
-```
+```bash
 $ sudo apt-get install libewf libewf2=20140608-1
 ```
 

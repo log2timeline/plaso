@@ -1,10 +1,12 @@
+# Plaso Dependencies
+
 This page contains detailed instructions on how to build and install dependencies.
 
 There are multiple ways to install the dependencies:
 
-* Using [prepackaged dependencies](Dependencies#prepackaged-dependencies);
-* [Batch build](Dependencies#batch-build) most of the dependencies;
-* [Manual build](Dependencies#manual-build) of the dependencies.
+* Using [prepackaged dependencies](Dependencies.md#prepackaged-dependencies);
+* [Batch build](Dependencies.md#batch-build) most of the dependencies;
+* [Manual build](Dependencies.md#manual-build) of the dependencies.
 
 ## Optional dependencies
 
@@ -28,14 +30,14 @@ The [GIFT copr](https://copr.fedorainfracloud.org/groups/g/gift/coprs/) contains
 
 To add the stable track to your dnf configuration run:
 
-```
+```bash
 sudo dnf install dnf-plugins-core
 sudo dnf copr enable @gift/stable
 ```
 
 To install the dependencies run:
 
-```
+```bash
 ./config/linux/gift_copr_install.sh
 ```
 
@@ -43,20 +45,20 @@ To install the dependencies run:
 
 To add the dev track to your dnf configuration run:
 
-```
+```bash
 sudo dnf install dnf-plugins-core
 sudo dnf copr enable @gift/dev
 ```
 
 To install the dependencies run:
 
-```
+```bash
 ./config/linux/gift_copr_install.sh include-development include-test
 ```
 
 For troubleshooting crashes it is recommended to install the following debug symbol packages as well:
 
-```
+```bash
 ./config/linux/gift_copr_install.sh include-debug
 ```
 

@@ -1,3 +1,5 @@
+# Virustotal analysis plugin
+
 Notes on how to use the virustotal analysis plugin.
 
 ## Getting an API key

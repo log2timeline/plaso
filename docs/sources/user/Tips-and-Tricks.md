@@ -1,4 +1,4 @@
-## Tips and Tricks
+# Tips and Tricks
 
 This is a collection of few tips and tricks that can be used with **plaso**
 

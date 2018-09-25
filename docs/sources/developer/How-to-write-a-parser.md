@@ -1,5 +1,6 @@
-# Introduction
+# How to write a parser
 
+## Introduction
 This page is intended to give you an introduction into developing a parser for plaso.
 
 * First a step-by-step example is provided to create a simple binary parser for the Safari Cookies.binarycookies file.
@@ -7,11 +8,11 @@ This page is intended to give you an introduction into developing a parser for p
 
 This page assumes you have at least a basic understanding of programming in Python and use of git.
 
-# Format
+## Format
 
 Before you can write a binary file parser you will need to have a good understanding of the file format. A description of the Safari Cookies.binarycookies format can be found [here](https://github.com/libyal/assorted/blob/master/documentation/Safari%20Cookies.asciidoc).
 
-# Parsers vs. Plugins
+## Parsers vs. Plugins
 Before starting work on a parser, check if Plaso already has a parser that handles the underlying format of the file you're parsing. Plaso currently supports plugins for the following file formats:
 * Bencode
 * Web Browser Cookies
@@ -19,14 +20,14 @@ Before starting work on a parser, check if Plaso already has a parser that handl
 * OLECF
 * Plist
 * SQLite
-* [Syslog](How-to-write-a-Syslog-plugin)
+* [Syslog](How-to-write-a-Syslog-plugin.md)
 * Windows Registry
 
 If the artifact you're trying to parse is in one of these formats, you need to write a plugin of the appropriate type, rather than a parser.
 
 For our example, however, the Safari Cookies.binarycookies file is in its own binary format, so a separate parser is appropriate.
 
-# Test data
+## Test data
 
 First we make a representative test file and add it to the test_data/ directory, in our example:
 ```
@@ -35,16 +36,16 @@ test_data/Cookies.binarycookies
 
 **Make sure that the test file does not contain sensitive or copyrighted material.**
 
-# Parsers, formatters, events and event data
+## Parsers, formatters, events and event data
 
 * parser; subclass of plaso.parsers.interface.FileObjectParser, that extracts events from the content of a file.
 * formatter (or event formatter); subclass of plaso.formatters.interface.EventFormatter, that generates a human readable description of the event data. 
-* event; subclass of plaso.containers.events.EventObject, that represents [an event](Scribbles-about-events#what-is-an-event)
+* event; subclass of plaso.containers.events.EventObject, that represents [an event](Scribbles-about-events.md#what-is-an-event)
 * event data; subclass of plaso.containers.events.EventData, that represents data related to the event.
 
-## Writing the parser
+### Writing the parser
 
-### Registering the parser
+#### Registering the parser
 
 Add an import for the parser to:
 ```
@@ -100,7 +101,7 @@ manager.ParsersManager.RegisterParser(BinaryCookieParser)
 
 
 
-## Writing the event formatter
+### Writing the event formatter
 
 ```
 plaso/formatters/safari_cookies.py

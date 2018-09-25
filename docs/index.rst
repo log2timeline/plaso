@@ -6,8 +6,8 @@ Plaso (Plaso Langar Að Safna Öllu) is a computer forensic tool for timeline ge
 Plaso's documentation is split into several parts:
 
 
--  `User documentation <sources/user/Home.html>`__
--  `Developer documentation <sources/developer/Home.html>`__
+-  `User documentation <sources/user/Users-Guide.html>`__
+-  `Developer documentation <sources/developer/Developers-Guide.html>`__
 -  `API documentation <sources/api/plaso.html>`__
 
 
@@ -26,6 +26,11 @@ Contents:
    :maxdepth: 3
 
    sources/developer/index
+
+.. toctree::
+   :maxdepth: 3
+
+   API documentation <sources/api/plaso>
 
 
 Indices and tables

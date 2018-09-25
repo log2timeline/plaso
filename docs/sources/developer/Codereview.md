@@ -1,4 +1,4 @@
-## Code Review
+# Code Review
 
 All code submitted into the plaso project goes through code review. We use the GitHub codereview process, which while not perfect, is good enough for our purposes.
 
@@ -6,7 +6,7 @@ One helpful hint is while you have a code in code review monitor the development
 
 ### Rationale
 
-To keep the code base maintainable and readable all code is developed using a similar coding style. See the [style guide](Style-guide). This makes the code easier to maintain and understand.
+To keep the code base maintainable and readable all code is developed using a similar coding style. See the [style guide](Style-guide.md). This makes the code easier to maintain and understand.
 
 The purpose of the code review is to ensure that:
 
@@ -36,7 +36,7 @@ And if things are unclear, don't hesitate to ask. The developer mailing list is:
 
 We have looked at [reviewable.io](https://reviewable.io) and our current assessment is that it looks very nice but does not make for a very functional User Interface/Experience. It also convolutes the git commit history.
 
-#### Referencing github issues
+### Referencing github issues
 
 If your changes relate to a specific [github issue](https://github.com/log2timeline/plaso/issues) add the issue number as following:
 
@@ -46,7 +46,7 @@ Added serializers profiler #120
 
 Where the "#120" is a reference to issue number 120.
 
-#### Updating the code review
+### Updating the code review
 
 During the code review process you'll be asked to change few things, that is the reviewer will add comments. Please follow the following guideline during the code review process:
 

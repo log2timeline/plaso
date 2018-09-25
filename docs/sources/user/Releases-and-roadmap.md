@@ -1,3 +1,5 @@
+# Releases and Roadmap
+
 Plaso comes in 2 different forms of releases:
 
 * a packaged release; found on the [releases page](https://github.com/log2timeline/plaso/releases)

@@ -1,3 +1,5 @@
+# Scribbles about events
+
 This page contains some scribbles about events. It contains information about:
 
 * What is an event?

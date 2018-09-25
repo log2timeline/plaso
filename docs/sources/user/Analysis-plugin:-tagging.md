@@ -1,3 +1,5 @@
+# Tagging Analysis Plugin
+
 Notes on how to use the tagging analysis plugin.
 
 ## Creating the tagging file
@@ -31,4 +33,4 @@ psort.py --analysis tagging --tagging-file tagging-file.txt timeline.plaso
 
 ## Also see
 
-* [Event filters](Event-Filters)
+* [Event filters](Event-Filters.md)

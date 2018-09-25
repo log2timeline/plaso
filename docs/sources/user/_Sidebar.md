@@ -1,35 +1,35 @@
 # Main
 
-* [Getting Started](Getting-Started)
-* [Releases and roadmap](Releases-and-roadmap)
-* [Scribbles about events](Scribbles-about-events)
+* [Getting Started](Getting-Started.md)
+* [Releases and roadmap](Releases-and-roadmap.md)
+* [Scribbles about events](Scribbles-about-events.md)
 
 # User Guide
 
-* [How to get started](Users-Guide)
-* [Creating a timeline](Creating-a-timeline)
-* [Using collection Filters](Collection-Filters)
-* [Event filters](Event-Filters)
-* [Analysis plugins](Analysis-plugins)
-* [Tips and Tricks](Tips-and-Tricks)
-* [Log2Timeline Perl (Legacy)](Log2Timeline-Perl-(Legacy))
+* [How to get started](Users-Guide.md)
+* [Creating a timeline](Creating-a-timeline.md)
+* [Using collection Filters](Collection-Filters.md)
+* [Event filters](Event-Filters.md)
+* [Analysis plugins](Analysis-plugins.md)
+* [Tips and Tricks](Tips-and-Tricks.md)
+* [Log2Timeline Perl (Legacy)](Log2Timeline-Perl-(Legacy).md)
 
 **Tools**
 
-* [image_export](Using-image_export)
-* [log2timeline](Using-log2timeline)
-* [pinfo](Using-pinfo)
-* [psort](Using-psort)
+* [image_export](Using-image_export.md)
+* [log2timeline](Using-log2timeline.md)
+* [pinfo](Using-pinfo.md)
+* [psort](Using-psort.md)
 
 # Installation
 
 **Packaged Release**
 
-* [Docker](Installing-with-docker)
-* [Fedora Core](Fedora-Core-Packaged-Release)
-* [MacOS](MacOS-Packaged-Release)
-* [Ubuntu](Ubuntu-Packaged-Release)
-* [Windows](Windows-Packaged-Release)
+* [Docker](Installing-with-docker.md)
+* [Fedora Core](Fedora-Core-Packaged-Release.md)
+* [MacOS](MacOS-Packaged-Release.md)
+* [Ubuntu](Ubuntu-Packaged-Release.md)
+* [Windows](Windows-Packaged-Release.md)
 
 **Development Release**
 
@@ -40,7 +40,7 @@
 
 # Development
 
-* [Developers guide](Developers-Guide)
+* [Developers guide](Developers-Guide.md)
 * [Maintainers guide](https://github.com/log2timeline/l2tdocs/blob/master/process/Maintainers%20guide.md)
 * [Style guide](Style-guide)
 * [Python 3 guide](Python-3-Guide)
@@ -54,6 +54,6 @@
 * [Profiling](Profiling)
 * [Testing](Testing)
 * [Troubleshooting](Troubleshooting)
-* [Troubleshooting on MacOS](Troubleshooting-Mac-OS-X)
-* [Troubleshooting on Ubuntu](Troubleshooting-Ubuntu)
-* [Troubleshooting on Windows](Troubleshooting-Windows)
+* [Troubleshooting on MacOS](Troubleshooting-MacOS.md)
+* [Troubleshooting on Ubuntu](Troubleshooting-Ubuntu.md)
+* [Troubleshooting on Windows](Troubleshooting-Windows.md)

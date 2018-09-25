@@ -10,11 +10,11 @@ There are multiple ways to install the dependencies on Ubuntu:
 
 ## Prepackaged dependencies
 
-Moved to Dependencies#macos
+Moved to Dependencies.md#macos
 
 ## Batch build
 
-Moved to Dependencies#batch-build
+Moved to Dependencies.md#batch-build
 
 ## Manual build
 It is impossible for us to support all flavors of Mac OS X out there, so if you want smooth sailing, we recommend sticking with the supported version or live with the fact that a manual build of the dependencies can be a tedious task.

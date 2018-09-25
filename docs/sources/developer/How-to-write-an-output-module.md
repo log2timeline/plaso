@@ -1,3 +1,5 @@
+# How to write an output module
+
 ## Create file and class
 * Plugin file in plaso/output/
   * Create an empty subclass of plaso.output.interface.OutputModule

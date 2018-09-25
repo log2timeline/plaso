@@ -55,38 +55,38 @@ Per [PEP8](https://pep8.org/#programming-recommendations): "Be consistent in ret
 
 There are still a few legacy docstrings in the codebase, here are some examples you might see. Please don't write new code that looks like this:
 
-```
+```python
 def AddAnalysisReport(self, analysis_report):
-"""Adds an analysis report.
-
-Args:
-  analysis_report: a report.
-"""
+    """Adds an analysis report.
+    
+    Args:
+      analysis_report: a report.
+    """
 ```
 This is missing an important detail, the argument type. Is it a string? Some other sort of object? How about this:
 
-```
+```python
 def AddAnalysisReport(self, analysis_report):
-"""Adds an analysis report.
-
-Args:
-  analysis_report: an analysis report object (instance of AnalysisReport)
-"""
+    """Adds an analysis report.
+    
+    Args:
+      analysis_report: an analysis report object (instance of AnalysisReport)
+    """
 ```
 This is overly verbose, and is hard to parse.
 
 Instead do:
 
-```
+```python
 def AddAnalysisReport(self, analysis_report, storage_writer=None):
-"""Adds an analysis report.
-
-Args:
-  analysis_report (AnalysisReport): a report.
-  storage_writer (Optional[StorageWriter]): the storage writer must be open, 
-      and cannot be closed. If no storage_writer is provided, a new writer 
-      will be created.
-"""
+    """Adds an analysis report.
+    
+    Args:
+      analysis_report (AnalysisReport): a report.
+      storage_writer (Optional[StorageWriter]): the storage writer must be open, 
+          and cannot be closed. If no storage_writer is provided, a new writer 
+          will be created.
+    """
 ```
 
 Make sure your arguments descriptions include:

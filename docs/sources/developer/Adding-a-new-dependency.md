@@ -1,8 +1,10 @@
+# Adding a new dependency
+
 There are several steps involved for getting a new dependency added to plaso.
 
 ## Before you begin checklist
 
-If the answer on any of the questions below is no the dependency is not suitable for plaso. In that case see: [Alternatives](Adding-a-new-dependency#alternatives)
+If the answer on any of the questions below is no the dependency is not suitable for plaso. In that case see: [Alternatives](Adding-a-new-dependency.md#alternatives)
 
 * Has the dependency a [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0) compatible license?
 

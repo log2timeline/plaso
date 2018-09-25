@@ -1,3 +1,5 @@
+# Troubleshooting on Windows 
+
 ## Plaso keeps telling me SQLite3 is too old
 
 The Python installation bundles its own version of SQLite3 that is older than the version required by Plaso. Fix this by
@@ -10,7 +12,7 @@ C:\Python27\Lib\sqlite3\
 ```
 * Installing a newer version of SQLite3, if not already installed.
 
-Also see: Dependencies-Windows#pysqlite
+Also see: Dependencies-Windows.md#pysqlite
 
 ## Not a valid Win32 application
 

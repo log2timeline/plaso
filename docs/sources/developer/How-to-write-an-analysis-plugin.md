@@ -1,3 +1,5 @@
+# How to write an analysis plugin
+
 ## Create file and class
 * Plugin file in plaso/analysis/
   * Create an empty subclass of plaso.analysis.interface.AnalysisPlugin

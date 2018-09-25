@@ -1,4 +1,5 @@
-# Feature requests
+# Feature requests and bug reports
+
 ## Labels
 
 Feature requests in github are labelled with "enhancement" for plaso we additionally label them with one or more of the following "focus area" labels:

@@ -1,14 +1,27 @@
-## Developer Guide
+# Developer Guide
 
-* [Setting up and maintaining your development environment](Developers-Guide#setting-up-and-maintaining-your-development-environment)
-* [Getting Started](Developers-Guide#getting-started)
-* [Design](Developers-Guide#design)
-* [Roadmap](Developers-Guide#roadmap)
-* [Contributing Code](Developers-Guide#contributing-code)
+* [Setting up and maintaining your development environment](Developers-Guide.html#setting-up-and-maintaining-your-development-environment)
+* [Getting Started](Developers-Guide.html#getting-started)
+* [Design](Developers-Guide.html#design)
+* [Roadmap](Developers-Guide.html#roadmap)
+* [Contributing Code](Developers-Guide.html#contributing-code)
+* [Python 3 Guide](Python-3-Guide.md)
 
 ## Setting up and maintaining your development environment
 
 The first challenge you will encounter is setting up and maintaining your development environment.
+
+Start by installing a development release on your platform:
+
+* [Development installation in a VirtualEnv](Running-plaso-in-virtualenv.md)
+* [Development installation on Fedora Core](Development-release-Fedora-Core.md)
+* [Development installation on MacOS](Development-release-MacOS.md)
+* [Development installation on Fedora Core](Development-release-Ubuntu.md)
+* [Development installation on Windows](Development-release-Windows.md)
+
+
+## Building dependencies
+If you're feeling particularly brave, you can try building all the dependencies yourself.
 
 **Note that plaso and some dependencies are currently actively under development keeping up with the development release is not for "the faint of heart".**
 
@@ -34,7 +47,7 @@ Once you've set up your development environment we recommend start simple:
 Overview of the general architecture of plaso:
 
 * [Architecture](Internals.md)
-* [Source code and API documentation](http://plaso-api.readthedocs.org/en/latest/modules.html)
+* [Source code and API documentation](http://plaso-api.readthedocs.org/en/latest/modules)
 
 ## Roadmap
 
@@ -54,7 +67,7 @@ Before you start writing the code, please review the following:
 
 ### Before you submit your first code review
 
-1. Join the development mailing list: [log2timeline-dev@googlegroups.com](https://groups.google.com/forum/?fromgroups#!forum/log2timeline-dev.md), we recommend using the same account as step 1
+1. Join the development mailing list: [log2timeline-dev@googlegroups.com](https://groups.google.com/forum/?fromgroups#!forum/log2timeline-dev), we recommend using the same account as step 1
 2. Install the required development tools like pylint, python-mock, sphinx
 3. Make sure to run all the tests inside the plaso and the dfVFS codebase, and that they successfully complete on your development system
 4. Make sure your development system is set up correctly so that you can develop and test correctly.
@@ -85,4 +98,4 @@ The current design docs are [stored here](https://drive.google.com/folderview?id
 
 Tests are part of a maintainable code base. Code without sufficient test is very likely to be broken by a large rewrite/refactor.
 
-Some guidelines for writing tests: [Style guide - tests](Style-guide#tests)
+Some guidelines for writing tests: [Style guide - tests](Style-guide.html#tests)

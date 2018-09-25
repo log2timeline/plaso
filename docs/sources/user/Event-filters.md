@@ -1,9 +1,10 @@
+# Event Filters
 Event filters can be used both during the extraction phase and in the post-processing stage of the tool.
 
 Tools that have event filter support:
- + [psort](Using-psort#filtering)
+ + [psort](Using-psort.md#filtering)
 
-The generic documentation of the filter language can be found [here](Objectfilter)
+The generic documentation of the filter language can be found [here](Objectfilter.md)
 
 The filters are evoked differently depending on the tool, consult each tool's documentation about how that is achieved.
 

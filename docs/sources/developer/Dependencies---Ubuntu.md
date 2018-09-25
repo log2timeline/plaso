@@ -1,3 +1,5 @@
+# Building Dependencies on Ubuntu
+
 This page contains detailed instructions on how to build and install dependencies on Ubuntu. Some of these instructions should also work on Ubuntu like systems like Debian or Linux Mint.
 
 There are multiple ways to install the dependencies on Ubuntu:
@@ -8,11 +10,11 @@ There are multiple ways to install the dependencies on Ubuntu:
 
 ## Prepackaged dependencies
 
-Moved to Dependencies#ubuntu
+[Moved](Dependencies.md#ubuntu)
 
 ## Batch build
 
-Moved to Dependencies#batch-build
+[Moved](Dependencies.md#batch-build)
 
 ## Manual build
 It is impossible for us to support all flavors of Ubuntu out there, so if you want smooth sailing, we recommend sticking with the supported version or live with the fact that a manual build of the dependencies can be a tedious task.
@@ -88,19 +90,19 @@ mv dpkg debian
 ```
 
 Have dpkg-buildpackage build the deb file:
-```
+```bash
 dpkg-buildpackage -rfakeroot
 ```
 
 This will create the following files in the build root directory:
-```
+```bash
 python-package-1.0.0-1_all.deb
 ```
 
 Note that the actual deb file name can vary per package.
 
 To install the required deb files run:
-```
+```bash
 sudo dpkg -i python-package-1.0.0-1_all.deb
 ```
 
@@ -110,7 +112,7 @@ The dfVFS build instructions can be found [here](https://github.com/log2timeline
 Download the latest source package from: https://github.com/log2timeline/dfvfs/releases
 
 To build deb files run the following command from the build root directory:
-```
+```bash
 tar xvf dfvfs-20140219.tar.gz 
 cd dfvfs-20140219/
 cp -rf dpkg debian
@@ -124,19 +126,19 @@ python-dfvfs_20140219-1_all.deb
 ```
 
 To install the required deb files run:
-```
+```bash
 sudo dpkg -i python-dfvfs_20140219-1_all.deb
 ```
 
 ### Hachoir
 To install hachoir run:
-```
+```bash
 sudo apt-get install python-hachoir-core python-hachoir-metadata python-hachoir-parser
 ```
 
 ### IPython
 To install IPython run:
-```
+```bash
 sudo apt-get install ipython
 ```
 

@@ -1,4 +1,6 @@
-* [nsrlsvr](Analysis-plugin:-nsrlsvr)
-* [tagging](Analysis-plugin:-tagging)
-* [viper](Analysis-plugin:-viper)
-* [virustotal](Analysis-plugin:-virustotal)
+# Analysis Plugins
+
+* [nsrlsvr](Analysis-plugin:-nsrlsvr.md)
+* [tagging](Analysis-plugin:-tagging.md)
+* [viper](Analysis-plugin:-viper.md)
+* [virustotal](Analysis-plugin:-virustotal.md)

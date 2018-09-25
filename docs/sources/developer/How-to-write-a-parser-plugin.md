@@ -1,4 +1,6 @@
-Writing a parser plugin is different, depending on which parser you're writing a plugin for. Parsers that support plugins are:
+# How to write a parser plugin
+
+Writing a parser plugin is different depending on which parser you're writing a plugin for. Parsers that support plugins are:
 
 * bencode
 * cookie
@@ -6,5 +8,5 @@ Writing a parser plugin is different, depending on which parser you're writing a
 * olecf
 * plist
 * sqlite
-* [syslog](How-to-write-a-Syslog-plugin)
+* [syslog](How-to-write-a-Syslog-plugin.md)
 * winreg
