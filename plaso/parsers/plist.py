@@ -10,6 +10,7 @@ from __future__ import unicode_literals
 import biplist
 
 from plaso.lib import errors
+from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import logger
 from plaso.parsers import manager
@@ -33,6 +34,16 @@ class PlistParser(interface.FileObjectParser):
   DESCRIPTION = 'Parser for binary and text plist files.'
 
   _plugin_classes = {}
+
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification.
+
+    Returns:
+      FormatSpecification: a format specification or None if not available.
+    """
+    format_specification = specification.FormatSpecification(cls.NAME)
+    format_specification.AddNewSignature(b'bplist', offset=0)
+    return format_specification
 
   def GetTopLevel(self, file_object):
     """Returns the deserialized content of a plist as a dictionary object.
