@@ -35,6 +35,7 @@ class PlistParser(interface.FileObjectParser):
 
   _plugin_classes = {}
 
+  @classmethod
   def GetFormatSpecification(cls):
     """Retrieves the format specification.
 
