@@ -44,7 +44,7 @@ class DSVParser(interface.FileObjectParser):
   QUOTE_CHAR = b'"'
 
   # The maximum size of a single field in the parser
-  FILE_SIZE_LIMIT = csv.field_size_limit()
+  FIELD_SIZE_LIMIT = csv.field_size_limit()
 
   # Value that should not appear inside the file, made to test the actual
   # file to see if it confirms to standards.
@@ -62,7 +62,7 @@ class DSVParser(interface.FileObjectParser):
     """
     super(DSVParser, self).__init__()
     self._encoding = encoding
-    self._maximum_line_length = len(self.COLUMNS) * self.FILE_SIZE_LIMIT
+    self._maximum_line_length = len(self.COLUMNS) * self.FIELD_SIZE_LIMIT
 
   def _ConvertRowToUnicode(self, parser_mediator, row):
     """Converts all strings in a DSV row dict to Unicode.
@@ -166,9 +166,9 @@ class DSVParser(interface.FileObjectParser):
     original_file_position = file_object.tell()
     line_reader = self._CreateLineReader(file_object)
     for _ in range(0, 20):
-      # Attempt to read a line that twice as long as any line that should be in
+      # Attempt to read a line that is longer than any line that should be in
       # the file.
-      sample_line = line_reader.readline(self._maximum_line_length * 2)
+      sample_line = line_reader.readline(self._maximum_line_length + 1)
       if len(sample_line) > self._maximum_line_length:
         file_object.seek(original_file_position)
         return False
