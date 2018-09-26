@@ -16,6 +16,8 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
+
+import re
 import os
 import sys
 import time
@@ -23,6 +25,9 @@ import time
 from mock import Mock as MagicMock
 from sphinx import apidoc
 
+from docutils import nodes, transforms
+from recommonmark.parser import CommonMarkParser
+from recommonmark.transform import AutoStructify
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -121,8 +126,14 @@ napoleon_include_special_with_doc = True
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
-# The suffix of source filenames.
-source_suffix = '.rst'
+# Enable markdown parser.
+source_parsers = {
+    '.md': CommonMarkParser,
+}
+
+# The suffixes of source filenames.
+
+source_suffix = ['.rst', '.md']
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
@@ -343,13 +354,72 @@ texinfo_documents = [(
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
 
+
+# Configure sphinx to convert markdown links (recommonmark is broken at the
+# moment).
+
+
+class ProcessLink(transforms.Transform):
+  """Transform definition to parse .md references to internal pages."""
+
+  default_priority = 1000
+
+  ANCHOR_REGEX = re.compile(
+      r'(?P<uri>[a-zA-Z0-9-./]+?).md#(?P<anchor>[a-zA-Z0-9-]+)')
+
+  def find_and_replace(self, node):
+    """Parses URIs containing .md and replaces them with their HTML page.
+
+    Args:
+        node(node): docutils node.
+
+    Returns:
+      node: docutils node.
+    """
+    if isinstance(node, nodes.reference) and 'refuri' in node:
+      reference_uri = node['refuri']
+      if reference_uri.endswith('.md'):
+        reference_uri = reference_uri[:-3] + '.html'
+        node['refuri'] = reference_uri
+      else:
+        match = self.ANCHOR_REGEX.match(reference_uri)
+        if match:
+          node['refuri'] = '{0:s}.html#{1:s}'.format(
+              match.group('uri'), match.group('anchor'))
+    return node
+
+  def traverse(self, node):
+    """Traverse the document tree rooted at node.
+
+    node(node): docutils node.
+    """
+    self.find_and_replace(node)
+
+    for c in node.children:
+      self.traverse(c)
+
+  # pylint: disable=arguments-differ
+  def apply(self):
+    """Applies transform on document tree."""
+    self.traverse(self.document)
+
+
 def RunSphinxAPIDoc(_):
-  """Run sphinx-apidoc to auto-generate documentation."""
-  # sys.path.append(os.path.join(os.path.dirname(__file__)))
+  """Runs sphinx-apidoc to auto-generate documentation."""
   current_directory = os.path.abspath(os.path.dirname(__file__))
-  module = os.path.join(current_directory,"..","plaso")
-  apidoc.main(['-o', current_directory, module, '--force'])
+  module = os.path.join(current_directory, '..', 'plaso')
+  api_directory = os.path.join(current_directory, 'sources', 'api')
+  apidoc.main(['-o', api_directory, module, '--force'])
+
 
 def setup(app):
-  """Override Sphinx setup to trigger sphinx-apidoc."""
+  """Called at Sphinx initialization."""
+  # Triggers sphinx-apidoc to generate API documentation.
   app.connect('builder-inited', RunSphinxAPIDoc)
+  app.add_config_value(
+      'recommonmark_config', {
+        'enable_auto_doc_ref': False},
+      True)
+
+  app.add_transform(AutoStructify)
+  app.add_transform(ProcessLink)

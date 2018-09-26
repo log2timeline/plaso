@@ -3,6 +3,8 @@ pyparsing
 # We have several parsers that create construct objects, and if we install
 # it correctly, the documentation looks better.
 construct
-# We need to pin the version of Sphinx for readthedocs, see
-# https://github.com/rtfd/readthedocs.org/issues/3769
 sphinx==1.7.0
+# Workaround for https://github.com/rtfd/recommonmark/issues/104.
+docutils==0.14
+# Required for markdown support.
+recommonmark
