@@ -25,7 +25,7 @@ class TestDSVParser(dsv_parser.DSVParser):
 
   def __init__(self):
     """Initializes a DSV parser."""
-    super(TestDSVParser, self).__init__()
+    super(TestDSVParser, self).__init__(encoding='utf-8')
     self.row_offsets = []
     self.rows = []
 
@@ -107,6 +107,18 @@ class DSVParserTest(test_lib.ParserTestCase):
     self.assertEqual(row['user'], 'joesmith')
     self.assertEqual(row['password'], 'superrich')
 
+  @shared_test_lib.skipUnlessHasTestFile(['password.csv'])
+  def testHasExpectedLineLength(self):
+    """Tests the _HasExpectedLineLength function."""
+    parser = TestDSVParser()
+    test_file_entry = self._GetTestFileEntry(['password.csv'])
+    test_file_object = test_file_entry.GetFileObject()
+
+    self.assertTrue(parser._HasExpectedLineLength(test_file_object))
+
+    parser._maximum_line_length = 2
+    parser._HasExpectedLineLength(test_file_object)
+    self.assertFalse(parser._HasExpectedLineLength(test_file_object))
 
 if __name__ == '__main__':
   unittest.main()
