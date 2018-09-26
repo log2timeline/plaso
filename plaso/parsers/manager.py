@@ -213,9 +213,10 @@ class ParsersManager(object):
     Returns:
       tuple: containing:
 
-      * FormatSpecificationStore: format specifications with signaures.
-      * list[str[: remaining parser names that do not have a format
-          specification with signatures.
+      * FormatSpecificationStore: format specifications with signatures.
+      * list[str]: names of parsers that do not have format specifications with
+          signatures, or have signatures but also need to be applied 'brute
+          force'.
     """
     specification_store = specification.FormatSpecificationStore()
     remainder_list = []
@@ -226,6 +227,11 @@ class ParsersManager(object):
 
       if format_specification and format_specification.signatures:
         specification_store.AddSpecification(format_specification)
+        # The plist parser is a special case, where it both defines a signature
+        # and also needs to be applied 'brute-force' to non-matching files,
+        # as the signature matches binary plists, but not XML or JSON plists.
+        if parser_name == 'plist':
+          remainder_list.append(parser_name)
       else:
         remainder_list.append(parser_name)
 
