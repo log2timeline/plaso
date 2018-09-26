@@ -118,6 +118,7 @@ class DSVParser(interface.FileObjectParser):
         quotechar=quotechar, restkey=magic_test_string,
         restval=magic_test_string)
 
+  # pylint: disable=missing-return-type-doc
   def _CreateLineReader(self, file_object):
     """Returns an object that returns lines from a text file.
 
@@ -132,7 +133,8 @@ class DSVParser(interface.FileObjectParser):
           over lines in a text file.
 
     Raises:
-      UnableToParseFile: if the file cannot be read with the specified encoding.
+      UnicodeDecodeError: if the file cannot be read with the specified
+          encoding.
     """
     # The Python 2 csv module reads bytes and the Python 3 csv module Unicode
     # reads strings.
@@ -182,7 +184,6 @@ class DSVParser(interface.FileObjectParser):
     """
     return specification.FormatSpecification(cls.NAME, text_format=True)
 
-
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a DSV text file-like object.
 
@@ -201,11 +202,13 @@ class DSVParser(interface.FileObjectParser):
 
     try:
       if not self._HasExpectedLineLength(file_object):
+        display_name = parser_mediator.GetDisplayName()
         raise errors.UnableToParseFile(
             '[{0:s}] Unable to parse DSV file: {1:s} with error: '
             'unexpected line length.'.format(
                 self.NAME, display_name))
-    except UnicodeDecodeError:
+    except UnicodeDecodeError as exception:
+      display_name = parser_mediator.GetDisplayName()
       raise errors.UnableToParseFile(
           '[{0:s}] Unable to parse DSV file: {1:s} with error: {2!s}.'.format(
               self.NAME, display_name, exception))
