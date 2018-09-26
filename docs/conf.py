@@ -404,12 +404,10 @@ class ProcessLink(transforms.Transform):
     self.traverse(self.document)
 
 
-
 def RunSphinxAPIDoc(_):
   """Runs sphinx-apidoc to auto-generate documentation."""
-  # sys.path.append(os.path.join(os.path.dirname(__file__)))
   current_directory = os.path.abspath(os.path.dirname(__file__))
-  module = os.path.join(current_directory,"..","plaso")
+  module = os.path.join(current_directory, '..', 'plaso')
   api_directory = os.path.join(current_directory, 'sources', 'api')
   apidoc.main(['-o', api_directory, module, '--force'])
 
@@ -418,9 +416,10 @@ def setup(app):
   """Called at Sphinx initialization."""
   # Triggers sphinx-apidoc to generate API documentation.
   app.connect('builder-inited', RunSphinxAPIDoc)
-  app.add_config_value('recommonmark_config', {
-    'enable_auto_doc_ref': False,
-  }, True)
+  app.add_config_value(
+      'recommonmark_config', {
+        'enable_auto_doc_ref': False},
+      True)
 
   app.add_transform(AutoStructify)
   app.add_transform(ProcessLink)
