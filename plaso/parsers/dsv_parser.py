@@ -62,7 +62,13 @@ class DSVParser(interface.FileObjectParser):
     """
     super(DSVParser, self).__init__()
     self._encoding = encoding
-    self._maximum_line_length = len(self.COLUMNS) * self.FIELD_SIZE_LIMIT
+    if py2to3.PY_2:
+      self._end_of_line = b'\n'
+    else:
+      self._end_of_line = '\n'
+    self._maximum_line_length = (
+        len(self._end_of_line) +
+        len(self.COLUMNS) * (self.FIELD_SIZE_LIMIT + len(self.DELIMITER)))
 
   def _ConvertRowToUnicode(self, parser_mediator, row):
     """Converts all strings in a DSV row dict to Unicode.
@@ -120,7 +126,7 @@ class DSVParser(interface.FileObjectParser):
 
   # pylint: disable=missing-return-type-doc
   def _CreateLineReader(self, file_object):
-    """Returns an object that returns lines from a text file.
+    """Creates an object that reads lines from a text file.
 
     The line reader is advanced to the beginning of the DSV content, skipping
     any header lines.
@@ -139,9 +145,11 @@ class DSVParser(interface.FileObjectParser):
     # The Python 2 csv module reads bytes and the Python 3 csv module Unicode
     # reads strings.
     if py2to3.PY_3:
-      line_reader = text_file.TextFile(file_object, encoding=self._encoding)
+      line_reader = text_file.TextFile(
+          file_object, encoding=self._encoding, end_of_line=self._end_of_line)
     else:
-      line_reader = line_reader_file.BinaryLineReader(file_object)
+      line_reader = line_reader_file.BinaryLineReader(
+          file_object, end_of_line=self._end_of_line)
     # If we specifically define a number of lines we should skip, do that here.
     for _ in range(0, self.NUMBER_OF_HEADER_LINES):
       try:

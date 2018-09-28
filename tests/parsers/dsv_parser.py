@@ -120,5 +120,6 @@ class DSVParserTest(test_lib.ParserTestCase):
     parser._HasExpectedLineLength(test_file_object)
     self.assertFalse(parser._HasExpectedLineLength(test_file_object))
 
+
 if __name__ == '__main__':
   unittest.main()
