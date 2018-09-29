@@ -169,7 +169,7 @@ class DSVParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): file-like object.
 
     Returns:
-        bool: True if the file has lines of the expected length.
+      bool: True if the file has lines of the expected length.
     """
     original_file_position = file_object.tell()
     line_reader = self._CreateLineReader(file_object)
@@ -211,10 +211,9 @@ class DSVParser(interface.FileObjectParser):
     try:
       if not self._HasExpectedLineLength(file_object):
         display_name = parser_mediator.GetDisplayName()
-        raise errors.UnableToParseFile(
+        raise errors.UnableToParseFile((
             '[{0:s}] Unable to parse DSV file: {1:s} with error: '
-            'unexpected line length.'.format(
-                self.NAME, display_name))
+            'unexpected line length.').format(self.NAME, display_name))
     except UnicodeDecodeError as exception:
       display_name = parser_mediator.GetDisplayName()
       raise errors.UnableToParseFile(
