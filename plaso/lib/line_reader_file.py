@@ -100,7 +100,7 @@ class BinaryLineReader(object):
         size = self._file_object_size - self._lines_buffer_offset
 
       self._file_object.seek(self._lines_buffer_offset, os.SEEK_SET)
-      read_buffer = self._file_object.read(size)
+      read_buffer = self._file_object.read(read_size)
 
       self._lines_buffer_offset += len(read_buffer)
 
