@@ -43,6 +43,9 @@ class DSVParser(interface.FileObjectParser):
   # it can be defined here.
   QUOTE_CHAR = b'"'
 
+  # The maximum size of a single field in the parser
+  FIELD_SIZE_LIMIT = csv.field_size_limit()
+
   # Value that should not appear inside the file, made to test the actual
   # file to see if it confirms to standards.
   _MAGIC_TEST_STRING = b'RegnThvotturMeistarans'
@@ -59,6 +62,13 @@ class DSVParser(interface.FileObjectParser):
     """
     super(DSVParser, self).__init__()
     self._encoding = encoding
+    if py2to3.PY_2:
+      self._end_of_line = b'\n'
+    else:
+      self._end_of_line = '\n'
+    self._maximum_line_length = (
+        len(self._end_of_line) +
+        len(self.COLUMNS) * (self.FIELD_SIZE_LIMIT + len(self.DELIMITER)))
 
   def _ConvertRowToUnicode(self, parser_mediator, row):
     """Converts all strings in a DSV row dict to Unicode.
@@ -114,6 +124,65 @@ class DSVParser(interface.FileObjectParser):
         quotechar=quotechar, restkey=magic_test_string,
         restval=magic_test_string)
 
+  # pylint: disable=missing-return-type-doc
+  def _CreateLineReader(self, file_object):
+    """Creates an object that reads lines from a text file.
+
+    The line reader is advanced to the beginning of the DSV content, skipping
+    any header lines.
+
+    Args:
+      file_object (dfvfs.FileIO): file-like object.
+
+    Returns:
+      TextFile|BinaryLineReader: an object that implements an iterator
+          over lines in a text file.
+
+    Raises:
+      UnicodeDecodeError: if the file cannot be read with the specified
+          encoding.
+    """
+    # The Python 2 csv module reads bytes and the Python 3 csv module Unicode
+    # reads strings.
+    if py2to3.PY_3:
+      line_reader = text_file.TextFile(
+          file_object, encoding=self._encoding, end_of_line=self._end_of_line)
+    else:
+      line_reader = line_reader_file.BinaryLineReader(
+          file_object, end_of_line=self._end_of_line)
+    # If we specifically define a number of lines we should skip, do that here.
+    for _ in range(0, self.NUMBER_OF_HEADER_LINES):
+      try:
+        line_reader.readline(self._maximum_line_length)
+      except UnicodeDecodeError:
+        raise
+    return line_reader
+
+  def _HasExpectedLineLength(self, file_object):
+    """Determines if a file begins with lines of the expected length.
+
+    As we know the maximum length of valid lines in the DSV file, the presence
+    of lines longer than this indicates that the file will not be parsed
+    successfully, without reading excessive data from a large file.
+
+    Args:
+      file_object (dfvfs.FileIO): file-like object.
+
+    Returns:
+      bool: True if the file has lines of the expected length.
+    """
+    original_file_position = file_object.tell()
+    line_reader = self._CreateLineReader(file_object)
+    for _ in range(0, 20):
+      # Attempt to read a line that is longer than any line that should be in
+      # the file.
+      sample_line = line_reader.readline(self._maximum_line_length + 1)
+      if len(sample_line) > self._maximum_line_length:
+        file_object.seek(original_file_position)
+        return False
+    file_object.seek(original_file_position)
+    return True
+
   @classmethod
   def GetFormatSpecification(cls):
     """Retrieves the format specification.
@@ -134,35 +203,27 @@ class DSVParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_size = file_object.get_size()
-    # The csv module can consume a lot of memory, 1 GiB for a 100 MiB file.
-    # Hence that the maximum supported file size is restricted.
-    if file_size > self._MAXIMUM_SUPPORTED_FILE_SIZE:
-      display_name = parser_mediator.GetDisplayName()
-      raise errors.UnableToParseFile((
-          '[{0:s}] Unable to parse DSV file: {1:s} size of file exceeds '
-          'maximum supported size').format(self.NAME, display_name))
-
     # TODO: Replace this with detection of the file encoding via byte-order
     # marks. Also see: https://github.com/log2timeline/plaso/issues/1971
     if not self._encoding:
       self._encoding = parser_mediator.codepage
 
-    # The Python 2 csv module reads bytes and the Python 3 csv module Unicode
-    # reads strings.
-    if py2to3.PY_3:
-      line_reader = text_file.TextFile(file_object, encoding=self._encoding)
-    else:
-      line_reader = line_reader_file.BinaryLineReader(file_object)
-
-    # If we specifically define a number of lines we should skip, do that here.
-    for _ in range(0, self.NUMBER_OF_HEADER_LINES):
-      line_reader.readline()
-
-    reader = self._CreateDictReader(line_reader)
-
-    row_offset = line_reader.tell()
     try:
+      if not self._HasExpectedLineLength(file_object):
+        display_name = parser_mediator.GetDisplayName()
+        raise errors.UnableToParseFile((
+            '[{0:s}] Unable to parse DSV file: {1:s} with error: '
+            'unexpected line length.').format(self.NAME, display_name))
+    except UnicodeDecodeError as exception:
+      display_name = parser_mediator.GetDisplayName()
+      raise errors.UnableToParseFile(
+          '[{0:s}] Unable to parse DSV file: {1:s} with error: {2!s}.'.format(
+              self.NAME, display_name, exception))
+
+    try:
+      line_reader = self._CreateLineReader(file_object)
+      reader = self._CreateDictReader(line_reader)
+      row_offset = line_reader.tell()
       row = next(reader)
     except (StopIteration, csv.Error, UnicodeDecodeError) as exception:
       display_name = parser_mediator.GetDisplayName()
