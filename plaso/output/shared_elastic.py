@@ -279,7 +279,8 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     """
     self._host = server
     self._port = port
-    logger.debug('Elasticsearch server: {0!s} port: {1:d}'.format(server, port or 9200))
+    logger.debug('Elasticsearch server: {0!s} port: {1:d}'.format(
+        server, port or 9200))
 
   def SetUsername(self, username):
     """Sets the username.

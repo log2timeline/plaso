@@ -24,12 +24,13 @@ class ElasticSearchOutputArgumentsHelperTest(
   _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--index_name INDEX_NAME] [--doc_type DOCUMENT_TYPE]
                      [--flush_interval FLUSH_INTERVAL] [--raw_fields]
-                     [--elastic_user ELASTIC_USER] [--server HOSTNAME]
-                     [--port PORT]
+                     [--elastic_user ELASTIC_USER] [--ca_certs CA_CERTS]
+                     [--server HOSTNAME] [--port PORT]
 
 Test argument parser.
 
 optional arguments:
+  --ca_certs CA_CERTS   Path to a file containing a list of root certificates.
   --doc_type DOCUMENT_TYPE
                         Name of the document type that will be used in
                         ElasticSearch.
