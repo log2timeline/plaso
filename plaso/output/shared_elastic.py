@@ -65,20 +65,27 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._password = None
     self._port = None
     self._username = None
+    self._ca_certs = None
 
   def _Connect(self):
     """Connects to an Elasticsearch server."""
-    elastic_hosts = [{'host': self._host, 'port': self._port}]
+    if self._port is not None:
+      elastic_hosts = [{'host': self._host, 'port': self._port}]
+    else:
+      elastic_hosts = [self._host]
 
     elastic_http_auth = None
     if self._username is not None:
       elastic_http_auth = (self._username, self._password)
 
     self._client = elasticsearch.Elasticsearch(
-        elastic_hosts, http_auth=elastic_http_auth)
+        elastic_hosts,
+        http_auth=elastic_http_auth,
+        ca_certs=self._ca_certs
+    )
 
     logger.debug('Connected to Elasticsearch server: {0:s} port: {1:d}.'.format(
-        self._host, self._port))
+        self._host, self._port or 9200))
 
   def _CreateIndexIfNotExists(self, index_name, mappings):
     """Creates an Elasticsearch index if it not already exists.
@@ -272,7 +279,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     """
     self._host = server
     self._port = port
-    logger.debug('Elasticsearch server: {0!s} port: {1:d}'.format(server, port))
+    logger.debug('Elasticsearch server: {0!s} port: {1:d}'.format(server, port or 9200))
 
   def SetUsername(self, username):
     """Sets the username.
@@ -282,6 +289,15 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     """
     self._username = username
     logger.debug('Elasticsearch username: {0!s}'.format(username))
+
+  def SetCACerts(self, ca_certs):
+    """Sets the certificates.
+
+    Args:
+      ca_certs (str): file containing a list of root certificates.
+    """
+    self._ca_certs = ca_certs
+    logger.debug('Elasticsearch ca_certs: {0!s}'.format(ca_certs))
 
   def WriteEventBody(self, event):
     """Writes an event to the output.
@@ -297,14 +313,20 @@ class SharedElasticsearch5OutputModule(SharedElasticsearchOutputModule):
 
   def _Connect(self):
     """Connects to an Elasticsearch server."""
-    elastic_hosts = [{'host': self._host, 'port': self._port}]
+    if self._port is not None:
+      elastic_hosts = [{'host': self._host, 'port': self._port}]
+    else:
+      elastic_hosts = [self._host]
 
     elastic_http_auth = None
     if self._username is not None:
       elastic_http_auth = (self._username, self._password)
 
     self._client = elasticsearch5.Elasticsearch(
-        elastic_hosts, http_auth=elastic_http_auth)
+        elastic_hosts,
+        http_auth=elastic_http_auth,
+        ca_certs=self._ca_certs
+    )
 
     logger.debug('Connected to Elasticsearch server: {0:s} port: {1:d}.'.format(
         self._host, self._port))

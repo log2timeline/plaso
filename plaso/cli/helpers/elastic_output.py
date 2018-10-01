@@ -18,7 +18,7 @@ class ElasticSearchServerArgumentsHelper(server_config.ServerArgumentsHelper):
   """Elastic Search server CLI arguments helper."""
 
   _DEFAULT_SERVER = '127.0.0.1'
-  _DEFAULT_PORT = 9200
+  _DEFAULT_PORT = None
 
 
 class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
@@ -33,6 +33,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
   _DEFAULT_FLUSH_INTERVAL = 1000
   _DEFAULT_RAW_FIELDS = False
   _DEFAULT_ELASTIC_USER = None
+  _DEFAULT_CA_CERTS = None
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -65,6 +66,10 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         '--elastic_user', dest='elastic_user', action='store',
         default=cls._DEFAULT_ELASTIC_USER, help=(
             'Username to use for Elasticsearch authentication.'))
+    argument_group.add_argument(
+        '--ca_certs', dest='ca_certs', action='store',
+        default=cls._DEFAULT_CA_CERTS, help=(
+            'Path to a file containing a list of root certificates.'))
 
     ElasticSearchServerArgumentsHelper.AddArguments(argument_group)
 
@@ -104,6 +109,9 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     else:
       elastic_password = None
 
+    ca_certs = cls._ParseStringOption(
+        options, 'ca_certs', default_value=cls._DEFAULT_CA_CERTS)
+
     ElasticSearchServerArgumentsHelper.ParseOptions(options, output_module)
     output_module.SetIndexName(index_name)
     output_module.SetDocumentType(document_type)
@@ -111,6 +119,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     output_module.SetRawFields(raw_fields)
     output_module.SetUsername(elastic_user)
     output_module.SetPassword(elastic_password)
+    output_module.SetCACerts(ca_certs)
 
 
 manager.ArgumentHelperManager.RegisterHelper(ElasticSearchOutputArgumentsHelper)
