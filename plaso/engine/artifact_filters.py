@@ -122,7 +122,7 @@ class ArtifactDefinitionsFilterHelper(object):
                       find_specs)
 
         elif (source.type_indicator ==
-             artifact_types.TYPE_INDICATOR_ARTIFACT_GROUP):
+              artifact_types.TYPE_INDICATOR_ARTIFACT_GROUP):
           self._artifacts.remove(name)
           for name_entry in set(source.names):
             self._artifacts.append(name_entry)
