@@ -455,7 +455,6 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
           os.path.join(temp_directory, 'passwords.txt')])
 
       extracted_files = self._RecursiveList(temp_directory)
-      print  extracted_files
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 

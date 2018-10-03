@@ -120,8 +120,9 @@ class ArtifactDefinitionsFilterHelper(object):
               self.find_specs_per_source_type[
                   artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY].extend(
                       find_specs)
-        
-        elif source.type_indicator == artifact_types.TYPE_INDICATOR_ARTIFACT_GROUP:
+
+        elif (source.type_indicator ==
+             artifact_types.TYPE_INDICATOR_ARTIFACT_GROUP):
           self._artifacts.remove(name)
           for name_entry in set(source.names):
             self._artifacts.append(name_entry)
