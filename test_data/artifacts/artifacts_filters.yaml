@@ -5,7 +5,7 @@ doc: Test Group
 sources:
 - type: ARTIFACT_GROUP
   attributes:
-    names: 
+    names:
      - 'TestFiles3'
      - 'TestFiles4'
 labels: [System]
@@ -42,7 +42,7 @@ doc: Test Doc3
 sources:
 - type: FILE
   attributes:
-    paths: 
+    paths:
       - '\a_directory\'
       - '\a_directory\a_file'
     separator: '\'
@@ -54,7 +54,7 @@ doc: Test Doc4
 sources:
 - type: FILE
   attributes:
-    paths: 
+    paths:
       - '\a_directory\another_file'
       - '\passwords.txt'
     separator: '\'
