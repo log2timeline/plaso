@@ -402,7 +402,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
   @shared_test_lib.skipUnlessHasTestFile(['image.qcow2'])
   def testProcessSourcesExtractWithArtifactsFilter(self):
-    """Tests the ProcessSources function with a filter file."""
+    """Tests the ProcessSources function with a artifacts filter file."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
@@ -411,7 +411,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     options.image = self._GetTestFilePath(['image.qcow2'])
     options.quiet = True
     options.artifact_filters = 'TestFilesImageExport'
-    
+
     with shared_test_lib.TempDirectory() as temp_directory:
       options.path = temp_directory
 
@@ -427,11 +427,11 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       extracted_files = self._RecursiveList(temp_directory)
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
-  
+
   @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
   @shared_test_lib.skipUnlessHasTestFile(['image.qcow2'])
   def testProcessSourcesExtractWithArtifactsGroupFilter(self):
-    """Tests the ProcessSources function with a filter file."""
+    """Tests the ProcessSources function with a group artifacts filter file."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 
