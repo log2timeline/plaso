@@ -98,6 +98,10 @@ class WrongBencodePlugin(Error):
   """Error reporting wrong bencode plugin used."""
 
 
+class WrongCompoundZIPPlugin(Error):
+  """Error reporting wrong compound ZIP plugin used."""
+
+
 class WrongFormatter(Error):
   """Raised when the formatter is not applicable for a particular event."""
 
