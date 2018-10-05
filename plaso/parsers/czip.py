@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import struct
 import zipfile
 
 from plaso.lib import errors
@@ -30,9 +31,10 @@ class CompoundZIPParser(interface.FileObjectParser):
   _plugin_classes = {}
 
   def __init__(self):
+    super(CompoundZIPParser, self).__init__()
     self._file_object = None
 
-  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+  def ParseFileObject(self, parser_mediator, file_object):
     """Parses a compound ZIP file-like object.
 
     Args:
@@ -47,8 +49,8 @@ class CompoundZIPParser(interface.FileObjectParser):
 
     if not zipfile.is_zipfile(file_object):
       raise errors.UnableToParseFile(
-        '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-            self.NAME, display_name, 'Not a Zip file.'))
+          '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+              self.NAME, display_name, 'Not a Zip file.'))
 
     # Some non-ZIP files pass the first test but will fail with a negative
     # seek (IOError) or another error.
@@ -57,8 +59,8 @@ class CompoundZIPParser(interface.FileObjectParser):
       zip_file.close()
     except (zipfile.BadZipfile, struct.error, zipfile.LargeZipFile):
       raise errors.UnableToParseFile(
-        '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-            self.NAME, display_name, 'Bad Zip file.'))
+          '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
+              self.NAME, display_name, 'Bad Zip file.'))
 
     self._file_object = file_object
 
@@ -84,7 +86,7 @@ class CompoundZIPParser(interface.FileObjectParser):
   def NameList(self):
     """Lists all files inside the archive with paths referring to the root
     of the archive.
-    
+
     Returns:
       list: a list of files in the archive, for example
           ['foo.txt', 'bar/quxx.doc']

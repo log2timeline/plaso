@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import re
-import struct
 import zipfile
 
 from xml.etree import ElementTree
@@ -14,7 +13,6 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.parsers import czip
 from plaso.parsers.czip_plugins import interface
@@ -81,18 +79,18 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
       ['[Content_Types].xml', '_rels/.rels', 'docProps/core.xml'])
 
   _PROPERTY_NAMES = {
-    'creator': 'author',
-    'lastModifiedBy': 'last_saved_by',
-    'Total_Time': 'total_edit_time',
-    'Pages': 'number_of_pages',
-    'CharactersWithSpaces': 'number_of_characters_with_spaces',
-    'Paragraphs': 'number_of_paragraphs',
-    'Characters': 'number_of_characters',
-    'Lines': 'number_of_lines',
-    'revision': 'revision_number',
-    'Words': 'number_of_words',
-    'Application': 'creating_app',
-    'Shared_Doc': 'shared',
+      'creator': 'author',
+      'lastModifiedBy': 'last_saved_by',
+      'Total_Time': 'total_edit_time',
+      'Pages': 'number_of_pages',
+      'CharactersWithSpaces': 'number_of_characters_with_spaces',
+      'Paragraphs': 'number_of_paragraphs',
+      'Characters': 'number_of_characters',
+      'Lines': 'number_of_lines',
+      'revision': 'revision_number',
+      'Words': 'number_of_words',
+      'Application': 'creating_app',
+      'Shared_Doc': 'shared',
   }
 
   def _GetPropertyValue(self, parser_mediator, properties, property_name):
@@ -246,7 +244,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
       xml_data = archive_proxy.Read('_rels/.rels')
       property_files = self._ParseRelationshipsXMLFile(xml_data)
     except (IndexError, IOError, KeyError, OverflowError, ValueError,
-        zipfile.BadZipfile) as exception:
+            zipfile.BadZipfile) as exception:
       parser_mediator.ProduceExtractionError((
           'Unable to parse relationships XML file: _rels/.rels with error: '
           '{0!s}').format(exception))
@@ -259,7 +257,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
         xml_data = archive_proxy.Read(path)
         properties = self._ParsePropertiesXMLFile(xml_data)
       except (IndexError, IOError, KeyError, OverflowError, ValueError,
-          zipfile.BadZipfile) as exception:
+              zipfile.BadZipfile) as exception:
         parser_mediator.ProduceExtractionError((
             'Unable to parse properties XML file: {0:s} with error: '
             '{1!s}').format(path, exception))

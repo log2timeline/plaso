@@ -24,6 +24,7 @@ class CompoundZIPPlugin(plugins.BasePlugin):
 
   NAME = 'czip'
 
+  # pylint: disable=arguments-differ
   def Process(self, parser_mediator, archive_proxy, **kwargs):
     """Determine if this is the correct plugin; if so proceed with processing.
 
