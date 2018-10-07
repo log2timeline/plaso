@@ -86,7 +86,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
          'URL prefix {2!s}.').format(self._host, self._port, self._url_prefix))
 
   def _CreateIndexIfNotExists(self, index_name, mappings):
-    """Creates an Elasticsearch index if it doesn't already exist.
+    """Creates an Elasticsearch index if it does not exist.
 
     Args:
       index_name (str): mame of the index.
@@ -295,7 +295,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
       url_prefix (str): URL prefix.
     """
     self._url_prefix = url_prefix
-    logger.debug('Elasticsearch url prefix: {0!s}')
+    logger.debug('Elasticsearch URL prefix: {0!s}')
 
   def WriteEventBody(self, event):
     """Writes an event to the output.
