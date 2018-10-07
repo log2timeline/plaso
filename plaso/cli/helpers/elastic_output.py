@@ -33,6 +33,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
   _DEFAULT_FLUSH_INTERVAL = 1000
   _DEFAULT_RAW_FIELDS = False
   _DEFAULT_ELASTIC_USER = None
+  _DEFAULT_URL_PREFIX = None
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -65,6 +66,10 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         '--elastic_user', dest='elastic_user', action='store',
         default=cls._DEFAULT_ELASTIC_USER, help=(
             'Username to use for Elasticsearch authentication.'))
+    argument_group.add_argument(
+        '--elastic_url_prefix', dest='elastic_url_prefix', type=str,
+        action='store', default=cls._DEFAULT_URL_PREFIX, help=(
+            'URL prefix for elastic search.'))
 
     ElasticSearchServerArgumentsHelper.AddArguments(argument_group)
 
@@ -97,6 +102,8 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         options, 'raw_fields', cls._DEFAULT_RAW_FIELDS)
     elastic_user = cls._ParseStringOption(
         options, 'elastic_user', default_value=cls._DEFAULT_ELASTIC_USER)
+    elastic_url_prefix = cls._ParseStringOption(
+        options, 'elastic_url_prefix', default_value=cls._DEFAULT_URL_PREFIX)
 
     if elastic_user is not None:
       elastic_password = getpass.getpass(
@@ -111,6 +118,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     output_module.SetRawFields(raw_fields)
     output_module.SetUsername(elastic_user)
     output_module.SetPassword(elastic_password)
+    output_module.SetURLPrefix(elastic_url_prefix)
 
 
 manager.ArgumentHelperManager.RegisterHelper(ElasticSearchOutputArgumentsHelper)

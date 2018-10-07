@@ -24,8 +24,9 @@ class ElasticSearchOutputArgumentsHelperTest(
   _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--index_name INDEX_NAME] [--doc_type DOCUMENT_TYPE]
                      [--flush_interval FLUSH_INTERVAL] [--raw_fields]
-                     [--elastic_user ELASTIC_USER] [--server HOSTNAME]
-                     [--port PORT]
+                     [--elastic_user ELASTIC_USER]
+                     [--elastic_url_prefix ELASTIC_URL_PREFIX]
+                     [--server HOSTNAME] [--port PORT]
 
 Test argument parser.
 
@@ -33,6 +34,8 @@ optional arguments:
   --doc_type DOCUMENT_TYPE
                         Name of the document type that will be used in
                         ElasticSearch.
+  --elastic_url_prefix ELASTIC_URL_PREFIX
+                        URL prefix for elastic search.
   --elastic_user ELASTIC_USER
                         Username to use for Elasticsearch authentication.
   --flush_interval FLUSH_INTERVAL
