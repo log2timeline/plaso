@@ -292,7 +292,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     """Sets the URL prefix.
 
     Args:
-      url_prefix (str): URL prefix
+      url_prefix (str): URL prefix.
     """
     self._url_prefix = url_prefix
     logger.debug('Elasticsearch url prefix: {0!s}')
