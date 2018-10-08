@@ -65,30 +65,35 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._password = None
     self._port = None
     self._username = None
+    self._use_ssl = None
     self._ca_certs = None
+    self._url_prefix = None
 
   def _Connect(self):
     """Connects to an Elasticsearch server."""
-    if self._port is not None:
-      elastic_hosts = [{'host': self._host, 'port': self._port}]
-    else:
-      elastic_hosts = [self._host]
+    elastic_host = {'host': self._host, 'port': self._port}
+
+    if self._url_prefix:
+      elastic_host['url_prefix'] = self._url_prefix
 
     elastic_http_auth = None
     if self._username is not None:
       elastic_http_auth = (self._username, self._password)
 
     self._client = elasticsearch.Elasticsearch(
-        elastic_hosts,
+        [elastic_host],
         http_auth=elastic_http_auth,
+        use_ssl=self._use_ssl,
         ca_certs=self._ca_certs
     )
 
-    logger.debug('Connected to Elasticsearch server: {0:s} port: {1:d}.'.format(
-        self._host, self._port or 9200))
+    logger.debug(
+        ('Connected to Elasticsearch server: {0:s} port: {1:d}'
+         'URL prefix {2!s}.').format(self._host, self._port, self._url_prefix))
+
 
   def _CreateIndexIfNotExists(self, index_name, mappings):
-    """Creates an Elasticsearch index if it not already exists.
+    """Creates an Elasticsearch index if it does not exist.
 
     Args:
       index_name (str): mame of the index.
@@ -280,7 +285,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._host = server
     self._port = port
     logger.debug('Elasticsearch server: {0!s} port: {1:d}'.format(
-        server, port or 9200))
+        server, port))
 
   def SetUsername(self, username):
     """Sets the username.
@@ -291,6 +296,15 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._username = username
     logger.debug('Elasticsearch username: {0!s}'.format(username))
 
+  def SetUseSSL(self, use_ssl):
+    """Sets the use of ssl.
+
+    Args:
+      use_ssl (bool): enforces use of ssl.
+    """
+    self._use_ssl = use_ssl
+    logger.debug('Elasticsearch use_ssl: {0!s}'.format(use_ssl))
+
   def SetCACerts(self, ca_certs):
     """Sets the certificates.
 
@@ -299,6 +313,16 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     """
     self._ca_certs = ca_certs
     logger.debug('Elasticsearch ca_certs: {0!s}'.format(ca_certs))
+
+  def SetURLPrefix(self, url_prefix):
+    """Sets the URL prefix.
+
+    Args:
+      url_prefix (str): URL prefix.
+    """
+    self._url_prefix = url_prefix
+    logger.debug('Elasticsearch URL prefix: {0!s}')
+
 
   def WriteEventBody(self, event):
     """Writes an event to the output.
@@ -314,10 +338,7 @@ class SharedElasticsearch5OutputModule(SharedElasticsearchOutputModule):
 
   def _Connect(self):
     """Connects to an Elasticsearch server."""
-    if self._port is not None:
-      elastic_hosts = [{'host': self._host, 'port': self._port}]
-    else:
-      elastic_hosts = [self._host]
+    elastic_hosts = [{'host': self._host, 'port': self._port}]
 
     elastic_http_auth = None
     if self._username is not None:
@@ -326,6 +347,7 @@ class SharedElasticsearch5OutputModule(SharedElasticsearchOutputModule):
     self._client = elasticsearch5.Elasticsearch(
         elastic_hosts,
         http_auth=elastic_http_auth,
+        use_ssl=self._use_ssl,
         ca_certs=self._ca_certs
     )
 

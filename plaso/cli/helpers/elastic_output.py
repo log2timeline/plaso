@@ -33,7 +33,9 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
   _DEFAULT_FLUSH_INTERVAL = 1000
   _DEFAULT_RAW_FIELDS = False
   _DEFAULT_ELASTIC_USER = None
+  _DEFAULT_USE_SSL = False
   _DEFAULT_CA_CERTS = None
+  _DEFAULT_URL_PREFIX = None
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -67,9 +69,17 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         default=cls._DEFAULT_ELASTIC_USER, help=(
             'Username to use for Elasticsearch authentication.'))
     argument_group.add_argument(
+        '--use_ssl', dest='use_ssl', action='store',
+        default=cls._DEFAULT_USE_SSL, help=(
+            'Enforces use of ssl.'))
+    argument_group.add_argument(
         '--ca_certs', dest='ca_certs', action='store',
         default=cls._DEFAULT_CA_CERTS, help=(
             'Path to a file containing a list of root certificates.'))
+    argument_group.add_argument(
+        '--elastic_url_prefix', dest='elastic_url_prefix', type=str,
+        action='store', default=cls._DEFAULT_URL_PREFIX, help=(
+            'URL prefix for elastic search.'))
 
     ElasticSearchServerArgumentsHelper.AddArguments(argument_group)
 
@@ -102,15 +112,18 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         options, 'raw_fields', cls._DEFAULT_RAW_FIELDS)
     elastic_user = cls._ParseStringOption(
         options, 'elastic_user', default_value=cls._DEFAULT_ELASTIC_USER)
+    use_ssl = cls._ParseStringOption(
+        options, 'use_ssl', default_value=cls._DEFAULT_USE_SSL)
+    ca_certs = cls._ParseStringOption(
+        options, 'ca_certs', default_value=cls._DEFAULT_CA_CERTS)
+    elastic_url_prefix = cls._ParseStringOption(
+        options, 'elastic_url_prefix', default_value=cls._DEFAULT_URL_PREFIX)
 
     if elastic_user is not None:
       elastic_password = getpass.getpass(
           'Enter your Elasticsearch password: ')
     else:
       elastic_password = None
-
-    ca_certs = cls._ParseStringOption(
-        options, 'ca_certs', default_value=cls._DEFAULT_CA_CERTS)
 
     ElasticSearchServerArgumentsHelper.ParseOptions(options, output_module)
     output_module.SetIndexName(index_name)
@@ -119,7 +132,9 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     output_module.SetRawFields(raw_fields)
     output_module.SetUsername(elastic_user)
     output_module.SetPassword(elastic_password)
+    output_module.SetUseSSL(use_ssl)
     output_module.SetCACerts(ca_certs)
+    output_module.SetURLPrefix(elastic_url_prefix)
 
 
 manager.ArgumentHelperManager.RegisterHelper(ElasticSearchOutputArgumentsHelper)

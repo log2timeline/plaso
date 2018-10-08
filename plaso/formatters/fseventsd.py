@@ -23,11 +23,9 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
   SOURCE_SHORT = 'FSEVENT'
 
   # pylint: disable=line-too-long
-  # Flag values are similar, but not identical to those described in the Apple
-  # documentation [1]. For example, the value of the IsDir flag is 0x00020000
-  # but the value 0x00000001 corresponds to a change to a directory item in
-  # an fseventsd file, by observation.
-  # [1] https://developer.apple.com/documentation/coreservices/core_services_enumerations/1455361-fseventstreameventflags
+  # The include header sys/fsevents.h defines various FSE constants, e.g.
+  # #define FSE_CREATE_FILE          0
+  # The flag values correspond to: FLAG = 1 << CONSTANT
 
   _FLAG_VALUES = {
       0x00000000: 'None',
