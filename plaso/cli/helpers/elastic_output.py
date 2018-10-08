@@ -18,7 +18,7 @@ class ElasticSearchServerArgumentsHelper(server_config.ServerArgumentsHelper):
   """Elastic Search server CLI arguments helper."""
 
   _DEFAULT_SERVER = '127.0.0.1'
-  _DEFAULT_PORT = None
+  _DEFAULT_PORT = 9200
 
 
 class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
