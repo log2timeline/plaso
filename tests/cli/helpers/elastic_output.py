@@ -24,15 +24,17 @@ class ElasticSearchOutputArgumentsHelperTest(
   _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--index_name INDEX_NAME] [--doc_type DOCUMENT_TYPE]
                      [--flush_interval FLUSH_INTERVAL] [--raw_fields]
-                     [--elastic_user ELASTIC_USER] [--use_ssl USE_SSL]
-                     [--ca_certs CA_CERTS]
+                     [--elastic_user ELASTIC_USER] [--use_ssl]
+                     [--ca_certificates_file_path CA_CERTIFICATES_FILE_PATH]
                      [--elastic_url_prefix ELASTIC_URL_PREFIX]
                      [--server HOSTNAME] [--port PORT]
 
 Test argument parser.
 
 optional arguments:
-  --ca_certs CA_CERTS   Path to a file containing a list of root certificates.
+  --ca_certificates_file_path CA_CERTIFICATES_FILE_PATH
+                        Path to a file containing a list of root certificates
+                        to trust.
   --doc_type DOCUMENT_TYPE
                         Name of the document type that will be used in
                         ElasticSearch.
@@ -49,7 +51,7 @@ optional arguments:
   --raw_fields          Export string fields that will not be analyzed by
                         Lucene.
   --server HOSTNAME     The hostname or server IP address of the server.
-  --use_ssl USE_SSL     Enforces use of ssl.
+  --use_ssl             Enforces use of ssl.
 """
 
   def testAddArguments(self):

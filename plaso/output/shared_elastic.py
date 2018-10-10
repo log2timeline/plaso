@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import os
 import logging
 
 from dfvfs.serializer.json_serializer import JsonPathSpecSerializer
@@ -90,7 +91,6 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     logger.debug(
         ('Connected to Elasticsearch server: {0:s} port: {1:d}'
          'URL prefix {2!s}.').format(self._host, self._port, self._url_prefix))
-
 
   def _CreateIndexIfNotExists(self, index_name, mappings):
     """Creates an Elasticsearch index if it does not exist.
@@ -305,14 +305,25 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._use_ssl = use_ssl
     logger.debug('Elasticsearch use_ssl: {0!s}'.format(use_ssl))
 
-  def SetCACerts(self, ca_certs):
-    """Sets the certificates.
+  def SetCACertificatesPath(self, ca_certificates_path):
+    """Sets the path to the CA certificates.
 
     Args:
-      ca_certs (str): file containing a list of root certificates.
+      ca_certificates_path (str): path to file containing a list of root
+        certificates to trust.
+
+    Raises:
+      BadConfigOption: if the CA certificates file does not exist.
     """
-    self._ca_certs = ca_certs
-    logger.debug('Elasticsearch ca_certs: {0!s}'.format(ca_certs))
+    if not ca_certificates_path:
+      return
+
+    if not os.path.exists(ca_certificates_path):
+      raise errors.BadConfigOption(
+          'No such certificate file: {0:s}.'.format(ca_certificates_path))
+
+    self._ca_certs = ca_certificates_path
+    logger.debug('Elasticsearch ca_certs: {0!s}'.format(ca_certificates_path))
 
   def SetURLPrefix(self, url_prefix):
     """Sets the URL prefix.
