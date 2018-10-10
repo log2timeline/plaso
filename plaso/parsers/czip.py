@@ -88,7 +88,7 @@ class CompoundZIPParser(interface.FileObjectParser):
     of the archive.
 
     Returns:
-      list: a list of files in the archive, for example
+      list[str]: paths of files in the archive, for example
           ['foo.txt', 'bar/quxx.doc']
     """
     with zipfile.ZipFile(self._file_object, 'r') as zip_file:

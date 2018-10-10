@@ -13,7 +13,7 @@ from plaso.parsers import logger
 from plaso.parsers import plugins
 
 class CompoundZIPPlugin(plugins.BasePlugin):
-  """This is and "abstract" class from which plugins should be based."""
+  """This is an "abstract" class from which plugins should be based."""
 
   # REQUIRED_ITEMS is a list of items required by a plugin.
   # This is used to understand whether a plugin is suited for a given compound
@@ -25,7 +25,7 @@ class CompoundZIPPlugin(plugins.BasePlugin):
   NAME = 'czip'
 
   # pylint: disable=arguments-differ
-  def Process(self, parser_mediator, archive_proxy, **kwargs):
+  def Process(self, parser_mediator, archive_proxy):
     """Determine if this is the correct plugin; if so proceed with processing.
 
     Process() checks if the current czip file being processed is a match for
@@ -34,8 +34,16 @@ class CompoundZIPPlugin(plugins.BasePlugin):
 
     This method is intended to be extended by actual plugins with archive
     specific logic.
-    """
 
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      archive_proxy (parsers.CompoundZIPParser): a slim proxy giving simple
+          access to archive files.
+
+    Raises:
+      UnableToParseFile: when the file cannot be parsed.
+    """
     if not set(archive_proxy.NameList()).issuperset(self.REQUIRED_ITEMS):
       raise errors.WrongCompoundZIPPlugin(self.NAME)
 

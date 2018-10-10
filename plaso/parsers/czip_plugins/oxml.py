@@ -224,7 +224,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
           'unsupported {0:s}: {1:s} with error: {2!s}'.format(
               error_description, time_string, exception))
 
-  def Process(self, parser_mediator, archive_proxy, **kwargs):
+  def Process(self, parser_mediator, archive_proxy):
     """Parses an OXML file-like object.
 
     Args:
@@ -236,9 +236,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-
-    # First of all, call upper processing logic
-    super(OpenXMLPlugin, self).Process(parser_mediator, archive_proxy, **kwargs)
+    super(OpenXMLPlugin, self).Process(parser_mediator, archive_proxy)
 
     try:
       xml_data = archive_proxy.Read('_rels/.rels')
@@ -316,5 +314,6 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
     self._ProduceEvent(
         parser_mediator, event_data, metadata, 'last_printed',
         definitions.TIME_DESCRIPTION_LAST_PRINTED, 'last printed time')
+
 
 czip.CompoundZIPParser.RegisterPlugin(OpenXMLPlugin)
