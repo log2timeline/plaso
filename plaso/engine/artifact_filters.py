@@ -2,6 +2,7 @@
 """Helper to create filters based on forensic artifact definitions."""
 
 from __future__ import unicode_literals
+from collections import defaultdict
 
 from artifacts import definitions as artifact_types
 
@@ -43,6 +44,7 @@ class ArtifactDefinitionsFilterHelper(object):
     self._artifacts = artifact_filters
     self._artifacts_registry = artifacts_registry
     self._knowledge_base = knowledge_base
+    self._find_specs_per_source_type = defaultdict(list)
 
   @staticmethod
   def CheckKeyCompatibility(key_path):
@@ -73,10 +75,6 @@ class ArtifactDefinitionsFilterHelper(object):
       environment_variables (Optional[list[EnvironmentVariableArtifact]]):
           environment variables.
     """
-    find_specs_per_source_type = {
-        artifact_types.TYPE_INDICATOR_FILE: [],
-        artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY: []}
-
     for name in self._artifacts:
       definition = self._artifacts_registry.GetDefinitionByName(name)
       if not definition:
@@ -90,8 +88,9 @@ class ArtifactDefinitionsFilterHelper(object):
             find_specs = self.BuildFindSpecsFromFileArtifact(
                 path_entry, source.separator, environment_variables,
                 self._knowledge_base.user_accounts)
-            find_specs_per_source_type[
-                artifact_types.TYPE_INDICATOR_FILE].extend(find_specs)
+            artifact_group = self._find_specs_per_source_type[
+                artifact_types.TYPE_INDICATOR_FILE]
+            artifact_group.extend(find_specs)
 
         elif (source.type_indicator ==
               artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY):
@@ -100,9 +99,9 @@ class ArtifactDefinitionsFilterHelper(object):
           for key_path in set(source.keys):
             if self.CheckKeyCompatibility(key_path):
               find_specs = self.BuildFindSpecsFromRegistryArtifact(key_path)
-              find_specs_per_source_type[
-                  artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY].extend(
-                      find_specs)
+              artifact_group = self._find_specs_per_source_type[
+                  artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY]
+              artifact_group.extend(find_specs)
 
         elif (source.type_indicator ==
               artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_VALUE):
@@ -118,9 +117,16 @@ class ArtifactDefinitionsFilterHelper(object):
               key_value['key'] for key_value in source.key_value_pairs]):
             if self.CheckKeyCompatibility(key_path):
               find_specs = self.BuildFindSpecsFromRegistryArtifact(key_path)
-              find_specs_per_source_type[
-                  artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY].extend(
-                      find_specs)
+              artifact_group = self._find_specs_per_source_type[
+                  artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY]
+              artifact_group.extend(find_specs)
+
+        elif (source.type_indicator ==
+              artifact_types.TYPE_INDICATOR_ARTIFACT_GROUP):
+          self._artifacts.remove(name)
+          for name_entry in set(source.names):
+            self._artifacts.append(name_entry)
+          self.BuildFindSpecs(environment_variables=environment_variables)
 
         else:
           logger.warning(
@@ -128,7 +134,7 @@ class ArtifactDefinitionsFilterHelper(object):
                   source.type_indicator))
 
     self._knowledge_base.SetValue(
-        self.KNOWLEDGE_BASE_VALUE, find_specs_per_source_type)
+        self.KNOWLEDGE_BASE_VALUE, self._find_specs_per_source_type)
 
   def BuildFindSpecsFromFileArtifact(
       self, source_path, path_separator, environment_variables, user_accounts):
