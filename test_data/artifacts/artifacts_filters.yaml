@@ -1,5 +1,16 @@
 # Artifact definitions.
 
+name: TestGroupExport
+doc: Test Group
+sources:
+- type: ARTIFACT_GROUP
+  attributes:
+    names:
+     - 'TestFiles3'
+     - 'TestFiles4'
+labels: [System]
+supported_os: [Windows]
+---
 name: TestFiles
 doc: Test Doc
 sources:
@@ -22,6 +33,30 @@ sources:
       - '\does_not_exist\some_file_*.txt'
       - '\globbed\test\path\**\'
       - 'failing'
+    separator: '\'
+labels: [System]
+supported_os: [Windows]
+---
+name: TestFiles3
+doc: Test Doc3
+sources:
+- type: FILE
+  attributes:
+    paths:
+      - '\a_directory\'
+      - '\a_directory\a_file'
+    separator: '\'
+labels: [System]
+supported_os: [Windows]
+---
+name: TestFiles4
+doc: Test Doc4
+sources:
+- type: FILE
+  attributes:
+    paths:
+      - '\a_directory\another_file'
+      - '\passwords.txt'
     separator: '\'
 labels: [System]
 supported_os: [Windows]
