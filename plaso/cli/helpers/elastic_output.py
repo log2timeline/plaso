@@ -33,6 +33,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
   _DEFAULT_FLUSH_INTERVAL = 1000
   _DEFAULT_RAW_FIELDS = False
   _DEFAULT_ELASTIC_USER = None
+  _DEFAULT_CA_CERTS = None
   _DEFAULT_URL_PREFIX = None
 
   @classmethod
@@ -66,6 +67,13 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         '--elastic_user', dest='elastic_user', action='store',
         default=cls._DEFAULT_ELASTIC_USER, help=(
             'Username to use for Elasticsearch authentication.'))
+    argument_group.add_argument(
+        '--use_ssl', dest='use_ssl', action='store_true',
+        help='Enforces use of ssl.')
+    argument_group.add_argument(
+        '--ca_certificates_file_path', dest='ca_certificates_file_path',
+        action='store', type=str, default=cls._DEFAULT_CA_CERTS, help=(
+            'Path to a file containing a list of root certificates to trust.'))
     argument_group.add_argument(
         '--elastic_url_prefix', dest='elastic_url_prefix', type=str,
         action='store', default=cls._DEFAULT_URL_PREFIX, help=(
@@ -102,6 +110,12 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         options, 'raw_fields', cls._DEFAULT_RAW_FIELDS)
     elastic_user = cls._ParseStringOption(
         options, 'elastic_user', default_value=cls._DEFAULT_ELASTIC_USER)
+
+    use_ssl = getattr(options, 'use_ssl', False)
+
+    ca_certificates_path = cls._ParseStringOption(
+        options, 'ca_certificates_file_path',
+        default_value=cls._DEFAULT_CA_CERTS)
     elastic_url_prefix = cls._ParseStringOption(
         options, 'elastic_url_prefix', default_value=cls._DEFAULT_URL_PREFIX)
 
@@ -118,6 +132,8 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     output_module.SetRawFields(raw_fields)
     output_module.SetUsername(elastic_user)
     output_module.SetPassword(elastic_password)
+    output_module.SetUseSSL(use_ssl)
+    output_module.SetCACertificatesPath(ca_certificates_path)
     output_module.SetURLPrefix(elastic_url_prefix)
 
 

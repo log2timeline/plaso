@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import os
 import logging
 
 from dfvfs.serializer.json_serializer import JsonPathSpecSerializer
@@ -65,6 +66,8 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._password = None
     self._port = None
     self._username = None
+    self._use_ssl = None
+    self._ca_certs = None
     self._url_prefix = None
 
   def _Connect(self):
@@ -79,7 +82,11 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
       elastic_http_auth = (self._username, self._password)
 
     self._client = elasticsearch.Elasticsearch(
-        [elastic_host], http_auth=elastic_http_auth)
+        [elastic_host],
+        http_auth=elastic_http_auth,
+        use_ssl=self._use_ssl,
+        ca_certs=self._ca_certs
+    )
 
     logger.debug(
         ('Connected to Elasticsearch server: {0:s} port: {1:d}'
@@ -277,7 +284,8 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     """
     self._host = server
     self._port = port
-    logger.debug('Elasticsearch server: {0!s} port: {1:d}'.format(server, port))
+    logger.debug('Elasticsearch server: {0!s} port: {1:d}'.format(
+        server, port))
 
   def SetUsername(self, username):
     """Sets the username.
@@ -288,6 +296,35 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._username = username
     logger.debug('Elasticsearch username: {0!s}'.format(username))
 
+  def SetUseSSL(self, use_ssl):
+    """Sets the use of ssl.
+
+    Args:
+      use_ssl (bool): enforces use of ssl.
+    """
+    self._use_ssl = use_ssl
+    logger.debug('Elasticsearch use_ssl: {0!s}'.format(use_ssl))
+
+  def SetCACertificatesPath(self, ca_certificates_path):
+    """Sets the path to the CA certificates.
+
+    Args:
+      ca_certificates_path (str): path to file containing a list of root
+        certificates to trust.
+
+    Raises:
+      BadConfigOption: if the CA certificates file does not exist.
+    """
+    if not ca_certificates_path:
+      return
+
+    if not os.path.exists(ca_certificates_path):
+      raise errors.BadConfigOption(
+          'No such certificate file: {0:s}.'.format(ca_certificates_path))
+
+    self._ca_certs = ca_certificates_path
+    logger.debug('Elasticsearch ca_certs: {0!s}'.format(ca_certificates_path))
+
   def SetURLPrefix(self, url_prefix):
     """Sets the URL prefix.
 
@@ -296,6 +333,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     """
     self._url_prefix = url_prefix
     logger.debug('Elasticsearch URL prefix: {0!s}')
+
 
   def WriteEventBody(self, event):
     """Writes an event to the output.
@@ -318,7 +356,11 @@ class SharedElasticsearch5OutputModule(SharedElasticsearchOutputModule):
       elastic_http_auth = (self._username, self._password)
 
     self._client = elasticsearch5.Elasticsearch(
-        elastic_hosts, http_auth=elastic_http_auth)
+        elastic_hosts,
+        http_auth=elastic_http_auth,
+        use_ssl=self._use_ssl,
+        ca_certs=self._ca_certs
+    )
 
     logger.debug('Connected to Elasticsearch server: {0:s} port: {1:d}.'.format(
         self._host, self._port))
