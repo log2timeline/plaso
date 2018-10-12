@@ -30,10 +30,6 @@ class CompoundZIPParser(interface.FileObjectParser):
 
   _plugin_classes = {}
 
-  def __init__(self):
-    super(CompoundZIPParser, self).__init__()
-    self._file_object = None
-
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a compound ZIP file-like object.
 
@@ -55,44 +51,22 @@ class CompoundZIPParser(interface.FileObjectParser):
     # Some non-ZIP files pass the first test but will fail with a negative
     # seek (IOError) or another error.
     try:
-      zip_file = zipfile.ZipFile(file_object, 'r')
+      zip_file = zipfile.ZipFile(file_object, 'r', allowZip64=True)
       zip_file.close()
     except (zipfile.BadZipfile, struct.error, zipfile.LargeZipFile):
       raise errors.UnableToParseFile(
           '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
               self.NAME, display_name, 'Bad Zip file.'))
 
-    self._file_object = file_object
-
-    for plugin in self._plugins:
-      try:
-        plugin.UpdateChainAndProcess(parser_mediator, archive_proxy=self)
-      except errors.WrongCompoundZIPPlugin as exception:
-        logger.debug('[{0:s}] wrong plugin: {1!s}'.format(
-            self.NAME, exception))
-
-  def Read(self, file_name):
-    """Reads a given file from the compound ZIP archive.
-
-    Args:
-      file_name (string): file to read
-
-    Returns:
-      string: the content of the file
-    """
-    with zipfile.ZipFile(self._file_object, 'r') as zip_file:
-      return zip_file.read(file_name)
-
-  def NameList(self):
-    """Lists all files inside the archive with paths referring to the root
-    of the archive.
-
-    Returns:
-      list[str]: paths of files in the archive, for example
-          ['foo.txt', 'bar/quxx.doc']
-    """
-    with zipfile.ZipFile(self._file_object, 'r') as zip_file:
-      return zip_file.namelist()
+    with zipfile.ZipFile(file_object, 'r', allowZip64=True) as zip_file:
+      name_list = zip_file.namelist()
+      for plugin in self._plugins:
+        try:
+          plugin.UpdateChainAndProcess(
+              parser_mediator, zip_file=zip_file, name_list=name_list)
+        except errors.WrongCompoundZIPPlugin as exception:
+          logger.debug('[{0:s}] wrong plugin: {1!s}'.format(
+              self.NAME, exception))
 
 
 manager.ParsersManager.RegisterParser(CompoundZIPParser)

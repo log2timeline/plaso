@@ -75,7 +75,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
   NAME = 'czip_oxml'
   DESCRIPTION = 'Parser for OpenXML (OXML) files.'
 
-  REQUIRED_ITEMS = frozenset(
+  REQUIRED_PATHS = frozenset(
       ['[Content_Types].xml', '_rels/.rels', 'docProps/core.xml'])
 
   _PROPERTY_NAMES = {
@@ -224,22 +224,18 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
           'unsupported {0:s}: {1:s} with error: {2!s}'.format(
               error_description, time_string, exception))
 
-  def Process(self, parser_mediator, archive_proxy):
+  def InspectArchive(self, parser_mediator):
     """Parses an OXML file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      archive_proxy (parsers.CompoundZIPParser): a slim proxy giving simple
-          access to archive files.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    super(OpenXMLPlugin, self).Process(parser_mediator, archive_proxy)
-
     try:
-      xml_data = archive_proxy.Read('_rels/.rels')
+      xml_data = self._zip_file.read('_rels/.rels')
       property_files = self._ParseRelationshipsXMLFile(xml_data)
     except (IndexError, IOError, KeyError, OverflowError, ValueError,
             zipfile.BadZipfile) as exception:
@@ -252,7 +248,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
 
     for path in property_files:
       try:
-        xml_data = archive_proxy.Read(path)
+        xml_data = self._zip_file.read(path)
         properties = self._ParsePropertiesXMLFile(xml_data)
       except (IndexError, IOError, KeyError, OverflowError, ValueError,
               zipfile.BadZipfile) as exception:
