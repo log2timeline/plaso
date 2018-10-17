@@ -456,7 +456,7 @@ class FileObjectInputReader(CLIInputReader):
     encoded_string = self._file_object.readline()
 
     try:
-      string = encoded_string.decode(self._encoding, errors=self._errors)
+      string = codecs.decode(encoded_string, self._encoding, self._errors)
     except UnicodeDecodeError:
       if self._errors == 'strict':
         logger.error(
@@ -466,7 +466,7 @@ class FileObjectInputReader(CLIInputReader):
             '"\\ufffd".')
         self._errors = 'replace'
 
-      string = encoded_string.decode(self._encoding, errors=self._errors)
+      string = codecs.decode(encoded_string, self._encoding, self._errors)
 
     return string
 
