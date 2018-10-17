@@ -7,6 +7,7 @@ import os
 import sys
 
 from plaso.cli import tools
+from plaso.cli import logger
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
 from plaso.lib import errors
@@ -93,6 +94,8 @@ class DataLocationArgumentsHelper(interface.ArgumentsHelper):
     if not data_location:
       raise errors.BadConfigOption(
           'Unable to determine location of data files.')
+
+    logger.info('Determined data location: {0:s}'.format(data_location))
 
     setattr(configuration_object, '_data_location', data_location)
 
