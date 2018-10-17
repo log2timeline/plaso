@@ -10,6 +10,7 @@ from artifacts import errors as artifacts_errors
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
 
+from plaso.cli import logger
 from plaso.cli import tools
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
@@ -106,8 +107,15 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
       raise errors.BadConfigOption(
           'No such artifacts filter file: {0:s}.'.format(custom_artifacts_path))
 
+    if custom_artifacts_path:
+      logger.info(
+          'Custom artifact filter file: {0:s}'.format(custom_artifacts_path))
+
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
+
+    logger.info(
+        'Determined artifact definitions path: {0:s}'.format(artifacts_path))
 
     try:
       registry.ReadFromDirectory(reader, artifacts_path)
