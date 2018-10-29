@@ -112,11 +112,11 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     """Tests the _GetParsersFromPresetCategory function."""
     expected_parser_names = [
         'bencode', 'binary_cookies', 'chrome_cache', 'chrome_preferences',
-        'esedb', 'esedb/msie_webcache', 'filestat', 'firefox_cache',
-        'gdrive_synclog', 'java_idx', 'lnk', 'mcafee_protection', 'msiecf',
-        'olecf', 'openxml', 'opera_global', 'opera_typed_history', 'pe',
-        'plist/safari_history', 'prefetch', 'sccm', 'skydrive_log',
-        'skydrive_log_old', 'sqlite/chrome_27_history',
+        'czip/oxml', 'esedb', 'esedb/msie_webcache', 'filestat',
+        'firefox_cache', 'gdrive_synclog', 'java_idx', 'lnk',
+        'mcafee_protection', 'msiecf', 'olecf', 'opera_global',
+        'opera_typed_history', 'pe', 'plist/safari_history', 'prefetch',
+        'sccm', 'skydrive_log', 'skydrive_log_old', 'sqlite/chrome_27_history',
         'sqlite/chrome_8_history', 'sqlite/chrome_autofill',
         'sqlite/chrome_cookies', 'sqlite/chrome_extension_activity',
         'sqlite/firefox_cookies', 'sqlite/firefox_downloads',
@@ -337,8 +337,8 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     # Test with a preset name.
     expected_parser_names = [
         'bencode', 'binary_cookies', 'chrome_cache', 'chrome_preferences',
-        'esedb', 'filestat', 'firefox_cache', 'gdrive_synclog', 'java_idx',
-        'lnk', 'mcafee_protection', 'msiecf', 'olecf', 'openxml',
+        'czip', 'esedb', 'filestat', 'firefox_cache', 'gdrive_synclog',
+        'java_idx', 'lnk', 'mcafee_protection', 'msiecf', 'olecf',
         'opera_global', 'opera_typed_history', 'pe', 'plist', 'prefetch',
         'sccm', 'skydrive_log', 'skydrive_log_old', 'sqlite',
         'symantec_scanlog', 'usnjrnl', 'winfirewall', 'winjob', 'winreg']

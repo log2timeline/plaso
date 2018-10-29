@@ -10,7 +10,6 @@ from plaso.formatters import oxml as _  # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.parsers import czip
 from plaso.parsers.czip_plugins import oxml
-from plaso.parsers import oxml as oxml_parser
 
 from tests import test_lib as shared_test_lib
 from tests.parsers.czip_plugins import test_lib
@@ -110,17 +109,10 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
   def testParseFileObject(self):
     """Tests the ParseFileObject function."""
     parser = czip.CompoundZIPParser()
-    original_parser = oxml_parser.OpenXMLParser()
     storage_writer = self._ParseFile(['Document.docx'], parser)
-    storage_writer2 = self._ParseFile(['Document.docx'], original_parser)
 
     self.assertEqual(storage_writer.number_of_errors, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
-
-    self.assertEqual(
-        storage_writer.number_of_errors, storage_writer2.number_of_errors)
-    self.assertEqual(
-        storage_writer.number_of_events, storage_writer2.number_of_events)
 
     events = list(storage_writer.GetEvents())
 

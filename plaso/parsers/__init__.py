@@ -38,7 +38,6 @@ from plaso.parsers import msiecf
 from plaso.parsers import ntfs
 from plaso.parsers import olecf
 from plaso.parsers import opera
-from plaso.parsers import oxml
 from plaso.parsers import pe
 from plaso.parsers import plist
 from plaso.parsers import popcontest

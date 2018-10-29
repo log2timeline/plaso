@@ -224,18 +224,21 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
           'unsupported {0:s}: {1:s} with error: {2!s}'.format(
               error_description, time_string, exception))
 
-  def InspectArchive(self, parser_mediator):
+  def InspectZipFile(self, parser_mediator, zip_file):
     """Parses an OXML file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
+      zip_file (zipfile.ZipFile): the zip file containing OXML content. It is
+          not be closed in this method, but will be closed by the parser logic
+           in czip.py.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
     try:
-      xml_data = self._zip_file.read('_rels/.rels')
+      xml_data = zip_file.read('_rels/.rels')
       property_files = self._ParseRelationshipsXMLFile(xml_data)
     except (IndexError, IOError, KeyError, OverflowError, ValueError,
             zipfile.BadZipfile) as exception:
@@ -248,7 +251,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
 
     for path in property_files:
       try:
-        xml_data = self._zip_file.read(path)
+        xml_data = zip_file.read(path)
         properties = self._ParsePropertiesXMLFile(xml_data)
       except (IndexError, IOError, KeyError, OverflowError, ValueError,
               zipfile.BadZipfile) as exception:
