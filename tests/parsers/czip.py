@@ -21,7 +21,7 @@ class CompoundZIPTest(test_lib.ParserTestCase):
   def testEnablePlugins(self):
     """Tests the EnablePlugins function."""
     parser = czip.CompoundZIPParser()
-    parser.EnablePlugins(['czip_oxml'])
+    parser.EnablePlugins(['oxml'])
 
     self.assertIsNotNone(parser)
     self.assertIsNone(parser._default_plugin)
