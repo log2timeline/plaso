@@ -72,7 +72,7 @@ class OpenXMLEventData(events.EventData):
 class OpenXMLPlugin(interface.CompoundZIPPlugin):
   """Parse metadata from OXML files."""
 
-  NAME = 'czip_oxml'
+  NAME = 'oxml'
   DESCRIPTION = 'Parser for OpenXML (OXML) files.'
 
   REQUIRED_PATHS = frozenset(
