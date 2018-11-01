@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-"""This file contains a parser for OXML files (i.e. MS Office 2007+)."""
+"""Compound ZIP parser plugin for OpenXML files."""
 
 from __future__ import unicode_literals
 
 import re
-import struct
 import zipfile
 
 from xml.etree import ElementTree
@@ -14,11 +13,9 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.lib import errors
 from plaso.lib import py2to3
-from plaso.parsers import interface
-from plaso.parsers import manager
-
+from plaso.parsers import czip
+from plaso.parsers.czip_plugins import interface
 
 class OpenXMLEventData(events.EventData):
   """OXML event data.
@@ -72,12 +69,14 @@ class OpenXMLEventData(events.EventData):
     self.template = None
     self.total_time = None
 
-
-class OpenXMLParser(interface.FileObjectParser):
+class OpenXMLPlugin(interface.CompoundZIPPlugin):
   """Parse metadata from OXML files."""
 
-  NAME = 'openxml'
+  NAME = 'oxml'
   DESCRIPTION = 'Parser for OpenXML (OXML) files.'
+
+  REQUIRED_PATHS = frozenset(
+      ['[Content_Types].xml', '_rels/.rels', 'docProps/core.xml'])
 
   _PROPERTY_NAMES = {
       'creator': 'author',
@@ -93,9 +92,6 @@ class OpenXMLParser(interface.FileObjectParser):
       'Application': 'creating_app',
       'Shared_Doc': 'shared',
   }
-
-  _FILES_REQUIRED = frozenset([
-      '[Content_Types].xml', '_rels/.rels', 'docProps/core.xml'])
 
   def _GetPropertyValue(self, parser_mediator, properties, property_name):
     """Retrieves a property value.
@@ -228,47 +224,24 @@ class OpenXMLParser(interface.FileObjectParser):
           'unsupported {0:s}: {1:s} with error: {2!s}'.format(
               error_description, time_string, exception))
 
-  # pylint: disable=arguments-differ
-  def ParseFileObject(self, parser_mediator, file_object):
+  def InspectZipFile(self, parser_mediator, zip_file):
     """Parses an OXML file-like object.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      file_object (dfvfs.FileIO): a file-like object.
+      zip_file (zipfile.ZipFile): the zip file containing OXML content. It is
+          not be closed in this method, but will be closed by the parser logic
+           in czip.py.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    display_name = parser_mediator.GetDisplayName()
-
-    if not zipfile.is_zipfile(file_object):
-      raise errors.UnableToParseFile(
-          '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, display_name, 'Not a Zip file.'))
-
-    # Some non-ZIP files pass the first test but will fail with a negative
-    # seek (IOError) or another error.
-    try:
-      zip_file = zipfile.ZipFile(file_object, 'r')
-    except (zipfile.BadZipfile, struct.error, zipfile.LargeZipFile):
-      raise errors.UnableToParseFile(
-          '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, display_name, 'Bad Zip file.'))
-
-    zip_name_list = set(zip_file.namelist())
-
-    if not self._FILES_REQUIRED.issubset(zip_name_list):
-      raise errors.UnableToParseFile(
-          '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, display_name, 'OXML element(s) missing.'))
-
     try:
       xml_data = zip_file.read('_rels/.rels')
       property_files = self._ParseRelationshipsXMLFile(xml_data)
-    except (
-        IndexError, IOError, KeyError, OverflowError, ValueError,
-        zipfile.BadZipfile) as exception:
+    except (IndexError, IOError, KeyError, OverflowError, ValueError,
+            zipfile.BadZipfile) as exception:
       parser_mediator.ProduceExtractionError((
           'Unable to parse relationships XML file: _rels/.rels with error: '
           '{0!s}').format(exception))
@@ -280,9 +253,8 @@ class OpenXMLParser(interface.FileObjectParser):
       try:
         xml_data = zip_file.read(path)
         properties = self._ParsePropertiesXMLFile(xml_data)
-      except (
-          IndexError, IOError, KeyError, OverflowError, ValueError,
-          zipfile.BadZipfile) as exception:
+      except (IndexError, IOError, KeyError, OverflowError, ValueError,
+              zipfile.BadZipfile) as exception:
         parser_mediator.ProduceExtractionError((
             'Unable to parse properties XML file: {0:s} with error: '
             '{1!s}').format(path, exception))
@@ -343,4 +315,4 @@ class OpenXMLParser(interface.FileObjectParser):
         definitions.TIME_DESCRIPTION_LAST_PRINTED, 'last printed time')
 
 
-manager.ParsersManager.RegisterParser(OpenXMLParser)
+czip.CompoundZIPParser.RegisterPlugin(OpenXMLPlugin)

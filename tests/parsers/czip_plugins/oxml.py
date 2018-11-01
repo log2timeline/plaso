@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for the OXML parser."""
+"""Tests for the OXML plugin."""
 
 from __future__ import unicode_literals
 
@@ -8,14 +8,15 @@ import unittest
 
 from plaso.formatters import oxml as _  # pylint: disable=unused-import
 from plaso.lib import definitions
-from plaso.parsers import oxml
+from plaso.parsers import czip
+from plaso.parsers.czip_plugins import oxml
 
 from tests import test_lib as shared_test_lib
-from tests.parsers import test_lib
+from tests.parsers.czip_plugins import test_lib
 
 
-class OXMLTest(test_lib.ParserTestCase):
-  """Tests for the OXML parser."""
+class OXMLTest(test_lib.CompoundZIPPluginTestCase):
+  """Tests for the OXML plugin."""
 
   # pylint: disable=protected-access
 
@@ -57,7 +58,7 @@ class OXMLTest(test_lib.ParserTestCase):
 
   def testParsePropertiesXMLFile(self):
     """Tests the _ParsePropertiesXMLFile function."""
-    parser = oxml.OpenXMLParser()
+    plugin = oxml.OpenXMLPlugin()
 
     expected_properties = {
         'author': 'Nides',
@@ -66,31 +67,30 @@ class OXMLTest(test_lib.ParserTestCase):
         'modified': '2013-08-25T22:18:00Z',
         'revision_number': '3'}
 
-    properties = parser._ParsePropertiesXMLFile(self._PROPERTIES_XML_DATA)
+    properties = plugin._ParsePropertiesXMLFile(self._PROPERTIES_XML_DATA)
     self.assertEqual(properties, expected_properties)
 
   def testParseRelationshipsXMLFile(self):
     """Tests the _ParseRelationshipsXMLFile function."""
-    parser = oxml.OpenXMLParser()
+    plugin = oxml.OpenXMLPlugin()
 
     expected_property_files = ['docProps/core.xml', 'docProps/app.xml']
 
-    property_files = parser._ParseRelationshipsXMLFile(
+    property_files = plugin._ParseRelationshipsXMLFile(
         self._RELATIONSHIPS_XML_DATA)
     self.assertEqual(property_files, expected_property_files)
 
   def testProduceEvent(self):
     """Tests the _ProduceEvent function."""
+    plugin = oxml.OpenXMLPlugin()
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
     event_data = oxml.OpenXMLEventData()
 
-    parser = oxml.OpenXMLParser()
-
-    properties = parser._ParsePropertiesXMLFile(self._PROPERTIES_XML_DATA)
+    properties = plugin._ParsePropertiesXMLFile(self._PROPERTIES_XML_DATA)
 
     # Test parsing a date and time string in intervals of 1 s.
-    parser._ProduceEvent(
+    plugin._ProduceEvent(
         parser_mediator, event_data, properties, 'modified',
         definitions.TIME_DESCRIPTION_MODIFICATION, 'modification time')
 
@@ -98,7 +98,7 @@ class OXMLTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_events, 1)
 
     # Test parsing a date and time string in intervals of 100 ns.
-    parser._ProduceEvent(
+    plugin._ProduceEvent(
         parser_mediator, event_data, properties, 'created',
         definitions.TIME_DESCRIPTION_CREATION, 'creation time')
 
@@ -108,7 +108,7 @@ class OXMLTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['Document.docx'])
   def testParseFileObject(self):
     """Tests the ParseFileObject function."""
-    parser = oxml.OpenXMLParser()
+    parser = czip.CompoundZIPParser()
     storage_writer = self._ParseFile(['Document.docx'], parser)
 
     self.assertEqual(storage_writer.number_of_errors, 0)
