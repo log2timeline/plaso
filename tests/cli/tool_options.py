@@ -222,7 +222,7 @@ class ParsersOptionsTest(test_lib.CLIToolTestCase):
 
     lines = frozenset(lines)
 
-    self.assertEqual(number_of_tables, 9)
+    self.assertEqual(number_of_tables, 10)
 
     expected_line = 'filestat : Parser for file system stat information.'
     self.assertIn(expected_line, lines)

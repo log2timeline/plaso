@@ -12,6 +12,7 @@ from plaso.parsers import chrome_cache
 from plaso.parsers import chrome_preferences
 from plaso.parsers import cups_ipp
 from plaso.parsers import custom_destinations
+from plaso.parsers import czip
 from plaso.parsers import docker
 from plaso.parsers import dpkg
 from plaso.parsers import esedb
@@ -37,7 +38,6 @@ from plaso.parsers import msiecf
 from plaso.parsers import ntfs
 from plaso.parsers import olecf
 from plaso.parsers import opera
-from plaso.parsers import oxml
 from plaso.parsers import pe
 from plaso.parsers import plist
 from plaso.parsers import popcontest
@@ -75,6 +75,7 @@ from plaso.parsers import zsh_extended_history
 
 # Register plugins.
 from plaso.parsers import bencode_plugins
+from plaso.parsers import czip_plugins
 from plaso.parsers import esedb_plugins
 from plaso.parsers import olecf_plugins
 from plaso.parsers import plist_plugins
