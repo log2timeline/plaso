@@ -29,7 +29,7 @@ Prefix unused function or method arguments with `unused_`.
 * Quote strings as ' or """ and not "
   * Quote strings in command line arguments (argparse) as "
 * Textual strings should be Unicode strings.
-  * Use the use the [unicode_literals](http://python-future.org/unicode_literals.html) module to make all strings unicode by default.
+  * Use the [unicode_literals](http://python-future.org/unicode_literals.html) module to make all strings unicode by default.
 * Use the format() function instead of the %-style of formatting strings.
   * Use positional or parameter format specifiers with typing e.g. '{0:s}' or '{text:s}' instead of '{0}', '{}' or '{:s}'. If we ever want to have language specific output strings we don't need to change the entire codebase (again). It also makes is easier in determining what type every parameter is expected to be.
 
@@ -38,7 +38,7 @@ Prefix unused function or method arguments with `unused_`.
 * When catching exceptions use "as exception:" not some alternative form like "as error:" or "as details:"
 * Raise exceptions like this: ```raise MyException('Error message')``` or ```raise MyException```.
 * Although Python allows for ```try ... except ... else``` we prefer not to use it.
-* Make exception messages as useful and descriptive and possible. For example, if the an argument is out of an acceptable range, print the invalid value to speed-up debugging.
+* Make exception messages as useful and descriptive and possible. For example, if an argument is out of an acceptable range, print the invalid value to speed-up debugging.
 
 #### Return statements
 
@@ -46,7 +46,7 @@ Per [PEP8](https://pep8.org/#programming-recommendations): "Be consistent in ret
 
 * Use `return None` instead of `return` when your function or method is expected to return a value.
 * Do not use `return None` in generators.
-* Use `return` in function or method that does not return a value.
+* Use `return` in a function or method that does not return a value.
 
 #### Docstrings
 
@@ -91,11 +91,11 @@ def AddAnalysisReport(self, analysis_report, storage_writer=None):
 
 Make sure your arguments descriptions include:
 
-1. They argument(s) type(s);
+1. The argument(s) type(s);
 2. In case of [standard types](https://docs.python.org/3.3/library/stdtypes.html) a description of their format. Note that we use the Python 3 standard types;
 3. Description of the meaning of the argument. In other words how the argument is used by the function (or method). If the description exceeds the line limit, indent the next line with 4 spaces.
 
-The meaning can be left out if the functions has a few arguments and how the argument is used is obvious from the description as in the example of `AddAnalysisReport`.
+The meaning can be left out if the function has only a couple arguments and how the arguments are used is obvious from the description as in the example of `AddAnalysisReport`.
 
 A few other tips:
 
@@ -214,7 +214,7 @@ SampleFunction(keyword='THEKEY')
 * Use class methods in preference to static methods
   * Use "cls" as the name of the class variable in preference to "klass"
 * Use textual pylint overrides e.g. "# pylint: disable=no-self-argument" instead of "# pylint: disable=E0213". For a list of overrides see: http://docs.pylint.org/features.html
-* Tags for events need to be strings containing only alphanumeric characters or underscores. One of the reasons for this is better compatibility with other tool, such as TimeSketch.
+* Tags for events need to be strings containing only alphanumeric characters or underscores. One of the reasons for this is better compatibility with other tool, such as [TimeSketch](https://github.com/google/timesketch).
 * All new Plaso code needs to be compatible with both Python 3.4+ and Python 2.7+. Plaso's [Python 3 Guide](Python-3-Guide) has some more detail about compatibility issues, and the pylint configuration will also flag some issues.
 
 ## Source files
@@ -233,7 +233,7 @@ Plaso uses pylint 1.7.x to enforce some additional best practices to keep the so
 
 ## Tests
 
-* Use as much as possible the test functions available in the local test_lib.py instead of writing your own test functions. If you think a test function is missing please add it, or mail the developer list to see if you can someone else to do it.
+* Use as much as possible the test functions available in the local test_lib.py instead of writing your own test functions. If you think a test function is missing please add it, or mail the developer list to see if you can get someone else to do it.
 * Use `self.CheckTimestamp` for testing timestamp values.
 
 Common test code should be stored in "test library" files, e.g. the parser test library:
@@ -249,12 +249,12 @@ We do this for various reasons:
 
 ## Rationale
 
-To keep the code base maintainable and readable all code is developed using a similar coding style. It ensures:
+To keep the codebase maintainable and readable, all code is developed using a similar coding style. It ensures:
 
-* the code is easy to maintain and understand. As a developer you'll sometimes find yourself thinking [WTF](http://en.wikipedia.org/wiki/WTF), what is the code supposed to do here. So it is really important point that you need to be able to come back to code 5 months later and still quickly understand what it supposed to be doing. Also for other people that want to contribute it is necessary that they need to be able to quickly understand the code. Be that said, quick-and-dirty solutions might work when you're working on a case, but we'll ban them from the code base.
+* the code is easy to maintain and understand. As a developer you'll sometimes find yourself thinking [WTF](http://en.wikipedia.org/wiki/WTF), what is the code supposed to do here. It's really important that you're able to come back to code 5 months later and still quickly understand what it's supposed to be doing. Also for other people that want to contribute it is necessary for them to quickly understand the code. That said, quick-and-dirty solutions might work when you're working on a case, but we'll ban them from the codebase.
 * that every developer knows to (largely) expect the same coding style.
 
-We've noticed that some people find the process of having a style guide and a code review process intimidating. We've also noticed that once people get used to it and have gone through the process few times they are generally thankful and learn quite a lot during the process, so bear with us.
+We've noticed that some people find the process of having a style guide and a code review process intimidating. We've also noticed that once people get used to it and have gone through the process a few times, they are generally thankful and learn quite a lot during the process, so bear with us.
 
 Having a unified style makes it much easier to maintain the codebase. That means that every developer should be able to make changes in any file in the codebase without worrying about different code styles. 
 
