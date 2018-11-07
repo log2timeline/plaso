@@ -46,7 +46,7 @@ Per [PEP8](https://pep8.org/#programming-recommendations): "Be consistent in ret
 
 * Use `return None` instead of `return` when your function or method is expected to return a value.
 * Do not use `return None` in generators.
-* Use `return` the in function or method that does not return a value.
+* Use `return` in a function or method that does not return a value.
 
 #### Docstrings
 
