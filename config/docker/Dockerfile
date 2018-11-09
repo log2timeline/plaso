@@ -2,15 +2,18 @@ FROM ubuntu:xenial
 MAINTAINER Log2Timeline <log2timeline-dev@googlegroups.com>
 
 # Create container with:
-# docker build -f plaso-dev-from-ppa.dockerfile
+# docker build --no-cache --build-arg PPA_TRACK="[dev|stable]" \
+#   --force-rm -t log2timeline/plaso .
 #
 # Run log2timeline on artifacts stored in /data/artifacts with:
 # docker run -ti -v /data/:/data/ <container_id> log2timeline \
 #   /data/results/result.plaso /data/artifacts
 
+ARG PPA_TRACK=stable
+
 RUN apt-get -y update
 RUN apt-get -y install software-properties-common apt-transport-https
-RUN add-apt-repository -y ppa:gift/dev
+RUN add-apt-repository -y ppa:gift/$PPA_TRACK
 
 RUN apt-get -y update
 RUN apt-get -y upgrade
