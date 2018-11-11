@@ -39,5 +39,5 @@ install:
 build: off
 
 test_script:
-- cmd: "%PYTHON%\\python.exe" -c "import pefile"
+- "%PYTHON%\\python.exe -c \"import pefile\""
 - "%PYTHON%\\python.exe run_tests.py"
