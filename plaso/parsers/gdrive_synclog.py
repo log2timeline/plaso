@@ -62,7 +62,7 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
   _FOUR_DIGITS = text_parser.PyparsingConstants.FOUR_DIGITS
   _TWO_DIGITS = text_parser.PyparsingConstants.TWO_DIGITS
 
-  _GDS_DATE_TIME = (
+  _GDS_DATE_TIME = pyparsing.Group(
       _FOUR_DIGITS.setResultsName('year') + _HYPHEN +
       _TWO_DIGITS.setResultsName('month') + _HYPHEN +
       _TWO_DIGITS.setResultsName('day') +
@@ -202,10 +202,10 @@ class GoogleDriveSyncLogParser(text_parser.PyparsingMultiLineTextParser):
     try:
       datetime_iso8601 = self._GetISO8601String(structure.date_time)
       date_time.CopyFromStringISO8601(datetime_iso8601)
-    except ValueError:
-      logger.debug(
-          'Not a Google Drive Sync log file, invalid date/time: {0!s}'.format(
-              structure.date_time))
+    except ValueError as exception:
+      logger.debug((
+          'Not a Google Drive Sync log file, invalid date/time: {0!s} '
+          'with error: {1!s}').format(structure.date_time, exception))
       return False
 
     return True

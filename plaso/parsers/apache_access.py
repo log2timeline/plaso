@@ -71,25 +71,24 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
   }
 
   # date format [18/Sep/2011:19:18:28 -0400]
-  _PYPARSING_COMPONENTS['date'] = (
-      (pyparsing.Suppress('[') +
-       text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('day') +
-       pyparsing.Suppress('/') +
-       text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
-       pyparsing.Suppress('/') +
-       text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName('year') +
-       pyparsing.Suppress(':') +
-       text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('hours') +
-       pyparsing.Suppress(':') +
-       text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('minutes') +
-       pyparsing.Suppress(':') +
-       text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('seconds') +
-       pyparsing.Combine(
-           pyparsing.oneOf(['-', '+']) +
-           pyparsing.Word(
-               pyparsing.nums, exact=4)).setResultsName('time_offset') +
-       pyparsing.Suppress(']')).setResultsName('date_time')
-  )
+  _PYPARSING_COMPONENTS['date'] = pyparsing.Group(
+      pyparsing.Suppress('[') +
+      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('day') +
+      pyparsing.Suppress('/') +
+      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName('month') +
+      pyparsing.Suppress('/') +
+      text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName('year') +
+      pyparsing.Suppress(':') +
+      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('hours') +
+      pyparsing.Suppress(':') +
+      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('minutes') +
+      pyparsing.Suppress(':') +
+      text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('seconds') +
+      pyparsing.Combine(
+          pyparsing.oneOf(['-', '+']) +
+          pyparsing.Word(
+              pyparsing.nums, exact=4)).setResultsName('time_offset') +
+      pyparsing.Suppress(']')).setResultsName('date_time')
 
   _SKIP_SEP = pyparsing.Suppress('"')
 
