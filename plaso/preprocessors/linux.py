@@ -123,7 +123,8 @@ class LinuxStandardBaseReleasePlugin(interface.FileArtifactPreprocessorPlugin):
 
     product_values = {}
     for line in text_file_object.readlines():
-      if line[0] == '#':
+      line = line.strip()
+      if line.startswith('#'):
         continue
       key, value = line.split('=')
       key = key.strip().upper()
