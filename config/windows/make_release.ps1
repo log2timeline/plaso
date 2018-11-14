@@ -188,25 +188,41 @@ rm -Force dist\plaso\licenses\LICENSE.pbr
 
 # Copy the artifacts yaml files
 git.exe clone https://github.com/ForensicArtifacts/artifacts.git dist\artifacts
+cd dist\artifacts
+$latest_tag=git.exe describe --tags $(git.exe rev-list --tags --max-count=1)
+git.exe checkout $latest_tag
+cd ..\..
 mkdir dist\plaso\artifacts
 xcopy /q /y dist\artifacts\data\*.yaml dist\plaso\artifacts
 
 # Copy the dfVFS yaml (dtFabric definition) files
 git.exe clone https://github.com/log2timeline/dfvfs.git dist\dfvfs
+cd dist\dfvfs
+$latest_tag=git.exe describe --tags $(git.exe rev-list --tags --max-count=1)
+git.exe checkout $latest_tag
+cd ..\..
 mkdir dist\plaso\dfvfs\lib
 xcopy /q /y dist\dfvfs\dfvfs\lib\*.yaml dist\plaso\dfvfs\lib
 
 # Copy the dfWinReg yaml (dtFabric definition) files
 git.exe clone https://github.com/log2timeline/dfwinreg.git dist\dfwinreg
+cd dist\dfwinreg
+$latest_tag=git.exe describe --tags $(git.exe rev-list --tags --max-count=1)
+git.exe checkout $latest_tag
+cd ..\..
 mkdir dist\plaso\dfwinreg
 xcopy /q /y dist\dfwinreg\dfwinreg\*.yaml dist\plaso\dfwinreg
 
 # Copy the plaso yaml (dtFabric definition) files
 mkdir dist\plaso\plaso\parsers
+mkdir dist\plaso\plaso\parsers\esedb_plugins
 mkdir dist\plaso\plaso\parsers\olecf_plugins
+mkdir dist\plaso\plaso\parsers\plist_plugins
 mkdir dist\plaso\plaso\parsers\winreg_plugins
 xcopy /q /y plaso\parsers\*.yaml dist\plaso\plaso\parsers
+xcopy /q /y plaso\parsers\esedb_plugins\*.yaml dist\plaso\plaso\parsers\esedb_plugins
 xcopy /q /y plaso\parsers\olecf_plugins\*.yaml dist\plaso\plaso\parsers\olecf_plugins
+xcopy /q /y plaso\parsers\plist_plugins\*.yaml dist\plaso\plaso\parsers\plist_plugins
 xcopy /q /y plaso\parsers\winreg_plugins\*.yaml dist\plaso\plaso\parsers\winreg_plugins
 
 # Makes plaso-<version>-<architecture>.zip
