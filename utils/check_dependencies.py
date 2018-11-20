@@ -22,3 +22,5 @@ if __name__ == '__main__':
 
     print('See: {0:s} on how to set up plaso.'.format(build_instructions_url))
     print('')
+
+    sys.exit(1)
