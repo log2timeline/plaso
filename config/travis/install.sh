@@ -46,6 +46,14 @@ elif test ${TRAVIS_OS_NAME} = "linux" && test ${TARGET} != "jenkins";
 then
 	sudo rm -f /etc/apt/sources.list.d/travis_ci_zeromq3-source.list;
 
+	if test ${TARGET} = "pylint";
+	then
+		if test ${TRAVIS_PYTHON_VERSION} = "2.7";
+		then
+			sudo add-apt-repository ppa:gift/pylint2 -y;
+		fi
+	fi
+
 	sudo add-apt-repository ppa:gift/dev -y;
 	sudo apt-get update -q;
 

@@ -65,39 +65,59 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python2-yara
                       python2-zmq";
 
-# Additional dependencies for running plaso tests, alphabetized,
-# one per line.
+# Additional dependencies for running tests, alphabetized, one per line.
 TEST_DEPENDENCIES="python-mock";
 
-# Additional dependencies for doing plaso development, alphabetized,
-# one per line.
-DEVELOPMENT_DEPENDENCIES="python-sphinx
-                          pylint";
+# Additional dependencies for development, alphabetized, one per line.
+DEVELOPMENT_DEPENDENCIES="pylint
+                          python-sphinx";
 
-# Additional dependencies for doing plaso debugging, alphabetized,
-# one per line.
+# Additional dependencies for debugging, alphabetized, one per line.
 DEBUG_DEPENDENCIES="libbde-debuginfo
+                    libbde-python-debuginfo
                     libesedb-debuginfo
+                    libesedb-python-debuginfo
                     libevt-debuginfo
+                    libevt-python-debuginfo
                     libevtx-debuginfo
+                    libevtx-python-debuginfo
                     libewf-debuginfo
+                    libewf-python-debuginfo
                     libfsntfs-debuginfo
+                    libfsntfs-python-debuginfo
                     libfvde-debuginfo
+                    libfvde-python-debuginfo
                     libfwnt-debuginfo
+                    libfwnt-python-debuginfo
                     libfwsi-debuginfo
+                    libfwsi-python-debuginfo
                     liblnk-debuginfo
+                    liblnk-python-debuginfo
                     libmsiecf-debuginfo
+                    libmsiecf-python-debuginfo
                     libolecf-debuginfo
+                    libolecf-python-debuginfo
                     libqcow-debuginfo
+                    libqcow-python-debuginfo
                     libregf-debuginfo
+                    libregf-python-debuginfo
                     libscca-debuginfo
+                    libscca-python-debuginfo
                     libsigscan-debuginfo
+                    libsigscan-python-debuginfo
                     libsmdev-debuginfo
+                    libsmdev-python-debuginfo
                     libsmraw-debuginfo
+                    libsmraw-python-debuginfo
                     libvhdi-debuginfo
+                    libvhdi-python-debuginfo
                     libvmdk-debuginfo
+                    libvmdk-python-debuginfo
                     libvshadow-debuginfo
-                    libvslvm-debuginfo";
+                    libvshadow-python-debuginfo
+                    libvslvm-debuginfo
+                    libvslvm-python-debuginfo
+                    python-guppy";
 
 sudo dnf install dnf-plugins-core
 sudo dnf copr -y enable @gift/dev
@@ -114,3 +134,4 @@ fi
 if [[ "$*" =~ "include-test" ]]; then
     sudo dnf install -y ${TEST_DEPENDENCIES}
 fi
+
