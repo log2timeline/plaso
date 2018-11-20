@@ -35,7 +35,6 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-biplist
                       python3-certifi
                       python3-chardet
-                      python3-construct
                       python3-crypto
                       python3-dateutil
                       python3-dfdatetime
@@ -61,17 +60,14 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-yara
                       python3-zmq";
 
-# Additional dependencies for running plaso tests, alphabetized,
-# one per line.
+# Additional dependencies for running tests, alphabetized, one per line.
 TEST_DEPENDENCIES="python-mock";
 
-# Additional dependencies for doing plaso development, alphabetized,
-# one per line.
-DEVELOPMENT_DEPENDENCIES="python-sphinx
-                          pylint";
+# Additional dependencies for development, alphabetized, one per line.
+DEVELOPMENT_DEPENDENCIES="pylint
+                          python-sphinx";
 
-# Additional dependencies for doing plaso debugging, alphabetized,
-# one per line.
+# Additional dependencies for debugging, alphabetized, one per line.
 DEBUG_DEPENDENCIES="libbde-dbg
                     libbde-python3-dbg
                     libesedb-dbg
@@ -116,6 +112,10 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libvshadow-python3-dbg
                     libvslvm-dbg
                     libvslvm-python3-dbg";
+
+if [[ "$*" =~ "include-development" ]]; then
+  sudo add-apt-repository ppa:gift/pylint3 -y
+fi
 
 sudo add-apt-repository ppa:gift/dev -y
 sudo apt-get update -q

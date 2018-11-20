@@ -65,17 +65,14 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-yara
                       python-zmq";
 
-# Additional dependencies for running plaso tests, alphabetized,
-# one per line.
+# Additional dependencies for running tests, alphabetized, one per line.
 TEST_DEPENDENCIES="python-mock";
 
-# Additional dependencies for doing plaso development, alphabetized,
-# one per line.
-DEVELOPMENT_DEPENDENCIES="python-sphinx
-                          pylint";
+# Additional dependencies for development, alphabetized, one per line.
+DEVELOPMENT_DEPENDENCIES="pylint
+                          python-sphinx";
 
-# Additional dependencies for doing plaso debugging, alphabetized,
-# one per line.
+# Additional dependencies for debugging, alphabetized, one per line.
 DEBUG_DEPENDENCIES="libbde-dbg
                     libbde-python-dbg
                     libesedb-dbg
@@ -121,6 +118,10 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libvslvm-dbg
                     libvslvm-python-dbg
                     python-guppy";
+
+if [[ "$*" =~ "include-development" ]]; then
+  sudo add-apt-repository ppa:gift/pylint2 -y
+fi
 
 sudo add-apt-repository ppa:gift/dev -y
 sudo apt-get update -q
