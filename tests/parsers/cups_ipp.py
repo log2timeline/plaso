@@ -17,6 +17,14 @@ from tests.parsers import test_lib
 class CupsIppParserTest(test_lib.ParserTestCase):
   """Tests for MacOS Cups IPP parser."""
 
+  # TODO: add tests for _GetStringValue
+  # TODO: add tests for _ParseAttribute
+  # TODO: add tests for _ParseAttributesGroup
+  # TODO: add tests for _ParseBooleanValue
+  # TODO: add tests for _ParseIntegerValue
+  # TODO: add tests for _ParseHeader
+  # TODO: add tests for ParseFileObject
+
   @shared_test_lib.skipUnlessHasTestFile(['mac_cups_ipp'])
   def testParse(self):
     """Tests the Parse function."""

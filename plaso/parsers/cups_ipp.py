@@ -306,7 +306,7 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
           'Unable to parse datetime value with error: {0!s}'.format(exception))
 
     rfc2579_date_time_tuple = (
-        value.year, value.month, value.day,
+        value.year, value.month, value.day_of_month,
         value.hours, value.minutes, value.seconds, value.deciseconds,
         value.direction_from_utc, value.hours_from_utc, value.minutes_from_utc)
     return dfdatetime_rfc2579_date_time.RFC2579DateTime(
