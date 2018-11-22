@@ -82,13 +82,13 @@ members:
   type: string
   encoding: utf8
   element_data_type: char
-  number_of_elements: cups_ipp_attribute.name_size
+  elements_data_size: cups_ipp_attribute.name_size
 - name: value_data_size
   data_type: int16
 - name: value_data
   type: stream
   element_data_type: uint8
-  number_of_elements: cups_ipp_attribute.value_data_size
+  elements_data_size: cups_ipp_attribute.value_data_size
 ---
 name: cups_ipp_datetime_value
 description: RFC2579 date-time value
