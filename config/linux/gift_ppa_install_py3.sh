@@ -61,7 +61,10 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-zmq";
 
 # Additional dependencies for running tests, alphabetized, one per line.
-TEST_DEPENDENCIES="python-mock";
+TEST_DEPENDENCIES="python3-funcsigs
+                   python3-mock
+                   python3-pbr
+                   python3-six";
 
 # Additional dependencies for development, alphabetized, one per line.
 DEVELOPMENT_DEPENDENCIES="pylint

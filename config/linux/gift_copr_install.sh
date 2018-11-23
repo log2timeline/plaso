@@ -66,7 +66,10 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python2-zmq";
 
 # Additional dependencies for running tests, alphabetized, one per line.
-TEST_DEPENDENCIES="python-mock";
+TEST_DEPENDENCIES="python2-funcsigs
+                   python2-mock
+                   python2-pbr
+                   python2-six";
 
 # Additional dependencies for development, alphabetized, one per line.
 DEVELOPMENT_DEPENDENCIES="pylint
