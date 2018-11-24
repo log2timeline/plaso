@@ -28,8 +28,8 @@ install:
     } Else {
       $SQLitePlatform = "win64-x64"
     }
-    $Url = 'https://www.sqlite.org/${SQLiteReleaseYear}}/sqlite-dll-${SQLitePlatform}}-${SQLiteVersion}.zip'
-    $DownloadPath = 'C:\Projects\sqlite-dll-${SQLitePlatform}}-${SQLiteVersion}.zip'
+    $Url = 'https://www.sqlite.org/${SQLiteReleaseYear}/sqlite-dll-${SQLitePlatform}-${SQLiteVersion}.zip'
+    $DownloadPath = 'C:\Projects\sqlite-dll-${SQLitePlatform}-${SQLiteVersion}.zip'
     (new-object net.webclient).DownloadFile($Url, $DownloadPath)
     $Output = Invoke-Expression -Command "& 'C:\\Program Files\\7-Zip\\7z.exe' -y -oC:\\Projects\\ x $DownloadPath 2>&1"
     Copy-Item -Force C:\Projects\sqlite3.dll "$env:PYTHON\\DLLs\\"
