@@ -20,19 +20,19 @@ matrix:
 install:
 - cmd: '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x86 /release'
 - ps: >-
-    "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12"
-    $SQLiteReleaseYear = 2018
-    $SQLiteVersion = 3250300
+    "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12";
+    $SQLiteReleaseYear = "2018";
+    $SQLiteVersion = "3250300";
     If ($env:MACHINE_TYPE -eq "x86") {
-      $SQLitePlatform = "win32-x86"
+      $SQLitePlatform = "win32-x86";
     } Else {
-      $SQLitePlatform = "win64-x64"
+      $SQLitePlatform = "win64-x64";
     }
-    $Url = "https://www.sqlite.org/${SQLiteReleaseYear}/sqlite-dll-${SQLitePlatform}-${SQLiteVersion}.zip"
-    $DownloadPath = "C:\Projects\sqlite-dll-${SQLitePlatform}-${SQLiteVersion}.zip"
-    (new-object net.webclient).DownloadFile($Url, $DownloadPath)
-    $Output = Invoke-Expression -Command "& 'C:\\Program Files\\7-Zip\\7z.exe' -y -oC:\\Projects\\ x $DownloadPath 2>&1"
-    Copy-Item -Force C:\Projects\sqlite3.dll "$env:PYTHON\\DLLs\\"
+    $Url = "https://www.sqlite.org/${SQLiteReleaseYear}/sqlite-dll-${SQLitePlatform}-${SQLiteVersion}.zip";
+    $DownloadPath = "C:\Projects\sqlite-dll-${SQLitePlatform}-${SQLiteVersion}.zip";
+    (new-object net.webclient).DownloadFile($Url, $DownloadPath);
+    $Output = Invoke-Expression -Command "& 'C:\\Program Files\\7-Zip\\7z.exe' -y -oC:\\Projects\\ x $DownloadPath 2>&1";
+    Copy-Item -Force C:\Projects\sqlite3.dll "$env:PYTHON\\DLLs\\";
 - cmd: "%PYTHON%\\python.exe -m pip install --upgrade pip"
 - cmd: "%PYTHON%\\python.exe -m pip install pywin32 WMI"
 - cmd: "%PYTHON%\\python.exe %PYTHON%\\Scripts\\pywin32_postinstall.py -install"
