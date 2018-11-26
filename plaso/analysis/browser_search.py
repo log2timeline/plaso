@@ -57,6 +57,8 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
        '_ExtractGoogleSearchQuery'),
       ('Google Sites', re.compile(r'sites.google.com/site'),
        '_ExtractGoogleSearchQuery'),
+      ('Yahoo', re.compile(r'yahoo\.com/search'),
+       '_ExtractYahooSearchQuery'),
       ('Yandex', re.compile(r'yandex\.com/search'),
        '_ExtractYandexSearchQuery'),
       ('Youtube', re.compile(r'youtube\.com'),
@@ -174,6 +176,28 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       return None
 
     return line.replace('+', ' ')
+
+  def _ExtractYahooSearchQuery(self, url):
+    """Extracts a search query from a Yahoo search URL.
+
+    Yahoo: https://search.yahoo.com/search?p=query
+    Yahoo: https://search.yahoo.com/search;?p=query
+
+    Args:
+      url (str): URL.
+
+    Returns:
+      str: search query or None if no query was found.
+    """
+    if 'p=' not in url:
+      return None
+    _, _, line = url.partition('p=')
+    before_and, _, _ = line.partition('&')
+    if not before_and:
+      return None
+    yahoo_search_url = before_and.split()[0]
+
+    return yahoo_search_url.replace('+', ' ')
 
   def _ExtractYandexSearchQuery(self, url):
     """Extracts a search query from a Yandex search URL.
