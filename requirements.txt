@@ -24,6 +24,7 @@ libesedb-python >= 20150409
 libevt-python >= 20120410
 libevtx-python >= 20141112
 libewf-python >= 20131210
+libfsapfs-python >= 20181125
 libfsntfs-python >= 20151130
 libfvde-python >= 20160719
 libfwnt-python >= 20180117

@@ -13,6 +13,7 @@ PYTHON2_DEPENDENCIES="libbde-python
                       libevt-python
                       libevtx-python
                       libewf-python
+                      libfsapfs-python
                       libfsntfs-python
                       libfvde-python
                       libfwnt-python
@@ -85,6 +86,8 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libevtx-python-dbg
                     libewf-dbg
                     libewf-python-dbg
+                    libfsapfs-dbg
+                    libfsapfs-python-dbg
                     libfsntfs-dbg
                     libfsntfs-python-dbg
                     libfvde-dbg

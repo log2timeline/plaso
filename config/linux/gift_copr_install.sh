@@ -14,6 +14,7 @@ PYTHON2_DEPENDENCIES="PyYAML
                       libevt-python
                       libevtx-python
                       libewf-python
+                      libfsapfs-python2
                       libfsntfs-python
                       libfvde-python
                       libfwnt-python
@@ -86,6 +87,8 @@ DEBUG_DEPENDENCIES="libbde-debuginfo
                     libevtx-python-debuginfo
                     libewf-debuginfo
                     libewf-python-debuginfo
+                    libfsapfs-debuginfo
+                    libfsapfs-python2-debuginfo
                     libfsntfs-debuginfo
                     libfsntfs-python-debuginfo
                     libfvde-debuginfo
