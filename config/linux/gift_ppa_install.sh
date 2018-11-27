@@ -68,8 +68,7 @@ PYTHON2_DEPENDENCIES="libbde-python
 # Additional dependencies for running tests, alphabetized, one per line.
 TEST_DEPENDENCIES="python-funcsigs
                    python-mock
-                   python-pbr
-                   python-six";
+                   python-pbr";
 
 # Additional dependencies for development, alphabetized, one per line.
 DEVELOPMENT_DEPENDENCIES="pylint

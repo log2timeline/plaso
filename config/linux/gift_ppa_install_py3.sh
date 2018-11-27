@@ -62,8 +62,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
 
 # Additional dependencies for running tests, alphabetized, one per line.
 TEST_DEPENDENCIES="python3-mock
-                   python3-pbr
-                   python3-six";
+                   python3-pbr";
 
 # Additional dependencies for development, alphabetized, one per line.
 DEVELOPMENT_DEPENDENCIES="pylint
