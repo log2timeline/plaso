@@ -1,0 +1,6 @@
+usr/lib/python3*/dist-packages/plaso/*.py
+usr/lib/python3*/dist-packages/plaso/*/*.py
+usr/lib/python3*/dist-packages/plaso/*/*.yaml
+usr/lib/python3*/dist-packages/plaso/*/*/*.py
+usr/lib/python3*/dist-packages/plaso/*/*/*.yaml
+usr/lib/python3*/dist-packages/plaso*.egg-info/*

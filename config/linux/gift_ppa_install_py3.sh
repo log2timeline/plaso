@@ -13,6 +13,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       libevt-python3
                       libevtx-python3
                       libewf-python3
+                      libfsapfs-python3
                       libfsntfs-python3
                       libfvde-python3
                       libfwnt-python3
@@ -61,7 +62,8 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-zmq";
 
 # Additional dependencies for running tests, alphabetized, one per line.
-TEST_DEPENDENCIES="python-mock";
+TEST_DEPENDENCIES="python3-mock
+                   python3-pbr";
 
 # Additional dependencies for development, alphabetized, one per line.
 DEVELOPMENT_DEPENDENCIES="pylint
@@ -78,6 +80,8 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libevtx-python3-dbg
                     libewf-dbg
                     libewf-python3-dbg
+                    libfsapfs-dbg
+                    libfsapfs-python3-dbg
                     libfsntfs-dbg
                     libfsntfs-python3-dbg
                     libfvde-dbg

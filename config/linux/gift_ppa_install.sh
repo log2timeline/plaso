@@ -13,6 +13,7 @@ PYTHON2_DEPENDENCIES="libbde-python
                       libevt-python
                       libevtx-python
                       libewf-python
+                      libfsapfs-python
                       libfsntfs-python
                       libfvde-python
                       libfwnt-python
@@ -66,7 +67,9 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-zmq";
 
 # Additional dependencies for running tests, alphabetized, one per line.
-TEST_DEPENDENCIES="python-mock";
+TEST_DEPENDENCIES="python-funcsigs
+                   python-mock
+                   python-pbr";
 
 # Additional dependencies for development, alphabetized, one per line.
 DEVELOPMENT_DEPENDENCIES="pylint
@@ -83,6 +86,8 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libevtx-python-dbg
                     libewf-dbg
                     libewf-python-dbg
+                    libfsapfs-dbg
+                    libfsapfs-python-dbg
                     libfsntfs-dbg
                     libfsntfs-python-dbg
                     libfvde-dbg
