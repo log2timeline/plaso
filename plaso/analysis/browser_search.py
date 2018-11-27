@@ -43,19 +43,19 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
   # Here we define filters and callback methods for all hits on each filter.
   _URL_FILTERS = frozenset([
-      ('Bing', re.compile('bing.com/search'), '_ExtractSearchQueryFromURL'),
+      ('Bing', re.compile(r'bing\.com/search'), '_ExtractSearchQueryFromURL'),
       ('DuckDuckGo', re.compile(r'duckduckgo\.com'),
        '_ExtractDuckDuckGoSearchQuery'),
       ('GMail', re.compile(r'mail\.google\.com'),
        '_ExtractGMailSearchQuery'),
-      ('Google Docs', re.compile(r'docs.google.com'),
+      ('Google Docs', re.compile(r'docs\.google\.com'),
        '_ExtractGoogleDocsSearchQuery'),
       ('Google Drive', re.compile(r'drive\.google\.com/drive/search'),
        '_ExtractGoogleSearchQuery'),
       ('Google Search',
        re.compile(r'(www\.|encrypted\.|/)google\.[^/]*/search'),
        '_ExtractGoogleSearchQuery'),
-      ('Google Sites', re.compile(r'sites.google.com/site'),
+      ('Google Sites', re.compile(r'sites\.google\.com/site'),
        '_ExtractGoogleSearchQuery'),
       ('Yahoo', re.compile(r'yahoo\.com/search'),
        '_ExtractYahooSearchQuery'),
@@ -180,8 +180,9 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
   def _ExtractYahooSearchQuery(self, url):
     """Extracts a search query from a Yahoo search URL.
 
-    Yahoo: https://search.yahoo.com/search?p=query
-    Yahoo: https://search.yahoo.com/search;?p=query
+    Examples:
+      https://search.yahoo.com/search?p=query
+      https://search.yahoo.com/search;?p=query
 
     Args:
       url (str): URL.
