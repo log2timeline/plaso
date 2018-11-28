@@ -63,7 +63,7 @@ class PstealTool(
   # TODO: is textwrap.dedent or the join really needed here?
   DESCRIPTION = textwrap.dedent('\n'.join([
       '',
-      ('psteal is a command line tool to extract events from individual '),
+      'psteal is a command line tool to extract events from individual ',
       'files, recursing a directory (e.g. mount point) or storage media ',
       'image or device. The output events will be stored in a storage file.',
       'This tool will then read the output and process the events into a CSV ',

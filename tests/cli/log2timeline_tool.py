@@ -109,6 +109,28 @@ optional arguments:
     self.assertTrue(output[3].startswith('Processing time\t: '))
     self.assertEqual(output[4:], expected_output[4:])
 
+  def _CreateExtractionOptions(self, source_path, password=None):
+    """Create options for testing extraction.
+
+    Args:
+      source_path (str): path of the source (test) data.
+      password (Optional[str]): password to unlock test data.
+
+    Returns:
+      TestOptions: options for testing extraction.
+    """
+    options = test_lib.TestOptions()
+    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
+    options.quiet = True
+    options.single_process = True
+    options.status_view_mode = 'none'
+    options.source = source_path
+
+    if password:
+      options.credentials = ['password:{0:s}'.format(password)]
+
+    return options
+
   # TODO: add tests for _CheckStorageFile
   # TODO: add tests for _CreateProcessingConfiguration
 
@@ -201,12 +223,8 @@ optional arguments:
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
-    options.quiet = True
-    options.single_process = True
-    options.status_view_mode = 'none'
-    options.source = self._GetTestFilePath(['testdir'])
+    source_path = self._GetTestFilePath(['testdir'])
+    options = self._CreateExtractionOptions(source_path)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
@@ -230,18 +248,15 @@ optional arguments:
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
+  @shared_test_lib.skipUnlessHasTestFile(['bdetogo.raw'])
   def testExtractEventsFromSourcesOnBDEImage(self):
     """Tests the ExtractEventsFromSources function on BDE image."""
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
-    options.credentials = ['password:{0:s}'.format(self._BDE_PASSWORD)]
-    options.quiet = True
-    options.single_process = True
-    options.status_view_mode = 'none'
-    options.source = self._GetTestFilePath(['bdetogo.raw'])
+    source_path = self._GetTestFilePath(['bdetogo.raw'])
+    options = self._CreateExtractionOptions(
+        source_path, password=self._BDE_PASSWORD)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
@@ -265,17 +280,14 @@ optional arguments:
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
+  @shared_test_lib.skipUnlessHasTestFile(['ímynd.dd'])
   def testExtractEventsFromSourcesImage(self):
     """Tests the ExtractEventsFromSources function on single partition image."""
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
-    options.quiet = True
-    options.single_process = True
-    options.status_view_mode = 'none'
-    options.source = self._GetTestFilePath(['ímynd.dd'])
+    source_path = self._GetTestFilePath(['ímynd.dd'])
+    options = self._CreateExtractionOptions(source_path)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
@@ -299,19 +311,16 @@ optional arguments:
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
+  @shared_test_lib.skipUnlessHasTestFile(['multi_partition_image.vmdk'])
   def testExtractEventsFromSourcesPartitionedImage(self):
     """Tests the ExtractEventsFromSources function on multi partition image."""
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
-    options.partitions = 'all'
-    options.quiet = True
-    options.single_process = True
-    options.status_view_mode = 'none'
     # Note that the source file is a RAW (VMDK flat) image.
-    options.source = self._GetTestFilePath(['multi_partition_image.vmdk'])
+    source_path = self._GetTestFilePath(['multi_partition_image.vmdk'])
+    options = self._CreateExtractionOptions(source_path)
+    options.partitions = 'all'
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
@@ -335,17 +344,14 @@ optional arguments:
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
+  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
   def testExtractEventsFromSourcesOnVSSImage(self):
     """Tests the ExtractEventsFromSources function on VSS image."""
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
-    options.quiet = True
-    options.single_process = True
-    options.status_view_mode = 'none'
-    options.source = self._GetTestFilePath(['vsstest.qcow2'])
+    source_path = self._GetTestFilePath(['vsstest.qcow2'])
+    options = self._CreateExtractionOptions(source_path)
     options.vss_stores = 'all'
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -374,17 +380,14 @@ optional arguments:
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
+  @shared_test_lib.skipUnlessHasTestFile(['System.evtx'])
   def testExtractEventsFromSourcesOnFile(self):
     """Tests the ExtractEventsFromSources function on a file."""
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
-    options.quiet = True
-    options.single_process = True
-    options.status_view_mode = 'none'
-    options.source = self._GetTestFilePath(['System.evtx'])
+    source_path = self._GetTestFilePath(['System.evtx'])
+    options = self._CreateExtractionOptions(source_path)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
@@ -417,12 +420,8 @@ optional arguments:
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
-    options.quiet = True
-    options.single_process = True
-    options.status_view_mode = 'none'
-    options.source = self._GetTestFilePath(['link_to_testdir'])
+    source_path = self._GetTestFilePath(['link_to_testdir'])
+    options = self._CreateExtractionOptions(source_path)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
@@ -455,12 +454,8 @@ optional arguments:
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
-    options.quiet = True
-    options.single_process = True
-    options.status_view_mode = 'none'
-    options.source = self._GetTestFilePath(['link_to_System.evtx'])
+    source_path = self._GetTestFilePath(['link_to_System.evtx'])
+    options = self._CreateExtractionOptions(source_path)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
@@ -489,13 +484,9 @@ optional arguments:
     output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
     test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
-    options = test_lib.TestOptions()
-    options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
-    options.quiet = True
+    source_path = self._GetTestFilePath(['test_pe.exe'])
+    options = self._CreateExtractionOptions(source_path)
     options.parsers = 'filestat,pe'
-    options.single_process = True
-    options.status_view_mode = 'none'
-    options.source = self._GetTestFilePath(['test_pe.exe'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.storage_file = os.path.join(temp_directory, 'storage.plaso')
