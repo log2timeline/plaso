@@ -195,13 +195,13 @@ class PathHelper(object):
       relative_path = '{0:s}{1:s}'.format(text_prepend, relative_path)
 
     parent_path_spec = path_spec.parent
-    if parent_path_spec and path_spec.type_indicator in [
+    if parent_path_spec and path_spec.type_indicator in (
         dfvfs_definitions.TYPE_INDICATOR_BZIP2,
-        dfvfs_definitions.TYPE_INDICATOR_GZIP]:
+        dfvfs_definitions.TYPE_INDICATOR_GZIP):
       parent_path_spec = parent_path_spec.parent
 
-    if parent_path_spec and parent_path_spec.type_indicator in [
-        dfvfs_definitions.TYPE_INDICATOR_VSHADOW]:
+    if parent_path_spec and parent_path_spec.type_indicator == (
+        dfvfs_definitions.TYPE_INDICATOR_VSHADOW):
       store_index = getattr(path_spec.parent, 'store_index', None)
       if store_index is not None:
         return 'VSS{0:d}:{1:s}:{2:s}'.format(
