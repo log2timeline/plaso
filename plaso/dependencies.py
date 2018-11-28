@@ -68,7 +68,7 @@ PYTHON_DEPENDENCIES = {
     'pyvmdk': ('get_version()', '20140421', None, True),
     'pyvshadow': ('get_version()', '20160109', None, True),
     'pyvslvm': ('get_version()', '20160109', None, True),
-    'requests': ('__version__', '2.20.0', None, True),
+    'requests': ('__version__', '2.18.0', None, True),
     'six': ('__version__', '1.1.0', None, True),
     'sqlite3': ('__version__', '', None, True),
     'urllib3': ('__version__', '1.21.1', None, True),
