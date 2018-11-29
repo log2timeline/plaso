@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import getpass
 import os
 import sys
+import textwrap
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfvfs.analyzer import analyzer as dfvfs_analyzer
@@ -36,7 +37,7 @@ except KeyError:
 
 
 class StorageMediaTool(tools.CLITool):
-  """Class that implements a storage media CLI tool."""
+  """CLI tool that supports a storage media device or image as input."""
 
   _DEFAULT_BYTES_PER_SECTOR = 512
 
@@ -51,6 +52,14 @@ class StorageMediaTool(tools.CLITool):
   # For context see: http://en.wikipedia.org/wiki/Byte
   _UNITS_1000 = ['B', 'kB', 'MB', 'GB', 'TB', 'EB', 'ZB', 'YB']
   _UNITS_1024 = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'EiB', 'ZiB', 'YiB']
+
+  _USER_PROMPT_VSS = '\n'.join(textwrap.wrap((
+      'Please specify the identifier(s) of the VSS that should be processed: '
+      'Note that a range of stores can be defined as: 3..5. Multiple stores '
+      'can be defined as: 1,3,5 (a list of comma separated values). Ranges '
+      'and lists can also be combined as: 1,3..5. The first store is 1. All '
+      'stores can be defined as "all". If no stores are specified none will '
+      'be processed. You can abort with Ctrl^C.'), 79))
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
@@ -115,12 +124,12 @@ class StorageMediaTool(tools.CLITool):
       magnitude_1024 += 1
 
     size_string_1000 = None
-    if magnitude_1000 > 0 and magnitude_1000 <= 7:
+    if 0 < magnitude_1000 <= 7:
       size_string_1000 = '{0:.1f}{1:s}'.format(
           size_1000, self._UNITS_1000[magnitude_1000])
 
     size_string_1024 = None
-    if magnitude_1024 > 0 and magnitude_1024 <= 7:
+    if 0 < magnitude_1024 <= 7:
       size_string_1024 = '{0:.1f}{1:s}'.format(
           size_1024, self._UNITS_1024[magnitude_1024])
 
@@ -130,52 +139,48 @@ class StorageMediaTool(tools.CLITool):
     return '{0:s} / {1:s} ({2:d} B)'.format(
         size_string_1024, size_string_1000, size)
 
-  def _GetNormalizedTSKVolumeIdentifiers(
-      self, volume_system, volume_identifiers):
-    """Retrieves the normalized TSK volume identifiers.
+  def _GetNormalizedVolumeIdentifiers(
+      self, volume_system, volume_identifiers, prefix='v'):
+    """Retrieves normalized volume identifiers.
 
     Args:
-      volume_system (dfvfs.TSKVolumeSystem): volume system.
+      volume_system (dfvfs.VolumeSystem): volume system.
       volume_identifiers (list[str]): allowed volume identifiers.
+      prefix (Optional[str]): volume identifier prefix.
 
     Returns:
       list[int]: normalized volume identifiers.
+
+    Raises:
+      SourceScannerError: if the volume identifier is not supported or no
+          volume could be found that corresponds with the identifier.
     """
+    prefix_length = 0
+    if prefix:
+      prefix_length = len(prefix)
+
     normalized_volume_identifiers = []
     for volume_identifier in volume_identifiers:
-      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
+      try:
+        identifier_has_prefix = volume_identifier.startswith(prefix)
+      except AttributeError:
+        identifier_has_prefix = False
+
+      if prefix and not identifier_has_prefix:
+        raise errors.SourceScannerError(
+            'Unsupported volume identifier: {0!s}.'.format(volume_identifier))
+
+      try:
+        volume = volume_system.GetVolumeByIdentifier(volume_identifier)
+      except KeyError:
+        volume = None
+
       if not volume:
         raise errors.SourceScannerError(
             'Volume missing for identifier: {0:s}.'.format(volume_identifier))
 
       try:
-        volume_identifier = int(volume.identifier[1:], 10)
-        normalized_volume_identifiers.append(volume_identifier)
-      except ValueError:
-        pass
-
-    return normalized_volume_identifiers
-
-  def _GetNormalizedVShadowVolumeIdentifiers(
-      self, volume_system, volume_identifiers):
-    """Retrieves the normalized VShadow volume identifiers.
-
-    Args:
-      volume_system (dfvfs.VShadowVolumeSystem): volume system.
-      volume_identifiers (list[str]): allowed volume identifiers.
-
-    Returns:
-      list[int]: normalized volume identifiers.
-    """
-    normalized_volume_identifiers = []
-    for volume_identifier in volume_identifiers:
-      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
-      if not volume:
-        raise errors.SourceScannerError(
-            'Volume missing for identifier: {0:s}.'.format(volume_identifier))
-
-      try:
-        volume_identifier = int(volume.identifier[3:], 10)
+        volume_identifier = int(volume.identifier[prefix_length:], 10)
         normalized_volume_identifiers.append(volume_identifier)
       except ValueError:
         pass
@@ -218,8 +223,8 @@ class StorageMediaTool(tools.CLITool):
       self._output_writer.Write('[WARNING] No partitions found.\n')
       return None
 
-    normalized_volume_identifiers = self._GetNormalizedTSKVolumeIdentifiers(
-        volume_system, volume_identifiers)
+    normalized_volume_identifiers = self._GetNormalizedVolumeIdentifiers(
+        volume_system, volume_identifiers, 'p')
 
     if partitions:
       if partitions == ['all']:
@@ -461,6 +466,67 @@ class StorageMediaTool(tools.CLITool):
     elif image_offset:
       self._partition_offset = image_offset * bytes_per_sector
 
+  def _ParseVolumeIdentifiersString(
+      self, volume_identifiers_string, prefix='v'):
+    """Parses a user specified volume identifiers string.
+
+    Args:
+      volume_identifiers_string (str): user specified volume identifiers. A
+          range of volumes can be defined as: "3..5". Multiple volumes can be
+          defined as: "1,3,5" (a list of comma separated values). Ranges and
+          lists can also be combined as: "1,3..5". The first volume is 1. All
+          volumes can be defined as: "all".
+      prefix (Optional[str]): volume identifier prefix.
+
+    Returns:
+      list[str]: volume identifiers.
+
+    Raises:
+      BadConfigOption: if the volume identifiers string is invalid.
+    """
+    prefix_length = 0
+    if prefix:
+      prefix_length = len(prefix)
+
+    if not volume_identifiers_string:
+      return []
+
+    if volume_identifiers_string == 'all':
+      return ['all']
+
+    volume_identifiers = []
+    for identifiers_range in volume_identifiers_string.split(','):
+      # Determine if the range is formatted as 1..3 otherwise it indicates
+      # a single volume identifier.
+      if '..' in identifiers_range:
+        first_identifier, last_identifier = identifiers_range.split('..')
+        try:
+          first_identifier = int(first_identifier, 10)
+          last_identifier = int(last_identifier, 10)
+        except ValueError:
+          raise errors.BadConfigOption(
+              'Invalid volume identifiers range: {0:s}.'.format(
+                  identifiers_range))
+
+        for volume_identifier in range(first_identifier, last_identifier + 1):
+          if volume_identifier not in volume_identifiers:
+            volume_identifiers.append(volume_identifier)
+      else:
+        if identifiers_range.startswith(prefix):
+          identifiers_range = identifiers_range[prefix_length:]
+
+        try:
+          volume_identifier = int(identifiers_range, 10)
+        except ValueError:
+          raise errors.BadConfigOption(
+              'Invalid volume identifier range: {0:s}.'.format(
+                  identifiers_range))
+
+        if volume_identifier not in volume_identifiers:
+          volume_identifiers.append(volume_identifier)
+
+    return sorted(volume_identifiers)
+
   def _ParseVSSProcessingOptions(self, options):
     """Parses the VSS processing options.
 
@@ -479,63 +545,52 @@ class StorageMediaTool(tools.CLITool):
       vss_stores = getattr(options, 'vss_stores', None)
 
     if vss_stores:
-      vss_stores = self._ParseVSSStoresString(vss_stores)
+      vss_stores = self._ParseVolumeIdentifiersString(vss_stores, prefix='vss')
 
     self._vss_only = vss_only
     self._vss_stores = vss_stores
 
-  def _ParseVSSStoresString(self, vss_stores):
-    """Parses the user specified VSS stores string.
+  def _PrintVSSStoreIdentifiersOverview(
+      self, volume_system, volume_identifiers):
+    """Prints an overview of VSS store identifiers.
 
     Args:
-      vss_stores (str): VSS stores. A range of stores can be defined
-          as: "3..5". Multiple stores can be defined as: "1,3,5" (a list
-          of comma separated values). Ranges and lists can also be
-          combined as: "1,3..5". The first store is 1. All stores can be
-          defined as: "all".
-
-    Returns:
-      list[str]: VSS stores.
+      volume_system (dfvfs.VShadowVolumeSystem): volume system.
+      volume_identifiers (list[str]): allowed volume identifiers.
 
     Raises:
-      BadConfigOption: if the VSS stores option is invalid.
+      SourceScannerError: if the source cannot be processed.
     """
-    if not vss_stores:
-      return []
+    header = 'The following Volume Shadow Snapshots (VSS) were found:\n'
+    self._output_writer.Write(header)
 
-    if vss_stores == 'all':
-      return ['all']
+    column_names = ['Identifier', 'Creation Time']
+    table_view = views.CLITabularTableView(column_names=column_names)
 
-    store_numbers = []
-    for vss_store_range in vss_stores.split(','):
-      # Determine if the range is formatted as 1..3 otherwise it indicates
-      # a single store number.
-      if '..' in vss_store_range:
-        first_store, last_store = vss_store_range.split('..')
-        try:
-          first_store = int(first_store, 10)
-          last_store = int(last_store, 10)
-        except ValueError:
-          raise errors.BadConfigOption(
-              'Invalid VSS store range: {0:s}.'.format(vss_store_range))
+    for volume_identifier in volume_identifiers:
+      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
+      if not volume:
+        raise errors.SourceScannerError(
+            'Volume missing for identifier: {0:s}.'.format(
+                volume_identifier))
 
-        for store_number in range(first_store, last_store + 1):
-          if store_number not in store_numbers:
-            store_numbers.append(store_number)
-      else:
-        if vss_store_range.startswith('vss'):
-          vss_store_range = vss_store_range[3:]
+      vss_creation_time = volume.GetAttribute('creation_time')
+      filetime = dfdatetime_filetime.Filetime(
+          timestamp=vss_creation_time.value)
+      vss_creation_time = filetime.GetPlasoTimestamp()
+      vss_creation_time = timelib.Timestamp.CopyToIsoFormat(
+          vss_creation_time)
 
-        try:
-          store_number = int(vss_store_range, 10)
-        except ValueError:
-          raise errors.BadConfigOption(
-              'Invalid VSS store range: {0:s}.'.format(vss_store_range))
+      if volume.HasExternalData():
+        vss_creation_time = (
+            '{0:s}\tWARNING: data stored outside volume').format(
+                vss_creation_time)
 
-        if store_number not in store_numbers:
-          store_numbers.append(store_number)
+      table_view.AddRow([volume.identifier, vss_creation_time])
 
-    return sorted(store_numbers)
+    self._output_writer.Write('\n')
+    table_view.Write(self._output_writer)
+    self._output_writer.Write('\n')
 
   def _PromptUserForEncryptedVolumeCredential(
       self, scan_context, locked_scan_node, credentials):
@@ -717,7 +772,7 @@ class StorageMediaTool(tools.CLITool):
 
   def _PromptUserForVSSStoreIdentifiers(
       self, volume_system, volume_identifiers, vss_stores=None):
-    """Prompts the user to provide the VSS store identifiers.
+    """Prompts the user to provide VSS store identifiers.
 
     This method first checks for the preferred VSS stores and falls back
     to prompt the user if no usable preferences were specified.
@@ -733,8 +788,8 @@ class StorageMediaTool(tools.CLITool):
     Raises:
       SourceScannerError: if the source cannot be processed.
     """
-    normalized_volume_identifiers = self._GetNormalizedVShadowVolumeIdentifiers(
-        volume_system, volume_identifiers)
+    normalized_volume_identifiers = self._GetNormalizedVolumeIdentifiers(
+        volume_system, volume_identifiers, prefix='vss')
 
     # TODO: refactor this to _GetVSSStoreIdentifiers.
     if vss_stores:
@@ -749,47 +804,13 @@ class StorageMediaTool(tools.CLITool):
     print_header = True
     while True:
       if print_header:
-        self._output_writer.Write(
-            'The following Volume Shadow Snapshots (VSS) were found:\n')
-
-        table_view = views.CLITabularTableView(column_names=[
-            'Identifier', 'Creation Time'])
-
-        for volume_identifier in volume_identifiers:
-          volume = volume_system.GetVolumeByIdentifier(volume_identifier)
-          if not volume:
-            raise errors.SourceScannerError(
-                'Volume missing for identifier: {0:s}.'.format(
-                    volume_identifier))
-
-          vss_creation_time = volume.GetAttribute('creation_time')
-          filetime = dfdatetime_filetime.Filetime(
-              timestamp=vss_creation_time.value)
-          vss_creation_time = filetime.GetPlasoTimestamp()
-          vss_creation_time = timelib.Timestamp.CopyToIsoFormat(
-              vss_creation_time)
-
-          if volume.HasExternalData():
-            vss_creation_time = (
-                '{0:s}\tWARNING: data stored outside volume').format(
-                    vss_creation_time)
-
-          table_view.AddRow([volume.identifier, vss_creation_time])
-
-        self._output_writer.Write('\n')
-        table_view.Write(self._output_writer)
-        self._output_writer.Write('\n')
+        self._PrintVSSStoreIdentifiersOverview(
+            volume_system, volume_identifiers)
 
         print_header = False
 
-      self._output_writer.Write(
-          'Please specify the identifier(s) of the VSS that should be '
-          'processed:\nNote that a range of stores can be defined as: 3..5. '
-          'Multiple stores can\nbe defined as: 1,3,5 (a list of comma '
-          'separated values). Ranges and lists can\nalso be combined '
-          'as: 1,3..5. The first store is 1. All stores can be defined\n'
-          'as "all". If no stores are specified none will be processed. You\n'
-          'can abort with Ctrl^C.\n')
+      self._output_writer.Write(self._USER_PROMPT_VSS)
+      self._output_writer.Write('\n')
 
       selected_vss_stores = self._input_reader.Read()
 
@@ -798,7 +819,8 @@ class StorageMediaTool(tools.CLITool):
         return []
 
       try:
-        selected_vss_stores = self._ParseVSSStoresString(selected_vss_stores)
+        selected_vss_stores = self._ParseVolumeIdentifiersString(
+            selected_vss_stores, prefix='vss')
       except errors.BadConfigOption:
         selected_vss_stores = []
 
@@ -833,17 +855,13 @@ class StorageMediaTool(tools.CLITool):
     if not volume_scan_node or not volume_scan_node.path_spec:
       raise errors.SourceScannerError('Invalid or missing volume scan node.')
 
-    selected_vss_stores = []
-    if not volume_scan_node.sub_nodes:
-      self._ScanVolumeScanNode(
-          scan_context, volume_scan_node, selected_vss_stores)
+    # Some volumes contain other volume or file systems. BitLocker ToGo has
+    # an encrypted and unencrypted volume.
+    sub_scan_nodes = volume_scan_node.sub_nodes or [volume_scan_node]
 
-    else:
-      # Some volumes contain other volume or file systems e.g. BitLocker ToGo
-      # has an encrypted and unencrypted volume.
-      for sub_scan_node in volume_scan_node.sub_nodes:
-        self._ScanVolumeScanNode(
-            scan_context, sub_scan_node, selected_vss_stores)
+    selected_vss_stores = []
+    for sub_scan_node in sub_scan_nodes:
+      self._ScanVolumeScanNode(scan_context, sub_scan_node, selected_vss_stores)
 
   def _ScanVolumeScanNode(
       self, scan_context, volume_scan_node, selected_vss_stores):
@@ -866,19 +884,17 @@ class StorageMediaTool(tools.CLITool):
     while len(scan_node.sub_nodes) == 1:
       # Make sure that we prompt the user about VSS selection.
       if scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
-        location = getattr(scan_node.path_spec, 'location', None)
-        if location == '/':
+        if scan_node.IsVolumeSystemRoot():
           break
 
       scan_node = scan_node.sub_nodes[0]
 
-    # The source scanner found an encrypted volume and we need
-    # a credential to unlock the volume.
-    if scan_node.type_indicator in (
-        dfvfs_definitions.ENCRYPTED_VOLUME_TYPE_INDICATORS):
-      self._ScanVolumeScanNodeEncrypted(scan_context, scan_node)
+    # The source scanner found a locked volume and we need a credential to
+    # unlock it.
+    if scan_context.IsLockedScanNode(volume_scan_node.path_spec):
+      self._UnlockEncryptedVolumeScanNode(scan_context, scan_node)
 
-    elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
+    if scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
       self._ScanVolumeScanNodeVSS(scan_node, selected_vss_stores)
 
     elif scan_node.type_indicator in (
@@ -887,42 +903,8 @@ class StorageMediaTool(tools.CLITool):
           self._PromptUserForVSSCurrentVolume()):
         self._source_path_specs.append(scan_node.path_spec)
 
-  def _ScanVolumeScanNodeEncrypted(self, scan_context, volume_scan_node):
-    """Scans an encrypted volume scan node for volume and file systems.
-
-    Args:
-      scan_context (dfvfs.SourceScannerContext): source scanner context.
-      volume_scan_node (dfvfs.SourceScanNode): volume scan node.
-    """
-    result = not scan_context.IsLockedScanNode(volume_scan_node.path_spec)
-    if not result:
-      credentials = credentials_manager.CredentialsManager.GetCredentials(
-          volume_scan_node.path_spec)
-
-      result = False
-      for credential_type, credential_data in self._credentials:
-        if credential_type not in credentials.CREDENTIALS:
-          continue
-
-        result = self._source_scanner.Unlock(
-            scan_context, volume_scan_node.path_spec, credential_type,
-            credential_data)
-
-        if result:
-          self._AddCredentialConfiguration(
-              volume_scan_node.path_spec, credential_type, credential_data)
-          break
-
-      if self._credentials and not result:
-        self._output_writer.Write(
-            '[WARNING] Unable to unlock encrypted volume using the provided '
-            'credentials.\n\n')
-
-      if not result:
-        result = self._PromptUserForEncryptedVolumeCredential(
-            scan_context, volume_scan_node, credentials)
-
-    if result:
+    elif scan_node.type_indicator in (
+        dfvfs_definitions.ENCRYPTED_VOLUME_TYPE_INDICATORS):
       self._source_scanner.Scan(
           scan_context, scan_path_spec=volume_scan_node.path_spec)
       self._ScanVolume(scan_context, volume_scan_node)
@@ -935,14 +917,13 @@ class StorageMediaTool(tools.CLITool):
       selected_vss_stores (list[str]): selected VSS store identifiers.
 
     Raises:
-      SourceScannerError: if a VSS sub scan node cannot be retrieved.
+      SourceScannerError: if a sub scan node cannot be retrieved.
     """
     if not self._process_vss:
       return
 
     # Do not scan inside individual VSS store scan nodes.
-    location = getattr(volume_scan_node.path_spec, 'location', None)
-    if location != '/':
+    if not volume_scan_node.IsVolumeSystemRoot():
       return
 
     vss_store_identifiers = self._GetVSSStoreIdentifiers(
@@ -967,6 +948,39 @@ class StorageMediaTool(tools.CLITool):
           dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
           parent=sub_scan_node.path_spec)
       self._source_path_specs.append(path_spec)
+
+  def _UnlockEncryptedVolumeScanNode(self, scan_context, volume_scan_node):
+    """Unlocks an encrypted volume scan node.
+
+    Args:
+      scan_context (dfvfs.SourceScannerContext): source scanner context.
+      volume_scan_node (dfvfs.SourceScanNode): volume scan node.
+    """
+    credentials = credentials_manager.CredentialsManager.GetCredentials(
+        volume_scan_node.path_spec)
+
+    is_unlocked = False
+    for credential_type, credential_data in self._credentials:
+      if credential_type not in credentials.CREDENTIALS:
+        continue
+
+      is_unlocked = self._source_scanner.Unlock(
+          scan_context, volume_scan_node.path_spec, credential_type,
+          credential_data)
+
+      if is_unlocked:
+        self._AddCredentialConfiguration(
+            volume_scan_node.path_spec, credential_type, credential_data)
+        break
+
+    if self._credentials and not is_unlocked:
+      self._output_writer.Write(
+          '[WARNING] Unable to unlock encrypted volume using the provided '
+          'credentials.\n\n')
+
+    if not is_unlocked:
+      is_unlocked = self._PromptUserForEncryptedVolumeCredential(
+          scan_context, volume_scan_node, credentials)
 
   def AddCredentialOptions(self, argument_group):
     """Adds the credential options to the argument group.
@@ -1083,7 +1097,7 @@ class StorageMediaTool(tools.CLITool):
 
     try:
       self._source_scanner.Scan(scan_context)
-    except (dfvfs_errors.BackEndError, ValueError) as exception:
+    except (ValueError, dfvfs_errors.BackEndError) as exception:
       raise errors.SourceScannerError(
           'Unable to scan source with error: {0!s}.'.format(exception))
 
@@ -1099,13 +1113,11 @@ class StorageMediaTool(tools.CLITool):
     while len(scan_node.sub_nodes) == 1:
       scan_node = scan_node.sub_nodes[0]
 
-    # The source scanner found a partition table and we need to determine
-    # which partition needs to be processed.
-    if scan_node.type_indicator != (
+    partition_identifiers = None
+    if scan_node.type_indicator == (
         dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
-      partition_identifiers = None
-
-    else:
+      # The source scanner found a partition table and we need to determine
+      # which partition needs to be processed.
       partition_identifiers = self._GetTSKPartitionIdentifiers(
           scan_node, partition_offset=self._partition_offset,
           partitions=self._partitions)

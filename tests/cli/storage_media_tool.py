@@ -289,8 +289,8 @@ optional arguments:
     self.assertEqual(size_string, expected_size_string)
 
   @shared_test_lib.skipUnlessHasTestFile(['tsk_volume_system.raw'])
-  def testGetNormalizedTSKVolumeIdentifiers(self):
-    """Tests the _GetNormalizedTSKVolumeIdentifiers function."""
+  def testGetNormalizedVolumeIdentifiersePartitionedImage(self):
+    """Tests the _GetNormalizedVolumeIdentifiers function."""
     test_tool = storage_media_tool.StorageMediaTool()
 
     test_path = self._GetTestFilePath(['tsk_volume_system.raw'])
@@ -302,21 +302,21 @@ optional arguments:
     volume_system = tsk_volume_system.TSKVolumeSystem()
     volume_system.Open(tsk_partition_path_spec)
 
-    volume_identifiers = test_tool._GetNormalizedTSKVolumeIdentifiers(
-        volume_system, ['p1', 'p2'])
+    volume_identifiers = test_tool._GetNormalizedVolumeIdentifiers(
+        volume_system, ['p1', 'p2'], prefix='p')
     self.assertEqual(volume_identifiers, [1, 2])
 
-    with self.assertRaises(KeyError):
-      test_tool._GetNormalizedTSKVolumeIdentifiers(
-          volume_system, [1, 2])
+    with self.assertRaises(errors.SourceScannerError):
+      test_tool._GetNormalizedVolumeIdentifiers(
+          volume_system, [1, 2], prefix='p')
 
-    with self.assertRaises(KeyError):
-      test_tool._GetNormalizedTSKVolumeIdentifiers(
-          volume_system, ['p3'])
+    with self.assertRaises(errors.SourceScannerError):
+      test_tool._GetNormalizedVolumeIdentifiers(
+          volume_system, ['p3'], prefix='p')
 
   @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
-  def testGetNormalizedVShadowVolumeIdentifiers(self):
-    """Tests the _GetNormalizedVShadowVolumeIdentifiers function."""
+  def testGetNormalizedVolumeIdentifiersVSS(self):
+    """Tests the _GetNormalizedVolumeIdentifiers function on a VSS."""
     test_tool = storage_media_tool.StorageMediaTool()
 
     test_path = self._GetTestFilePath(['vsstest.qcow2'])
@@ -330,17 +330,17 @@ optional arguments:
     volume_system = vshadow_volume_system.VShadowVolumeSystem()
     volume_system.Open(vss_path_spec)
 
-    volume_identifiers = test_tool._GetNormalizedVShadowVolumeIdentifiers(
-        volume_system, ['vss1', 'vss2'])
+    volume_identifiers = test_tool._GetNormalizedVolumeIdentifiers(
+        volume_system, ['vss1', 'vss2'], prefix='vss')
     self.assertEqual(volume_identifiers, [1, 2])
 
-    with self.assertRaises(KeyError):
-      test_tool._GetNormalizedTSKVolumeIdentifiers(
-          volume_system, [1, 2])
+    with self.assertRaises(errors.SourceScannerError):
+      test_tool._GetNormalizedVolumeIdentifiers(
+          volume_system, [1, 2], prefix='vss')
 
-    with self.assertRaises(KeyError):
-      test_tool._GetNormalizedTSKVolumeIdentifiers(
-          volume_system, ['vss3'])
+    with self.assertRaises(errors.SourceScannerError):
+      test_tool._GetNormalizedVolumeIdentifiers(
+          volume_system, ['vss3'], prefix='vss')
 
   # TODO: add test for _GetTSKPartitionIdentifiers.
   # TODO: add test for _GetVSSStoreIdentifiers.
