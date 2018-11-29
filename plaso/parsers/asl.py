@@ -96,7 +96,7 @@ class ASLParser(dtfabric_parser.DtFabricBaseParser):
       record, record_data_size = self._ReadStructureFromFileObject(
           file_object, record_offset, record_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.UnableToParseFile((
+      raise errors.ParseError((
           'Unable to parse record at offset: 0x{0:08x} with error: '
           '{1!s}').format(record_offset, exception))
 

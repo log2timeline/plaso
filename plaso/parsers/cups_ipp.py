@@ -387,6 +387,7 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
 
     data_dict = {}
     time_dict = {}
+    is_first_attribute_group = True
 
     try:
       for name, value in self._ParseAttributesGroup(file_object):
@@ -397,9 +398,15 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
         else:
           data_dict.setdefault(name, []).append(value)
 
+        is_first_attribute_group = False
+
     except (ValueError, errors.ParseError) as exception:
-      parser_mediator.ProduceExtractionWarning(
-          'unable to parse attributes with error: {0!s}'.format(exception))
+      error_message = (
+          'unable to parse attribute group with error: {0!s}').format(exception)
+      if is_first_attribute_group:
+        raise errors.UnableToParseFile(error_message)
+
+      parser_mediator.ProduceExtractionWarning(error_message)
       return
 
     event_data = CupsIppEventData()

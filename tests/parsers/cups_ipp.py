@@ -4,7 +4,6 @@
 
 from __future__ import unicode_literals
 
-import io
 import unittest
 
 from dfvfs.helpers import fake_file_system_builder
@@ -48,7 +47,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     return attribute_map.FoldByteStream(attribute)
 
   def _CreateDateTimeValueData(self, parser):
-    """Created date time value test data.
+    """Creates date time value test data.
 
     Args:
       parser (CupsIppParser): CUPS IPP parser.
@@ -63,6 +62,22 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         deciseconds=5, direction_from_utc=ord('+'), hours_from_utc=1,
         minutes_from_utc=0)
     return datetime_map.FoldByteStream(datetime)
+
+  def _CreateHeaderData(self, parser):
+    """Creates header test data.
+
+    Args:
+      parser (CupsIppParser): CUPS IPP parser.
+
+    Returns:
+      bytes: header test data.
+    """
+    header_map = parser._GetDataTypeMap('cups_ipp_header')
+
+    header = header_map.CreateStructureValues(
+        major_version=1, minor_version=1, operation_identifier=5,
+        request_identifier=0)
+    return header_map.FoldByteStream(header)
 
   def testGetStringValue(self):
     """Tests the _GetStringValue function."""
@@ -80,14 +95,14 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
     attribute_data = self._CreateAttributeTestData(
         parser, 0x00, 'test', b'\x12')
-    file_object = io.BytesIO(attribute_data)
+    file_object = self._CreateFileObject('cups_ipp', attribute_data)
 
     name, value = parser._ParseAttribute(file_object)
     self.assertEqual(name, 'test')
     self.assertEqual(value, b'\x12')
 
     # Test with attribute data too small.
-    file_object = io.BytesIO(attribute_data[:-1])
+    file_object = self._CreateFileObject('cups_ipp', attribute_data[:-1])
 
     with self.assertRaises(errors.ParseError):
       parser._ParseAttribute(file_object)
@@ -95,7 +110,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     # Test attribute with integer value.
     attribute_data = self._CreateAttributeTestData(
         parser, 0x21, 'int', b'\x12\x34\x56\x78')
-    file_object = io.BytesIO(attribute_data)
+    file_object = self._CreateFileObject('cups_ipp', attribute_data)
 
     name, value = parser._ParseAttribute(file_object)
     self.assertEqual(name, 'int')
@@ -104,7 +119,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     # Test attribute with boolean value.
     attribute_data = self._CreateAttributeTestData(
         parser, 0x22, 'bool', b'\x01')
-    file_object = io.BytesIO(attribute_data)
+    file_object = self._CreateFileObject('cups_ipp', attribute_data)
 
     name, value = parser._ParseAttribute(file_object)
     self.assertEqual(name, 'bool')
@@ -114,7 +129,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     datetime_data = self._CreateDateTimeValueData(parser)
     attribute_data = self._CreateAttributeTestData(
         parser, 0x31, 'datetime', datetime_data)
-    file_object = io.BytesIO(attribute_data)
+    file_object = self._CreateFileObject('cups_ipp', attribute_data)
 
     name, value = parser._ParseAttribute(file_object)
     self.assertEqual(name, 'datetime')
@@ -124,7 +139,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     # Test attribute with string without language.
     attribute_data = self._CreateAttributeTestData(
         parser, 0x42, 'string', b'NOLANG')
-    file_object = io.BytesIO(attribute_data)
+    file_object = self._CreateFileObject('cups_ipp', attribute_data)
 
     name, value = parser._ParseAttribute(file_object)
     self.assertEqual(name, 'string')
@@ -133,7 +148,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     # Test attribute with ASCII string and tag value charset.
     attribute_data = self._CreateAttributeTestData(
         parser, 0x47, 'charset', b'utf8')
-    file_object = io.BytesIO(attribute_data)
+    file_object = self._CreateFileObject('cups_ipp', attribute_data)
 
     name, value = parser._ParseAttribute(file_object)
     self.assertEqual(name, 'charset')
@@ -143,13 +158,14 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     """Tests the _ParseAttributesGroup function."""
     parser = cups_ipp.CupsIppParser()
 
-    file_object = io.BytesIO(self._ATTRIBUTES_GROUP_DATA)
+    file_object = self._CreateFileObject(
+        'cups_ipp', self._ATTRIBUTES_GROUP_DATA)
 
     name_value_pairs = list(parser._ParseAttributesGroup(file_object))
     self.assertEqual(name_value_pairs, [('attributes-charset', 'utf-8')])
 
     # Test with unsupported attributes groups start tag value.
-    file_object = io.BytesIO(b''.join([
+    file_object = self._CreateFileObject('cups_ipp', b''.join([
         b'\xff', self._ATTRIBUTES_GROUP_DATA[1:]]))
 
     with self.assertRaises(errors.ParseError):
@@ -208,28 +224,26 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         storage_writer, file_entry=test_file_entry)
 
     parser = cups_ipp.CupsIppParser()
-    header_map = parser._GetDataTypeMap('cups_ipp_header')
 
-    header = header_map.CreateStructureValues(
-        major_version=1, minor_version=1, operation_identifier=5,
-        request_identifier=0)
-    header_data = header_map.FoldByteStream(header)
-    file_object = io.BytesIO(header_data)
+    header_data = self._CreateHeaderData(parser)
+    file_object = self._CreateFileObject('cups_ipp', header_data)
 
     parser._ParseHeader(parser_mediator, file_object)
 
     # Test with header data too small.
-    file_object = io.BytesIO(header_data[:-1])
+    file_object = self._CreateFileObject('cups_ipp', header_data[:-1])
 
     with self.assertRaises(errors.UnableToParseFile):
       parser._ParseHeader(parser_mediator, file_object)
 
     # Test with unsupported format version.
+    header_map = parser._GetDataTypeMap('cups_ipp_header')
+
     header = header_map.CreateStructureValues(
         major_version=99, minor_version=1, operation_identifier=5,
         request_identifier=0)
     header_data = header_map.FoldByteStream(header)
-    file_object = io.BytesIO(header_data)
+    file_object = self._CreateFileObject('cups_ipp', header_data)
 
     with self.assertRaises(errors.UnableToParseFile):
       parser._ParseHeader(parser_mediator, file_object)
@@ -239,7 +253,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         major_version=1, minor_version=1, operation_identifier=99,
         request_identifier=0)
     header_data = header_map.FoldByteStream(header)
-    file_object = io.BytesIO(header_data)
+    file_object = self._CreateFileObject('cups_ipp', header_data)
 
     parser._ParseHeader(parser_mediator, file_object)
 
@@ -247,17 +261,12 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     """Tests the ParseFileObject function."""
     parser = cups_ipp.CupsIppParser()
 
-    header_map = parser._GetDataTypeMap('cups_ipp_header')
-
-    header = header_map.CreateStructureValues(
-        major_version=1, minor_version=1, operation_identifier=5,
-        request_identifier=0)
-    header_data = header_map.FoldByteStream(header)
+    header_data = self._CreateHeaderData(parser)
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
 
-    file_object = io.BytesIO(b''.join([
+    file_object = self._CreateFileObject('cups_ipp', b''.join([
         header_data, self._ATTRIBUTES_GROUP_DATA]))
 
     parser.ParseFileObject(parser_mediator, file_object)
@@ -269,7 +278,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
 
-    file_object = io.BytesIO(b''.join([
+    file_object = self._CreateFileObject('cups_ipp', b''.join([
         header_data, self._ATTRIBUTES_GROUP_DATA[:-1]]))
 
     parser.ParseFileObject(parser_mediator, file_object)
@@ -285,7 +294,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
 
-    file_object = io.BytesIO(b''.join([
+    file_object = self._CreateFileObject('cups_ipp', b''.join([
         header_data, b'\x01', attribute_data, b'\x03']))
 
     parser.ParseFileObject(parser_mediator, file_object)
