@@ -44,9 +44,9 @@ class CLITool(object):
     """Initializes a command line interface tool.
 
     Args:
-      input_reader (Optional[InputReader]): input reader, where None indicates
+      input_reader (Optional[CLIInputReader]): input reader, where None indicates
           that the stdin input reader should be used.
-      output_writer (Optional[OutputWriter]): output writer, where None
+      output_writer (Optional[CLIOutputWriter]): output writer, where None
           indicates that the stdout output writer should be used.
     """
     super(CLITool, self).__init__()
