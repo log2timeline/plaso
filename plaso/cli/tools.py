@@ -44,8 +44,8 @@ class CLITool(object):
     """Initializes a command line interface tool.
 
     Args:
-      input_reader (Optional[CLIInputReader]): input reader, where None indicates
-          that the stdin input reader should be used.
+      input_reader (Optional[CLIInputReader]): input reader, where None
+          indicates that the stdin input reader should be used.
       output_writer (Optional[CLIOutputWriter]): output writer, where None
           indicates that the stdout output writer should be used.
     """
