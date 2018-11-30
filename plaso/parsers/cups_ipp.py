@@ -63,10 +63,9 @@ class CupsIppEventData(events.EventData):
     """Initializes event data."""
     super(CupsIppEventData, self).__init__(data_type=self.DATA_TYPE)
     self.application = None
-    # TODO: remove data_dict.
-    self.data_dict = None
     self.computer_name = None
     self.copies = None
+    # TODO: remove data_dict.
     self.data_dict = None
     self.doc_type = None
     self.job_id = None
@@ -305,10 +304,11 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
       raise errors.ParseError(
           'Unable to parse datetime value with error: {0!s}'.format(exception))
 
+    direction_from_utc = chr(value.direction_from_utc)
     rfc2579_date_time_tuple = (
         value.year, value.month, value.day_of_month,
         value.hours, value.minutes, value.seconds, value.deciseconds,
-        value.direction_from_utc, value.hours_from_utc, value.minutes_from_utc)
+        direction_from_utc, value.hours_from_utc, value.minutes_from_utc)
     return dfdatetime_rfc2579_date_time.RFC2579DateTime(
         rfc2579_date_time_tuple=rfc2579_date_time_tuple)
 
