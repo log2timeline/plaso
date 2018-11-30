@@ -29,6 +29,42 @@ class CupsIppParserTest(test_lib.ParserTestCase):
       0x65, 0x73, 0x2d, 0x63, 0x68, 0x61, 0x72, 0x73, 0x65, 0x74, 0x00, 0x05,
       0x75, 0x74, 0x66, 0x2d, 0x38, 0x03]))
 
+  def _CreateAttributeTestData(self, parser, tag_value, name, value_data):
+    """Creates attribute test data.
+
+    Args:
+      parser (CupsIppParser): CUPS IPP parser.
+      tag_value (int): value of the attribute tag.
+      name (str): name of the attribute.
+      value_data (bytes): data of the attribute value.
+
+    Returns:
+      bytes: attribute test data.
+    """
+    attribute_map = parser._GetDataTypeMap('cups_ipp_attribute')
+
+    attribute = attribute_map.CreateStructureValues(
+        tag_value=tag_value, name_size=len(name), name=name,
+        value_data_size=len(value_data), value_data=value_data)
+    return attribute_map.FoldByteStream(attribute)
+
+  def _CreateDateTimeValueData(self, parser):
+    """Created date time value test data.
+
+    Args:
+      parser (CupsIppParser): CUPS IPP parser.
+
+    Returns:
+      bytes: date time value test data.
+    """
+    datetime_map = parser._GetDataTypeMap('cups_ipp_datetime_value')
+
+    datetime = datetime_map.CreateStructureValues(
+        year=2018, month=11, day_of_month=27, hours=16, minutes=41, seconds=51,
+        deciseconds=5, direction_from_utc=ord('+'), hours_from_utc=1,
+        minutes_from_utc=0)
+    return datetime_map.FoldByteStream(datetime)
+
   def testGetStringValue(self):
     """Tests the _GetStringValue function."""
     parser = cups_ipp.CupsIppParser()
@@ -42,12 +78,9 @@ class CupsIppParserTest(test_lib.ParserTestCase):
   def testParseAttribute(self):
     """Tests the _ParseAttribute function."""
     parser = cups_ipp.CupsIppParser()
-    attribute_map = parser._GetDataTypeMap('cups_ipp_attribute')
 
-    attribute = attribute_map.CreateStructureValues(
-        tag_value=0, name_size=4, name='test', value_data_size=1,
-        value_data=b'\x12')
-    attribute_data = attribute_map.FoldByteStream(attribute)
+    attribute_data = self._CreateAttributeTestData(
+        parser, 0x00, 'test', b'\x12')
     file_object = io.BytesIO(attribute_data)
 
     name, value = parser._ParseAttribute(file_object)
@@ -61,10 +94,8 @@ class CupsIppParserTest(test_lib.ParserTestCase):
       parser._ParseAttribute(file_object)
 
     # Test attribute with integer value.
-    attribute = attribute_map.CreateStructureValues(
-        tag_value=0x21, name_size=3, name='int', value_data_size=4,
-        value_data=b'\x12\x34\x56\x78')
-    attribute_data = attribute_map.FoldByteStream(attribute)
+    attribute_data = self._CreateAttributeTestData(
+        parser, 0x21, 'int', b'\x12\x34\x56\x78')
     file_object = io.BytesIO(attribute_data)
 
     name, value = parser._ParseAttribute(file_object)
@@ -72,10 +103,8 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     self.assertEqual(value, 0x12345678)
 
     # Test attribute with boolean value.
-    attribute = attribute_map.CreateStructureValues(
-        tag_value=0x22, name_size=4, name='bool', value_data_size=1,
-        value_data=b'\x01')
-    attribute_data = attribute_map.FoldByteStream(attribute)
+    attribute_data = self._CreateAttributeTestData(
+        parser, 0x22, 'bool', b'\x01')
     file_object = io.BytesIO(attribute_data)
 
     name, value = parser._ParseAttribute(file_object)
@@ -83,18 +112,9 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     self.assertEqual(value, True)
 
     # Test attribute with date time value.
-    datetime_map = parser._GetDataTypeMap('cups_ipp_datetime_value')
-
-    datetime = datetime_map.CreateStructureValues(
-        year=2018, month=11, day_of_month=27, hours=16, minutes=41, seconds=51,
-        deciseconds=5, direction_from_utc=ord('+'), hours_from_utc=1,
-        minutes_from_utc=0)
-    datetime_data = datetime_map.FoldByteStream(datetime)
-
-    attribute = attribute_map.CreateStructureValues(
-        tag_value=0x31, name_size=8, name='datetime',
-        value_data_size=len(datetime_data), value_data=datetime_data)
-    attribute_data = attribute_map.FoldByteStream(attribute)
+    datetime_data = self._CreateDateTimeValueData(parser)
+    attribute_data = self._CreateAttributeTestData(
+        parser, 0x31, 'datetime', datetime_data)
     file_object = io.BytesIO(attribute_data)
 
     name, value = parser._ParseAttribute(file_object)
@@ -103,10 +123,8 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     self.assertEqual(value.year, 2018)
 
     # Test attribute with string without language.
-    attribute = attribute_map.CreateStructureValues(
-        tag_value=0x42, name_size=6, name='string', value_data_size=6,
-        value_data=b'NOLANG')
-    attribute_data = attribute_map.FoldByteStream(attribute)
+    attribute_data = self._CreateAttributeTestData(
+        parser, 0x42, 'string', b'NOLANG')
     file_object = io.BytesIO(attribute_data)
 
     name, value = parser._ParseAttribute(file_object)
@@ -114,10 +132,8 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     self.assertEqual(value, 'NOLANG')
 
     # Test attribute with ASCII string and tag value charset.
-    attribute = attribute_map.CreateStructureValues(
-        tag_value=0x47, name_size=7, name='charset', value_data_size=4,
-        value_data=b'utf8')
-    attribute_data = attribute_map.FoldByteStream(attribute)
+    attribute_data = self._CreateAttributeTestData(
+        parser, 0x47, 'charset', b'utf8')
     file_object = io.BytesIO(attribute_data)
 
     name, value = parser._ParseAttribute(file_object)
@@ -157,13 +173,8 @@ class CupsIppParserTest(test_lib.ParserTestCase):
   def testParseDateTimeValue(self):
     """Tests the _ParseDateTimeValue function."""
     parser = cups_ipp.CupsIppParser()
-    datetime_map = parser._GetDataTypeMap('cups_ipp_datetime_value')
 
-    datetime = datetime_map.CreateStructureValues(
-        year=2018, month=11, day_of_month=27, hours=16, minutes=41, seconds=51,
-        deciseconds=5, direction_from_utc=ord('+'), hours_from_utc=1,
-        minutes_from_utc=0)
-    datetime_data = datetime_map.FoldByteStream(datetime)
+    datetime_data = self._CreateDateTimeValueData(parser)
 
     datetime_value = parser._ParseDateTimeValue(datetime_data, 0)
     self.assertIsNotNone(datetime_value)
@@ -268,19 +279,9 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_events, 0)
 
     # Test attribute with date time value.
-    attribute_map = parser._GetDataTypeMap('cups_ipp_attribute')
-    datetime_map = parser._GetDataTypeMap('cups_ipp_datetime_value')
-
-    datetime = datetime_map.CreateStructureValues(
-        year=2018, month=11, day_of_month=27, hours=16, minutes=41, seconds=51,
-        deciseconds=5, direction_from_utc=ord('+'), hours_from_utc=1,
-        minutes_from_utc=0)
-    datetime_data = datetime_map.FoldByteStream(datetime)
-
-    attribute = attribute_map.CreateStructureValues(
-        tag_value=0x31, name_size=21, name='date-time-at-creation',
-        value_data_size=len(datetime_data), value_data=datetime_data)
-    attribute_data = attribute_map.FoldByteStream(attribute)
+    datetime_data = self._CreateDateTimeValueData(parser)
+    attribute_data = self._CreateAttributeTestData(
+        parser, 0x31, 'date-time-at-creation', datetime_data)
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
