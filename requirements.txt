@@ -10,7 +10,7 @@ chardet >= 2.0.1
 dfdatetime >= 20180704
 dfvfs >= 20181128
 dfwinreg >= 20180712
-dtfabric >= 20180808
+dtfabric >= 20181128
 efilter == 1-1.5
 elasticsearch >= 6.0
 elasticsearch5 >= 5.4.0
