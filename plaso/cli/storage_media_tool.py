@@ -1062,7 +1062,9 @@ class StorageMediaTool(tools.CLITool):
       self._ScanVolumeScanNodeAPFSContainer(scan_node, base_path_specs)
 
     elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
-      self._ScanVolumeScanNodeVSS(scan_node, base_path_specs)
+      # TODO: refactor to use scan options.
+      if self._process_vss:
+        self._ScanVolumeScanNodeVSS(scan_node, base_path_specs)
 
     elif scan_node.type_indicator in (
         dfvfs_definitions.FILE_SYSTEM_TYPE_INDICATORS):
@@ -1125,10 +1127,6 @@ class StorageMediaTool(tools.CLITool):
       SourceScannerError: if a VSS sub scan node scannot be retrieved or
           if the scan node is invalid.
     """
-    # TODO: refactor to use scan options for self._process_vss.
-    if not self._process_vss:
-      return
-
     if not volume_scan_node or not volume_scan_node.path_spec:
       raise errors.SourceScannerError('Invalid or missing volume scan node.')
 
