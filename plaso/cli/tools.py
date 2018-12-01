@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The CLI tools classes."""
+"""The command line interface (CLI) tools classes."""
 
 from __future__ import unicode_literals
 
@@ -25,7 +25,7 @@ import pytz  # pylint: disable=wrong-import-order
 
 
 class CLITool(object):
-  """CLI tool.
+  """Command line interface tool.
 
   Attributes:
     list_timezones (bool): True if the time zones should be listed.
@@ -41,12 +41,12 @@ class CLITool(object):
   NAME = ''
 
   def __init__(self, input_reader=None, output_writer=None):
-    """Initializes the CLI tool object.
+    """Initializes a command line interface tool.
 
     Args:
-      input_reader (Optional[InputReader]): input reader, where None indicates
-          that the stdin input reader should be used.
-      output_writer (Optional[OutputWriter]): output writer, where None
+      input_reader (Optional[CLIInputReader]): input reader, where None
+          indicates that the stdin input reader should be used.
+      output_writer (Optional[CLIOutputWriter]): output writer, where None
           indicates that the stdout output writer should be used.
     """
     super(CLITool, self).__init__()
@@ -388,10 +388,10 @@ class CLITool(object):
 
 
 class CLIInputReader(object):
-  """CLI input reader interface."""
+  """Command line interface input reader interface."""
 
   def __init__(self, encoding='utf-8'):
-    """Initializes the input reader object.
+    """Initializes an input reader.
 
     Args:
       encoding (Optional[str]): input encoding.
@@ -410,10 +410,10 @@ class CLIInputReader(object):
 
 
 class CLIOutputWriter(object):
-  """CLI output writer interface."""
+  """Command line interface output writer interface."""
 
   def __init__(self, encoding='utf-8'):
-    """Initializes the output writer object.
+    """Initializes an output writer.
 
     Args:
       encoding (Optional[str]): output encoding.
@@ -431,13 +431,13 @@ class CLIOutputWriter(object):
 
 
 class FileObjectInputReader(CLIInputReader):
-  """File-like object input reader.
+  """File object command line interface input reader.
 
   This input reader relies on the file-like object having a readline method.
   """
 
   def __init__(self, file_object, encoding='utf-8'):
-    """Initializes the input reader object.
+    """Initializes a file object command line interface input reader.
 
     Args:
       file_object (file): file-like object to read from.
@@ -472,10 +472,10 @@ class FileObjectInputReader(CLIInputReader):
 
 
 class StdinInputReader(FileObjectInputReader):
-  """Stdin input reader."""
+  """Stdin command line interface input reader."""
 
   def __init__(self, encoding='utf-8'):
-    """Initializes the input reader object.
+    """Initializes an stdin input reader.
 
     Args:
       encoding (Optional[str]): input encoding.
@@ -484,13 +484,13 @@ class StdinInputReader(FileObjectInputReader):
 
 
 class FileObjectOutputWriter(CLIOutputWriter):
-  """File-like object output writer.
+  """File object command line interface output writer.
 
   This output writer relies on the file-like object having a write method.
   """
 
   def __init__(self, file_object, encoding='utf-8'):
-    """Initializes the output writer object.
+    """Initializes a file object command line interface output writer.
 
     Args:
       file_object (file): file-like object to read from.
@@ -525,10 +525,10 @@ class FileObjectOutputWriter(CLIOutputWriter):
 
 
 class StdoutOutputWriter(FileObjectOutputWriter):
-  """Stdout output writer."""
+  """Stdout command line interface output writer."""
 
   def __init__(self, encoding='utf-8'):
-    """Initializes the output writer object.
+    """Initializes a stdout output writer.
 
     Args:
       encoding (Optional[str]): output encoding.
