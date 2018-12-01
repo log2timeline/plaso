@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import argparse
 import io
 import locale
+import os
 import sys
 import unittest
 
@@ -245,8 +246,22 @@ optional arguments:
     self.assertEqual(string, expected_string)
 
 
-class StdinInputReaderTest(unittest.TestCase):
-  """The unit test case for a stdin input reader."""
+class CLIInputReaderTest(test_lib.CLIToolTestCase):
+  """Tests for the command line interface input reader interface."""
+
+  def testInitialize(self):
+    """Tests the __init__ function."""
+    input_reader = tools.CLIInputReader()
+    self.assertIsNotNone(input_reader)
+
+
+class FileObjectInputReaderTest(unittest.TestCase):
+  """Tests for the file object command line interface input reader."""
+
+  def testInitialize(self):
+    """Tests the __init__ function."""
+    input_reader = tools.StdinInputReader()
+    self.assertIsNotNone(input_reader)
 
   _TEST_DATA = (
       b'A first string\n'
@@ -256,10 +271,8 @@ class StdinInputReaderTest(unittest.TestCase):
 
   def testReadAscii(self):
     """Tests the Read function with ASCII encoding."""
-    original_stdin = sys.stdin
-    sys.stdin = io.BytesIO(self._TEST_DATA)
-
-    input_reader = tools.StdinInputReader(encoding='ascii')
+    file_object = io.BytesIO(self._TEST_DATA)
+    input_reader = tools.FileObjectInputReader(file_object, encoding='ascii')
 
     string = input_reader.Read()
     self.assertEqual(string, 'A first string\n')
@@ -278,14 +291,10 @@ class StdinInputReaderTest(unittest.TestCase):
         '\x00b\x00a\x00n\x00d\x00')
     self.assertEqual(string, expected_string)
 
-    sys.stdin = original_stdin
-
   def testReadUtf8(self):
     """Tests the Read function with UTF-8 encoding."""
-    original_stdin = sys.stdin
-    sys.stdin = io.BytesIO(self._TEST_DATA)
-
-    input_reader = tools.StdinInputReader()
+    file_object = io.BytesIO(self._TEST_DATA)
+    input_reader = tools.FileObjectInputReader(file_object)
 
     string = input_reader.Read()
     self.assertEqual(string, 'A first string\n')
@@ -304,37 +313,76 @@ class StdinInputReaderTest(unittest.TestCase):
         '\x00b\x00a\x00n\x00d\x00')
     self.assertEqual(string, expected_string)
 
-    sys.stdin = original_stdin
+
+class StdinInputReaderTest(unittest.TestCase):
+  """Tests for the stdin command line interface input reader."""
+
+  def testInitialize(self):
+    """Tests the __init__ function."""
+    input_reader = tools.StdinInputReader()
+    self.assertIsNotNone(input_reader)
 
 
 class FileObjectOutputWriterTest(unittest.TestCase):
-  """The unit test case for a file-like object output writer."""
+  """Tests for the file object command line interface output writer."""
+
+  def _ReadOutput(self, file_object):
+    """Reads all output added since the last call to ReadOutput.
+
+    Args:
+      file_object (file): file-like object.
+
+    Returns:
+      str: output data.
+    """
+    file_object.seek(0, os.SEEK_SET)
+    output_data = file_object.read()
+
+    file_object.seek(0, os.SEEK_SET)
+    file_object.truncate(0)
+    return output_data
 
   def testWriteAscii(self):
     """Tests the Write function with ASCII encoding."""
-    output_writer = test_lib.TestOutputWriter(encoding='ascii')
+    file_object = io.BytesIO()
+    output_writer = tools.FileObjectOutputWriter(
+        file_object, encoding='ascii')
 
     output_writer.Write('A first string\n')
-    string = output_writer.ReadOutput()
-    self.assertEqual(string, 'A first string\n')
+
+    byte_stream = self._ReadOutput(file_object)
+    self.assertEqual(byte_stream, b'A first string\n')
 
     # Unicode string with non-ASCII characters.
     output_writer.Write('þriðja string\n')
-    string = output_writer.ReadOutput()
-    self.assertEqual(string, '?ri?ja string\n')
+
+    byte_stream = self._ReadOutput(file_object)
+    self.assertEqual(byte_stream, b'?ri?ja string\n')
 
   def testWriteUtf8(self):
     """Tests the Write function with UTF-8 encoding."""
-    output_writer = test_lib.TestOutputWriter()
+    file_object = io.BytesIO()
+    output_writer = tools.FileObjectOutputWriter(file_object)
 
     output_writer.Write('A first string\n')
-    string = output_writer.ReadOutput()
-    self.assertEqual(string, 'A first string\n')
+
+    byte_stream = self._ReadOutput(file_object)
+    self.assertEqual(byte_stream, b'A first string\n')
 
     # Unicode string with non-ASCII characters.
     output_writer.Write('þriðja string\n')
-    string = output_writer.ReadOutput()
-    self.assertEqual(string, 'þriðja string\n')
+
+    byte_stream = self._ReadOutput(file_object)
+    self.assertEqual(byte_stream, b'\xc3\xberi\xc3\xb0ja string\n')
+
+
+class StdoutOutputWriterTest(unittest.TestCase):
+  """Tests for the stdout command line interface output writer."""
+
+  def testWriteAscii(self):
+    """Tests the Write function with ASCII encoding."""
+    output_writer = tools.StdoutOutputWriter(encoding='ascii')
+    output_writer.Write('A first string\n')
 
 
 if __name__ == '__main__':
