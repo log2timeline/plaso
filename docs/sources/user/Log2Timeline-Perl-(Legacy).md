@@ -75,7 +75,7 @@ The options can also be supplied on the command line, `-o 63` for sector offset 
 
 This can also be achieved without knowing the offset into the disk image.
 
-    log2timeline.py --partition 2 /cases/timeline/myhost.dump image.dd
+    log2timeline.py --partitions 2 /cases/timeline/myhost.dump image.dd
 
 First of all there is quite a difference in the number of parameters, let's go slightly over them:
 
