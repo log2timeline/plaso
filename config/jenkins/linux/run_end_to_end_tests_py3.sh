@@ -30,6 +30,10 @@ if ! test -f ${CONFIGURATION_FILE};
 then
 	CONFIGURATION_FILE="config/jenkins/greendale/${CONFIGURATION_FILE}";
 fi
+if ! test -f ${CONFIGURATION_FILE};
+then
+	CONFIGURATION_FILE="config/jenkins/sans/${CONFIGURATION_FILE}";
+fi
 
 PYTHONPATH=. python3 ./utils/check_dependencies.py
 
