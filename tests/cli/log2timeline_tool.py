@@ -248,6 +248,37 @@ optional arguments:
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
+  @shared_test_lib.skipUnlessHasTestFile(['apfs.dmg'])
+  def testExtractEventsFromSourcesOnAPFSImage(self):
+    """Tests the ExtractEventsFromSources function on APFS image."""
+    output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
+    test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
+
+    source_path = self._GetTestFilePath(['apfs.dmg'])
+    options = self._CreateExtractionOptions(source_path)
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      options.storage_file = os.path.join(temp_directory, 'storage.plaso')
+      options.storage_format = definitions.STORAGE_FORMAT_SQLITE
+
+      test_tool.ParseOptions(options)
+
+      test_tool.ExtractEventsFromSources()
+
+      expected_output = [
+          '',
+          'Source path\t: {0:s}'.format(options.source),
+          'Source type\t: storage media image',
+          'Processing time\t: 00:00:00',
+          '',
+          'Processing started.',
+          'Processing completed.',
+          '',
+          '']
+
+      output = output_writer.ReadOutput()
+      self._CheckOutput(output, expected_output)
+
   @shared_test_lib.skipUnlessHasTestFile(['bdetogo.raw'])
   def testExtractEventsFromSourcesOnBDEImage(self):
     """Tests the ExtractEventsFromSources function on BDE image."""

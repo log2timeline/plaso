@@ -16,6 +16,7 @@ from dfvfs.helpers import source_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
+from dfvfs.volume import apfs_volume_system
 from dfvfs.volume import tsk_volume_system
 from dfvfs.volume import vshadow_volume_system
 
@@ -25,7 +26,6 @@ from plaso.cli import views
 from plaso.engine import configurations
 from plaso.lib import errors
 from plaso.lib import py2to3
-from plaso.lib import timelib
 
 
 try:
@@ -53,13 +53,26 @@ class StorageMediaTool(tools.CLITool):
   _UNITS_1000 = ['B', 'kB', 'MB', 'GB', 'TB', 'EB', 'ZB', 'YB']
   _UNITS_1024 = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'EiB', 'ZiB', 'YiB']
 
-  _USER_PROMPT_VSS = '\n'.join(textwrap.wrap((
+  _USER_PROMPT_APFS = (
+      'Please specify the identifier(s) of the APFS volume that should be '
+      'processed: Note that a range of volumes can be defined as: 3..5. '
+      'Multiple volumes can be defined as: 1,3,5 (a list of comma separated '
+      'values). Ranges and lists can also be combined as: 1,3..5. The first '
+      'volume is 1. All volumes can be defined as "all". If no volumes are '
+      'specified none will be processed. You can abort with Ctrl^C.')
+
+  _USER_PROMPT_TSK = (
+      'Please specify the identifier of the partition that should be '
+      'processed. All partitions can be defined as: "all". Note that you can '
+      'abort with Ctrl^C.')
+
+  _USER_PROMPT_VSS = (
       'Please specify the identifier(s) of the VSS that should be processed: '
       'Note that a range of stores can be defined as: 3..5. Multiple stores '
       'can be defined as: 1,3,5 (a list of comma separated values). Ranges '
       'and lists can also be combined as: 1,3..5. The first store is 1. All '
       'stores can be defined as "all". If no stores are specified none will '
-      'be processed. You can abort with Ctrl^C.'), 79))
+      'be processed. You can abort with Ctrl^C.')
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
@@ -84,6 +97,8 @@ class StorageMediaTool(tools.CLITool):
     self._source_scanner = source_scanner.SourceScanner()
     self._source_path = None
     self._source_path_specs = []
+    self._textwrapper = textwrap.TextWrapper()
+    self._user_selected_vss_stores = False
     self._vss_only = False
     self._vss_stores = None
 
@@ -139,58 +154,42 @@ class StorageMediaTool(tools.CLITool):
     return '{0:s} / {1:s} ({2:d} B)'.format(
         size_string_1024, size_string_1000, size)
 
-  def _GetNormalizedVolumeIdentifiers(
-      self, volume_system, volume_identifiers, prefix='v'):
-    """Retrieves normalized volume identifiers.
+  def _GetAPFSVolumeIdentifiers(self, scan_node):
+    """Determines the APFS volume identifiers.
 
     Args:
-      volume_system (dfvfs.VolumeSystem): volume system.
-      volume_identifiers (list[str]): allowed volume identifiers.
-      prefix (Optional[str]): volume identifier prefix.
+      scan_node (dfvfs.SourceScanNode): scan node.
 
     Returns:
-      list[int]: normalized volume identifiers.
+      list[str]: APFS volume identifiers.
 
     Raises:
-      SourceScannerError: if the volume identifier is not supported or no
-          volume could be found that corresponds with the identifier.
+      SourceScannerError: if the format of or within the source is not
+          supported or the the scan node is invalid.
+      UserAbort: if the user requested to abort.
     """
-    prefix_length = 0
-    if prefix:
-      prefix_length = len(prefix)
+    if not scan_node or not scan_node.path_spec:
+      raise errors.SourceScannerError('Invalid scan node.')
 
-    normalized_volume_identifiers = []
-    for volume_identifier in volume_identifiers:
+    volume_system = apfs_volume_system.APFSVolumeSystem()
+    volume_system.Open(scan_node.path_spec)
+
+    volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
+        volume_system)
+    if not volume_identifiers:
+      return []
+
+    if len(volume_identifiers) > 1:
       try:
-        identifier_has_prefix = volume_identifier.startswith(prefix)
-      except AttributeError:
-        identifier_has_prefix = False
+        volume_identifiers = self._PromptUserForAPFSVolumeIdentifiers(
+            volume_system, volume_identifiers)
+      except KeyboardInterrupt:
+        raise errors.UserAbort('File system scan aborted.')
 
-      if prefix and not identifier_has_prefix:
-        raise errors.SourceScannerError(
-            'Unsupported volume identifier: {0!s}.'.format(volume_identifier))
+    return self._NormalizedVolumeIdentifiers(
+        volume_system, volume_identifiers, prefix='apfs')
 
-      try:
-        volume = volume_system.GetVolumeByIdentifier(volume_identifier)
-      except KeyError:
-        volume = None
-
-      if not volume:
-        raise errors.SourceScannerError(
-            'Volume missing for identifier: {0:s}.'.format(volume_identifier))
-
-      try:
-        volume_identifier = int(volume.identifier[prefix_length:], 10)
-        normalized_volume_identifiers.append(volume_identifier)
-      except ValueError:
-        pass
-
-    return normalized_volume_identifiers
-
-  # TODO: refactor this method that it become more clear what it is
-  # supposed to do.
-  def _GetTSKPartitionIdentifiers(
-      self, scan_node, partition_offset=None, partitions=None):
+  def _GetTSKPartitionIdentifiers(self, scan_node):
     """Determines the TSK partition identifiers.
 
     This method first checks for the preferred partition number, then for
@@ -199,11 +198,9 @@ class StorageMediaTool(tools.CLITool):
 
     Args:
       scan_node (dfvfs.SourceScanNode): scan node.
-      partition_offset (Optional[int]): preferred partition byte offset.
-      partitions (Optional[list[str]]): preferred partition identifiers.
 
     Returns:
-      list[str]: partition identifiers.
+      list[str]: TSK partition identifiers.
 
     Raises:
       RuntimeError: if the volume for a specific identifier cannot be
@@ -221,57 +218,56 @@ class StorageMediaTool(tools.CLITool):
         volume_system)
     if not volume_identifiers:
       self._output_writer.Write('[WARNING] No partitions found.\n')
-      return None
+      return []
 
-    normalized_volume_identifiers = self._GetNormalizedVolumeIdentifiers(
-        volume_system, volume_identifiers, 'p')
-
-    if partitions:
+    # TODO: refactor self._partitions to use scan options.
+    if self._partitions:
+      partitions = self._partitions
       if partitions == ['all']:
         partitions = range(1, volume_system.number_of_volumes + 1)
 
-      if not set(partitions).difference(normalized_volume_identifiers):
-        return [
-            'p{0:d}'.format(partition_number)
-            for partition_number in partitions]
+      partitions = self._NormalizedVolumeIdentifiers(
+          volume_system, partitions, prefix='p')
 
-    if partition_offset is not None:
+      if not set(partitions).difference(volume_identifiers):
+        return partitions
+
+    # TODO: refactor self._partition_offset to use scan options.
+    if self._partition_offset is not None:
       for volume in volume_system.volumes:
         volume_extent = volume.extents[0]
-        if volume_extent.offset == partition_offset:
+        if volume_extent.offset == self._partition_offset:
           return [volume.identifier]
 
       self._output_writer.Write((
           '[WARNING] No such partition with offset: {0:d} '
-          '(0x{0:08x}).\n').format(partition_offset))
+          '(0x{0:08x}).\n').format(self._partition_offset))
 
     if len(volume_identifiers) == 1:
       return volume_identifiers
 
     try:
-      selected_volume_identifier = self._PromptUserForPartitionIdentifier(
+      volume_identifiers = self._PromptUserForPartitionIdentifiers(
           volume_system, volume_identifiers)
     except KeyboardInterrupt:
       raise errors.UserAbort('File system scan aborted.')
 
-    if selected_volume_identifier == 'all':
-      return volume_identifiers
+    return self._NormalizedVolumeIdentifiers(
+        volume_system, volume_identifiers, prefix='p')
 
-    return [selected_volume_identifier]
-
-  def _GetVSSStoreIdentifiers(self, scan_node, vss_stores=None):
+  def _GetVSSStoreIdentifiers(self, scan_node):
     """Determines the VSS store identifiers.
 
     Args:
       scan_node (dfvfs.SourceScanNode): scan node.
-      vss_stores (Optional[list[str]]): preferred VSS store identifiers.
 
     Returns:
       list[str]: VSS store identifiers.
 
     Raises:
-      SourceScannerError: if the format of or within the source
-          is not supported or the the scan node is invalid.
+      SourceScannerError: if the format of or within the source is not
+          supported or the scan node is invalid.
+      UserAbort: if the user requested to abort.
     """
     if not scan_node or not scan_node.path_spec:
       raise errors.SourceScannerError('Invalid scan node.')
@@ -284,13 +280,62 @@ class StorageMediaTool(tools.CLITool):
     if not volume_identifiers:
       return []
 
+    # TODO: refactor to use scan options.
+    if self._vss_stores:
+      vss_stores = self._vss_stores
+      if vss_stores == ['all']:
+        vss_stores = range(1, volume_system.number_of_volumes + 1)
+
+      vss_stores = self._NormalizedVolumeIdentifiers(
+          volume_system, vss_stores, prefix='vss')
+
+      if not set(vss_stores).difference(volume_identifiers):
+        return vss_stores
+
     try:
-      selected_store_identifiers = self._PromptUserForVSSStoreIdentifiers(
-          volume_system, volume_identifiers, vss_stores=vss_stores)
+      volume_identifiers = self._PromptUserForVSSStoreIdentifiers(
+          volume_system, volume_identifiers)
+
     except KeyboardInterrupt:
       raise errors.UserAbort('File system scan aborted.')
 
-    return selected_store_identifiers
+    return self._NormalizedVolumeIdentifiers(
+        volume_system, volume_identifiers, prefix='vss')
+
+  def _NormalizedVolumeIdentifiers(
+      self, volume_system, volume_identifiers, prefix='v'):
+    """Normalizes volume identifiers.
+
+    Args:
+      volume_system (VolumeSystem): volume system.
+      volume_identifiers (list[int|str]): allowed volume identifiers, formatted
+          as an integer or string with prefix.
+      prefix (Optional[str]): volume identifier prefix.
+
+    Returns:
+      list[str]: volume identifiers with prefix.
+
+    Raises:
+      SourceScannerError: if the volume identifier is not supported or no
+          volume could be found that corresponds with the identifier.
+    """
+    normalized_volume_identifiers = []
+    for volume_identifier in volume_identifiers:
+      if isinstance(volume_identifier, int):
+        volume_identifier = '{0:s}{1:d}'.format(prefix, volume_identifier)
+
+      try:
+        volume = volume_system.GetVolumeByIdentifier(volume_identifier)
+      except KeyError:
+        volume = None
+
+      if not volume:
+        raise errors.SourceScannerError(
+            'Volume missing for identifier: {0:s}.'.format(volume_identifier))
+
+      normalized_volume_identifiers.append(volume_identifier)
+
+    return normalized_volume_identifiers
 
   def _ParseCredentialOptions(self, options):
     """Parses the credential options.
@@ -479,10 +524,10 @@ class StorageMediaTool(tools.CLITool):
       prefix (Optional[str]): volume identifier prefix.
 
     Returns:
-      list[str]: volume identifiers.
+      list[str]: volume identifiers with prefix or the string "all".
 
     Raises:
-      BadConfigOption: if the volume identifiers string is invalid.
+      ValueError: if the volume identifiers string is invalid.
     """
     prefix_length = 0
     if prefix:
@@ -494,37 +539,45 @@ class StorageMediaTool(tools.CLITool):
     if volume_identifiers_string == 'all':
       return ['all']
 
-    volume_identifiers = []
+    volume_identifiers = set()
     for identifiers_range in volume_identifiers_string.split(','):
       # Determine if the range is formatted as 1..3 otherwise it indicates
       # a single volume identifier.
       if '..' in identifiers_range:
         first_identifier, last_identifier = identifiers_range.split('..')
+
+        if first_identifier.startswith(prefix):
+          first_identifier = first_identifier[prefix_length:]
+
+        if last_identifier.startswith(prefix):
+          last_identifier = last_identifier[prefix_length:]
+
         try:
           first_identifier = int(first_identifier, 10)
           last_identifier = int(last_identifier, 10)
         except ValueError:
-          raise errors.BadConfigOption(
-              'Invalid volume identifiers range: {0:s}.'.format(
-                  identifiers_range))
+          raise ValueError('Invalid volume identifiers range: {0:s}.'.format(
+              identifiers_range))
 
         for volume_identifier in range(first_identifier, last_identifier + 1):
           if volume_identifier not in volume_identifiers:
-            volume_identifiers.append(volume_identifier)
+            volume_identifier = '{0:s}{1:d}'.format(prefix, volume_identifier)
+            volume_identifiers.add(volume_identifier)
       else:
-        if identifiers_range.startswith(prefix):
-          identifiers_range = identifiers_range[prefix_length:]
+        identifier = identifiers_range
+        if identifier.startswith(prefix):
+          identifier = identifiers_range[prefix_length:]
 
         try:
-          volume_identifier = int(identifiers_range, 10)
+          volume_identifier = int(identifier, 10)
         except ValueError:
-          raise errors.BadConfigOption(
-              'Invalid volume identifier range: {0:s}.'.format(
-                  identifiers_range))
+          raise ValueError('Invalid volume identifier range: {0:s}.'.format(
+              identifiers_range))
 
-        if volume_identifier not in volume_identifiers:
-          volume_identifiers.append(volume_identifier)
+        volume_identifier = '{0:s}{1:d}'.format(prefix, volume_identifier)
+        volume_identifiers.add(volume_identifier)
 
+    # Note that sorted will return a list.
     return sorted(volume_identifiers)
 
   def _ParseVSSProcessingOptions(self, options):
@@ -545,10 +598,81 @@ class StorageMediaTool(tools.CLITool):
       vss_stores = getattr(options, 'vss_stores', None)
 
     if vss_stores:
-      vss_stores = self._ParseVolumeIdentifiersString(vss_stores, prefix='vss')
+      try:
+        vss_stores = self._ParseVolumeIdentifiersString(
+            vss_stores, prefix='vss')
+      except ValueError as exception:
+        raise errors.BadConfigOption(exception)
 
     self._vss_only = vss_only
     self._vss_stores = vss_stores
+
+  def _PrintAPFSVolumeIdentifiersOverview(
+      self, volume_system, volume_identifiers):
+    """Prints an overview of APFS volume identifiers.
+
+    Args:
+      volume_system (dfvfs.APFSVolumeSystem): volume system.
+      volume_identifiers (list[str]): allowed volume identifiers.
+
+    Raises:
+      SourceScannerError: if a volume cannot be resolved from the volume
+          identifier.
+    """
+    header = 'The following Apple File System (APFS) volumes were found:\n'
+    self._output_writer.Write(header)
+
+    column_names = ['Identifier', 'Name']
+    table_view = views.CLITabularTableView(column_names=column_names)
+
+    for volume_identifier in volume_identifiers:
+      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
+      if not volume:
+        raise errors.SourceScannerError(
+            'Volume missing for identifier: {0:s}.'.format(
+                volume_identifier))
+
+      volume_attribute = volume.GetAttribute('name')
+      table_view.AddRow([volume.identifier, volume_attribute.value])
+
+    self._output_writer.Write('\n')
+    table_view.Write(self._output_writer)
+    self._output_writer.Write('\n')
+
+  def _PrintTSKPartitionIdentifiersOverview(
+      self, volume_system, volume_identifiers):
+    """Prints an overview of TSK partition identifiers.
+
+    Args:
+      volume_system (dfvfs.TSKVolumeSystem): volume system.
+      volume_identifiers (list[str]): allowed volume identifiers.
+
+    Raises:
+      SourceScannerError: if a volume cannot be resolved from the volume
+          identifier.
+    """
+    header = 'The following partitions were found:\n'
+    self._output_writer.Write(header)
+
+    column_names = ['Identifier', 'Offset (in bytes)', 'Size (in bytes)']
+    table_view = views.CLITabularTableView(column_names=column_names)
+
+    for volume_identifier in sorted(volume_identifiers):
+      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
+      if not volume:
+        raise errors.SourceScannerError(
+            'Partition missing for identifier: {0:s}.'.format(
+                volume_identifier))
+
+      volume_extent = volume.extents[0]
+      volume_offset = '{0:d} (0x{0:08x})'.format(volume_extent.offset)
+      volume_size = self._FormatHumanReadableSize(volume_extent.size)
+
+      table_view.AddRow([volume.identifier, volume_offset, volume_size])
+
+    self._output_writer.Write('\n')
+    table_view.Write(self._output_writer)
+    self._output_writer.Write('\n')
 
   def _PrintVSSStoreIdentifiersOverview(
       self, volume_system, volume_identifiers):
@@ -559,7 +683,8 @@ class StorageMediaTool(tools.CLITool):
       volume_identifiers (list[str]): allowed volume identifiers.
 
     Raises:
-      SourceScannerError: if the source cannot be processed.
+      SourceScannerError: if a volume cannot be resolved from the volume
+          identifier.
     """
     header = 'The following Volume Shadow Snapshots (VSS) were found:\n'
     self._output_writer.Write(header)
@@ -574,23 +699,61 @@ class StorageMediaTool(tools.CLITool):
             'Volume missing for identifier: {0:s}.'.format(
                 volume_identifier))
 
-      vss_creation_time = volume.GetAttribute('creation_time')
-      filetime = dfdatetime_filetime.Filetime(
-          timestamp=vss_creation_time.value)
-      vss_creation_time = filetime.GetPlasoTimestamp()
-      vss_creation_time = timelib.Timestamp.CopyToIsoFormat(
-          vss_creation_time)
+      volume_attribute = volume.GetAttribute('creation_time')
+      filetime = dfdatetime_filetime.Filetime(timestamp=volume_attribute.value)
+      creation_time = filetime.CopyToDateTimeString()
 
       if volume.HasExternalData():
-        vss_creation_time = (
-            '{0:s}\tWARNING: data stored outside volume').format(
-                vss_creation_time)
+        creation_time = '{0:s}\tWARNING: data stored outside volume'.format(
+            creation_time)
 
-      table_view.AddRow([volume.identifier, vss_creation_time])
+      table_view.AddRow([volume.identifier, creation_time])
 
     self._output_writer.Write('\n')
     table_view.Write(self._output_writer)
     self._output_writer.Write('\n')
+
+  def _PromptUserForAPFSVolumeIdentifiers(
+      self, volume_system, volume_identifiers):
+    """Prompts the user to provide APFS volume identifiers.
+
+    Args:
+      volume_system (dfvfs.APFSVolumeSystem): volume system.
+      volume_identifiers (list[str]): volume identifiers including prefix.
+
+    Returns:
+      list[str]: selected volume identifiers including prefix or None.
+    """
+    print_header = True
+    while True:
+      if print_header:
+        self._PrintAPFSVolumeIdentifiersOverview(
+            volume_system, volume_identifiers)
+
+        print_header = False
+
+      lines = self._textwrapper.wrap(self._USER_PROMPT_APFS)
+      self._output_writer.Write('\n'.join(lines))
+      self._output_writer.Write('\n\nVolume identifiers: ')
+
+      try:
+        selected_volumes = self._ReadSelectedVolumes(
+            volume_system, prefix='apfs')
+        if (not selected_volumes or
+            not set(selected_volumes).difference(volume_identifiers)):
+          break
+      except ValueError:
+        pass
+
+      self._output_writer.Write('\n')
+
+      lines = self._textwrapper.wrap(
+          'Unsupported volume identifier(s), please try again or abort with '
+          'Ctrl^C.')
+      self._output_writer.Write('\n'.join(lines))
+      self._output_writer.Write('\n\n')
+
+    return selected_volumes
 
   def _PromptUserForEncryptedVolumeCredential(
       self, scan_context, locked_scan_node, credentials):
@@ -679,69 +842,46 @@ class StorageMediaTool(tools.CLITool):
 
     return result
 
-  def _PromptUserForPartitionIdentifier(
+  def _PromptUserForPartitionIdentifiers(
       self, volume_system, volume_identifiers):
-    """Prompts the user to provide a partition identifier.
+    """Prompts the user to provide partition identifiers.
 
     Args:
       volume_system (dfvfs.TSKVolumeSystem): volume system.
-      volume_identifiers (list[str]): allowed volume identifiers.
+      volume_identifiers (list[str]): volume identifiers including prefix.
 
     Returns:
-      str: partition identifier or "all".
-
-    Raises:
-      SourceScannerError: if the source cannot be processed.
+      list[str]: selected volume identifiers including prefix or None.
     """
-    self._output_writer.Write('The following partitions were found:\n')
-
-    table_view = views.CLITabularTableView(column_names=[
-        'Identifier', 'Offset (in bytes)', 'Size (in bytes)'])
-
-    for volume_identifier in sorted(volume_identifiers):
-      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
-      if not volume:
-        raise errors.SourceScannerError(
-            'Volume missing for identifier: {0:s}.'.format(volume_identifier))
-
-      volume_extent = volume.extents[0]
-      volume_offset = '{0:d} (0x{0:08x})'.format(volume_extent.offset)
-      volume_size = self._FormatHumanReadableSize(volume_extent.size)
-
-      table_view.AddRow([volume.identifier, volume_offset, volume_size])
-
-    self._output_writer.Write('\n')
-    table_view.Write(self._output_writer)
-    self._output_writer.Write('\n')
-
+    print_header = True
     while True:
-      self._output_writer.Write(
-          'Please specify the identifier of the partition that should be '
-          'processed.\nAll partitions can be defined as: "all". Note that you '
-          'can abort with Ctrl^C.\n')
+      if print_header:
+        self._PrintTSKPartitionIdentifiersOverview(
+            volume_system, volume_identifiers)
 
-      selected_volume_identifier = self._input_reader.Read()
-      selected_volume_identifier = selected_volume_identifier.strip()
+        print_header = False
 
-      if not selected_volume_identifier.startswith('p'):
-        try:
-          partition_number = int(selected_volume_identifier, 10)
-          selected_volume_identifier = 'p{0:d}'.format(partition_number)
-        except ValueError:
-          pass
+      lines = self._textwrapper.wrap(self._USER_PROMPT_TSK)
+      self._output_writer.Write('\n'.join(lines))
+      self._output_writer.Write('\n\nPartition identifiers: ')
 
-      if (selected_volume_identifier == 'all' or
-          selected_volume_identifier in volume_identifiers):
-        break
+      try:
+        selected_volumes = self._ReadSelectedVolumes(volume_system, prefix='p')
+        if (not selected_volumes or
+            not set(selected_volumes).difference(volume_identifiers)):
+          break
+      except ValueError:
+        pass
 
-      self._output_writer.Write(
-          '\n'
-          'Unsupported partition identifier, please try again or abort '
-          'with Ctrl^C.\n'
-          '\n')
+      self._output_writer.Write('\n')
 
-    self._output_writer.Write('\n')
-    return selected_volume_identifier
+      lines = self._textwrapper.wrap(
+          'Unsupported partition identifier(s), please try again or abort with '
+          'Ctrl^C.')
+      self._output_writer.Write('\n'.join(lines))
+      self._output_writer.Write('\n\n')
+
+    return selected_volumes
 
   def _PromptUserForVSSCurrentVolume(self):
     """Prompts the user if the current volume with VSS should be processed.
@@ -771,7 +911,7 @@ class StorageMediaTool(tools.CLITool):
     return not process_current_volume or process_current_volume == 'yes'
 
   def _PromptUserForVSSStoreIdentifiers(
-      self, volume_system, volume_identifiers, vss_stores=None):
+      self, volume_system, volume_identifiers):
     """Prompts the user to provide VSS store identifiers.
 
     This method first checks for the preferred VSS stores and falls back
@@ -779,28 +919,11 @@ class StorageMediaTool(tools.CLITool):
 
     Args:
       volume_system (dfvfs.VShadowVolumeSystem): volume system.
-      volume_identifiers (list[str]): allowed volume identifiers.
-      vss_stores (Optional[list[str]]): preferred VSS store identifiers.
+      volume_identifiers (list[str]): volume identifiers including prefix.
 
     Returns:
-      list[str]: selected VSS store identifiers.
-
-    Raises:
-      SourceScannerError: if the source cannot be processed.
+      list[str]: selected volume identifiers including prefix or None.
     """
-    normalized_volume_identifiers = self._GetNormalizedVolumeIdentifiers(
-        volume_system, volume_identifiers, prefix='vss')
-
-    # TODO: refactor this to _GetVSSStoreIdentifiers.
-    if vss_stores:
-      if vss_stores == ['all']:
-        # We need to set the stores to cover all vss stores.
-        vss_stores = range(1, volume_system.number_of_volumes + 1)
-        vss_stores = list(vss_stores)
-
-      if not set(vss_stores).difference(normalized_volume_identifiers):
-        return vss_stores
-
     print_header = True
     while True:
       if print_header:
@@ -809,48 +932,86 @@ class StorageMediaTool(tools.CLITool):
 
         print_header = False
 
-      self._output_writer.Write(self._USER_PROMPT_VSS)
-      self._output_writer.Write('\n')
-
-      selected_vss_stores = self._input_reader.Read()
-
-      selected_vss_stores = selected_vss_stores.strip()
-      if not selected_vss_stores:
-        return []
+      lines = self._textwrapper.wrap(self._USER_PROMPT_VSS)
+      self._output_writer.Write('\n'.join(lines))
+      self._output_writer.Write('\n\nVSS identifiers: ')
 
       try:
-        selected_vss_stores = self._ParseVolumeIdentifiersString(
-            selected_vss_stores, prefix='vss')
-      except errors.BadConfigOption:
-        selected_vss_stores = []
+        selected_volumes = self._ReadSelectedVolumes(
+            volume_system, prefix='vss')
+        if (not selected_volumes or
+            not set(selected_volumes).difference(volume_identifiers)):
+          break
+      except ValueError:
+        pass
 
-      if selected_vss_stores == ['all']:
-        # We need to set the stores to cover all vss stores.
-        selected_vss_stores = range(1, volume_system.number_of_volumes + 1)
-        selected_vss_stores = list(selected_vss_stores)
+      self._output_writer.Write('\n')
 
-      if not set(selected_vss_stores).difference(normalized_volume_identifiers):
-        break
-
-      self._output_writer.Write(
-          '\n'
+      lines = self._textwrapper.wrap(
           'Unsupported VSS identifier(s), please try again or abort with '
-          'Ctrl^C.\n'
-          '\n')
+          'Ctrl^C.')
+      self._output_writer.Write('\n'.join(lines))
+      self._output_writer.Write('\n\n')
 
-    self._output_writer.Write('\n')
-    return selected_vss_stores
+    return selected_volumes
 
-  def _ScanVolume(self, scan_context, volume_scan_node):
+  def _ReadSelectedVolumes(self, volume_system, prefix='v'):
+    """Reads the selected volumes provided by the user.
+
+    Args:
+      volume_system (APFSVolumeSystem): volume system.
+      prefix (Optional[str]): volume identifier prefix.
+
+    Returns:
+      list[str]: selected volume identifiers including prefix.
+
+    Raises:
+      KeyboardInterrupt: if the user requested to abort.
+      ValueError: if the volume identifiers string could not be parsed.
+    """
+    volume_identifiers_string = self._input_reader.Read()
+    volume_identifiers_string = volume_identifiers_string.strip()
+
+    if not volume_identifiers_string:
+      return []
+
+    selected_volumes = self._ParseVolumeIdentifiersString(
+        volume_identifiers_string, prefix=prefix)
+
+    if selected_volumes == ['all']:
+      return [
+          '{0:s}{1:d}'.format(prefix, volume_index)
+          for volume_index in range(1, volume_system.number_of_volumes + 1)]
+
+    return selected_volumes
+
+  def _ScanFileSystem(self, file_system_scan_node, base_path_specs):
+    """Scans a file system scan node for file systems.
+
+    Args:
+      file_system_scan_node (dfvfs.SourceScanNode): file system scan node.
+      base_path_specs (list[PathSpec]): file system base path specifications.
+
+    Raises:
+      SourceScannerError: if the scan node is invalid.
+    """
+    if not file_system_scan_node or not file_system_scan_node.path_spec:
+      raise errors.SourceScannerError(
+          'Invalid or missing file system scan node.')
+
+    base_path_specs.append(file_system_scan_node.path_spec)
+
+  def _ScanVolume(self, scan_context, volume_scan_node, base_path_specs):
     """Scans the volume scan node for volume and file systems.
 
     Args:
       scan_context (dfvfs.SourceScannerContext): source scanner context.
       volume_scan_node (dfvfs.SourceScanNode): volume scan node.
+      base_path_specs (list[PathSpec]): file system base path specifications.
 
     Raises:
       SourceScannerError: if the format of or within the source
-          is not supported or the the scan node is invalid.
+          is not supported or the scan node is invalid.
     """
     if not volume_scan_node or not volume_scan_node.path_spec:
       raise errors.SourceScannerError('Invalid or missing volume scan node.')
@@ -859,22 +1020,24 @@ class StorageMediaTool(tools.CLITool):
     # an encrypted and unencrypted volume.
     sub_scan_nodes = volume_scan_node.sub_nodes or [volume_scan_node]
 
-    selected_vss_stores = []
+    # TODO: refactor to use scan options.
+    self._user_selected_vss_stores = False
+
     for sub_scan_node in sub_scan_nodes:
-      self._ScanVolumeScanNode(scan_context, sub_scan_node, selected_vss_stores)
+      self._ScanVolumeScanNode(scan_context, sub_scan_node, base_path_specs)
 
   def _ScanVolumeScanNode(
-      self, scan_context, volume_scan_node, selected_vss_stores):
+      self, scan_context, volume_scan_node, base_path_specs):
     """Scans an individual volume scan node for volume and file systems.
 
     Args:
       scan_context (dfvfs.SourceScannerContext): source scanner context.
       volume_scan_node (dfvfs.SourceScanNode): volume scan node.
-      selected_vss_stores (list[str]): selected VSS store identifiers.
+      base_path_specs (list[PathSpec]): file system base path specifications.
 
     Raises:
       SourceScannerError: if the format of or within the source
-          is not supported or the the scan node is invalid.
+          is not supported or the scan node is invalid.
     """
     if not volume_scan_node or not volume_scan_node.path_spec:
       raise errors.SourceScannerError('Invalid or missing volume scan node.')
@@ -894,60 +1057,111 @@ class StorageMediaTool(tools.CLITool):
     if scan_context.IsLockedScanNode(volume_scan_node.path_spec):
       self._UnlockEncryptedVolumeScanNode(scan_context, scan_node)
 
-    if scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
-      self._ScanVolumeScanNodeVSS(scan_node, selected_vss_stores)
+    if scan_node.type_indicator == (
+        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER):
+      self._ScanVolumeScanNodeAPFSContainer(scan_node, base_path_specs)
+
+    elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
+      # TODO: refactor to use scan options.
+      if self._process_vss:
+        self._ScanVolumeScanNodeVSS(scan_node, base_path_specs)
 
     elif scan_node.type_indicator in (
         dfvfs_definitions.FILE_SYSTEM_TYPE_INDICATORS):
-      if (not self._vss_only or not selected_vss_stores or
+      # TODO: refactor to use scan options.
+      if (not self._vss_only or not self._user_selected_vss_stores or
           self._PromptUserForVSSCurrentVolume()):
-        self._source_path_specs.append(scan_node.path_spec)
+        self._ScanFileSystem(scan_node, base_path_specs)
 
     elif scan_node.type_indicator in (
         dfvfs_definitions.ENCRYPTED_VOLUME_TYPE_INDICATORS):
       self._source_scanner.Scan(
           scan_context, scan_path_spec=volume_scan_node.path_spec)
-      self._ScanVolume(scan_context, volume_scan_node)
+      self._ScanVolume(scan_context, volume_scan_node, base_path_specs)
 
-  def _ScanVolumeScanNodeVSS(self, volume_scan_node, selected_vss_stores):
-    """Scans a VSS volume scan node for volume and file systems.
+  def _ScanVolumeScanNodeAPFSContainer(self, volume_scan_node, base_path_specs):
+    """Scans an APFS container scan node for volume and file systems.
 
     Args:
       volume_scan_node (dfvfs.SourceScanNode): volume scan node.
-      selected_vss_stores (list[str]): selected VSS store identifiers.
+      base_path_specs (list[PathSpec]): file system base path specifications.
 
     Raises:
       SourceScannerError: if a sub scan node cannot be retrieved.
     """
-    if not self._process_vss:
+    # Do not scan inside individual APFS volume scan nodes.
+    if not volume_scan_node.IsVolumeSystemRoot():
       return
+
+    volume_identifiers = self._GetAPFSVolumeIdentifiers(volume_scan_node)
+
+    for volume_identifier in volume_identifiers:
+      location = '/{0:s}'.format(volume_identifier)
+      sub_scan_node = volume_scan_node.GetSubNodeByLocation(location)
+      if not sub_scan_node:
+        raise errors.SourceScannerError(
+            'Scan node missing for APFS volume identifier: {0:d}.'.format(
+                volume_identifier))
+
+      # TODO: consider changes this when upstream changes have been made.
+      # Currently pyfsapfs does not support reading from a volume as a device.
+      # Also see: https://github.com/log2timeline/dfvfs/issues/332
+      # self._source_scanner.Scan(
+      #     scan_context, scan_path_spec=sub_scan_node.path_spec)
+      # self._ScanFileSystem(sub_scan_node, base_path_specs)
+
+      path_spec = path_spec_factory.Factory.NewPathSpec(
+          dfvfs_definitions.TYPE_INDICATOR_APFS, location='/',
+          parent=sub_scan_node.path_spec)
+
+      base_path_specs.append(path_spec)
+
+  def _ScanVolumeScanNodeVSS(self, volume_scan_node, base_path_specs):
+    """Scans a VSS volume scan node for volume and file systems.
+
+    Args:
+      volume_scan_node (dfvfs.SourceScanNode): volume scan node.
+      base_path_specs (list[PathSpec]): file system base path specifications.
+
+    Raises:
+      SourceScannerError: if a VSS sub scan node scannot be retrieved or
+          if the scan node is invalid.
+    """
+    if not volume_scan_node or not volume_scan_node.path_spec:
+      raise errors.SourceScannerError('Invalid or missing volume scan node.')
 
     # Do not scan inside individual VSS store scan nodes.
     if not volume_scan_node.IsVolumeSystemRoot():
       return
 
-    vss_store_identifiers = self._GetVSSStoreIdentifiers(
-        volume_scan_node, vss_stores=self._vss_stores)
-
-    selected_vss_stores.extend(vss_store_identifiers)
+    # TODO: refactor to use scan options for self._vss_stores.
+    vss_store_identifiers = self._GetVSSStoreIdentifiers(volume_scan_node)
 
     # Process VSS stores starting with the most recent one.
     vss_store_identifiers.reverse()
     for vss_store_identifier in vss_store_identifiers:
-      location = '/vss{0:d}'.format(vss_store_identifier)
+      location = '/{0:s}'.format(vss_store_identifier)
       sub_scan_node = volume_scan_node.GetSubNodeByLocation(location)
       if not sub_scan_node:
-        logger.error(
+        raise errors.SourceScannerError(
             'Scan node missing for VSS store identifier: {0:d}.'.format(
                 vss_store_identifier))
-        continue
 
-      # We "optimize" here for user experience, ideally we would scan for
+      # We "optimize" here for user experience, alternatively we could scan for
       # a file system instead of hard coding a TSK child path specification.
       path_spec = path_spec_factory.Factory.NewPathSpec(
           dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
           parent=sub_scan_node.path_spec)
-      self._source_path_specs.append(path_spec)
+
+      # TODO: look into building VSS store on demand.
+      # self._source_scanner.Scan(
+      #     scan_context, scan_path_spec=sub_scan_node.path_spec)
+      # self._ScanFileSystem(sub_scan_node, base_path_specs)
+
+      base_path_specs.append(path_spec)
+
+      # TODO: refactor to use scan options.
+      self._user_selected_vss_stores = True
 
   def _UnlockEncryptedVolumeScanNode(self, scan_context, volume_scan_node):
     """Unlocks an encrypted volume scan node.
@@ -960,6 +1174,7 @@ class StorageMediaTool(tools.CLITool):
         volume_scan_node.path_spec)
 
     is_unlocked = False
+    # TODO: refactor to use scan options for self._process_vss.
     for credential_type, credential_data in self._credentials:
       if credential_type not in credentials.CREDENTIALS:
         continue
@@ -1113,26 +1328,23 @@ class StorageMediaTool(tools.CLITool):
     while len(scan_node.sub_nodes) == 1:
       scan_node = scan_node.sub_nodes[0]
 
-    partition_identifiers = None
-    if scan_node.type_indicator == (
+    base_path_specs = []
+    if scan_node.type_indicator != (
         dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
-      # The source scanner found a partition table and we need to determine
-      # which partition needs to be processed.
-      partition_identifiers = self._GetTSKPartitionIdentifiers(
-          scan_node, partition_offset=self._partition_offset,
-          partitions=self._partitions)
-
-    if not partition_identifiers:
-      self._ScanVolume(scan_context, scan_node)
+      self._ScanVolume(scan_context, scan_node, base_path_specs)
 
     else:
+      # Determine which partition needs to be processed.
+      partition_identifiers = self._GetTSKPartitionIdentifiers(scan_node)
       for partition_identifier in partition_identifiers:
         location = '/{0:s}'.format(partition_identifier)
         sub_scan_node = scan_node.GetSubNodeByLocation(location)
-        self._ScanVolume(scan_context, sub_scan_node)
+        self._ScanVolume(scan_context, sub_scan_node, base_path_specs)
 
-    if not self._source_path_specs:
+    if not base_path_specs:
       raise errors.SourceScannerError(
           'No supported file system found in source.')
+
+    self._source_path_specs = base_path_specs
 
     return scan_context
