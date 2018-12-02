@@ -734,7 +734,7 @@ class StorageMediaTool(tools.CLITool):
 
       lines = self._textwrapper.wrap(self._USER_PROMPT_APFS)
       self._output_writer.Write('\n'.join(lines))
-      self._output_writer.Write('\n')
+      self._output_writer.Write('\n\nVolume identifiers: ')
 
       try:
         selected_volumes = self._ReadSelectedVolumes(
@@ -863,7 +863,7 @@ class StorageMediaTool(tools.CLITool):
 
       lines = self._textwrapper.wrap(self._USER_PROMPT_TSK)
       self._output_writer.Write('\n'.join(lines))
-      self._output_writer.Write('\n')
+      self._output_writer.Write('\n\nPartition identifiers: ')
 
       try:
         selected_volumes = self._ReadSelectedVolumes(volume_system, prefix='p')
@@ -934,7 +934,7 @@ class StorageMediaTool(tools.CLITool):
 
       lines = self._textwrapper.wrap(self._USER_PROMPT_VSS)
       self._output_writer.Write('\n'.join(lines))
-      self._output_writer.Write('\n')
+      self._output_writer.Write('\n\nVSS identifiers: ')
 
       try:
         selected_volumes = self._ReadSelectedVolumes(
