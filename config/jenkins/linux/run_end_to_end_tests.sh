@@ -21,18 +21,18 @@ if test ${CONFIGURATION} = 'travis';
 then
 	SOURCES_DIRECTORY="test_data";
 	REFERENCES_DIRECTORY="test_data/end_to_end";
-	CONFIGURATION_FILE="config/jenkins/${CONFIGURATION_FILE}";
+	CONFIGURATION_FILE="config/jenkins/${CONFIGURATION}.ini";
 fi
 
 mkdir -p ${RESULTS_DIRECTORY} ${RESULTS_DIRECTORY}/profiling;
 
 if ! test -f ${CONFIGURATION_FILE};
 then
-	CONFIGURATION_FILE="config/jenkins/greendale/${CONFIGURATION_FILE}";
+	CONFIGURATION_FILE="config/jenkins/greendale/${CONFIGURATION}.ini";
 fi
 if ! test -f ${CONFIGURATION_FILE};
 then
-	CONFIGURATION_FILE="config/jenkins/sans/${CONFIGURATION_FILE}";
+	CONFIGURATION_FILE="config/jenkins/sans/${CONFIGURATION}.ini";
 fi
 
 PYTHONPATH=. ./utils/check_dependencies.py
