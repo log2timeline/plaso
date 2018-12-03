@@ -16,7 +16,6 @@ from plaso.lib import errors
 from plaso.lib import objectfilter
 from plaso.lib import py2to3
 from plaso.lib import timelib
-from plaso.parsers import presets
 
 # pylint: disable=missing-type-doc,missing-return-type-doc,missing-return-doc
 
@@ -215,28 +214,6 @@ class PlasoExpression(objectfilter.BasicExpression):
     return ops
 
 
-class ParserList(objectfilter.GenericBinaryOperator):
-  """Matches when a parser is inside a predefined list of parsers."""
-
-
-  def __init__(self, *children, **kwargs):
-    """Construct the parser list and retrieve a list of available parsers."""
-    super(ParserList, self).__init__(*children, **kwargs)
-    self.compiled_list = presets.CATEGORIES.get(
-        self.right_operand.lower(), [])
-
-  def Operation(self, x, unused_y):
-    """Return a bool depending on the parser list contains the parser."""
-    if self.left_operand != 'parser':
-      raise errors.MalformedQueryError(
-          'Unable to use keyword "inlist" for other than parser.')
-
-    if x in self.compiled_list:
-      return True
-
-    return False
-
-
 class PlasoAttributeFilterImplementation(objectfilter.BaseFilterImplementation):
   """Does field name access on the lowercase version of names.
 
@@ -248,7 +225,6 @@ class PlasoAttributeFilterImplementation(objectfilter.BaseFilterImplementation):
   FILTERS.update(objectfilter.BaseFilterImplementation.FILTERS)
   FILTERS.update({'ValueExpander': PlasoValueExpander})
   OPS = objectfilter.OP2FN
-  OPS.update({'inlist': ParserList,})
 
 
 class DateCompareObject(object):
