@@ -145,7 +145,7 @@ This combines storing all log entries to a file for easier viewing later and hav
 
 There are also few options that can be used to prevent the tool from prompting the user to select VSS stores or partitions.
 
- + **--partition PARTITION_NUMBER**: Preselects the partition number to use, eg: ```---partition 2``` will pick the second partition on the disk.
+ + **--partitions PARTITION_NUMBERS**: Preselects the partition number to use, eg: ```---partitions 2``` will pick the second partition on the disk.
  + **--vss_stores**: Selects the VSS stores to include, eg: ```---vss_stores all``` will select all available VSS stores, or ```--vss_stores 1,4,5``` (only first, fourth and fifth), or ```--vss_stores 1..3``` (first three stores).
  + **--no_vss**: Skip all VSS parsing
 
@@ -212,7 +212,7 @@ More information about the collection filters can be found [here](Collection-Fil
 
 **Everything following this is still not written**
 
-Here we discuss the use of ```--use_old_preprocess``` and ```--partition all```
+Here we discuss the use of ```--partitions all```
 
 ### OTHER OPTIONS TO DISCUSS
 
