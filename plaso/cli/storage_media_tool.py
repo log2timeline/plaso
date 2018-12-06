@@ -25,7 +25,6 @@ from plaso.cli import tools
 from plaso.cli import views
 from plaso.engine import configurations
 from plaso.lib import errors
-from plaso.lib import py2to3
 
 
 try:
@@ -38,8 +37,6 @@ except KeyError:
 
 class StorageMediaTool(tools.CLITool):
   """CLI tool that supports a storage media device or image as input."""
-
-  _DEFAULT_BYTES_PER_SECTOR = 512
 
   # TODO: remove this redirect.
   _SOURCE_OPTION = 'source'
@@ -92,7 +89,6 @@ class StorageMediaTool(tools.CLITool):
     self._credential_configurations = []
     self._filter_file = None
     self._partitions = None
-    self._partition_offset = None
     self._process_vss = False
     self._source_scanner = source_scanner.SourceScanner()
     self._source_path = None
@@ -231,17 +227,6 @@ class StorageMediaTool(tools.CLITool):
 
       if not set(partitions).difference(volume_identifiers):
         return partitions
-
-    # TODO: refactor self._partition_offset to use scan options.
-    if self._partition_offset is not None:
-      for volume in volume_system.volumes:
-        volume_extent = volume.extents[0]
-        if volume_extent.offset == self._partition_offset:
-          return [volume.identifier]
-
-      self._output_writer.Write((
-          '[WARNING] No such partition with offset: {0:d} '
-          '(0x{0:08x}).\n').format(self._partition_offset))
 
     if len(volume_identifiers) == 1:
       return volume_identifiers
@@ -465,51 +450,6 @@ class StorageMediaTool(tools.CLITool):
     """
     partitions = getattr(options, 'partitions', None)
     self._partitions = self._ParsePartitionsString(partitions)
-
-    image_offset_bytes = getattr(options, 'image_offset_bytes', None)
-
-    if self._partitions and image_offset_bytes is not None:
-      raise errors.BadConfigOption((
-          'Option "--image_offset_bytes" can not be used in combination '
-          'with "--partitions" or "--partition".'))
-
-    image_offset = getattr(options, 'image_offset', None)
-
-    if self._partitions and image_offset is not None:
-      raise errors.BadConfigOption((
-          'Option "--image_offset" can not be used in combination with '
-          '"--partitions" or "--partition".'))
-
-    if (image_offset_bytes is not None and
-        isinstance(image_offset_bytes, py2to3.STRING_TYPES)):
-      try:
-        image_offset_bytes = int(image_offset_bytes, 10)
-      except ValueError:
-        raise errors.BadConfigOption(
-            'Invalid image offset bytes: {0:s}.'.format(image_offset_bytes))
-
-    if image_offset_bytes is None and image_offset is not None:
-      bytes_per_sector = getattr(
-          options, 'bytes_per_sector', self._DEFAULT_BYTES_PER_SECTOR)
-
-      if isinstance(image_offset, py2to3.STRING_TYPES):
-        try:
-          image_offset = int(image_offset, 10)
-        except ValueError:
-          raise errors.BadConfigOption(
-              'Invalid image offset: {0:s}.'.format(image_offset))
-
-      if isinstance(bytes_per_sector, py2to3.STRING_TYPES):
-        try:
-          bytes_per_sector = int(bytes_per_sector, 10)
-        except ValueError:
-          raise errors.BadConfigOption(
-              'Invalid bytes per sector: {0:s}.'.format(bytes_per_sector))
-
-    if image_offset_bytes:
-      self._partition_offset = image_offset_bytes
-    elif image_offset:
-      self._partition_offset = image_offset * bytes_per_sector
 
   def _ParseVolumeIdentifiersString(
       self, volume_identifiers_string, prefix='v'):
@@ -1230,28 +1170,6 @@ class StorageMediaTool(tools.CLITool):
             'be defined as: "1,3,5" (a list of comma separated values). '
             'Ranges and lists can also be combined as: "1,3..5". The first '
             'partition is 1. All partitions can be specified with: "all".'))
-
-    argument_group.add_argument(
-        '--offset', dest='image_offset', action='store', default=None,
-        type=int, help=(
-            'The offset of the volume within the storage media image in '
-            'number of sectors. A sector is {0:d} bytes in size by default '
-            'this can be overwritten with the --sector_size option.').format(
-                self._DEFAULT_BYTES_PER_SECTOR))
-
-    argument_group.add_argument(
-        '--ob', '--offset_bytes', '--offset_bytes',
-        dest='image_offset_bytes', action='store', default=None, type=int,
-        help=(
-            'The offset of the volume within the storage media image in '
-            'number of bytes.'))
-
-    argument_group.add_argument(
-        '--sector_size', '--sector-size', dest='bytes_per_sector',
-        action='store', type=int, default=self._DEFAULT_BYTES_PER_SECTOR,
-        help=(
-            'The number of bytes per sector, which is {0:d} by '
-            'default.').format(self._DEFAULT_BYTES_PER_SECTOR))
 
   def AddVSSProcessingOptions(self, argument_group):
     """Adds the VSS processing options to the argument group.
