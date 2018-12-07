@@ -8,6 +8,7 @@ Subpackages
 
     plaso.parsers.bencode_plugins
     plaso.parsers.cookie_plugins
+    plaso.parsers.czip_plugins
     plaso.parsers.esedb_plugins
     plaso.parsers.olecf_plugins
     plaso.parsers.plist_plugins
@@ -103,6 +104,14 @@ plaso.parsers.custom\_destinations module
 -----------------------------------------
 
 .. automodule:: plaso.parsers.custom_destinations
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.parsers.czip module
+-------------------------
+
+.. automodule:: plaso.parsers.czip
     :members:
     :undoc-members:
     :show-inheritance:
@@ -311,14 +320,6 @@ plaso.parsers.opera module
 --------------------------
 
 .. automodule:: plaso.parsers.opera
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.parsers.oxml module
--------------------------
-
-.. automodule:: plaso.parsers.oxml
     :members:
     :undoc-members:
     :show-inheritance:

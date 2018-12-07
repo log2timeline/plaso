@@ -37,5 +37,5 @@ And is moving to support:
 
 * [Homepage](https://github.com/log2timeline/plaso)
 * [Downloads](https://github.com/log2timeline/plaso/releases)
-* [Documentation](https://github.com/log2timeline/plaso/wiki)
+* [Documentation](https://plaso.readthedocs.io)
 
