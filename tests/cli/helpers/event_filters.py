@@ -28,7 +28,7 @@ Test argument parser.
 positional arguments:
   FILTER                A filter that can be used to filter the dataset before
                         it is written into storage. More information about the
-                        filters and how to use them can be found here: 
+                        filters and how to use them can be found here:
                         https://plaso.readthedocs.io/en/latest/sources/user
                         /Event-filters.html
 
