@@ -71,9 +71,9 @@ The tool will detect whether or not the input is a file, directory or a disk ima
     also be combined as: 1,3..5. The first store is 1. If no stores are specified
     none will be processed. You can abort with Ctrl^C.
 
-The options can also be supplied on the command line, `-o 63` for sector offset into the disk image, or `--vss_stores '1,2'` for defining the VSS stores to parse, or `--no-vss` or `-vss-stores all` for processing all VSS stores.
+The options can also be supplied on the command line, `--vss_stores '1,2'` for defining the VSS stores to parse, or `--no-vss` or `-vss-stores all` for processing all VSS stores.
 
-This can also be achieved without knowing the offset into the disk image.
+This can be achieved without calculating the offset into the disk image.
 
     log2timeline.py --partitions 2 /cases/timeline/myhost.dump image.dd
 
