@@ -188,9 +188,8 @@ class StorageMediaTool(tools.CLITool):
   def _GetTSKPartitionIdentifiers(self, scan_node):
     """Determines the TSK partition identifiers.
 
-    This method first checks for the preferred partition number, then for
-    the preferred partition offset and falls back to prompt the user if
-    no usable preferences were specified.
+    This method first checks for the preferred partition number, then
+    falls back to prompt the user if no usable preferences were specified.
 
     Args:
       scan_node (dfvfs.SourceScanNode): scan node.
