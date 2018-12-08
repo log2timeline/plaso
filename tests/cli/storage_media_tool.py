@@ -55,6 +55,7 @@ optional arguments:
 
   _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = """\
 usage: storage_media_tool_test.py [--partitions PARTITIONS]
+                                  [--volumes VOLUMES]
 
 Test argument parser.
 
@@ -66,6 +67,12 @@ optional arguments:
                         separated values). Ranges and lists can also be
                         combined as: "1,3..5". The first partition is 1. All
                         partitions can be specified with: "all".
+  --volumes VOLUMES, --volume VOLUMES
+                        Define volumes to be processed. A range of volumes can
+                        be defined as: "3..5". Multiple volumes can be defined
+                        as: "1,3,5" (a list of comma separated values). Ranges
+                        and lists can also be combined as: "1,3..5". The first
+                        volume is 1. All volumes can be specified with: "all".
 """
 
   _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = """\
@@ -296,6 +303,10 @@ optional arguments:
 
     volume_identifiers = test_tool._NormalizedVolumeIdentifiers(
         volume_system, [1, 2], prefix='p')
+    self.assertEqual(volume_identifiers, ['p1', 'p2'])
+
+    volume_identifiers = test_tool._NormalizedVolumeIdentifiers(
+        volume_system, ['1', '2'], prefix='p')
     self.assertEqual(volume_identifiers, ['p1', 'p2'])
 
     # Test error conditions.
@@ -918,7 +929,7 @@ optional arguments:
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool._process_vss = True
     test_tool._vss_only = False
-    test_tool._vss_stores = ['all']
+    test_tool._vss_stores = 'all'
 
     test_path = self._GetTestFilePath(['vsstest.qcow2'])
     scan_context = source_scanner.SourceScannerContext()
@@ -928,8 +939,7 @@ optional arguments:
     volume_scan_node = self._GetTestScanNode(scan_context)
 
     base_path_specs = []
-    test_tool._ScanVolume(
-        scan_context, volume_scan_node, base_path_specs)
+    test_tool._ScanVolume(scan_context, volume_scan_node, base_path_specs)
     self.assertEqual(len(base_path_specs), 3)
 
   def testScanVolumeScanNode(self):
@@ -992,7 +1002,7 @@ optional arguments:
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool._process_vss = True
     test_tool._vss_only = False
-    test_tool._vss_stores = ['all']
+    test_tool._vss_stores = 'all'
 
     # Test function on VSS root.
     test_path = self._GetTestFilePath(['vsstest.qcow2'])
@@ -1002,7 +1012,7 @@ optional arguments:
     test_tool._source_scanner.Scan(scan_context)
     test_tool._process_vss = True
     test_tool._vss_only = False
-    test_tool._vss_stores = ['all']
+    test_tool._vss_stores = 'all'
     volume_scan_node = self._GetTestScanNode(scan_context)
 
     base_path_specs = []
@@ -1018,7 +1028,7 @@ optional arguments:
     test_tool._source_scanner.Scan(scan_context)
     test_tool._process_vss = True
     test_tool._vss_only = False
-    test_tool._vss_stores = ['all']
+    test_tool._vss_stores = 'all'
     volume_scan_node = self._GetTestScanNode(scan_context)
 
     base_path_specs = []
@@ -1034,7 +1044,7 @@ optional arguments:
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool._process_vss = True
     test_tool._vss_only = False
-    test_tool._vss_stores = ['all']
+    test_tool._vss_stores = 'all'
 
     # Test function on VSS root.
     test_path = self._GetTestFilePath(['vsstest.qcow2'])

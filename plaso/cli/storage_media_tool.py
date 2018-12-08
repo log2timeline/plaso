@@ -95,6 +95,7 @@ class StorageMediaTool(tools.CLITool):
     self._source_path_specs = []
     self._textwrapper = textwrap.TextWrapper()
     self._user_selected_vss_stores = False
+    self._volumes = None
     self._vss_only = False
     self._vss_stores = None
 
@@ -175,6 +176,19 @@ class StorageMediaTool(tools.CLITool):
     if not volume_identifiers:
       return []
 
+    # TODO: refactor self._volumes to use scan options.
+    if self._volumes:
+      if self._volumes == 'all':
+        volumes = range(1, volume_system.number_of_volumes + 1)
+      else:
+        volumes = self._volumes
+
+      selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
+          volume_system, volumes, prefix='apfs')
+
+      if not set(selected_volume_identifiers).difference(volume_identifiers):
+        return selected_volume_identifiers
+
     if len(volume_identifiers) > 1:
       try:
         volume_identifiers = self._PromptUserForAPFSVolumeIdentifiers(
@@ -217,15 +231,16 @@ class StorageMediaTool(tools.CLITool):
 
     # TODO: refactor self._partitions to use scan options.
     if self._partitions:
-      partitions = self._partitions
-      if partitions == ['all']:
+      if self._partitions == 'all':
         partitions = range(1, volume_system.number_of_volumes + 1)
+      else:
+        partitions = self._partitions
 
-      partitions = self._NormalizedVolumeIdentifiers(
+      selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
           volume_system, partitions, prefix='p')
 
-      if not set(partitions).difference(volume_identifiers):
-        return partitions
+      if not set(selected_volume_identifiers).difference(volume_identifiers):
+        return selected_volume_identifiers
 
     if len(volume_identifiers) == 1:
       return volume_identifiers
@@ -266,15 +281,16 @@ class StorageMediaTool(tools.CLITool):
 
     # TODO: refactor to use scan options.
     if self._vss_stores:
-      vss_stores = self._vss_stores
-      if vss_stores == ['all']:
+      if self._vss_stores == 'all':
         vss_stores = range(1, volume_system.number_of_volumes + 1)
+      else:
+        vss_stores = self._vss_stores
 
-      vss_stores = self._NormalizedVolumeIdentifiers(
+      selected_volume_identifiers = self._NormalizedVolumeIdentifiers(
           volume_system, vss_stores, prefix='vss')
 
-      if not set(vss_stores).difference(volume_identifiers):
-        return vss_stores
+      if not set(selected_volume_identifiers).difference(volume_identifiers):
+        return selected_volume_identifiers
 
     try:
       volume_identifiers = self._PromptUserForVSSStoreIdentifiers(
@@ -307,6 +323,13 @@ class StorageMediaTool(tools.CLITool):
     for volume_identifier in volume_identifiers:
       if isinstance(volume_identifier, int):
         volume_identifier = '{0:s}{1:d}'.format(prefix, volume_identifier)
+
+      elif not volume_identifier.startswith(prefix):
+        try:
+          volume_identifier = int(volume_identifier, 10)
+          volume_identifier = '{0:s}{1:d}'.format(prefix, volume_identifier)
+        except (TypeError, ValueError):
+          pass
 
       try:
         volume = volume_system.GetVolumeByIdentifier(volume_identifier)
@@ -355,60 +378,6 @@ class StorageMediaTool(tools.CLITool):
 
       self._credentials.append((credential_type, credential_data))
 
-  def _ParsePartitionsString(self, partitions):
-    """Parses the user specified partitions string.
-
-    Args:
-      partitions (str): partitions. A range of partitions can be defined
-          as: "3..5". Multiple partitions can be defined as: "1,3,5" (a list
-          of comma separated values). Ranges and lists can also be combined
-          as: "1,3..5". The first partition is 1. All partitions can be
-          defined as: "all".
-
-    Returns:
-      list[int|str]: partition numbers or "all" to represent all available
-          partitions.
-
-    Raises:
-      BadConfigOption: if the partitions string is invalid.
-    """
-    if not partitions:
-      return []
-
-    if partitions == 'all':
-      return ['all']
-
-    partition_numbers = []
-    for partition_range in partitions.split(','):
-      # Determine if the range is formatted as 1..3 otherwise it indicates
-      # a single partition number.
-      if '..' in partition_range:
-        first_partition, last_partition = partition_range.split('..')
-        try:
-          first_partition = int(first_partition, 10)
-          last_partition = int(last_partition, 10)
-        except ValueError:
-          raise errors.BadConfigOption(
-              'Invalid partition range: {0:s}.'.format(partition_range))
-
-        for partition_number in range(first_partition, last_partition + 1):
-          if partition_number not in partition_numbers:
-            partition_numbers.append(partition_number)
-      else:
-        if partition_range.startswith('p'):
-          partition_range = partition_range[1:]
-
-        try:
-          partition_number = int(partition_range, 10)
-        except ValueError:
-          raise errors.BadConfigOption(
-              'Invalid partition range: {0:s}.'.format(partition_range))
-
-        if partition_number not in partition_numbers:
-          partition_numbers.append(partition_number)
-
-    return sorted(partition_numbers)
-
   def _ParseSourcePathOption(self, options):
     """Parses the source path option.
 
@@ -447,8 +416,19 @@ class StorageMediaTool(tools.CLITool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    partitions = getattr(options, 'partitions', None)
-    self._partitions = self._ParsePartitionsString(partitions)
+    self._partitions = getattr(options, 'partitions', None)
+    if self._partitions:
+      try:
+        self._ParseVolumeIdentifiersString(self._partitions, prefix='p')
+      except ValueError:
+        raise errors.BadConfigOption('Unsupported partitions')
+
+    self._volumes = getattr(options, 'volumes', None)
+    if self._volumes:
+      try:
+        self._ParseVolumeIdentifiersString(self._volumes, prefix='apfs')
+      except ValueError:
+        raise errors.BadConfigOption('Unsupported volumes')
 
   def _ParseVolumeIdentifiersString(
       self, volume_identifiers_string, prefix='v'):
@@ -538,10 +518,9 @@ class StorageMediaTool(tools.CLITool):
 
     if vss_stores:
       try:
-        vss_stores = self._ParseVolumeIdentifiersString(
-            vss_stores, prefix='vss')
-      except ValueError as exception:
-        raise errors.BadConfigOption(exception)
+        self._ParseVolumeIdentifiersString(vss_stores, prefix='vss')
+      except ValueError:
+        raise errors.BadConfigOption('Unsupported VSS stores')
 
     self._vss_only = vss_only
     self._vss_stores = vss_stores
@@ -1169,6 +1148,15 @@ class StorageMediaTool(tools.CLITool):
             'be defined as: "1,3,5" (a list of comma separated values). '
             'Ranges and lists can also be combined as: "1,3..5". The first '
             'partition is 1. All partitions can be specified with: "all".'))
+
+    argument_group.add_argument(
+        '--volumes', '--volume', dest='volumes', action='store', type=str,
+        default=None, help=(
+            'Define volumes to be processed. A range of volumes can be defined '
+            'as: "3..5". Multiple volumes can be defined as: "1,3,5" (a list '
+            'of comma separated values). Ranges and lists can also be combined '
+            'as: "1,3..5". The first volume is 1. All volumes can be specified '
+            'with: "all".'))
 
   def AddVSSProcessingOptions(self, argument_group):
     """Adds the VSS processing options to the argument group.
