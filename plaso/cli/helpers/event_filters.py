@@ -35,16 +35,16 @@ class EventFiltersArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        '--slice', metavar='DATE', dest='slice', type=str,
-        default='', action='store', help=(
+        '--slice', metavar='DATE', dest='slice', type=str, default='',
+        action='store', help=(
             'Create a time slice around a certain date. This parameter, if '
             'defined will display all events that happened X minutes before '
             'and after the defined date. X is controlled by the parameter '
             '--slice_size but defaults to 5 minutes.'))
 
     argument_group.add_argument(
-        '--slice_size', '--slice-size', dest='slice_size', type=int,
-        default=5, action='store', help=(
+        '--slice_size', '--slice-size', dest='slice_size', type=int, default=5,
+        action='store', help=(
             'Defines the slice size. In the case of a regular time slice it '
             'defines the number of minutes the slice size should be. In the '
             'case of the --slicer it determines the number of events before '
