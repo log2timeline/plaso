@@ -23,7 +23,7 @@ Start by installing a development release on your platform:
 ## Building dependencies
 If you're feeling particularly brave, you can try building all the dependencies yourself.
 
-**Note that Plaso and so`me dependencies are currently actively under development keeping up with the development release is not for "the faint of heart".**
+**Note that Plaso and some dependencies are currently actively under development keeping up with the development release is not for "the faint of heart".**
 
 * [Running the development release on Ubuntu Linux](Development-release-Ubuntu.md)
   * [Building and installing dependencies on Ubuntu Linux](Dependencies---Ubuntu.md)
