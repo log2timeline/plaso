@@ -20,7 +20,7 @@ class EventFiltersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT_PY2 = """\
+  _EXPECTED_OUTPUT = """\
 usage: cli_helper.py [--slice DATE] [--slice_size SLICE_SIZE] [--slicer]
                      [FILTER]
 
@@ -53,7 +53,7 @@ optional arguments:
                         by the --slice_size parameter.
 """
 
-  _EXPECTED_OUTPUT_PY3 = """\
+  _EXPECTED_OUTPUT_PY3_6 = """\
 usage: cli_helper.py [--slice DATE] [--slice_size SLICE_SIZE] [--slicer]
                      [FILTER]
 
@@ -97,10 +97,10 @@ optional arguments:
 
     output = self._RunArgparseFormatHelp(argument_parser)
 
-    if sys.version_info[0] < 3:
-      self.assertEqual(output, self._EXPECTED_OUTPUT_PY2)
+    if tuple(sys.version_info[0:1]) < (3, 6):
+      self.assertEqual(output, self._EXPECTED_OUTPUT)
     else:
-      self.assertEqual(output, self._EXPECTED_OUTPUT_PY3)
+      self.assertEqual(output, self._EXPECTED_OUTPUT_PY3_6)
 
   def testParseOptions(self):
     """Tests the ParseOptions function."""
