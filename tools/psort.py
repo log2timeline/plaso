@@ -6,7 +6,7 @@ Sample Usage:
   psort.py /tmp/mystorage.dump "date > '01-06-2012'"
 
 See additional details here:
-  https://github.com/log2timeline/plaso/wiki/Using-psort
+  https://plaso.readthedocs.io/en/latest/sources/user/Using-psort.html
 """
 
 from __future__ import unicode_literals

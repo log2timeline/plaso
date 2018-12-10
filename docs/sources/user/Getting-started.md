@@ -1,6 +1,6 @@
 # Getting start with Plaso
 
-Getting started with log2timeline plaso can be challenging at first. This page describes some of the steps we recommend taking.
+Getting started with Plaso can be challenging at first. This page describes some of the steps we recommend taking.
 
 ## I just want to run plaso log2timeline
 
@@ -10,7 +10,7 @@ To get started have a look at the [User Guide](Users-Guide.md).
 
 If you have questions, suggestions and want to discuss them join the general discussions mailing list: [log2timeline-discuss](https://groups.google.com/forum/#!forum/log2timeline-discuss)
 
-## I want to develop plaso log2timeline
+## I want to develop Plaso 
 
 There are various ways to develop with plaso. We expect the more common use case that you would like to extend plaso by adding a parser or plugin or equivalent.
 
@@ -18,9 +18,7 @@ For this you'll need to use a [development release](Releases-and-roadmap.md).
 
 Get a github and gmail account and enable 2-factor authentication.
 
-To get started have a look at the [Developers guide](Developers-Guide.md).
-
-**Note that the codelabs currently reflect plaso 1.2 and we are working on updating them to reflect plaso 1.3**
+To get started have a look at the [Developers guide](../developer/Developers-Guide.md).
 
 Last but not least we also recommend joining the development mailing list: [log2timeline-dev](https://groups.google.com/forum/#!forum/log2timeline-dev)
 

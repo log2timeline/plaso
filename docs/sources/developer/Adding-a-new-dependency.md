@@ -57,7 +57,7 @@ Update the following wiki pages:
 
 * [Licenses dependencies](Licenses-dependencies.md)
 * [Dependencies Fedora Core](Dependencies-Fedora-Core.md)
-* [Dependencies Mac OS X](Dependencies-Mac-OS-X.md)
+* [Dependencies Mac OS X](Dependencies-MacOS.md)
 * [Dependencies Ubuntu](Dependencies---Ubuntu.md)
 * [Dependencies Windows](Dependencies-Windows.md)
 

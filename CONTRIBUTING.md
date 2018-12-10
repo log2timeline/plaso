@@ -14,8 +14,8 @@ so save us all some time, and include that first up!
 
 ## Code Review
 
-All code for Plaso goes through [code review](https://github.com/log2timeline/plaso/wiki/Codereview),
-and conforms with the Plaso [style guide](https://github.com/log2timeline/plaso/wiki/Style-guide).
+All code for Plaso goes through [code review](https://plaso.readthedocs.io/en/latest/sources/developer/Codereview.html),
+and conforms with the Plaso [style guide](https://plaso.readthedocs.io/en/latest/sources/developer/Style-guide.html).
 Please don't send a pull request without creating a code review issue first!
 
 If you're adding a new feature or have some code fix a bug, please also open a
@@ -26,4 +26,4 @@ track progress, and discuss any broader ramifications.
 
 * Make sure you have a [GitHub account](https://github.com/signup/free), then create your own Plaso fork
 * Join the development [mailing list](log2timeline-dev@googlegroups.com)
-* Read through the [developers guide](https://github.com/log2timeline/plaso/wiki/Developers-Guide) for detailed instructions and tips.
+* Read through the [developers guide](https://plaso.readthedocs.io/en/latest/sources/developer/Developers-Guide.html) for detailed instructions and tips.
