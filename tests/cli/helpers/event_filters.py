@@ -97,7 +97,7 @@ optional arguments:
 
     output = self._RunArgparseFormatHelp(argument_parser)
 
-    if tuple(sys.version_info[0:1]) < (3, 6):
+    if tuple(sys.version_info[0:2]) < (3, 6):
       self.assertEqual(output, self._EXPECTED_OUTPUT)
     else:
       self.assertEqual(output, self._EXPECTED_OUTPUT_PY3_6)
