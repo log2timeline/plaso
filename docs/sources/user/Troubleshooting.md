@@ -5,7 +5,7 @@ This page contains instructions that can be used to assist you in debugging pote
 ## Quick list
 
 1. Check the [commit history](https://github.com/log2timeline/plaso/commits/master) and [issue tracker](https://github.com/log2timeline/plaso/issues?q=is%3Aissue) if the bug has already been fixed;
-2. If you are running the development release make sure plaso and dependencies are up to date, see: [Developers Guide](Developers-Guide.md)
+2. If you are running the development release make sure plaso and dependencies are up to date, see: [Developers Guide](/developer/Developers-Guide.md)
 3. If you are experiencing an issue that cannot directly be attributed to some broken code e.g. the test are getting killed, check your system logs it might be a problem with resources available to plaso;
 4. Try to isolate the error, see below.
 
@@ -166,7 +166,7 @@ Wait until the crash occurs and generate a back trace.
 Also see: [DebuggingWithGdb](https://wiki.python.org/moin/DebuggingWithGdb), [gdb Support](https://docs.python.org/devguide/gdb.html)
 
 ## High memory usage
-Plaso consists of various components. It can happen that one of these components uses a lot of memory or even leaks memory. In these cases it is important to isolate the error, see before, to track down what the possible culprit is. Also see: [Profiling memory usage](Profiling.md#profiling-memory-usage)
+Plaso consists of various components. It can happen that one of these components uses a lot of memory or even leaks memory. In these cases it is important to isolate the error, see before, to track down what the possible culprit is. Also see: [Profiling memory usage](../developer/Profiling.md#profiling-memory-usage)
 
 ## Also see
 

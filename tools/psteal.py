@@ -9,7 +9,7 @@ Sample Usage:
   psteal.py --source=/tmp/mystorage.dump --write=/tmp/mystorage_timeline.csv
 
 See additional details here:
-  https://github.com/log2timeline/plaso/wiki/Using-psteal
+  https://plaso.readthedocs.io/en/latest/sources/user/Creating-a-timeline.html#using-psteal
 """
 
 from __future__ import unicode_literals

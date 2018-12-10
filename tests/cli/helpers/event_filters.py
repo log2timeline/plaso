@@ -29,8 +29,8 @@ positional arguments:
   FILTER                A filter that can be used to filter the dataset before
                         it is written into storage. More information about the
                         filters and how to use them can be found here:
-                        https://github.com/log2timeline/plaso/wiki/Event-
-                        filters
+                        https://plaso.readthedocs.io/en/latest/sources/user
+                        /Event-filters.html
 
 optional arguments:
   --slice DATE          Create a time slice around a certain date. This

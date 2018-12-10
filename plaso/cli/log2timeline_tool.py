@@ -55,7 +55,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       'image or device.',
       '',
       'More information can be gathered from here:',
-      '    https://github.com/log2timeline/plaso/wiki/Using-log2timeline',
+      '    https://plaso.readthedocs.io/en/latest/sources/user/'
+      'Using-log2timeline.html',
       '']))
 
   EPILOG = textwrap.dedent('\n'.join([
