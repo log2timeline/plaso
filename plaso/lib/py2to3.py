@@ -25,7 +25,4 @@ else:
   UNICHR = chr
   UNICODE_TYPE = str
 
-if tuple(sys.version_info[0:2]) >= (3, 5):
-  PY_3_5_AND_LATER = True
-else:
-  PY_3_5_AND_LATER = False
+PY_3_5_AND_LATER = bool(tuple(sys.version_info[0:2]) >= (3, 5))
