@@ -11,6 +11,7 @@ import unittest
 from plaso.cli import tools
 from plaso.cli.helpers import event_filters
 from plaso.lib import errors
+from plaso.lib import py2to3
 
 from tests.cli import test_lib as cli_test_lib
 
@@ -53,7 +54,7 @@ optional arguments:
                         by the --slice_size parameter.
 """
 
-  _EXPECTED_OUTPUT_PY3_6 = """\
+  _EXPECTED_OUTPUT_PY_3_5_AND_LATER = """\
 usage: cli_helper.py [--slice DATE] [--slice_size SLICE_SIZE] [--slicer]
                      [FILTER]
 
@@ -97,10 +98,10 @@ optional arguments:
 
     output = self._RunArgparseFormatHelp(argument_parser)
 
-    if tuple(sys.version_info[0:2]) < (3, 6):
-      self.assertEqual(output, self._EXPECTED_OUTPUT)
+    if py2to3.PY_3_5_AND_LATER:
+      self.assertEqual(output, self._EXPECTED_OUTPUT_PY_3_5_AND_LATER)
     else:
-      self.assertEqual(output, self._EXPECTED_OUTPUT_PY3_6)
+      self.assertEqual(output, self._EXPECTED_OUTPUT)
 
   def testParseOptions(self):
     """Tests the ParseOptions function."""
