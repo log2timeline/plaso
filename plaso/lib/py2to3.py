@@ -24,3 +24,5 @@ else:
   STRING_TYPES = (str, )
   UNICHR = chr
   UNICODE_TYPE = str
+
+PY_3_5_AND_LATER = bool(tuple(sys.version_info[0:2]) >= (3, 5))

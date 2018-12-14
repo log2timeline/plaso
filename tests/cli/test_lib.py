@@ -20,7 +20,7 @@ class SortedArgumentsHelpFormatter(argparse.HelpFormatter):
     """Adds arguments.
 
     Args:
-      actions (TODO): TODO.
+      actions (list[argparse._StoreAction]): command line actions.
     """
     actions = sorted(actions, key=operator.attrgetter('option_strings'))
     super(SortedArgumentsHelpFormatter, self).add_arguments(actions)
