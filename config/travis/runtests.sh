@@ -40,33 +40,41 @@ then
 
 elif test "${TRAVIS_OS_NAME}" = "linux";
 then
+	COVERAGE="/usr/bin/coverage";
+
+	if ! test -x "${COVERAGE}";
+	then
+		# Ubuntu has renamed coverage.
+		COVERAGE="/usr/bin/python-coverage";
+	fi
+
 	if test -n "${TOXENV}";
 	then
 		tox --sitepackages ${TOXENV};
 
 	elif test "${TRAVIS_PYTHON_VERSION}" = "2.7";
 	then
-		coverage erase
-		coverage run --source=plaso --omit="*_test*,*__init__*,*test_lib*" ./run_tests.py
+		${COVERAGE} erase
+		${COVERAGE} run --source=plaso --omit="*_test*,*__init__*,*test_lib*" ./run_tests.py
 	else
 		python ./run_tests.py
-	fi
 
-	python ./setup.py build
+		python ./setup.py build
 
-	python ./setup.py sdist
+		python ./setup.py sdist
 
-	python ./setup.py bdist
+		python ./setup.py bdist
 
-	TMPDIR="${PWD}/tmp";
-	TMPSITEPACKAGES="${TMPDIR}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages";
+		TMPDIR="${PWD}/tmp";
+		TMPSITEPACKAGES="${TMPDIR}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages";
 
-	mkdir -p ${TMPSITEPACKAGES};
+		mkdir -p ${TMPSITEPACKAGES};
 
-	PYTHONPATH=${TMPSITEPACKAGES} python ./setup.py install --prefix=${TMPDIR};
+		PYTHONPATH=${TMPSITEPACKAGES} python ./setup.py install --prefix=${TMPDIR};
 
-	if test -f tests/end-to-end.py;
-	then
-		PYTHONPATH=. python ./tests/end-to-end.py --debug -c config/end-to-end.ini;
+		if test -f tests/end-to-end.py;
+		then
+			PYTHONPATH=. python ./tests/end-to-end.py --debug -c config/end-to-end.ini;
+		fi
 	fi
 fi
