@@ -210,7 +210,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       self._CheckOutput(output, expected_output)
 
   # TODO: Fix test https://github.com/log2timeline/plaso/issues/2253.
-  @unittest.expectedFailure
+  @unittest.skip('failing on Windows')
   @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
   @shared_test_lib.skipUnlessHasTestFile(['bdetogo.raw'])
   def testExtractEventsFromSourceBDEImage(self):
