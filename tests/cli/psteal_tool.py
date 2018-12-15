@@ -209,12 +209,12 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
-  @unittest.expectedFailure()
+  # TODO: Fix test https://github.com/log2timeline/plaso/issues/2253.
+  @unittest.expectedFailure
   @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
   @shared_test_lib.skipUnlessHasTestFile(['bdetogo.raw'])
   def testExtractEventsFromSourceBDEImage(self):
     """Tests the ExtractEventsFromSources function on an image with BDE."""
-    # TODO: added for testing.
     dfvfs_resolver.Resolver.key_chain.Empty()
 
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
