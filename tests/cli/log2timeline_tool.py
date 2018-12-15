@@ -402,7 +402,7 @@ optional arguments:
           'Processing started.',
           'Processing completed.',
           '',
-          'Number of errors encountered while extracting events: 1.',
+          'Number of errors encountered while extracting events: 3.',
           '',
           'Use pinfo to inspect errors in more detail.',
           '',

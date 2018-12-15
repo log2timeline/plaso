@@ -7,9 +7,9 @@
 # Fail on error.
 set -e
 
-CONFIGURATION=$1;
+CONFIGURATION_NAME=$1;
 
-CONFIGURATION_FILE="${CONFIGURATION}.ini";
+CONFIGURATION_FILE="${CONFIGURATION_NAME}.ini";
 
 SOURCES_DIRECTORY="/media/greendale_images";
 REFERENCES_DIRECTORY="/media/greendale_images";
@@ -19,22 +19,22 @@ RESULTS_DIRECTORY="plaso-out";
 ./config/linux/gift_ppa_install.sh include-test;
 
 # Change path to test this script on Travis-CI.
-if test ${CONFIGURATION} = 'travis';
+if test ${CONFIGURATION_NAME} = 'travis';
 then
 	SOURCES_DIRECTORY="test_data";
 	REFERENCES_DIRECTORY="test_data/end_to_end";
-	CONFIGURATION_FILE="config/jenkins/${CONFIGURATION}.ini";
+	CONFIGURATION_FILE="config/jenkins/${CONFIGURATION_NAME}.ini";
 fi
 
 mkdir -p ${RESULTS_DIRECTORY} ${RESULTS_DIRECTORY}/profiling;
 
 if ! test -f ${CONFIGURATION_FILE};
 then
-	CONFIGURATION_FILE="config/jenkins/greendale/${CONFIGURATION}.ini";
+	CONFIGURATION_FILE="config/jenkins/greendale/${CONFIGURATION_NAME}.ini";
 fi
 if ! test -f ${CONFIGURATION_FILE};
 then
-	CONFIGURATION_FILE="config/jenkins/sans/${CONFIGURATION}.ini";
+	CONFIGURATION_FILE="config/jenkins/sans/${CONFIGURATION_NAME}.ini";
 fi
 
 PYTHONPATH=. ./utils/check_dependencies.py
@@ -52,7 +52,7 @@ wait ${PID_COMMAND};
 RESULT=$?;
 
 # On Travis-CI print the stdout and stderr output to troubleshoot potential issues.
-if test ${CONFIGURATION} = 'travis';
+if test ${CONFIGURATION_NAME} = 'travis';
 then
 	for FILE in `find ${RESULTS_DIRECTORY} -name \*.out -type f`;
 	do

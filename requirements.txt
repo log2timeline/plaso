@@ -8,7 +8,7 @@ biplist >= 1.0.3
 certifi >= 2016.9.26
 chardet >= 2.0.1
 dfdatetime >= 20180704
-dfvfs >= 20181128
+dfvfs >= 20181209
 dfwinreg >= 20180712
 dtfabric >= 20181128
 efilter == 1-1.5
@@ -24,7 +24,7 @@ libesedb-python >= 20150409
 libevt-python >= 20120410
 libevtx-python >= 20141112
 libewf-python >= 20131210
-libfsapfs-python >= 20181125
+libfsapfs-python >= 20181205
 libfsntfs-python >= 20151130
 libfvde-python >= 20160719
 libfwnt-python >= 20180117
