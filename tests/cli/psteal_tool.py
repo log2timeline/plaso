@@ -209,6 +209,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self._CheckOutput(output, expected_output)
 
+  @unittest.expectedFailure()
   @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
   @shared_test_lib.skipUnlessHasTestFile(['bdetogo.raw'])
   def testExtractEventsFromSourceBDEImage(self):
