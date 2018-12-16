@@ -50,7 +50,7 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
 
   # pylint: disable=unused-argument
   def _MockPost(self, url, data=None):
-    """Mock funtion to simulate a Viper API request.
+    """Mock function to simulate a Viper API request.
 
     Args:
       url (str): URL being requested.

@@ -37,9 +37,7 @@ Dependency | License
 Dependency | License
 --- | ---
 [bencode](https://pypi.python.org/pypi/bencode) | [BitTorrent Open Source License](http://web.archive.org/web/20080213154112/http://www.bittorrent.com/bittorrent-open-source-license)
-[binplist](https://github.com/google/binplist/) | [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0)
-[construct](http://construct.readthedocs.org) | [MIT license](http://opensource.org/licenses/MIT)
-[DPKT](https://code.google.com/p/dpkt/) | [BSD 3-clause license](http://opensource.org/licenses/BSD-3-Clause)
+[biplist](docs/sources/developer/Licenses-dependencies.md) | [BSD 3-clause license](http://opensource.org/licenses/BSD-3-Clause)
 [Hachoir](https://bitbucket.org/haypo/hachoir) | [GNU General Public License 2](http://www.gnu.org/licenses/gpl-2.0.html) <br> **Not integrated in the binary build.**
 [Libesedb and Python-bindings](https://github.com/libyal/libesedb/) | [GNU Lesser General Public License 3](http://www.gnu.org/licenses/lgpl.html)
 [Libevt and Python-bindings](https://github.com/libyal/libevt/) | [GNU Lesser General Public License 3](http://www.gnu.org/licenses/lgpl.html)

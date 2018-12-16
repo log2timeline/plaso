@@ -107,7 +107,7 @@ modules_to_mock.remove('urllib3')
 
 # There are some modules we install via pip on readthedocs that we don't need
 # to mock.
-PIP_INSTALLED_MODULES = set(['construct', 'pyparsing', 'six'])
+PIP_INSTALLED_MODULES = set(['pyparsing', 'six'])
 modules_to_mock = set(modules_to_mock).difference(PIP_INSTALLED_MODULES)
 modules_to_mock = sorted(modules_to_mock)
 print('Mocking modules')

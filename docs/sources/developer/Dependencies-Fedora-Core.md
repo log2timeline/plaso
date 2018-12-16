@@ -42,10 +42,8 @@ Name | Download URL | Comments | Dependencies
 --- | --- | --- | --- 
 artifacts | https://github.com/ForensicArtifacts/artifacts/releases | |
 bencode | https://pypi.python.org/pypi/bencode | |
-binplist | https://github.com/google/binplist/releases | |
-construct | https://pypi.python.org/pypi/construct#downloads | 2.5.2 or later 2.x version | six
+biplist | https://pypi.python.org/pypi/biplist | |
 dateutil | https://pypi.python.org/pypi/python-dateutil | |
-dpkt | https://pypi.python.org/pypi/dpkt | |
 google-apputils | https://pypi.python.org/pypi/google-apputils | |
 PyParsing | http://sourceforge.net/projects/pyparsing/files/ | 2.0.3 or later 2.x version |
 python-gflags | https://github.com/google/python-gflags/releases | |
@@ -59,21 +57,6 @@ yara-python | https://github.com/VirusTotal/yara-python | |
 Some of these Python modules can be directly installed via dnf:
 ```
 sudo dnf install libyaml pyparsing python-dateutil python-requests python-six PyYAML pytz
-```
-
-#### construct - Troubleshooting
-
-**Note the construct package could conflict with Fedora distribute version of construct: python-construct.**
-
-#### DPKT - Troubleshooting
-
-```
-ImportError: cannot import name pystone
-```
-
-pystone can be found in python-test
-```
-sudo dnf install python-test
 ```
 
 #### Building a RPM

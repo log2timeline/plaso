@@ -42,7 +42,8 @@ class PstealTool(
 
   Psteal extract events from the provided source and stores them in an
   intermediate storage file. After extraction an output log file is created.
-  This mimics the behaviour of the log2timeline.pl.
+  This mimics the behavior of the log2timeline.pl.
+
   The tool currently doesn't support any of the log2timeline or psort tools'
   flags.
 

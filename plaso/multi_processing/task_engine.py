@@ -857,7 +857,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     # The task queue should be closed by _StopExtractionProcesses, this
     # close is a failsafe, primarily due to MultiProcessingQueue's
-    # blocking behaviour.
+    # blocking behavior.
     self._task_queue.Close(abort=True)
 
     if self._processing_status.error_path_specs:

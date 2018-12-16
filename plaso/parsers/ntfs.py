@@ -345,7 +345,7 @@ class NTFSUsnJrnlParser(dtfabric_parser.DtFabricBaseParser):
             'Unable to parse USN record at offset: 0x{0:08x} with error: '
             '{1!s}').format(current_offset, exception))
 
-      # Per MSDN we need to use name offset for forward compatibily.
+      # Per MSDN we need to use name offset for forward compatibility.
       name_offset = usn_record.name_offset - 60
       utf16_stream = usn_record.name[name_offset:usn_record.name_size]
 

@@ -41,8 +41,7 @@ class DefaultPlugin(interface.PlistPlugin):
           datetime_value, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-      # TODO: Binplist keeps a list of offsets but not mapped to a key.
-      # adjust code when there is a way to map keys to offsets.
+      # TODO: adjust code when there is a way to map keys to offsets.
 
   # TODO: move this into the parser as with the olecf plugins.
   # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.

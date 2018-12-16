@@ -119,7 +119,7 @@ class MacUserPlugin(interface.PlistPlugin):
         if date_time and isinstance(shadow_hash_data, (list, tuple)):
           # Extract the hash password information.
           # It is store in the attribute ShadowHasData which is
-          # a binary plist data; However binplist only extract one
+          # a binary plist data; However biplist only extracts one
           # level of binary plist, then it returns this information
           # as a string.
 
