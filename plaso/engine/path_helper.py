@@ -17,32 +17,37 @@ class PathHelper(object):
   _RECURSIVE_GLOB_LIMIT = 10
 
   @classmethod
-  def AppendPathEntries(cls, path, path_separator, count, skip_first):
-    """Appends wildcard entries to end of path.
+  def AppendPathEntries(
+      cls, path, path_separator, number_of_wildcards, skip_first):
+    """Appends glob wildcards to a path.
 
-    Will append wildcard * to given path building a list of strings for "count"
-    iterations, skipping the first directory if skip_first is true.
+    This function will append glob wildcards "*" to a path, returning paths
+    with an additional glob wildcard up to the specified number. E.g. given
+    the path "/tmp" and a number of 2 wildcards, this function will return
+    "tmp/*", "tmp/*/*". When skip_first is true the path with the first
+    wildcard is not returned as a result.
 
     Args:
-      path (str): Path to append wildcards to.
+      path (str): path to append glob wildcards to.
       path_separator (str): path segment separator.
-      count (int): Number of entries to be appended.
-      skip_first (bool): Whether or not to skip first entry to append.
+      number_of_wildcards (int): number of glob wildcards to append.
+      skip_first (bool): True if the the first path with glob wildcard should
+          be skipped as a result.
 
     Returns:
-      list[str]: Paths that were expanded from the path with wildcards.
+      list[str]: paths with glob wildcards.
     """
-    paths = []
-    replacement = '{0:s}*'.format(path_separator)
+    if path[-1] == path_separator:
+      path = path[:-1]
 
-    iteration = 0
-    while iteration < count:
-      if skip_first and iteration == 0:
-        path += replacement
-      else:
-        path += replacement
-        paths.append(path)
-      iteration += 1
+    if skip_first:
+      path = ''.join([path, path_separator, '*'])
+      number_of_wildcards -= 1
+
+    paths = []
+    for _ in range(0, number_of_wildcards):
+      path = ''.join([path, path_separator, '*'])
+      paths.append(path)
 
     return paths
 
@@ -65,7 +70,7 @@ class PathHelper(object):
     Returns:
       list[str]: String path expanded for each glob.
     """
-    glob_regex = r'(.*)?{0}\*\*(\d{{1,2}})?({0})?$'.format(
+    glob_regex = r'(.*)?{0:s}\*\*(\d{{1,2}})?({0:s})?$'.format(
         re.escape(path_separator))
 
     match = re.search(glob_regex, path)
@@ -87,13 +92,14 @@ class PathHelper(object):
         match.group(1), path_separator, iterations, skip_first)
 
   @classmethod
-  def ExpandUsersHomeDirectoryPath(cls, path, user_accounts):
+  def ExpandUsersHomeDirectoryPath(cls, path, path_separator, user_accounts):
     """Expands a path to contain all users home or profile directories.
 
     Expands the GRR artifacts path variable "%%users.homedir%%".
 
     Args:
       path (str): Windows path with environment variables.
+      path_separator (str): path segment separator.
       user_accounts (list[UserAccountArtifact]): user accounts.
 
     Returns:
@@ -103,11 +109,22 @@ class PathHelper(object):
     if not path_upper_case.startswith('%%USERS.HOMEDIR%%'):
       user_paths = [path]
     else:
-      regex = re.compile(re.escape('%%users.homedir%%'))
+      # We do not use regular expression here to replace "%%users.homedir%%"
+      # because this will complicate matters with Windows paths since
+      # as of Python 3.7 the repl argument of re.sub(), needs to be properly
+      # escaped.
+
+      # Strip path of "%%users.homedir%%".
+      path = path[17:]
 
       user_paths = []
       for user_account in user_accounts:
-        user_path = regex.sub(user_account.user_directory, path, re.IGNORECASE)
+        user_path = user_account.user_directory
+        # Prevent concatting 2 path segment separators.
+        if user_path[-1] == path_separator and path[0] == path_separator:
+          user_path = user_path[:-1]
+
+        user_path = ''.join([user_path, path])
         user_paths.append(user_path)
 
     # Remove the drive letter, if it exists.

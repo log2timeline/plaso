@@ -1,6 +1,3 @@
-language: python
-virtualenv:
-  system_site_packages: true
 matrix:
   include:
   - env: TARGET="pylint"
@@ -8,35 +5,95 @@ matrix:
     dist: trusty
     sudo: required
     group: edge
+    language: python
     python: 2.7
+    virtualenv:
+      system_site_packages: true
   - env: TARGET="linux-python27"
     os: linux
-    dist: trusty
+    dist: xenial
     sudo: required
     group: edge
+    language: python
     python: 2.7
-  - env: TARGET="linux-python34"
+    virtualenv:
+      system_site_packages: true
+  - env: TARGET="linux-python35"
     os: linux
-    dist: trusty
+    dist: xenial
     sudo: required
     group: edge
-    python: 3.4
+    language: python
+    python: 3.5
+    virtualenv:
+      system_site_packages: true
   - env: [TARGET="linux-python27-tox", TOXENV="py27"]
     os: linux
-    dist: trusty
+    dist: xenial
     sudo: required
     group: edge
+    language: python
     python: 2.7
+    virtualenv:
+      system_site_packages: false
   - env: [TARGET="linux-python34-tox", TOXENV="py34"]
     os: linux
-    dist: trusty
+    dist: xenial
     sudo: required
     group: edge
+    language: python
     python: 3.4
+    virtualenv:
+      system_site_packages: false
+  - env: [TARGET="linux-python35-tox", TOXENV="py35"]
+    os: linux
+    dist: xenial
+    sudo: required
+    group: edge
+    language: python
+    python: 3.5
+    virtualenv:
+      system_site_packages: false
+  - env: [TARGET="linux-python36-tox", TOXENV="py36"]
+    os: linux
+    dist: xenial
+    sudo: required
+    group: edge
+    language: python
+    python: 3.6
+    virtualenv:
+      system_site_packages: false
+  - env: [TARGET="linux-python37-tox", TOXENV="py37"]
+    os: linux
+    dist: xenial
+    sudo: required
+    group: edge
+    language: python
+    python: 3.7
+    virtualenv:
+      system_site_packages: false
   - env: [TARGET="macos-python27", PYTHONPATH="/Library/Python/2.7/site-packages/"]
     os: osx
     osx_image: xcode9.2
     language: generic
+  - env: TARGET="trusty-python27"
+    os: linux
+    dist: trusty
+    sudo: required
+    group: edge
+    language: python
+    python: 2.7
+    virtualenv:
+      system_site_packages: true
+  - env: TARGET="trusty-python34"
+    os: linux
+    dist: trusty
+    sudo: required
+    group: edge
+    language: python
+    python: 3.4
+    virtualenv:
+      system_site_packages: true
   - env: TARGET="jenkins"
     os: linux
     dist: trusty

@@ -117,7 +117,7 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
 
     path = '%%users.homedir%%\\Profile'
     expanded_paths = path_helper.PathHelper.ExpandUsersHomeDirectoryPath(
-        path, [user_account_artifact1, user_account_artifact2])
+        path, '\\', [user_account_artifact1, user_account_artifact2])
 
     expected_expanded_paths = [
         '\\Users\\Test1\\Profile',
@@ -126,14 +126,14 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
 
     path = 'C:\\Temp'
     expanded_paths = path_helper.PathHelper.ExpandUsersHomeDirectoryPath(
-        path, [user_account_artifact1, user_account_artifact2])
+        path, '\\', [user_account_artifact1, user_account_artifact2])
 
     expected_expanded_paths = ['\\Temp']
     self.assertEqual(expanded_paths, expected_expanded_paths)
 
     path = 'C:\\Temp\\%%users.homedir%%'
     expanded_paths = path_helper.PathHelper.ExpandUsersHomeDirectoryPath(
-        path, [user_account_artifact1, user_account_artifact2])
+        path, '\\', [user_account_artifact1, user_account_artifact2])
 
     expected_expanded_paths = ['\\Temp\\%%users.homedir%%']
     self.assertEqual(expanded_paths, expected_expanded_paths)
