@@ -155,7 +155,7 @@ class ArtifactDefinitionsFilterHelper(object):
     for glob_path in path_helper.PathHelper.ExpandRecursiveGlobs(
         source_path, path_separator):
       for path in path_helper.PathHelper.ExpandUsersHomeDirectoryPath(
-          glob_path, user_accounts):
+          glob_path, path_separator, user_accounts):
         if '%' in path:
           path = path_helper.PathHelper.ExpandWindowsPath(
               path, environment_variables)
