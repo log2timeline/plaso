@@ -1183,6 +1183,26 @@ optional arguments:
         scan_context, vss_scan_node, base_path_specs)
     self.assertEqual(len(base_path_specs), 2)
 
+  @shared_test_lib.skipUnlessHasTestFile(['vsstest.qcow2'])
+  def testScanVolumeSystemRootOnVSSDisabled(self):
+    """Tests the _ScanVolumeSystemRoot function on VSS with VSS turned off."""
+    test_tool = storage_media_tool.StorageMediaTool()
+    test_tool._process_vss = False
+
+    test_path = self._GetTestFilePath(['vsstest.qcow2'])
+    scan_context = source_scanner.SourceScannerContext()
+    scan_context.OpenSourcePath(test_path)
+
+    test_tool._source_scanner.Scan(scan_context)
+    scan_node = self._GetTestScanNode(scan_context)
+
+    vss_scan_node = scan_node.sub_nodes[0]
+
+    base_path_specs = []
+    test_tool._ScanVolumeSystemRoot(
+        scan_context, vss_scan_node, base_path_specs)
+    self.assertEqual(len(base_path_specs), 0)
+
   def testAddCredentialOptions(self):
     """Tests the AddCredentialOptions function."""
     argument_parser = argparse.ArgumentParser(

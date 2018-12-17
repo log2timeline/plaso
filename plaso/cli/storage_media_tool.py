@@ -989,15 +989,17 @@ class StorageMediaTool(tools.CLITool):
       self._ScanFileSystem(scan_node, base_path_specs)
 
     elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
-      # TODO: look into building VSS store on demand.
+      if self._process_vss:
+        # TODO: look into building VSS store on demand.
 
-      # We "optimize" here for user experience, alternatively we could scan for
-      # a file system instead of hard coding a TSK child path specification.
-      path_spec = path_spec_factory.Factory.NewPathSpec(
-          dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
-          parent=scan_node.path_spec)
+        # We "optimize" here for user experience, alternatively we could scan
+        # for a file system instead of hard coding a TSK child path
+        # specification.
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
+            parent=scan_node.path_spec)
 
-      base_path_specs.append(path_spec)
+        base_path_specs.append(path_spec)
 
     else:
       for sub_scan_node in scan_node.sub_nodes:
@@ -1023,9 +1025,12 @@ class StorageMediaTool(tools.CLITool):
       volume_identifiers = self._GetAPFSVolumeIdentifiers(scan_node)
 
     elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
-      volume_identifiers = self._GetVSSStoreIdentifiers(scan_node)
-      # Process VSS stores (snapshots) starting with the most recent one.
-      volume_identifiers.reverse()
+      if self._process_vss:
+        volume_identifiers = self._GetVSSStoreIdentifiers(scan_node)
+        # Process VSS stores (snapshots) starting with the most recent one.
+        volume_identifiers.reverse()
+      else:
+        volume_identifiers = []
 
     else:
       raise errors.SourceScannerError(
