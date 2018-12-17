@@ -269,7 +269,13 @@ class FileObjectInputReaderTest(unittest.TestCase):
       b'\xc3\xberi\xc3\xb0ja string\n'
       b'\xff\xfef\x00j\x00\xf3\x00r\x00\xf0\x00a\x00 \x00b\x00a\x00n\x00d\x00')
 
-  def testReadAscii(self):
+  _TEST_STRING_DATA = (
+      'A first string\n'
+      'A 2nd string\n'
+      'þriðja string\n'
+  )
+
+  def testReadASCII(self):
     """Tests the Read function with ASCII encoding."""
     file_object = io.BytesIO(self._TEST_DATA)
     input_reader = tools.FileObjectInputReader(file_object, encoding='ascii')
@@ -291,7 +297,7 @@ class FileObjectInputReaderTest(unittest.TestCase):
         '\x00b\x00a\x00n\x00d\x00')
     self.assertEqual(string, expected_string)
 
-  def testReadUtf8(self):
+  def testReadUTF8(self):
     """Tests the Read function with UTF-8 encoding."""
     file_object = io.BytesIO(self._TEST_DATA)
     input_reader = tools.FileObjectInputReader(file_object)
@@ -312,6 +318,19 @@ class FileObjectInputReaderTest(unittest.TestCase):
         '\ufffd\ufffdf\x00j\x00\ufffd\x00r\x00\ufffd\x00a\x00 '
         '\x00b\x00a\x00n\x00d\x00')
     self.assertEqual(string, expected_string)
+
+  def testReadUnicode(self):
+    """Tests the Read function on a unicode string."""
+    file_object = io.StringIO(self._TEST_STRING_DATA)
+    input_reader = tools.FileObjectInputReader(file_object)
+    string = input_reader.Read()
+    self.assertEqual(string, 'A first string\n')
+
+    string = input_reader.Read()
+    self.assertEqual(string, 'A 2nd string\n')
+
+    string = input_reader.Read()
+    self.assertEqual(string, 'þriðja string\n')
 
 
 class StdinInputReaderTest(unittest.TestCase):
