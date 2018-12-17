@@ -84,7 +84,7 @@ To filter a car based on the tyre brand, we would use a search path of
 "tyres.brand".
 
 Because the filter implementation provides the actual classes that perform
-handling of the search paths, operators, etc. customizing the behaviour of the
+handling of the search paths, operators, etc. customizing the behavior of the
 filter is easy. Three basic filter implementations are given:
 
   BaseFilterImplementation: search path expansion is done on attribute names

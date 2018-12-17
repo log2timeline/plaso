@@ -86,7 +86,7 @@ class TaggingFile(object):
       # Returns Sum(Literal(5), Literal(5))
 
     Args:
-      event_tagging_expression (str): event tagging experssion either in
+      event_tagging_expression (str): event tagging expression either in
           objectfilter or dottysql syntax.
 
     Returns:

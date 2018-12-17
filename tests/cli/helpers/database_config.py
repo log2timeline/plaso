@@ -17,7 +17,7 @@ class MockPartialOutputModule(object):
   """Mock of a partial output module for testing.
 
   Attributes:
-    hostname (str): hostname or IP address of the databse server.
+    hostname (str): hostname or IP address of the database server.
     password (str): password to access the database.
     port (int): port number of the database server.
     username (str): username to access the database.
@@ -45,7 +45,7 @@ class MockPartialOutputModule(object):
     """Sets the server information.
 
     Args:
-      server (str): hostname or IP address of the databse server.
+      server (str): hostname or IP address of the database server.
       port (int): port number of the database server.
     """
     self.hostname = server

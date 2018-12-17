@@ -411,7 +411,7 @@ class StatusView(object):
     Args:
       source_path (str): path of the source.
       source_type (str): source type.
-      artifact_filters (Optional[str]): names of artifact defintions to use as
+      artifact_filters (Optional[str]): names of artifact definitions to use as
           filters.
       filter_file (Optional[str]): filter file.
     """

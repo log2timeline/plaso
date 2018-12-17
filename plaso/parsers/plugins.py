@@ -14,7 +14,7 @@ from __future__ import unicode_literals
 class BasePlugin(object):
   """A plugin is a lightweight parser that makes use of a common data structure.
 
-  When a data structure is common amongst several artifacts or files a plugin
+  When a data structure is common among several artifacts or files a plugin
   infrastructure can be written to make writing parsers simpler. The goal of a
   plugin is have only a single parser that understands the data structure that
   can call plugins that have specialized knowledge of certain structures.

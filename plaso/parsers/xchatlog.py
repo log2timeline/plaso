@@ -27,7 +27,7 @@ would become intricate, since it would need to manage day transition,
 chat lines crossing the midnight. From there derives the last day of
 the year bug, since the parser will not manage that transition.
 
-Moreover the strftime is locale-dependant, so month names, footer and
+Moreover the strftime is locale-dependent, so month names, footer and
 headers can change, even inside the same log file. Being said that, the
 following will be the main logic used to parse the log files (note that
 the first header *must be* '\*\*\*\* BEGIN ...' otherwise file will be skipped).

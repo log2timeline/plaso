@@ -9,7 +9,7 @@ labels: [Configuration Files, System]
 supported_os: [Linux]
 ---
 name: LinuxLocalTime
-doc: Local time zone configuation
+doc: Local time zone configuration.
 sources:
 - type: FILE
   attributes: {paths: ['/etc/localtime']}

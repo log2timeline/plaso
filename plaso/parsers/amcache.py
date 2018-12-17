@@ -21,7 +21,7 @@ class AmcacheEventData(events.EventData):
     full_path (str): full path of file
     sha1 (str): sha1 of file
     productname (str): product name file belongs to
-    companyname (str): company name that created product file belogs to
+    companyname (str): company name that created product file belongs to
     fileversion (str): version of file
     languagecode (int): language code of file
     filesize (int): size of file in bytes

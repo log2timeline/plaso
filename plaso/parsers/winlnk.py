@@ -25,9 +25,9 @@ class WinLnkLinkEventData(events.EventData):
   """Windows Shortcut (LNK) link event data.
 
   Attributes:
-    birth_droid_file_identifier (str): distributed link tracking brith droid
+    birth_droid_file_identifier (str): distributed link tracking birth droid
         file identifier.
-    birth_droid_volume_identifier (str): distributed link tracking brith droid
+    birth_droid_volume_identifier (str): distributed link tracking birth droid
         volume identifier.
     command_line_arguments (str): command line arguments.
     description (str): description of the linked item.
@@ -38,7 +38,7 @@ class WinLnkLinkEventData(events.EventData):
         identifier.
     droid_volume_identifier (str): distributed link tracking droid volume
         identifier.
-    env_var_location (str): evironment variables loction.
+    env_var_location (str): environment variables loction.
     file_attribute_flags (int): file attribute flags of the linked item.
     file_size (int): size of the linked item.
     icon_location (str): icon location.

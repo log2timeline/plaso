@@ -78,11 +78,11 @@ class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
       relative_path = '{0:s}{1:s}'.format(
           path_separator, path_separator.join(relative_path_segments))
 
-    evironment_variable = artifacts.EnvironmentVariableArtifact(
+    environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name=self._NAME, value=relative_path)
 
     try:
-      knowledge_base.AddEnvironmentVariable(evironment_variable)
+      knowledge_base.AddEnvironmentVariable(environment_variable)
     except KeyError:
       # TODO: add and store preprocessing errors.
       pass
