@@ -988,7 +988,8 @@ class StorageMediaTool(tools.CLITool):
     elif scan_node.IsFileSystem():
       self._ScanFileSystem(scan_node, base_path_specs)
 
-    elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
+    elif (self._process_vss and
+          scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW):
       # TODO: look into building VSS store on demand.
 
       # We "optimize" here for user experience, alternatively we could scan for
@@ -1023,9 +1024,12 @@ class StorageMediaTool(tools.CLITool):
       volume_identifiers = self._GetAPFSVolumeIdentifiers(scan_node)
 
     elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
-      volume_identifiers = self._GetVSSStoreIdentifiers(scan_node)
-      # Process VSS stores (snapshots) starting with the most recent one.
-      volume_identifiers.reverse()
+      if self._process_vss:
+        volume_identifiers = self._GetVSSStoreIdentifiers(scan_node)
+        # Process VSS stores (snapshots) starting with the most recent one.
+        volume_identifiers.reverse()
+      else:
+        volume_identifiers = []
 
     else:
       raise errors.SourceScannerError(
