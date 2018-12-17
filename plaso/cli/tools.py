@@ -455,6 +455,9 @@ class FileObjectInputReader(CLIInputReader):
     """
     encoded_string = self._file_object.readline()
 
+    if isinstance(encoded_string, py2to3.UNICODE_TYPE):
+      return encoded_string
+
     try:
       string = codecs.decode(encoded_string, self._encoding, self._errors)
     except UnicodeDecodeError:
