@@ -65,7 +65,7 @@ optional arguments:
     self.assertEqual(test_tool._output_format, options.output_format)
     self.assertEqual(test_tool._output_filename, options.write)
 
-    # Test with a configuation object missing.
+    # Test with a configuration object missing.
     with self.assertRaises(errors.BadConfigObject):
       output_modules.OutputModulesArgumentsHelper.ParseOptions(options, None)
 

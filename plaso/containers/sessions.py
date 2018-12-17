@@ -74,7 +74,7 @@ class Session(interface.AttributeContainer):
           container.
 
     Raises:
-      ValueError: if the identifier fo the session completion does not match
+      ValueError: if the identifier of the session completion does not match
           that of the session.
     """
     if self.identifier != session_completion.identifier:

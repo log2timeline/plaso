@@ -92,7 +92,7 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Shared4n6TimeOutputModule):
     return all_tags
 
   def _GetUniqueValues(self, field_name):
-    """Retrieves the unique values fo a specific field from the database.
+    """Retrieves the unique values of a specific field from the database.
 
     Args:
       field_name (str): name of the field.

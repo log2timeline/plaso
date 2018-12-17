@@ -48,10 +48,8 @@ Name | Download URL | Comments | Dependencies
 --- | --- | --- | --- 
 artifacts | https://github.com/ForensicArtifacts/artifacts/releases | Comes with dpkg files |
 bencode | https://pypi.python.org/pypi/bencode | |
-binplist | https://github.com/google/binplist/releases | Comes with dpkg files |
-construct | https://pypi.python.org/pypi/construct#downloads | 2.5.2 or later 2.x version | six
+biplist | https://pypi.python.org/pypi/biplist | |
 dateutil | https://pypi.python.org/pypi/python-dateutil | |
-dpkt | https://pypi.python.org/pypi/dpkt | |
 google-apputils | https://pypi.python.org/pypi/google-apputils | |
 PyParsing | http://sourceforge.net/projects/pyparsing/files/ | 2.0.3 or later 2.x version |
 python-gflags | https://github.com/google/python-gflags/releases | |

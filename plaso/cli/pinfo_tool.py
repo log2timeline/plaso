@@ -124,7 +124,7 @@ class PinfoTool(
     storage_counters = self._CalculateStorageCounters(storage)
     compare_storage_counters = self._CalculateStorageCounters(compare_storage)
 
-    # TODO: improve comparision, currently only total numbers are compared.
+    # TODO: improve comparison, currently only total numbers are compared.
 
     return storage_counters == compare_storage_counters
 

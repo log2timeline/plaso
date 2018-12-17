@@ -67,13 +67,11 @@ Name | Download URL | Comments | Dependencies
 --- | --- | --- | --- 
 artifacts | https://github.com/ForensicArtifacts/artifacts/releases | |
 bencode | https://pypi.python.org/pypi/bencode | |
-binplist | https://github.com/google/binplist/releases | |
-construct | https://pypi.python.org/pypi/construct#downloads | 2.5.2 or later 2.x version | six
+biplist | https://pypi.python.org/pypi/biplist | |
 dateutil | https://pypi.python.org/pypi/python-dateutil | |
 dfdatetime | https://github.com/log2timeline/dfdatetime/releases | |
 dfvfs | https://github.com/log2timeline/dfvfs/releases | |
 dfwinreg | https://github.com/log2timeline/dfwinreg/releases | |
-dpkt | https://pypi.python.org/pypi/dpkt | |
 google-apputils | https://pypi.python.org/pypi/google-apputils | |
 hachoir-core | https://bitbucket.org/haypo/hachoir/wiki/Install/source | |
 hachoir-parser | https://bitbucket.org/haypo/hachoir/wiki/Install/source | |

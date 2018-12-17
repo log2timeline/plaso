@@ -15,10 +15,9 @@ The output should be something on these lines:
 
 ```
 Checking availability and versions of plaso dependencies.
-[OK]		artifacts version: 20150409
+[OK]		Crypto version: 2.6.1
+[OK]		artifacts version: 20180827
 [OK]		bencode
-[OK]		binplist version: 0.1.4
-[OK]		construct version: 2.5.2
 ...
 ```
 
@@ -93,60 +92,25 @@ python-pyparsing: /usr/lib/python2.7/dist-packages/pyparsing.py
 Once the package has been identified that contains the out-of-date dependency the next step is to see if it is truly at the latest version.
 
 ```
-$ apt-cache policy python-construct
-python-construct:
-  Installed: 2.5.1-1
-  Candidate: 2.5.1-1
+$ apt-cache policy python-pyparsing
+python-pyparsing:
+  Installed: 2.0.2-1
+  Candidate: 2.0.2-1
   Version table:
-     2.5.2-1 0
+     2.0.3-1 0
         500 REPO
- *** 2.5.1-1 0
+ *** 2.0.2-1 0
         600 REPO
         100 /var/lib/dpkg/status
 ```
 
-Here you can see an example of *python-construct* that has version **2.5.1-1** installed instead of version **2.5.2-1**, which is required by plaso. To correct this you may have to specifically indicate the version you want to install.
+Here you can see an example of *python-pyparsing* that has version **2.0.2-1** installed instead of version **2.0.3-1**, which is required by plaso. To correct this you may have to specifically indicate the version you want to install.
 
 ```
-$ sudo apt-get install python-construct=2.5.2-1
+$ sudo apt-get install python-pyparsing=2.0.3-1
 ```
 
 ### Common package conflicts
-
-#### Construct
-
-```
-$ log2timeline.py 
-Traceback (most recent call last):
-  File "/usr/bin/log2timeline.py", line 13, in <module>
-    from plaso.cli import extraction_tool
-  File "/usr/lib/python2.7/dist-packages/plaso/cli/extraction_tool.py", line 7, in <module>
-    from plaso.cli import storage_media_tool
-...
-  File "/usr/lib/python2.7/dist-packages/dfvfs/file_io/gzip_file_io.py", line 22, in GzipFile
-    construct.ULInt16(u'signature'),
-  File "/usr/lib/python2.7/dist-packages/construct/macros.py", line 160, in ULInt16
-    return FormatField(name, "<", "H")
-  File "/usr/lib/python2.7/dist-packages/construct/core.py", line 352, in __init__
-    StaticField.__init__(self, name, self.packer.size)
-  File "/usr/lib/python2.7/dist-packages/construct/core.py", line 324, in __init__
-    Construct.__init__(self, name)
-  File "/usr/lib/python2.7/dist-packages/construct/core.py", line 103, in __init__
-    raise TypeError("name must be a string or None", name)
-TypeError: ('name must be a string or None', u'signature')
-```
-
-This indicates that an older not supported version of construct is installed on your system. Please make sure you update to the latest version.
-
-```
-$ apt-cache policy python-construct
-```
-
-Check to see if there is a more up-to-date version available, you may need to specifically indicate the version you would like to install, e.g.:
-
-```
-$ sudo apt-get install python-construct=2.5.2-1
-```
 
 #### PyParsing
 

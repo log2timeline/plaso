@@ -61,10 +61,8 @@ Name | Download URL | Identifier | Comments | Dependencies
 --- | --- | --- | --- | --- 
 artifacts | https://github.com/ForensicArtifacts/artifacts/releases | com.github.ForensicArtifacts.artifacts | |
 bencode | https://pypi.python.org/pypi/bencode | org.python.pypi.bencode | |
-binplist | https://github.com/google/binplist/releases | com.github.google.binplist | |
-construct | https://pypi.python.org/pypi/construct#downloads | org.python.pypi.construct | latest 2.x version | six
+biplist | https://pypi.python.org/pypi/biplist | org.python.pypi.biplist | |
 dateutil | https://pypi.python.org/pypi/python-dateutil | com.github.dateutil.dateutil | |
-dpkt | https://pypi.python.org/pypi/dpkt | org.python.pypi.dpkt | |
 google-apputils | https://pypi.python.org/pypi/google-apputils | com.github.google.google-apputils | |
 PyParsing | http://sourceforge.net/projects/pyparsing/files/ | net.sourceforge.pyparsing | |
 python-gflags | https://github.com/google/python-gflags/releases | com.github.google.python-gflags | |

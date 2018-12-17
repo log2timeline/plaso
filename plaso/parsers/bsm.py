@@ -598,7 +598,7 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
       token_data (object): token data.
 
     Returns:
-      dict[str, str]: formatted token values or an emtpy dictionary if no
+      dict[str, str]: formatted token values or an empty dictionary if no
           formatted token values could be determined.
     """
     token_data_format_function = self._TOKEN_DATA_FORMAT_FUNCTIONS.get(
