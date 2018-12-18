@@ -1,3 +1,5 @@
+# Building and Installing Dependencies on MacOS 
+
 This page contains detailed instructions on how to build and install dependencies on Mac OS X.
 
 There are multiple ways to install the dependencies on Ubuntu:
@@ -10,11 +12,11 @@ There are multiple ways to install the dependencies on Ubuntu:
 
 ## Prepackaged dependencies
 
-Moved to Dependencies.md#macos
+[Moved](Dependencies.md#macos)
 
 ## Batch build
 
-Moved to Dependencies.md#batch-build
+[Moved](Dependencies.md#batch-build)
 
 ## Manual build
 It is impossible for us to support all flavors of Mac OS X out there, so if you want smooth sailing, we recommend sticking with the supported version or live with the fact that a manual build of the dependencies can be a tedious task.

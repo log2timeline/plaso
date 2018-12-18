@@ -10,6 +10,7 @@ To install the packaged release see:
 
 * [MacOS](MacOS-Packaged-Release.md)
 * [Ubuntu](Ubuntu-Packaged-Release.md)
+* [Fedora Core](Fedora-Core-Packaged-Release.md)
 * [Windows](Windows-Packaged-Release.md)
 * [Docker](Installing-with-docker.md)
 

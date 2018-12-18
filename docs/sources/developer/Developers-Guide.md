@@ -5,7 +5,6 @@
 * [Design](Developers-Guide.html#design)
 * [Roadmap](Developers-Guide.html#roadmap)
 * [Contributing Code](Developers-Guide.html#contributing-code)
-* [Python 3 Guide](Python-3-Guide.md)
 
 ## Setting up and maintaining your development environment
 
@@ -47,11 +46,11 @@ Once you've set up your development environment we recommend start simple:
 Overview of the general architecture of Plaso:
 
 * [Architecture](Internals.md)
-* [Source code and API documentation](http://plaso-api.readthedocs.org/en/latest/modules)
+* [API documentation](../api/plaso.html)
 
 ## Roadmap
 
-A high level roadmap can be found [here](Releases-and-roadmap.md). Individual features are tracked as a github issue and labeled as "enhancement". A list of features can be found [here](https://github.com/log2timeline/plaso/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement).
+A high level roadmap can be found [here](../user/Releases-and-roadmap.md). Individual features are tracked as a github issue and labeled as "enhancement". A list of features can be found [here](https://github.com/log2timeline/plaso/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement).
 
 ## Contributing Code
 

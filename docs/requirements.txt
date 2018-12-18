@@ -5,3 +5,5 @@ sphinx==1.7.0
 docutils==0.14
 # Required for markdown support.
 recommonmark
+# For table rendering on readthedocs.
+sphinx-markdown-tables
