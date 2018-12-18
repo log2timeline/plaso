@@ -1,4 +1,4 @@
-# Building Dependencies on Ubuntu
+# Building and Installing Dependencies on Ubuntu
 
 This page contains detailed instructions on how to build and install dependencies on Ubuntu. Some of these instructions should also work on Ubuntu like systems like Debian or Linux Mint.
 

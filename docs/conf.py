@@ -53,7 +53,8 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'sphinx_markdown_tables'
 ]
 
 

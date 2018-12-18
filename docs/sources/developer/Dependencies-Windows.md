@@ -1,3 +1,5 @@
+# Building and Installing Dependencies on Windows 
+
 This page contains detailed instructions on how to build and install dependencies on Windows.
 
 There are multiple ways to install the dependencies on Windows:
@@ -8,11 +10,11 @@ There are multiple ways to install the dependencies on Windows:
 
 ## Prepackaged dependencies
 
-Moved to Dependencies.md#windows
+[Moved](Dependencies.md#windows)
 
 ## Batch build
 
-Moved to Dependencies.md#batch-build
+[Moved](Dependencies.md#batch-build)
 
 ## Manual build
 

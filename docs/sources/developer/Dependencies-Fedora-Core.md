@@ -1,3 +1,5 @@
+# Building and Installing Dependencies on Fedora Core 
+
 ## Manual build
 
 It is impossible for us to support all flavors of Fedora Core out there, so if you want smooth sailing, we recommend sticking with the supported version or live with the fact that a manual build of the dependencies can be a tedious task.

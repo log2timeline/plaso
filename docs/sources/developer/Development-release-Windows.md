@@ -1,3 +1,5 @@
+# Developing on Windows
+
 To download the latest version of Plaso you'll need to install the git tools: http://git-scm.com/downloads
 
 Checkout the plaso source from the git repo:
