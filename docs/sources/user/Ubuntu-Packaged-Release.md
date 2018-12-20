@@ -8,7 +8,7 @@ sudo apt-get update
 sudo apt-get install python-plaso plaso-tools
 ```
 
-### Ubuntu 14.04 and 16.04 LTS
+### Ubuntu 14.04, 16.04 and 18.04 LTS
 
 To install plaso from the GIFT Personal Package Archive (PPA) add the [GIFT PPA](https://launchpad.net/~gift):
 
