@@ -10,6 +10,8 @@ If the answer on any of the questions below is no the dependency is not suitable
 
 Code licensed under a GPL, AGPL or BSD 4-clause cannot be integrated in a binary build, hence these licenses are deemed incompatible. Note that this could also apply to other source code licenses.
 
+Also note that we cannot integrate code under Public Domain. For more context see: [Public Domain Is Not Open Source](https://opensource.org/node/878).
+
 * Does the dependency support Linux, Mac OS X and Windows?
 
 ## Automated testing
