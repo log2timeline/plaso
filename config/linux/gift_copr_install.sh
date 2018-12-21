@@ -45,9 +45,6 @@ PYTHON2_DEPENDENCIES="PyYAML
                       python-efilter
                       python-elasticsearch
                       python-elasticsearch5
-                      python-hachoir-core
-                      python-hachoir-metadata
-                      python-hachoir-parser
                       python-pefile
                       python-psutil
                       python-pysqlite

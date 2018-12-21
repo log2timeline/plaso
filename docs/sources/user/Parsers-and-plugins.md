@@ -23,7 +23,6 @@ firefox_cache | Parser for Firefox Cache version 1 files (Firefox 31 or earlier)
 firefox_cache2 | Parser for Firefox Cache version 2 files (Firefox 32 or later).
 fsevents | Parser for fseventsd files.
 gdrive_synclog | Parser for Google Drive Sync log files.
-hachoir | Parser that wraps Hachoir.
 java_idx | Parser for Java WebStart Cache IDX files.
 lnk | Parser for Windows Shortcut (LNK) files.
 mac_appfirewall_log | Parser for appfirewall.log files.
@@ -207,8 +206,8 @@ linux | bash_history, bencode, dockerjson, dpkg, filestat, sqlite/google_drive, 
 macos | sqlite/appusage, asl_log, bash_history, bencode, bsm_log, cups_ipp, filestat, fseventsd, sqlite/google_drive, gdrive_synclog, sqlite/imessage, java_idx, sqlite/ls_quarantine, mac_appfirewall_log, sqlite/mac_document_versions, mac_keychain, mac_securityd, sqlite/mackeeper_cache, macwifi, olecf, czip/oxml, plist, sqlite/skype, syslog, utmpx, webhist, zsh_extended_history
 webhist | binary_cookies, chrome_cache, sqlite/chrome_autofill, sqlite/chrome_cookies, sqlite/chrome_extension_activity, sqlite/chrome_8_history, sqlite/chrome_27_history, chrome_preferences, firefox_cache, sqlite/firefox_cookies, sqlite/firefox_downloads, sqlite/firefox_history, java_idx, esedb/msie_webcache, msiecf, opera_global, opera_typed_history, plist/safari_history
 win7 | recycle_bin, custom_destinations, esedb/file_history, olecf/olecf_automatic_destinations, win_gen, winevtx, amcache
-win7_slow | hachoir, mft, win7
+win7_slow | mft, win7
 win_gen | bencode, esedb, filestat, sqlite/google_drive, gdrive_synclog, java_idx, lnk, mcafee_protection, olecf, czip/oxml, pe, prefetch, sccm, skydrive_log, skydrive_log_old, sqlite/skype, symantec_scanlog, usnjrnl, webhist, winfirewall, winjob, winreg
 winxp | recycle_bin_info2, rplog, win_gen, winevt
-winxp_slow | hachoir, mft, winxp
+winxp_slow | mft, winxp
 

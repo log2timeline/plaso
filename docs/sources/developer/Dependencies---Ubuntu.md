@@ -128,20 +128,6 @@ To install the required deb files run:
 sudo dpkg -i python-dfvfs_20140219-1_all.deb
 ```
 
-### Hachoir
-To install hachoir run:
-```bash
-sudo apt-get install python-hachoir-core python-hachoir-metadata python-hachoir-parser
-```
-
-### IPython
-To install IPython run:
-```bash
-sudo apt-get install ipython
-```
-
-For information on how to build IPython from source see: http://ipython.org/ipython-doc/stable/install/install.html
-
 ### libyal
 The following instructions apply to the following dependencies:
 

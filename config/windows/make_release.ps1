@@ -56,18 +56,6 @@ If (-Not (Test-Path $PyInstaller))
 
 $Version = & Invoke-Expression -Command "git describe --tags --abbrev=0"
 
-# Remove support for hachoir which is GPLv2 and cannot be distributed
-# in binary form. Leave the formatter because it does not link in the
-# hachoir code.
-Get-Content "plaso\parsers\__init__.py" | %{$_ -replace "from plaso.parsers import hachoir", "pass"} | Set-Content "plaso\parsers\__init__.py.patched"
-mv -Force plaso\parsers\__init__.py.patched plaso\parsers\__init__.py
-
-Get-Content "plaso\parsers\presets.py" | %{$_ -replace "'hachoir', ", ""} | Set-Content "plaso\parsers\presets.py.patched"
-mv -Force plaso\parsers\presets.py.patched plaso\parsers\presets.py
-
-Get-Content "plaso\dependencies.py" | Select-String -pattern 'hachoir_' -notmatch | Set-Content "plaso\dependencies.py.patched"
-mv -Force plaso\dependencies.py.patched plaso\dependencies.py
-
 # Build the binaries for each tool
 If (Test-Path "dist")
 {
@@ -179,7 +167,7 @@ Foreach ($d in $dep.context.DisplayPostContext.split(': ')[2].split(',')) {
     cp "dist\l2tdevtools\data\licenses\LICENSE.$($d)" dist\plaso\licenses
 }
 
-rm -Force dist\plaso\licenses\LICENSE.hachoir-*
+# Remove debug, test and yet unused dependencies.
 rm -Force dist\plaso\licenses\LICENSE.guppy
 rm -Force dist\plaso\licenses\LICENSE.libexe
 rm -Force dist\plaso\licenses\LICENSE.libwrc
