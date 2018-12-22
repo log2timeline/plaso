@@ -479,6 +479,16 @@ class ParsersManager(object):
     return cls._presets.GetPresets()
 
   @classmethod
+  def ReadPresetsFromFile(cls, path):
+    """Reads parser and parser plugin presets from a file.
+
+    Args:
+      path (str): path of file that contains the the parser and parser plugin
+          presets configuration.
+    """
+    cls._presets.ReadFromFile(path)
+
+  @classmethod
   def RegisterParser(cls, parser_class):
     """Registers a parser class.
 

@@ -47,6 +47,7 @@ class FilterFileArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the configuration object is of the wrong type.
+      BadConfigOptions: if the collection file does not exist.
     """
     if not isinstance(configuration_object, tools.CLITool):
       raise errors.BadConfigObject(

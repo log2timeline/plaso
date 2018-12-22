@@ -9,6 +9,7 @@ import unittest
 from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.output import manager as output_manager
+from plaso.parsers import manager as parsers_manager
 
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
@@ -185,6 +186,7 @@ class TestToolWithParsersOptions(
   """Tool to test the parsers options."""
 
 
+@shared_test_lib.skipUnlessHasTestFile(['presets.yaml'])
 class ParsersOptionsTest(test_lib.CLIToolTestCase):
   """Tests for the parsers options."""
 
@@ -193,6 +195,9 @@ class ParsersOptionsTest(test_lib.CLIToolTestCase):
   def testGetParserPresetsInformation(self):
     """Tests the _GetParserPresetsInformation function."""
     test_tool = TestToolWithParsersOptions()
+
+    presets_file = self._GetTestFilePath(['presets.yaml'])
+    parsers_manager.ParsersManager.ReadPresetsFromFile(presets_file)
 
     parser_presets_information = test_tool._GetParserPresetsInformation()
     self.assertGreaterEqual(len(parser_presets_information), 1)
@@ -204,6 +209,9 @@ class ParsersOptionsTest(test_lib.CLIToolTestCase):
     """Tests the ListParsersAndPlugins function."""
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')
     test_tool = TestToolWithParsersOptions(output_writer=output_writer)
+
+    presets_file = self._GetTestFilePath(['presets.yaml'])
+    parsers_manager.ParsersManager.ReadPresetsFromFile(presets_file)
 
     test_tool.ListParsersAndPlugins()
 

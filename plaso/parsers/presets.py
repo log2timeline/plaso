@@ -3,67 +3,97 @@
 
 from __future__ import unicode_literals
 
+import yaml
+
+from plaso.lib import errors
+
+
 class ParserPresetDefinition(object):
   """Parser and parser plugin preset definition.
 
   Attributes:
     name (str): name of the preset.
-    parsers (str): names of parser and parser plugins.
+    parsers (list[str]): names of parser and parser plugins.
   """
 
-  def __init__(self):
-    """Initializes a parser and parser plugin preset definition."""
+  def __init__(self, name, parsers):
+    """Initializes a parser and parser plugin preset definition.
+
+    Attributes:
+      name (str): name of the preset.
+      parsers (list[str]): names of parser and parser plugins.
+    """
     super(ParserPresetDefinition, self).__init__()
-    self.name = None
-    self.parsers = None
+    self.name = name
+    self.parsers = parsers
 
 
 class ParserPresets(object):
   """Parser and parser plugin presets."""
 
-  CATEGORIES = {
-      'win_gen': [
-          'bencode', 'esedb', 'filestat', 'sqlite/google_drive',
-          'gdrive_synclog', 'java_idx', 'lnk', 'mcafee_protection',
-          'olecf', 'czip/oxml', 'pe', 'prefetch', 'sccm', 'skydrive_log',
-          'skydrive_log_old', 'sqlite/skype', 'symantec_scanlog', 'usnjrnl',
-          'webhist', 'winfirewall', 'winjob', 'winreg'],
-      'winxp': ['recycle_bin_info2', 'rplog', 'win_gen', 'winevt'],
-      'winxp_slow': ['mft', 'winxp'],
-      'win7': [
-          'recycle_bin', 'custom_destinations', 'esedb/file_history',
-          'olecf/olecf_automatic_destinations', 'win_gen', 'winevtx',
-          'amcache'],
-      'win7_slow': ['mft', 'win7'],
-      'webhist': [
-          'binary_cookies', 'chrome_cache', 'sqlite/chrome_autofill',
-          'sqlite/chrome_cookies', 'sqlite/chrome_extension_activity',
-          'sqlite/chrome_8_history', 'sqlite/chrome_27_history',
-          'chrome_preferences', 'firefox_cache', 'sqlite/firefox_cookies',
-          'sqlite/firefox_downloads', 'sqlite/firefox_history', 'java_idx',
-          'esedb/msie_webcache', 'msiecf', 'opera_global',
-          'opera_typed_history', 'plist/safari_history'],
-      'linux': [
-          'bash_history', 'bencode', 'dockerjson', 'dpkg', 'filestat',
-          'sqlite/google_drive', 'gdrive_synclog', 'java_idx', 'olecf',
-          'czip/oxml', 'pls_recall', 'popularity_contest', 'selinux',
-          'sqlite/skype', 'syslog', 'systemd_journal', 'utmp', 'webhist',
-          'xchatlog', 'xchatscrollback', 'sqlite/zeitgeist',
-          'zsh_extended_history'],
-      'macos': [
-          'sqlite/appusage', 'asl_log', 'bash_history', 'bencode', 'bsm_log',
-          'cups_ipp', 'filestat', 'fseventsd', 'sqlite/google_drive',
-          'gdrive_synclog', 'sqlite/imessage', 'java_idx',
-          'sqlite/ls_quarantine', 'mac_appfirewall_log',
-          'sqlite/mac_document_versions', 'mac_keychain', 'mac_securityd',
-          'sqlite/mackeeper_cache', 'macwifi', 'olecf', 'czip/oxml', 'plist',
-          'sqlite/skype', 'syslog', 'utmpx', 'webhist', 'zsh_extended_history'],
-      'android': [
-          'android_app_usage', 'filestat', 'chrome_cache',
-          'sqlite/android_calls', 'sqlite/android_sms',
-          'sqlite/android_webview', 'sqlite/android_webviewcache',
-          'sqlite/chrome_cookies', 'sqlite/chrome_8_history',
-          'sqlite/chrome_27_history', 'sqlite/skype']}
+  def __init__(self):
+    """Initializes parser and parser plugin presets."""
+    super(ParserPresets, self).__init__()
+    self._definitions = {}
+
+  def _ReadPresetDefinitionValues(self, preset_definition_values):
+    """Reads a preset definition from a dictionary.
+
+    Args:
+      preset_definition_values (dict[str, object]): preset definition values.
+
+    Returns:
+      ParserPresetDefinition: a preset definition.
+
+    Raises:
+      MalformedPresetError: if the format of the preset definition is not set
+          or incorrect.
+    """
+    if not preset_definition_values:
+      raise errors.MalformedPresetError('Missing preset definition values.')
+
+    name = preset_definition_values.get('name', None)
+    if not name:
+      raise errors.MalformedPresetError(
+          'Invalid preset definition missing name.')
+
+    parsers = preset_definition_values.get('parsers', None)
+    if not parsers:
+      raise errors.MalformedPresetError(
+          'Invalid preset definition missing parsers.')
+
+    return ParserPresetDefinition(name, parsers)
+
+  def _ReadPresetsFromFileObject(self, file_object):
+    """Reads parser and parser plugin presets from a file-like object.
+
+    Args:
+      file_object (file): file-like object containing the parser and parser
+          plugin presets definitions.
+
+    Yields:
+      PresetDefinition: preset definition.
+
+    Raises:
+      MalformedPresetError: if one or more plugin preset definitions are
+          malformed.
+    """
+    yaml_generator = yaml.safe_load_all(file_object)
+
+    last_preset_definition = None
+    for yaml_definition in yaml_generator:
+      try:
+        preset_definition = self._ReadPresetDefinitionValues(yaml_definition)
+      except errors.MalformedPresetError as exception:
+        error_location = 'At start'
+        if last_preset_definition:
+          error_location = 'After: {0:s}'.format(last_preset_definition.name)
+
+        raise errors.MalformedPresetError(
+            '{0:s} {1!s}'.format(error_location, exception))
+
+      yield preset_definition
+      last_preset_definition = preset_definition
 
   def GetNames(self):
     """Retrieves the preset names.
@@ -71,7 +101,7 @@ class ParserPresets(object):
     Returns:
       list[str]: preset names in alphabetical order.
     """
-    return sorted(self.CATEGORIES.keys())
+    return sorted(self._definitions.keys())
 
   def GetPresetByName(self, name):
     """Retrieves a specific preset definition by name.
@@ -82,15 +112,7 @@ class ParserPresets(object):
     Returns:
       PresetDefinition: preset definition or None if not available.
     """
-    preset_definition = None
-
-    parsers = self.CATEGORIES.get(name, None)
-    if parsers is not None:
-      preset_definition = ParserPresetDefinition()
-      preset_definition.name = name
-      preset_definition.parsers = parsers
-
-    return preset_definition
+    return self._definitions.get(name, None)
 
   def GetPresets(self):
     """Retrieves the preset definitions.
@@ -98,8 +120,18 @@ class ParserPresets(object):
     Yields:
       PresetDefinition: preset definition in alphabetical order by name.
     """
-    for name, parsers in sorted(self.CATEGORIES.items()):
-      preset_definition = ParserPresetDefinition()
-      preset_definition.name = name
-      preset_definition.parsers = parsers
+    for _, preset_definition in sorted(self._definitions.items()):
       yield preset_definition
+
+  def ReadFromFile(self, path):
+    """Reads parser and parser plugin presets from a file.
+
+    Args:
+      path (str): path of file that contains the the parser and parser plugin
+          presets configuration.
+    """
+    self._definitions = {}
+
+    with open(path, 'r') as file_object:
+      for preset_definition in self._ReadPresetsFromFileObject(file_object):
+        self._definitions[preset_definition.name] = preset_definition
