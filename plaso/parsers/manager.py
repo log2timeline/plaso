@@ -15,6 +15,7 @@ class ParsersManager(object):
   """The parsers and plugins manager."""
 
   _parser_classes = {}
+  _presets = presets.ParserPresets()
 
   @classmethod
   def _GetParserFilters(cls, parser_filter_expression):
@@ -41,7 +42,7 @@ class ParsersManager(object):
     includes = {}
     excludes = {}
 
-    preset_categories = presets.CATEGORIES.keys()
+    preset_names = cls._presets.GetNames()
 
     for parser_filter in parser_filter_expression.split(','):
       parser_filter = parser_filter.strip()
@@ -55,7 +56,7 @@ class ParsersManager(object):
         active_dict = includes
 
       parser_filter = parser_filter.lower()
-      if parser_filter in preset_categories:
+      if parser_filter in preset_names:
         for parser_in_category in cls._GetParsersFromPresetCategory(
             parser_filter):
           parser, _, plugin = parser_in_category.partition('/')
@@ -82,12 +83,15 @@ class ParsersManager(object):
     Returns:
       list[str]: parser names in alphabetical order.
     """
-    if category not in presets.CATEGORIES:
+    preset_definition = cls._presets.GetPresetByName(category)
+    if preset_definition is None:
       return []
 
+    preset_names = cls._presets.GetNames()
     parser_names = set()
-    for element_name in presets.CATEGORIES.get(category):
-      if element_name in presets.CATEGORIES:
+
+    for element_name in preset_definition.parsers:
+      if element_name in preset_names:
         category_parser_names = cls._GetParsersFromPresetCategory(element_name)
         parser_names.update(category_parser_names)
       else:
@@ -463,6 +467,16 @@ class ParsersManager(object):
       return 'win7'
 
     return None
+
+  @classmethod
+  def GetPresets(cls):
+    """Retrieves the preset definitions.
+
+    Returns:
+      generator[PresetDefinition]: preset definition generator in alphabetical
+          order by name.
+    """
+    return cls._presets.GetPresets()
 
   @classmethod
   def RegisterParser(cls, parser_class):

@@ -89,6 +89,7 @@ class SerializedAttributeContainerList(object):
     self.data_size += len(serialized_data)
     self.next_sequence_number += 1
 
+
 # pylint: disable=redundant-returns-doc,redundant-yields-doc
 class BaseStore(object):
   """Storage interface."""
@@ -359,6 +360,7 @@ class BaseStorageFile(BaseStore):
 
     Raises:
       IOError: if the serialized data cannot be decoded.
+      OSError: if the serialized data cannot be decoded.
     """
     if not serialized_data:
       return None
@@ -431,6 +433,7 @@ class BaseStorageFile(BaseStore):
 
     Raises:
       IOError: if the attribute container cannot be serialized.
+      OSError: if the attribute container cannot be serialized.
     """
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(
@@ -458,6 +461,7 @@ class BaseStorageFile(BaseStore):
 
     Raises:
       IOError: when the storage file is closed or read-only.
+      OSError: when the storage file is closed or read-only.
     """
     if not self._is_open:
       raise IOError('Unable to write to closed storage file.')
@@ -521,6 +525,7 @@ class StorageFileMergeReader(StorageMergeReader):
 
     Raises:
       IOError: if the serialized data cannot be decoded.
+      OSError: if the serialized data cannot be decoded.
     """
     if not serialized_data:
       return None
@@ -1179,6 +1184,7 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     if not self._storage_file:
       raise IOError('Unable to write to closed storage writer.')
@@ -1191,6 +1197,7 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -1209,6 +1216,7 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -1223,6 +1231,7 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -1239,6 +1248,7 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -1252,6 +1262,7 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -1266,6 +1277,7 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -1290,6 +1302,7 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
+      OSError: if the storage type is not supported or
           if the temporary path for the task storage does not exist.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
@@ -1313,6 +1326,7 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -1332,6 +1346,7 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported.
+      OSError: if the storage type is not supported.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Unsupported storage type.')
@@ -1358,6 +1373,7 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     return self._storage_file.GetEvents()
 
@@ -1391,6 +1407,7 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     if not self._storage_file:
       raise IOError('Unable to read from closed storage writer.')
@@ -1411,6 +1428,7 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     if not self._storage_file:
       raise IOError('Unable to read from closed storage writer.')
@@ -1429,6 +1447,8 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
+          if the temporary path for the task storage does not exist.
+      OSError: if the storage type is not supported or
           if the temporary path for the task storage does not exist.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
@@ -1456,6 +1476,7 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     if not self._storage_file:
       raise IOError('Unable to read from closed storage writer.')
@@ -1473,6 +1494,8 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
+          if the storage file cannot be renamed.
+      OSError: if the storage type is not supported or
           if the storage file cannot be renamed.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
@@ -1493,6 +1516,7 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: if the storage writer is already opened.
+      OSError: if the storage writer is already opened.
     """
     if self._storage_file:
       raise IOError('Storage writer already opened.')
@@ -1523,6 +1547,8 @@ class StorageFileWriter(StorageWriter):
     Raises:
       IOError: if the storage type is not supported or
           if the storage file cannot be renamed.
+      OSError: if the storage type is not supported or
+          if the storage file cannot be renamed.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Unsupported storage type.')
@@ -1552,6 +1578,7 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     if not self._storage_file:
       raise IOError('Unable to read from closed storage writer.')
@@ -1566,6 +1593,8 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
+          if the storage file cannot be removed.
+      OSError: if the storage type is not supported or
           if the storage file cannot be removed.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
@@ -1614,6 +1643,10 @@ class StorageFileWriter(StorageWriter):
           if the storage type is not supported or
           if the temporary path for the task storage does not exist or
           if the temporary path for the task storage doe not refers to a file.
+      OSError: if the storage file cannot be opened or
+          if the storage type is not supported or
+          if the temporary path for the task storage does not exist or
+          if the temporary path for the task storage doe not refers to a file.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Unsupported storage type.')
@@ -1633,6 +1666,8 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
+          if the temporary path for the task storage already exists.
+      OSError: if the storage type is not supported or
           if the temporary path for the task storage already exists.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
@@ -1662,6 +1697,7 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported.
+      OSError: if the storage type is not supported.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError('Unsupported storage type.')
@@ -1697,6 +1733,8 @@ class StorageFileWriter(StorageWriter):
     Raises:
       IOError: if the storage type does not support writing preprocessing
           information or when the storage writer is closed.
+      OSError: if the storage type does not support writing preprocessing
+          information or when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -1714,6 +1752,8 @@ class StorageFileWriter(StorageWriter):
     Raises:
       IOError: if the storage type is not supported or
           when the storage writer is closed.
+      OSError: if the storage type is not supported or
+          when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -1729,6 +1769,8 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
+          when the storage writer is closed.
+      OSError: if the storage type is not supported or
           when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
@@ -1748,6 +1790,8 @@ class StorageFileWriter(StorageWriter):
     Raises:
       IOError: if the storage type is not supported or
           when the storage writer is closed.
+      OSError: if the storage type is not supported or
+          when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -1763,6 +1807,8 @@ class StorageFileWriter(StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
+          when the storage writer is closed.
+      OSError: if the storage type is not supported or
           when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
