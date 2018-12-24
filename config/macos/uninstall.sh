@@ -61,23 +61,25 @@ if test $? -eq 0;
 then
   echo "Uninstalling plaso.";
 
+  # Note that the paths returned by pkgutil do not have a leading /.
   INSTALLED_FILES=`/usr/sbin/pkgutil --files ${PACKAGE_IDENTIFIER} --only-files`;
 
   for INSTALLED_FILE in ${INSTALLED_FILES};
   do
-    if test -f ${INSTALLED_FILE};
+    if test -f /${INSTALLED_FILE};
     then
-      rm -f ${INSTALLED_FILE};
+      rm -f /${INSTALLED_FILE};
     fi
   done
 
+  # Note that the paths returned by pkgutil do not have a leading /.
   INSTALLED_FILES=`/usr/sbin/pkgutil --files ${PACKAGE_IDENTIFIER} --only-dirs | sort -r`;
 
   for INSTALLED_FILE in ${INSTALLED_FILES};
   do
-    if test -d ${INSTALLED_FILE};
+    if test -d /${INSTALLED_FILE};
     then
-      rmdir ${INSTALLED_FILE} 2> /dev/null;
+      rmdir /${INSTALLED_FILE} 2> /dev/null;
     fi
   done
 
@@ -95,23 +97,25 @@ do
     continue
   fi
 
+  # Note that the paths returned by pkgutil do not have a leading /.
   INSTALLED_FILES=`/usr/sbin/pkgutil --files ${PACKAGE_IDENTIFIER} --only-files`;
 
   for INSTALLED_FILE in ${INSTALLED_FILES};
   do
-    if test -f ${INSTALLED_FILE};
+    if test -f /${INSTALLED_FILE};
     then
-      rm -f ${INSTALLED_FILE};
+      rm -f /${INSTALLED_FILE};
     fi
   done
 
+  # Note that the paths returned by pkgutil do not have a leading /.
   INSTALLED_FILES=`/usr/sbin/pkgutil --files ${PACKAGE_IDENTIFIER} --only-dirs | sort -r`;
 
   for INSTALLED_FILE in ${INSTALLED_FILES};
   do
-    if test -d ${INSTALLED_FILE};
+    if test -d /${INSTALLED_FILE};
     then
-      rmdir ${INSTALLED_FILE} 2> /dev/null;
+      rmdir /${INSTALLED_FILE} 2> /dev/null;
     fi
   done
 
