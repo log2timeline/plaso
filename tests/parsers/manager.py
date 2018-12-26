@@ -382,7 +382,7 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
 
     TestParserWithPlugins.DeregisterPlugin(TestPlugin)
 
-  # TODO: add tests for GetPresetForOperatingSystem.
+  # TODO: add tests for GetPresetsForOperatingSystem.
 
   def testPluginRegistration(self):
     """Tests the RegisterPlugin and DeregisterPlugin functions."""

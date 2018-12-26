@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 import pysigscan
 
-from plaso.lib import definitions
+from plaso.containers import artifacts
 from plaso.lib import specification
 from plaso.parsers import logger
 from plaso.parsers import presets
@@ -406,10 +406,10 @@ class ParsersManager(object):
     return parsers_information
 
   @classmethod
-  def GetPresetForOperatingSystem(
+  def GetPresetsForOperatingSystem(
       cls, operating_system, operating_system_product,
       operating_system_version):
-    """Determines the preset for a specific operating system.
+    """Determines the presets for a specific operating system.
 
     Args:
       operating_system (str): operating system for example "Windows". This
@@ -420,53 +420,14 @@ class ParsersManager(object):
           example "5.1" as determined by preprocessing.
 
     Returns:
-      str: parser filter preset, where None represents all parsers and plugins.
+      list[PresetDefinition]: preset definitions, where an empty list
+          represents all parsers and parser plugins (no preset).
     """
-    # TODO: Make this more sane. Currently we are only checking against
-    # one possible version of Windows, and then making the assumption if
-    # that is not correct we default to Windows 7. Same thing with other
-    # OS's, no assumption or checks are really made there.
-    # Also this is done by default, and no way for the user to turn off
-    # this behavior, need to add a parameter to the CLI tools that takes
-    # care of overwriting this behavior.
+    operating_system = artifacts.OperatingSystemArtifact(
+        name=operating_system, product=operating_system_product,
+        version=operating_system_version)
 
-    if operating_system == definitions.OPERATING_SYSTEM_LINUX:
-      return 'linux'
-
-    if operating_system == definitions.OPERATING_SYSTEM_MACOS:
-      return 'macos'
-
-    if operating_system_product:
-      operating_system_product = operating_system_product.lower()
-    else:
-      operating_system_product = ''
-
-    if operating_system_version:
-      operating_system_version = operating_system_version.split('.')
-    else:
-      operating_system_version = ['0', '0']
-
-    # Windows NT 5 (2000, XP and 2003).
-    if ('windows' in operating_system_product and
-        operating_system_version[0] == '5'):
-      return 'winxp'
-
-    # TODO: Improve this detection, this should be more 'intelligent', since
-    # there are quite a lot of versions out there that would benefit from
-    # loading up the set of 'winxp' parsers.
-    if ('windows xp' in operating_system_product or
-        'windows server 2000' in operating_system_product or
-        'windows server 2003' in operating_system_product):
-      return 'winxp'
-
-    # Fallback for other Windows versions.
-    if 'windows' in operating_system_product:
-      return 'win7'
-
-    if operating_system == definitions.OPERATING_SYSTEM_WINDOWS:
-      return 'win7'
-
-    return None
+    return cls._presets.GetPresetsByOperatingSystem(operating_system)
 
   @classmethod
   def GetPresets(cls):

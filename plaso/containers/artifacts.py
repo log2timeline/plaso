@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 from plaso.containers import interface
 from plaso.containers import manager
+from plaso.lib import definitions
 
 
 class ArtifactAttributeContainer(interface.AttributeContainer):
@@ -64,6 +65,120 @@ class HostnameArtifact(ArtifactAttributeContainer):
     super(HostnameArtifact, self).__init__()
     self.name = name
     self.schema = schema
+
+
+class OperatingSystemArtifact(ArtifactAttributeContainer):
+  """Operating system artifact attribute container.
+
+  Attributes:
+    name (str): name, such as "Linux", "MacOS" or "Windows".
+    product (str): product name, such as "macOS Mojave" or "Windows XP".
+    version (str): version, such as "10.14.1" or "5.1".
+  """
+  CONTAINER_TYPE = 'operating_system'
+
+  # Note that the product names below are normalized.
+  _NAMES_AND_VERSIONS_PER_PRODUCT = {
+      'Windows 2000': (definitions.OPERATING_SYSTEM_WINDOWS_NT, (5, 0)),
+      'Windows 2003': (definitions.OPERATING_SYSTEM_WINDOWS_NT, (5, 2)),
+      'Windows 2003 R2': (definitions.OPERATING_SYSTEM_WINDOWS_NT, (5, 2)),
+      'Windows 2008': (definitions.OPERATING_SYSTEM_WINDOWS_NT, (6, 0)),
+      'Windows 2008 R2': (definitions.OPERATING_SYSTEM_WINDOWS_NT, (6, 1)),
+      'Windows 2012': (definitions.OPERATING_SYSTEM_WINDOWS_NT, (6, 2)),
+      'Windows 2012 R2': (definitions.OPERATING_SYSTEM_WINDOWS_NT, (6, 3)),
+      'Windows 2016': (definitions.OPERATING_SYSTEM_WINDOWS_NT, (10, 0)),
+      'Windows 2019': (definitions.OPERATING_SYSTEM_WINDOWS_NT, (10, 0)),
+      'Windows 7': (definitions.OPERATING_SYSTEM_WINDOWS_NT, (6, 1)),
+      'Windows 8': (definitions.OPERATING_SYSTEM_WINDOWS_NT, (6, 2)),
+      'Windows 8.1': (definitions.OPERATING_SYSTEM_WINDOWS_NT, (6, 3)),
+      'Windows 10': (definitions.OPERATING_SYSTEM_WINDOWS_NT, (10, 0)),
+      'Windows Vista': (definitions.OPERATING_SYSTEM_WINDOWS_NT, (6, 0)),
+      'Windows XP': (definitions.OPERATING_SYSTEM_WINDOWS_NT, (5, 1))}
+
+  def __init__(self, name=None, product=None, version=None):
+    """Initializes an operating system artifact.
+
+    Args:
+      name (str): name, such as "Linux", "MacOS" or "Windows".
+      product (str): product name, such as "macOS Mojave" or "Windows XP".
+      version (str): version, such as "10.14.1" or "5.1".
+    """
+    super(OperatingSystemArtifact, self).__init__()
+    self.name = name
+    self.product = product
+    self.version = version
+
+  @property
+  def normalized_product(self):
+    """str: normalized product name."""
+    normalized_product = self.product or ''
+    normalized_product = normalized_product.split(' ')
+    normalized_product_lower_case = [
+        segment.lower() for segment in normalized_product]
+
+    if 'windows' in normalized_product_lower_case:
+      segment_index = normalized_product_lower_case.index('windows') + 1
+      if normalized_product_lower_case[segment_index] == 'server':
+        segment_index += 1
+      return 'Windows {0:s}'.format(normalized_product[segment_index])
+
+    return self.product or ''
+
+  @property
+  def version_tuple(self):
+    """tuple[int]: version tuple or None if version is not set or invalid."""
+    try:
+      return tuple([int(digit, 10) for digit in self.version.split('.')])
+    except (AttributeError, TypeError, ValueError):
+      return None
+
+  def Compare(self, other):
+    """Compares operating system artifact attribute containers.
+
+    This function compares the operating systems based on the most specific
+    available critera. These criteria, in order of most to least specific, are:
+    * product
+    * name and version
+    * name
+
+    Args:
+      other (OperatingSystemArtifact): operating system artifact attribute
+          container to compare with.
+
+    Returns:
+      bool: True if the operating systems are considered equivalent, False if
+          the most specific criteria do no match, or no criteria are available.
+    """
+    if self.product and other.product:
+      return self.normalized_product == other.normalized_product
+
+    if self.product:
+      self_name, self_version_tuple = self._NAMES_AND_VERSIONS_PER_PRODUCT.get(
+          self.normalized_product)
+      return (
+          self_name == other.name and self_version_tuple == other.version_tuple)
+
+    if self.name and self.version:
+      if other.product:
+        other_name, other_version_tuple = (
+            self._NAMES_AND_VERSIONS_PER_PRODUCT.get(other.normalized_product))
+      else:
+        other_name = other.name
+        other_version_tuple = other.version_tuple
+
+      return (
+          self.name == other_name and self.version_tuple == other_version_tuple)
+
+    if self.name:
+      if other.product:
+        other_name, _ = self._NAMES_AND_VERSIONS_PER_PRODUCT.get(
+            other.normalized_product)
+      else:
+        other_name = other.name
+
+      return self.name == other_name
+
+    return False
 
 
 class SystemConfigurationArtifact(ArtifactAttributeContainer):
