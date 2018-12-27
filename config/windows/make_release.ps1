@@ -89,7 +89,7 @@ If ( $LastExitCode -ne 0 ) {
     Exit 1
 }
 
-$Arguments = "--hidden-import artifacts --hidden-import requests --onedir tools\log2timeline.py"
+$Arguments = "--hidden-import artifacts --hidden-import future --hidden-import requests --onedir tools\log2timeline.py"
 
 If ( $Python -ne "" )
 {
@@ -134,7 +134,7 @@ If ( $LastExitCode -ne 0 ) {
     Exit 1
 }
 
-$Arguments = "--hidden-import artifacts --hidden-import requests --onedir tools\psteal.py"
+$Arguments = "--hidden-import artifacts --hidden-import future --hidden-import requests --onedir tools\psteal.py"
 
 If ( $Python -ne "" )
 {
