@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The parser and parser pluging presets."""
+"""The parser and parser plugin presets."""
 
 from __future__ import unicode_literals
 
