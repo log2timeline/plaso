@@ -22,7 +22,7 @@ For ease of maintenance the following instructions use as much MSI package files
 
 **Note that when making MSI packages, make sure the remove the previous versions before installing the newer version.**
 
-Alternative installation methods like installing directly from source, using easy_install or pip are [not recommended](https://stackoverflow.com/questions/3220404/why-use-pip-over-easy-install) because when not maintained correctly they can mess up your setup more easily than using MSIs. E.g. easy_installer and pip do not always remove older versions, e.g. when upgrading IPython 0.13 to 1.1, though Python distutil generated MSI packages don't detect and remove previous versions either it is less likely you'll end up with multiple different versions of the same package installed side-by-side.
+Alternative installation methods like installing directly from source, using easy_install or pip are [not recommended](https://stackoverflow.com/questions/3220404/why-use-pip-over-easy-install) because when not maintained correctly they can mess up your setup more easily than using MSIs. E.g. easy_installer and pip do not always remove older versions, though Python distutil generated MSI packages don't detect and remove previous versions either it is less likely you'll end up with multiple different versions of the same package installed side-by-side.
 
 If you run into problems building, installing or running the dependencies first check: [Troubleshooting](Troubleshooting-Windows.md).
 
@@ -75,9 +75,6 @@ dfdatetime | https://github.com/log2timeline/dfdatetime/releases | |
 dfvfs | https://github.com/log2timeline/dfvfs/releases | |
 dfwinreg | https://github.com/log2timeline/dfwinreg/releases | |
 google-apputils | https://pypi.python.org/pypi/google-apputils | |
-hachoir-core | https://bitbucket.org/haypo/hachoir/wiki/Install/source | |
-hachoir-parser | https://bitbucket.org/haypo/hachoir/wiki/Install/source | |
-hachoir-metadata | https://bitbucket.org/haypo/hachoir/wiki/Install/source | |
 pefile | https://github.com/erocarrera/pefile/releases | |
 psutil | https://pypi.python.org/pypi/psutil | |
 PyParsing | http://sourceforge.net/projects/pyparsing/files/ | 2.0.3 or later 2.x version |

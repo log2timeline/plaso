@@ -125,23 +125,6 @@ To install the required pkg files run:
 sudo installer -target / -pkg python-dfvfs-20140219.pkg
 ```
 
-### IPython
-Download the latest source package from: https://github.com/ipython/ipython/releases
-
-To build pkg files run the following command from the build root directory:
-```
-tar xfvz ipython-1.2.1.tar.gz
-cd ipython-1.2.1
-python setup.py install --root=$PWD/tmp --install-data=/usr/local 
-pkgbuild --root tmp --identifier org.github.ipython.ipython --version 1.2.1 --ownership recommended ../ipython-1.2.1.pkg
-cd ..
-```
-
-To install the required pkg files run:
-```
-sudo installer -target / -pkg ipython-1.2.1.pkg
-```
-
 #### gnureadline
 Download the latest source package from: https://pypi.python.org/pypi/gnureadline
 
@@ -156,57 +139,6 @@ pkgbuild --root tmp --identifier org.python.pypi.gnureadline --version 6.3.3 --o
 To install the required pkg files run:
 ```
 sudo installer -target / -pkg gnureadline-6.3.3.pkg
-```
-
-### Hachoir
-Download the latest source package from: https://bitbucket.org/haypo/hachoir/wiki/Install/source
-
-You'll need:
-
-* hachoir-core-1.3.3.tar.gz
-* hachoir-parser-1.3.4.tar.gz
-* hachoir-metadata-1.3.3.tar.gz
-
-To build pkg files run the following command from the build root directory:
-```
-tar xfvz hachoir-core-1.3.3.tar.gz
-cd hachoir-core-1.3.3
-python setup.py install --root=$PWD/tmp --install-data=/usr/local 
-pkgbuild --root tmp --identifier org.bitbucket.hachoir.core --version 1.3.3 --ownership recommended ../python-hachoir-core-1.3.3.pkg
-cd ..
-```
-
-To install the required pkg files run:
-```
-sudo installer -target / -pkg python-hachoir-core-1.3.3.pkg
-```
-
-To build pkg files run the following command from the build root directory:
-```
-tar xfvz hachoir-parser-1.3.4.tar.gz
-cd hachoir-parser-1.3.4
-python setup.py install --root=$PWD/tmp --install-data=/usr/local 
-pkgbuild --root tmp --identifier org.bitbucket.hachoir.parser --version 1.3.4 --ownership recommended ../python-hachoir-parser-1.3.4.pkg
-cd ..
-```
-
-To install the required pkg files run:
-```
-sudo installer -target / -pkg python-hachoir-parser-1.3.4.pkg
-```
-
-To build pkg files run the following command from the build root directory:
-```
-tar xfvz hachoir-metadata-1.3.3.tar.gz
-cd hachoir-metadata-1.3.3
-python setup.py install --root=$PWD/tmp --install-data=/usr/local 
-pkgbuild --root tmp --identifier org.bitbucket.hachoir.metadata --version 1.3.3 --ownership recommended ../python-hachoir-metadata-1.3.3.pkg
-cd ..
-```
-
-To install the required pkg files run:
-```
-sudo installer -target / -pkg python-hachoir-metadata-1.3.3.pkg
 ```
 
 ### libyal

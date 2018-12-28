@@ -4,16 +4,6 @@
 EXIT_FAILURE=1;
 EXIT_SUCCESS=0;
 
-# Remove support for hachoir which is GPLv2 and cannot be distributed
-# in binary form. Leave the formatter because it does not link in the
-# hachoir code.
-
-rm -f plaso/parsers/hachoir*
-
-sed -i"~" -e "s/'hachoir', //" plaso/parsers/presets.py
-
-sed -i"~" '/hachoir_/d' plaso/dependencies.py
-
 if ! test -d ../l2tdevtools;
 then
 	echo "Unable to locate l2tdevtools.";
@@ -32,7 +22,7 @@ do
 	cp "../l2tdevtools/data/licenses/LICENSE.${DEPENDENCY}" config/licenses/
 done
 
-rm -f config/licenses/LICENSE.hachoir-*
+# Remove debug, test and yet unused dependencies.
 rm -f config/licenses/LICENSE.guppy
 rm -f config/licenses/LICENSE.libexe
 rm -f config/licenses/LICENSE.libwrc

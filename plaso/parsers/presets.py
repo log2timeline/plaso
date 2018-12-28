@@ -11,11 +11,11 @@ CATEGORIES = {
         'symantec_scanlog', 'usnjrnl', 'webhist', 'winfirewall', 'winjob',
         'winreg'],
     'winxp': ['recycle_bin_info2', 'rplog', 'win_gen', 'winevt'],
-    'winxp_slow': ['hachoir', 'mft', 'winxp'],
+    'winxp_slow': ['mft', 'winxp'],
     'win7': [
         'recycle_bin', 'custom_destinations', 'esedb/file_history',
         'olecf/olecf_automatic_destinations', 'win_gen', 'winevtx', 'amcache'],
-    'win7_slow': ['hachoir', 'mft', 'win7'],
+    'win7_slow': ['mft', 'win7'],
     'webhist': [
         'binary_cookies', 'chrome_cache', 'sqlite/chrome_autofill',
         'sqlite/chrome_cookies', 'sqlite/chrome_extension_activity',

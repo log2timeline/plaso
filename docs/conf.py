@@ -87,17 +87,15 @@ modules_to_mock = list(dependencies.PYTHON_DEPENDENCIES.keys())
 # to explicitly mock each submodule.
 # TODO: Find a better way to do this
 ADDITIONAL_MODULES = set([
-    'artifacts.knowledge_base', 'dateutil.parser', 'dtfabric.runtime', 'dfvfs.analyzer',
-    'dfvfs.credentials', 'dfvfs.file_io', 'dfvfs.helpers', 'dfvfs.lib',
-    'dfvfs.path', 'dfvfs.resolver', 'dfvfs.serializer',
+    'artifacts.knowledge_base', 'dateutil.parser', 'dtfabric.runtime',
+    'dfvfs.analyzer', 'dfvfs.credentials', 'dfvfs.file_io', 'dfvfs.helpers',
+    'dfvfs.lib', 'dfvfs.path', 'dfvfs.resolver', 'dfvfs.serializer',
     'dfvfs.serializer.json_serializer', 'dfvfs.vfs', 'dfvfs.volume',
     'dfwinreg.definitions', 'efilter.protocols', 'elasticsearch',
-    'elasticsearch.exceptions', 'flask', 'hachoir_core',
-    'hachoir_core.config', 'hachoir_parser', 'hachoir_metadata', 'MySQLdb',
-    'pyelasticsearch', 'timesketch', 'timesketch.lib',
-    'timesketch.lib.datastores', 'timesketch.lib.datastores.elastic',
-    'timesketch.models', 'timesketch.models.sketch',
-    'timesketch.models.user', 'lz4.block'])
+    'elasticsearch.exceptions', 'flask', 'MySQLdb', 'pyelasticsearch',
+    'timesketch', 'timesketch.lib', 'timesketch.lib.datastores',
+    'timesketch.lib.datastores.elastic', 'timesketch.models',
+    'timesketch.models.sketch', 'timesketch.models.user', 'lz4.block'])
 modules_to_mock = set(modules_to_mock).union(ADDITIONAL_MODULES)
 
 # Readthedocs has it's own install of chardet, requests and urllib3, so remove

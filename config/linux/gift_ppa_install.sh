@@ -47,9 +47,6 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-elasticsearch
                       python-elasticsearch5
                       python-future
-                      python-hachoir-core
-                      python-hachoir-metadata
-                      python-hachoir-parser
                       python-idna
                       python-lz4
                       python-pefile
