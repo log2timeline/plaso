@@ -17,7 +17,6 @@ from plaso.lib import errors
 from plaso.output import manager as output_manager
 from plaso.output import mediator as output_mediator
 from plaso.parsers import manager as parsers_manager
-from plaso.parsers import presets as parsers_presets
 from plaso.winnt import language_ids
 
 
@@ -237,8 +236,11 @@ class ParsersOptions(object):
         str: parsers names corresponding to the preset
     """
     parser_presets_information = []
-    for preset_name, parser_names in sorted(parsers_presets.CATEGORIES.items()):
-      parser_presets_information.append((preset_name, ', '.join(parser_names)))
+    for preset_definition in parsers_manager.ParsersManager.GetPresets():
+      preset_information_tuple = (
+          preset_definition.name, ', '.join(preset_definition.parsers))
+      # TODO: refactor to pass PresetDefinition.
+      parser_presets_information.append(preset_information_tuple)
 
     return parser_presets_information
 
