@@ -105,4 +105,5 @@ install:
 script:
 - ./config/travis/run_with_timeout.sh 30 ./config/travis/runtests.sh
 after_success:
+- if ! test -f /usr/bin/coverage; then sudo ln -s /usr/bin/python-coverage /usr/bin/coverage; fi
 - if test ${TARGET} = "linux-python27"; then curl -o codecov.sh -s https://codecov.io/bash && /bin/bash ./codecov.sh; fi
