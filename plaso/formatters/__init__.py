@@ -34,6 +34,7 @@ from plaso.formatters import fseventsd
 from plaso.formatters import ganalytics
 from plaso.formatters import gdrive
 from plaso.formatters import gdrive_synclog
+from plaso.formatters import google_takeout
 from plaso.formatters import hangouts_messages
 from plaso.formatters import iis
 from plaso.formatters import imessage
