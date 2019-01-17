@@ -379,7 +379,7 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
     return charset
 
   def _BodyMail(self, message):
-    """Gets the body mail.
+    """Gets the body mail. If the body mail is encoded in Base64, it's decoded.
 
        Args:
          message (str): mail
@@ -387,27 +387,20 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
        Returns:
          str: body mail
     """
-    #if message.get_charsets()[0]:
-    #  charset = self._GetCharset(message.get_charsets()[0])
+
     if message.get_content_type() == 'text/plain':
       if message['Content-Transfer-Encoding'] == 'base64':
         return base64.b64decode(message.get_payload())
       return message.get_payload()
-    """
-    elif message.get_content_type() == 'text/html':
-      html_pattern = re.compile(r'<[^>]+>|&nbsp;|[.|#]?.+([\s]?)+{[^}]*?}')
-      body = re.sub(
-          html_pattern, '', message.get_payload().decode(charset, 'ignore')
-      ).encode(charset, 'ignore')
-    """
+
     return message.get_payload()
 
   def _ParseBodyMail(self, mail):
     """Gets the mail content.
-        A Message object consists of headers and payloads. The payload is
-        either a string in the case of simple message objects or a list of
-        Message objects for MIME container documents.
-        For each message the charset is taken to do the right decoding.
+       A Message object consists of headers and payloads. The payload is
+       either a string in the case of simple message objects or a list of
+       Message objects for MIME container documents.
+       For each message the charset is taken to do the right decoding.
 
        Args:
          mail (instance): mail
@@ -433,7 +426,6 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
             body = bodymail
     else:
       body = self._BodyMail(mail)
-
     return body
 
   def _MBoxParser(self, file_object, parser_mediator):
@@ -510,7 +502,7 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
               event_data.vbr_info = value
             elif key == 'Return-Path':
               event_data.return_path = value
-          event_data.body = self._ParseBodyMail(mail)
+          event_data.body = self._ParseBodyMail(mail).decode('utf8', 'ignore')
           event = time_events.DateTimeValuesEvent(
               date_time, 'Mail')
           parser_mediator.ProduceEventWithEventData(event, event_data)

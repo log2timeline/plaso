@@ -34,6 +34,7 @@ class CompoundZIPPlugin(plugins.BasePlugin):
           this method, but will be closed by the parser logic in czip.py.
     """
 
+  #pylint: disable=unused-argument
   def CheckZipFile(self, zip_file, archive_members):
     """Checks if the zip file being contains the paths specified in
        REQUIRED_PATHS. If all paths are present, the plugin logic processing
@@ -46,10 +47,13 @@ class CompoundZIPPlugin(plugins.BasePlugin):
          archive_members (list[str]): file paths in the archive.
 
        Returns:
-         true if the required paths are set and the archive members' set is a super set of the
-         required paths' set
+         bool: True if the required paths are set and the archive members' set
+           is a super set of the required paths' set, False otherwise.
     """
-    return self.REQUIRED_PATHS and set(archive_members).issuperset(self.REQUIRED_PATHS)
+    return (
+        self.REQUIRED_PATHS and
+        set(archive_members).issuperset(self.REQUIRED_PATHS)
+    )
 
   # pylint: disable=arguments-differ
   def Process(self, parser_mediator, zip_file, archive_members):
@@ -64,8 +68,8 @@ class CompoundZIPPlugin(plugins.BasePlugin):
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
-      ValueError: if a subclass has not specified REQUIRED_PATHS or the regex didn't validate the
-        specific file.
+      ValueError: if a subclass has not specified REQUIRED_PATHS or
+        the regex didn't validate the specific file.
     """
 
     if not self.CheckZipFile(zip_file, archive_members):

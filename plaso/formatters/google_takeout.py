@@ -51,12 +51,12 @@ class GoogleActivitiesUpdateEventFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_SEPARATOR = '; '
 
   FORMAT_STRING_PIECES = [
-    'Header: {header}',
-    'Title: {title}',
-    'TitleURL: {title_url}',
-    'Subtitles: {subtitles}',
-    'Details: {details}',
-    'Location: {location}'
+      'Header: {header}',
+      'Title: {title}',
+      'TitleURL: {title_url}',
+      'Subtitles: {subtitles}',
+      'Details: {details}',
+      'Location: {location}'
   ]
 
 class GooglePurchasesUpdateEventFormatter(interface.ConditionalEventFormatter):
@@ -70,14 +70,14 @@ class GooglePurchasesUpdateEventFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_SEPARATOR = '; '
 
   FORMAT_STRING_PIECES = [
-    'Order ID: {order_id}',
-    'Merchant: {merchant}',
-    'Product: {product}',
-    'Status: {status}',
-    'Quantity: {quantity}',
-    'Price: {price}',
-    'Url: {url}',
-    'Address: {address}'
+      'Order ID: {order_id}',
+      'Merchant: {merchant}',
+      'Product: {product}',
+      'Status: {status}',
+      'Quantity: {quantity}',
+      'Price: {price}',
+      'Url: {url}',
+      'Address: {address}'
   ]
 
 class GoogleMapsUpdateEventFormatter(interface.ConditionalEventFormatter):
@@ -91,18 +91,19 @@ class GoogleMapsUpdateEventFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_SEPARATOR = '; '
 
   FORMAT_STRING_PIECES = [
-    'Latitude: {latitude}',
-    'Longitude: {longitude}',
-    'Accuracy: {accuracy}',
-    'Velocity: {velocity}',
-    'Heading: {heading}',
-    'Altitude: {altitude}',
-    'Vertical accuracy: {vertical_accuracy}',
-    'Activity: {activity}'
+      'Latitude: {latitude}',
+      'Longitude: {longitude}',
+      'Accuracy: {accuracy}',
+      'Velocity: {velocity}',
+      'Heading: {heading}',
+      'Altitude: {altitude}',
+      'Vertical accuracy: {vertical_accuracy}',
+      'Activity: {activity}'
   ]
 
 
-class GoogleChromeHistoryUpdateEventFormatter(interface.ConditionalEventFormatter):
+class GoogleChromeHistoryUpdateEventFormatter(
+    interface.ConditionalEventFormatter):
   """Formatter for a Google Chrome history event."""
   DATA_TYPE = 'web:google:chrome:history'
 
@@ -112,10 +113,10 @@ class GoogleChromeHistoryUpdateEventFormatter(interface.ConditionalEventFormatte
   FORMAT_STRING_SEPARATOR = '; '
 
   FORMAT_STRING_PIECES = [
-    'Title: {title}',
-    'URL: {url}',
-    'Client ID: {client_id}',
-    'Page Transition: {page_transition}',
+      'Title: {title}',
+      'URL: {url}',
+      'Client ID: {client_id}',
+      'Page Transition: {page_transition}',
   ]
 
 class GoogleHangoutsUpdateEventFormatter(interface.ConditionalEventFormatter):
@@ -128,20 +129,20 @@ class GoogleHangoutsUpdateEventFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_SEPARATOR = '; '
 
   FORMAT_STRING_PIECES = [
-    'Conversation ID: {conversation_id}',
-    'Conversation name: {conversation_name}',
-    'Conversation type: {conversation_type}',
-    'Conversation view: {conversation_view}',
-    'Conversation medium: {conversation_medium}',
-    'User: {user}',
-    'Inviter: {inviter}',
-    'Participant: {participant}',
-    'Message type: {message_type}',
-    'Message text: {message_text}',
-    'Message photo: {message_photo}',
-    'Conversation old name: {conversation_old_name}',
-    'User added: {user_added}',
-    'User removed: {user_removed}'
+      'Conversation ID: {conversation_id}',
+      'Conversation name: {conversation_name}',
+      'Conversation type: {conversation_type}',
+      'Conversation view: {conversation_view}',
+      'Conversation medium: {conversation_medium}',
+      'User: {user}',
+      'Inviter: {inviter}',
+      'Participant: {participant}',
+      'Message type: {message_type}',
+      'Message text: {message_text}',
+      'Message photo: {message_photo}',
+      'Conversation old name: {conversation_old_name}',
+      'User added: {user_added}',
+      'User removed: {user_removed}'
   ]
 
 manager.FormattersManager.RegisterFormatter(

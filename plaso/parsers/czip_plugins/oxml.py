@@ -13,7 +13,6 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import definitions
-from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.parsers import czip
 from plaso.parsers.czip_plugins import interface
