@@ -141,6 +141,8 @@ class GooglePurchasesEventData(events.EventData):
     self.price = None
     self.url = None
     self.address = None
+    self.departure_airport = None
+    self.arrival_airport = None
 
 
 class GoogleHangoutsEventData(events.EventData):
@@ -270,7 +272,7 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       if fp.endswith('.json'):
         with zip_file.open(filepath) as f:
           json_data = json.loads(f.read())
-          if 'customer' in json_data:
+          if 'lineItem' in json_data:
             self._PurchasesParser(json_data, self._parser_mediator)
           elif 'locations' in json_data:
             self._GmapsParser(json_data, self._parser_mediator)
@@ -289,7 +291,8 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
 
   def CheckZipFile(self, zip_file, archive_members):
     """Checks if the zip file contains a file 'index.html';
-       if so checks with regex the existence of the keyword 'Google Takeout'.
+       if so checks with regex the existence of the keyword 'Google Takeout'
+       or 'Google Takeaway'.
        This keyword is in every Google's dump.
 
     Args:
@@ -303,10 +306,11 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
 
     with zip_file.open('Takeout/index.html') as f:
       data = f.read()
+
       takeout_regex = re.compile(
           r'<img\ssrc="data:image/png;base64,'
           r'((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|'
-          r'[A-Za-z0-9+/]{3}=)?)"\salt="Google Takeout">')
+          r'[A-Za-z0-9+/]{3}=)?)"\salt="Google\sTake[a-z]{3,4}">')
       return re.search(takeout_regex, data)
 
   def _GetDateTime(self, date):
@@ -428,6 +432,44 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       body = self._BodyMail(mail)
     return body
 
+  def _GetMailInfo(self, event_data, key, value):
+    """Gets other mail info.
+
+    Args:
+      event_data (GoogleGMailParserEventData): event data
+      key (str): key
+      value (str): value
+    """
+
+    if key == 'From':
+      event_data.mailfrom = value
+    elif key == 'To':
+      event_data.mailto = value
+    elif key == 'Cc':
+      event_data.cc = value
+    elif key == 'Bcc':
+      event_data.bcc = value
+    elif key == 'Subject':
+      event_data.subject = value
+    elif key == 'Precedence':
+      event_data.precedence = value
+    elif key == 'In-Reply-To':
+      event_data.in_reply_to = value
+    elif key == 'Authentication-Results':
+      event_data.auth_results = value
+    elif key == 'ARC-Seal':
+      event_data.arc_seal = value
+    elif key == 'ARC-Message-Signature':
+      event_data.arc_msg_signature = value
+    elif key == 'Received-SPF':
+      event_data.received_spf = value
+    elif key == 'Auto-Submitted':
+      event_data.auto_submitted = value
+    elif key == 'VBR-Info':
+      event_data.vbr_info = value
+    elif key == 'Return-Path':
+      event_data.return_path = value
+
   def _MBoxParser(self, file_object, parser_mediator):
     """Parses Mbox file (.mbox).
 
@@ -465,20 +507,6 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
               if date_regex.match(str(value)):
                 dt = self._GetDateTime(value)
                 date_time.CopyFromDateTimeString(dt)
-            elif key == 'From':
-              event_data.mailfrom = value
-            elif key == 'To':
-              event_data.mailto = value
-            elif key == 'Cc':
-              event_data.cc = value
-            elif key == 'Bcc':
-              event_data.bcc = value
-            elif key == 'Subject':
-              event_data.subject = value
-            elif key == 'Precedence':
-              event_data.precedence = value
-            elif key == 'In-Reply-To':
-              event_data.in_reply_to = value
             elif key == 'Received':
               if value.startswith('by'):
                 received_by = value + ' - ' + received_by
@@ -488,24 +516,57 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
                 + ') ' + received_from
               event_data.received_by = received_by
               event_data.received_from = received_from
-            elif key == 'Authentication-Results':
-              event_data.auth_results = value
-            elif key == 'ARC-Seal':
-              event_data.arc_seal = value
-            elif key == 'ARC-Message-Signature':
-              event_data.arc_msg_signature = value
-            elif key == 'Received-SPF':
-              event_data.received_spf = value
-            elif key == 'Auto-Submitted':
-              event_data.auto_submitted = value
-            elif key == 'VBR-Info':
-              event_data.vbr_info = value
-            elif key == 'Return-Path':
-              event_data.return_path = value
+            else:
+              self._GetMailInfo(event_data, key, value)
+
           event_data.body = self._ParseBodyMail(mail).decode('utf8', 'ignore')
           event = time_events.DateTimeValuesEvent(
               date_time, 'Mail')
           parser_mediator.ProduceEventWithEventData(event, event_data)
+
+  def _GetSubtitles(self, datakey):
+    """Gets subtitles (a secondary activity).
+
+    Args:
+      datakey (list): list of activities
+
+    Returns:
+      str: subtitles (a secondary activity)
+    """
+
+    subtitles = ''
+    for subtitle in datakey:
+      if 'name' in subtitle:
+        if 'url' in subtitle:
+          subtitles += subtitle['name'] + ': ' + subtitle['url']
+        else:
+          subtitles += subtitle['name'] + ' - '
+      if 'url' in subtitle:
+        subtitles += subtitle['url']
+      return subtitles
+
+  def _GetOtherActivities(self, event_data, data, key):
+    """Gets secondary activities.
+
+    Args:
+      event_data (GoogleActivitiesEventData): event data
+      data (dict): data of JSON file.
+      key (unicode): data's key
+    """
+
+    if key == 'title':
+      event_data.title = data[key]
+    elif key == 'titleUrl':
+      event_data.title_url = data[key]
+    elif key == 'details':
+      details = ''
+      for detail in data[key]:
+        details += detail['name']
+      event_data.details = details
+    elif key == 'subtitles':
+      event_data.subtitles = self._GetSubtitles(data[key])[:-2]
+    elif key == 'locations':
+      event_data.location = data[key][0]['name'] + ': ' + data[key][0]['url']
 
   def _ActivitiesParser(self, data, parser_mediator):
     """Parses Activities file (JSON).
@@ -521,45 +582,72 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
     products = ''
     dt = ''
     header = ''
+
     for key in data:
       if key == 'header':
         header = data[key]
-      elif key == 'title':
-        event_data.title = data[key]
-      elif key == 'titleUrl':
-        event_data.title_url = data[key]
-      elif key == 'details':
-        details = ''
-        for detail in data[key]:
-          details += detail['name']
-        event_data.details = details
-      elif key == 'subtitles':
-        subtitles = ''
-        for subtitle in data[key]:
-          if 'name' in subtitle:
-            if 'url' in subtitle:
-              subtitles += subtitle['name'] + ': ' + subtitle['url']
-            else:
-              subtitles += subtitle['name'] + ' - '
-          if 'url' in subtitle:
-            subtitles += subtitle['url']
-        event_data.subtitles = subtitles[:-2]
       elif key == 'products':
         for product in data[key]:
           products += product
-      elif key == 'locations':
-        event_data.location = data[key][0]['name'] + ': ' + data[key][0]['url']
+        if header != products:
+          event_data.header = header
       elif key == 'time':
         dt = data[key].replace('T', ' ').replace('Z', '')
         date_time.CopyFromDateTimeString(dt)
+      else:
+        self._GetOtherActivities(event_data, data, key)
     if dt:
-      if header != products:
-        event_data.header = header
       event = time_events.DateTimeValuesEvent(
           date_time, products
       )
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
+  #pylint: disable=unused-argument
+  def _GetPurchaseInfo(self, event_data, value, info, timestamp):
+    """Gets other Purchase info.
+
+    Args:
+      event_data (GoogleActivitiesEventData): event data
+      value (str): value
+      info (unicode): key
+      timestamp (unicode): timestamp
+
+    """
+
+    if info == 'status':
+      event_data.status = value[info]
+    elif info == 'quantity':
+      event_data.quantity = value[info]
+    elif info == 'unitPrice':
+      for el in value[info]:
+        if el == 'displayString':
+          event_data.price = value[info][el]
+    elif info == 'productInfo':
+      event_data.product = value[info]['name']
+    elif info == 'landingPageUrl':
+      event_data.url = value[info]['link']
+    elif info == 'fulfillment':
+      for el in value[info]:
+        if el == 'location':
+          event_data.address = value[info][el] \
+              ['address'][0]
+        elif el == 'timeWindow':
+          time_usec = value[info][el]['startTime'] \
+              ['usecSinceEpochUtc']
+          timestamp = dfdatetime_posix_time.PosixTimeInMicroseconds(
+              timestamp=time_usec
+          )
+    elif info == 'flightLeg':
+      for el in value[info]:
+        if el == 'departureAirport':
+          event_data.departure_airport = value[info][el]['location']['name']
+        if el == 'arrivalAirport':
+          event_data.arrival_airport = value[info][el]['location']['name']
+    elif info == 'bookingTimestamp':
+      time_usec = value[info]['usecSinceEpochUtc']
+      timestamp = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=time_usec
+      )
 
   def _PurchasesParser(self, data, parser_mediator):
     """Parses Purchases file (JSON).
@@ -577,32 +665,18 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
         event_data.order_id = data[key]
       if key == 'transactionMerchant':
         event_data.merchant = data[key]['name']
+      if key == 'creationTime':
+        time_usec = data[key]['usecSinceEpochUtc']
+        timestamp = dfdatetime_posix_time.PosixTimeInMicroseconds(
+            timestamp=time_usec
+        )
       elif key == 'lineItem':
         for element in data[key][0]:
           for info in data[key][0][element]:
-            if info == 'status':
-              event_data.status = data[key][0][element][info]
-            if info == 'quantity':
-              event_data.quantity = data[key][0][element][info]
-            if info == 'unitPrice':
-              for el in data[key][0][element][info]:
-                if el == 'displayString':
-                  event_data.price = data[key][0][element][info][el]
-            if info == 'productInfo':
-              event_data.product = data[key][0][element][info]['name']
-            if info == 'landingPageUrl':
-              event_data.url = data[key][0][element][info]['link']
-            if info == 'fulfillment':
-              for el in data[key][0][element][info]:
-                if el == 'location':
-                  event_data.address = data[key][0][element][info][el] \
-                      ['address'][0]
-                elif el == 'timeWindow':
-                  time_usec = data[key][0][element][info][el]['startTime'] \
-                      ['usecSinceEpochUtc']
-                  timestamp = dfdatetime_posix_time.PosixTimeInMicroseconds(
-                      timestamp=time_usec
-                  )
+            self._GetPurchaseInfo(
+                event_data, data[key][0][element], info, timestamp
+            )
+
     if timestamp:
       event = time_events.DateTimeValuesEvent(timestamp, 'Purchase')
       parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -698,6 +772,118 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
             users[participant['id']['gaia_id']] = participant['fallback_name']
     return users
 
+  def _GetConversationInfo(self, event_data, conversation):
+    """Gets conversation's info
+
+    Args:
+      event_data (GoogleHangoutsEventData): event data
+      conversation (dict): hangout conversation
+    """
+    event_data.conversation_id = \
+      conversation['id']['id']
+    event_data.conversation_type = \
+      conversation['type']
+    if 'name' in conversation:
+      event_data.conversation_name = \
+        conversation['name']
+
+  def _GetConversationState(self, event_data, conversation, users):
+    """Get conversations' state
+
+    Args:
+      event_data (GoogleHangoutsEventData): event data
+      conversation (dict): hangout conversation
+      users (dict): list of users
+    """
+
+    event_data.conversation_notification_level = \
+      conversation['notification_level']
+    event_data.conversation_medium = \
+      conversation['view'][0]
+
+    if 'inviter_id' in conversation:
+      inviter = conversation['inviter_id']['gaia_id']
+      inviter = str(users.get(inviter)) + ' (ID: ' + inviter + ')'
+      event_data.inviter = inviter
+
+  def _GetEventInfo(self, event, event_data, users):
+    """Get Hangouts event info
+
+    Args:
+      event (dict): hangout evenet
+      event_data (GoogleHangoutsEventData): event data
+      users (dict): list of users
+    """
+
+    if 'conversation_id' in event:
+      event_data.conversation_id = event['conversation_id']['id']
+    if 'sender_id' in event:
+      event_data.user = str(users.get(
+          event['sender_id']['gaia_id']
+      ))
+    if ('chat_message' in event) and \
+      ('message_content' in event['chat_message']):
+      if 'segment' in event['chat_message']['message_content']:
+        event_data.message_text = ''
+        for segment in event['chat_message']['message_content'] \
+            ['segment']:
+          if 'type' in segment:
+            event_data.message_type = segment['type']
+          if 'text' in segment:
+            event_data.message_text = event_data.message_text \
+            + segment['text']
+      if 'attachment' in event['chat_message']['message_content']:
+        for item in event['chat_message']['message_content'] \
+            ['attachment']:
+          event_data.message_type = item['embed_item']['type'][0]
+          if 'plus_photo' in item['embed_item']:
+            if 'thumbnail' in item['embed_item'] \
+                ['plus_photo']:
+              event_data.message_photo = item['embed_item'] \
+                  ['plus_photo']['thumbnail']['image_url']
+    if 'membership_change' in event:
+      if event['membership_change']['type'] == 'JOIN':
+        user_name = str(users.get(
+            event['membership_change']['participant_id'][0]['gaia_id']
+        ))
+        event_data.user_added = user_name \
+          + str(users.get(
+              event['membership_change']['participant_id'][0]['gaia_id']
+          ))
+      elif event['membership_change']['type'] == 'LEAVE':
+        event_data.user_removed = \
+          str(users.get(
+              event['membership_change']['participant_id'][0]['gaia_id']
+          ))
+    if 'conversation_rename' in event:
+      event_data.conversation_name = event['conversation_rename'] \
+        ['new_name']
+      event_data.conversation_old_name = event['conversation_rename'] \
+        ['old_name']
+
+  def _GetDefinitionEvent(self, event, event_data, users):
+    definition = ''
+    if event['event_type'] == 'ADD_USER':
+      definition = definitions.TIME_USER_ADDED
+    elif event['event_type'] == 'REMOVE_USER':
+      definition = definitions.TIME_USER_REMOVED
+    elif event['event_type'] == 'REGULAR_CHAT_MESSAGE':
+      definition = definitions.TIME_MESSAGE_SENT
+    elif event['event_type'] == 'RENAME_CONVERSATION':
+      definition = definitions.TIME_CONVERSATION_RENAMED
+    elif event['event_type'] == 'HANGOUT_EVENT':
+      if 'hangout_event' in event:
+        participants = ''
+        for participant in event['hangout_event']['participant_id']:
+          participants = str(users.get(participant['gaia_id'])) \
+          + ' (ID: ' + participant['gaia_id'] + '), ' + participants
+        event_data.participant = participants[:-2]
+        if event['hangout_event']['event_type'] == 'START_HANGOUT':
+          definition = definitions.TIME_START_VIDEO_CALL
+        if event['hangout_event']['event_type'] == 'END_HANGOUT':
+          definition = definitions.TIME_END_VIDEO_CALL
+    return definition
+
   def _HangoutsParser(self, data, parser_mediator):
     """Parses Hangouts file (JSON).
 
@@ -717,31 +903,18 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       if ('conversation' in comunication) and ("events" in comunication):
         conversation = comunication['conversation']
         if 'conversation' in comunication['conversation']:
-          invite_ts_conv_event_data.conversation_id = \
-            conversation['conversation']['id']['id']
-          invite_ts_conv_event_data.conversation_type = \
-            conversation['conversation']['type']
-          sort_ts_conv_event_data.conversation_id = \
-            conversation['conversation']['id']['id']
-          sort_ts_conv_event_data.conversation_type = \
-            conversation['conversation']['type']
-          active_ts_conv_event_data.conversation_id = \
-            conversation['conversation']['id']['id']
-          active_ts_conv_event_data.conversation_type = \
-            conversation['conversation']['type']
-          latest_read_conv_event_data.conversation_id = \
-            conversation['conversation']['id']['id']
-          latest_read_conv_event_data.conversation_type = \
-            conversation['conversation']['type']
-          if 'name' in conversation['conversation']:
-            invite_ts_conv_event_data.conversation_name = \
-              conversation['conversation']['name']
-            sort_ts_conv_event_data.conversation_name = \
-              conversation['conversation']['name']
-            active_ts_conv_event_data.conversation_name = \
-              conversation['conversation']['name']
-            latest_read_conv_event_data.conversation_name = \
-              conversation['conversation']['name']
+          self._GetConversationInfo(
+              invite_ts_conv_event_data, conversation['conversation']
+          )
+          self._GetConversationInfo(
+              sort_ts_conv_event_data, conversation['conversation']
+          )
+          self._GetConversationInfo(
+              active_ts_conv_event_data, conversation['conversation']
+          )
+          self._GetConversationInfo(
+              latest_read_conv_event_data, conversation['conversation']
+          )
 
         if 'self_conversation_state' in conversation['conversation']:
           self_conversation_state = conversation['conversation']\
@@ -755,23 +928,18 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
                   timestamp=self_read_state['latest_read_timestamp']
               )
 
-          invite_ts_conv_event_data.conversation_notification_level = \
-            self_conversation_state['notification_level']
-          sort_ts_conv_event_data.conversation_notification_level = \
-            self_conversation_state['notification_level']
-          active_ts_conv_event_data.conversation_notification_level = \
-            self_conversation_state['notification_level']
-          invite_ts_conv_event_data.conversation_medium = \
-            self_conversation_state['view'][0]
-          sort_ts_conv_event_data.conversation_medium = \
-            self_conversation_state['view'][0]
-          active_ts_conv_event_data.conversation_medium = \
-            self_conversation_state['view'][0]
-          latest_read_conv_event_data.conversation_medium = \
-            self_conversation_state['view'][0]
-          if 'inviter_id' in self_conversation_state:
-            inviter = self_conversation_state['inviter_id']['gaia_id']
-            inviter = str(users.get(inviter)) + ' (ID: ' + inviter + ')'
+          self._GetConversationState(
+              invite_ts_conv_event_data, self_conversation_state, users
+          )
+          self._GetConversationState(
+              sort_ts_conv_event_data, self_conversation_state, users
+          )
+          self._GetConversationState(
+              active_ts_conv_event_data, self_conversation_state, users
+          )
+          self._GetConversationState(
+              latest_read_conv_event_data, self_conversation_state, users
+          )
 
           if 'invite_timestamp' in self_conversation_state:
             invite_conversation_timestamp = \
@@ -800,17 +968,12 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
                 active_conversation_timestamp,
                 definitions.TIME_ACTIVATION_CONVERSATION
             )
-
           latest_read_conversation = time_events.DateTimeValuesEvent(
               latest_read_conversation_timestamp, definitions.TIME_LATEST_READ
           )
 
         latest_read_conv_event_data.user = str(users.get(self_user)) \
           + ' (ID: ' + self_user + ')'
-        invite_ts_conv_event_data.inviter = inviter
-        sort_ts_conv_event_data.inviter = inviter
-        active_ts_conv_event_data.inviter = inviter
-        latest_read_conv_event_data.inviter = inviter
 
         parser_mediator.ProduceEventWithEventData(
             event_invite_ts_conversation, invite_ts_conv_event_data
@@ -827,78 +990,12 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
 
         for event in comunication['events']:
           event_data = GoogleHangoutsEventData()
-          if 'conversation_id' in event:
-            event_data.conversation_id = event['conversation_id']['id']
-
-          if 'sender_id' in event:
-            event_data.user = str(users.get(event['sender_id']['gaia_id'])) \
-            + ' (ID: ' + event['sender_id']['gaia_id'] + ')'
+          self._GetEventInfo(event, event_data, users)
           message_timestamp = dfdatetime_posix_time.PosixTimeInMicroseconds(
               timestamp=event['timestamp']
           )
 
-          if ('chat_message' in event) and \
-            ('message_content' in event['chat_message']):
-            if 'segment' in event['chat_message']['message_content']:
-              event_data.message_text = ''
-              for segment in event['chat_message']['message_content'] \
-                  ['segment']:
-                if 'type' in segment:
-                  event_data.message_type = segment['type']
-                if 'text' in segment:
-                  event_data.message_text = event_data.message_text \
-                  + segment['text']
-            if 'attachment' in event['chat_message']['message_content']:
-              for item in event['chat_message']['message_content'] \
-                  ['attachment']:
-                event_data.message_type = item['embed_item']['type'][0]
-                if 'plus_photo' in item['embed_item']:
-                  if 'thumbnail' in item['embed_item'] \
-                      ['plus_photo']:
-                    event_data.message_photo = item['embed_item'] \
-                        ['plus_photo']['thumbnail']['image_url']
-          if 'membership_change' in event:
-            if event['membership_change']['type'] == 'JOIN':
-              user_name = str(users.get(
-                  event['membership_change']['participant_id'][0]['gaia_id']
-              ))
-              event_data.user_added = user_name \
-                + ' (ID: ' \
-                + event['membership_change']['participant_id'][0]['gaia_id'] \
-                + ')'
-            elif event['membership_change']['type'] == 'LEAVE':
-              event_data.user_removed = \
-                str(users.get(
-                    event['membership_change']['participant_id'][0]['gaia_id'])
-                   ) + ' (ID: ' \
-                  + event['membership_change']['participant_id'][0]['gaia_id'] \
-                  + ')'
-
-          if 'conversation_rename' in event:
-            event_data.conversation_name = event['conversation_rename'] \
-              ['new_name']
-            event_data.conversation_old_name = event['conversation_rename'] \
-              ['old_name']
-          if event['event_type'] == 'ADD_USER':
-            definition = definitions.TIME_USER_ADDED
-          elif event['event_type'] == 'REMOVE_USER':
-            definition = definitions.TIME_USER_REMOVED
-          elif event['event_type'] == 'REGULAR_CHAT_MESSAGE':
-            definition = definitions.TIME_MESSAGE_SENT
-          elif event['event_type'] == 'RENAME_CONVERSATION':
-            definition = definitions.TIME_CONVERSATION_RENAMED
-          elif event['event_type'] == 'HANGOUT_EVENT':
-            if 'hangout_event' in event:
-              participants = ''
-              for participant in event['hangout_event']['participant_id']:
-                participants = str(users.get(participant['gaia_id'])) \
-                + ' (ID: ' + participant['gaia_id'] + '), ' + participants
-              event_data.participant = participants[:-2]
-              if event['hangout_event']['event_type'] == 'START_HANGOUT':
-                definition = definitions.TIME_START_VIDEO_CALL
-              if event['hangout_event']['event_type'] == 'END_HANGOUT':
-                definition = definitions.TIME_END_VIDEO_CALL
-
+          definition = self._GetDefinitionEvent(event, event_data, users)
           date_time_message = time_events.DateTimeValuesEvent(
               message_timestamp, definition
           )

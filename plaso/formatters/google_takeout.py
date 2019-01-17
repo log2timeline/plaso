@@ -77,7 +77,9 @@ class GooglePurchasesUpdateEventFormatter(interface.ConditionalEventFormatter):
       'Quantity: {quantity}',
       'Price: {price}',
       'Url: {url}',
-      'Address: {address}'
+      'Address: {address}',
+      'Departure Airport: {departure_airport}',
+      'Arrival Airport: {arrival_airport}'
   ]
 
 class GoogleMapsUpdateEventFormatter(interface.ConditionalEventFormatter):
