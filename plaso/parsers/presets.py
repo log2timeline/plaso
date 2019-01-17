@@ -17,7 +17,7 @@ class ParserPreset(object):
   """
 
   def __init__(self, name, parsers):
-    """Initializes a parser and parser plugin preset definition.
+    """Initializes a parser and parser plugin preset.
 
     Attributes:
       name (str): name of the preset.

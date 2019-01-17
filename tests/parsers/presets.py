@@ -34,6 +34,10 @@ class ParserPresetsManagerTest(shared_test_lib.BaseTestCase):
     test_names = list(test_manager.GetNames())
     self.assertEqual(len(test_names), 7)
 
+    expected_names = sorted([
+        'android', 'linux', 'macos', 'webhist', 'win7', 'win_gen', 'winxp'])
+    self.assertEqual(test_names, expected_names)
+
   def testGetPresetByName(self):
     """Tests the GetPresetByName function."""
     test_manager = presets.ParserPresetsManager()
