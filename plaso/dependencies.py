@@ -52,7 +52,7 @@ PYTHON_DEPENDENCIES = {
     'pylnk': ('get_version()', '20150830', None, True),
     'pymsiecf': ('get_version()', '20150314', None, True),
     'pyolecf': ('get_version()', '20151223', None, True),
-    'pyparsing': ('__version__', '2.0.3', None, True),
+    'pyparsing': ('__version__', '2.3.0', None, True),
     'pyqcow': ('get_version()', '20131204', None, True),
     'pyregf': ('get_version()', '20150315', None, True),
     'pyscca': ('get_version()', '20161031', None, True),
@@ -142,12 +142,6 @@ def _CheckPythonModule(
       map(int, _VERSION_SPLIT_REGEX.split(minimum_version)))
 
   if module_version_map < minimum_version_map:
-    if not is_required:
-      print((
-          '[OPTIONAL]\t{0:s} version: {1!s} is too old, {2!s} or later '
-          'required.').format(module_name, module_version, minimum_version))
-      return True
-
     print((
         '[FAILURE]\t{0:s} version: {1!s} is too old, {2!s} or later '
         'required.').format(module_name, module_version, minimum_version))
@@ -157,12 +151,6 @@ def _CheckPythonModule(
     maximum_version_map = list(
         map(int, _VERSION_SPLIT_REGEX.split(maximum_version)))
     if module_version_map > maximum_version_map:
-      if not is_required:
-        print((
-            '[OPTIONAL]\t{0:s} version: {1!s} is too recent, {2!s} or earlier '
-            'required.').format(module_name, module_version, minimum_version))
-        return True
-
       print((
           '[FAILURE]\t{0:s} version: {1!s} is too recent, {2!s} or earlier '
           'required.').format(module_name, module_version, maximum_version))

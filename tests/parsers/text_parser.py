@@ -45,9 +45,6 @@ class PyparsingConstantsTest(test_lib.ParserTestCase):
         text_parser.PyparsingConstants.IPV4_ADDRESS.parseString('1.1.34.2'))
 
     with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString('1.1.34.258')
-
-    with self.assertRaises(pyparsing.ParseException):
       text_parser.PyparsingConstants.IPV4_ADDRESS.parseString('a.1.34.258')
 
     with self.assertRaises(pyparsing.ParseException):
@@ -55,30 +52,6 @@ class PyparsingConstantsTest(test_lib.ParserTestCase):
 
     with self.assertRaises(pyparsing.ParseException):
       text_parser.PyparsingConstants.IPV4_ADDRESS.parseString('34.258')
-
-    with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_ADDRESS.parseString('10.52.34.258')
-
-  def testConstantOctet(self):
-    """Tests parsing with the IPV4_OCTET constant."""
-    self.assertTrue(
-        text_parser.PyparsingConstants.IPV4_OCTET.parseString('0'))
-
-    self.assertTrue(
-        text_parser.PyparsingConstants.IPV4_OCTET.parseString('123'))
-
-    self.assertTrue(
-        text_parser.PyparsingConstants.IPV4_OCTET.parseString('255'))
-
-    with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_OCTET.parseString('526')
-
-    with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_OCTET.parseString('1026')
-
-    with self.assertRaises(pyparsing.ParseException):
-      text_parser.PyparsingConstants.IPV4_OCTET.parseString(
-          'a9', parseAll=True)
 
 
 class PyparsingSingleLineTextParserTest(unittest.TestCase):
