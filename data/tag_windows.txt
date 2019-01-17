@@ -1,7 +1,7 @@
 application_execution
-  data_type is 'windows:prefetch'
+  data_type is 'windows:prefetch:execution'
   data_type is 'windows:lnk:link' and filename contains 'Recent' and (local_path contains '.exe' or network_path contains '.exe' or relative_path contains '.exe')
-  data_type is 'windows:registry:key_value' AND (plugin contains 'userassist' or plugin contains 'mru') AND regvalue.__all__ contains '.exe'
+  data_type is 'windows:registry:key_value' AND (parser contains 'userassist' or parser contains 'mru') AND regvalue contains '.exe'
   data_type is 'windows:evtx:record' and strings contains 'user mode service' and strings contains 'demand start'
   data_type is 'fs:stat' and filename contains 'Windows/Tasks/At'
   data_type is 'windows:tasks:job'
@@ -21,7 +21,7 @@ application_removal
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Application-Experience' and event_identifier is 908
 
 document_open
-  data_type is 'windows:registry:key_value' AND plugin contains 'mru' AND regvalue.__all__ notcontains '.exe' AND timestamp > 0
+  data_type is 'windows:registry:key_value' AND parser contains 'mru' AND regvalue notcontains '.exe' AND timestamp > 0
 
 login_failed
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Security-Auditing' and event_identifier is 4625
@@ -81,8 +81,8 @@ system_sleep
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Kernel-Power' and event_identifier is 42
 
 autorun
-  data_type is 'windows:registry:key_value' and plugin contains 'Run'
-  data_type is 'windows:registry:key_value' AND (plugin contains 'run' or plugin contains 'lfu') AND (regvalue.__all__ contains '.exe' OR regvalue.__all__ contains '.dll')
+  data_type is 'windows:registry:key_value' and parser contains 'Run'
+  data_type is 'windows:registry:key_value' AND (parser contains 'run' or parser contains 'lfu') AND (regvalue contains '.exe' OR regvalue contains '.dll')
 
 file_download
   data_type is 'chrome:history:file_downloaded'
