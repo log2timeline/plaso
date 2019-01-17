@@ -15,7 +15,7 @@ class ParsersManager(object):
   """The parsers and plugins manager."""
 
   _parser_classes = {}
-  _presets = presets.ParserPresets()
+  _presets = presets.ParserPresetsManager()
 
   @classmethod
   def _GetParserFilters(cls, parser_filter_expression):

@@ -3,7 +3,7 @@
 ## Create file and class
 * Plugin file in plaso/analysis/
   * Create an empty subclass of plaso.analysis.interface.AnalysisPlugin
-  * Register it with the analysis pluging by calling AnalysisPluginManager.RegisterPlugin
+  * Register it with the analysis plugin by calling AnalysisPluginManager.RegisterPlugin
 * Test file in tests/analysis/
   * Create an empty subclass of tests.analysis.test_lib.AnalysisPluginTestCase
 

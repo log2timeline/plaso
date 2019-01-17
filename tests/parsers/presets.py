@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for parser and parser pluging presets."""
+"""Tests for parser and parser plugin presets."""
 
 from __future__ import unicode_literals
 
@@ -11,38 +11,37 @@ from plaso.parsers import presets
 from tests import test_lib as shared_test_lib
 
 
-class ParserPresetDefinitionTest(shared_test_lib.BaseTestCase):
-  """Tests for the parser and parser pluging preset definition."""
+class ParserPresetTest(shared_test_lib.BaseTestCase):
+  """Tests for the parser and parser plugin preset."""
 
   def testInitialize(self):
     """Tests the __init__ function."""
-    test_definition = presets.ParserPresetDefinition(
-        'test', ['parser1', 'parser2'])
+    test_definition = presets.ParserPreset('test', ['parser1', 'parser2'])
     self.assertIsNotNone(test_definition)
 
 
 @shared_test_lib.skipUnlessHasTestFile(['presets.yaml'])
-class ParserPresetsTest(shared_test_lib.BaseTestCase):
-  """Tests for the parser and parser pluging presets."""
+class ParserPresetsManagerTest(shared_test_lib.BaseTestCase):
+  """Tests for the parser and parser plugin presets manager."""
 
   def testGetNames(self):
     """Tests the GetNames function."""
-    test_parser_presets = presets.ParserPresets()
+    test_manager = presets.ParserPresetsManager()
 
     test_path = self._GetTestFilePath(['presets.yaml'])
-    test_parser_presets.ReadFromFile(test_path)
+    test_manager.ReadFromFile(test_path)
 
-    test_names = list(test_parser_presets.GetNames())
+    test_names = list(test_manager.GetNames())
     self.assertEqual(len(test_names), 7)
 
   def testGetPresetByName(self):
     """Tests the GetPresetByName function."""
-    test_parser_presets = presets.ParserPresets()
+    test_manager = presets.ParserPresetsManager()
 
     test_path = self._GetTestFilePath(['presets.yaml'])
-    test_parser_presets.ReadFromFile(test_path)
+    test_manager.ReadFromFile(test_path)
 
-    test_preset = test_parser_presets.GetPresetByName('linux')
+    test_preset = test_manager.GetPresetByName('linux')
     self.assertIsNotNone(test_preset)
     self.assertEqual(test_preset.name, 'linux')
 
@@ -72,17 +71,17 @@ class ParserPresetsTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(test_preset.parsers, expected_parsers)
 
-    test_preset = test_parser_presets.GetPresetByName('bogus')
+    test_preset = test_manager.GetPresetByName('bogus')
     self.assertIsNone(test_preset)
 
   def testGetPresets(self):
     """Tests the GetPresets function."""
-    test_parser_presets = presets.ParserPresets()
+    test_manager = presets.ParserPresetsManager()
 
     test_path = self._GetTestFilePath(['presets.yaml'])
-    test_parser_presets.ReadFromFile(test_path)
+    test_manager.ReadFromFile(test_path)
 
-    test_presets = list(test_parser_presets.GetPresets())
+    test_presets = list(test_manager.GetPresets())
     self.assertEqual(len(test_presets), 7)
 
 

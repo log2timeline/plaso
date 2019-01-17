@@ -8,8 +8,8 @@ import yaml
 from plaso.lib import errors
 
 
-class ParserPresetDefinition(object):
-  """Parser and parser plugin preset definition.
+class ParserPreset(object):
+  """Parser and parser plugin preset.
 
   Attributes:
     name (str): name of the preset.
@@ -23,27 +23,27 @@ class ParserPresetDefinition(object):
       name (str): name of the preset.
       parsers (list[str]): names of parser and parser plugins.
     """
-    super(ParserPresetDefinition, self).__init__()
+    super(ParserPreset, self).__init__()
     self.name = name
     self.parsers = parsers
 
 
-class ParserPresets(object):
-  """Parser and parser plugin presets."""
+class ParserPresetsManager(object):
+  """The parsers and plugin presets manager."""
 
   def __init__(self):
-    """Initializes parser and parser plugin presets."""
-    super(ParserPresets, self).__init__()
+    """Initializes a parser and parser plugin presets manager."""
+    super(ParserPresetsManager, self).__init__()
     self._definitions = {}
 
-  def _ReadPresetDefinitionValues(self, preset_definition_values):
-    """Reads a preset definition from a dictionary.
+  def _ReadParserPresetValues(self, preset_definition_values):
+    """Reads a parser preset from a dictionary.
 
     Args:
       preset_definition_values (dict[str, object]): preset definition values.
 
     Returns:
-      ParserPresetDefinition: a preset definition.
+      ParserPreset: a parser preset.
 
     Raises:
       MalformedPresetError: if the format of the preset definition is not set
@@ -62,7 +62,7 @@ class ParserPresets(object):
       raise errors.MalformedPresetError(
           'Invalid preset definition missing parsers.')
 
-    return ParserPresetDefinition(name, parsers)
+    return ParserPreset(name, parsers)
 
   def _ReadPresetsFromFileObject(self, file_object):
     """Reads parser and parser plugin presets from a file-like object.
@@ -72,7 +72,7 @@ class ParserPresets(object):
           plugin presets definitions.
 
     Yields:
-      PresetDefinition: preset definition.
+      ParserPreset: a parser preset.
 
     Raises:
       MalformedPresetError: if one or more plugin preset definitions are
@@ -83,7 +83,7 @@ class ParserPresets(object):
     last_preset_definition = None
     for yaml_definition in yaml_generator:
       try:
-        preset_definition = self._ReadPresetDefinitionValues(yaml_definition)
+        preset_definition = self._ReadParserPresetValues(yaml_definition)
       except errors.MalformedPresetError as exception:
         error_location = 'At start'
         if last_preset_definition:
@@ -110,7 +110,7 @@ class ParserPresets(object):
       name (str): name of the preset.
 
     Returns:
-      PresetDefinition: preset definition or None if not available.
+      ParserPreset: a parser preset or None if not available.
     """
     return self._definitions.get(name, None)
 
@@ -118,10 +118,10 @@ class ParserPresets(object):
     """Retrieves the preset definitions.
 
     Yields:
-      PresetDefinition: preset definition in alphabetical order by name.
+      ParserPreset: parser presets in alphabetical order by name.
     """
-    for _, preset_definition in sorted(self._definitions.items()):
-      yield preset_definition
+    for _, parser_preset in sorted(self._definitions.items()):
+      yield parser_preset
 
   def ReadFromFile(self, path):
     """Reads parser and parser plugin presets from a file.
