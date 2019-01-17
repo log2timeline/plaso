@@ -602,6 +602,56 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       )
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
+  def _GetTimestampPurchase(self, ts):
+    """Gets Purchase timestamp.
+
+    Args:
+      ts (unicode): timestamp from json
+
+    Returns:
+      PosixTimeInMicroseconds: timestamp in PosixTime
+    """
+
+    time_usec = ts
+    timestamp = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=time_usec
+    )
+    return timestamp
+
+  #pylint: disable=unused-argument
+  def _GetInfoFulfillmentPurchase(self, event_data, value, timestamp):
+
+    """Gets info about fulfillment (purchase).
+
+    Args:
+      event_data (GoogleActivitiesEventData): event data
+      value (str): value
+      timestamp (unicode): timestamp from json
+
+    """
+
+    for el in value:
+      if el == 'location':
+        event_data.address = value[el] \
+            ['address'][0]
+      elif el == 'timeWindow':
+        timestamp = self._GetTimestampPurchase(value[el]['startTime'] \
+            ['usecSinceEpochUtc'])
+
+  def _GetInfoAirportPurchase(self, event_data, value):
+    """Gets info about Airport (purchase).
+
+    Args:
+      event_data (GoogleActivitiesEventData): event data
+      value (str): value
+
+    """
+    for el in value:
+      if el == 'departureAirport':
+        event_data.departure_airport = value[el]['location']['name']
+      if el == 'arrivalAirport':
+        event_data.arrival_airport = value[el]['location']['name']
+
   #pylint: disable=unused-argument
   def _GetPurchaseInfo(self, event_data, value, info, timestamp):
     """Gets other Purchase info.
@@ -627,27 +677,11 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
     elif info == 'landingPageUrl':
       event_data.url = value[info]['link']
     elif info == 'fulfillment':
-      for el in value[info]:
-        if el == 'location':
-          event_data.address = value[info][el] \
-              ['address'][0]
-        elif el == 'timeWindow':
-          time_usec = value[info][el]['startTime'] \
-              ['usecSinceEpochUtc']
-          timestamp = dfdatetime_posix_time.PosixTimeInMicroseconds(
-              timestamp=time_usec
-          )
+      self._GetInfoFulfillmentPurchase(event_data, value[info], timestamp)
     elif info == 'flightLeg':
-      for el in value[info]:
-        if el == 'departureAirport':
-          event_data.departure_airport = value[info][el]['location']['name']
-        if el == 'arrivalAirport':
-          event_data.arrival_airport = value[info][el]['location']['name']
+      self._GetInfoAirportPurchase(event_data, value[info])
     elif info == 'bookingTimestamp':
-      time_usec = value[info]['usecSinceEpochUtc']
-      timestamp = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=time_usec
-      )
+      timestamp = self._GetTimestampPurchase(value[info]['usecSinceEpochUtc'])
 
   def _PurchasesParser(self, data, parser_mediator):
     """Parses Purchases file (JSON).
@@ -666,10 +700,7 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       if key == 'transactionMerchant':
         event_data.merchant = data[key]['name']
       if key == 'creationTime':
-        time_usec = data[key]['usecSinceEpochUtc']
-        timestamp = dfdatetime_posix_time.PosixTimeInMicroseconds(
-            timestamp=time_usec
-        )
+        timestamp = self._GetTimestampPurchase(data[key]['usecSinceEpochUtc'])
       elif key == 'lineItem':
         for element in data[key][0]:
           for info in data[key][0][element]:
@@ -806,6 +837,58 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       inviter = str(users.get(inviter)) + ' (ID: ' + inviter + ')'
       event_data.inviter = inviter
 
+  def _GetSegment(self, event_data, segments):
+    """Get conversations' segment
+
+    Args:
+      event_data (GoogleHangoutsEventData): event data
+      segments (dict): hangout attachment
+    """
+    for segment in segments:
+      if 'type' in segment:
+        event_data.message_type = segment['type']
+      if 'text' in segment:
+        event_data.message_text = event_data.message_text \
+        + segment['text']
+
+  def _GetAttachment(self, event_data, attachment):
+    """Get conversations' attachment
+
+    Args:
+      event_data (GoogleHangoutsEventData): event data
+      attachment (dict): hangout attachment
+    """
+
+    for item in attachment:
+      event_data.message_type = item['embed_item']['type'][0]
+      if 'plus_photo' in item['embed_item']:
+        if 'thumbnail' in item['embed_item'] \
+            ['plus_photo']:
+          event_data.message_photo = item['embed_item'] \
+              ['plus_photo']['thumbnail']['image_url']
+
+  def _GetMembershipChange(self, event_data, event, users):
+    """Get conversations' membership change (join and leave).
+
+    Args:
+      event_data (GoogleHangoutsEventData): event data
+      event (dict): event about a conversation's member
+      users (dict): list of users
+    """
+    if event['type'] == 'JOIN':
+      user_name = str(users.get(
+          event['participant_id'][0]['gaia_id']
+      ))
+      event_data.user_added = user_name \
+        + str(users.get(
+            event['participant_id'][0]['gaia_id']
+        ))
+    elif event['type'] == 'LEAVE':
+      event_data.user_removed = \
+        str(users.get(
+            event['participant_id'][0]['gaia_id']
+        ))
+
   def _GetEventInfo(self, event, event_data, users):
     """Get Hangouts event info
 
@@ -825,36 +908,13 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       ('message_content' in event['chat_message']):
       if 'segment' in event['chat_message']['message_content']:
         event_data.message_text = ''
-        for segment in event['chat_message']['message_content'] \
-            ['segment']:
-          if 'type' in segment:
-            event_data.message_type = segment['type']
-          if 'text' in segment:
-            event_data.message_text = event_data.message_text \
-            + segment['text']
+        self._GetSegment(event_data, event['chat_message']['message_content'] \
+            ['segment'])
       if 'attachment' in event['chat_message']['message_content']:
-        for item in event['chat_message']['message_content'] \
-            ['attachment']:
-          event_data.message_type = item['embed_item']['type'][0]
-          if 'plus_photo' in item['embed_item']:
-            if 'thumbnail' in item['embed_item'] \
-                ['plus_photo']:
-              event_data.message_photo = item['embed_item'] \
-                  ['plus_photo']['thumbnail']['image_url']
+        self._GetAttachment(event_data, event['chat_message'] \
+            ['message_content']['attachment'])
     if 'membership_change' in event:
-      if event['membership_change']['type'] == 'JOIN':
-        user_name = str(users.get(
-            event['membership_change']['participant_id'][0]['gaia_id']
-        ))
-        event_data.user_added = user_name \
-          + str(users.get(
-              event['membership_change']['participant_id'][0]['gaia_id']
-          ))
-      elif event['membership_change']['type'] == 'LEAVE':
-        event_data.user_removed = \
-          str(users.get(
-              event['membership_change']['participant_id'][0]['gaia_id']
-          ))
+      self._GetMembershipChange(event_data, event['membership_change'], users)
     if 'conversation_rename' in event:
       event_data.conversation_name = event['conversation_rename'] \
         ['new_name']
