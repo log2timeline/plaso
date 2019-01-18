@@ -155,16 +155,9 @@ class PyparsingConstants(object):
 
   # Numbers.
   INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(PyParseIntCast)
-  IPV4_OCTET = pyparsing.Word(pyparsing.nums, min=1, max=3).setParseAction(
-      PyParseIntCast, PyParseRangeCheck(0, 255))
-  IPV4_ADDRESS = (IPV4_OCTET + ('.' + IPV4_OCTET) * 3).setParseAction(
-      PyParseJoinList)
 
-  # TODO: Fix the IPv6 address specification to be more accurate (8 :, correct
-  # size, etc).
-  IPV6_ADDRESS = pyparsing.Word(':' + pyparsing.hexnums).setParseAction(
-      PyParseJoinList)
-
+  IPV4_ADDRESS = pyparsing.pyparsing_common.ipv4_address
+  IPV6_ADDRESS = pyparsing.pyparsing_common.ipv6_address
   IP_ADDRESS = (IPV4_ADDRESS | IPV6_ADDRESS)
 
   # TODO: deprecate and remove, use THREE_LETTERS instead.

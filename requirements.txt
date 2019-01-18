@@ -43,7 +43,7 @@ lz4 >= 0.10.0
 pefile >= 2018.8.8
 psutil >= 5.4.3
 pycrypto >= 2.6
-pyparsing >= 2.0.3
+pyparsing >= 2.3.0
 python-dateutil >= 1.5
 pytsk3 >= 20160721
 pytz

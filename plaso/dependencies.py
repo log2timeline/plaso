@@ -52,7 +52,7 @@ PYTHON_DEPENDENCIES = {
     'pylnk': ('get_version()', '20150830', None, True),
     'pymsiecf': ('get_version()', '20150314', None, True),
     'pyolecf': ('get_version()', '20151223', None, True),
-    'pyparsing': ('__version__', '2.0.3', None, True),
+    'pyparsing': ('__version__', '2.3.0', None, True),
     'pyqcow': ('get_version()', '20131204', None, True),
     'pyregf': ('get_version()', '20150315', None, True),
     'pyscca': ('get_version()', '20161031', None, True),
