@@ -137,6 +137,8 @@ optional arguments:
   def testGetPluginData(self):
     """Tests the _GetPluginData function."""
     test_tool = log2timeline_tool.Log2TimelineTool()
+    test_tool._data_location = self._GetTestFilePath([])
+
     plugin_info = test_tool._GetPluginData()
 
     self.assertIn('Hashers', plugin_info)

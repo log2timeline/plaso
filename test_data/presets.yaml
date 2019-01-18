@@ -1,0 +1,140 @@
+# Parser and parser plugin presets.
+
+name: android
+description: Preset for Android.
+parsers:
+- android_app_usage
+- chrome_cache
+- filestat
+- sqlite/android_calls
+- sqlite/android_sms
+- sqlite/android_webview
+- sqlite/android_webviewcache
+- sqlite/chrome_27_history
+- sqlite/chrome_8_history
+- sqlite/chrome_cookies
+- sqlite/skype
+---
+name: linux
+description: Preset for Linux.
+parsers:
+- bash_history
+- bencode
+- czip/oxml
+- dockerjson
+- dpkg
+- filestat
+- gdrive_synclog
+- java_idx
+- olecf
+- pls_recall
+- popularity_contest
+- selinux
+- sqlite/google_drive
+- sqlite/skype
+- sqlite/zeitgeist
+- syslog
+- systemd_journal
+- utmp
+- webhist
+- xchatlog
+- xchatscrollback
+- zsh_extended_history
+---
+name: macos
+description: Preset for MacOS.
+parsers:
+- asl_log
+- bash_history
+- bencode
+- bsm_log
+- cups_ipp
+- czip/oxml
+- filestat
+- fseventsd
+- gdrive_synclog
+- java_idx
+- mac_appfirewall_log
+- mac_keychain
+- mac_securityd
+- macwifi
+- olecf
+- plist
+- sqlite/appusage
+- sqlite/google_drive
+- sqlite/imessage
+- sqlite/ls_quarantine
+- sqlite/mac_document_versions
+- sqlite/mackeeper_cache
+- sqlite/skype
+- syslog
+- utmpx
+- webhist
+- zsh_extended_history
+---
+name: webhist
+description: Preset for Web history.
+parsers:
+- binary_cookies
+- chrome_cache
+- chrome_preferences
+- esedb/msie_webcache
+- firefox_cache
+- java_idx
+- msiecf
+- opera_global
+- opera_typed_history
+- plist/safari_history
+- sqlite/chrome_27_history
+- sqlite/chrome_8_history
+- sqlite/chrome_autofill
+- sqlite/chrome_cookies
+- sqlite/chrome_extension_activity
+- sqlite/firefox_cookies
+- sqlite/firefox_downloads
+- sqlite/firefox_history
+---
+name: win_gen
+description: Preset for generic Windows.
+parsers:
+- bencode
+- czip/oxml
+- esedb
+- filestat
+- gdrive_synclog
+- java_idx
+- lnk
+- mcafee_protection
+- olecf
+- pe
+- prefetch
+- sccm
+- skydrive_log
+- skydrive_log_old
+- sqlite/google_drive
+- sqlite/skype
+- symantec_scanlog
+- usnjrnl
+- webhist
+- winfirewall
+- winjob
+- winreg
+---
+name: win7
+description: Preset for Windows 7 and later.
+parsers:
+- amcache
+- custom_destinations
+- esedb/file_history
+- olecf/olecf_automatic_destinations
+- recycle_bin
+- winevtx
+- win_gen
+---
+name: winxp
+description: Preset for Windows XP and 2003.
+parsers:
+- recycle_bin_info2
+- rplog
+- win_gen
+- winevt

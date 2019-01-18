@@ -28,6 +28,10 @@ class InvalidEvent(Error):
   """Error indicating an event is malformed."""
 
 
+class MalformedPresetError(Error):
+  """Raised when a parser preset definition is malformed."""
+
+
 class MalformedQueryError(Error):
   """Raised when an objectfilter query is malformed."""
 
