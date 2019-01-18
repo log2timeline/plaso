@@ -197,6 +197,7 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
 
     self.assertIn('winreg', parsers_names)
 
+  @shared_test_lib.skipUnlessHasTestFile(['presets.yaml'])
   def testGetParserAndPluginNames(self):
     """Tests the GetParserAndPluginNames function."""
     TestParserWithPlugins.RegisterPlugin(TestPlugin)
@@ -231,6 +232,9 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     manager.ParsersManager.DeregisterParser(TestParser)
 
     # Test with a preset name.
+    test_path = self._GetTestFilePath(['presets.yaml'])
+    manager.ParsersManager.ReadPresetsFromFile(test_path)
+
     parser_names = manager.ParsersManager.GetParserAndPluginNames(
         parser_filter_expression='win_gen')
     self.assertIn('lnk', parser_names)
@@ -298,6 +302,7 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     manager.ParsersManager.DeregisterParser(TestParserWithPlugins)
     manager.ParsersManager.DeregisterParser(TestParser)
 
+  @shared_test_lib.skipUnlessHasTestFile(['presets.yaml'])
   def testGetParsers(self):
     """Tests the GetParsers function."""
     TestParserWithPlugins.RegisterPlugin(TestPlugin)
@@ -335,6 +340,9 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     manager.ParsersManager.DeregisterParser(TestParser)
 
     # Test with a preset name.
+    test_path = self._GetTestFilePath(['presets.yaml'])
+    manager.ParsersManager.ReadPresetsFromFile(test_path)
+
     expected_parser_names = [
         'bencode', 'binary_cookies', 'chrome_cache', 'chrome_preferences',
         'czip', 'esedb', 'filestat', 'firefox_cache', 'gdrive_synclog',
