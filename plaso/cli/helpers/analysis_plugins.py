@@ -41,7 +41,7 @@ class AnalysisPluginsArgumentsHelper(interface.ArgumentsHelper):
     if '--analysis' in arguments:
       argument_index = arguments.index('--analysis') + 1
 
-    if argument_index > 0 and argument_index < len(arguments):
+    if 0 < argument_index < len(arguments):
       names = [name.strip() for name in arguments[argument_index].split(',')]
     else:
       names = None

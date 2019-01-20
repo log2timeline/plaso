@@ -135,6 +135,8 @@ class ArtifactDefinitionsFilterHelper(object):
             artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_VALUE):
         # TODO: Handle Registry Values Once Supported in dfwinreg.
         # https://github.com/log2timeline/dfwinreg/issues/98
+
+        # Use set-comprehension to create a set of the source key paths.
         key_paths = {
             key_value['key'] for key_value in source.key_value_pairs}
         key_paths_string = ', '.join(key_paths)

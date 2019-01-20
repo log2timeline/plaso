@@ -46,7 +46,7 @@ class OutputModule(object):
 
   def Close(self):
     """Closes the output."""
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
   def GetMissingArguments(self):
     """Retrieves arguments required by the module that have not been specified.
@@ -59,7 +59,7 @@ class OutputModule(object):
 
   def Open(self):
     """Opens the output."""
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
   def WriteEvent(self, event):
     """Writes the event to the output.
@@ -97,7 +97,7 @@ class OutputModule(object):
     Can be used for post-processing or output after an individual event
     has been written, such as writing closing XML tags, etc.
     """
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
   def WriteEventMACBGroup(self, event_macb_group):
     """Writes an event MACB group to the output.
@@ -123,7 +123,7 @@ class OutputModule(object):
     Can be used for pre-processing or output before an individual event
     has been written, such as writing opening XML tags, etc.
     """
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
   def WriteFooter(self):
     """Writes the footer to the output.
@@ -131,7 +131,7 @@ class OutputModule(object):
     Can be used for post-processing or output after the last event
     is written, such as writing a file footer.
     """
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
   def WriteHeader(self):
     """Writes the header to the output.
@@ -139,7 +139,7 @@ class OutputModule(object):
     Can be used for pre-processing or output before the first event
     is written, such as writing a file header.
     """
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class LinearOutputModule(OutputModule):

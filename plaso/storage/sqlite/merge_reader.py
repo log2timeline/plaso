@@ -228,7 +228,11 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
       RuntimeError: if the add method for the active attribute container
           type is missing.
       OSError: if the task storage file cannot be deleted.
+      ValueError: if the maximum number of containers is a negative value.
     """
+    if maximum_number_of_containers < 0:
+      raise ValueError('Invalid maximum number of containers')
+
     if not self._cursor:
       self._Open()
       self._ReadStorageMetadata()
@@ -239,11 +243,11 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
       if not self._active_cursor:
         self._PrepareForNextContainerType()
 
-      if maximum_number_of_containers > 0:
+      if maximum_number_of_containers == 0:
+        rows = self._active_cursor.fetchall()
+      else:
         number_of_rows = maximum_number_of_containers - number_of_containers
         rows = self._active_cursor.fetchmany(size=number_of_rows)
-      else:
-        rows = self._active_cursor.fetchall()
 
       if not rows:
         self._active_cursor = None
@@ -277,7 +281,7 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
 
         number_of_containers += 1
 
-      if (maximum_number_of_containers > 0 and
+      if (maximum_number_of_containers != 0 and
           number_of_containers >= maximum_number_of_containers):
         return False
 

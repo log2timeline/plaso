@@ -159,7 +159,7 @@ class StatusView(object):
       used_memory_1024 /= 1024
       magnitude_1024 += 1
 
-    if magnitude_1024 > 0 and magnitude_1024 <= 7:
+    if 0 < magnitude_1024 <= 7:
       return '{0:.1f} {1:s}'.format(
           used_memory_1024, self._UNITS_1024[magnitude_1024])
 

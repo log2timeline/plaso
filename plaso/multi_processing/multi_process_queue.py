@@ -57,7 +57,7 @@ class MultiProcessingQueue(plaso_queue.Queue):
 
   def Open(self):
     """Opens the queue."""
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
   def Close(self, abort=False):
     """Closes the queue.

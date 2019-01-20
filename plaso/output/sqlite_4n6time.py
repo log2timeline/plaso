@@ -128,8 +128,8 @@ class SQLite4n6TimeOutputModule(shared_4n6time.Shared4n6TimeOutputModule):
       self._cursor.execute('DELETE FROM l2t_{0:s}s'.format(field))
       for name, frequency in iter(values.items()):
         self._cursor.execute((
-            'INSERT INTO l2t_{0:s}s ({1:s}s, frequency) '
-            'VALUES("{2:s}", {3:d}) ').format(field, field, name, frequency))
+            'INSERT INTO l2t_{0:s}s ({0:s}s, frequency) '
+            'VALUES("{1:s}", {2:d}) ').format(field, name, frequency))
     self._cursor.execute('DELETE FROM l2t_tags')
     for tag in self._ListTags():
       self._cursor.execute('INSERT INTO l2t_tags (tag) VALUES (?)', [tag])
