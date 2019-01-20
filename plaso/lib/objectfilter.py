@@ -171,8 +171,8 @@ class Filter(object):
     return filter(self.Matches, objects)
 
   def __str__(self):
-    return '{0:s}({1:s})'.format(
-        self.__class__.__name__, ', '.join([str(arg) for arg in self.args]))
+    return '{0:s}({1:s})'.format(self.__class__.__name__, ', '.join([
+        str(argument) for argument in self.args]))
 
 
 class AndFilter(Filter):
@@ -262,10 +262,9 @@ class GenericBinaryOperator(BinaryOperator):
       try:
         if self.Operation(val, self.right_operand):
           return True
-        else:
-          continue
-      except (ValueError, TypeError):
-        continue
+      except (TypeError, ValueError):
+        pass
+
     return False
 
   def Matches(self, obj):
@@ -640,8 +639,8 @@ class ContextExpression(lexer.Expression):
   def Compile(self, filter_implementation):
     """Compile the expression."""
     arguments = [self.attribute]
-    for arg in self.args:
-      arguments.append(arg.Compile(filter_implementation))
+    for argument in self.args:
+      arguments.append(argument.Compile(filter_implementation))
     expander = filter_implementation.FILTERS['ValueExpander']
     context_cls = filter_implementation.FILTERS['Context']
     return context_cls(arguments=arguments,
@@ -652,9 +651,9 @@ class BinaryExpression(lexer.BinaryExpression):
   def Compile(self, filter_implementation):
     """Compile the binary expression into a filter object."""
     operator = self.operator.lower()
-    if operator == 'and' or operator == '&&':
+    if operator in ('and', '&&'):
       method = 'AndFilter'
-    elif operator == 'or' or operator == '||':
+    elif operator in ('or', '||'):
       method = 'OrFilter'
     else:
       raise errors.ParseError(
@@ -771,7 +770,7 @@ class Parser(lexer.SearchParser):
           'Unable to perform a negative match, issuing a positive one.')
 
   def InsertArg(self, string='', **unused_kwargs):
-    """Insert an arg to the current expression."""
+    """Insert an argument to the current expression."""
     # Note that "string" is not necessarily of type string.
     logging.debug('Storing argument: {0!s}'.format(string))
 
@@ -815,7 +814,7 @@ class Parser(lexer.SearchParser):
     if self.state == 'ATTRIBUTE':
       return self.StoreAttribute(string=self.string)
 
-    elif self.state == 'ARG':
+    if self.state == 'ARG':
       return self.InsertArg(string=self.string)
 
     return None

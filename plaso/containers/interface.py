@@ -3,9 +3,9 @@
 
 from __future__ import unicode_literals
 
-from plaso.lib import py2to3
-
 from efilter.protocols import structured
+
+from plaso.lib import py2to3
 
 
 class AttributeContainerIdentifier(object):

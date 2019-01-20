@@ -64,13 +64,15 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
     # pylint: disable=protected-access
     self.assertEqual(
         url, virustotal.VirusTotalAnalyzer._VIRUSTOTAL_API_REPORT_URL)
-    if params['resource'] == self._EVENT_1_HASH:
-      response = MockResponse()
-      response['resource'] = self._EVENT_1_HASH
-      response['response_code'] = 1
-      response['positives'] = 10
-      return response
-    self.fail('Unexpected parameters to request.get()')
+
+    if params['resource'] != self._EVENT_1_HASH:
+      self.fail('Unexpected parameters to request.get()')
+
+    response = MockResponse()
+    response['resource'] = self._EVENT_1_HASH
+    response['response_code'] = 1
+    response['positives'] = 10
+    return response
 
   def _CreateTestEventObject(self, event_dictionary):
     """Create a test event with a set of attributes.

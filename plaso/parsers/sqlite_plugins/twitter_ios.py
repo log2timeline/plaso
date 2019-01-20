@@ -56,7 +56,7 @@ class TwitterIOSStatusEventData(events.EventData):
     favorited (int): value to mark status as favorite by the account.
     name (str): user's profile name.
     retweet_count (str): number of times the status message has been retweeted.
-    text (str): content of the status messsage.
+    text (str): content of the status message.
     user_id (int): user unique identifier.
   """
 

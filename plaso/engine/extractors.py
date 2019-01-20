@@ -281,10 +281,11 @@ class EventExtractor(object):
 
       parse_result = self._ParseFileEntryWithParser(
           parser_mediator, parser, file_entry, file_object=file_object)
+
       if parse_result == self._PARSE_RESULT_FAILURE:
         return self._PARSE_RESULT_FAILURE
 
-      elif parse_result == self._PARSE_RESULT_SUCCESS:
+      if parse_result == self._PARSE_RESULT_SUCCESS:
         parse_results = self._PARSE_RESULT_SUCCESS
 
     return parse_results

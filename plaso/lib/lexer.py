@@ -238,21 +238,21 @@ class Expression(object):
     return 'Expression: ({0:s}) ({1:s}) {2:s}'.format(
         self.attribute, self.operator, self.args)
 
-  def AddArg(self, arg):
-    """Adds a new arg to this expression.
+  def AddArg(self, argument):
+    """Adds a new argument to this expression.
 
     Args:
-       arg: The argument to add (string).
+       argument (str): argument to add.
 
     Returns:
-      True if this arg is the last arg, False otherwise.
+      True if the argument is the last argument, False otherwise.
 
     Raises:
-      ParseError: If there are too many args.
+      ParseError: If there are too many arguments.
     """
-    self.args.append(arg)
+    self.args.append(argument)
     if len(self.args) > self.number_of_args:
-      raise errors.ParseError('Too many args for this expression.')
+      raise errors.ParseError('Too many arguments for this expression.')
 
     elif len(self.args) == self.number_of_args:
       return True
@@ -315,9 +315,9 @@ class BinaryExpression(Expression):
   def Compile(self, filter_implementation):
     """Compile the binary expression into a filter object."""
     operator = self.operator.lower()
-    if operator == 'and' or operator == '&&':
+    if operator in ('and', '&&'):
       method = 'AndFilter'
-    elif operator == 'or' or operator == '||':
+    elif operator in ('or', '||'):
       method = 'OrFilter'
     else:
       raise errors.ParseError(
@@ -431,8 +431,9 @@ class SearchParser(Lexer):
     if self.state == 'ATTRIBUTE':
       return self.StoreAttribute(string=self.string)
 
-    elif self.state == 'ARG_LIST':
+    if self.state == 'ARG_LIST':
       return self.InsertArg(string=self.string)
+
     return None
 
   def StoreAttribute(self, string='', **unused_kwargs):
@@ -453,7 +454,7 @@ class SearchParser(Lexer):
     self.current_expression.SetOperator(string)
 
   def InsertArg(self, string='', **unused_kwargs):
-    """Insert an arg to the current expression."""
+    """Insert an argument to the current expression."""
     logging.debug('Storing Argument {0:s}'.format(string))
 
     # This expression is complete

@@ -22,7 +22,7 @@ class SkyDriveLogEventData(events.EventData):
   Attributes:
     detail (str): details.
     log_level (str): log level.
-    module (str): name of the module that generated the log messsage.
+    module (str): name of the module that generated the log message.
     source_code (str): source file and line number that generated the log
         message.
   """

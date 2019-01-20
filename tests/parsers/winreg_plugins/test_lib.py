@@ -73,13 +73,13 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     """
     file_object = file_entry.GetFileObject()
     if not file_object:
-      return
+      return None
 
     win_registry_reader = winreg.FileObjectWinRegistryFileReader()
     registry_file = win_registry_reader.Open(file_object)
     if not registry_file:
       file_object.close()
-      return
+      return None
 
     win_registry = dfwinreg_registry.WinRegistry()
     key_path_prefix = win_registry.GetRegistryFileMapping(registry_file)

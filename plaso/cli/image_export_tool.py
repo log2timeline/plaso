@@ -443,6 +443,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     Raises:
       IOError: if the format specification file could not be read from
           the specified data location.
+      OSError: if the format specification file could not be read from
+          the specified data location.
       ValueError: if no data location was specified.
     """
     if not signature_identifiers:

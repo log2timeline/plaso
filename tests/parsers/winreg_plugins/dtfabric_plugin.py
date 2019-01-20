@@ -31,6 +31,7 @@ class ErrorBytesIO(io.BytesIO):
 
     Raises:
       IOError: for testing.
+      OSError: for testing.
     """
     raise IOError('Unable to read for testing purposes.')
 
