@@ -8,57 +8,57 @@ set -e
 
 # Dependencies for running plaso, alphabetized, one per line.
 # This should not include packages only required for testing or development.
-PYTHON2_DEPENDENCIES="PyYAML
-                      libbde-python
-                      libesedb-python
-                      libevt-python
-                      libevtx-python
-                      libewf-python
+PYTHON2_DEPENDENCIES="libbde-python2
+                      libesedb-python2
+                      libevt-python2
+                      libevtx-python2
+                      libewf-python2
                       libfsapfs-python2
-                      libfsntfs-python
-                      libfvde-python
-                      libfwnt-python
-                      libfwsi-python
-                      liblnk-python
-                      libmsiecf-python
-                      libolecf-python
-                      libqcow-python
-                      libregf-python
-                      libscca-python
-                      libsigscan-python
-                      libsmdev-python
-                      libsmraw-python
-                      libvhdi-python
-                      libvmdk-python
-                      libvshadow-python
-                      libvslvm-python
-                      python-XlsxWriter
-                      python-artifacts
-                      python-bencode
+                      libfsntfs-python2
+                      libfvde-python2
+                      libfwnt-python2
+                      libfwsi-python2
+                      liblnk-python2
+                      libmsiecf-python2
+                      libolecf-python2
+                      libqcow-python2
+                      libregf-python2
+                      libscca-python2
+                      libsigscan-python2
+                      libsmdev-python2
+                      libsmraw-python2
+                      libvhdi-python2
+                      libvmdk-python2
+                      libvshadow-python2
+                      libvslvm-python2
                       python-biplist
                       python-chardet
-                      python-crypto
-                      python-dfdatetime
                       python-dfvfs
                       python-dfwinreg
-                      python-dtfabric
                       python-efilter
                       python-elasticsearch
                       python-elasticsearch5
-                      python-pefile
                       python-psutil
-                      python-pysqlite
-                      python-pytsk3
-                      python-requests
-                      python-six
+                      python2-XlsxWriter
+                      python2-artifacts
                       python2-backports-lzma
+                      python2-bencode
                       python2-certifi
+                      python2-crypto
                       python2-dateutil
+                      python2-dfdatetime
+                      python2-dtfabric
                       python2-future
                       python2-idna
                       python2-lz4
+                      python2-pefile
                       python2-pyparsing
+                      python2-pysqlite
+                      python2-pytsk3
                       python2-pytz
+                      python2-pyyaml
+                      python2-requests
+                      python2-six
                       python2-urllib3
                       python2-yara
                       python2-zmq";
@@ -66,8 +66,7 @@ PYTHON2_DEPENDENCIES="PyYAML
 # Additional dependencies for running tests, alphabetized, one per line.
 TEST_DEPENDENCIES="python2-funcsigs
                    python2-mock
-                   python2-pbr
-                   python2-six";
+                   python2-pbr";
 
 # Additional dependencies for development, alphabetized, one per line.
 DEVELOPMENT_DEPENDENCIES="pylint
@@ -75,51 +74,51 @@ DEVELOPMENT_DEPENDENCIES="pylint
 
 # Additional dependencies for debugging, alphabetized, one per line.
 DEBUG_DEPENDENCIES="libbde-debuginfo
-                    libbde-python-debuginfo
+                    libbde-python2-debuginfo
                     libesedb-debuginfo
-                    libesedb-python-debuginfo
+                    libesedb-python2-debuginfo
                     libevt-debuginfo
-                    libevt-python-debuginfo
+                    libevt-python2-debuginfo
                     libevtx-debuginfo
-                    libevtx-python-debuginfo
+                    libevtx-python2-debuginfo
                     libewf-debuginfo
-                    libewf-python-debuginfo
+                    libewf-python2-debuginfo
                     libfsapfs-debuginfo
                     libfsapfs-python2-debuginfo
                     libfsntfs-debuginfo
-                    libfsntfs-python-debuginfo
+                    libfsntfs-python2-debuginfo
                     libfvde-debuginfo
-                    libfvde-python-debuginfo
+                    libfvde-python2-debuginfo
                     libfwnt-debuginfo
-                    libfwnt-python-debuginfo
+                    libfwnt-python2-debuginfo
                     libfwsi-debuginfo
-                    libfwsi-python-debuginfo
+                    libfwsi-python2-debuginfo
                     liblnk-debuginfo
-                    liblnk-python-debuginfo
+                    liblnk-python2-debuginfo
                     libmsiecf-debuginfo
-                    libmsiecf-python-debuginfo
+                    libmsiecf-python2-debuginfo
                     libolecf-debuginfo
-                    libolecf-python-debuginfo
+                    libolecf-python2-debuginfo
                     libqcow-debuginfo
-                    libqcow-python-debuginfo
+                    libqcow-python2-debuginfo
                     libregf-debuginfo
-                    libregf-python-debuginfo
+                    libregf-python2-debuginfo
                     libscca-debuginfo
-                    libscca-python-debuginfo
+                    libscca-python2-debuginfo
                     libsigscan-debuginfo
-                    libsigscan-python-debuginfo
+                    libsigscan-python2-debuginfo
                     libsmdev-debuginfo
-                    libsmdev-python-debuginfo
+                    libsmdev-python2-debuginfo
                     libsmraw-debuginfo
-                    libsmraw-python-debuginfo
+                    libsmraw-python2-debuginfo
                     libvhdi-debuginfo
-                    libvhdi-python-debuginfo
+                    libvhdi-python2-debuginfo
                     libvmdk-debuginfo
-                    libvmdk-python-debuginfo
+                    libvmdk-python2-debuginfo
                     libvshadow-debuginfo
-                    libvshadow-python-debuginfo
+                    libvshadow-python2-debuginfo
                     libvslvm-debuginfo
-                    libvslvm-python-debuginfo
+                    libvslvm-python2-debuginfo
                     python-guppy";
 
 sudo dnf install dnf-plugins-core
