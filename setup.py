@@ -29,12 +29,6 @@ try:
 except ImportError:
   from distutils.command.sdist import sdist
 
-# Change PYTHONPATH to include plaso.
-sys.path.insert(0, '.')
-
-import plaso  # pylint: disable=wrong-import-position
-
-
 version_tuple = (sys.version_info[0], sys.version_info[1])
 if version_tuple[0] not in (2, 3):
   print('Unsupported Python version: {0:s}.'.format(sys.version))
@@ -51,6 +45,11 @@ elif version_tuple[0] == 3 and version_tuple < (3, 4):
       'Unsupported Python 3 version: {0:s}, version 3.4 or higher '
       'required.').format(sys.version))
   sys.exit(1)
+
+# Change PYTHONPATH to include plaso so that we can get the version.
+sys.path.insert(0, '.')
+
+import plaso  # pylint: disable=wrong-import-position
 
 
 if not bdist_msi:
@@ -87,45 +86,97 @@ else:
         spec_file = bdist_rpm._make_spec_file(self)
 
       if sys.version_info[0] < 3:
-        python_package = 'python'
+        python_package = 'python2'
       else:
         python_package = 'python3'
 
       description = []
-      summary = ''
+      requires = ''
+      summary = ''  # pylint: disable=unused-variable
       in_description = False
 
       python_spec_file = []
       for line in iter(spec_file):
         if line.startswith('Summary: '):
-          summary = line
+          summary = line[9:]
 
         elif line.startswith('BuildRequires: '):
-          line = 'BuildRequires: {0:s}-setuptools'.format(python_package)
+          line = 'BuildRequires: {0:s}-setuptools, {0:s}-devel'.format(
+              python_package)
 
         elif line.startswith('Requires: '):
+          requires = line[10:]
           if python_package == 'python3':
-            line = line.replace('python', 'python3')
+            requires = requires.replace('python-', 'python3-')
+            requires = requires.replace('python2-', 'python3-')
+          continue
 
         elif line.startswith('%description'):
           in_description = True
 
+        elif line.startswith('python setup.py build'):
+          if python_package == 'python3':
+            line = '%py3_build'
+          else:
+            line = '%py2_build'
+
+        elif line.startswith('python setup.py install'):
+          if python_package == 'python3':
+            line = '%py3_install'
+          else:
+            line = '%py2_install'
+
         elif line.startswith('%files'):
-          # Cannot use %{_libdir} here since it can expand to "lib64".
+          python_spec_file.extend([
+              '%package -n %{name}-tools',
+              'Summary: Tools for plaso (log2timeline)',
+              '',
+              '%description -n %{name}-tools'])
+
+          python_spec_file.extend(description)
+
           lines = [
+              '%files -n %{name}-data',
+              '%defattr(644,root,root,755)',
+              '%license LICENSE',
+              '%doc ACKNOWLEDGEMENTS AUTHORS README',
+              '%{_datadir}/%{name}/*',
+              '',
               '%files -n {0:s}-%{{name}}'.format(python_package),
               '%defattr(644,root,root,755)',
-              '%doc ACKNOWLEDGEMENTS AUTHORS LICENSE README',
-              '%{_prefix}/bin/*.py',
-              '%{_prefix}/lib/python*/site-packages/**/*.py',
-              '%{_prefix}/lib/python*/site-packages/**/*.yaml',
-              '%{_prefix}/lib/python*/site-packages/plaso*.egg-info/*',
-              '%{_prefix}/share/plaso/*',
-              '',
-              '%exclude %{_prefix}/share/doc/*',
-              '%exclude %{_prefix}/lib/python*/site-packages/**/*.pyc',
-              '%exclude %{_prefix}/lib/python*/site-packages/**/*.pyo',
-              '%exclude %{_prefix}/lib/python*/site-packages/**/__pycache__/*']
+              '%license LICENSE',
+              '%doc ACKNOWLEDGEMENTS AUTHORS README']
+
+          if python_package == 'python3':
+            lines.extend([
+                '%{python3_sitelib}/plaso/*.py',
+                '%{python3_sitelib}/plaso/*/*.py',
+                '%{python3_sitelib}/plaso/*/*.yaml',
+                '%{python3_sitelib}/plaso/*/*/*.py',
+                '%{python3_sitelib}/plaso/*/*/*.yaml',
+                '%{python3_sitelib}/plaso*.egg-info/*',
+                '',
+                '%exclude %{_prefix}/share/doc/*',
+                '%exclude %{python3_sitelib}/plaso/__pycache__/*',
+                '%exclude %{python3_sitelib}/plaso/*/__pycache__/*',
+                '%exclude %{python3_sitelib}/plaso/*/*/__pycache__/*'])
+
+          else:
+            lines.extend([
+                '%{python2_sitelib}/plaso/*.py',
+                '%{python2_sitelib}/plaso/*/*.py',
+                '%{python2_sitelib}/plaso/*/*.yaml',
+                '%{python2_sitelib}/plaso/*/*/*.py',
+                '%{python2_sitelib}/plaso/*/*/*.yaml',
+                '%{python2_sitelib}/plaso*.egg-info/*',
+                '',
+                '%exclude %{_prefix}/share/doc/*',
+                '%exclude %{python2_sitelib}/plaso/*.pyc',
+                '%exclude %{python2_sitelib}/plaso/*.pyo',
+                '%exclude %{python2_sitelib}/plaso/*/*.pyc',
+                '%exclude %{python2_sitelib}/plaso/*/*.pyo',
+                '%exclude %{python2_sitelib}/plaso/*/*/*.pyc',
+                '%exclude %{python2_sitelib}/plaso/*/*/*.pyo'])
 
           python_spec_file.extend(lines)
           break
@@ -133,12 +184,30 @@ else:
         elif line.startswith('%prep'):
           in_description = False
 
+          python_spec_file.extend([
+              '%package -n %{name}-data',
+              'Summary: Data files for plaso (log2timeline)',
+              '',
+              '%description -n %{name}-data'])
+
+          python_spec_file.extend(description)
+
           python_spec_file.append(
               '%package -n {0:s}-%{{name}}'.format(python_package))
-          python_spec_file.append('{0:s}'.format(summary))
-          python_spec_file.append('')
-          python_spec_file.append(
-              '%description -n {0:s}-%{{name}}'.format(python_package))
+          if python_package == 'python2':
+            python_spec_file.extend([
+                'Obsoletes: python-plaso < %{version}',
+                'Provides: python-plaso = %{version}'])
+            python_summary = 'Python 2 module of plaso (log2timeline)'
+          else:
+            python_summary = 'Python 3 module of plaso (log2timeline)'
+
+          python_spec_file.extend([
+              'Requires: %{{name}}-data {0:s}'.format(requires),
+              'Summary: {0:s}'.format(python_summary),
+              '',
+              '%description -n {0:s}-%{{name}}'.format(python_package)])
+
           python_spec_file.extend(description)
 
         elif in_description:
@@ -150,6 +219,11 @@ else:
 
         python_spec_file.append(line)
 
+      python_spec_file.extend([
+          '',
+          '%files -n %{name}-tools',
+          '%{_bindir}/*.py'])
+
       return python_spec_file
 
 
@@ -160,7 +234,7 @@ if version_tuple[0] == 2:
   if not encoding:
     encoding = locale.getpreferredencoding()
 
-  # Make sure the default encoding is set correctly otherwise
+  # Make sure the default encoding is set correctly otherwise on Python 2
   # setup.py sdist will fail to include filenames with Unicode characters.
   reload(sys)  # pylint: disable=undefined-variable
 
@@ -169,7 +243,8 @@ if version_tuple[0] == 2:
 
 # Unicode in the description will break python-setuptools, hence
 # "Plaso Langar Að Safna Öllu" was removed.
-plaso_description = 'Super timeline all the things'
+plaso_description = (
+    'Super timeline all the things.')
 
 plaso_long_description = (
     'Plaso (log2timeline) is a framework to create super timelines. Its '
@@ -198,7 +273,7 @@ setup(
     packages=find_packages('.', exclude=[
         'docs', 'tests', 'tests.*', 'tools', 'utils']),
     package_dir={
-        'plaso': 'plaso',
+        'plaso': 'plaso'
     },
     include_package_data=True,
     package_data={
@@ -206,7 +281,7 @@ setup(
         'plaso.parsers.esedb_plugins': ['*.yaml'],
         'plaso.parsers.olecf_plugins': ['*.yaml'],
         'plaso.parsers.plist_plugins': ['*.yaml'],
-        'plaso.parsers.winreg_plugins': ['*.yaml'],
+        'plaso.parsers.winreg_plugins': ['*.yaml']
     },
     zip_safe=False,
     scripts=glob.glob(os.path.join('tools', '[a-z]*.py')),
