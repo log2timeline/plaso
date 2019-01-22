@@ -132,8 +132,8 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
     except (AttributeError, TypeError, ValueError):
       return None
 
-  def Compare(self, other):
-    """Compares operating system artifact attribute containers.
+  def IsEquivalent(self, other):
+    """Determines if 2 operating system artifacts are equivalent.
 
     This function compares the operating systems based on the most specific
     available critera. These criteria, in order of most to least specific, are:

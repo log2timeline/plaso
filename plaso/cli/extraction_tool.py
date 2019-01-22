@@ -113,15 +113,16 @@ class ExtractionTool(
               operating_system_version))
 
       if preset_definitions:
-        if len(preset_definitions) != 1:
+        preset_names = [
+            preset_definition.name for preset_definition in preset_definitions]
+        if len(preset_names) != 1:
           raise errors.BadConfigOption(
-              'More than 1 parser presets found for: {0:s}'.format(
-                  operating_system))
+              'More than 1 parser preset found for: {0:s} namely: {1:s}'.format(
+                  operating_system, preset_names))
 
-        preset_name = preset_definitions[0].name
         logger.info('Parser filter expression set to: {0:s}'.format(
-            preset_name))
-        configuration.parser_filter_expression = preset_name
+            preset_names[0]))
+        configuration.parser_filter_expression = preset_names[0]
 
     return configuration
 

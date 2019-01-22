@@ -59,39 +59,37 @@ class OperatingSystemArtifactTest(shared_test_lib.BaseTestCase):
     attribute_container = artifacts.OperatingSystemArtifact(version="5.a")
     self.assertIsNone(attribute_container.version_tuple)
 
-  def testCompare(self):
-    """Tests the Compare function."""
-    attribute_container1 = artifacts.OperatingSystemArtifact(
+  def testIsEquivalent(self):
+    """Tests the IsEquivalent function."""
+    win2k12_container = artifacts.OperatingSystemArtifact(
         product='Windows 2012')
-    attribute_container2 = artifacts.OperatingSystemArtifact(
-        product='Windows XP')
+    winxp_container = artifacts.OperatingSystemArtifact(product='Windows XP')
 
-    self.assertFalse(attribute_container1.Compare(attribute_container2))
-    self.assertFalse(attribute_container2.Compare(attribute_container1))
+    self.assertFalse(win2k12_container.IsEquivalent(winxp_container))
+    self.assertFalse(winxp_container.IsEquivalent(win2k12_container))
 
-    attribute_container1 = artifacts.OperatingSystemArtifact(
+    winnt62_container = artifacts.OperatingSystemArtifact(
         name=definitions.OPERATING_SYSTEM_WINDOWS_NT, version='6.2')
-    attribute_container2 = artifacts.OperatingSystemArtifact(
+    winnt51_container = artifacts.OperatingSystemArtifact(
         name=definitions.OPERATING_SYSTEM_WINDOWS_NT, version='5.1')
 
-    self.assertFalse(attribute_container1.Compare(attribute_container2))
-    self.assertFalse(attribute_container2.Compare(attribute_container1))
+    self.assertFalse(winnt62_container.IsEquivalent(winnt51_container))
+    self.assertFalse(winnt51_container.IsEquivalent(winnt62_container))
 
-    attribute_container1 = artifacts.OperatingSystemArtifact(
+    win9x_container = artifacts.OperatingSystemArtifact(
         name=definitions.OPERATING_SYSTEM_WINDOWS_9x)
-    attribute_container2 = artifacts.OperatingSystemArtifact(
+    winnt_container = artifacts.OperatingSystemArtifact(
         name=definitions.OPERATING_SYSTEM_WINDOWS_NT)
 
-    self.assertFalse(attribute_container1.Compare(attribute_container2))
-    self.assertFalse(attribute_container2.Compare(attribute_container1))
+    self.assertFalse(win9x_container.IsEquivalent(winnt_container))
+    self.assertFalse(winnt_container.IsEquivalent(win9x_container))
 
-    attribute_container1 = artifacts.OperatingSystemArtifact(
+    winnt51_container = artifacts.OperatingSystemArtifact(
         name=definitions.OPERATING_SYSTEM_WINDOWS_NT, version='5.1')
-    attribute_container2 = artifacts.OperatingSystemArtifact(
-        product='Windows XP')
+    winxp_container = artifacts.OperatingSystemArtifact(product='Windows XP')
 
-    self.assertTrue(attribute_container1.Compare(attribute_container2))
-    self.assertTrue(attribute_container2.Compare(attribute_container1))
+    self.assertTrue(winnt51_container.IsEquivalent(winxp_container))
+    self.assertTrue(winxp_container.IsEquivalent(winnt51_container))
 
   def testGetAttributeNames(self):
     """Tests the GetAttributeNames function."""

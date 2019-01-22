@@ -16,7 +16,7 @@ class ParserPreset(object):
     name (str): name of the preset.
     operating_system (list[OperatingSystemArtifact]): operating system
         artifact attribute containers, that specify to which operating
-        systems the preset should apply.
+        systems the preset applies.
     parsers (list[str]): names of parser and parser plugins.
   """
 
@@ -170,7 +170,7 @@ class ParserPresetsManager(object):
     preset_definitions = []
     for preset_definition in self._definitions.values():
       for preset_operating_system in preset_definition.operating_systems:
-        if preset_operating_system.Compare(operating_system):
+        if preset_operating_system.IsEquivalent(operating_system):
           preset_definitions.append(preset_definition)
 
     return preset_definitions
