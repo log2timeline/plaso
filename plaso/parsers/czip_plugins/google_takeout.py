@@ -312,7 +312,7 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
             r'((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|'
             r'[A-Za-z0-9+/]{3}=)?)"\salt="Google\sTake[a-z]{3,4}">')
         return re.search(takeout_regex, data)
-      return False
+    return False
 
   def _GetDateTime(self, date):
     """Gets the date time well formatted (Standard C asctime).
