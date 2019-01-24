@@ -1190,11 +1190,12 @@ class Mailbox:
     except KeyError:
       return default
 
-  # pylint: disable=inconsistent-return-statements
   def __getitem__(self, key):
     """Return the keyed message; raise KeyError if it doesn't exist."""
     if not self._factory:
       return self.Get_message(key)
+    return KeyError('No message with key: %s' % key)
+
 
   def Get_message(self, key):
     """Return a Message representation or raise a KeyError."""
@@ -1286,7 +1287,6 @@ class _singlefileMailbox(Mailbox):
     self._lookup()
     return len(self._toc)
 
-  # pylint: disable=inconsistent-return-statements
   def _lookup(self, key=None):
     """Return (start, stop) or raise KeyError."""
     if self._toc is None:
@@ -1297,6 +1297,7 @@ class _singlefileMailbox(Mailbox):
         return self._toc[key]
       except KeyError:
         raise KeyError('No message with key: %s' % key)
+    return KeyError('No message with key: %s' % key)
 
 class _mboxMMDF(_singlefileMailbox):
   """An mbox or MMDF mailbox."""
