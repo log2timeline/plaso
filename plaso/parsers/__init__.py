@@ -21,10 +21,12 @@ from plaso.parsers import firefox_cache
 from plaso.parsers import fseventsd
 from plaso.parsers import gdrive_synclog
 
+"""
 try:
   from plaso.parsers import hachoir
 except ImportError:
   pass
+"""
 
 from plaso.parsers import iis
 from plaso.parsers import java_idx
