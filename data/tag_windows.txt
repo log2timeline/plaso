@@ -1,7 +1,8 @@
 application_execution
   data_type is 'windows:prefetch:execution'
   data_type is 'windows:lnk:link' and filename contains 'Recent' and (local_path contains '.exe' or network_path contains '.exe' or relative_path contains '.exe')
-  data_type is 'windows:registry:key_value' AND (parser contains 'userassist' or parser contains 'mru') AND regvalue contains '.exe'
+  data_type == 'windows:registry:key_value' and parser =~ '.*mru' and regvalue =~ '.*\.[Ee]{1}[Xx]{1}[Ee]{1}'
+  data_type is 'windows:registry:userassist' and parser contains 'userassist' and value_name contains '.exe'
   data_type is 'windows:evtx:record' and strings contains 'user mode service' and strings contains 'demand start'
   data_type is 'fs:stat' and filename contains 'Windows/Tasks/At'
   data_type is 'windows:tasks:job'
@@ -21,7 +22,8 @@ application_removal
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Application-Experience' and event_identifier is 908
 
 document_open
-  data_type is 'windows:registry:key_value' AND parser contains 'mru' AND regvalue notcontains '.exe' AND timestamp > 0
+  data_type == 'windows:registry:key_value' and parser != "winreg/mrulistex_string_and_shell_item" and parser =~ '.*mru' and regvalue =~ '.*\S+\.\S+( |$|\")' and (not (regvalue =~ '.*\.(exe|EXE)')) and timestamp > 0
+  data_type == 'windows:lnk:link' and filename =~ '.*Recent' and (local_path =~ '.*\.[A-Za-z0-9]{1,12}$' or network_path =~ '.*\.[A-Za-z0-9]{1,12}$' or relative_path =~ '.*\.[A-Za-z0-9]{1,12}$') and (not (local_path =~ '(.*\.[Ee]{1}[Xx]{1}[Ee]{1}$)')) and (not (network_path =~ '(.*\.[Ee]{1}[Xx]{1}[Ee]{1}$)')) and (not (relative_path =~ '(.*\.[Ee]{1}[Xx]{1}[Ee]{1}$)'))
 
 login_failed
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Security-Auditing' and event_identifier is 4625
@@ -82,7 +84,7 @@ system_sleep
 
 autorun
   data_type is 'windows:registry:key_value' and parser contains 'Run'
-  data_type is 'windows:registry:key_value' AND (parser contains 'run' or parser contains 'lfu') AND (regvalue contains '.exe' OR regvalue contains '.dll')
+  data_type == 'windows:registry:key_value' and (parser =~ '.*run' or parser =~ '.*lfu') and (regvalue =~ '.*\.[Ee]{1}[Xx]{1}[Ee]{1}' or regvalue =~ '.*\.[Dd]{1}[Ll]{1}[Ll]{1}')
 
 file_download
   data_type is 'chrome:history:file_downloaded'
