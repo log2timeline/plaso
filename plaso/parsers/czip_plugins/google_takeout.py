@@ -433,8 +433,10 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       body = self._BodyMail(mail)
     return body
 
+  #pylint: disable=invalid-name
   def _GetMailInfo(self, event_data, key, value):
     """Gets other mail info.
+       There is dictionary mapping case values to functions to call.
 
     Args:
       event_data (GoogleGMailParserEventData): event data
@@ -442,34 +444,138 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       value (str): value
     """
 
-    if key == 'From':
+    def GetMailFrom(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
       event_data.mailfrom = value
-    elif key == 'To':
+
+    def GetMailTo(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
       event_data.mailto = value
-    elif key == 'Cc':
+
+    def GetMailCc(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
       event_data.cc = value
-    elif key == 'Bcc':
+
+    def GetMailBcc(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
       event_data.bcc = value
-    elif key == 'Subject':
+
+    def GetMailSubject(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
       event_data.subject = value
-    elif key == 'Precedence':
+
+    def GetMailPrecedence(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
       event_data.precedence = value
-    elif key == 'In-Reply-To':
+
+    def GetMailInReplyTo(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
       event_data.in_reply_to = value
-    elif key == 'Authentication-Results':
+
+    def GetMailAuthRes(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
       event_data.auth_results = value
-    elif key == 'ARC-Seal':
+
+    def GetMailARCSeal(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
       event_data.arc_seal = value
-    elif key == 'ARC-Message-Signature':
+
+    def GetMailARCMsg(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
       event_data.arc_msg_signature = value
-    elif key == 'Received-SPF':
+
+    def GetMailRecSPF(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
       event_data.received_spf = value
-    elif key == 'Auto-Submitted':
+
+    def GetMailAutoSub(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
       event_data.auto_submitted = value
-    elif key == 'VBR-Info':
+
+    def GetMailVBRInfo(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
       event_data.vbr_info = value
-    elif key == 'Return-Path':
+
+    def GetMailReturnPath(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
       event_data.return_path = value
+
+    keys = {
+        'From': GetMailFrom,
+        'To': GetMailTo,
+        'Cc': GetMailCc,
+        'Bcc': GetMailBcc,
+        'Subject': GetMailSubject,
+        'Precedence': GetMailPrecedence,
+        'In-Reply-To': GetMailInReplyTo,
+        'Authentication-Results': GetMailAuthRes,
+        'ARC-Seal': GetMailARCSeal,
+        'ARC-Message-Signature': GetMailARCMsg,
+        'Received-SPF': GetMailRecSPF,
+        'Auto-Submitted': GetMailAutoSub,
+        'VBR-Info': GetMailVBRInfo,
+        'Return-Path': GetMailReturnPath
+    }
+
+    if key in keys:
+      getKey = keys[key]
+      getKey(value)
 
   def _MBoxParser(self, file_object, parser_mediator):
     """Parses Mbox file (.mbox).
@@ -698,9 +804,9 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
     for key in data:
       if key == 'merchantOrderId':
         event_data.order_id = data[key]
-      if key == 'transactionMerchant':
+      elif key == 'transactionMerchant':
         event_data.merchant = data[key]['name']
-      if key == 'creationTime':
+      elif key == 'creationTime':
         timestamp = self._GetTimestampPurchase(data[key]['usecSinceEpochUtc'])
       elif key == 'lineItem':
         for element in data[key][0]:
