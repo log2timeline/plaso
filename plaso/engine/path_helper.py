@@ -98,7 +98,7 @@ class PathHelper(object):
     Expands the GRR artifacts path variable "%%users.homedir%%".
 
     Args:
-      path (str): Windows path with environment variables.
+      path (str): path with environment variables.
       path_separator (str): path segment separator.
       user_accounts (list[UserAccountArtifact]): user accounts.
 
@@ -120,7 +120,7 @@ class PathHelper(object):
       user_paths = []
       for user_account in user_accounts:
         user_path = user_account.user_directory
-        # Prevent concatting 2 path segment separators.
+        # Prevent concatenating 2 path segment separators.
         if user_path[-1] == path_separator and path[0] == path_separator:
           user_path = user_path[:-1]
 

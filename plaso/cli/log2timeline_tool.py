@@ -368,7 +368,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     Raises:
       BadConfigOption: if the storage file path is invalid or the storage
-          format not supported.
+          format not supported or an invalid filter was specified.
       SourceScannerError: if the source scanner could not find a supported
           file system.
       UserAbort: if the user initiated an abort.
@@ -428,10 +428,15 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._SetExtractionParsersAndPlugins(configuration, session)
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
-    filter_find_specs = engine.BaseEngine.BuildFilterFindSpecs(
-        self._artifact_definitions_path, self._custom_artifacts_path,
-        extraction_engine.knowledge_base, self._artifact_filters,
-        self._filter_file)
+    try:
+      filter_find_specs = engine.BaseEngine.BuildFilterFindSpecs(
+          self._artifact_definitions_path, self._custom_artifacts_path,
+          extraction_engine.knowledge_base, self._artifact_filters,
+          self._filter_file)
+    except errors.InvalidFilter as exception:
+      raise errors.BadConfigOption(
+          'Unable to build filter specification: {0!s}'.format(exception))
+
 
     processing_status = None
     if single_process_mode:

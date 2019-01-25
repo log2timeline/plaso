@@ -44,7 +44,6 @@ class ArtifactDefinitionsFilterHelper(object):
     self._artifacts = artifact_filters
     self._artifacts_registry = artifacts_registry
     self._knowledge_base = knowledge_base
-    self._find_specs_per_source_type = defaultdict(list)
 
   @staticmethod
   def CheckKeyCompatibility(key_path):
@@ -75,71 +74,109 @@ class ArtifactDefinitionsFilterHelper(object):
       environment_variables (Optional[list[EnvironmentVariableArtifact]]):
           environment variables.
     """
+    find_specs = []
     for name in self._artifacts:
       definition = self._artifacts_registry.GetDefinitionByName(name)
       if not definition:
         continue
 
-      for source in definition.sources:
-        if source.type_indicator == artifact_types.TYPE_INDICATOR_FILE:
-          # TODO: move source.paths iteration into
-          # BuildFindSpecsFromFileArtifact.
-          for path_entry in set(source.paths):
-            find_specs = self.BuildFindSpecsFromFileArtifact(
-                path_entry, source.separator, environment_variables,
-                self._knowledge_base.user_accounts)
-            artifact_group = self._find_specs_per_source_type[
-                artifact_types.TYPE_INDICATOR_FILE]
-            artifact_group.extend(find_specs)
+      find_specs.extend(self._BuildFindSpecsFromArtifact(
+          definition, environment_variables))
 
-        elif (source.type_indicator ==
-              artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY):
-          # TODO: move source.keys iteration into
-          # BuildFindSpecsFromRegistryArtifact.
-          for key_path in set(source.keys):
-            if self.CheckKeyCompatibility(key_path):
-              find_specs = self.BuildFindSpecsFromRegistryArtifact(key_path)
-              artifact_group = self._find_specs_per_source_type[
-                  artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY]
-              artifact_group.extend(find_specs)
+    find_specs_per_source_type = defaultdict(list)
+    for find_spec in find_specs:
+      if isinstance(find_spec, registry_searcher.FindSpec):
+        artifact_list = find_specs_per_source_type[
+            artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY]
+        artifact_list.append(find_spec)
+        continue
 
-        elif (source.type_indicator ==
-              artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_VALUE):
-          # TODO: Handle Registry Values Once Supported in dfwinreg.
-          # https://github.com/log2timeline/dfwinreg/issues/98
-          logger.warning((
-              'Windows Registry values are not supported, extracting key: '
-              '"{0!s}"').format(source.key_value_pairs))
-
-          # TODO: move source.key_value_pairs iteration into
-          # BuildFindSpecsFromRegistryArtifact.
-
-          # Use set-comprehension to create a set of the source key paths.
-          source_key_paths = {
-              key_value['key'] for key_value in source.key_value_pairs}
-          for key_path in source_key_paths:
-            if self.CheckKeyCompatibility(key_path):
-              find_specs = self.BuildFindSpecsFromRegistryArtifact(key_path)
-              artifact_group = self._find_specs_per_source_type[
-                  artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY]
-              artifact_group.extend(find_specs)
-
-        elif (source.type_indicator ==
-              artifact_types.TYPE_INDICATOR_ARTIFACT_GROUP):
-          self._artifacts.remove(name)
-          for name_entry in set(source.names):
-            self._artifacts.append(name_entry)
-          self.BuildFindSpecs(environment_variables=environment_variables)
-
-        else:
-          logger.warning(
-              'Unsupported artifact definition source type: "{0:s}"'.format(
-                  source.type_indicator))
+      if isinstance(find_spec, file_system_searcher.FindSpec):
+        artifact_list = find_specs_per_source_type[
+            artifact_types.TYPE_INDICATOR_FILE]
+        artifact_list.append(find_spec)
+        continue
+      logger.warning('Unknown find specification type: {0!s}'.format(find_spec))
 
     self._knowledge_base.SetValue(
-        self.KNOWLEDGE_BASE_VALUE, self._find_specs_per_source_type)
+        self.KNOWLEDGE_BASE_VALUE, find_specs_per_source_type)
 
-  def BuildFindSpecsFromFileArtifact(
+
+  def _BuildFindSpecsFromArtifact(self, definition, environment_variables):
+    """Builds find specifications from an artifact definition.
+
+    Args:
+      definition (artifacts.ArtifactDefinition): artifact definition.
+      environment_variables (list[EnvironmentVariableArtifact]):
+          environment variables.
+
+    Returns:
+      list[dfwinreg.FindSpec|dfvfs.FindSpec]: find specifications.
+    """
+    find_specs = []
+    for source in definition.sources:
+      if source.type_indicator == artifact_types.TYPE_INDICATOR_FILE:
+        for path_entry in set(source.paths):
+          specifications = self._BuildFindSpecsFromFileSource(
+              path_entry, source.separator, environment_variables,
+              self._knowledge_base.user_accounts)
+          find_specs.extend(specifications)
+
+      elif (source.type_indicator ==
+            artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY):
+        for key_path in set(source.keys):
+          if self.CheckKeyCompatibility(key_path):
+            specifications = self._BuildFindSpecsFromRegistrySource(key_path)
+            find_specs.extend(specifications)
+
+      elif (source.type_indicator ==
+            artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_VALUE):
+        # TODO: Handle Registry Values Once Supported in dfwinreg.
+        # https://github.com/log2timeline/dfwinreg/issues/98
+        logger.warning((
+            'Windows Registry values are not supported, extracting key: '
+            '"{0!s}"').format(source.key_value_pairs))
+
+        source_key_paths = {
+          key_value['key'] for key_value in source.key_value_pairs}
+        for key_path in source_key_paths:
+          if self.CheckKeyCompatibility(key_path):
+            specifications = self._BuildFindSpecsFromRegistrySource(key_path)
+            find_specs.extend(specifications)
+
+      elif (source.type_indicator ==
+            artifact_types.TYPE_INDICATOR_ARTIFACT_GROUP):
+        for name in source.names:
+          specifications = self._BuildFindSpecsFromGroupSource(
+              name, environment_variables)
+          find_specs.extend(specifications)
+
+      else:
+        logger.warning(
+            'Unsupported artifact definition source type: "{0:s}"'.format(
+                source.type_indicator))
+
+      return find_specs
+
+
+  def _BuildFindSpecsFromGroupSource(self, group_name, environment_variables):
+    """Builds find specifications from a artifact group source type.
+
+    Args:
+      group_name (str):
+      environment_variables (list[str]): environment variable attributes used to
+          dynamically populate environment variables in key.
+
+    Returns:
+      list[dfwinreg.FindSpec|dfvfs.FindSpec]: find specifications.
+    """
+    definition = self._artifacts_registry.GetDefinitionByName(group_name)
+    if not definition:
+      return None
+    return self._BuildFindSpecsFromArtifact(definition, environment_variables)
+
+
+  def _BuildFindSpecsFromFileSource(
       self, source_path, path_separator, environment_variables, user_accounts):
     """Builds find specifications from a file source type.
 
@@ -194,7 +231,7 @@ class ArtifactDefinitionsFilterHelper(object):
 
     return find_specs
 
-  def BuildFindSpecsFromRegistryArtifact(self, source_key_path):
+  def _BuildFindSpecsFromRegistrySource(self, source_key_path):
     """Build find specifications from a Windows Registry source type.
 
     Args:
