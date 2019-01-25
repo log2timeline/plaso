@@ -2,6 +2,8 @@ application_execution
   data_type is 'windows:prefetch:execution'
   data_type is 'windows:lnk:link' and filename contains 'Recent' and (local_path contains '.exe' or network_path contains '.exe' or relative_path contains '.exe')
   data_type == 'windows:registry:key_value' and parser =~ '.*mru' and regvalue =~ '.*\.[Ee]{1}[Xx]{1}[Ee]{1}'
+  data_type is 'windows:registry:key_value' and key_path contains '\\Search\\RecentApps\\'
+  data_type is 'windows:registry:key_value' and key_path contains '\\Services\\bam\\UserSettings\\'
   data_type is 'windows:registry:userassist' and parser contains 'userassist' and value_name contains '.exe'
   data_type is 'windows:evtx:record' and strings contains 'user mode service' and strings contains 'demand start'
   data_type is 'fs:stat' and filename contains 'Windows/Tasks/At'
@@ -9,6 +11,7 @@ application_execution
   data_type is 'windows:evt:record' and source_name is 'Security' and event_identifier is 592
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Security-Auditing' and event_identifier is 4688
   data_type is 'windows:registry:appcompatcache'
+  data_type is 'windows:registry:amcache'
 
 application_install
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Application-Experience' and event_identifier is 903
