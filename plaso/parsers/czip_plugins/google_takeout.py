@@ -769,26 +769,86 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       info (unicode): key
       timestamp (unicode): timestamp
 
+    Returns:
+      PosixTimeInMicroseconds: timestamp
     """
 
-    if info == 'status':
-      event_data.status = value[info]
-    elif info == 'quantity':
-      event_data.quantity = value[info]
-    elif info == 'unitPrice':
-      for el in value[info]:
+    def GetStatus(value):
+      """Gets and stores a value
+
+      Args:
+        value (unicode): value
+      """
+      event_data.status = value
+
+    def GetQuantity(value):
+      """Gets and stores a value
+
+      Args:
+        value (unicode): value
+      """
+      event_data.quantity = value
+
+    def GetUnitPrice(value):
+      """Gets and stores a value
+
+      Args:
+        value (unicode): value
+      """
+      for el in value:
         if el == 'displayString':
-          event_data.price = value[info][el]
-    elif info == 'productInfo':
-      event_data.product = value[info]['name']
-    elif info == 'landingPageUrl':
-      event_data.url = value[info]['link']
-    elif info == 'fulfillment':
-      self._GetInfoFulfillmentPurchase(event_data, value[info], timestamp)
-    elif info == 'flightLeg':
-      self._GetInfoAirportPurchase(event_data, value[info])
-    elif info == 'bookingTimestamp':
+          event_data.price = value[el]
+
+    def GetProductInfo(value):
+      """Gets and stores a value
+
+      Args:
+        value (unicode): value
+      """
+      event_data.product = value['name']
+
+    def GetLandingPageUrl(value):
+      """Gets and stores a value
+
+      Args:
+        value (unicode): value
+      """
+      event_data.url = value['link']
+
+    def GetFulfillment(value):
+      """Gets and stores a value using another method
+
+      Args:
+        value (unicode): value
+      """
+      self._GetInfoFulfillmentPurchase(event_data, value, timestamp)
+
+    def GetFlightLeg(value):
+      """Gets and stores a value using another method
+
+      Args:
+        value (unicode): value
+      """
+      self._GetInfoAirportPurchase(event_data, value)
+
+    keys = {
+        'status': GetStatus,
+        'quantity': GetQuantity,
+        'unitPrice': GetUnitPrice,
+        'productInfo': GetProductInfo,
+        'landingPageUrl': GetLandingPageUrl,
+        'fulfillment': GetFulfillment,
+        'flightLeg': GetFlightLeg
+    }
+
+    if info in keys:
+      getKey = keys[info]
+      getKey(value[info])
+
+    if info == 'bookingTimestamp':
       timestamp = self._GetTimestampPurchase(value[info]['usecSinceEpochUtc'])
+
+    return timestamp
 
   def _PurchasesParser(self, data, parser_mediator):
     """Parses Purchases file (JSON).
@@ -811,7 +871,7 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       elif key == 'lineItem':
         for element in data[key][0]:
           for info in data[key][0][element]:
-            self._GetPurchaseInfo(
+            timestamp = self._GetPurchaseInfo(
                 event_data, data[key][0][element], info, timestamp
             )
 
@@ -828,24 +888,83 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
           and other components, such as storage and dfvfs.
     """
 
+    event_data = GoogleMapsEventData()
+
+    def GetLatitude(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
+      event_data.latitude = value / 1e7
+
+    def GetLongitude(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
+      event_data.longitude = value / 1e7
+
+    def GetVelocity(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
+      event_data.velocity = value
+
+    def GetHeading(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
+      event_data.heading = value
+
+    def GetAltitude(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
+      event_data.altitude = value
+
+    def GetAccuracy(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
+      event_data.accuracy = value
+
+    def GetVerticalAccuracy(value):
+      """Gets and stores a value
+
+      Args:
+        value (str): value
+      """
+      event_data.vertical_accuracy = value
+
     for location in data["locations"]:
       date_time = dfdatetime_posix_time.PosixTimeInMilliseconds(
           timestamp=location["timestampMs"]
       )
-      event_data = GoogleMapsEventData()
 
-      if ('latitudeE7' in location) and ('longitudeE7' in location):
-        event_data.latitude = location['latitudeE7'] / 1e7
-        event_data.longitude = location['longitudeE7'] / 1e7
-        event_data.accuracy = location['accuracy']
-        if 'velocity' in location:
-          event_data.velocity = location['velocity']
-        if 'heading' in location:
-          event_data.heading = location['heading']
-        if 'altitude' in location:
-          event_data.altitude = location['altitude']
-        if 'verticalAccuracy' in location:
-          event_data.vertical_accuracy = location['verticalAccuracy']
+      keys = {
+          'latitudeE7': GetLatitude,
+          'longitudeE7': GetLongitude,
+          'velocity': GetVelocity,
+          'heading': GetHeading,
+          'altitude': GetAltitude,
+          'accuracy': GetAccuracy,
+          'verticalAccuracy': GetVerticalAccuracy
+      }
+
+      for key in location:
+        if key in keys:
+          getKey = keys[key]
+          getKey(location[key])
 
       if 'activity' in location:
         activity_str = ""
@@ -1030,25 +1149,28 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
 
   def _GetDefinitionEvent(self, event, event_data, users):
     definition = ''
-    if event['event_type'] == 'ADD_USER':
-      definition = definitions.TIME_USER_ADDED
-    elif event['event_type'] == 'REMOVE_USER':
-      definition = definitions.TIME_USER_REMOVED
-    elif event['event_type'] == 'REGULAR_CHAT_MESSAGE':
-      definition = definitions.TIME_MESSAGE_SENT
-    elif event['event_type'] == 'RENAME_CONVERSATION':
-      definition = definitions.TIME_CONVERSATION_RENAMED
-    elif event['event_type'] == 'HANGOUT_EVENT':
+
+    keys = {
+        'ADD_USER': 'TIME_USER_ADDED',
+        'REMOVE_USER': 'TIME_USER_REMOVED',
+        'REGULAR_CHAT_MESSAGE': 'TIME_MESSAGE_SENT',
+        'RENAME_CONVERSATION': 'TIME_CONVERSATION_RENAMED',
+        'START_HANGOUT': 'Start Video Call',
+        'END_HANGOUT': 'End Video Call'
+    }
+
+    if event['event_type'] in keys:
+      definition = keys[event['event_type']]
+
+    if event['event_type'] == 'HANGOUT_EVENT':
       if 'hangout_event' in event:
         participants = ''
         for participant in event['hangout_event']['participant_id']:
           participants = str(users.get(participant['gaia_id'])) \
           + ' (ID: ' + participant['gaia_id'] + '), ' + participants
         event_data.participant = participants[:-2]
-        if event['hangout_event']['event_type'] == 'START_HANGOUT':
-          definition = definitions.TIME_START_VIDEO_CALL
-        if event['hangout_event']['event_type'] == 'END_HANGOUT':
-          definition = definitions.TIME_END_VIDEO_CALL
+        if event['hangout_event']['event_type'] in keys:
+          definition = event['hangout_event']['event_type']
     return definition
 
   def _HangoutsParser(self, data, parser_mediator):
@@ -1115,7 +1237,7 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
               )
             event_invite_ts_conversation = time_events.DateTimeValuesEvent(
                 invite_conversation_timestamp,
-                definitions.TIME_INVITATION_CONVERSATION
+                'Invitation Conversation'
             )
           if 'sort_timestamp' in self_conversation_state:
             sort_conversation_timestamp = \
@@ -1124,7 +1246,7 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
               )
             event_sort_ts_conversation = time_events.DateTimeValuesEvent(
                 sort_conversation_timestamp,
-                definitions.TIME_SORTING_CONVERSATION
+                'Sorting Conversation'
             )
           if 'active_timestamp' in self_conversation_state:
             active_conversation_timestamp = \
@@ -1133,7 +1255,7 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
               )
             event_active_ts_conversation = time_events.DateTimeValuesEvent(
                 active_conversation_timestamp,
-                definitions.TIME_ACTIVATION_CONVERSATION
+                'Activation Conversation'
             )
           latest_read_conversation = time_events.DateTimeValuesEvent(
               latest_read_conversation_timestamp, definitions.TIME_LATEST_READ
