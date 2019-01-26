@@ -22,7 +22,7 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
     """Tests the Parse function on a MacOS BSM file."""
     parser = bsm.BSMParser()
     knowledge_base_values = {
-        'operating_system': definitions.OPERATING_SYSTEM_MACOS}
+        'operating_system': definitions.OPERATING_SYSTEM_FAMILY_MACOS}
     storage_writer = self._ParseFile(
         ['apple.bsm'], parser,
         knowledge_base_values=knowledge_base_values)
@@ -177,7 +177,7 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
     """Tests the Parse function on a "generic" BSM file."""
     parser = bsm.BSMParser()
     knowledge_base_values = {
-        'operating_system': definitions.OPERATING_SYSTEM_LINUX}
+        'operating_system': definitions.OPERATING_SYSTEM_FAMILY_LINUX}
     storage_writer = self._ParseFile(
         ['openbsm.bsm'], parser, knowledge_base_values=knowledge_base_values)
 

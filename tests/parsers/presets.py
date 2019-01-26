@@ -89,7 +89,7 @@ class ParserPresetsManagerTest(shared_test_lib.BaseTestCase):
     test_path = self._GetTestFilePath(['presets.yaml'])
     test_manager.ReadFromFile(test_path)
 
-    operating_system = artifacts.OperatingSystemArtifact(name='MacOS')
+    operating_system = artifacts.OperatingSystemArtifact(family='MacOS')
 
     test_presets = test_manager.GetPresetsByOperatingSystem(operating_system)
     self.assertEqual(len(test_presets), 1)
@@ -126,7 +126,7 @@ class ParserPresetsManagerTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(test_presets[0].parsers, expected_parsers)
 
-    operating_system = artifacts.OperatingSystemArtifact(name='bogus')
+    operating_system = artifacts.OperatingSystemArtifact(family='bogus')
 
     test_presets = test_manager.GetPresetsByOperatingSystem(operating_system)
     self.assertEqual(len(test_presets), 0)

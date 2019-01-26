@@ -18,7 +18,7 @@ parsers:
 name: linux
 description: Preset for Linux.
 operating_systems:
-- {name: Linux}
+- {family: Linux}
 parsers:
 - bash_history
 - bencode
@@ -46,7 +46,7 @@ parsers:
 name: macos
 description: Preset for MacOS.
 operating_systems:
-- {name: MacOS}
+- {family: MacOS}
 parsers:
 - asl_log
 - bash_history
@@ -127,7 +127,7 @@ parsers:
 name: win7
 description: Preset for generic Windows, intended for Windows Vista and later.
 operating_systems:
-- {name: Windows NT}
+- {family: Windows NT}
 parsers:
 - amcache
 - custom_destinations

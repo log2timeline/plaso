@@ -41,12 +41,7 @@ class HostnameArtifactTest(shared_test_lib.BaseTestCase):
 class OperatingSystemArtifactTest(shared_test_lib.BaseTestCase):
   """Tests for the operating system artifact."""
 
-  def testNormalizedProduct(self):
-    """Tests the normalized_product property."""
-    attribute_container = artifacts.OperatingSystemArtifact(
-        product='Windows Server 2012 R2 Standard')
-
-    self.assertEqual(attribute_container.normalized_product, 'Windows 2012')
+  # pylint: disable=protected-access
 
   def testVersionTuple(self):
     """Tests the version_tuplele property."""
@@ -59,6 +54,20 @@ class OperatingSystemArtifactTest(shared_test_lib.BaseTestCase):
     attribute_container = artifacts.OperatingSystemArtifact(version="5.a")
     self.assertIsNone(attribute_container.version_tuple)
 
+  def testGetNameFromProduct(self):
+    """Tests the _GetNameFromProduct function."""
+    attribute_container = artifacts.OperatingSystemArtifact(
+        product='Windows Server 2012 R2 Standard')
+
+    name = attribute_container._GetNameFromProduct()
+    self.assertEqual(name, 'Windows 2012 R2')
+
+    attribute_container = artifacts.OperatingSystemArtifact(
+        product='Microsoft Windows Server 2003')
+
+    name = attribute_container._GetNameFromProduct()
+    self.assertEqual(name, 'Windows 2003')
+
   def testIsEquivalent(self):
     """Tests the IsEquivalent function."""
     win2k12_container = artifacts.OperatingSystemArtifact(
@@ -69,23 +78,23 @@ class OperatingSystemArtifactTest(shared_test_lib.BaseTestCase):
     self.assertFalse(winxp_container.IsEquivalent(win2k12_container))
 
     winnt62_container = artifacts.OperatingSystemArtifact(
-        name=definitions.OPERATING_SYSTEM_WINDOWS_NT, version='6.2')
+        family=definitions.OPERATING_SYSTEM_FAMILY_WINDOWS_NT, version='6.2')
     winnt51_container = artifacts.OperatingSystemArtifact(
-        name=definitions.OPERATING_SYSTEM_WINDOWS_NT, version='5.1')
+        family=definitions.OPERATING_SYSTEM_FAMILY_WINDOWS_NT, version='5.1')
 
     self.assertFalse(winnt62_container.IsEquivalent(winnt51_container))
     self.assertFalse(winnt51_container.IsEquivalent(winnt62_container))
 
     win9x_container = artifacts.OperatingSystemArtifact(
-        name=definitions.OPERATING_SYSTEM_WINDOWS_9x)
+        family=definitions.OPERATING_SYSTEM_FAMILY_WINDOWS_9x)
     winnt_container = artifacts.OperatingSystemArtifact(
-        name=definitions.OPERATING_SYSTEM_WINDOWS_NT)
+        family=definitions.OPERATING_SYSTEM_FAMILY_WINDOWS_NT)
 
     self.assertFalse(win9x_container.IsEquivalent(winnt_container))
     self.assertFalse(winnt_container.IsEquivalent(win9x_container))
 
     winnt51_container = artifacts.OperatingSystemArtifact(
-        name=definitions.OPERATING_SYSTEM_WINDOWS_NT, version='5.1')
+        family=definitions.OPERATING_SYSTEM_FAMILY_WINDOWS_NT, version='5.1')
     winxp_container = artifacts.OperatingSystemArtifact(product='Windows XP')
 
     self.assertTrue(winnt51_container.IsEquivalent(winxp_container))
@@ -95,7 +104,7 @@ class OperatingSystemArtifactTest(shared_test_lib.BaseTestCase):
     """Tests the GetAttributeNames function."""
     attribute_container = artifacts.OperatingSystemArtifact()
 
-    expected_attribute_names = ['name', 'product', 'version']
+    expected_attribute_names = ['family', 'name', 'product', 'version']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
     self.assertEqual(attribute_names, expected_attribute_names)

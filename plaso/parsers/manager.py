@@ -413,7 +413,7 @@ class ParsersManager(object):
 
     Args:
       operating_system (str): operating system for example "Windows". This
-          should be one of the values in definitions.OPERATING_SYSTEMS.
+          should be one of the values in definitions.OPERATING_SYSTEM_FAMILIES.
       operating_system_product (str): operating system product for
           example "Windows XP" as determined by preprocessing.
       operating_system_version (str): operating system version for
@@ -424,7 +424,7 @@ class ParsersManager(object):
           represents all parsers and parser plugins (no preset).
     """
     operating_system = artifacts.OperatingSystemArtifact(
-        name=operating_system, product=operating_system_product,
+        family=operating_system, product=operating_system_product,
         version=operating_system_version)
 
     return cls._presets.GetPresetsByOperatingSystem(operating_system)

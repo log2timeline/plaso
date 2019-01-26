@@ -57,16 +57,16 @@ class ParserPresetsManager(object):
     if not operating_system_values:
       raise errors.MalformedPresetError('Missing operating system values.')
 
-    name = operating_system_values.get('name', None)
+    family = operating_system_values.get('family', None)
     product = operating_system_values.get('product', None)
     version = operating_system_values.get('version', None)
 
-    if not name and not product:
+    if not family and not product:
       raise errors.MalformedPresetError(
-          'Invalid operating system missing name and product.')
+          'Invalid operating system missing family and product.')
 
     return artifacts.OperatingSystemArtifact(
-        name=name, product=product, version=version)
+        family=family, product=product, version=version)
 
   def _ReadParserPresetValues(self, preset_definition_values):
     """Reads a parser preset from a dictionary.
