@@ -172,18 +172,6 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     expected_result = hpy is not None
     result = test_engine.SupportsGuppyMemoryProfiling()
     self.assertEqual(result, expected_result)
-  #
-  #
-  # @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
-  # def testBuildFilterFindSpecs(self):
-  #   """Tests the BuildFilterFindSpecs function."""
-  #   artifact_definitions_path = None
-  #   custom_artifacts_path = None
-  #   knowledge_base_object = knowledge_base_engine.KnowledgeBase()
-  #   artifact_filter_names = None
-  #   filter_file_path = None
-  #
-  #   filter_specifications =
 
 
 if __name__ == '__main__':
