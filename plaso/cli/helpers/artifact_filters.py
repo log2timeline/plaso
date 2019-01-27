@@ -31,7 +31,7 @@ class ArtifactFiltersArgumentsHelper(interface.ArgumentsHelper):
     argument_group.add_argument(
         '--artifact_filters', '--artifact-filters',
         dest='artifact_filter_string', type=str, default=None,
-        action='store', help=(
+        metavar='ARTIFACT_FILTERS', action='store', help=(
             'Names of forensic artifact definitions, provided on the command '
             'command line (comma separated). Forensic artifacts are stored '
             'in .yaml files that are directly pulled from the artifact '
