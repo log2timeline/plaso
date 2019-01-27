@@ -139,7 +139,7 @@ class ArtifactDefinitionsFilterHelper(object):
             '"{0!s}"').format(source.key_value_pairs))
 
         source_key_paths = {
-          key_value['key'] for key_value in source.key_value_pairs}
+            key_value['key'] for key_value in source.key_value_pairs}
         for key_path in source_key_paths:
           if self.CheckKeyCompatibility(key_path):
             specifications = self._BuildFindSpecsFromRegistrySource(key_path)
