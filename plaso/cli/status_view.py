@@ -322,8 +322,9 @@ class StatusView(object):
         'Source type\t: {0:s}\n'.format(self._source_type))
 
     if self._artifact_filters:
+      artifacts_string = ', '.join(self._artifact_filters)
       self._output_writer.Write('Artifact filters\t: {0!s}\n'.format(
-          self._artifact_filters))
+          artifacts_string))
     if self._filter_file:
       self._output_writer.Write('Filter file\t: {0:s}\n'.format(
           self._filter_file))
@@ -413,8 +414,8 @@ class StatusView(object):
     Args:
       source_path (str): path of the source.
       source_type (str): source type.
-      artifact_filters (Optional[str]): names of artifact definitions to use as
-          filters.
+      artifact_filters (Optional[list[str]]): names of artifact definitions to
+          use as filters.
       filter_file (Optional[str]): filter file.
     """
     self._artifact_filters = artifact_filters

@@ -308,7 +308,7 @@ class BaseEngine(object):
       list[dfvfs.FindSpec]: find specifications for the file source type.
 
     Raises:
-      RuntimeError: if no valid FindSpecs are built.
+      InvalidFilter: if no valid FindSpecs are built.
     """
     environment_variables = knowledge_base_object.GetEnvironmentVariables()
     find_specs = None

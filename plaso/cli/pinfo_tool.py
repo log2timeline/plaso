@@ -358,7 +358,7 @@ class PinfoTool(
       # bytes.
       if isinstance(preferred_encoding, py2to3.BYTES_TYPE):
         preferred_encoding = preferred_encoding.decode('utf-8')
-      artifact_filters = session.artifact_filters or 'N/A'
+      artifact_filters = session.artifact_filters or ['N/A']
       filter_file = session.filter_file or 'N/A'
 
       title = 'Session: {0!s}'.format(session_identifier)

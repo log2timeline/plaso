@@ -96,7 +96,8 @@ class ArtifactDefinitionsFilterHelper(object):
             artifact_types.TYPE_INDICATOR_FILE]
         artifact_list.append(find_spec)
         continue
-      logger.warning('Unknown find specification type: {0!s}'.format(find_spec))
+      logger.warning('Unknown find specification type: {0:s}'.format(
+          type(find_spec)))
 
     self._knowledge_base.SetValue(
         self.KNOWLEDGE_BASE_VALUE, find_specs_per_source_type)
@@ -158,17 +159,18 @@ class ArtifactDefinitionsFilterHelper(object):
 
       return find_specs
 
-
   def _BuildFindSpecsFromGroupSource(self, group_name, environment_variables):
     """Builds find specifications from a artifact group source type.
 
     Args:
-      group_name (str):
+      group_name (str): artifact group name.
       environment_variables (list[str]): environment variable attributes used to
-          dynamically populate environment variables in key.
+          dynamically populate environment variables in file and registry
+          artifacts.
 
     Returns:
-      list[dfwinreg.FindSpec|dfvfs.FindSpec]: find specifications.
+      list[dfwinreg.FindSpec|dfvfs.FindSpec]: find specifications or None if no
+          artifact with the given name can be retrieved.
     """
     definition = self._artifacts_registry.GetDefinitionByName(group_name)
     if not definition:

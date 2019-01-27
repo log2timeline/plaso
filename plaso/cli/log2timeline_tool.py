@@ -437,7 +437,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       raise errors.BadConfigOption(
           'Unable to build filter specification: {0!s}'.format(exception))
 
-
     processing_status = None
     if single_process_mode:
       logger.debug('Starting extraction in single process mode.')

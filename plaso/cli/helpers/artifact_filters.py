@@ -30,7 +30,7 @@ class ArtifactFiltersArgumentsHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         '--artifact_filters', '--artifact-filters',
-        dest='artifact_filters', type=str, default=None,
+        dest='artifact_filter_string', type=str, default=None,
         action='store', help=(
             'Names of forensic artifact definitions, provided on the command '
             'command line (comma separated). Forensic artifacts are stored '
@@ -69,7 +69,7 @@ class ArtifactFiltersArgumentsHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           'Configuration object is not an instance of CLITool')
 
-    artifact_filters = cls._ParseStringOption(options, 'artifact_filters')
+    artifact_filters = cls._ParseStringOption(options, 'artifact_filter_string')
     artifact_filters_file = cls._ParseStringOption(
         options, 'artifact_filters_file')
     filter_file = cls._ParseStringOption(options, 'file_filter')
