@@ -103,8 +103,9 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
       result, _ = formatters_manager.FormattersManager.GetMessageStrings(
           formatter_mediator, event_object)
     except KeyError as exception:
-      logging.warning('Unable to correctly assemble event with error: {0!s}'.format(
-          exception))
+      logging.warning(
+          'Unable to correctly assemble event with error: {0!s}'.format(
+              exception))
 
     return result
 
@@ -118,8 +119,9 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
       source_short, source_long = (
           formatters_manager.FormattersManager.GetSourceStrings(event_object))
     except KeyError as exception:
-      logging.warning('Unable to correctly assemble event with error: {0!s}'.format(
-          exception))
+      logging.warning(
+          'Unable to correctly assemble event with error: {0!s}'.format(
+              exception))
 
     return source_short, source_long
 
