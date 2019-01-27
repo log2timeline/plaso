@@ -48,7 +48,7 @@ class _EventSourceHeap(object):
       EventSource: event source or None on error.
     """
     try:
-      _, event_source = heapq.heappop(self._heap)
+      _, _, event_source = heapq.heappop(self._heap)
 
     except IndexError:
       return None
@@ -71,7 +71,7 @@ class _EventSourceHeap(object):
     else:
       weight = 100
 
-    heap_values = (weight, event_source)
+    heap_values = (weight, time.time(), event_source)
     heapq.heappush(self._heap, heap_values)
 
     if len(self._heap) >= self._maximum_number_of_items:
