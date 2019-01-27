@@ -377,7 +377,7 @@ class ProcessLink(transforms.Transform):
     """
     if isinstance(node, nodes.reference) and 'refuri' in node:
       reference_uri = node['refuri']
-      if reference_uri.endswith('.md'):
+      if reference_uri.endswith('.md') and not reference_uri.startswith('http'):
         reference_uri = reference_uri[:-3] + '.html'
         node['refuri'] = reference_uri
       else:
