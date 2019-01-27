@@ -361,7 +361,7 @@ class PinfoTool(
       if session.artifact_filters:
         artifact_filters_string = ', '.join(session.artifact_filters)
       else:
-        artifact_filters_string = 'N/a'
+        artifact_filters_string = 'N/A'
       filter_file = session.filter_file or 'N/A'
 
       title = 'Session: {0!s}'.format(session_identifier)
