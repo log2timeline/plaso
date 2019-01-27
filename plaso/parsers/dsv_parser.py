@@ -152,10 +152,7 @@ class DSVParser(interface.FileObjectParser):
           file_object, end_of_line=self._end_of_line)
     # If we specifically define a number of lines we should skip, do that here.
     for _ in range(0, self.NUMBER_OF_HEADER_LINES):
-      try:
-        line_reader.readline(self._maximum_line_length)
-      except UnicodeDecodeError:
-        raise
+      line_reader.readline(self._maximum_line_length)
     return line_reader
 
   def _HasExpectedLineLength(self, file_object):

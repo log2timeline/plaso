@@ -149,6 +149,7 @@ class SQLite4n6TimeOutputModule(shared_4n6time.Shared4n6TimeOutputModule):
 
     Raises:
       IOError: if the specified output file already exists.
+      OSError: if the specified output file already exists.
       ValueError: if the filename is not set.
     """
     if not self._filename:

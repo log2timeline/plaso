@@ -285,11 +285,12 @@ class StatusView(object):
     """Retrieves the analysis status update callback function.
 
     Returns:
-      function: status update callback function or None.
+      function: status update callback function or None if not available.
     """
     if self._mode == self.MODE_LINEAR:
       return self._PrintAnalysisStatusUpdateLinear
-    elif self._mode == self.MODE_WINDOW:
+
+    if self._mode == self.MODE_WINDOW:
       return self._PrintAnalysisStatusUpdateWindow
 
     return None
@@ -298,11 +299,12 @@ class StatusView(object):
     """Retrieves the extraction status update callback function.
 
     Returns:
-      function: status update callback function or None.
+      function: status update callback function or None if not available.
     """
     if self._mode == self.MODE_LINEAR:
       return self._PrintExtractionStatusUpdateLinear
-    elif self._mode == self.MODE_WINDOW:
+
+    if self._mode == self.MODE_WINDOW:
       return self._PrintExtractionStatusUpdateWindow
 
     return None

@@ -193,13 +193,13 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     if class_type == 'bytes':
       return binascii.a2b_qp(json_dict['stream'])
 
-    elif class_type == 'tuple':
+    if class_type == 'tuple':
       return tuple(cls._ConvertListToObject(json_dict['values']))
 
-    elif class_type == 'collections.Counter':
+    if class_type == 'collections.Counter':
       return cls._ConvertDictToCollectionsCounter(json_dict)
 
-    elif class_type == 'AttributeContainer':
+    if class_type == 'AttributeContainer':
       # Use __container_type__ to indicate the attribute container type.
       container_type = json_dict.get('__container_type__', None)
 

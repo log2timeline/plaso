@@ -69,6 +69,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     if not self._is_open:
       raise IOError('Unable to write to closed storage writer.')
@@ -100,6 +101,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -115,6 +117,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -131,6 +134,8 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed or
+          if the event data identifier type is not supported.
+      OSError: when the storage writer is closed or
           if the event data identifier type is not supported.
     """
     self._RaiseIfNotWritable()
@@ -156,6 +161,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -173,6 +179,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -189,6 +196,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -213,6 +221,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the task storage already exists.
+      OSError: if the task storage already exists.
     """
     if task.identifier in self._task_storage_writers:
       raise IOError('Storage writer for task: {0:s} already exists.'.format(
@@ -228,6 +237,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -299,6 +309,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     if not self._is_open:
       raise IOError('Unable to read from closed storage writer.')
@@ -319,6 +330,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     if not self._is_open:
       raise IOError('Unable to read from closed storage writer.')
@@ -342,6 +354,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
     """
     if not self._is_open:
       raise IOError('Unable to read from closed storage writer.')
@@ -371,6 +384,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the task storage does not exist.
+      OSError: if the task storage does not exist.
     """
     if task.identifier not in self._task_storage_writers:
       raise IOError('Storage writer for task: {0:s} does not exist.'.format(
@@ -381,6 +395,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the storage writer is already opened.
+      OSError: if the storage writer is already opened.
     """
     if self._is_open:
       raise IOError('Storage writer already opened.')
@@ -398,6 +413,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the task storage does not exist.
+      OSError: if the task storage does not exist.
     """
     if task.identifier not in self._task_storage_writers:
       raise IOError('Storage writer for task: {0:s} does not exist.'.format(
@@ -418,6 +434,8 @@ class FakeStorageWriter(interface.StorageWriter):
     Raises:
       IOError: if the storage type does not support writing preprocessing
           information or when the storage writer is closed.
+      OSError: if the storage type does not support writing preprocessing
+          information or when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -434,6 +452,7 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the task storage does not exist.
+      OSError: if the task storage does not exist.
     """
     if task.identifier not in self._task_storage_writers:
       raise IOError('Storage writer for task: {0:s} does not exist.'.format(
@@ -468,6 +487,8 @@ class FakeStorageWriter(interface.StorageWriter):
     Raises:
       IOError: if the storage type does not support writing preprocessing
           information or when the storage writer is closed.
+      OSError: if the storage type does not support writing preprocessing
+          information or when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -485,6 +506,8 @@ class FakeStorageWriter(interface.StorageWriter):
     Raises:
       IOError: if the storage type does not support writing a session
           completion or when the storage writer is closed.
+      OSError: if the storage type does not support writing a session
+          completion or when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -499,6 +522,8 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the storage type does not support writing a session
+          start or when the storage writer is closed.
+      OSError: if the storage type does not support writing a session
           start or when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
@@ -517,6 +542,8 @@ class FakeStorageWriter(interface.StorageWriter):
     Raises:
       IOError: if the storage type does not support writing a task
           completion or when the storage writer is closed.
+      OSError: if the storage type does not support writing a task
+          completion or when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
 
@@ -531,6 +558,8 @@ class FakeStorageWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the storage type does not support writing a task
+          start or when the storage writer is closed.
+      OSError: if the storage type does not support writing a task
           start or when the storage writer is closed.
     """
     self._RaiseIfNotWritable()

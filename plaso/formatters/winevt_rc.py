@@ -202,7 +202,7 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     if number_of_values == 0:
       return None
 
-    elif number_of_values == 1:
+    if number_of_values == 1:
       values = values_list[0]
       return values['event_log_provider_key']
 
@@ -238,7 +238,7 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     if number_of_values == 0:
       return None
 
-    elif number_of_values == 1:
+    if number_of_values == 1:
       return values[0]['message_string']
 
     raise RuntimeError('More than one value found in database.')
@@ -355,7 +355,7 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     if number_of_values == 0:
       return None
 
-    elif number_of_values == 1:
+    if number_of_values == 1:
       return values[0]['value']
 
     raise RuntimeError('More than one value found in database.')

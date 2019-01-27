@@ -212,6 +212,7 @@ class SQLiteDatabase(object):
 
     Raises:
       IOError: if the file-like object cannot be read.
+      OSError: if the file-like object cannot be read.
       sqlite3.DatabaseError: if the database cannot be parsed.
       ValueError: if the file-like object is missing.
     """

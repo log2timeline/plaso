@@ -17,7 +17,7 @@ from plaso.output import dynamic
 from plaso.output import interface
 from plaso.output import manager
 
-import pytz
+import pytz  # pylint: disable=wrong-import-order
 
 
 class XLSXOutputModule(interface.OutputModule):
@@ -111,6 +111,7 @@ class XLSXOutputModule(interface.OutputModule):
 
     Raises:
       IOError: if the specified output file already exists.
+      OSError: if the specified output file already exists.
       ValueError: if the filename is not set.
     """
     if not self._filename:

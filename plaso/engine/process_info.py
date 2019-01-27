@@ -17,6 +17,7 @@ class ProcessInfo(object):
 
     Raises:
       IOError: If the process identified by the PID does not exist.
+      OSError: If the process identified by the PID does not exist.
     """
     if not psutil.pid_exists(pid):
       raise IOError('Process with PID: {0:d} does not exist'.format(pid))

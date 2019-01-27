@@ -16,7 +16,7 @@ from plaso.cli import image_export_tool
 from plaso.lib import errors
 
 from tests import test_lib as shared_test_lib
-from tests.cli import test_lib as test_lib
+from tests.cli import test_lib
 
 
 class ImageExportToolTest(test_lib.CLIToolTestCase):

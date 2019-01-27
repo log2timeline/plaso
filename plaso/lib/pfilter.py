@@ -194,16 +194,16 @@ class PlasoExpression(objectfilter.BasicExpression):
     # timestamps in a "human readable" format.
     if self.attribute == 'timestamp':
       args = []
-      for arg in self.args:
-        args.append(DateCompareObject(arg))
+      for argument in self.args:
+        args.append(DateCompareObject(argument))
       self.args = args
 
-    for arg in self.args:
-      if isinstance(arg, DateCompareObject):
+    for argument in self.args:
+      if isinstance(argument, DateCompareObject):
         if 'Less' in str(operator):
-          TimeRangeCache.SetUpperTimestamp(arg.data)
+          TimeRangeCache.SetUpperTimestamp(argument.data)
         else:
-          TimeRangeCache.SetLowerTimestamp(arg.data)
+          TimeRangeCache.SetLowerTimestamp(argument.data)
     arguments.extend(self.args)
     expander = filter_implementation.FILTERS['ValueExpander']
     ops = operator(arguments=arguments, value_expander=expander)

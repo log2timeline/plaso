@@ -119,9 +119,7 @@ class WindowsRegistryKeyPathFilter(BaseWindowsRegistryKeyFilter):
           # TODO: check if control_set is in bounds.
           return control_set is not None
 
-    return (
-        key_path == self._key_path_upper or
-        key_path == self._wow64_key_path_upper)
+    return key_path in (self._key_path_upper, self._wow64_key_path_upper)
 
 
 class WindowsRegistryKeyPathPrefixFilter(BaseWindowsRegistryKeyFilter):

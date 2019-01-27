@@ -150,18 +150,21 @@ class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     response_code = hash_information['response_code']
     if response_code == self._VIRUSTOTAL_NOT_PRESENT_RESPONSE_CODE:
       return ['virustotal_not_present']
-    elif response_code == self._VIRUSTOTAL_PRESENT_RESPONSE_CODE:
+
+    if response_code == self._VIRUSTOTAL_PRESENT_RESPONSE_CODE:
       positives = hash_information['positives']
       if positives > 0:
         return ['virustotal_detections_{0:d}'.format(positives)]
+
       return ['virsutotal_no_detections']
-    elif response_code == self._VIRUSTOTAL_ANALYSIS_PENDING_RESPONSE_CODE:
+
+    if response_code == self._VIRUSTOTAL_ANALYSIS_PENDING_RESPONSE_CODE:
       return ['virustotal_analysis_pending']
-    else:
-      logger.error(
-          'VirusTotal returned unknown response code {0!s}'.format(
-              response_code))
-      return ['virustotal_unknown_response_code_{0:d}'.format(response_code)]
+
+    logger.error(
+        'VirusTotal returned unknown response code {0!s}'.format(
+            response_code))
+    return ['virustotal_unknown_response_code_{0:d}'.format(response_code)]
 
   def SetAPIKey(self, api_key):
     """Sets the VirusTotal API key to use in queries.

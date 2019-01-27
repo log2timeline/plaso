@@ -161,8 +161,11 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Shared4n6TimeOutputModule):
     """Connects to the database and creates the required tables.
 
     Raises:
-      IOError: If Unable to insert into database.
-      ValueError: If no database name given.
+      IOError: if the 4n6time tables cannot be created or data not inserted
+          in the database.
+      OSError: if the 4n6time tables cannot be created or data not inserted
+          in the database.
+      ValueError: if no database name given.
     """
     if not self._dbname:
       raise ValueError('Missing database name.')
