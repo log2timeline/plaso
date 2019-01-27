@@ -62,10 +62,10 @@ class OLECFPropertySetStream(object):
     if property_value.type == pyolecf.value_types.BOOLEAN:
       return property_value.data_as_boolean
 
-    elif property_value.type in self._INTEGER_TYPES:
+    if property_value.type in self._INTEGER_TYPES:
       return property_value.data_as_integer
 
-    elif property_value.type in self._STRING_TYPES:
+    if property_value.type in self._STRING_TYPES:
       return property_value.data_as_string
 
     try:

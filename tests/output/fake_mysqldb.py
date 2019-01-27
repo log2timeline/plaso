@@ -94,7 +94,7 @@ class FakeMySQLdbCursor(object):
     """
     if (not self.query_results or self._result_index < 0 or
         self._result_index >= len(self.query_results)):
-      return
+      return None
 
     row = self.query_results[self._result_index]
     self._result_index += 1

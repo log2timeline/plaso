@@ -36,7 +36,7 @@ from plaso.lib import timelib
 from plaso.multi_processing import psort
 from plaso.storage import factory as storage_factory
 
-import pytz
+import pytz  # pylint: disable=wrong-import-order
 
 
 class PsortTool(
@@ -162,15 +162,17 @@ class PsortTool(
     """
     # Get a list of all available plugins.
     analysis_plugin_info = self._analysis_manager.GetAllPluginInformation()
-    analysis_plugin_names = set([
-        name.lower() for name, _, _ in analysis_plugin_info])
+    # Use set-comprehension to create a set of the analysis plugin names.
+    analysis_plugin_names = {
+        name.lower() for name, _, _ in analysis_plugin_info}
 
     analysis_plugins = self.ParseStringOption(options, 'analysis_plugins')
     if not analysis_plugins:
       return
 
-    requested_plugin_names = set([
-        name.strip().lower() for name in analysis_plugins.split(',')])
+    # Use set-comprehension to create a set of the requested plugin names.
+    requested_plugin_names = {
+        name.strip().lower() for name in analysis_plugins.split(',')}
 
     # Check to see if we are trying to load plugins that do not exist.
     difference = requested_plugin_names.difference(analysis_plugin_names)

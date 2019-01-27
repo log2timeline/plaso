@@ -263,9 +263,8 @@ class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
       event (EventObject): event to examine.
     """
     # TODO: Handle event log entries here also (ie, event id 4697).
-    if getattr(event, 'data_type', None) != 'windows:registry:service':
-      return
-    else:
+    event_data_type = getattr(event, 'data_type', '')
+    if event_data_type == 'windows:registry:service':
       # Create and store the service.
       service = WindowsService.FromEvent(event)
       self._service_collection.AddService(service)

@@ -108,7 +108,7 @@ class ChromeContentSettingsExceptionsFormatter(
     if primary_url == '':
       subject = 'local file'
 
-    elif primary_url == secondary_url or secondary_url == '*':
+    elif secondary_url in (primary_url, '*'):
       subject = primary_url
 
     elif secondary_url == '':

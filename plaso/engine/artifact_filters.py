@@ -113,8 +113,11 @@ class ArtifactDefinitionsFilterHelper(object):
 
           # TODO: move source.key_value_pairs iteration into
           # BuildFindSpecsFromRegistryArtifact.
-          for key_path in set([
-              key_value['key'] for key_value in source.key_value_pairs]):
+
+          # Use set-comprehension to create a set of the source key paths.
+          source_key_paths = {
+              key_value['key'] for key_value in source.key_value_pairs}
+          for key_path in source_key_paths:
             if self.CheckKeyCompatibility(key_path):
               find_specs = self.BuildFindSpecsFromRegistryArtifact(key_path)
               artifact_group = self._find_specs_per_source_type[

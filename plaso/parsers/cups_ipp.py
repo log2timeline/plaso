@@ -35,7 +35,7 @@ from plaso.parsers import logger
 from plaso.parsers import manager
 
 
-# TODO: RFC Pendings types: resolution, dateTime, rangeOfInteger.
+# TODO: RFC pending types: resolution, dateTime, rangeOfInteger.
 #       "dateTime" is not used by Mac OS, instead it uses integer types.
 # TODO: Only tested against CUPS IPP MacOS.
 

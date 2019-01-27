@@ -253,6 +253,7 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
 
     Raises:
       IOError: if the cache record header cannot be validated.
+      OSError: if the cache record header cannot be validated.
       ParseError: if the cache record header cannot be parsed.
     """
     file_offset = file_object.get_offset()

@@ -68,8 +68,9 @@ class AnalysisPluginManagerTest(shared_test_lib.BaseTestCase):
     """Tests the GetPlugins function."""
     manager.AnalysisPluginManager.RegisterPlugin(TestAnalysisPlugin)
 
-    plugin_set = set([name for name, _ in list(
-        manager.AnalysisPluginManager.GetPlugins())])
+    # Use set-comprehension to create a set of the analysis plugin names.
+    plugin_set = {name for name, _ in list(
+        manager.AnalysisPluginManager.GetPlugins())}
     self.assertTrue('test_plugin' in plugin_set)
 
     manager.AnalysisPluginManager.DeregisterPlugin(TestAnalysisPlugin)

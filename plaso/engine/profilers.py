@@ -45,10 +45,10 @@ class SampleFileProfiler(object):
   """Shared functionality for sample file-based profilers."""
 
 
-  # This constant must be overriden by subclasses.
+  # This constant must be overridden by subclasses.
   _FILENAME_PREFIX = None
 
-  # This constant must be overriden by subclasses.
+  # This constant must be overridden by subclasses.
   _FILE_HEADER = None
 
   def __init__(self, identifier, configuration):

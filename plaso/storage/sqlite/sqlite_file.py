@@ -136,6 +136,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Raises:
       IOError: if the attribute container cannot be serialized.
+      OSError: if the attribute container cannot be serialized.
     """
     container_list = self._GetSerializedAttributeContainerList(container_type)
 
@@ -158,6 +159,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Raises:
       IOError: if the event cannot be serialized.
+      OSError: if the event cannot be serialized.
     """
     identifier = identifiers.SQLTableIdentifier(
         self._CONTAINER_TYPE_EVENT,
@@ -180,6 +182,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Raises:
       IOError: if the format version or the serializer format is not supported.
+      OSError: if the format version or the serializer format is not supported.
     """
     format_version = metadata_values.get('format_version', None)
 
@@ -260,6 +263,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Raises:
       IOError: when there is an error querying the storage file.
+      OSError: when there is an error querying the storage file.
     """
     sequence_number = index + 1
     query = 'SELECT _data FROM {0:s} WHERE rowid = {1:d}'.format(
@@ -321,6 +325,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Raises:
       IOError: when there is an error querying the storage file.
+      OSError: when there is an error querying the storage file.
     """
     query = 'SELECT _identifier, _data FROM {0:s}'.format(container_type)
     if filter_expression:
@@ -529,6 +534,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Raises:
       IOError: when the storage file is closed or read-only.
+      OSError: when the storage file is closed or read-only.
     """
     self._RaiseIfNotWritable()
 
@@ -542,6 +548,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Raises:
       IOError: when the storage file is closed or read-only.
+      OSError: when the storage file is closed or read-only.
     """
     self._RaiseIfNotWritable()
 
@@ -555,6 +562,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Raises:
       IOError: when the storage file is closed or read-only or
+          if the event data identifier type is not supported.
+      OSError: when the storage file is closed or read-only or
           if the event data identifier type is not supported.
     """
     self._RaiseIfNotWritable()
@@ -579,6 +588,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Raises:
       IOError: when the storage file is closed or read-only.
+      OSError: when the storage file is closed or read-only.
     """
     self._RaiseIfNotWritable()
 
@@ -592,6 +602,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Raises:
       IOError: when the storage file is closed or read-only.
+      OSError: when the storage file is closed or read-only.
     """
     self._RaiseIfNotWritable()
 
@@ -606,6 +617,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Raises:
       IOError: when the storage file is closed or read-only or
+          if the event identifier type is not supported.
+      OSError: when the storage file is closed or read-only or
           if the event identifier type is not supported.
     """
     self._RaiseIfNotWritable()
@@ -627,6 +640,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Raises:
       IOError: when the storage file is closed or read-only or
+          if the event tags cannot be serialized.
+      OSError: when the storage file is closed or read-only or
           if the event tags cannot be serialized.
     """
     self._RaiseIfNotWritable()
@@ -670,6 +685,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Raises:
       IOError: if the storage file is already closed.
+      OSError: if the storage file is already closed.
     """
     if not self._is_open:
       raise IOError('Storage file already closed.')
@@ -835,6 +851,9 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       IOError: if a stream is missing or there is a mismatch in session
           identifiers between the session start and completion attribute
           containers.
+      OSError: if a stream is missing or there is a mismatch in session
+          identifiers between the session start and completion attribute
+          containers.
     """
     session_start_generator = self._GetAttributeContainers(
         self._CONTAINER_TYPE_SESSION_START)
@@ -931,6 +950,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Raises:
       IOError: if the storage file is already opened or if the database
+          cannot be connected.
+      OSError: if the storage file is already opened or if the database
           cannot be connected.
       ValueError: if path is missing.
     """
@@ -1030,6 +1051,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     Raises:
       IOError: if the storage type does not support writing preprocess
           information or the storage file is closed or read-only.
+      OSError: if the storage type does not support writing preprocess
+          information or the storage file is closed or read-only.
     """
     self._RaiseIfNotWritable()
 
@@ -1048,6 +1071,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Raises:
       IOError: when the storage file is closed or read-only.
+      OSError: when the storage file is closed or read-only.
     """
     self._RaiseIfNotWritable()
 
@@ -1061,6 +1085,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Raises:
       IOError: when the storage file is closed or read-only.
+      OSError: when the storage file is closed or read-only.
     """
     self._RaiseIfNotWritable()
 
@@ -1074,6 +1099,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Raises:
       IOError: when the storage file is closed or read-only.
+      OSError: when the storage file is closed or read-only.
     """
     self._RaiseIfNotWritable()
 
@@ -1087,6 +1113,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     Raises:
       IOError: when the storage file is closed or read-only.
+      OSError: when the storage file is closed or read-only.
     """
     self._RaiseIfNotWritable()
 

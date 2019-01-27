@@ -60,6 +60,7 @@ class PlistFile(object):
 
     Raises:
       IOError: if the plist file-like object cannot be read.
+      OSError: if the plist file-like object cannot be read.
     """
     try:
       self.root_key = biplist.readPlist(file_object)

@@ -193,26 +193,26 @@ class ESEDBPlugin(plugins.BasePlugin):
     if column_type == pyesedb.column_types.NULL:
       return None
 
-    elif column_type == pyesedb.column_types.BOOLEAN:
+    if column_type == pyesedb.column_types.BOOLEAN:
       # TODO: implement
       raise ValueError('Boolean value support not implemented yet.')
 
-    elif column_type in self.INTEGER_COLUMN_TYPES:
+    if column_type in self.INTEGER_COLUMN_TYPES:
       if long_value:
         raise ValueError('Long integer value not supported.')
       return record.get_value_data_as_integer(value_entry)
 
-    elif column_type in self.FLOATING_POINT_COLUMN_TYPES:
+    if column_type in self.FLOATING_POINT_COLUMN_TYPES:
       if long_value:
         raise ValueError('Long floating point value not supported.')
       return record.get_value_data_as_floating_point(value_entry)
 
-    elif column_type in self.STRING_COLUMN_TYPES:
+    if column_type in self.STRING_COLUMN_TYPES:
       if long_value:
         return long_value.get_data_as_string()
       return record.get_value_data_as_string(value_entry)
 
-    elif column_type == pyesedb.column_types.GUID:
+    if column_type == pyesedb.column_types.GUID:
       # TODO: implement
       raise ValueError('GUID value support not implemented yet.')
 

@@ -291,9 +291,10 @@ class MultiProcessEngine(engine.BaseEngine):
       process (MultiProcessBaseProcess): process.
 
     Raises:
+      IOError: if the RPC client cannot connect to the server.
       KeyError: if the process is not registered with the engine or
           if the process is already being monitored.
-      IOError: if the RPC client cannot connect to the server.
+      OSError: if the RPC client cannot connect to the server.
       ValueError: if the process is missing.
     """
     if process is None:
