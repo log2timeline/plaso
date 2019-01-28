@@ -250,7 +250,7 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     environment_variable = [artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='SystemRoot', value='C:\\Windows')]
 
-    find_specs = test_filter_file._BuildFindSpecsFromFileSource(
+    find_specs = test_filter_file._BuildFindSpecsFromFileSourcePath(
         path_entry, separator, environment_variable, user_accounts)
 
     # Should build 1 find_spec.
@@ -268,7 +268,7 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
 
     # Test expansion of globs.
     path_entry = '\\test_data\\**'
-    find_specs = test_filter_file._BuildFindSpecsFromFileSource(
+    find_specs = test_filter_file._BuildFindSpecsFromFileSourcePath(
         path_entry, separator, environment_variable, user_accounts)
 
     # Glob expansion should by default recurse ten levels.
@@ -296,7 +296,7 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     user_accounts = [testuser1, testuser2]
     path_entry = '%%users.homedir%%/.thumbnails/**3'
 
-    find_specs = test_filter_file._BuildFindSpecsFromFileSource(
+    find_specs = test_filter_file._BuildFindSpecsFromFileSourcePath(
         path_entry, separator, environment_variable, user_accounts)
 
     # Six total find specs should be created for testuser1 and testuser2.
@@ -315,7 +315,7 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     user_accounts = [testuser1, testuser2]
     path_entry = '%%users.homedir%%\\AppData\\**4'
 
-    find_specs = test_filter_file._BuildFindSpecsFromFileSource(
+    find_specs = test_filter_file._BuildFindSpecsFromFileSourcePath(
         path_entry, separator, environment_variable, user_accounts)
 
     # Eight find specs should be created for testuser1 and testuser2.

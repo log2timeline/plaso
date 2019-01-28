@@ -118,7 +118,7 @@ class ArtifactDefinitionsFilterHelper(object):
     for source in definition.sources:
       if source.type_indicator == artifact_types.TYPE_INDICATOR_FILE:
         for path_entry in set(source.paths):
-          specifications = self._BuildFindSpecsFromFileSource(
+          specifications = self._BuildFindSpecsFromFileSourcePath(
               path_entry, source.separator, environment_variables,
               self._knowledge_base.user_accounts)
           find_specs.extend(specifications)
@@ -127,28 +127,30 @@ class ArtifactDefinitionsFilterHelper(object):
             artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY):
         for key_path in set(source.keys):
           if self.CheckKeyCompatibility(key_path):
-            specifications = self._BuildFindSpecsFromRegistrySource(key_path)
+            specifications = self._BuildFindSpecsFromRegistrySourceKey(key_path)
             find_specs.extend(specifications)
 
       elif (source.type_indicator ==
             artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_VALUE):
         # TODO: Handle Registry Values Once Supported in dfwinreg.
         # https://github.com/log2timeline/dfwinreg/issues/98
-        logger.warning((
-            'Windows Registry values are not supported, extracting key: '
-            '"{0!s}"').format(source.key_value_pairs))
-
-        source_key_paths = {
+        key_paths = {
             key_value['key'] for key_value in source.key_value_pairs}
-        for key_path in source_key_paths:
+        key_paths_string = ', '.join(key_paths)
+
+        logger.warning((
+            'Windows Registry values are not supported, extracting keys: '
+            '"{0!s}"').format(key_paths))
+
+        for key_path in key_paths:
           if self.CheckKeyCompatibility(key_path):
-            specifications = self._BuildFindSpecsFromRegistrySource(key_path)
+            specifications = self._BuildFindSpecsFromRegistrySourceKey(key_path)
             find_specs.extend(specifications)
 
       elif (source.type_indicator ==
             artifact_types.TYPE_INDICATOR_ARTIFACT_GROUP):
         for name in source.names:
-          specifications = self._BuildFindSpecsFromGroupSource(
+          specifications = self._BuildFindSpecsFromGroupName(
               name, environment_variables)
           find_specs.extend(specifications)
 
@@ -159,8 +161,8 @@ class ArtifactDefinitionsFilterHelper(object):
 
       return find_specs
 
-  def _BuildFindSpecsFromGroupSource(self, group_name, environment_variables):
-    """Builds find specifications from a artifact group source type.
+  def _BuildFindSpecsFromGroupName(self, group_name, environment_variables):
+    """Builds find specifications from a artifact group name.
 
     Args:
       group_name (str): artifact group name.
@@ -178,7 +180,7 @@ class ArtifactDefinitionsFilterHelper(object):
     return self._BuildFindSpecsFromArtifact(definition, environment_variables)
 
 
-  def _BuildFindSpecsFromFileSource(
+  def _BuildFindSpecsFromFileSourcePath(
       self, source_path, path_separator, environment_variables, user_accounts):
     """Builds find specifications from a file source type.
 
@@ -233,24 +235,24 @@ class ArtifactDefinitionsFilterHelper(object):
 
     return find_specs
 
-  def _BuildFindSpecsFromRegistrySource(self, source_key_path):
+  def _BuildFindSpecsFromRegistrySourceKey(self, key_path):
     """Build find specifications from a Windows Registry source type.
 
     Args:
-      source_key_path (str): Windows Registry key path defined by the source.
+      key_path (str): Windows Registry key path defined by the source.
 
     Returns:
       list[dfwinreg.FindSpec]: find specifications for the Windows Registry
           source type.
     """
     find_specs = []
-    for key_path in path_helper.PathHelper.ExpandRecursiveGlobs(
-        source_key_path, '\\'):
-      if '%%' in key_path:
-        logger.error('Unable to expand key path: "{0:s}"'.format(key_path))
+    for key_path_glob in path_helper.PathHelper.ExpandRecursiveGlobs(
+        key_path, '\\'):
+      if '%%' in key_path_glob:
+        logger.error('Unable to expand key path: "{0:s}"'.format(key_path_glob))
         continue
 
-      find_spec = registry_searcher.FindSpec(key_path_glob=key_path)
+      find_spec = registry_searcher.FindSpec(key_path_glob=key_path_glob)
       find_specs.append(find_spec)
 
     return find_specs

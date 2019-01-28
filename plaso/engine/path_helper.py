@@ -120,7 +120,7 @@ class PathHelper(object):
       user_paths = []
       for user_account in user_accounts:
         user_path = user_account.user_directory
-        # Prevent concatenating 2 path segment separators.
+        # Prevent concatenating two consecuative path segment separators.
         if user_path[-1] == path_separator and path[0] == path_separator:
           user_path = user_path[:-1]
 
