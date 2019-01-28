@@ -72,9 +72,9 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
 
   Attributes:
     family (str): operating system family name, such as "Linux", "MacOS"
-        or "Windows". This value is used to programmatically link a parser
-        preset to an operating system and therefore must be one of predefined
-        values.
+        or "Windows", defined in definitions.OPERATING_SYSTEM_FAMILIES.
+        This value is used to programmatically link a parser preset to an
+        operating system and therefore must be one of predefined values.
     name (str): operating system name, such as "macOS Mojave" or "Windows XP".
         This value is used to programmatically link a parser preset to an
         operating system and therefore must be one of predefined values.
@@ -110,9 +110,9 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
 
     Args:
       family (Optional[str]): operating system family name, such as "Linux",
-        "MacOS" or "Windows". This value is used to programmatically link a
-        parser preset to an operating system and therefore must be one of
-        predefined values.
+        "MacOS" or "Windows", defined in definitions.OPERATING_SYSTEM_FAMILIES.
+        This value is used to programmatically link a parser preset to an
+        operating system and therefore must be one of predefined values.
       product (Optional[str]): product information, such as "macOS Mojave" or
           "Windows Professional XP". This value is typically obtained from the
           source data.
