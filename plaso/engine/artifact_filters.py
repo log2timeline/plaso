@@ -80,8 +80,9 @@ class ArtifactDefinitionsFilterHelper(object):
       if not definition:
         continue
 
-      find_specs.extend(self._BuildFindSpecsFromArtifact(
-          definition, environment_variables))
+      artifact_find_specs = self._BuildFindSpecsFromArtifact(
+          definition, environment_variables)
+      find_specs.extend(artifact_find_specs)
 
     find_specs_per_source_type = defaultdict(list)
     for find_spec in find_specs:
@@ -101,7 +102,6 @@ class ArtifactDefinitionsFilterHelper(object):
 
     self._knowledge_base.SetValue(
         self.KNOWLEDGE_BASE_VALUE, find_specs_per_source_type)
-
 
   def _BuildFindSpecsFromArtifact(self, definition, environment_variables):
     """Builds find specifications from an artifact definition.

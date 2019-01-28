@@ -323,7 +323,7 @@ class StatusView(object):
 
     if self._artifact_filters:
       artifacts_string = ', '.join(self._artifact_filters)
-      self._output_writer.Write('Artifact filters\t: {0!s}\n'.format(
+      self._output_writer.Write('Artifact filters\t: {0:s}\n'.format(
           artifacts_string))
     if self._filter_file:
       self._output_writer.Write('Filter file\t: {0:s}\n'.format(
