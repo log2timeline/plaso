@@ -302,13 +302,13 @@ class BaseEngine(object):
        artifact_filter_names (Optional[list[str]]): names of artifact
           definitions that are used for filtering file system and Windows
           Registry key paths.
-       filter_file_path (Optional[str]): Path of filter file.
+       filter_file_path (Optional[str]): path of filter file.
 
     Returns:
       list[dfvfs.FindSpec]: find specifications for the file source type.
 
     Raises:
-      RuntimeError: if no valid FindSpecs are built.
+      InvalidFilter: if no valid FindSpecs are built.
     """
     environment_variables = knowledge_base_object.GetEnvironmentVariables()
     find_specs = None
@@ -329,7 +329,7 @@ class BaseEngine(object):
           environment_variables=environment_variables)
 
     if (artifact_filter_names or filter_file_path) and not find_specs:
-      raise RuntimeError(
+      raise errors.InvalidFilter(
           'Error processing filters, no valid specifications built.')
 
     return find_specs

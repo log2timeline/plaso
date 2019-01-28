@@ -37,7 +37,7 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
     """Create a Windows path resolver and sets the environment variables.
 
     Args:
-      file_system (dfvfs.FileSytem): file system.
+      file_system (dfvfs.FileSystem): file system.
       mount_point (dfvfs.PathSpec): mount point path specification.
       environment_variables (list[EnvironmentVariableArtifact]): environment
           variables.

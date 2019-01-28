@@ -11,6 +11,17 @@ sources:
 labels: [System]
 supported_os: [Windows]
 ---
+name: TestGroupExtract
+doc: Test Group
+sources:
+- type: ARTIFACT_GROUP
+  attributes:
+    names:
+     - 'TestFiles'
+     - 'TestFiles2'
+labels: [System]
+supported_os: [Windows]
+---
 name: TestFiles
 doc: Test Doc
 sources:
