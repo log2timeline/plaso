@@ -60,7 +60,7 @@ class BaseEngine(object):
 
     Returns:
       str: operating system for example "Windows". This should be one of
-          the values in definitions.OPERATING_SYSTEMS.
+          the values in definitions.OPERATING_SYSTEM_FAMILIES.
     """
     find_specs = [
         file_system_searcher.FindSpec(
@@ -90,15 +90,15 @@ class BaseEngine(object):
         '\\winnt\\system32', '/winnt35/system32', '\\winnt35\\system32',
         '\\wtsrv\\system32', '/wtsrv/system32'])
 
-    operating_system = definitions.OPERATING_SYSTEM_UNKNOWN
+    operating_system = definitions.OPERATING_SYSTEM_FAMILY_UNKNOWN
     if windows_locations.intersection(set(locations)):
-      operating_system = definitions.OPERATING_SYSTEM_WINDOWS
+      operating_system = definitions.OPERATING_SYSTEM_FAMILY_WINDOWS_NT
 
     elif '/system/library' in locations:
-      operating_system = definitions.OPERATING_SYSTEM_MACOS
+      operating_system = definitions.OPERATING_SYSTEM_FAMILY_MACOS
 
     elif '/etc' in locations:
-      operating_system = definitions.OPERATING_SYSTEM_LINUX
+      operating_system = definitions.OPERATING_SYSTEM_FAMILY_LINUX
 
     return operating_system
 
@@ -264,7 +264,7 @@ class BaseEngine(object):
             file_system, mount_point)
 
         operating_system = self._DetermineOperatingSystem(searcher)
-        if operating_system != definitions.OPERATING_SYSTEM_UNKNOWN:
+        if operating_system != definitions.OPERATING_SYSTEM_FAMILY_UNKNOWN:
           preprocess_manager.PreprocessPluginsManager.RunPlugins(
               artifacts_registry_object, file_system, mount_point,
               self.knowledge_base)

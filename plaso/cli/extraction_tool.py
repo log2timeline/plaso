@@ -73,6 +73,10 @@ class ExtractionTool(
 
     Returns:
       ProcessingConfiguration: processing configuration.
+
+    Raises:
+      BadConfigOption: if more than 1 parser and parser plugins preset
+          was found for the detected operating system.
     """
     # TODO: pass preferred_encoding.
     configuration = configurations.ProcessingConfiguration()
@@ -103,16 +107,22 @@ class ExtractionTool(
           'operating_system_product')
       operating_system_version = knowledge_base.GetValue(
           'operating_system_version')
-      parser_filter_expression = (
-          parsers_manager.ParsersManager.GetPresetForOperatingSystem(
+      preset_definitions = (
+          parsers_manager.ParsersManager.GetPresetsForOperatingSystem(
               operating_system, operating_system_product,
               operating_system_version))
 
-      if parser_filter_expression:
-        logger.info('Parser filter expression changed to: {0:s}'.format(
-            parser_filter_expression))
+      if preset_definitions:
+        preset_names = [
+            preset_definition.name for preset_definition in preset_definitions]
+        if len(preset_names) != 1:
+          raise errors.BadConfigOption(
+              'More than 1 parser preset found for: {0:s} namely: {1:s}'.format(
+                  operating_system, preset_names))
 
-      configuration.parser_filter_expression = parser_filter_expression
+        logger.info('Parser filter expression set to: {0:s}'.format(
+            preset_names[0]))
+        configuration.parser_filter_expression = preset_names[0]
 
     return configuration
 

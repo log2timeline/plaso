@@ -44,7 +44,7 @@ class EventExtractor(object):
           can have the value of:
 
           * An exact match of a list of parsers, or a preset (see
-            plaso/parsers/presets.py for a full list of available presets).
+            data/presets.yaml for the list of predefined presets).
           * A name of a single parser (case insensitive), e.g. msiecf.
           * A glob name for a single parser, e.g. '*msie*' (case insensitive).
     """
@@ -114,7 +114,7 @@ class EventExtractor(object):
           can have the value of:
 
           * An exact match of a list of parsers, or a preset (see
-            plaso/parsers/presets.py for a full list of available presets).
+            data/presets.yaml for the list of predefined presets).
           * A name of a single parser (case insensitive), e.g. msiecf.
           * A glob name for a single parser, e.g. '*msie*' (case insensitive).
     """

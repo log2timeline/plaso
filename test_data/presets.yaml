@@ -17,6 +17,8 @@ parsers:
 ---
 name: linux
 description: Preset for Linux.
+operating_systems:
+- {family: Linux}
 parsers:
 - bash_history
 - bencode
@@ -43,6 +45,8 @@ parsers:
 ---
 name: macos
 description: Preset for MacOS.
+operating_systems:
+- {family: MacOS}
 parsers:
 - asl_log
 - bash_history
@@ -95,7 +99,7 @@ parsers:
 - sqlite/firefox_history
 ---
 name: win_gen
-description: Preset for generic Windows.
+description: Preset for generic Windows, intended as template for other Windows presets.
 parsers:
 - bencode
 - czip/oxml
@@ -121,7 +125,9 @@ parsers:
 - winreg
 ---
 name: win7
-description: Preset for Windows 7 and later.
+description: Preset for generic Windows, intended for Windows Vista and later.
+operating_systems:
+- {family: Windows NT}
 parsers:
 - amcache
 - custom_destinations
@@ -132,7 +138,11 @@ parsers:
 - win_gen
 ---
 name: winxp
-description: Preset for Windows XP and 2003.
+description: Preset for Windows 2000, Windows XP and Windows 2003.
+operating_systems:
+- {product: Windows 2000}
+- {product: Windows XP}
+- {product: Windows 2003}
 parsers:
 - recycle_bin_info2
 - rplog

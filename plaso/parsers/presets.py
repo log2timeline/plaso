@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import yaml
 
+from plaso.containers import artifacts
 from plaso.lib import errors
 
 
@@ -13,6 +14,9 @@ class ParserPreset(object):
 
   Attributes:
     name (str): name of the preset.
+    operating_system (list[OperatingSystemArtifact]): operating system
+        artifact attribute containers, that specify to which operating
+        systems the preset applies.
     parsers (list[str]): names of parser and parser plugins.
   """
 
@@ -25,6 +29,7 @@ class ParserPreset(object):
     """
     super(ParserPreset, self).__init__()
     self.name = name
+    self.operating_systems = []
     self.parsers = parsers
 
 
@@ -35,6 +40,33 @@ class ParserPresetsManager(object):
     """Initializes a parser and parser plugin presets manager."""
     super(ParserPresetsManager, self).__init__()
     self._definitions = {}
+
+  def _ReadOperatingSystemArtifactValues(self, operating_system_values):
+    """Reads an operating system artifact from a dictionary.
+
+    Args:
+      operating_system_values (dict[str, object]): operating system values.
+
+    Returns:
+      OperatingSystemArtifact: an operating system artifact attribute container.
+
+    Raises:
+      MalformedPresetError: if the format of the operating system values are
+          not set or incorrect.
+    """
+    if not operating_system_values:
+      raise errors.MalformedPresetError('Missing operating system values.')
+
+    family = operating_system_values.get('family', None)
+    product = operating_system_values.get('product', None)
+    version = operating_system_values.get('version', None)
+
+    if not family and not product:
+      raise errors.MalformedPresetError(
+          'Invalid operating system missing family and product.')
+
+    return artifacts.OperatingSystemArtifact(
+        family=family, product=product, version=version)
 
   def _ReadParserPresetValues(self, preset_definition_values):
     """Reads a parser preset from a dictionary.
@@ -47,7 +79,8 @@ class ParserPresetsManager(object):
 
     Raises:
       MalformedPresetError: if the format of the preset definition is not set
-          or incorrect.
+          or incorrect, or the preset of a specific operating system has already
+          been set.
     """
     if not preset_definition_values:
       raise errors.MalformedPresetError('Missing preset definition values.')
@@ -62,7 +95,15 @@ class ParserPresetsManager(object):
       raise errors.MalformedPresetError(
           'Invalid preset definition missing parsers.')
 
-    return ParserPreset(name, parsers)
+    parser_preset = ParserPreset(name, parsers)
+
+    for operating_system_values in preset_definition_values.get(
+        'operating_systems', []):
+      operating_system = self._ReadOperatingSystemArtifactValues(
+          operating_system_values)
+      parser_preset.operating_systems.append(operating_system)
+
+    return parser_preset
 
   def _ReadPresetsFromFileObject(self, file_object):
     """Reads parser and parser plugin presets from a file-like object.
@@ -112,7 +153,27 @@ class ParserPresetsManager(object):
     Returns:
       ParserPreset: a parser preset or None if not available.
     """
+    name = name.lower()
     return self._definitions.get(name, None)
+
+  def GetPresetsByOperatingSystem(self, operating_system):
+    """Retrieves preset definitions for a specific operating system.
+
+    Args:
+      operating_system (OperatingSystemArtifact): an operating system artifact
+          attribute container.
+
+    Returns:
+      list[PresetDefinition]: preset definition that correspond with the
+          operating system.
+    """
+    preset_definitions = []
+    for preset_definition in self._definitions.values():
+      for preset_operating_system in preset_definition.operating_systems:
+        if preset_operating_system.IsEquivalent(operating_system):
+          preset_definitions.append(preset_definition)
+
+    return preset_definitions
 
   def GetPresets(self):
     """Retrieves the preset definitions.
