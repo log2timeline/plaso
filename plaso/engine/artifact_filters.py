@@ -97,6 +97,7 @@ class ArtifactDefinitionsFilterHelper(object):
             artifact_types.TYPE_INDICATOR_FILE]
         artifact_list.append(find_spec)
         continue
+
       logger.warning('Unknown find specification type: {0:s}'.format(
           type(find_spec)))
 
