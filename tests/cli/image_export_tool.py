@@ -410,7 +410,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
     options.image = self._GetTestFilePath(['image.qcow2'])
     options.quiet = True
-    options.artifact_filters = 'TestFilesImageExport'
+    options.artifact_filter_string = 'TestFilesImageExport'
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.path = temp_directory
@@ -439,7 +439,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     options.artifact_definitions_path = self._GetTestFilePath(['artifacts'])
     options.image = self._GetTestFilePath(['image.qcow2'])
     options.quiet = True
-    options.artifact_filters = 'TestGroupExport'
+    options.artifact_filter_string = 'TestGroupExport'
 
     with shared_test_lib.TempDirectory() as temp_directory:
       options.path = temp_directory

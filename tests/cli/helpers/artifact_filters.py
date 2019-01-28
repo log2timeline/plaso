@@ -64,7 +64,7 @@ optional arguments:
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
-    options.artifact_filters = 'TestFiles, TestFiles2'
+    options.artifact_filter_string = 'TestFiles, TestFiles2'
     expected_output = ['TestFiles', 'TestFiles2']
 
     test_tool = tools.CLITool()
@@ -82,7 +82,7 @@ optional arguments:
 
     expected_output = ['TestFiles', 'TestFiles2', 'TestFiles3']
 
-    options.artifact_filters = None
+    options.artifact_filter_string = None
     artifact_filters.ArtifactFiltersArgumentsHelper.ParseOptions(
         options, test_tool)
 

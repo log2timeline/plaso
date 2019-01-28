@@ -358,7 +358,10 @@ class PinfoTool(
       # bytes.
       if isinstance(preferred_encoding, py2to3.BYTES_TYPE):
         preferred_encoding = preferred_encoding.decode('utf-8')
-      artifact_filters = session.artifact_filters or 'N/A'
+      if session.artifact_filters:
+        artifact_filters_string = ', '.join(session.artifact_filters)
+      else:
+        artifact_filters_string = 'N/A'
       filter_file = session.filter_file or 'N/A'
 
       title = 'Session: {0!s}'.format(session_identifier)
@@ -374,7 +377,7 @@ class PinfoTool(
       table_view.AddRow(['Enabled parser and plugins', enabled_parser_names])
       table_view.AddRow(['Preferred encoding', preferred_encoding])
       table_view.AddRow(['Debug mode', session.debug_mode])
-      table_view.AddRow(['Artifact filters', artifact_filters])
+      table_view.AddRow(['Artifact filters', artifact_filters_string])
       table_view.AddRow(['Filter file', filter_file])
 
       table_view.Write(self._output_writer)

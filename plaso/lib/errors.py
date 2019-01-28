@@ -27,6 +27,8 @@ class HeapFull(Error):
 class InvalidEvent(Error):
   """Error indicating an event is malformed."""
 
+class InvalidFilter(Error):
+  """Error indicating an invalid filter was specified."""
 
 class MalformedPresetError(Error):
   """Raised when a parser preset definition is malformed."""
