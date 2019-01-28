@@ -140,7 +140,7 @@ class ArtifactDefinitionsFilterHelper(object):
 
         logger.warning((
             'Windows Registry values are not supported, extracting keys: '
-            '"{0!s}"').format(key_paths))
+            '"{0!s}"').format(key_paths_string))
 
         for key_path in key_paths:
           if self.CheckKeyCompatibility(key_path):
