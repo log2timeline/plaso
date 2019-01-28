@@ -91,7 +91,8 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
         file_system, mount_point)
 
     operating_system = test_engine._DetermineOperatingSystem(searcher)
-    self.assertEqual(operating_system, definitions.OPERATING_SYSTEM_UNKNOWN)
+    self.assertEqual(
+        operating_system, definitions.OPERATING_SYSTEM_FAMILY_UNKNOWN)
 
   def testStartStopProfiling(self):
     """Tests the _StartProfiling and _StopProfiling functions."""
@@ -161,7 +162,7 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     test_engine.PreprocessSources(registry, [source_path_spec])
 
     operating_system = test_engine.knowledge_base.GetValue('operating_system')
-    self.assertEqual(operating_system, 'Windows')
+    self.assertEqual(operating_system, 'Windows NT')
 
     test_engine.PreprocessSources(registry, [None])
 
