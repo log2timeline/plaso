@@ -36,7 +36,7 @@ Description: Python 3 module of plaso (log2timeline)
 
 Package: plaso-tools
 Architecture: all
-Depends: python3-plaso, ${python3:Depends}, ${misc:Depends}
+Depends: python-plaso, ${python:Depends}, ${misc:Depends}
 Description: Tools of plaso (log2timeline)
  Plaso (log2timeline) is a framework to create super timelines. Its
  purpose is to extract timestamps from various files found on typical
