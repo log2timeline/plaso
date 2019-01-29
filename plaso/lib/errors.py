@@ -20,10 +20,6 @@ class ConnectionError(Error):  # pylint: disable=redefined-builtin
   """Class that defines errors encountered connecting to a service."""
 
 
-class HeapFull(Error):
-  """Class that implements a heap full exception."""
-
-
 class InvalidEvent(Error):
   """Error indicating an event is malformed."""
 
