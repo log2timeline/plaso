@@ -41,11 +41,19 @@ class _EventSourceHeap(object):
     self._heap = []
     self._maximum_number_of_items = maximum_number_of_items
 
+  def IsFull(self):
+    """Determines if the heap is full.
+
+    Returns:
+      bool: True if the heap is full, False otherwise.
+    """
+    return len(self._heap) >= self._maximum_number_of_items
+
   def PopEventSource(self):
     """Pops an event source from the heap.
 
     Returns:
-      EventSource: event source or None on error.
+      EventSource: an event source or None on if no event source is available.
     """
     try:
       _, _, event_source = heapq.heappop(self._heap)
@@ -60,10 +68,6 @@ class _EventSourceHeap(object):
 
     Args:
       event_source (EventSource): event source.
-
-    Raises:
-      HeapFull: if the heap contains the maximum number of items. Note that
-          this exception is raised after the item is added to the heap.
     """
     if event_source.file_entry_type == (
         dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY):
@@ -73,9 +77,6 @@ class _EventSourceHeap(object):
 
     heap_values = (weight, time.time(), event_source)
     heapq.heappush(self._heap, heap_values)
-
-    if len(self._heap) >= self._maximum_number_of_items:
-      raise errors.HeapFull()
 
 
 class TaskMultiProcessEngine(engine.MultiProcessEngine):
@@ -167,9 +168,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._processing_profiler.StopTiming('get_event_source')
 
     while event_source:
-      try:
-        event_source_heap.PushEventSource(event_source)
-      except errors.HeapFull:
+      event_source_heap.PushEventSource(event_source)
+      if event_source_heap.IsFull():
         break
 
       if self._processing_profiler:
@@ -451,7 +451,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
         self._MergeTaskStorage(storage_writer)
 
-        self._FillEventSourceHeap(storage_writer, event_source_heap)
+        if not event_source_heap.IsFull():
+          self._FillEventSourceHeap(storage_writer, event_source_heap)
 
         if not task and not event_source:
           event_source = event_source_heap.PopEventSource()
