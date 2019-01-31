@@ -14,7 +14,7 @@ class ParserPreset(object):
 
   Attributes:
     name (str): name of the preset.
-    operating_system (list[OperatingSystemArtifact]): operating system
+    operating_systems (list[OperatingSystemArtifact]): operating system
         artifact attribute containers, that specify to which operating
         systems the preset applies.
     parsers (list[str]): names of parser and parser plugins.
