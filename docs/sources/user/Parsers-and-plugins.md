@@ -201,13 +201,13 @@ winreg_default | Parser for Registry data.
 
 Name | Parsers and plugins
 --- | ---
-android | android_app_usage, filestat, chrome_cache, sqlite/android_calls, sqlite/android_sms, sqlite/android_webview, sqlite/android_webviewcache, sqlite/chrome_cookies, sqlite/chrome_8_history, sqlite/chrome_27_history, sqlite/skype
-linux | bash_history, bencode, dockerjson, dpkg, filestat, sqlite/google_drive, gdrive_synclog, java_idx, olecf, czip/oxml, pls_recall, popularity_contest, selinux, sqlite/skype, syslog, systemd_journal, utmp, webhist, xchatlog, xchatscrollback, sqlite/zeitgeist, zsh_extended_history
-macos | sqlite/appusage, asl_log, bash_history, bencode, bsm_log, cups_ipp, filestat, fseventsd, sqlite/google_drive, gdrive_synclog, sqlite/imessage, java_idx, sqlite/ls_quarantine, mac_appfirewall_log, sqlite/mac_document_versions, mac_keychain, mac_securityd, sqlite/mackeeper_cache, macwifi, olecf, czip/oxml, plist, sqlite/skype, syslog, utmpx, webhist, zsh_extended_history
-webhist | binary_cookies, chrome_cache, sqlite/chrome_autofill, sqlite/chrome_cookies, sqlite/chrome_extension_activity, sqlite/chrome_8_history, sqlite/chrome_27_history, chrome_preferences, firefox_cache, sqlite/firefox_cookies, sqlite/firefox_downloads, sqlite/firefox_history, java_idx, esedb/msie_webcache, msiecf, opera_global, opera_typed_history, plist/safari_history
-win7 | recycle_bin, custom_destinations, esedb/file_history, olecf/olecf_automatic_destinations, win_gen, winevtx, amcache
+android | android_app_usage, chrome_cache, filestat, sqlite/android_calls, sqlite/android_sms, sqlite/android_webview, sqlite/android_webviewcache, sqlite/chrome_27_history, sqlite/chrome_8_history, sqlite/chrome_cookies, sqlite/skype
+linux | bash_history, bencode, czip/oxml, dockerjson, dpkg, filestat, gdrive_synclog, java_idx, olecf, pls_recall, popularity_contest, selinux, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, syslog, systemd_journal, utmp, webhist, xchatlog, xchatscrollback, zsh_extended_history
+macos | asl_log, bash_history, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, gdrive_synclog, java_idx, mac_appfirewall_log, mac_keychain, mac_securityd, macwifi, olecf, plist, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mackeeper_cache, sqlite/skype, syslog, utmpx, webhist, zsh_extended_history
+webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_27_history, sqlite/chrome_8_history, sqlite/chrome_autofill, sqlite/chrome_cookies, sqlite/chrome_extension_activity, sqlite/firefox_cookies, sqlite/firefox_downloads, sqlite/firefox_history
+win7 | amcache, custom_destinations, esedb/file_history, olecf/olecf_automatic_destinations, recycle_bin, winevtx, win_gen
 win7_slow | mft, win7
-win_gen | bencode, esedb, filestat, sqlite/google_drive, gdrive_synclog, java_idx, lnk, mcafee_protection, olecf, czip/oxml, pe, prefetch, sccm, skydrive_log, skydrive_log_old, sqlite/skype, symantec_scanlog, usnjrnl, webhist, winfirewall, winjob, winreg
+win_gen | bencode, czip/oxml, esedb, filestat, gdrive_synclog, java_idx, lnk, mcafee_protection, olecf, pe, prefetch, sccm, skydrive_log, skydrive_log_old, sqlite/google_drive, sqlite/skype, symantec_scanlog, usnjrnl, webhist, winfirewall, winjob, winreg
 winxp | recycle_bin_info2, rplog, win_gen, winevt
 winxp_slow | mft, winxp
 
