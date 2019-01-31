@@ -129,6 +129,7 @@ else:
         elif line.startswith('%files'):
           python_spec_file.extend([
               '%package -n %{name}-tools',
+              'Requires: python-plaso',
               'Summary: Tools for plaso (log2timeline)',
               '',
               '%description -n %{name}-tools'])
@@ -203,7 +204,7 @@ else:
             python_summary = 'Python 3 module of plaso (log2timeline)'
 
           python_spec_file.extend([
-              'Requires: %{{name}}-data {0:s}'.format(requires),
+              'Requires: plaso-data {0:s}'.format(requires),
               'Summary: {0:s}'.format(python_summary),
               '',
               '%description -n {0:s}-%{{name}}'.format(python_package)])
