@@ -145,7 +145,7 @@ class ExtractionTool(
           self._buffer_size = int(self._buffer_size, 10)
       except ValueError:
         raise errors.BadConfigOption(
-            'Invalid buffer size: {0:d}.'.format(self._buffer_size))
+            'Invalid buffer size: {0!s}.'.format(self._buffer_size))
 
     self._queue_size = self.ParseNumericOption(options, 'queue_size')
 
