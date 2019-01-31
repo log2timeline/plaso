@@ -444,138 +444,25 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       value (str): value
     """
 
-    def GetMailFrom(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.mailfrom = value
-
-    def GetMailTo(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.mailto = value
-
-    def GetMailCc(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.cc = value
-
-    def GetMailBcc(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.bcc = value
-
-    def GetMailSubject(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.subject = value
-
-    def GetMailPrecedence(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.precedence = value
-
-    def GetMailInReplyTo(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.in_reply_to = value
-
-    def GetMailAuthRes(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.auth_results = value
-
-    def GetMailARCSeal(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.arc_seal = value
-
-    def GetMailARCMsg(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.arc_msg_signature = value
-
-    def GetMailRecSPF(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.received_spf = value
-
-    def GetMailAutoSub(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.auto_submitted = value
-
-    def GetMailVBRInfo(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.vbr_info = value
-
-    def GetMailReturnPath(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.return_path = value
-
     keys = {
-        'From': GetMailFrom,
-        'To': GetMailTo,
-        'Cc': GetMailCc,
-        'Bcc': GetMailBcc,
-        'Subject': GetMailSubject,
-        'Precedence': GetMailPrecedence,
-        'In-Reply-To': GetMailInReplyTo,
-        'Authentication-Results': GetMailAuthRes,
-        'ARC-Seal': GetMailARCSeal,
-        'ARC-Message-Signature': GetMailARCMsg,
-        'Received-SPF': GetMailRecSPF,
-        'Auto-Submitted': GetMailAutoSub,
-        'VBR-Info': GetMailVBRInfo,
-        'Return-Path': GetMailReturnPath
+        'From': 'mailfrom',
+        'To': 'mailto',
+        'Cc': 'cc',
+        'Bcc': 'bcc',
+        'Subject': 'subject',
+        'Precedence': 'precedence',
+        'In-Reply-To': 'in_reply_to',
+        'Authentication-Results': 'auth_results',
+        'ARC-Seal': 'arc_seal',
+        'ARC-Message-Signature': 'arc_msg_signature',
+        'Received-SPF': 'received_spf',
+        'Auto-Submitted': 'auto_submitted',
+        'VBR-Info': 'vbr_info',
+        'Return-Path': 'return_path'
     }
 
     if key in keys:
-      getKey = keys[key]
-      getKey(value)
+      setattr(event_data, keys[key], value)
 
   def _MBoxParser(self, file_object, parser_mediator):
     """Parses Mbox file (.mbox).
@@ -773,22 +660,6 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       PosixTimeInMicroseconds: timestamp
     """
 
-    def GetStatus(value):
-      """Gets and stores a value
-
-      Args:
-        value (unicode): value
-      """
-      event_data.status = value
-
-    def GetQuantity(value):
-      """Gets and stores a value
-
-      Args:
-        value (unicode): value
-      """
-      event_data.quantity = value
-
     def GetUnitPrice(value):
       """Gets and stores a value
 
@@ -798,22 +669,6 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       for el in value:
         if el == 'displayString':
           event_data.price = value[el]
-
-    def GetProductInfo(value):
-      """Gets and stores a value
-
-      Args:
-        value (unicode): value
-      """
-      event_data.product = value['name']
-
-    def GetLandingPageUrl(value):
-      """Gets and stores a value
-
-      Args:
-        value (unicode): value
-      """
-      event_data.url = value['link']
 
     def GetFulfillment(value):
       """Gets and stores a value using another method
@@ -832,17 +687,28 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       self._GetInfoAirportPurchase(event_data, value)
 
     keys = {
-        'status': GetStatus,
-        'quantity': GetQuantity,
+        'status': 'status',
+        'quantity': 'quantity',
+        'productInfo': 'product',
+        'landingPageUrl': 'url'
+    }
+
+    keys2 = {
         'unitPrice': GetUnitPrice,
-        'productInfo': GetProductInfo,
-        'landingPageUrl': GetLandingPageUrl,
         'fulfillment': GetFulfillment,
         'flightLeg': GetFlightLeg
     }
 
     if info in keys:
-      getKey = keys[info]
+      if isinstance(value[info], dict):
+        if 'link' in value[info]:
+          setattr(event_data, keys[info], value[info]['link'])
+        elif 'name' in value[info]:
+          setattr(event_data, keys[info], value[info]['name'])
+      else:
+        setattr(event_data, keys[info], value[info])
+    elif info in keys2:
+      getKey = keys2[info]
       getKey(value[info])
 
     if info == 'bookingTimestamp':
@@ -888,83 +754,28 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
           and other components, such as storage and dfvfs.
     """
 
-    event_data = GoogleMapsEventData()
-
-    def GetLatitude(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.latitude = value / 1e7
-
-    def GetLongitude(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.longitude = value / 1e7
-
-    def GetVelocity(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.velocity = value
-
-    def GetHeading(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.heading = value
-
-    def GetAltitude(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.altitude = value
-
-    def GetAccuracy(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.accuracy = value
-
-    def GetVerticalAccuracy(value):
-      """Gets and stores a value
-
-      Args:
-        value (str): value
-      """
-      event_data.vertical_accuracy = value
-
     for location in data["locations"]:
+      event_data = GoogleMapsEventData()
       date_time = dfdatetime_posix_time.PosixTimeInMilliseconds(
           timestamp=location["timestampMs"]
       )
 
       keys = {
-          'latitudeE7': GetLatitude,
-          'longitudeE7': GetLongitude,
-          'velocity': GetVelocity,
-          'heading': GetHeading,
-          'altitude': GetAltitude,
-          'accuracy': GetAccuracy,
-          'verticalAccuracy': GetVerticalAccuracy
+          'latitudeE7': 'latitude',
+          'longitudeE7': 'longitude',
+          'velocity': 'velocity',
+          'heading': 'heading',
+          'altitude': 'altitude',
+          'accuracy': 'accuracy',
+          'verticalAccuracy': 'vertical_accuracy'
       }
 
       for key in location:
         if key in keys:
-          getKey = keys[key]
-          getKey(location[key])
+          if key == 'latitudeE7' or key == 'longitudeE7':
+            setattr(event_data, keys[key], location[key] / 1e7)
+          else:
+            setattr(event_data, keys[key], location[key])
 
       if 'activity' in location:
         activity_str = ""
@@ -1036,13 +847,10 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       event_data (GoogleHangoutsEventData): event data
       conversation (dict): hangout conversation
     """
-    event_data.conversation_id = \
-      conversation['id']['id']
-    event_data.conversation_type = \
-      conversation['type']
+    event_data.conversation_id = conversation['id']['id']
+    event_data.conversation_type = conversation['type']
     if 'name' in conversation:
-      event_data.conversation_name = \
-        conversation['name']
+      event_data.conversation_name = conversation['name']
 
   def _GetConversationState(self, event_data, conversation, users):
     """Get conversations' state
@@ -1055,8 +863,7 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
 
     event_data.conversation_notification_level = \
       conversation['notification_level']
-    event_data.conversation_medium = \
-      conversation['view'][0]
+    event_data.conversation_medium = conversation['view'][0]
 
     if 'inviter_id' in conversation:
       inviter = conversation['inviter_id']['gaia_id']
@@ -1088,8 +895,7 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
     for item in attachment:
       event_data.message_type = item['embed_item']['type'][0]
       if 'plus_photo' in item['embed_item']:
-        if 'thumbnail' in item['embed_item'] \
-            ['plus_photo']:
+        if 'thumbnail' in item['embed_item']['plus_photo']:
           event_data.message_photo = item['embed_item'] \
               ['plus_photo']['thumbnail']['image_url']
 
