@@ -52,7 +52,7 @@ class OutputModulesArgumentsHelper(interface.ArgumentsHelper):
     elif '--output-format' in arguments:
       argument_index = arguments.index('--output-format') + 1
 
-    if argument_index > 0 and argument_index < len(arguments):
+    if 0 < argument_index < len(arguments):
       names = [name.strip() for name in arguments[argument_index].split(',')]
     else:
       names = ['dynamic']

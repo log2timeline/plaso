@@ -51,7 +51,7 @@ class _MockNsrlsvrSocket(object):
 
   def close(self):
     """Mocks the socket.close method"""
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class NsrlSvrTest(test_lib.AnalysisPluginTestCase):

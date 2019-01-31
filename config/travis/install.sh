@@ -51,6 +51,8 @@ then
 		if test ${TRAVIS_PYTHON_VERSION} = "2.7";
 		then
 			sudo add-apt-repository ppa:gift/pylint2 -y;
+		else
+			sudo add-apt-repository ppa:gift/pylint3 -y;
 		fi
 	fi
 

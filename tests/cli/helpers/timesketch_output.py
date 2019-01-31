@@ -28,7 +28,7 @@ class MockTimesketchOutputModule(timesketch_out.TimesketchOutputModule):
     # We deliberately don't call super here to prevent the call to
     # timesketch.create_app() raising an exception.
     # pylint: disable=super-init-not-called
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class TimesketchOutputArgumentsHelperTest(

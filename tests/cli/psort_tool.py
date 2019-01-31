@@ -47,7 +47,7 @@ class TestOutputModuleArgumentHelper(helpers_interface.ArgumentsHelper):
   @classmethod
   def AddArguments(cls, argument_group):
     """Mock the add argument section."""
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
   # pylint: disable=arguments-differ
   @classmethod

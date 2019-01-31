@@ -2,11 +2,11 @@ matrix:
   include:
   - env: TARGET="pylint"
     os: linux
-    dist: trusty
+    dist: xenial
     sudo: required
     group: edge
     language: python
-    python: 2.7
+    python: 3.5
     virtualenv:
       system_site_packages: true
   - env: TARGET="linux-python27"
@@ -76,24 +76,6 @@ matrix:
     os: osx
     osx_image: xcode9.2
     language: generic
-  - env: TARGET="trusty-python27"
-    os: linux
-    dist: trusty
-    sudo: required
-    group: edge
-    language: python
-    python: 2.7
-    virtualenv:
-      system_site_packages: true
-  - env: TARGET="trusty-python34"
-    os: linux
-    dist: trusty
-    sudo: required
-    group: edge
-    language: python
-    python: 3.4
-    virtualenv:
-      system_site_packages: true
   - env: TARGET="jenkins"
     os: linux
     dist: trusty
