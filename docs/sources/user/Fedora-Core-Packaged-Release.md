@@ -19,5 +19,5 @@ sudo dnf copr enable @gift/stable
 Install plaso, tools and dependencies:
 
 ```
-sudo dnf install python-plaso plaso-tools
+sudo dnf install plaso-tools
 ```
