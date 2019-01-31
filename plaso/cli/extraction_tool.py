@@ -115,14 +115,11 @@ class ExtractionTool(
       if preset_definitions:
         preset_names = [
             preset_definition.name for preset_definition in preset_definitions]
-        if len(preset_names) != 1:
-          raise errors.BadConfigOption(
-              'More than 1 parser preset found for: {0:s} namely: {1:s}'.format(
-                  operating_system, preset_names))
+        filter_expression = ','.join(preset_names)
 
         logger.info('Parser filter expression set to: {0:s}'.format(
-            preset_names[0]))
-        configuration.parser_filter_expression = preset_names[0]
+            filter_expression))
+        configuration.parser_filter_expression = filter_expression
 
     return configuration
 
@@ -148,7 +145,7 @@ class ExtractionTool(
           self._buffer_size = int(self._buffer_size, 10)
       except ValueError:
         raise errors.BadConfigOption(
-            'Invalid buffer size: {0:s}.'.format(self._buffer_size))
+            'Invalid buffer size: {0:d}.'.format(self._buffer_size))
 
     self._queue_size = self.ParseNumericOption(options, 'queue_size')
 
