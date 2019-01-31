@@ -20,7 +20,7 @@ class TestEventFilter(interface.FilterObject):
     Raises:
       WrongPlugin: if the filter could not be compiled.
     """
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class FilterTestCase(shared_test_lib.BaseTestCase):

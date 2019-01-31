@@ -32,7 +32,7 @@ class TestEventExtractionWorker(worker.EventExtractionWorker):
           other components, such as storage and dfvfs.
       path_spec (dfvfs.PathSpec): path specification.
     """
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class TestFailureEventExtractionWorker(worker.EventExtractionWorker):

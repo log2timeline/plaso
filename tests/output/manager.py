@@ -23,7 +23,7 @@ class TestOutput(interface.OutputModule):
     Args:
       event (EventObject): event that contains the event values.
     """
-    pass
+    pass  # pylint: disable=unnecessary-pass
 
 
 class OutputManagerTest(unittest.TestCase):

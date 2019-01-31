@@ -861,8 +861,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
         self._CONTAINER_TYPE_SESSION_COMPLETION)
 
     for session_index in range(0, self._last_session):
-      session_start = next(session_start_generator)
-      session_completion = next(session_completion_generator)
+      session_start = next(session_start_generator)  # pylint: disable=stop-iteration-return
+      session_completion = next(session_completion_generator)  # pylint: disable=stop-iteration-return
 
       session = sessions.Session()
       session.CopyAttributesFromSessionStart(session_start)

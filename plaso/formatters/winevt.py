@@ -57,7 +57,7 @@ class WinEVTFormatter(interface.ConditionalEventFormatter):
     Returns:
       str: description of the event type.
     """
-    if event_type >= 0 and event_type < len(self._EVENT_TYPES):
+    if 0 <= event_type < len(self._EVENT_TYPES):
       return self._EVENT_TYPES[event_type]
     return 'Unknown {0:d}'.format(event_type)
 
@@ -70,7 +70,7 @@ class WinEVTFormatter(interface.ConditionalEventFormatter):
     Returns:
       str: description of the event severity.
     """
-    if severity >= 0 and severity < len(self._SEVERITY):
+    if 0 <= severity < len(self._SEVERITY):
       return self._SEVERITY[severity]
     return 'Unknown {0:d}'.format(severity)
 
