@@ -5,10 +5,10 @@
 SIFT workstation version 3 adds the [GIFT PPA](https://launchpad.net/~gift) stable track. All you need to do get the most recent stable release of Plaso is:
 ```
 sudo apt-get update
-sudo apt-get install python-plaso plaso-tools
+sudo apt-get install plaso-tools
 ```
 
-### Ubuntu 14.04, 16.04 and 18.04 LTS
+### Ubuntu 16.04 and 18.04 LTS
 
 To install plaso from the GIFT Personal Package Archive (PPA) add the [GIFT PPA](https://launchpad.net/~gift):
 
@@ -20,5 +20,5 @@ Update and install plaso:
 
 ```
 sudo apt-get update
-sudo apt-get install python-plaso plaso-tools
+sudo apt-get install plaso-tools
 ```
