@@ -113,7 +113,8 @@ class ArtifactDefinitionsFilterHelper(object):
           environment variables.
 
     Returns:
-      list[dfwinreg.FindSpec|dfvfs.FindSpec]: find specifications.
+      list[dfvfs.FindSpec|dfwinreg.FindSpec]: dfVFS or dfWinReg find
+          specifications.
     """
     find_specs = []
     for source in definition.sources:

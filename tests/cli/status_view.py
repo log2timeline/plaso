@@ -34,7 +34,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     output = output.split('\n')
 
     self.assertEqual(output[:4], expected_output[:4])
-    self.assertTrue(output[4].startswith('Processing time\t: '))
+    self.assertTrue(output[4].startswith('Processing time\t\t: '))
     self.assertEqual(output[5:], expected_output[5:])
 
   # TODO: add tests for _ClearScreen
@@ -106,9 +106,9 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     expected_output = [
         'plaso - test_tool version {0:s}'.format(plaso.__version__),
         '',
-        'Source path\t: /test/source/path',
-        'Source type\t: directory',
-        'Processing time\t: 00:00:00',
+        'Source path\t\t: /test/source/path',
+        'Source type\t\t: directory',
+        'Processing time\t\t: 00:00:00',
         '',
         table_header,
         ('f_identifier    '
@@ -133,9 +133,9 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     expected_output = [
         'plaso - test_tool version {0:s}'.format(plaso.__version__),
         '',
-        'Source path\t: /test/source/path',
-        'Source type\t: directory',
-        'Processing time\t: 00:00:00',
+        'Source path\t\t: /test/source/path',
+        'Source type\t\t: directory',
+        'Processing time\t\t: 00:00:00',
         '',
         table_header,
         ('f_identifier    '
