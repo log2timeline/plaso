@@ -163,7 +163,7 @@ class ArtifactDefinitionsFilterHelper(object):
             'Unsupported artifact definition source type: "{0:s}"'.format(
                 source.type_indicator))
 
-      return find_specs
+    return find_specs
 
   def _BuildFindSpecsFromGroupName(self, group_name, environment_variables):
     """Builds find specifications from a artifact group name.
@@ -181,8 +181,8 @@ class ArtifactDefinitionsFilterHelper(object):
     definition = self._artifacts_registry.GetDefinitionByName(group_name)
     if not definition:
       return None
-    return self._BuildFindSpecsFromArtifact(definition, environment_variables)
 
+    return self._BuildFindSpecsFromArtifact(definition, environment_variables)
 
   def _BuildFindSpecsFromFileSourcePath(
       self, source_path, path_separator, environment_variables, user_accounts):
