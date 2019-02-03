@@ -5,9 +5,6 @@ from __future__ import unicode_literals
 
 import os
 
-from efilter import api as efilter_api
-from efilter import errors as efilter_errors
-
 from plaso.analysis import interface
 from plaso.analysis import logger
 from plaso.analysis import manager
@@ -33,7 +30,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     super(TaggingAnalysisPlugin, self).__init__()
     self._autodetect_tag_file_attempt = False
     self._number_of_event_tags = 0
-    self._tag_rules = None
+    self._tagging_rules = None
 
   def _AttemptAutoDetectTagFile(self, analysis_mediator):
     """Detects which tag file is most appropriate.
@@ -81,11 +78,12 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
           plugins and other components, such as storage and dfvfs.
       event (EventObject): event to examine.
     """
-    if self._tag_rules is None:
+    if self._tagging_rules is None:
       if self._autodetect_tag_file_attempt:
         # There's nothing to tag with, and we've already tried to find a good
         # tag file, so there's nothing we can do with this event (or any other).
         return
+
       if not self._AttemptAutoDetectTagFile(mediator):
         logger.info(
             'No tag definition file specified, and plaso was not able to '
@@ -93,21 +91,19 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
             'no events will be tagged.')
         return
 
-    try:
-      matched_labels = efilter_api.apply(self._tag_rules, vars=event)
-    except efilter_errors.EfilterTypeError as exception:
-      logger.warning('Unable to apply efilter query with error: {0!s}'.format(
-          exception))
-      matched_labels = None
+    matched_label_names = []
+    for label_name, filter_objects in iter(self._tagging_rules.items()):
+      for filter_object in filter_objects:
+        if filter_object.Match(event):
+          matched_label_names.append(label_name)
+          break
 
-    if not matched_labels:
-      return
+    if matched_label_names:
+      event_tag = self._CreateEventTag(
+          event, self._EVENT_TAG_COMMENT, matched_label_names)
 
-    labels = list(efilter_api.getvalues(matched_labels))
-    event_tag = self._CreateEventTag(event, self._EVENT_TAG_COMMENT, labels)
-
-    mediator.ProduceEventTag(event_tag)
-    self._number_of_event_tags += 1
+      mediator.ProduceEventTag(event_tag)
+      self._number_of_event_tags += 1
 
   def SetAndLoadTagFile(self, tagging_file_path):
     """Sets the tag file to be used by the plugin.
@@ -116,7 +112,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
       tagging_file_path (str): path of the tagging file.
     """
     tag_file = tagging_file.TaggingFile(tagging_file_path)
-    self._tag_rules = tag_file.GetEventTaggingRules()
+    self._tagging_rules = tag_file.GetEventTaggingRules()
 
 
 manager.AnalysisPluginManager.RegisterPlugin(TaggingAnalysisPlugin)
