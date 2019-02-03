@@ -60,7 +60,7 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event.
     """
-    pass  # pylint: disable=unnecessary-pass
+    return
 
 
 class TestEvent(events.EventObject):
@@ -135,7 +135,7 @@ class TestOutputModule(output_interface.LinearOutputModule):
 
   def WriteHeader(self):
     """Writes the header to the output."""
-    pass  # pylint: disable=unnecessary-pass
+    return
 
   def WriteEventMACBGroup(self, event_macb_group):
     """Writes an event MACB group to the output.

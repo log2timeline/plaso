@@ -22,7 +22,7 @@ class NullOutputModule(interface.OutputModule):
     Args:
       event (EventObject): event.
     """
-    pass  # pylint: disable=unnecessary-pass
+    return
 
 
 manager.OutputManager.RegisterOutput(NullOutputModule)
