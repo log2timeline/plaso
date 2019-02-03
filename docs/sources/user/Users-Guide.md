@@ -20,7 +20,10 @@ If you run into problems installing, check out the [installation troubleshooting
 
 Please report all discovered bugs on the [issue tracker](https://github.com/log2timeline/plaso/issues).
 
-To follow announcements from the plaso team or send in generic inquiries or discuss the tool, please subscribe to the [log2timeline-discuss](https://groups.google.com/forum/#!forum/log2timeline-discuss) mailing list or join the [G+ community](https://plus.google.com/communities/108570205204169790104).
+To follow announcements from the plaso team or send in generic inquiries or discuss the tool:
+
+* subscribe to the [log2timeline-discuss](https://groups.google.com/forum/#!forum/log2timeline-discuss) mailing list.
+* join the plaso channel part of the [open-source-dfir Slack community](https://open-source-dfir.slack.com/), more information can be found [here](https://github.com/open-source-dfir/slack).
 
 ### I know the good old Perl version
 
