@@ -9,13 +9,21 @@ L2TBINARIES_DEPENDENCIES="PyYAML XlsxWriter artifacts backports.lzma bencode bip
 
 L2TBINARIES_TEST_DEPENDENCIES="funcsigs mock pbr six";
 
-PYTHON2_DEPENDENCIES="libbde-python libesedb-python libevt-python libevtx-python libewf-python libfsapfs-python libfsntfs-python libfvde-python libfwnt-python libfwsi-python liblnk-python libmsiecf-python libolecf-python libqcow-python libregf-python libscca-python libsigscan-python libsmdev-python libsmraw-python libvhdi-python libvmdk-python libvshadow-python libvslvm-python python-artifacts python-backports.lzma python-bencode python-biplist python-certifi python-chardet python-crypto python-dateutil python-dfdatetime python-dfvfs python-dfwinreg python-dtfabric python-efilter python-elasticsearch python-elasticsearch5 python-future python-idna python-lz4 python-pefile python-psutil python-pyparsing python-pysqlite2 python-pytsk3 python-requests python-six python-tz python-urllib3 python-xlsxwriter python-yaml python-yara python-zmq";
+DPKG_PYTHON2_DEPENDENCIES="libbde-python libesedb-python libevt-python libevtx-python libewf-python libfsapfs-python libfsntfs-python libfvde-python libfwnt-python libfwsi-python liblnk-python libmsiecf-python libolecf-python libqcow-python libregf-python libscca-python libsigscan-python libsmdev-python libsmraw-python libvhdi-python libvmdk-python libvshadow-python libvslvm-python python-artifacts python-backports.lzma python-bencode python-biplist python-certifi python-chardet python-crypto python-dateutil python-dfdatetime python-dfvfs python-dfwinreg python-dtfabric python-efilter python-elasticsearch python-elasticsearch5 python-future python-idna python-lz4 python-pefile python-psutil python-pyparsing python-pysqlite2 python-pytsk3 python-requests python-six python-tz python-urllib3 python-xlsxwriter python-yaml python-yara python-zmq";
 
-PYTHON2_TEST_DEPENDENCIES="python-coverage python-funcsigs python-mock python-pbr python-six python-tox";
+DPKG_PYTHON2_TEST_DEPENDENCIES="python-coverage python-funcsigs python-mock python-pbr python-tox";
 
-PYTHON3_DEPENDENCIES="libbde-python3 libesedb-python3 libevt-python3 libevtx-python3 libewf-python3 libfsapfs-python3 libfsntfs-python3 libfvde-python3 libfwnt-python3 libfwsi-python3 liblnk-python3 libmsiecf-python3 libolecf-python3 libqcow-python3 libregf-python3 libscca-python3 libsigscan-python3 libsmdev-python3 libsmraw-python3 libvhdi-python3 libvmdk-python3 libvshadow-python3 libvslvm-python3 python3-artifacts python3-bencode python3-biplist python3-certifi python3-chardet python3-crypto python3-dateutil python3-dfdatetime python3-dfvfs python3-dfwinreg python3-dtfabric python3-efilter python3-elasticsearch python3-elasticsearch5 python3-future python3-idna python3-lz4 python3-pefile python3-psutil python3-pyparsing python3-pytsk3 python3-requests python3-six python3-tz python3-urllib3 python3-xlsxwriter python3-yaml python3-yara python3-zmq";
+DPKG_PYTHON3_DEPENDENCIES="libbde-python3 libesedb-python3 libevt-python3 libevtx-python3 libewf-python3 libfsapfs-python3 libfsntfs-python3 libfvde-python3 libfwnt-python3 libfwsi-python3 liblnk-python3 libmsiecf-python3 libolecf-python3 libqcow-python3 libregf-python3 libscca-python3 libsigscan-python3 libsmdev-python3 libsmraw-python3 libvhdi-python3 libvmdk-python3 libvshadow-python3 libvslvm-python3 python3-artifacts python3-bencode python3-biplist python3-certifi python3-chardet python3-crypto python3-dateutil python3-dfdatetime python3-dfvfs python3-dfwinreg python3-dtfabric python3-efilter python3-elasticsearch python3-elasticsearch5 python3-future python3-idna python3-lz4 python3-pefile python3-psutil python3-pyparsing python3-pytsk3 python3-requests python3-six python3-tz python3-urllib3 python3-xlsxwriter python3-yaml python3-yara python3-zmq";
 
-PYTHON3_TEST_DEPENDENCIES="python3-mock python3-pbr python3-setuptools python3-six python3-tox";
+DPKG_PYTHON3_TEST_DEPENDENCIES="python3-mock python3-pbr python3-setuptools python3-tox";
+
+RPM_PYTHON2_DEPENDENCIES="libbde-python2 libesedb-python2 libevt-python2 libevtx-python2 libewf-python2 libfsapfs-python2 libfsntfs-python2 libfvde-python2 libfwnt-python2 libfwsi-python2 liblnk-python2 libmsiecf-python2 libolecf-python2 libqcow-python2 libregf-python2 libscca-python2 libsigscan-python2 libsmdev-python2 libsmraw-python2 libvhdi-python2 libvmdk-python2 libvshadow-python2 libvslvm-python2 python-biplist python-chardet python-dfvfs python-dfwinreg python-efilter python-elasticsearch python-elasticsearch5 python-psutil python2-XlsxWriter python2-artifacts python2-backports-lzma python2-bencode python2-certifi python2-crypto python2-dateutil python2-dfdatetime python2-dtfabric python2-future python2-idna python2-lz4 python2-pefile python2-pyparsing python2-pysqlite python2-pytsk3 python2-pytz python2-pyyaml python2-requests python2-six python2-urllib3 python2-yara python2-zmq";
+
+RPM_PYTHON2_TEST_DEPENDENCIES="python2-funcsigs python2-mock python2-pbr";
+
+RPM_PYTHON3_DEPENDENCIES="libbde-python3 libesedb-python3 libevt-python3 libevtx-python3 libewf-python3 libfsapfs-python3 libfsntfs-python3 libfvde-python3 libfwnt-python3 libfwsi-python3 liblnk-python3 libmsiecf-python3 libolecf-python3 libqcow-python3 libregf-python3 libscca-python3 libsigscan-python3 libsmdev-python3 libsmraw-python3 libvhdi-python3 libvmdk-python3 libvshadow-python3 libvslvm-python3 python3-XlsxWriter python3-artifacts python3-bencode python3-biplist python3-certifi python3-chardet python3-crypto python3-dateutil python3-dfdatetime python3-dfvfs python3-dfwinreg python3-dtfabric python3-efilter python3-elasticsearch python3-elasticsearch5 python3-future python3-idna python3-lz4 python3-pefile python3-psutil python3-pyparsing python3-pytsk3 python3-pytz python3-pyyaml python3-requests python3-six python3-urllib3 python3-yara python3-zmq";
+
+RPM_PYTHON3_TEST_DEPENDENCIES="python3-mock python3-pbr";
 
 # Exit on error.
 set -e;
@@ -42,18 +50,32 @@ then
 		sudo /usr/bin/hdiutil detach /Volumes/${PACKAGE}-*.pkg
 	done
 
+elif test -n "${FEDORA_VERSION}";
+then
+	CONTAINER_NAME="fedora${FEDORA_VERSION}";
+
+	docker pull registry.fedoraproject.org/fedora:${FEDORA_VERSION};
+
+	docker run --name=${CONTAINER_NAME} --detach -i registry.fedoraproject.org/fedora:${FEDORA_VERSION};
+
+	docker exec ${CONTAINER_NAME} dnf install -y dnf-plugins-core;
+
+	docker exec ${CONTAINER_NAME} dnf copr -y enable @gift/dev;
+
+	if test ${TRAVIS_PYTHON_VERSION} = "2.7";
+	then
+		docker exec ${CONTAINER_NAME} dnf install -y git python2 ${RPM_PYTHON2_DEPENDENCIES} ${RPM_PYTHON2_TEST_DEPENDENCIES};
+	else
+		docker exec ${CONTAINER_NAME} dnf install -y git python3 ${RPM_PYTHON3_DEPENDENCIES} ${RPM_PYTHON3_TEST_DEPENDENCIES};
+	fi
+
 elif test ${TRAVIS_OS_NAME} = "linux" && test ${TARGET} != "jenkins";
 then
 	sudo rm -f /etc/apt/sources.list.d/travis_ci_zeromq3-source.list;
 
 	if test ${TARGET} = "pylint";
 	then
-		if test ${TRAVIS_PYTHON_VERSION} = "2.7";
-		then
-			sudo add-apt-repository ppa:gift/pylint2 -y;
-		else
-			sudo add-apt-repository ppa:gift/pylint3 -y;
-		fi
+		sudo add-apt-repository ppa:gift/pylint3 -y;
 	fi
 
 	sudo add-apt-repository ppa:gift/dev -y;
@@ -61,9 +83,9 @@ then
 
 	if test ${TRAVIS_PYTHON_VERSION} = "2.7";
 	then
-		sudo apt-get install -y ${PYTHON2_DEPENDENCIES} ${PYTHON2_TEST_DEPENDENCIES};
+		sudo apt-get install -y ${DPKG_PYTHON2_DEPENDENCIES} ${DPKG_PYTHON2_TEST_DEPENDENCIES};
 	else
-		sudo apt-get install -y ${PYTHON3_DEPENDENCIES} ${PYTHON3_TEST_DEPENDENCIES};
+		sudo apt-get install -y ${DPKG_PYTHON3_DEPENDENCIES} ${DPKG_PYTHON3_TEST_DEPENDENCIES};
 	fi
 	if test ${TARGET} = "pylint";
 	then

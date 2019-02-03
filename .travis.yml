@@ -1,6 +1,7 @@
 matrix:
   include:
-  - env: TARGET="pylint"
+  - name: "Pylint on Ubuntu Xenial (16.04) with Python 3.5"
+    env: TARGET="pylint"
     os: linux
     dist: xenial
     sudo: required
@@ -9,7 +10,8 @@ matrix:
     python: 3.5
     virtualenv:
       system_site_packages: true
-  - env: TARGET="linux-python27"
+  - name: "Ubuntu Xenial (16.04) with Python 2.7"
+    env: TARGET="linux-python27"
     os: linux
     dist: xenial
     sudo: required
@@ -18,7 +20,8 @@ matrix:
     python: 2.7
     virtualenv:
       system_site_packages: true
-  - env: TARGET="linux-python35"
+  - name: "Ubuntu Xenial (16.04) with Python 3.5"
+    env: TARGET="linux-python35"
     os: linux
     dist: xenial
     sudo: required
@@ -27,7 +30,8 @@ matrix:
     python: 3.5
     virtualenv:
       system_site_packages: true
-  - env: [TARGET="linux-python27-tox", TOXENV="py27"]
+  - name: "Ubuntu Xenial (16.04) with Python 2.7 and tox"
+    env: [TARGET="linux-python27-tox", TOXENV="py27"]
     os: linux
     dist: xenial
     sudo: required
@@ -36,7 +40,8 @@ matrix:
     python: 2.7
     virtualenv:
       system_site_packages: false
-  - env: [TARGET="linux-python34-tox", TOXENV="py34"]
+  - name: "Ubuntu Xenial (16.04) with Python 3.4 and tox"
+    env: [TARGET="linux-python34-tox", TOXENV="py34"]
     os: linux
     dist: xenial
     sudo: required
@@ -45,7 +50,8 @@ matrix:
     python: 3.4
     virtualenv:
       system_site_packages: false
-  - env: [TARGET="linux-python35-tox", TOXENV="py35"]
+  - name: "Ubuntu Xenial (16.04) with Python 3.5 and tox"
+    env: [TARGET="linux-python35-tox", TOXENV="py35"]
     os: linux
     dist: xenial
     sudo: required
@@ -54,7 +60,8 @@ matrix:
     python: 3.5
     virtualenv:
       system_site_packages: false
-  - env: [TARGET="linux-python36-tox", TOXENV="py36"]
+  - name: "Ubuntu Xenial (16.04) with Python 3.6 and tox"
+    env: [TARGET="linux-python36-tox", TOXENV="py36"]
     os: linux
     dist: xenial
     sudo: required
@@ -63,7 +70,8 @@ matrix:
     python: 3.6
     virtualenv:
       system_site_packages: false
-  - env: [TARGET="linux-python37-tox", TOXENV="py37"]
+  - name: "Ubuntu Xenial (16.04) with Python 3.7 and tox"
+    env: [TARGET="linux-python37-tox", TOXENV="py37"]
     os: linux
     dist: xenial
     sudo: required
@@ -72,7 +80,28 @@ matrix:
     python: 3.7
     virtualenv:
       system_site_packages: false
-  - env: [TARGET="macos-python27", PYTHONPATH="/Library/Python/2.7/site-packages/"]
+  - name: "Fedora Core 29 (Docker) with Python 2.7"
+    env: FEDORA_VERSION="29"
+    os: linux
+    dist: xenial
+    sudo: required
+    group: edge
+    language: python
+    python: 2.7
+    services:
+    - docker
+  - name: "Fedora Core 29 (Docker) with Python 3.7"
+    env: FEDORA_VERSION="29"
+    os: linux
+    dist: xenial
+    sudo: required
+    group: edge
+    language: python
+    python: 3.7
+    services:
+    - docker
+  - name: "MacOS with Python 2.7.10"
+    env: [TARGET="macos-python27", PYTHONPATH="/Library/Python/2.7/site-packages/"]
     os: osx
     osx_image: xcode9.2
     language: generic

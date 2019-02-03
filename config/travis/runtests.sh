@@ -38,6 +38,19 @@ then
 		PYTHONPATH=. python ./tests/end-to-end.py --debug -c config/end-to-end.ini;
 	fi
 
+elif test -n "${FEDORA_VERSION}";
+then
+	CONTAINER_NAME="fedora${FEDORA_VERSION}";
+
+	docker exec "${CONTAINER_NAME}" sh -c "git clone https://github.com/log2timeline/plaso.git";
+
+	if test ${TRAVIS_PYTHON_VERSION} = "2.7";
+	then
+		docker exec "${CONTAINER_NAME}" sh -c "export LANG=en_US.UTF-8; cd plaso && python2 run_tests.py";
+	else
+		docker exec "${CONTAINER_NAME}" sh -c "cd plaso && python3 run_tests.py";
+	fi
+
 elif test "${TRAVIS_OS_NAME}" = "linux";
 then
 	COVERAGE="/usr/bin/coverage";
