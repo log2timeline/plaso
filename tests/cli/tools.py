@@ -23,11 +23,12 @@ class CLIToolTest(test_lib.CLIToolTestCase):
   # pylint: disable=protected-access
 
   _EXPECTED_BASIC_OPTIONS = """\
-usage: tool_test.py [-h] [-V]
+usage: tool_test.py [-h] [--troubles] [-V]
 
 Test argument parser.
 
 optional arguments:
+  --troubles     Show troubleshooting information.
   -V, --version  Show the version information.
   -h, --help     Show this help message and exit.
 """
