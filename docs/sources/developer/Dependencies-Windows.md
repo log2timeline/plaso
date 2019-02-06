@@ -78,7 +78,6 @@ google-apputils | https://pypi.python.org/pypi/google-apputils | |
 pefile | https://github.com/erocarrera/pefile/releases | |
 psutil | https://pypi.python.org/pypi/psutil | |
 PyParsing | http://sourceforge.net/projects/pyparsing/files/ | 2.0.3 or later 2.x version |
-python-gflags | https://github.com/google/python-gflags/releases | |
 pytsk | https://github.com/py4n6/pytsk/releases | |
 pytz | https://pypi.python.org/pypi/pytz | |
 PyYAML | http://pyyaml.org/wiki/PyYAML | |
