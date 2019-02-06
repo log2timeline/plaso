@@ -317,16 +317,16 @@ class StatusView(object):
       processing_status (ProcessingStatus): processing status.
     """
     self._output_writer.Write(
-        'Source path\t: {0:s}\n'.format(self._source_path))
+        'Source path\t\t: {0:s}\n'.format(self._source_path))
     self._output_writer.Write(
-        'Source type\t: {0:s}\n'.format(self._source_type))
+        'Source type\t\t: {0:s}\n'.format(self._source_type))
 
     if self._artifact_filters:
       artifacts_string = ', '.join(self._artifact_filters)
       self._output_writer.Write('Artifact filters\t: {0:s}\n'.format(
           artifacts_string))
     if self._filter_file:
-      self._output_writer.Write('Filter file\t: {0:s}\n'.format(
+      self._output_writer.Write('Filter file\t\t: {0:s}\n'.format(
           self._filter_file))
 
     if not processing_status:
@@ -337,7 +337,7 @@ class StatusView(object):
       processing_time = time.strftime('%H:%M:%S', time_struct)
 
     self._output_writer.Write(
-        'Processing time\t: {0:s}\n'.format(processing_time))
+        'Processing time\t\t: {0:s}\n'.format(processing_time))
 
     if processing_status and processing_status.tasks_status:
       tasks_status = processing_status.tasks_status

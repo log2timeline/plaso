@@ -120,18 +120,24 @@ class PathHelper(object):
       user_paths = []
       for user_account in user_accounts:
         user_path = user_account.user_directory
-        # Prevent concatenating two consecuative path segment separators.
+        # Prevent concatenating two consecutive path segment separators.
         if user_path[-1] == path_separator and path[0] == path_separator:
           user_path = user_path[:-1]
 
         user_path = ''.join([user_path, path])
         user_paths.append(user_path)
 
-    # Remove the drive letter, if it exists.
-    for path_index, user_path in enumerate(user_paths):
-      if len(user_path) > 2 and user_path[1] == ':':
-        _, _, user_path = user_path.rpartition(':')
-        user_paths[path_index] = user_path
+    # Remove leading drive letters or %SystemDrive%.
+    for index, user_path in enumerate(user_paths):
+      user_path_upper_case = user_path.upper()
+
+      if len(user_path) >= 2 and user_path[1] == ':':
+        # Strip path of drive letter, e.g. "C:".
+        user_paths[index] = user_path[2:]
+
+      elif user_path_upper_case.startswith('%SYSTEMDRIVE%\\'):
+        # Strip path of "%SystemDrive%".
+        user_paths[index] = user_path[13:]
 
     return user_paths
 
