@@ -54,25 +54,37 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     return artifact_filters.ArtifactDefinitionsFilterHelper(
         registry, artifact_definitions, knowledge_base)
 
+  def _CreateTestKnowledgeBaseWindows(self):
+    """Creates a knowlege base for testing Windows paths.
+
+    Creates a knowledge base with 2 user accounts.
+
+    Returns:
+      KnowledgeBase: knowledge base.
+    """
+    knowledge_base = knowledge_base_engine.KnowledgeBase()
+
+    test_user1 = artifacts.UserAccountArtifact(
+        identifier='1000',
+        user_directory='C:\\Users\\testuser1',
+        username='testuser1')
+    knowledge_base.AddUserAccount(test_user1)
+
+    test_user2 = artifacts.UserAccountArtifact(
+        identifier='1001',
+        user_directory='%SystemDrive%\\Users\\testuser2',
+        username='testuser2')
+    knowledge_base.AddUserAccount(test_user2)
+
+    return knowledge_base
+
   @shared_test_lib.skipUnlessHasTestFile(['artifacts'])
   @shared_test_lib.skipUnlessHasTestFile(['System.evtx'])
   @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_1.txt'])
   @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_3.txt'])
   def testBuildFindSpecsWithFileSystem(self):
     """Tests the BuildFindSpecs function for file type artifacts."""
-    knowledge_base = knowledge_base_engine.KnowledgeBase()
-
-    testuser1 = artifacts.UserAccountArtifact(
-        identifier='1000',
-        user_directory='C:\\Users\\testuser1',
-        username='testuser1')
-    knowledge_base.AddUserAccount(testuser1)
-
-    testuser2 = artifacts.UserAccountArtifact(
-        identifier='1001',
-        user_directory='C:\\Users\\testuser2',
-        username='testuser2')
-    knowledge_base.AddUserAccount(testuser2)
+    knowledge_base = self._CreateTestKnowledgeBaseWindows()
 
     test_filter_file = self._CreateTestArtifactDefinitionsFilterHelper(
         ['TestFiles', 'TestFiles2'], knowledge_base)
@@ -125,19 +137,7 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['testdir', 'filter_3.txt'])
   def testBuildFindSpecsWithFileSystemAndGroup(self):
     """Tests the BuildFindSpecs function for file type artifacts."""
-    knowledge_base = knowledge_base_engine.KnowledgeBase()
-
-    testuser1 = artifacts.UserAccountArtifact(
-        identifier='1000',
-        user_directory='C:\\Users\\testuser1',
-        username='testuser1')
-    knowledge_base.AddUserAccount(testuser1)
-
-    testuser2 = artifacts.UserAccountArtifact(
-        identifier='1001',
-        user_directory='C:\\Users\\testuser2',
-        username='testuser2')
-    knowledge_base.AddUserAccount(testuser2)
+    knowledge_base = self._CreateTestKnowledgeBaseWindows()
 
     filter_helper = self._CreateTestArtifactDefinitionsFilterHelper(
         ['TestGroupExtract'], knowledge_base)
@@ -236,8 +236,8 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     compatible_key = test_filter_file.CheckKeyCompatibility(key_path)
     self.assertFalse(compatible_key)
 
-  def testBuildFindSpecsFromFileArtifact(self):
-    """Tests the BuildFindSpecsFromFileArtifact function on file sources."""
+  def testBuildFindSpecsFromFileSourcePath(self):
+    """Tests the _BuildFindSpecsFromFileSourcePath function on file sources."""
     knowledge_base = knowledge_base_engine.KnowledgeBase()
     test_filter_file = self._CreateTestArtifactDefinitionsFilterHelper(
         [], knowledge_base)
@@ -309,9 +309,9 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     # Test Windows path with profile directories and globs with a depth of 4.
     separator = '\\'
     testuser1 = artifacts.UserAccountArtifact(
-        user_directory='\\Users\\testuser1', username='testuser1')
+        user_directory='C:\\Users\\testuser1', username='testuser1')
     testuser2 = artifacts.UserAccountArtifact(
-        user_directory='\\Users\\testuser2', username='testuser2')
+        user_directory='%SystemDrive%\\Users\\testuser2', username='testuser2')
     user_accounts = [testuser1, testuser2]
     path_entry = '%%users.homedir%%\\AppData\\**4'
 

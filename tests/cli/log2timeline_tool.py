@@ -106,7 +106,7 @@ optional arguments:
     output = output.split('\n')
 
     self.assertEqual(output[:3], expected_output[:3])
-    self.assertTrue(output[3].startswith('Processing time\t: '))
+    self.assertTrue(output[3].startswith('Processing time\t\t: '))
     self.assertEqual(output[4:], expected_output[4:])
 
   def _CreateExtractionOptions(self, source_path, password=None):
@@ -238,9 +238,9 @@ optional arguments:
 
       expected_output = [
           '',
-          'Source path\t: {0:s}'.format(options.source),
-          'Source type\t: directory',
-          'Processing time\t: 00:00:00',
+          'Source path\t\t: {0:s}'.format(options.source),
+          'Source type\t\t: directory',
+          'Processing time\t\t: 00:00:00',
           '',
           'Processing started.',
           'Processing completed.',
@@ -269,9 +269,9 @@ optional arguments:
 
       expected_output = [
           '',
-          'Source path\t: {0:s}'.format(options.source),
-          'Source type\t: storage media image',
-          'Processing time\t: 00:00:00',
+          'Source path\t\t: {0:s}'.format(options.source),
+          'Source type\t\t: storage media image',
+          'Processing time\t\t: 00:00:00',
           '',
           'Processing started.',
           'Processing completed.',
@@ -301,9 +301,9 @@ optional arguments:
 
       expected_output = [
           '',
-          'Source path\t: {0:s}'.format(options.source),
-          'Source type\t: storage media image',
-          'Processing time\t: 00:00:00',
+          'Source path\t\t: {0:s}'.format(options.source),
+          'Source type\t\t: storage media image',
+          'Processing time\t\t: 00:00:00',
           '',
           'Processing started.',
           'Processing completed.',
@@ -332,9 +332,9 @@ optional arguments:
 
       expected_output = [
           '',
-          'Source path\t: {0:s}'.format(options.source),
-          'Source type\t: storage media image',
-          'Processing time\t: 00:00:00',
+          'Source path\t\t: {0:s}'.format(options.source),
+          'Source type\t\t: storage media image',
+          'Processing time\t\t: 00:00:00',
           '',
           'Processing started.',
           'Processing completed.',
@@ -365,9 +365,9 @@ optional arguments:
 
       expected_output = [
           '',
-          'Source path\t: {0:s}'.format(options.source),
-          'Source type\t: storage media image',
-          'Processing time\t: 00:00:00',
+          'Source path\t\t: {0:s}'.format(options.source),
+          'Source type\t\t: storage media image',
+          'Processing time\t\t: 00:00:00',
           '',
           'Processing started.',
           'Processing completed.',
@@ -397,9 +397,9 @@ optional arguments:
 
       expected_output = [
           '',
-          'Source path\t: {0:s}'.format(options.source),
-          'Source type\t: storage media image',
-          'Processing time\t: 00:00:00',
+          'Source path\t\t: {0:s}'.format(options.source),
+          'Source type\t\t: storage media image',
+          'Processing time\t\t: 00:00:00',
           '',
           'Processing started.',
           'Processing completed.',
@@ -432,9 +432,9 @@ optional arguments:
 
       expected_output = [
           '',
-          'Source path\t: {0:s}'.format(options.source),
-          'Source type\t: single file',
-          'Processing time\t: 00:00:00',
+          'Source path\t\t: {0:s}'.format(options.source),
+          'Source type\t\t: single file',
+          'Processing time\t\t: 00:00:00',
           '',
           'Processing started.',
           'Processing completed.',
@@ -466,9 +466,9 @@ optional arguments:
 
       expected_output = [
           '',
-          'Source path\t: {0:s}'.format(options.source),
-          'Source type\t: directory',
-          'Processing time\t: 00:00:00',
+          'Source path\t\t: {0:s}'.format(options.source),
+          'Source type\t\t: directory',
+          'Processing time\t\t: 00:00:00',
           '',
           'Processing started.',
           'Processing completed.',
@@ -500,9 +500,9 @@ optional arguments:
 
       expected_output = [
           '',
-          'Source path\t: {0:s}'.format(options.source),
-          'Source type\t: single file',
-          'Processing time\t: 00:00:00',
+          'Source path\t\t: {0:s}'.format(options.source),
+          'Source type\t\t: single file',
+          'Processing time\t\t: 00:00:00',
           '',
           'Processing started.',
           'Processing completed.',

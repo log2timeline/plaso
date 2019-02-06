@@ -113,7 +113,7 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     user_account_artifact1 = artifacts.UserAccountArtifact(
         user_directory='C:\\Users\\Test1', username='Test1')
     user_account_artifact2 = artifacts.UserAccountArtifact(
-        user_directory='C:\\Users\\Test2', username='Test2')
+        user_directory='%SystemDrive%\\Users\\Test2', username='Test2')
 
     path = '%%users.homedir%%\\Profile'
     expanded_paths = path_helper.PathHelper.ExpandUsersHomeDirectoryPath(
