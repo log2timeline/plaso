@@ -48,7 +48,6 @@ biplist | https://pypi.python.org/pypi/biplist | |
 dateutil | https://pypi.python.org/pypi/python-dateutil | |
 google-apputils | https://pypi.python.org/pypi/google-apputils | |
 PyParsing | http://sourceforge.net/projects/pyparsing/files/ | 2.0.3 or later 2.x version |
-python-gflags | https://github.com/google/python-gflags/releases | |
 pytz | https://pypi.python.org/pypi/pytz | |
 PyYAML | http://pyyaml.org/wiki/PyYAML | |
 pyzmq | https://pypi.python.org/pypi/pyzmq | Needs Cython to build |
@@ -184,23 +183,6 @@ cd ..
 To install the required rpm files run:
 ```
 sudo dnf install psutil-1.2.1/dist/psutil-1.2.1.x86_64.rpm
-```
-
-#### python-gflags
-
-Download the latest source package from: https://github.com/google/python-gflags/releases
-
-To build rpm files run the following command from the build root directory:
-```
-tar xvf python-gflags-python-gflags-2.0.tar.gz
-cd python-gflags-python-gflags-2.0/
-python setup.py bdist_rpm
-cd ..
-```
-
-To install the required rpm files run:
-```
-sudo dnf install python-gflags-python-gflags-2.0/dist/python-gflags-2.0-1.noarch.rpm
 ```
 
 ### Pytsk

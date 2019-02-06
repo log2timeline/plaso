@@ -67,7 +67,6 @@ biplist | https://pypi.python.org/pypi/biplist | org.python.pypi.biplist | |
 dateutil | https://pypi.python.org/pypi/python-dateutil | com.github.dateutil.dateutil | |
 google-apputils | https://pypi.python.org/pypi/google-apputils | com.github.google.google-apputils | |
 PyParsing | http://sourceforge.net/projects/pyparsing/files/ | net.sourceforge.pyparsing | |
-python-gflags | https://github.com/google/python-gflags/releases | com.github.google.python-gflags | |
 pytz | https://pypi.python.org/pypi/pytz | org.python.pypi.pytz | |
 pyzmq | https://pypi.python.org/pypi/pyzmq | com.github.zeromq.pyzmq | Needs Cython to build |
 requests | https://github.com/kennethreitz/requests/releases | com.github.kennethreitz.requests | Make sure to click on: "Show # newer tags" |

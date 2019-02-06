@@ -52,7 +52,6 @@ biplist | https://pypi.python.org/pypi/biplist | |
 dateutil | https://pypi.python.org/pypi/python-dateutil | |
 google-apputils | https://pypi.python.org/pypi/google-apputils | |
 PyParsing | http://sourceforge.net/projects/pyparsing/files/ | 2.0.3 or later 2.x version |
-python-gflags | https://github.com/google/python-gflags/releases | |
 pytz | https://pypi.python.org/pypi/pytz | |
 PyYAML | http://pyyaml.org/wiki/PyYAML | |
 pyzmq | https://pypi.python.org/pypi/pyzmq | Needs Cython to build |
