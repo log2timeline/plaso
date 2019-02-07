@@ -266,24 +266,26 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
 
     self._parser_mediator = parser_mediator
 
+    keys = {
+        'lineItem': self._PurchasesParser,
+        'locations': self._GmapsParser,
+        'conversations': self._HangoutsParser,
+        'Browser History': self._GchromeParser
+    }
+
     for filepath in zip_file.namelist():
       filepath_encoded = filepath.encode('ascii', 'ignore')
       fp = filepath_encoded.decode('utf-8', 'replace')
       if fp.endswith('.json'):
         with zip_file.open(filepath) as f:
           json_data = json.loads(f.read())
-          if 'lineItem' in json_data:
-            self._PurchasesParser(json_data, self._parser_mediator)
-          elif 'locations' in json_data:
-            self._GmapsParser(json_data, self._parser_mediator)
-          elif 'conversations' in json_data:
-            self._HangoutsParser(json_data, self._parser_mediator)
-          elif 'Browser History' in json_data:
-            self._GchromeParser(json_data, self._parser_mediator)
-          else:
-            for data in json_data:
-              if 'header' and 'products' in data:
-                self._ActivitiesParser(data, self._parser_mediator)
+          for key in keys:
+            if key in json_data:
+              getkey = keys[key]
+              getkey(json_data, self._parser_mediator)
+          for data in json_data:
+            if 'header' and 'products' in data:
+              self._ActivitiesParser(data, self._parser_mediator)
       elif filepath.endswith('.mbox'):
         mbox_file = BytesIO(zip_file.read(filepath))
         self._MBoxParser(mbox_file, self._parser_mediator)
@@ -393,11 +395,9 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
          str: body mail
     """
 
-    if message.get_content_type() == 'text/plain':
-      if message['Content-Transfer-Encoding'] == 'base64':
-        return base64.b64decode(message.get_payload())
-      return message.get_payload()
-
+    if (message.get_content_type() == 'text/plain') and \
+      (message['Content-Transfer-Encoding'] == 'base64'):
+      return base64.b64decode(message.get_payload())
     return message.get_payload()
 
   def _ParseBodyMail(self, mail):
@@ -426,14 +426,13 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
                   charset = self._GetCharset(subpart.get_charsets()[0])
               body += self._BodyMail(subpart).decode(charset, 'ignore')
         else:
-          bodymail = self._BodyMail(part)
-          if bodymail:
-            body = bodymail
+          if self._BodyMail(part):
+            body = self._BodyMail(part)
     else:
       body = self._BodyMail(mail)
     return body
 
-  #pylint: disable=invalid-name
+  # pylint: disable=invalid-name
   def _GetMailInfo(self, event_data, key, value):
     """Gets other mail info.
        There is dictionary mapping case values to functions to call.
@@ -612,7 +611,7 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
     )
     return timestamp
 
-  #pylint: disable=unused-argument
+  # pylint: disable=unused-argument
   def _GetInfoFulfillmentPurchase(self, event_data, value, timestamp):
 
     """Gets info about fulfillment (purchase).
@@ -646,7 +645,7 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       if el == 'arrivalAirport':
         event_data.arrival_airport = value[el]['location']['name']
 
-  #pylint: disable=unused-argument
+  # pylint: disable=unused-argument
   def _GetPurchaseInfo(self, event_data, value, info, timestamp):
     """Gets other Purchase info.
 
@@ -772,7 +771,7 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
 
       for key in location:
         if key in keys:
-          if key == 'latitudeE7' or key == 'longitudeE7':
+          if (key == 'latitudeE7') or (key == 'longitudeE7'):
             setattr(event_data, keys[key], location[key] / 1e7)
           else:
             setattr(event_data, keys[key], location[key])
@@ -1098,11 +1097,11 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
               date_time_message, event_data
           )
 
-# pylint: disable=C1001
+# pylint: disable=old-style-class
 class Mailbox:
   """A group of messages in a particular place."""
 
-  #pylint: disable=unused-argument
+  # pylint: disable=unused-argument
   def __init__(self, factory=None, create=True):
     """Initialize a Mailbox instance."""
     self._factory = factory
@@ -1124,20 +1123,15 @@ class Mailbox:
       return self.Get_message(key)
     return KeyError('No message with key: %s' % key)
 
-
   def Get_message(self, key):
     """Return a Message representation or raise a KeyError."""
-    raise NotImplementedError('Method must be implemented by subclass')
-
-  def Get_string(self, key):
-    """Return a string representation or raise a KeyError."""
     raise NotImplementedError('Method must be implemented by subclass')
 
   def Iterkeys(self):
     """Return an iterator over keys."""
     raise NotImplementedError('Method must be implemented by subclass')
 
-  # pylint: disable=C0103
+  # pylint: disable=invalid-name
   def keys(self):
     """Return a list of keys."""
     return list(self.Iterkeys())
@@ -1154,7 +1148,7 @@ class Mailbox:
   def __iter__(self):
     return self.Itervalues()
 
-  # pylint: disable=C0103
+  # pylint: disable=invalid-name
   def values(self):
     """Return a list of messages. Memory intensive."""
     return list(self.Itervalues())
@@ -1171,13 +1165,6 @@ class Mailbox:
   def Items(self):
     """Return a list of (key, message) tuples. Memory intensive."""
     return list(self.Iteritems())
-
-  def Has_key(self, key):
-    """Return True if the keyed message exists, False otherwise."""
-    raise NotImplementedError('Method must be implemented by subclass')
-
-  def __contains__(self, key):
-    return self.Has_key(key)
 
   def __len__(self):
     """Return a count of messages in the mailbox."""
@@ -1292,12 +1279,13 @@ class Message(email.message.Message):
 
   def __init__(self, message=None):
     """Initialize a Message instance."""
+    # pylint:disable=invalid-name
     if isinstance(message, unicode):
       message = message.encode('ascii', 'ignore')
     if isinstance(message, email.message.Message):
       self._become_message(copy.deepcopy(message))
       if isinstance(message, Message):
-        # pylint: disable=W0212
+        # pylint: disable=protected-access
         message._explain_to(self)
     elif isinstance(message, str):
       self._become_message(email.message_from_string(message))
