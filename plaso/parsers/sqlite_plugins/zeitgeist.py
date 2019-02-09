@@ -104,8 +104,6 @@ class ZeitgeistActivityDatabasePlugin(interface.SQLitePlugin):
           'CREATE TABLE uri ( id INTEGER PRIMARY KEY, value VARCHAR '
           'UNIQUE )')}]
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseZeitgeistEventRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a zeitgeist event row.

@@ -441,8 +441,6 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
     return identifier_mappings
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseApplicationResourceUsage(
       self, parser_mediator, cache=None, database=None, table=None,
       **unused_kwargs):
@@ -461,8 +459,6 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
         self._APPLICATION_RESOURCE_USAGE_VALUES_MAP,
         SRUMApplicationResourceUsageEventData)
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseNetworkDataUsage(
       self, parser_mediator, cache=None, database=None, table=None,
       **unused_kwargs):
@@ -480,8 +476,6 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
         parser_mediator, cache, database, table,
         self._NETWORK_DATA_USAGE_VALUES_MAP, SRUMNetworkDataUsageEventData)
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseNetworkConnectivityUsage(
       self, parser_mediator, cache=None, database=None, table=None,
       **unused_kwargs):

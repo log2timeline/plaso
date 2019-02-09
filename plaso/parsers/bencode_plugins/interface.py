@@ -115,8 +115,6 @@ class BencodePlugin(plugins.BasePlugin):
                 item, root=root + '/' + key, depth=depth - 1):
               yield keyval
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   @abc.abstractmethod
   def GetEntries(self, parser_mediator, data=None, **kwargs):
     """Extracts event object from the values of entries within a bencoded file.
@@ -142,8 +140,7 @@ class BencodePlugin(plugins.BasePlugin):
       data (Optional[dict[str, object]]): bencode data values.
     """
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc,arguments-differ
+  # pylint: disable=arguments-differ
   def Process(self, parser_mediator, data, **kwargs):
     """Determine if this is the correct plugin; if so proceed with processing.
 

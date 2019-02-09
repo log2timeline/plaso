@@ -99,8 +99,6 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
       'metadata': (
           'CREATE TABLE metadata (key TEXT NOT NULL UNIQUE, value)')}]
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParsePageVisitRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a visited row.
 
