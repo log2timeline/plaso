@@ -29,7 +29,7 @@ from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.engine import knowledge_base
-from plaso.filters import manager as filters_manager
+from plaso.filters import event_filter
 from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.lib import timelib
@@ -198,11 +198,14 @@ class PsortTool(
     """
     self._event_filter_expression = self.ParseStringOption(options, 'filter')
     if self._event_filter_expression:
-      self._event_filter = filters_manager.FiltersManager.GetFilterObject(
-          self._event_filter_expression)
-      if not self._event_filter:
-        raise errors.BadConfigOption('Invalid filter expression: {0:s}'.format(
-            self._event_filter_expression))
+      self._event_filter = event_filter.EventObjectFilter()
+
+      try:
+        self._event_filter.CompileFilter(self._event_filter_expression)
+      except errors.ParseError as exception:
+        raise errors.BadConfigOption((
+            'Unable to compile filter expression with error: '
+            '{0!s}').format(exception))
 
     time_slice_event_time_string = getattr(options, 'slice', None)
     time_slice_duration = getattr(options, 'slice_size', 5)
