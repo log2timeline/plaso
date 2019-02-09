@@ -3,7 +3,6 @@
 
 from plaso.filters import dynamic_filter
 from plaso.filters import event_filter
-from plaso.filters import filter_list
 
 # This file does not register a filter.
 # from plaso.filters import path_filter
