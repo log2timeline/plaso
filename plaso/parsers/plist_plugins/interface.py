@@ -107,8 +107,7 @@ class PlistPlugin(plugins.BasePlugin):
             return match
     return match
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
+  # pylint: disable=arguments-differ
   @abc.abstractmethod
   def GetEntries(
       self, parser_mediator, top_level=None, match=None, **unused_kwargs):
@@ -153,8 +152,6 @@ class PlistPlugin(plugins.BasePlugin):
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc,arguments-differ
   def Process(self, parser_mediator, plist_name, top_level, **kwargs):
     """Determine if this is the correct plugin; if so proceed with processing.
 

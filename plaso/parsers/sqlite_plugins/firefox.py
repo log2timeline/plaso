@@ -299,8 +299,6 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       3: 'Separator',
   }
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseBookmarkAnnotationRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a bookmark annotation row.
@@ -336,8 +334,6 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseBookmarkFolderRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a bookmark folder row.
@@ -373,8 +369,6 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseBookmarkRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a bookmark row.
@@ -416,8 +410,6 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParsePageVisitedRow(
       self, parser_mediator, query, row, cache=None, database=None,
       **unused_kwargs):
@@ -557,8 +549,6 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
   # The required tables.
   REQUIRED_TABLES = frozenset(['moz_downloads'])
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseDownloadsRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a downloads row.

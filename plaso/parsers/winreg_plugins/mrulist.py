@@ -57,8 +57,6 @@ class BaseMRUListWindowsRegistryPlugin(
 
   _DEFINITION_FILE = 'mru.yaml'
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc,redundant-returns-doc
   @abc.abstractmethod
   def _ParseMRUListEntryValue(
       self, parser_mediator, registry_key, entry_index, entry_letter, **kwargs):
@@ -166,8 +164,6 @@ class MRUListStringWindowsRegistryPlugin(BaseMRUListWindowsRegistryPlugin):
 
   URLS = ['http://forensicartifacts.com/tag/mru/']
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def _ParseMRUListEntryValue(
       self, parser_mediator, registry_key, entry_index, entry_letter, **kwargs):
     """Parses the MRUList entry value.
@@ -213,8 +209,7 @@ class MRUListStringWindowsRegistryPlugin(BaseMRUListWindowsRegistryPlugin):
 
     return value_string
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc,arguments-differ
+  # pylint: disable=arguments-differ
   def ExtractEvents(
       self, parser_mediator, registry_key, codepage='cp1252', **kwargs):
     """Extracts events from a Windows Registry key.
@@ -242,8 +237,7 @@ class MRUListShellItemListWindowsRegistryPlugin(
 
   URLS = ['https://github.com/libyal/winreg-kb/wiki/MRU-keys']
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc,arguments-differ
+  # pylint: disable=arguments-differ
   def _ParseMRUListEntryValue(
       self, parser_mediator, registry_key, entry_index, entry_letter,
       codepage='cp1252', **kwargs):
@@ -284,8 +278,7 @@ class MRUListShellItemListWindowsRegistryPlugin(
 
     return value_string
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc,arguments-differ
+  # pylint: disable=arguments-differ
   def ExtractEvents(
       self, parser_mediator, registry_key, codepage='cp1252', **kwargs):
     """Extracts events from a Windows Registry key.

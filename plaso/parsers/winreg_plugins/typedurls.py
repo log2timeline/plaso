@@ -29,8 +29,6 @@ class TypedURLsPlugin(interface.WindowsRegistryPlugin):
   _RE_VALUE_NAME = re.compile(r'^url[0-9]+$', re.I)
   _SOURCE_APPEND = ': Typed URLs'
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
 

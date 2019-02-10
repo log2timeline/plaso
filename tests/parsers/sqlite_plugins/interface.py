@@ -59,8 +59,6 @@ class TestSQLitePlugin(interface.SQLitePlugin):
     super(TestSQLitePlugin, self).__init__()
     self.results = []
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseMyTableRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a MyTable row.
 

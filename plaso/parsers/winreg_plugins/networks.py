@@ -135,8 +135,6 @@ class NetworksWindowsRegistryPlugin(
       raise errors.ParseError(
           'Invalid SYSTEMTIME value: {0!s}'.format(system_time_tuple))
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
 

@@ -52,8 +52,7 @@ class BasePlugin(object):
     """Return the name of the plugin."""
     return self.NAME
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc,unused-argument
+  # pylint: disable=unused-argument
   def Process(self, parser_mediator, **kwargs):
     """Evaluates if this is the correct plugin and processes data accordingly.
 
@@ -77,8 +76,6 @@ class BasePlugin(object):
       raise ValueError('Unused keyword arguments: {0:s}.'.format(
           ', '.join(kwargs.keys())))
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def UpdateChainAndProcess(self, parser_mediator, **kwargs):
     """Wrapper for Process() to synchronize the parser chain.
 

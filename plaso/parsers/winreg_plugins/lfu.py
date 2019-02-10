@@ -23,8 +23,6 @@ class BootVerificationPlugin(interface.WindowsRegistryPlugin):
 
   URLS = ['http://technet.microsoft.com/en-us/library/cc782537(v=ws.10).aspx']
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
 
@@ -62,8 +60,6 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
 
   URLS = ['http://technet.microsoft.com/en-us/library/cc963230.aspx']
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
     """Extracts events from a Windows Registry key.
 

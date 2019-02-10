@@ -339,8 +339,6 @@ class ESEDBPlugin(plugins.BasePlugin):
           'Unable to map {0:s} data at offset: 0x{1:08x} with error: '
           '{2!s}').format(data_type_map.name or '', file_offset, exception))
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def GetEntries(self, parser_mediator, cache=None, database=None, **kwargs):
     """Extracts event objects from the database.
 
@@ -385,8 +383,7 @@ class ESEDBPlugin(plugins.BasePlugin):
           parser_mediator, cache=cache, database=database, table=esedb_table,
           **kwargs)
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc,arguments-differ
+  # pylint: disable=arguments-differ
   def Process(self, parser_mediator, cache=None, database=None, **kwargs):
     """Determines if this is the appropriate plugin for the database.
 

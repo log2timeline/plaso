@@ -174,8 +174,6 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
           'INTEGER, \'businessProfileState\' INTEGER, \'analyticsType\' '
           'INTEGER )')}]
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseContactRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a contact row from the database.
 
@@ -220,8 +218,6 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
           date_time, definitions.TIME_DESCRIPTION_UPDATE)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseStatusRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a contact row from the database.
 
