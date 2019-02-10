@@ -432,8 +432,6 @@ class SkypePlugin(interface.SQLitePlugin):
           'INTEGER, size INTEGER, path TEXT, failures INTEGER, vflags '
           'INTEGER, xmsg TEXT, extprop_hide_from_history INTEGER)')}]
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseAccountInformation(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses account information.
@@ -498,8 +496,6 @@ class SkypePlugin(interface.SQLitePlugin):
       event = time_events.DateTimeValuesEvent(date_time, 'Last Used')
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseChat(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a chat message.
 
@@ -541,8 +537,6 @@ class SkypePlugin(interface.SQLitePlugin):
       event = time_events.DateTimeValuesEvent(date_time, 'Chat from Skype')
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseSMS(self, parser_mediator, query, row, **unused_kwargs):
     """Parses an SMS.
 
@@ -569,8 +563,6 @@ class SkypePlugin(interface.SQLitePlugin):
       event = time_events.DateTimeValuesEvent(date_time, 'SMS from Skype')
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseCall(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a call.
 
@@ -658,8 +650,6 @@ class SkypePlugin(interface.SQLitePlugin):
         event = time_events.DateTimeValuesEvent(date_time, 'Call from Skype')
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseFileTransfer(
       self, parser_mediator, query, row, cache=None, database=None,
       **unused_kwargs):

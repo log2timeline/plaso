@@ -127,8 +127,6 @@ class IMessagePlugin(interface.SQLitePlugin):
           'INTEGER REFERENCES attachment (ROWID) ON DELETE CASCADE, '
           'UNIQUE(message_id, attachment_id))')}]
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseMessageRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a message row.
 

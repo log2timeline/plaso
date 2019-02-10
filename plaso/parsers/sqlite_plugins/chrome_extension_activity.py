@@ -78,8 +78,6 @@ class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
           'CREATE TABLE url_ids (id INTEGER PRIMARY KEY, value TEXT NOT '
           'NULL)')}]
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def ParseActivityLogUncompressedRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses an activity log row.

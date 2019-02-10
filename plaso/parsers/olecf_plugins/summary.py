@@ -264,8 +264,6 @@ class DocumentSummaryInformationOLECFPlugin(interface.OLECFPlugin):
   # pylint: disable=anomalous-backslash-in-string
   REQUIRED_ITEMS = frozenset(['\005DocumentSummaryInformation'])
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def Process(self, parser_mediator, root_item=None, **kwargs):
     """Parses a document summary information OLECF item.
 
@@ -326,8 +324,6 @@ class SummaryInformationOLECFPlugin(interface.OLECFPlugin):
       'last_save_time': 'Document Last Save Time',
   }
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def Process(self, parser_mediator, root_item=None, **kwargs):
     """Parses a summary information OLECF item.
 

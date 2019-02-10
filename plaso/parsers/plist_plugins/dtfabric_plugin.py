@@ -153,8 +153,6 @@ class DtFabricBasePlistPlugin(interface.PlistPlugin):
           'Unable to map {0:s} data at offset: 0x{1:08x} with error: '
           '{2!s}').format(data_type_map.name or '', file_offset, exception))
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   @abc.abstractmethod
   def GetEntries(
       self, parser_mediator, top_level=None, match=None, **unused_kwargs):

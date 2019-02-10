@@ -58,8 +58,6 @@ class MacUserPlugin(interface.PlistPlugin):
 
   _ROOT = '/'
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def Process(self, parser_mediator, plist_name, top_level, **kwargs):
     """Check if it is a valid MacOS system  account plist file name.
 
@@ -72,8 +70,7 @@ class MacUserPlugin(interface.PlistPlugin):
     super(MacUserPlugin, self).Process(
         parser_mediator, plist_name=self.PLIST_PATH, top_level=top_level)
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc,arguments-differ
+  # pylint: disable=arguments-differ
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant user timestamp entries.
 

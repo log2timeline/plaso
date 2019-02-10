@@ -20,8 +20,6 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
 
   SUPPORTED_HASHES = ['md5', 'sha1', 'sha256']
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
     """Initializes a VirusTotal analyzer.
 

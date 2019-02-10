@@ -83,8 +83,6 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
       'http://www.dfinews.com/articles/2012/02/'
       'google-analytics-cookies-and-forensic-implications')]
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def GetEntries(
       self, parser_mediator, cookie_data=None, url=None, **kwargs):
     """Extracts event objects from the cookie.
@@ -206,8 +204,6 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
       'http://www.dfinews.com/articles/2012/02/'
       'google-analytics-cookies-and-forensic-implications')]
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def GetEntries(
       self, parser_mediator, cookie_data=None, url=None, **kwargs):
     """Extracts event objects from the cookie.
@@ -287,8 +283,6 @@ class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
 
   COOKIE_NAME = '__utmt'
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def GetEntries(
       self, parser_mediator, cookie_data=None, url=None, **kwargs):
     """Extracts event objects from the cookie.
@@ -355,8 +349,6 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
       'http://www.dfinews.com/articles/2012/02/'
       'google-analytics-cookies-and-forensic-implications')]
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc
   def GetEntries(
       self, parser_mediator, cookie_data=None, url=None, **kwargs):
     """Extracts event objects from the cookie.

@@ -39,8 +39,6 @@ class TransmissionPlugin(interface.BencodePlugin):
       'activity-date', 'done-date', 'added-date', 'destination',
       'seeding-time-seconds'])
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc,arguments-differ
   def GetEntries(self, parser_mediator, data=None, **unused_kwargs):
     """Extract data from Transmission's resume folder files.
 

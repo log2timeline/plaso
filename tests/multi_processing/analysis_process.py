@@ -34,8 +34,6 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
     """
     return
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc,unused-argument
   def ExamineEvent(self, mediator, event):
     """Analyzes an event.
 

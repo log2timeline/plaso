@@ -81,8 +81,6 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
 
     return record_values
 
-  # pylint 1.9.3 wants a docstring for kwargs, but this is not useful to add.
-  # pylint: disable=missing-param-doc,unused-argument
   def ParseNameSpace(
       self, parser_mediator, cache=None, database=None, table=None,
       **unused_kwargs):
