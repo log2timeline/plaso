@@ -771,7 +771,7 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
 
       for key in location:
         if key in keys:
-          if (key == 'latitudeE7') or (key == 'longitudeE7'):
+          if key == ('latitudeE7', 'longitudeE7'):
             setattr(event_data, keys[key], location[key] / 1e7)
           else:
             setattr(event_data, keys[key], location[key])
@@ -1097,7 +1097,9 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
               date_time_message, event_data
           )
 
+# pylint: disable=bad-option-value
 # pylint: disable=old-style-class
+# pylint: disable=abstract-method
 class Mailbox:
   """A group of messages in a particular place."""
 
@@ -1279,9 +1281,6 @@ class Message(email.message.Message):
 
   def __init__(self, message=None):
     """Initialize a Message instance."""
-    # pylint:disable=invalid-name
-    if isinstance(message, unicode):
-      message = message.encode('ascii', 'ignore')
     if isinstance(message, email.message.Message):
       self._become_message(copy.deepcopy(message))
       if isinstance(message, Message):
