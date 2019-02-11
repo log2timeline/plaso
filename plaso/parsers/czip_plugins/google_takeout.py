@@ -486,7 +486,6 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
         date_time = dfdatetime_time_elements.TimeElements()
         received_from = ''
         received_by = ''
-
         if 'Date' in mail.keys():
           for key, value in zip(mail.keys(), mail.values()):
             if key == 'Date':
@@ -501,6 +500,7 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
                 dt = self._GetDateTime(value)
                 date_time.CopyFromDateTimeString(dt)
             elif key == 'Received':
+              print value
               if value.startswith('by'):
                 received_by = value + ' - ' + received_by
               if value.startswith('from'):
@@ -685,29 +685,29 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       """
       self._GetInfoAirportPurchase(event_data, value)
 
-    keys = {
+    key_to_value = {
         'status': 'status',
         'quantity': 'quantity',
         'productInfo': 'product',
         'landingPageUrl': 'url'
     }
 
-    keys2 = {
+    key_to_value2 = {
         'unitPrice': GetUnitPrice,
         'fulfillment': GetFulfillment,
         'flightLeg': GetFlightLeg
     }
 
-    if info in keys:
+    if info in key_to_value:
       if isinstance(value[info], dict):
         if 'link' in value[info]:
-          setattr(event_data, keys[info], value[info]['link'])
+          setattr(event_data, key_to_value[info], value[info]['link'])
         elif 'name' in value[info]:
-          setattr(event_data, keys[info], value[info]['name'])
+          setattr(event_data, key_to_value[info], value[info]['name'])
       else:
-        setattr(event_data, keys[info], value[info])
-    elif info in keys2:
-      getKey = keys2[info]
+        setattr(event_data, key_to_value[info], value[info])
+    elif info in key_to_value2:
+      getKey = key_to_value2[info]
       getKey(value[info])
 
     if info == 'bookingTimestamp':
@@ -759,7 +759,7 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
           timestamp=location["timestampMs"]
       )
 
-      keys = {
+      key_to_value = {
           'latitudeE7': 'latitude',
           'longitudeE7': 'longitude',
           'velocity': 'velocity',
@@ -770,11 +770,11 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
       }
 
       for key in location:
-        if key in keys:
+        if key in key_to_value:
           if key == ('latitudeE7', 'longitudeE7'):
-            setattr(event_data, keys[key], location[key] / 1e7)
+            setattr(event_data, key_to_value[key], location[key] / 1e7)
           else:
-            setattr(event_data, keys[key], location[key])
+            setattr(event_data, key_to_value[key], location[key])
 
       if 'activity' in location:
         activity_str = ""
