@@ -500,7 +500,6 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
                 dt = self._GetDateTime(value)
                 date_time.CopyFromDateTimeString(dt)
             elif key == 'Received':
-              print value
               if value.startswith('by'):
                 received_by = value + ' - ' + received_by
               if value.startswith('from'):
