@@ -466,7 +466,7 @@ class FakeStorageWriter(interface.StorageWriter):
     Args:
       serializers_profiler (SerializersProfiler): serializers profiler.
     """
-    pass  # pylint: disable=unnecessary-pass
+    return
 
   def SetStorageProfiler(self, storage_profiler):
     """Sets the storage profiler.
@@ -474,7 +474,7 @@ class FakeStorageWriter(interface.StorageWriter):
     Args:
       storage_profiler (StorageProfiler): storage profiler.
     """
-    pass  # pylint: disable=unnecessary-pass
+    return
 
   # pylint: disable=unused-argument
   def WritePreprocessingInformation(self, knowledge_base):
