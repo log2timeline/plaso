@@ -85,6 +85,9 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
   """
   CONTAINER_TYPE = 'operating_system'
 
+  _DEFAULT_FAMILY_AND_VERSION = (
+      definitions.OPERATING_SYSTEM_FAMILY_UNKNOWN, (0, 0))
+
   _FAMILY_AND_VERSION_PER_NAME = {
       'Windows 2000': (definitions.OPERATING_SYSTEM_FAMILY_WINDOWS_NT, (5, 0)),
       'Windows 2003': (definitions.OPERATING_SYSTEM_FAMILY_WINDOWS_NT, (5, 2)),
@@ -152,7 +155,7 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
 
     if 'windows' in product_lower_case:
       segment_index = product_lower_case.index('windows') + 1
-      if product_lower_case[segment_index] == 'server':
+      if product_lower_case[segment_index] in ('(r)', 'server'):
         segment_index += 1
 
       # Check if the version has a suffix.
@@ -186,7 +189,7 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
 
     if self.name:
       self_family, self_version_tuple = self._FAMILY_AND_VERSION_PER_NAME.get(
-          self.name)
+          self.name, self._DEFAULT_FAMILY_AND_VERSION)
       return (
           self_family == other.family and
           self_version_tuple == other.version_tuple)
@@ -194,7 +197,8 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
     if self.family and self.version:
       if other.name:
         other_family, other_version_tuple = (
-            self._FAMILY_AND_VERSION_PER_NAME.get(other.name))
+            self._FAMILY_AND_VERSION_PER_NAME.get(
+                other.name, self._DEFAULT_FAMILY_AND_VERSION))
       else:
         other_family = other.family
         other_version_tuple = other.version_tuple
@@ -205,7 +209,8 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
 
     if self.family:
       if other.name:
-        other_family, _ = self._FAMILY_AND_VERSION_PER_NAME.get(other.name)
+        other_family, _ = self._FAMILY_AND_VERSION_PER_NAME.get(
+            other.name, self._DEFAULT_FAMILY_AND_VERSION)
       else:
         other_family = other.family
 
