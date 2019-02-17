@@ -31,27 +31,27 @@ PYTHON2_DEPENDENCIES="libbde-python2
                       libvmdk-python2
                       libvshadow-python2
                       libvslvm-python2
-                      python-biplist
-                      python-chardet
-                      python-dfvfs
-                      python-dfwinreg
-                      python-efilter
-                      python-elasticsearch
-                      python-elasticsearch5
-                      python-psutil
                       python2-XlsxWriter
                       python2-artifacts
                       python2-backports-lzma
                       python2-bencode
+                      python2-biplist
                       python2-certifi
+                      python2-chardet
                       python2-crypto
                       python2-dateutil
                       python2-dfdatetime
+                      python2-dfvfs
+                      python2-dfwinreg
                       python2-dtfabric
+                      python2-efilter
+                      python2-elasticsearch
+                      python2-elasticsearch5
                       python2-future
                       python2-idna
                       python2-lz4
                       python2-pefile
+                      python2-psutil
                       python2-pyparsing
                       python2-pysqlite
                       python2-pytsk3
