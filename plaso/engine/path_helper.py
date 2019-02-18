@@ -124,6 +124,9 @@ class PathHelper(object):
       return path[2:]
 
     path_upper_case = path.upper()
+    if path_upper_case.startswith('%%ENVIRON_SYSTEMDRIVE%%\\'):
+      return path[23:]
+
     if path_upper_case.startswith('%SYSTEMDRIVE%\\'):
       return path[13:]
 
