@@ -2,7 +2,6 @@
 """This file imports Python modules that register filters."""
 
 from plaso.filters import event_filter
-from plaso.filters import filter_list
 
 # This file does not register a filter.
 # from plaso.filters import path_filter
