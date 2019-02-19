@@ -1,6 +1,7 @@
 # !/usr/bin/python
 # -*- coding: utf-8 -*-
 """Tests for Mac Notes event formatter."""
+from __future__ import unicode_literals
 
 import unittest
 
@@ -13,14 +14,14 @@ class MacNotesZhtmlstringFormatterTest(test_lib.EventFormatterTestCase):
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = mac_notes.MacNotesZhtmlstringFormatter()
+    event_formatter = mac_notes.MacNotesNotesFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = mac_notes.MacNotesZhtmlstringFormatter()
+    event_formatter = mac_notes.MacNotesNotesFormatter()
 
-    expected_attribute_names = ['zhtmlstring']
+    expected_attribute_names = ['zhtmlstring', 'last_modified_time']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

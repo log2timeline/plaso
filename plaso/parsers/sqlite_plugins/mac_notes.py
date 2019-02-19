@@ -6,6 +6,8 @@ SQLite database Name: NotesV7.storedata
 """
 
 from __future__ import unicode_literals
+import re 
+from bs4 import BeautifulSoup
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
@@ -14,9 +16,7 @@ from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
-from bs4 import BeautifulSoup
-import re 
-import logging
+
 
 
 class MacNotesZhtmlstringEventData(events.EventData):
@@ -24,7 +24,7 @@ class MacNotesZhtmlstringEventData(events.EventData):
 
   Attributes:
     zhtmlstring: contains note data.
-
+    last_modified_date: last time note was modified.
   """
 
   DATA_TYPE = 'mac:notes:zhtmlstring'
@@ -126,12 +126,10 @@ class MacNotesPlugin(interface.SQLitePlugin):
     last_modified = self._GetRowValue(query_hash, row,'last_modified_time')
     event_data.last_modified_time = dfdatetime_cocoa_time.CocoaTime(
       timestamp=last_modified).CopyToDateTimeString()
-    logging.warning(event_data.last_modified_time)
 
     timestamp = self._GetRowValue(query_hash, row, 'timestamp')
 
     date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-    logging.warning(event_data.zhtmlstring)
     event = time_events.DateTimeValuesEvent(
       date_time, definitions.TIME_DESCRIPTION_CREATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)

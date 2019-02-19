@@ -5,13 +5,12 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.lib import definitions
-#from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import mac_notes
 
 from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
-import logging
+
 
 class MacNotesTest(test_lib.SQLitePluginTestCase):
   """Tests for mac notes database plugin."""
