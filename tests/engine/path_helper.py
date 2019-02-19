@@ -19,6 +19,99 @@ from tests import test_lib as shared_test_lib
 class PathHelperTest(shared_test_lib.BaseTestCase):
   """Tests for the path helper."""
 
+  # pylint: disable=protected-access
+
+  def testExpandUsersHomeDirectoryPathSegments(self):
+    """Tests the _ExpandUsersHomeDirectoryPathSegments function."""
+    user_account_artifact1 = artifacts.UserAccountArtifact(
+        user_directory='/home/Test1', username='Test1')
+    user_account_artifact2 = artifacts.UserAccountArtifact(
+        user_directory='/Users/Test2', username='Test2')
+
+    user_accounts = [user_account_artifact1, user_account_artifact2]
+
+    path_segments = ['%%users.homedir%%', '.bashrc']
+    expanded_paths = (
+        path_helper.PathHelper._ExpandUsersHomeDirectoryPathSegments(
+            path_segments, '/', user_accounts))
+
+    expected_expanded_paths = [
+        '/home/Test1/.bashrc',
+        '/Users/Test2/.bashrc']
+    self.assertEqual(expanded_paths, expected_expanded_paths)
+
+    user_account_artifact1 = artifacts.UserAccountArtifact(
+        user_directory='C:\\Users\\Test1', username='Test1')
+    user_account_artifact2 = artifacts.UserAccountArtifact(
+        user_directory='%SystemDrive%\\Users\\Test2', username='Test2')
+
+    user_accounts = [user_account_artifact1, user_account_artifact2]
+
+    path_segments = ['%%users.userprofile%%', 'Profile']
+    expanded_paths = (
+        path_helper.PathHelper._ExpandUsersHomeDirectoryPathSegments(
+            path_segments, '\\', user_accounts))
+
+    expected_expanded_paths = [
+        '\\Users\\Test1\\Profile',
+        '\\Users\\Test2\\Profile']
+    self.assertEqual(expanded_paths, expected_expanded_paths)
+
+    path_segments = ['C:', 'Temp']
+    expanded_paths = (
+        path_helper.PathHelper._ExpandUsersHomeDirectoryPathSegments(
+            path_segments, '\\', user_accounts))
+
+    expected_expanded_paths = ['\\Temp']
+    self.assertEqual(expanded_paths, expected_expanded_paths)
+
+    path_segments = ['C:', 'Temp', '%%users.userprofile%%']
+    expanded_paths = (
+        path_helper.PathHelper._ExpandUsersHomeDirectoryPathSegments(
+            path_segments, '\\', user_accounts))
+
+    expected_expanded_paths = ['\\Temp\\%%users.userprofile%%']
+    self.assertEqual(expanded_paths, expected_expanded_paths)
+
+  def testExpandUsersVariablePathSegments(self):
+    """Tests the _ExpandUsersVariablePathSegments function."""
+    user_account_artifact1 = artifacts.UserAccountArtifact(
+        user_directory='C:\\Users\\Test1', username='Test1')
+    user_account_artifact2 = artifacts.UserAccountArtifact(
+        user_directory='%SystemDrive%\\Users\\Test2', username='Test2')
+
+    user_accounts = [user_account_artifact1, user_account_artifact2]
+
+    path_segments = ['%%users.appdata%%', 'Microsoft', 'Windows', 'Recent']
+    expanded_paths = path_helper.PathHelper._ExpandUsersVariablePathSegments(
+        path_segments, '\\', user_accounts)
+
+    expected_expanded_paths = [
+        '\\Users\\Test1\\AppData\\Roaming\\Microsoft\\Windows\\Recent',
+        '\\Users\\Test1\\Application Data\\Microsoft\\Windows\\Recent',
+        '\\Users\\Test2\\AppData\\Roaming\\Microsoft\\Windows\\Recent',
+        '\\Users\\Test2\\Application Data\\Microsoft\\Windows\\Recent']
+    self.assertEqual(sorted(expanded_paths), expected_expanded_paths)
+
+    path_segments = ['C:', 'Windows']
+    expanded_paths = path_helper.PathHelper._ExpandUsersVariablePathSegments(
+        path_segments, '\\', user_accounts)
+
+    expected_expanded_paths = ['\\Windows']
+    self.assertEqual(sorted(expanded_paths), expected_expanded_paths)
+
+  def testStripDriveFromPath(self):
+    """Tests the _StripDriveFromPath function."""
+    stripped_path = path_helper.PathHelper._StripDriveFromPath('C:\\Windows')
+    self.assertEqual(stripped_path, '\\Windows')
+
+    stripped_path = path_helper.PathHelper._StripDriveFromPath(
+        '%SystemDrive%\\Windows')
+    self.assertEqual(stripped_path, '\\Windows')
+
+    stripped_path = path_helper.PathHelper._StripDriveFromPath('\\Windows')
+    self.assertEqual(stripped_path, '\\Windows')
+
   def testAppendPathEntries(self):
     """Tests the AppendPathEntries function."""
     separator = '\\'
@@ -108,35 +201,25 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
         '/etc/sysconfig/*/*/*/*'])
     self.assertEqual(sorted(paths), check_paths)
 
-  def testExpandUsersHomeDirectoryPath(self):
-    """Tests the ExpandUsersHomeDirectoryPath function."""
+  def testExpandUsersVariablePath(self):
+    """Tests the ExpandUsersVariablePath function."""
     user_account_artifact1 = artifacts.UserAccountArtifact(
         user_directory='C:\\Users\\Test1', username='Test1')
     user_account_artifact2 = artifacts.UserAccountArtifact(
         user_directory='%SystemDrive%\\Users\\Test2', username='Test2')
 
-    path = '%%users.homedir%%\\Profile'
-    expanded_paths = path_helper.PathHelper.ExpandUsersHomeDirectoryPath(
-        path, '\\', [user_account_artifact1, user_account_artifact2])
+    user_accounts = [user_account_artifact1, user_account_artifact2]
+
+    path = '%%users.appdata%%\\Microsoft\\Windows\\Recent'
+    expanded_paths = path_helper.PathHelper.ExpandUsersVariablePath(
+        path, '\\', user_accounts)
 
     expected_expanded_paths = [
-        '\\Users\\Test1\\Profile',
-        '\\Users\\Test2\\Profile']
-    self.assertEqual(expanded_paths, expected_expanded_paths)
-
-    path = 'C:\\Temp'
-    expanded_paths = path_helper.PathHelper.ExpandUsersHomeDirectoryPath(
-        path, '\\', [user_account_artifact1, user_account_artifact2])
-
-    expected_expanded_paths = ['\\Temp']
-    self.assertEqual(expanded_paths, expected_expanded_paths)
-
-    path = 'C:\\Temp\\%%users.homedir%%'
-    expanded_paths = path_helper.PathHelper.ExpandUsersHomeDirectoryPath(
-        path, '\\', [user_account_artifact1, user_account_artifact2])
-
-    expected_expanded_paths = ['\\Temp\\%%users.homedir%%']
-    self.assertEqual(expanded_paths, expected_expanded_paths)
+        '\\Users\\Test1\\AppData\\Roaming\\Microsoft\\Windows\\Recent',
+        '\\Users\\Test1\\Application Data\\Microsoft\\Windows\\Recent',
+        '\\Users\\Test2\\AppData\\Roaming\\Microsoft\\Windows\\Recent',
+        '\\Users\\Test2\\Application Data\\Microsoft\\Windows\\Recent']
+    self.assertEqual(sorted(expanded_paths), expected_expanded_paths)
 
   def testExpandWindowsPath(self):
     """Tests the ExpandWindowsPath function."""

@@ -16,6 +16,119 @@ class PathHelper(object):
 
   _RECURSIVE_GLOB_LIMIT = 10
 
+  _PATH_EXPANSIONS_PER_USERS_VARIABLE = {
+      '%%users.appdata%%': [
+          ['%%users.userprofile%%', 'AppData', 'Roaming'],
+          ['%%users.userprofile%%', 'Application Data']],
+      '%%users.localappdata%%': [
+          ['%%users.userprofile%%', 'AppData', 'Local'],
+          ['%%users.userprofile%%', 'Local Settings', 'Application Data']],
+      '%%users.localappdata_low%%': [
+          ['%%users.userprofile%%', 'AppData', 'LocalLow']],
+      '%%users.temp%%': [
+          ['%%users.localappdata%%', 'Temp']]}
+
+  @classmethod
+  def _ExpandUsersHomeDirectoryPathSegments(
+      cls, path_segments, path_separator, user_accounts):
+    """Expands a path to contain all users home or profile directories.
+
+    Expands the artifacts path variable "%%users.homedir%%" or
+    "%%users.userprofile%%".
+
+    Args:
+      path_segments (list[str]): path segments.
+      path_separator (str): path segment separator.
+      user_accounts (list[UserAccountArtifact]): user accounts.
+
+    Returns:
+      list[str]: paths returned for user accounts without a drive letter.
+    """
+    if not path_segments:
+      return []
+
+    user_paths = []
+
+    first_path_segment = path_segments[0].upper()
+    if first_path_segment not in ('%%USERS.HOMEDIR%%', '%%USERS.USERPROFILE%%'):
+      user_path = path_separator.join(path_segments)
+      user_paths.append(user_path)
+
+    else:
+      for user_account in user_accounts:
+        user_path = user_account.user_directory
+        # Prevent concatenating two consecutive path segment separators.
+        if user_path[-1] == path_separator:
+          user_path = user_path[:-1]
+
+        user_path_segments = [user_path]
+        user_path_segments.extend(path_segments[1:])
+
+        user_path = path_separator.join(user_path_segments)
+        user_paths.append(user_path)
+
+    return [cls._StripDriveFromPath(user_path) for user_path in user_paths]
+
+  @classmethod
+  def _ExpandUsersVariablePathSegments(
+      cls, path_segments, path_separator, user_accounts):
+    """Expands path segments with a users variable, e.g. %%users.homedir%%.
+
+    Args:
+      path_segments (list[str]): path segments.
+      path_separator (str): path segment separator.
+      user_accounts (list[UserAccountArtifact]): user accounts.
+
+    Returns:
+      list[str]: paths for which the users variables have been expanded.
+    """
+    if not path_segments:
+      return []
+
+    if path_segments[0] in ('%%users.homedir%%', '%%users.userprofile%%'):
+      return cls._ExpandUsersHomeDirectoryPathSegments(
+          path_segments, path_separator, user_accounts)
+
+    path_expansions = cls._PATH_EXPANSIONS_PER_USERS_VARIABLE.get(
+        path_segments[0], None)
+
+    if path_expansions:
+      expanded_paths = []
+
+      for path_expansion in path_expansions:
+        expanded_path_segments = list(path_expansion)
+        expanded_path_segments.extend(path_segments[1:])
+
+        paths = cls._ExpandUsersVariablePathSegments(
+            expanded_path_segments, path_separator, user_accounts)
+        expanded_paths.extend(paths)
+
+      return expanded_paths
+
+    # TODO: add support for %%users.username%%
+    path = path_separator.join(path_segments)
+    path = cls._StripDriveFromPath(path)
+    return [path]
+
+  @classmethod
+  def _StripDriveFromPath(cls, path):
+    """Removes a leading drive letter or %SystemDrive% from the path.
+
+    Args:
+      path (str): path.
+
+    Returns:
+      str: path without leading drive letter or %SystemDrive%.
+    """
+    if len(path) >= 2 and path[1] == ':':
+      return path[2:]
+
+    path_upper_case = path.upper()
+    if path_upper_case.startswith('%SYSTEMDRIVE%\\'):
+      return path[13:]
+
+    return path
+
   @classmethod
   def AppendPathEntries(
       cls, path, path_separator, number_of_wildcards, skip_first):
@@ -92,54 +205,20 @@ class PathHelper(object):
         match.group(1), path_separator, iterations, skip_first)
 
   @classmethod
-  def ExpandUsersHomeDirectoryPath(cls, path, path_separator, user_accounts):
-    """Expands a path to contain all users home or profile directories.
-
-    Expands the GRR artifacts path variable "%%users.homedir%%".
+  def ExpandUsersVariablePath(cls, path, path_separator, user_accounts):
+    """Expands a path with a users variable, e.g. %%users.homedir%%.
 
     Args:
-      path (str): path with environment variables.
+      path (str): path with users variable.
       path_separator (str): path segment separator.
       user_accounts (list[UserAccountArtifact]): user accounts.
 
     Returns:
-      list[str]: paths returned for user accounts without a drive letter.
+      list[str]: paths for which the users variables have been expanded.
     """
-    path_upper_case = path.upper()
-    if not path_upper_case.startswith('%%USERS.HOMEDIR%%'):
-      user_paths = [path]
-    else:
-      # We do not use regular expression here to replace "%%users.homedir%%"
-      # because this will complicate matters with Windows paths since
-      # as of Python 3.7 the repl argument of re.sub(), needs to be properly
-      # escaped.
-
-      # Strip path of "%%users.homedir%%".
-      path = path[17:]
-
-      user_paths = []
-      for user_account in user_accounts:
-        user_path = user_account.user_directory
-        # Prevent concatenating two consecutive path segment separators.
-        if user_path[-1] == path_separator and path[0] == path_separator:
-          user_path = user_path[:-1]
-
-        user_path = ''.join([user_path, path])
-        user_paths.append(user_path)
-
-    # Remove leading drive letters or %SystemDrive%.
-    for index, user_path in enumerate(user_paths):
-      user_path_upper_case = user_path.upper()
-
-      if len(user_path) >= 2 and user_path[1] == ':':
-        # Strip path of drive letter, e.g. "C:".
-        user_paths[index] = user_path[2:]
-
-      elif user_path_upper_case.startswith('%SYSTEMDRIVE%\\'):
-        # Strip path of "%SystemDrive%".
-        user_paths[index] = user_path[13:]
-
-    return user_paths
+    path_segments = path.split(path_separator)
+    return cls._ExpandUsersVariablePathSegments(
+        path_segments, path_separator, user_accounts)
 
   @classmethod
   def ExpandWindowsPath(cls, path, environment_variables):
