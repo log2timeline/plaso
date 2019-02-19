@@ -15,6 +15,7 @@ from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 from bs4 import BeautifulSoup
+import re 
 import logging
 
 
@@ -30,9 +31,10 @@ class MacNotesZhtmlstringEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacNotesZhtmlstringEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(MacNotesZhtmlstringEventData, self).__init__(
+      data_type=self.DATA_TYPE)
     self.zhtmlstring = None
-
+    self.last_modified_time = None
 
 class MacNotesPlugin(interface.SQLitePlugin):
   """Parser for MacNotes"""
@@ -41,14 +43,10 @@ class MacNotesPlugin(interface.SQLitePlugin):
   DESCRIPTION = 'Parser for MacNotes'
 
   QUERIES = [(' SELECT nb.ZHTMLSTRING AS zhtmlstring, '
-                    'n.ZDATECREATED AS timestamp '
+                    'n.ZDATECREATED AS timestamp, '
+                    'n.ZDATEEDITED AS last_modified_time '
                     'FROM ZNOTEBODY nb, ZNOTE n '
                     'WHERE nb.Z_PK = n.Z_PK', 'ParseZHTMLSTRINGRow')]
-  #('SELECT a.identifier AS bundle_name, '
-  #     'r.data AS dataBlob, r.delivered_date AS timestamp,'
-   #    'r.presented AS presented '
-    #   'FROM app a, record r '
-     #  'WHERE a.app_id = r.app_id', 'ParseNotificationcenterRow')
 
   REQUIRED_TABLES = frozenset(['ZNOTEBODY', 'ZNOTE'])
 
@@ -119,18 +117,21 @@ class MacNotesPlugin(interface.SQLitePlugin):
     # will raise "IndexError: Index must be int or string".
     query_hash = hash(query)
     event_data = MacNotesZhtmlstringEventData()
-    logging.warning('\nhere4\n')
-    
-    soup = BeautifulSoup(self._GetRowValue(query_hash, row,'zhtmlstring'), 'html.parser')
-
-    event_data.zhtmlstring = soup.body.prettify()
-    
-    #row['zhtmlstring']
+    soup = BeautifulSoup(self._GetRowValue(query_hash, row,'zhtmlstring'),
+                         'html.parser')
+    body = soup.body.prettify()
+    body = re.sub(r'(<\/?(div|body|span|b|table|tr|td|tbody|p).*>\n?)', '',
+                  body)
+    event_data.zhtmlstring = body
+    last_modified = self._GetRowValue(query_hash, row,'last_modified_time')
+    event_data.last_modified_time = dfdatetime_cocoa_time.CocoaTime(
+      timestamp=last_modified).CopyToDateTimeString()
+    logging.warning(event_data.last_modified_time)
 
     timestamp = self._GetRowValue(query_hash, row, 'timestamp')
-    
+
     date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-    logging.warning(date_time)
+    logging.warning(event_data.zhtmlstring)
     event = time_events.DateTimeValuesEvent(
       date_time, definitions.TIME_DESCRIPTION_CREATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)

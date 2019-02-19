@@ -34,7 +34,15 @@ class MacNotesTest(test_lib.SQLitePluginTestCase):
     self.CheckTimestamp(event.timestamp, '2014-02-11 02:38:27.097813')
     self.assertEqual(
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
-    logging.warning('\nyesss\n')
+    self.assertEqual(event.last_modified_time, '2015-07-31 19:05:46.372972')
+    expected_message = ('   building 4th brandy gibs\n'
+      '      microsoft office\n'
+      '   body soul and peace\n'
+      '    example.com\n'
+      '        3015555555: plumbing and heating\n'
+      '    claim#123456\n'
+      '        Small business\n            ')
+    self.assertEqual(event.zhtmlstring, expected_message)
 
 if __name__ == '__main__':
   unittest.main()
