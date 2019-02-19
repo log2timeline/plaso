@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 from plaso.filters import interface
-from plaso.filters import manager
 from plaso.lib import errors
 
 
@@ -48,6 +47,3 @@ class EventObjectFilter(interface.FilterObject):
 
     self._decision = self._matcher.Matches(event)
     return self._decision
-
-
-manager.FiltersManager.RegisterFilter(EventObjectFilter)
