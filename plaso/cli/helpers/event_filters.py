@@ -7,7 +7,7 @@ from plaso.cli import time_slices
 from plaso.cli import tools
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
-from plaso.filters import manager as filters_manager
+from plaso.filters import event_filter
 from plaso.lib import errors
 from plaso.lib import timelib
 
@@ -86,13 +86,16 @@ class EventFiltersArgumentsHelper(interface.ArgumentsHelper):
 
     filter_expression = cls._ParseStringOption(options, 'filter')
 
-    event_filter = None
+    filter_object = None
     if filter_expression:
-      event_filter = filters_manager.FiltersManager.GetFilterObject(
-          filter_expression)
-      if not event_filter:
-        raise errors.BadConfigOption('Invalid filter expression: {0:s}'.format(
-            filter_expression))
+      filter_object = event_filter.EventObjectFilter()
+
+      try:
+        filter_object.CompileFilter(filter_expression)
+      except errors.ParseError as exception:
+        raise errors.BadConfigOption((
+            'Unable to compile filter expression with error: '
+            '{0!s}').format(exception))
 
     time_slice_event_time_string = getattr(options, 'slice', None)
     time_slice_duration = getattr(options, 'slice_size', 5)
@@ -118,8 +121,8 @@ class EventFiltersArgumentsHelper(interface.ArgumentsHelper):
 
     setattr(configuration_object, '_event_filter_expression', filter_expression)
 
-    if event_filter:
-      setattr(configuration_object, '_event_filter', event_filter)
+    if filter_object:
+      setattr(configuration_object, '_event_filter', filter_object)
 
     setattr(configuration_object, '_use_time_slicer', use_time_slicer)
 
