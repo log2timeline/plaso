@@ -4,7 +4,6 @@ XlsxWriter >= 0.9.3
 artifacts >= 20190305
 backports.lzma ; python_version < '3.0'
 bencode.py
-beautifulsoup4
 biplist >= 1.0.3
 certifi >= 2016.9.26
 chardet >= 2.0.1

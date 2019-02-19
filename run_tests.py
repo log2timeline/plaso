@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import unicode_literals
 # -*- coding: utf-8 -*-
 """Script to run the tests."""
 
