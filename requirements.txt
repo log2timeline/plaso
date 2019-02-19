@@ -5,6 +5,7 @@ artifacts >= 20170818
 backports.lzma ; python_version < '3.0'
 bencode.py
 biplist >= 1.0.3
+beautifulsoup4
 certifi >= 2016.9.26
 chardet >= 2.0.1
 dfdatetime >= 20180704
