@@ -22,7 +22,7 @@ PYTHON_DEPENDENCIES = {
     'artifacts': ('__version__', '20170818', None, True),
     'bencode': ('', '', None, True),
     'biplist': ('', '1.0.3', None, True),
-    'beautifulsoup4': ('', '', None, True),
+    'beautifulsoup4': ('__version__', '4.6.3', None, True),
     'certifi': ('__version__', '2016.9.26', None, True),
     'chardet': ('__version__', '2.0.1', None, True),
     'Crypto': ('__version__', '2.6', None, True),
