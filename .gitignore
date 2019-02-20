@@ -29,6 +29,9 @@
 /.review
 ._code_review_number
 
+# MacOS files
+.DS_Store
+
 # Pycharm files
 /.idea
 
