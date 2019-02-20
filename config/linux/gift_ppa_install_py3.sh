@@ -34,6 +34,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-artifacts
                       python3-bencode
                       python3-biplist
+                      python3-bs4
                       python3-certifi
                       python3-chardet
                       python3-crypto
