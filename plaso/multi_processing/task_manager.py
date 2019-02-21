@@ -200,9 +200,14 @@ class TaskManager(object):
     This method does not lock the manager and should be called by a method
     holding the manager lock.
     """
+    # Abandon all tasks after they're identified so as not to modify the
+    # dict while iterating over it.
+    tasks_to_abandon = []
     for task_identifier, task in iter(self._tasks_queued.items()):
       logger.debug('Abandoned queued task: {0:s}.'.format(task_identifier))
+      tasks_to_abandon.append((task_identifier, task))
 
+    for task_identifier, task in tasks_to_abandon:
       self._tasks_abandoned[task_identifier] = task
       del self._tasks_queued[task_identifier]
 
