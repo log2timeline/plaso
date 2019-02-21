@@ -6,18 +6,12 @@ from __future__ import unicode_literals
 import io
 import re
 
-from efilter import ast as efilter_ast
-from efilter import errors as efilter_errors
-from efilter import query as efilter_query
-
+from plaso.filters import event_filter
 from plaso.lib import errors
 
 
 class TaggingFile(object):
-  """Tagging file.
-
-  A tagging file contains one or more event tagging rules.
-  """
+  """Tagging file that defines one or more event tagging rules."""
 
   # A line with no indent is a tag name.
   _TAG_LABEL_LINE = re.compile(r'^(\w+)')
@@ -38,97 +32,45 @@ class TaggingFile(object):
     super(TaggingFile, self).__init__()
     self._path = path
 
-  def _ParseDefinitions(self, tagging_file_path):
-    """Parses the tag file and yields tuples of label name, list of rule ASTs.
-
-    Args:
-      tagging_file_path (str): path to the tagging file.
-
-    Yields:
-      tuple: containing:
-
-        str: label name.
-        list[efilter.query.Query]: efilter queries.
-    """
-    queries = None
-    label_name = None
-    with io.open(tagging_file_path, 'r', encoding='utf-8') as tagging_file:
-      for line in tagging_file.readlines():
-        label_match = self._TAG_LABEL_LINE.match(line)
-        if label_match:
-          if label_name and queries:
-            yield label_name, queries
-
-          queries = []
-          label_name = label_match.group(1)
-          continue
-
-        event_tagging_expression = self._TAG_RULE_LINE.match(line)
-        if not event_tagging_expression:
-          continue
-
-        tagging_rule = self._ParseEventTaggingRule(
-            event_tagging_expression.group(1))
-        queries.append(tagging_rule)
-
-      # Yield any remaining tags once we reach the end of the file.
-      if label_name and queries:
-        yield label_name, queries
-
-  def _ParseEventTaggingRule(self, event_tagging_expression):
-    """Parses an event tagging expression.
-
-    This method attempts to detect whether the event tagging expression is valid
-    objectfilter or dottysql syntax.
-
-    Example:
-      _ParseEventTaggingRule('5 + 5')
-      # Returns Sum(Literal(5), Literal(5))
-
-    Args:
-      event_tagging_expression (str): event tagging expression either in
-          objectfilter or dottysql syntax.
-
-    Returns:
-      efilter.query.Query: efilter query of the event tagging expression.
-
-    Raises:
-      TaggingFileError: when the tagging file cannot be correctly parsed.
-    """
-    if self._OBJECTFILTER_WORDS.search(event_tagging_expression):
-      syntax = 'objectfilter'
-    else:
-      syntax = 'dottysql'
-
-    try:
-      return efilter_query.Query(event_tagging_expression, syntax=syntax)
-
-    except efilter_errors.EfilterParseError as exception:
-      stripped_expression = event_tagging_expression.rstrip()
-      raise errors.TaggingFileError((
-          'Unable to parse event tagging expressoin: "{0:s}" with error: '
-          '{1!s}').format(stripped_expression, exception))
-
   def GetEventTaggingRules(self):
     """Retrieves the event tagging rules from the tagging file.
 
     Returns:
-      efilter.ast.Expression: efilter abstract syntax tree (AST), containing the
-          tagging rules.
+      dict[str, FilterObject]: tagging rules, that consists of one or more
+          filter objects per label.
+
+    Raises:
+      TaggingFileError: if a filter expression cannot be compiled.
     """
-    tags = []
-    for label_name, rules in self._ParseDefinitions(self._path):
-      if not rules:
-        continue
+    tagging_rules = {}
 
-      tag = efilter_ast.IfElse(
-          # Union will be true if any of the 'rules' match.
-          efilter_ast.Union(*[rule.root for rule in rules]),
-          # If so then evaluate to a string with the name of the tag.
-          efilter_ast.Literal(label_name),
-          # Otherwise don't return anything.
-          efilter_ast.Literal(None))
-      tags.append(tag)
+    label_name = None
+    with io.open(self._path, 'r', encoding='utf-8') as tagging_file:
+      for line in tagging_file.readlines():
+        line = line.rstrip()
 
-    # Generate a repeated value with all the tags (None will be skipped).
-    return efilter_ast.Repeat(*tags)
+        stripped_line = line.lstrip()
+        if not stripped_line or stripped_line[0] == '#':
+          continue
+
+        if not line[0].isspace():
+          label_name = line
+          tagging_rules[label_name] = []
+          continue
+
+        if not label_name:
+          continue
+
+        filter_object = event_filter.EventObjectFilter()
+
+        try:
+          filter_object.CompileFilter(stripped_line)
+        except errors.ParseError as exception:
+          raise errors.TaggingFileError((
+              'Unable to compile filter for label: {0:s} with error: '
+              '{1!s}').format(label_name, exception))
+
+        if filter_object not in tagging_rules[label_name]:
+          tagging_rules[label_name].append(filter_object)
+
+    return tagging_rules

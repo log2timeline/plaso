@@ -22,19 +22,19 @@ class EventObjectFilterTest(test_lib.FilterTestCase):
     test_filter.CompileFilter(
         'some_stuff is "random" and other_stuff is not "random"')
 
-    with self.assertRaises(errors.WrongPlugin):
+    with self.assertRaises(errors.ParseError):
       test_filter.CompileFilter(
           'SELECT stuff FROM machine WHERE conditions are met')
 
-    with self.assertRaises(errors.WrongPlugin):
+    with self.assertRaises(errors.ParseError):
       test_filter.CompileFilter(
           '/tmp/file_that_most_likely_does_not_exist')
 
-    with self.assertRaises(errors.WrongPlugin):
+    with self.assertRaises(errors.ParseError):
       test_filter.CompileFilter(
           'some random stuff that is destined to fail')
 
-    with self.assertRaises(errors.WrongPlugin):
+    with self.assertRaises(errors.ParseError):
       test_filter.CompileFilter(
           'some_stuff is "random" and other_stuff ')
 

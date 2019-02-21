@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-from efilter.protocols import structured
-
 from plaso.lib import py2to3
 
 
@@ -174,13 +172,3 @@ class AttributeContainer(object):
       session_identifier (str): session identifier.
     """
     self._session_identifier = session_identifier
-
-
-# Efilter protocol definition to enable filtering of containers.
-structured.IStructured.implement(
-    for_type=AttributeContainer,
-    implementations={
-        structured.resolve:
-            lambda container, key: getattr(container, key, None),
-        structured.getmembers_runtime:
-            lambda container: container.GetAttributeNames()})
