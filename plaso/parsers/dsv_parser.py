@@ -50,9 +50,6 @@ class DSVParser(interface.FileObjectParser):
   # file to see if it confirms to standards.
   _MAGIC_TEST_STRING = b'RegnThvotturMeistarans'
 
-  # Maximum supported file size of 16 MiB.
-  _MAXIMUM_SUPPORTED_FILE_SIZE = 16 * 1024 * 1024
-
   def __init__(self, encoding=None):
     """Initializes a delimiter separated values (DSV) parser.
 
@@ -147,9 +144,24 @@ class DSVParser(interface.FileObjectParser):
     if py2to3.PY_3:
       line_reader = text_file.TextFile(
           file_object, encoding=self._encoding, end_of_line=self._end_of_line)
+
+      # pylint: disable=protected-access
+      if self._maximum_line_length > line_reader._MAXIMUM_READ_BUFFER_SIZE:
+        # Line length is one less than the maximum buffer size so that we
+        # tell if there's a line that doesn't end at the end before the end of
+        # the file.
+        self._maximum_line_length = line_reader._MAXIMUM_READ_BUFFER_SIZE - 1
+
     else:
       line_reader = line_reader_file.BinaryLineReader(
           file_object, end_of_line=self._end_of_line)
+
+      # Line length is one less than the maximum buffer size so that we
+      # tell if there's a line that doesn't end at the end before the end of
+      # the file.
+      if self._maximum_line_length > line_reader.MAXIMUM_READ_BUFFER_SIZE:
+        self._maximum_line_length = line_reader.MAXIMUM_READ_BUFFER_SIZE - 1
+
     # If we specifically define a number of lines we should skip, do that here.
     for _ in range(0, self.NUMBER_OF_HEADER_LINES):
       line_reader.readline(self._maximum_line_length)
