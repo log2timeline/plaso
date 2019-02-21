@@ -181,7 +181,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_abandoned), 2)
 
     result_task = manager._GetTaskPendingRetry()
-    self.assertEqual(result_task, test_tasks[0])
+    self.assertIn(result_task, test_tasks)
 
   def testHasTasksPendingMerge(self):
     """Tests the _HasTasksPendingMerge function."""
@@ -463,7 +463,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(manager._tasks_abandoned), 2)
 
     result_tasks = manager.GetFailedTasks()
-    self.assertEqual(result_tasks, test_tasks)
+    self.assertEqual(set(result_tasks), set(test_tasks))
 
   def testGetProcessedTaskByIdentifier(self):
     """Tests the GetProcessedTaskByIdentifier function."""
