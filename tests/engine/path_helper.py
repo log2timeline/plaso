@@ -109,6 +109,10 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
         '%SystemDrive%\\Windows')
     self.assertEqual(stripped_path, '\\Windows')
 
+    stripped_path = path_helper.PathHelper._StripDriveFromPath(
+        '%%environ_systemdrive%%\\Windows')
+    self.assertEqual(stripped_path, '\\Windows')
+
     stripped_path = path_helper.PathHelper._StripDriveFromPath('\\Windows')
     self.assertEqual(stripped_path, '\\Windows')
 
