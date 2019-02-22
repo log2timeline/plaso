@@ -146,21 +146,19 @@ class DSVParser(interface.FileObjectParser):
           file_object, encoding=self._encoding, end_of_line=self._end_of_line)
 
       # pylint: disable=protected-access
-      if self._maximum_line_length > line_reader._MAXIMUM_READ_BUFFER_SIZE:
-        # Line length is one less than the maximum buffer size so that we
-        # tell if there's a line that doesn't end at the end before the end of
-        # the file.
-        self._maximum_line_length = line_reader._MAXIMUM_READ_BUFFER_SIZE - 1
+      maximum_read_buffer_size = line_reader._MAXIMUM_READ_BUFFER_SIZE
 
     else:
       line_reader = line_reader_file.BinaryLineReader(
           file_object, end_of_line=self._end_of_line)
 
-      # Line length is one less than the maximum buffer size so that we
-      # tell if there's a line that doesn't end at the end before the end of
-      # the file.
-      if self._maximum_line_length > line_reader.MAXIMUM_READ_BUFFER_SIZE:
-        self._maximum_line_length = line_reader.MAXIMUM_READ_BUFFER_SIZE - 1
+      maximum_read_buffer_size = line_reader.MAXIMUM_READ_BUFFER_SIZE
+
+    # Line length is one less than the maximum read buffer size so that we
+    # tell if there's a line that doesn't end at the end before the end of
+    # the file.
+    if self._maximum_line_length > maximum_read_buffer_size:
+      self._maximum_line_length = maximum_read_buffer_size - 1
 
     # If we specifically define a number of lines we should skip, do that here.
     for _ in range(0, self.NUMBER_OF_HEADER_LINES):
