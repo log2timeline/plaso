@@ -13,11 +13,6 @@ try:
 except ImportError:
   elasticsearch = None
 
-try:
-  import elasticsearch5
-except ImportError:
-  elasticsearch5 = None
-
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import interface
@@ -27,11 +22,6 @@ from plaso.output import logger
 if elasticsearch:
   elastic_logger = logging.getLogger('elasticsearch.trace')
   elastic_logger.setLevel(logging.WARNING)
-
-# Configure the Elasticsearch 5 logger.
-if elasticsearch5:
-  elastic5_logger = logging.getLogger('elasticsearch.trace')
-  elastic5_logger.setLevel(logging.WARNING)
 
 
 class SharedElasticsearchOutputModule(interface.OutputModule):
@@ -342,43 +332,3 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
       event (EventObject): event.
     """
     self._InsertEvent(event)
-
-
-class SharedElasticsearch5OutputModule(SharedElasticsearchOutputModule):
-  """Shared output module for Elasticsearch 5."""
-
-  def _Connect(self):
-    """Connects to an Elasticsearch server."""
-    elastic_hosts = [{'host': self._host, 'port': self._port}]
-
-    elastic_http_auth = None
-    if self._username is not None:
-      elastic_http_auth = (self._username, self._password)
-
-    self._client = elasticsearch5.Elasticsearch(
-        elastic_hosts,
-        http_auth=elastic_http_auth,
-        use_ssl=self._use_ssl,
-        ca_certs=self._ca_certs
-    )
-
-    logger.debug('Connected to Elasticsearch server: {0:s} port: {1:d}.'.format(
-        self._host, self._port))
-
-  def _CreateIndexIfNotExists(self, index_name, mappings):
-    """Creates an Elasticsearch index if it not already exists.
-
-    Args:
-      index_name (str): mame of the index.
-      mappings (dict[str, object]): mappings of the index.
-
-    Raises:
-      RuntimeError: if the Elasticsearch index cannot be created.
-    """
-    try:
-      super(SharedElasticsearch5OutputModule, self)._CreateIndexIfNotExists(
-          index_name, mappings)
-    except elasticsearch5.exceptions.ConnectionError as exception:
-      raise RuntimeError(
-          'Unable to create Elasticsearch index with error: {0!s}'.format(
-              exception))

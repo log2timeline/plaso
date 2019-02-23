@@ -31,7 +31,6 @@ PYTHON_DEPENDENCIES = {
     'dfwinreg': ('__version__', '20180712', None, True),
     'dtfabric': ('__version__', '20181128', None, True),
     'elasticsearch': ('__versionstr__', '6.0', None, False),
-    'elasticsearch5': ('__versionstr__', '5.4.0', None, True),
     'future': ('__version__', '0.16.0', None, True),
     'idna': ('', '2.5', None, True),
     'lz4': ('', '0.10.0', None, False),
