@@ -33,13 +33,14 @@ class MacNotesTest(test_lib.SQLitePluginTestCase):
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
     self.assertEqual(event.title, 'building 4th brandy gibs')
-    expected_message = ('   building 4th brandy gibs\n'
-                        '      microsoft office\n'
-                        '   body soul and peace\n'
-                        '    example.com\n'
-                        '        3015555555: plumbing and heating\n'
-                        '    claim#123456\n'
-                        '        Small business\n            ')
+    expected_message = (
+        '   building 4th brandy gibs\n'
+        '      microsoft office\n'
+        '   body soul and peace\n'
+        '    example.com\n'
+        '        3015555555: plumbing and heating\n'
+        '    claim#123456\n'
+        '        Small business\n            ')
     self.assertEqual(event.zhtmlstring, expected_message)
 
 if __name__ == '__main__':
