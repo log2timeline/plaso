@@ -9,7 +9,7 @@ from plaso.parsers.sqlite_plugins import mac_notes
 
 from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
-import logging
+ 
 
 class MacNotesTest(test_lib.SQLitePluginTestCase):
   """Tests for mac notes database plugin."""
@@ -40,8 +40,6 @@ class MacNotesTest(test_lib.SQLitePluginTestCase):
                         '        3015555555: plumbing and heating\n'
                         '    claim#123456\n'
                         '        Small business\n            ')
-    logging.warning(event.zhtmlstring)
-    logging.warning('here')
     self.assertEqual(event.zhtmlstring, expected_message)
 
 if __name__ == '__main__':
