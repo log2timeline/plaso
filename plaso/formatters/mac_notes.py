@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""mac notes formatter."""
+"""The Mac Notes zhtmlstring event formatter."""
 from __future__ import unicode_literals
 
 from plaso.formatters import interface
@@ -7,16 +7,15 @@ from plaso.formatters import manager
 
 
 class MacNotesNotesFormatter(interface.ConditionalEventFormatter):
-  """mac notes zhtmlstring event formatter."""
+  """Formatter for a Mac Notes zhtlmstring record"""
 
   DATA_TYPE = 'mac:notes:zhtmlstring'
-  """Correct Format String Pieces where needed"""
 
   FORMAT_STRING_PIECES = [
       'note_body:{zhtmlstring}',
-      'last_modified:{last_modified_time}']
+      'title:{title}']
 
-  FORMAT_STRING_SHORT_PIECES = ['note_body:{zhtmlstring}']
+  FORMAT_STRING_SHORT_PIECES = ['title:{title}']
 
   SOURCE_LONG = 'Mac Notes Zhtmlstring'
   SOURCE_SHORT = 'Mac Notes'
