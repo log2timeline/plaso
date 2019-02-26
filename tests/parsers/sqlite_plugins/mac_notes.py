@@ -18,8 +18,8 @@ class MacNotesTest(test_lib.SQLitePluginTestCase):
   def testProcess(self):
     """Test the Process function on a Mac Notes file."""
     plugin_object = mac_notes.MacNotesPlugin()
-    storage_writer = self._ParseDatabaseFileWithPlugin(['NotesV7.storedata'],
-                                                       plugin_object)
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        ['NotesV7.storedata'], plugin_object)
 
     self.assertEqual(storage_writer.number_of_events, 6)
     self.assertEqual(storage_writer.number_of_errors, 0)
