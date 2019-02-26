@@ -18,11 +18,11 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class MacNotesZhtmlstringEventData(events.EventData):
-  """mac notes zhtmlstring event data.
+  """Mac Notes zhtmlstring event data.
 
   Attributes:
-    zhtmlstring: contains note data.
-    last_modified_date: last time note was modified.
+    zhtmlstring (str): contains note data.
+    last_modified_date (str): last time note was modified.
   """
 
   DATA_TYPE = 'mac:notes:zhtmlstring'
@@ -39,9 +39,9 @@ class MacNotesPlugin(interface.SQLitePlugin):
   """Parser for Mac OS Notes."""
 
   NAME = 'mac_notes'
-  DESCRIPTION = 'Parser for MacNotes'
+  DESCRIPTION = 'Parser for Mac Notes'
 
-  QUERIES = [(' SELECT nb.ZHTMLSTRING AS zhtmlstring, '
+  QUERIES = [('SELECT nb.ZHTMLSTRING AS zhtmlstring, '
               'n.ZDATECREATED AS timestamp, '
               'n.ZDATEEDITED AS last_modified_time, n.ZTITLE as title '
               'FROM ZNOTEBODY nb, ZNOTE n '
