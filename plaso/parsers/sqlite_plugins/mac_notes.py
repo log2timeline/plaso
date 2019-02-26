@@ -32,7 +32,7 @@ class MacNotesZhtmlstringEventData(events.EventData):
     super(MacNotesZhtmlstringEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.zhtmlstring = None
-    self.last_modified_time = None
+    self.title = None
 
 
 class MacNotesPlugin(interface.SQLitePlugin):
@@ -43,7 +43,7 @@ class MacNotesPlugin(interface.SQLitePlugin):
 
   QUERIES = [(' SELECT nb.ZHTMLSTRING AS zhtmlstring, '
               'n.ZDATECREATED AS timestamp, '
-              'n.ZDATEEDITED AS last_modified_time '
+              'n.ZDATEEDITED AS last_modified_time, n.ZTITLE as title '
               'FROM ZNOTEBODY nb, ZNOTE n '
               'WHERE nb.Z_PK = n.Z_PK', 'ParseZHTMLSTRINGRow')]
 
@@ -122,16 +122,21 @@ class MacNotesPlugin(interface.SQLitePlugin):
     body = re.sub(r'(<\/?(div|body|span|b|table|tr|td|tbody|p).*>\n?)', '',
                   body)
     event_data.zhtmlstring = body
-    last_modified = self._GetRowValue(query_hash, row, 'last_modified_time')
-    event_data.last_modified_time = dfdatetime_cocoa_time.CocoaTime(
-        timestamp=last_modified).CopyToDateTimeString()
-
+    event_data.title = self._GetRowValue(query_hash, row, 'title')
     timestamp = self._GetRowValue(query_hash, row, 'timestamp')
 
     date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_CREATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    timestamp = self._GetRowValue(query_hash, row, 'last_modified_time')
+    if timestamp:
+      date_time = dfdatetime_cocoa_time.CocoaTime(
+          timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, definitions.TIME_DESCRIPTION_LAST_USED)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(MacNotesPlugin)
