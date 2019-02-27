@@ -35,6 +35,7 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-backports.lzma
                       python-bencode
                       python-biplist
+                      python-bs4
                       python-certifi
                       python-chardet
                       python-crypto
