@@ -243,7 +243,7 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
         [], knowledge_base)
 
     separator = '\\'
-    user_accounts = []
+    test_user_accounts = []
 
     # Test expansion of environment variables.
     path_entry = '%%environ_systemroot%%\\test_data\\*.evtx'
@@ -251,7 +251,7 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
         case_sensitive=False, name='SystemRoot', value='C:\\Windows')]
 
     find_specs = test_filter_file._BuildFindSpecsFromFileSourcePath(
-        path_entry, separator, environment_variable, user_accounts)
+        path_entry, separator, environment_variable, test_user_accounts)
 
     # Should build 1 find_spec.
     self.assertEqual(len(find_specs), 1)
@@ -260,16 +260,17 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     if py2to3.PY_3:
       # Underscores are not escaped in regular expressions in supported versions
       # of Python 3. See https://bugs.python.org/issue2650.
-      path_segments = ['Windows', 'test_data', '.*\\.evtx']
+      expected_location_segments = ['Windows', 'test_data', '.*\\.evtx']
     else:
-      path_segments = ['Windows', 'test\\_data', '.*\\.evtx']
+      expected_location_segments = ['Windows', 'test\\_data', '.*\\.evtx']
 
-    self.assertEqual(find_specs[0]._location_segments, path_segments)
+    self.assertEqual(
+        find_specs[0]._location_segments, expected_location_segments)
 
     # Test expansion of globs.
     path_entry = '\\test_data\\**'
     find_specs = test_filter_file._BuildFindSpecsFromFileSourcePath(
-        path_entry, separator, environment_variable, user_accounts)
+        path_entry, separator, environment_variable, test_user_accounts)
 
     # Glob expansion should by default recurse ten levels.
     self.assertEqual(len(find_specs), 10)
@@ -278,52 +279,71 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     if py2to3.PY_3:
       # Underscores are not escaped in regular expressions in supported versions
       # of Python 3. See https://bugs.python.org/issue2650
-      path_segments = ['test_data']
+      expected_location_segments = ['test_data']
     else:
-      path_segments = ['test\\_data']
+      expected_location_segments = ['test\\_data']
 
-    path_segments.extend([
+    expected_location_segments.extend([
         '.*', '.*', '.*', '.*', '.*', '.*', '.*', '.*', '.*', '.*'])
 
-    self.assertEqual(find_specs[9]._location_segments, path_segments)
+    self.assertEqual(
+        find_specs[9]._location_segments, expected_location_segments)
 
     # Test expansion of user home directories
     separator = '/'
-    testuser1 = artifacts.UserAccountArtifact(
+    test_user1 = artifacts.UserAccountArtifact(
         user_directory='/homes/testuser1', username='testuser1')
-    testuser2 = artifacts.UserAccountArtifact(
+    test_user2 = artifacts.UserAccountArtifact(
         user_directory='/home/testuser2', username='testuser2')
-    user_accounts = [testuser1, testuser2]
+    test_user_accounts = [test_user1, test_user2]
+
     path_entry = '%%users.homedir%%/.thumbnails/**3'
-
     find_specs = test_filter_file._BuildFindSpecsFromFileSourcePath(
-        path_entry, separator, environment_variable, user_accounts)
+        path_entry, separator, environment_variable, test_user_accounts)
 
-    # Six total find specs should be created for testuser1 and testuser2.
+    # 6 find specs should be created for testuser1 and testuser2.
     self.assertEqual(len(find_specs), 6)
 
     # Last entry in find_specs list should be testuser2 with a depth of 3
-    path_segments = ['home', 'testuser2', '\\.thumbnails', '.*', '.*', '.*']
-    self.assertEqual(find_specs[5]._location_segments, path_segments)
+    expected_location_segments = [
+        'home', 'testuser2', '\\.thumbnails', '.*', '.*', '.*']
+    self.assertEqual(
+        find_specs[5]._location_segments, expected_location_segments)
 
     # Test Windows path with profile directories and globs with a depth of 4.
     separator = '\\'
-    testuser1 = artifacts.UserAccountArtifact(
+    test_user1 = artifacts.UserAccountArtifact(
         user_directory='C:\\Users\\testuser1', username='testuser1')
-    testuser2 = artifacts.UserAccountArtifact(
+    test_user2 = artifacts.UserAccountArtifact(
         user_directory='%SystemDrive%\\Users\\testuser2', username='testuser2')
-    user_accounts = [testuser1, testuser2]
-    path_entry = '%%users.homedir%%\\AppData\\**4'
+    test_user_accounts = [test_user1, test_user2]
 
+    path_entry = '%%users.userprofile%%\\AppData\\**4'
     find_specs = test_filter_file._BuildFindSpecsFromFileSourcePath(
-        path_entry, separator, environment_variable, user_accounts)
+        path_entry, separator, environment_variable, test_user_accounts)
 
-    # Eight find specs should be created for testuser1 and testuser2.
+    # 8 find specs should be created for testuser1 and testuser2.
     self.assertEqual(len(find_specs), 8)
 
     # Last entry in find_specs list should be testuser2, with a depth of 4.
-    path_segments = ['Users', 'testuser2', 'AppData', '.*', '.*', '.*', '.*']
-    self.assertEqual(find_specs[7]._location_segments, path_segments)
+    expected_location_segments = [
+        'Users', 'testuser2', 'AppData', '.*', '.*', '.*', '.*']
+    self.assertEqual(
+        find_specs[7]._location_segments, expected_location_segments)
+
+    path_entry = '%%users.localappdata%%\\Microsoft\\**4'
+    find_specs = test_filter_file._BuildFindSpecsFromFileSourcePath(
+        path_entry, separator, environment_variable, test_user_accounts)
+
+    # 16 find specs should be created for testuser1 and testuser2.
+    self.assertEqual(len(find_specs), 16)
+
+    # Last entry in find_specs list should be testuser2, with a depth of 4.
+    expected_location_segments = [
+        'Users', 'testuser2', 'Local\\ Settings', 'Application\\ Data',
+        'Microsoft', '.*', '.*', '.*', '.*']
+    self.assertEqual(
+        find_specs[15]._location_segments, expected_location_segments)
 
 
 if __name__ == '__main__':

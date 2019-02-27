@@ -43,7 +43,6 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-dfvfs
                       python-dfwinreg
                       python-dtfabric
-                      python-efilter
                       python-elasticsearch
                       python-elasticsearch5
                       python-future
@@ -122,10 +121,6 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libvslvm-dbg
                     libvslvm-python-dbg
                     python-guppy";
-
-if [[ "$*" =~ "include-development" ]]; then
-  sudo add-apt-repository ppa:gift/pylint2 -y
-fi
 
 sudo add-apt-repository ppa:gift/dev -y
 sudo apt-get update -q

@@ -5,9 +5,6 @@ from __future__ import unicode_literals
 
 import abc
 
-from plaso.lib import errors
-from plaso.lib import pfilter
-
 
 class FilterObject(object):
   """Filter object interface."""
@@ -45,22 +42,6 @@ class FilterObject(object):
   def separator(self):
     """str: output field separator."""
     return ','
-
-  def _GetMatcher(self, filter_expression):
-    """Retrieves a filter object for a specific filter expression.
-
-    Args:
-      filter_expression (str): filter expression.
-
-    Returns:
-      object: filter or None.
-    """
-    try:
-      parser = pfilter.BaseParser(filter_expression).Parse()
-      return parser.Compile(pfilter.PlasoAttributeFilterImplementation)
-
-    except errors.ParseError:
-      return None
 
   @abc.abstractmethod
   def CompileFilter(self, filter_expression):

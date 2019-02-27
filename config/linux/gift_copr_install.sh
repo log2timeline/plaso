@@ -44,7 +44,6 @@ PYTHON2_DEPENDENCIES="libbde-python2
                       python2-dfvfs
                       python2-dfwinreg
                       python2-dtfabric
-                      python2-efilter
                       python2-elasticsearch
                       python2-elasticsearch5
                       python2-future

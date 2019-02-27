@@ -202,7 +202,7 @@ class ArtifactDefinitionsFilterHelper(object):
     find_specs = []
     for glob_path in path_helper.PathHelper.ExpandRecursiveGlobs(
         source_path, path_separator):
-      for path in path_helper.PathHelper.ExpandUsersHomeDirectoryPath(
+      for path in path_helper.PathHelper.ExpandUsersVariablePath(
           glob_path, path_separator, user_accounts):
         if '%' in path:
           path = path_helper.PathHelper.ExpandWindowsPath(

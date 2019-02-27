@@ -4,8 +4,7 @@
 from __future__ import unicode_literals
 
 from plaso.filters import interface
-from plaso.filters import manager
-from plaso.lib import errors
+from plaso.lib import pfilter
 
 
 class EventObjectFilter(interface.FilterObject):
@@ -25,11 +24,10 @@ class EventObjectFilter(interface.FilterObject):
       filter_expression (str): filter expression.
 
     Raises:
-      WrongPlugin: if the filter could not be compiled.
+      ParseError: if the filter expression cannot be parsed.
     """
-    matcher = self._GetMatcher(filter_expression)
-    if not matcher:
-      raise errors.WrongPlugin('Malformed filter expression.')
+    filter_parser = pfilter.BaseParser(filter_expression).Parse()
+    matcher = filter_parser.Compile(pfilter.PlasoAttributeFilterImplementation)
 
     self._filter_expression = filter_expression
     self._matcher = matcher
@@ -48,6 +46,3 @@ class EventObjectFilter(interface.FilterObject):
 
     self._decision = self._matcher.Matches(event)
     return self._decision
-
-
-manager.FiltersManager.RegisterFilter(EventObjectFilter)
