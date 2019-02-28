@@ -35,6 +35,7 @@ PYTHON2_DEPENDENCIES="libbde-python
                       python-backports.lzma
                       python-bencode
                       python-biplist
+                      python-bs4
                       python-certifi
                       python-chardet
                       python-crypto
@@ -66,8 +67,7 @@ PYTHON2_DEPENDENCIES="libbde-python
 TEST_DEPENDENCIES="python-coverage
                    python-funcsigs
                    python-mock
-                   python-pbr
-                   python-tox";
+                   python-pbr";
 
 # Additional dependencies for development, alphabetized, one per line.
 DEVELOPMENT_DEPENDENCIES="pylint
@@ -121,6 +121,10 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libvslvm-dbg
                     libvslvm-python-dbg
                     python-guppy";
+
+if [[ "$*" =~ "include-development" ]]; then
+  sudo add-apt-repository ppa:gift/pylint2 -y
+fi
 
 sudo add-apt-repository ppa:gift/dev -y
 sudo apt-get update -q

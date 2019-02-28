@@ -34,6 +34,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-artifacts
                       python3-bencode
                       python3-biplist
+                      python3-bs4
                       python3-certifi
                       python3-chardet
                       python3-crypto
@@ -63,7 +64,7 @@ PYTHON3_DEPENDENCIES="libbde-python3
 # Additional dependencies for running tests, alphabetized, one per line.
 TEST_DEPENDENCIES="python3-mock
                    python3-pbr
-                   python3-setuptools"
+                   python3-setuptools";
 
 # Additional dependencies for development, alphabetized, one per line.
 DEVELOPMENT_DEPENDENCIES="pylint
