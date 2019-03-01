@@ -135,4 +135,3 @@ fi
 if [[ "$*" =~ "include-test" ]]; then
     sudo dnf install -y ${TEST_DEPENDENCIES}
 fi
-
