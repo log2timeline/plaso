@@ -13,7 +13,7 @@ from tests.parsers.sqlite_plugins import test_lib
 
 class MacNotesTest(test_lib.SQLitePluginTestCase):
   """Tests for mac notes database plugin."""
-  
+
   @shared_test_lib.skipUnlessHasTestFile(['NotesV7.storedata'])
   def testProcess(self):
     """Test the Process function on a Mac Notes file."""
