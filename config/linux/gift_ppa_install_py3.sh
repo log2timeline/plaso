@@ -118,10 +118,6 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libvslvm-dbg
                     libvslvm-python3-dbg";
 
-if [[ "$*" =~ "include-development" ]]; then
-  sudo add-apt-repository ppa:gift/pylint3 -y
-fi
-
 sudo add-apt-repository ppa:gift/dev -y
 sudo apt-get update -q
 sudo apt-get install -y ${PYTHON3_DEPENDENCIES}

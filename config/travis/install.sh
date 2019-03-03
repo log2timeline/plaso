@@ -19,6 +19,7 @@ DPKG_PYTHON3_TEST_DEPENDENCIES="python3-mock python3-pbr python3-setuptools";
 
 RPM_PYTHON2_DEPENDENCIES="libbde-python2 libesedb-python2 libevt-python2 libevtx-python2 libewf-python2 libfsapfs-python2 libfsntfs-python2 libfvde-python2 libfwnt-python2 libfwsi-python2 liblnk-python2 libmsiecf-python2 libolecf-python2 libqcow-python2 libregf-python2 libscca-python2 libsigscan-python2 libsmdev-python2 libsmraw-python2 libvhdi-python2 libvmdk-python2 libvshadow-python2 libvslvm-python2 python2-XlsxWriter python2-artifacts python2-backports-lzma python2-beautifulsoup4 python2-bencode python2-biplist python2-certifi python2-chardet python2-crypto python2-dateutil python2-dfdatetime python2-dfvfs python2-dfwinreg python2-dtfabric python2-elasticsearch python2-elasticsearch5 python2-future python2-idna python2-lz4 python2-pefile python2-psutil python2-pyparsing python2-pysqlite python2-pytsk3 python2-pytz python2-pyyaml python2-requests python2-six python2-urllib3 python2-yara python2-zmq";
 
+
 RPM_PYTHON2_TEST_DEPENDENCIES="python2-funcsigs python2-mock python2-pbr";
 
 RPM_PYTHON3_DEPENDENCIES="libbde-python3 libesedb-python3 libevt-python3 libevtx-python3 libewf-python3 libfsapfs-python3 libfsntfs-python3 libfvde-python3 libfwnt-python3 libfwsi-python3 liblnk-python3 libmsiecf-python3 libolecf-python3 libqcow-python3 libregf-python3 libscca-python3 libsigscan-python3 libsmdev-python3 libsmraw-python3 libvhdi-python3 libvmdk-python3 libvshadow-python3 libvslvm-python3 python3-XlsxWriter python3-artifacts python3-beautifulsoup4 python3-bencode python3-biplist python3-certifi python3-chardet python3-crypto python3-dateutil python3-dfdatetime python3-dfvfs python3-dfwinreg python3-dtfabric python3-elasticsearch python3-elasticsearch5 python3-future python3-idna python3-lz4 python3-pefile python3-psutil python3-pyparsing python3-pytsk3 python3-pytz python3-pyyaml python3-requests python3-six python3-urllib3 python3-yara python3-zmq";
@@ -84,18 +85,22 @@ then
 	docker run --name=${CONTAINER_NAME} --detach -i ubuntu:${UBUNTU_VERSION};
 
 	docker exec ${CONTAINER_NAME} apt-get update -q;
-	docker exec ${CONTAINER_NAME} sh -c "DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common";
+
+	docker exec ${CONTAINER_NAME} sh -c "DEBIAN_FRONTEND=noninteractive apt-get install -y locales software-properties-common";
 
 	docker exec ${CONTAINER_NAME} add-apt-repository ppa:gift/dev -y;
+
+	docker exec ${CONTAINER_NAME} locale-gen en_US.UTF-8;
 
 	if test -n "${TOXENV}";
 	then
 		docker exec ${CONTAINER_NAME} add-apt-repository universe;
 		docker exec ${CONTAINER_NAME} add-apt-repository ppa:deadsnakes/ppa -y;
 
-		DPKG_PYTHON="python${TRAVIS_PYTHON_VERSION}";
+		DPKG_PYTHON="python${TRAVIS_PYTHON_VERSION} python${TRAVIS_PYTHON_VERSION}-dev";
 
-		docker exec ${CONTAINER_NAME} sh -c "DEBIAN_FRONTEND=noninteractive apt-get install -y ${DPKG_PYTHON} tox";
+		docker exec ${CONTAINER_NAME} sh -c "DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential liblzma-dev ${DPKG_PYTHON} tox";
+
 
 	elif test ${TRAVIS_PYTHON_VERSION} = "2.7";
 	then
