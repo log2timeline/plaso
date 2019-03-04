@@ -1,7 +1,7 @@
 pip >= 7.0.0
 PyYAML >= 3.10
 XlsxWriter >= 0.9.3
-artifacts >= 20170818
+artifacts >= 20190305
 backports.lzma ; python_version < '3.0'
 bencode.py
 biplist >= 1.0.3

@@ -227,15 +227,45 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
 
   def testExpandWindowsPath(self):
     """Tests the ExpandWindowsPath function."""
+    environment_variables = []
+
+    environment_variable = artifacts.EnvironmentVariableArtifact(
+        case_sensitive=False, name='allusersappdata',
+        value='C:\\Documents and Settings\\All Users\\Application Data')
+    environment_variables.append(environment_variable)
+
+    environment_variable = artifacts.EnvironmentVariableArtifact(
+        case_sensitive=False, name='allusersprofile',
+        value='C:\\Documents and Settings\\All Users')
+    environment_variables.append(environment_variable)
+
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='SystemRoot', value='C:\\Windows')
+    environment_variables.append(environment_variable)
+
+    expected_expanded_path = (
+        'C:\\Documents and Settings\\All Users\\Application Data\\'
+        'Apache Software Foundation')
 
     expanded_path = path_helper.PathHelper.ExpandWindowsPath(
-        '%SystemRoot%\\System32', [environment_variable])
+        '%AllUsersAppData%\\Apache Software Foundation',
+        environment_variables)
+    self.assertEqual(expanded_path, expected_expanded_path)
+
+    expected_expanded_path = (
+        'C:\\Documents and Settings\\All Users\\Start Menu\\Programs\\Startup')
+
+    expanded_path = path_helper.PathHelper.ExpandWindowsPath(
+        '%AllUsersProfile%\\Start Menu\\Programs\\Startup',
+        environment_variables)
+    self.assertEqual(expanded_path, expected_expanded_path)
+
+    expanded_path = path_helper.PathHelper.ExpandWindowsPath(
+        '%SystemRoot%\\System32', environment_variables)
     self.assertEqual(expanded_path, 'C:\\Windows\\System32')
 
     expanded_path = path_helper.PathHelper.ExpandWindowsPath(
-        'C:\\Windows\\System32', [environment_variable])
+        'C:\\Windows\\System32', environment_variables)
     self.assertEqual(expanded_path, 'C:\\Windows\\System32')
 
     expanded_path = path_helper.PathHelper.ExpandWindowsPath(
@@ -243,19 +273,22 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     self.assertEqual(expanded_path, '%SystemRoot%\\System32')
 
     expanded_path = path_helper.PathHelper.ExpandWindowsPath(
-        '%Bogus%\\System32', [environment_variable])
+        '%Bogus%\\System32', environment_variables)
     self.assertEqual(expanded_path, '%Bogus%\\System32')
 
     expanded_path = path_helper.PathHelper.ExpandWindowsPath(
-        '%%environ_systemroot%%\\System32', [environment_variable])
+        '%%environ_systemroot%%\\System32', environment_variables)
     self.assertEqual(expanded_path, '\\Windows\\System32')
 
     # Test non-string environment variable.
+    environment_variables = []
+
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='SystemRoot', value=('bogus', 0))
+    environment_variables.append(environment_variable)
 
     expanded_path = path_helper.PathHelper.ExpandWindowsPath(
-        '%SystemRoot%\\System32', [environment_variable])
+        '%SystemRoot%\\System32', environment_variables)
     self.assertEqual(expanded_path, '%SystemRoot%\\System32')
 
   def testGetDisplayNameForPathSpec(self):
