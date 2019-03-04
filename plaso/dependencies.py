@@ -91,6 +91,7 @@ def _CheckPythonModule(
     maximum_version (Optional[str]): maximum required version. Should only be
         used if there is a later version that is not supported.
     verbose_output (Optional[bool]): True if output should be verbose.
+
   Returns:
     bool: True if the Python module is available and conforms to
         the minimum required version, False otherwise.
@@ -177,6 +178,7 @@ def _CheckSQLite3(verbose_output=True):
 
   Args:
     verbose_output (Optional[bool]): True if output should be verbose.
+
   Returns:
     bool: True if the sqlite3 Python module is available, False otherwise.
   """
@@ -225,6 +227,7 @@ def _ImportPythonModule(module_name):
 
   Args:
     module_name (str): name of the module.
+
   Returns:
     module: Python module or None if the module cannot be imported.
   """
@@ -246,6 +249,7 @@ def CheckDependencies(verbose_output=True):
 
   Args:
     verbose_output (Optional[bool]): True if output should be verbose.
+
   Returns:
     bool: True if the dependencies are available, False otherwise.
   """
