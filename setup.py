@@ -75,6 +75,7 @@ else:
 
     def _make_spec_file(self):
       """Generates the text of an RPM spec file.
+
       Returns:
         list[str]: lines of the RPM spec file.
       """
