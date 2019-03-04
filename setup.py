@@ -75,7 +75,6 @@ else:
 
     def _make_spec_file(self):
       """Generates the text of an RPM spec file.
-
       Returns:
         list[str]: lines of the RPM spec file.
       """
@@ -92,7 +91,7 @@ else:
 
       description = []
       requires = ''
-      summary = ''
+      summary = ''  # pylint: disable=unused-variable
       in_description = False
 
       python_spec_file = []
@@ -129,8 +128,8 @@ else:
         elif line.startswith('%files'):
           python_spec_file.extend([
               '%package -n %{name}-tools',
-              'Requires: {0:s}-plaso'.format(python_package),
-              'Summary: Tools for {0:s}'.format(summary),
+              'Requires: python-plaso',
+              'Summary: Tools for plaso (log2timeline)',
               '',
               '%description -n %{name}-tools'])
 
@@ -152,7 +151,9 @@ else:
             lines.extend([
                 '%{python3_sitelib}/plaso/*.py',
                 '%{python3_sitelib}/plaso/*/*.py',
+                '%{python3_sitelib}/plaso/*/*.yaml',
                 '%{python3_sitelib}/plaso/*/*/*.py',
+                '%{python3_sitelib}/plaso/*/*/*.yaml',
                 '%{python3_sitelib}/plaso*.egg-info/*',
                 '',
                 '%exclude %{_prefix}/share/doc/*',
@@ -164,7 +165,9 @@ else:
             lines.extend([
                 '%{python2_sitelib}/plaso/*.py',
                 '%{python2_sitelib}/plaso/*/*.py',
+                '%{python2_sitelib}/plaso/*/*.yaml',
                 '%{python2_sitelib}/plaso/*/*/*.py',
+                '%{python2_sitelib}/plaso/*/*/*.yaml',
                 '%{python2_sitelib}/plaso*.egg-info/*',
                 '',
                 '%exclude %{_prefix}/share/doc/*',
@@ -183,7 +186,7 @@ else:
 
           python_spec_file.extend([
               '%package -n %{name}-data',
-              'Summary: Data files for {0:s}'.format(summary),
+              'Summary: Data files for plaso (log2timeline)',
               '',
               '%description -n %{name}-data'])
 
@@ -195,9 +198,9 @@ else:
             python_spec_file.extend([
                 'Obsoletes: python-plaso < %{version}',
                 'Provides: python-plaso = %{version}'])
-            python_summary = 'Python 2 module of {0:s}'.format(summary)
+            python_summary = 'Python 2 module of plaso (log2timeline)'
           else:
-            python_summary = 'Python 3 module of {0:s}'.format(summary)
+            python_summary = 'Python 3 module of plaso (log2timeline)'
 
           python_spec_file.extend([
               'Requires: plaso-data {0:s}'.format(requires),
@@ -238,6 +241,8 @@ if version_tuple[0] == 2:
   sys.setdefaultencoding(encoding)  # pylint: disable=no-member
 
 
+# Unicode in the description will break python-setuptools, hence
+# "Plaso Langar Að Safna Öllu" was removed.
 plaso_description = (
     'Super timeline all the things.')
 
