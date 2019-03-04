@@ -122,10 +122,6 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libvslvm-python-dbg
                     python-guppy";
 
-if [[ "$*" =~ "include-development" ]]; then
-  sudo add-apt-repository ppa:gift/pylint2 -y
-fi
-
 sudo add-apt-repository ppa:gift/dev -y
 sudo apt-get update -q
 sudo apt-get install -y ${PYTHON2_DEPENDENCIES}
