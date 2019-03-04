@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import ctypes
 import sys
 import time
 
@@ -47,6 +48,7 @@ class StatusView(object):
     super(StatusView, self).__init__()
     self._artifact_filters = None
     self._filter_file = None
+    self._have_ansi_support = not win32console
     self._mode = self.MODE_WINDOW
     self._output_writer = output_writer
     self._source_path = None
@@ -55,6 +57,12 @@ class StatusView(object):
         output_writer, tools.StdoutOutputWriter)
     self._storage_file_path = None
     self._tool_name = tool_name
+
+    if win32console:
+      kernel32 = ctypes.windll.kernel32
+      stdout_handle = kernel32.GetStdHandle(-11)
+      result = kernel32.SetConsoleMode(stdout_handle, 7)
+      self._have_ansi_support = result != 0
 
   def _AddsAnalysisProcessStatusTableRow(self, process_status, table_view):
     """Adds an analysis process status table row.
@@ -121,15 +129,16 @@ class StatusView(object):
 
   def _ClearScreen(self):
     """Clears the terminal/console screen."""
-    if not win32console:
+    if self._have_ansi_support:
       # ANSI escape sequence to clear screen.
       self._output_writer.Write('\033[2J')
       # ANSI escape sequence to move cursor to top left.
       self._output_writer.Write('\033[H')
 
-    else:
-      # Windows cmd.exe does not support ANSI escape codes, thus instead we
-      # fill the console screen buffer with spaces.
+    elif win32console:
+      # This version of Windows cmd.exe does not support ANSI escape codes, thus
+      # instead we fill the console screen buffer with spaces. The downside of
+      # this approach is an annoying flicker.
       top_left_coordinate = win32console.PyCOORDType(0, 0)
       screen_buffer = win32console.GetStdHandle(win32api.STD_OUTPUT_HANDLE)
       screen_buffer_information = screen_buffer.GetConsoleScreenBufferInfo()
@@ -143,6 +152,10 @@ class StatusView(object):
       screen_buffer.FillConsoleOutputAttribute(
           screen_buffer_attributes, console_size, top_left_coordinate)
       screen_buffer.SetConsoleCursorPosition(top_left_coordinate)
+
+      # TODO: remove update flicker. For win32console we could set the cursor
+      # top left, write the table, clean the remainder of the screen buffer
+      # and set the cursor at the end of the table.
 
   def _FormatSizeInUnitsOf1024(self, size):
     """Represents a number of bytes in units of 1024.
@@ -219,9 +232,6 @@ class StatusView(object):
       self._output_writer.Write(
           'Processing aborted - waiting for clean up.\n\n')
 
-    # TODO: remove update flicker. For win32console we could set the cursor
-    # top left, write the table, clean the remainder of the screen buffer
-    # and set the cursor at the end of the table.
     if self._stdout_output_writer:
       # We need to explicitly flush stdout to prevent partial status updates.
       sys.stdout.flush()

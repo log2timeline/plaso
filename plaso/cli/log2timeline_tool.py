@@ -75,13 +75,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       'And that is how you build a timeline using log2timeline...',
       '']))
 
-  # The window status-view mode has an annoying flicker on Windows,
-  # hence we default to linear status-view mode instead.
-  if sys.platform.startswith('win'):
-    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_LINEAR
-  else:
-    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_WINDOW
-
   _SOURCE_TYPES_TO_PREPROCESS = frozenset([
       dfvfs_definitions.SOURCE_TYPE_DIRECTORY,
       dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
@@ -104,7 +97,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
     self._source_type = None
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
-    self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
+    self._status_view_mode = status_view.StatusView.MODE_WINDOW
     self._stdout_output_writer = isinstance(
         self._output_writer, tools.StdoutOutputWriter)
     self._worker_memory_limit = None
