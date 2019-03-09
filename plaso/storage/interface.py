@@ -118,14 +118,6 @@ class BaseStore(object):
     """
 
   @abc.abstractmethod
-  def AddError(self, error):
-    """Adds an error.
-
-    Args:
-      error (ExtractionError): error.
-    """
-
-  @abc.abstractmethod
   def AddEvent(self, event):
     """Adds an event.
 
@@ -150,6 +142,14 @@ class BaseStore(object):
     """
 
   @abc.abstractmethod
+  def AddWarning(self, warning):
+    """Adds an error.
+
+    Args:
+      warning (ExtractionWarning): warning.
+    """
+
+  @abc.abstractmethod
   def Close(self):
     """Closes the storage."""
 
@@ -159,14 +159,6 @@ class BaseStore(object):
 
     Yields:
       AnalysisReport: analysis report.
-    """
-
-  @abc.abstractmethod
-  def GetErrors(self):
-    """Retrieves the errors.
-
-    Yields:
-      ExtractionError: error.
     """
 
   @abc.abstractmethod
@@ -255,6 +247,14 @@ class BaseStore(object):
     """
 
   @abc.abstractmethod
+  def GetWarnings(self):
+    """Retrieves the warnings.
+
+    Yields:
+      ExtractionWarning: warning.
+    """
+
+  @abc.abstractmethod
   def HasAnalysisReports(self):
     """Determines if a store contains analysis reports.
 
@@ -263,11 +263,11 @@ class BaseStore(object):
     """
 
   @abc.abstractmethod
-  def HasErrors(self):
-    """Determines if a store contains extraction errors.
+  def HasWarnings(self):
+    """Determines if a store contains extraction warnings.
 
     Returns:
-      bool: True if the store contains extraction errors.
+      bool: True if the store contains extraction warnings.
     """
 
   @abc.abstractmethod
@@ -600,11 +600,11 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
-  def GetErrors(self):
-    """Retrieves the errors.
+  def GetWarnings(self):
+    """Retrieves the warnings.
 
     Yields:
-      ExtractionError: error.
+      ExtractionWarning: warning.
     """
 
   @abc.abstractmethod
@@ -794,13 +794,13 @@ class StorageFileReader(StorageReader):
     """
     return self._storage_file.GetAnalysisReports()
 
-  def GetErrors(self):
-    """Retrieves the errors.
+  def GetWarnings(self):
+    """Retrieves the warnings.
 
     Returns:
-      generator(ExtractionError): error generator.
+      generator(ExtractionWarning): warning generator.
     """
-    return self._storage_file.GetErrors()
+    return self._storage_file.GetWarnings()
 
   def GetEventData(self):
     """Retrieves the event data.
@@ -946,10 +946,10 @@ class StorageWriter(object):
 
   Attributes:
     number_of_analysis_reports (int): number of analysis reports written.
-    number_of_errors (int): number of errors written.
     number_of_event_sources (int): number of event sources written.
     number_of_event_tags (int): number of event tags written.
     number_of_events (int): number of events written.
+    number_of_warnings (int): number of warnings written.
   """
 
   def __init__(
@@ -970,10 +970,10 @@ class StorageWriter(object):
     self._task = task
     self._written_event_source_index = 0
     self.number_of_analysis_reports = 0
-    self.number_of_errors = 0
     self.number_of_event_sources = 0
     self.number_of_event_tags = 0
     self.number_of_events = 0
+    self.number_of_warnings = 0
 
   @abc.abstractmethod
   def AddAnalysisReport(self, analysis_report):
@@ -981,14 +981,6 @@ class StorageWriter(object):
 
     Args:
       analysis_report (AnalysisReport): a report.
-    """
-
-  @abc.abstractmethod
-  def AddError(self, error):
-    """Adds an error.
-
-    Args:
-      error (ExtractionError): an error.
     """
 
   @abc.abstractmethod
@@ -1014,6 +1006,15 @@ class StorageWriter(object):
     Args:
       event_tag (EventTag): an event tag.
     """
+
+  @abc.abstractmethod
+  def AddWarning(self, warning):
+    """Adds an warning.
+
+    Args:
+      warning (ExtractionWarning): a warning.
+    """
+
 
   @abc.abstractmethod
   def Close(self):
@@ -1322,11 +1323,11 @@ class StorageFileWriter(StorageWriter):
     self._session.analysis_reports_counter[report_identifier] += 1
     self.number_of_analysis_reports += 1
 
-  def AddError(self, error):
-    """Adds an error.
+  def AddWarning(self, warning):
+    """Adds an warning.
 
     Args:
-      error (AnalysisError|ExtractionError): an analysis or extraction error.
+      warning (ExtractionWarning): an extraction warning.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -1334,8 +1335,8 @@ class StorageFileWriter(StorageWriter):
     """
     self._RaiseIfNotWritable()
 
-    self._storage_file.AddError(error)
-    self.number_of_errors += 1
+    self._storage_file.AddWarning(warning)
+    self.number_of_warnings += 1
 
   def AddEvent(self, event):
     """Adds an event.

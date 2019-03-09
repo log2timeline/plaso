@@ -94,7 +94,7 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
         parser_mediator, event_data, properties, 'modified',
         definitions.TIME_DESCRIPTION_MODIFICATION, 'modification time')
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     # Test parsing a date and time string in intervals of 100 ns.
@@ -102,7 +102,7 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
         parser_mediator, event_data, properties, 'created',
         definitions.TIME_DESCRIPTION_CREATION, 'creation time')
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
 
   @shared_test_lib.skipUnlessHasTestFile(['Document.docx'])
@@ -111,7 +111,7 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
     parser = czip.CompoundZIPParser()
     storage_writer = self._ParseFile(['Document.docx'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
 
     events = list(storage_writer.GetEvents())

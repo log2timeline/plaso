@@ -393,7 +393,7 @@ class EventExtractionWorker(object):
       error_message = (
           'analyzer failed to determine archive type indicators '
           'with error: {0!s}').format(exception)
-      mediator.ProduceExtractionError(error_message, path_spec=path_spec)
+      mediator.ProduceExtractionWarning(error_message, path_spec=path_spec)
 
     return type_indicators
 
@@ -418,7 +418,7 @@ class EventExtractionWorker(object):
       error_message = (
           'analyzer failed to determine compressed stream type indicators '
           'with error: {0!s}').format(exception)
-      mediator.ProduceExtractionError(error_message, path_spec=path_spec)
+      mediator.ProduceExtractionWarning(error_message, path_spec=path_spec)
 
     return type_indicators
 
@@ -476,7 +476,7 @@ class EventExtractionWorker(object):
         error_message = (
             'unsupported archive format type indicator: {0:s}').format(
                 type_indicator)
-        mediator.ProduceExtractionError(
+        mediator.ProduceExtractionWarning(
             error_message, path_spec=path_spec)
 
       if archive_path_spec:
@@ -500,7 +500,7 @@ class EventExtractionWorker(object):
           error_message = (
               'unable to process archive file with error: {0!s}').format(
                   exception)
-          mediator.ProduceExtractionError(
+          mediator.ProduceExtractionWarning(
               error_message, path_spec=generated_path_spec)
 
   def _ProcessCompressedStreamTypes(self, mediator, path_spec, type_indicators):
@@ -543,7 +543,7 @@ class EventExtractionWorker(object):
         error_message = (
             'unsupported compressed stream format type indicators: '
             '{0:s}').format(type_indicator)
-        mediator.ProduceExtractionError(
+        mediator.ProduceExtractionWarning(
             error_message, path_spec=path_spec)
 
       if compressed_stream_path_spec:
@@ -579,7 +579,7 @@ class EventExtractionWorker(object):
         error_message = (
             'unable to process directory entry: {0:s} with error: '
             '{1!s}').format(sub_file_entry.name, exception)
-        mediator.ProduceExtractionError(
+        mediator.ProduceExtractionWarning(
             error_message, path_spec=file_entry.path_spec)
         continue
 

@@ -22,7 +22,7 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
     plugin = summary.SummaryInformationOLECFPlugin()
     storage_writer = self._ParseOLECFFileWithPlugin(['Document.doc'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
 
     events = list(storage_writer.GetSortedEvents())
@@ -75,7 +75,7 @@ class TestDocumentSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
     plugin = summary.DocumentSummaryInformationOLECFPlugin()
     storage_writer = self._ParseOLECFFileWithPlugin(['Document.doc'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetSortedEvents())

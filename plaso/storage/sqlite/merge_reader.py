@@ -7,7 +7,7 @@ import os
 import sqlite3
 import zlib
 
-from plaso.containers import errors
+from plaso.containers import warnings
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports
@@ -25,7 +25,7 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
   _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
-  _CONTAINER_TYPE_EXTRACTION_ERROR = errors.ExtractionError.CONTAINER_TYPE
+  _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
   _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
   _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
 
@@ -37,7 +37,7 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
       _CONTAINER_TYPE_EVENT_DATA,
       _CONTAINER_TYPE_EVENT,
       _CONTAINER_TYPE_EVENT_TAG,
-      _CONTAINER_TYPE_EXTRACTION_ERROR,
+      _CONTAINER_TYPE_EXTRACTION_WARNING,
       _CONTAINER_TYPE_ANALYSIS_REPORT)
 
   _ADD_CONTAINER_TYPE_METHODS = {
@@ -46,7 +46,7 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
       _CONTAINER_TYPE_EVENT_DATA: '_AddEventData',
       _CONTAINER_TYPE_EVENT_SOURCE: '_AddEventSource',
       _CONTAINER_TYPE_EVENT_TAG: '_AddEventTag',
-      _CONTAINER_TYPE_EXTRACTION_ERROR: '_AddError',
+      _CONTAINER_TYPE_EXTRACTION_WARNING: '_AddWarning',
   }
 
   _TABLE_NAMES_QUERY = (
@@ -96,14 +96,6 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
     """
     self._storage_writer.AddAnalysisReport(analysis_report)
 
-  def _AddError(self, error):
-    """Adds an error.
-
-    Args:
-      error (ExtractionError): error.
-    """
-    self._storage_writer.AddError(error)
-
   def _AddEvent(self, event):
     """Adds an event.
 
@@ -152,6 +144,14 @@ class SQLiteStorageMergeReader(interface.StorageFileMergeReader):
       event_tag (EventTag): event tag.
     """
     self._storage_writer.AddEventTag(event_tag)
+
+  def _AddWarning(self, warning):
+    """Adds a warning.
+
+    Args:
+      warning (ExtractionWarning): warning.
+    """
+    self._storage_writer.AddWarning(warning)
 
   def _Close(self):
     """Closes the task storage after reading."""

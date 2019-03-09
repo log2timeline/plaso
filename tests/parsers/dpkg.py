@@ -21,7 +21,7 @@ class DpkgParserTest(test_lib.ParserTestCase):
     parser = dpkg.DpkgParser()
     storage_writer = self._ParseFile(['dpkg.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
 
     events = list(storage_writer.GetEvents())

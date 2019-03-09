@@ -25,7 +25,7 @@ class TangoAndroidProfileTest(test_lib.SQLitePluginTestCase):
 
     # We should have 115 tango profile events in total with no errors.
     self.assertEqual(115, storage_writer.number_of_events)
-    self.assertEqual(0, storage_writer.number_of_errors)
+    self.assertEqual(0, storage_writer.number_of_warnings)
 
     events = list(storage_writer.GetSortedEvents())
 
@@ -83,7 +83,7 @@ class TangoAndroidTCTest(test_lib.SQLitePluginTestCase):
 
     # We should have 43 tango tc events in total with no errors.
     self.assertEqual(43, storage_writer.number_of_events)
-    self.assertEqual(0, storage_writer.number_of_errors)
+    self.assertEqual(0, storage_writer.number_of_warnings)
 
     events = list(storage_writer.GetSortedEvents())
 

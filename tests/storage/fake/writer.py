@@ -6,11 +6,11 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.containers import errors
 from plaso.containers import event_sources
 from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.containers import tasks
+from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.storage.fake import writer as fake_writer
 
@@ -35,22 +35,6 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
 
     with self.assertRaises(IOError):
       storage_writer.AddAnalysisReport(analysis_report)
-
-  def testAddError(self):
-    """Tests the AddError function."""
-    session = sessions.Session()
-    extraction_error = errors.ExtractionError(
-        message='Test extraction error')
-
-    storage_writer = fake_writer.FakeStorageWriter(session)
-    storage_writer.Open()
-
-    storage_writer.AddError(extraction_error)
-
-    storage_writer.Close()
-
-    with self.assertRaises(IOError):
-      storage_writer.AddError(extraction_error)
 
   def testAddEvent(self):
     """Tests the AddEvent function."""
@@ -104,6 +88,22 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
 
     with self.assertRaises(IOError):
       storage_writer.AddEventTag(event_tag)
+
+  def testAddWarning(self):
+    """Tests the AddWarning function."""
+    session = sessions.Session()
+    warning = warnings.ExtractionWarning(
+        message='Test extraction error')
+
+    storage_writer = fake_writer.FakeStorageWriter(session)
+    storage_writer.Open()
+
+    storage_writer.AddWarning(warning)
+
+    storage_writer.Close()
+
+    with self.assertRaises(IOError):
+      storage_writer.AddWarning(warning)
 
   def testOpenClose(self):
     """Tests the Open and Close functions."""

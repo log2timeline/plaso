@@ -23,7 +23,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     parser = winevtx.WinEvtxParser()
     storage_writer = self._ParseFile(['System.evtx'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
 
     # Windows Event Viewer Log (EVTX) information:
     #   Version                     : 3.1
@@ -129,7 +129,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     # contains invalid log at the end.
     storage_writer = self._ParseFile(['System2.evtx'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 194)
 
     events = list(storage_writer.GetEvents())

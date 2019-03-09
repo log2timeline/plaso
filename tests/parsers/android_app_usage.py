@@ -23,7 +23,7 @@ class AndroidAppUsageParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['usage-history.xml'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 28)
 
     events = list(storage_writer.GetEvents())

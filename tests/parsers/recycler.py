@@ -23,7 +23,7 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
     parser = recycler.WinRecycleBinParser()
     storage_writer = self._ParseFile(['$II3DF3L.zip'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())
@@ -47,7 +47,7 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
     parser = recycler.WinRecycleBinParser()
     storage_writer = self._ParseFile(['$I103S5F.jpg'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())
@@ -75,7 +75,7 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
     parser = recycler.WinRecyclerInfo2Parser()
     storage_writer = self._ParseFile(['INFO2'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
 
     events = list(storage_writer.GetEvents())

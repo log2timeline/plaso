@@ -9,7 +9,7 @@ import time
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
-from plaso.containers import errors
+from plaso.containers import warnings
 from plaso.engine import path_helper
 from plaso.engine import profilers
 from plaso.lib import errors as errors_lib
@@ -61,9 +61,9 @@ class ParserMediator(object):
     self._last_event_data_identifier = None
     self._memory_profiler = None
     self._mount_path = None
-    self._number_of_errors = 0
     self._number_of_event_sources = 0
     self._number_of_events = 0
+    self._number_of_warnings = 0
     self._parser_chain_components = []
     self._preferred_year = preferred_year
     self._process_information = None
@@ -96,11 +96,6 @@ class ParserMediator(object):
     return self._knowledge_base
 
   @property
-  def number_of_produced_errors(self):
-    """int: number of produced errors."""
-    return self._number_of_errors
-
-  @property
   def number_of_produced_event_sources(self):
     """int: number of produced event sources."""
     return self._number_of_event_sources
@@ -109,6 +104,11 @@ class ParserMediator(object):
   def number_of_produced_events(self):
     """int: number of produced events."""
     return self._number_of_events
+
+  @property
+  def number_of_produced_warnings(self):
+    """int: number of produced errors."""
+    return self._number_of_warnings
 
   @property
   def operating_system(self):
@@ -521,11 +521,11 @@ class ParserMediator(object):
 
     self.last_activity_timestamp = time.time()
 
-  def ProduceExtractionError(self, message, path_spec=None):
-    """Produces an extraction error.
+  def ProduceExtractionWarning(self, message, path_spec=None):
+    """Produces an extraction warning.
 
     Args:
-      message (str): message of the error.
+      message (str): message of the warning.
       path_spec (Optional[dfvfs.PathSpec]): path specification, where None
           will use the path specification of current file entry set in
           the mediator.
@@ -540,10 +540,10 @@ class ParserMediator(object):
       path_spec = self._file_entry.path_spec
 
     parser_chain = self.GetParserChain()
-    extraction_error = errors.ExtractionError(
+    warning = warnings.ExtractionWarning(
         message=message, parser_chain=parser_chain, path_spec=path_spec)
-    self._storage_writer.AddError(extraction_error)
-    self._number_of_errors += 1
+    self._storage_writer.AddWarning(warning)
+    self._number_of_warnings += 1
 
     self.last_activity_timestamp = time.time()
 

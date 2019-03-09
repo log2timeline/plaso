@@ -39,7 +39,7 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         ['firefox_cookies.sqlite'], plugin)
     events = self._GetAnalyticsCookieEvents(storage_writer)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(len(events), 25)
 
     event = events[14]
@@ -70,7 +70,7 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         ['cookies.db'], plugin)
     events = self._GetAnalyticsCookieEvents(storage_writer)
 
-    self.assertEqual(storage_writer.number_of_errors, 1)
+    self.assertEqual(storage_writer.number_of_warnings, 1)
 
     # The cookie database contains 560 entries in total. Out of them
     # there are 75 events created by the Google Analytics plugin.

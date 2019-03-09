@@ -169,7 +169,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
           time_elements_tuple=structure.date_time)
       date_time.is_local_time = True
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'invalid date time value: {0!s}'.format(structure.date_time))
       return
 

@@ -128,7 +128,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
       try:
         timestamp = int(timestamp, 10)
       except (ValueError, TypeError):
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'Unable to parse timestamp value: {0!s}'.format(timestamp))
 
       return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
@@ -137,7 +137,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
     try:
       return self._ConvertToTimestamp(row['date'], row['time'])
     except ValueError as exception:
-      parser_mediator.ProduceExtractionError((
+      parser_mediator.ProduceExtractionWarning((
           'Unable to parse time string: "{0:s} {1:s}" with error: '
           '{2!s}').format(repr(row['date']), repr(row['time']), exception))
 

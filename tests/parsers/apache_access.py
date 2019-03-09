@@ -22,7 +22,7 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
     parser = apache_access.ApacheAccessParser()
     storage_writer = self._ParseFile(['access.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
 
     # The order in which DSVParser generates events is nondeterministic

@@ -83,16 +83,16 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     status = {
         'display_name': '',
         'identifier': self._name,
-        'number_of_consumed_errors': None,
         'number_of_consumed_event_tags': None,
         'number_of_consumed_events': self._number_of_consumed_events,
         'number_of_consumed_reports': None,
         'number_of_consumed_sources': None,
-        'number_of_produced_errors': None,
+       'number_of_consumed_warnings': None,
         'number_of_produced_event_tags': number_of_produced_event_tags,
         'number_of_produced_events': None,
         'number_of_produced_reports': number_of_produced_reports,
         'number_of_produced_sources': None,
+        'number_of_produced_warnings': None,
         'processing_status': self._status,
         'task_identifier': None,
         'used_memory': used_memory}

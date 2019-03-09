@@ -22,7 +22,7 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     parser = skydrivelog.SkyDriveLogParser()
     storage_writer = self._ParseFile(['skydriveerr.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 19)
 
     events = list(storage_writer.GetEvents())
@@ -70,7 +70,7 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['skydriveerr-unicode.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 19)
 
     events = list(storage_writer.GetEvents())
@@ -89,7 +89,7 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     parser = skydrivelog.SkyDriveLogParser()
     storage_writer = self._ParseFile(['skydrive.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 17)
 
     events = list(storage_writer.GetEvents())
@@ -156,7 +156,7 @@ class SkyDriveOldLogUnitTest(test_lib.ParserTestCase):
     parser = skydrivelog.SkyDriveOldLogParser()
     storage_writer = self._ParseFile(['skydrive_old.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 1)
+    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 18)
 
     events = list(storage_writer.GetEvents())

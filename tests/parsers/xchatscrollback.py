@@ -22,7 +22,7 @@ class XChatScrollbackUnitTest(test_lib.ParserTestCase):
     parser = xchatscrollback.XChatScrollbackParser()
     storage_writer = self._ParseFile(['xchatscrollback.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 1)
+    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 10)
 
     events = list(storage_writer.GetEvents())

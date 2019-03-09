@@ -272,7 +272,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       try:
         date_time.CopyFromStringISO8601(structure.chromeos_date)
       except ValueError:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'invalid date time value: {0:s}'.format(structure.chromeos_date))
         return
 
@@ -292,7 +292,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
             time_elements_tuple=time_elements_tuple)
         date_time.is_local_time = True
       except ValueError:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'invalid date time value: {0!s}'.format(time_elements_tuple))
         return
 

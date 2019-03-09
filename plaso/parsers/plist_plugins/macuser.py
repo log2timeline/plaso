@@ -108,7 +108,7 @@ class MacUserPlugin(interface.PlistPlugin):
           date_time.CopyFromStringISO8601(time_string)
         except ValueError:
           date_time = None
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'unable to parse password last set time string: {0:s}'.format(
                   time_string))
 
@@ -164,7 +164,7 @@ class MacUserPlugin(interface.PlistPlugin):
           date_time.CopyFromStringISO8601(time_string)
         except ValueError:
           date_time = None
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'unable to parse last login time string: {0:s}'.format(
                   time_string))
 
@@ -186,7 +186,7 @@ class MacUserPlugin(interface.PlistPlugin):
           date_time.CopyFromStringISO8601(time_string)
         except ValueError:
           date_time = None
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'unable to parse failed login time string: {0:s}'.format(
                   time_string))
 

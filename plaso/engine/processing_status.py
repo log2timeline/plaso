@@ -15,10 +15,6 @@ class ProcessStatus(object):
     identifier (str): process identifier.
     last_running_time (int): timestamp of the last update when the process had
         a running process status.
-    number_of_consumed_errors (int): total number of errors consumed by
-        the process.
-    number_of_consumed_errors_delta (int): number of errors consumed by
-        the process since the last status update.
     number_of_consumed_event_tags (int): total number of event tags consumed by
         the process.
     number_of_consumed_event_tags_delta (int): number of event tags consumed by
@@ -35,9 +31,9 @@ class ProcessStatus(object):
         by the process.
     number_of_consumed_sources_delta (int): number of event sources consumed
         by the process since the last status update.
-    number_of_produced_errors (int): total number of errors produced by
+    number_of_consumed_warnings (int): total number of warnings consumed by
         the process.
-    number_of_produced_errors_delta (int): number of errors produced by
+    number_of_consumed_warnings_delta (int): number of warnings consumed by
         the process since the last status update.
     number_of_produced_event_tags (int): total number of event tags produced by
         the process.
@@ -55,6 +51,10 @@ class ProcessStatus(object):
         produced by the process.
     number_of_produced_sources_delta (int): number of event sources produced
         by the process since the last status update.
+    number_of_produced_warnings (int): total number of warnings produced by
+        the process.
+    number_of_produced_warnings_delta (int): number of warnings produced by
+        the process since the last status update.
     pid (int): process identifier (PID).
     status (str): human readable status indication e.g. 'Hashing', 'Idle'.
     used_memory (int): size of used memory in bytes.
@@ -66,8 +66,6 @@ class ProcessStatus(object):
     self.display_name = None
     self.identifier = None
     self.last_running_time = 0
-    self.number_of_consumed_errors = 0
-    self.number_of_consumed_errors_delta = 0
     self.number_of_consumed_event_tags = 0
     self.number_of_consumed_event_tags_delta = 0
     self.number_of_consumed_events = 0
@@ -76,8 +74,8 @@ class ProcessStatus(object):
     self.number_of_consumed_reports_delta = 0
     self.number_of_consumed_sources = 0
     self.number_of_consumed_sources_delta = 0
-    self.number_of_produced_errors = 0
-    self.number_of_produced_errors_delta = 0
+    self.number_of_consumed_warnings = 0
+    self.number_of_consumed_warnings_delta = 0
     self.number_of_produced_event_tags = 0
     self.number_of_produced_event_tags_delta = 0
     self.number_of_produced_events = 0
@@ -86,52 +84,11 @@ class ProcessStatus(object):
     self.number_of_produced_reports_delta = 0
     self.number_of_produced_sources = 0
     self.number_of_produced_sources_delta = 0
+    self.number_of_produced_warnings = 0
+    self.number_of_produced_warnings_delta = 0
     self.pid = None
     self.status = None
     self.used_memory = 0
-
-  def UpdateNumberOfErrors(
-      self, number_of_consumed_errors, number_of_produced_errors):
-    """Updates the number of errors.
-
-    Args:
-      number_of_consumed_errors (int): total number of errors consumed by
-          the process.
-      number_of_produced_errors (int): total number of errors produced by
-          the process.
-
-    Returns:
-      bool: True if either number of errors has increased.
-
-    Raises:
-      ValueError: if the consumed or produced number of errors is smaller
-          than the value of the previous update.
-    """
-    consumed_errors_delta = 0
-    if number_of_consumed_errors is not None:
-      if number_of_consumed_errors < self.number_of_consumed_errors:
-        raise ValueError(
-            'Number of consumed errors smaller than previous update.')
-
-      consumed_errors_delta = (
-          number_of_consumed_errors - self.number_of_consumed_errors)
-
-      self.number_of_consumed_errors = number_of_consumed_errors
-      self.number_of_consumed_errors_delta = consumed_errors_delta
-
-    produced_errors_delta = 0
-    if number_of_produced_errors is not None:
-      if number_of_produced_errors < self.number_of_produced_errors:
-        raise ValueError(
-            'Number of produced errors smaller than previous update.')
-
-      produced_errors_delta = (
-          number_of_produced_errors - self.number_of_produced_errors)
-
-      self.number_of_produced_errors = number_of_produced_errors
-      self.number_of_produced_errors_delta = produced_errors_delta
-
-    return consumed_errors_delta > 0 or produced_errors_delta > 0
 
   def UpdateNumberOfEventReports(
       self, number_of_consumed_reports, number_of_produced_reports):
@@ -305,6 +262,49 @@ class ProcessStatus(object):
 
     return consumed_event_tags_delta > 0 or produced_event_tags_delta > 0
 
+  def UpdateNumberOfWarnings(
+      self, number_of_consumed_warnings, number_of_produced_warnings):
+    """Updates the number of warnings.
+
+    Args:
+      number_of_consumed_warnings (int): total number of warnings consumed by
+          the process.
+      number_of_produced_warnings (int): total number of warnings produced by
+          the process.
+
+    Returns:
+      bool: True if either number of warnings has increased.
+
+    Raises:
+      ValueError: if the consumed or produced number of warnings is smaller
+          than the value of the previous update.
+    """
+    consumed_warnings_delta = 0
+    if number_of_consumed_warnings is not None:
+      if number_of_consumed_warnings < self.number_of_consumed_warnings:
+        raise ValueError(
+            'Number of consumed warnings smaller than previous update.')
+
+      consumed_warnings_delta = (
+          number_of_consumed_warnings - self.number_of_consumed_warnings)
+
+      self.number_of_consumed_warnings = number_of_consumed_warnings
+      self.number_of_consumed_warnings_delta = consumed_warnings_delta
+
+    produced_warnings_delta = 0
+    if number_of_produced_warnings is not None:
+      if number_of_produced_warnings < self.number_of_produced_warnings:
+        raise ValueError(
+            'Number of produced warnings smaller than previous update.')
+
+      produced_warnings_delta = (
+          number_of_produced_warnings - self.number_of_produced_warnings)
+
+      self.number_of_produced_warnings = number_of_produced_warnings
+      self.number_of_produced_warnings_delta = produced_warnings_delta
+
+    return consumed_warnings_delta > 0 or produced_warnings_delta > 0
+
 
 class ProcessingStatus(object):
   """The status of the overall extraction process (processing).
@@ -339,13 +339,13 @@ class ProcessingStatus(object):
             for identifier in sorted(self._workers_status.keys())]
 
   # pylint: disable=too-many-arguments
-  def _UpdateProcessStatus(
-      self, process_status, identifier, status, pid, used_memory, display_name,
-      number_of_consumed_sources, number_of_produced_sources,
-      number_of_consumed_events, number_of_produced_events,
-      number_of_consumed_event_tags, number_of_produced_event_tags,
-      number_of_consumed_errors, number_of_produced_errors,
-      number_of_consumed_reports, number_of_produced_reports):
+  def _UpdateProcessStatus(self, process_status, identifier, status, pid,
+      used_memory, display_name, number_of_consumed_sources,
+      number_of_produced_sources, number_of_consumed_events,
+      number_of_produced_events, number_of_consumed_event_tags,
+      number_of_produced_event_tags, number_of_consumed_reports,
+      number_of_produced_reports, number_of_consumed_warnings,
+      number_of_produced_warnings):
     """Updates a process status.
 
     Args:
@@ -368,14 +368,14 @@ class ProcessingStatus(object):
           by the process.
       number_of_produced_event_tags (int): total number of event tags produced
           by the process.
-      number_of_consumed_errors (int): total number of errors consumed by
-          the process.
-      number_of_produced_errors (int): total number of errors produced by
-          the process.
       number_of_consumed_reports (int): total number of event reports consumed
           by the process.
       number_of_produced_reports (int): total number of event reports produced
           by the process.
+      number_of_consumed_warnings (int): total number of warnings consumed by
+          the process.
+      number_of_produced_warnings (int): total number of warnings produced by
+          the process.
     """
     new_sources = process_status.UpdateNumberOfEventSources(
         number_of_consumed_sources, number_of_produced_sources)
@@ -386,8 +386,8 @@ class ProcessingStatus(object):
     new_event_tags = process_status.UpdateNumberOfEventTags(
         number_of_consumed_event_tags, number_of_produced_event_tags)
 
-    new_errors = process_status.UpdateNumberOfErrors(
-        number_of_consumed_errors, number_of_produced_errors)
+    new_warnings = process_status.UpdateNumberOfWarnings(
+        number_of_consumed_warnings, number_of_produced_warnings)
 
     new_reports = process_status.UpdateNumberOfEventReports(
         number_of_consumed_reports, number_of_produced_reports)
@@ -398,18 +398,17 @@ class ProcessingStatus(object):
     process_status.status = status
     process_status.used_memory = used_memory
 
-    if (new_sources or new_events or new_event_tags or new_errors or
+    if (new_sources or new_events or new_event_tags or new_warnings or
         new_reports):
       process_status.last_running_time = time.time()
 
   # pylint: disable=too-many-arguments
-  def UpdateForemanStatus(
-      self, identifier, status, pid, used_memory, display_name,
-      number_of_consumed_sources, number_of_produced_sources,
+  def UpdateForemanStatus(self, identifier, status, pid, used_memory,
+      display_name, number_of_consumed_sources, number_of_produced_sources,
       number_of_consumed_events, number_of_produced_events,
       number_of_consumed_event_tags, number_of_produced_event_tags,
-      number_of_consumed_errors, number_of_produced_errors,
-      number_of_consumed_reports, number_of_produced_reports):
+      number_of_consumed_reports, number_of_produced_reports,
+      number_of_consumed_warnings, number_of_produced_warnings):
     """Updates the status of the foreman.
 
     Args:
@@ -431,9 +430,9 @@ class ProcessingStatus(object):
           by the foreman.
       number_of_produced_event_tags (int): total number of event tags produced
           by the foreman.
-      number_of_consumed_errors (int): total number of errors consumed by
+      number_of_consumed_warnings (int): total number of warnings consumed by
           the foreman.
-      number_of_produced_errors (int): total number of errors produced by
+      number_of_produced_warnings (int): total number of warnings produced by
           the foreman.
       number_of_consumed_reports (int): total number of event reports consumed
           by the process.
@@ -443,13 +442,13 @@ class ProcessingStatus(object):
     if not self.foreman_status:
       self.foreman_status = ProcessStatus()
 
-    self._UpdateProcessStatus(
-        self.foreman_status, identifier, status, pid, used_memory, display_name,
-        number_of_consumed_sources, number_of_produced_sources,
-        number_of_consumed_events, number_of_produced_events,
-        number_of_consumed_event_tags, number_of_produced_event_tags,
-        number_of_consumed_errors, number_of_produced_errors,
-        number_of_consumed_reports, number_of_produced_reports)
+    self._UpdateProcessStatus(self.foreman_status, identifier, status, pid,
+        used_memory, display_name, number_of_consumed_sources,
+        number_of_produced_sources, number_of_consumed_events,
+        number_of_produced_events, number_of_consumed_event_tags,
+        number_of_produced_event_tags, number_of_consumed_reports,
+        number_of_produced_reports, number_of_consumed_warnings,
+        number_of_produced_warnings)
 
   def UpdateEventsStatus(self, events_status):
     """Updates the events status.
@@ -468,13 +467,12 @@ class ProcessingStatus(object):
     self.tasks_status = tasks_status
 
   # pylint: disable=too-many-arguments
-  def UpdateWorkerStatus(
-      self, identifier, status, pid, used_memory, display_name,
-      number_of_consumed_sources, number_of_produced_sources,
+  def UpdateWorkerStatus(self, identifier, status, pid, used_memory,
+      display_name, number_of_consumed_sources, number_of_produced_sources,
       number_of_consumed_events, number_of_produced_events,
       number_of_consumed_event_tags, number_of_produced_event_tags,
-      number_of_consumed_errors, number_of_produced_errors,
-      number_of_consumed_reports, number_of_produced_reports):
+      number_of_consumed_reports, number_of_produced_reports,
+      number_of_consumed_warnings, number_of_produced_warnings):
     """Updates the status of a worker.
 
     Args:
@@ -496,26 +494,26 @@ class ProcessingStatus(object):
           by the worker.
       number_of_produced_event_tags (int): total number of event tags produced
           by the worker.
-      number_of_consumed_errors (int): total number of errors consumed by
-          the worker.
-      number_of_produced_errors (int): total number of errors produced by
-          the worker.
       number_of_consumed_reports (int): total number of event reports consumed
           by the process.
       number_of_produced_reports (int): total number of event reports produced
           by the process.
+      number_of_consumed_warnings (int): total number of warnings consumed by
+          the worker.
+      number_of_produced_warnings (int): total number of warnings produced by
+          the worker.
     """
     if identifier not in self._workers_status:
       self._workers_status[identifier] = ProcessStatus()
 
     process_status = self._workers_status[identifier]
-    self._UpdateProcessStatus(
-        process_status, identifier, status, pid, used_memory, display_name,
-        number_of_consumed_sources, number_of_produced_sources,
-        number_of_consumed_events, number_of_produced_events,
-        number_of_consumed_event_tags, number_of_produced_event_tags,
-        number_of_consumed_errors, number_of_produced_errors,
-        number_of_consumed_reports, number_of_produced_reports)
+    self._UpdateProcessStatus(process_status, identifier, status, pid,
+        used_memory, display_name, number_of_consumed_sources,
+        number_of_produced_sources, number_of_consumed_events,
+        number_of_produced_events, number_of_consumed_event_tags,
+        number_of_produced_event_tags, number_of_consumed_reports,
+        number_of_produced_reports, number_of_consumed_warnings,
+        number_of_produced_warnings)
 
 
 class EventsStatus(object):

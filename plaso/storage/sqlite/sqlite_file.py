@@ -8,12 +8,12 @@ import sqlite3
 import zlib
 
 from plaso.containers import artifacts
-from plaso.containers import errors
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.containers import tasks
+from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.storage import event_heaps
 from plaso.storage import identifiers
@@ -30,7 +30,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     storage_type (str): storage type.
   """
 
-  _FORMAT_VERSION = 20180101
+  _FORMAT_VERSION = 20190309
 
   # The earliest format version, stored in-file, that this class
   # is able to read.
@@ -41,17 +41,19 @@ class SQLiteStorageFile(interface.BaseStorageFile):
   _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_SOURCE = event_sources.EventSource.CONTAINER_TYPE
   _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
-  _CONTAINER_TYPE_EXTRACTION_ERROR = errors.ExtractionError.CONTAINER_TYPE
+  _CONTAINER_TYPE_EXTRACTION_ERROR = warnings.ExtractionError.CONTAINER_TYPE
   _CONTAINER_TYPE_SESSION_COMPLETION = sessions.SessionCompletion.CONTAINER_TYPE
   _CONTAINER_TYPE_SESSION_START = sessions.SessionStart.CONTAINER_TYPE
   _CONTAINER_TYPE_SYSTEM_CONFIGURATION = (
       artifacts.SystemConfigurationArtifact.CONTAINER_TYPE)
   _CONTAINER_TYPE_TASK_COMPLETION = tasks.TaskCompletion.CONTAINER_TYPE
   _CONTAINER_TYPE_TASK_START = tasks.TaskStart.CONTAINER_TYPE
+  _CONTAINER_TYPE_EXTRACTION_WARNING = warnings.ExtractionWarning.CONTAINER_TYPE
 
   _CONTAINER_TYPES = (
       _CONTAINER_TYPE_ANALYSIS_REPORT,
       _CONTAINER_TYPE_EXTRACTION_ERROR,
+      _CONTAINER_TYPE_EXTRACTION_WARNING,
       _CONTAINER_TYPE_EVENT,
       _CONTAINER_TYPE_EVENT_DATA,
       _CONTAINER_TYPE_EVENT_SOURCE,
@@ -554,11 +556,11 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     self._WriteAttributeContainer(analysis_report)
 
-  def AddError(self, error):
-    """Adds an error.
+  def AddWarning(self, warning):
+    """Adds an warning.
 
     Args:
-      error (ExtractionError): error.
+      warning (ExtractionWarning): warning.
 
     Raises:
       IOError: when the storage file is closed or read-only.
@@ -566,7 +568,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     """
     self._RaiseIfNotWritable()
 
-    self._AddAttributeContainer(self._CONTAINER_TYPE_EXTRACTION_ERROR, error)
+    self._AddAttributeContainer(
+        self._CONTAINER_TYPE_EXTRACTION_WARNING, warning)
 
   def AddEvent(self, event):
     """Adds an event.
@@ -717,7 +720,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       self._WriteSerializedAttributeContainerList(
           self._CONTAINER_TYPE_EVENT_TAG)
       self._WriteSerializedAttributeContainerList(
-          self._CONTAINER_TYPE_EXTRACTION_ERROR)
+          self._CONTAINER_TYPE_EXTRACTION_WARNING)
 
     if self._connection:
       # We need to run commit or not all data is stored in the database.
@@ -737,13 +740,35 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     """
     return self._GetAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_REPORT)
 
-  def GetErrors(self):
-    """Retrieves the errors.
+  def GetWarnings(self):
+    """Retrieves the warnings.
 
     Returns:
-      generator(ExtractionError): error generator.
+      generator(ExtractionWarning): warning generator.
     """
-    return self._GetAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_ERROR)
+    # For backwards compatibility with pre-20190309 stores.
+    # Note that stores cannot contain both ExtractionErrors and
+    # ExtractionWarnings
+    if self._HasAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_ERROR):
+      return self._GetExtractionErrorsAsWarnings()
+
+    return self._GetAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
+
+  def _GetExtractionErrorsAsWarnings(self):
+    """Retrieves errors from from the store, and converts them to warnings.
+
+    This method is for backwards compatibility with pre-20190309 storage format
+    stores which used ExtractionError attribute containers.
+
+    Yields:
+      ExtractionWarning: extraction warnings.
+    """
+    for extraction_error in self._GetAttributeContainers(
+        self._CONTAINER_TYPE_EXTRACTION_ERROR):
+      error_attributes = extraction_error.CopyToDict()
+      warning = warnings.ExtractionWarning()
+      warning.CopyFromDict(error_attributes)
+      yield warning
 
   def GetEvents(self):
     """Retrieves the events.
@@ -938,13 +963,20 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     """
     return self._HasAttributeContainers(self._CONTAINER_TYPE_ANALYSIS_REPORT)
 
-  def HasErrors(self):
-    """Determines if a store contains extraction errors.
+  def HasWarnings(self):
+    """Determines if a store contains extraction warnings.
 
     Returns:
-      bool: True if the store contains extraction errors.
+      bool: True if the store contains extraction warnings.
     """
-    return self._HasAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_ERROR)
+    # To support older storage versions, check for the now deprecated
+    # extraction errors.
+    has_errors = self._HasAttributeContainers(
+        self._CONTAINER_TYPE_EXTRACTION_ERROR)
+    if has_errors:
+      return True
+
+    return self._HasAttributeContainers(self._CONTAINER_TYPE_EXTRACTION_WARNING)
 
   def HasEventTags(self):
     """Determines if a store contains event tags.

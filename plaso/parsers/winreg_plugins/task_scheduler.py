@@ -84,7 +84,7 @@ class TaskCacheWindowsRegistryPlugin(
     tree_key = registry_key.GetSubkeyByName('Tree')
 
     if not tasks_key or not tree_key:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'Task Cache is missing a Tasks or Tree sub key.')
       return
 
@@ -96,7 +96,7 @@ class TaskCacheWindowsRegistryPlugin(
         # string and should be 78 bytes in size.
         id_value_data_size = len(id_value.data)
         if id_value_data_size != 78:
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'unsupported Id value data size: {0:d}.'.format(
                   id_value_data_size))
           continue
@@ -123,7 +123,7 @@ class TaskCacheWindowsRegistryPlugin(
         dynamic_info_record_map = dynamic_info2_map
       else:
         if not dynamic_info_size_error_reported:
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'unsupported DynamicInfo value data size: {0:d}.'.format(
                   dynamic_info_value_data_size))
           dynamic_info_size_error_reported = True
@@ -133,7 +133,7 @@ class TaskCacheWindowsRegistryPlugin(
         dynamic_info_record = self._ReadStructureFromByteStream(
             dynamic_info_value.data, 0, dynamic_info_record_map)
       except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to parse DynamicInfo record with error: {0!s}.'.format(
                 exception))
 

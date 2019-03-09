@@ -28,7 +28,7 @@ class ESEDBParserTest(test_lib.ParserTestCase):
     #     Current format:         0x620,17
     #     Page size:              32768 bytes
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 0)
 
     storage_writer = self._CreateStorageWriter()
@@ -36,10 +36,10 @@ class ESEDBParserTest(test_lib.ParserTestCase):
     parser = esedb.ESEDBParser()
     parser.ParseFileObject(parser_mediator, None)
 
-    self.assertEqual(storage_writer.number_of_errors, 1)
+    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 0)
 
-    errors = list(storage_writer.GetErrors())
+    errors = list(storage_writer.GetWarnings())
 
     error = errors[0]
     self.assertIsNotNone(error)

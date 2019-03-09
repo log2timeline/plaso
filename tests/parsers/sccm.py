@@ -22,7 +22,7 @@ class SCCMLogsUnitTest(test_lib.ParserTestCase):
     parser = sccm.SCCMParser()
     storage_writer = self._ParseFile(['sccm_various.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 10)
 
     events = list(storage_writer.GetEvents())

@@ -27,7 +27,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile([
         'systemd', 'journal', 'system.journal'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2101)
 
     events = list(storage_writer.GetEvents())
@@ -59,7 +59,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile([
         'systemd', 'journal', 'system.journal.lz4'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 85)
 
     events = list(storage_writer.GetEvents())
@@ -105,7 +105,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     parser.ParseFileObject(parser_mediator, file_object)
 
-    self.assertEqual(storage_writer.number_of_errors, 1)
+    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 2211)
 
     events = list(storage_writer.GetEvents())
@@ -120,9 +120,9 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     expected_short_message = '{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    self.assertEqual(storage_writer.number_of_errors, 1)
+    self.assertEqual(storage_writer.number_of_warnings, 1)
 
-    errors = list(storage_writer.GetErrors())
+    errors = list(storage_writer.GetWarnings())
     error = errors[0]
     expected_error_message = (
         'Unable to parse journal entry at offset: 0x0041bfb0 with error: '

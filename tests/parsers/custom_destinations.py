@@ -25,7 +25,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['5afe4de1b92fc382.customDestinations-ms'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 126)
 
     events = list(storage_writer.GetEvents())

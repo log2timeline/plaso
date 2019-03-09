@@ -31,7 +31,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(os_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 126352)
 
     events = list(storage_writer.GetEvents())
@@ -71,7 +71,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(tsk_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 284)
 
     events = list(storage_writer.GetEvents())
@@ -166,7 +166,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFileByPathSpec(tsk_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 184)
 
 
@@ -191,7 +191,7 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
     # requires to read directly from the volume.
     storage_writer = self._ParseFileByPathSpec(volume_path_spec, parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 19)
 
     events = list(storage_writer.GetEvents())

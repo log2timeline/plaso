@@ -201,18 +201,18 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._knowledge_base = None
     self._memory_profiler = None
     self._merge_task = None
-    self._number_of_consumed_errors = 0
-    self._number_of_consumed_events = 0
     self._number_of_consumed_event_tags = 0
+    self._number_of_consumed_events = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
+    self._number_of_consumed_warnings = 0
     self._number_of_duplicate_events = 0
     self._number_of_macb_grouped_events = 0
-    self._number_of_produced_errors = 0
-    self._number_of_produced_events = 0
     self._number_of_produced_event_tags = 0
+    self._number_of_produced_events = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
+    self._number_of_produced_warnings = 0
     self._processing_configuration = None
     self._processing_profiler = None
     self._serializers_profiler = None
@@ -238,14 +238,14 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       RuntimeError: if a non-recoverable situation is encountered.
     """
     self._status = definitions.PROCESSING_STATUS_RUNNING
-    self._number_of_consumed_errors = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
-    self._number_of_produced_errors = 0
+    self._number_of_consumed_warnings = 0
     self._number_of_produced_events = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
+    self._number_of_produced_warnings = 0
 
     number_of_filtered_events = 0
 
@@ -668,14 +668,14 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
       display_name = getattr(self._merge_task, 'identifier', '')
 
-      self._processing_status.UpdateForemanStatus(
-          self._name, self._status, self._pid, used_memory, display_name,
+      self._processing_status.UpdateForemanStatus(self._name, self._status,
+          self._pid, used_memory, display_name,
           self._number_of_consumed_sources, self._number_of_produced_sources,
           self._number_of_consumed_events, self._number_of_produced_events,
           self._number_of_consumed_event_tags,
-          self._number_of_produced_event_tags,
-          self._number_of_consumed_errors, self._number_of_produced_errors,
-          self._number_of_consumed_reports, self._number_of_produced_reports)
+          self._number_of_produced_event_tags, self._number_of_consumed_reports,
+          self._number_of_produced_reports, self._number_of_consumed_warnings,
+          self._number_of_produced_warnings)
 
       self._processing_status.UpdateEventsStatus(self._events_status)
 
@@ -751,10 +751,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._RaiseIfNotMonitored(pid)
 
     display_name = process_status.get('display_name', '')
-    number_of_consumed_errors = process_status.get(
-        'number_of_consumed_errors', None)
-    number_of_produced_errors = process_status.get(
-        'number_of_produced_errors', None)
 
     number_of_consumed_event_tags = process_status.get(
         'number_of_consumed_event_tags', None)
@@ -776,6 +772,11 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     number_of_produced_sources = process_status.get(
         'number_of_produced_sources', None)
 
+    number_of_consumed_warnings = process_status.get(
+        'number_of_consumed_warnings', None)
+    number_of_produced_warnings = process_status.get(
+        'number_of_produced_warnings', None)
+
     if status_indicator != definitions.PROCESSING_STATUS_IDLE:
       last_activity_timestamp = process_status.get(
           'last_activity_timestamp', 0.0)
@@ -790,13 +791,13 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
               'the timeout period.').format(process.name, pid))
           status_indicator = definitions.PROCESSING_STATUS_NOT_RESPONDING
 
-    self._processing_status.UpdateWorkerStatus(
-        process.name, status_indicator, pid, used_memory, display_name,
-        number_of_consumed_sources, number_of_produced_sources,
-        number_of_consumed_events, number_of_produced_events,
-        number_of_consumed_event_tags, number_of_produced_event_tags,
-        number_of_consumed_errors, number_of_produced_errors,
-        number_of_consumed_reports, number_of_produced_reports)
+    self._processing_status.UpdateWorkerStatus(process.name, status_indicator,
+        pid, used_memory, display_name, number_of_consumed_sources,
+        number_of_produced_sources, number_of_consumed_events,
+        number_of_produced_events, number_of_consumed_event_tags,
+        number_of_produced_event_tags, number_of_consumed_reports,
+        number_of_produced_reports, number_of_consumed_warnings,
+        number_of_produced_warnings)
 
   def _StartWorkerProcess(self, process_name, storage_writer):
     """Creates, starts, monitors and registers a worker process.

@@ -66,7 +66,7 @@ class SingleProcessEngine(engine.BaseEngine):
     # All exceptions need to be caught here to prevent the worker
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
-      parser_mediator.ProduceExtractionError((
+      parser_mediator.ProduceExtractionWarning((
           'unable to process path specification with error: '
           '{0!s}').format(exception), path_spec=path_spec)
 
@@ -195,13 +195,11 @@ class SingleProcessEngine(engine.BaseEngine):
 
     used_memory = self._process_information.GetUsedMemory() or 0
 
-    self._processing_status.UpdateForemanStatus(
-        self._name, status, self._pid, used_memory, display_name,
-        number_of_consumed_sources, storage_writer.number_of_event_sources,
-        0, storage_writer.number_of_events,
-        0, 0,
-        0, storage_writer.number_of_errors,
-        0, 0)
+    self._processing_status.UpdateForemanStatus(self._name, status, self._pid,
+        used_memory, display_name, number_of_consumed_sources,
+        storage_writer.number_of_event_sources, 0,
+        storage_writer.number_of_events, 0, 0, 0, 0, 0,
+        storage_writer.number_of_warnings)
 
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)

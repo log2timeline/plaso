@@ -29,7 +29,7 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
         'docker', 'containers', container_identifier, 'container-json.log']
     storage_writer = self._ParseFile(path_segments, parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 10)
 
     events = list(storage_writer.GetEvents())
@@ -84,7 +84,7 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
         'docker', 'containers', container_identifier, 'config.json']
     storage_writer = self._ParseFile(path_segments, parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
 
     events = list(storage_writer.GetEvents())
@@ -118,7 +118,7 @@ class DockerJSONUnitTest(test_lib.ParserTestCase):
     path_segments = ['docker', 'graph', layer_identifier, 'json']
     storage_writer = self._ParseFile(path_segments, parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())
