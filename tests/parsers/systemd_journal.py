@@ -122,12 +122,12 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(storage_writer.number_of_warnings, 1)
 
-    errors = list(storage_writer.GetWarnings())
-    error = errors[0]
-    expected_error_message = (
+    warnings = list(storage_writer.GetWarnings())
+    warning = warnings[0]
+    expected_warning_message = (
         'Unable to parse journal entry at offset: 0x0041bfb0 with error: '
         'object offset should be after hash tables (0 < 2527472)')
-    self.assertEqual(error.message, expected_error_message)
+    self.assertEqual(warning.message, expected_warning_message)
 
 
 if __name__ == '__main__':

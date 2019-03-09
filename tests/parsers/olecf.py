@@ -50,12 +50,12 @@ class OLECFParserTest(test_lib.ParserTestCase):
     self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 0)
 
-    errors = list(storage_writer.GetWarnings())
+    warnings = list(storage_writer.GetWarnings())
 
-    error = errors[0]
-    self.assertIsNotNone(error)
+    warning = warnings[0]
+    self.assertIsNotNone(warning)
 
-    self.assertTrue(error.message.startswith(
+    self.assertTrue(warning.message.startswith(
         'unable to open file with error: pyolecf_file_open_file_object: '))
 
 

@@ -24,7 +24,7 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['cookies.db'], plugin)
 
-    # There should be one error due to the parser attempting the Chrome 66+
+    # There should be one warning due to the parser attempting the Chrome 66+
     # query as well.
     self.assertEqual(storage_writer.number_of_warnings, 1)
 
@@ -128,7 +128,7 @@ class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['Cookies-68.0.3440.106'], plugin)
 
-    # There should be one error due to the parser attempting the Chrome 17-65
+    # There should be one warning due to the parser attempting the Chrome 17-65
     # query as well.
     self.assertEqual(storage_writer.number_of_warnings, 1)
 

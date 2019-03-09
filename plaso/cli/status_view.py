@@ -443,7 +443,7 @@ class StatusView(object):
       if number_of_warnings:
         output_text = '\n'.join([
             '',
-            ('Number of warnings encountered while extracting events: '
+            ('Number of warnings generated while extracting events: '
              '{0:d}.').format(number_of_warnings),
             '',
             'Use pinfo to inspect warnings in more detail.',

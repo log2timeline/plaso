@@ -143,7 +143,7 @@ class BaseStore(object):
 
   @abc.abstractmethod
   def AddWarning(self, warning):
-    """Adds an error.
+    """Adds a warning.
 
     Args:
       warning (ExtractionWarning): warning.

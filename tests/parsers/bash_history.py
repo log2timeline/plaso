@@ -20,7 +20,7 @@ class BashHistoryTest(test_lib.ParserTestCase):
 
     Args:
       storage_writer (FakeStorageWriter): storage writer.
-      expected_number_of_warnings (Optional[int]): number of expected errors
+      expected_number_of_warnings (Optional[int]): number of expected warnings.
           generated.
     """
     self.assertEqual(

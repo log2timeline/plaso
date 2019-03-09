@@ -390,10 +390,10 @@ class EventExtractionWorker(object):
     except IOError as exception:
       type_indicators = []
 
-      error_message = (
+      warning_message = (
           'analyzer failed to determine archive type indicators '
           'with error: {0!s}').format(exception)
-      mediator.ProduceExtractionWarning(error_message, path_spec=path_spec)
+      mediator.ProduceExtractionWarning(warning_message, path_spec=path_spec)
 
     return type_indicators
 
@@ -415,10 +415,10 @@ class EventExtractionWorker(object):
     except IOError as exception:
       type_indicators = []
 
-      error_message = (
+      warning_message = (
           'analyzer failed to determine compressed stream type indicators '
           'with error: {0!s}').format(exception)
-      mediator.ProduceExtractionWarning(error_message, path_spec=path_spec)
+      mediator.ProduceExtractionWarning(warning_message, path_spec=path_spec)
 
     return type_indicators
 
@@ -473,11 +473,11 @@ class EventExtractionWorker(object):
       else:
         archive_path_spec = None
 
-        error_message = (
+        warning_message = (
             'unsupported archive format type indicator: {0:s}').format(
                 type_indicator)
         mediator.ProduceExtractionWarning(
-            error_message, path_spec=path_spec)
+            warning_message, path_spec=path_spec)
 
       if archive_path_spec:
         try:
@@ -497,11 +497,11 @@ class EventExtractionWorker(object):
             self.last_activity_timestamp = time.time()
 
         except (IOError, errors.MaximumRecursionDepth) as exception:
-          error_message = (
+          warning_message = (
               'unable to process archive file with error: {0!s}').format(
                   exception)
           mediator.ProduceExtractionWarning(
-              error_message, path_spec=generated_path_spec)
+              warning_message, path_spec=generated_path_spec)
 
   def _ProcessCompressedStreamTypes(self, mediator, path_spec, type_indicators):
     """Processes a data stream containing compressed stream types such as: bz2.
@@ -540,11 +540,11 @@ class EventExtractionWorker(object):
       else:
         compressed_stream_path_spec = None
 
-        error_message = (
+        warning_message = (
             'unsupported compressed stream format type indicators: '
             '{0:s}').format(type_indicator)
         mediator.ProduceExtractionWarning(
-            error_message, path_spec=path_spec)
+            warning_message, path_spec=path_spec)
 
       if compressed_stream_path_spec:
         event_source = event_sources.FileEntryEventSource(
@@ -576,11 +576,11 @@ class EventExtractionWorker(object):
           continue
 
       except dfvfs_errors.BackEndError as exception:
-        error_message = (
+        warning_message = (
             'unable to process directory entry: {0:s} with error: '
             '{1!s}').format(sub_file_entry.name, exception)
         mediator.ProduceExtractionWarning(
-            error_message, path_spec=file_entry.path_spec)
+            warning_message, path_spec=file_entry.path_spec)
         continue
 
       # For TSK-based file entries only, ignore the virtual /$OrphanFiles

@@ -12,7 +12,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from plaso.containers import warnings
 from plaso.engine import path_helper
 from plaso.engine import profilers
-from plaso.lib import errors as errors_lib
+from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.parsers import logger
@@ -107,7 +107,7 @@ class ParserMediator(object):
 
   @property
   def number_of_produced_warnings(self):
-    """int: number of produced errors."""
+    """int: number of produced warnings."""
     return self._number_of_warnings
 
   @property
@@ -489,10 +489,10 @@ class ParserMediator(object):
       InvalidEvent: if the event timestamp value is not set or out of bounds.
     """
     if event.timestamp is None:
-      raise errors_lib.InvalidEvent('Event timestamp value not set.')
+      raise errors.InvalidEvent('Event timestamp value not set.')
 
     if event.timestamp < self._INT64_MIN or event.timestamp > self._INT64_MAX:
-      raise errors_lib.InvalidEvent('Event timestamp value out of bounds.')
+      raise errors.InvalidEvent('Event timestamp value out of bounds.')
 
     event_data_hash = event_data.GetAttributeValuesHash()
     if event_data_hash != self._last_event_data_hash:

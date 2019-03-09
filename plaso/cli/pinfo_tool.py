@@ -183,25 +183,25 @@ class PinfoTool(
 
       table_view.Write(self._output_writer)
 
-  def _PrintErrorsDetails(self, storage_reader):
-    """Prints the details of the errors.
+  def _PrintWarningsDetails(self, storage_reader):
+    """Prints the details of the warnings.
 
     Args:
       storage_reader (StorageReader): storage reader.
     """
     if not storage_reader.HasWarnings():
-      self._output_writer.Write('No errors stored.\n\n')
+      self._output_writer.Write('No warnings stored.\n\n')
       return
 
-    for index, error in enumerate(storage_reader.GetWarnings()):
-      title = 'Error: {0:d}'.format(index)
+    for index, warning in enumerate(storage_reader.GetWarnings()):
+      title = 'Warning: {0:d}'.format(index)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
 
-      table_view.AddRow(['Message', error.message])
-      table_view.AddRow(['Parser chain', error.parser_chain])
+      table_view.AddRow(['Message', warning.message])
+      table_view.AddRow(['Parser chain', warning.parser_chain])
 
-      path_specification = error.path_spec.comparable
+      path_specification = warning.path_spec.comparable
       for path_index, line in enumerate(path_specification.split('\n')):
         if not line:
           continue
@@ -455,7 +455,7 @@ class PinfoTool(
       else:
         self._PrintEventLabelsCounter(storage_counters['event_labels'])
 
-      self._PrintErrorsDetails(storage_reader)
+      self._PrintWarningsDetails(storage_reader)
       self._PrintAnalysisReportsDetails(storage_reader)
 
     elif storage_reader.storage_type == definitions.STORAGE_TYPE_TASK:
