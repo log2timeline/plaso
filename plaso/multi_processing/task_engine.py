@@ -469,7 +469,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           message='Worker failed to process path specification',
           path_spec=task.path_spec)
       self._storage_writer.AddWarning(warning)
-      self._processing_status.error_specs.append(task.path_spec)
+      self._processing_status.error_path_specs.append(task.path_spec)
 
     self._status = definitions.PROCESSING_STATUS_IDLE
 
@@ -612,9 +612,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     display_name = getattr(self._merge_task, 'identifier', '')
 
     self._processing_status.UpdateForemanStatus(
-        self._name, self._status,  self._pid, used_memory, display_name,
+        self._name, self._status, self._pid, used_memory, display_name,
         self._number_of_consumed_sources, self._number_of_produced_sources,
-        self._number_of_consumed_events,  self._number_of_produced_events,
+        self._number_of_consumed_events, self._number_of_produced_events,
         self._number_of_consumed_event_tags,
         self._number_of_produced_event_tags, self._number_of_consumed_reports,
         self._number_of_produced_reports, self._number_of_consumed_warnings,

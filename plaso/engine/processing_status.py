@@ -339,13 +339,13 @@ class ProcessingStatus(object):
             for identifier in sorted(self._workers_status.keys())]
 
   # pylint: disable=too-many-arguments
-  def _UpdateProcessStatus(self, process_status, identifier, status, pid,
-      used_memory, display_name, number_of_consumed_sources,
-      number_of_produced_sources, number_of_consumed_events,
-      number_of_produced_events, number_of_consumed_event_tags,
-      number_of_produced_event_tags, number_of_consumed_reports,
-      number_of_produced_reports, number_of_consumed_warnings,
-      number_of_produced_warnings):
+  def _UpdateProcessStatus(
+      self, process_status, identifier, status, pid, used_memory, display_name,
+      number_of_consumed_sources, number_of_produced_sources,
+      number_of_consumed_events, number_of_produced_events,
+      number_of_consumed_event_tags, number_of_produced_event_tags,
+      number_of_consumed_reports, number_of_produced_reports,
+      number_of_consumed_warnings, number_of_produced_warnings):
     """Updates a process status.
 
     Args:
@@ -403,8 +403,9 @@ class ProcessingStatus(object):
       process_status.last_running_time = time.time()
 
   # pylint: disable=too-many-arguments
-  def UpdateForemanStatus(self, identifier, status, pid, used_memory,
-      display_name, number_of_consumed_sources, number_of_produced_sources,
+  def UpdateForemanStatus(
+      self, identifier, status, pid, used_memory, display_name,
+      number_of_consumed_sources, number_of_produced_sources,
       number_of_consumed_events, number_of_produced_events,
       number_of_consumed_event_tags, number_of_produced_event_tags,
       number_of_consumed_reports, number_of_produced_reports,
@@ -442,13 +443,13 @@ class ProcessingStatus(object):
     if not self.foreman_status:
       self.foreman_status = ProcessStatus()
 
-    self._UpdateProcessStatus(self.foreman_status, identifier, status, pid,
-        used_memory, display_name, number_of_consumed_sources,
-        number_of_produced_sources, number_of_consumed_events,
-        number_of_produced_events, number_of_consumed_event_tags,
-        number_of_produced_event_tags, number_of_consumed_reports,
-        number_of_produced_reports, number_of_consumed_warnings,
-        number_of_produced_warnings)
+    self._UpdateProcessStatus(
+        self.foreman_status, identifier, status, pid, used_memory, display_name,
+        number_of_consumed_sources, number_of_produced_sources,
+        number_of_consumed_events, number_of_produced_events,
+        number_of_consumed_event_tags, number_of_produced_event_tags,
+        number_of_consumed_reports, number_of_produced_reports,
+        number_of_consumed_warnings, number_of_produced_warnings)
 
   def UpdateEventsStatus(self, events_status):
     """Updates the events status.
@@ -467,8 +468,9 @@ class ProcessingStatus(object):
     self.tasks_status = tasks_status
 
   # pylint: disable=too-many-arguments
-  def UpdateWorkerStatus(self, identifier, status, pid, used_memory,
-      display_name, number_of_consumed_sources, number_of_produced_sources,
+  def UpdateWorkerStatus(
+      self, identifier, status, pid, used_memory, display_name,
+      number_of_consumed_sources, number_of_produced_sources,
       number_of_consumed_events, number_of_produced_events,
       number_of_consumed_event_tags, number_of_produced_event_tags,
       number_of_consumed_reports, number_of_produced_reports,
@@ -507,13 +509,13 @@ class ProcessingStatus(object):
       self._workers_status[identifier] = ProcessStatus()
 
     process_status = self._workers_status[identifier]
-    self._UpdateProcessStatus(process_status, identifier, status, pid,
-        used_memory, display_name, number_of_consumed_sources,
-        number_of_produced_sources, number_of_consumed_events,
-        number_of_produced_events, number_of_consumed_event_tags,
-        number_of_produced_event_tags, number_of_consumed_reports,
-        number_of_produced_reports, number_of_consumed_warnings,
-        number_of_produced_warnings)
+    self._UpdateProcessStatus(
+        process_status, identifier, status, pid, used_memory, display_name,
+        number_of_consumed_sources, number_of_produced_sources,
+        number_of_consumed_events, number_of_produced_events,
+        number_of_consumed_event_tags, number_of_produced_event_tags,
+        number_of_consumed_reports, number_of_produced_reports,
+        number_of_consumed_warnings, number_of_produced_warnings)
 
 
 class EventsStatus(object):

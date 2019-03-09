@@ -87,7 +87,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
         'number_of_consumed_events': self._number_of_consumed_events,
         'number_of_consumed_reports': None,
         'number_of_consumed_sources': None,
-       'number_of_consumed_warnings': None,
+        'number_of_consumed_warnings': None,
         'number_of_produced_event_tags': number_of_produced_event_tags,
         'number_of_produced_events': None,
         'number_of_produced_reports': number_of_produced_reports,

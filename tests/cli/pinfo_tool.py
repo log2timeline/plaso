@@ -204,7 +204,7 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 
     expected_output = (
         '{0:s}'
-        'No errors stored.\n'
+        'No warnings stored.\n'
         '\n'
         'No analysis reports stored.\n'
         '\n').format(expected_output)

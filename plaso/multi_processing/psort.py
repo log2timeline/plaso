@@ -668,8 +668,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
       display_name = getattr(self._merge_task, 'identifier', '')
 
-      self._processing_status.UpdateForemanStatus(self._name, self._status,
-          self._pid, used_memory, display_name,
+      self._processing_status.UpdateForemanStatus(
+          self._name, self._status, self._pid, used_memory, display_name,
           self._number_of_consumed_sources, self._number_of_produced_sources,
           self._number_of_consumed_events, self._number_of_produced_events,
           self._number_of_consumed_event_tags,
@@ -791,13 +791,13 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
               'the timeout period.').format(process.name, pid))
           status_indicator = definitions.PROCESSING_STATUS_NOT_RESPONDING
 
-    self._processing_status.UpdateWorkerStatus(process.name, status_indicator,
-        pid, used_memory, display_name, number_of_consumed_sources,
-        number_of_produced_sources, number_of_consumed_events,
-        number_of_produced_events, number_of_consumed_event_tags,
-        number_of_produced_event_tags, number_of_consumed_reports,
-        number_of_produced_reports, number_of_consumed_warnings,
-        number_of_produced_warnings)
+    self._processing_status.UpdateWorkerStatus(
+        process.name, status_indicator, pid, used_memory, display_name,
+        number_of_consumed_sources, number_of_produced_sources,
+        number_of_consumed_events, number_of_produced_events,
+        number_of_consumed_event_tags, number_of_produced_event_tags,
+        number_of_consumed_reports, number_of_produced_reports,
+        number_of_consumed_warnings, number_of_produced_warnings)
 
   def _StartWorkerProcess(self, process_name, storage_writer):
     """Creates, starts, monitors and registers a worker process.

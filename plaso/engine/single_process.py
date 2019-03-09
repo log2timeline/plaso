@@ -195,9 +195,9 @@ class SingleProcessEngine(engine.BaseEngine):
 
     used_memory = self._process_information.GetUsedMemory() or 0
 
-    self._processing_status.UpdateForemanStatus(self._name, status, self._pid,
-        used_memory, display_name, number_of_consumed_sources,
-        storage_writer.number_of_event_sources, 0,
+    self._processing_status.UpdateForemanStatus(
+        self._name, status, self._pid, used_memory, display_name,
+        number_of_consumed_sources, storage_writer.number_of_event_sources, 0,
         storage_writer.number_of_events, 0, 0, 0, 0, 0,
         storage_writer.number_of_warnings)
 
