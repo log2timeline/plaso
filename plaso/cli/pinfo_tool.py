@@ -337,6 +337,7 @@ class PinfoTool(
     """
     for session_number, session in enumerate(storage.GetSessions()):
       session_identifier = uuid.UUID(hex=session.identifier)
+      session_identifier = str(session_identifier)
 
       start_time = 'N/A'
       if session.start_time is not None:
@@ -364,7 +365,7 @@ class PinfoTool(
         artifact_filters_string = 'N/A'
       filter_file = session.filter_file or 'N/A'
 
-      title = 'Session: {0!s}'.format(session_identifier)
+      title = 'Session: {0:s}'.format(session_identifier)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
 
