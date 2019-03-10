@@ -43,7 +43,6 @@ PYTHON3_DEPENDENCIES="libbde-python3
                       python3-dfwinreg
                       python3-dtfabric
                       python3-elasticsearch
-                      python3-elasticsearch5
                       python3-future
                       python3-idna
                       python3-lz4
