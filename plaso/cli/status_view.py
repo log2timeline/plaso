@@ -38,6 +38,16 @@ class StatusView(object):
 
   _UNITS_1024 = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'EiB', 'ZiB', 'YiB']
 
+  _WINAPI_STD_OUTPUT_HANDLE = -11
+
+  _WINAPI_ENABLE_PROCESSED_INPUT = 1
+  _WINAPI_ENABLE_LINE_INPUT = 2
+  _WINAPI_ENABLE_ECHO_INPUT = 4
+
+  _WINAPI_ANSI_CONSOLE_MODE = (
+      _WINAPI_ENABLE_PROCESSED_INPUT | _WINAPI_ENABLE_LINE_INPUT |
+      _WINAPI_ENABLE_ECHO_INPUT)
+
   def __init__(self, output_writer, tool_name):
     """Initializes a status view.
 
@@ -60,8 +70,9 @@ class StatusView(object):
 
     if win32console:
       kernel32 = ctypes.windll.kernel32
-      stdout_handle = kernel32.GetStdHandle(-11)
-      result = kernel32.SetConsoleMode(stdout_handle, 7)
+      stdout_handle = kernel32.GetStdHandle(self._WINAPI_STD_OUTPUT_HANDLE)
+      result = kernel32.SetConsoleMode(
+          stdout_handle, self._WINAPI_ANSI_CONSOLE_MODE)
       self._have_ansi_support = result != 0
 
   def _AddsAnalysisProcessStatusTableRow(self, process_status, table_view):
