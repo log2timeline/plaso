@@ -337,7 +337,7 @@ class PinfoTool(
     """
     for session_number, session in enumerate(storage.GetSessions()):
       session_identifier = uuid.UUID(hex=session.identifier)
-      session_identifier = '{1!s}'.format(session_identifier)
+      session_identifier = '{0!s}'.format(session_identifier)
 
       start_time = 'N/A'
       if session.start_time is not None:
@@ -410,7 +410,7 @@ class PinfoTool(
       start_time = timelib.Timestamp.CopyToIsoFormat(
           session.start_time)
       session_identifier = uuid.UUID(hex=session.identifier)
-      session_identifier = '{1!s}'.format(session_identifier)
+      session_identifier = '{0!s}'.format(session_identifier)
       table_view.AddRow([session_identifier, start_time])
 
     table_view.Write(self._output_writer)
@@ -487,7 +487,7 @@ class PinfoTool(
       start_time = timelib.Timestamp.CopyToIsoFormat(
           task_start.timestamp)
       task_identifier = uuid.UUID(hex=task_start.identifier)
-      task_identifier = '{1!s}'.format(task_identifier)
+      task_identifier = '{0!s}'.format(task_identifier)
       table_view.AddRow([task_identifier, start_time])
 
     table_view.Write(self._output_writer)
