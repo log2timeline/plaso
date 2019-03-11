@@ -7,7 +7,6 @@ import argparse
 import collections
 import datetime
 import os
-import sys
 import textwrap
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -85,13 +84,6 @@ class PstealTool(
       'And that is how you build a timeline using psteal...',
       '']))
 
-  # The window status-view mode has an annoying flicker on Windows,
-  # hence we default to linear status-view mode instead.
-  if sys.platform.startswith('win'):
-    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_LINEAR
-  else:
-    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_WINDOW
-
   _SOURCE_TYPES_TO_PREPROCESS = frozenset([
       dfvfs_definitions.SOURCE_TYPE_DIRECTORY,
       dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
@@ -119,7 +111,7 @@ class PstealTool(
     self._parsers_manager = parsers_manager.ParsersManager
     self._preferred_language = 'en-US'
     self._preferred_year = None
-    self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
+    self._status_view_mode = status_view.StatusView.MODE_WINDOW
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
     self._time_slice = None
     self._use_time_slicer = False
