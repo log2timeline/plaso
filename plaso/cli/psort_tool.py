@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 import argparse
 import collections
 import os
-import sys
 import time
 
 # The following import makes sure the filters are registered.
@@ -62,13 +61,6 @@ class PsortTool(
       'Application to read, filter and process output from a plaso storage '
       'file.')
 
-  # The window status-view mode has an annoying flicker on Windows,
-  # hence we default to linear status-view mode instead.
-  if sys.platform.startswith('win'):
-    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_LINEAR
-  else:
-    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_WINDOW
-
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
 
@@ -91,7 +83,7 @@ class PsortTool(
     self._number_of_analysis_reports = 0
     self._preferred_language = 'en-US'
     self._process_memory_limit = None
-    self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
+    self._status_view_mode = status_view.StatusView.MODE_WINDOW
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
     self._stdout_output_writer = isinstance(
         self._output_writer, tools.StdoutOutputWriter)
