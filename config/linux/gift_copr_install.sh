@@ -34,6 +34,7 @@ PYTHON2_DEPENDENCIES="libbde-python2
                       python2-XlsxWriter
                       python2-artifacts
                       python2-backports-lzma
+                      python2-beautifulsoup4
                       python2-bencode
                       python2-biplist
                       python2-certifi
@@ -135,4 +136,3 @@ fi
 if [[ "$*" =~ "include-test" ]]; then
     sudo dnf install -y ${TEST_DEPENDENCIES}
 fi
-

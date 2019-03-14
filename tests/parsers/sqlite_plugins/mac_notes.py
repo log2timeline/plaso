@@ -9,7 +9,7 @@ from plaso.parsers.sqlite_plugins import mac_notes
 
 from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
- 
+
 
 class MacNotesTest(test_lib.SQLitePluginTestCase):
   """Tests for mac notes database plugin."""
