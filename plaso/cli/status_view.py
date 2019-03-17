@@ -189,11 +189,16 @@ class StatusView(object):
 
     return '{0:d} B'.format(size)
 
-  def _PrintAnalysisStatusHeader(self):
-    """Prints the analysis status header."""
-    self._output_writer.Write(
-        'Storage file\t: {0:s}\n'.format(self._storage_file_path))
+  def _PrintAnalysisStatusHeader(self, processing_status):
+    """Prints the analysis status header.
 
+    Args:
+      processing_status (ProcessingStatus): processing status.
+    """
+    self._output_writer.Write(
+        'Storage file\t\t: {0:s}\n'.format(self._storage_file_path))
+
+    self._PrintProcessingTime(processing_status)
     self._output_writer.Write('\n')
 
   def _PrintAnalysisStatusUpdateLinear(self, processing_status):
@@ -224,7 +229,7 @@ class StatusView(object):
         self._tool_name, plaso.__version__)
     self._output_writer.Write(output_text)
 
-    self._PrintAnalysisStatusHeader()
+    self._PrintAnalysisStatusHeader(processing_status)
 
     table_view = views.CLITabularTableView(column_names=[
         'Identifier', 'PID', 'Status', 'Memory', 'Events', 'Tags',
@@ -302,6 +307,46 @@ class StatusView(object):
       # We need to explicitly flush stdout to prevent partial status updates.
       sys.stdout.flush()
 
+  def _PrintProcessingTime(self, processing_status):
+    """Prints the processing time.
+
+    Args:
+      processing_status (ProcessingStatus): processing status.
+    """
+    if not processing_status:
+      processing_time = '00:00:00'
+    else:
+      processing_time = time.time() - processing_status.start_time
+      time_struct = time.gmtime(processing_time)
+      processing_time = time.strftime('%H:%M:%S', time_struct)
+
+    self._output_writer.Write(
+        'Processing time\t\t: {0:s}\n'.format(processing_time))
+
+  def _PrintTasksStatus(self, processing_status):
+    """Prints the status of the tasks.
+
+    Args:
+      processing_status (ProcessingStatus): processing status.
+    """
+    if processing_status and processing_status.tasks_status:
+      tasks_status = processing_status.tasks_status
+
+      table_view = views.CLITabularTableView(
+          column_names=['Tasks:', 'Queued', 'Processing', 'Merging',
+                        'Abandoned', 'Total'],
+          column_sizes=[15, 7, 15, 15, 15, 0])
+
+      table_view.AddRow([
+          '', tasks_status.number_of_queued_tasks,
+          tasks_status.number_of_tasks_processing,
+          tasks_status.number_of_tasks_pending_merge,
+          tasks_status.number_of_abandoned_tasks,
+          tasks_status.total_number_of_tasks])
+
+      self._output_writer.Write('\n')
+      table_view.Write(self._output_writer)
+
   def GetAnalysisStatusUpdateCallback(self):
     """Retrieves the analysis status update callback function.
 
@@ -350,34 +395,8 @@ class StatusView(object):
       self._output_writer.Write('Filter file\t\t: {0:s}\n'.format(
           self._filter_file))
 
-    if not processing_status:
-      processing_time = '00:00:00'
-    else:
-      processing_time = time.time() - processing_status.start_time
-      time_struct = time.gmtime(processing_time)
-      processing_time = time.strftime('%H:%M:%S', time_struct)
-
-    self._output_writer.Write(
-        'Processing time\t\t: {0:s}\n'.format(processing_time))
-
-    if processing_status and processing_status.tasks_status:
-      tasks_status = processing_status.tasks_status
-
-      table_view = views.CLITabularTableView(
-          column_names=['Tasks:', 'Queued', 'Processing', 'Merging',
-                        'Abandoned', 'Total'],
-          column_sizes=[15, 7, 15, 15, 15, 0])
-
-      table_view.AddRow([
-          '', tasks_status.number_of_queued_tasks,
-          tasks_status.number_of_tasks_processing,
-          tasks_status.number_of_tasks_pending_merge,
-          tasks_status.number_of_abandoned_tasks,
-          tasks_status.total_number_of_tasks])
-
-      self._output_writer.Write('\n')
-      table_view.Write(self._output_writer)
-
+    self._PrintProcessingTime(processing_status)
+    self._PrintTasksStatus(processing_status)
     self._output_writer.Write('\n')
 
   def PrintExtractionSummary(self, processing_status):

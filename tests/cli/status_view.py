@@ -158,6 +158,8 @@ class StatusViewTest(test_lib.CLIToolTestCase):
     output = output_writer.ReadOutput()
     self._CheckOutput(output, expected_output)
 
+  # TODO: add tests for _PrintProcessingTime
+  # TODO: add tests for _PrintTasksStatus
   # TODO: add tests for GetAnalysisStatusUpdateCallback
   # TODO: add tests for GetExtractionStatusUpdateCallback
   # TODO: add tests for PrintAnalysisReportsDetails
