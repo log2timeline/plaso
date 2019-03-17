@@ -65,21 +65,6 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     username = self._output_mediator.GetUsername(event)
     return self._FormatField(username)
 
-  def _WriteOutputValues(self, output_values):
-    """Writes values to the output.
-
-    Args:
-      output_values (list[str]): output values.
-    """
-    for index, value in enumerate(output_values):
-      if not isinstance(value, py2to3.STRING_TYPES):
-        value = ''
-      output_values[index] = value.replace(',', ' ')
-
-    output_line = ','.join(output_values)
-    output_line = '{0:s}\n'.format(output_line)
-    self._output_writer.Write(output_line)
-
   def _GetOutputValues(self, event):
     """Retrieves output values.
 
@@ -162,10 +147,17 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
       notes.append('-')
 
     year, month, day_of_month = date_time.GetDate()
-    date_string = '{0:02d}/{1:02d}/{2:04d}'.format(month, day_of_month, year)
-
     hours, minutes, seconds = date_time.GetTimeOfDay()
-    time_string = '{0:02d}:{1:02d}:{2:02d}'.format(hours, minutes, seconds)
+    try:
+      date_string = '{0:02d}/{1:02d}/{2:04d}'.format(month, day_of_month, year)
+      time_string = '{0:02d}:{1:02d}:{2:02d}'.format(hours, minutes, seconds)
+    except (TypeError, ValueError):
+      self._ReportEventError(event, (
+          'unable to copy timestamp: {0!s} to a human readable date and time. '
+          'Defaulting to: "00/00/0000" "--:--:--"').format(event.timestamp))
+
+      date_string = '00/00/0000'
+      time_string = '--:--:--'
 
     output_values = [
         date_string,
@@ -187,6 +179,21 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
         extra_attributes]
 
     return output_values
+
+  def _WriteOutputValues(self, output_values):
+    """Writes values to the output.
+
+    Args:
+      output_values (list[str]): output values.
+    """
+    for index, value in enumerate(output_values):
+      if not isinstance(value, py2to3.STRING_TYPES):
+        value = ''
+      output_values[index] = value.replace(',', ' ')
+
+    output_line = ','.join(output_values)
+    output_line = '{0:s}\n'.format(output_line)
+    self._output_writer.Write(output_line)
 
   def WriteEventBody(self, event):
     """Writes the body of an event object to the output.

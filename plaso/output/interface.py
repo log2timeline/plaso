@@ -37,11 +37,13 @@ class OutputModule(object):
     """
     event_identifier = event.GetIdentifier()
     event_identifier_string = event_identifier.CopyToString()
+    display_name = getattr(event, 'display_name', None) or 'N/A'
+    parser_chain = getattr(event, 'parser', None) or 'N/A'
     error_message = (
         'Event: {0!s} data type: {1:s} display name: {2:s} '
         'parser chain: {3:s} with error: {4:s}').format(
-            event_identifier_string, event.data_type, event.display_name,
-            event.parser, error_message)
+            event_identifier_string, event.data_type, display_name,
+            parser_chain, error_message)
     logger.error(error_message)
 
   def Close(self):
