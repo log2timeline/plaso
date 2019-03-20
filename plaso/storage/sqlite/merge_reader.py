@@ -7,11 +7,11 @@ import os
 import sqlite3
 import zlib
 
-from plaso.containers import warnings
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.containers import tasks
+from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.storage import identifiers
 from plaso.storage import interface
