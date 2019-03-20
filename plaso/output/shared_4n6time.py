@@ -56,8 +56,15 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
     year, month, day_of_month = date_time.GetDate()
     hours, minutes, seconds = date_time.GetTimeOfDay()
 
-    return '{0:04d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}'.format(
-        year, month, day_of_month, hours, minutes, seconds)
+    try:
+      return '{0:04d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d}'.format(
+          year, month, day_of_month, hours, minutes, seconds)
+    except (TypeError, ValueError):
+      self._ReportEventError(event, (
+          'unable to copy timestamp: {0!s} to a human readable date and '
+          'time. Defaulting to: "0000-00-00 00:00:00"').format(event.timestamp))
+
+      return '0000-00-00 00:00:00'
 
   def _GetSanitizedEventValues(self, event):
     """Sanitizes the event for use in 4n6time.

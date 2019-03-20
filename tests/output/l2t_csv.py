@@ -48,6 +48,8 @@ class L2TTestEventFormatter(formatters_interface.EventFormatter):
 class L2TCSVTest(test_lib.OutputModuleTestCase):
   """Tests for the L2tCSV output module."""
 
+  # pylint: disable=protected-access
+
   def setUp(self):
     """Makes preparations before running an individual test."""
     output_mediator = self._CreateOutputMediator()
@@ -55,16 +57,65 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
     self._formatter = l2t_csv.L2TCSVOutputModule(output_mediator)
     self._formatter.SetOutputWriter(self._output_writer)
 
-  def testWriteHeader(self):
-    """Tests the WriteHeader function."""
-    expected_header = (
-        'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
-        'version,filename,inode,notes,format,extra\n')
+  def testFormatField(self):
+    """Tests the _FormatField function."""
+    field_string = self._formatter._FormatField('test,ing')
+    self.assertEqual(field_string, 'test ing')
 
-    self._formatter.WriteHeader()
+  def testFormatHostname(self):
+    """Tests the _FormatHostname function."""
+    event = L2TTestEvent()
+    hostname_string = self._formatter._FormatHostname(event)
+    self.assertEqual(hostname_string, 'ubuntu')
 
-    header = self._output_writer.ReadOutput()
-    self.assertEqual(header, expected_header)
+  def testFormatUsername(self):
+    """Tests the _FormatUsername function."""
+    event = L2TTestEvent()
+    username_string = self._formatter._FormatUsername(event)
+    self.assertEqual(username_string, '-')
+
+  def testGetOutputValues(self):
+    """Tests the _GetOutputValues function."""
+    formatters_manager.FormattersManager.RegisterFormatter(
+        L2TTestEventFormatter)
+
+    expected_output_values = [
+        '06/27/2012',
+        '18:17:01',
+        'UTC',
+        '....',
+        'LOG',
+        'Syslog',
+        '-',
+        '-',
+        'ubuntu',
+        ('Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '
+         'for user root)'),
+        ('Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed '
+         'for user root)'),
+        '2',
+        'log/syslog.1',
+        '-',
+        '-',
+        '-',
+        'my_number: 123; some_additional_foo: True']
+
+    event = L2TTestEvent()
+    output_values = self._formatter._GetOutputValues(event)
+    self.assertEqual(len(output_values), 17)
+    self.assertEqual(output_values, expected_output_values)
+
+    event.timestamp = -9223372036854775808
+    output_values = self._formatter._GetOutputValues(event)
+    self.assertEqual(len(output_values), 17)
+    expected_output_values[0] = '00/00/0000'
+    expected_output_values[1] = '--:--:--'
+    self.assertEqual(output_values, expected_output_values)
+
+    formatters_manager.FormattersManager.DeregisterFormatter(
+        L2TTestEventFormatter)
+
+  # TODO: add coverage for _WriteOutputValues
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
@@ -95,6 +146,19 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
 
     formatters_manager.FormattersManager.DeregisterFormatter(
         L2TTestEventFormatter)
+
+  # TODO: add coverage for WriteEventMACBGroup
+
+  def testWriteHeader(self):
+    """Tests the WriteHeader function."""
+    expected_header = (
+        'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
+        'version,filename,inode,notes,format,extra\n')
+
+    self._formatter.WriteHeader()
+
+    header = self._output_writer.ReadOutput()
+    self.assertEqual(header, expected_header)
 
 
 if __name__ == '__main__':
