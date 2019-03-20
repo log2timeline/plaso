@@ -20,6 +20,16 @@ from tests import test_lib as shared_test_lib
 from tests.storage import test_lib
 
 
+class TestSQLiteStorageFileV1(sqlite_file.SQLiteStorageFile):
+  _FORMAT_VERSION = 1
+  _COMPATIBLE_FORMAT_VERSION = 1
+
+
+class TestSQLiteStorageFileV2(sqlite_file.SQLiteStorageFile):
+  _FORMAT_VERSION = 2
+  _COMPATIBLE_FORMAT_VERSION = 1
+
+
 class SQLiteStorageFileTest(test_lib.StorageTestCase):
   """Tests for the SQLite-based storage file object."""
 
@@ -513,6 +523,26 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file.WriteTaskCompletion(task_completion)
 
       storage_file.Close()
+
+  def testVersionCompatibility(self):
+    """Tests the version compatibility methods."""
+    with shared_test_lib.TempDirectory() as temp_directory:
+      v1_storage_path = os.path.join(temp_directory, 'v1.sqlite')
+      v1_storage_file = TestSQLiteStorageFileV1(
+         storage_type=definitions.STORAGE_TYPE_SESSION)
+      v1_storage_file.Open(path=v1_storage_path, read_only=False)
+      v1_storage_file.Close()
+
+      v2_storage_file_rw = TestSQLiteStorageFileV2(
+         storage_type=definitions.STORAGE_TYPE_SESSION)
+
+      with self.assertRaises(OSError):
+        v2_storage_file_rw.Open(path=v1_storage_path, read_only=False)
+
+      v2_storage_file_ro = TestSQLiteStorageFileV2(
+         storage_type=definitions.STORAGE_TYPE_SESSION)
+      v2_storage_file_ro.Open(path=v1_storage_path, read_only=True)
+      v2_storage_file_ro.Close()
 
 
 # TODO: add tests for SQLiteStorageMergeReader
