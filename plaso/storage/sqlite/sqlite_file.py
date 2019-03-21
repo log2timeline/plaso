@@ -412,7 +412,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
     metadata_values = {row[0]: row[1] for row in self._cursor.fetchall()}
 
-    SQLiteStorageFile._CheckStorageMetadata(
+    self._CheckStorageMetadata(
         metadata_values, check_readable_only=check_readable_only)
 
     self.format_version = metadata_values['format_version']

@@ -20,12 +20,16 @@ from tests import test_lib as shared_test_lib
 from tests.storage import test_lib
 
 
-class TestSQLiteStorageFileV1(sqlite_file.SQLiteStorageFile):
+class _TestSQLiteStorageFileV1(sqlite_file.SQLiteStorageFile):
+  """Test class for testing format compatibility checks."""
+
   _FORMAT_VERSION = 1
   _COMPATIBLE_FORMAT_VERSION = 1
 
 
-class TestSQLiteStorageFileV2(sqlite_file.SQLiteStorageFile):
+class _TestSQLiteStorageFileV2(sqlite_file.SQLiteStorageFile):
+  """Test class for testing format compatibility checks."""
+
   _FORMAT_VERSION = 2
   _COMPATIBLE_FORMAT_VERSION = 1
 
@@ -97,8 +101,6 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       self.assertEqual(number_of_containers, 0)
 
       storage_file.Close()
-
-  # TODO: add tests for _CheckStorageMetadata
 
   def testGetAttributeContainerByIndex(self):
     """Tests the _GetAttributeContainerByIndex function."""
@@ -528,18 +530,18 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
     """Tests the version compatibility methods."""
     with shared_test_lib.TempDirectory() as temp_directory:
       v1_storage_path = os.path.join(temp_directory, 'v1.sqlite')
-      v1_storage_file = TestSQLiteStorageFileV1(
+      v1_storage_file = _TestSQLiteStorageFileV1(
          storage_type=definitions.STORAGE_TYPE_SESSION)
       v1_storage_file.Open(path=v1_storage_path, read_only=False)
       v1_storage_file.Close()
 
-      v2_storage_file_rw = TestSQLiteStorageFileV2(
+      v2_storage_file_rw = _TestSQLiteStorageFileV2(
          storage_type=definitions.STORAGE_TYPE_SESSION)
 
       with self.assertRaises(OSError):
         v2_storage_file_rw.Open(path=v1_storage_path, read_only=False)
 
-      v2_storage_file_ro = TestSQLiteStorageFileV2(
+      v2_storage_file_ro = _TestSQLiteStorageFileV2(
          storage_type=definitions.STORAGE_TYPE_SESSION)
       v2_storage_file_ro.Open(path=v1_storage_path, read_only=True)
       v2_storage_file_ro.Close()
