@@ -88,6 +88,94 @@ class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
       pass
 
 
+class WindowsAllUsersAppDataKnowledgeBasePlugin(
+    interface.KnowledgeBasePreprocessorPlugin):
+  """The allusersdata knowledge base value plugin.
+
+  The allusersdata value is needed for the expansion of
+  %%environ_allusersappdata%% in artifact definitions.
+  """
+
+  def Collect(self, knowledge_base):
+    """Collects values from the knowledge base.
+
+    Args:
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+
+    Raises:
+      PreProcessFail: if the preprocessing fails.
+    """
+    environment_variable = knowledge_base.GetEnvironmentVariable('programdata')
+    allusersdata = getattr(environment_variable, 'value', None)
+
+    if not allusersdata:
+      environment_variable = knowledge_base.GetEnvironmentVariable(
+          'allusersprofile')
+      allusersdata = getattr(environment_variable, 'value', None)
+
+      if allusersdata:
+        allusersdata = '\\'.join([allusersdata, 'Application Data'])
+
+    if allusersdata:
+      environment_variable = artifacts.EnvironmentVariableArtifact(
+          case_sensitive=False, name='allusersdata', value=allusersdata)
+
+      try:
+        knowledge_base.AddEnvironmentVariable(environment_variable)
+      except KeyError:
+        # TODO: add and store preprocessing errors.
+        pass
+
+
+class WindowsAllUsersProfileEnvironmentVariablePlugin(
+    WindowsEnvironmentVariableArtifactPreprocessorPlugin):
+  """The Windows %AllUsersProfile% environment variable plugin."""
+
+  ARTIFACT_DEFINITION_NAME = 'WindowsEnvironmentVariableAllUsersProfile'
+
+  _NAME = 'allusersprofile'
+
+
+class WindowsAllUsersAppProfileKnowledgeBasePlugin(
+    interface.KnowledgeBasePreprocessorPlugin):
+  """The allusersprofile knowledge base value plugin.
+
+  The allusersprofile value is needed for the expansion of
+  %%environ_allusersappprofile%% in artifact definitions.
+
+  It is derived from %ProgramData% for versions of Windows, Vista and later,
+  that do not define %AllUsersProfile%.
+  """
+
+  def Collect(self, knowledge_base):
+    """Collects values from the knowledge base.
+
+    Args:
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+
+    Raises:
+      PreProcessFail: if the preprocessing fails.
+    """
+    environment_variable = knowledge_base.GetEnvironmentVariable(
+        'allusersprofile')
+    allusersprofile = getattr(environment_variable, 'value', None)
+
+    if not allusersprofile:
+      environment_variable = knowledge_base.GetEnvironmentVariable(
+          'programdata')
+      allusersprofile = getattr(environment_variable, 'value', None)
+
+      if allusersprofile:
+        environment_variable = artifacts.EnvironmentVariableArtifact(
+            case_sensitive=False, name='allusersprofile', value=allusersprofile)
+
+        try:
+          knowledge_base.AddEnvironmentVariable(environment_variable)
+        except KeyError:
+          # TODO: add and store preprocessing errors.
+          pass
+
+
 class WindowsCodepagePlugin(
     interface.WindowsRegistryValueArtifactPreprocessorPlugin):
   """The Windows codepage plugin."""
@@ -146,6 +234,55 @@ class WindowsHostnamePlugin(
     if not knowledge_base.GetHostname():
       hostname_artifact = artifacts.HostnameArtifact(name=value_data)
       knowledge_base.SetHostname(hostname_artifact)
+
+
+class WindowsProgramDataEnvironmentVariablePlugin(
+    WindowsEnvironmentVariableArtifactPreprocessorPlugin):
+  """The Windows %ProgramData% environment variable plugin."""
+
+  ARTIFACT_DEFINITION_NAME = 'WindowsEnvironmentVariableProgramData'
+
+  _NAME = 'programdata'
+
+
+class WindowsProgramDataKnowledgeBasePlugin(
+    interface.KnowledgeBasePreprocessorPlugin):
+  """The programdata knowledge base value plugin.
+
+  The programdata value is needed for the expansion of %%environ_programdata%%
+  in artifact definitions.
+
+  It is derived from %AllUsersProfile% for versions of Windows prior to Vista
+  that do not define %ProgramData%.
+  """
+
+  def Collect(self, knowledge_base):
+    """Collects values from the knowledge base.
+
+    Args:
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+
+    Raises:
+      PreProcessFail: if the preprocessing fails.
+    """
+    environment_variable = knowledge_base.GetEnvironmentVariable(
+        'programdata')
+    allusersprofile = getattr(environment_variable, 'value', None)
+
+    if not allusersprofile:
+      environment_variable = knowledge_base.GetEnvironmentVariable(
+          'allusersprofile')
+      allusersprofile = getattr(environment_variable, 'value', None)
+
+      if allusersprofile:
+        environment_variable = artifacts.EnvironmentVariableArtifact(
+            case_sensitive=False, name='programdata', value=allusersprofile)
+
+        try:
+          knowledge_base.AddEnvironmentVariable(environment_variable)
+        except KeyError:
+          # TODO: add and store preprocessing errors.
+          pass
 
 
 class WindowsProgramFilesEnvironmentVariablePlugin(
@@ -329,7 +466,12 @@ class WindowsWinDirEnvironmentVariablePlugin(
 
 
 manager.PreprocessPluginsManager.RegisterPlugins([
+    WindowsAllUsersAppDataKnowledgeBasePlugin,
+    WindowsAllUsersProfileEnvironmentVariablePlugin,
+    WindowsAllUsersAppProfileKnowledgeBasePlugin,
     WindowsCodepagePlugin, WindowsHostnamePlugin,
+    WindowsProgramDataEnvironmentVariablePlugin,
+    WindowsProgramDataKnowledgeBasePlugin,
     WindowsProgramFilesEnvironmentVariablePlugin,
     WindowsProgramFilesX86EnvironmentVariablePlugin,
     WindowsSystemProductPlugin, WindowsSystemRootEnvironmentVariablePlugin,

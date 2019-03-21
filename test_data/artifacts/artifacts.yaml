@@ -161,6 +161,34 @@ sources:
 supported_os: [Windows]
 urls: ['https://github.com/libyal/winreg-kb/blob/master/documentation/System%20keys.asciidoc']
 ---
+name: WindowsEnvironmentVariableAllUsersProfile
+doc: |
+  The %AllUsersProfile% environment variable
+
+  May or may not depend on registry keys - see urls
+sources:
+- type: REGISTRY_VALUE
+  attributes:
+    key_value_pairs:
+      - {key: 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\ProfileList', value: 'AllUsersProfile'}
+provides: [environ_allusersprofile]
+supported_os: [Windows]
+urls:
+- 'https://www.microsoft.com/en-us/wdsi/help/folder-variables'
+- 'https://github.com/mirror/reactos/blob/c6d2b35ffc91e09f50dfb214ea58237509329d6b/reactos/boot/bootdata/livecd.inf'
+- 'http://support.microsoft.com/kb//214653'
+---
+name: WindowsEnvironmentVariableProgramData
+doc: The %ProgramData% environment variable.
+sources:
+- type: REGISTRY_VALUE
+  attributes:
+    key_value_pairs:
+      - {key: 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\ProfileList', value: 'ProgramData'}
+provides: [environ_allusersappdata]
+supported_os: [Windows]
+urls: ['http://environmentvariables.org/ProgramData']
+---
 name: WindowsEnvironmentVariableProgramFiles
 doc: The %ProgramFiles% environment variable.
 sources:
