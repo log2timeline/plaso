@@ -122,7 +122,8 @@ class PinfoTool(
       bool: True if the content of the stores is identical.
     """
     storage_counters = self._CalculateStorageCounters(storage_reader)
-    compare_storage_counters = self._CalculateStorageCounters(compare_storage_reader)
+    compare_storage_counters = self._CalculateStorageCounters(
+        compare_storage_reader)
 
     # TODO: improve comparison, currently only total numbers are compared.
 
@@ -172,7 +173,8 @@ class PinfoTool(
       self._output_writer.Write('No analysis reports stored.\n\n')
       return
 
-    for index, analysis_report in enumerate(storage_reader.GetAnalysisReports()):
+    for index, analysis_report in enumerate(
+        storage_reader.GetAnalysisReports()):
       title = 'Analysis report: {0:d}'.format(index)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
@@ -425,7 +427,8 @@ class PinfoTool(
         self._views_format_type, title='Plaso Storage Information')
     table_view.AddRow(['Filename', os.path.basename(self._storage_file_path)])
     table_view.AddRow(['Format version', storage_reader.format_version])
-    table_view.AddRow(['Serialization format', storage_reader.serialization_format])
+    table_view.AddRow(
+        ['Serialization format', storage_reader.serialization_format])
     table_view.Write(self._output_writer)
 
     if storage_reader.storage_type == definitions.STORAGE_TYPE_SESSION:
