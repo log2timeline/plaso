@@ -77,6 +77,15 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       with self.assertRaises(ValueError):
         storage_file._CountStoredAttributeContainers('bogus')
 
+      # Test for a supported container type that does not have a table
+      # present in the storage file.
+      query = 'DROP TABLE {0:s}'.format(
+          storage_file._CONTAINER_TYPE_EVENT_DATA)
+      storage_file._cursor.execute(query)
+      number_of_containers = storage_file._CountStoredAttributeContainers(
+          storage_file._CONTAINER_TYPE_EVENT_DATA)
+      self.assertEqual(number_of_containers, 0)
+
       storage_file.Close()
 
   # TODO: add tests for _CheckStorageMetadata
