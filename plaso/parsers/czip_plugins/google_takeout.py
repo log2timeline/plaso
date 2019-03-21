@@ -1097,7 +1097,6 @@ class GoogleTakeoutPlugin(interface.CompoundZIPPlugin):
           )
 
 # pylint: disable=bad-option-value
-# pylint: disable=old-style-class
 # pylint: disable=abstract-method
 class Mailbox:
   """A group of messages in a particular place."""
