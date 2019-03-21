@@ -244,8 +244,6 @@ if version_tuple[0] == 2:
   sys.setdefaultencoding(encoding)  # pylint: disable=no-member
 
 
-# Unicode in the description will break python-setuptools, hence
-# "Plaso Langar Að Safna Öllu" was removed.
 plaso_description = (
     'Super timeline all the things.')
 
