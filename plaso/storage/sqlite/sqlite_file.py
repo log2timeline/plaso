@@ -237,7 +237,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       raise ValueError('Attribute container type {0:s} is not supported'.format(
           container_type))
 
-    if not self._HasTable(self._CONTAINER_TYPE_ANALYSIS_REPORT):
+    if not self._HasTable(container_type):
       return 0
 
     # Note that this is SQLite specific, and will give inaccurate results if
