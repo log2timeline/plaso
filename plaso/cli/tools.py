@@ -146,6 +146,13 @@ class CLITool(object):
       options (argparse.Namespace): command line arguments.
     """
     self._log_file = self.ParseStringOption(options, 'log_file')
+    if not self._log_file:
+      local_date_time = datetime.datetime.now()
+      self._log_file = (
+          '{0:s}-{1:04d}{2:02d}{3:02d}T{4:02d}{5:02d}{6:02d}.log.gz').format(
+              self.NAME, local_date_time.year, local_date_time.month,
+              local_date_time.day, local_date_time.hour, local_date_time.minute,
+              local_date_time.second)
 
   def _ParseTimezoneOption(self, options):
     """Parses the timezone options.
@@ -223,8 +230,10 @@ class CLITool(object):
     argument_group.add_argument(
         '--logfile', '--log_file', '--log-file', action='store',
         metavar='FILENAME', dest='log_file', type=str, default='', help=(
-            'If defined all log messages will be redirected to this file '
-            'instead the default STDERR.'))
+            'Path of the file in which to store log messages, by default '
+            'this file will be named: "{0:s}-YYYYMMDDThhmmss.log.gz". Note '
+            'that the file will be gzip compressed if the extension is '
+            '".gz".').format(self.NAME))
 
   def AddTimeZoneOption(self, argument_group):
     """Adds the time zone option to the argument group.
