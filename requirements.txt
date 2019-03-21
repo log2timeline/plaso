@@ -3,6 +3,7 @@ PyYAML >= 3.10
 XlsxWriter >= 0.9.3
 artifacts >= 20190305
 backports.lzma ; python_version < '3.0'
+beautifulsoup4 >= 4.6.3
 bencode.py
 biplist >= 1.0.3
 certifi >= 2016.9.26
