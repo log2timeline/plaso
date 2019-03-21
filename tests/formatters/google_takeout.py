@@ -29,6 +29,9 @@ class GoogleGmailUpdateEventFormatterTest(test_lib.EventFormatterTestCase):
         'auth_results', 'arc_seal', 'arc_msg_signature', 'arc_auth_results',
         'auto_submitted', 'in_reply_to', 'return_path']
 
+    self._TestGetFormatStringAttributeNames(
+        event_formatter, expected_attribute_names)
+
 class GoogleActivitiesUpdateEventFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the Google Activities event formatter."""
 
@@ -121,6 +124,9 @@ class GoogleHangoutsUpdateEventFormatterTest(test_lib.EventFormatterTestCase):
         'conversation_view', 'conversation_medium', 'user', 'inviter',
         'participant', 'message_type', 'message_text', 'message_photo',
         'conversation_old_name', 'user_added', 'user_removed']
+
+    self._TestGetFormatStringAttributeNames(
+        event_formatter, expected_attribute_names)
 
 if __name__ == '__main__':
   unittest.main()
