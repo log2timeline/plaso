@@ -110,8 +110,6 @@ then
 
 elif test ${TRAVIS_OS_NAME} = "linux" && test ${TARGET} != "jenkins";
 then
-	sudo rm -f /etc/apt/sources.list.d/travis_ci_zeromq3-source.list;
-
 	if test ${TARGET} = "pylint";
 	then
 		sudo add-apt-repository ppa:gift/pylint3 -y;
