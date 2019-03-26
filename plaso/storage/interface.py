@@ -761,21 +761,21 @@ class StorageFileReader(StorageReader):
 
   @property
   def format_version(self):
-    """int: format version"""
+    """int: format version or None if not set."""
     if self._storage_file:
       return self._storage_file.format_version
     return None
 
   @property
   def serialization_format(self):
-    """str: serialization format."""
+    """str: serialization format or None if not set."""
     if self._storage_file:
       return self._storage_file.serialization_format
     return None
 
   @property
   def storage_type(self):
-    """str: storage type."""
+    """str: storage type  or None if not set."""
     if self._storage_file:
       return self._storage_file.storage_type
     return None
