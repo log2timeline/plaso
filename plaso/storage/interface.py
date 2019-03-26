@@ -775,7 +775,7 @@ class StorageFileReader(StorageReader):
 
   @property
   def storage_type(self):
-    """str: storage type  or None if not set."""
+    """str: storage type or None if not set."""
     if self._storage_file:
       return self._storage_file.storage_type
     return None
