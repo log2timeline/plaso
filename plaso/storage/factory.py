@@ -29,22 +29,6 @@ class StorageFactory(object):
     return None
 
   @classmethod
-  def CreateStorageFileForFile(cls, path):
-    """Creates a storage file based on the file.
-
-    Args:
-      path (str): path to the storage file.
-
-    Returns:
-      StorageFile: a storage file or None if the storage file cannot be
-          opened or the storage format is not supported.
-    """
-    if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
-      return sqlite_file.SQLiteStorageFile()
-
-    return None
-
-  @classmethod
   def CreateStorageReaderForFile(cls, path):
     """Creates a storage reader based on the file.
 
@@ -55,7 +39,8 @@ class StorageFactory(object):
       StorageReader: a storage reader or None if the storage file cannot be
           opened or the storage format is not supported.
     """
-    if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
+    if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(
+        path, check_readable_only=True):
       return sqlite_reader.SQLiteStorageFileReader(path)
 
     return None

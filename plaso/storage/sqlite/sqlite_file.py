@@ -174,11 +174,14 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       self._WriteSerializedAttributeContainerList(self._CONTAINER_TYPE_EVENT)
 
   @classmethod
-  def _CheckStorageMetadata(cls, metadata_values):
+  def _CheckStorageMetadata(cls, metadata_values, check_readable_only=False):
     """Checks the storage metadata.
 
     Args:
       metadata_values (dict[str, str]): metadata values per key.
+      check_readable_only (Optional[bool]): whether the store should only be
+          checked to see if it can be read. If False, the store will be checked
+          to see if it can be read and written to.
 
     Raises:
       IOError: if the format version or the serializer format is not supported.
@@ -193,6 +196,10 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       format_version = int(format_version, 10)
     except (TypeError, ValueError):
       raise IOError('Invalid format version: {0!s}.'.format(format_version))
+
+    if not check_readable_only and format_version != cls._FORMAT_VERSION:
+      raise IOError('Format version: {0:d} is not supported.'.format(
+          format_version))
 
     if format_version < cls._COMPATIBLE_FORMAT_VERSION:
       raise IOError(
@@ -392,14 +399,21 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     self._cursor.execute(query)
     return bool(self._cursor.fetchone())
 
-  def _ReadStorageMetadata(self):
-    """Reads the storage metadata."""
+  def _ReadAndCheckStorageMetadata(self, check_readable_only=False):
+    """Reads storage metadata and checks that the values are valid.
+
+    Args:
+      check_readable_only (Optional[bool]): whether the store should only be
+          checked to see if it can be read. If False, the store will be checked
+          to see if it can be read and written to.
+    """
     query = 'SELECT key, value FROM metadata'
     self._cursor.execute(query)
 
     metadata_values = {row[0]: row[1] for row in self._cursor.fetchall()}
 
-    SQLiteStorageFile._CheckStorageMetadata(metadata_values)
+    self._CheckStorageMetadata(
+        metadata_values, check_readable_only=check_readable_only)
 
     self.format_version = metadata_values['format_version']
     self.compression_format = metadata_values['compression_format']
@@ -650,11 +664,14 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       self.AddEventTag(event_tag)
 
   @classmethod
-  def CheckSupportedFormat(cls, path):
+  def CheckSupportedFormat(cls, path, check_readable_only=False):
     """Checks if the storage file format is supported.
 
     Args:
       path (str): path to the storage file.
+      check_readable_only (Optional[bool]): whether the store should only be
+          checked to see if it can be read. If False, the store will be checked
+          to see if it can be read and written to.
 
     Returns:
       bool: True if the format is supported.
@@ -670,7 +687,8 @@ class SQLiteStorageFile(interface.BaseStorageFile):
 
       metadata_values = {row[0]: row[1] for row in cursor.fetchall()}
 
-      cls._CheckStorageMetadata(metadata_values)
+      cls._CheckStorageMetadata(
+          metadata_values, check_readable_only=check_readable_only)
 
       connection.close()
       result = True
@@ -848,12 +866,10 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       Session: session attribute container.
 
     Raises:
-      IOError: if a stream is missing or there is a mismatch in session
-          identifiers between the session start and completion attribute
-          containers.
-      OSError: if a stream is missing or there is a mismatch in session
-          identifiers between the session start and completion attribute
-          containers.
+      IOError: if there is a mismatch in session identifiers between the
+          session start and completion attribute containers.
+      OSError: if there is a mismatch in session identifiers between the
+          session start and completion attribute containers.
     """
     session_start_generator = self._GetAttributeContainers(
         self._CONTAINER_TYPE_SESSION_START)
@@ -975,7 +991,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
     self._read_only = read_only
 
     if read_only:
-      self._ReadStorageMetadata()
+      self._ReadAndCheckStorageMetadata(check_readable_only=True)
     else:
       # self._cursor.execute('PRAGMA journal_mode=MEMORY')
 
@@ -985,7 +1001,7 @@ class SQLiteStorageFile(interface.BaseStorageFile):
       if not self._HasTable('metadata'):
         self._WriteStorageMetadata()
       else:
-        self._ReadStorageMetadata()
+        self._ReadAndCheckStorageMetadata()
 
       if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
         data_column_type = 'BLOB'
