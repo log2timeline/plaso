@@ -92,11 +92,20 @@ class SerializedAttributeContainerList(object):
 
 # pylint: disable=redundant-returns-doc,redundant-yields-doc
 class BaseStore(object):
-  """Storage interface."""
+  """Storage interface.
+
+  Attributes:
+    format_version (int): storage format version.
+    serialization_format (str): serialization format.
+    storage_type (str): storage type.
+  """
 
   def __init__(self):
     """Initializes a store."""
     super(BaseStore, self).__init__()
+    self.format_version = None
+    self.serialization_format = None
+    self.storage_type = None
     self._serializers_profiler = None
     self._storage_profiler = None
 
@@ -220,6 +229,14 @@ class BaseStore(object):
 
     Returns:
       int: number of event sources.
+    """
+
+  @abc.abstractmethod
+  def GetSessions(self):
+    """Retrieves the sessions.
+
+    Yields:
+      Session: session.
     """
 
   @abc.abstractmethod
@@ -558,6 +575,18 @@ class StorageReader(object):
     """Make usable with "with" statement."""
     self.Close()
 
+  @abc.abstractproperty
+  def format_version(self):
+    """int: format version"""
+
+  @abc.abstractproperty
+  def serialization_format(self):
+    """str: serialization format."""
+
+  @abc.abstractproperty
+  def storage_type(self):
+    """str: storage type."""
+
   @abc.abstractmethod
   def Close(self):
     """Closes the storage reader."""
@@ -641,6 +670,14 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
+  def GetSessions(self):
+    """Retrieves the sessions.
+
+    Yields:
+      Session: session.
+    """
+
+  @abc.abstractmethod
   def GetSortedEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 
@@ -653,6 +690,30 @@ class StorageReader(object):
 
     Yields:
       EventObject: event.
+    """
+
+  @abc.abstractmethod
+  def HasAnalysisReports(self):
+    """Determines if a store contains analysis reports.
+
+    Returns:
+      bool: True if the store contains analysis reports.
+    """
+
+  @abc.abstractmethod
+  def HasErrors(self):
+    """Determines if a store contains extraction errors.
+
+    Returns:
+      bool: True if the store contains extraction errors.
+    """
+
+  @abc.abstractmethod
+  def HasEventTags(self):
+    """Determines if a store contains event tags.
+
+    Returns:
+      bool: True if the store contains event tags.
     """
 
   @abc.abstractmethod
@@ -697,6 +758,27 @@ class StorageFileReader(StorageReader):
     super(StorageFileReader, self).__init__()
     self._path = path
     self._storage_file = None
+
+  @property
+  def format_version(self):
+    """int: format version or None if not set."""
+    if self._storage_file:
+      return self._storage_file.format_version
+    return None
+
+  @property
+  def serialization_format(self):
+    """str: serialization format or None if not set."""
+    if self._storage_file:
+      return self._storage_file.serialization_format
+    return None
+
+  @property
+  def storage_type(self):
+    """str: storage type or None if not set."""
+    if self._storage_file:
+      return self._storage_file.storage_type
+    return None
 
   def Close(self):
     """Closes the storage reader."""
@@ -796,6 +878,38 @@ class StorageFileReader(StorageReader):
       generator(EventObject): event generator.
     """
     return self._storage_file.GetSortedEvents(time_range=time_range)
+
+  def GetSessions(self):
+    """Retrieves the sessions.
+
+    Returns:
+      generator(Session): session generator.
+    """
+    return self._storage_file.GetSessions()
+
+  def HasAnalysisReports(self):
+    """Determines if a store contains analysis reports.
+
+    Returns:
+      bool: True if the store contains analysis reports.
+    """
+    return self._storage_file.HasAnalysisReports()
+
+  def HasErrors(self):
+    """Determines if a store contains extraction errors.
+
+    Returns:
+      bool: True if the store contains extraction errors.
+    """
+    return self._storage_file.HasErrors()
+
+  def HasEventTags(self):
+    """Determines if a store contains event tags.
+
+    Returns:
+      bool: True if the store contains event tags.
+    """
+    return self._storage_file.HasEventTags()
 
   def ReadPreprocessingInformation(self, knowledge_base):
     """Reads preprocessing information.
