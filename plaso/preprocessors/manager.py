@@ -142,6 +142,8 @@ class PreprocessPluginsManager(object):
             preprocess_plugin.ARTIFACT_DEFINITION_NAME))
         continue
 
+      logger.debug('Running file system preprocessor plugin: {0:s}'.format(
+          preprocess_plugin.ARTIFACT_DEFINITION_NAME))
       try:
         preprocess_plugin.Collect(
             knowledge_base, artifact_definition, searcher, file_system)
@@ -159,6 +161,8 @@ class PreprocessPluginsManager(object):
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
     """
     for preprocess_plugin in cls._knowledge_base_plugins.values():
+      logger.debug('Running knowledge base preprocessor plugin: {0:s}'.format(
+          preprocess_plugin.__class__.__name__))
       try:
         preprocess_plugin.Collect(knowledge_base)
       except errors.PreProcessFail as exception:
@@ -186,6 +190,8 @@ class PreprocessPluginsManager(object):
             preprocess_plugin.ARTIFACT_DEFINITION_NAME))
         continue
 
+      logger.debug('Running Windows Registry preprocessor plugin: {0:s}'.format(
+          preprocess_plugin.ARTIFACT_DEFINITION_NAME))
       try:
         preprocess_plugin.Collect(knowledge_base, artifact_definition, searcher)
       except (IOError, errors.PreProcessFail) as exception:
