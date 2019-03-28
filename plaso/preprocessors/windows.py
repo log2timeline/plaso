@@ -38,6 +38,8 @@ class WindowsEnvironmentVariableArtifactPreprocessorPlugin(
         case_sensitive=False, name=self._NAME, value=value_data)
 
     try:
+      logger.debug('setting environment variable: {0:s} to: "{1:s}"'.format(
+          self._NAME, value_data))
       knowledge_base.AddEnvironmentVariable(environment_variable)
     except KeyError:
       # TODO: add and store preprocessing errors.
@@ -82,6 +84,8 @@ class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
         case_sensitive=False, name=self._NAME, value=relative_path)
 
     try:
+      logger.debug('setting environment variable: {0:s} to: "{1:s}"'.format(
+          self._NAME, relative_path))
       knowledge_base.AddEnvironmentVariable(environment_variable)
     except KeyError:
       # TODO: add and store preprocessing errors.
@@ -106,21 +110,23 @@ class WindowsAllUsersAppDataKnowledgeBasePlugin(
       PreProcessFail: if the preprocessing fails.
     """
     environment_variable = knowledge_base.GetEnvironmentVariable('programdata')
-    allusersdata = getattr(environment_variable, 'value', None)
+    allusersappdata = getattr(environment_variable, 'value', None)
 
-    if not allusersdata:
+    if not allusersappdata:
       environment_variable = knowledge_base.GetEnvironmentVariable(
           'allusersprofile')
       allusersdata = getattr(environment_variable, 'value', None)
 
       if allusersdata:
-        allusersdata = '\\'.join([allusersdata, 'Application Data'])
+        allusersappdata = '\\'.join([allusersdata, 'Application Data'])
 
-    if allusersdata:
+    if allusersappdata:
       environment_variable = artifacts.EnvironmentVariableArtifact(
-          case_sensitive=False, name='allusersdata', value=allusersdata)
+          case_sensitive=False, name='allusersappdata', value=allusersappdata)
 
       try:
+        logger.debug('setting environment variable: {0:s} to: "{1:s}"'.format(
+            'allusersappdata', allusersappdata))
         knowledge_base.AddEnvironmentVariable(environment_variable)
       except KeyError:
         # TODO: add and store preprocessing errors.
@@ -170,6 +176,8 @@ class WindowsAllUsersAppProfileKnowledgeBasePlugin(
             case_sensitive=False, name='allusersprofile', value=allusersprofile)
 
         try:
+          logger.debug('setting environment variable: {0:s} to: "{1:s}"'.format(
+              'allusersprofile', allusersprofile))
           knowledge_base.AddEnvironmentVariable(environment_variable)
         except KeyError:
           # TODO: add and store preprocessing errors.
@@ -279,6 +287,8 @@ class WindowsProgramDataKnowledgeBasePlugin(
             case_sensitive=False, name='programdata', value=allusersprofile)
 
         try:
+          logger.debug('setting environment variable: {0:s} to: "{1:s}"'.format(
+              'programdata', allusersprofile))
           knowledge_base.AddEnvironmentVariable(environment_variable)
         except KeyError:
           # TODO: add and store preprocessing errors.
