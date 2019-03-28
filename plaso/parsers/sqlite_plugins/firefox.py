@@ -64,10 +64,10 @@ class FirefoxPlacesBookmarkEventData(events.EventData):
   """Firefox bookmark event data.
 
   Attributes:
-    bookmark_type (int): bookmark type.
-    hostname (str): hostname.
+    host (str): visited hostname.
     places_title (str): places title.
     title (str): title of the bookmark folder.
+    type (int): bookmark type.
     url (str): bookmarked URL.
     visit_count (int): visit count.
   """
@@ -92,7 +92,7 @@ class FirefoxPlacesPageVisitedEventData(events.EventData):
 
   Attributes:
     extra (list[object]): extra event data.
-    hostname (str): visited hostname.
+    host (str): visited hostname.
     title (str): title of the visited page.
     url (str): URL of the visited page.
     visit_count (int): visit count.
