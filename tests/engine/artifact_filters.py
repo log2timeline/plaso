@@ -65,13 +65,13 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     knowledge_base = knowledge_base_engine.KnowledgeBase()
 
     test_user1 = artifacts.UserAccountArtifact(
-        identifier='1000',
+        identifier='1000', path_separator='\\',
         user_directory='C:\\Users\\testuser1',
         username='testuser1')
     knowledge_base.AddUserAccount(test_user1)
 
     test_user2 = artifacts.UserAccountArtifact(
-        identifier='1001',
+        identifier='1001', path_separator='\\',
         user_directory='%SystemDrive%\\Users\\testuser2',
         username='testuser2')
     knowledge_base.AddUserAccount(test_user2)
@@ -313,9 +313,11 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     # Test Windows path with profile directories and globs with a depth of 4.
     separator = '\\'
     test_user1 = artifacts.UserAccountArtifact(
-        user_directory='C:\\Users\\testuser1', username='testuser1')
+        path_separator='\\', user_directory='C:\\Users\\testuser1',
+        username='testuser1')
     test_user2 = artifacts.UserAccountArtifact(
-        user_directory='%SystemDrive%\\Users\\testuser2', username='testuser2')
+        path_separator='\\', user_directory='%SystemDrive%\\Users\\testuser2',
+        username='testuser2')
     test_user_accounts = [test_user1, test_user2]
 
     path_entry = '%%users.userprofile%%\\AppData\\**4'
