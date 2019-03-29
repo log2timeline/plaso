@@ -7,15 +7,15 @@ from plaso.formatters import manager
 
 
 class MacNotesNotesFormatter(interface.ConditionalEventFormatter):
-  """Formatter for a Mac Notes zhtlmstring record"""
+  """Formatter for a Mac Notes zhtmlstring record."""
 
   DATA_TYPE = 'mac:notes:zhtmlstring'
 
   FORMAT_STRING_PIECES = [
-      'note_body:{zhtmlstring}',
-      'title:{title}']
+      'title: {title}',
+      'note_body: {note_text}']
 
-  FORMAT_STRING_SHORT_PIECES = ['title:{title}']
+  FORMAT_STRING_SHORT_PIECES = ['title: {title}']
 
   SOURCE_LONG = 'Mac Notes Zhtmlstring'
   SOURCE_SHORT = 'Mac Notes'

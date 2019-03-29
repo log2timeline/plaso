@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """Parser for mac notes database.
+
 SQLite database path: test_data/NotesV7.storedata
 SQLite database Name: NotesV7.storedata
 """
-
 from __future__ import unicode_literals
 import re
 from bs4 import BeautifulSoup
@@ -21,8 +21,9 @@ class MacNotesZhtmlstringEventData(events.EventData):
   """Mac Notes zhtmlstring event data.
 
   Attributes:
-    zhtmlstring (str): contains note data.
-    last_modified_date (str): last time note was modified.
+    zhtmlstring (str): note html string.
+    note_text (str): note text, extracted from the HTML string.
+    title (str): note title.
   """
 
   DATA_TYPE = 'mac:notes:zhtmlstring'
@@ -31,8 +32,9 @@ class MacNotesZhtmlstringEventData(events.EventData):
     """Initializes event data."""
     super(MacNotesZhtmlstringEventData, self).__init__(
         data_type=self.DATA_TYPE)
-    self.zhtmlstring = None
     self.title = None
+    self.note_text = None
+    self.zhtmlstring = None
 
 
 class MacNotesPlugin(interface.SQLitePlugin):
@@ -103,6 +105,21 @@ class MacNotesPlugin(interface.SQLitePlugin):
           'VARCHAR, Z_SUPER INTEGER, Z_MAX INTEGER)')
   }]
 
+  def _GetNoteText(self, zhtmlstring):
+    """Returns a sanitized version of the note HTML.
+
+    Args:
+      zhtmlstring (str): HTML content of a note.
+
+    Returns:
+      str: a version of the note body with (most of) the HTML removed.
+    """
+    soup = BeautifulSoup(zhtmlstring, features='html.parser')
+    body = soup.body.prettify()
+    body = re.sub(
+        r'(<\/?(div|body|span|b|table|tr|td|tbody|p).*>\n?)', '', body)
+    return body
+
   def ParseZHTMLSTRINGRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a row from the database.
 
@@ -112,31 +129,33 @@ class MacNotesPlugin(interface.SQLitePlugin):
       query (str): query that created the row.
       row (sqlite3.Row): row resulting from query.
     """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
     query_hash = hash(query)
     event_data = MacNotesZhtmlstringEventData()
-    soup = BeautifulSoup(self._GetRowValue(query_hash, row, 'zhtmlstring'),
-                         'html.parser')
-    body = soup.body.prettify()
-    body = re.sub(r'(<\/?(div|body|span|b|table|tr|td|tbody|p).*>\n?)', '',
-                  body)
-    event_data.zhtmlstring = body
-    event_data.title = self._GetRowValue(query_hash, row, 'title')
-    timestamp = self._GetRowValue(query_hash, row, 'timestamp')
 
-    date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_CREATION)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    title = self._GetRowValue(query_hash, row, 'title')
+    event_data.title = title
 
-    timestamp = self._GetRowValue(query_hash, row, 'last_modified_time')
-    if timestamp:
-      date_time = dfdatetime_cocoa_time.CocoaTime(
-          timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_LAST_USED)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    zhtmlstring = self._GetRowValue(query_hash, row, 'zhtmlstring')
+    event_data.zhtmlstring = zhtmlstring
+
+    note_text = self._GetNoteText(zhtmlstring)
+    event_data.note_text = note_text
+
+    create_timestamp = self._GetRowValue(query_hash, row, 'timestamp')
+    create_date_time = dfdatetime_cocoa_time.CocoaTime(
+        timestamp=create_timestamp)
+    create_event = time_events.DateTimeValuesEvent(
+        create_date_time, definitions.TIME_DESCRIPTION_CREATION)
+    parser_mediator.ProduceEventWithEventData(create_event, event_data)
+
+    modified_timestamp = self._GetRowValue(
+        query_hash, row, 'last_modified_time')
+    if modified_timestamp:
+      modified_date_time = dfdatetime_cocoa_time.CocoaTime(
+          timestamp=modified_timestamp)
+      modified_event = time_events.DateTimeValuesEvent(
+          modified_date_time, definitions.TIME_DESCRIPTION_LAST_USED)
+      parser_mediator.ProduceEventWithEventData(modified_event, event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(MacNotesPlugin)
