@@ -244,7 +244,7 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     environment_variables.append(environment_variable)
 
     expected_expanded_path = (
-        'C:\\Documents and Settings\\All Users\\Application Data\\'
+        '\\Documents and Settings\\All Users\\Application Data\\'
         'Apache Software Foundation')
 
     expanded_path = path_helper.PathHelper.ExpandWindowsPath(
@@ -253,7 +253,7 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     self.assertEqual(expanded_path, expected_expanded_path)
 
     expected_expanded_path = (
-        'C:\\Documents and Settings\\All Users\\Start Menu\\Programs\\Startup')
+        '\\Documents and Settings\\All Users\\Start Menu\\Programs\\Startup')
 
     expanded_path = path_helper.PathHelper.ExpandWindowsPath(
         '%AllUsersProfile%\\Start Menu\\Programs\\Startup',
@@ -262,11 +262,11 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
 
     expanded_path = path_helper.PathHelper.ExpandWindowsPath(
         '%SystemRoot%\\System32', environment_variables)
-    self.assertEqual(expanded_path, 'C:\\Windows\\System32')
+    self.assertEqual(expanded_path, '\\Windows\\System32')
 
     expanded_path = path_helper.PathHelper.ExpandWindowsPath(
         'C:\\Windows\\System32', environment_variables)
-    self.assertEqual(expanded_path, 'C:\\Windows\\System32')
+    self.assertEqual(expanded_path, '\\Windows\\System32')
 
     expanded_path = path_helper.PathHelper.ExpandWindowsPath(
         '%SystemRoot%\\System32', None)

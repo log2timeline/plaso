@@ -30,7 +30,7 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
     plugin.Collect(knowledge_base_object)
 
     environment_variable = knowledge_base_object.GetEnvironmentVariable(
-        'allusersdata')
+        'allusersappdata')
     self.assertIsNone(environment_variable)
 
   def testCollectWithAllUsersProfile(self):
@@ -47,7 +47,7 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
     plugin.Collect(knowledge_base_object)
 
     environment_variable = knowledge_base_object.GetEnvironmentVariable(
-        'allusersdata')
+        'allusersappdata')
     self.assertIsNotNone(environment_variable)
     self.assertEqual(
         environment_variable.value,
@@ -67,7 +67,7 @@ class WindowsAllUsersAppDataKnowledgeBasePluginTest(
     plugin.Collect(knowledge_base_object)
 
     environment_variable = knowledge_base_object.GetEnvironmentVariable(
-        'allusersdata')
+        'allusersappdata')
     self.assertIsNotNone(environment_variable)
     self.assertEqual(environment_variable.value, '%SystemDrive%\\ProgramData')
 

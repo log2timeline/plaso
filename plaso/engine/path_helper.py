@@ -270,7 +270,8 @@ class PathHelper(object):
         if len(path_segments[index]) >= 2 and path_segments[index][1] == ':':
           _, _, path_segments[index] = path_segments[index].rpartition(':')
 
-    return '\\'.join(path_segments)
+    path = '\\'.join(path_segments)
+    return cls._StripDriveFromPath(path)
 
   @classmethod
   def GetDisplayNameForPathSpec(
