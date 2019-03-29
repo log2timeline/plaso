@@ -23,6 +23,9 @@ from tests.analysis import test_lib
 class _MockNsrlsvrSocket(object):
   """Mock socket object for testing."""
 
+  _EVENT_1_HASH = (
+      b'2d79fcc6b02a2e183a0cb30e0e25d103f42badda9fbf86bbee06f93aa3855aff')
+
   def __init__(self):
     """Initializes a mock socket."""
     super(_MockNsrlsvrSocket, self).__init__()
@@ -36,7 +39,7 @@ class _MockNsrlsvrSocket(object):
   def recv(self, buffer_size):
     """Mocks the socket.recv method."""
     expected_data = (
-        self._data == 'QUERY {0:s}\n'.format(NsrlSvrTest.EVENT_1_HASH))
+        self._data == b'QUERY {0:s}\n'.format(self._EVENT_1_HASH))
 
     self._data = None
 
@@ -57,7 +60,7 @@ class _MockNsrlsvrSocket(object):
 class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
   """Tests for the nsrlsvr analysis plugin."""
 
-  EVENT_1_HASH = (
+  _EVENT_1_HASH = (
       '2d79fcc6b02a2e183a0cb30e0e25d103f42badda9fbf86bbee06f93aa3855aff')
 
   _EVENT_2_HASH = (
@@ -66,7 +69,7 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
   _TEST_EVENTS = [
       {'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
        'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
-       'sha256_hash': EVENT_1_HASH,
+       'sha256_hash': _EVENT_1_HASH,
        'data_type': 'fs:stat',
        'pathspec': fake_path_spec.FakePathSpec(
            location='C:\\WINDOWS\\system32\\good.exe')
