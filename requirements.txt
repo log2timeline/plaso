@@ -12,6 +12,7 @@ dfvfs >= 20181209
 dfwinreg >= 20180712
 dtfabric >= 20181128
 elasticsearch >= 6.0
+efilter >= 1-1.4
 future >= 0.16.0
 idna >= 2.5
 libbde-python >= 20140531
