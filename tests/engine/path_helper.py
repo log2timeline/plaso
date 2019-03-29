@@ -41,9 +41,11 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     self.assertEqual(expanded_paths, expected_expanded_paths)
 
     user_account_artifact1 = artifacts.UserAccountArtifact(
-        user_directory='C:\\Users\\Test1', username='Test1')
+        path_separator='\\', user_directory='C:\\Users\\Test1',
+        username='Test1')
     user_account_artifact2 = artifacts.UserAccountArtifact(
-        user_directory='%SystemDrive%\\Users\\Test2', username='Test2')
+        path_separator='\\', user_directory='%SystemDrive%\\Users\\Test2',
+        username='Test2')
 
     user_accounts = [user_account_artifact1, user_account_artifact2]
 
@@ -76,9 +78,11 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
   def testExpandUsersVariablePathSegments(self):
     """Tests the _ExpandUsersVariablePathSegments function."""
     user_account_artifact1 = artifacts.UserAccountArtifact(
-        user_directory='C:\\Users\\Test1', username='Test1')
+        path_separator='\\', user_directory='C:\\Users\\Test1',
+        username='Test1')
     user_account_artifact2 = artifacts.UserAccountArtifact(
-        user_directory='%SystemDrive%\\Users\\Test2', username='Test2')
+        path_separator='\\', user_directory='%SystemDrive%\\Users\\Test2',
+        username='Test2')
 
     user_accounts = [user_account_artifact1, user_account_artifact2]
 
@@ -100,21 +104,20 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     expected_expanded_paths = ['\\Windows']
     self.assertEqual(sorted(expanded_paths), expected_expanded_paths)
 
-  def testStripDriveFromPath(self):
-    """Tests the _StripDriveFromPath function."""
-    stripped_path = path_helper.PathHelper._StripDriveFromPath('C:\\Windows')
-    self.assertEqual(stripped_path, '\\Windows')
+  def testIsWindowsDrivePathSegment(self):
+    """Tests the _IsWindowsDrivePathSegment function."""
+    result = path_helper.PathHelper._IsWindowsDrivePathSegment('C:')
+    self.assertTrue(result)
 
-    stripped_path = path_helper.PathHelper._StripDriveFromPath(
-        '%SystemDrive%\\Windows')
-    self.assertEqual(stripped_path, '\\Windows')
+    result = path_helper.PathHelper._IsWindowsDrivePathSegment('%SystemDrive%')
+    self.assertTrue(result)
 
-    stripped_path = path_helper.PathHelper._StripDriveFromPath(
-        '%%environ_systemdrive%%\\Windows')
-    self.assertEqual(stripped_path, '\\Windows')
+    result = path_helper.PathHelper._IsWindowsDrivePathSegment(
+        '%%environ_systemdrive%%')
+    self.assertTrue(result)
 
-    stripped_path = path_helper.PathHelper._StripDriveFromPath('\\Windows')
-    self.assertEqual(stripped_path, '\\Windows')
+    result = path_helper.PathHelper._IsWindowsDrivePathSegment('Windows')
+    self.assertFalse(result)
 
   def testAppendPathEntries(self):
     """Tests the AppendPathEntries function."""
@@ -208,9 +211,11 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
   def testExpandUsersVariablePath(self):
     """Tests the ExpandUsersVariablePath function."""
     user_account_artifact1 = artifacts.UserAccountArtifact(
-        user_directory='C:\\Users\\Test1', username='Test1')
+        path_separator='\\', user_directory='C:\\Users\\Test1',
+        username='Test1')
     user_account_artifact2 = artifacts.UserAccountArtifact(
-        user_directory='%SystemDrive%\\Users\\Test2', username='Test2')
+        path_separator='\\', user_directory='%SystemDrive%\\Users\\Test2',
+        username='Test2')
 
     user_accounts = [user_account_artifact1, user_account_artifact2]
 
