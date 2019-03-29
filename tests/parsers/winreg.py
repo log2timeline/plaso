@@ -115,22 +115,20 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     parser = winreg.WinRegistryParser()
     knowledge_base = knowledge_base_engine.KnowledgeBase()
 
-    artifacts_filters = ['TestRegistryKey', 'TestRegistryValue']
+    artifact_filter_names = ['TestRegistryKey', 'TestRegistryValue']
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
 
     registry.ReadFromDirectory(reader, self._GetTestFilePath(['artifacts']))
 
-    test_filter_file = artifact_filters.ArtifactDefinitionsFilterHelper(
-        registry, artifacts_filters, knowledge_base)
+    artifacts_filter_helper = artifact_filters.ArtifactDefinitionsFilterHelper(
+        registry, knowledge_base)
 
-    test_filter_file.BuildFindSpecs(environment_variables=None)
+    artifacts_filter_helper.BuildFindSpecs(
+        artifact_filter_names, environment_variables=None)
 
-    find_specs = {
-        test_filter_file.KNOWLEDGE_BASE_VALUE : knowledge_base.GetValue(
-            test_filter_file.KNOWLEDGE_BASE_VALUE)}
     storage_writer = self._ParseFile(
-        ['SYSTEM'], parser, knowledge_base_values=find_specs)
+        ['SYSTEM'], parser, artifacts_filter_helper=artifacts_filter_helper)
 
     events = list(storage_writer.GetEvents())
 

@@ -22,6 +22,8 @@ class ParserMediator(object):
   """Parser mediator.
 
   Attributes:
+    artifacts_filter_helper (ArtifactDefinitionsFilterHelper): artifacts
+        definitions filter helper.
     last_activity_timestamp (int): timestamp received that indicates the last
         time activity was observed. The last activity timestamp is updated
         when the mediator produces an attribute container, such as an event
@@ -29,19 +31,23 @@ class ParserMediator(object):
         to indicate the last time the worker was known to be active. This
         information is then used by the foreman to detect workers that are
         not responding (stalled).
+    registry_find_specs (list[dfwinreg.FindSpec]): Windows Registry find
+        specifications.
   """
   _INT64_MIN = -1 << 63
   _INT64_MAX = (1 << 63) - 1
 
   def __init__(
-      self, storage_writer, knowledge_base, preferred_year=None,
-      resolver_context=None, temporary_directory=None):
+      self, storage_writer, knowledge_base, artifacts_filter_helper=None,
+      preferred_year=None, resolver_context=None, temporary_directory=None):
     """Initializes a parser mediator.
 
     Args:
       storage_writer (StorageWriter): storage writer.
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for parsing.
+      artifacts_filter_helper (Optional[ArtifactDefinitionsFilterHelper]):
+          artifacts definitions filter helper.
       preferred_year (Optional[int]): preferred year.
       resolver_context (Optional[dfvfs.Context]): resolver context.
       temporary_directory (Optional[str]): path of the directory for temporary
@@ -68,6 +74,7 @@ class ParserMediator(object):
     self._temporary_directory = temporary_directory
     self._text_prepend = None
 
+    self.artifacts_filter_helper = artifacts_filter_helper
     self.last_activity_timestamp = 0.0
 
   @property

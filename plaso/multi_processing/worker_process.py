@@ -20,8 +20,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
   """Class that defines a multi-processing worker process."""
 
   def __init__(
-      self, task_queue, storage_writer, knowledge_base, session_identifier,
-      processing_configuration, **kwargs):
+      self, task_queue, storage_writer, artifacts_filter_helper,
+      knowledge_base, session_identifier, processing_configuration, **kwargs):
     """Initializes a worker process.
 
     Non-specified keyword arguments (kwargs) are directly passed to
@@ -30,6 +30,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     Args:
       task_queue (PlasoQueue): task queue.
       storage_writer (StorageWriter): storage writer for a session storage.
+      artifacts_filter_helper (ArtifactDefinitionsFilterHelper): artifacts
+          definitions filter helper.
       knowledge_base (KnowledgeBase): knowledge base which contains
           information from the source data needed for parsing.
       session_identifier (str): identifier of the session.
@@ -39,6 +41,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     """
     super(WorkerProcess, self).__init__(processing_configuration, **kwargs)
     self._abort = False
+    self._artifacts_filter_helper = artifacts_filter_helper
     self._buffer_size = 0
     self._current_display_name = ''
     self._extraction_worker = None
@@ -125,6 +128,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
     self._parser_mediator = parsers_mediator.ParserMediator(
         None, self._knowledge_base,
+        artifacts_filter_helper=self._artifacts_filter_helper,
         preferred_year=self._processing_configuration.preferred_year,
         resolver_context=resolver_context,
         temporary_directory=self._processing_configuration.temporary_directory)
