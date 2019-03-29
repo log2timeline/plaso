@@ -78,8 +78,11 @@ class ArtifactDefinitionsFilterHelper(object):
     for name in self._artifacts:
       definition = self._artifacts_registry.GetDefinitionByName(name)
       if not definition:
+        logger.debug('undefined artifact definition: {0:s}'.format(name))
         continue
 
+      logger.debug(
+          'building find spec from artifact definition: {0:s}'.format(name))
       artifact_find_specs = self._BuildFindSpecsFromArtifact(
           definition, environment_variables)
       find_specs.extend(artifact_find_specs)
@@ -202,11 +205,18 @@ class ArtifactDefinitionsFilterHelper(object):
     find_specs = []
     for glob_path in path_helper.PathHelper.ExpandRecursiveGlobs(
         source_path, path_separator):
+      logger.debug('building find spec from glob path: {0:s}'.format(
+          glob_path))
+
       for path in path_helper.PathHelper.ExpandUsersVariablePath(
           glob_path, path_separator, user_accounts):
+        logger.debug('building find spec from path: {0:s}'.format(path))
+
         if '%' in path:
           path = path_helper.PathHelper.ExpandWindowsPath(
               path, environment_variables)
+          logger.debug('building find spec from expanded path: {0:s}'.format(
+              path))
 
         if not path.startswith(path_separator):
           logger.warning((

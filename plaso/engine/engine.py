@@ -313,17 +313,27 @@ class BaseEngine(object):
     environment_variables = knowledge_base_object.GetEnvironmentVariables()
     find_specs = None
     if artifact_filter_names:
+      logger.debug(
+          'building find specification based on artifacts: {0:s}'.format(
+              ', '.join(artifact_filter_names)))
+
       artifacts_registry_object = cls.BuildArtifactsRegistry(
           artifact_definitions_path, custom_artifacts_path)
       artifact_filters_object = (
           artifact_filters.ArtifactDefinitionsFilterHelper(
               artifacts_registry_object, artifact_filter_names,
               knowledge_base_object))
-      artifact_filters_object.BuildFindSpecs(environment_variables)
+      artifact_filters_object.BuildFindSpecs(
+          environment_variables=environment_variables)
       find_specs = knowledge_base_object.GetValue(
           artifact_filters_object.KNOWLEDGE_BASE_VALUE)[
               artifact_types.TYPE_INDICATOR_FILE]
+
     elif filter_file_path:
+      logger.debug(
+          'building find specification based on filter file: {0:s}'.format(
+              filter_file_path))
+
       filter_file_object = filter_file.FilterFile(filter_file_path)
       find_specs = filter_file_object.BuildFindSpecs(
           environment_variables=environment_variables)
