@@ -195,13 +195,16 @@ class CLITool(object):
     Args:
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
-    version_string = 'plaso - {0:s} version {1:s}'.format(
-        self.NAME, plaso.__version__)
+    version_string = self.GetVersionInformation()
 
     # We want a custom help message and not the default argparse one.
     argument_group.add_argument(
         '-h', '--help', action='help',
         help='Show this help message and exit.')
+
+    argument_group.add_argument(
+        '--troubles', dest='show_troubleshooting', action='store_true',
+        default=False, help='Show troubleshooting information.')
 
     argument_group.add_argument(
         '-V', '--version', dest='version', action='version',
@@ -283,6 +286,14 @@ class CLITool(object):
             for argument in command_line_arguments]
 
     return ' '.join(command_line_arguments)
+
+  def GetVersionInformation(self):
+    """Retrieves the version information.
+
+    Returns:
+      str: version information.
+    """
+    return 'plaso - {0:s} version {1:s}'.format(self.NAME, plaso.__version__)
 
   def ListTimeZones(self):
     """Lists the timezones."""
