@@ -449,7 +449,7 @@ class WindowsUserAccountsPlugin(
       errors.PreProcessFail: if the preprocessing fails.
     """
     user_account = artifacts.UserAccountArtifact(
-        identifier=registry_key.name)
+        identifier=registry_key.name, path_separator='\\')
 
     registry_value = registry_key.GetValueByName('ProfileImagePath')
     if registry_value:
