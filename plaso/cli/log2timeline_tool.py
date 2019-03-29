@@ -45,6 +45,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     list_profilers (bool): True if the profilers should be listed.
     show_info (bool): True if information about hashers, parsers, plugins,
         etc. should be shown.
+    show_troubleshooting (bool): True if troubleshooting information should
+        be shown.
   """
 
   NAME = 'log2timeline'
@@ -107,6 +109,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.list_parsers_and_plugins = False
     self.list_profilers = False
     self.show_info = False
+    self.show_troubleshooting = False
 
   def _GetPluginData(self):
     """Retrieves the version and various plugin information.
@@ -306,6 +309,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.list_profilers = self._profilers == 'list'
 
     self.show_info = getattr(options, 'show_info', False)
+    self.show_troubleshooting = getattr(options, 'show_troubleshooting', False)
 
     if getattr(options, 'use_markdown', False):
       self._views_format_type = views.ViewsFactory.FORMAT_TYPE_MARKDOWN
@@ -313,7 +317,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.dependencies_check = getattr(options, 'dependencies_check', True)
 
     if (self.list_hashers or self.list_parsers_and_plugins or
-        self.list_profilers or self.list_timezones or self.show_info):
+        self.list_profilers or self.list_timezones or self.show_info or
+        self.show_troubleshooting):
       return
 
     self._ParseInformationalOptions(options)
