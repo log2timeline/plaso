@@ -10,6 +10,7 @@ import os
 import textwrap
 
 from dfvfs.helpers import file_system_searcher
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
@@ -21,13 +22,11 @@ from plaso.cli import storage_media_tool
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import engine
 from plaso.engine import extractors
-from plaso.engine import knowledge_base
 from plaso.engine import path_helper
 from plaso.filters import file_entry as file_entry_filters
 from plaso.lib import errors
 from plaso.lib import loggers
 from plaso.lib import specification
-from plaso.preprocessors import manager as preprocess_manager
 
 
 class ImageExportTool(storage_media_tool.StorageMediaTool):
@@ -63,6 +62,11 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
   # TODO: remove this redirect.
   _SOURCE_OPTION = 'image'
 
+  _SOURCE_TYPES_TO_PREPROCESS = frozenset([
+      dfvfs_definitions.SOURCE_TYPE_DIRECTORY,
+      dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
+      dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE])
+
   _SPECIFICATION_FILE_ENCODING = 'utf-8'
 
   def __init__(self, input_reader=None, output_writer=None):
@@ -85,11 +89,11 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._digests = {}
     self._filter_collection = file_entry_filters.FileEntryFilterCollection()
     self._filter_file = None
-    self._knowledge_base = knowledge_base.KnowledgeBase()
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._process_memory_limit = None
     self._resolver_context = context.Context()
     self._skip_duplicates = True
+    self._source_type = None
 
     self.has_filters = False
     self.list_signature_identifiers = False
@@ -314,12 +318,16 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       skip_duplicates (Optional[bool]): True if files with duplicate content
           should be skipped.
     """
+    extraction_engine = engine.BaseEngine()
+
+    # If the source is a directory or a storage media image
+    # run pre-processing.
+    if self._source_type in self._SOURCE_TYPES_TO_PREPROCESS:
+      self._PreprocessSources(extraction_engine)
+
     for source_path_spec in source_path_specs:
       file_system, mount_point = self._GetSourceFileSystem(
           source_path_spec, resolver_context=self._resolver_context)
-
-      if self._knowledge_base is None:
-        self._Preprocess(file_system, mount_point)
 
       display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
           source_path_spec)
@@ -328,7 +336,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
       filter_find_specs = engine.BaseEngine.BuildFilterFindSpecs(
           artifact_definitions_path, custom_artifacts_path,
-          self._knowledge_base, artifact_filters, filter_file)
+          extraction_engine.knowledge_base, artifact_filters, filter_file)
 
       searcher = file_system_searcher.FileSystemSearcher(
           file_system, mount_point)
@@ -472,20 +480,21 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         specification_store, signature_identifiers)
     self._filter_collection.AddFilter(file_entry_filter)
 
-  def _Preprocess(self, file_system, mount_point):
-    """Preprocesses the image.
+  def _PreprocessSources(self, extraction_engine):
+    """Preprocesses the sources.
 
     Args:
-      file_system (dfvfs.FileSystem): file system to be preprocessed.
-      mount_point (dfvfs.PathSpec): mount point path specification that refers
-          to the base location of the file system.
+      extraction_engine (BaseEngine): extraction engine to preprocess
+          the sources.
     """
     logger.debug('Starting preprocessing.')
 
     try:
-      preprocess_manager.PreprocessPluginsManager.RunPlugins(
-          self._artifacts_registry, file_system, mount_point,
-          self._knowledge_base)
+      artifacts_registry = engine.BaseEngine.BuildArtifactsRegistry(
+          self._artifact_definitions_path, self._custom_artifacts_path)
+      extraction_engine.PreprocessSources(
+          artifacts_registry, self._source_path_specs,
+          resolver_context=self._resolver_context)
 
     except IOError as exception:
       logger.error('Unable to preprocess with error: {0!s}'.format(exception))
@@ -755,7 +764,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           file system.
       UserAbort: if the user initiated an abort.
     """
-    self.ScanSource(self._source_path)
+    scan_context = self.ScanSource(self._source_path)
+    self._source_type = scan_context.source_type
 
     self._output_writer.Write('Export started.\n')
 
