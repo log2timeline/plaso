@@ -17,9 +17,14 @@ If everything fails create a new issue on the [issue tracker](https://github.com
 
 Hence please provide us with the following details:
 
-* What steps will reproduce the problem? What output did you expect? What do you see instead?
-* What version of plaso/log2timeline are you using? (use log2timeline.py -v to see)
-* On what operating system and architecture? (be specific, as in Mac OS X Mountain Lion, 10.8.2 for instance or 64-bit Windows 7)
+* What steps will reproduce the problem?
+  * What output did you expect?
+  * What do you see instead?
+* The output of `log2timeline.py --troubles`, which provide:
+  * The Python version including operating system and architecture
+  * The path to plaso/log2timeline
+  * The version of plaso/log2timeline
+  * Information about dependencies
 * Are you processing a storage media image, if so which format, a directory or on an individual file?
 * Were you able to isolate the error to a specific file? Is it possible to share the file with the developer?
 * Any additional information that could be of use e.g. build logs, error logs, debug logs, etc.
@@ -29,6 +34,7 @@ Hence please provide us with the following details:
 Also see the sections below on how to troubleshoot issues of a specific nature.
 
 ## Isolating errors
+
 The most important part of troubleshooting is isolating the error.
 
 Can you run the tests successfully?
@@ -56,11 +62,13 @@ Try:
 * running in single process and debug mode, see section below.
 
 ## Producing debug logs
+
 To produce debugging logs, run log2timeline like so: `log2timeline.py --log-file=log2timeline_problem.log.gz --debug`. This will create multiple, gzip-compressed log files. There will be one called log2timeline_problem.log.gz containing logs from the main log2timeline process, and one log file for each worker process.
 
 Note that the .gz file suffix is important, as it triggers Plaso to compress the log output. In an uncompressed form, the logs are very large. The compressed logs can be reviewed with unzip tools like `zless` and `zgrep`.
 
 ## Import errors
+
 It sometimes happen that the tests fail with an import error e.g.
 ```
 ImportError: Failed to import test module:
@@ -87,12 +95,14 @@ import plaso
 It also sometimes means that you have multiple versions of plaso installed on your system and Python tries to import for the wrong one.
 
 ## Crashes, hangs and tracebacks
+
 In the context of plaso crashes and tracebacks have different meanings:
 
 * crash; an error that causes an abrupt termination of the program you were running e.g. a segfault (SIGSEGV)
 * traceback; the back trace of an error that was caught by an exception handler that can cause a termination of the program you were running
 
 ### A worker segfault-ing
+
 Since plaso relies on several compiled dependencies it is possible that a worker segfault (SIGSEGV).
 
 As part of the 1.3 pre-release bug hunting a SIGSEGV signal handler was added however this process turned out, as expected, unreliable. However it added an interesting side effect that is very useful for debugging. If the SIGSEGV signal handler is enable the worker process typically remains in the "running" state but stops producing event object. What happens under the hood is that the SIGSEGV signal is caught but the worker is unable to cleanly terminate. Because of this "frozen" state of the worker it is very easy to attach a debugger e.g. `gdb python -p PID`.
@@ -100,11 +110,13 @@ As part of the 1.3 pre-release bug hunting a SIGSEGV signal handler was added ho
 A `kill -11 PID` however seems to be cleanly handled by the SIGSEGV signal handler and puts the worker into "error" status.
 
 ### A worker gives a killed status
+
 This typically indicates that the worker was killed (SIGKILL) likely by an external process e.g the Out Of Memory (OOM) killer.
 
 Your system logs might indicate why the worker was killed.
 
 ### Which processes are running
+
 The following command help you determine which plaso processes are running on your system:
 
 Linux:
@@ -118,6 +130,7 @@ ps aux | grep log2timeline.py | grep python | awk '{print $2}' | tr '\n' ',' | s
 ```
 
 ### Analyzing crashes with single process and debug mode
+
 In single process and debug mode `log2timeline.py --debug --single-process ...` log2timeline will run a Python debug shell (pdb) when an uncaught Python exception is raised.
 
 Use `u` to go up one level and `d` to go down one level .
@@ -135,6 +148,7 @@ args
 Note that inside pdb you can run any Python commands including loading new libraries e.g. for troubleshooting. You can prepend commands with an exclamation mark (!) to indicate that you want to run a Python command as an opposed to a debug shell one.
 
 ### Analyzing crashes with gdb
+
 Once you have isolated the file that causes the crash and you cannot share the file you can generate a back trace that can help us fix the error.
 
 First make sure you have the debug symbols installed.
@@ -166,6 +180,7 @@ Wait until the crash occurs and generate a back trace.
 Also see: [DebuggingWithGdb](https://wiki.python.org/moin/DebuggingWithGdb), [gdb Support](https://docs.python.org/devguide/gdb.html)
 
 ## High memory usage
+
 Plaso consists of various components. It can happen that one of these components uses a lot of memory or even leaks memory. In these cases it is important to isolate the error, see before, to track down what the possible culprit is. Also see: [Profiling memory usage](../developer/Profiling.md#profiling-memory-usage)
 
 ## Also see
