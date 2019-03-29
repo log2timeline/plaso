@@ -23,8 +23,9 @@ from tests.analysis import test_lib
 class _MockNsrlsvrSocket(object):
   """Mock socket object for testing."""
 
-  _EVENT_1_HASH = (
-      b'2d79fcc6b02a2e183a0cb30e0e25d103f42badda9fbf86bbee06f93aa3855aff')
+  _EXPECTED_DATA = (
+      b'QUERY 2d79fcc6b02a2e183a0cb30e0e25d103f42badda9fbf86bbee06f93aa3855aff'
+      b'\n')
 
   def __init__(self):
     """Initializes a mock socket."""
@@ -38,9 +39,7 @@ class _MockNsrlsvrSocket(object):
   # pylint: disable=unused-argument
   def recv(self, buffer_size):
     """Mocks the socket.recv method."""
-    expected_data = (
-        self._data == b'QUERY {0:s}\n'.format(self._EVENT_1_HASH))
-
+    expected_data = self._data == self._EXPECTED_DATA
     self._data = None
 
     if expected_data:

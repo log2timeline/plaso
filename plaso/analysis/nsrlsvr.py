@@ -67,7 +67,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
       bool: True if the hash was found, False if not or None on error.
     """
     try:
-      query = b'QUERY {0:s}\n'.format(digest.encode('ascii'))
+      query = 'QUERY {0:s}\n'.format(digest).encode('ascii')
     except UnicodeDecodeError:
       logger.error('Unable to encode digest: {0!s} to ASCII.'.format(digest))
       return False
