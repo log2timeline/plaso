@@ -10,6 +10,7 @@ import os
 import textwrap
 
 from dfvfs.helpers import file_system_searcher
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
@@ -126,7 +127,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     return hasher_object.GetStringDigest()
 
   def _CreateSanitizedDestination(
-      self, source_file_entry, source_path_spec, destination_path):
+      self, source_file_entry, source_path_spec, source_data_stream_name,
+      destination_path):
     """Creates a sanitized path of both destination directory and filename.
 
     This function replaces non-printable and other characters defined in
@@ -135,6 +137,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     Args:
       source_file_entry (dfvfs.FileEntry): file entry of the source file.
       source_path_spec (dfvfs.PathSpec): path specification of the source file.
+      source_data_stream_name (str): name of the data stream of the source file
+          entry.
       destination_path (str): path of the destination directory.
 
     Returns:
@@ -151,8 +155,29 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           character if character not in self._DIRTY_CHARACTERS else '_'
           for character in path_segment])
 
-    return (
-        os.path.join(destination_path, *path_segments[:-1]), path_segments[-1])
+    target_filename = path_segments.pop()
+
+    parent_path_spec = getattr(source_file_entry.path_spec, 'parent', None)
+
+    while parent_path_spec:
+      if parent_path_spec.type_indicator == (
+          dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
+        path_segments.insert(0, parent_path_spec.location[1:])
+        break
+
+      elif parent_path_spec.type_indicator == (
+          dfvfs_definitions.TYPE_INDICATOR_VSHADOW):
+        path_segments.insert(0, parent_path_spec.location[1:])
+
+      parent_path_spec = getattr(parent_path_spec, 'parent', None)
+
+    target_directory = os.path.join(destination_path, *path_segments)
+
+    if source_data_stream_name:
+      target_filename = '{0:s}_{1:s}'.format(
+          target_filename, source_data_stream_name)
+
+    return target_directory, target_filename
 
   # TODO: merge with collector and/or engine.
   def _Extract(
@@ -221,22 +246,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       self._digests[digest] = display_name
 
     target_directory, target_filename = self._CreateSanitizedDestination(
-        file_entry, file_entry.path_spec, destination_path)
+        file_entry, file_entry.path_spec, data_stream_name, destination_path)
 
-    parent_path_spec = getattr(file_entry.path_spec, 'parent', None)
-    if parent_path_spec:
-      vss_store_number = getattr(parent_path_spec, 'store_index', None)
-      if vss_store_number is not None:
-        target_filename = 'vss{0:d}_{1:s}'.format(
-            vss_store_number + 1, target_filename)
-
-    if data_stream_name:
-      target_filename = '{0:s}_{1:s}'.format(target_filename, data_stream_name)
-
-    if not target_directory:
-      target_directory = destination_path
-
-    elif not os.path.isdir(target_directory):
+    if not os.path.isdir(target_directory):
       os.makedirs(target_directory)
 
     target_path = os.path.join(target_directory, target_filename)
