@@ -327,6 +327,8 @@ class BaseEngine(object):
       self._artifacts_filter_helper.BuildFindSpecs(
           artifact_filter_names, environment_variables=environment_variables)
 
+      # If the user selected Windows Registry artifacts we have to ensure
+      # the Windows Registry files are parsed.
       if self._artifacts_filter_helper.registry_find_specs:
         self._artifacts_filter_helper.BuildFindSpecs(
             self._WINDOWS_REGISTRY_FILES_ARTIFACT_NAMES,

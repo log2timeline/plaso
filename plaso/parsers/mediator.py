@@ -31,8 +31,6 @@ class ParserMediator(object):
         to indicate the last time the worker was known to be active. This
         information is then used by the foreman to detect workers that are
         not responding (stalled).
-    registry_find_specs (list[dfwinreg.FindSpec]): Windows Registry find
-        specifications.
   """
   _INT64_MIN = -1 << 63
   _INT64_MAX = (1 << 63) - 1
