@@ -225,7 +225,6 @@ class StorageMediaTool(tools.CLITool):
     volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
         volume_system)
     if not volume_identifiers:
-      self._output_writer.Write('[WARNING] No partitions found.\n')
       return []
 
     # TODO: refactor self._partitions to use scan options.
@@ -782,7 +781,7 @@ class StorageMediaTool(tools.CLITool):
 
       try:
         selected_volumes = self._ReadSelectedVolumes(volume_system, prefix='p')
-        if (not selected_volumes or
+        if (selected_volumes and
             not set(selected_volumes).difference(volume_identifiers)):
           break
       except ValueError:
@@ -1173,6 +1172,9 @@ class StorageMediaTool(tools.CLITool):
     else:
       # Determine which partition needs to be processed.
       partition_identifiers = self._GetTSKPartitionIdentifiers(scan_node)
+      if not partition_identifiers:
+        raise errors.SourceScannerError('No partitions found.')
+
       for partition_identifier in partition_identifiers:
         location = '/{0:s}'.format(partition_identifier)
         sub_scan_node = scan_node.GetSubNodeByLocation(location)
