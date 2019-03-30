@@ -35,7 +35,6 @@ class PstealTool(
     extraction_tool.ExtractionTool,
     tool_options.HashersOptions,
     tool_options.OutputModuleOptions,
-    tool_options.ParsersOptions,
     tool_options.StorageFileOptions):
   """Psteal CLI tool.
 
@@ -438,12 +437,7 @@ class PstealTool(
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['data_location'])
 
-    presets_file = os.path.join(self._data_location, 'presets.yaml')
-    if not os.path.isfile(presets_file):
-      raise errors.BadConfigOption(
-          'No such parser presets file: {0:s}.'.format(presets_file))
-
-    parsers_manager.ParsersManager.ReadPresetsFromFile(presets_file)
+    self._ReadParserPresetsFromFile()
 
     # The output modules options are dependent on the preferred language
     # and preferred time zone options.

@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import argparse
-import os
 import sys
 import time
 import textwrap
@@ -290,12 +289,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['data_location'])
 
-    presets_file = os.path.join(self._data_location, 'presets.yaml')
-    if not os.path.isfile(presets_file):
-      raise errors.BadConfigOption(
-          'No such parser presets file: {0:s}.'.format(presets_file))
-
-    parsers_manager.ParsersManager.ReadPresetsFromFile(presets_file)
+    self._ReadParserPresetsFromFile()
 
     # Check the list options first otherwise required options will raise.
     argument_helper_names = ['hashers', 'parsers', 'profiling']
