@@ -126,7 +126,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     parsers_information = parsers_manager.ParsersManager.GetParsersInformation()
     plugins_information = (
         parsers_manager.ParsersManager.GetParserPluginsInformation())
-    presets_information = self._GetParserPresetsInformation()
+    presets_information = parsers_manager.ParsersManager.GetPresetsInformation()
 
     return_dict['Hashers'] = hashers_information
     return_dict['Parsers'] = parsers_information

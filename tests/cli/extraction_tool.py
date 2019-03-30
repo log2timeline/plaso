@@ -36,19 +36,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
 
   # TODO: add test for _CreateProcessingConfiguration
 
-  def testGetParserPresetsInformation(self):
-    """Tests the _GetParserPresetsInformation function."""
-    test_tool = extraction_tool.ExtractionTool()
-
-    presets_file = self._GetTestFilePath(['presets.yaml'])
-    parsers_manager.ParsersManager.ReadPresetsFromFile(presets_file)
-
-    parser_presets_information = test_tool._GetParserPresetsInformation()
-    self.assertGreaterEqual(len(parser_presets_information), 1)
-
-    available_parser_names = [name for name, _ in parser_presets_information]
-    self.assertIn('linux', available_parser_names)
-
   def testParsePerformanceOptions(self):
     """Tests the _ParsePerformanceOptions function."""
     test_tool = extraction_tool.ExtractionTool()

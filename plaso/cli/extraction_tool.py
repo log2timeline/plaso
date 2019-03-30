@@ -37,6 +37,8 @@ class ExtractionTool(
 
   _BYTES_IN_A_MIB = 1024 * 1024
 
+  _PRESETS_FILE_NAME = 'presets.yaml'
+
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes an CLI tool.
 
@@ -127,24 +129,6 @@ class ExtractionTool(
 
     return configuration
 
-  def _GetParserPresetsInformation(self):
-    """Retrieves the parser presets information.
-
-    Returns:
-      list[tuple]: containing:
-
-        str: parser preset name
-        str: parsers names corresponding to the preset
-    """
-    parser_presets_information = []
-    for preset_definition in parsers_manager.ParsersManager.GetPresets():
-      preset_information_tuple = (
-          preset_definition.name, ', '.join(preset_definition.parsers))
-      # TODO: refactor to pass PresetDefinition.
-      parser_presets_information.append(preset_information_tuple)
-
-    return parser_presets_information
-
   def _ParsePerformanceOptions(self, options):
     """Parses the performance options.
 
@@ -214,12 +198,18 @@ class ExtractionTool(
     Raises:
       BadConfigOption: if the parser presets file cannot be read.
     """
-    self._presets_file = os.path.join(self._data_location, 'presets.yaml')
+    self._presets_file = os.path.join(
+        self._data_location, self._PRESETS_FILE_NAME)
     if not os.path.isfile(self._presets_file):
       raise errors.BadConfigOption(
           'No such parser presets file: {0:s}.'.format(self._presets_file))
 
-    parsers_manager.ParsersManager.ReadPresetsFromFile(self._presets_file)
+    try:
+      parsers_manager.ParsersManager.ReadPresetsFromFile(self._presets_file)
+    except errors.MalformedPresetError as exception:
+      raise errors.BadConfigOption(
+          'Unable to read presets from file with error: {0!s}'.format(
+              exception))
 
   def _SetExtractionParsersAndPlugins(self, configuration, session):
     """Sets the parsers and plugins before extraction.
@@ -323,7 +313,7 @@ class ExtractionTool(
 
       title = '{0:s} ({1:s})'.format(title, presets_file)
 
-    presets_information = self._GetParserPresetsInformation()
+    presets_information = parsers_manager.ParsersManager.GetPresetsInformation()
 
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, column_names=['Name', 'Parsers and plugins'],
