@@ -701,19 +701,19 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
-  def HasErrors(self):
-    """Determines if a store contains extraction errors.
-
-    Returns:
-      bool: True if the store contains extraction errors.
-    """
-
-  @abc.abstractmethod
   def HasEventTags(self):
     """Determines if a store contains event tags.
 
     Returns:
       bool: True if the store contains event tags.
+    """
+
+  @abc.abstractmethod
+  def HasWarnings(self):
+    """Determines if a store contains extraction warnings.
+
+    Returns:
+      bool: True if the store contains extraction warnings.
     """
 
   @abc.abstractmethod
@@ -895,14 +895,6 @@ class StorageFileReader(StorageReader):
     """
     return self._storage_file.HasAnalysisReports()
 
-  def HasErrors(self):
-    """Determines if a store contains extraction errors.
-
-    Returns:
-      bool: True if the store contains extraction errors.
-    """
-    return self._storage_file.HasErrors()
-
   def HasEventTags(self):
     """Determines if a store contains event tags.
 
@@ -910,6 +902,14 @@ class StorageFileReader(StorageReader):
       bool: True if the store contains event tags.
     """
     return self._storage_file.HasEventTags()
+
+  def HasWarnings(self):
+    """Determines if a store contains extraction warnings.
+
+    Returns:
+      bool: True if the store contains extraction warnings.
+    """
+    return self._storage_file.HasWarnings()
 
   def ReadPreprocessingInformation(self, knowledge_base):
     """Reads preprocessing information.
