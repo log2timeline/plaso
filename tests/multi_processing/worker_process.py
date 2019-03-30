@@ -61,13 +61,13 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     test_process = worker_process.WorkerProcess(
-        None, None, None, None, None, name='TestWorker')
+        None, None, None, None, None, None, name='TestWorker')
     self.assertIsNotNone(test_process)
 
   def testGetStatus(self):
     """Tests the _GetStatus function."""
     test_process = worker_process.WorkerProcess(
-        None, None, None, None, None, name='TestWorker')
+        None, None, None, None, None, None, name='TestWorker')
     status_attributes = test_process._GetStatus()
 
     self.assertIsNotNone(status_attributes)
@@ -94,7 +94,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
     configuration = configurations.ProcessingConfiguration()
 
     test_process = worker_process.WorkerProcess(
-        task_queue, None, None, None, configuration, name='TestWorker')
+        task_queue, None, None, None, None, configuration, name='TestWorker')
     test_process._abort = True
     test_process._pid = 0
 
@@ -105,7 +105,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
     configuration = configurations.ProcessingConfiguration()
 
     test_process = worker_process.WorkerProcess(
-        None, None, None, None, configuration, name='TestWorker')
+        None, None, None, None, None, configuration, name='TestWorker')
 
     session = sessions.Session()
     storage_writer = self._CreateStorageWriter(session)
@@ -134,8 +134,8 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
     configuration = configurations.ProcessingConfiguration()
 
     test_process = worker_process.WorkerProcess(
-        None, storage_writer, knowledge_base, session.identifier, configuration,
-        name='TestWorker')
+        None, storage_writer, None, knowledge_base, session.identifier,
+        configuration, name='TestWorker')
     test_process._parser_mediator = self._CreateParserMediator(
         storage_writer, knowledge_base)
 
@@ -152,7 +152,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
           'task_queue'])
 
       test_process = worker_process.WorkerProcess(
-          None, None, None, None, configuration, name='TestWorker')
+          None, None, None, None, None, configuration, name='TestWorker')
       test_process._extraction_worker = TestEventExtractionWorker()
 
       test_process._StartProfiling(None)
@@ -163,7 +163,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
   def testSignalAbort(self):
     """Tests the SignalAbort function."""
     test_process = worker_process.WorkerProcess(
-        None, None, None, None, None, name='TestWorker')
+        None, None, None, None, None, None, name='TestWorker')
     test_process.SignalAbort()
 
 
