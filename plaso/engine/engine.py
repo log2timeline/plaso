@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 import os
 
-from artifacts import definitions as artifact_types
 from artifacts import errors as artifacts_errors
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
@@ -37,10 +36,14 @@ class BaseEngine(object):
   # The interval of status updates in number of seconds.
   _STATUS_UPDATE_INTERVAL = 0.5
 
+  _WINDOWS_REGISTRY_FILES_ARTIFACT_NAMES = [
+      'WindowsSystemRegistryFiles', 'WindowsUserRegistryFiles']
+
   def __init__(self):
     """Initializes an engine."""
     super(BaseEngine, self).__init__()
     self._abort = False
+    self._artifacts_filter_helper = None
     self._guppy_memory_profiler = None
     self._memory_profiler = None
     self._name = 'Main'
@@ -289,20 +292,19 @@ class BaseEngine(object):
     """
     return profilers.GuppyMemoryProfiler.IsSupported()
 
-  @classmethod
   def BuildFilterFindSpecs(
-      cls, artifact_definitions_path, custom_artifacts_path,
+      self, artifact_definitions_path, custom_artifacts_path,
       knowledge_base_object, artifact_filter_names=None, filter_file_path=None):
     """Builds find specifications from artifacts or filter file if available.
 
     Args:
-       artifact_definitions_path (str): path to artifact definitions file.
-       custom_artifacts_path (str): path to custom artifact definitions file.
-       knowledge_base_object (KnowledgeBase): knowledge base.
-       artifact_filter_names (Optional[list[str]]): names of artifact
+      artifact_definitions_path (str): path to artifact definitions file.
+      custom_artifacts_path (str): path to custom artifact definitions file.
+      knowledge_base_object (KnowledgeBase): knowledge base.
+      artifact_filter_names (Optional[list[str]]): names of artifact
           definitions that are used for filtering file system and Windows
           Registry key paths.
-       filter_file_path (Optional[str]): path of filter file.
+      filter_file_path (Optional[str]): path of filter file.
 
     Returns:
       list[dfvfs.FindSpec]: find specifications for the file source type.
@@ -317,17 +319,27 @@ class BaseEngine(object):
           'building find specification based on artifacts: {0:s}'.format(
               ', '.join(artifact_filter_names)))
 
-      artifacts_registry_object = cls.BuildArtifactsRegistry(
+      artifacts_registry_object = BaseEngine.BuildArtifactsRegistry(
           artifact_definitions_path, custom_artifacts_path)
-      artifact_filters_object = (
+      self._artifacts_filter_helper = (
           artifact_filters.ArtifactDefinitionsFilterHelper(
-              artifacts_registry_object, artifact_filter_names,
-              knowledge_base_object))
-      artifact_filters_object.BuildFindSpecs(
-          environment_variables=environment_variables)
-      find_specs = knowledge_base_object.GetValue(
-          artifact_filters_object.KNOWLEDGE_BASE_VALUE)[
-              artifact_types.TYPE_INDICATOR_FILE]
+              artifacts_registry_object, knowledge_base_object))
+      self._artifacts_filter_helper.BuildFindSpecs(
+          artifact_filter_names, environment_variables=environment_variables)
+
+      # If the user selected Windows Registry artifacts we have to ensure
+      # the Windows Registry files are parsed.
+      if self._artifacts_filter_helper.registry_find_specs:
+        self._artifacts_filter_helper.BuildFindSpecs(
+            self._WINDOWS_REGISTRY_FILES_ARTIFACT_NAMES,
+            environment_variables=environment_variables)
+
+      find_specs = self._artifacts_filter_helper.file_system_find_specs
+
+      if not find_specs:
+        raise errors.InvalidFilter(
+            'No valid file system find specifications were built from '
+            'artifacts.')
 
     elif filter_file_path:
       logger.debug(
@@ -338,9 +350,10 @@ class BaseEngine(object):
       find_specs = filter_file_object.BuildFindSpecs(
           environment_variables=environment_variables)
 
-    if (artifact_filter_names or filter_file_path) and not find_specs:
-      raise errors.InvalidFilter(
-          'Error processing filters, no valid specifications built.')
+      if not find_specs:
+        raise errors.InvalidFilter(
+            'No valid file system find specifications were built from filter '
+            'file.')
 
     return find_specs
 

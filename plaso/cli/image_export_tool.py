@@ -345,7 +345,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       output_writer.Write(
           'Extracting file entries from: {0:s}\n'.format(display_name))
 
-      filter_find_specs = engine.BaseEngine.BuildFilterFindSpecs(
+      filter_find_specs = extraction_engine.BuildFilterFindSpecs(
           artifact_definitions_path, custom_artifacts_path,
           extraction_engine.knowledge_base, artifact_filters, filter_file)
 

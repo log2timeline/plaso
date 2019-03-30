@@ -231,6 +231,7 @@ class SingleProcessEngine(engine.BaseEngine):
     """
     parser_mediator = parsers_mediator.ParserMediator(
         storage_writer, self.knowledge_base,
+        artifacts_filter_helper=self._artifacts_filter_helper,
         preferred_year=processing_configuration.preferred_year,
         resolver_context=resolver_context,
         temporary_directory=processing_configuration.temporary_directory)
