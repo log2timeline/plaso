@@ -371,6 +371,17 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
 
     manager.ParsersManager.DeregisterParser(TestParser)
 
+  def testGetPresetsInformation(self):
+    """Tests the GetPresetsInformation function."""
+    presets_file = self._GetTestFilePath(['presets.yaml'])
+    manager.ParsersManager.ReadPresetsFromFile(presets_file)
+
+    parser_presets_information = manager.ParsersManager.GetPresetsInformation()
+    self.assertGreaterEqual(len(parser_presets_information), 1)
+
+    available_parser_names = [name for name, _ in parser_presets_information]
+    self.assertIn('linux', available_parser_names)
+
   def testGetPlugins(self):
     """Tests the GetPlugins function."""
     TestParserWithPlugins.RegisterPlugin(TestPlugin)

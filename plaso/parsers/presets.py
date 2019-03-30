@@ -190,6 +190,10 @@ class ParserPresetsManager(object):
     Args:
       path (str): path of file that contains the the parser and parser plugin
           presets configuration.
+
+    Raises:
+      MalformedPresetError: if one or more plugin preset definitions are
+          malformed.
     """
     self._definitions = {}
 
