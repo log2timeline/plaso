@@ -23,6 +23,11 @@ class EntropyHasher(interface.BaseHasher):
     self._counter = collections.Counter()
     self._length = 0
 
+  @classmethod
+  def GetAttributeName(cls):
+    """Determines the attribute name for the hash result."""
+    return 'file_entropy'
+
   def GetBinaryDigest(self):
     """Returns the digest of the hash function as a binary string.
 

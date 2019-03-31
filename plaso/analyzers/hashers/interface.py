@@ -12,6 +12,11 @@ class BaseHasher(object):
   NAME = 'base_hasher'
   DESCRIPTION = 'Calculates a digest hash over input data.'
 
+  @classmethod
+  def GetAttributeName(cls):
+    """Determines the attribute name for the hash result."""
+    return '{0:s}_hash'.format(cls.NAME)
+
   # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
   def GetStringDigest(self):

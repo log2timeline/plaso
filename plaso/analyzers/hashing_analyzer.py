@@ -50,7 +50,7 @@ class HashingAnalyzer(interface.BaseAnalyzer):
       logger.debug('Processing results for hasher {0:s}'.format(hasher.NAME))
       result = analyzer_result.AnalyzerResult()
       result.analyzer_name = self.NAME
-      result.attribute_name = '{0:s}_hash'.format(hasher.NAME)
+      result.attribute_name = hasher.GetAttributeName()
       result.attribute_value = hasher.GetStringDigest()
       results.append(result)
     return results
