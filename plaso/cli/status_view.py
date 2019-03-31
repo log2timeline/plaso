@@ -199,6 +199,10 @@ class StatusView(object):
         'Storage file\t\t: {0:s}\n'.format(self._storage_file_path))
 
     self._PrintProcessingTime(processing_status)
+
+    if processing_status and processing_status.events_status:
+      self._PrintEventsStatus(processing_status.events_status)
+
     self._output_writer.Write('\n')
 
   def _PrintAnalysisStatusUpdateLinear(self, processing_status):
@@ -306,6 +310,25 @@ class StatusView(object):
     if self._stdout_output_writer:
       # We need to explicitly flush stdout to prevent partial status updates.
       sys.stdout.flush()
+
+  def _PrintEventsStatus(self, events_status):
+    """Prints the status of the events.
+
+    Args:
+      events_status (EventsStatus): events status.
+    """
+    # TODO: print additional event status as "Events MACB grouped",
+    # "Duplicate events removed", "Events filtered"
+    if events_status:
+      table_view = views.CLITabularTableView(
+          column_names=['Events:', 'Total'],
+          column_sizes=[15, 0])
+
+      table_view.AddRow([
+          '', events_status.total_number_of_events])
+
+      self._output_writer.Write('\n')
+      table_view.Write(self._output_writer)
 
   def _PrintProcessingTime(self, processing_status):
     """Prints the processing time.

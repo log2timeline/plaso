@@ -9,6 +9,7 @@ import os
 import time
 
 from plaso.engine import plaso_queue
+from plaso.engine import processing_status
 from plaso.engine import zeromq_queue
 from plaso.containers import tasks
 from plaso.lib import bufferlib
@@ -191,6 +192,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._event_filter_expression = None
     self._event_queues = {}
     self._event_tag_index = event_tag_index.EventTagIndex()
+    self._events_status = processing_status.EventsStatus()
     # The export event heap is used to make sure the events are sorted in
     # a deterministic way.
     self._export_event_heap = PsortEventHeap()
@@ -675,6 +677,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           self._number_of_consumed_errors, self._number_of_produced_errors,
           self._number_of_consumed_reports, self._number_of_produced_reports)
 
+      self._processing_status.UpdateEventsStatus(self._events_status)
+
       if self._status_update_callback:
         self._status_update_callback(self._processing_status)
 
@@ -742,7 +746,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     process = self._processes_per_pid[pid]
 
-    processing_status = process_status.get('processing_status', None)
+    status_indicator = process_status.get('processing_status', None)
 
     self._RaiseIfNotMonitored(pid)
 
@@ -772,7 +776,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     number_of_produced_sources = process_status.get(
         'number_of_produced_sources', None)
 
-    if processing_status != definitions.PROCESSING_STATUS_IDLE:
+    if status_indicator != definitions.PROCESSING_STATUS_IDLE:
       last_activity_timestamp = process_status.get(
           'last_activity_timestamp', 0.0)
 
@@ -784,10 +788,10 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           logger.error((
               'Process {0:s} (PID: {1:d}) has not reported activity within '
               'the timeout period.').format(process.name, pid))
-          processing_status = definitions.PROCESSING_STATUS_NOT_RESPONDING
+          status_indicator = definitions.PROCESSING_STATUS_NOT_RESPONDING
 
     self._processing_status.UpdateWorkerStatus(
-        process.name, processing_status, pid, used_memory, display_name,
+        process.name, status_indicator, pid, used_memory, display_name,
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
         number_of_consumed_event_tags, number_of_produced_event_tags,
@@ -1006,6 +1010,12 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._status_update_callback = status_update_callback
 
     storage_reader.ReadPreprocessingInformation(knowledge_base_object)
+
+    total_number_of_events = 0
+    for session in storage_reader.GetSessions():
+      total_number_of_events += session.parsers_counter['total']
+
+    self._events_status.total_number_of_events = total_number_of_events
 
     output_module.Open()
     output_module.WriteHeader()

@@ -313,6 +313,7 @@ class ProcessingStatus(object):
     aborted (bool): True if processing was aborted.
     error_path_specs (list[dfvfs.PathSpec]): path specifications that
         caused critical errors during processing.
+    events_status (EventsStatus): status information about events.
     foreman_status (ProcessingStatus): foreman processing status.
     start_time (float): time that the processing was started. Contains the
         number of micro seconds since January 1, 1970, 00:00:00 UTC.
@@ -326,6 +327,7 @@ class ProcessingStatus(object):
 
     self.aborted = False
     self.error_path_specs = []
+    self.events_status = None
     self.foreman_status = None
     self.start_time = time.time()
     self.tasks_status = None
@@ -449,6 +451,14 @@ class ProcessingStatus(object):
         number_of_consumed_errors, number_of_produced_errors,
         number_of_consumed_reports, number_of_produced_reports)
 
+  def UpdateEventsStatus(self, events_status):
+    """Updates the events status.
+
+    Args:
+      events_status (EventsStatus): status information about events.
+    """
+    self.events_status = events_status
+
   def UpdateTasksStatus(self, tasks_status):
     """Updates the tasks status.
 
@@ -506,6 +516,19 @@ class ProcessingStatus(object):
         number_of_consumed_event_tags, number_of_produced_event_tags,
         number_of_consumed_errors, number_of_produced_errors,
         number_of_consumed_reports, number_of_produced_reports)
+
+
+class EventsStatus(object):
+  """The status of the events.
+
+  Attributes:
+    total_number_of_events (int): total number of events in the storage file.
+  """
+
+  def __init__(self):
+    """Initializes an events status."""
+    super(EventsStatus, self).__init__()
+    self.total_number_of_events = 0
 
 
 class TasksStatus(object):
