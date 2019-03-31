@@ -1,16 +1,9 @@
 # -*- coding: utf-8 -*-
 """Parser for mac notes database.
-<<<<<<< HEAD
-SQLite database path: test_data/NotesV7.storedata
-SQLite database Name: NotesV7.storedata
-"""
-
-=======
 
 SQLite database path: test_data/NotesV7.storedata
 SQLite database Name: NotesV7.storedata
 """
->>>>>>> bd228e50f7a1e53182a310daa1733cd720bcee26
 from __future__ import unicode_literals
 import re
 from bs4 import BeautifulSoup
@@ -28,14 +21,8 @@ class MacNotesZhtmlstringEventData(events.EventData):
   """Mac Notes zhtmlstring event data.
 
   Attributes:
-<<<<<<< HEAD
-    zhtmlstring (str): contains note data.
-    last_modified_date (str): last time note was modified.
-=======
     zhtmlstring (str): note html string.
-    note_text (str): note text, extracted from the HTML string.
     title (str): note title.
->>>>>>> bd228e50f7a1e53182a310daa1733cd720bcee26
   """
 
   DATA_TYPE = 'mac:notes:zhtmlstring'
@@ -44,14 +31,8 @@ class MacNotesZhtmlstringEventData(events.EventData):
     """Initializes event data."""
     super(MacNotesZhtmlstringEventData, self).__init__(
         data_type=self.DATA_TYPE)
-<<<<<<< HEAD
     self.zhtmlstring = None
     self.title = None
-=======
-    self.title = None
-    self.note_text = None
-    self.zhtmlstring = None
->>>>>>> bd228e50f7a1e53182a310daa1733cd720bcee26
 
 
 class MacNotesPlugin(interface.SQLitePlugin):
