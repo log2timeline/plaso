@@ -11,7 +11,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 2105165
+  {inode} 790035
   {offset} 0
   {parser} syslog
   {timestamp} 1327218753000000
@@ -20,7 +20,7 @@
 [Additional attributes]:
   {pid} 30840
   {reporter} client
-  {severity} 
+  {severity} b''
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
@@ -35,7 +35,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 2105165
+  {inode} 790035
   {offset} 0
   {parser} syslog
   {timestamp} 1327218753000000
@@ -44,7 +44,7 @@
 [Additional attributes]:
   {pid} 30840
   {reporter} client
-  {severity} 
+  {severity} b''
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
@@ -59,7 +59,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 2105165
+  {inode} 790035
   {offset} 0
   {parser} syslog
   {timestamp} 1327218781000000
@@ -70,7 +70,7 @@
   {command} touch /var/run/crond.somecheck
   {pid} 31051
   {reporter} CRON
-  {severity} 
+  {severity} b''
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
@@ -85,7 +85,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 2105165
+  {inode} 790035
   {offset} 0
   {parser} syslog
   {timestamp} 1327218841000000
@@ -96,7 +96,7 @@
   {command} /sbin/status.mycheck)
   {pid} 31067
   {reporter} CRON
-  {severity} 
+  {severity} b''
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
@@ -111,7 +111,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 2105165
+  {inode} 790035
   {offset} 0
   {parser} syslog
   {timestamp} 1327218841000000
@@ -122,7 +122,7 @@
   {command} touch /var/run/crond.somecheck
   {pid} 31068
   {reporter} CRON
-  {severity} 
+  {severity} b''
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
@@ -137,16 +137,16 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 2105165
+  {inode} 790035
   {offset} 0
   {parser} syslog
   {timestamp} 1327218872000000
   {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
-  {pid} 
+  {pid} b''
   {reporter} Job
-  {severity} 
+  {severity} b''
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
@@ -161,16 +161,16 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} :
-  {inode} 2105165
+  {inode} 790035
   {offset} 0
   {parser} syslog
   {timestamp} 1330478143000000
   {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
-  {pid} 
+  {pid} b''
   {reporter} ---
-  {severity} 
+  {severity} b''
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
@@ -185,7 +185,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 2105165
+  {inode} 790035
   {offset} 0
   {parser} syslog
   {timestamp} 1355853272000000
@@ -194,7 +194,7 @@
 [Additional attributes]:
   {pid} 1234
   {reporter} anacron
-  {severity} 
+  {severity} b''
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
@@ -209,7 +209,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 2105165
+  {inode} 790035
   {offset} 0
   {parser} syslog
   {timestamp} 1364079678000000
@@ -218,7 +218,7 @@
 [Additional attributes]:
   {pid} 19
   {reporter} somrandomexe
-  {severity} 
+  {severity} b''
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
@@ -233,7 +233,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 2105165
+  {inode} 790035
   {offset} 0
   {parser} syslog
   {timestamp} 1364079678000000
@@ -242,7 +242,7 @@
 [Additional attributes]:
   {pid} 1915
   {reporter} somrandomexe
-  {severity} 
+  {severity} b''
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
@@ -258,7 +258,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 2105165
+  {inode} 790035
   {offset} 0
   {parser} syslog
   {timestamp} 1384737320000000
@@ -267,7 +267,7 @@
 [Additional attributes]:
   {pid} 10100
   {reporter} aprocess
-  {severity} 
+  {severity} b''
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
@@ -282,7 +282,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 2105165
+  {inode} 790035
   {offset} 0
   {parser} syslog
   {timestamp} 1388512472000000
@@ -291,7 +291,7 @@
 [Additional attributes]:
   {pid} 1234
   {reporter} /sbin/anacron
-  {severity} 
+  {severity} b''
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
@@ -306,7 +306,7 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} victoria
-  {inode} 2105165
+  {inode} 790035
   {offset} 0
   {parser} syslog
   {timestamp} 1391699790000000
@@ -315,7 +315,7 @@
 [Additional attributes]:
   {pid} 2085
   {reporter} process
-  {severity} 
+  {severity} b''
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
@@ -330,16 +330,16 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} :
-  {inode} 2105165
+  {inode} 790035
   {offset} 0
   {parser} syslog
   {timestamp} 1416273343000000
   {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
-  {pid} 
+  {pid} b''
   {reporter} ---
-  {severity} 
+  {severity} b''
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
@@ -353,16 +353,16 @@
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 2105165
+  {inode} 790035
   {offset} 0
   {parser} syslog
   {timestamp} 1416299420000000
   {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
-  {pid} 
+  {pid} b''
   {reporter} kernel
-  {severity} 
+  {severity} b''
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
@@ -377,20 +377,20 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} victoria
-  {inode} 2105165
+  {inode} 790035
   {offset} 0
   {parser} syslog
   {timestamp} 1416299480000000
   {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
-  {pid} 
+  {pid} b''
   {reporter} kernel
-  {severity} 
+  {severity} b''
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2018-08-31T14:12:11+00:00
+  2019-03-30T21:44:57+00:00
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
   
@@ -399,9 +399,9 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 2105165
+  {inode} 790035
   {parser} filestat
-  {timestamp} 1535724731000000
+  {timestamp} 1553982297000000
   {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
@@ -412,7 +412,7 @@
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2018-08-31T14:12:11+00:00
+  2019-03-30T21:44:57+00:00
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
   
@@ -421,9 +421,9 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 2105165
+  {inode} 790035
   {parser} filestat
-  {timestamp} 1535724731000000
+  {timestamp} 1553982297000000
   {timestamp_desc} Metadata Modification Time
 
 [Additional attributes]:
@@ -434,7 +434,7 @@
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2018-08-31T14:12:13+00:00
+  2019-03-30T21:45:06+00:00
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
   
@@ -443,9 +443,9 @@
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 2105165
+  {inode} 790035
   {parser} filestat
-  {timestamp} 1535724733000000
+  {timestamp} 1553982306000000
   {timestamp_desc} Last Access Time
 
 [Additional attributes]:
