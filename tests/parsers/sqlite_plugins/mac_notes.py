@@ -34,14 +34,18 @@ class MacNotesTest(test_lib.SQLitePluginTestCase):
 
     self.assertEqual(event.title, 'building 4th brandy gibs')
     expected_message = (
-        '   building 4th brandy gibs\n'
-        '      microsoft office\n'
-        '   body soul and peace\n'
-        '    example.com\n'
-        '        3015555555: plumbing and heating\n'
-        '    claim#123456\n'
-        '        Small business\n            ')
-    self.assertEqual(event.zhtmlstring, expected_message)
+        'note_body:   building 4th brandy gibs'
+        '      microsoft office'
+        '   body soul and peace'
+        '    example.com'
+        '        3015555555: plumbing and heating'
+        '    claim#123456'
+        '        Small business            '
+        ' title:building 4th brandy gibs')
+    expected_short_message = (
+        'title:building 4th brandy gibs')
+
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 if __name__ == '__main__':
   unittest.main()
