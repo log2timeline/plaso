@@ -5,8 +5,6 @@ SQLite database path: test_data/NotesV7.storedata
 SQLite database Name: NotesV7.storedata
 """
 from __future__ import unicode_literals
-import re
-from bs4 import BeautifulSoup
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
