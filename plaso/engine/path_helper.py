@@ -42,15 +42,15 @@ class PathHelper(object):
       user_accounts (list[UserAccountArtifact]): user accounts.
 
     Returns:
-      list[str]: paths returned for user accounts without a drive letter.
+      list[str]: paths returned for user accounts without a drive indicator.
     """
     if not path_segments:
       return []
 
     user_paths = []
 
-    first_path_segment = path_segments[0].upper()
-    if first_path_segment not in ('%%USERS.HOMEDIR%%', '%%USERS.USERPROFILE%%'):
+    first_path_segment = path_segments[0].lower()
+    if first_path_segment not in ('%%users.homedir%%', '%%users.userprofile%%'):
       if cls._IsWindowsDrivePathSegment(path_segments[0]):
         path_segments[0] = ''
 
@@ -91,7 +91,10 @@ class PathHelper(object):
     if not path_segments:
       return []
 
-    if path_segments[0] in ('%%users.homedir%%', '%%users.userprofile%%'):
+    path_segments_lower = [
+        path_segment.lower() for path_segment in path_segments]
+
+    if path_segments_lower[0] in ('%%users.homedir%%', '%%users.userprofile%%'):
       return cls._ExpandUsersHomeDirectoryPathSegments(
           path_segments, path_separator, user_accounts)
 

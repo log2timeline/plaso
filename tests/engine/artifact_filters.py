@@ -213,7 +213,7 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     # NOT a Compatible Key.
     key_path = 'HKEY_USERS\\S-1-5-18'
     compatible_key = test_filter_file.CheckKeyCompatibility(key_path)
-    self.assertFalse(compatible_key)
+    self.assertTrue(compatible_key)
 
   def testBuildFindSpecsFromFileSourcePath(self):
     """Tests the _BuildFindSpecsFromFileSourcePath function on file sources."""

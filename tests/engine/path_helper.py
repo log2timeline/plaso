@@ -78,11 +78,11 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
   def testExpandUsersVariablePathSegments(self):
     """Tests the _ExpandUsersVariablePathSegments function."""
     user_account_artifact1 = artifacts.UserAccountArtifact(
-        path_separator='\\', user_directory='C:\\Users\\Test1',
-        username='Test1')
+        identifier='1000', path_separator='\\',
+        user_directory='C:\\Users\\Test1', username='Test1')
     user_account_artifact2 = artifacts.UserAccountArtifact(
-        path_separator='\\', user_directory='%SystemDrive%\\Users\\Test2',
-        username='Test2')
+        identifier='1001', path_separator='\\',
+        user_directory='%SystemDrive%\\Users\\Test2', username='Test2')
 
     user_accounts = [user_account_artifact1, user_account_artifact2]
 

@@ -31,10 +31,12 @@ class ArtifactDefinitionsFilterHelper(object):
   """
 
   _COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES = frozenset([
+      'HKEY_CURRENT_USER',
       'HKEY_LOCAL_MACHINE\\SYSTEM',
       'HKEY_LOCAL_MACHINE\\SOFTWARE',
       'HKEY_LOCAL_MACHINE\\SAM',
-      'HKEY_LOCAL_MACHINE\\SECURITY'])
+      'HKEY_LOCAL_MACHINE\\SECURITY',
+      'HKEY_USERS'])
 
   def __init__(self, artifacts_registry, knowledge_base):
     """Initializes an artifact definitions filter helper.
@@ -54,8 +56,8 @@ class ArtifactDefinitionsFilterHelper(object):
     self.registry_artifact_names = set()
     self.registry_find_specs = []
 
-  @staticmethod
-  def CheckKeyCompatibility(key_path):
+  @classmethod
+  def CheckKeyCompatibility(cls, key_path):
     """Checks if a Windows Registry key path is supported by dfWinReg.
 
     Args:
@@ -64,14 +66,13 @@ class ArtifactDefinitionsFilterHelper(object):
     Returns:
       bool: True if key is compatible or False if not.
     """
-    for key_path_prefix in (
-        ArtifactDefinitionsFilterHelper._COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES):
-      key_path = key_path.upper()
-      if key_path.startswith(key_path_prefix):
+    key_path_upper = key_path.upper()
+    for key_path_prefix in cls._COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES:
+      if key_path_upper.startswith(key_path_prefix):
         return True
 
-    logger.warning(
-        'Prefix of key "{0:s}" is currently not supported'.format(key_path))
+    logger.warning('Key path: "{0:s}" is currently not supported'.format(
+        key_path))
     return False
 
   def BuildFindSpecs(self, artifact_filter_names, environment_variables=None):
@@ -132,8 +133,9 @@ class ArtifactDefinitionsFilterHelper(object):
       elif (source.type_indicator ==
             artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY):
         for key_path in set(source.keys):
-          if self.CheckKeyCompatibility(key_path):
-            specifications = self._BuildFindSpecsFromRegistrySourceKey(key_path)
+          if ArtifactDefinitionsFilterHelper.CheckKeyCompatibility(key_path):
+            specifications = self._BuildFindSpecsFromRegistrySourceKey(
+                key_path, self._knowledge_base.user_accounts)
             find_specs.extend(specifications)
             self.registry_artifact_names.add(definition.name)
 
@@ -152,8 +154,9 @@ class ArtifactDefinitionsFilterHelper(object):
             '"{0!s}"').format(key_paths_string))
 
         for key_path in key_paths:
-          if self.CheckKeyCompatibility(key_path):
-            specifications = self._BuildFindSpecsFromRegistrySourceKey(key_path)
+          if ArtifactDefinitionsFilterHelper.CheckKeyCompatibility(key_path):
+            specifications = self._BuildFindSpecsFromRegistrySourceKey(
+                key_path, self._knowledge_base.user_accounts)
             find_specs.extend(specifications)
             self.registry_artifact_names.add(definition.name)
 
@@ -206,13 +209,13 @@ class ArtifactDefinitionsFilterHelper(object):
       list[dfvfs.FindSpec]: find specifications for the file source type.
     """
     find_specs = []
-    for glob_path in path_helper.PathHelper.ExpandRecursiveGlobs(
+    for path_glob in path_helper.PathHelper.ExpandRecursiveGlobs(
         source_path, path_separator):
-      logger.debug('building find spec from glob path: {0:s}'.format(
-          glob_path))
+      logger.debug('building find spec from path glob: {0:s}'.format(
+          path_glob))
 
       for path in path_helper.PathHelper.ExpandUsersVariablePath(
-          glob_path, path_separator, user_accounts):
+          path_glob, path_separator, user_accounts):
         logger.debug('building find spec from path: {0:s}'.format(path))
 
         if '%' in path:
@@ -252,11 +255,13 @@ class ArtifactDefinitionsFilterHelper(object):
 
     return find_specs
 
-  def _BuildFindSpecsFromRegistrySourceKey(self, key_path):
+  def _BuildFindSpecsFromRegistrySourceKey(self, key_path, user_accounts):
     """Build find specifications from a Windows Registry source type.
 
     Args:
       key_path (str): Windows Registry key path defined by the source.
+      user_accounts (list[str]): identified user accounts stored in the
+          knowledge base.
 
     Returns:
       list[dfwinreg.FindSpec]: find specifications for the Windows Registry
@@ -265,9 +270,15 @@ class ArtifactDefinitionsFilterHelper(object):
     find_specs = []
     for key_path_glob in path_helper.PathHelper.ExpandRecursiveGlobs(
         key_path, '\\'):
-      if '%%' in key_path_glob:
-        logger.error('Unable to expand key path: "{0:s}"'.format(key_path_glob))
-        continue
+      logger.debug('building find spec from key path glob: {0:s}'.format(
+          key_path_glob))
+
+      key_path_glob_upper = key_path_glob.upper()
+      if key_path_glob_upper.startswith('HKEY_USERS\\%%USERS.SID%%'):
+        key_path_glob = 'HKEY_CURRENT_USER{0:s}'.format(key_path_glob[26:])
+
+      # TODO: add support for %%users.sid%% in WindowsUninstallKeys.
+      _ = user_accounts
 
       find_spec = registry_searcher.FindSpec(key_path_glob=key_path_glob)
       find_specs.append(find_spec)
