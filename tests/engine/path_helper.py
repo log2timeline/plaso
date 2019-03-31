@@ -41,9 +41,11 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     self.assertEqual(expanded_paths, expected_expanded_paths)
 
     user_account_artifact1 = artifacts.UserAccountArtifact(
-        user_directory='C:\\Users\\Test1', username='Test1')
+        path_separator='\\', user_directory='C:\\Users\\Test1',
+        username='Test1')
     user_account_artifact2 = artifacts.UserAccountArtifact(
-        user_directory='%SystemDrive%\\Users\\Test2', username='Test2')
+        path_separator='\\', user_directory='%SystemDrive%\\Users\\Test2',
+        username='Test2')
 
     user_accounts = [user_account_artifact1, user_account_artifact2]
 
@@ -76,8 +78,10 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
   def testExpandUsersVariablePathSegments(self):
     """Tests the _ExpandUsersVariablePathSegments function."""
     user_account_artifact1 = artifacts.UserAccountArtifact(
+        identifier='1000', path_separator='\\',
         user_directory='C:\\Users\\Test1', username='Test1')
     user_account_artifact2 = artifacts.UserAccountArtifact(
+        identifier='1001', path_separator='\\',
         user_directory='%SystemDrive%\\Users\\Test2', username='Test2')
 
     user_accounts = [user_account_artifact1, user_account_artifact2]
@@ -100,21 +104,20 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     expected_expanded_paths = ['\\Windows']
     self.assertEqual(sorted(expanded_paths), expected_expanded_paths)
 
-  def testStripDriveFromPath(self):
-    """Tests the _StripDriveFromPath function."""
-    stripped_path = path_helper.PathHelper._StripDriveFromPath('C:\\Windows')
-    self.assertEqual(stripped_path, '\\Windows')
+  def testIsWindowsDrivePathSegment(self):
+    """Tests the _IsWindowsDrivePathSegment function."""
+    result = path_helper.PathHelper._IsWindowsDrivePathSegment('C:')
+    self.assertTrue(result)
 
-    stripped_path = path_helper.PathHelper._StripDriveFromPath(
-        '%SystemDrive%\\Windows')
-    self.assertEqual(stripped_path, '\\Windows')
+    result = path_helper.PathHelper._IsWindowsDrivePathSegment('%SystemDrive%')
+    self.assertTrue(result)
 
-    stripped_path = path_helper.PathHelper._StripDriveFromPath(
-        '%%environ_systemdrive%%\\Windows')
-    self.assertEqual(stripped_path, '\\Windows')
+    result = path_helper.PathHelper._IsWindowsDrivePathSegment(
+        '%%environ_systemdrive%%')
+    self.assertTrue(result)
 
-    stripped_path = path_helper.PathHelper._StripDriveFromPath('\\Windows')
-    self.assertEqual(stripped_path, '\\Windows')
+    result = path_helper.PathHelper._IsWindowsDrivePathSegment('Windows')
+    self.assertFalse(result)
 
   def testAppendPathEntries(self):
     """Tests the AppendPathEntries function."""
@@ -208,9 +211,11 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
   def testExpandUsersVariablePath(self):
     """Tests the ExpandUsersVariablePath function."""
     user_account_artifact1 = artifacts.UserAccountArtifact(
-        user_directory='C:\\Users\\Test1', username='Test1')
+        path_separator='\\', user_directory='C:\\Users\\Test1',
+        username='Test1')
     user_account_artifact2 = artifacts.UserAccountArtifact(
-        user_directory='%SystemDrive%\\Users\\Test2', username='Test2')
+        path_separator='\\', user_directory='%SystemDrive%\\Users\\Test2',
+        username='Test2')
 
     user_accounts = [user_account_artifact1, user_account_artifact2]
 
@@ -227,35 +232,68 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
 
   def testExpandWindowsPath(self):
     """Tests the ExpandWindowsPath function."""
+    environment_variables = []
+
+    environment_variable = artifacts.EnvironmentVariableArtifact(
+        case_sensitive=False, name='allusersappdata',
+        value='C:\\Documents and Settings\\All Users\\Application Data')
+    environment_variables.append(environment_variable)
+
+    environment_variable = artifacts.EnvironmentVariableArtifact(
+        case_sensitive=False, name='allusersprofile',
+        value='C:\\Documents and Settings\\All Users')
+    environment_variables.append(environment_variable)
+
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='SystemRoot', value='C:\\Windows')
+    environment_variables.append(environment_variable)
+
+    expected_expanded_path = (
+        '\\Documents and Settings\\All Users\\Application Data\\'
+        'Apache Software Foundation')
 
     expanded_path = path_helper.PathHelper.ExpandWindowsPath(
-        '%SystemRoot%\\System32', [environment_variable])
-    self.assertEqual(expanded_path, 'C:\\Windows\\System32')
+        '%AllUsersAppData%\\Apache Software Foundation',
+        environment_variables)
+    self.assertEqual(expanded_path, expected_expanded_path)
+
+    expected_expanded_path = (
+        '\\Documents and Settings\\All Users\\Start Menu\\Programs\\Startup')
 
     expanded_path = path_helper.PathHelper.ExpandWindowsPath(
-        'C:\\Windows\\System32', [environment_variable])
-    self.assertEqual(expanded_path, 'C:\\Windows\\System32')
+        '%AllUsersProfile%\\Start Menu\\Programs\\Startup',
+        environment_variables)
+    self.assertEqual(expanded_path, expected_expanded_path)
+
+    expanded_path = path_helper.PathHelper.ExpandWindowsPath(
+        '%SystemRoot%\\System32', environment_variables)
+    self.assertEqual(expanded_path, '\\Windows\\System32')
+
+    expanded_path = path_helper.PathHelper.ExpandWindowsPath(
+        'C:\\Windows\\System32', environment_variables)
+    self.assertEqual(expanded_path, '\\Windows\\System32')
 
     expanded_path = path_helper.PathHelper.ExpandWindowsPath(
         '%SystemRoot%\\System32', None)
     self.assertEqual(expanded_path, '%SystemRoot%\\System32')
 
     expanded_path = path_helper.PathHelper.ExpandWindowsPath(
-        '%Bogus%\\System32', [environment_variable])
+        '%Bogus%\\System32', environment_variables)
     self.assertEqual(expanded_path, '%Bogus%\\System32')
 
     expanded_path = path_helper.PathHelper.ExpandWindowsPath(
-        '%%environ_systemroot%%\\System32', [environment_variable])
+        '%%environ_systemroot%%\\System32', environment_variables)
     self.assertEqual(expanded_path, '\\Windows\\System32')
 
     # Test non-string environment variable.
+    environment_variables = []
+
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='SystemRoot', value=('bogus', 0))
+    environment_variables.append(environment_variable)
 
     expanded_path = path_helper.PathHelper.ExpandWindowsPath(
-        '%SystemRoot%\\System32', [environment_variable])
+        '%SystemRoot%\\System32', environment_variables)
     self.assertEqual(expanded_path, '%SystemRoot%\\System32')
 
   def testGetDisplayNameForPathSpec(self):

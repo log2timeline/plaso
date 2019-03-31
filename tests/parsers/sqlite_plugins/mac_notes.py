@@ -4,6 +4,10 @@ from __future__ import unicode_literals
 
 import unittest
 
+<<<<<<< HEAD
+=======
+from plaso.formatters import mac_notes as _  # pylint: disable=unused-import
+>>>>>>> bd228e50f7a1e53182a310daa1733cd720bcee26
 from plaso.lib import definitions
 from plaso.parsers.sqlite_plugins import mac_notes
 

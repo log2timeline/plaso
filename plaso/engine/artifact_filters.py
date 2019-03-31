@@ -2,7 +2,6 @@
 """Helper to create filters based on forensic artifact definitions."""
 
 from __future__ import unicode_literals
-from collections import defaultdict
 
 from artifacts import definitions as artifact_types
 
@@ -19,34 +18,46 @@ class ArtifactDefinitionsFilterHelper(object):
 
   For more information about Forensic Artifacts see:
   https://github.com/ForensicArtifacts/artifacts/blob/master/docs/Artifacts%20definition%20format%20and%20style%20guide.asciidoc
+
+  Attributes:
+    file_system_artifact_names (set[str]): names of artifacts definitions that
+        generated file system find specifications.
+    file_system_find_specs (list[dfvfs.FindSpec]): file system find
+        specifications.
+    registry_artifact_names (set[str]): names of artifacts definitions that
+        generated Windows Registry find specifications.
+    registry_find_specs (list[dfwinreg.FindSpec]): Windows Registry find
+        specifications.
   """
 
-  KNOWLEDGE_BASE_VALUE = 'ARTIFACT_FILTERS'
-
   _COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES = frozenset([
+      'HKEY_CURRENT_USER',
       'HKEY_LOCAL_MACHINE\\SYSTEM',
       'HKEY_LOCAL_MACHINE\\SOFTWARE',
       'HKEY_LOCAL_MACHINE\\SAM',
-      'HKEY_LOCAL_MACHINE\\SECURITY'])
+      'HKEY_LOCAL_MACHINE\\SECURITY',
+      'HKEY_USERS'])
 
-  def __init__(self, artifacts_registry, artifact_filters, knowledge_base):
+  def __init__(self, artifacts_registry, knowledge_base):
     """Initializes an artifact definitions filter helper.
 
     Args:
       artifacts_registry (artifacts.ArtifactDefinitionsRegistry): artifact
           definitions registry.
-      artifact_filters (list[str]): names of artifact definitions that are
-          used for filtering file system and Windows Registry key paths.
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for filtering.
     """
     super(ArtifactDefinitionsFilterHelper, self).__init__()
-    self._artifacts = artifact_filters
     self._artifacts_registry = artifacts_registry
     self._knowledge_base = knowledge_base
 
-  @staticmethod
-  def CheckKeyCompatibility(key_path):
+    self.file_system_artifact_names = set()
+    self.file_system_find_specs = []
+    self.registry_artifact_names = set()
+    self.registry_find_specs = []
+
+  @classmethod
+  def CheckKeyCompatibility(cls, key_path):
     """Checks if a Windows Registry key path is supported by dfWinReg.
 
     Args:
@@ -55,54 +66,47 @@ class ArtifactDefinitionsFilterHelper(object):
     Returns:
       bool: True if key is compatible or False if not.
     """
-    for key_path_prefix in (
-        ArtifactDefinitionsFilterHelper._COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES):
-      key_path = key_path.upper()
-      if key_path.startswith(key_path_prefix):
+    key_path_upper = key_path.upper()
+    for key_path_prefix in cls._COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES:
+      if key_path_upper.startswith(key_path_prefix):
         return True
 
-    logger.warning(
-        'Prefix of key "{0:s}" is currently not supported'.format(key_path))
+    logger.warning('Key path: "{0:s}" is currently not supported'.format(
+        key_path))
     return False
 
-  def BuildFindSpecs(self, environment_variables=None):
+  def BuildFindSpecs(self, artifact_filter_names, environment_variables=None):
     """Builds find specifications from artifact definitions.
 
-    The resulting find specifications are set in the knowledge base.
-
     Args:
+      artifact_filter_names (list[str]): names of artifact definitions that are
+          used for filtering file system and Windows Registry key paths.
       environment_variables (Optional[list[EnvironmentVariableArtifact]]):
           environment variables.
     """
     find_specs = []
-    for name in self._artifacts:
+    for name in artifact_filter_names:
       definition = self._artifacts_registry.GetDefinitionByName(name)
       if not definition:
+        logger.debug('undefined artifact definition: {0:s}'.format(name))
         continue
 
+      logger.debug('building find spec from artifact definition: {0:s}'.format(
+          name))
       artifact_find_specs = self._BuildFindSpecsFromArtifact(
           definition, environment_variables)
       find_specs.extend(artifact_find_specs)
 
-    find_specs_per_source_type = defaultdict(list)
     for find_spec in find_specs:
-      if isinstance(find_spec, registry_searcher.FindSpec):
-        artifact_list = find_specs_per_source_type[
-            artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY]
-        artifact_list.append(find_spec)
-        continue
-
       if isinstance(find_spec, file_system_searcher.FindSpec):
-        artifact_list = find_specs_per_source_type[
-            artifact_types.TYPE_INDICATOR_FILE]
-        artifact_list.append(find_spec)
-        continue
+        self.file_system_find_specs.append(find_spec)
 
-      logger.warning('Unknown find specification type: {0:s}'.format(
-          type(find_spec)))
+      elif isinstance(find_spec, registry_searcher.FindSpec):
+        self.registry_find_specs.append(find_spec)
 
-    self._knowledge_base.SetValue(
-        self.KNOWLEDGE_BASE_VALUE, find_specs_per_source_type)
+      else:
+        logger.warning('Unsupported find specification type: {0:s}'.format(
+            type(find_spec)))
 
   def _BuildFindSpecsFromArtifact(self, definition, environment_variables):
     """Builds find specifications from an artifact definition.
@@ -124,13 +128,16 @@ class ArtifactDefinitionsFilterHelper(object):
               path_entry, source.separator, environment_variables,
               self._knowledge_base.user_accounts)
           find_specs.extend(specifications)
+          self.file_system_artifact_names.add(definition.name)
 
       elif (source.type_indicator ==
             artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY):
         for key_path in set(source.keys):
-          if self.CheckKeyCompatibility(key_path):
-            specifications = self._BuildFindSpecsFromRegistrySourceKey(key_path)
+          if ArtifactDefinitionsFilterHelper.CheckKeyCompatibility(key_path):
+            specifications = self._BuildFindSpecsFromRegistrySourceKey(
+                key_path, self._knowledge_base.user_accounts)
             find_specs.extend(specifications)
+            self.registry_artifact_names.add(definition.name)
 
       elif (source.type_indicator ==
             artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_VALUE):
@@ -147,9 +154,11 @@ class ArtifactDefinitionsFilterHelper(object):
             '"{0!s}"').format(key_paths_string))
 
         for key_path in key_paths:
-          if self.CheckKeyCompatibility(key_path):
-            specifications = self._BuildFindSpecsFromRegistrySourceKey(key_path)
+          if ArtifactDefinitionsFilterHelper.CheckKeyCompatibility(key_path):
+            specifications = self._BuildFindSpecsFromRegistrySourceKey(
+                key_path, self._knowledge_base.user_accounts)
             find_specs.extend(specifications)
+            self.registry_artifact_names.add(definition.name)
 
       elif (source.type_indicator ==
             artifact_types.TYPE_INDICATOR_ARTIFACT_GROUP):
@@ -200,13 +209,20 @@ class ArtifactDefinitionsFilterHelper(object):
       list[dfvfs.FindSpec]: find specifications for the file source type.
     """
     find_specs = []
-    for glob_path in path_helper.PathHelper.ExpandRecursiveGlobs(
+    for path_glob in path_helper.PathHelper.ExpandRecursiveGlobs(
         source_path, path_separator):
+      logger.debug('building find spec from path glob: {0:s}'.format(
+          path_glob))
+
       for path in path_helper.PathHelper.ExpandUsersVariablePath(
-          glob_path, path_separator, user_accounts):
+          path_glob, path_separator, user_accounts):
+        logger.debug('building find spec from path: {0:s}'.format(path))
+
         if '%' in path:
           path = path_helper.PathHelper.ExpandWindowsPath(
               path, environment_variables)
+          logger.debug('building find spec from expanded path: {0:s}'.format(
+              path))
 
         if not path.startswith(path_separator):
           logger.warning((
@@ -239,11 +255,13 @@ class ArtifactDefinitionsFilterHelper(object):
 
     return find_specs
 
-  def _BuildFindSpecsFromRegistrySourceKey(self, key_path):
+  def _BuildFindSpecsFromRegistrySourceKey(self, key_path, user_accounts):
     """Build find specifications from a Windows Registry source type.
 
     Args:
       key_path (str): Windows Registry key path defined by the source.
+      user_accounts (list[str]): identified user accounts stored in the
+          knowledge base.
 
     Returns:
       list[dfwinreg.FindSpec]: find specifications for the Windows Registry
@@ -252,9 +270,15 @@ class ArtifactDefinitionsFilterHelper(object):
     find_specs = []
     for key_path_glob in path_helper.PathHelper.ExpandRecursiveGlobs(
         key_path, '\\'):
-      if '%%' in key_path_glob:
-        logger.error('Unable to expand key path: "{0:s}"'.format(key_path_glob))
-        continue
+      logger.debug('building find spec from key path glob: {0:s}'.format(
+          key_path_glob))
+
+      key_path_glob_upper = key_path_glob.upper()
+      if key_path_glob_upper.startswith('HKEY_USERS\\%%USERS.SID%%'):
+        key_path_glob = 'HKEY_CURRENT_USER{0:s}'.format(key_path_glob[26:])
+
+      # TODO: add support for %%users.sid%% in WindowsUninstallKeys.
+      _ = user_accounts
 
       find_spec = registry_searcher.FindSpec(key_path_glob=key_path_glob)
       find_specs.append(find_spec)

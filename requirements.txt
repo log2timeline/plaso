@@ -1,7 +1,7 @@
 pip >= 7.0.0
 PyYAML >= 3.10
 XlsxWriter >= 0.9.3
-artifacts >= 20170818
+artifacts >= 20190305
 backports.lzma ; python_version < '3.0'
 beautifulsoup4 >= 4.6.3
 bencode.py
@@ -13,7 +13,6 @@ dfvfs >= 20181209
 dfwinreg >= 20180712
 dtfabric >= 20181128
 elasticsearch >= 6.0
-elasticsearch5 >= 5.4.0
 future >= 0.16.0
 idna >= 2.5
 libbde-python >= 20140531

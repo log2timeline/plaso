@@ -42,32 +42,38 @@ class PathHelper(object):
       user_accounts (list[UserAccountArtifact]): user accounts.
 
     Returns:
-      list[str]: paths returned for user accounts without a drive letter.
+      list[str]: paths returned for user accounts without a drive indicator.
     """
     if not path_segments:
       return []
 
     user_paths = []
 
-    first_path_segment = path_segments[0].upper()
-    if first_path_segment not in ('%%USERS.HOMEDIR%%', '%%USERS.USERPROFILE%%'):
+    first_path_segment = path_segments[0].lower()
+    if first_path_segment not in ('%%users.homedir%%', '%%users.userprofile%%'):
+      if cls._IsWindowsDrivePathSegment(path_segments[0]):
+        path_segments[0] = ''
+
       user_path = path_separator.join(path_segments)
       user_paths.append(user_path)
 
     else:
       for user_account in user_accounts:
-        user_path = user_account.user_directory
-        # Prevent concatenating two consecutive path segment separators.
-        if user_path[-1] == path_separator:
-          user_path = user_path[:-1]
+        user_path_segments = user_account.GetUserDirectoryPathSegments()
 
-        user_path_segments = [user_path]
+        if cls._IsWindowsDrivePathSegment(user_path_segments[0]):
+          user_path_segments[0] = ''
+
+        # Prevent concatenating two consecutive path segment separators.
+        if not user_path_segments[-1]:
+          user_path_segments.pop()
+
         user_path_segments.extend(path_segments[1:])
 
         user_path = path_separator.join(user_path_segments)
         user_paths.append(user_path)
 
-    return [cls._StripDriveFromPath(user_path) for user_path in user_paths]
+    return user_paths
 
   @classmethod
   def _ExpandUsersVariablePathSegments(
@@ -85,7 +91,10 @@ class PathHelper(object):
     if not path_segments:
       return []
 
-    if path_segments[0] in ('%%users.homedir%%', '%%users.userprofile%%'):
+    path_segments_lower = [
+        path_segment.lower() for path_segment in path_segments]
+
+    if path_segments_lower[0] in ('%%users.homedir%%', '%%users.userprofile%%'):
       return cls._ExpandUsersHomeDirectoryPathSegments(
           path_segments, path_separator, user_accounts)
 
@@ -105,32 +114,31 @@ class PathHelper(object):
 
       return expanded_paths
 
+    if cls._IsWindowsDrivePathSegment(path_segments[0]):
+      path_segments[0] = ''
+
     # TODO: add support for %%users.username%%
     path = path_separator.join(path_segments)
-    path = cls._StripDriveFromPath(path)
     return [path]
 
   @classmethod
-  def _StripDriveFromPath(cls, path):
-    """Removes a leading drive letter or %SystemDrive% from the path.
+  def _IsWindowsDrivePathSegment(cls, path_segment):
+    """Determines if the path segment contains a Windows Drive indicator.
+
+    A drive indicator can be a drive letter or %SystemDrive%.
 
     Args:
-      path (str): path.
+      path_segment (str): path segment.
 
     Returns:
-      str: path without leading drive letter or %SystemDrive%.
+      bool: True if the path segment contains a Windows Drive indicator.
     """
-    if len(path) >= 2 and path[1] == ':':
-      return path[2:]
+    if (len(path_segment) == 2 and path_segment[1] == ':' and
+        path_segment[0].isalpha()):
+      return True
 
-    path_upper_case = path.upper()
-    if path_upper_case.startswith('%%ENVIRON_SYSTEMDRIVE%%\\'):
-      return path[23:]
-
-    if path_upper_case.startswith('%SYSTEMDRIVE%\\'):
-      return path[13:]
-
-    return path
+    path_segment = path_segment.upper()
+    return path_segment in ('%%ENVIRON_SYSTEMDRIVE%%', '%SYSTEMDRIVE%')
 
   @classmethod
   def AppendPathEntries(
@@ -235,8 +243,6 @@ class PathHelper(object):
     Returns:
       str: expanded Windows path.
     """
-    # TODO: Add support for items such as %%users.localappdata%%
-
     if environment_variables is None:
       environment_variables = []
 
@@ -251,24 +257,28 @@ class PathHelper(object):
         lookup_table[attribute_name] = attribute_value
 
     path_segments = path.split('\\')
-    for index, path_segment in enumerate(path_segments):
+    # Make a copy of path_segments since this loop can change it.
+    for index, path_segment in enumerate(list(path_segments)):
       if (len(path_segment) <= 2 or not path_segment.startswith('%') or
           not path_segment.endswith('%')):
         continue
 
-      check_for_drive_letter = False
       path_segment_upper_case = path_segment.upper()
       if path_segment_upper_case.startswith('%%ENVIRON_'):
         lookup_key = path_segment_upper_case[10:-2]
-        check_for_drive_letter = True
       else:
         lookup_key = path_segment_upper_case[1:-1]
-      path_segments[index] = lookup_table.get(lookup_key, path_segment)
+      path_segment = lookup_table.get(lookup_key, path_segment)
+      path_segment = path_segment.split('\\')
 
-      if check_for_drive_letter:
-        # Remove the drive letter.
-        if len(path_segments[index]) >= 2 and path_segments[index][1] == ':':
-          _, _, path_segments[index] = path_segments[index].rpartition(':')
+      expanded_path_segments = list(path_segments[:index])
+      expanded_path_segments.extend(path_segment)
+      expanded_path_segments.extend(path_segments[index + 1:])
+
+      path_segments = expanded_path_segments
+
+    if cls._IsWindowsDrivePathSegment(path_segments[0]):
+      path_segments[0] = ''
 
     return '\\'.join(path_segments)
 

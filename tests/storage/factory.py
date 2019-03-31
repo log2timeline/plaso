@@ -8,7 +8,6 @@ import unittest
 
 from plaso.containers import sessions
 from plaso.storage import factory
-from plaso.storage.sqlite import sqlite_file
 from plaso.storage.sqlite import reader as sqlite_reader
 from plaso.storage.sqlite import writer as sqlite_writer
 
@@ -18,14 +17,6 @@ from tests.storage import test_lib
 
 class StorageFactoryTest(test_lib.StorageTestCase):
   """Tests for the storage factory."""
-
-  @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
-  def testCreateStorageFileForFile(self):
-    """Test the CreateStorageFileForFile function."""
-    test_file = self._GetTestFilePath(['psort_test.plaso'])
-
-    storage_file = factory.StorageFactory.CreateStorageFileForFile(test_file)
-    self.assertIsInstance(storage_file, sqlite_file.SQLiteStorageFile)
 
   @shared_test_lib.skipUnlessHasTestFile(['psort_test.plaso'])
   def testCreateStorageReaderForFile(self):

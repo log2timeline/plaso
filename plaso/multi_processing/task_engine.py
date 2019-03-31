@@ -503,8 +503,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       task_queue = self._task_queue
 
     process = worker_process.WorkerProcess(
-        task_queue, storage_writer, self.knowledge_base,
-        self._session_identifier, self._processing_configuration,
+        task_queue, storage_writer, self._artifacts_filter_helper,
+        self.knowledge_base, self._session_identifier,
+        self._processing_configuration,
         enable_sigsegv_handler=self._enable_sigsegv_handler, name=process_name)
 
     # Remove all possible log handlers to prevent a child process from logging

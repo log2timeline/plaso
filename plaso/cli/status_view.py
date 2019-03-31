@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import ctypes
 import sys
 import time
 
@@ -37,6 +38,16 @@ class StatusView(object):
 
   _UNITS_1024 = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'EiB', 'ZiB', 'YiB']
 
+  _WINAPI_STD_OUTPUT_HANDLE = -11
+
+  _WINAPI_ENABLE_PROCESSED_INPUT = 1
+  _WINAPI_ENABLE_LINE_INPUT = 2
+  _WINAPI_ENABLE_ECHO_INPUT = 4
+
+  _WINAPI_ANSI_CONSOLE_MODE = (
+      _WINAPI_ENABLE_PROCESSED_INPUT | _WINAPI_ENABLE_LINE_INPUT |
+      _WINAPI_ENABLE_ECHO_INPUT)
+
   def __init__(self, output_writer, tool_name):
     """Initializes a status view.
 
@@ -47,6 +58,7 @@ class StatusView(object):
     super(StatusView, self).__init__()
     self._artifact_filters = None
     self._filter_file = None
+    self._have_ansi_support = not win32console
     self._mode = self.MODE_WINDOW
     self._output_writer = output_writer
     self._source_path = None
@@ -55,6 +67,13 @@ class StatusView(object):
         output_writer, tools.StdoutOutputWriter)
     self._storage_file_path = None
     self._tool_name = tool_name
+
+    if win32console:
+      kernel32 = ctypes.windll.kernel32
+      stdout_handle = kernel32.GetStdHandle(self._WINAPI_STD_OUTPUT_HANDLE)
+      result = kernel32.SetConsoleMode(
+          stdout_handle, self._WINAPI_ANSI_CONSOLE_MODE)
+      self._have_ansi_support = result != 0
 
   def _AddsAnalysisProcessStatusTableRow(self, process_status, table_view):
     """Adds an analysis process status table row.
@@ -121,15 +140,16 @@ class StatusView(object):
 
   def _ClearScreen(self):
     """Clears the terminal/console screen."""
-    if not win32console:
+    if self._have_ansi_support:
       # ANSI escape sequence to clear screen.
       self._output_writer.Write('\033[2J')
       # ANSI escape sequence to move cursor to top left.
       self._output_writer.Write('\033[H')
 
-    else:
-      # Windows cmd.exe does not support ANSI escape codes, thus instead we
-      # fill the console screen buffer with spaces.
+    elif win32console:
+      # This version of Windows cmd.exe does not support ANSI escape codes, thus
+      # instead we fill the console screen buffer with spaces. The downside of
+      # this approach is an annoying flicker.
       top_left_coordinate = win32console.PyCOORDType(0, 0)
       screen_buffer = win32console.GetStdHandle(win32api.STD_OUTPUT_HANDLE)
       screen_buffer_information = screen_buffer.GetConsoleScreenBufferInfo()
@@ -143,6 +163,10 @@ class StatusView(object):
       screen_buffer.FillConsoleOutputAttribute(
           screen_buffer_attributes, console_size, top_left_coordinate)
       screen_buffer.SetConsoleCursorPosition(top_left_coordinate)
+
+      # TODO: remove update flicker. For win32console we could set the cursor
+      # top left, write the table, clean the remainder of the screen buffer
+      # and set the cursor at the end of the table.
 
   def _FormatSizeInUnitsOf1024(self, size):
     """Represents a number of bytes in units of 1024.
@@ -165,10 +189,19 @@ class StatusView(object):
 
     return '{0:d} B'.format(size)
 
-  def _PrintAnalysisStatusHeader(self):
-    """Prints the analysis status header."""
+  def _PrintAnalysisStatusHeader(self, processing_status):
+    """Prints the analysis status header.
+
+    Args:
+      processing_status (ProcessingStatus): processing status.
+    """
     self._output_writer.Write(
-        'Storage file\t: {0:s}\n'.format(self._storage_file_path))
+        'Storage file\t\t: {0:s}\n'.format(self._storage_file_path))
+
+    self._PrintProcessingTime(processing_status)
+
+    if processing_status and processing_status.events_status:
+      self._PrintEventsStatus(processing_status.events_status)
 
     self._output_writer.Write('\n')
 
@@ -200,7 +233,7 @@ class StatusView(object):
         self._tool_name, plaso.__version__)
     self._output_writer.Write(output_text)
 
-    self._PrintAnalysisStatusHeader()
+    self._PrintAnalysisStatusHeader(processing_status)
 
     table_view = views.CLITabularTableView(column_names=[
         'Identifier', 'PID', 'Status', 'Memory', 'Events', 'Tags',
@@ -219,9 +252,6 @@ class StatusView(object):
       self._output_writer.Write(
           'Processing aborted - waiting for clean up.\n\n')
 
-    # TODO: remove update flicker. For win32console we could set the cursor
-    # top left, write the table, clean the remainder of the screen buffer
-    # and set the cursor at the end of the table.
     if self._stdout_output_writer:
       # We need to explicitly flush stdout to prevent partial status updates.
       sys.stdout.flush()
@@ -281,6 +311,65 @@ class StatusView(object):
       # We need to explicitly flush stdout to prevent partial status updates.
       sys.stdout.flush()
 
+  def _PrintEventsStatus(self, events_status):
+    """Prints the status of the events.
+
+    Args:
+      events_status (EventsStatus): events status.
+    """
+    # TODO: print additional event status as "Events MACB grouped",
+    # "Duplicate events removed", "Events filtered"
+    if events_status:
+      table_view = views.CLITabularTableView(
+          column_names=['Events:', 'Total'],
+          column_sizes=[15, 0])
+
+      table_view.AddRow([
+          '', events_status.total_number_of_events])
+
+      self._output_writer.Write('\n')
+      table_view.Write(self._output_writer)
+
+  def _PrintProcessingTime(self, processing_status):
+    """Prints the processing time.
+
+    Args:
+      processing_status (ProcessingStatus): processing status.
+    """
+    if not processing_status:
+      processing_time = '00:00:00'
+    else:
+      processing_time = time.time() - processing_status.start_time
+      time_struct = time.gmtime(processing_time)
+      processing_time = time.strftime('%H:%M:%S', time_struct)
+
+    self._output_writer.Write(
+        'Processing time\t\t: {0:s}\n'.format(processing_time))
+
+  def _PrintTasksStatus(self, processing_status):
+    """Prints the status of the tasks.
+
+    Args:
+      processing_status (ProcessingStatus): processing status.
+    """
+    if processing_status and processing_status.tasks_status:
+      tasks_status = processing_status.tasks_status
+
+      table_view = views.CLITabularTableView(
+          column_names=['Tasks:', 'Queued', 'Processing', 'Merging',
+                        'Abandoned', 'Total'],
+          column_sizes=[15, 7, 15, 15, 15, 0])
+
+      table_view.AddRow([
+          '', tasks_status.number_of_queued_tasks,
+          tasks_status.number_of_tasks_processing,
+          tasks_status.number_of_tasks_pending_merge,
+          tasks_status.number_of_abandoned_tasks,
+          tasks_status.total_number_of_tasks])
+
+      self._output_writer.Write('\n')
+      table_view.Write(self._output_writer)
+
   def GetAnalysisStatusUpdateCallback(self):
     """Retrieves the analysis status update callback function.
 
@@ -329,34 +418,8 @@ class StatusView(object):
       self._output_writer.Write('Filter file\t\t: {0:s}\n'.format(
           self._filter_file))
 
-    if not processing_status:
-      processing_time = '00:00:00'
-    else:
-      processing_time = time.time() - processing_status.start_time
-      time_struct = time.gmtime(processing_time)
-      processing_time = time.strftime('%H:%M:%S', time_struct)
-
-    self._output_writer.Write(
-        'Processing time\t\t: {0:s}\n'.format(processing_time))
-
-    if processing_status and processing_status.tasks_status:
-      tasks_status = processing_status.tasks_status
-
-      table_view = views.CLITabularTableView(
-          column_names=['Tasks:', 'Queued', 'Processing', 'Merging',
-                        'Abandoned', 'Total'],
-          column_sizes=[15, 7, 15, 15, 15, 0])
-
-      table_view.AddRow([
-          '', tasks_status.number_of_queued_tasks,
-          tasks_status.number_of_tasks_processing,
-          tasks_status.number_of_tasks_pending_merge,
-          tasks_status.number_of_abandoned_tasks,
-          tasks_status.total_number_of_tasks])
-
-      self._output_writer.Write('\n')
-      table_view.Write(self._output_writer)
-
+    self._PrintProcessingTime(processing_status)
+    self._PrintTasksStatus(processing_status)
     self._output_writer.Write('\n')
 
   def PrintExtractionSummary(self, processing_status):

@@ -55,11 +55,11 @@ class PinfoTool(
     self._verbose = False
     self.compare_storage_information = False
 
-  def _CalculateStorageCounters(self, storage):
+  def _CalculateStorageCounters(self, storage_reader):
     """Calculates the counters of the entire storage.
 
     Args:
-      storage (BaseStore): storage.
+      storage_reader (StorageReader): storage reader.
 
     Returns:
       dict[str,collections.Counter]: storage counters.
@@ -71,7 +71,7 @@ class PinfoTool(
     parsers_counter = collections.Counter()
     parsers_counter_error = False
 
-    for session in storage.GetSessions():
+    for session in storage_reader.GetSessions():
       # Check for a dict for backwards compatibility.
       if isinstance(session.analysis_reports_counter, dict):
         analysis_reports_counter += collections.Counter(
@@ -111,18 +111,19 @@ class PinfoTool(
 
     return storage_counters
 
-  def _CompareStores(self, storage, compare_storage):
+  def _CompareStores(self, storage_reader, compare_storage_reader):
     """Compares the contents of two stores.
 
     Args:
-      storage (BaseStore): storage.
-      compare_storage (BaseStore): storage to compare against.
+      storage_reader (StorageReader): storage reader.
+      compare_storage_reader (StorageReader): storage to compare against.
 
     Returns:
       bool: True if the content of the stores is identical.
     """
-    storage_counters = self._CalculateStorageCounters(storage)
-    compare_storage_counters = self._CalculateStorageCounters(compare_storage)
+    storage_counters = self._CalculateStorageCounters(storage_reader)
+    compare_storage_counters = self._CalculateStorageCounters(
+        compare_storage_reader)
 
     # TODO: improve comparison, currently only total numbers are compared.
 
@@ -162,17 +163,18 @@ class PinfoTool(
 
     table_view.Write(self._output_writer)
 
-  def _PrintAnalysisReportsDetails(self, storage):
+  def _PrintAnalysisReportsDetails(self, storage_reader):
     """Prints the details of the analysis reports.
 
     Args:
-      storage (BaseStore): storage.
+      storage_reader (StorageReader): storage reader.
     """
-    if not storage.HasAnalysisReports():
+    if not storage_reader.HasAnalysisReports():
       self._output_writer.Write('No analysis reports stored.\n\n')
       return
 
-    for index, analysis_report in enumerate(storage.GetAnalysisReports()):
+    for index, analysis_report in enumerate(
+        storage_reader.GetAnalysisReports()):
       title = 'Analysis report: {0:d}'.format(index)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
@@ -181,17 +183,17 @@ class PinfoTool(
 
       table_view.Write(self._output_writer)
 
-  def _PrintErrorsDetails(self, storage):
+  def _PrintErrorsDetails(self, storage_reader):
     """Prints the details of the errors.
 
     Args:
-      storage (BaseStore): storage.
+      storage_reader (StorageReader): storage reader.
     """
-    if not storage.HasErrors():
+    if not storage_reader.HasErrors():
       self._output_writer.Write('No errors stored.\n\n')
       return
 
-    for index, error in enumerate(storage.GetErrors()):
+    for index, error in enumerate(storage_reader.GetErrors()):
       title = 'Error: {0:d}'.format(index)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
@@ -274,16 +276,16 @@ class PinfoTool(
 
     table_view.Write(self._output_writer)
 
-  def _PrintPreprocessingInformation(self, storage, session_number=None):
+  def _PrintPreprocessingInformation(self, storage_reader, session_number=None):
     """Prints the details of the preprocessing information.
 
     Args:
-      storage (BaseStore): storage.
+      storage_reader (StorageReader): storage reader.
       session_number (Optional[int]): session number.
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    storage.ReadPreprocessingInformation(knowledge_base_object)
+    storage_reader.ReadPreprocessingInformation(knowledge_base_object)
 
     # TODO: replace session_number by session_identifier.
     system_configuration = knowledge_base_object.GetSystemConfigurationArtifact(
@@ -329,14 +331,15 @@ class PinfoTool(
 
     table_view.Write(self._output_writer)
 
-  def _PrintSessionsDetails(self, storage):
+  def _PrintSessionsDetails(self, storage_reader):
     """Prints the details of the sessions.
 
     Args:
-      storage (BaseStore): storage.
+      storage_reader (BaseStore): storage.
     """
-    for session_number, session in enumerate(storage.GetSessions()):
+    for session_number, session in enumerate(storage_reader.GetSessions()):
       session_identifier = uuid.UUID(hex=session.identifier)
+      session_identifier = '{0!s}'.format(session_identifier)
 
       start_time = 'N/A'
       if session.start_time is not None:
@@ -364,7 +367,7 @@ class PinfoTool(
         artifact_filters_string = 'N/A'
       filter_file = session.filter_file or 'N/A'
 
-      title = 'Session: {0!s}'.format(session_identifier)
+      title = 'Session: {0:s}'.format(session_identifier)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
 
@@ -383,7 +386,7 @@ class PinfoTool(
       table_view.Write(self._output_writer)
 
       if self._verbose:
-        self._PrintPreprocessingInformation(storage, session_number + 1)
+        self._PrintPreprocessingInformation(storage_reader, session_number + 1)
 
         self._PrintParsersCounter(
             session.parsers_counter, session_identifier=session_identifier)
@@ -409,28 +412,30 @@ class PinfoTool(
       start_time = timelib.Timestamp.CopyToIsoFormat(
           session.start_time)
       session_identifier = uuid.UUID(hex=session.identifier)
-      table_view.AddRow([str(session_identifier), start_time])
+      session_identifier = '{0!s}'.format(session_identifier)
+      table_view.AddRow([session_identifier, start_time])
 
     table_view.Write(self._output_writer)
 
-  def _PrintStorageInformationAsText(self, storage):
+  def _PrintStorageInformationAsText(self, storage_reader):
     """Prints information about the store as human-readable text.
 
     Args:
-      storage (BaseStore): storage.
+      storage_reader (StorageReader): storage reader.
     """
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title='Plaso Storage Information')
     table_view.AddRow(['Filename', os.path.basename(self._storage_file_path)])
-    table_view.AddRow(['Format version', storage.format_version])
-    table_view.AddRow(['Serialization format', storage.serialization_format])
+    table_view.AddRow(['Format version', storage_reader.format_version])
+    table_view.AddRow(
+        ['Serialization format', storage_reader.serialization_format])
     table_view.Write(self._output_writer)
 
-    if storage.storage_type == definitions.STORAGE_TYPE_SESSION:
-      self._PrintSessionsOverview(storage)
-      self._PrintSessionsDetails(storage)
+    if storage_reader.storage_type == definitions.STORAGE_TYPE_SESSION:
+      self._PrintSessionsOverview(storage_reader)
+      self._PrintSessionsDetails(storage_reader)
 
-      storage_counters = self._CalculateStorageCounters(storage)
+      storage_counters = self._CalculateStorageCounters(storage_reader)
 
       if 'parsers' not in storage_counters:
         self._output_writer.Write(
@@ -450,21 +455,21 @@ class PinfoTool(
       else:
         self._PrintEventLabelsCounter(storage_counters['event_labels'])
 
-      self._PrintErrorsDetails(storage)
-      self._PrintAnalysisReportsDetails(storage)
+      self._PrintErrorsDetails(storage_reader)
+      self._PrintAnalysisReportsDetails(storage_reader)
 
-    elif storage.storage_type == definitions.STORAGE_TYPE_TASK:
-      self._PrintTasksInformation(storage)
+    elif storage_reader.storage_type == definitions.STORAGE_TYPE_TASK:
+      self._PrintTasksInformation(storage_reader)
 
-  def _PrintStorageInformationAsJSON(self, storage):
+  def _PrintStorageInformationAsJSON(self, storage_reader):
     """Writes a summary of sessions as machine-readable JSON.
 
     Args:
-      storage (BaseStore): storage.
+      storage_reader (StorageReader): storage reader.
     """
     serializer = json_serializer.JSONAttributeContainerSerializer
     self._output_writer.Write('{')
-    for index, session in enumerate(storage.GetSessions()):
+    for index, session in enumerate(storage_reader.GetSessions()):
       json_string = serializer.WriteSerialized(session)
       if index != 0:
         self._output_writer.Write(',\n')
@@ -472,20 +477,21 @@ class PinfoTool(
           session.identifier, json_string))
     self._output_writer.Write('}')
 
-  def _PrintTasksInformation(self, storage):
+  def _PrintTasksInformation(self, storage_reader):
     """Prints information about the tasks.
 
     Args:
-      storage (BaseStore): storage.
+      storage_reader (StorageReader): storage reader.
     """
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title='Tasks')
 
-    for task_start, _ in storage.GetSessions():
+    for task_start, _ in storage_reader.GetSessions():
       start_time = timelib.Timestamp.CopyToIsoFormat(
           task_start.timestamp)
       task_identifier = uuid.UUID(hex=task_start.identifier)
-      table_view.AddRow([str(task_identifier), start_time])
+      task_identifier = '{0!s}'.format(task_identifier)
+      table_view.AddRow([task_identifier, start_time])
 
     table_view.Write(self._output_writer)
 
@@ -495,47 +501,29 @@ class PinfoTool(
     Returns:
       bool: True if the content of the stores is identical.
     """
-    storage_file = storage_factory.StorageFactory.CreateStorageFileForFile(
+    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
-    if not storage_file:
+    if not storage_reader:
       logger.error(
           'Format of storage file: {0:s} not supported'.format(
               self._storage_file_path))
       return False
 
-    try:
-      storage_file.Open(path=self._storage_file_path, read_only=True)
-    except IOError as exception:
-      logger.error(
-          'Unable to open storage file: {0:s} with error: {1!s}'.format(
-              self._storage_file_path, exception))
-      return False
-
-    compare_storage_file = (
-        storage_factory.StorageFactory.CreateStorageFileForFile(
+    compare_storage_reader = (
+        storage_factory.StorageFactory.CreateStorageReaderForFile(
             self._compare_storage_file_path))
-    if not compare_storage_file:
+    if not compare_storage_reader:
       logger.error(
           'Format of storage file: {0:s} not supported'.format(
               self._compare_storage_file_path))
       return False
 
     try:
-      compare_storage_file.Open(
-          path=self._compare_storage_file_path, read_only=True)
-    except IOError as exception:
-      logger.error(
-          'Unable to open storage file: {0:s} with error: {1!s}'.format(
-              self._compare_storage_file_path, exception))
-      storage_file.Close()
-      return False
-
-    try:
-      result = self._CompareStores(storage_file, compare_storage_file)
+      result = self._CompareStores(storage_reader, compare_storage_reader)
 
     finally:
-      compare_storage_file.Close()
-      storage_file.Close()
+      compare_storage_reader.Close()
+      storage_reader.Close()
 
     if result:
       self._output_writer.Write('Storage files are identical.\n')
@@ -657,26 +645,18 @@ class PinfoTool(
 
   def PrintStorageInformation(self):
     """Prints the storage information."""
-    storage_file = storage_factory.StorageFactory.CreateStorageFileForFile(
+    storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
         self._storage_file_path)
-    if not storage_file:
+    if not storage_reader:
       logger.error(
           'Format of storage file: {0:s} not supported'.format(
               self._storage_file_path))
       return
 
     try:
-      storage_file.Open(path=self._storage_file_path, read_only=True)
-    except IOError as exception:
-      logger.error(
-          'Unable to open storage file: {0:s} with error: {1!s}'.format(
-              self._storage_file_path, exception))
-      return
-
-    try:
       if self._output_format == 'json':
-        self._PrintStorageInformationAsJSON(storage_file)
+        self._PrintStorageInformationAsJSON(storage_reader)
       elif self._output_format == 'text':
-        self._PrintStorageInformationAsText(storage_file)
+        self._PrintStorageInformationAsText(storage_reader)
     finally:
-      storage_file.Close()
+      storage_reader.Close()

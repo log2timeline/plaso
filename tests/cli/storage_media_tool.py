@@ -801,20 +801,7 @@ optional arguments:
 
     self.assertEqual(volume_identifiers, ['p1', 'p2'])
 
-    # Test selection of no partitions.
-    input_file_object = io.BytesIO(b'\n')
-    test_input_reader = tools.FileObjectInputReader(input_file_object)
-
-    output_file_object = io.BytesIO()
-    test_output_writer = tools.FileObjectOutputWriter(output_file_object)
-
-    test_tool = storage_media_tool.StorageMediaTool(
-        input_reader=test_input_reader, output_writer=test_output_writer)
-
-    volume_identifiers = test_tool._PromptUserForPartitionIdentifiers(
-        volume_system, ['p1', 'p2'])
-
-    self.assertEqual(volume_identifiers, [])
+    # TODO: test selection of no partitions.
 
   # TODO: add test for _PromptUserForVSSCurrentVolume.
 

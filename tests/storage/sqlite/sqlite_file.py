@@ -20,6 +20,20 @@ from tests import test_lib as shared_test_lib
 from tests.storage import test_lib
 
 
+class _TestSQLiteStorageFileV1(sqlite_file.SQLiteStorageFile):
+  """Test class for testing format compatibility checks."""
+
+  _FORMAT_VERSION = 1
+  _COMPATIBLE_FORMAT_VERSION = 1
+
+
+class _TestSQLiteStorageFileV2(sqlite_file.SQLiteStorageFile):
+  """Test class for testing format compatibility checks."""
+
+  _FORMAT_VERSION = 2
+  _COMPATIBLE_FORMAT_VERSION = 1
+
+
 class SQLiteStorageFileTest(test_lib.StorageTestCase):
   """Tests for the SQLite-based storage file object."""
 
@@ -77,9 +91,16 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       with self.assertRaises(ValueError):
         storage_file._CountStoredAttributeContainers('bogus')
 
-      storage_file.Close()
+      # Test for a supported container type that does not have a table
+      # present in the storage file.
+      query = 'DROP TABLE {0:s}'.format(
+          storage_file._CONTAINER_TYPE_EVENT_DATA)
+      storage_file._cursor.execute(query)
+      number_of_containers = storage_file._CountStoredAttributeContainers(
+          storage_file._CONTAINER_TYPE_EVENT_DATA)
+      self.assertEqual(number_of_containers, 0)
 
-  # TODO: add tests for _CheckStorageMetadata
+      storage_file.Close()
 
   def testGetAttributeContainerByIndex(self):
     """Tests the _GetAttributeContainerByIndex function."""
@@ -504,6 +525,26 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       storage_file.WriteTaskCompletion(task_completion)
 
       storage_file.Close()
+
+  def testVersionCompatibility(self):
+    """Tests the version compatibility methods."""
+    with shared_test_lib.TempDirectory() as temp_directory:
+      v1_storage_path = os.path.join(temp_directory, 'v1.sqlite')
+      v1_storage_file = _TestSQLiteStorageFileV1(
+          storage_type=definitions.STORAGE_TYPE_SESSION)
+      v1_storage_file.Open(path=v1_storage_path, read_only=False)
+      v1_storage_file.Close()
+
+      v2_storage_file_rw = _TestSQLiteStorageFileV2(
+          storage_type=definitions.STORAGE_TYPE_SESSION)
+
+      with self.assertRaises((IOError, OSError)):
+        v2_storage_file_rw.Open(path=v1_storage_path, read_only=False)
+
+      v2_storage_file_ro = _TestSQLiteStorageFileV2(
+          storage_type=definitions.STORAGE_TYPE_SESSION)
+      v2_storage_file_ro.Open(path=v1_storage_path, read_only=True)
+      v2_storage_file_ro.Close()
 
 
 # TODO: add tests for SQLiteStorageMergeReader

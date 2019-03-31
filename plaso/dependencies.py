@@ -19,7 +19,7 @@ import re
 # Where version_attribute_name is either a name of an attribute,
 # property or method.
 PYTHON_DEPENDENCIES = {
-    'artifacts': ('__version__', '20170818', None, True),
+    'artifacts': ('__version__', '20190305', None, True),
     'bencode': ('', '', None, True),
     'biplist': ('', '1.0.3', None, True),
     'bs4': ('__version__', '4.6.3', None, True),
@@ -32,7 +32,6 @@ PYTHON_DEPENDENCIES = {
     'dfwinreg': ('__version__', '20180712', None, True),
     'dtfabric': ('__version__', '20181128', None, True),
     'elasticsearch': ('__versionstr__', '6.0', None, False),
-    'elasticsearch5': ('__versionstr__', '5.4.0', None, True),
     'future': ('__version__', '0.16.0', None, True),
     'idna': ('', '2.5', None, True),
     'lz4': ('', '0.10.0', None, False),
@@ -142,12 +141,6 @@ def _CheckPythonModule(
       map(int, _VERSION_SPLIT_REGEX.split(minimum_version)))
 
   if module_version_map < minimum_version_map:
-    if not is_required:
-      print((
-          '[OPTIONAL]\t{0:s} version: {1!s} is too old, {2!s} or later '
-          'required.').format(module_name, module_version, minimum_version))
-      return True
-
     print((
         '[FAILURE]\t{0:s} version: {1!s} is too old, {2!s} or later '
         'required.').format(module_name, module_version, minimum_version))
@@ -157,12 +150,6 @@ def _CheckPythonModule(
     maximum_version_map = list(
         map(int, _VERSION_SPLIT_REGEX.split(maximum_version)))
     if module_version_map > maximum_version_map:
-      if not is_required:
-        print((
-            '[OPTIONAL]\t{0:s} version: {1!s} is too recent, {2!s} or earlier '
-            'required.').format(module_name, module_version, minimum_version))
-        return True
-
       print((
           '[FAILURE]\t{0:s} version: {1!s} is too recent, {2!s} or earlier '
           'required.').format(module_name, module_version, maximum_version))

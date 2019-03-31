@@ -7,7 +7,6 @@ import argparse
 import collections
 import datetime
 import os
-import sys
 import textwrap
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -36,7 +35,6 @@ class PstealTool(
     extraction_tool.ExtractionTool,
     tool_options.HashersOptions,
     tool_options.OutputModuleOptions,
-    tool_options.ParsersOptions,
     tool_options.StorageFileOptions):
   """Psteal CLI tool.
 
@@ -85,13 +83,6 @@ class PstealTool(
       'And that is how you build a timeline using psteal...',
       '']))
 
-  # The window status-view mode has an annoying flicker on Windows,
-  # hence we default to linear status-view mode instead.
-  if sys.platform.startswith('win'):
-    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_LINEAR
-  else:
-    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_WINDOW
-
   _SOURCE_TYPES_TO_PREPROCESS = frozenset([
       dfvfs_definitions.SOURCE_TYPE_DIRECTORY,
       dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
@@ -119,7 +110,7 @@ class PstealTool(
     self._parsers_manager = parsers_manager.ParsersManager
     self._preferred_language = 'en-US'
     self._preferred_year = None
-    self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
+    self._status_view_mode = status_view.StatusView.MODE_WINDOW
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
     self._time_slice = None
     self._use_time_slicer = False
@@ -321,7 +312,7 @@ class PstealTool(
     self._SetExtractionParsersAndPlugins(configuration, session)
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
-    filter_find_specs = engine.BaseEngine.BuildFilterFindSpecs(
+    filter_find_specs = extraction_engine.BuildFilterFindSpecs(
         self._artifact_definitions_path, self._custom_artifacts_path,
         extraction_engine.knowledge_base, self._artifact_filters,
         self._filter_file)
@@ -446,12 +437,7 @@ class PstealTool(
     helpers_manager.ArgumentHelperManager.ParseOptions(
         options, self, names=['data_location'])
 
-    presets_file = os.path.join(self._data_location, 'presets.yaml')
-    if not os.path.isfile(presets_file):
-      raise errors.BadConfigOption(
-          'No such parser presets file: {0:s}.'.format(presets_file))
-
-    parsers_manager.ParsersManager.ReadPresetsFromFile(presets_file)
+    self._ReadParserPresetsFromFile()
 
     # The output modules options are dependent on the preferred language
     # and preferred time zone options.

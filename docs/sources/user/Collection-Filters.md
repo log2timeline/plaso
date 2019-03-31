@@ -14,7 +14,7 @@ The separator is a forward slash '/' and each field represents a directory up un
 
  + A string representing the exact directory name, case insensitive.
  + A regular expression denoting the name of the directory or file.
- + A name of an attribute collected during the preprocessing stage, denoted by a curly bracket {attribute_name}.
+ + A name of an attribute collected during the preprocessing stage, denoted by a curly bracket `{attribute_name}`.
 
 This can lead to a line similar to this:
 
@@ -36,4 +36,4 @@ Each one of these files may produce more than one directory, and each directory 
 
 These files can be used to limit the collection of data from a machine and target the parsing, thus both reducing the amount of irrelevant events in the timeline and reduce the time it takes to parse an image using the tool.
 
-An important caveat is that collection filters do not offer the option of blacklisting, that is to say every file in a folder except files that match pattern *foo*. Another important caveat is that there is no support for recursion, which means that something like ```/Users/.+/AppData/**`` or something like that would not search the AppData folder and every subfolder under that. These feature requests are being tracked [here](https://github.com/log2timeline/plaso/issues/103)
+An important caveat is that collection filters do not offer the option of blacklisting, that is to say every file in a folder except files that match pattern *foo*. Another important caveat is that there is no support for recursion, which means that something like `/Users/.+/AppData/**` or something like that would not search the AppData folder and every subfolder under that. These feature requests are being tracked [here](https://github.com/log2timeline/plaso/issues/103)

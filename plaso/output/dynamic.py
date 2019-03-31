@@ -16,8 +16,8 @@ from plaso.output import manager
 class DynamicFieldsHelper(object):
   """Helper for outputting a dynamic selection of fields."""
 
-  # A dict containing mappings between the name of fields and
-  # a callback function that formats the field value.
+  # Maps the name of a fields to a a callback function that formats
+  # the field value.
   _FIELD_FORMAT_CALLBACKS = {
       'date': '_FormatDate',
       'datetime': '_FormatDateTime',
@@ -38,8 +38,7 @@ class DynamicFieldsHelper(object):
       'type': '_FormatTimestampDescription',
       'user': '_FormatUsername',
       'username': '_FormatUsername',
-      'zone': '_FormatZone',
-  }
+      'zone': '_FormatZone'}
 
   def __init__(self, output_mediator):
     """Initializes a dynamic fields helper.
@@ -65,7 +64,14 @@ class DynamicFieldsHelper(object):
         timestamp=event.timestamp)
 
     year, month, day_of_month = date_time.GetDate()
-    return '{0:04d}-{1:02d}-{2:02d}'.format(year, month, day_of_month)
+    try:
+      return '{0:04d}-{1:02d}-{2:02d}'.format(year, month, day_of_month)
+    except (TypeError, ValueError):
+      self._ReportEventError(event, (
+          'unable to copy timestamp: {0!s} to a human readable date. '
+          'Defaulting to: "0000-00-00"').format(event.timestamp))
+
+      return '0000-00-00'
 
   def _FormatDateTime(self, event):
     """Formats the date and time in ISO 8601 format.
@@ -243,8 +249,18 @@ class DynamicFieldsHelper(object):
     date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
         timestamp=event.timestamp)
 
+    year, month, day_of_month = date_time.GetDate()
     hours, minutes, seconds = date_time.GetTimeOfDay()
-    return '{0:02d}:{1:02d}:{2:02d}'.format(hours, minutes, seconds)
+    try:
+      # Ensure that the date is valid.
+      _ = '{0:04d}-{1:02d}-{2:02d}'.format(year, month, day_of_month)
+      return '{0:02d}:{1:02d}:{2:02d}'.format(hours, minutes, seconds)
+    except (TypeError, ValueError):
+      self._ReportEventError(event, (
+          'unable to copy timestamp: {0!s} to a human readable time. '
+          'Defaulting to: "--:--:--"').format(event.timestamp))
+
+      return '--:--:--'
 
   def _FormatTimestampDescription(self, event):
     """Formats the timestamp description.
@@ -278,7 +294,7 @@ class DynamicFieldsHelper(object):
     Returns:
       str: time zone field.
     """
-    return self._output_mediator.timezone
+    return '{0!s}'.format(self._output_mediator.timezone)
 
   def _ReportEventError(self, event, error_message):
     """Reports an event related error.
@@ -289,11 +305,13 @@ class DynamicFieldsHelper(object):
     """
     event_identifier = event.GetIdentifier()
     event_identifier_string = event_identifier.CopyToString()
+    display_name = getattr(event, 'display_name', None) or 'N/A'
+    parser_chain = getattr(event, 'parser', None) or 'N/A'
     error_message = (
         'Event: {0!s} data type: {1:s} display name: {2:s} '
         'parser chain: {3:s} with error: {4:s}').format(
-            event_identifier_string, event.data_type, event.display_name,
-            event.parser, error_message)
+            event_identifier_string, event.data_type, display_name,
+            parser_chain, error_message)
     logger.error(error_message)
 
   def GetFormattedField(self, event, field_name):
