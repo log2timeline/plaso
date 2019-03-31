@@ -13,32 +13,6 @@ class HasherTestCase(shared_test_lib.BaseTestCase):
 
   _DEFAULT_READ_SIZE = 512
 
-  def _AssertFileEntryBinaryDigestMatch(
-      self, hasher, file_entry, expected_digest):
-    """Checks that a hasher returns a given result when it hashes a file.
-
-    Args:
-      hasher (BaseHasher): hasher to test.
-      file_entry (dfvfs.file_entry): file entry whose default data stream will
-          be hashed.
-      expected_digest (bytes): digest expected to be returned by hasher.
-    """
-    file_object = file_entry.GetFileObject()
-
-    try:
-      # Make sure we are starting from the beginning of the file.
-      file_object.seek(0, os.SEEK_SET)
-
-      data = file_object.read(self._DEFAULT_READ_SIZE)
-      while data:
-        hasher.Update(data)
-        data = file_object.read(self._DEFAULT_READ_SIZE)
-
-    finally:
-      file_object.close()
-
-    self.assertEqual(hasher.GetBinaryDigest(), expected_digest)
-
   def _AssertFileEntryStringDigestMatch(
       self, hasher, file_entry, expected_digest):
     """Checks that a hasher returns a given result when it hashes a file.

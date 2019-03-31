@@ -14,16 +14,6 @@ class BaseHasher(object):
 
   # pylint: disable=redundant-returns-doc
   @abc.abstractmethod
-  def GetBinaryDigest(self):
-    """Retrieves the digest of the hash function as a binary string.
-
-    Returns:
-      bytes: binary hash digest calculated over the data blocks passed to
-          Update().
-    """
-
-  # pylint: disable=redundant-returns-doc
-  @abc.abstractmethod
   def GetStringDigest(self):
     """Retrieves the digest of the hash function expressed as a Unicode string.
 
