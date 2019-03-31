@@ -44,6 +44,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
   # TODO: add tests for _PrintAnalysisStatusHeader
   # TODO: add tests for _PrintAnalysisStatusUpdateLinear
   # TODO: add tests for _PrintAnalysisStatusUpdateWindow
+  # TODO: add tests for _PrintEventsStatus
 
   def testPrintExtractionStatusUpdateLinear(self):
     """Tests the PrintExtractionStatusUpdateLinear function."""
