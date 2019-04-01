@@ -53,7 +53,7 @@ class TimeMachinePlugin(dtfabric_plugin.DtFabricBasePlistPlugin):
         alias = backup_alias.string
 
       except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to parse backup alias value with error: {0!s}'.format(
                 exception))
         alias = 'Unknown alias'

@@ -521,7 +521,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     for line in output.split('\n'):
       lines.append(line)
 
-    self.assertEqual(len(lines), 21)
+    self.assertEqual(len(lines), 22)
 
     expected_line = (
         '2014-11-18T01:15:43+00:00,'
@@ -530,7 +530,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
         'Log File,'
         '[---] last message repeated 5 times ---,'
         'syslog,'
-        'OS:/tmp/test/test_data/syslog,'
+        'OS:/private/tmp/test/test_data/syslog,'
         'repeated')
     self.assertEqual(lines[14], expected_line)
 

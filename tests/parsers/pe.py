@@ -22,7 +22,7 @@ class PECOFFTest(test_lib.ParserTestCase):
     parser = pe.PEParser()
     storage_writer = self._ParseFile(['test_pe.exe'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
 
     events = list(storage_writer.GetEvents())
@@ -52,7 +52,7 @@ class PECOFFTest(test_lib.ParserTestCase):
     parser = pe.PEParser()
     storage_writer = self._ParseFile(['test_driver.sys'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())

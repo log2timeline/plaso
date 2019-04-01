@@ -62,19 +62,19 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
       key_path (str): Windows Registry key path.
     """
     if not registry_value.DataIsString():
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unsupported UpdateKey value data type: {0:s}'.format(
               registry_value.data_type_string))
       return
 
     date_time_string = registry_value.GetDataAsObject()
     if not date_time_string:
-      parser_mediator.ProduceExtractionError('missing UpdateKey value data')
+      parser_mediator.ProduceExtractionWarning('missing UpdateKey value data')
       return
 
     re_match = self._UPDATE_DATE_TIME_RE.match(date_time_string)
     if not re_match:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unsupported UpdateKey value data: {0!s}'.format(date_time_string))
       return
 
@@ -89,7 +89,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
       minutes = int(minutes, 10)
       seconds = int(seconds, 10)
     except (TypeError, ValueError):
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'invalid UpdateKey date time value: {0!s}'.format(date_time_string))
       return
 
@@ -103,7 +103,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
           time_elements_tuple=time_elements_tuple)
       date_time.is_local_time = True
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'invalid UpdateKey date time value: {0!s}'.format(
               time_elements_tuple))
       return

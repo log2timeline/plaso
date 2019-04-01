@@ -34,7 +34,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile([
         'firefox_cache', 'firefox28', '_CACHE_001_'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1668)
 
     events = list(storage_writer.GetEvents())
@@ -78,7 +78,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
         '2B__utmz%3D68537988.1398089459.1.1.utmcsr%3D(direct)%7Cutmccn'
         '%3D(direct)%7Cutmcmd%3D(none)%3B&aip=1&utmu=qBQ~')
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 141)
 
     events = list(storage_writer.GetEvents())
@@ -102,7 +102,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['firefox_cache', 'firefox28', '_CACHE_003_'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 9)
 
     events = list(storage_writer.GetEvents())
@@ -126,7 +126,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['firefox_cache', 'firefox28', 'E8D65m01'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 9)
 
   @shared_test_lib.skipUnlessHasTestFile([
@@ -137,7 +137,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['firefox_cache', 'firefox3', '_CACHE_001_'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 73)
 
     events = list(storage_writer.GetEvents())
@@ -165,7 +165,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['firefox_cache', 'firefox3', '_CACHE_002_'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
 
     events = list(storage_writer.GetEvents())
@@ -182,7 +182,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['firefox_cache', 'firefox3', '_CACHE_003_'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
 
     events = list(storage_writer.GetEvents())
@@ -205,7 +205,7 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
         '1F4B3A4FC81FB19C530758231FA54313BE8F6FA2']
     storage_writer = self._ParseFile(path_segments, parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
 
     events = list(storage_writer.GetEvents())

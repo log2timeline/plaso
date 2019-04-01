@@ -23,7 +23,7 @@ class AndroidSMSTest(test_lib.SQLitePluginTestCase):
     plugin = android_sms.AndroidSMSPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(['mmssms.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     # The SMS database file contains 9 events (5 SENT, 4 RECEIVED messages).
     self.assertEqual(storage_writer.number_of_events, 9)
 

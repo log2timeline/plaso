@@ -125,14 +125,14 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
 
     msg_value = structure.get('msg')
     if not msg_value:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'missing msg value: {0!s}'.format(structure))
       return
 
     try:
       seconds = int(msg_value[0], 10)
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unsupported number of seconds in msg value: {0!s}'.format(
               structure))
       return
@@ -140,7 +140,7 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
     try:
       milliseconds = int(msg_value[1], 10)
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unsupported number of milliseconds in msg value: {0!s}'.format(
               structure))
       return

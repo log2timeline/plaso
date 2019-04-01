@@ -26,7 +26,7 @@ class AirportPluginTest(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
 
     # The order in which PlistParser generates events is nondeterministic

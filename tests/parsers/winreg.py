@@ -74,7 +74,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     parser = winreg.WinRegistryParser()
     storage_writer = self._ParseFile(['ntuser.dat.LOG'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 0)
 
   @shared_test_lib.skipUnlessHasTestFile(['SYSTEM'])

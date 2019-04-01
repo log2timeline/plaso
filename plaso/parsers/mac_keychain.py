@@ -706,7 +706,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
           if the value does not represent a valid string.
     """
     if date_time_value[14] != 'Z':
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'invalid date and time value: {0!s}'.format(date_time_value))
       return None
 
@@ -718,7 +718,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
       minutes = int(date_time_value[10:12], 10)
       seconds = int(date_time_value[12:14], 10)
     except (TypeError, ValueError):
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'invalid date and time value: {0!s}'.format(date_time_value))
       return None
 
@@ -728,7 +728,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
       return dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'invalid date and time value: {0!s}'.format(date_time_value))
       return None
 
@@ -751,7 +751,7 @@ class KeychainParser(dtfabric_parser.DtFabricBaseParser):
     try:
       return binary_data_value.decode('utf-8')
     except UnicodeDecodeError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'invalid binary data string value: {0:s}'.format(
               repr(binary_data_value)))
       return None

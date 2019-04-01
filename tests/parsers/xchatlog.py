@@ -23,7 +23,7 @@ class XChatLogUnitTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['xchat.log'], parser, timezone='Europe/Rome')
 
-    self.assertEqual(storage_writer.number_of_errors, 1)
+    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 9)
 
     events = list(storage_writer.GetEvents())

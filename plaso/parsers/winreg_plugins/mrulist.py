@@ -110,7 +110,7 @@ class BaseMRUListWindowsRegistryPlugin(
     try:
       mrulist = self._ParseMRUListValue(registry_key)
     except (ValueError, errors.ParseError) as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to parse MRUList value with error: {0!s}'.format(exception))
       return
 
@@ -125,7 +125,7 @@ class BaseMRUListWindowsRegistryPlugin(
         break
 
       if found_terminator:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'found additional MRUList entries after terminator in key: '
             '{0:s}.').format(registry_key.path))
 
@@ -183,7 +183,7 @@ class MRUListStringWindowsRegistryPlugin(BaseMRUListWindowsRegistryPlugin):
 
     value = registry_key.GetValueByName('{0:s}'.format(entry_letter))
     if value is None:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'missing MRUList value: {0:s} in key: {1:s}.'.format(
               entry_letter, registry_key.path))
 
@@ -201,7 +201,7 @@ class MRUListStringWindowsRegistryPlugin(BaseMRUListWindowsRegistryPlugin):
         value_string = self._ReadStructureFromByteStream(
             value.data, 0, utf16le_string_map)
       except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to parse MRUList entry value: {0:s} with error: '
             '{1!s}').format(entry_letter, exception))
 
@@ -259,12 +259,12 @@ class MRUListShellItemListWindowsRegistryPlugin(
 
     value = registry_key.GetValueByName('{0:s}'.format(entry_letter))
     if value is None:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'missing MRUList value: {0:s} in key: {1:s}.'.format(
               entry_letter, registry_key.path))
 
     elif not value.DataIsBinaryData():
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'Non-binary MRUList entry value: {1:s} in key: {2:s}.'.format(
               entry_letter, registry_key.path))
 

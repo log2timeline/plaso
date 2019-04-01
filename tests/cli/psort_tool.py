@@ -286,8 +286,8 @@ optional arguments:
     self.assertEqual(TestOutputModuleMissingParameters.parameters, 'foobar')
 
     expected_line = (
-        'FILE/OS Metadata Modification Time OS:/tmp/test/test_data/syslog '
-        'Type: file')
+        'FILE/OS Metadata Modification Time '
+        'OS:/private/tmp/test/test_data/syslog Type: file')
     self.assertIn(expected_line, lines)
 
     output_manager.OutputManager.DeregisterOutput(

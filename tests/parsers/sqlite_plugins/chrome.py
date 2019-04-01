@@ -24,7 +24,7 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     # The History file contains 71 events (69 page visits, 1 file downloads).
     self.assertEqual(storage_writer.number_of_events, 71)
 
@@ -87,7 +87,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-57.0.2987.133'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     # The History file contains 2 events (1 page visits, 1 file downloads).
     self.assertEqual(storage_writer.number_of_events, 2)
 
@@ -147,7 +147,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-58.0.3029.96'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     # The History file contains 2 events (1 page visits, 1 file downloads).
     self.assertEqual(storage_writer.number_of_events, 2)
 
@@ -207,7 +207,7 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['History-59.0.3071.86'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     # The History file contains 2 events (1 page visits, 1 file downloads).
     self.assertEqual(storage_writer.number_of_events, 2)
 

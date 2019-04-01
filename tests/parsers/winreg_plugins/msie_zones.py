@@ -57,7 +57,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
 
     events = list(storage_writer.GetEvents())
@@ -106,7 +106,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
 
     events = list(storage_writer.GetEvents())
@@ -159,7 +159,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
 
     events = list(storage_writer.GetEvents())
@@ -289,7 +289,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin, file_entry=test_file_entry)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
 
     events = list(storage_writer.GetEvents())

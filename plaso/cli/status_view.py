@@ -438,15 +438,15 @@ class StatusView(object):
       else:
         self._output_writer.Write('Processing completed.\n')
 
-      number_of_errors = (
-          processing_status.foreman_status.number_of_produced_errors)
-      if number_of_errors:
+      number_of_warnings = (
+          processing_status.foreman_status.number_of_produced_warnings)
+      if number_of_warnings:
         output_text = '\n'.join([
             '',
-            ('Number of errors encountered while extracting events: '
-             '{0:d}.').format(number_of_errors),
+            ('Number of warnings generated while extracting events: '
+             '{0:d}.').format(number_of_warnings),
             '',
-            'Use pinfo to inspect errors in more detail.',
+            'Use pinfo to inspect warnings in more detail.',
             ''])
         self._output_writer.Write(output_text)
 

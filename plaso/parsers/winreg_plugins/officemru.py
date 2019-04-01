@@ -106,7 +106,7 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
       try:
         timestamp = int(values[0][0], 16)
       except ValueError:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to convert filetime string to an integer for '
             'value: {0:s}.').format(registry_value.name))
         continue

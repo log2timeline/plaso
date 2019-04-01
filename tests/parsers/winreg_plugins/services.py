@@ -99,7 +99,7 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     plugin = services.ServicesPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())

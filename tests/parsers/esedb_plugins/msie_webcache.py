@@ -24,7 +24,7 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     storage_writer = self._ParseESEDBFileWithPlugin(
         ['WebCacheV01.dat'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1354)
 
     # The order in which ESEDBPlugin._GetRecordValues() generates events is

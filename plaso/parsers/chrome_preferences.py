@@ -124,7 +124,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
     for extension_id, extension in sorted(settings_dict.items()):
       install_time = extension.get('install_time', None)
       if not install_time:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'installation time missing for extension ID {0:s}'.format(
                 extension_id))
         continue
@@ -132,14 +132,14 @@ class ChromePreferencesParser(interface.FileObjectParser):
       try:
         install_time = int(install_time, 10)
       except ValueError:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to convert installation time for extension ID '
             '{0:s}').format(extension_id))
         continue
 
       manifest = extension.get('manifest', None)
       if not manifest:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'manifest missing for extension ID {0:s}'.format(extension_id))
         continue
 

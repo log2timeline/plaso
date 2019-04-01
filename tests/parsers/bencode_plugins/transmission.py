@@ -23,7 +23,7 @@ class BencodeTest(test_lib.BencodePluginTestCase):
     parser = bencode_parser.BencodeParser()
     storage_writer = self._ParseFile(['bencode_transmission'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
 
     # The order in which BencodeParser generates events is nondeterministic

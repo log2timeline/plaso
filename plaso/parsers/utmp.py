@@ -94,14 +94,16 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
       username = entry.username.split(b'\x00')[0]
       username = username.decode(encoding)
     except UnicodeDecodeError:
-      parser_mediator.ProduceExtractionError('unable to decode username string')
+      parser_mediator.ProduceExtractionWarning(
+          'unable to decode username string')
       username = None
 
     try:
       terminal = entry.terminal.split(b'\x00')[0]
       terminal = terminal.decode(encoding)
     except UnicodeDecodeError:
-      parser_mediator.ProduceExtractionError('unable to decode terminal string')
+      parser_mediator.ProduceExtractionWarning(
+          'unable to decode terminal string')
       terminal = None
 
     if terminal == '~':
@@ -111,7 +113,8 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
       hostname = entry.hostname.split(b'\x00')[0]
       hostname = hostname.decode(encoding)
     except UnicodeDecodeError:
-      parser_mediator.ProduceExtractionError('unable to decode hostname string')
+      parser_mediator.ProduceExtractionWarning(
+          'unable to decode hostname string')
       hostname = None
 
     if not hostname or hostname == ':0':

@@ -90,7 +90,7 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistWithPlugin(
         plugin, 'plist_binary', top_level)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     # Correct filename with odd filename cAsinG. Adding an extra useless key.
@@ -98,7 +98,7 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistWithPlugin(
         plugin, 'pLiSt_BinAry', top_level)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     # Test wrong filename.

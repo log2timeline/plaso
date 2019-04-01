@@ -23,7 +23,7 @@ class AndroidWebViewCache(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['webviewCache.db'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 10)
 
     events = list(storage_writer.GetEvents())

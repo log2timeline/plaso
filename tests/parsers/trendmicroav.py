@@ -22,7 +22,7 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
     parser = trendmicroav.OfficeScanVirusDetectionParser()
     storage_writer = self._ParseFile(['pccnt35.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
 
     # The order in which DSVParser generates events is nondeterministic
@@ -55,7 +55,7 @@ class TrendMicroUnitTest(test_lib.ParserTestCase):
     parser = trendmicroav.OfficeScanWebReputationParser()
     storage_writer = self._ParseFile(['OfcUrlf.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
 
     # The order in which DSVParser generates events is nondeterministic

@@ -263,7 +263,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
     parser.ParseFileObject(parser_mediator, file_object)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 0)
 
     # Test with attribute group data too small.
@@ -275,7 +275,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
     parser.ParseFileObject(parser_mediator, file_object)
 
-    self.assertEqual(storage_writer.number_of_errors, 1)
+    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 0)
 
     # Test attribute with date time value.
@@ -291,7 +291,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
     parser.ParseFileObject(parser_mediator, file_object)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
   @shared_test_lib.skipUnlessHasTestFile(['mac_cups_ipp'])
@@ -301,7 +301,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
     parser = cups_ipp.CupsIppParser()
     storage_writer = self._ParseFile(['mac_cups_ipp'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 3)
 
     events = list(storage_writer.GetSortedEvents())
