@@ -30,7 +30,7 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistWithPlugin(
         plugin, 'single', top_level_dict_single)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     # The order in which PlistParser generates events is nondeterministic
@@ -80,7 +80,7 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
     storage_writer = self._ParsePlistWithPlugin(
         plugin, 'nested', top_level_dict_many_keys)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
 
     # The order in which PlistParser generates events is nondeterministic

@@ -30,7 +30,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     # windows:lnk:link 33
     # windows:distributed_link_tracking:creation: 44
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 88)
 
     events = list(storage_writer.GetEvents())
@@ -122,7 +122,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     # olecf:dest_list:entry: 2
     # windows:lnk:link 2
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
 
     events = list(storage_writer.GetEvents())

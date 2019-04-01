@@ -1,22 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Tests for the errors attribute containers."""
+"""Tests for the warnings attribute containers."""
 
 from __future__ import unicode_literals
 
 import unittest
 
-from plaso.containers import errors
+from plaso.containers import warnings
 
 from tests import test_lib as shared_test_lib
 
 
-class ExtractionErrorTest(shared_test_lib.BaseTestCase):
-  """Tests for the extraction error attribute container."""
+class ExtractionWarningTest(shared_test_lib.BaseTestCase):
+  """Tests for the extraction warning attribute container."""
 
   def testGetAttributeNames(self):
     """Tests the GetAttributeNames function."""
-    attribute_container = errors.ExtractionError()
+    attribute_container = warnings.ExtractionWarning()
 
     expected_attribute_names = [
         'message', 'parser_chain', 'path_spec']

@@ -414,7 +414,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       else:
         if len(line) > 80:
           line = '{0:s}...'.format(line[:77])
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to parse log line: {0:s} at offset: {1:d}'.format(
                 repr(line), self._current_offset))
         consecutive_line_failures += 1
@@ -429,7 +429,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       try:
         line = self._ReadLine(text_file_object, max_len=self.MAX_LINE_LENGTH)
       except UnicodeDecodeError:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to read and decode log line at offset {0:d}'.format(
                 self._current_offset))
         break
@@ -664,7 +664,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
           self.ParseRecord(parser_mediator, key, tokens)
           consecutive_line_failures = 0
         except (errors.ParseError, errors.TimestampError) as exception:
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'unable to parse record: {0:s} with error: {1!s}'.format(
                   key, exception))
 
@@ -675,7 +675,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
         if odd_line:
           if len(odd_line) > 80:
             odd_line = '{0:s}...'.format(odd_line[:77])
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'unable to parse log line: {0:s}'.format(repr(odd_line)))
           consecutive_line_failures += 1
           if (consecutive_line_failures >
@@ -686,7 +686,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       try:
         text_reader.ReadLines(file_object)
       except UnicodeDecodeError as exception:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to read lines with error: {0!s}'.format(exception))
 
   # pylint: disable=redundant-returns-doc

@@ -60,13 +60,13 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
       header = self._ReadStructureFromByteStream(
           value_data, 0, header_map)
     except (ValueError, errors.ParseError) as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to parse header value with error: {0!s}'.format(
               exception))
       return
 
     if header.format_version not in (1, 9, 12, 19):
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unsupported format version: {0:d}'.format(header.format_version))
       return
 
@@ -90,7 +90,7 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
         entry_footer = self._ReadStructureFromByteStream(
             value_data[value_data_offset:], value_data_offset, entry_footer_map)
       except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to parse sentinel at offset: 0x{0:08x} '
             'with error: {1!s}').format(value_data_offset, exception))
         return
@@ -108,7 +108,7 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
         entry_header = self._ReadStructureFromByteStream(
             value_data[value_data_offset:], value_data_offset, entry_header_map)
       except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to parse entry header at offset: 0x{0:08x} '
             'with error: {1!s}').format(value_data_offset, exception))
         break
@@ -132,7 +132,7 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
         entry_footer = self._ReadStructureFromByteStream(
             value_data[value_data_offset:], value_data_offset, entry_footer_map)
       except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to parse entry footer at offset: 0x{0:08x} '
             'with error: {1!s}').format(value_data_offset, exception))
         return

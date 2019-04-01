@@ -193,7 +193,7 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
           page_header, header_size = self._ParseDLSPageHeader(
               file_object, file_offset)
         except errors.ParseError as exception:
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'Unable to parse page header with error: {0!s}'.format(
                   exception))
           break
@@ -212,7 +212,7 @@ class FseventsdParser(dtfabric_parser.DtFabricBaseParser):
             file_object, file_offset, record_map)
         file_offset += record_length
       except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'Unable to parse page record with error: {0!s}'.format(
                 exception))
         break

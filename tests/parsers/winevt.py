@@ -29,7 +29,7 @@ class WinEvtParserTest(test_lib.ParserTestCase):
     #	Number of recovered records : 437
     #	Log type                    : System
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, (6063 + 437) * 2)
 
     events = list(storage_writer.GetEvents())

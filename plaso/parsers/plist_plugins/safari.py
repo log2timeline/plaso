@@ -56,7 +56,7 @@ class SafariHistoryPlugin(interface.PlistPlugin):
     """
     format_version = match.get('WebHistoryFileVersion', None)
     if format_version != 1:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unsupported Safari history version: {0!s}'.format(format_version))
       return
 
@@ -66,14 +66,14 @@ class SafariHistoryPlugin(interface.PlistPlugin):
     for history_entry in match.get('WebHistoryDates', {}):
       last_visited_date = history_entry.get('lastVisitedDate', None)
       if last_visited_date is None:
-        parser_mediator.ProduceExtractionError('missing last visited date')
+        parser_mediator.ProduceExtractionWarning('missing last visited date')
         continue
 
       try:
         # Last visited date is a string containing a floating point value.
         timestamp = float(last_visited_date)
       except (TypeError, ValueError):
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to convert last visited date {0:s}'.format(
                 last_visited_date))
         continue

@@ -267,7 +267,7 @@ class ESEDBPlugin(plugins.BasePlugin):
         except Exception as exception:  # pylint: disable=broad-except
           logger.error(exception)
           value = None
-          parser_mediator.ProduceExtractionError((
+          parser_mediator.ProduceExtractionWarning((
               'unable to parse value: {0:s} with callback: {1:s} with error: '
               '{2!s}').format(column_name, value_callback_method, exception))
 
@@ -276,7 +276,7 @@ class ESEDBPlugin(plugins.BasePlugin):
           value = self._GetRecordValue(record, value_entry)
         except ValueError as exception:
           value = None
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'unable to parse value: {0:s} with error: {1!s}'.format(
                   column_name, exception))
 

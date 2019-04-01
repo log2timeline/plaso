@@ -325,7 +325,7 @@ class SystemdJournalParser(dtfabric_parser.DtFabricBaseParser):
       try:
         fields = self._ParseJournalEntry(file_object, entry_object_offset)
       except errors.ParseError as exception:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'Unable to parse journal entry at offset: 0x{0:08x} with '
             'error: {1!s}').format(entry_object_offset, exception))
         return

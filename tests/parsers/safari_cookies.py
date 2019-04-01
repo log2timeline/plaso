@@ -34,7 +34,7 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
     # * 182 events from the safari cookie parser
     # * 25 event from the cookie plugins
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 207)
     self.assertEqual(len(cookie_events), 182)
 

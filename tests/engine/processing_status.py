@@ -13,16 +13,16 @@ class ProcessStatusTest(unittest.TestCase):
   """Tests the process status."""
 
   def testUpdateNumberOfErrors(self):
-    """Tests the UpdateNumberOfErrors function."""
+    """Tests the UpdateNumberOfWarnings function."""
     process_status = processing_status.ProcessStatus()
 
-    process_status.UpdateNumberOfErrors(5, 5)
+    process_status.UpdateNumberOfWarnings(5, 5)
 
     with self.assertRaises(ValueError):
-      process_status.UpdateNumberOfErrors(1, 10)
+      process_status.UpdateNumberOfWarnings(1, 10)
 
     with self.assertRaises(ValueError):
-      process_status.UpdateNumberOfErrors(10, 1)
+      process_status.UpdateNumberOfWarnings(10, 1)
 
   def testUpdateNumberOfEventReports(self):
     """Tests the UpdateNumberOfEventReports function."""
@@ -110,8 +110,8 @@ class ProcessingStatusTest(unittest.TestCase):
     """Tests the UpdateWorkerStatus function."""
     status = processing_status.ProcessingStatus()
     status.UpdateWorkerStatus(
-        'test', 'Idle', 12345, 2000000, 'test process',
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        'test', 'Idle', 12345, 2000000, 'test process', 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 
 class TasksStatusTest(unittest.TestCase):

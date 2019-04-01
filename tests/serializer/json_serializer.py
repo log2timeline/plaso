@@ -128,7 +128,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         sorted(analysis_report_dict.items()),
         sorted(expected_analysis_report_dict.items()))
 
-  # TODO: add ExtractionError tests.
+  # TODO: add ExtractionWarning tests.
 
   def testReadAndWriteSerializedEventObject(self):
     """Test ReadSerialized and WriteSerialized of EventObject."""

@@ -62,16 +62,16 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       dict[str, object]: status attributes, indexed by name.
     """
     if self._parser_mediator:
-      number_of_produced_errors = (
-          self._parser_mediator.number_of_produced_errors)
       number_of_produced_events = (
           self._parser_mediator.number_of_produced_events)
       number_of_produced_sources = (
           self._parser_mediator.number_of_produced_event_sources)
+      number_of_produced_warnings = (
+          self._parser_mediator.number_of_produced_warnings)
     else:
-      number_of_produced_errors = None
       number_of_produced_events = None
       number_of_produced_sources = None
+      number_of_produced_warnings = None
 
     if self._extraction_worker and self._parser_mediator:
       last_activity_timestamp = max(
@@ -99,15 +99,15 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     status = {
         'display_name': self._current_display_name,
         'identifier': self._name,
-        'number_of_consumed_errors': None,
+        'last_activity_timestamp': last_activity_timestamp,
         'number_of_consumed_event_tags': None,
         'number_of_consumed_events': self._number_of_consumed_events,
         'number_of_consumed_sources': self._number_of_consumed_sources,
-        'number_of_produced_errors': number_of_produced_errors,
+        'number_of_consumed_warnings': None,
         'number_of_produced_event_tags': None,
         'number_of_produced_events': number_of_produced_events,
         'number_of_produced_sources': number_of_produced_sources,
-        'last_activity_timestamp': last_activity_timestamp,
+        'number_of_produced_warnings': number_of_produced_warnings,
         'processing_status': processing_status,
         'task_identifier': task_identifier,
         'used_memory': used_memory}
@@ -250,7 +250,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
           '{0:s}').format(self._current_display_name))
 
     except Exception as exception:  # pylint: disable=broad-except
-      parser_mediator.ProduceExtractionError((
+      parser_mediator.ProduceExtractionWarning((
           'unable to process path specification with error: '
           '{0!s}').format(exception), path_spec=path_spec)
 

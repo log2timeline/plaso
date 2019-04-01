@@ -13,7 +13,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 
 from plaso.containers import event_sources
-from plaso.containers import errors as error_containers
+from plaso.containers import warnings
 from plaso.engine import extractors
 from plaso.engine import plaso_queue
 from plaso.engine import zeromq_queue
@@ -120,16 +120,16 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._merge_task = None
     self._merge_task_on_hold = None
-    self._number_of_consumed_errors = 0
     self._number_of_consumed_event_tags = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
-    self._number_of_produced_errors = 0
+    self._number_of_consumed_warnings = 0
     self._number_of_produced_event_tags = 0
     self._number_of_produced_events = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
+    self._number_of_produced_warnings = 0
     self._number_of_worker_processes = 0
     self._path_spec_extractor = extractors.PathSpecExtractor()
     self._processing_configuration = None
@@ -291,9 +291,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
               self._merge_task, 'merge_resumed')
 
       self._status = definitions.PROCESSING_STATUS_RUNNING
-      self._number_of_produced_errors = storage_writer.number_of_errors
       self._number_of_produced_events = storage_writer.number_of_events
       self._number_of_produced_sources = storage_writer.number_of_event_sources
+      self._number_of_produced_warnings = storage_writer.number_of_warnings
 
   def _ProcessSources(
       self, source_path_specs, storage_writer, filter_find_specs=None):
@@ -311,16 +311,16 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._processing_profiler.StartTiming('process_sources')
 
     self._status = definitions.PROCESSING_STATUS_COLLECTING
-    self._number_of_consumed_errors = 0
     self._number_of_consumed_event_tags = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
-    self._number_of_produced_errors = 0
+    self._number_of_consumed_warnings = 0
     self._number_of_produced_event_tags = 0
     self._number_of_produced_events = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
+    self._number_of_produced_warnings = 0
 
     path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
         source_path_specs, find_specs=filter_find_specs,
@@ -350,9 +350,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     else:
       self._status = definitions.PROCESSING_STATUS_COMPLETED
 
-    self._number_of_produced_errors = storage_writer.number_of_errors
     self._number_of_produced_events = storage_writer.number_of_events
     self._number_of_produced_sources = storage_writer.number_of_event_sources
+    self._number_of_produced_warnings = storage_writer.number_of_warnings
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming('process_sources')
@@ -465,10 +465,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._status_update_callback(self._processing_status)
 
     for task in self._task_manager.GetFailedTasks():
-      error = error_containers.ExtractionError(
+      warning = warnings.ExtractionWarning(
           message='Worker failed to process path specification',
           path_spec=task.path_spec)
-      self._storage_writer.AddError(error)
+      self._storage_writer.AddWarning(warning)
       self._processing_status.error_path_specs.append(task.path_spec)
 
     self._status = definitions.PROCESSING_STATUS_IDLE
@@ -616,9 +616,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         self._number_of_consumed_sources, self._number_of_produced_sources,
         self._number_of_consumed_events, self._number_of_produced_events,
         self._number_of_consumed_event_tags,
-        self._number_of_produced_event_tags,
-        self._number_of_consumed_errors, self._number_of_produced_errors,
-        self._number_of_consumed_reports, self._number_of_produced_reports)
+        self._number_of_produced_event_tags, self._number_of_consumed_reports,
+        self._number_of_produced_reports, self._number_of_consumed_warnings,
+        self._number_of_produced_warnings)
 
   def _UpdateProcessingStatus(self, pid, process_status, used_memory):
     """Updates the processing status.
@@ -644,10 +644,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._RaiseIfNotMonitored(pid)
 
     display_name = process_status.get('display_name', '')
-    number_of_consumed_errors = process_status.get(
-        'number_of_consumed_errors', None)
-    number_of_produced_errors = process_status.get(
-        'number_of_produced_errors', None)
 
     number_of_consumed_event_tags = process_status.get(
         'number_of_consumed_event_tags', None)
@@ -669,6 +665,11 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     number_of_produced_sources = process_status.get(
         'number_of_produced_sources', None)
 
+    number_of_consumed_warnings = process_status.get(
+        'number_of_consumed_warnings', None)
+    number_of_produced_warnings = process_status.get(
+        'number_of_produced_warnings', None)
+
     if processing_status != definitions.PROCESSING_STATUS_IDLE:
       last_activity_timestamp = process_status.get(
           'last_activity_timestamp', 0.0)
@@ -688,8 +689,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
         number_of_consumed_event_tags, number_of_produced_event_tags,
-        number_of_consumed_errors, number_of_produced_errors,
-        number_of_consumed_reports, number_of_produced_reports)
+        number_of_consumed_reports, number_of_produced_reports,
+        number_of_consumed_warnings, number_of_produced_warnings)
 
     task_identifier = process_status.get('task_identifier', '')
     if not task_identifier:

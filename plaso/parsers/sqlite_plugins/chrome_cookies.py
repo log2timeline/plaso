@@ -171,7 +171,7 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
             url=url)
 
       except Exception as exception:  # pylint: disable=broad-except
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'plugin: {0:s} unable to parse cookie with error: {1!s}'.format(
                 plugin.NAME, exception))
 

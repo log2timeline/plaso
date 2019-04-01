@@ -73,12 +73,12 @@ class BagMRUWindowsRegistryPlugin(
     path_segment = 'N/A'
     value_string = ''
     if value is None:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'Missing MRUListEx entry value: {0:d} in key: {1:s}.'.format(
               entry_number, registry_key.path))
 
     elif not value.DataIsBinaryData():
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'Non-binary MRUListEx entry value: {0:d} in key: {1:s}.'.format(
               entry_number, registry_key.path))
 
@@ -141,7 +141,7 @@ class BagMRUWindowsRegistryPlugin(
     try:
       mrulistex = self._ParseMRUListExValue(registry_key)
     except (ValueError, errors.ParseError) as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to parse MRUListEx value with error: {0!s}'.format(exception))
       return
 
@@ -159,7 +159,7 @@ class BagMRUWindowsRegistryPlugin(
         continue
 
       if found_terminator:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'found additional MRUListEx entries after terminator in key: '
             '{0:s}.').format(registry_key.path))
 
@@ -187,7 +187,7 @@ class BagMRUWindowsRegistryPlugin(
       sub_key_name = '{0:d}'.format(entry_number)
       sub_key = registry_key.GetSubkeyByName(sub_key_name)
       if not sub_key:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'Missing BagMRU sub key: {0:d} in key: {1:s}.'.format(
                 entry_number, registry_key.path))
         continue

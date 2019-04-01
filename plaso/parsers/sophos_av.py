@@ -80,7 +80,7 @@ class SophosAVLogParser(text_parser.PyparsingSingleLineTextParser):
       # TODO: check if date and time values are local time or in UTC.
       date_time.is_local_time = True
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'invalid date time value: {0!s}'.format(structure.date_time))
       return
 

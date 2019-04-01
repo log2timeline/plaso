@@ -320,7 +320,7 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
     try:
       date_time.CopyFromStringISO8601(structure.date)
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'invalid date time value: {0:s}'.format(structure.date))
       return
 
@@ -395,7 +395,7 @@ class SantaParser(text_parser.PyparsingSingleLineTextParser):
               new_date_time, definitions.TIME_DESCRIPTION_FIRST_CONNECTED)
           parser_mediator.ProduceEventWithEventData(new_event, event_data)
         except ValueError:
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'invalid date time value: {0:s}'.format(event_data.appearance))
 
       event = time_events.DateTimeValuesEvent(

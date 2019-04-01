@@ -216,14 +216,14 @@ class WinIISParser(text_parser.PyparsingSingleLineTextParser):
           self._year, self._month, self._day_of_month, hours, minutes, seconds)
 
     else:
-      parser_mediator.ProduceExtractionError('missing date and time values')
+      parser_mediator.ProduceExtractionWarning('missing date and time values')
       return
 
     try:
       date_time = dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'invalid date time value: {0!s}'.format(time_elements_tuple))
       return
 

@@ -25,7 +25,7 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
         ['selinux.log'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_errors, 4)
+    self.assertEqual(storage_writer.number_of_warnings, 4)
     self.assertEqual(storage_writer.number_of_events, 7)
 
     events = list(storage_writer.GetEvents())

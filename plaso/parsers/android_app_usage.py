@@ -80,13 +80,13 @@ class AndroidAppUsageParser(interface.FileObjectParser):
 
         last_resume_time = part_node.get('lrt', None)
         if last_resume_time is None:
-          parser_mediator.ProduceExtractionError('missing last resume time.')
+          parser_mediator.ProduceExtractionWarning('missing last resume time.')
           continue
 
         try:
           last_resume_time = int(last_resume_time, 10)
         except ValueError:
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'unsupported last resume time: {0:s}.'.format(last_resume_time))
           continue
 

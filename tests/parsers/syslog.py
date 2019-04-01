@@ -25,7 +25,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
         ['syslog_rsyslog'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 8)
 
   @shared_test_lib.skipUnlessHasTestFile(['syslog_osx'])
@@ -37,7 +37,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
         ['syslog_osx'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2)
 
   @shared_test_lib.skipUnlessHasTestFile(['syslog_chromeos'])
@@ -49,7 +49,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
         ['syslog_chromeos'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 8)
 
     events = list(storage_writer.GetSortedEvents())
@@ -94,7 +94,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
         ['syslog'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_errors, 1)
+    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 16)
 
     events = list(storage_writer.GetSortedEvents())
@@ -147,7 +147,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
         ['syslog'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_errors, 2)
+    self.assertEqual(storage_writer.number_of_warnings, 2)
     self.assertEqual(storage_writer.number_of_events, 15)
 
 

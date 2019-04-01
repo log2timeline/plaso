@@ -111,7 +111,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
         # TODO: get encoding form XML metadata.
         property_value = property_value.decode('utf-8')
       except UnicodeDecodeError:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to decode property: {0:s}'.format(property_name))
 
     return property_value
@@ -220,7 +220,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
       event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
       parser_mediator.ProduceEventWithEventData(event, event_data)
     except ValueError as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unsupported {0:s}: {1:s} with error: {2!s}'.format(
               error_description, time_string, exception))
 
@@ -242,7 +242,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
       property_files = self._ParseRelationshipsXMLFile(xml_data)
     except (IndexError, IOError, KeyError, OverflowError, ValueError,
             zipfile.BadZipfile) as exception:
-      parser_mediator.ProduceExtractionError((
+      parser_mediator.ProduceExtractionWarning((
           'Unable to parse relationships XML file: _rels/.rels with error: '
           '{0!s}').format(exception))
       return
@@ -255,7 +255,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
         properties = self._ParsePropertiesXMLFile(xml_data)
       except (IndexError, IOError, KeyError, OverflowError, ValueError,
               zipfile.BadZipfile) as exception:
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'Unable to parse properties XML file: {0:s} with error: '
             '{1!s}').format(path, exception))
         continue

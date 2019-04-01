@@ -115,7 +115,7 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
 
       last_typed_time = history_item.get('last_typed', None)
       if last_typed_time is None:
-        parser_mediator.ProduceExtractionError('missing last typed time.')
+        parser_mediator.ProduceExtractionWarning('missing last typed time.')
         continue
 
       date_time = dfdatetime_time_elements.TimeElements()
@@ -123,7 +123,7 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
       try:
         date_time.CopyFromStringISO8601(last_typed_time)
       except ValueError as exception:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unsupported last typed time: {0:s} with error: {1!s}.'.format(
                 last_typed_time, exception))
         continue
@@ -168,7 +168,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
     try:
       title = text_file_object.readline()
     except UnicodeDecodeError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to read and decode title')
       return False
 
@@ -178,21 +178,21 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
     try:
       url = text_file_object.readline()
     except UnicodeDecodeError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to read and decode url')
       return False
 
     try:
       timestamp = text_file_object.readline()
     except UnicodeDecodeError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to read and decode timestamp')
       return False
 
     try:
       popularity_index = text_file_object.readline()
     except UnicodeDecodeError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to read and decode popularity index')
       return False
 
@@ -208,7 +208,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
     try:
       event_data.popularity_index = int(popularity_index, 10)
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to convert popularity index: {0:s}'.format(popularity_index))
 
     if event_data.popularity_index < 0:
@@ -220,7 +220,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
     try:
       timestamp = int(timestamp, 10)
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to convert timestamp: {0:s}'.format(timestamp))
       timestamp = None
 

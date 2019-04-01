@@ -82,7 +82,7 @@ class WinPrefetchParser(interface.FileObjectParser):
     try:
       scca_file.open_file_object(file_object)
     except IOError as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to open file with error: {0!s}'.format(exception))
       return
 
@@ -127,7 +127,7 @@ class WinPrefetchParser(interface.FileObjectParser):
     for entry_index, file_metrics in enumerate(scca_file.file_metrics_entries):
       mapped_file_string = file_metrics.filename
       if not mapped_file_string:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'missing filename for file metrics entry: {0:d}'.format(
                 entry_index))
         continue
@@ -154,7 +154,7 @@ class WinPrefetchParser(interface.FileObjectParser):
 
     timestamp = scca_file.get_last_run_time_as_integer(0)
     if not timestamp:
-      parser_mediator.ProduceExtractionError('missing last run time')
+      parser_mediator.ProduceExtractionWarning('missing last run time')
       date_time = dfdatetime_semantic_time.SemanticTime('Not set')
     else:
       date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)

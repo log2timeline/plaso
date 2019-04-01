@@ -148,7 +148,7 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
       date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
           time_elements_tuple=structure.header_date_time)
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'invalid date time value: {0!s}'.format(structure.header_date_time))
       return
 
@@ -184,7 +184,7 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
       date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'invalid date time value: {0!s}'.format(structure.date_time))
       return
 
@@ -335,7 +335,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
       date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'invalid date time value: {0!s}'.format(structure.date_time))
       return
 

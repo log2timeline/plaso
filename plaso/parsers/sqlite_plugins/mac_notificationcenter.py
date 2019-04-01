@@ -114,7 +114,7 @@ class MacNotificationCenterPlugin(interface.SQLitePlugin):
       req = full_biplist['req']
 
     except (biplist.InvalidPlistException, KeyError) as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to read plist from database with error: {0!s}'.format(
               exception))
       return
