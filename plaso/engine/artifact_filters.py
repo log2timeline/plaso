@@ -134,8 +134,7 @@ class ArtifactDefinitionsFilterHelper(object):
             artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY):
         for key_path in set(source.keys):
           if ArtifactDefinitionsFilterHelper.CheckKeyCompatibility(key_path):
-            specifications = self._BuildFindSpecsFromRegistrySourceKey(
-                key_path, self._knowledge_base.user_accounts)
+            specifications = self._BuildFindSpecsFromRegistrySourceKey(key_path)
             find_specs.extend(specifications)
             self.registry_artifact_names.add(definition.name)
 
@@ -155,8 +154,7 @@ class ArtifactDefinitionsFilterHelper(object):
 
         for key_path in key_paths:
           if ArtifactDefinitionsFilterHelper.CheckKeyCompatibility(key_path):
-            specifications = self._BuildFindSpecsFromRegistrySourceKey(
-                key_path, self._knowledge_base.user_accounts)
+            specifications = self._BuildFindSpecsFromRegistrySourceKey(key_path)
             find_specs.extend(specifications)
             self.registry_artifact_names.add(definition.name)
 
@@ -255,13 +253,11 @@ class ArtifactDefinitionsFilterHelper(object):
 
     return find_specs
 
-  def _BuildFindSpecsFromRegistrySourceKey(self, key_path, user_accounts):
+  def _BuildFindSpecsFromRegistrySourceKey(self, key_path):
     """Build find specifications from a Windows Registry source type.
 
     Args:
       key_path (str): Windows Registry key path defined by the source.
-      user_accounts (list[str]): identified user accounts stored in the
-          knowledge base.
 
     Returns:
       list[dfwinreg.FindSpec]: find specifications for the Windows Registry
@@ -276,9 +272,6 @@ class ArtifactDefinitionsFilterHelper(object):
       key_path_glob_upper = key_path_glob.upper()
       if key_path_glob_upper.startswith('HKEY_USERS\\%%USERS.SID%%'):
         key_path_glob = 'HKEY_CURRENT_USER{0:s}'.format(key_path_glob[26:])
-
-      # TODO: add support for %%users.sid%% in WindowsUninstallKeys.
-      _ = user_accounts
 
       find_spec = registry_searcher.FindSpec(key_path_glob=key_path_glob)
       find_specs.append(find_spec)
