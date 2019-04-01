@@ -206,8 +206,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
     self._number_of_consumed_warnings = 0
-    self._number_of_duplicate_events = 0
-    self._number_of_macb_grouped_events = 0
     self._number_of_produced_event_tags = 0
     self._number_of_produced_events = 0
     self._number_of_produced_reports = 0
@@ -455,10 +453,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       use_time_slicer (Optional[bool]): True if the 'time slicer' should be
           used. The 'time slicer' will provide a context of events around
           an event of interest.
-
-    Returns:
-      collections.Counter: counter that tracks the number of unique events
-          read from storage.
     """
     self._status = definitions.PROCESSING_STATUS_EXPORTING
 
@@ -476,8 +470,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     filter_limit = getattr(event_filter, 'limit', None)
     forward_entries = 0
 
-    number_of_filtered_events = 0
-    number_of_events_from_time_slice = 0
+    self._events_status.number_of_filtered_events = 0
+    self._events_status.number_of_events_from_time_slice = 0
 
     for event in storage_reader.GetSortedEvents(time_range=time_slice_range):
       event_data_identifier = event.GetEventDataIdentifier()
@@ -493,7 +487,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           storage_reader, event_identifier)
 
       if time_slice_range and event.timestamp != time_slice.event_timestamp:
-        number_of_events_from_time_slice += 1
+        self._events_status.number_of_events_from_time_slice += 1
 
       if event_filter:
         filter_match = event_filter.Match(event)
@@ -503,23 +497,23 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       # pylint: disable=singleton-comparison
       if filter_match == False:
         if not time_slice_buffer:
-          number_of_filtered_events += 1
+          self._events_status.number_of_filtered_events += 1
 
         elif forward_entries == 0:
           time_slice_buffer.Append(event)
-          number_of_filtered_events += 1
+          self._events_status.number_of_filtered_events += 1
 
         elif forward_entries <= time_slice_buffer.size:
           self._ExportEvent(
               output_module, event, deduplicate_events=deduplicate_events)
           self._number_of_consumed_events += 1
-          number_of_events_from_time_slice += 1
+          self._events_status.number_of_events_from_time_slice += 1
           forward_entries += 1
 
         else:
           # We reached the maximum size of the time slice and don't need to
           # include other entries.
-          number_of_filtered_events += 1
+          self._events_status.number_of_filtered_events += 1
           forward_entries = 0
 
       else:
@@ -531,8 +525,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
                 output_module, event_in_buffer,
                 deduplicate_events=deduplicate_events)
             self._number_of_consumed_events += 1
-            number_of_filtered_events += 1
-            number_of_events_from_time_slice += 1
+            self._events_status.number_of_filtered_events += 1
+            self._events_status.number_of_events_from_time_slice += 1
 
           forward_entries = 1
 
@@ -546,24 +540,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           break
 
     self._FlushExportBuffer(output_module)
-
-    events_counter = collections.Counter()
-    events_counter['Events filtered'] = number_of_filtered_events
-    events_counter['Events from time slice'] = number_of_events_from_time_slice
-    events_counter['Events processed'] = self._number_of_consumed_events
-
-    if self._number_of_duplicate_events:
-      events_counter['Duplicate events removed'] = (
-          self._number_of_duplicate_events)
-
-    if self._number_of_macb_grouped_events:
-      events_counter['Events MACB grouped'] = (
-          self._number_of_macb_grouped_events)
-
-    if filter_limit:
-      events_counter['Limited By'] = filter_limit
-
-    return events_counter
 
   def _FlushExportBuffer(self, output_module, deduplicate_events=True):
     """Flushes buffered events and writes them to the output module.
@@ -581,7 +557,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     for macb_group_identifier, content_identifier, event in generator:
       if deduplicate_events and last_content_identifier == content_identifier:
-        self._number_of_duplicate_events += 1
+        self._events_status.number_of_duplicate_events += 1
         continue
 
       if macb_group_identifier is None:
@@ -600,7 +576,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           output_module.WriteEventMACBGroup(macb_group)
           macb_group = [event]
 
-        self._number_of_macb_grouped_events += 1
+        self._events_status.number_of_macb_grouped_events += 1
 
       last_macb_group_identifier = macb_group_identifier
       last_content_identifier = content_identifier
@@ -664,20 +640,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       for pid in list(self._process_information_per_pid.keys()):
         self._CheckStatusAnalysisProcess(pid)
 
-      used_memory = self._process_information.GetUsedMemory() or 0
-
-      display_name = getattr(self._merge_task, 'identifier', '')
-
-      self._processing_status.UpdateForemanStatus(
-          self._name, self._status, self._pid, used_memory, display_name,
-          self._number_of_consumed_sources, self._number_of_produced_sources,
-          self._number_of_consumed_events, self._number_of_produced_events,
-          self._number_of_consumed_event_tags,
-          self._number_of_produced_event_tags, self._number_of_consumed_reports,
-          self._number_of_produced_reports, self._number_of_consumed_warnings,
-          self._number_of_produced_warnings)
-
-      self._processing_status.UpdateEventsStatus(self._events_status)
+      self._UpdateForemanProcessStatus()
 
       if self._status_update_callback:
         self._status_update_callback(self._processing_status)
@@ -726,6 +689,23 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
       for event_queue in self._event_queues.values():
         event_queue.Close(abort=True)
+
+  def _UpdateForemanProcessStatus(self):
+    """Update the foreman process status."""
+    used_memory = self._process_information.GetUsedMemory() or 0
+
+    display_name = getattr(self._merge_task, 'identifier', '')
+
+    self._processing_status.UpdateForemanStatus(
+        self._name, self._status, self._pid, used_memory, display_name,
+        self._number_of_consumed_sources, self._number_of_produced_sources,
+        self._number_of_consumed_events, self._number_of_produced_events,
+        self._number_of_consumed_event_tags,
+        self._number_of_produced_event_tags,
+        self._number_of_consumed_warnings, self._number_of_produced_warnings,
+        self._number_of_consumed_reports, self._number_of_produced_reports)
+
+    self._processing_status.UpdateEventsStatus(self._events_status)
 
   def _UpdateProcessingStatus(self, pid, process_status, used_memory):
     """Updates the processing status.
@@ -899,6 +879,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._analysis_plugins = {}
     self._data_location = data_location
     self._event_filter_expression = event_filter_expression
+    self._events_status = processing_status.EventsStatus()
     self._knowledge_base = knowledge_base_object
     self._status_update_callback = status_update_callback
     self._processing_configuration = processing_configuration
@@ -1002,11 +983,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       use_time_slicer (Optional[bool]): True if the 'time slicer' should be
           used. The 'time slicer' will provide a context of events around
           an event of interest.
-
-    Returns:
-      collections.Counter: counter that tracks the number of events extracted
-          from storage.
     """
+    self._events_status = processing_status.EventsStatus()
     self._processing_configuration = processing_configuration
     self._status_update_callback = status_update_callback
 
@@ -1026,7 +1004,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._StartProfiling(self._processing_configuration.profiling)
 
     try:
-      events_counter = self._ExportEvents(
+      self._ExportEvents(
           storage_reader, output_module, deduplicate_events=deduplicate_events,
           event_filter=event_filter, time_slice=time_slice,
           use_time_slicer=use_time_slicer)
@@ -1041,8 +1019,12 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     self._StopProfiling()
 
+    self._UpdateForemanProcessStatus()
+
+    if self._status_update_callback:
+      self._status_update_callback(self._processing_status)
+
     # Reset values.
     self._status_update_callback = None
     self._processing_configuration = None
-
-    return events_counter
+    self._events_status = None

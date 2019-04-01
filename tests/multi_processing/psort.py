@@ -508,10 +508,8 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
         storage_file_path)
 
     test_engine = psort.PsortMultiProcessEngine()
-    counter = test_engine.ExportEvents(
+    test_engine.ExportEvents(
         knowledge_base_object, storage_reader, output_module, configuration)
-
-    self.assertEqual(counter['Stored Events'], 0)
 
     lines = []
     output = output_writer.ReadOutput()
