@@ -215,6 +215,9 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     compatible_key = test_filter_file.CheckKeyCompatibility(key_path)
     self.assertTrue(compatible_key)
 
+  # TODO: add tests for _BuildFindSpecsFromArtifact
+  # TODO: add tests for _BuildFindSpecsFromGroupName
+
   def testBuildFindSpecsFromFileSourcePath(self):
     """Tests the _BuildFindSpecsFromFileSourcePath function on file sources."""
     knowledge_base = knowledge_base_engine.KnowledgeBase()
@@ -325,6 +328,8 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
         'Microsoft', '.*', '.*', '.*', '.*']
     self.assertEqual(
         find_specs[15]._location_segments, expected_location_segments)
+
+  # TODO: add tests for _BuildFindSpecsFromRegistrySourceKey
 
 
 if __name__ == '__main__':
