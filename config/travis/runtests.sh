@@ -12,17 +12,6 @@ if test "${TARGET}" = "jenkins";
 then
 	./config/jenkins/linux/run_end_to_end_tests.sh "travis";
 
-elif test "${TARGET}" = "pylint";
-then
-	pylint --version
-
-	for FILE in `find setup.py config plaso tests tools -name \*.py`;
-	do
-		echo "Checking: ${FILE}";
-
-		pylint --rcfile=.pylintrc ${FILE};
-	done
-
 elif test "${TRAVIS_OS_NAME}" = "osx";
 then
 	PYTHONPATH=/Library/Python/2.7/site-packages/ /usr/bin/python ./run_tests.py;
@@ -44,14 +33,19 @@ then
 
 	if test -n "${TOXENV}";
 	then
-		docker exec ${CONTAINER_NAME} sh -c "export LANG=en_US.UTF-8; cd plaso && tox -e ${TOXENV}";
+		TEST_COMMAND="tox -e ${TOXENV}";
+
+	elif test "${TARGET}" = "pylint";
+	then
+		TEST_COMMAND="./config/travis/run_pylint.sh";
 
 	elif test ${TRAVIS_PYTHON_VERSION} = "2.7";
 	then
-		docker exec ${CONTAINER_NAME} sh -c "export LANG=en_US.UTF-8; cd plaso && python2 run_tests.py";
+		TEST_COMMAND="python2 run_tests.py";
 	else
-		docker exec ${CONTAINER_NAME} sh -c "export LANG=en_US.UTF-8; cd plaso && python3 run_tests.py";
+		TEST_COMMAND="python3 run_tests.py";
 	fi
+	docker exec ${CONTAINER_NAME} sh -c "export LANG=en_US.UTF-8; cd plaso && ${TEST_COMMAND}";
 
 elif test -n "${UBUNTU_VERSION}";
 then
@@ -59,14 +53,19 @@ then
 
 	if test -n "${TOXENV}";
 	then
-		docker exec ${CONTAINER_NAME} sh -c "export LANG=en_US.UTF-8; cd plaso && tox -e ${TOXENV}";
+		TEST_COMMAND="tox -e ${TOXENV}";
+
+	elif test "${TARGET}" = "pylint";
+	then
+		TEST_COMMAND="./config/travis/run_pylint.sh";
 
 	elif test ${TRAVIS_PYTHON_VERSION} = "2.7";
 	then
-		docker exec ${CONTAINER_NAME} sh -c "export LANG=en_US.UTF-8; cd plaso && python2 run_tests.py";
+		TEST_COMMAND="python2 run_tests.py";
 	else
-		docker exec ${CONTAINER_NAME} sh -c "export LANG=en_US.UTF-8; cd plaso && python3 run_tests.py";
+		TEST_COMMAND="python3 run_tests.py";
 	fi
+	docker exec ${CONTAINER_NAME} sh -c "export LANG=en_US.UTF-8; cd plaso && ${TEST_COMMAND}";
 
 elif test "${TRAVIS_OS_NAME}" = "linux";
 then
