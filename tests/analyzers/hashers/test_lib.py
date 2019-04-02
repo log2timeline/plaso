@@ -39,18 +39,6 @@ class HasherTestCase(shared_test_lib.BaseTestCase):
 
     self.assertEqual(hasher.GetStringDigest(), expected_digest)
 
-  def _AssertTestPathBinaryDigestMatch(self, hasher, path_segments, digest):
-    """Checks if a hasher returns a given result when it hashes a test file.
-
-    Args:
-      hasher (BaseHasher): hasher to test.
-      path_segments (list[str]): components of a path to a test file, relative
-          to the test_data directory.
-      digest (bytes): digest the hasher should return.
-    """
-    file_entry = self._GetTestFileEntry(path_segments)
-    self._AssertFileEntryBinaryDigestMatch(hasher, file_entry, digest)
-
   def _AssertTestPathStringDigestMatch(self, hasher, path_segments, digest):
     """Checks if a hasher returns a given result when it hashes a test file.
 
