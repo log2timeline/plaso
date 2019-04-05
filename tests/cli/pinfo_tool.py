@@ -247,8 +247,10 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     output = output_writer.ReadOutput()
     json_output = json.loads(output)
 
+    sessions = json_output.get('sessions')
+
     first_session_identifier = 'session_{0:s}'.format(session_identifier)
-    first_session = json_output.get(first_session_identifier, None)
+    first_session = sessions.get(first_session_identifier)
     self.assertIsNotNone(first_session)
 
     self.assertEqual(first_session['identifier'], session_identifier)

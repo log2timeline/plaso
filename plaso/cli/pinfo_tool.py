@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import argparse
 import collections
+import json
 import os
 import uuid
 
@@ -447,16 +448,16 @@ class PinfoTool(
             session.event_labels_counter,
             session_identifier=session_identifier)
 
-  def _PrintSessionsOverview(self, storage):
+  def _PrintSessionsOverview(self, storage_reader):
     """Prints a sessions overview.
 
     Args:
-      storage (BaseStore): storage.
+      storage_reader (StorageReader): storage reader.
     """
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title='Sessions')
 
-    for session in storage.GetSessions():
+    for session in storage_reader.GetSessions():
       start_time = timelib.Timestamp.CopyToIsoFormat(
           session.start_time)
       session_identifier = uuid.UUID(hex=session.identifier)
@@ -520,14 +521,20 @@ class PinfoTool(
       storage_reader (StorageReader): storage reader.
     """
     serializer = json_serializer.JSONAttributeContainerSerializer
+    storage_counters = self._CalculateStorageCounters(storage_reader)
+    storage_counters_json = json.dumps(storage_counters)
     self._output_writer.Write('{')
+    self._output_writer.Write('"storage_counters": {0:s}'.format(
+        storage_counters_json))
+    self._output_writer.Write(',\n')
+    self._output_writer.Write(' "sessions": {')
     for index, session in enumerate(storage_reader.GetSessions()):
       json_string = serializer.WriteSerialized(session)
       if index != 0:
         self._output_writer.Write(',\n')
       self._output_writer.Write('"session_{0:s}": {1:s} '.format(
           session.identifier, json_string))
-    self._output_writer.Write('}')
+    self._output_writer.Write('}}')
 
   def _PrintTasksInformation(self, storage_reader):
     """Prints information about the tasks.
