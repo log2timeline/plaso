@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Psort (Plaso Síar Og Raðar Þessu) - Makes output from Plaso Storage files.
 

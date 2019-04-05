@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Extensible Storage Engine (ESE) database files (EDB) parser."""
 
