@@ -130,7 +130,7 @@ matrix:
     dist: xenial
     sudo: required
     group: edge
-    python: 2.7
+    python: 3.5
 install:
 - ./config/travis/install.sh
 script:
