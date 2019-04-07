@@ -29,7 +29,7 @@ class MacKnowledgeCSafariFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_PIECES = [
       'Safari open uri {uri}',
-      'with title {uri_title}'
+      'with title {uri_title}',
       'and was visited during {usage_in_seconds} seconds']
 
   FORMAT_STRING_SHORT_PIECES = ['Safari open uri {uri}']
