@@ -182,7 +182,7 @@ class NetworksWindowsRegistryPlugin(
           date_time = self._ParseSystemTime(date_created_value.data)
         except errors.ParseError as exception:
           date_time = None
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'unable to parse date created with error: {0!s}'.format(
                   exception))
 
@@ -197,7 +197,7 @@ class NetworksWindowsRegistryPlugin(
           date_time = self._ParseSystemTime(date_last_connected_value.data)
         except errors.ParseError as exception:
           date_time = None
-          parser_mediator.ProduceExtractionError(
+          parser_mediator.ProduceExtractionWarning(
               'unable to parse date last connected with error: {0!s}'.format(
                   exception))
 

@@ -22,7 +22,7 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
     parser = gdrive_synclog.GoogleDriveSyncLogParser()
     storage_writer = self._ParseFile(['sync_log.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2190)
 
     events = list(storage_writer.GetEvents())
@@ -86,7 +86,7 @@ class GoogleDriveSyncLogUnitTest(test_lib.ParserTestCase):
     parser = gdrive_synclog.GoogleDriveSyncLogParser()
     storage_writer = self._ParseFile(['sync_log-osx.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2338)
 
     events = list(storage_writer.GetEvents())

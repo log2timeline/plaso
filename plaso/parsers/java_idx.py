@@ -128,7 +128,7 @@ class JavaIDXParser(dtfabric_parser.DtFabricBaseParser):
         http_header, data_size = self._ReadStructureFromFileObject(
             file_object, file_offset, http_header_map)
       except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'Unable to parse HTTP header value at offset: 0x{0:08x}'.format(
                 file_offset))
         break
@@ -166,7 +166,7 @@ class JavaIDXParser(dtfabric_parser.DtFabricBaseParser):
         download_date = timelib.Timestamp.FromTimeString(
             date_http_header.value, gmt_as_timezone=False)
       except errors.TimestampError:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'Unable to parse date HTTP header value: {0:s}'.format(
                 date_http_header.value))
 

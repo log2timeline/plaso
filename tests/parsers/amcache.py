@@ -22,7 +22,7 @@ class AmcacheParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFile(['Amcache.hve'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1179)
 
     events = list(storage_writer.GetSortedEvents())
@@ -56,7 +56,7 @@ class AmcacheParserTest(test_lib.ParserTestCase):
 
     storage_writer = self._ParseFile(['SYSTEM'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 0)
 
 

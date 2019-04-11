@@ -34,11 +34,11 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     super(FakeStorageWriter, self).__init__(
         session, storage_type=storage_type, task=task)
-    self._errors = []
     self._event_data = {}
     self._event_sources = []
     self._event_tags = []
     self._events = []
+    self._warnings = []
     self._is_open = False
     self._task_storage_writers = {}
     self.analysis_reports = []
@@ -108,23 +108,6 @@ class FakeStorageWriter(interface.StorageWriter):
     analysis_report = self._PrepareAttributeContainer(analysis_report)
 
     self.analysis_reports.append(analysis_report)
-
-  def AddError(self, error):
-    """Adds an error.
-
-    Args:
-      error (ExtractionError): error.
-
-    Raises:
-      IOError: when the storage writer is closed.
-      OSError: when the storage writer is closed.
-    """
-    self._RaiseIfNotWritable()
-
-    error = self._PrepareAttributeContainer(error)
-
-    self._errors.append(error)
-    self.number_of_errors += 1
 
   def AddEvent(self, event):
     """Adds an event.
@@ -210,6 +193,24 @@ class FakeStorageWriter(interface.StorageWriter):
     self._event_tags.append(event_tag)
     self.number_of_event_tags += 1
 
+  def AddWarning(self, warning):
+    """Adds a warnings.
+
+    Args:
+      warning (ExtractionWarning): warning.
+
+    Raises:
+      IOError: when the storage writer is closed.
+      OSError: when the storage writer is closed.
+    """
+    self._RaiseIfNotWritable()
+
+    warning = self._PrepareAttributeContainer(warning)
+
+    self._warnings.append(warning)
+    self.number_of_warnings += 1
+
+
   def CreateTaskStorage(self, task):
     """Creates a task storage.
 
@@ -243,13 +244,13 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._is_open = False
 
-  def GetErrors(self):
-    """Retrieves the errors.
+  def GetWarnings(self):
+    """Retrieves the warnings.
 
     Returns:
-      generator(ExtractionError): error generator.
+      generator(ExtractionWarning): warning generator.
     """
-    return iter(self._errors)
+    return iter(self._warnings)
 
   def GetEvents(self):
     """Retrieves the events.

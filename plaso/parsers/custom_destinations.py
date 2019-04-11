@@ -63,7 +63,7 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
       message = (
           'unable to open LNK file: {0:s} with error: {1!s}').format(
               display_name, exception)
-      parser_mediator.ProduceExtractionError(message)
+      parser_mediator.ProduceExtractionWarning(message)
       return 0
 
     parser_mediator.AppendToParserChain(self._WINLNK_PARSER)
@@ -154,7 +154,7 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
               'entry header with error: {1!s}').format(
                   display_name, exception))
 
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to parse entry header with error: {0!s}'.format(
                 exception))
         break
@@ -172,12 +172,12 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
               file_object, file_offset, file_footer_map)
 
           if file_footer.signature != self._FILE_FOOTER_SIGNATURE:
-            parser_mediator.ProduceExtractionError(
+            parser_mediator.ProduceExtractionWarning(
                 'invalid entry header signature at offset: 0x{0:08x}'.format(
                     file_offset))
 
         except (ValueError, errors.ParseError) as exception:
-          parser_mediator.ProduceExtractionError((
+          parser_mediator.ProduceExtractionWarning((
               'unable to parse footer at offset: 0x{0:08x} with error: '
               '{1!s}').format(file_offset, exception))
           break
@@ -200,11 +200,11 @@ class CustomDestinationsParser(dtfabric_parser.DtFabricBaseParser):
           file_object, file_offset, file_footer_map)
 
       if file_footer.signature != self._FILE_FOOTER_SIGNATURE:
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'invalid footer signature at offset: 0x{0:08x}'.format(file_offset))
 
     except (ValueError, errors.ParseError) as exception:
-      parser_mediator.ProduceExtractionError((
+      parser_mediator.ProduceExtractionWarning((
           'unable to parse footer at offset: 0x{0:08x} with error: '
           '{1!s}').format(file_offset, exception))
 

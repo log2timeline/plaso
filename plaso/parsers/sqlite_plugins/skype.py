@@ -638,7 +638,7 @@ class SkypePlugin(interface.SQLitePlugin):
         call_duration = self._GetRowValue(query_hash, row, 'call_duration')
         call_duration = int(call_duration)
       except (ValueError, TypeError):
-        parser_mediator.ProduceExtractionError(
+        parser_mediator.ProduceExtractionWarning(
             'unable to determine when call: {0:s} was finished.'.format(
                 call_identifier))
         call_duration = None
@@ -711,7 +711,7 @@ class SkypePlugin(interface.SQLitePlugin):
     try:
       file_size = int(filesize, 10)
     except (ValueError, TypeError):
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to convert file size: {0!s} of file: {1:s}'.format(
               filesize, filename))
       file_size = 0

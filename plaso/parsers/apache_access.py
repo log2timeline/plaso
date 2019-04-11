@@ -184,7 +184,7 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
       iso_date_time = self._GetISO8601String(structure.date_time)
       date_time.CopyFromStringISO8601(iso_date_time)
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'invalid date time value: {0!s}'.format(structure.date_time))
       return
 

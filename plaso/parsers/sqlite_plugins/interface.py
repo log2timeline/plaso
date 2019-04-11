@@ -105,7 +105,7 @@ class SQLitePlugin(plugins.BasePlugin):
       rows = database.Query(query)
 
     except sqlite3.DatabaseError as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to run query: {0:s} on database with error: {1!s}'.format(
               query, exception))
       return
@@ -122,7 +122,7 @@ class SQLitePlugin(plugins.BasePlugin):
         callback(parser_mediator, query, row, cache=cache, database=database)
 
       except Exception as exception:  # pylint: disable=broad-except
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to parse row: {0:d} with callback: {1:s} on database '
             'with error: {2!s}').format(
                 index, callback.__name__, exception))

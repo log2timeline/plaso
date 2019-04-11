@@ -20,15 +20,6 @@ class SHA256Hasher(interface.BaseHasher):
     super(SHA256Hasher, self).__init__()
     self._sha256_context = hashlib.sha256()
 
-  def GetBinaryDigest(self):
-    """Returns the digest of the hash function as a binary string.
-
-    Returns:
-      bytes: binary string hash digest calculated over the data blocks passed to
-          Update().
-    """
-    return self._sha256_context.digest()
-
   def GetStringDigest(self):
     """Returns the digest of the hash function expressed as a Unicode string.
 

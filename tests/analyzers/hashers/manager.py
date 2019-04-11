@@ -17,17 +17,6 @@ class TestHasher(interface.BaseHasher):
 
   NAME = 'testhash'
 
-  def GetBinaryDigest(self):
-    """Retrieves the digest of the hash function as a binary string.
-
-    Returns:
-      bytes: binary string hash digest calculated over the data blocks passed to
-          Update().
-    """
-    # Chosen by fair dice roll. Guaranteed to be random.
-    # Compliant with RFC 1149.4. See http://xkcd.com/221/.
-    return b'4'
-
   def GetStringDigest(self):
     """Retrieves the digest of the hash function expressed as a Unicode string.
 

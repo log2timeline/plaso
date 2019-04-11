@@ -96,7 +96,7 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
               '{2:s}.').format(
                   registry_key.path, value_name,
                   registry_value.data_type_string)
-          parser_mediator.ProduceExtractionError(error_string)
+          parser_mediator.ProduceExtractionWarning(error_string)
 
         # TODO: why does this have a separate event object? Remove this.
         event_data.regvalue = {'BootExecute': value_string}

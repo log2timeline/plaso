@@ -22,7 +22,7 @@ class UtmpxParserTest(test_lib.ParserTestCase):
     parser = utmpx.UtmpxParser()
     storage_writer = self._ParseFile(['utmpx_mac'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 6)
 
     events = list(storage_writer.GetEvents())

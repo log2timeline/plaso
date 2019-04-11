@@ -398,7 +398,7 @@ class CupsIppParser(dtfabric_parser.DtFabricBaseParser):
           data_dict.setdefault(name, []).append(value)
 
     except (ValueError, errors.ParseError) as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to parse attributes with error: {0!s}'.format(exception))
       return
 

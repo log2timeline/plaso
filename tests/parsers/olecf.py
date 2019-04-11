@@ -28,7 +28,7 @@ class OLECFParserTest(test_lib.ParserTestCase):
     #     Sector size         : 512
     #     Short sector size   : 64
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 9)
 
     events = list(storage_writer.GetEvents())
@@ -47,15 +47,15 @@ class OLECFParserTest(test_lib.ParserTestCase):
     parser = olecf.OLECFParser()
     parser.ParseFileObject(parser_mediator, None)
 
-    self.assertEqual(storage_writer.number_of_errors, 1)
+    self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 0)
 
-    errors = list(storage_writer.GetErrors())
+    warnings = list(storage_writer.GetWarnings())
 
-    error = errors[0]
-    self.assertIsNotNone(error)
+    warning = warnings[0]
+    self.assertIsNotNone(warning)
 
-    self.assertTrue(error.message.startswith(
+    self.assertTrue(warning.message.startswith(
         'unable to open file with error: pyolecf_file_open_file_object: '))
 
 

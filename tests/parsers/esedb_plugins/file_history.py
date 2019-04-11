@@ -23,7 +23,7 @@ class FileHistoryESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     plugin = file_history.FileHistoryESEDBPlugin()
     storage_writer = self._ParseESEDBFileWithPlugin(['Catalog1.edb'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 2713)
 
     events = list(storage_writer.GetEvents())

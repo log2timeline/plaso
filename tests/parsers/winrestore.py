@@ -23,7 +23,7 @@ class RestorePointLogParserTest(test_lib.ParserTestCase):
     parser = winrestore.RestorePointLogParser()
     storage_writer = self._ParseFile(['rp.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     events = list(storage_writer.GetEvents())

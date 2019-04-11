@@ -3,13 +3,13 @@
 
 from plaso.containers import analyzer_result
 from plaso.containers import artifacts
-from plaso.containers import errors
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.containers import storage_media
 from plaso.containers import tasks
+from plaso.containers import warnings
 
 # These modules define attribute containers that inherit from other attribute
 # containers but do not register attribute containers themselves, so they are

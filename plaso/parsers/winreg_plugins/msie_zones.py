@@ -200,7 +200,7 @@ class MsieZoneSettingsPlugin(interface.WindowsRegistryPlugin):
 
     if registry_key.number_of_subkeys == 0:
       error_string = 'Key: {0:s} missing subkeys.'.format(registry_key.path)
-      parser_mediator.ProduceExtractionError(error_string)
+      parser_mediator.ProduceExtractionWarning(error_string)
       return
 
     for zone_key in registry_key.GetSubkeys():

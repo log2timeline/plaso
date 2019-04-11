@@ -202,7 +202,7 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     try:
       date_time_string = self._GetISO8601String(structure)
     except ValueError as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to determine date time string with error: {0!s}'.format(
               exception))
 
@@ -215,7 +215,7 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     try:
       date_time.CopyFromStringISO8601(date_time_string)
     except ValueError as exception:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'unable to parse date time value: {0:s} with error: {1!s}'.format(
               date_time_string, exception))
       return

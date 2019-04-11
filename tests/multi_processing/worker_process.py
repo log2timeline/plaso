@@ -73,7 +73,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
     self.assertIsNotNone(status_attributes)
     self.assertEqual(status_attributes['identifier'], 'TestWorker')
     self.assertEqual(status_attributes['last_activity_timestamp'], 0.0)
-    self.assertIsNone(status_attributes['number_of_produced_errors'])
+    self.assertIsNone(status_attributes['number_of_produced_warnings'])
 
     session = sessions.Session()
     storage_writer = self._CreateStorageWriter(session)
@@ -85,7 +85,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
     self.assertIsNotNone(status_attributes)
     self.assertEqual(status_attributes['identifier'], 'TestWorker')
     self.assertEqual(status_attributes['last_activity_timestamp'], 0.0)
-    self.assertEqual(status_attributes['number_of_produced_errors'], 0)
+    self.assertEqual(status_attributes['number_of_produced_warnings'], 0)
 
   def testMain(self):
     """Tests the _Main function."""
@@ -116,15 +116,15 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
 
     extraction_worker = TestEventExtractionWorker()
     test_process._ProcessPathSpec(extraction_worker, parser_mediator, path_spec)
-    self.assertEqual(parser_mediator._number_of_errors, 0)
+    self.assertEqual(parser_mediator._number_of_warnings, 0)
 
     extraction_worker = TestFailureEventExtractionWorker()
     test_process._ProcessPathSpec(extraction_worker, parser_mediator, path_spec)
-    self.assertEqual(parser_mediator._number_of_errors, 0)
+    self.assertEqual(parser_mediator._number_of_warnings, 0)
     self.assertTrue(test_process._abort)
 
     test_process._ProcessPathSpec(None, parser_mediator, path_spec)
-    self.assertEqual(parser_mediator._number_of_errors, 1)
+    self.assertEqual(parser_mediator._number_of_warnings, 1)
 
   def testProcessTask(self):
     """Tests the _ProcessTask function."""

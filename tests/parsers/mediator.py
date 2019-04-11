@@ -190,7 +190,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     event_data = events.EventData()
 
     parsers_mediator.ProduceEventWithEventData(event_with_timestamp, event_data)
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 1)
 
     event_without_timestamp = events.EventObject()
@@ -198,7 +198,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
       parsers_mediator.ProduceEventWithEventData(
           event_without_timestamp, event_data)
 
-  # TODO: add tests for ProduceExtractionError.
+  # TODO: add tests for ProduceExtractionWarning.
   # TODO: add tests for RemoveEventAttribute.
 
   def testResetFileEntry(self):

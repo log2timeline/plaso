@@ -23,7 +23,7 @@ class TestDefaultPluginOLECF(test_lib.OLECFPluginTestCase):
     plugin = default.DefaultOLECFPlugin()
     storage_writer = self._ParseOLECFFileWithPlugin(['Document.doc'], plugin)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 5)
 
     events = list(storage_writer.GetEvents())

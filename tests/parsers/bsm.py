@@ -27,7 +27,7 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
         ['apple.bsm'], parser,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 54)
 
     events = list(storage_writer.GetEvents())
@@ -181,7 +181,7 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         ['openbsm.bsm'], parser, knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 50)
 
     events = list(storage_writer.GetEvents())

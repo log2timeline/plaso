@@ -142,7 +142,7 @@ class MacOSSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
       date_time = dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
-      parser_mediator.ProduceExtractionError(
+      parser_mediator.ProduceExtractionWarning(
           'invalid date time value: {0!s}'.format(structure.date_time))
       return
 

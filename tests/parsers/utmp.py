@@ -22,7 +22,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
     parser = utmp.UtmpParser()
     storage_writer = self._ParseFile(['utmp'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 14)
 
     events = list(storage_writer.GetEvents())
@@ -94,7 +94,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
     parser = utmp.UtmpParser()
     storage_writer = self._ParseFile(['wtmp.1'], parser)
 
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
     self.assertEqual(storage_writer.number_of_events, 4)
 
     events = list(storage_writer.GetEvents())

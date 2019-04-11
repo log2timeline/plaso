@@ -118,7 +118,7 @@ class PlsRecallParser(dtfabric_parser.DtFabricBaseParser):
         if file_offset == 0:
           raise errors.UnableToParseFile('Unable to parse first record.')
 
-        parser_mediator.ProduceExtractionError((
+        parser_mediator.ProduceExtractionWarning((
             'unable to parse record at offset: 0x{0:08x} with error: '
             '{1!s}').format(file_offset, exception))
         break
