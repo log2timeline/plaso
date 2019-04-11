@@ -21,7 +21,6 @@ class MacNotesTest(test_lib.SQLitePluginTestCase):
         ['NotesV7.storedata'], plugin_object)
 
     self.assertEqual(storage_writer.number_of_events, 6)
-    self.assertEqual(storage_writer.number_of_errors, 0)
 
     events = list(storage_writer.GetEvents())
 
