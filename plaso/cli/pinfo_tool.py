@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import argparse
 import collections
+import json
 import os
 import uuid
 
@@ -100,6 +101,16 @@ class PinfoTool(
 
     storage_counters = {}
 
+    warnings_by_path_spec = collections.Counter()
+    warnings_by_parser_chain = collections.Counter()
+
+    for warning in list(storage_reader.GetWarnings()):
+      warnings_by_path_spec[warning.path_spec.comparable] += 1
+      warnings_by_parser_chain[warning.parser_chain] += 1
+
+    storage_counters['warnings_by_path_spec'] = warnings_by_path_spec
+    storage_counters['warnings_by_parser_chain'] = warnings_by_parser_chain
+
     if not analysis_reports_counter_error:
       storage_counters['analysis_reports'] = analysis_reports_counter
 
@@ -183,17 +194,55 @@ class PinfoTool(
 
       table_view.Write(self._output_writer)
 
-  def _PrintWarningsDetails(self, storage_reader):
-    """Prints the details of the warnings.
+  def _PrintWarningCounters(self, storage_counters):
+    """Prints a summary of the warnings.
 
     Args:
-      storage_reader (StorageReader): storage reader.
+      storage_counters (dict): storage counters.
     """
-    if not storage_reader.HasWarnings():
+    warnings_by_pathspec = storage_counters.get('warnings_by_path_spec', {})
+    warnings_by_parser_chain = storage_counters.get(
+        'warnings_by_parser_chain', {})
+    if not warnings_by_parser_chain:
       self._output_writer.Write('No warnings stored.\n\n')
       return
 
-    for index, warning in enumerate(storage_reader.GetWarnings()):
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, title='Warnings generated per parser',
+        column_names=['Parser (plugin) name', 'Number of warnings'])
+    for parser_chain, count in warnings_by_parser_chain.items():
+      parser_chain = parser_chain or '<No parser>'
+      table_view.AddRow([parser_chain, '{0:d}'.format(count)])
+    table_view.Write(self._output_writer)
+
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, title='Pathspecs with most warnings',
+        column_names=['Number of warnings', 'Pathspec'])
+
+    top_pathspecs = warnings_by_pathspec.most_common(10)
+    for pathspec, count in top_pathspecs:
+      for path_index, line in enumerate(pathspec.split('\n')):
+        if not line:
+          continue
+
+        if path_index == 0:
+          table_view.AddRow(['{0:d}'.format(count), line])
+        else:
+          table_view.AddRow(['', line])
+
+    table_view.Write(self._output_writer)
+
+  def _PrintWarningsDetails(self, storage):
+    """Prints the details of the warnings.
+
+    Args:
+      storage (BaseStore): storage.
+    """
+    if not storage.HasWarnings():
+      self._output_writer.Write('No warnings stored.\n\n')
+      return
+
+    for index, warning in enumerate(storage.GetWarnings()):
       title = 'Warning: {0:d}'.format(index)
       table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
@@ -399,16 +448,16 @@ class PinfoTool(
             session.event_labels_counter,
             session_identifier=session_identifier)
 
-  def _PrintSessionsOverview(self, storage):
+  def _PrintSessionsOverview(self, storage_reader):
     """Prints a sessions overview.
 
     Args:
-      storage (BaseStore): storage.
+      storage_reader (StorageReader): storage reader.
     """
     table_view = views.ViewsFactory.GetTableView(
         self._views_format_type, title='Sessions')
 
-    for session in storage.GetSessions():
+    for session in storage_reader.GetSessions():
       start_time = timelib.Timestamp.CopyToIsoFormat(
           session.start_time)
       session_identifier = uuid.UUID(hex=session.identifier)
@@ -455,7 +504,11 @@ class PinfoTool(
       else:
         self._PrintEventLabelsCounter(storage_counters['event_labels'])
 
-      self._PrintWarningsDetails(storage_reader)
+      self._PrintWarningCounters(storage_counters)
+
+      if self._verbose:
+        self._PrintWarningsDetails(storage_reader)
+
       self._PrintAnalysisReportsDetails(storage_reader)
 
     elif storage_reader.storage_type == definitions.STORAGE_TYPE_TASK:
@@ -468,14 +521,20 @@ class PinfoTool(
       storage_reader (StorageReader): storage reader.
     """
     serializer = json_serializer.JSONAttributeContainerSerializer
+    storage_counters = self._CalculateStorageCounters(storage_reader)
+    storage_counters_json = json.dumps(storage_counters)
     self._output_writer.Write('{')
+    self._output_writer.Write('"storage_counters": {0:s}'.format(
+        storage_counters_json))
+    self._output_writer.Write(',\n')
+    self._output_writer.Write(' "sessions": {')
     for index, session in enumerate(storage_reader.GetSessions()):
       json_string = serializer.WriteSerialized(session)
       if index != 0:
         self._output_writer.Write(',\n')
       self._output_writer.Write('"session_{0:s}": {1:s} '.format(
           session.identifier, json_string))
-    self._output_writer.Write('}')
+    self._output_writer.Write('}}')
 
   def _PrintTasksInformation(self, storage_reader):
     """Prints information about the tasks.
