@@ -162,13 +162,22 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
           'Unable to parse first utmp entry with error: {0!s}'.format(
               exception))
 
+    if not timestamp:
+      raise errors.UnableToParseFile(
+          'Unable to parse first utmp entry with error: missing timestamp')
+
+    if not event_data.hostname:
+      raise errors.UnableToParseFile(
+          'Unable to parse first utmp entry with error: missing hostname')
+
+    if not event_data.terminal:
+      raise errors.UnableToParseFile(
+          'Unable to parse first utmp entry with error: missing terminal')
+
     if not event_data.username:
       raise errors.UnableToParseFile(
           'Unable to parse first utmp entry with error: missing username')
 
-    if not timestamp:
-      raise errors.UnableToParseFile(
-          'Unable to parse first utmp entry with error: missing timestamp')
 
     date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
         timestamp=timestamp)
