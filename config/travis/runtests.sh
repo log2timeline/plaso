@@ -10,7 +10,7 @@ set -e;
 
 if test "${TARGET}" = "jenkins";
 then
-	./config/jenkins/linux/run_end_to_end_tests.sh "travis";
+	./config/jenkins/linux/run_end_to_end_tests_py3.sh "travis";
 
 elif test "${TRAVIS_OS_NAME}" = "osx";
 then
