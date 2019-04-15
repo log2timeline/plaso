@@ -131,8 +131,8 @@ class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
       raise errors.PreProcessFail((
           'Unable to retrieve file entry: {0:s} with error: '
           '{1!s}').format(relative_path, exception))
-
-    self._ParseFileEntry(knowledge_base, file_entry)
+    if file_entry:
+      self._ParseFileEntry(knowledge_base, file_entry)
 
 
 class FileArtifactPreprocessorPlugin(FileEntryArtifactPreprocessorPlugin):
