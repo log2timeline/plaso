@@ -171,17 +171,20 @@ class MultiProcessEngine(engine.BaseEngine):
 
       self._TerminateProcessByPid(pid)
 
-      logger.info('Starting replacement worker process for {0:s}'.format(
-          process.name))
-      replacement_process_attempts = 0
       replacement_process = None
-      while replacement_process_attempts < self._MAXIMUM_REPLACEMENT_RETRIES:
-        replacement_process_attempts += 1
+      for replacement_process_attempt in range(
+          self._MAXIMUM_REPLACEMENT_RETRIES):
+        logger.info((
+            'Attempt: {0:d} to start replacement worker process for '
+            '{1:s}').format(replacement_process_attempt + 1, process.name))
+
         replacement_process = self._StartWorkerProcess(
             process.name, self._storage_writer)
-        if not replacement_process:
-          time.sleep(self._REPLACEMENT_WORKER_RETRY_DELAY)
+        if replacement_process:
           break
+
+        time.sleep(self._REPLACEMENT_WORKER_RETRY_DELAY)
+
       if not replacement_process:
         logger.error(
             'Unable to create replacement worker process for: {0:s}'.format(
