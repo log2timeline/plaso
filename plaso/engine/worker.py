@@ -102,7 +102,7 @@ class EventExtractionWorker(object):
     self._processing_profiler = None
 
     self.last_activity_timestamp = 0.0
-    self.processing_status = definitions.PROCESSING_STATUS_IDLE
+    self.processing_status = definitions.STATUS_INDICATOR_IDLE
 
   def _AnalyzeDataStream(self, mediator, file_entry, data_stream_name):
     """Analyzes the contents of a specific data stream of a file entry.
@@ -216,7 +216,7 @@ class EventExtractionWorker(object):
 
       analyzer_object.Reset()
 
-    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+    self.processing_status = definitions.STATUS_INDICATOR_RUNNING
 
   def _CanSkipDataStream(self, file_entry, data_stream):
     """Determines if analysis and extraction of a data stream can be skipped.
@@ -320,7 +320,7 @@ class EventExtractionWorker(object):
       data_stream_name (str): name of the data stream whose content is to be
           extracted.
     """
-    self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
+    self.processing_status = definitions.STATUS_INDICATOR_EXTRACTING
 
     if self._processing_profiler:
       self._processing_profiler.StartTiming('extracting')
@@ -331,7 +331,7 @@ class EventExtractionWorker(object):
     if self._processing_profiler:
       self._processing_profiler.StopTiming('extracting')
 
-    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+    self.processing_status = definitions.STATUS_INDICATOR_RUNNING
 
     self.last_activity_timestamp = time.time()
 
@@ -361,7 +361,7 @@ class EventExtractionWorker(object):
         '[ExtractMetadataFromFileEntry] processing file entry: {0:s}'.format(
             display_name))
 
-    self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
+    self.processing_status = definitions.STATUS_INDICATOR_EXTRACTING
 
     if self._processing_profiler:
       self._processing_profiler.StartTiming('extracting')
@@ -371,7 +371,7 @@ class EventExtractionWorker(object):
     if self._processing_profiler:
       self._processing_profiler.StopTiming('extracting')
 
-    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+    self.processing_status = definitions.STATUS_INDICATOR_RUNNING
 
   def _GetArchiveTypes(self, mediator, path_spec):
     """Determines if a data stream contains an archive such as: TAR or ZIP.
@@ -451,7 +451,7 @@ class EventExtractionWorker(object):
     if number_of_type_indicators == 0:
       return
 
-    self.processing_status = definitions.PROCESSING_STATUS_COLLECTING
+    self.processing_status = definitions.STATUS_INDICATOR_COLLECTING
 
     if number_of_type_indicators > 1:
       display_name = mediator.GetDisplayName()
@@ -517,7 +517,7 @@ class EventExtractionWorker(object):
     if number_of_type_indicators == 0:
       return
 
-    self.processing_status = definitions.PROCESSING_STATUS_COLLECTING
+    self.processing_status = definitions.STATUS_INDICATOR_COLLECTING
 
     if number_of_type_indicators > 1:
       display_name = mediator.GetDisplayName()
@@ -562,7 +562,7 @@ class EventExtractionWorker(object):
           parsers and other components, such as storage and abort signals.
       file_entry (dfvfs.FileEntry): file entry of the directory.
     """
-    self.processing_status = definitions.PROCESSING_STATUS_COLLECTING
+    self.processing_status = definitions.STATUS_INDICATOR_COLLECTING
 
     if self._processing_profiler:
       self._processing_profiler.StartTiming('collecting')
@@ -604,7 +604,7 @@ class EventExtractionWorker(object):
     if self._processing_profiler:
       self._processing_profiler.StopTiming('collecting')
 
-    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+    self.processing_status = definitions.STATUS_INDICATOR_RUNNING
 
   def _ProcessFileEntry(self, mediator, file_entry):
     """Processes a file entry.
@@ -698,7 +698,7 @@ class EventExtractionWorker(object):
       display_name = mediator.GetDisplayName()
       logger.debug(
           'Skipping content extraction of: {0:s}'.format(display_name))
-      self.processing_status = definitions.PROCESSING_STATUS_IDLE
+      self.processing_status = definitions.STATUS_INDICATOR_IDLE
       return
 
     path_spec = copy.deepcopy(file_entry.path_spec)
@@ -740,7 +740,7 @@ class EventExtractionWorker(object):
           parsers and other components, such as storage and abort signals.
       file_entry (dfvfs.FileEntry): file entry of the metadata file.
     """
-    self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
+    self.processing_status = definitions.STATUS_INDICATOR_EXTRACTING
 
     self._event_extractor.ParseFileEntryMetadata(mediator, file_entry)
     for data_stream in file_entry.data_streams:
@@ -797,7 +797,7 @@ class EventExtractionWorker(object):
       path_spec (dfvfs.PathSpec): path specification.
     """
     self.last_activity_timestamp = time.time()
-    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+    self.processing_status = definitions.STATUS_INDICATOR_RUNNING
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(
         path_spec, resolver_context=mediator.resolver_context)
@@ -807,7 +807,7 @@ class EventExtractionWorker(object):
       logger.warning(
           'Unable to open file entry with path spec: {0:s}'.format(
               display_name))
-      self.processing_status = definitions.PROCESSING_STATUS_IDLE
+      self.processing_status = definitions.STATUS_INDICATOR_IDLE
       return
 
     mediator.SetFileEntry(file_entry)
@@ -821,7 +821,7 @@ class EventExtractionWorker(object):
       mediator.ResetFileEntry()
 
       self.last_activity_timestamp = time.time()
-      self.processing_status = definitions.PROCESSING_STATUS_IDLE
+      self.processing_status = definitions.STATUS_INDICATOR_IDLE
 
   # TODO: move the functionality of this method into the constructor.
   def SetExtractionConfiguration(self, configuration):

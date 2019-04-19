@@ -53,7 +53,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     self._foreman_status_wait_event = None
     self._knowledge_base = knowledge_base
     self._number_of_consumed_events = 0
-    self._status = definitions.PROCESSING_STATUS_INITIALIZED
+    self._status = definitions.STATUS_INDICATOR_INITIALIZED
     self._storage_writer = storage_writer
     self._task = None
 
@@ -98,8 +98,8 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
         'used_memory': used_memory}
 
     if self._status in (
-        definitions.PROCESSING_STATUS_ABORTED,
-        definitions.PROCESSING_STATUS_COMPLETED):
+        definitions.STATUS_INDICATOR_ABORTED,
+        definitions.STATUS_INDICATOR_COMPLETED):
       self._foreman_status_wait_event.set()
 
     return status
@@ -120,7 +120,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     # Creating the threading event in the constructor will cause a pickle
     # error on Windows when an analysis process is created.
     self._foreman_status_wait_event = threading.Event()
-    self._status = definitions.PROCESSING_STATUS_ANALYZING
+    self._status = definitions.STATUS_INDICATOR_ANALYZING
 
     task = tasks.Task()
     # TODO: temporary solution.
@@ -175,7 +175,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
               self._name, self._pid))
 
       if not self._abort:
-        self._status = definitions.PROCESSING_STATUS_REPORTING
+        self._status = definitions.STATUS_INDICATOR_REPORTING
 
         self._analysis_mediator.ProduceAnalysisReport(self._analysis_plugin)
 
@@ -206,9 +206,9 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
       pass
 
     if self._abort:
-      self._status = definitions.PROCESSING_STATUS_ABORTED
+      self._status = definitions.STATUS_INDICATOR_ABORTED
     else:
-      self._status = definitions.PROCESSING_STATUS_COMPLETED
+      self._status = definitions.STATUS_INDICATOR_COMPLETED
 
     self._foreman_status_wait_event.wait(self._FOREMAN_STATUS_WAIT)
 

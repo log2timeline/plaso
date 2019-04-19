@@ -217,7 +217,7 @@ class StatusView(object):
           '{3!s}\n').format(
               worker_status.identifier, worker_status.pid,
               worker_status.number_of_consumed_events,
-              worker_status.status not in definitions.PROCESSING_ERROR_STATUS)
+              worker_status.status not in definitions.ERROR_STATUS_INDICATORS)
       self._output_writer.Write(status_line)
 
   def _PrintAnalysisStatusUpdateWindow(self, processing_status):
@@ -269,7 +269,7 @@ class StatusView(object):
               worker_status.identifier, worker_status.pid,
               worker_status.number_of_produced_events,
               worker_status.display_name,
-              worker_status.status not in definitions.PROCESSING_ERROR_STATUS)
+              worker_status.status not in definitions.ERROR_STATUS_INDICATORS)
       self._output_writer.Write(status_line)
 
   def _PrintExtractionStatusUpdateWindow(self, processing_status):
