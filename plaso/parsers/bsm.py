@@ -635,11 +635,15 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
       ParseError: if the event record cannot be read.
     """
     header_record_offset = file_object.tell()
-    token_type, token_data = self._ParseToken(file_object, header_record_offset)
 
+    # Check the header token type before reading the token data to prevent
+    # variable size tokens to consume a large amount of memory.
+    token_type = self._ParseTokenType(file_object, header_record_offset)
     if token_type not in self._HEADER_TOKEN_TYPES:
       raise errors.ParseError(
           'Unsupported header token type: 0x{0:02x}'.format(token_type))
+
+    token_type, token_data = self._ParseToken(file_object, header_record_offset)
 
     if token_data.format_version != 11:
       raise errors.ParseError('Unsupported format version type: {0:d}'.format(
@@ -708,12 +712,9 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
         int: token type
         object: token data or None if the token type is not supported.
     """
-    token_type_map = self._GetDataTypeMap('uint8')
-
-    token_type, _ = self._ReadStructureFromFileObject(
-        file_object, file_offset, token_type_map)
-
+    token_type = self._ParseTokenType(file_object, file_offset)
     token_data = None
+
     token_data_map_name = self._DATA_TYPE_MAP_PER_TOKEN_TYPE.get(
         token_type, None)
     if token_data_map_name:
@@ -723,6 +724,24 @@ class BSMParser(dtfabric_parser.DtFabricBaseParser):
           file_object, file_offset + 1, token_data_map)
 
     return token_type, token_data
+
+  def _ParseTokenType(self, file_object, file_offset):
+    """Parses a token type.
+
+    Args:
+      file_object (dfvfs.FileIO): file-like object.
+      file_offset (int): offset of the token relative to the start of
+          the file-like object.
+
+    Returns:
+      int: token type
+    """
+    token_type_map = self._GetDataTypeMap('uint8')
+
+    token_type, _ = self._ReadStructureFromFileObject(
+        file_object, file_offset, token_type_map)
+
+    return token_type
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a BSM file-like object.
