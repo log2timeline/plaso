@@ -24,11 +24,6 @@ class EntropyTest(test_lib.HasherTestCase):
     self._AssertTestPathStringDigestMatch(
         hasher, ['empty_file'], expected_entropy)
 
-    hasher = entropy.EntropyHasher()
-    expected_binary_entropy = b'0.000000'
-    self._AssertTestPathBinaryDigestMatch(
-        hasher, ['empty_file'], expected_binary_entropy)
-
   @shared_test_lib.skipUnlessHasTestFile(['syslog.zip'])
   def testFileHashMatchesKnownFile(self):
     """Tests that hasher matches the hash of a known file."""
@@ -37,11 +32,6 @@ class EntropyTest(test_lib.HasherTestCase):
     hasher = entropy.EntropyHasher()
     self._AssertTestPathStringDigestMatch(
         hasher, ['syslog.zip'], expected_entropy)
-
-    hasher = entropy.EntropyHasher()
-    expected_binary_entropy = b'7.264319'
-    self._AssertTestPathBinaryDigestMatch(
-        hasher, ['syslog.zip'], expected_binary_entropy)
 
 
 if __name__ == '__main__':
