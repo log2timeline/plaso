@@ -29,7 +29,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
     Args:
       task_queue (PlasoQueue): task queue.
-      storage_writer (StorageWriter): storage writer for a session storage.
+      storage_writer (StorageWriter): storage writer for a session store.
       collection_filters_helper (CollectionFiltersHelper): collection filters
           helper.
       knowledge_base (KnowledgeBase): knowledge base which contains
@@ -279,16 +279,17 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
     self._task = task
 
-    storage_writer = self._storage_writer.CreateTaskStorage(task)
+    task_storage_writer = self._storage_writer.CreateTaskStorage(
+        task, self._processing_configuration.task_storage_format)
 
     if self._serializers_profiler:
-      storage_writer.SetSerializersProfiler(self._serializers_profiler)
+      task_storage_writer.SetSerializersProfiler(self._serializers_profiler)
 
-    storage_writer.Open()
+    task_storage_writer.Open()
 
-    self._parser_mediator.SetStorageWriter(storage_writer)
+    self._parser_mediator.SetStorageWriter(task_storage_writer)
 
-    storage_writer.WriteTaskStart()
+    task_storage_writer.WriteTaskStart()
 
     try:
       # TODO: add support for more task types.
@@ -300,11 +301,11 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
         self._guppy_memory_profiler.Sample()
 
     finally:
-      storage_writer.WriteTaskCompletion(aborted=self._abort)
+      task_storage_writer.WriteTaskCompletion(aborted=self._abort)
 
       self._parser_mediator.SetStorageWriter(None)
 
-      storage_writer.Close()
+      task_storage_writer.Close()
 
     try:
       self._storage_writer.FinalizeTaskStorage(task)

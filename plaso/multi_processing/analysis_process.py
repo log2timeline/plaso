@@ -123,12 +123,14 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     self._status = definitions.STATUS_INDICATOR_ANALYZING
 
     task = tasks.Task()
+    task.storage_format = definitions.STORAGE_FORMAT_SQLITE
     # TODO: temporary solution.
     task.identifier = self._analysis_plugin.plugin_name
 
     self._task = task
 
-    storage_writer = self._storage_writer.CreateTaskStorage(task)
+    storage_writer = self._storage_writer.CreateTaskStorage(
+        task, definitions.STORAGE_FORMAT_SQLITE)
 
     if self._serializers_profiler:
       storage_writer.SetSerializersProfiler(self._serializers_profiler)

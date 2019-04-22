@@ -311,17 +311,21 @@ class TaskManager(object):
       return retry_task
 
   # TODO: add support for task types.
-  def CreateTask(self, session_identifier):
+  def CreateTask(
+      self, session_identifier,
+      storage_format=definitions.STORAGE_FORMAT_SQLITE):
     """Creates a task.
 
     Args:
       session_identifier (str): the identifier of the session the task is
           part of.
+      storage_format (str): TODO
 
     Returns:
       Task: task attribute container.
     """
     task = tasks.Task(session_identifier)
+    task.storage_format = storage_format
     logger.debug('Created task: {0:s}.'.format(task.identifier))
 
     with self._lock:
@@ -540,7 +544,7 @@ class TaskManager(object):
       self._tasks_profiler = None
 
   def UpdateTaskAsPendingMerge(self, task):
-    """Updates the task manager to reflect the task is ready to be merged.
+    """Updates the task manager to reflect that the task is ready to be merged.
 
     Args:
       task (Task): task.

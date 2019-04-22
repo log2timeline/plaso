@@ -20,13 +20,16 @@ class StorageFormatArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   # pylint: disable=no-member,protected-access
 
   _EXPECTED_OUTPUT = """\
-usage: cli_helper.py [--storage_format FORMAT]
+usage: cli_helper.py [--storage_format FORMAT] [--task_storage_format FORMAT]
 
 Test argument parser.
 
 optional arguments:
   --storage_format FORMAT, --storage-format FORMAT
                         Format of the storage file, the default is: sqlite.
+                        Supported options: sqlite
+  --task_storage_format FORMAT, --task-storage-format FORMAT
+                        Format for task storage, the default is: sqlite.
                         Supported options: sqlite
 """
 
@@ -46,11 +49,14 @@ optional arguments:
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
     options.storage_format = 'sqlite'
+    options.task_storage_format = 'sqlite'
 
     test_tool = tools.CLITool()
     storage_format.StorageFormatArgumentsHelper.ParseOptions(options, test_tool)
 
     self.assertEqual(test_tool._storage_format, options.storage_format)
+    self.assertEqual(
+        test_tool._task_storage_format, options.task_storage_format)
 
     with self.assertRaises(errors.BadConfigObject):
       storage_format.StorageFormatArgumentsHelper.ParseOptions(options, None)

@@ -207,6 +207,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
     preferred_year (int): preferred initial year value for year-less date and
         time values.
     profiling (ProfilingConfiguration): profiling configuration.
+    task_storage_format (str): format to use for storing task results.
     temporary_directory (str): path of the directory for temporary files.
   """
   CONTAINER_TYPE = 'processing_configuration'
@@ -226,4 +227,5 @@ class ProcessingConfiguration(interface.AttributeContainer):
     self.parser_filter_expression = None
     self.preferred_year = None
     self.profiling = ProfilingConfiguration()
+    self.task_storage_format = None
     self.temporary_directory = None

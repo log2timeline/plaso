@@ -13,6 +13,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import sessions
+from plaso.lib import definitions
 from plaso.engine import configurations
 from plaso.multi_processing import task_engine
 from plaso.storage.sqlite import writer as sqlite_writer
@@ -50,6 +51,7 @@ class TaskMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     configuration = configurations.ProcessingConfiguration()
     configuration.parser_filter_expression = 'filestat'
+    configuration.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, 'storage.plaso')

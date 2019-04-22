@@ -91,6 +91,8 @@ STORAGE_FORMAT_SQLITE = 'sqlite'
 
 STORAGE_FORMATS = frozenset([STORAGE_FORMAT_SQLITE])
 
+TASK_STORAGE_FORMATS = frozenset([STORAGE_FORMAT_SQLITE])
+
 DEFAULT_STORAGE_FORMAT = STORAGE_FORMAT_SQLITE
 
 # The session storage contains the results of one or more sessions.

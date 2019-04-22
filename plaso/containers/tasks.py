@@ -35,6 +35,7 @@ class Task(interface.AttributeContainer):
     start_time (int): time that the task was started. Contains the number
         of micro seconds since January 1, 1970, 00:00:00 UTC.
     storage_file_size (int): size of the storage file in bytes.
+    storage_format (str): the format the task was stored in.
   """
   CONTAINER_TYPE = 'task'
 
@@ -57,6 +58,7 @@ class Task(interface.AttributeContainer):
     self.session_identifier = session_identifier
     self.start_time = int(time.time() * definitions.MICROSECONDS_PER_SECOND)
     self.storage_file_size = None
+    self.storage_format = None
 
   # This method is necessary for heap sort.
   def __lt__(self, other):
@@ -84,6 +86,7 @@ class Task(interface.AttributeContainer):
     retry_task.merge_priority = self.merge_priority
     retry_task.path_spec = self.path_spec
     retry_task.storage_file_size = self.storage_file_size
+    retry_task.storage_format = self.storage_format
 
     self.has_retry = True
 

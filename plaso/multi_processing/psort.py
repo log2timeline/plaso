@@ -304,6 +304,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
         # TODO: temporary solution.
         task = tasks.Task()
+        task.storage_format = definitions.STORAGE_FORMAT_SQLITE
         task.identifier = plugin_name
 
         merge_ready = storage_writer.CheckTaskReadyForMerge(task)

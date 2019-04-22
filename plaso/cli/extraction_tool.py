@@ -65,6 +65,7 @@ class ExtractionTool(
     self._single_process_mode = False
     self._storage_file_path = None
     self._storage_format = definitions.STORAGE_FORMAT_SQLITE
+    self._task_storage_format = definitions.STORAGE_FORMAT_SQLITE
     self._temporary_directory = None
     self._text_prepend = None
     self._yara_rules_string = None
@@ -104,6 +105,7 @@ class ExtractionTool(
     configuration.profiling.directory = self._profiling_directory
     configuration.profiling.sample_rate = self._profiling_sample_rate
     configuration.profiling.profilers = self._profilers
+    configuration.task_storage_format = self._task_storage_format
     configuration.temporary_directory = self._temporary_directory
 
     if not configuration.parser_filter_expression:

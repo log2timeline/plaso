@@ -209,10 +209,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           storage_writer.PrepareMergeTaskStorage(task)
           self._task_manager.UpdateTaskAsPendingMerge(task)
 
-      except KeyError:
+      except KeyError as exception:
         logger.error(
-            'Unable to retrieve task: {0:s} to prepare it to be merged.'.format(
-                task_identifier))
+            'Unable to retrieve task: {0:s} to prepare it to be merged. '
+            'Error: {1!s}.'.format(task_identifier, exception))
         continue
 
     if self._processing_profiler:
@@ -423,7 +423,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           task = self._task_manager.CreateRetryTask()
 
         if not task and event_source:
-          task = self._task_manager.CreateTask(self._session_identifier)
+          task = self._task_manager.CreateTask(
+              self._session_identifier,
+              self._processing_configuration.task_storage_format)
           task.file_entry_type = event_source.file_entry_type
           task.path_spec = event_source.path_spec
           event_source = None
@@ -435,9 +437,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
         if task:
           if self._ScheduleTask(task):
+            task_path_spec = task.path_spec.comparable.replace('\n', ' ')
             logger.debug(
                 'Scheduled task {0:s} for path specification {1:s}'.format(
-                    task.identifier, task.path_spec.comparable))
+                    task.identifier, task_path_spec))
 
             self._task_manager.SampleTaskStatus(task, 'scheduled')
 
@@ -450,6 +453,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
         if not event_source_heap.IsFull():
           self._FillEventSourceHeap(storage_writer, event_source_heap)
+        else:
+          logger.debug('Source heap is full.')
 
         if not task and not event_source:
           event_source = event_source_heap.PopEventSource()
