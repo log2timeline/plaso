@@ -1,4 +1,4 @@
-FROM ubuntu:xenial
+FROM ubuntu:bionic
 MAINTAINER Log2Timeline <log2timeline-dev@googlegroups.com>
 
 # Create container with:
