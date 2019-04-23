@@ -522,10 +522,12 @@ class EventsStatus(object):
   """The status of the events.
 
   Attributes:
-    number_of_duplicate_events (int): number of duplicate events.
+    number_of_duplicate_events (int): number of duplicate events, not including
+        the original.
     number_of_events_from_time_slice (int): number of events from time slice.
-    number_of_filtered_events (int): number of filtered events.
-    number_of_macb_grouped_events (int): number of MACB grouped events.
+    number_of_filtered_events (int): number of events excluded by the event
+        filter.
+    number_of_macb_grouped_events (int): number of events grouped based on MACB.
     total_number_of_events (int): total number of events in the storage file.
   """
 
