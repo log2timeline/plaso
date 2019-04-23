@@ -105,7 +105,7 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
       terminal = entry.terminal.split(b'\x00')[0]
       terminal = terminal.decode(encoding)
     except UnicodeDecodeError:
-      warning_strings.apppend('unable to decode terminal string')
+      warning_strings.append('unable to decode terminal string')
       terminal = None
 
     if terminal == '~':
