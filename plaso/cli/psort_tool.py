@@ -540,7 +540,6 @@ class PsortTool(
       for item, value in iter(session.analysis_reports_counter.items()):
         analysis_counter[item] = value
 
-    events_counter = None
     if self._output_format != 'null':
       storage_reader = (
           storage_factory.StorageFactory.CreateStorageReaderForFile(
@@ -550,7 +549,7 @@ class PsortTool(
       analysis_engine = psort.PsortMultiProcessEngine(
           use_zeromq=self._use_zeromq)
 
-      events_counter = analysis_engine.ExportEvents(
+      analysis_engine.ExportEvents(
           self._knowledge_base, storage_reader, self._output_module,
           configuration, deduplicate_events=self._deduplicate_events,
           event_filter=self._event_filter,
@@ -570,13 +569,6 @@ class PsortTool(
           table_view.AddRow([element, count])
 
       table_view.AddRow(['Total', analysis_counter['total']])
-      table_view.Write(self._output_writer)
-
-    if events_counter:
-      table_view = views.ViewsFactory.GetTableView(
-          self._views_format_type, title='Export results')
-      for element, count in events_counter.most_common():
-        table_view.AddRow([element, count])
       table_view.Write(self._output_writer)
 
     storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(

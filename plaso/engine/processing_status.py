@@ -522,12 +522,22 @@ class EventsStatus(object):
   """The status of the events.
 
   Attributes:
+    number_of_duplicate_events (int): number of duplicate events, not including
+        the original.
+    number_of_events_from_time_slice (int): number of events from time slice.
+    number_of_filtered_events (int): number of events excluded by the event
+        filter.
+    number_of_macb_grouped_events (int): number of events grouped based on MACB.
     total_number_of_events (int): total number of events in the storage file.
   """
 
   def __init__(self):
     """Initializes an events status."""
     super(EventsStatus, self).__init__()
+    self.number_of_duplicate_events = 0
+    self.number_of_events_from_time_slice = 0
+    self.number_of_filtered_events = 0
+    self.number_of_macb_grouped_events = 0
     self.total_number_of_events = 0
 
 
