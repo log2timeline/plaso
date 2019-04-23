@@ -439,7 +439,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       self.assertEqual(expected_output, result_output)
 
     output = output_writer.ReadOutput()
-    self.assertIn('Events processed : 38', output)
+    self.assertIn('Processing completed.', output)
 
 
 if __name__ == '__main__':
