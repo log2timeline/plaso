@@ -125,12 +125,18 @@ matrix:
     os: osx
     osx_image: xcode9.2
     language: generic
-  - env: TARGET="jenkins"
+  - env: TARGET="jenkins3"
     os: linux
     dist: xenial
     sudo: required
     group: edge
     python: 3.5
+  - env: TARGET="jenkins2"
+    os: linux
+    dist: xenial
+    sudo: required
+    group: edge
+    python: 2.7
 install:
 - ./config/travis/install.sh
 script:
