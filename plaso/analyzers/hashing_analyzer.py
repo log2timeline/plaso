@@ -17,7 +17,7 @@ class HashingAnalyzer(interface.BaseAnalyzer):
   NAME = 'hashing'
   DESCRIPTION = 'Calculates hashes of file content.'
 
-  PROCESSING_STATUS_HINT = definitions.PROCESSING_STATUS_HASHING
+  PROCESSING_STATUS_HINT = definitions.STATUS_INDICATOR_HASHING
 
   INCREMENTAL_ANALYZER = True
 

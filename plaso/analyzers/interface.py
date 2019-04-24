@@ -15,7 +15,7 @@ class BaseAnalyzer(object):
   DESCRIPTION = ''
 
   # Processing status hint used by the worker.
-  PROCESSING_STATUS_HINT = definitions.PROCESSING_STATUS_ANALYZING
+  PROCESSING_STATUS_HINT = definitions.STATUS_INDICATOR_ANALYZING
 
   INCREMENTAL_ANALYZER = False
   SIZE_LIMIT = 32 * 1024 * 1024

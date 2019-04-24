@@ -135,7 +135,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._processing_configuration = None
     self._resolver_context = context.Context()
     self._session_identifier = None
-    self._status = definitions.PROCESSING_STATUS_IDLE
+    self._status = definitions.STATUS_INDICATOR_IDLE
     self._storage_merge_reader = None
     self._storage_merge_reader_on_hold = None
     self._task_queue = None
@@ -230,7 +230,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     # Limit the number of attribute containers from a single task-based
     # storage file that are merged per loop to keep tasks flowing.
     if task or self._storage_merge_reader:
-      self._status = definitions.PROCESSING_STATUS_MERGING
+      self._status = definitions.STATUS_INDICATOR_MERGING
 
       if self._processing_profiler:
         self._processing_profiler.StartTiming('merge')
@@ -290,7 +290,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._task_manager.SampleTaskStatus(
               self._merge_task, 'merge_resumed')
 
-      self._status = definitions.PROCESSING_STATUS_RUNNING
+      self._status = definitions.STATUS_INDICATOR_RUNNING
       self._number_of_produced_events = storage_writer.number_of_events
       self._number_of_produced_sources = storage_writer.number_of_event_sources
       self._number_of_produced_warnings = storage_writer.number_of_warnings
@@ -310,7 +310,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if self._processing_profiler:
       self._processing_profiler.StartTiming('process_sources')
 
-    self._status = definitions.PROCESSING_STATUS_COLLECTING
+    self._status = definitions.STATUS_INDICATOR_COLLECTING
     self._number_of_consumed_event_tags = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_reports = 0
@@ -346,9 +346,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._ScheduleTasks(storage_writer)
 
     if self._abort:
-      self._status = definitions.PROCESSING_STATUS_ABORTED
+      self._status = definitions.STATUS_INDICATOR_ABORTED
     else:
-      self._status = definitions.PROCESSING_STATUS_COMPLETED
+      self._status = definitions.STATUS_INDICATOR_COMPLETED
 
     self._number_of_produced_events = storage_writer.number_of_events
     self._number_of_produced_sources = storage_writer.number_of_event_sources
@@ -402,7 +402,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     """
     logger.debug('Task scheduler started')
 
-    self._status = definitions.PROCESSING_STATUS_RUNNING
+    self._status = definitions.STATUS_INDICATOR_RUNNING
 
     # TODO: make tasks persistent.
 
@@ -471,7 +471,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._storage_writer.AddWarning(warning)
       self._processing_status.error_path_specs.append(task.path_spec)
 
-    self._status = definitions.PROCESSING_STATUS_IDLE
+    self._status = definitions.STATUS_INDICATOR_IDLE
 
     if self._abort:
       logger.debug('Task scheduler aborted')
@@ -670,7 +670,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     number_of_produced_warnings = process_status.get(
         'number_of_produced_warnings', None)
 
-    if processing_status != definitions.PROCESSING_STATUS_IDLE:
+    if processing_status != definitions.STATUS_INDICATOR_IDLE:
       last_activity_timestamp = process_status.get(
           'last_activity_timestamp', 0.0)
 
@@ -682,7 +682,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           logger.error((
               'Process {0:s} (PID: {1:d}) has not reported activity within '
               'the timeout period.').format(process.name, pid))
-          processing_status = definitions.PROCESSING_STATUS_NOT_RESPONDING
+          processing_status = definitions.STATUS_INDICATOR_NOT_RESPONDING
 
     self._processing_status.UpdateWorkerStatus(
         process.name, processing_status, pid, used_memory, display_name,

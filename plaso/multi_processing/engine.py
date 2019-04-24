@@ -147,10 +147,10 @@ class MultiProcessEngine(engine.BaseEngine):
                 process.name, pid, rpc_port))
 
         processing_status_string = 'RPC error'
-        status_indicator = definitions.PROCESSING_STATUS_RUNNING
+        status_indicator = definitions.STATUS_INDICATOR_RUNNING
       else:
         processing_status_string = 'killed'
-        status_indicator = definitions.PROCESSING_STATUS_KILLED
+        status_indicator = definitions.STATUS_INDICATOR_KILLED
 
       process_status = {
           'processing_status': processing_status_string}
@@ -164,7 +164,7 @@ class MultiProcessEngine(engine.BaseEngine):
         status_indicator = worker_status.status
         break
 
-    if status_indicator in definitions.PROCESSING_ERROR_STATUS:
+    if status_indicator in definitions.ERROR_STATUS_INDICATORS:
       logger.error((
           'Process {0:s} (PID: {1:d}) is not functioning correctly. '
           'Status code: {2!s}.').format(process.name, pid, status_indicator))
