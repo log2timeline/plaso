@@ -287,6 +287,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           should be skipped.
     """
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+
+    if not file_entry:
+      logger.warning('Unable to open file entry for path spec: {0:s}'.format(
+          path_spec.comparable))
+      return
+
     if not self._filter_collection.Matches(file_entry):
       return
 
