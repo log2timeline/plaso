@@ -30,7 +30,7 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     user_account_artifact3 = artifacts.UserAccountArtifact(username='Test3')
 
     user_accounts = [
-      user_account_artifact1, user_account_artifact2, user_account_artifact3]
+        user_account_artifact1, user_account_artifact2, user_account_artifact3]
 
     path_segments = ['%%users.homedir%%', '.bashrc']
     expanded_paths = (
