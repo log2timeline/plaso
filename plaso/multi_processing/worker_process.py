@@ -50,7 +50,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._number_of_consumed_sources = 0
     self._parser_mediator = None
     self._session_identifier = session_identifier
-    self._status = definitions.PROCESSING_STATUS_INITIALIZED
+    self._status = definitions.STATUS_INDICATOR_INITIALIZED
     self._storage_writer = storage_writer
     self._task = None
     self._task_queue = task_queue
@@ -166,7 +166,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     logger.debug('Worker: {0!s} (PID: {1:d}) started.'.format(
         self._name, self._pid))
 
-    self._status = definitions.PROCESSING_STATUS_RUNNING
+    self._status = definitions.STATUS_INDICATOR_RUNNING
 
     try:
       logger.debug('{0!s} (PID: {1:d}) started monitoring task queue.'.format(
@@ -216,9 +216,9 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._storage_writer = None
 
     if self._abort:
-      self._status = definitions.PROCESSING_STATUS_ABORTED
+      self._status = definitions.STATUS_INDICATOR_ABORTED
     else:
-      self._status = definitions.PROCESSING_STATUS_COMPLETED
+      self._status = definitions.STATUS_INDICATOR_COMPLETED
 
     logger.debug('Worker: {0!s} (PID: {1:d}) stopped.'.format(
         self._name, self._pid))

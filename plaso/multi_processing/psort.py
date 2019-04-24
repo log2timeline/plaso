@@ -214,7 +214,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._processing_configuration = None
     self._processing_profiler = None
     self._serializers_profiler = None
-    self._status = definitions.PROCESSING_STATUS_IDLE
+    self._status = definitions.STATUS_INDICATOR_IDLE
     self._status_update_callback = None
     self._use_zeromq = use_zeromq
     self._worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
@@ -235,7 +235,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     Raises:
       RuntimeError: if a non-recoverable situation is encountered.
     """
-    self._status = definitions.PROCESSING_STATUS_RUNNING
+    self._status = definitions.STATUS_INDICATOR_RUNNING
     self._number_of_consumed_events = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
@@ -305,7 +305,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         merge_ready = storage_writer.CheckTaskReadyForMerge(task)
         if merge_ready:
           storage_writer.PrepareMergeTaskStorage(task)
-          self._status = definitions.PROCESSING_STATUS_MERGING
+          self._status = definitions.STATUS_INDICATOR_MERGING
 
           event_queue = self._event_queues[plugin_name]
           del self._event_queues[plugin_name]
@@ -319,7 +319,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           # TODO: temporary solution.
           plugin_names.remove(plugin_name)
 
-          self._status = definitions.PROCESSING_STATUS_RUNNING
+          self._status = definitions.STATUS_INDICATOR_RUNNING
 
           self._number_of_produced_event_tags = (
               storage_writer.number_of_event_tags)
@@ -357,7 +357,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._RaiseIfNotRegistered(pid)
 
     if pid in self._completed_analysis_processes:
-      status_indicator = definitions.PROCESSING_STATUS_COMPLETED
+      status_indicator = definitions.STATUS_INDICATOR_COMPLETED
       process_status = {
           'processing_status': status_indicator}
       used_memory = 0
@@ -385,7 +385,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         self._rpc_errors_per_pid[pid] = 0
         status_indicator = process_status.get('processing_status', None)
 
-        if status_indicator == definitions.PROCESSING_STATUS_COMPLETED:
+        if status_indicator == definitions.STATUS_INDICATOR_COMPLETED:
           self._completed_analysis_processes.add(pid)
 
       else:
@@ -403,17 +403,17 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
                   process.name, pid, rpc_port))
 
           processing_status_string = 'RPC error'
-          status_indicator = definitions.PROCESSING_STATUS_RUNNING
+          status_indicator = definitions.STATUS_INDICATOR_RUNNING
         else:
           processing_status_string = 'killed'
-          status_indicator = definitions.PROCESSING_STATUS_KILLED
+          status_indicator = definitions.STATUS_INDICATOR_KILLED
 
         process_status = {
             'processing_status': processing_status_string}
 
     self._UpdateProcessingStatus(pid, process_status, used_memory)
 
-    if status_indicator in definitions.PROCESSING_ERROR_STATUS:
+    if status_indicator in definitions.ERROR_STATUS_INDICATORS:
       logger.error((
           'Process {0:s} (PID: {1:d}) is not functioning correctly. '
           'Status code: {2!s}.').format(
@@ -454,7 +454,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           used. The 'time slicer' will provide a context of events around
           an event of interest.
     """
-    self._status = definitions.PROCESSING_STATUS_EXPORTING
+    self._status = definitions.STATUS_INDICATOR_EXPORTING
 
     time_slice_buffer = None
     time_slice_range = None
@@ -757,7 +757,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     number_of_produced_warnings = process_status.get(
         'number_of_produced_warnings', None)
 
-    if status_indicator != definitions.PROCESSING_STATUS_IDLE:
+    if status_indicator != definitions.STATUS_INDICATOR_IDLE:
       last_activity_timestamp = process_status.get(
           'last_activity_timestamp', 0.0)
 
@@ -769,7 +769,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           logger.error((
               'Process {0:s} (PID: {1:d}) has not reported activity within '
               'the timeout period.').format(process.name, pid))
-          status_indicator = definitions.PROCESSING_STATUS_NOT_RESPONDING
+          status_indicator = definitions.STATUS_INDICATOR_NOT_RESPONDING
 
     self._processing_status.UpdateWorkerStatus(
         process.name, status_indicator, pid, used_memory, display_name,
@@ -912,7 +912,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         self._AnalyzeEvents(
             storage_writer, analysis_plugins, event_filter=event_filter)
 
-        self._status = definitions.PROCESSING_STATUS_FINALIZING
+        self._status = definitions.STATUS_INDICATOR_FINALIZING
 
       except KeyboardInterrupt:
         keyboard_interrupt = True

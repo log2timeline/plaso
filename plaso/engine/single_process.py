@@ -98,7 +98,7 @@ class SingleProcessEngine(engine.BaseEngine):
     number_of_consumed_sources = 0
 
     self._UpdateStatus(
-        definitions.PROCESSING_STATUS_COLLECTING, '',
+        definitions.STATUS_INDICATOR_COLLECTING, '',
         number_of_consumed_sources, storage_writer)
 
     display_name = ''
@@ -119,12 +119,12 @@ class SingleProcessEngine(engine.BaseEngine):
       storage_writer.AddEventSource(event_source)
 
       self._UpdateStatus(
-          definitions.PROCESSING_STATUS_COLLECTING, display_name,
+          definitions.STATUS_INDICATOR_COLLECTING, display_name,
           number_of_consumed_sources, storage_writer)
 
     # Force the status update here to make sure the status is up to date.
     self._UpdateStatus(
-        definitions.PROCESSING_STATUS_RUNNING, display_name,
+        definitions.STATUS_INDICATOR_RUNNING, display_name,
         number_of_consumed_sources, storage_writer, force=True)
 
     if self._processing_profiler:
@@ -159,9 +159,9 @@ class SingleProcessEngine(engine.BaseEngine):
         self._processing_profiler.StopTiming('get_event_source')
 
     if self._abort:
-      status = definitions.PROCESSING_STATUS_ABORTED
+      status = definitions.STATUS_INDICATOR_ABORTED
     else:
-      status = definitions.PROCESSING_STATUS_COMPLETED
+      status = definitions.STATUS_INDICATOR_COMPLETED
 
     # Force the status update here to make sure the status is up to date
     # on exit.
@@ -190,8 +190,8 @@ class SingleProcessEngine(engine.BaseEngine):
         self._last_status_update_timestamp + self._STATUS_UPDATE_INTERVAL):
       return
 
-    if status == definitions.PROCESSING_STATUS_IDLE:
-      status = definitions.PROCESSING_STATUS_RUNNING
+    if status == definitions.STATUS_INDICATOR_IDLE:
+      status = definitions.STATUS_INDICATOR_RUNNING
 
     used_memory = self._process_information.GetUsedMemory() or 0
 
