@@ -301,7 +301,8 @@ class UserAccountArtifact(ArtifactAttributeContainer):
     """Retrieves the path segments of the user directory.
 
     Returns:
-      list[str]: path segments of the user directory.
+      list[str]: path segments of the user directory or an empty list if no
+        user directory is set.
     """
     if not self.user_directory:
       return []
