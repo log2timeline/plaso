@@ -12,8 +12,7 @@ if test "${TARGET}" = "jenkins3";
 then
 	./config/jenkins/linux/run_end_to_end_tests_py3.sh "travis";
 
-elif test "${TRAVIS_OS_NAME}" = "osx";
-if test "${TARGET}" = "jenkins2";
+elif  test "${TARGET}" = "jenkins2";
 then
 	./config/jenkins/linux/run_end_to_end_tests_py.sh "travis";
 
