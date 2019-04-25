@@ -8,7 +8,11 @@
 # Exit on error.
 set -e;
 
-if test "${TARGET}" = "jenkins";
+if test "${TARGET}" = "jenkins3";
+then
+	./config/jenkins/linux/run_end_to_end_tests_py3.sh "travis";
+
+elif  test "${TARGET}" = "jenkins2";
 then
 	./config/jenkins/linux/run_end_to_end_tests.sh "travis";
 

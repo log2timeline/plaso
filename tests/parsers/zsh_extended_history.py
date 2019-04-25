@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*_ coding: utf-8 -*-
 """Tests for the Zsh extended_history parser."""
 

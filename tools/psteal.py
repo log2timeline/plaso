@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Psteal (Plaso SýndarheimsTímalína sem Er ALgjörlega sjálfvirk).
 
