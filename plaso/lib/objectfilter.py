@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-#
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 """Classes to perform filtering of objects based on their data members.
 
 Given a list of objects and a textual filter expression, these classes allow

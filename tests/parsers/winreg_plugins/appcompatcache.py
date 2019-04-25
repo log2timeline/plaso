@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tests for the Application Compatibility Cache key Windows Registry plugin."""
 
