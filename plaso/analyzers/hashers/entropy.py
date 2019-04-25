@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-import codecs
 import collections
 import math
 
@@ -25,14 +24,14 @@ class EntropyHasher(interface.BaseHasher):
 
   @classmethod
   def GetAttributeName(cls):
-    """The attribute name for the hash result."""
+    """The attribute name for the result."""
     return 'file_entropy'
 
   def GetStringDigest(self):
-    """Caclulates a unicode string containing the entropy value.
+    """Calculates a unicode string containing the entropy value.
 
     Byte entropy is a value between 0.0 and 8.0, and is returned as a string
-    here to match the Plaso analyzer and storage APIs.
+    to match the Plaso analyzer and storage APIs.
 
     Returns:
       str: byte entropy calculated over the data blocks passed to
@@ -51,7 +50,8 @@ class EntropyHasher(interface.BaseHasher):
     concatenation of the arguments.
 
     Args:
-      data(bytes): block of data with which to update the context of the hasher.
+      data(bytes): block of data with which to update the context of the entropy
+          calculator.
     """
     self._counter.update(data)
     self._length += len(data)
