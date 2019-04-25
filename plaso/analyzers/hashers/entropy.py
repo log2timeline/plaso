@@ -38,7 +38,7 @@ class EntropyHasher(interface.BaseHasher):
           Update().
     """
     if self._length == 0:
-      return '0.0'
+      return '0.000000'
 
     entropy = 0
     for byte_frequency in self._counter.values():
