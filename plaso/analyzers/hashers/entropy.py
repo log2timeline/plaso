@@ -37,6 +37,9 @@ class EntropyHasher(interface.BaseHasher):
       str: byte entropy calculated over the data blocks passed to
           Update().
     """
+    if self._length == 0:
+      return '0.0'
+
     entropy = 0
     for byte_frequency in self._counter.values():
       byte_probability = byte_frequency / self._length
