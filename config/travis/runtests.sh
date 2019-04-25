@@ -14,7 +14,7 @@ then
 
 elif  test "${TARGET}" = "jenkins2";
 then
-	./config/jenkins/linux/run_end_to_end_tests_py.sh "travis";
+	./config/jenkins/linux/run_end_to_end_tests.sh "travis";
 
 elif test "${TRAVIS_OS_NAME}" = "osx";
 then
