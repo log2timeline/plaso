@@ -40,7 +40,8 @@ class EntropyHasher(interface.BaseHasher):
     entropy = 0
     for byte_frequency in self._counter.values():
       byte_probability = byte_frequency / self._length
-      entropy += - byte_probability * math.log(byte_probability, 2)
+      if byte_probability:
+        entropy += - byte_probability * math.log(byte_probability, 2)
     return '{0:f}'.format(entropy)
 
   def Update(self, data):
