@@ -124,9 +124,15 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
         location='/a_directory/another_file', parent=os_path_spec)
 
+    non_existent_test_path = self._GetTestFilePath(['does_not_exist'])
+    non_existent_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=non_existent_test_path)
+
     with shared_test_lib.TempDirectory() as temp_directory:
       test_tool._ExtractFileEntry(
           tsk_path_spec, temp_directory, output_writer)
+      test_tool._ExtractFileEntry(
+          non_existent_path_spec, temp_directory, output_writer)
 
   # TODO: add tests for _ExtractWithFilter.
   # TODO: add tests for _GetSourceFileSystem.
