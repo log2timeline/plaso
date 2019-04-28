@@ -61,6 +61,9 @@ class PathHelper(object):
       for user_account in user_accounts:
         user_path_segments = user_account.GetUserDirectoryPathSegments()
 
+        if not user_path_segments:
+          continue
+
         if cls._IsWindowsDrivePathSegment(user_path_segments[0]):
           user_path_segments[0] = ''
 
