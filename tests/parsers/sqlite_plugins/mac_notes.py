@@ -8,6 +8,7 @@ from plaso.parsers.sqlite_plugins import mac_notes
 
 from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
+import logging
 
 
 class MacNotesTest(test_lib.SQLitePluginTestCase):
@@ -31,19 +32,7 @@ class MacNotesTest(test_lib.SQLitePluginTestCase):
         event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
     self.assertEqual(event.title, 'building 4th brandy gibs')
-    expected_message = (
-        'note_body:   building 4th brandy gibs'
-        '      microsoft office'
-        '   body soul and peace'
-        '    example.com'
-        '        3015555555: plumbing and heating'
-        '    claim#123456'
-        '        Small business            '
-        ' title:building 4th brandy gibs')
-    expected_short_message = (
-        'title:building 4th brandy gibs')
-
-    self._TestGetMessageStrings(event, expected_message, expected_short_message)
+    logging.error(event.zhtmlstring)
 
 if __name__ == '__main__':
   unittest.main()

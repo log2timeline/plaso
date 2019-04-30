@@ -1,0 +1,22 @@
+
+import subprocess 
+filename = 'input.txt'
+output = 'output.txt'
+file = open(filename, 'r')
+f2 = open(output, 'w')
+for line in file:
+	line.replace('https://screenshot.googleplex.com/','')
+	print(line)
+  out = subprocess.call('rpcget --blade_service=apphosting-frontend --extra_headers "X-GFE-SSL: yes" '+ line , shell=True)
+  if out == 0:
+    f2.write(line)
+
+f2.close()
+file.close()
+
+
+
+rpcget --request='POST' --extra_headers='Origin: https://ahosting-dot-screenshot.googleplex.com/' --blade_service=apphosting-frontend  --output_hea$
+
+
+

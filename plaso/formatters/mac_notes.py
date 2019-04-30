@@ -2,7 +2,6 @@
 """The Mac Notes zhtmlstring event formatter."""
 from __future__ import unicode_literals
 import re
-from bs4 import BeautifulSoup
 
 from plaso.formatters import interface
 from plaso.formatters import manager
@@ -45,10 +44,9 @@ class MacNotesNotesFormatter(interface.ConditionalEventFormatter):
 
     event_values = event.CopyToDict()
 
-    soup = BeautifulSoup(event_values.get('zhtmlstring', None), 'html.parser')
-    body = soup.body.prettify()
-    body = re.sub(r'(<\/?(div|body|span|b|table|tr|td|tbody|p).*>\n?)', '',
-                  body)
+    body = re.sub(
+        r'(<\/?(html|head|div|body|span|b|table|tr|td|tbody|p).*>\n?)',
+        '',event_values.get('zhtmlstring', None))
     event_values['zhtmlstring'] = body
 
     return self._ConditionalFormatMessages(event_values)
