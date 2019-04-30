@@ -46,7 +46,7 @@ class MacNotesNotesFormatter(interface.ConditionalEventFormatter):
 
     body = re.sub(
         r'(<\/?(html|head|div|body|span|b|table|tr|td|tbody|p).*>\n?)',
-        '',event_values.get('zhtmlstring', None))
+        '', event_values.get('zhtmlstring', None))
     event_values['zhtmlstring'] = body
 
     return self._ConditionalFormatMessages(event_values)
