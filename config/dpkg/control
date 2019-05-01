@@ -2,7 +2,7 @@ Source: plaso
 Section: python
 Priority: extra
 Maintainer: Log2Timeline maintainers <log2timeline-maintainers@googlegroups.com>
-Build-Depends: debhelper (>= 9), python-all (>= 2.7~), python-setuptools, python3-all (>= 3.4~), python3-setuptools
+Build-Depends: debhelper (>= 9), dh-python, python-all (>= 2.7~), python-setuptools, python3-all (>= 3.4~), python3-setuptools
 Standards-Version: 3.9.5
 X-Python-Version: >= 2.7
 X-Python3-Version: >= 3.4
@@ -36,7 +36,7 @@ Description: Python 3 module of plaso (log2timeline)
 
 Package: plaso-tools
 Architecture: all
-Depends: python-plaso (>= ${binary:Version}), ${python:Depends}, ${misc:Depends}
+Depends: python3-plaso (>= ${binary:Version}), ${python3:Depends}, ${misc:Depends}
 Description: Tools of plaso (log2timeline)
  Plaso (log2timeline) is a framework to create super timelines. Its
  purpose is to extract timestamps from various files found on typical
