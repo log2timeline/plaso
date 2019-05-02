@@ -65,7 +65,8 @@ PYTHON2_DEPENDENCIES="libbde-python
 TEST_DEPENDENCIES="python-coverage
                    python-funcsigs
                    python-mock
-                   python-pbr";
+                   python-pbr
+                   python-setuptools";
 
 # Additional dependencies for development, alphabetized, one per line.
 DEVELOPMENT_DEPENDENCIES="pylint
