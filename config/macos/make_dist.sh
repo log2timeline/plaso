@@ -51,6 +51,9 @@ cp AUTHORS ACKNOWLEDGEMENTS LICENSE tmp/usr/local/share/doc/plaso
 
 for PY_FILE in tmp/usr/local/bin/*.py;
 do
+  # Rewrite the shebang of the Python script since MacOS uses Python 2.7
+  sed -i ${PY_FILE} 's?#!/usr/bin/env python3?#!/usr/bin/env python?';
+
   SH_FILE=${PY_FILE/.py/.sh};
   cat > ${SH_FILE} << EOT
 #!/bin/sh
