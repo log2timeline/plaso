@@ -109,14 +109,14 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
         'filename': 'log/syslog.1',
         'hostname': 'ubuntu',
         'message': '[',
-        'my_number': 123,
+        'my_number': '123',
         'some_additional_foo': True,
         'source_long': 'Log File',
         'source_short': 'LOG',
         'tag': ['Test'],
         'text': ('Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
                  'session\n closed for user root)'),
-        'timestamp': 1340821021000000,
+        'timestamp': '1340821021000000',
         'timestamp_desc': 'Content Modification Time',
     }
 

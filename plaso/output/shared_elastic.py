@@ -14,9 +14,11 @@ except ImportError:
   elasticsearch = None
 
 from plaso.lib import errors
+from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import logger
+
 
 # Configure the Elasticsearch logger.
 if elasticsearch:
@@ -46,6 +48,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
           modules and other components, such as storage and dfvfs.
     """
     super(SharedElasticsearchOutputModule, self).__init__(output_mediator)
+    self._ca_certs = None
     self._client = None
     self._document_type = self._DEFAULT_DOCUMENT_TYPE
     self._event_documents = []
@@ -55,10 +58,9 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._number_of_buffered_events = 0
     self._password = None
     self._port = None
+    self._url_prefix = None
     self._username = None
     self._use_ssl = None
-    self._ca_certs = None
-    self._url_prefix = None
 
   def _Connect(self):
     """Connects to an Elasticsearch server."""
@@ -157,6 +159,13 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
               attribute_value)
         except TypeError:
           continue
+
+      # Convert integer values to strings since Elasticsearch does not support
+      # integer values that exceed the signed 64-bit value range.
+      if (isinstance(attribute_value, py2to3.INTEGER_TYPES) and
+          not isinstance(attribute_value, bool)):
+        attribute_value = '{0:d}'.format(attribute_value)
+
       event_values[attribute_name] = attribute_value
 
     # Add a string representation of the timestamp.

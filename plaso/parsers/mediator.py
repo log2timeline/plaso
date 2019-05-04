@@ -183,7 +183,8 @@ class ParserMediator(object):
     Returns:
       int: inode or -1 if the inode value cannot be converted to an integer.
     """
-    if isinstance(inode_value, py2to3.INTEGER_TYPES):
+    if (isinstance(inode_value, py2to3.INTEGER_TYPES) and
+        not isinstance(inode_value, bool)):
       return inode_value
 
     if isinstance(inode_value, float):

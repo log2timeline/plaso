@@ -42,7 +42,8 @@ class ArgumentsHelper(object):
     if argument_value is None:
       return default_value
 
-    if not isinstance(argument_value, py2to3.INTEGER_TYPES):
+    if (not isinstance(argument_value, py2to3.INTEGER_TYPES) or
+        isinstance(argument_value, bool)):
       raise errors.BadConfigOption(
           'Unsupported option: {0:s} integer type required.'.format(
               argument_name))
