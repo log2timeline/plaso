@@ -8,6 +8,8 @@ import os
 import unittest
 
 from plaso.analysis import chrome_extension
+from plaso.lib import definitions
+from plaso.lib import timelib
 
 from tests import test_lib as shared_test_lib
 from tests.analysis import test_lib
@@ -107,26 +109,25 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['chrome_extensions'])
   def testExamineEventAndCompileReportMacOSPaths(self):
     """Tests the ExamineEvent and CompileReport functions on MacOS paths."""
-    events = []
+    test_events = []
     for path in self._MACOS_PATHS:
-      event_dictionary = {
+      event_values = {
           'data_type': 'fs:stat',
           'filename': path,
-          'timestamp': 12345,
-          'timestamp_desc': 'Some stuff'}
+          'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
+          'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
 
-      event = self._CreateTestEventObject(event_dictionary)
-      events.append(event)
+      event, event_data = self._CreateTestEvent(event_values)
+      test_events.append((event, event_data))
 
     plugin = MockChromeExtensionPlugin()
     storage_writer = self._AnalyzeEvents(
-        events, plugin, knowledge_base_values={'users': self._MACOS_USERS})
+        test_events, plugin, knowledge_base_values={
+            'users': self._MACOS_USERS})
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
 
     analysis_report = storage_writer.analysis_reports[0]
-
-    self.assertEqual(plugin._sep, '/')
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.
@@ -148,26 +149,25 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile(['chrome_extensions'])
   def testExamineEventAndCompileReportWindowsPaths(self):
     """Tests the ExamineEvent and CompileReport functions on Windows paths."""
-    events = []
+    test_events = []
     for path in self._WINDOWS_PATHS:
-      event_dictionary = {
+      event_values = {
           'data_type': 'fs:stat',
           'filename': path,
-          'timestamp': 12345,
-          'timestamp_desc': 'Some stuff'}
+          'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
+          'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}
 
-      event = self._CreateTestEventObject(event_dictionary)
-      events.append(event)
+      event, event_data = self._CreateTestEvent(event_values)
+      test_events.append((event, event_data))
 
     plugin = MockChromeExtensionPlugin()
     storage_writer = self._AnalyzeEvents(
-        events, plugin, knowledge_base_values={'users': self._WINDOWS_USERS})
+        test_events, plugin, knowledge_base_values={
+            'users': self._WINDOWS_USERS})
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
 
     analysis_report = storage_writer.analysis_reports[0]
-
-    self.assertEqual(plugin._sep, '\\')
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.

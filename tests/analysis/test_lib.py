@@ -18,12 +18,11 @@ from tests import test_lib as shared_test_lib
 class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for an analysis plugin."""
 
-  def _AnalyzeEvents(
-      self, event_objects, plugin, knowledge_base_values=None):
+  def _AnalyzeEvents(self, test_events, plugin, knowledge_base_values=None):
     """Analyzes events using the analysis plugin.
 
     Args:
-      event_objects (list[EventObject]]): events to analyze.
+      test_events (list[tuple[EventObject, EventData]]]): events to analyze.
       plugin (AnalysisPlugin): plugin.
       knowledge_base_values (Optional[dict[str, str]]): knowledge base values.
 
@@ -36,32 +35,51 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     session = sessions.Session()
     storage_writer = fake_writer.FakeStorageWriter(session)
     storage_writer.Open()
-    for event in event_objects:
+    for event, event_data in test_events:
+      storage_writer.AddEventData(event_data)
+
+      event.SetEventDataIdentifier(event_data.GetIdentifier())
       storage_writer.AddEvent(event)
 
     mediator = analysis_mediator.AnalysisMediator(
         storage_writer, knowledge_base_object)
 
-    for event in event_objects:
-      plugin.ExamineEvent(mediator, event)
+    for event, event_data in test_events:
+      plugin.ExamineEvent(mediator, event, event_data)
 
     analysis_report = plugin.CompileReport(mediator)
     storage_writer.AddAnalysisReport(analysis_report)
 
     return storage_writer
 
-  def _CreateTestEventObject(self, event_dictionary):
-    """Create a test event with a set of attributes.
+  def _CreateTestEvent(self, event_values):
+    """Create a test event and event data.
 
     Args:
-      event_dictionary (dict[str, str]): contains attributes of an event.
+      event_values (dict[str, str]): event values.
 
     Returns:
-      EventObject: event with the appropriate attributes for testing.
+      tuple[EventObject, WindowsRegistryServiceEventData]: event and event
+          data for testing.
     """
+    copy_of_event_values = dict(event_values)
+
+    timestamp = copy_of_event_values.get('timestamp', None)
+    if 'timestamp' in copy_of_event_values:
+      del copy_of_event_values['timestamp']
+
+    timestamp_desc = copy_of_event_values.get('timestamp_desc', None)
+    if 'timestamp_desc' in copy_of_event_values:
+      del copy_of_event_values['timestamp_desc']
+
     event = events.EventObject()
-    event.CopyFromDict(event_dictionary)
-    return event
+    event.timestamp = timestamp
+    event.timestamp_desc = timestamp_desc
+
+    event_data = events.EventData()
+    event_data.CopyFromDict(copy_of_event_values)
+
+    return event, event_data
 
   def _ParseAndAnalyzeFile(
       self, path_segments, parser, plugin, knowledge_base_values=None):
@@ -86,7 +104,13 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
         storage_writer, knowledge_base_object)
 
     for event in storage_writer.GetSortedEvents():
-      plugin.ExamineEvent(mediator, event)
+      event_data = None
+      event_data_identifier = event.GetEventDataIdentifier()
+      if event_data_identifier:
+        event_data = storage_writer.GetEventDataByIdentifier(
+            event_data_identifier)
+
+      plugin.ExamineEvent(mediator, event, event_data)
 
     analysis_report = plugin.CompileReport(mediator)
     storage_writer.AddAnalysisReport(analysis_report)
@@ -125,8 +149,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
         file_object.close()
 
     else:
-      self.fail(
-          'Got unexpected parser type: {0:s}'.format(type(parser)))
+      self.fail('Got unexpected parser type: {0:s}'.format(type(parser)))
 
     return storage_writer
 

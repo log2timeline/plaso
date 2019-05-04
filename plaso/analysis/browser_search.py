@@ -17,7 +17,6 @@ from plaso.analysis import interface
 from plaso.analysis import logger
 from plaso.analysis import manager
 from plaso.containers import reports
-from plaso.formatters import manager as formatters_manager
 from plaso.lib import py2to3
 
 
@@ -38,6 +37,37 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
   _EVENT_TAG_COMMENT = 'Browser Search'
   _EVENT_TAG_LABELS = ['browser_search']
+
+  _SUPPORTED_EVENT_DATA_TYPES = frozenset([
+      'chrome:autofill:entry',
+      'chrome:cache:entry',
+      'chrome:cookie:entry',
+      'chrome:extension_activity:activity_log',
+      'chrome:history:file_downloaded',
+      'chrome:history:page_visited',
+      'firefox:cache:record',
+      'firefox:cookie:entry',
+      'firefox:places:bookmark_annotation',
+      'firefox:places:bookmark_folder',
+      'firefox:places:bookmark',
+      'firefox:places:page_visited',
+      'firefox:downloads:download',
+      'cookie:google:analytics:utma',
+      'cookie:google:analytics:utmb',
+      'cookie:google:analytics:utmt',
+      'cookie:google:analytics:utmz',
+      'msiecf:leak',
+      'msiecf:redirected',
+      'msiecf:url',
+      'msie:webcache:container',
+      'msie:webcache:containers',
+      'msie:webcache:leak_file',
+      'msie:webcache:partitions',
+      'opera:history:entry',
+      'opera:history:typed_entry',
+      'safari:cookie:entry',
+      'safari:history:visit',
+      'safari:history:visit_sqlite'])
 
   # TODO: use groups to build a single RE.
 
@@ -308,25 +338,24 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     analysis_report.report_dict = results
     return analysis_report
 
-  def ExamineEvent(self, mediator, event):
+  def ExamineEvent(self, mediator, event, event_data):
     """Analyzes an event.
 
     Args:
       mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
-      event (EventObject): event to examine.
+      event (EventObject): event.
+      event_data (EventData): event data.
     """
-    # This event requires an URL attribute.
-    url = getattr(event, 'url', None)
+    if event_data.data_type not in self._SUPPORTED_EVENT_DATA_TYPES:
+      return
+
+    url = getattr(event_data, 'url', None)
     if not url:
       return
 
-    # TODO: refactor this the source should be used in formatting only.
-    # Check if we are dealing with a web history event.
-    source, _ = formatters_manager.FormattersManager.GetSourceStrings(event)
-
-    if source != 'WEBHIST':
-      return
+    parser_or_plugin_name = getattr(event_data, 'parser', 'N/A')
+    parser_or_plugin_name = getattr(event_data, 'plugin', parser_or_plugin_name)
 
     for engine, url_expression, method_name in self._URL_FILTERS:
       callback_method = getattr(self, method_name, None)
@@ -354,11 +383,9 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       self._counter['{0:s}:{1:s}'.format(engine, search_query)] += 1
 
       # Add the timeline format for each search term.
-      timestamp = getattr(event, 'timestamp', 0)
-      source = getattr(event, 'parser', 'N/A')
-      source = getattr(event, 'plugin', source)
-      self._search_term_timeline.append(
-          SEARCH_OBJECT(timestamp, source, engine, search_query))
+      search_object = SEARCH_OBJECT(
+          event.timestamp, parser_or_plugin_name, engine, search_query)
+      self._search_term_timeline.append(search_object)
 
 
 manager.AnalysisPluginManager.RegisterPlugin(BrowserSearchPlugin)

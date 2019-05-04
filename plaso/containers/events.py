@@ -75,8 +75,7 @@ class EventObject(interface.AttributeContainer):
     self.timestamp = None
     self.timestamp_desc = None
 
-    # TODO: add a solution for event_data_entry_index,
-    # event_data_stream_number and event_data_row_identifier
+    # TODO: add a solution for event_data_row_identifier
 
   # This method is necessary for heap sort.
   def __lt__(self, other):

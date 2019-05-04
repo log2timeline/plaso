@@ -152,18 +152,18 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
       while not self._abort:
         try:
-          event = self._event_queue.PopItem()
+          queued_object = self._event_queue.PopItem()
 
         except (errors.QueueClose, errors.QueueEmpty) as exception:
           logger.debug('ConsumeItems exiting with exception {0:s}.'.format(
               type(exception)))
           break
 
-        if isinstance(event, plaso_queue.QueueAbort):
+        if isinstance(queued_object, plaso_queue.QueueAbort):
           logger.debug('ConsumeItems exiting, dequeued QueueAbort object.')
           break
 
-        self._ProcessEvent(self._analysis_mediator, event)
+        self._ProcessEvent(self._analysis_mediator, *queued_object)
 
         self._number_of_consumed_events += 1
 
@@ -233,16 +233,17 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     except errors.QueueAlreadyClosed:
       logger.error('Queue for {0:s} was already closed.'.format(self.name))
 
-  def _ProcessEvent(self, mediator, event):
+  def _ProcessEvent(self, mediator, event, event_data):
     """Processes an event.
 
     Args:
       mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event.
+      event_data (EventData): event data.
     """
     try:
-      self._analysis_plugin.ExamineEvent(mediator, event)
+      self._analysis_plugin.ExamineEvent(mediator, event, event_data)
 
     except Exception as exception:  # pylint: disable=broad-except
       self.SignalAbort()

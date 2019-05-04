@@ -21,6 +21,9 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
 
+  _SUPPORTED_EVENT_DATA_TYPES = frozenset([
+      'fs:stat'])
+
   _TITLE_RE = re.compile(r'<title>([^<]+)</title>')
   _WEB_STORE_URL = 'https://chrome.google.com/webstore/detail/{xid}?hl=en-US'
 
@@ -31,10 +34,6 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
     # Saved list of already looked up extensions.
     self._extensions = {}
     self._results = {}
-
-    # TODO: see if these can be moved to arguments passed to ExamineEvent
-    # or some kind of state object.
-    self._sep = None
 
   def _GetChromeWebStorePage(self, extension_identifier):
     """Retrieves the page for the extension from the Chrome store website.
@@ -151,43 +150,38 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
     analysis_report.report_dict = self._results
     return analysis_report
 
-  def ExamineEvent(self, mediator, event):
+  # pylint: disable=unused-argument
+  def ExamineEvent(self, mediator, event, event_data):
     """Analyzes an event.
 
     Args:
       mediator (AnalysisMediator): mediates interactions between analysis
           plugins and other components, such as storage and dfvfs.
       event (EventObject): event to examine.
+      event_data (EventData): event data.
     """
-    # Only interested in filesystem events.
-    if event.data_type != 'fs:stat':
+    if event_data.data_type not in self._SUPPORTED_EVENT_DATA_TYPES:
       return
 
-    filename = getattr(event, 'filename', None)
+    filename = getattr(event_data, 'filename', None)
     if not filename:
       return
 
+    separator = self._GetPathSegmentSeparator(filename)
+    path_segments = filename.lower().split(separator)
+
     # Determine if we have a Chrome extension ID.
-    if 'chrome' not in filename.lower():
+    if 'chrome' not in path_segments and 'chromium' not in path_segments:
       return
 
-    if not self._sep:
-      self._sep = self._GetPathSegmentSeparator(filename)
-
-    if '{0:s}Extensions{0:s}'.format(self._sep) not in filename:
+    if path_segments[-2] != 'extensions':
       return
 
-    # Now we have extension IDs, let's check if we've got the
-    # folder, nothing else.
-    paths = filename.split(self._sep)
-    if paths[-2] != 'Extensions':
-      return
-
-    extension_identifier = paths[-1]
+    # TODO: use a regex to check extension identifier
+    extension_identifier = path_segments[-1]
     if extension_identifier == 'Temp':
       return
 
-    # Get the user and ID.
     user = mediator.GetUsernameForPath(filename)
 
     # We still want this information in here, so that we can

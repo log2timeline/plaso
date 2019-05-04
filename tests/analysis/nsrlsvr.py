@@ -66,19 +66,18 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
       'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
   _TEST_EVENTS = [
-      {'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
-       'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
+      {'data_type': 'fs:stat',
+       'pathspec': fake_path_spec.FakePathSpec(
+           location='C:\\WINDOWS\\system32\\good.exe'),
        'sha256_hash': _EVENT_1_HASH,
-       'data_type': 'fs:stat',
-       'pathspec': fake_path_spec.FakePathSpec(
-           location='C:\\WINDOWS\\system32\\good.exe')
-      },
-      {'timestamp': timelib.Timestamp.CopyFromString('2016-01-01 17:00:00'),
-       'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION,
+       'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION},
+      {'data_type': 'fs:stat:ntfs',
        'sha256_hash': _EVENT_2_HASH,
-       'data_type': 'fs:stat:ntfs',
        'pathspec': fake_path_spec.FakePathSpec(
-           location='C:\\WINDOWS\\system32\\evil.exe')}]
+           location='C:\\WINDOWS\\system32\\evil.exe'),
+       'timestamp': timelib.Timestamp.CopyFromString('2016-01-01 17:00:00'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_CREATION}]
 
   # pylint: disable=unused-argument
   def _MockCreateConnection(self, connection_information, timeout):
@@ -106,17 +105,17 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
 
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
-    events = []
-    for event_dictionary in self._TEST_EVENTS:
-      event = self._CreateTestEventObject(event_dictionary)
-      events.append(event)
+    test_events = []
+    for event_values in self._TEST_EVENTS:
+      event, event_data = self._CreateTestEvent(event_values)
+      test_events.append((event, event_data))
 
     plugin = nsrlsvr.NsrlsvrAnalysisPlugin()
     plugin.SetHost('localhost')
     plugin.SetPort(9120)
     plugin.SetLabel('nsrl_present')
 
-    storage_writer = self._AnalyzeEvents(events, plugin)
+    storage_writer = self._AnalyzeEvents(test_events, plugin)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
     self.assertEqual(storage_writer.number_of_event_tags, 1)
