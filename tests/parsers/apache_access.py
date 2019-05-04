@@ -22,15 +22,15 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
     parser = apache_access.ApacheAccessParser()
     storage_writer = self._ParseFile(['access.log'], parser)
 
-    self.assertEqual(storage_writer.number_of_warnings, 0)
-    self.assertEqual(storage_writer.number_of_events, 5)
+    self.assertEqual(storage_writer.number_of_warnings, 1)
+    self.assertEqual(storage_writer.number_of_events, 7)
 
     # The order in which DSVParser generates events is nondeterministic
     # hence we sort the events.
     events = list(storage_writer.GetSortedEvents())
 
     # Test combined log format event.
-    event = events[0]
+    event = events[2]
     self.CheckTimestamp(event.timestamp, '2016-01-13 17:31:20.000000')
 
     self.assertEqual(event.ip_address, '192.168.0.2')
@@ -64,7 +64,7 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     # Test common log format parser event.
-    event = events[1]
+    event = events[3]
     self.CheckTimestamp(event.timestamp, '2016-01-13 19:31:16.000000')
 
     self.assertEqual(event.ip_address, '10.0.0.1')
