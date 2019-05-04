@@ -22,3 +22,6 @@ override_dh_auto_install:
 		$$python setup.py install --root=$(CURDIR) --install-layout=deb; \
 	done;
 
+.PHONY: override_dh_python3
+override_dh_python3:
+	dh_python3 -p plaso-tools --shebang=/usr/bin/python3
