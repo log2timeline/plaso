@@ -63,7 +63,7 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
         test_lib.TestEventFormatter)
 
     event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
-    self._output_module.WriteEventBody(event, event_data)
+    self._output_module.WriteEventBody(event, event_data, None)
 
     expected_event_body = (
         '1340821021|LOG|ubuntu|root|2012-06-27T18:17:01+00:00; Unknown Time; '
@@ -123,7 +123,7 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
         test_lib.TestEventFormatter)
 
     event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
-    self._output_module.WriteEventBody(event, event_data)
+    self._output_module.WriteEventBody(event, event_data, None)
 
     expected_event_body = (
         '1340821021|LOG|ubuntu|root|2012-06-27T18:17:01+00:00; Unknown Time; '

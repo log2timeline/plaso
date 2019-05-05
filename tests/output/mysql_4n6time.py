@@ -107,7 +107,7 @@ class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
     }
 
     event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
-    event_dict = output_module._GetSanitizedEventValues(event, event_data)
+    event_dict = output_module._GetSanitizedEventValues(event, event_data, None)
 
     self.assertIsInstance(event_dict, dict)
     self.assertDictContainsSubset(expected_dict, event_dict)
@@ -183,7 +183,7 @@ class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
     output_module._cursor = fake_cursor
 
     event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
-    output_module.WriteEventBody(event, event_data)
+    output_module.WriteEventBody(event, event_data, None)
 
 
 if __name__ == '__main__':

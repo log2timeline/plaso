@@ -87,14 +87,14 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
     """Tests the WriteEventBody function."""
     # Test event without geo-location.
     event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
-    self._output_module.WriteEventBody(event, event_data)
+    self._output_module.WriteEventBody(event, event_data, None)
 
     event_body = self._output_writer.ReadOutput()
     self.assertEqual(event_body, '')
 
     # Test event with geo-location.
     event, event_data = self._CreateTestEvent(self._TEST_EVENTS[1])
-    self._output_module.WriteEventBody(event, event_data)
+    self._output_module.WriteEventBody(event, event_data, None)
 
     event_body = self._output_writer.ReadOutput()
 

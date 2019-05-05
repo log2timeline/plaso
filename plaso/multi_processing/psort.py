@@ -597,27 +597,25 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         self._events_status.number_of_duplicate_events += 1
         continue
 
-      # TODO: refactor to separately output event and event tag
       event_identifier = event.GetIdentifier()
-      event.tag = self._event_tag_index.GetEventTagByIdentifier(
+      event_tag = self._event_tag_index.GetEventTagByIdentifier(
           storage_reader, event_identifier)
-      # TODO: end refactor
 
       if macb_group_identifier is None:
         if macb_group:
           output_module.WriteEventMACBGroup(macb_group)
           macb_group = []
 
-        output_module.WriteEvent(event, event_data)
+        output_module.WriteEvent(event, event_data, event_tag)
 
       else:
         if (last_macb_group_identifier == macb_group_identifier or
             not macb_group):
-          macb_group.append((event, event_data))
+          macb_group.append((event, event_data, event_tag))
 
         else:
           output_module.WriteEventMACBGroup(macb_group)
-          macb_group = [(event, event_data)]
+          macb_group = [(event, event_data, event_tag)]
 
         self._events_status.number_of_macb_grouped_events += 1
 

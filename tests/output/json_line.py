@@ -68,7 +68,7 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
         test_lib.TestEventFormatter)
 
     event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
-    self._output_module.WriteEventBody(event, event_data)
+    self._output_module.WriteEventBody(event, event_data, None)
 
     formatters_manager.FormattersManager.DeregisterFormatter(
         test_lib.TestEventFormatter)

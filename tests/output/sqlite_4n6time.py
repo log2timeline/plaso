@@ -92,7 +92,7 @@ class SqliteOutputModuleTest(test_lib.OutputModuleTestCase):
       sqlite_output.SetFilename(sqlite_file)
 
       sqlite_output.Open()
-      sqlite_output.WriteEventBody(event, event_data)
+      sqlite_output.WriteEventBody(event, event_data, None)
       sqlite_output.Close()
 
       sqlite_connection = sqlite3.connect(sqlite_file)

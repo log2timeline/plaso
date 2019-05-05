@@ -156,19 +156,20 @@ class XLSXOutputModule(interface.OutputModule):
     """
     self._timestamp_format = timestamp_format
 
-  def WriteEventBody(self, event, event_data):
+  def WriteEventBody(self, event, event_data, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_tag (EventTag): event tag.
     """
     for field_name in self._fields:
       if field_name == 'datetime':
         output_value = self._FormatDateTime(event, event_data)
       else:
         output_value = self._dynamic_fields_helper.GetFormattedField(
-            event, event_data, field_name)
+            event, event_data, event_tag, field_name)
 
       output_value = self._RemoveIllegalXMLCharacters(output_value)
 

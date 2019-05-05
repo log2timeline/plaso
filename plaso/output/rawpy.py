@@ -16,12 +16,13 @@ class NativePythonFormatterHelper(object):
   """Helper for outputting as "raw" (or native) Python."""
 
   @classmethod
-  def GetFormattedEvent(cls, event, event_data):
+  def GetFormattedEvent(cls, event, event_data, event_tag):
     """Retrieves a string representation of the event.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_tag (EventTag): event tag.
 
     Returns:
       str: string representation of the event.
@@ -39,8 +40,6 @@ class NativePythonFormatterHelper(object):
       attribute_string = pathspec.comparable.replace('\n', '\n  ')
       attribute_string = '  {0:s}\n'.format(attribute_string)
       lines_of_text.append(attribute_string)
-
-    # TODO: add support for event tag after event clean up.
 
     lines_of_text.append('[Reserved attributes]:')
     out_additional = ['[Additional attributes]:']
@@ -60,7 +59,7 @@ class NativePythonFormatterHelper(object):
             attribute_name, attribute_value)
         out_additional.append(attribute_string)
 
-      elif attribute_name not in ('pathspec', 'tag'):
+      elif attribute_name != 'pathspec':
         attribute_string = '  {{{0!s}}} {1!s}'.format(
             attribute_name, attribute_value)
         lines_of_text.append(attribute_string)
@@ -69,6 +68,13 @@ class NativePythonFormatterHelper(object):
     out_additional.append('')
 
     lines_of_text.extend(out_additional)
+
+    if event_tag:
+      lines_of_text.append('[Tag]:')
+      attribute_string = '  {{labels}} {0!s}'.format(event_tag.labels)
+      lines_of_text.append(attribute_string)
+      lines_of_text.append('')
+
     return '\n'.join(lines_of_text)
 
 
@@ -78,15 +84,16 @@ class NativePythonOutputModule(interface.LinearOutputModule):
   NAME = 'rawpy'
   DESCRIPTION = '"raw" (or native) Python output.'
 
-  def WriteEventBody(self, event, event_data):
+  def WriteEventBody(self, event, event_data, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_tag (EventTag): event tag.
     """
     output_string = NativePythonFormatterHelper.GetFormattedEvent(
-        event, event_data)
+        event, event_data, event_tag)
     self._output_writer.Write(output_string)
 
 

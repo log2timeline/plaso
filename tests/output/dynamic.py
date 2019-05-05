@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
+from plaso.containers import events
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
@@ -154,9 +155,15 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     dynamic_fields_helper = dynamic.DynamicFieldsHelper(output_mediator)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
-    tag_string = dynamic_fields_helper._FormatTag(event, event_data)
+    tag_string = dynamic_fields_helper._FormatTag(None)
     self.assertEqual(tag_string, '-')
+
+    event_tag = events.EventTag()
+    event_tag.AddLabel('one')
+    event_tag.AddLabel('two')
+
+    tag_string = dynamic_fields_helper._FormatTag(event_tag)
+    self.assertEqual(tag_string, 'one two')
 
   def testFormatTime(self):
     """Tests the _FormatTime function."""
@@ -208,7 +215,7 @@ class DynamicFieldsHelperTest(test_lib.OutputModuleTestCase):
 
     event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
     zone_string = dynamic_fields_helper.GetFormattedField(
-        event, event_data, 'zone')
+        event, event_data, None, 'zone')
     self.assertEqual(zone_string, 'UTC')
 
 
@@ -236,8 +243,6 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     formatters_manager.FormattersManager.RegisterFormatter(
         TestEventFormatter)
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
-
     output_mediator = self._CreateOutputMediator()
     output_writer = cli_test_lib.TestOutputWriter()
     output_module = dynamic.DynamicOutputModule(output_mediator)
@@ -254,7 +259,8 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     header = output_writer.ReadOutput()
     self.assertEqual(header, expected_header)
 
-    output_module.WriteEventBody(event, event_data)
+    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    output_module.WriteEventBody(event, event_data, None)
     expected_event_body = (
         '2012-06-27,18:17:01,UTC,..C.,LOG,Syslog,Metadata Modification Time,-,'
         'ubuntu,Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
@@ -280,7 +286,8 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
         '2012-06-27T18:17:01+00:00,-,ubuntu,Reporter <CRON> PID: 8442'
         ' (pam_unix(cron:session): session closed for user root)\n')
 
-    output_module.WriteEventBody(event, event_data)
+    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    output_module.WriteEventBody(event, event_data, None)
     event_body = output_writer.ReadOutput()
     self.assertEqual(event_body, expected_event_body)
 

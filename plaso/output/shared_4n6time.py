@@ -86,6 +86,20 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
 
     return inode
 
+  def _FormatTag(self, event_tag):
+    """Formats the event tag.
+
+    Args:
+      event_tag (EventTag): event tag or None if not set.
+
+    Returns:
+      str: event tag labels or an empty string if event tag is not set.
+    """
+    if not event_tag:
+      return ''
+
+    return ' '.join(event_tag.labels)
+
   def _FormatVSSNumber(self, event_data):
     """Formats the VSS store number related to the event.
 
@@ -100,12 +114,13 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
 
     return getattr(event_data.pathspec, 'vss_store_number', -1)
 
-  def _GetSanitizedEventValues(self, event, event_data):
+  def _GetSanitizedEventValues(self, event, event_data, event_tag):
     """Sanitizes the event for use in 4n6time.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_tag (EventTag): event tag.
 
     Returns:
       dict[str, object]: dictionary containing the sanitized event values.
@@ -153,13 +168,7 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
     inode = self._FormatInode(event_data)
     vss_store_number = self._FormatVSSNumber(event_data)
 
-    tags = None
-    if getattr(event, 'tag', None):
-      tags = getattr(event.tag, 'tags', None)
-
-    taglist = ''
-    if isinstance(tags, (list, tuple)):
-      taglist = ','.join(tags)
+    tag = self._FormatTag(event_tag)
 
     offset = event_data.offset
     if offset is None:
@@ -182,7 +191,7 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
         'datetime': datetime_string,
         'reportnotes': '',
         'inreport': '',
-        'tag': taglist,
+        'tag': tag,
         'offset': offset,
         'vss_store_number': vss_store_number,
         'URL': getattr(event_data, 'url', '-'),

@@ -76,7 +76,7 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     output_module._CreateIndexIfNotExists('test', {})
 
     event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
-    output_module._InsertEvent(event, event_data)
+    output_module._InsertEvent(event, event_data, None)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)
@@ -91,13 +91,13 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator()
     output_module = TestElasticsearchOutputModule(output_mediator)
 
+    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+
     event_tag = events.EventTag()
     event_tag.AddLabel('Test')
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
-    event.tag = event_tag
-
-    event_values = output_module._GetSanitizedEventValues(event, event_data)
+    event_values = output_module._GetSanitizedEventValues(
+        event, event_data, event_tag)
 
     expected_event_values = {
         'data_type': 'syslog:line',
@@ -133,12 +133,12 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(len(output_module._event_documents), 0)
     self.assertEqual(output_module._number_of_buffered_events, 0)
 
-    output_module._InsertEvent(event, event_data)
+    output_module._InsertEvent(event, event_data, None)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)
 
-    output_module._InsertEvent(event, event_data)
+    output_module._InsertEvent(event, event_data, None)
 
     self.assertEqual(len(output_module._event_documents), 4)
     self.assertEqual(output_module._number_of_buffered_events, 2)
@@ -243,7 +243,7 @@ class SharedElasticsearchOutputModuleTest(test_lib.OutputModuleTestCase):
     self.assertEqual(output_module._number_of_buffered_events, 0)
 
     event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
-    output_module.WriteEventBody(event, event_data)
+    output_module.WriteEventBody(event, event_data, None)
 
     self.assertEqual(len(output_module._event_documents), 2)
     self.assertEqual(output_module._number_of_buffered_events, 1)
