@@ -46,26 +46,26 @@ class ChromeExtensionActivityEventFormatter(
   }
 
   # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event):
-    """Determines the formatted message strings for an event object.
+  def GetMessages(self, formatter_mediator, event_data):
+    """Determines the formatted message strings for an event.
 
     Args:
       formatter_mediator (FormatterMediator): mediates the interactions
           between formatters and other components, such as storage and Windows
           EventLog resources.
-      event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       tuple(str, str): formatted message string and short message string.
 
     Raises:
-      WrongFormatter: if the event object cannot be formatted by the formatter.
+      WrongFormatter: if the event cannot be formatted by the formatter.
     """
-    if self.DATA_TYPE != event.data_type:
+    if self.DATA_TYPE != event_data.data_type:
       raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event.data_type))
+          event_data.data_type))
 
-    event_values = event.CopyToDict()
+    event_values = event_data.CopyToDict()
 
     action_type = event_values.get('action_type')
     event_values['action_type'] = '%s (type %d)'%(
@@ -74,7 +74,6 @@ class ChromeExtensionActivityEventFormatter(
     )
 
     return self._ConditionalFormatMessages(event_values)
-
 
 
 manager.FormattersManager.RegisterFormatter(

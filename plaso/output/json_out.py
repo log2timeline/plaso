@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import copy
 import json
 
 from plaso.output import interface
@@ -28,17 +29,25 @@ class JSONOutputModule(interface.LinearOutputModule):
     super(JSONOutputModule, self).__init__(output_mediator)
     self._event_counter = 0
 
-  def WriteEventBody(self, event):
-    """Writes the body of an event object to the output.
+  def WriteEventBody(self, event, event_data):
+    """Writes event values to the output.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
     """
-    inode = getattr(event, 'inode', None)
-    if inode is None:
-      event.inode = 0
+    # TODO: since the internal serializer can change move functionality
+    # to serialize into a shared json output module class.
+    # TODO: refactor to separately serialize event and event data
+    copy_of_event = copy.deepcopy(event)
+    for attribute_name, attribute_value in event_data.GetAttributes():
+      setattr(copy_of_event, attribute_name, attribute_value)
 
-    json_dict = self._JSON_SERIALIZER.WriteSerializedDict(event)
+    inode = getattr(event_data, 'inode', None)
+    if inode is None:
+      copy_of_event.inode = 0
+
+    json_dict = self._JSON_SERIALIZER.WriteSerializedDict(copy_of_event)
     json_string = json.dumps(json_dict, sort_keys=True)
 
     if self._event_counter != 0:

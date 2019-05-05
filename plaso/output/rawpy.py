@@ -3,7 +3,10 @@
 
 from __future__ import unicode_literals
 
+import logging
+
 from plaso.lib import definitions
+from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import manager
@@ -13,11 +16,12 @@ class NativePythonFormatterHelper(object):
   """Helper for outputting as "raw" (or native) Python."""
 
   @classmethod
-  def GetFormattedEventObject(cls, event):
+  def GetFormattedEvent(cls, event, event_data):
     """Retrieves a string representation of the event.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       str: string representation of the event.
@@ -29,7 +33,7 @@ class NativePythonFormatterHelper(object):
         '[Timestamp]:',
         '  {0:s}'.format(time_string)]
 
-    pathspec = getattr(event, 'pathspec', None)
+    pathspec = getattr(event_data, 'pathspec', None)
     if pathspec:
       lines_of_text.append('[Pathspec]:')
       attribute_string = pathspec.comparable.replace('\n', '\n  ')
@@ -41,7 +45,16 @@ class NativePythonFormatterHelper(object):
     lines_of_text.append('[Reserved attributes]:')
     out_additional = ['[Additional attributes]:']
 
-    for attribute_name, attribute_value in sorted(event.GetAttributes()):
+    for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
+      # TODO: some pyparsing based parsers can generate empty bytes values
+      # in Python 3.
+      if (isinstance(attribute_value, py2to3.BYTES_TYPE) and
+          attribute_value == b''):
+        logging.debug((
+            'attribute: {0:s} of data type: {1:s} contains an empty bytes '
+            'value').format(attribute_name, event_data.data_type))
+        attribute_value = ''
+
       if attribute_name not in definitions.RESERVED_VARIABLE_NAMES:
         attribute_string = '  {{{0!s}}} {1!s}'.format(
             attribute_name, attribute_value)
@@ -65,13 +78,15 @@ class NativePythonOutputModule(interface.LinearOutputModule):
   NAME = 'rawpy'
   DESCRIPTION = '"raw" (or native) Python output.'
 
-  def WriteEventBody(self, event):
-    """Writes the body of an event to the output.
+  def WriteEventBody(self, event, event_data):
+    """Writes event values to the output.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
     """
-    output_string = NativePythonFormatterHelper.GetFormattedEventObject(event)
+    output_string = NativePythonFormatterHelper.GetFormattedEvent(
+        event, event_data)
     self._output_writer.Write(output_string)
 
 

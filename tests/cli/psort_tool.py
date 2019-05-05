@@ -96,16 +96,19 @@ class TestOutputModuleMissingParameters(output_interface.LinearOutputModule):
     """Set missing value."""
     setattr(cls, attribute, value)
 
-  def WriteEventBody(self, event):
+  def WriteEventBody(self, event, event_data):
     """Writes the body of an event object to the output.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
     """
-    message, _ = self._output_mediator.GetFormattedMessages(event)
-    source_short, source_long = self._output_mediator.GetFormattedSources(event)
-    self._output_writer.Write('{0:s}/{1:s} {2:s}\n'.format(
-        source_short, source_long, message))
+    message, _ = self._output_mediator.GetFormattedMessages(event_data)
+    source_short, source_long = self._output_mediator.GetFormattedSources(
+        event, event_data)
+    output_text = '{0:s}/{1:s} {2:s}\n'.format(
+        source_short, source_long, message)
+    self._output_writer.Write(output_text)
 
   def WriteHeader(self):
     """Writes the header to the output."""

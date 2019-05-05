@@ -17,25 +17,6 @@ from tests.cli import test_lib as cli_test_lib
 from tests.output import test_lib
 
 
-class L2TTestEvent(events.EventObject):
-  """Test event object."""
-  DATA_TYPE = 'test:l2t_csv'
-
-  def __init__(self):
-    """Initializes an event object."""
-    super(L2TTestEvent, self).__init__()
-    self.timestamp = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01')
-    self.timestamp_desc = definitions.TIME_DESCRIPTION_WRITTEN
-    self.hostname = 'ubuntu'
-    self.filename = 'log/syslog.1'
-    self.display_name = 'log/syslog.1'
-    self.some_additional_foo = True
-    self.my_number = 123
-    self.text = (
-        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
-        'closed for user root)')
-
-
 class L2TTestEventFormatter(formatters_interface.EventFormatter):
   """Test event formatter."""
   DATA_TYPE = 'test:l2t_csv'
@@ -49,6 +30,19 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
   """Tests for the L2tCSV output module."""
 
   # pylint: disable=protected-access
+
+  _TEST_EVENTS = [
+      {'data_type': 'test:l2t_csv',
+       'display_name': 'log/syslog.1',
+       'filename': 'log/syslog.1',
+       'hostname': 'ubuntu',
+       'my_number': 123,
+       'some_additional_foo': True,
+       'text': (
+           'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
+           'closed for user root)'),
+       'timestamp': timelib.Timestamp.CopyFromString('2012-06-27 18:17:01'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}]
 
   def setUp(self):
     """Makes preparations before running an individual test."""
@@ -64,14 +58,14 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
 
   def testFormatHostname(self):
     """Tests the _FormatHostname function."""
-    event = L2TTestEvent()
-    hostname_string = self._formatter._FormatHostname(event)
+    _, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    hostname_string = self._formatter._FormatHostname(event_data)
     self.assertEqual(hostname_string, 'ubuntu')
 
   def testFormatUsername(self):
     """Tests the _FormatUsername function."""
-    event = L2TTestEvent()
-    username_string = self._formatter._FormatUsername(event)
+    _, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    username_string = self._formatter._FormatUsername(event_data)
     self.assertEqual(username_string, '-')
 
   def testGetOutputValues(self):
@@ -100,13 +94,13 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         '-',
         'my_number: 123; some_additional_foo: True']
 
-    event = L2TTestEvent()
-    output_values = self._formatter._GetOutputValues(event)
+    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    output_values = self._formatter._GetOutputValues(event, event_data)
     self.assertEqual(len(output_values), 17)
     self.assertEqual(output_values, expected_output_values)
 
     event.timestamp = -9223372036854775808
-    output_values = self._formatter._GetOutputValues(event)
+    output_values = self._formatter._GetOutputValues(event, event_data)
     self.assertEqual(len(output_values), 17)
     expected_output_values[0] = '00/00/0000'
     expected_output_values[1] = '--:--:--'
@@ -125,10 +119,10 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
     event_tag = events.EventTag()
     event_tag.AddLabels(['Malware', 'Printed'])
 
-    event = L2TTestEvent()
+    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
     event.tag = event_tag
 
-    self._formatter.WriteEventBody(event)
+    self._formatter.WriteEventBody(event, event_data)
 
     expected_event_body = (
         '06/27/2012,18:17:01,UTC,M...,LOG,Syslog,Content Modification Time,-,'

@@ -597,14 +597,9 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         self._events_status.number_of_duplicate_events += 1
         continue
 
-      # TODO: refactor to separately output event and event data
-      copy_of_event = copy.deepcopy(event)
-      if event_data:
-        for attribute_name, attribute_value in event_data.GetAttributes():
-          setattr(copy_of_event, attribute_name, attribute_value)
-
+      # TODO: refactor to separately output event and event tag
       event_identifier = event.GetIdentifier()
-      copy_of_event.tag = self._event_tag_index.GetEventTagByIdentifier(
+      event.tag = self._event_tag_index.GetEventTagByIdentifier(
           storage_reader, event_identifier)
       # TODO: end refactor
 
@@ -613,16 +608,16 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           output_module.WriteEventMACBGroup(macb_group)
           macb_group = []
 
-        output_module.WriteEvent(copy_of_event)
+        output_module.WriteEvent(event, event_data)
 
       else:
         if (last_macb_group_identifier == macb_group_identifier or
             not macb_group):
-          macb_group.append(copy_of_event)
+          macb_group.append((event, event_data))
 
         else:
           output_module.WriteEventMACBGroup(macb_group)
-          macb_group = [copy_of_event]
+          macb_group = [(event, event_data)]
 
         self._events_status.number_of_macb_grouped_events += 1
 

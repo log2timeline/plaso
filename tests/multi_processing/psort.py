@@ -78,9 +78,9 @@ class TestOutputModule(output_interface.LinearOutputModule):
   """Output module for testing.
 
   Attributes:
-    events (list[EventObject]): event written to the output.
-    macb_groups (list[list[EventObject]]): MACB groups of events written to
-        the output.
+    events (list[tuple[EventObject, EventData]]): event written to the output.
+    macb_groups (list[list[tuple[EventObject, EventData]]]): MACB groups of
+        events written to the output.
   """
 
   NAME = 'psort_test'
@@ -99,13 +99,14 @@ class TestOutputModule(output_interface.LinearOutputModule):
     self.events = []
     self.macb_groups = []
 
-  def WriteEventBody(self, event):
+  def WriteEventBody(self, event, event_data):
     """Writes the body of an event object to the output.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
     """
-    self.events.append(event)
+    self.events.append((event, event_data))
 
   def WriteHeader(self):
     """Writes the header to the output."""

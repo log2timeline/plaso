@@ -68,26 +68,26 @@ class FSEventsdEventFormatter(interface.ConditionalEventFormatter):
     return ', '.join(event_types)
 
   # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event):
-    """Determines the formatted message strings for an event object.
+  def GetMessages(self, formatter_mediator, event_data):
+    """Determines the formatted message strings for an event.
 
     Args:
       formatter_mediator (FormatterMediator): mediates the interactions
           between formatters and other components, such as storage and Windows
           EventLog resources.
-      event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       tuple(str, str): formatted message string and short message string.
 
     Raises:
-      WrongFormatter: if the event object cannot be formatted by the formatter.
+      WrongFormatter: if the event cannot be formatted by the formatter.
     """
-    if self.DATA_TYPE != event.data_type:
+    if self.DATA_TYPE != event_data.data_type:
       raise errors.WrongFormatter(
-          'Unsupported data type: {0:s}.'.format(event.data_type))
+          'Unsupported data type: {0:s}.'.format(event_data.data_type))
 
-    event_values = event.CopyToDict()
+    event_values = event_data.CopyToDict()
     flags = event_values['flags']
     event_values['hex_flags'] = '0x{0:08x}'.format(flags)
     event_values['flag_values'] = self._GetFlagValues(flags)

@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-from plaso.containers import events
 from plaso import formatters   # pylint: disable=unused-import
 from plaso.lib import definitions
 from plaso.lib import timelib
@@ -19,30 +18,24 @@ if mysql_4n6time.MySQLdb is None:
   mysql_4n6time.MySQLdb = fake_mysqldb
 
 
-class MySQL4n6TimeTestEvent(events.EventObject):
-  """Test event."""
-
-  DATA_TYPE = 'syslog:line'
-
-  def __init__(self, event_timestamp):
-    """Initializes an event."""
-    super(MySQL4n6TimeTestEvent, self).__init__()
-    self.display_name = 'log/syslog.1'
-    self.filename = 'log/syslog.1'
-    self.hostname = 'ubuntu'
-    self.my_number = 123
-    self.some_additional_foo = True
-    self.text = (
-        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
-        'closed for user root)')
-    self.timestamp_desc = definitions.TIME_DESCRIPTION_WRITTEN
-    self.timestamp = event_timestamp
-
-
 class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for the 4n6time MySQL output class."""
 
   # pylint: disable=protected-access
+
+  _TEST_EVENTS = [
+      {'data_type': 'syslog:line',
+       'display_name': 'log/syslog.1',
+       'filename': 'log/syslog.1',
+       'hostname': 'ubuntu',
+       'my_number': 123,
+       'some_additional_foo': True,
+       'text': (
+           'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
+           'closed for user root)'),
+       'timestamp': timelib.Timestamp.CopyFromString(
+           '2012-06-27 18:17:01+00:00'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_WRITTEN}]
 
   def testGetTags(self):
     """Tests the _GetTags function."""
@@ -113,10 +106,8 @@ class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
         'user': '-'
     }
 
-    timestamp = timelib.Timestamp.CopyFromString(
-        '2012-06-27 18:17:01+00:00')
-    event = MySQL4n6TimeTestEvent(timestamp)
-    event_dict = output_module._GetSanitizedEventValues(event)
+    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    event_dict = output_module._GetSanitizedEventValues(event, event_data)
 
     self.assertIsInstance(event_dict, dict)
     self.assertDictContainsSubset(expected_dict, event_dict)
@@ -191,10 +182,8 @@ class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
     output_module._count = 0
     output_module._cursor = fake_cursor
 
-    timestamp = timelib.Timestamp.CopyFromString(
-        '2012-06-27 18:17:01+00:00')
-    event = MySQL4n6TimeTestEvent(timestamp)
-    output_module.WriteEventBody(event)
+    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+    output_module.WriteEventBody(event, event_data)
 
 
 if __name__ == '__main__':

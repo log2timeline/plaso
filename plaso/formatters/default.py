@@ -15,19 +15,19 @@ class DefaultFormatter(interface.EventFormatter):
   FORMAT_STRING_SHORT = '<DEFAULT> {attribute_driven}'
 
   # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event):
-    """Determines the formatted message strings for an event object.
+  def GetMessages(self, formatter_mediator, event_data):
+    """Determines the formatted message strings for an event.
 
     Args:
       formatter_mediator (FormatterMediator): mediates the interactions
           between formatters and other components, such as storage and Windows
           EventLog resources.
-      event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       tuple(str, str): formatted message string and short message string.
     """
-    event_values = event.CopyToDict()
+    event_values = event_data.CopyToDict()
 
     # TODO: clean up the default formatter and add a test to make sure
     # it is clear how it is intended to work.

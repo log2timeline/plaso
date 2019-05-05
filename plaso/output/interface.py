@@ -28,21 +28,22 @@ class OutputModule(object):
     super(OutputModule, self).__init__()
     self._output_mediator = output_mediator
 
-  def _ReportEventError(self, event, error_message):
+  def _ReportEventError(self, event, event_data, error_message):
     """Reports an event related error.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
       error_message (str): error message.
     """
     event_identifier = event.GetIdentifier()
     event_identifier_string = event_identifier.CopyToString()
-    display_name = getattr(event, 'display_name', None) or 'N/A'
-    parser_chain = getattr(event, 'parser', None) or 'N/A'
+    display_name = getattr(event_data, 'display_name', None) or 'N/A'
+    parser_chain = getattr(event_data, 'parser', None) or 'N/A'
     error_message = (
         'Event: {0!s} data type: {1:s} display name: {2:s} '
         'parser chain: {3:s} with error: {4:s}').format(
-            event_identifier_string, event.data_type, display_name,
+            event_identifier_string, event_data.data_type, display_name,
             parser_chain, error_message)
     logger.error(error_message)
 
@@ -63,34 +64,36 @@ class OutputModule(object):
     """Opens the output."""
     return
 
-  def WriteEvent(self, event):
+  def WriteEvent(self, event, event_data):
     """Writes the event to the output.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
     """
     self.WriteEventStart()
 
     try:
-      self.WriteEventBody(event)
+      self.WriteEventBody(event, event_data)
 
     except errors.NoFormatterFound as exception:
       error_message = 'unable to retrieve formatter with error: {0!s}'.format(
           exception)
-      self._ReportEventError(event, error_message)
+      self._ReportEventError(event, event_data, error_message)
 
     except errors.WrongFormatter as exception:
       error_message = 'wrong formatter with error: {0!s}'.format(exception)
-      self._ReportEventError(event, error_message)
+      self._ReportEventError(event, event_data, error_message)
 
     self.WriteEventEnd()
 
   @abc.abstractmethod
-  def WriteEventBody(self, event):
+  def WriteEventBody(self, event, event_data):
     """Writes event values to the output.
 
     Args:
-      event (EventObject): event that contains the event values.
+      event (EventObject): event.
+      event_data (EventData): event data.
     """
 
   def WriteEventEnd(self):
@@ -113,11 +116,11 @@ class OutputModule(object):
     such. If not overridden this function will output every event individually.
 
     Args:
-      event_macb_group (list[EventObject]): group of events with identical
-          timestamps, attributes and values.
+      event_macb_group (list[tuple[EventObject, EventData]]): group of events
+          with identical timestamps, attributes and values.
     """
-    for event in event_macb_group:
-      self.WriteEvent(event)
+    for event, event_data in event_macb_group:
+      self.WriteEvent(event, event_data)
 
   def WriteEventStart(self):
     """Writes the start of an event to the output.

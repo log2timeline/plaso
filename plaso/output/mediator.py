@@ -89,11 +89,12 @@ class OutputMediator(object):
 
     return event_formatter.GetMessages(self._formatter_mediator, event)
 
-  def GetFormattedSources(self, event):
+  def GetFormattedSources(self, event, event_data):
     """Retrieves the formatted sources related to the event.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       tuple: containing:
@@ -101,43 +102,43 @@ class OutputMediator(object):
         str: full source string or None if no event formatter was found.
         str: short source string or None if no event formatter was found.
     """
-    event_formatter = self.GetEventFormatter(event)
+    event_formatter = self.GetEventFormatter(event_data)
     if not event_formatter:
       return None, None
 
-    return event_formatter.GetSources(event)
+    return event_formatter.GetSources(event, event_data)
 
-  def GetFormatStringAttributeNames(self, event):
+  def GetFormatStringAttributeNames(self, event_data):
     """Retrieves the attribute names in the format string.
 
     Args:
-      event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       list[str]: list containing the attribute names. If no event formatter to
           match the event can be found the function returns None.
     """
-    event_formatter = self.GetEventFormatter(event)
+    event_formatter = self.GetEventFormatter(event_data)
     if not event_formatter:
       return None
 
     return event_formatter.GetFormatStringAttributeNames()
 
-  def GetHostname(self, event, default_hostname='-'):
+  def GetHostname(self, event_data, default_hostname='-'):
     """Retrieves the hostname related to the event.
 
     Args:
-      event (EventObject): event.
+      event_data (EventData): event data.
       default_hostname (Optional[str]): default hostname.
 
     Returns:
       str: hostname.
     """
-    hostname = getattr(event, 'hostname', None)
+    hostname = getattr(event_data, 'hostname', None)
     if hostname:
       return hostname
 
-    session_identifier = event.GetSessionIdentifier()
+    session_identifier = event_data.GetSessionIdentifier()
     if session_identifier is None:
       return default_hostname
 
@@ -145,16 +146,17 @@ class OutputMediator(object):
         session_identifier=session_identifier)
     return hostname or default_hostname
 
-  def GetMACBRepresentation(self, event):
+  def GetMACBRepresentation(self, event, event_data):
     """Retrieves the MACB representation.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       str: MACB representation.
     """
-    data_type = getattr(event, 'data_type', None)
+    data_type = getattr(event_data, 'data_type', None)
     if not data_type:
       return '....'
 
@@ -270,25 +272,25 @@ class OutputMediator(object):
     """
     return self._knowledge_base.GetStoredHostname()
 
-  def GetUsername(self, event, default_username='-'):
+  def GetUsername(self, event_data, default_username='-'):
     """Retrieves the username related to the event.
 
     Args:
-      event (EventObject): event.
+      event_data (EventData): event data.
       default_username (Optional[str]): default username.
 
     Returns:
       str: username.
     """
-    username = getattr(event, 'username', None)
+    username = getattr(event_data, 'username', None)
     if username and username != '-':
       return username
 
-    session_identifier = event.GetSessionIdentifier()
+    session_identifier = event_data.GetSessionIdentifier()
     if session_identifier is None:
       return default_username
 
-    user_sid = getattr(event, 'user_sid', None)
+    user_sid = getattr(event_data, 'user_sid', None)
     username = self._knowledge_base.GetUsernameByIdentifier(
         user_sid, session_identifier=session_identifier)
     return username or default_username

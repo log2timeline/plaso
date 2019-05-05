@@ -42,26 +42,26 @@ class FileStatEventFormatter(interface.ConditionalEventFormatter):
       dfvfs_definitions.FILE_ENTRY_TYPE_PIPE: 'pipe'}
 
   # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event):
-    """Determines the formatted message strings for an event object.
+  def GetMessages(self, formatter_mediator, event_data):
+    """Determines the formatted message strings for an event.
 
     Args:
       formatter_mediator (FormatterMediator): mediates the interactions
           between formatters and other components, such as storage and Windows
           EventLog resources.
-      event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       tuple(str, str): formatted message string and short message string.
 
     Raises:
-      WrongFormatter: if the event object cannot be formatted by the formatter.
+      WrongFormatter: if the event cannot be formatted by the formatter.
     """
-    if self.DATA_TYPE != event.data_type:
+    if self.DATA_TYPE != event_data.data_type:
       raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event.data_type))
+          event_data.data_type))
 
-    event_values = event.CopyToDict()
+    event_values = event_data.CopyToDict()
 
     file_entry_type = event_values.get('file_entry_type', None)
     if file_entry_type is not None:
@@ -76,23 +76,24 @@ class FileStatEventFormatter(interface.ConditionalEventFormatter):
 
     return self._ConditionalFormatMessages(event_values)
 
-  def GetSources(self, event):
-    """Determines the the short and long source for an event object.
+  def GetSources(self, event, event_data):
+    """Determines the the short and long source for an event.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       tuple(str, str): short and long source string.
 
     Raises:
-      WrongFormatter: if the event object cannot be formatted by the formatter.
+      WrongFormatter: if the event cannot be formatted by the formatter.
     """
-    if self.DATA_TYPE != event.data_type:
+    if self.DATA_TYPE != event_data.data_type:
       raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event.data_type))
+          event_data.data_type))
 
-    file_system_type = getattr(event, 'file_system_type', 'UNKNOWN')
+    file_system_type = getattr(event_data, 'file_system_type', 'UNKNOWN')
     timestamp_desc = getattr(event, 'timestamp_desc', 'Time')
     source_long = '{0:s} {1:s}'.format(file_system_type, timestamp_desc)
 
@@ -124,26 +125,26 @@ class NTFSFileStatEventFormatter(FileStatEventFormatter):
       0x00000030: '$FILE_NAME'
   }
 
-  def GetMessages(self, formatter_mediator, event):
-    """Determines the formatted message strings for an event object.
+  def GetMessages(self, formatter_mediator, event_data):
+    """Determines the formatted message strings for an event.
 
     Args:
       formatter_mediator (FormatterMediator): mediates the interactions
           between formatters and other components, such as storage and Windows
           EventLog resources.
-      event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       tuple(str, str): formatted message string and short message string.
 
     Raises:
-      WrongFormatter: if the event object cannot be formatted by the formatter.
+      WrongFormatter: if the event cannot be formatted by the formatter.
     """
-    if self.DATA_TYPE != event.data_type:
+    if self.DATA_TYPE != event_data.data_type:
       raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event.data_type))
+          event_data.data_type))
 
-    event_values = event.CopyToDict()
+    event_values = event_data.CopyToDict()
 
     attribute_type = event_values.get('attribute_type', 0)
     event_values['attribute_name'] = self._ATTRIBUTE_NAMES.get(
@@ -213,26 +214,26 @@ class NTFSUSNChangeEventFormatter(interface.ConditionalEventFormatter):
       0x00000002: 'USN_SOURCE_AUXILIARY_DATA',
       0x00000004: 'USN_SOURCE_REPLICATION_MANAGEMENT'}
 
-  def GetMessages(self, formatter_mediator, event):
-    """Determines the formatted message strings for an event object.
+  def GetMessages(self, formatter_mediator, event_data):
+    """Determines the formatted message strings for an event.
 
     Args:
       formatter_mediator (FormatterMediator): mediates the interactions
           between formatters and other components, such as storage and Windows
           EventLog resources.
-      event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       tuple(str, str): formatted message string and short message string.
 
     Raises:
-      WrongFormatter: if the event object cannot be formatted by the formatter.
+      WrongFormatter: if the event cannot be formatted by the formatter.
     """
-    if self.DATA_TYPE != event.data_type:
+    if self.DATA_TYPE != event_data.data_type:
       raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
-          event.data_type))
+          event_data.data_type))
 
-    event_values = event.CopyToDict()
+    event_values = event_data.CopyToDict()
 
     file_reference = event_values.get('file_reference', None)
     if file_reference:

@@ -43,17 +43,6 @@ class TestEventData(events.EventData):
 class SqliteOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests for the 4n6time SQLite output module."""
 
-  # TODO: remove after event data refactor.
-  def _MergeEventAndEventData(self, event, event_data):
-    """Merges the event data with the event.
-
-    args:
-      event (EventObject): event.
-      event_data (EventData): event_data.
-    """
-    for attribute_name, attribute_value in event_data.GetAttributes():
-      setattr(event, attribute_name, attribute_value)
-
   def testOutput(self):
     """Tests the 4n6time SQLite output module."""
     event_data = TestEventData()
@@ -62,8 +51,6 @@ class SqliteOutputModuleTest(test_lib.OutputModuleTestCase):
         '2012-06-27 18:17:01+00:00')
     event = time_events.TimestampEvent(
         timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
-
-    self._MergeEventAndEventData(event, event_data)
 
     expected_dict = {
         'type': 'Content Modification Time',
@@ -105,7 +92,7 @@ class SqliteOutputModuleTest(test_lib.OutputModuleTestCase):
       sqlite_output.SetFilename(sqlite_file)
 
       sqlite_output.Open()
-      sqlite_output.WriteEventBody(event)
+      sqlite_output.WriteEventBody(event, event_data)
       sqlite_output.Close()
 
       sqlite_connection = sqlite3.connect(sqlite_file)
