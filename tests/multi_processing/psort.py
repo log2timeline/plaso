@@ -532,7 +532,7 @@ class PsortMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
         'Log File,'
         '[---] last message repeated 5 times ---,'
         'syslog,'
-        'OS:/private/tmp/test/test_data/syslog,'
+        'OS:/tmp/test/test_data/syslog,'
         'repeated')
     self.assertEqual(lines[14], expected_line)
 

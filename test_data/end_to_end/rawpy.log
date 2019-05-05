@@ -2,20 +2,18 @@
 [Timestamp]:
   2012-01-22T07:52:33+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {body} INFO No change in [/etc/netgroup]. Done
   {data_type} syslog:line
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 4320950225
+  {inode} 862607
   {offset} 0
   {parser} syslog
-  {timestamp} 1327218753000000
-  {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
   {pid} 30840
@@ -26,20 +24,18 @@
 [Timestamp]:
   2012-01-22T07:52:33+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {body} INFO No new content in ímynd.dd.
   {data_type} syslog:line
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 4320950225
+  {inode} 862607
   {offset} 0
   {parser} syslog
-  {timestamp} 1327218753000000
-  {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
   {pid} 30840
@@ -50,20 +46,18 @@
 [Timestamp]:
   2012-01-22T07:53:01+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {body} (root) CMD (touch /var/run/crond.somecheck)
   {data_type} syslog:cron:task_run
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 4320950225
+  {inode} 862607
   {offset} 0
   {parser} syslog
-  {timestamp} 1327218781000000
-  {timestamp_desc} Content Modification Time
   {username} root
 
 [Additional attributes]:
@@ -76,20 +70,18 @@
 [Timestamp]:
   2012-01-22T07:54:01+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {body} (root) CMD (/sbin/status.mycheck))
   {data_type} syslog:cron:task_run
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 4320950225
+  {inode} 862607
   {offset} 0
   {parser} syslog
-  {timestamp} 1327218841000000
-  {timestamp_desc} Content Modification Time
   {username} root
 
 [Additional attributes]:
@@ -102,20 +94,18 @@
 [Timestamp]:
   2012-01-22T07:54:01+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {body} (root) CMD (touch /var/run/crond.somecheck)
   {data_type} syslog:cron:task_run
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 4320950225
+  {inode} 862607
   {offset} 0
   {parser} syslog
-  {timestamp} 1327218841000000
-  {timestamp_desc} Content Modification Time
   {username} root
 
 [Additional attributes]:
@@ -128,20 +118,18 @@
 [Timestamp]:
   2012-01-22T07:54:32+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {body} `cron.daily' terminated
   {data_type} syslog:line
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 4320950225
+  {inode} 862607
   {offset} 0
   {parser} syslog
-  {timestamp} 1327218872000000
-  {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
   {pid} 
@@ -152,20 +140,18 @@
 [Timestamp]:
   2012-02-29T01:15:43+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {body} testing leap year in parsing, events take place in 2012 ---
   {data_type} syslog:line
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} :
-  {inode} 4320950225
+  {inode} 862607
   {offset} 0
   {parser} syslog
-  {timestamp} 1330478143000000
-  {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
   {pid} 
@@ -176,20 +162,18 @@
 [Timestamp]:
   2012-12-18T17:54:32+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {body} No true exit can exist (124 job run)
   {data_type} syslog:line
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 4320950225
+  {inode} 862607
   {offset} 0
   {parser} syslog
-  {timestamp} 1355853272000000
-  {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
   {pid} 1234
@@ -200,20 +184,18 @@
 [Timestamp]:
   2013-03-23T23:01:18+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {body} This syslog message has a fractional value for seconds.
   {data_type} syslog:line
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 4320950225
+  {inode} 862607
   {offset} 0
   {parser} syslog
-  {timestamp} 1364079678000000
-  {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
   {pid} 19
@@ -224,20 +206,18 @@
 [Timestamp]:
   2013-03-23T23:01:18+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {body} This syslog message is brought to you by me (and not the other guy)
   {data_type} syslog:line
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 4320950225
+  {inode} 862607
   {offset} 0
   {parser} syslog
-  {timestamp} 1364079678000000
-  {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
   {pid} 1915
@@ -248,21 +228,19 @@
 [Timestamp]:
   2013-11-18T01:15:20+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {body} This is a multi-line message that screws up
 	many syslog parsers.
   {data_type} syslog:line
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 4320950225
+  {inode} 862607
   {offset} 0
   {parser} syslog
-  {timestamp} 1384737320000000
-  {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
   {pid} 10100
@@ -273,20 +251,18 @@
 [Timestamp]:
   2013-12-31T17:54:32+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {body} Another one just like this (124 job run)
   {data_type} syslog:line
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 4320950225
+  {inode} 862607
   {offset} 0
   {parser} syslog
-  {timestamp} 1388512472000000
-  {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
   {pid} 1234
@@ -297,20 +273,18 @@
 [Timestamp]:
   2014-02-06T15:16:30+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {body} Test message with single character day
   {data_type} syslog:line
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} victoria
-  {inode} 4320950225
+  {inode} 862607
   {offset} 0
   {parser} syslog
-  {timestamp} 1391699790000000
-  {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
   {pid} 2085
@@ -321,20 +295,18 @@
 [Timestamp]:
   2014-11-18T01:15:43+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {body} last message repeated 5 times ---
   {data_type} syslog:line
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} :
-  {inode} 4320950225
+  {inode} 862607
   {offset} 0
   {parser} syslog
-  {timestamp} 1416273343000000
-  {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
   {pid} 
@@ -345,19 +317,17 @@
 [Timestamp]:
   2014-11-18T08:30:20+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {body} [997.390602] sda2: rw=0, want=65, limit=2
   {data_type} syslog:line
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
-  {inode} 4320950225
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {inode} 862607
   {offset} 0
   {parser} syslog
-  {timestamp} 1416299420000000
-  {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
   {pid} 
@@ -368,20 +338,18 @@
 [Timestamp]:
   2014-11-18T08:31:20+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {body} [998.390602] sda2: rw=0, want=66, limit=2
   {data_type} syslog:line
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
   {hostname} victoria
-  {inode} 4320950225
+  {inode} 862607
   {offset} 0
   {parser} syslog
-  {timestamp} 1416299480000000
-  {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
   {pid} 
@@ -390,19 +358,17 @@
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2019-03-31T18:29:44+00:00
+  2019-05-05T11:51:02+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {data_type} fs:stat
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
-  {inode} 4320950225
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {inode} 862607
   {parser} filestat
-  {timestamp} 1554056984000000
-  {timestamp_desc} Content Modification Time
 
 [Additional attributes]:
   {file_entry_type} file
@@ -412,19 +378,17 @@
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2019-03-31T18:29:44+00:00
+  2019-05-05T11:51:02+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {data_type} fs:stat
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
-  {inode} 4320950225
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {inode} 862607
   {parser} filestat
-  {timestamp} 1554056984000000
-  {timestamp_desc} Metadata Modification Time
 
 [Additional attributes]:
   {file_entry_type} file
@@ -434,19 +398,17 @@
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2019-03-31T18:29:48+00:00
+  2019-05-05T11:51:53+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {data_type} fs:stat
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
-  {inode} 4320950225
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {inode} 862607
   {parser} filestat
-  {timestamp} 1554056988000000
-  {timestamp_desc} Last Access Time
 
 [Additional attributes]:
   {file_entry_type} file
@@ -456,19 +418,17 @@
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2019-03-31T18:29:50+00:00
+  2019-05-05T11:51:57+00:00
 [Pathspec]:
-  type: OS, location: /private/tmp/test/test_data/syslog
+  type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
   {data_type} fs:stat
-  {display_name} OS:/private/tmp/test/test_data/syslog
-  {filename} /private/tmp/test/test_data/syslog
-  {inode} 4320950225
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {inode} 862607
   {parser} filestat
-  {timestamp} 1554056990000000
-  {timestamp_desc} Last Access Time
 
 [Additional attributes]:
   {file_entry_type} file
