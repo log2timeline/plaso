@@ -146,23 +146,6 @@ class BinaryExpression(Expression):
           'Expected expression, got {0:s} {1:s} {2:s}'.format(
               lhs, self.operator, rhs))
 
-  # TODO: rename this function to GetTreeAsString or equivalent.
-  def PrintTree(self, depth=''):
-    """Prints the binary expression represented as a tree.
-
-    Args:
-      depth (Optional[str]): indentation string of the binary expression in
-          the tree.
-
-    Returns:
-      str: the binary expression represented as a tree.
-    """
-    result = '{0:s}{1:s}\n'.format(depth, self.operator)
-    for part in self.args:
-      result += '{0:s}-{1:s}\n'.format(depth, part.PrintTree(depth + '  '))
-
-    return result
-
   def Compile(self, filter_implementation):
     """Compiles the binary expression into a filter object.
 
@@ -183,6 +166,23 @@ class BinaryExpression(Expression):
 
     args = [x.Compile(filter_implementation) for x in self.args]
     return getattr(filter_implementation, method)(*args)
+
+  # TODO: rename this function to GetTreeAsString or equivalent.
+  def PrintTree(self, depth=''):
+    """Prints the binary expression represented as a tree.
+
+    Args:
+      depth (Optional[str]): indentation string of the binary expression in
+          the tree.
+
+    Returns:
+      str: the binary expression represented as a tree.
+    """
+    result = '{0:s}{1:s}\n'.format(depth, self.operator)
+    for part in self.args:
+      result += '{0:s}-{1:s}\n'.format(depth, part.PrintTree(depth + '  '))
+
+    return result
 
 
 class IdentityExpression(Expression):
@@ -268,138 +268,6 @@ class SearchParser(object):
     self.string = None
     self.verbose = 0
 
-  def BinaryOperator(self, string=None, **unused_kwargs):
-    """Sets the binary operator.
-
-    Args:
-      string (Optional[str]): expression string.
-    """
-    self.stack.append(self.binary_expression_cls(string))
-
-  def BracketOpen(self, **unused_kwargs):
-    """Defines an open bracket."""
-    self.stack.append('(')
-
-  def BracketClose(self, **unused_kwargs):
-    """Defines a closing bracket."""
-    self.stack.append(')')
-
-  def Close(self):
-    """Forces parse the remaining data in the buffer."""
-    while self.NextToken():
-      if not self.buffer:
-        return
-
-  def Default(self, **kwarg):
-    """Default callback handler."""
-    logging.debug('Default handler: {0:s}'.format(kwarg))
-
-  def Empty(self):
-    """Checks if the buffer is empty.
-
-    Returns:
-      bool: True if the buffer is emtpy.
-    """
-    return not self.buffer
-
-  def Feed(self, data):
-    """Feeds the buffer with data.
-
-    Args:
-      data (str): data to be processed by the search parser.
-    """
-    self.buffer = ''.join([self.buffer, data])
-
-  def StringStart(self, **unused_kwargs):
-    """Initializes the internal string."""
-    self.string = ''
-
-  def StringEscape(self, string, match, **unused_kwargs):
-    """Escapes backslashes found inside an expression string.
-
-    Backslashes followed by anything other than ['"rnbt] will just be included
-    in the string.
-
-    Args:
-      string (str): expression string that matched.
-      match (re.MatchObject): match object, where match.group(1) contains
-          the escaped code.
-    """
-    if match.group(1) in '\'"rnbt':
-      self.string += string.decode('unicode_escape')
-    else:
-      self.string += string
-
-  def StringInsert(self, string='', **unused_kwargs):
-    """Adds the expression string to the internal string.
-
-    Args:
-      string (Optional[str]): expression string.
-    """
-    self.string += string
-
-  def StringFinish(self, **unused_kwargs):
-    """Finishes a string operation.
-
-    Returns:
-      str: ??? or None when the internal state is not "ATTRIBUTE" or
-          "ARG_LIST".
-    """
-    if self.state == 'ATTRIBUTE':
-      return self.StoreAttribute(string=self.string)
-
-    if self.state == 'ARG_LIST':
-      return self.InsertArg(string=self.string)
-
-    return None
-
-  def StoreAttribute(self, string='', **unused_kwargs):
-    """Store the attribute.
-
-    Args:
-      string (Optional[str]): expression string.
-
-    Returns:
-      str: token.
-    """
-    logging.debug('Storing attribute {0:s}'.format(repr(string)))
-
-    # TODO: Update the expected number_of_args
-    try:
-      self.current_expression.SetAttribute(string)
-    except AttributeError:
-      raise errors.ParseError('Invalid attribute \'{0:s}\''.format(string))
-
-    return 'OPERATOR'
-
-  def StoreOperator(self, string='', **unused_kwargs):
-    """Store the operator.
-
-    Args:
-      string (Optional[str]): expression string.
-    """
-    logging.debug('Storing operator {0:s}'.format(repr(string)))
-    self.current_expression.SetOperator(string)
-
-  def InsertArg(self, string='', **unused_kwargs):
-    """Inserts an argument into the current expression.
-
-    Args:
-      string (Optional[str]): argument string.
-
-    Returns:
-      str: state.
-    """
-    logging.debug('Storing Argument {0:s}'.format(string))
-
-    # This expression is complete
-    if self.current_expression.AddArg(string):
-      self.stack.append(self.current_expression)
-      self.current_expression = self.expression_cls()
-      return self.PopState()
-
-    return None
-
   def _CombineBinaryExpressions(self, operator):
     """Combines binary expressions.
 
@@ -430,32 +298,39 @@ class SearchParser(object):
 
     self.stack = list(filter(None, self.stack))
 
-  def Reduce(self):
-    """Reduce the token stack into an AST.
+  def BinaryOperator(self, string=None, **unused_kwargs):
+    """Sets the binary operator.
+
+    Args:
+      string (Optional[str]): expression string.
+    """
+    self.stack.append(self.binary_expression_cls(string))
+
+  def BracketClose(self, **unused_kwargs):
+    """Defines a closing bracket."""
+    self.stack.append(')')
+
+  def BracketOpen(self, **unused_kwargs):
+    """Defines an open bracket."""
+    self.stack.append('(')
+
+  def Close(self):
+    """Forces parse the remaining data in the buffer."""
+    while self.NextToken():
+      if not self.buffer:
+        return
+
+  def Default(self, **kwarg):
+    """Default callback handler."""
+    logging.debug('Default handler: {0:s}'.format(kwarg))
+
+  def Empty(self):
+    """Checks if the buffer is empty.
 
     Returns:
-      str: token.
+      bool: True if the buffer is emtpy.
     """
-    # Check for sanity
-    if self.state != 'INITIAL':
-      self.Error('Premature end of expression')
-
-    length = len(self.stack)
-    while length > 1:
-      # Precedence order
-      self._CombineParenthesis()
-      self._CombineBinaryExpressions('and')
-      self._CombineBinaryExpressions('or')
-
-      # No change
-      if len(self.stack) == length:
-        break
-      length = len(self.stack)
-
-    if length != 1:
-      self.Error('Illegal query expression')
-
-    return self.stack[0]
+    return not self.buffer
 
   def Error(self, message=None, weight=1):  # pylint: disable=unused-argument
     """Raises a parse error.
@@ -471,6 +346,33 @@ class SearchParser(object):
         '{0:s} in position {1:s}: {2:s} <----> {3:s} )'.format(
             message, len(self.processed_buffer), self.processed_buffer,
             self.buffer))
+
+  def Feed(self, data):
+    """Feeds the buffer with data.
+
+    Args:
+      data (str): data to be processed by the search parser.
+    """
+    self.buffer = ''.join([self.buffer, data])
+
+  def InsertArg(self, string='', **unused_kwargs):
+    """Inserts an argument into the current expression.
+
+    Args:
+      string (Optional[str]): argument string.
+
+    Returns:
+      str: state.
+    """
+    logging.debug('Storing Argument {0:s}'.format(string))
+
+    # This expression is complete
+    if self.current_expression.AddArg(string):
+      self.stack.append(self.current_expression)
+      self.current_expression = self.expression_cls()
+      return self.PopState()
+
+    return None
 
   def NextToken(self):
     """Fetches the next token by trying to match any of the regexes in order.
@@ -565,3 +467,101 @@ class SearchParser(object):
     """Pushes the current state on the state stack."""
     logging.debug('Storing state {0:s}'.format(repr(self.state)))
     self.state_stack.append(self.state)
+
+  def Reduce(self):
+    """Reduce the token stack into an AST.
+
+    Returns:
+      str: token.
+    """
+    # Check for sanity
+    if self.state != 'INITIAL':
+      self.Error('Premature end of expression')
+
+    length = len(self.stack)
+    while length > 1:
+      # Precedence order
+      self._CombineParenthesis()
+      self._CombineBinaryExpressions('and')
+      self._CombineBinaryExpressions('or')
+
+      # No change
+      if len(self.stack) == length:
+        break
+      length = len(self.stack)
+
+    if length != 1:
+      self.Error('Illegal query expression')
+
+    return self.stack[0]
+
+  def StringEscape(self, string, match, **unused_kwargs):
+    """Escapes backslashes found inside an expression string.
+
+    Backslashes followed by anything other than ['"rnbt] will just be included
+    in the string.
+
+    Args:
+      string (str): expression string that matched.
+      match (re.MatchObject): match object, where match.group(1) contains
+          the escaped code.
+    """
+    if match.group(1) in '\'"rnbt':
+      self.string += string.decode('unicode_escape')
+    else:
+      self.string += string
+
+  def StringFinish(self, **unused_kwargs):
+    """Finishes a string operation.
+
+    Returns:
+      str: ??? or None when the internal state is not "ATTRIBUTE" or
+          "ARG_LIST".
+    """
+    if self.state == 'ATTRIBUTE':
+      return self.StoreAttribute(string=self.string)
+
+    if self.state == 'ARG_LIST':
+      return self.InsertArg(string=self.string)
+
+    return None
+
+  def StringInsert(self, string='', **unused_kwargs):
+    """Adds the expression string to the internal string.
+
+    Args:
+      string (Optional[str]): expression string.
+    """
+    self.string += string
+
+  def StringStart(self, **unused_kwargs):
+    """Initializes the internal string."""
+    self.string = ''
+
+  def StoreAttribute(self, string='', **unused_kwargs):
+    """Store the attribute.
+
+    Args:
+      string (Optional[str]): expression string.
+
+    Returns:
+      str: token.
+    """
+    logging.debug('Storing attribute {0:s}'.format(repr(string)))
+
+    # TODO: Update the expected number_of_args
+    try:
+      self.current_expression.SetAttribute(string)
+    except AttributeError:
+      raise errors.ParseError('Invalid attribute \'{0:s}\''.format(string))
+
+    return 'OPERATOR'
+
+  def StoreOperator(self, string='', **unused_kwargs):
+    """Store the operator.
+
+    Args:
+      string (Optional[str]): expression string.
+    """
+    logging.debug('Storing operator {0:s}'.format(repr(string)))
+    self.current_expression.SetOperator(string)
