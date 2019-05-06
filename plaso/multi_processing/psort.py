@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import collections
-import copy
 import heapq
 import os
 import time
@@ -268,25 +267,16 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     filter_limit = getattr(event_filter, 'limit', None)
 
     for event in storage_writer.GetSortedEvents():
-      event_data = None
       event_data_identifier = event.GetEventDataIdentifier()
-      if event_data_identifier:
-        event_data = storage_writer.GetEventDataByIdentifier(
-            event_data_identifier)
+      event_data = storage_writer.GetEventDataByIdentifier(
+          event_data_identifier)
+
+      event_identifier = event.GetIdentifier()
+      event_tag = self._event_tag_index.GetEventTagByIdentifier(
+          storage_writer, event_identifier)
 
       if event_filter:
-        # TODO: refactor to separately filter event and event data
-        copy_of_event = copy.deepcopy(event)
-        if event_data:
-          for attribute_name, attribute_value in event_data.GetAttributes():
-            setattr(copy_of_event, attribute_name, attribute_value)
-
-        event_identifier = event.GetIdentifier()
-        copy_of_event.tag = self._event_tag_index.GetEventTagByIdentifier(
-            storage_writer, event_identifier)
-      # TODO: end refactor
-
-        filter_match = event_filter.Match(copy_of_event)
+        filter_match = event_filter.Match(event, event_data, event_tag)
       else:
         filter_match = None
 
@@ -500,28 +490,19 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._events_status.number_of_events_from_time_slice = 0
 
     for event in storage_reader.GetSortedEvents(time_range=time_slice_range):
-      event_data = None
       event_data_identifier = event.GetEventDataIdentifier()
-      if event_data_identifier:
-        event_data = storage_reader.GetEventDataByIdentifier(
-            event_data_identifier)
+      event_data = storage_reader.GetEventDataByIdentifier(
+          event_data_identifier)
+
+      event_identifier = event.GetIdentifier()
+      event_tag = self._event_tag_index.GetEventTagByIdentifier(
+          storage_reader, event_identifier)
 
       if time_slice_range and event.timestamp != time_slice.event_timestamp:
         self._events_status.number_of_events_from_time_slice += 1
 
       if event_filter:
-        # TODO: refactor to separately filter event and event data
-        copy_of_event = copy.deepcopy(event)
-        if event_data:
-          for attribute_name, attribute_value in event_data.GetAttributes():
-            setattr(copy_of_event, attribute_name, attribute_value)
-
-        event_identifier = event.GetIdentifier()
-        copy_of_event.tag = self._event_tag_index.GetEventTagByIdentifier(
-            storage_reader, event_identifier)
-      # TODO: end refactor
-
-        filter_match = event_filter.Match(copy_of_event)
+        filter_match = event_filter.Match(event, event_data, event_tag)
       else:
         filter_match = None
 
