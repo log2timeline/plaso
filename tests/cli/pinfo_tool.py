@@ -61,8 +61,23 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 
     self.assertFalse(test_tool.CompareStores())
 
+    expected_output = '\n'.join([
+        '',
+        ('************************* Events generated per parser ***************'
+         '***********'),
+        'Parser (plugin) name : Number of events',
+        ('---------------------------------------------------------------------'
+         '-----------'),
+        '            filestat : 3 (6)',
+        '               total : 3 (38)',
+        ('---------------------------------------------------------------------'
+         '-----------'),
+        '',
+        'Storage files are different.',
+        ''])
+
     output = output_writer.ReadOutput()
-    self.assertEqual(output, 'Storage files are different.\n')
+    self.assertEqual(output, expected_output)
 
   def testParseArguments(self):
     """Tests the ParseArguments function."""
