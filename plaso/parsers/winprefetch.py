@@ -135,7 +135,7 @@ class WinPrefetchParser(interface.FileObjectParser):
       file_reference = file_metrics.file_reference
       if file_reference:
         mapped_file_string = (
-            '{0:s} [MFT entry: {1:d}, sequence: {2:d}]').format(
+            '{0:s} [{1:d}-{2:d}]').format(
                 mapped_file_string, file_reference & 0xffffffffffff,
                 file_reference >> 48)
 
