@@ -251,6 +251,24 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     # a structural fix.
     self._line_structures = list(self.LINE_STRUCTURES)
 
+  def _GetValueFromStructure(self, structure, name, default_value=None):
+    """Retrieves a token value from a Pyparsing structure.
+
+    This method ensures the token value is set to the default value when
+    the token is not present in the structure. Instead of returning
+    the Pyparsing default value of an empty byte stream (b'').
+
+    Args:
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+      name (str): name of the token.
+      default_value (Optional[object]): default value.
+
+    Returns:
+      object: value in the token or default value if the token is not available
+          in the structure.
+    """
+    return structure.get(name, default_value)
+
   # Pylint is confused by the formatting of the bytes_in argument.
   # pylint: disable=missing-param-doc,missing-type-doc
   def _IsText(self, bytes_in, encoding=None):

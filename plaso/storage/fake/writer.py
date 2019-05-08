@@ -281,7 +281,8 @@ class FakeStorageWriter(interface.StorageWriter):
     Returns:
       EventData: event data or None if not available.
     """
-    return self._event_data.get(identifier, None)
+    lookup_key = identifier.CopyToString()
+    return self._event_data.get(lookup_key, None)
 
   def GetEventSources(self):
     """Retrieves the event sources.
