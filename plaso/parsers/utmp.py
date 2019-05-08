@@ -54,6 +54,8 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
 
   _SUPPORTED_TYPES = frozenset(range(0, 10))
 
+  _DEAD_PROCESS_TYPE = 8
+
   def _ReadEntry(self, parser_mediator, file_object, file_offset):
     """Reads an utmp entry.
 
@@ -70,11 +72,13 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
         int: timestamp, which contains the number of microseconds
             since January 1, 1970, 00:00:00 UTC.
         UtmpEventData: event data of the utmp entry read.
+        list[str]: warning messages emitted by the parser.
 
     Raises:
       ParseError: if the entry cannot be parsed.
     """
     entry_map = self._GetDataTypeMap('linux_libc6_utmp_entry')
+    warning_strings = []
 
     try:
       entry, _ = self._ReadStructureFromFileObject(
@@ -94,16 +98,14 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
       username = entry.username.split(b'\x00')[0]
       username = username.decode(encoding)
     except UnicodeDecodeError:
-      parser_mediator.ProduceExtractionWarning(
-          'unable to decode username string')
+      warning_strings.append('unable to decode username string')
       username = None
 
     try:
       terminal = entry.terminal.split(b'\x00')[0]
       terminal = terminal.decode(encoding)
     except UnicodeDecodeError:
-      parser_mediator.ProduceExtractionWarning(
-          'unable to decode terminal string')
+      warning_strings.append('unable to decode terminal string')
       terminal = None
 
     if terminal == '~':
@@ -113,8 +115,7 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
       hostname = entry.hostname.split(b'\x00')[0]
       hostname = hostname.decode(encoding)
     except UnicodeDecodeError:
-      parser_mediator.ProduceExtractionWarning(
-          'unable to decode hostname string')
+      warning_strings.append('unable to decode hostname string')
       hostname = None
 
     if not hostname or hostname == ':0':
@@ -139,7 +140,7 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
 
     timestamp = entry.microseconds + (
         entry.timestamp * definitions.MICROSECONDS_PER_SECOND)
-    return timestamp, event_data
+    return timestamp, event_data, warning_strings
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses an utmp file-like object.
@@ -155,20 +156,26 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
     file_offset = 0
 
     try:
-      timestamp, event_data = self._ReadEntry(
+      timestamp, event_data, warning_strings = self._ReadEntry(
           parser_mediator, file_object, file_offset)
     except errors.ParseError as exception:
       raise errors.UnableToParseFile(
           'Unable to parse first utmp entry with error: {0!s}'.format(
               exception))
 
-    if not event_data.username:
-      raise errors.UnableToParseFile(
-          'Unable to parse first utmp entry with error: missing username')
-
     if not timestamp:
       raise errors.UnableToParseFile(
           'Unable to parse first utmp entry with error: missing timestamp')
+
+    if not event_data.username and event_data.type != self._DEAD_PROCESS_TYPE:
+      raise errors.UnableToParseFile(
+          'Unable to parse first utmp entry with error: missing username')
+
+    if warning_strings:
+      all_warnings = ', '.join(warning_strings)
+      raise errors.UnableToParseFile(
+          'Unable to parse first utmp entry with error: {0:s}'.format(
+              all_warnings))
 
     date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
         timestamp=timestamp)
@@ -184,7 +191,7 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
         break
 
       try:
-        timestamp, event_data = self._ReadEntry(
+        timestamp, event_data, warning_strings = self._ReadEntry(
             parser_mediator, file_object, file_offset)
       except errors.ParseError:
         # Note that the utmp file can contain trailing data.
@@ -195,6 +202,9 @@ class UtmpParser(dtfabric_parser.DtFabricBaseParser):
       event = time_events.DateTimeValuesEvent(
           date_time, definitions.TIME_DESCRIPTION_START)
       parser_mediator.ProduceEventWithEventData(event, event_data)
+
+      for warning_string in warning_strings:
+        parser_mediator.ProduceExtractionWarning(warning_string)
 
       file_offset = file_object.tell()
 
