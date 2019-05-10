@@ -3,8 +3,8 @@
 
 from __future__ import unicode_literals
 
+from plaso.filters import expression_parser
 from plaso.filters import interface
-from plaso.lib import pfilter
 
 
 class EventObjectFilter(interface.FilterObject):
@@ -28,11 +28,11 @@ class EventObjectFilter(interface.FilterObject):
     Raises:
       ParseError: if the filter expression cannot be parsed.
     """
-    expression_parser = pfilter.EventFilterExpressionParser(filter_expression)
-    expression = expression_parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser(filter_expression)
+    expression = parser.Parse()
 
     self._event_filter = expression.Compile(
-        pfilter.PlasoAttributeFilterImplementation)
+        expression_parser.PlasoAttributeFilterImplementation)
     self._filter_expression = filter_expression
 
   def Match(self, event):
