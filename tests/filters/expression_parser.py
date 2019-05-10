@@ -44,9 +44,16 @@ class TokenTest(shared_test_lib.BaseTestCase):
 class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
   """Tests the event filter expression parser."""
 
+  # pylint: disable=protected-access
+
+  # TODO: add tests for _AddBinaryOperator
   # TODO: add tests for _CombineBinaryExpressions
   # TODO: add tests for _CombineParenthesis
-  # TODO: add tests for BinaryOperator
+  # TODO: add tests for _GetNextToken
+  # TODO: add tests for _NegateExpression
+  # TODO: add tests for _PushBack
+  # TODO: add tests for _Reduce
+  # TODO: add tests for _Reset
 
   def testBracketClose(self):
     """Tests the BracketClose function."""
@@ -60,41 +67,16 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
 
     parser.BracketOpen()
 
-  def testClose(self):
-    """Tests the Close function."""
-    parser = expression_parser.EventFilterExpressionParser()
-
-    with self.assertRaises(errors.ParseError):
-      parser.Close()
-
   def testDefault(self):
     """Tests the Default function."""
     parser = expression_parser.EventFilterExpressionParser()
 
     parser.Default()
 
-  def testCompile(self):
-    """Tests the Compile function."""
-    parser = expression_parser.EventFilterExpressionParser()
-
-    result = parser.Empty()
-    self.assertTrue(result)
-
-  # TODO: add tests for Error
-
-  def testFeed(self):
-    """Tests the Feed function."""
-    parser = expression_parser.EventFilterExpressionParser()
-
-    parser.Feed('data')
-
   # TODO: add tests for InsertArg
-  # TODO: add tests for NextToken
   # TODO: add tests for Parse
   # TODO: add tests for PopState
-  # TODO: add tests for PushBack
   # TODO: add tests for PushState
-  # TODO: add tests for Reduce
   # TODO: add tests for StringEscape
 
   def testStringFinish(self):
@@ -120,6 +102,7 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
   def testStoreAttribute(self):
     """Tests the StoreAttribute function."""
     parser = expression_parser.EventFilterExpressionParser()
+    parser._Reset()
 
     token = parser.StoreAttribute(string='attribute')
     self.assertEqual(token, 'OPERATOR')
@@ -127,6 +110,7 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
   def testStoreOperator(self):
     """Tests the StoreOperator function."""
     parser = expression_parser.EventFilterExpressionParser()
+    parser._Reset()
 
     parser.StoreOperator(string='and')
 
@@ -286,8 +270,8 @@ class ObjectFilterTest(unittest.TestCase):
         '  AND num_imported_functions == 1',
         ')'])
 
-    parser = expression_parser.EventFilterExpressionParser(query)
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse(query)
     event_filter = expression.Compile()
     self.assertEqual(True, event_filter.Matches(self.file))
 
@@ -296,146 +280,138 @@ class ObjectFilterTest(unittest.TestCase):
       filters.Regexp(arguments=['name', 'I [dont compile'])
 
   def testEscaping(self):
-    parser = expression_parser.EventFilterExpressionParser(r'a is "\n"')
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse(r'a is "\n"')
     self.assertEqual(expression.args[0], '\n')
 
     # Invalid escape sequence.
-    parser = expression_parser.EventFilterExpressionParser(r'a is "\z"')
+    parser = expression_parser.EventFilterExpressionParser()
     with self.assertRaises(errors.ParseError):
-      parser.Parse()
+      parser.Parse(r'a is "\z"')
 
     # Can escape the backslash.
-    parser = expression_parser.EventFilterExpressionParser(r'a is "\\"')
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse(r'a is "\\"')
     self.assertEqual(expression.args[0], '\\')
 
     # Test hexadecimal escaping.
 
     # This fails as it's not really a hex escaped string.
-    parser = expression_parser.EventFilterExpressionParser(r'a is "\xJZ"')
+    parser = expression_parser.EventFilterExpressionParser()
     with self.assertRaises(errors.ParseError):
-      parser.Parse()
+      parser.Parse(r'a is "\xJZ"')
 
     # Instead, this is what one should write.
-    parser = expression_parser.EventFilterExpressionParser(r'a is "\\xJZ"')
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse(r'a is "\\xJZ"')
     self.assertEqual(expression.args[0], r'\xJZ')
 
     # Standard hex-escape.
-    parser = expression_parser.EventFilterExpressionParser(
-        'a is "\x41\x41\x41"')
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse('a is "\x41\x41\x41"')
     self.assertEqual(expression.args[0], 'AAA')
 
     # Hex-escape + a character.
-    parser = expression_parser.EventFilterExpressionParser('a is "\x414"')
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse('a is "\x414"')
     self.assertEqual(expression.args[0], 'A4')
 
     # How to include r'\x41'.
-    parser = expression_parser.EventFilterExpressionParser('a is "\\x41"')
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse('a is "\\x41"')
     self.assertEqual(expression.args[0], '\x41')
 
   def testParse(self):
     # Arguments are either int, float or quoted string.
-    parser = expression_parser.EventFilterExpressionParser('attribute == 1')
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse('attribute == 1')
     self.assertIsNotNone(expression)
 
-    parser = expression_parser.EventFilterExpressionParser('attribute == 0x10')
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse('attribute == 0x10')
     self.assertIsNotNone(expression)
 
-    parser = expression_parser.EventFilterExpressionParser('attribute == 1a')
+    parser = expression_parser.EventFilterExpressionParser()
     with self.assertRaises(errors.ParseError):
-      parser.Parse()
+      parser.Parse('attribute == 1a')
 
-    parser = expression_parser.EventFilterExpressionParser('attribute == 1.2')
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse('attribute == 1.2')
     self.assertIsNotNone(expression)
 
-    parser = expression_parser.EventFilterExpressionParser(
-        'attribute == \'bla\'')
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse('attribute == \'bla\'')
     self.assertIsNotNone(expression)
 
-    parser = expression_parser.EventFilterExpressionParser('attribute == "bla"')
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse('attribute == "bla"')
     self.assertIsNotNone(expression)
 
-    parser = expression_parser.EventFilterExpressionParser('something == red')
+    parser = expression_parser.EventFilterExpressionParser()
     with self.assertRaises(errors.ParseError):
-      parser.Parse()
+      parser.Parse('something == red')
 
     # Can't start with AND.
-    parser = expression_parser.EventFilterExpressionParser(
-        'and something is \'Blue\'')
+    parser = expression_parser.EventFilterExpressionParser()
     with self.assertRaises(errors.ParseError):
-      parser.Parse()
+      parser.Parse('and something is \'Blue\'')
 
     # Test negative filters.
-    parser = expression_parser.EventFilterExpressionParser(
-        'attribute not == \'dancer\'')
+    parser = expression_parser.EventFilterExpressionParser()
     with self.assertRaises(errors.ParseError):
-      parser.Parse()
+      parser.Parse('attribute not == \'dancer\'')
 
-    parser = expression_parser.EventFilterExpressionParser(
-        'attribute == not \'dancer\'')
+    parser = expression_parser.EventFilterExpressionParser()
     with self.assertRaises(errors.ParseError):
-      parser.Parse()
+      parser.Parse('attribute == not \'dancer\'')
 
-    parser = expression_parser.EventFilterExpressionParser(
-        'attribute not not equals \'dancer\'')
+    parser = expression_parser.EventFilterExpressionParser()
     with self.assertRaises(errors.ParseError):
-      parser.Parse()
+      parser.Parse('attribute not not equals \'dancer\'')
 
-    parser = expression_parser.EventFilterExpressionParser('attribute not > 23')
+    parser = expression_parser.EventFilterExpressionParser()
     with self.assertRaises(errors.ParseError):
-      parser.Parse()
+      parser.Parse('attribute not > 23')
 
     # Need to close braces.
-    parser = expression_parser.EventFilterExpressionParser('(a is 3)')
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse('(a is 3)')
     self.assertIsNotNone(expression)
 
-    parser = expression_parser.EventFilterExpressionParser('(a is 3')
+    parser = expression_parser.EventFilterExpressionParser()
     with self.assertRaises(errors.ParseError):
-      parser.Parse()
+      parser.Parse('(a is 3')
 
     # Need to open braces to close them.
-    parser = expression_parser.EventFilterExpressionParser('a is 3)')
+    parser = expression_parser.EventFilterExpressionParser()
     with self.assertRaises(errors.ParseError):
-      parser.Parse()
+      parser.Parse('a is 3)')
 
     # Context Operator alone is not accepted.
-    parser = expression_parser.EventFilterExpressionParser('@attributes')
+    parser = expression_parser.EventFilterExpressionParser()
     with self.assertRaises(errors.ParseError):
-      parser.Parse()
+      parser.Parse('@attributes')
 
     # Accepted only with braces.
-    parser = expression_parser.EventFilterExpressionParser(
-        '@attributes( name is \'adrien\')')
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse('@attributes( name is \'adrien\')')
     self.assertIsNotNone(expression)
 
     # Not without them.
-    parser = expression_parser.EventFilterExpressionParser(
-        '@attributes name is \'adrien\'')
+    parser = expression_parser.EventFilterExpressionParser()
     with self.assertRaises(errors.ParseError):
-      parser.Parse()
+      parser.Parse('@attributes name is \'adrien\'')
 
     # Can nest context operators.
-    query = '@imported_dlls( @imported_function( name is \'OpenFileA\'))'
-    parser = expression_parser.EventFilterExpressionParser(query)
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse(
+        '@imported_dlls( @imported_function( name is \'OpenFileA\'))')
     self.assertIsNotNone(expression)
 
     # Can nest context operators and mix braces without it messing up.
-    query = '@imported_dlls( @imported_function( name is \'OpenFileA\'))'
-    parser = expression_parser.EventFilterExpressionParser(query)
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse(
+        '@imported_dlls( @imported_function( name is \'OpenFileA\'))')
     self.assertIsNotNone(expression)
 
     query = '\n'.join([
@@ -447,8 +423,8 @@ class ObjectFilterTest(unittest.TestCase):
         '  )',
         ')'])
 
-    parser = expression_parser.EventFilterExpressionParser(query)
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse(query)
     self.assertIsNotNone(expression)
 
     # Mix context and binary operators.
@@ -461,8 +437,8 @@ class ObjectFilterTest(unittest.TestCase):
         '  ) AND num_functions == 2',
         ')'])
 
-    parser = expression_parser.EventFilterExpressionParser(query)
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse(query)
     self.assertIsNotNone(expression)
 
     # Also on the right.
@@ -476,9 +452,9 @@ class ObjectFilterTest(unittest.TestCase):
         '  )',
         ')'])
 
-    parser = expression_parser.EventFilterExpressionParser(query)
+    parser = expression_parser.EventFilterExpressionParser()
     with self.assertRaises(errors.ParseError):
-      parser.Parse()
+      parser.Parse(query)
 
     # Altogether.
     # There's an imported dll that imports OpenFileA AND
@@ -493,44 +469,40 @@ class ObjectFilterTest(unittest.TestCase):
         ')',
         'AND @exported_symbols(name is "inject")'])
 
-    parser = expression_parser.EventFilterExpressionParser(query)
+    parser = expression_parser.EventFilterExpressionParser()
     with self.assertRaises(errors.ParseError):
-      parser.Parse()
+      parser.Parse(query)
 
   def testCompile(self):
     obj = test_lib.DummyObject('something', 'Blue')
-    parser = expression_parser.EventFilterExpressionParser(
-        'something == \'Blue\'')
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse('something == \'Blue\'')
     event_filter = expression.Compile()
     self.assertEqual(event_filter.Matches(obj), True)
 
-    parser = expression_parser.EventFilterExpressionParser(
-        'something == \'Red\'')
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse('something == \'Red\'')
     event_filter = expression.Compile()
     self.assertEqual(event_filter.Matches(obj), False)
 
-    parser = expression_parser.EventFilterExpressionParser(
-        'something == "Red"')
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse('something == "Red"')
     event_filter = expression.Compile()
     self.assertEqual(event_filter.Matches(obj), False)
 
     obj = test_lib.DummyObject('size', 4)
-    parser = expression_parser.EventFilterExpressionParser('size < 3')
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse('size < 3')
     event_filter = expression.Compile()
     self.assertEqual(event_filter.Matches(obj), False)
 
-    parser = expression_parser.EventFilterExpressionParser('size == 4')
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse('size == 4')
     event_filter = expression.Compile()
     self.assertEqual(event_filter.Matches(obj), True)
 
-    query = 'something is \'Blue\' and size not contains 3'
-    parser = expression_parser.EventFilterExpressionParser(query)
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse('something is \'Blue\' and size not contains 3')
     event_filter = expression.Compile()
     self.assertEqual(event_filter.Matches(obj), False)
 
@@ -546,8 +518,8 @@ class PFilterTest(unittest.TestCase):
       query (str): event filter expression.
       expected_result (bool): expected result.
     """
-    parser = expression_parser.EventFilterExpressionParser(query)
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse(query)
     event_filter = expression.Compile()
 
     self.assertEqual(
@@ -590,9 +562,9 @@ class PFilterTest(unittest.TestCase):
     # Double negative matching -> should be the same
     # as a positive one.
     query = 'filename not not contains \'GoodFella\''
-    parser = expression_parser.EventFilterExpressionParser(query)
+    parser = expression_parser.EventFilterExpressionParser()
     with self.assertRaises(errors.ParseError):
-      parser.Parse()
+      parser.Parse(query)
 
     # Test date filtering.
     query = 'date >= \'2015-11-18\''
