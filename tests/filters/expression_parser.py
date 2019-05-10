@@ -134,47 +134,31 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
 # pylint: disable=missing-docstring
 
 
-class LowercaseAttributeFilterImplementation(
-    expression_parser.BaseFilterImplementation):
-  """Does field name access on the lowercase version of names.
-
-  Useful to only access attributes and properties with Google's python naming
-  style.
-  """
-
-  FILTERS = {}
-  FILTERS.update(expression_parser.BaseFilterImplementation.FILTERS)
-
-
 class ObjectFilterTest(unittest.TestCase):
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self.file = test_lib.DummyFile()
-
-  operator_tests = {
-      filters.Less: [
+  _OPERATOR_TESTS = {
+      filters.LessThanOperator: [
           (True, ['size', 1000]),
           (True, ['size', 11]),
           (False, ['size', 10]),
           (False, ['size', 0]),
           (False, ['float', 1.0]),
           (True, ['float', 123.9824])],
-      filters.LessEqual: [
+      filters.LessEqualOperator: [
           (True, ['size', 1000]),
           (True, ['size', 11]),
           (True, ['size', 10]),
           (False, ['size', 9]),
           (False, ['float', 1.0]),
           (True, ['float', 123.9823])],
-      filters.Greater: [
+      filters.GreaterThanOperator: [
           (True, ['size', 1]),
           (True, ['size', 9.23]),
           (False, ['size', 10]),
           (False, ['size', 1000]),
           (True, ['float', 122]),
           (True, ['float', 1.0])],
-      filters.GreaterEqual: [
+      filters.GreaterEqualOperator: [
           (False, ['size', 1000]),
           (False, ['size', 11]),
           (True, ['size', 10]),
@@ -193,11 +177,11 @@ class ObjectFilterTest(unittest.TestCase):
           (True, ['imported_dlls.imported_functions', 'FindWindow']),
           # But not with numbers.
           (False, ['size', 12])],
-      filters.Equals: [
+      filters.EqualsOperator: [
           (True, ['name', 'boot.ini']),
           (False, ['name', 'foobar']),
           (True, ['float', 123.9823])],
-      filters.NotEquals: [
+      filters.NotEqualsOperator: [
           (False, ['name', 'boot.ini']),
           (True, ['name', 'foobar']),
           (True, ['float', 25])],
@@ -220,8 +204,12 @@ class ObjectFilterTest(unittest.TestCase):
           (False, ['imported_dlls.imported_functions', 'FindWindow'])],
       }
 
+  def setUp(self):
+    """Makes preparations before running an individual test."""
+    self.file = test_lib.DummyFile()
+
   def testBinaryOperators(self):
-    for operator, test_data in self.operator_tests.items():
+    for operator, test_data in self._OPERATOR_TESTS.items():
       for test_unit in test_data:
         ops = operator(arguments=test_unit[1])
         self.assertEqual(
@@ -250,17 +238,18 @@ class ObjectFilterTest(unittest.TestCase):
 
   def testContext(self):
     with self.assertRaises(errors.InvalidNumberOfOperands):
-      filters.Context(arguments=['context'])
+      filters.ContextOperator(arguments=['context'])
 
     with self.assertRaises(errors.InvalidNumberOfOperands):
-      filters.Context(arguments=[
-          'context', filters.Equals(arguments=['path', 'value']),
-          filters.Equals(arguments=['another_path', 'value'])])
+      filters.ContextOperator(arguments=[
+          'context', filters.EqualsOperator(arguments=['path', 'value']),
+          filters.EqualsOperator(arguments=['another_path', 'value'])])
 
     # One imported_dll imports 2 functions AND one imported_dll imports
     # function RegQueryValueEx.
     arguments = [
-        filters.Equals(arguments=['imported_dlls.num_imported_functions', 1]),
+        filters.EqualsOperator(arguments=[
+            'imported_dlls.num_imported_functions', 1]),
         filters.Contains(arguments=[
             'imported_dlls.imported_functions', 'RegQueryValueEx'])]
     condition = filters.AndFilter(arguments=arguments)
@@ -269,12 +258,12 @@ class ObjectFilterTest(unittest.TestCase):
     self.assertEqual(True, condition.Matches(self.file))
 
     arguments = [
-        filters.Equals(arguments=['num_imported_functions', 2]),
+        filters.EqualsOperator(arguments=['num_imported_functions', 2]),
         filters.Contains(arguments=['imported_functions', 'RegQueryValueEx'])]
     condition = filters.AndFilter(arguments=arguments)
 
     # The same DLL imports 2 functions AND one of these is RegQueryValueEx.
-    context = filters.Context(arguments=['imported_dlls', condition])
+    context = filters.ContextOperator(arguments=['imported_dlls', condition])
 
     # With context, it doesn't match because both don't match in the same dll.
     self.assertEqual(False, context.Matches(self.file))
@@ -282,11 +271,11 @@ class ObjectFilterTest(unittest.TestCase):
     # One imported_dll imports only 1 function AND one imported_dll imports
     # function RegQueryValueEx.
     condition = filters.AndFilter(arguments=[
-        filters.Equals(arguments=['num_imported_functions', 1]),
+        filters.EqualsOperator(arguments=['num_imported_functions', 1]),
         filters.Contains(arguments=['imported_functions', 'RegQueryValueEx'])])
 
     # The same DLL imports 1 function AND it's RegQueryValueEx.
-    context = filters.Context(['imported_dlls', condition])
+    context = filters.ContextOperator(['imported_dlls', condition])
     self.assertEqual(True, context.Matches(self.file))
 
     # Now test the context with a straight query.
@@ -299,7 +288,7 @@ class ObjectFilterTest(unittest.TestCase):
 
     parser = expression_parser.EventFilterExpressionParser(query)
     expression = parser.Parse()
-    event_filter = expression.Compile(LowercaseAttributeFilterImplementation)
+    event_filter = expression.Compile()
     self.assertEqual(True, event_filter.Matches(self.file))
 
   def testRegexpRaises(self):
@@ -513,36 +502,36 @@ class ObjectFilterTest(unittest.TestCase):
     parser = expression_parser.EventFilterExpressionParser(
         'something == \'Blue\'')
     expression = parser.Parse()
-    event_filter = expression.Compile(LowercaseAttributeFilterImplementation)
+    event_filter = expression.Compile()
     self.assertEqual(event_filter.Matches(obj), True)
 
     parser = expression_parser.EventFilterExpressionParser(
         'something == \'Red\'')
     expression = parser.Parse()
-    event_filter = expression.Compile(LowercaseAttributeFilterImplementation)
+    event_filter = expression.Compile()
     self.assertEqual(event_filter.Matches(obj), False)
 
     parser = expression_parser.EventFilterExpressionParser(
         'something == "Red"')
     expression = parser.Parse()
-    event_filter = expression.Compile(LowercaseAttributeFilterImplementation)
+    event_filter = expression.Compile()
     self.assertEqual(event_filter.Matches(obj), False)
 
     obj = test_lib.DummyObject('size', 4)
     parser = expression_parser.EventFilterExpressionParser('size < 3')
     expression = parser.Parse()
-    event_filter = expression.Compile(LowercaseAttributeFilterImplementation)
+    event_filter = expression.Compile()
     self.assertEqual(event_filter.Matches(obj), False)
 
     parser = expression_parser.EventFilterExpressionParser('size == 4')
     expression = parser.Parse()
-    event_filter = expression.Compile(LowercaseAttributeFilterImplementation)
+    event_filter = expression.Compile()
     self.assertEqual(event_filter.Matches(obj), True)
 
     query = 'something is \'Blue\' and size not contains 3'
     parser = expression_parser.EventFilterExpressionParser(query)
     expression = parser.Parse()
-    event_filter = expression.Compile(LowercaseAttributeFilterImplementation)
+    event_filter = expression.Compile()
     self.assertEqual(event_filter.Matches(obj), False)
 
 
@@ -559,8 +548,7 @@ class PFilterTest(unittest.TestCase):
     """
     parser = expression_parser.EventFilterExpressionParser(query)
     expression = parser.Parse()
-    event_filter = expression.Compile(
-        expression_parser.BaseFilterImplementation)
+    event_filter = expression.Compile()
 
     self.assertEqual(
         expected_result, event_filter.Matches(event),

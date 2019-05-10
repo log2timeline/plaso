@@ -98,7 +98,6 @@ import logging
 import re
 
 from plaso.filters import expressions
-from plaso.filters import filters
 from plaso.lib import errors
 
 
@@ -679,31 +678,3 @@ class EventFilterExpressionParser(object):
     """
     logging.debug('Storing operator {0:s}'.format(repr(string)))
     self.current_expression.SetOperator(string)
-
-
-class BaseFilterImplementation(object):
-  """Defines the base implementation of an object filter by its attributes.
-
-  Inherit from this class, switch any of the needed operators and pass it to
-  the Compile method of a parsed string to obtain an executable filter.
-  """
-
-  OPS = {
-      '==': filters.Equals,
-      '>': filters.Greater,
-      '>=': filters.GreaterEqual,
-      '<': filters.Less,
-      '<=': filters.LessEqual,
-      '!=': filters.NotEquals,
-      'contains': filters.Contains,
-      'equals': filters.Equals,
-      'inset': filters.InSet,
-      'iregexp': filters.RegexpInsensitive,
-      'is': filters.Equals,
-      'regexp': filters.Regexp}
-
-  FILTERS = {
-      'AndFilter': filters.AndFilter,
-      'Context': filters.Context,
-      'IdentityFilter': filters.IdentityFilter,
-      'OrFilter': filters.OrFilter}

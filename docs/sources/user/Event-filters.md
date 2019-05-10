@@ -4,8 +4,6 @@ Event filters can be used both during the extraction phase and in the post-proce
 Tools that have event filter support:
  + [psort](Using-psort.md#filtering)
 
-The generic documentation of the filter language can be found [here](Objectfilter.md)
-
 The filters are evoked differently depending on the tool, consult each tool's documentation about how that is achieved.
 
 When the filters were originally introduced a [blog post](http://blog.kiddaland.net/2012/12/log2timeline-filtering-101.html) was made explaining them. Since this blog post was introduced there have been some changes made to the filtering that make it a bit out-of-date, yet a good resource to read over.

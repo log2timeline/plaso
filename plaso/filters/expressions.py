@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import abc
 
 from plaso.lib import errors
+from plaso.filters import filters
 from plaso.filters import helpers
 
 
@@ -52,15 +53,11 @@ class Expression(object):
     return False
 
   @abc.abstractmethod
-  def Compile(self, filter_implementation):
-    """Given a filter implementation, compile this expression.
-
-    Args:
-      filter_implementation (type): class of the filter object, which should
-          be a subclass of BaseFilterImplementation.
+  def Compile(self):
+    """Compiles the expression into a filter.
 
     Returns:
-      object: filter object of the binary expression.
+      Filter: filter object corresponding the expression.
     """
 
   def SetAttribute(self, attribute):
@@ -116,44 +113,37 @@ class BinaryExpression(Expression):
 
     self.args = [lhs, rhs]
 
-  # pylint: disable=missing-raises-doc
-  def Compile(self, filter_implementation):
-    """Compiles the binary expression into a filter object.
-
-    Args:
-      filter_implementation (type): class of the filter object, which should
-          be a subclass of BaseFilterImplementation.
+  def Compile(self):
+    """Compiles the expression into a filter.
 
     Returns:
-      object: filter object of the binary expression.
+      Filter: filter object corresponding the expression.
+
+    Raises:
+      ParseError: if the operator is not supported.
     """
     operator = self.operator.lower()
     if operator in ('and', '&&'):
-      method = 'AndFilter'
+      filter_class = filters.AndFilter
     elif operator in ('or', '||'):
-      method = 'OrFilter'
+      filter_class = filters.OrFilter
     else:
-      raise errors.ParseError(
-          'Invalid binary operator {0:s}.'.format(operator))
+      raise errors.ParseError('Unusupported operator: {0:s}.'.format(operator))
 
-    args = [x.Compile(filter_implementation) for x in self.args]
-    return filter_implementation.FILTERS[method](arguments=args)
+    args = [argument.Compile() for argument in self.args]
+    return filter_class(arguments=args)
 
 
 class IdentityExpression(Expression):
   """An event filter parser expression which always evaluates to True."""
 
-  def Compile(self, filter_implementation):
-    """Compiles the binary expression into a filter object.
-
-    Args:
-      filter_implementation (type): class of the filter object, which should
-          be a subclass of BaseFilterImplementation.
+  def Compile(self):
+    """Compiles the expression into a filter.
 
     Returns:
-      object: filter object of the identity expression.
+      IdentityFilter: filter object which always evaluates to True.
     """
-    return filter_implementation.IdentityFilter()
+    return filters.IdentityFilter()
 
 
 class ContextExpression(Expression):
@@ -173,23 +163,18 @@ class ContextExpression(Expression):
     if part:
       self.args.append(part)
 
-  def Compile(self, filter_implementation):
-    """Given a filter implementation, compile this expression.
-
-    Args:
-      filter_implementation (type): class of the filter object, which should
-          be a subclass of BaseFilterImplementation.
+  def Compile(self):
+    """Compiles the expression into a filter.
 
     Returns:
-      object: filter object of the binary expression.
+      ContextOperator: context operator filter.
     """
     arguments = [self.attribute]
     for argument in self.args:
-      filter_object = argument.Compile(filter_implementation)
+      filter_object = argument.Compile()
       arguments.append(filter_object)
 
-    context_cls = filter_implementation.FILTERS['Context']
-    return context_cls(arguments=arguments)
+    return filters.ContextOperator(arguments=arguments)
 
   def SetExpression(self, expression):
     """Sets the expression.
@@ -215,6 +200,21 @@ class EventExpression(Expression):
         the operation.
   """
 
+  # TODO: add an IsOperator
+  _OPERATORS = {
+      '==': filters.EqualsOperator,
+      '>': filters.GreaterThanOperator,
+      '>=': filters.GreaterEqualOperator,
+      '<': filters.LessThanOperator,
+      '<=': filters.LessEqualOperator,
+      '!=': filters.NotEqualsOperator,
+      'contains': filters.Contains,
+      'equals': filters.EqualsOperator,
+      'inset': filters.InSet,
+      'iregexp': filters.RegexpInsensitive,
+      'is': filters.EqualsOperator,
+      'regexp': filters.Regexp}
+
   # A simple dictionary used to swap attributes so other names can be used
   # to reference some core attributes (implementation specific).
   _SWAP_SOURCE = {
@@ -230,15 +230,11 @@ class EventExpression(Expression):
     super(EventExpression, self).__init__()
     self.bool_value = True
 
-  def Compile(self, filter_implementation):
-    """Given a filter implementation, compile this expression.
-
-    Args:
-      filter_implementation (type): class of the filter object, which should
-          be a subclass of BaseFilterImplementation.
+  def Compile(self):
+    """Compiles the expression into a filter.
 
     Returns:
-      object: filter object of the binary expression.
+      Filter: filter object corresponding the expression.
 
     Raises:
       ParseError: if the operator is missing or unknown.
@@ -249,9 +245,8 @@ class EventExpression(Expression):
     if not self.operator:
       raise errors.ParseError('Missing operator.')
 
-    op_str = self.operator.lower()
-    operator = filter_implementation.OPS.get(op_str, None)
-
+    lookup_key = self.operator.lower()
+    operator = self._OPERATORS.get(lookup_key, None)
     if not operator:
       raise errors.ParseError('Unknown operator: {0:s}.'.format(self.operator))
 
@@ -267,7 +262,8 @@ class EventExpression(Expression):
 
     for argument in self.args:
       if isinstance(argument, helpers.DateCompareObject):
-        if 'Less' in str(operator):
+        if isinstance(operator, (
+            filters.LessEqualOperator, filters.LessThanOperator)):
           helpers.TimeRangeCache.SetUpperTimestamp(argument.data)
         else:
           helpers.TimeRangeCache.SetLowerTimestamp(argument.data)
