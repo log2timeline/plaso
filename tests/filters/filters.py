@@ -146,7 +146,6 @@ class GreaterEqualOperatorTest(shared_test_lib.BaseTestCase):
 # TODO: add tests for InSet
 # TODO: add tests for Regexp
 # TODO: add tests for RegexpInsensitive
-# TODO: add tests for ContextOperator
 
 
 if __name__ == "__main__":
