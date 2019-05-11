@@ -239,7 +239,7 @@ class WinRegistryParser(interface.FileObjectParser):
       return
 
     registry_find_specs = getattr(
-        parser_mediator.artifacts_filter_helper, 'registry_find_specs', None)
+        parser_mediator.collection_filters_helper, 'registry_find_specs', None)
 
     if not registry_find_specs:
       try:
@@ -248,8 +248,9 @@ class WinRegistryParser(interface.FileObjectParser):
         parser_mediator.ProduceExtractionWarning('{0!s}'.format(exception))
 
     else:
-      artifacts_filter_helper = artifact_filters.ArtifactDefinitionsFilterHelper
-      if not artifacts_filter_helper.CheckKeyCompatibility(key_path_prefix):
+      artifacts_filters_helper = (
+          artifact_filters.ArtifactDefinitionsFiltersHelper)
+      if not artifacts_filters_helper.CheckKeyCompatibility(key_path_prefix):
         logger.warning((
             'Artifacts filters are not supported for Windows Registry file '
             'with key path prefix: "{0:s}".').format(key_path_prefix))

@@ -33,8 +33,8 @@ class PathFilterTest(shared_test_lib.BaseTestCase):
       test_filter = path_filters.PathFilter('bogus')
 
 
-class PathFiltersHelperTest(shared_test_lib.BaseTestCase):
-  """Tests for the path filters helpers."""
+class PathCollectionFiltersHelperTest(shared_test_lib.BaseTestCase):
+  """Tests for the path collection filters helper."""
 
   # pylint: disable=protected-access
 
@@ -85,11 +85,11 @@ class PathFiltersHelperTest(shared_test_lib.BaseTestCase):
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='SystemRoot', value='C:\\Windows')
 
-    test_helper = path_filters.PathFiltersHelper()
+    test_helper = path_filters.PathCollectionFiltersHelper()
     test_helper.BuildFindSpecs(
         test_path_filters, environment_variables=[environment_variable])
 
-    self.assertEqual(len(test_helper.file_system_find_specs), 5)
+    self.assertEqual(len(test_helper.included_file_system_find_specs), 5)
 
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location='.')
@@ -98,7 +98,7 @@ class PathFiltersHelperTest(shared_test_lib.BaseTestCase):
         file_system, path_spec)
 
     path_spec_generator = searcher.Find(
-        find_specs=test_helper.file_system_find_specs)
+        find_specs=test_helper.included_file_system_find_specs)
     self.assertIsNotNone(path_spec_generator)
 
     path_specs = list(path_spec_generator)
@@ -121,11 +121,11 @@ class PathFiltersHelperTest(shared_test_lib.BaseTestCase):
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='SystemRoot', value='C:\\Windows')
 
-    test_helper = path_filters.PathFiltersHelper()
+    test_helper = path_filters.PathCollectionFiltersHelper()
     test_helper.BuildFindSpecs(
         test_path_filters, environment_variables=[environment_variable])
 
-    self.assertEqual(len(test_helper.file_system_find_specs), 5)
+    self.assertEqual(len(test_helper.included_file_system_find_specs), 5)
 
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location='.')
@@ -134,7 +134,7 @@ class PathFiltersHelperTest(shared_test_lib.BaseTestCase):
         file_system, path_spec)
 
     path_spec_generator = searcher.Find(
-        find_specs=test_helper.file_system_find_specs)
+        find_specs=test_helper.included_file_system_find_specs)
     self.assertIsNotNone(path_spec_generator)
 
     path_specs = list(path_spec_generator)

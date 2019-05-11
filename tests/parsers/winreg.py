@@ -121,14 +121,15 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
 
     registry.ReadFromDirectory(reader, self._GetTestFilePath(['artifacts']))
 
-    artifacts_filter_helper = artifact_filters.ArtifactDefinitionsFilterHelper(
-        registry, knowledge_base)
+    artifacts_filters_helper = (
+        artifact_filters.ArtifactDefinitionsFiltersHelper(
+            registry, knowledge_base))
 
-    artifacts_filter_helper.BuildFindSpecs(
+    artifacts_filters_helper.BuildFindSpecs(
         artifact_filter_names, environment_variables=None)
 
     storage_writer = self._ParseFile(
-        ['SYSTEM'], parser, artifacts_filter_helper=artifacts_filter_helper)
+        ['SYSTEM'], parser, collection_filters_helper=artifacts_filters_helper)
 
     events = list(storage_writer.GetEvents())
 

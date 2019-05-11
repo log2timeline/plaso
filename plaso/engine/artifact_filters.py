@@ -5,16 +5,19 @@ from __future__ import unicode_literals
 
 from artifacts import definitions as artifact_types
 
-from dfvfs.helpers import file_system_searcher
 from dfwinreg import registry_searcher
+
+from dfvfs.helpers import file_system_searcher
+
+from plaso.engine import filters_helper
 from plaso.engine import logger
 from plaso.engine import path_helper
 
 
-class ArtifactDefinitionsFilterHelper(object):
-  """Helper to create filters based on artifact definitions.
+class ArtifactDefinitionsFiltersHelper(filters_helper.CollectionFiltersHelper):
+  """Helper to create collection filters based on artifact definitions.
 
-  Builds extraction filters from forensic artifact definitions.
+  Builds collection filters from forensic artifact definitions.
 
   For more information about Forensic Artifacts see:
   https://github.com/ForensicArtifacts/artifacts/blob/master/docs/Artifacts%20definition%20format%20and%20style%20guide.asciidoc
@@ -22,12 +25,8 @@ class ArtifactDefinitionsFilterHelper(object):
   Attributes:
     file_system_artifact_names (set[str]): names of artifacts definitions that
         generated file system find specifications.
-    file_system_find_specs (list[dfvfs.FindSpec]): file system find
-        specifications.
     registry_artifact_names (set[str]): names of artifacts definitions that
         generated Windows Registry find specifications.
-    registry_find_specs (list[dfwinreg.FindSpec]): Windows Registry find
-        specifications.
   """
 
   _COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES = frozenset([
@@ -39,7 +38,7 @@ class ArtifactDefinitionsFilterHelper(object):
       'HKEY_USERS'])
 
   def __init__(self, artifacts_registry, knowledge_base):
-    """Initializes an artifact definitions filter helper.
+    """Initializes an artifact definitions filters helper.
 
     Args:
       artifacts_registry (artifacts.ArtifactDefinitionsRegistry): artifact
@@ -47,14 +46,12 @@ class ArtifactDefinitionsFilterHelper(object):
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for filtering.
     """
-    super(ArtifactDefinitionsFilterHelper, self).__init__()
+    super(ArtifactDefinitionsFiltersHelper, self).__init__()
     self._artifacts_registry = artifacts_registry
     self._knowledge_base = knowledge_base
 
     self.file_system_artifact_names = set()
-    self.file_system_find_specs = []
     self.registry_artifact_names = set()
-    self.registry_find_specs = []
 
   def _BuildFindSpecsFromArtifact(self, definition, environment_variables):
     """Builds find specifications from an artifact definition.
@@ -81,7 +78,7 @@ class ArtifactDefinitionsFilterHelper(object):
       elif (source.type_indicator ==
             artifact_types.TYPE_INDICATOR_WINDOWS_REGISTRY_KEY):
         for key_path in set(source.keys):
-          if ArtifactDefinitionsFilterHelper.CheckKeyCompatibility(key_path):
+          if ArtifactDefinitionsFiltersHelper.CheckKeyCompatibility(key_path):
             specifications = self._BuildFindSpecsFromRegistrySourceKey(key_path)
             find_specs.extend(specifications)
             self.registry_artifact_names.add(definition.name)
@@ -101,7 +98,7 @@ class ArtifactDefinitionsFilterHelper(object):
             '"{0!s}"').format(key_paths_string))
 
         for key_path in key_paths:
-          if ArtifactDefinitionsFilterHelper.CheckKeyCompatibility(key_path):
+          if ArtifactDefinitionsFiltersHelper.CheckKeyCompatibility(key_path):
             specifications = self._BuildFindSpecsFromRegistrySourceKey(key_path)
             find_specs.extend(specifications)
             self.registry_artifact_names.add(definition.name)
@@ -250,7 +247,7 @@ class ArtifactDefinitionsFilterHelper(object):
 
     for find_spec in find_specs:
       if isinstance(find_spec, file_system_searcher.FindSpec):
-        self.file_system_find_specs.append(find_spec)
+        self.included_file_system_find_specs.append(find_spec)
 
       elif isinstance(find_spec, registry_searcher.FindSpec):
         self.registry_find_specs.append(find_spec)

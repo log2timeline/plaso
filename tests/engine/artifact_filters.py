@@ -26,20 +26,20 @@ from plaso.parsers import winreg as windows_registry_parser
 from tests import test_lib as shared_test_lib
 
 
-class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
-  """Tests for artifact definitions filter helper."""
+class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
+  """Tests for artifact definitions filters helper."""
 
   # pylint: disable=protected-access
 
-  def _CreateTestArtifactDefinitionsFilterHelper(self, knowledge_base):
-    """Creates an artifact definitions filter helper for testing.
+  def _CreateTestArtifactDefinitionsFiltersHelper(self, knowledge_base):
+    """Creates an artifact definitions filters helper for testing.
 
     Args:
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for filtering.
 
     Returns:
-      ArtifactDefinitionsFilterHelper: artifact definitions filter helper.
+      ArtifactDefinitionsFiltersHelper: artifact definitions filters helper.
     """
     registry = artifacts_registry.ArtifactDefinitionsRegistry()
     reader = artifacts_reader.YamlArtifactsReader()
@@ -47,7 +47,7 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
     registry.ReadFromDirectory(reader, test_artifacts_path)
 
-    return artifact_filters.ArtifactDefinitionsFilterHelper(
+    return artifact_filters.ArtifactDefinitionsFiltersHelper(
         registry, knowledge_base)
 
   def _CreateTestKnowledgeBaseWindows(self):
@@ -83,23 +83,24 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     knowledge_base = self._CreateTestKnowledgeBaseWindows()
 
     artifact_filter_names = ['TestFiles', 'TestFiles2']
-    artifacts_filter_helper = self._CreateTestArtifactDefinitionsFilterHelper(
+    test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper(
         knowledge_base)
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='SystemDrive', value='C:')
 
-    artifacts_filter_helper.BuildFindSpecs(
+    test_filters_helper.BuildFindSpecs(
         artifact_filter_names, environment_variables=[environment_variable])
 
     # There should be 15 file system find specifications.
-    self.assertEqual(len(artifacts_filter_helper.file_system_find_specs), 15)
-    self.assertEqual(len(artifacts_filter_helper.registry_find_specs), 0)
+    self.assertEqual(
+        len(test_filters_helper.included_file_system_find_specs), 15)
+    self.assertEqual(len(test_filters_helper.registry_find_specs), 0)
 
     # Last find_spec should contain the testuser2 profile path.
     location_segments = sorted([
         find_spec._location_segments
-        for find_spec in artifacts_filter_helper.file_system_find_specs])
+        for find_spec in test_filters_helper.included_file_system_find_specs])
     path_segments = [
         'Users', 'testuser2', 'Documents', 'WindowsPowerShell', 'profile\\.ps1']
     self.assertEqual(location_segments[2], path_segments)
@@ -111,7 +112,7 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
         file_system, path_spec)
 
     path_spec_generator = searcher.Find(
-        find_specs=artifacts_filter_helper.file_system_find_specs)
+        find_specs=test_filters_helper.included_file_system_find_specs)
     self.assertIsNotNone(path_spec_generator)
 
     path_specs = list(path_spec_generator)
@@ -131,18 +132,19 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     knowledge_base = self._CreateTestKnowledgeBaseWindows()
 
     artifact_filter_names = ['TestGroupExtract']
-    artifacts_filter_helper = self._CreateTestArtifactDefinitionsFilterHelper(
+    test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper(
         knowledge_base)
 
     environment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='SystemDrive', value='C:')
 
-    artifacts_filter_helper.BuildFindSpecs(
+    test_filters_helper.BuildFindSpecs(
         artifact_filter_names, environment_variables=[environment_variable])
 
     # There should be 15 file system find specifications.
-    self.assertEqual(len(artifacts_filter_helper.file_system_find_specs), 15)
-    self.assertEqual(len(artifacts_filter_helper.registry_find_specs), 0)
+    self.assertEqual(
+        len(test_filters_helper.included_file_system_find_specs), 15)
+    self.assertEqual(len(test_filters_helper.registry_find_specs), 0)
 
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location='.')
@@ -151,7 +153,7 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
         file_system, path_spec)
 
     path_spec_generator = searcher.Find(
-        find_specs=artifacts_filter_helper.file_system_find_specs)
+        find_specs=test_filters_helper.included_file_system_find_specs)
     self.assertIsNotNone(path_spec_generator)
 
     path_specs = list(path_spec_generator)
@@ -169,14 +171,15 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
     """Tests the BuildFindSpecs function on Windows Registry sources."""
     knowledge_base = knowledge_base_engine.KnowledgeBase()
     artifact_filter_names = ['TestRegistry', 'TestRegistryValue']
-    artifacts_filter_helper = self._CreateTestArtifactDefinitionsFilterHelper(
+    test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper(
         knowledge_base)
 
-    artifacts_filter_helper.BuildFindSpecs(artifact_filter_names)
+    test_filters_helper.BuildFindSpecs(artifact_filter_names)
 
     # There should be 3 Windows Registry find specifications.
-    self.assertEqual(len(artifacts_filter_helper.file_system_find_specs), 0)
-    self.assertEqual(len(artifacts_filter_helper.registry_find_specs), 3)
+    self.assertEqual(
+        len(test_filters_helper.included_file_system_find_specs), 0)
+    self.assertEqual(len(test_filters_helper.registry_find_specs), 3)
 
     win_registry_reader = (
         windows_registry_parser.FileObjectWinRegistryFileReader())
@@ -193,7 +196,7 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
 
     searcher = dfwinreg_registry_searcher.WinRegistrySearcher(win_registry)
     key_paths = list(searcher.Find(
-        find_specs=artifacts_filter_helper.registry_find_specs))
+        find_specs=test_filters_helper.registry_find_specs))
 
     self.assertIsNotNone(key_paths)
 
@@ -202,7 +205,7 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
   def testCheckKeyCompatibility(self):
     """Tests the CheckKeyCompatibility function"""
     knowledge_base = knowledge_base_engine.KnowledgeBase()
-    test_filter_file = self._CreateTestArtifactDefinitionsFilterHelper(
+    test_filter_file = self._CreateTestArtifactDefinitionsFiltersHelper(
         knowledge_base)
 
     # Compatible Key.
@@ -221,7 +224,7 @@ class ArtifactDefinitionsFilterHelperTest(shared_test_lib.BaseTestCase):
   def testBuildFindSpecsFromFileSourcePath(self):
     """Tests the _BuildFindSpecsFromFileSourcePath function on file sources."""
     knowledge_base = knowledge_base_engine.KnowledgeBase()
-    test_filter_file = self._CreateTestArtifactDefinitionsFilterHelper(
+    test_filter_file = self._CreateTestArtifactDefinitionsFiltersHelper(
         knowledge_base)
 
     separator = '\\'

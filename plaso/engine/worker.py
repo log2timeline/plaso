@@ -788,13 +788,15 @@ class EventExtractionWorker(object):
     """
     return [analyzer_instance.NAME for analyzer_instance in self._analyzers]
 
-  def ProcessPathSpec(self, mediator, path_spec):
+  def ProcessPathSpec(self, mediator, path_spec, excluded_find_specs=None):
     """Processes a path specification.
 
     Args:
       mediator (ParserMediator): mediates the interactions between
           parsers and other components, such as storage and abort signals.
       path_spec (dfvfs.PathSpec): path specification.
+      excluded_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
+         that are excluded from processing.
     """
     self.last_activity_timestamp = time.time()
     self.processing_status = definitions.STATUS_INDICATOR_RUNNING
@@ -809,6 +811,12 @@ class EventExtractionWorker(object):
               display_name))
       self.processing_status = definitions.STATUS_INDICATOR_IDLE
       return
+
+    for find_spec in excluded_find_specs or []:
+      if find_spec.Matches(file_entry) == (True, True):
+        logger.info('Skipped: {0:s} because of exclusion filter.'.format(
+            file_entry.path_spec.location))
+        return
 
     mediator.SetFileEntry(file_entry)
 

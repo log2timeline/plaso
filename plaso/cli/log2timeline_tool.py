@@ -360,7 +360,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     Raises:
       BadConfigOption: if the storage file path is invalid or the storage
-          format not supported or an invalid filter was specified.
+          format not supported or an invalid collection filter was specified.
       SourceScannerError: if the source scanner could not find a supported
           file system.
       UserAbort: if the user initiated an abort.
@@ -421,13 +421,14 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
     try:
-      filter_find_specs = extraction_engine.BuildFilterFindSpecs(
+      extraction_engine.BuildCollectionFilters(
           self._artifact_definitions_path, self._custom_artifacts_path,
           extraction_engine.knowledge_base, self._artifact_filters,
           self._filter_file)
     except errors.InvalidFilter as exception:
       raise errors.BadConfigOption(
-          'Unable to build filter specification: {0!s}'.format(exception))
+          'Unable to build collection filters with error: {0!s}'.format(
+              exception))
 
     processing_status = None
     if single_process_mode:
@@ -435,8 +436,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
       processing_status = extraction_engine.ProcessSources(
           self._source_path_specs, storage_writer, self._resolver_context,
-          configuration, filter_find_specs=filter_find_specs,
-          status_update_callback=status_update_callback)
+          configuration, status_update_callback=status_update_callback)
 
     else:
       logger.debug('Starting extraction in multi process mode.')
@@ -444,7 +444,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       processing_status = extraction_engine.ProcessSources(
           session.identifier, self._source_path_specs, storage_writer,
           configuration, enable_sigsegv_handler=self._enable_sigsegv_handler,
-          filter_find_specs=filter_find_specs,
           number_of_worker_processes=self._number_of_extraction_workers,
           status_update_callback=status_update_callback,
           worker_memory_limit=self._worker_memory_limit)
