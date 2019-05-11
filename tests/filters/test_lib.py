@@ -111,10 +111,6 @@ class DummyFile(object):
   def novalues(self):
     return []
 
-  @property
-  def imported_dlls(self):
-    return [self.imported_dll1, self.imported_dll2]
-
   def Callable(self):
     raise RuntimeError('This can not be called.')
 

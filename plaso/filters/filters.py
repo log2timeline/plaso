@@ -8,7 +8,8 @@ import logging
 import re
 
 from plaso.filters import helpers
-from plaso.filters import value_expanders
+from plaso.formatters import manager as formatters_manager
+from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import errors
 from plaso.lib import py2to3
 
@@ -31,29 +32,17 @@ class Filter(object):
     logging.debug('Adding {0!s}'.format(arguments))
 
     super(Filter, self).__init__()
-    self._value_expander = value_expanders.EventValueExpander()
     self.args = arguments or []
 
-  def Filter(self, objects):
-    """Retrieves objects that match the filter.
-
-    Args:
-      objects (list[object]): objects to filter.
-
-    Returns:
-      list[object]: objects that match the filter.
-    """
-    return filter(self.Matches, objects)
-
   @abc.abstractmethod
-  def Matches(self, obj):
-    """Determines if the object matches the filter.
+  def Matches(self, event):
+    """Determines if the event matches the filter.
 
     Args:
-      obj (object): object to compare against the filter.
+      event (EventObject): event to compare against the filter.
 
     Returns:
-      bool: True if the object matches the filter, False otherwise.
+      bool: True if the event matches the filter, False otherwise.
     """
 
 
@@ -63,17 +52,17 @@ class AndFilter(Filter):
   Note that if no conditions are passed, all objects will pass.
   """
 
-  def Matches(self, obj):
-    """Determines if the object matches the filter.
+  def Matches(self, event):
+    """Determines if the event matches the filter.
 
     Args:
-      obj (object): object to compare against the filter.
+      event (EventObject): event to compare against the filter.
 
     Returns:
-      bool: True if the object matches the filter, False otherwise.
+      bool: True if the event matches the filter, False otherwise.
     """
     for sub_filter in self.args:
-      if not sub_filter.Matches(obj):
+      if not sub_filter.Matches(event):
         return False
     return True
 
@@ -84,20 +73,20 @@ class OrFilter(Filter):
   Note that if no conditions are passed, all objects will pass.
   """
 
-  def Matches(self, obj):
-    """Determines if the object matches the filter.
+  def Matches(self, event):
+    """Determines if the event matches the filter.
 
     Args:
-      obj (object): object to compare against the filter.
+      event (EventObject): event to compare against the filter.
 
     Returns:
-      bool: True if the object matches the filter, False otherwise.
+      bool: True if the event matches the filter, False otherwise.
     """
     if not self.args:
       return True
 
     for sub_filter in self.args:
-      if sub_filter.Matches(obj):
+      if sub_filter.Matches(event):
         return True
     return False
 
@@ -106,28 +95,28 @@ class Operator(Filter):
   """Interface for filters that represent operators."""
 
   @abc.abstractmethod
-  def Matches(self, obj):
-    """Determines if the object matches the filter.
+  def Matches(self, event):
+    """Determines if the event matches the filter.
 
     Args:
-      obj (object): object to compare against the filter.
+      event (EventObject): event to compare against the filter.
 
     Returns:
-      bool: True if the object matches the filter, False otherwise.
+      bool: True if the event matches the filter, False otherwise.
     """
 
 
 class IdentityFilter(Operator):
   """A filter which always evaluates to True."""
 
-  def Matches(self, obj):
-    """Determines if the object matches the filter.
+  def Matches(self, event):
+    """Determines if the event matches the filter.
 
     Args:
-      obj (object): object to compare against the filter.
+      event (EventObject): event to compare against the filter.
 
     Returns:
-      bool: True to indicated the object matches the filter.
+      bool: True if the event matches the filter, False otherwise.
     """
     return True
 
@@ -160,24 +149,21 @@ class BinaryOperator(Operator):
     self.right_operand = arguments[1]
 
   @abc.abstractmethod
-  def Matches(self, obj):
-    """Determines if the object matches the filter.
+  def Matches(self, event):
+    """Determines if the event matches the filter.
 
     Args:
-      obj (object): object to compare against the filter.
+      event (EventObject): event to compare against the filter.
 
     Returns:
-      bool: True if the object matches the filter, False otherwise.
+      bool: True if the event matches the filter, False otherwise.
     """
 
 
 class GenericBinaryOperator(BinaryOperator):
-  """Shared functionality for common binary operators.
+  """Shared functionality for common binary operators."""
 
-  Attribute:
-    bool_value (bool): boolean value that represents the result of
-        the operation.
-  """
+  _OBJECT_PATH_SEPARATOR = '.'
 
   def __init__(self, arguments=None, **kwargs):
     """Initializes a generic binary operator.
@@ -186,209 +172,296 @@ class GenericBinaryOperator(BinaryOperator):
       arguments (Optional[object]): operands of the filter.
     """
     super(GenericBinaryOperator, self).__init__(arguments=arguments, **kwargs)
-    self.bool_value = True
-
-  def FlipBool(self):
-    """Negates the value of the bool_value attribute."""
-    logging.debug('Negative matching.')
-    self.bool_value = not self.bool_value
+    self._bool_value = True
 
   @abc.abstractmethod
-  def Operation(self, x, y):
+  def _CompareValue(self, event_value, filter_value):
     """Compares two values with the operator.
 
     Args:
-      x (object): first value.
-      y (object): second value.
+      event_value (object): value retrieved from the event.
+      filter_value (object): value defined by the filter.
 
     Returns:
       bool: True if the values match according to the operator, False otherwise.
     """
 
-  def Operate(self, values):
-    """Determines if one or more values match the filter.
+  def _GetMessage(self, event):
+    """Retrieves a formatted message string.
 
     Args:
-      values (list[object]): values to match against the filter.
+      event (EventObject): event.
 
     Returns:
-      bool: True if one or more values match, False otherwise.
+      str: formatted message string.
     """
-    for val in values:
-      try:
-        if self.Operation(val, self.right_operand):
-          return True
-      except (TypeError, ValueError):
-        pass
+    # TODO: move this somewhere where the mediator can be instantiated once.
+    formatter_mediator = formatters_mediator.FormatterMediator()
 
-    return False
+    result = ''
+    try:
+      result, _ = formatters_manager.FormattersManager.GetMessageStrings(
+          formatter_mediator, event)
+    except KeyError as exception:
+      logging.warning(
+          'Unable to correctly assemble event with error: {0!s}'.format(
+              exception))
 
-  def Matches(self, obj):
-    """Determines if the object matches the filter.
+    return result
+
+  def _GetSources(self, event):
+    """Retrieves a formatted source strings.
 
     Args:
-      obj (object): object to compare against the filter.
+      event (EventObject): event.
 
     Returns:
-      bool: True if the object matches the filter, False otherwise.
+      tuple(str, str): short and long source string.
     """
-    key = self.left_operand
-    values = self._value_expander.Expand(obj, key)
-    values = list(values)
-    if values and self.Operate(values):
-      return self.bool_value
-    return not self.bool_value
+    try:
+      source_short, source_long = (
+          formatters_manager.FormattersManager.GetSourceStrings(event))
+    except KeyError as exception:
+      logging.warning(
+          'Unable to correctly assemble event with error: {0!s}'.format(
+              exception))
+
+    return source_short, source_long
+
+  def _GetValue(self, event, attribute_name):
+    """Retrieves the value of a specific event attribute.
+
+    Args:
+      event (EventObject): event to retrieve the value from.
+      attribute_name (str): name of the attribute to retrieve the value from.
+
+    Returns:
+      object: attribute value or None if not available.
+    """
+    if attribute_name == 'message':
+      return self._GetMessage(event)
+
+    if attribute_name in ('source', 'source_short'):
+      source_short, _ = self._GetSources(event)
+      return source_short
+
+    if attribute_name in ('source_long', 'sourcetype'):
+      _, source_long = self._GetSources(event)
+      return source_long
+
+    attribute_value = getattr(event, attribute_name, None)
+    if attribute_value:
+      if attribute_name == 'tag':
+        return attribute_value.labels
+
+      if isinstance(attribute_value, dict):
+        return helpers.DictObject(attribute_value)
+
+    return attribute_value
+
+  def _GetValueByPath(self, event, path):
+    """Retrieves the value of a specific event attribute given an object path.
+
+    Given an object path such as ["pathspec", "inode"] it returns the value
+    event.pathspec.inode.
+
+    Args:
+      event (EventObject): event to retrieve the value from.
+      path (list[str]): object path to traverse, that contains the attribute
+          names.
+
+    Returns:
+      object: attribute value or None if not available.
+    """
+    if isinstance(path, py2to3.STRING_TYPES):
+      path = path.split(self._OBJECT_PATH_SEPARATOR)
+
+    attribute_name = path[0].lower()
+    attribute_value = self._GetValue(event, attribute_name)
+
+    if attribute_value is None:
+      return None
+
+    if len(path) == 1 or isinstance(attribute_value, dict):
+      return attribute_value
+
+    return self._GetValueByPath(attribute_value, path[1:])
+
+  def FlipBool(self):
+    """Negates the internal boolean value attribute."""
+    logging.debug('Negative matching.')
+    self._bool_value = not self._bool_value
+
+  def Matches(self, event):
+    """Determines if the event matches the filter.
+
+    Args:
+      event (EventObject): event to compare against the filter.
+
+    Returns:
+      bool: True if the event matches the filter, False otherwise.
+    """
+    object_path = self.left_operand.split('.')
+    value = self._GetValueByPath(event, object_path)
+
+    if value and self._CompareValue(value, self.right_operand):
+      return self._bool_value
+    return not self._bool_value
 
 
 class EqualsOperator(GenericBinaryOperator):
   """Equals (==) operator."""
 
-  def Operation(self, x, y):
+  def _CompareValue(self, event_value, filter_value):
     """Compares if two values are equal.
 
     Args:
-      x (object): first value.
-      y (object): second value.
+      event_value (object): value retrieved from the event.
+      filter_value (object): value defined by the filter.
 
     Returns:
       bool: True if the values are equal, False otherwise.
     """
-    return x == y
+    return event_value == filter_value
 
 
 class NotEqualsOperator(GenericBinaryOperator):
   """Not equals (!=) operator."""
 
-  def Operation(self, x, y):
+  def _CompareValue(self, event_value, filter_value):
     """Compares if two values are not equal.
 
     Args:
-      x (object): first value.
-      y (object): second value.
+      event_value (object): value retrieved from the event.
+      filter_value (object): value defined by the filter.
 
     Returns:
       bool: True if the values are not equal, False otherwise.
     """
-    return x != y
+    return event_value != filter_value
 
 
 class LessThanOperator(GenericBinaryOperator):
   """Less than (<) operator."""
 
-  def Operation(self, x, y):
-    """Compares if the first value is less than the second.
+  def _CompareValue(self, event_value, filter_value):
+    """Compares if the event value is less than the second.
 
     Args:
-      x (object): first value.
-      y (object): second value.
+      event_value (object): value retrieved from the event.
+      filter_value (object): value defined by the filter.
 
     Returns:
-      bool: True if the first value is less than the second, False otherwise.
+      bool: True if the event value is less than the second, False otherwise.
     """
-    return x < y
+    return event_value < filter_value
 
 
 class LessEqualOperator(GenericBinaryOperator):
   """Less than or equals (<=) operator."""
 
-  def Operation(self, x, y):
-    """Compares if the first value is less than or equals the second.
+  def _CompareValue(self, event_value, filter_value):
+    """Compares if the event value is less than or equals the second.
 
     Args:
-      x (object): first value.
-      y (object): second value.
+      event_value (object): value retrieved from the event.
+      filter_value (object): value defined by the filter.
 
     Returns:
-      bool: True if the first value is than or equals the second, False
+      bool: True if the event value is than or equals the second, False
           otherwise.
     """
-    return x <= y
+    return event_value <= filter_value
 
 
 class GreaterThanOperator(GenericBinaryOperator):
   """Greater than (>) operator."""
 
-  def Operation(self, x, y):
-    """Compares if the first value is greater than the second.
+  def _CompareValue(self, event_value, filter_value):
+    """Compares if the event value is greater than the second.
 
     Args:
-      x (object): first value.
-      y (object): second value.
+      event_value (object): value retrieved from the event.
+      filter_value (object): value defined by the filter.
 
     Returns:
-      bool: True if the first value is greater than the second, False otherwise.
+      bool: True if the event value is greater than the second, False otherwise.
     """
-    return x > y
+    return event_value > filter_value
 
 
 class GreaterEqualOperator(GenericBinaryOperator):
   """Greater than or equals (>=) operator."""
 
-  def Operation(self, x, y):
-    """Compares if the first value is greater than or equals the second.
+  def _CompareValue(self, event_value, filter_value):
+    """Compares if the event value is greater than or equals the second.
 
     Args:
-      x (object): first value.
-      y (object): second value.
+      event_value (object): value retrieved from the event.
+      filter_value (object): value defined by the filter.
 
     Returns:
-      bool: True if the first value is greater than or equals the second, False
+      bool: True if the event value is greater than or equals the second, False
           otherwise.
     """
-    return x >= y
+    return event_value >= filter_value
 
 
 class Contains(GenericBinaryOperator):
   """Operator to determine if a value contains another value."""
 
-  def Operation(self, x, y):
+  def _CompareValue(self, event_value, filter_value):
     """Compares if the second value is part of the first.
 
     Note that this method will do a case insensitive comparion if the first
     value is a string.
 
     Args:
-      x (object): first value.
-      y (object): second value.
+      event_value (object): value retrieved from the event.
+      filter_value (object): value defined by the filter.
 
     Returns:
       bool: True if the second value is part of the first, False otherwise.
     """
-    if isinstance(x, py2to3.STRING_TYPES):
-      return y.lower() in x.lower()
+    try:
+      if isinstance(event_value, py2to3.STRING_TYPES):
+        return filter_value.lower() in event_value.lower()
 
-    return y in x
+      return filter_value in event_value
+    except (AttributeError, TypeError):
+      return False
 
 
 # TODO: Change to an N-ary Operator?
 class InSet(GenericBinaryOperator):
   """Operator to determine if a value is part of another value."""
 
-  def Operation(self, x, y):
-    """Compares if the first value is part of the second.
+  def _CompareValue(self, event_value, filter_value):
+    """Compares if the event value is part of the second.
 
     Note that this method will do a case insensitive string comparion if
-    the first value is a string.
+    the event value is a string.
 
     Args:
-      x (object): first value.
-      y (object): second value.
+      event_value (object): value retrieved from the event.
+      filter_value (object): value defined by the filter.
 
     Returns:
-      bool: True if the first value is part of the second, False otherwise.
+      bool: True if the event value is part of the second, False otherwise.
     """
-    if x in y:
+    if event_value in filter_value:
       return True
 
-    # x might be an iterable
+    # event_value might be an iterable
     # first we need to skip strings or we'll do silly things
     # pylint: disable=consider-merging-isinstance
-    if isinstance(x, py2to3.STRING_TYPES) or isinstance(x, bytes):
+    if (isinstance(event_value, py2to3.STRING_TYPES) or
+        isinstance(event_value, bytes)):
       return False
 
     try:
-      for value in x:
-        if value not in y:
+      for value in event_value:
+        if value not in filter_value:
           return False
       return True
     except TypeError:
@@ -429,19 +502,19 @@ class Regexp(GenericBinaryOperator):
 
     self.compiled_re = compiled_re
 
-  def Operation(self, x, y):
-    """Compares if the first value matches a regular expression.
+  def _CompareValue(self, event_value, filter_value):
+    """Compares if the event value matches a regular expression.
 
     Args:
-      x (object): first value.
-      y (object): second value.
+      event_value (object): value retrieved from the event.
+      filter_value (object): value defined by the filter.
 
     Returns:
-      bool: True if the first value matches the regular expression, False
+      bool: True if the event value matches the regular expression, False
           otherwise.
     """
     try:
-      string_value = helpers.GetUnicodeString(x)
+      string_value = helpers.GetUnicodeString(event_value)
       if self.compiled_re.search(string_value):
         return True
     except TypeError:
