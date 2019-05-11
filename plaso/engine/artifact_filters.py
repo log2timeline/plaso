@@ -56,58 +56,6 @@ class ArtifactDefinitionsFilterHelper(object):
     self.registry_artifact_names = set()
     self.registry_find_specs = []
 
-  @classmethod
-  def CheckKeyCompatibility(cls, key_path):
-    """Checks if a Windows Registry key path is supported by dfWinReg.
-
-    Args:
-      key_path (str): path of the Windows Registry key.
-
-    Returns:
-      bool: True if key is compatible or False if not.
-    """
-    key_path_upper = key_path.upper()
-    for key_path_prefix in cls._COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES:
-      if key_path_upper.startswith(key_path_prefix):
-        return True
-
-    logger.warning('Key path: "{0:s}" is currently not supported'.format(
-        key_path))
-    return False
-
-  def BuildFindSpecs(self, artifact_filter_names, environment_variables=None):
-    """Builds find specifications from artifact definitions.
-
-    Args:
-      artifact_filter_names (list[str]): names of artifact definitions that are
-          used for filtering file system and Windows Registry key paths.
-      environment_variables (Optional[list[EnvironmentVariableArtifact]]):
-          environment variables.
-    """
-    find_specs = []
-    for name in artifact_filter_names:
-      definition = self._artifacts_registry.GetDefinitionByName(name)
-      if not definition:
-        logger.debug('undefined artifact definition: {0:s}'.format(name))
-        continue
-
-      logger.debug('building find spec from artifact definition: {0:s}'.format(
-          name))
-      artifact_find_specs = self._BuildFindSpecsFromArtifact(
-          definition, environment_variables)
-      find_specs.extend(artifact_find_specs)
-
-    for find_spec in find_specs:
-      if isinstance(find_spec, file_system_searcher.FindSpec):
-        self.file_system_find_specs.append(find_spec)
-
-      elif isinstance(find_spec, registry_searcher.FindSpec):
-        self.registry_find_specs.append(find_spec)
-
-      else:
-        logger.warning('Unsupported find specification type: {0:s}'.format(
-            type(find_spec)))
-
   def _BuildFindSpecsFromArtifact(self, definition, environment_variables):
     """Builds find specifications from an artifact definition.
 
@@ -191,6 +139,31 @@ class ArtifactDefinitionsFilterHelper(object):
 
     return self._BuildFindSpecsFromArtifact(definition, environment_variables)
 
+  def _BuildFindSpecsFromRegistrySourceKey(self, key_path):
+    """Build find specifications from a Windows Registry source type.
+
+    Args:
+      key_path (str): Windows Registry key path defined by the source.
+
+    Returns:
+      list[dfwinreg.FindSpec]: find specifications for the Windows Registry
+          source type.
+    """
+    find_specs = []
+    for key_path_glob in path_helper.PathHelper.ExpandRecursiveGlobs(
+        key_path, '\\'):
+      logger.debug('building find spec from key path glob: {0:s}'.format(
+          key_path_glob))
+
+      key_path_glob_upper = key_path_glob.upper()
+      if key_path_glob_upper.startswith('HKEY_USERS\\%%USERS.SID%%'):
+        key_path_glob = 'HKEY_CURRENT_USER{0:s}'.format(key_path_glob[26:])
+
+      find_spec = registry_searcher.FindSpec(key_path_glob=key_path_glob)
+      find_specs.append(find_spec)
+
+    return find_specs
+
   def _BuildFindSpecsFromFileSourcePath(
       self, source_path, path_separator, environment_variables, user_accounts):
     """Builds find specifications from a file source type.
@@ -253,27 +226,54 @@ class ArtifactDefinitionsFilterHelper(object):
 
     return find_specs
 
-  def _BuildFindSpecsFromRegistrySourceKey(self, key_path):
-    """Build find specifications from a Windows Registry source type.
+  def BuildFindSpecs(self, artifact_filter_names, environment_variables=None):
+    """Builds find specifications from artifact definitions.
 
     Args:
-      key_path (str): Windows Registry key path defined by the source.
-
-    Returns:
-      list[dfwinreg.FindSpec]: find specifications for the Windows Registry
-          source type.
+      artifact_filter_names (list[str]): names of artifact definitions that are
+          used for filtering file system and Windows Registry key paths.
+      environment_variables (Optional[list[EnvironmentVariableArtifact]]):
+          environment variables.
     """
     find_specs = []
-    for key_path_glob in path_helper.PathHelper.ExpandRecursiveGlobs(
-        key_path, '\\'):
-      logger.debug('building find spec from key path glob: {0:s}'.format(
-          key_path_glob))
+    for name in artifact_filter_names:
+      definition = self._artifacts_registry.GetDefinitionByName(name)
+      if not definition:
+        logger.debug('undefined artifact definition: {0:s}'.format(name))
+        continue
 
-      key_path_glob_upper = key_path_glob.upper()
-      if key_path_glob_upper.startswith('HKEY_USERS\\%%USERS.SID%%'):
-        key_path_glob = 'HKEY_CURRENT_USER{0:s}'.format(key_path_glob[26:])
+      logger.debug('building find spec from artifact definition: {0:s}'.format(
+          name))
+      artifact_find_specs = self._BuildFindSpecsFromArtifact(
+          definition, environment_variables)
+      find_specs.extend(artifact_find_specs)
 
-      find_spec = registry_searcher.FindSpec(key_path_glob=key_path_glob)
-      find_specs.append(find_spec)
+    for find_spec in find_specs:
+      if isinstance(find_spec, file_system_searcher.FindSpec):
+        self.file_system_find_specs.append(find_spec)
 
-    return find_specs
+      elif isinstance(find_spec, registry_searcher.FindSpec):
+        self.registry_find_specs.append(find_spec)
+
+      else:
+        logger.warning('Unsupported find specification type: {0:s}'.format(
+            type(find_spec)))
+
+  @classmethod
+  def CheckKeyCompatibility(cls, key_path):
+    """Checks if a Windows Registry key path is supported by dfWinReg.
+
+    Args:
+      key_path (str): path of the Windows Registry key.
+
+    Returns:
+      bool: True if key is compatible or False if not.
+    """
+    key_path_upper = key_path.upper()
+    for key_path_prefix in cls._COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES:
+      if key_path_upper.startswith(key_path_prefix):
+        return True
+
+    logger.warning('Key path: "{0:s}" is currently not supported'.format(
+        key_path))
+    return False
