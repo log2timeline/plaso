@@ -4,8 +4,7 @@
 The scan tree is a tree based on multiple paths that contains the path
 segments per node. The most significant path segment is at the root and
 therefore compared first. More information can be found here:
-https://github.com/libyal/libsigscan/wiki/Internals
-#scanning-tree-based-signature-scanning
+https://github.com/libyal/libsigscan/wiki/Internals#scanning-tree-based-signature-scanning
 
 The scan tree is used in the filter to filter provided paths.
 """
@@ -15,10 +14,8 @@ from __future__ import unicode_literals
 from plaso.lib import py2to3
 
 
-# TODO: Update docstrings in this file.
-# pylint: disable=missing-type-doc,missing-return-type-doc
 class _PathFilterTable(object):
-  """Class that implements a path filter table.
+  """Path filter table.
 
   The path filter table is used to construct a scan tree.
   """
@@ -27,11 +24,10 @@ class _PathFilterTable(object):
     """Initializes and builds the path filter table from a list of paths.
 
     Args:
-      paths: a list of strings containing the paths.
-      ignore_list: a list of path segment indexes to ignore, where 0 is the
-                   index of the first path segment relative from the root.
-      path_segment_separator: optional string containing the path segment
-                              separator.
+      paths (list[str]): paths.
+      ignore_list (list[int]): path segment indexes to ignore, where 0 is the
+          index of the first path segment relative from the root.
+      path_segment_separator (Optional[str]): path segment separator.
     """
     super(_PathFilterTable, self).__init__()
     self._path_segment_separator = path_segment_separator
@@ -45,9 +41,9 @@ class _PathFilterTable(object):
     """Adds the path segments to the table.
 
     Args:
-      path: a string containing the path.
-      ignore_list: a list of path segment indexes to ignore, where 0 is the
-                   index of the first path segment relative from the root.
+      path (str): path.
+      ignore_list (list[int]): path segment indexes to ignore, where 0 is the
+          index of the first path segment relative from the root.
     """
     path_segments = path.split(self._path_segment_separator)
     for path_segment_index, path_segment in enumerate(path_segments):
@@ -67,11 +63,11 @@ class _PathFilterTable(object):
     """Retrieves the path indexes list.
 
     Args:
-      path_segment_index: an integer containing the path segment index.
-      path_segment: a string containing the path segment.
+      path_segment_index (int): index of the path segment in the table.
+      path_segment (str): path segment.
 
     Returns:
-      A list of integers containing the path indexes.
+      list[int]: path indexes.
     """
     return self.path_segments_per_index[path_segment_index][path_segment]
 
@@ -79,15 +75,19 @@ class _PathFilterTable(object):
     """Retrieves the path segments for a specific path segment index.
 
     Args:
-      path_segment_index: an integer containing the path segment index.
+      path_segment_index (int): index of the path segment in the table.
 
     Returns:
-      A dictionary containing the paths list per path segment.
+      dict[str, list[str]]: paths per path segment.
     """
     return self.path_segments_per_index[path_segment_index]
 
   def ToDebugString(self):
-    """Converts the path filter table into a debug string."""
+    """Converts the path filter table into a debug string.
+
+    Returns:
+      str: debug string representing the path filter table.
+    """
     text_parts = ['Path segment index\tPath segments(s)']
     for index, path_segments in self.path_segments_per_index.items():
       text_parts.append('{0:d}\t\t\t[{1:s}]'.format(
@@ -99,7 +99,7 @@ class _PathFilterTable(object):
 
 
 class _PathSegmentWeights(object):
-  """Class that implements path segment weights.
+  """Path segment weights.
 
   The path segment weights are used to determine the most significant
   path segment per index. The path segment weights are used to construct
@@ -107,7 +107,7 @@ class _PathSegmentWeights(object):
   """
 
   def __init__(self):
-    """Initializes the path segment weights."""
+    """Initializes path segment weights."""
     super(_PathSegmentWeights, self).__init__()
     self._indexes_per_weight = {}
     self._weight_per_index = {}
@@ -116,11 +116,12 @@ class _PathSegmentWeights(object):
     """Adds a path segment index and sets its weight to 0.
 
     Args:
-      path_segment_index: an integer containing the path segment index.
+      path_segment_index (int): index of the path segment in the path filter
+          table.
 
     Raises:
       ValueError: if the path segment weights already contains
-                  the path segment index.
+          the path segment index.
     """
     if path_segment_index in self._weight_per_index:
       raise ValueError('Path segment index already set.')
@@ -131,12 +132,13 @@ class _PathSegmentWeights(object):
     """Adds a weight for a specific path segment index.
 
     Args:
-      path_segment_index: an integer containing the path segment index.
-      weight: an integer containing the weight.
+      path_segment_index (int): index of the path segment in the path filter
+          table.
+      weight (int): weight of the path segment.
 
     Raises:
       ValueError: if the path segment weights do not contain
-                  the path segment index.
+          the path segment index.
     """
     if path_segment_index not in self._weight_per_index:
       raise ValueError('Path segment index not set.')
@@ -152,8 +154,7 @@ class _PathSegmentWeights(object):
     """Retrieves the first available path segment index.
 
     Returns:
-      An integer containing the first available path segment index
-      or None if not available.
+      int: first available path segment index or None if not available.
     """
     path_segment_indexes = sorted(self._weight_per_index.keys())
     if not path_segment_indexes:
@@ -162,30 +163,50 @@ class _PathSegmentWeights(object):
     return path_segment_indexes[0]
 
   def GetLargestWeight(self):
-    """Retrieves the largest weight or 0 if none."""
+    """Retrieves the largest weight.
+
+    Returns:
+      int: largest weight or 0 if there are no weights.
+    """
     if not self._indexes_per_weight:
       return 0
 
     return max(self._indexes_per_weight)
 
   def GetIndexesForWeight(self, weight):
-    """Retrieves the list of path segment indexes for a specific weight."""
+    """Retrieves the path segment indexes for a specific weight.
+
+    Args:
+      weight (int): weight.
+
+    Returns:
+      list[int]: path segment indexes for the weight.
+    """
     return self._indexes_per_weight[weight]
 
   def GetWeightForIndex(self, path_segment_index):
-    """Retrieves the weight for a specific path segment index."""
+    """Retrieves the weight for a specific path segment index.
+
+    Args:
+      path_segment_index (int): index of the path segment in the path filter
+          table.
+
+    Returns:
+      int: weight for the path segment index.
+    """
     return self._weight_per_index[path_segment_index]
 
   def SetWeight(self, path_segment_index, weight):
     """Sets a weight for a specific path segment index.
 
     Args:
-      path_segment_index: an integer containing the path segment index.
-      weight: an integer containing the weight.
+      path_segment_index (int): index of the path segment in the path filter
+          table.
+      weight (int): weight.
 
     Raises:
       ValueError: if the path segment weights do not contain
-                  the path segment index.
+          the path segment index.
     """
     if path_segment_index not in self._weight_per_index:
       raise ValueError('Path segment index not set.')
@@ -198,7 +219,11 @@ class _PathSegmentWeights(object):
     self._indexes_per_weight[weight].append(path_segment_index)
 
   def ToDebugString(self):
-    """Converts the path segment weights into a debug string."""
+    """Converts the path segment weights into a debug string.
+
+    Returns:
+      str: debug string representing the path segment weights.
+    """
     text_parts = ['Path segment index\tWeight']
     for path_segment_index, weight in self._weight_per_index.items():
       text_parts.append('{0:d}\t\t\t{1:d}'.format(
@@ -215,17 +240,16 @@ class _PathSegmentWeights(object):
 
 
 class PathFilterScanTree(object):
-  """Class that implements a path filter scan tree."""
+  """Path filter scan tree."""
 
   def __init__(self, paths, case_sensitive=True, path_segment_separator='/'):
     """Initializes and builds a path filter scan tree.
 
     Args:
-      paths: a list of strings containing the paths.
-      case_sensitive: optional boolean value to indicate string matches should
-                      be case sensitive.
-      path_segment_separator: optional string containing the path segment
-                              separator.
+      paths (list[str]): paths.
+      case_sensitive (Optional[bool]): True if string matches should be case
+          sensitive.
+      path_segment_separator (Optional[str]): path segment separator.
     """
     super(PathFilterScanTree, self).__init__()
     self._case_sensitive = case_sensitive
@@ -245,17 +269,16 @@ class PathFilterScanTree(object):
     """Builds a scan tree node.
 
     Args:
-      path_filter_table: a path filter table object (instance of
-                         _PathFilterTable).
-      ignore_list: a list of path segment indexes to ignore, where 0 is the
-                   index of the first path segment relative from the root.
+      path_filter_table (_PathFilterTable): path filter table.
+      ignore_list (list[int]): path segment indexes to ignore, where 0 is the
+          index of the first path segment relative from the root.
 
     Returns:
-      A scan tree node (instance of PathFilterScanTreeNode).
+      PathFilterScanTreeNode: a scan tree node.
 
     Raises:
       ValueError: if the path segment index value or the number of paths
-                  segments value is out of bounds.
+          segments value is out of bounds.
     """
     # Make a copy of the lists because the function is going to alter them
     # and the changes must remain in scope of the function.
@@ -341,15 +364,13 @@ class PathFilterScanTree(object):
     """Retrieves the index of the most significant path segment.
 
     Args:
-      paths: a list of strings containing the paths.
-      similarity_weights: the similarity weights object (instance of
-                          _PathSegmentWeights).
-      occurrence_weights: the occurrence weights object (instance of
-                          _PathSegmentWeights).
-      value_weights: the value weights object (instance of _PathSegmentWeights).
+      paths (list[str]): paths.
+      similarity_weights (_PathSegmentWeights): similarity weights.
+      occurrence_weights (_PathSegmentWeights): occurrence weights.
+      value_weights (_PathSegmentWeights): value weights.
 
     Returns:
-      An integer containing the path segment index.
+      int: path segment index.
 
     Raises:
       ValueError: when paths is an empty list.
@@ -379,12 +400,11 @@ class PathFilterScanTree(object):
     """Retrieves the index of the path segment based on occurrence weights.
 
     Args:
-      occurrence_weights: the occurrence weights object (instance of
-                          _PathSegmentWeights).
-      value_weights: the value weights object (instance of _PathSegmentWeights).
+      occurrence_weights (_PathSegmentWeights): occurrence weights.
+      value_weights (_PathSegmentWeights): value weights.
 
     Returns:
-      An integer containing the path segment index.
+      int: path segment index.
     """
     largest_weight = occurrence_weights.GetLargestWeight()
 
@@ -420,14 +440,12 @@ class PathFilterScanTree(object):
     """Retrieves the index of the path segment based on similarity weights.
 
     Args:
-      similarity_weights: the similarity weights object (instance of
-                          _PathSegmentWeights).
-      occurrence_weights: the occurrence weights object (instance of
-                          _PathSegmentWeights).
-      value_weights: the value weights object (instance of _PathSegmentWeights).
+      similarity_weights (_PathSegmentWeights): similarity weights.
+      occurrence_weights (_PathSegmentWeights): occurrence weights.
+      value_weights (_PathSegmentWeights): value weights.
 
     Returns:
-      An integer containing the path segment index.
+      int: path segment index.
     """
     largest_weight = similarity_weights.GetLargestWeight()
 
@@ -473,10 +491,10 @@ class PathFilterScanTree(object):
     """Retrieves the index of the path segment based on value weights.
 
     Args:
-      value_weights: the value weights object (instance of _PathSegmentWeights).
+      value_weights (_PathSegmentWeights): value weights.
 
     Returns:
-      An integer containing the path segment index.
+      int: path segment index.
 
     Raises:
       RuntimeError: is no path segment index can be found.
@@ -502,14 +520,13 @@ class PathFilterScanTree(object):
     """Checks if a path matches the scan tree-based path filter.
 
     Args:
-      path: a string containing the path.
-      path_segment_separator: optional string containing the path segment
-                              separator. None defaults to the path segment
-                              separator that was set when the path filter
-                              scan tree was initialized.
+      path (str): path.
+      path_segment_separator (Optional[str]): path segment separator, where
+          None defaults to the path segment separator that was set when
+          the path filter scan tree was initialized.
 
     Returns:
-      A boolean indicating if the path matches the filter.
+      bool: True if the path matches the filter, False otherwise.
     """
     if not self._case_sensitive:
       path = path.lower()
@@ -548,19 +565,18 @@ class PathFilterScanTreeNode(object):
   the scan object to use next when there was no match.
 
   Attributes:
-    default_value: the default scan object, either a scan tree sub node
-                   (instance of PathFilterScanTreeNode) or a string
-                   containing a path.
-    parent: the parent path filter scan tree node or None.
-    path_segment_index: an integer containing the path segment index
-                        represented by the node.
+    default_value (str|PathFilterScanTreeNode): the default scan object, which
+        is either a scan tree sub node or a path.
+    parent (PathFilterScanTreeNode): the parent path filter scan tree node or
+        None if the node has no parent.
+    path_segment_index (int): path segment index represented by the node.
   """
 
   def __init__(self, path_segment_index):
     """Initializes a path filter scan tree node.
 
     Args:
-      path_segment_index: an integer containing the path segment index.
+      path_segment_index (int): path segment index.
     """
     super(PathFilterScanTreeNode, self).__init__()
     self._path_segments = {}
@@ -570,20 +586,20 @@ class PathFilterScanTreeNode(object):
 
   @property
   def path_segments(self):
-    """A list of strings containing the path segments."""
+    """list[str]: path segments."""
     return self._path_segments.keys()
 
-  def AddPathSegment(self, path_segment, scan_object):
+  def AddPathSegment(self, path_segment, scan_object):  # pylint: disable=missing-type-doc
     """Adds a path segment.
 
     Args:
-      path_segment: a string containing the path segment.
-      scan_object: a scan object, either a scan tree sub node (instance of
-                   PathFilterScanTreeNode) or a string containing a path.
+      path_segment (str): path segment.
+      scan_object (str|PathFilterScanTreeNode): a scan object, which is either
+          a scan tree sub node or a path.
 
     Raises:
       ValueError: if the node already contains a scan object for
-                  the path segment.
+          the path segment.
     """
     if path_segment in self._path_segments:
       raise ValueError('Path segment already set.')
@@ -593,15 +609,15 @@ class PathFilterScanTreeNode(object):
 
     self._path_segments[path_segment] = scan_object
 
-  def GetScanObject(self, path_segment):
+  def GetScanObject(self, path_segment):  # pylint: disable=missing-return-type-doc
     """Retrieves the scan object for a specific path segment.
 
     Args:
-      path_segment: a string containing the path segment.
+      path_segment (str): path segment.
 
     Returns:
-      A scan object, which can be a scan tree sub node (instance of
-      PathFilterScanTreeNode), a path or the default value.
+      str|PathFilterScanTreeNode: a scan object, which is either
+          a scan tree sub node, a path of the default value.
     """
     return self._path_segments.get(path_segment, self.default_value)
 
@@ -609,8 +625,8 @@ class PathFilterScanTreeNode(object):
     """Sets the default (non-match) value.
 
     Args:
-      scan_object: a scan object, either a scan tree sub node (instance of
-                   PathFilterScanTreeNode) or a string containing a path.
+      scan_object (str|PathFilterScanTreeNode): a scan object, which is either
+          a scan tree sub node or a path.
 
     Raises:
       TypeError: if the scan object is of an unsupported type.
@@ -629,11 +645,10 @@ class PathFilterScanTreeNode(object):
     """Converts the path filter scan tree node into a debug string.
 
     Args:
-      indentation_level: an integer containing the text indentation level.
+      indentation_level (int): text indentation level.
 
     Returns:
-      A string containing a debug representation of the path filter scan
-      tree node.
+      str: debug string representing the path filter scan tree node.
     """
     indentation = '  ' * indentation_level
 
