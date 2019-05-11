@@ -1,0 +1,6 @@
+# Filter file for testing format features.
+
+# Include filter with Linux paths.
+/usr/bin
+# Include filter with Windows paths.
+/Windows/System32

@@ -1,0 +1,136 @@
+# -*- coding: utf-8 -*-
+"""Path filter.
+
+Path filter are specified in filter files and are used during collection
+to include or exclude file system paths.
+"""
+
+from __future__ import unicode_literals
+
+from dfvfs.helpers import file_system_searcher
+
+from plaso.engine import logger
+from plaso.engine import path_helper
+
+
+class PathFilter(object):
+  """Path filter.
+
+  Attributes:
+    description (str): description of the purpose of the filter or None if
+        not set.
+    filter_type (str): indicates if the filter should include or excludes
+        paths during collection.
+    path_separator (str): path segment separator.
+    paths (list[str]): paths to filter.
+    prefixes (list[str]): path prefixes to filter.
+    suffixes (list[str]): path suffixes to filter.
+  """
+
+  FILTER_TYPE_EXCLUDE = 'exclude'
+  FILTER_TYPE_INCLUDE = 'include'
+
+  def __init__(
+      self, filter_type, description=None, path_separator='/', paths=None,
+      prefixes=None, suffixes=None):
+    """Initializes a path filter.
+
+    Args:
+      filter_type (str): indicates if the filter should include or excludes
+          paths during collection.
+      description (Optional[str]): description of the purpose of the filter.
+      path_separator (Optional[str]): path segment separator.
+      paths (Optional[list[str]]): paths to filter.
+      prefixes (Optional[list[str]]): path prefixes to filter.
+      suffixes (Optional[list[str]]): path suffixes to filter.
+
+    Raises:
+      ValueError: if the filter type contains an unsupported value.
+    """
+    if filter_type not in (self.FILTER_TYPE_EXCLUDE, self.FILTER_TYPE_INCLUDE):
+      raise ValueError('Unsupported filter type: {0!s}'.format(filter_type))
+
+    super(PathFilter, self).__init__()
+    self.description = description
+    self.filter_type = filter_type
+    self.path_separator = path_separator
+    self.paths = paths or []
+    self.prefixes = prefixes or []
+    self.suffixes = suffixes or []
+
+
+class PathFiltersHelper(object):
+  """Helper for path filters.
+
+  Attributes:
+    file_system_find_specs (list[dfvfs.FindSpec]): file system find
+        specifications.
+  """
+
+  def __init__(self):
+    """Initializes a path filter helper."""
+    super(PathFiltersHelper, self).__init__()
+    self.file_system_find_specs = []
+
+  def BuildFindSpecs(self, path_filters, environment_variables=None):
+    """Builds find specifications from path filters.
+
+    Args:
+      path_filters (list[PathFilter]): path filters.
+      environment_variables (Optional[list[EnvironmentVariableArtifact]]):
+          environment variables.
+    """
+    for path_filter in path_filters:
+      if path_filter.filter_type == PathFilter.FILTER_TYPE_EXCLUDE:
+        logger.warning('Exclude path filter not yet supported.')
+        continue
+
+      if path_filter.prefixes:
+        logger.warning('Path prefixes not yet supported.')
+
+      if path_filter.suffixes:
+        logger.warning('Path suffixes not yet supported.')
+
+      for path in path_filter.paths:
+        # Since paths are regular expression the path separator is escaped.
+        if path_filter.path_separator == '\\':
+          path_separator = '\\\\'
+        else:
+          path_separator = path_filter.path_separator
+
+        expand_path = False
+        path_segments = path.split(path_separator)
+        for index, path_segment in enumerate(path_segments):
+          if len(path_segment) <= 2:
+            continue
+
+          if path_segment[0] == '{' and path_segment[-1] == '}':
+            # Rewrite legacy path expansion attributes. e.g. {systemroot},
+            # into %SystemRoot%.
+            path_segment = '%{0:s}%'.format(path_segment[1:-1])
+            path_segments[index] = path_segment
+
+          if path_segment[0] == '%' and path_segment[-1] == '%':
+            expand_path = True
+
+        if expand_path:
+          path_segments = path_helper.PathHelper.ExpandWindowsPathSegments(
+              path_segments, environment_variables)
+
+        if path_segments[0] != '':
+          logger.warning((
+              'The path filter must be defined as an absolute path: '
+              '{0:s}').format(path))
+          continue
+
+        # Strip the root path segment.
+        path_segments.pop(0)
+
+        if not path_segments[-1]:
+          logger.warning(
+              'Empty last path segment in path: {0:s}'.format(path))
+          continue
+
+        find_spec = file_system_searcher.FindSpec(
+            location_regex=path_segments, case_sensitive=False)
+        self.file_system_find_specs.append(find_spec)

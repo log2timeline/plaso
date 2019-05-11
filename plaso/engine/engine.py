@@ -19,8 +19,10 @@ from plaso.engine import artifact_filters
 from plaso.engine import filter_file
 from plaso.engine import knowledge_base
 from plaso.engine import logger
+from plaso.engine import path_filters
 from plaso.engine import processing_status
 from plaso.engine import profilers
+from plaso.engine import yaml_filter_file
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.preprocessors import manager as preprocess_manager
@@ -47,6 +49,7 @@ class BaseEngine(object):
     self._guppy_memory_profiler = None
     self._memory_profiler = None
     self._name = 'Main'
+    self._path_filters_helper = None
     self._processing_status = processing_status.ProcessingStatus()
     self._processing_profiler = None
     self._serializers_profiler = None
@@ -335,7 +338,6 @@ class BaseEngine(object):
             environment_variables=environment_variables)
 
       find_specs = self._artifacts_filter_helper.file_system_find_specs
-
       if not find_specs:
         raise errors.InvalidFilter(
             'No valid file system find specifications were built from '
@@ -346,14 +348,25 @@ class BaseEngine(object):
           'building find specification based on filter file: {0:s}'.format(
               filter_file_path))
 
-      filter_file_object = filter_file.FilterFile(filter_file_path)
-      find_specs = filter_file_object.BuildFindSpecs(
-          environment_variables=environment_variables)
+      filter_file_path_lower = filter_file_path.lower()
+      if (filter_file_path_lower.endswith('.yaml') or
+          filter_file_path_lower.endswith('.yml')):
+        filter_file_object = yaml_filter_file.YAMLFilterFile()
+      else:
+        filter_file_object = filter_file.FilterFile()
 
+      filter_file_path_filters = filter_file_object.ReadFromFile(
+          filter_file_path)
+
+      self._path_filters_helper = path_filters.PathFiltersHelper()
+      self._path_filters_helper.BuildFindSpecs(
+          filter_file_path_filters, environment_variables=environment_variables)
+
+      find_specs = self._path_filters_helper.file_system_find_specs
       if not find_specs:
-        raise errors.InvalidFilter(
+        raise errors.InvalidFilter((
             'No valid file system find specifications were built from filter '
-            'file.')
+            'file: {0:s}.').format(filter_file_path))
 
     return find_specs
 
