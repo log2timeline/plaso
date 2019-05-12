@@ -148,6 +148,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
     storage_writer.WriteTaskStart()
 
+    # pylint: disable=try-except-raise
     try:
       logger.debug(
           '{0!s} (PID: {1:d}) started monitoring event queue.'.format(
@@ -178,6 +179,9 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
         self._status = definitions.STATUS_INDICATOR_REPORTING
 
         self._analysis_mediator.ProduceAnalysisReport(self._analysis_plugin)
+
+    except definitions.EXCEPTIONS_EXCLUDED_FROM_CATCH_ALL:
+      raise
 
     # All exceptions need to be caught here to prevent the process
     # from being killed by an uncaught exception.

@@ -69,6 +69,7 @@ class BaseChromeCookiePlugin(interface.SQLitePlugin):
     self._cookie_plugins = (
         cookie_plugins_manager.CookiePluginsManager.GetPlugins())
 
+  # pylint: disable=missing-raises-doc
   def ParseCookieRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a cookie row.
 
@@ -132,10 +133,14 @@ class BaseChromeCookiePlugin(interface.SQLitePlugin):
       if cookie_name != plugin.COOKIE_NAME:
         continue
 
+      # pylint: disable=try-except-raise
       try:
         plugin.UpdateChainAndProcess(
             parser_mediator, cookie_data=cookie_data, cookie_name=cookie_name,
             url=url)
+
+      except definitions.EXCEPTIONS_EXCLUDED_FROM_CATCH_ALL:
+        raise
 
       except Exception as exception:  # pylint: disable=broad-except
         parser_mediator.ProduceExtractionWarning(

@@ -64,6 +64,7 @@ class SingleProcessEngine(engine.BaseEngine):
         self._file_system_cache.remove(file_system)
         self._file_system_cache.append(file_system)
 
+  # pylint: disable=missing-raises-doc
   def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
     """Processes a path specification.
 
@@ -82,9 +83,13 @@ class SingleProcessEngine(engine.BaseEngine):
       excluded_find_specs = (
           self.collection_filters_helper.excluded_file_system_find_specs)
 
+    # pylint: disable=try-except-raise
     try:
       extraction_worker.ProcessPathSpec(
           parser_mediator, path_spec, excluded_find_specs=excluded_find_specs)
+
+    except definitions.EXCEPTIONS_EXCLUDED_FROM_CATCH_ALL:
+      raise
 
     except KeyboardInterrupt:
       self._abort = True

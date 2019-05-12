@@ -3,6 +3,7 @@
 
 import pyesedb
 
+from plaso.lib import definitions
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import logger
@@ -97,6 +98,7 @@ class ESEDBParser(interface.FileObjectParser):
     format_specification.AddNewSignature(b'\xef\xcd\xab\x89', offset=4)
     return format_specification
 
+  # pylint: disable=missing-raises-doc
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses an ESE database file-like object.
 
@@ -116,6 +118,7 @@ class ESEDBParser(interface.FileObjectParser):
 
     # Compare the list of available plugin objects.
     cache = ESEDBCache()
+
     try:
       for plugin in self._plugins:
         if parser_mediator.abort:
@@ -132,9 +135,13 @@ class ESEDBParser(interface.FileObjectParser):
         logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
             display_name, plugin.NAME))
 
+        # pylint: disable=try-except-raise
         try:
           plugin.UpdateChainAndProcess(
               parser_mediator, cache=cache, database=database)
+
+        except definitions.EXCEPTIONS_EXCLUDED_FROM_CATCH_ALL:
+          raise
 
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionWarning((

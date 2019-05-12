@@ -8,6 +8,7 @@ import pyesedb
 from dtfabric import errors as dtfabric_errors
 from dtfabric.runtime import fabric as dtfabric_fabric
 
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import logger
 from plaso.parsers import plugins
@@ -214,6 +215,7 @@ class ESEDBPlugin(plugins.BasePlugin):
       return long_value.get_data()
     return record.get_value_data(value_entry)
 
+  # pylint: disable=missing-raises-doc
   def _GetRecordValues(
       self, parser_mediator, table_name, record, value_mappings=None):
     """Retrieves the values from the record.
@@ -254,9 +256,13 @@ class ESEDBPlugin(plugins.BasePlugin):
                     self.NAME, value_callback_method, column_name, table_name))
 
       if value_callback:
+        # pylint: disable=try-except-raise
         try:
           value_data = record.get_value_data(value_entry)
           value = value_callback(value_data)
+
+        except definitions.EXCEPTIONS_EXCLUDED_FROM_CATCH_ALL:
+          raise
 
         except Exception as exception:  # pylint: disable=broad-except
           logger.error(exception)

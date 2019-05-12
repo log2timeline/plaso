@@ -3,6 +3,7 @@
 
 import pyolecf
 
+from plaso.lib import definitions
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import logger
@@ -40,6 +41,7 @@ class OLECFParser(interface.FileObjectParser):
 
     return format_specification
 
+  # pylint: disable=missing-raises-doc
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses an OLE Compound File (OLECF) file-like object.
 
@@ -88,8 +90,12 @@ class OLECFParser(interface.FileObjectParser):
         logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
             display_name, plugin.NAME))
 
+        # pylint: disable=try-except-raise
         try:
           plugin.UpdateChainAndProcess(parser_mediator, root_item=root_item)
+
+        except definitions.EXCEPTIONS_EXCLUDED_FROM_CATCH_ALL:
+          raise
 
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionWarning((
@@ -97,9 +103,14 @@ class OLECFParser(interface.FileObjectParser):
               '{1!s}').format(plugin.NAME, exception))
 
       if self._default_plugin and not parser_mediator.abort:
+        # pylint: disable=try-except-raise
         try:
           self._default_plugin.UpdateChainAndProcess(
               parser_mediator, root_item=root_item)
+
+        # Raise on coding errors.
+        except definitions.EXCEPTIONS_EXCLUDED_FROM_CATCH_ALL:
+          raise
 
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionWarning((
