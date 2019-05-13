@@ -147,7 +147,7 @@ class DependencyHelper(object):
       dependency (DependencyDefinition): dependency definition.
 
     Returns:
-      tuple: consists:
+      tuple: containing:
 
         bool: True if the Python module is available and conforms to
             the minimum required version, False otherwise.
@@ -178,7 +178,7 @@ class DependencyHelper(object):
       maximum_version (str): maximum version.
 
     Returns:
-      tuple: consists:
+      tuple: containing:
 
         bool: True if the Python module is available and conforms to
             the minimum required version, False otherwise.
@@ -256,7 +256,7 @@ class DependencyHelper(object):
     """Checks the availability of lzma.
 
     Returns:
-      tuple: consists:
+      tuple: containing:
 
         bool: True if the Python module is available and conforms to
             the minimum required version, False otherwise.
@@ -288,7 +288,7 @@ class DependencyHelper(object):
     """Checks the availability of sqlite3.
 
     Returns:
-      tuple: consists:
+      tuple: containing:
 
         bool: True if the Python module is available and conforms to
             the minimum required version, False otherwise.
