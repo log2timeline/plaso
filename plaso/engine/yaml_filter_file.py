@@ -42,8 +42,6 @@ class YAMLFilterFile(object):
       'description',
       'path_separator',
       'paths',
-      'prefixes',
-      'suffixes',
       'type'])
 
   def _ReadFilterDefinition(self, filter_definition_values):
@@ -79,20 +77,16 @@ class YAMLFilterFile(object):
               filter_type))
 
     paths = filter_definition_values.get('paths', None)
-    prefixes = filter_definition_values.get('prefixes', None)
-    suffixes = filter_definition_values.get('suffixes', None)
 
-    if not paths and not prefixes and not suffixes:
-      raise errors.ParseError(
-          'Invalid path filter definition missing paths, prefixes and suffixes '
-          'at least one needs to be set.')
+    if not paths:
+      raise errors.ParseError('Invalid path filter definition missing paths.')
 
     description = filter_definition_values.get('description', None)
     path_separator = filter_definition_values.get('path_separator', '/')
 
     return path_filters.PathFilter(
-        filter_type, description=description, paths=paths, prefixes=prefixes,
-        path_separator=path_separator, suffixes=suffixes)
+        filter_type, description=description, path_separator=path_separator,
+        paths=paths)
 
   def _ReadFromFileObject(self, file_object):
     """Reads the path filters from the YAML-based filter file-like object.

@@ -23,16 +23,13 @@ class PathFilter(object):
         paths during collection.
     path_separator (str): path segment separator.
     paths (list[str]): paths to filter.
-    prefixes (list[str]): path prefixes to filter.
-    suffixes (list[str]): path suffixes to filter.
   """
 
   FILTER_TYPE_EXCLUDE = 'exclude'
   FILTER_TYPE_INCLUDE = 'include'
 
   def __init__(
-      self, filter_type, description=None, path_separator='/', paths=None,
-      prefixes=None, suffixes=None):
+      self, filter_type, description=None, path_separator='/', paths=None):
     """Initializes a path filter.
 
     Args:
@@ -41,8 +38,6 @@ class PathFilter(object):
       description (Optional[str]): description of the purpose of the filter.
       path_separator (Optional[str]): path segment separator.
       paths (Optional[list[str]]): paths to filter.
-      prefixes (Optional[list[str]]): path prefixes to filter.
-      suffixes (Optional[list[str]]): path suffixes to filter.
 
     Raises:
       ValueError: if the filter type contains an unsupported value.
@@ -55,8 +50,6 @@ class PathFilter(object):
     self.filter_type = filter_type
     self.path_separator = path_separator
     self.paths = paths or []
-    self.prefixes = prefixes or []
-    self.suffixes = suffixes or []
 
 
 class PathFiltersHelper(object):
@@ -84,12 +77,6 @@ class PathFiltersHelper(object):
       if path_filter.filter_type == PathFilter.FILTER_TYPE_EXCLUDE:
         logger.warning('Exclude path filter not yet supported.')
         continue
-
-      if path_filter.prefixes:
-        logger.warning('Path prefixes not yet supported.')
-
-      if path_filter.suffixes:
-        logger.warning('Path suffixes not yet supported.')
 
       for path in path_filter.paths:
         # Since paths are regular expression the path separator is escaped.

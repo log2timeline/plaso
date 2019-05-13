@@ -16,13 +16,3 @@ type: exclude
 path_separator: '\'
 paths:
 - '\\Windows\\WinSxS'
----
-description: Include filter with path prefixes.
-type: include
-prefixes:
-- '/usr'
----
-description: Include filter with path suffixes.
-type: include
-suffixes:
-- 'wp/wp-config.php'

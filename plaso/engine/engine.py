@@ -383,7 +383,7 @@ class BaseEngine(object):
       artifacts.ArtifactDefinitionsRegistry: artifact definitions registry.
 
     Raises:
-      RuntimeError: if no valid FindSpecs are built.
+      BadConfigOption: if no valid FindSpecs are built.
     """
     if artifact_definitions_path and not os.path.isdir(
         artifact_definitions_path):

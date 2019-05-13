@@ -30,8 +30,6 @@ class YAMLFilterFileTest(shared_test_lib.BaseTestCase):
     self.assertEqual(path_filter.filter_type, 'include')
     self.assertEqual(path_filter.path_separator, '/')
     self.assertEqual(path_filter.paths, ['/usr/bin'])
-    self.assertEqual(path_filter.prefixes, [])
-    self.assertEqual(path_filter.suffixes, [])
 
     with self.assertRaises(errors.ParseError):
       test_filter_file._ReadFilterDefinition({})
@@ -54,7 +52,7 @@ class YAMLFilterFileTest(shared_test_lib.BaseTestCase):
     with io.open(test_path, 'r', encoding='utf-8') as file_object:
       path_filters = list(test_filter_file._ReadFromFileObject(file_object))
 
-    self.assertEqual(len(path_filters), 5)
+    self.assertEqual(len(path_filters), 3)
 
   @shared_test_lib.skipUnlessHasTestFile(['filter_files', 'format_test.yaml'])
   def testReadFromFile(self):
@@ -64,7 +62,7 @@ class YAMLFilterFileTest(shared_test_lib.BaseTestCase):
     test_path = self._GetTestFilePath(['filter_files', 'format_test.yaml'])
     path_filters = test_filter_file.ReadFromFile(test_path)
 
-    self.assertEqual(len(path_filters), 5)
+    self.assertEqual(len(path_filters), 3)
 
     self.assertEqual(path_filters[0].path_separator, '/')
     self.assertEqual(path_filters[0].paths, ['/usr/bin'])
