@@ -617,7 +617,7 @@ class PathFilterScanTreeNode(object):
 
     Returns:
       str|PathFilterScanTreeNode: a scan object, which is either
-          a scan tree sub node, a path of the default value.
+          a scan tree sub node, a path or the default value.
     """
     return self._path_segments.get(path_segment, self.default_value)
 
