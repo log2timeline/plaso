@@ -246,6 +246,24 @@ class PathHelper(object):
     Returns:
       str: expanded Windows path.
     """
+    path_segments = path.split('\\')
+    path_segments = cls.ExpandWindowsPathSegments(
+        path_segments, environment_variables)
+    return '\\'.join(path_segments)
+
+  @classmethod
+  def ExpandWindowsPathSegments(cls, path_segments, environment_variables):
+    """Expands a Windows path segments containing environment variables.
+
+    Args:
+      path_segments (list[str]): Windows path segments with environment
+          variables.
+      environment_variables (list[EnvironmentVariableArtifact]): environment
+          variables.
+
+    Returns:
+      list[str]: expanded Windows path segments.
+    """
     if environment_variables is None:
       environment_variables = []
 
@@ -259,7 +277,6 @@ class PathHelper(object):
 
         lookup_table[attribute_name] = attribute_value
 
-    path_segments = path.split('\\')
     # Make a copy of path_segments since this loop can change it.
     for index, path_segment in enumerate(list(path_segments)):
       if (len(path_segment) <= 2 or not path_segment.startswith('%') or
@@ -283,7 +300,7 @@ class PathHelper(object):
     if cls._IsWindowsDrivePathSegment(path_segments[0]):
       path_segments[0] = ''
 
-    return '\\'.join(path_segments)
+    return path_segments
 
   @classmethod
   def GetDisplayNameForPathSpec(
