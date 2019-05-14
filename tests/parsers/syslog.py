@@ -58,6 +58,10 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2016-10-25 19:37:23.297265')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.reporter, 'periodic_scheduler')
+    self.assertEqual(event_data.severity, 'INFO')
+
     expected_message = (
         'INFO [periodic_scheduler, pid: 13707] cleanup_logs: job completed')
     self._TestGetMessageStrings(event, expected_message, expected_message)
@@ -66,17 +70,31 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2016-10-25 19:37:24.987014')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.reporter, 'kernel')
+    self.assertEqual(event_data.severity, 'DEBUG')
+
     # Testing year increment.
     event = events[4]
 
     self.CheckTimestamp(event.timestamp, '2016-10-25 19:37:24.993079')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.reporter, 'kernel')
+    self.assertEqual(event_data.severity, 'DEBUG')
+
     event = events[6]
 
-    expected_reporter = 'kernel'
-    self.assertEqual(event.reporter, expected_reporter)
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.reporter, 'kernel')
+    self.assertEqual(event_data.severity, 'ERR')
 
     event = events[7]
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.reporter, 'aprocess')
+    self.assertEqual(event_data.severity, 'INFO')
+
     expected_message = (
         'INFO [aprocess] [  316.587330] cfg80211: This is a multi-line\t'
         'message that screws up many syslog parsers.')
@@ -91,8 +109,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
     parser = syslog.SyslogParser()
     knowledge_base_values = {'year': 2012}
     storage_writer = self._ParseFile(
-        ['syslog'], parser,
-        knowledge_base_values=knowledge_base_values)
+        ['syslog'], parser, knowledge_base_values=knowledge_base_values)
 
     self.assertEqual(storage_writer.number_of_warnings, 1)
     self.assertEqual(storage_writer.number_of_events, 16)
@@ -103,7 +120,11 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2012-01-22 07:52:33.000000')
 
-    self.assertEqual(event.hostname, 'myhostname.myhost.com')
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.data_type, 'syslog:line')
+    self.assertEqual(event_data.hostname, 'myhostname.myhost.com')
+    self.assertEqual(event_data.reporter, 'client')
+    self.assertIsNone(event_data.severity)
 
     expected_message = (
         '[client, pid: 30840] INFO No new content in ímynd.dd.')
@@ -113,16 +134,34 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     self.CheckTimestamp(event.timestamp, '2012-02-29 01:15:43.000000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.reporter, '---')
+    self.assertIsNone(event_data.severity)
+
     # Testing year increment.
     event = events[8]
 
     self.CheckTimestamp(event.timestamp, '2013-03-23 23:01:18.000000')
 
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(
+        event_data.body,
+        'This syslog message has a fractional value for seconds.')
+    self.assertEqual(event_data.reporter, 'somrandomexe')
+    self.assertIsNone(event_data.severity)
+
     event = events[11]
-    expected_reporter = '/sbin/anacron'
-    self.assertEqual(event.reporter, expected_reporter)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.reporter, '/sbin/anacron')
+    self.assertIsNone(event_data.severity)
 
     event = events[10]
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertEqual(event_data.reporter, 'aprocess')
+    self.assertIsNone(event_data.severity)
+
     expected_message = (
         '[aprocess, pid: 10100] This is a multi-line message that screws up'
         '\tmany syslog parsers.')
@@ -132,8 +171,12 @@ class SyslogParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     event = events[14]
-    self.assertEqual(event.reporter, 'kernel')
-    self.assertIsNone(event.hostname)
+
+    event_data = self._GetEventDataOfEvent(storage_writer, event)
+    self.assertIsNone(event_data.hostname)
+    self.assertEqual(event_data.reporter, 'kernel')
+    self.assertIsNone(event_data.severity)
+
     expected_message = (
         '[kernel] [997.390602] sda2: rw=0, want=65, limit=2')
     expected_short_message = (

@@ -73,6 +73,19 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     storage_writer.Open()
     return storage_writer
 
+  def _GetEventDataOfEvent(self, storage_writer, event):
+    """Retrieves the event data of an event.
+
+    Args:
+      storage_writer (FakeStorageWriter): storage writer.
+      event (EventObject): event.
+
+    Return:
+      EventData: event data corresponding to the event.
+    """
+    event_data_identifier = event.GetEventDataIdentifier()
+    return storage_writer.GetEventDataByIdentifier(event_data_identifier)
+
   def _GetShortMessage(self, message_string):
     """Shortens a message string to a maximum of 80 character width.
 
