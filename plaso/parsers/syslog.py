@@ -268,24 +268,36 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
 
     if key == 'chromeos_syslog_line':
       date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+      iso8601_string = self._GetValueFromStructure(structure, 'chromeos_date')
 
       try:
-        date_time.CopyFromStringISO8601(structure.chromeos_date)
+        date_time.CopyFromStringISO8601(iso8601_string)
       except ValueError:
         parser_mediator.ProduceExtractionWarning(
-            'invalid date time value: {0:s}'.format(structure.chromeos_date))
+            'invalid date time value: {0:s}'.format(iso8601_string))
         return
 
     else:
       # TODO: add support for fractional seconds.
 
-      month = timelib.MONTH_DICT.get(structure.month.lower(), 0)
+      month = self._GetValueFromStructure(structure, 'month')
+      try:
+        month = timelib.MONTH_DICT.get(month.lower(), 0)
+      except AttributeError:
+        parser_mediator.ProduceExtractionWarning(
+            'invalid month value: {0!s}'.format(month))
+        return
+
       if month != 0:
         self._UpdateYear(parser_mediator, month)
 
+      day = self._GetValueFromStructure(structure, 'day')
+      hours = self._GetValueFromStructure(structure, 'hour')
+      minutes = self._GetValueFromStructure(structure, 'minute')
+      seconds = self._GetValueFromStructure(structure, 'second')
+
       time_elements_tuple = (
-          self._year_use, month, structure.day, structure.hour,
-          structure.minute, structure.second)
+          self._year_use, month, day, hours, minutes, seconds)
 
       try:
         date_time = dfdatetime_time_elements.TimeElements(
@@ -299,28 +311,28 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     plugin = None
     if key == 'syslog_comment':
       event_data = SyslogCommentEventData()
-      event_data.body = structure.body
+      event_data.body = self._GetValueFromStructure(structure, 'body')
       # TODO: pass line number to offset or remove.
       event_data.offset = 0
 
     else:
       event_data = SyslogLineEventData()
-      event_data.body = structure.body
-      event_data.hostname = structure.hostname or None
+      event_data.body = self._GetValueFromStructure(structure, 'body')
+      event_data.hostname = self._GetValueFromStructure(structure, 'hostname')
       # TODO: pass line number to offset or remove.
       event_data.offset = 0
-      event_data.pid = structure.pid
-      event_data.reporter = structure.reporter
-      event_data.severity = structure.severity
+      event_data.pid = self._GetValueFromStructure(structure, 'pid')
+      event_data.reporter = self._GetValueFromStructure(structure, 'reporter')
+      event_data.severity = self._GetValueFromStructure(structure, 'severity')
 
-      plugin = self._plugin_by_reporter.get(structure.reporter, None)
+      plugin = self._plugin_by_reporter.get(event_data.reporter, None)
       if plugin:
         attributes = {
-            'hostname': structure.hostname,
-            'severity': structure.severity,
-            'reporter': structure.reporter,
-            'pid': structure.pid,
-            'body': structure.body}
+            'body': event_data.body,
+            'hostname': event_data.hostname,
+            'pid': event_data.pid,
+            'reporter': event_data.reporter,
+            'severity': event_data.severity}
 
         try:
           # TODO: pass event_data instead of attributes.
