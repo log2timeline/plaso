@@ -3,10 +3,9 @@
 
 from __future__ import unicode_literals
 
-from dfvfs.helpers import file_system_searcher
+import io
 
-from plaso.engine import logger
-from plaso.lib import py2to3
+from plaso.engine import path_filters
 
 
 class FilterFile(object):
@@ -26,79 +25,32 @@ class FilterFile(object):
   "{{123-AF25-E523}}" will be replaced with "{123-AF25-E523}" at runtime.
   """
 
-  def __init__(self, path):
-    """Initializes a filter file.
+  def _ReadFromFileObject(self, file_object):
+    """Reads the path filters from the filter file-like object.
 
     Args:
-      path (str): path to a file that contains one or more path filters.
+      file_object (file): filter file-like object.
+
+    Yields:
+      PathFilter: path filter.
     """
-    super(FilterFile, self).__init__()
-    self._path = path
+    paths = []
+    for line in file_object:
+      line = line.strip()
+      if line and not line.startswith('#'):
+        paths.append(line)
 
-  # TODO: split read and validation from BuildFindSpecs, raise instead of log
-  # TODO: determine how to apply the path filters for exclusion.
+    yield path_filters.PathFilter(
+        path_filters.PathFilter.FILTER_TYPE_INCLUDE, paths=paths)
 
-  def BuildFindSpecs(self, environment_variables=None):
-    """Build find specification from a filter file.
+  def ReadFromFile(self, path):
+    """Reads the path filters from the filter file.
 
     Args:
-      environment_variables (Optional[list[EnvironmentVariableArtifact]]):
-          environment variables.
+      path (str): path to a filter file.
 
     Returns:
-      list[dfvfs.FindSpec]: find specification.
+      list[PathFilter]: path filters.
     """
-    path_attributes = {}
-    if environment_variables:
-      for environment_variable in environment_variables:
-        attribute_name = environment_variable.name.lower()
-        attribute_value = environment_variable.value
-        if not isinstance(attribute_value, py2to3.STRING_TYPES):
-          continue
-
-        # Remove the drive letter.
-        if len(attribute_value) > 2 and attribute_value[1] == ':':
-          _, _, attribute_value = attribute_value.rpartition(':')
-
-        if attribute_value.startswith('\\'):
-          attribute_value = attribute_value.replace('\\', '/')
-
-        path_attributes[attribute_name] = attribute_value
-
-    find_specs = []
-    with open(self._path, 'r') as file_object:
-      for line in file_object:
-        line = line.strip()
-        if line.startswith('#'):
-          continue
-
-        if path_attributes:
-          try:
-            line = line.format(**path_attributes)
-          except KeyError as exception:
-            logger.error((
-                'Unable to expand path filter: {0:s} with error: '
-                '{1!s}').format(line, exception))
-            continue
-
-        if not line.startswith('/'):
-          logger.warning((
-              'The path filter must be defined as an absolute path: '
-              '{0:s}').format(line))
-          continue
-
-        # Convert the path filters into a list of path segments and strip
-        # the root path segment.
-        path_segments = line.split('/')
-        path_segments.pop(0)
-
-        if not path_segments[-1]:
-          logger.warning(
-              'Empty last path segment in path filter: {0:s}'.format(line))
-          continue
-
-        find_spec = file_system_searcher.FindSpec(
-            location_regex=path_segments, case_sensitive=False)
-        find_specs.append(find_spec)
-
-    return find_specs
+    with io.open(path, 'r', encoding='utf-8') as file_object:
+      return list(self._ReadFromFileObject(file_object))
