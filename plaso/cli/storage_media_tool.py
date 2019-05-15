@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import codecs
 import getpass
 import os
 import sys
@@ -215,6 +216,7 @@ class StorageMediaTool(tools.CLITool):
           retrieved.
       SourceScannerError: if the format of or within the source
           is not supported or the the scan node is invalid.
+      UserAbort: if the user requested to abort.
     """
     if not scan_node or not scan_node.path_spec:
       raise errors.SourceScannerError('Invalid scan node.')
@@ -368,7 +370,7 @@ class StorageMediaTool(tools.CLITool):
 
       if credential_type in self._BINARY_DATA_CREDENTIAL_TYPES:
         try:
-          credential_data = credential_data.decode('hex')
+          credential_data = codecs.decode(credential_data, 'hex')
         except TypeError:
           raise errors.BadConfigOption(
               'Unsupported credential data for: {0:s}.'.format(
@@ -742,7 +744,7 @@ class StorageMediaTool(tools.CLITool):
 
       if credential_type == 'key':
         try:
-          credential_data = credential_data.decode('hex')
+          credential_data = codecs.decode(credential_data, 'hex')
         except TypeError:
           self._output_writer.Write('Unsupported credential data.\n')
           continue
