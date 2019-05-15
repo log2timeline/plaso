@@ -63,7 +63,7 @@ class PinfoTool(
       storage_reader (StorageReader): storage reader.
 
     Returns:
-      dict[str,collections.Counter]: storage counters.
+      dict[str, collections.Counter]: storage counters.
     """
     analysis_reports_counter = collections.Counter()
     analysis_reports_counter_error = False
@@ -122,6 +122,53 @@ class PinfoTool(
 
     return storage_counters
 
+  def _CompareCounter(self, counter, compare_counter):
+    """Compares two counters.
+
+    Args:
+      counter (collections.Counter): counter.
+      compare_counter (collections.Counter): counter to compare against.
+
+    Returns:
+      dict[str, tuple[int, int]]: mismatching results per key.
+    """
+    keys = set(counter.keys())
+    keys.union(compare_counter.keys())
+
+    differences = {}
+    for key in keys:
+      value = counter.get(key, 0)
+      compare_value = compare_counter.get(key, 0)
+      if value != compare_value:
+        differences[key] = (value, compare_value)
+
+    return differences
+
+  def _PrintCounterDifferences(
+      self, differences, column_names=None, reverse=False, title=None):
+    """Prints the counter differences.
+
+    Args:
+      differences (dict[str, tuple[int, int]]): mismatching results per key.
+      column_names (Optional[list[str]]): column names.
+      reverse (Optional[bool]): True if the key and values of differences
+          should be printed in reverse order.
+      title (Optional[str]): title.
+    """
+    # TODO: add support for 3 column table?
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=column_names, title=title)
+
+    for key, value in sorted(differences.items()):
+      value_string = '{0:d} ({1:d})'.format(value[0], value[1])
+      if reverse:
+        table_view.AddRow([value_string, key])
+      else:
+        table_view.AddRow([key, value_string])
+
+    table_view.Write(self._output_writer)
+    self._output_writer.Write('\n')
+
   def _CompareStores(self, storage_reader, compare_storage_reader):
     """Compares the contents of two stores.
 
@@ -132,13 +179,85 @@ class PinfoTool(
     Returns:
       bool: True if the content of the stores is identical.
     """
+    stores_are_identical = True
+
     storage_counters = self._CalculateStorageCounters(storage_reader)
     compare_storage_counters = self._CalculateStorageCounters(
         compare_storage_reader)
 
-    # TODO: improve comparison, currently only total numbers are compared.
+    # Compare number of events.
+    parsers_counter = storage_counters.get('parsers', collections.Counter())
+    compare_parsers_counter = compare_storage_counters.get(
+        'parsers', collections.Counter())
+    differences = self._CompareCounter(parsers_counter, compare_parsers_counter)
 
-    return storage_counters == compare_storage_counters
+    if differences:
+      stores_are_identical = False
+
+      self._PrintCounterDifferences(
+          differences,
+          column_names=['Parser (plugin) name', 'Number of events'],
+          title='Events generated per parser')
+
+    # Compare warnings by parser chain.
+    warnings_counter = storage_counters.get(
+        'warnings_by_parser_chain', collections.Counter())
+    compare_warnings_counter = compare_storage_counters.get(
+        'warnings_by_parser_chain', collections.Counter())
+    differences = self._CompareCounter(
+        warnings_counter, compare_warnings_counter)
+
+    if differences:
+      stores_are_identical = False
+
+      self._PrintCounterDifferences(
+          differences,
+          column_names=['Parser (plugin) name', 'Number of warnings'],
+          title='Warnings generated per parser')
+
+    # Compare warnings by path specification
+    warnings_counter = storage_counters.get(
+        'warnings_by_path_spec', collections.Counter())
+    compare_warnings_counter = compare_storage_counters.get(
+        'warnings_by_path_spec', collections.Counter())
+    differences = self._CompareCounter(
+        warnings_counter, compare_warnings_counter)
+
+    if differences:
+      stores_are_identical = False
+
+      self._PrintCounterDifferences(
+          differences, column_names=['Number of warnings', 'Pathspec'],
+          reverse=True, title='Pathspecs with most warnings')
+
+    # Compare event labels.
+    labels_counter = storage_counters.get('event_labels', collections.Counter())
+    compare_labels_counter = compare_storage_counters.get(
+        'event_labels', collections.Counter())
+    differences = self._CompareCounter(labels_counter, compare_labels_counter)
+
+    if differences:
+      stores_are_identical = False
+
+      self._PrintCounterDifferences(
+          differences, column_names=['Label', 'Number of event tags'],
+          title='Event tags generated per label')
+
+    # Compare analysis reports.
+    reports_counter = storage_counters.get(
+        'analysis_reports', collections.Counter())
+    compare_reports_counter = compare_storage_counters.get(
+        'analysis_reports', collections.Counter())
+    differences = self._CompareCounter(reports_counter, compare_reports_counter)
+
+    if differences:
+      stores_are_identical = False
+
+      self._PrintCounterDifferences(
+          differences, column_names=['Plugin name', 'Number of reports'],
+          title='Reports generated per plugin')
+
+    return stores_are_identical
 
   def _PrintAnalysisReportCounter(
       self, analysis_reports_counter, session_identifier=None):
@@ -208,16 +327,18 @@ class PinfoTool(
       return
 
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, title='Warnings generated per parser',
-        column_names=['Parser (plugin) name', 'Number of warnings'])
+        self._views_format_type,
+        column_names=['Parser (plugin) name', 'Number of warnings'],
+        title='Warnings generated per parser')
     for parser_chain, count in warnings_by_parser_chain.items():
       parser_chain = parser_chain or '<No parser>'
       table_view.AddRow([parser_chain, '{0:d}'.format(count)])
     table_view.Write(self._output_writer)
 
     table_view = views.ViewsFactory.GetTableView(
-        self._views_format_type, title='Pathspecs with most warnings',
-        column_names=['Number of warnings', 'Pathspec'])
+        self._views_format_type,
+        column_names=['Number of warnings', 'Pathspec'],
+        title='Pathspecs with most warnings')
 
     top_pathspecs = warnings_by_pathspec.most_common(10)
     for pathspec, count in top_pathspecs:
