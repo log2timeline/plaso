@@ -34,6 +34,7 @@ then
 elif test -n "${FEDORA_VERSION}";
 then
 	CONTAINER_NAME="fedora${FEDORA_VERSION}";
+	CONTAINER_OPTIONS="-e LANG=en_US.UTF-8";
 
 	if test -n "${TOXENV}";
 	then
@@ -45,19 +46,33 @@ then
 
 	elif test ${TRAVIS_PYTHON_VERSION} = "2.7";
 	then
-		TEST_COMMAND="python2 run_tests.py";
+		TEST_COMMAND="./config/travis/run_python2.sh";
 	else
-		TEST_COMMAND="python3 run_tests.py";
+		TEST_COMMAND="./config/travis/run_python3.sh";
 	fi
-	docker exec ${CONTAINER_NAME} sh -c "export LANG=en_US.UTF-8; cd plaso && ${TEST_COMMAND}";
+	# Note that exec options need to be defined before the container name.
+	docker exec ${CONTAINER_OPTIONS} ${CONTAINER_NAME} sh -c "cd plaso && ${TEST_COMMAND}";
 
 elif test -n "${UBUNTU_VERSION}";
 then
 	CONTAINER_NAME="ubuntu${UBUNTU_VERSION}";
+	CONTAINER_OPTIONS="-e LANG=en_US.UTF-8";
 
 	if test -n "${TOXENV}";
 	then
 		TEST_COMMAND="tox -e ${TOXENV}";
+
+	elif test "${TARGET}" = "coverage";
+	then
+		# Also see: https://docs.codecov.io/docs/testing-with-docker
+		curl -o codecov_env.sh -s https://codecov.io/env;
+
+		# Generates a series of -e options.
+		CODECOV_ENV=$(/bin/bash ./codecov_env.sh);
+
+		CONTAINER_OPTIONS="${CODECOV_ENV} ${CONTAINER_OPTIONS}";
+
+		TEST_COMMAND="./config/travis/run_coverage.sh";
 
 	elif test "${TARGET}" = "pylint";
 	then
@@ -65,49 +80,10 @@ then
 
 	elif test ${TRAVIS_PYTHON_VERSION} = "2.7";
 	then
-		TEST_COMMAND="python2 run_tests.py";
+		TEST_COMMAND="./config/travis/run_python2.sh";
 	else
-		TEST_COMMAND="python3 run_tests.py";
+		TEST_COMMAND="./config/travis/run_python3.sh";
 	fi
-	docker exec ${CONTAINER_NAME} sh -c "export LANG=en_US.UTF-8; cd plaso && ${TEST_COMMAND}";
-
-elif test "${TRAVIS_OS_NAME}" = "linux";
-then
-	COVERAGE="/usr/bin/coverage";
-
-	if ! test -x "${COVERAGE}";
-	then
-		# Ubuntu has renamed coverage.
-		COVERAGE="/usr/bin/python-coverage";
-	fi
-
-	if test -n "${TOXENV}";
-	then
-		tox --sitepackages ${TOXENV};
-
-	elif test "${TRAVIS_PYTHON_VERSION}" = "2.7";
-	then
-		${COVERAGE} erase
-		${COVERAGE} run --source=plaso --omit="*_test*,*__init__*,*test_lib*" ./run_tests.py
-	else
-		python ./run_tests.py
-
-		python ./setup.py build
-
-		python ./setup.py sdist
-
-		python ./setup.py bdist
-
-		TMPDIR="${PWD}/tmp";
-		TMPSITEPACKAGES="${TMPDIR}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages";
-
-		mkdir -p ${TMPSITEPACKAGES};
-
-		PYTHONPATH=${TMPSITEPACKAGES} python ./setup.py install --prefix=${TMPDIR};
-
-		if test -f tests/end-to-end.py;
-		then
-			PYTHONPATH=. python ./tests/end-to-end.py --debug -c config/end-to-end.ini;
-		fi
-	fi
+	# Note that exec options need to be defined before the container name.
+	docker exec ${CONTAINER_OPTIONS} ${CONTAINER_NAME} sh -c "cd plaso && ${TEST_COMMAND}";
 fi
