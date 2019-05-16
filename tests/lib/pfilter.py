@@ -31,14 +31,20 @@ formatters_manager.FormattersManager.RegisterFormatter(PfilterFakeFormatter)
 class PFilterTest(unittest.TestCase):
   """Simple plaso specific tests to the pfilter implementation."""
 
-  def _RunPlasoTest(self, event, query, result):
-    """Run a simple test against an event object."""
+  def _RunPlasoTest(self, event, query, expected_result):
+    """Run a simple test against an event object.
+
+    Args:
+      event (EventObject): event.
+      query (str): event filter expression.
+      expected_result (bool): expected result.
+    """
     my_parser = pfilter.BaseParser(query).Parse()
     matcher = my_parser.Compile(
         pfilter.PlasoAttributeFilterImplementation)
 
     self.assertEqual(
-        result, matcher.Matches(event),
+        expected_result, matcher.Matches(event),
         'query {0:s} failed with event {1!s}'.format(query, event.CopyToDict()))
 
   def testPlasoEvents(self):
