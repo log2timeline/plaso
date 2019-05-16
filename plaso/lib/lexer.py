@@ -7,6 +7,7 @@ https://github.com/google/grr
 
 from __future__ import unicode_literals
 
+import abc
 import logging
 import re
 
@@ -14,7 +15,17 @@ from plaso.lib import errors
 
 
 class Token(object):
-  """An event filter parser token."""
+  """An event filter parser token.
+
+  Attributes:
+    actions (list[str]): list of method names in the SearchParser to call.
+    next_state (str): next state we transition to if this Token matches.
+    re_str (str): regular expression to try and match from the current point.
+    regex (_sre.SRE_Pattern): regular expression to try and match from
+        the current point.
+    state_regex (str): regular expression that is considered when the current
+        state matches this rule.
+  """
 
   def __init__(self, state_regex, regex, actions, next_state, flags=re.I):
     """Initializes an event filter expressions parser token.
@@ -28,40 +39,39 @@ class Token(object):
       flags (Optional[int]): flags for the regular expression module (re).
     """
     super(Token, self).__init__()
+    self.actions = []
+    self.next_state = next_state
+    self.re_str = regex
+    self.regex = re.compile(regex, re.DOTALL | re.M | re.S | re.U | flags)
     self.state_regex = re.compile(
         state_regex, re.DOTALL | re.M | re.S | re.U | flags)
-    self.regex = re.compile(regex, re.DOTALL | re.M | re.S | re.U | flags)
-    self.re_str = regex
-    self.actions = []
+
     if actions:
       self.actions = actions.split(',')
 
-    self.next_state = next_state
-
 
 class Expression(object):
-  """An event filter parser expression."""
+  """An event filter parser expression.
 
+  Attributes:
+    attribute (str): attribute or None if not set.
+    args (list[str]): arguments.
+    number_of_args (int): expected number of arguments.
+    operator (str): operator or None if not set.
+  """
+
+  _NUMBER_OF_ARGS = 1
+
+  # TODO: this currently needs to be a class attribute for objectfilter.
+  # See if this can be changed to an instance attribute.
   attribute = None
-  args = None
-  operator = None
-
-  # The expected number of args
-  number_of_args = 1
 
   def __init__(self):
     """Initializes an event filter parser expression."""
     super(Expression, self).__init__()
     self.args = []
-
-  def __str__(self):
-    """Retrieves a string representation of the expression.
-
-    Returns:
-      str: string representation of the expression.
-    """
-    return 'Expression: ({0:s}) ({1:s}) {2:s}'.format(
-        self.attribute, self.operator, self.args)
+    self.number_of_args = 1
+    self.operator = None
 
   def AddArg(self, argument):
     """Adds a new argument to this expression.
@@ -84,22 +94,32 @@ class Expression(object):
 
     return False
 
-  def Compile(self, unused_filter_implementation):
-    """Given a filter implementation, compile this expression."""
-    raise NotImplementedError(
-        '{0:s} does not implement Compile.'.format(self.__class__.__name__))
+  @abc.abstractmethod
+  def Compile(self, filter_implementation):
+    """Given a filter implementation, compile this expression.
 
-  # TODO: rename this function to GetTreeAsString or equivalent.
-  def PrintTree(self, depth=''):
-    """Print the tree."""
-    return '{0:s} {1:s}'.format(depth, self)
+    Args:
+      filter_implementation (type): class of the filter object, which should
+          be a subclass of objectfilter.BaseFilterImplementation.
+
+    Returns:
+      object: filter object of the binary expression.
+    """
 
   def SetAttribute(self, attribute):
-    """Set the attribute."""
+    """Sets the attribute.
+
+    Args:
+      attribute (str): attribute, or None if not set.
+    """
     self.attribute = attribute
 
   def SetOperator(self, operator):
-    """Set the operator."""
+    """Set the operator.
+
+    Args:
+      operator (str): operator, such as "and" or "&&", or None if not set.
+    """
     self.operator = operator
 
 
@@ -110,23 +130,15 @@ class BinaryExpression(Expression):
     """Initializes an event filter parser binary expression.
 
     Args:
-      operator (str): operator.
+      operator (str): operator, such as "and" or "&&".
       part (str): expression part.
     """
     super(BinaryExpression, self).__init__()
     self.args = []
     self.operator = operator
+
     if part:
       self.args.append(part)
-
-  def __str__(self):
-    """Retrieves a string representation of the binary expression.
-
-    Returns:
-      str: string representation of the binary expression.
-    """
-    return 'Binary Expression: {0:s} {1:s}'.format(
-        self.operator, [str(x) for x in self.args])
 
   def AddOperands(self, lhs, rhs):
     """Adds an operand.
@@ -139,18 +151,20 @@ class BinaryExpression(Expression):
       ParseError: if either left hand side or right hand side expression
           is not an instance of Expression.
     """
-    if isinstance(lhs, Expression) and isinstance(rhs, Expression):
-      self.args = [lhs, rhs]
-    else:
-      raise errors.ParseError(
-          'Expected expression, got {0:s} {1:s} {2:s}'.format(
-              lhs, self.operator, rhs))
+    if not isinstance(lhs, Expression):
+      raise errors.ParseError('Left hand side is not an expression')
+
+    if not isinstance(rhs, Expression):
+      raise errors.ParseError('Right hand side is not an expression')
+
+    self.args = [lhs, rhs]
 
   def Compile(self, filter_implementation):
     """Compiles the binary expression into a filter object.
 
     Args:
-      filter_implementation (class): class of the filter object.
+      filter_implementation (type): class of the filter object, which should
+          be a subclass of objectfilter.BaseFilterImplementation.
 
     Returns:
       object: filter object of the binary expression.
@@ -167,23 +181,6 @@ class BinaryExpression(Expression):
     args = [x.Compile(filter_implementation) for x in self.args]
     return getattr(filter_implementation, method)(*args)
 
-  # TODO: rename this function to GetTreeAsString or equivalent.
-  def PrintTree(self, depth=''):
-    """Prints the binary expression represented as a tree.
-
-    Args:
-      depth (Optional[str]): indentation string of the binary expression in
-          the tree.
-
-    Returns:
-      str: the binary expression represented as a tree.
-    """
-    result = '{0:s}{1:s}\n'.format(depth, self.operator)
-    for part in self.args:
-      result += '{0:s}-{1:s}\n'.format(depth, part.PrintTree(depth + '  '))
-
-    return result
-
 
 class IdentityExpression(Expression):
   """An event filter parser expression which always evaluates to True."""
@@ -192,7 +189,8 @@ class IdentityExpression(Expression):
     """Compiles the binary expression into a filter object.
 
     Args:
-      filter_implementation (class): class of the filter object.
+      filter_implementation (type): class of the filter object, which should
+          be a subclass of objectfilter.BaseFilterImplementation.
 
     Returns:
       object: filter object of the identity expression.
@@ -207,12 +205,27 @@ class SearchParser(object):
     filename contains "foo" and (size > 100k or date before "2011-10")
     date between 2011 and 2010
     files older than 1 year
+
+  Attributes:
+    buffer (str): buffer that holds the expression.
+    current_expression (Expression): current expression.
+    error (int): ???
+    filter_string (str): ???
+    flags (int): ???
+    processed (int): ???
+    processed_buffer (str): buffer that holds the part of the expression
+        that has been processed.
+    stack (list[str]): token stack.
+    state (str): parser state.
+    state_stack (list[str]): stack of parser states.
+    string (str): string expression or None if not set.
   """
   _CONTINUE_STATE = 'CONTINUE'
   _INITIAL_STATE = 'INITIAL'
 
   _ERROR_TOKEN = 'Error'
 
+  # Classes of the expressions generated by the parser.
   expression_cls = Expression
   binary_expression_cls = BinaryExpression
 
@@ -256,23 +269,22 @@ class SearchParser(object):
     """
     super(SearchParser, self).__init__()
     self.buffer = data
-    self.current_expression = self.expression_cls()  # Holds expression
+    self.current_expression = self.expression_cls()
     self.error = 0
     self.filter_string = data
     self.flags = 0
     self.processed = 0
     self.processed_buffer = ''
-    self.stack = []  # The token stack
+    self.stack = []
     self.state = self._INITIAL_STATE
     self.state_stack = []
     self.string = None
-    self.verbose = 0
 
   def _CombineBinaryExpressions(self, operator):
     """Combines binary expressions.
 
     Args:
-      operator (???): operator.
+      operator (str): operator, such as "and" or "&&".
     """
     for i in range(1, len(self.stack)-1):
       item = self.stack[i]
@@ -302,9 +314,10 @@ class SearchParser(object):
     """Sets the binary operator.
 
     Args:
-      string (Optional[str]): expression string.
+      string (str): operator, such as "and" or "&&".
     """
-    self.stack.append(self.binary_expression_cls(string))
+    expression = self.binary_expression_cls(operator=string)
+    self.stack.append(expression)
 
   def BracketClose(self, **unused_kwargs):
     """Defines a closing bracket."""
@@ -322,7 +335,7 @@ class SearchParser(object):
 
   def Default(self, **kwarg):
     """Default callback handler."""
-    logging.debug('Default handler: {0:s}'.format(kwarg))
+    logging.debug('Default handler: {0!s}'.format(kwarg))
 
   def Empty(self):
     """Checks if the buffer is empty.
@@ -343,7 +356,7 @@ class SearchParser(object):
       ParseError: always raised.
     """
     raise errors.ParseError(
-        '{0:s} in position {1:s}: {2:s} <----> {3:s} )'.format(
+        '{0:s} in position {1:d}: {2:s} <----> {3:s} )'.format(
             message, len(self.processed_buffer), self.processed_buffer,
             self.buffer))
 
@@ -432,7 +445,7 @@ class SearchParser(object):
     """Parses the data in the internal buffer.
 
     Returns:
-      str: token.
+      Expression: expression.
     """
     if not self.filter_string:
       return IdentityExpression()
@@ -472,7 +485,7 @@ class SearchParser(object):
     """Reduce the token stack into an AST.
 
     Returns:
-      str: token.
+      Expression: expression.
     """
     # Check for sanity
     if self.state != 'INITIAL':
@@ -515,7 +528,7 @@ class SearchParser(object):
     """Finishes a string operation.
 
     Returns:
-      str: ??? or None when the internal state is not "ATTRIBUTE" or
+      str: token or None when the internal state is not "ATTRIBUTE" or
           "ARG_LIST".
     """
     if self.state == 'ATTRIBUTE':
