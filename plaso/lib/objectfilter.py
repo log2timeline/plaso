@@ -98,13 +98,8 @@ import logging
 import re
 
 from plaso.lib import errors
-from plaso.lib import lexer
 from plaso.lib import py2to3
 
-
-# pylint: disable=attribute-defined-outside-init
-# pylint: disable=missing-docstring,missing-param-doc
-# pylint: disable=missing-type-doc,missing-yield-type-doc
 
 def GetUnicodeString(value):
   """Attempts to convert the argument to a Unicode string.
@@ -127,8 +122,191 @@ def GetUnicodeString(value):
   return value
 
 
-class InvalidNumberOfOperands(errors.Error):
-  """The number of operands provided to this operator is wrong."""
+class Token(object):
+  """An event filter parser token.
+
+  Attributes:
+    actions (list[str]): list of method names in the SearchParser to call.
+    next_state (str): next state we transition to if this Token matches.
+    re_str (str): regular expression to try and match from the current point.
+    regex (_sre.SRE_Pattern): regular expression to try and match from
+        the current point.
+    state_regex (str): regular expression that is considered when the current
+        state matches this rule.
+  """
+
+  def __init__(self, state_regex, regex, actions, next_state, flags=re.I):
+    """Initializes an event filter expressions parser token.
+
+    Args:
+      state_regex (str): regular expression that is considered when the current
+          state matches this rule.
+      regex (str): regular expression to try and match from the current point.
+      actions (list[str]): list of method names in the SearchParser to call.
+      next_state (str): next state we transition to if this Token matches.
+      flags (Optional[int]): flags for the regular expression module (re).
+    """
+    super(Token, self).__init__()
+    self.actions = []
+    self.next_state = next_state
+    self.re_str = regex
+    self.regex = re.compile(regex, re.DOTALL | re.M | re.S | re.U | flags)
+    self.state_regex = re.compile(
+        state_regex, re.DOTALL | re.M | re.S | re.U | flags)
+
+    if actions:
+      self.actions = actions.split(',')
+
+
+class Expression(object):
+  """An event filter parser expression.
+
+  Attributes:
+    attribute (str): attribute or None if not set.
+    args (list[str]): arguments.
+    number_of_args (int): expected number of arguments.
+    operator (str): operator or None if not set.
+  """
+
+  # TODO: this currently needs to be a class attribute for objectfilter.
+  # See if this can be changed to an instance attribute.
+  attribute = None
+
+  def __init__(self):
+    """Initializes an event filter parser expression."""
+    super(Expression, self).__init__()
+    self.args = []
+    self.number_of_args = 1
+    self.operator = None
+
+  def AddArg(self, argument):
+    """Adds a new argument to this expression.
+
+    Args:
+       argument (str): argument to add.
+
+    Returns:
+      bool: True if the argument is the last argument, False otherwise.
+
+    Raises:
+      ParseError: If there are too many arguments.
+    """
+    self.args.append(argument)
+    if len(self.args) > self.number_of_args:
+      raise errors.ParseError('Too many arguments for this expression.')
+
+    elif len(self.args) == self.number_of_args:
+      return True
+
+    return False
+
+  @abc.abstractmethod
+  def Compile(self, filter_implementation):
+    """Given a filter implementation, compile this expression.
+
+    Args:
+      filter_implementation (type): class of the filter object, which should
+          be a subclass of objectfilter.BaseFilterImplementation.
+
+    Returns:
+      object: filter object of the binary expression.
+    """
+
+  def SetAttribute(self, attribute):
+    """Sets the attribute.
+
+    Args:
+      attribute (str): attribute, or None if not set.
+    """
+    self.attribute = attribute
+
+  def SetOperator(self, operator):
+    """Set the operator.
+
+    Args:
+      operator (str): operator, such as "and" or "&&", or None if not set.
+    """
+    self.operator = operator
+
+
+class BinaryExpression(Expression):
+  """An event filter parser expression which takes two other expressions."""
+
+  def __init__(self, operator='', part=None):
+    """Initializes an event filter parser binary expression.
+
+    Args:
+      operator (str): operator, such as "and" or "&&".
+      part (str): expression part.
+    """
+    super(BinaryExpression, self).__init__()
+    self.args = []
+    self.operator = operator
+
+    if part:
+      self.args.append(part)
+
+  def AddOperands(self, lhs, rhs):
+    """Adds an operand.
+
+    Args:
+      lhs (Expression): left hand side expression.
+      rhs (Expression): right hand side expression.
+
+    Raises:
+      ParseError: if either left hand side or right hand side expression
+          is not an instance of Expression.
+    """
+    if not isinstance(lhs, Expression):
+      raise errors.ParseError('Left hand side is not an expression')
+
+    if not isinstance(rhs, Expression):
+      raise errors.ParseError('Right hand side is not an expression')
+
+    self.args = [lhs, rhs]
+
+  def Compile(self, filter_implementation):
+    """Compiles the binary expression into a filter object.
+
+    Args:
+      filter_implementation (type): class of the filter object, which should
+          be a subclass of objectfilter.BaseFilterImplementation.
+
+    Returns:
+      object: filter object of the binary expression.
+    """
+    operator = self.operator.lower()
+    if operator in ('and', '&&'):
+      method = 'AndFilter'
+    elif operator in ('or', '||'):
+      method = 'OrFilter'
+    else:
+      raise errors.ParseError(
+          'Invalid binary operator {0:s}.'.format(operator))
+
+    args = [x.Compile(filter_implementation) for x in self.args]
+    return filter_implementation.FILTERS[method](arguments=args)
+
+
+class IdentityExpression(Expression):
+  """An event filter parser expression which always evaluates to True."""
+
+  def Compile(self, filter_implementation):
+    """Compiles the binary expression into a filter object.
+
+    Args:
+      filter_implementation (type): class of the filter object, which should
+          be a subclass of objectfilter.BaseFilterImplementation.
+
+    Returns:
+      object: filter object of the identity expression.
+    """
+    return filter_implementation.IdentityFilter()
+
+
+# pylint: disable=attribute-defined-outside-init
+# pylint: disable=missing-docstring,missing-param-doc
+# pylint: disable=missing-type-doc,missing-yield-type-doc
 
 
 class Filter(object):
@@ -196,9 +374,12 @@ class OrFilter(Filter):
     return False
 
 
-# pylint: disable=abstract-method
 class Operator(Filter):
   """Base class for all operators."""
+
+  @abc.abstractmethod
+  def Matches(self, obj):
+    """Whether object obj matches this filter."""
 
 
 class IdentityFilter(Operator):
@@ -213,9 +394,13 @@ class UnaryOperator(Operator):
     """Constructor."""
     super(UnaryOperator, self).__init__(arguments=[operand], **kwargs)
     if len(self.args) != 1:
-      raise InvalidNumberOfOperands(
+      raise errors.InvalidNumberOfOperands(
           'Only one operand is accepted by {0:s}. Received {1:d}.'.format(
               self.__class__.__name__, len(self.args)))
+
+  @abc.abstractmethod
+  def Matches(self, obj):
+    """Whether object obj matches this filter."""
 
 
 class BinaryOperator(Operator):
@@ -228,12 +413,16 @@ class BinaryOperator(Operator):
   def __init__(self, arguments=None, **kwargs):
     super(BinaryOperator, self).__init__(arguments=arguments, **kwargs)
     if len(self.args) != 2:
-      raise InvalidNumberOfOperands(
+      raise errors.InvalidNumberOfOperands(
           'Only two operands are accepted by {0:s}. Received {1:s}.'.format(
               self.__class__.__name__, len(self.args)))
 
     self.left_operand = self.args[0]
     self.right_operand = self.args[1]
+
+  @abc.abstractmethod
+  def Matches(self, obj):
+    """Whether object obj matches this filter."""
 
 
 class GenericBinaryOperator(BinaryOperator):
@@ -324,7 +513,8 @@ class Contains(GenericBinaryOperator):
 
 
 class InSet(GenericBinaryOperator):
-  # TODO(user): Change to an N-ary Operator?
+  # TODO: Change to an N-ary Operator?
+
   """Whether all values are contained within the right operand."""
 
   def Operation(self, x, y):
@@ -460,7 +650,7 @@ class Context(Operator):
 
   def __init__(self, arguments=None, **kwargs):
     if len(arguments) != 2:
-      raise InvalidNumberOfOperands('Context accepts only 2 operands.')
+      raise errors.InvalidNumberOfOperands('Context accepts only 2 operands.')
     super(Context, self).__init__(arguments=arguments, **kwargs)
     self.context, self.condition = self.args
 
@@ -470,21 +660,6 @@ class Context(Operator):
         if self.condition.Matches(sub_object):
           return True
     return False
-
-
-OP2FN = {
-    'equals': Equals,
-    'is': Equals,
-    '==': Equals,
-    '!=': NotEquals,
-    'contains': Contains,
-    '>': Greater,
-    '>=': GreaterEqual,
-    '<': Less,
-    '<=': LessEqual,
-    'inset': InSet,
-    'regexp': Regexp,
-    'iregexp': RegexpInsensitive}
 
 
 class ValueExpander(object):
@@ -579,7 +754,7 @@ class DictValueExpander(ValueExpander):
     return obj.get(attr_name, None)
 
 
-class BasicExpression(lexer.Expression):
+class BasicExpression(Expression):
   """Basic Expression."""
 
   def __init__(self):
@@ -608,7 +783,7 @@ class BasicExpression(lexer.Expression):
     return ops
 
 
-class ContextExpression(lexer.Expression):
+class ContextExpression(Expression):
   """Represents the context operator."""
 
   def __init__(self, attribute="", part=None):
@@ -624,7 +799,7 @@ class ContextExpression(lexer.Expression):
 
   def SetExpression(self, expression):
     """Set the expression."""
-    if isinstance(expression, lexer.Expression):
+    if isinstance(expression, Expression):
       self.args = [expression]
     else:
       raise errors.ParseError(
@@ -641,86 +816,214 @@ class ContextExpression(lexer.Expression):
                        value_expander=expander)
 
 
-class BinaryExpression(lexer.BinaryExpression):
-  def Compile(self, filter_implementation):
-    """Compile the binary expression into a filter object."""
-    operator = self.operator.lower()
-    if operator in ('and', '&&'):
-      method = 'AndFilter'
-    elif operator in ('or', '||'):
-      method = 'OrFilter'
-    else:
-      raise errors.ParseError(
-          'Invalid binary operator {0:s}.'.format(operator))
-
-    args = [x.Compile(filter_implementation) for x in self.args]
-    return filter_implementation.FILTERS[method](arguments=args)
-
-
-class Parser(lexer.SearchParser):
-  """Parses and generates an AST for a query written in the described language.
+class Parser(object):
+  """A parser for objectfilter expressions.
 
   Examples of valid syntax:
     size is 40
     (name contains "Program Files" AND hash.md5 is "123abc")
     @imported_modules (num_symbols = 14 AND symbol.name is "FindWindow")
+
+  Attributes:
+    buffer (str): buffer that holds the expression.
+    current_expression (Expression): current expression.
+    error (int): ???
+    filter_string (str): ???
+    flags (int): ???
+    processed (int): ???
+    processed_buffer (str): buffer that holds the part of the expression
+        that has been processed.
+    stack (list[str]): token stack.
+    state (str): parser state.
+    state_stack (list[str]): stack of parser states.
+    string (str): string expression or None if not set.
   """
+  _CONTINUE_STATE = 'CONTINUE'
+  _INITIAL_STATE = 'INITIAL'
+
+  _ERROR_TOKEN = 'Error'
+
+  # Classes of the expressions generated by the parser.
   expression_cls = BasicExpression
   binary_expression_cls = BinaryExpression
   context_cls = ContextExpression
 
   tokens = [
       # Operators and related tokens
-      lexer.Token('INITIAL', r'\@[\w._0-9]+',
-                  'ContextOperator,PushState', 'CONTEXTOPEN'),
-      lexer.Token('INITIAL', r'[^\s\(\)]', 'PushState,PushBack', 'ATTRIBUTE'),
-      lexer.Token('INITIAL', r'\(', 'PushState,BracketOpen', None),
-      lexer.Token('INITIAL', r'\)', 'BracketClose', 'BINARY'),
+      Token('INITIAL', r'\@[\w._0-9]+', 'ContextOperator,PushState',
+            'CONTEXTOPEN'),
+      Token('INITIAL', r'[^\s\(\)]', 'PushState,PushBack', 'ATTRIBUTE'),
+      Token('INITIAL', r'\(', 'PushState,BracketOpen', None),
+      Token('INITIAL', r'\)', 'BracketClose', 'BINARY'),
 
       # Context
-      lexer.Token('CONTEXTOPEN', r'\(', 'BracketOpen', 'INITIAL'),
+      Token('CONTEXTOPEN', r'\(', 'BracketOpen', 'INITIAL'),
 
       # Double quoted string
-      lexer.Token('STRING', '"', 'PopState,StringFinish', None),
-      lexer.Token('STRING', r'\\x(..)', 'HexEscape', None),
-      lexer.Token('STRING', r'\\(.)', 'StringEscape', None),
-      lexer.Token('STRING', r'[^\\"]+', 'StringInsert', None),
+      Token('STRING', '"', 'PopState,StringFinish', None),
+      Token('STRING', r'\\x(..)', 'HexEscape', None),
+      Token('STRING', r'\\(.)', 'StringEscape', None),
+      Token('STRING', r'[^\\"]+', 'StringInsert', None),
 
       # Single quoted string
-      lexer.Token('SQ_STRING', '\'', 'PopState,StringFinish', None),
-      lexer.Token('SQ_STRING', r'\\x(..)', 'HexEscape', None),
-      lexer.Token('SQ_STRING', r'\\(.)', 'StringEscape', None),
-      lexer.Token('SQ_STRING', r'[^\\\']+', 'StringInsert', None),
+      Token('SQ_STRING', '\'', 'PopState,StringFinish', None),
+      Token('SQ_STRING', r'\\x(..)', 'HexEscape', None),
+      Token('SQ_STRING', r'\\(.)', 'StringEscape', None),
+      Token('SQ_STRING', r'[^\\\']+', 'StringInsert', None),
 
       # Basic expression
-      lexer.Token('ATTRIBUTE', r'[\w._0-9]+', 'StoreAttribute', 'OPERATOR'),
-      lexer.Token('OPERATOR', r'not ', 'FlipLogic', None),
-      lexer.Token('OPERATOR', r'(\w+|[<>!=]=?)', 'StoreOperator', 'CHECKNOT'),
-      lexer.Token('CHECKNOT', r'not', 'FlipLogic', 'ARG'),
-      lexer.Token('CHECKNOT', r'\s+', None, None),
-      lexer.Token('CHECKNOT', r'([^not])', 'PushBack', 'ARG'),
-      lexer.Token('ARG', r'(\d+\.\d+)', 'InsertFloatArg', 'ARG'),
-      lexer.Token('ARG', r'(0x\d+)', 'InsertInt16Arg', 'ARG'),
-      lexer.Token('ARG', r'(\d+)', 'InsertIntArg', 'ARG'),
-      lexer.Token('ARG', '"', 'PushState,StringStart', 'STRING'),
-      lexer.Token('ARG', '\'', 'PushState,StringStart', 'SQ_STRING'),
+      Token('ATTRIBUTE', r'[\w._0-9]+', 'StoreAttribute', 'OPERATOR'),
+      Token('OPERATOR', r'not ', 'FlipLogic', None),
+      Token('OPERATOR', r'(\w+|[<>!=]=?)', 'StoreOperator', 'CHECKNOT'),
+      Token('CHECKNOT', r'not', 'FlipLogic', 'ARG'),
+      Token('CHECKNOT', r'\s+', None, None),
+      Token('CHECKNOT', r'([^not])', 'PushBack', 'ARG'),
+      Token('ARG', r'(\d+\.\d+)', 'InsertFloatArg', 'ARG'),
+      Token('ARG', r'(0x\d+)', 'InsertInt16Arg', 'ARG'),
+      Token('ARG', r'(\d+)', 'InsertIntArg', 'ARG'),
+      Token('ARG', '"', 'PushState,StringStart', 'STRING'),
+      Token('ARG', '\'', 'PushState,StringStart', 'SQ_STRING'),
       # When the last parameter from arg_list has been pushed
 
       # State where binary operators are supported (AND, OR)
-      lexer.Token('BINARY', r'(?i)(and|or|\&\&|\|\|)',
-                  'BinaryOperator', 'INITIAL'),
+      Token('BINARY', r'(?i)(and|or|\&\&|\|\|)', 'BinaryOperator', 'INITIAL'),
       # - We can also skip spaces
-      lexer.Token('BINARY', r'\s+', None, None),
+      Token('BINARY', r'\s+', None, None),
       # - But if it's not "and" or just spaces we have to go back
-      lexer.Token('BINARY', '.', 'PushBack,PopState', None),
+      Token('BINARY', '.', 'PushBack,PopState', None),
 
       # Skip whitespace.
-      lexer.Token('.', r'\s+', None, None),
-      ]
+      Token('.', r'\s+', None, None)]
 
-  def StoreAttribute(self, string='', **kwargs):
-    self.flipped = False
-    super(Parser, self).StoreAttribute(string, **kwargs)
+  def __init__(self, data=''):
+    """Initializes an objectfilter parser.
+
+    Args:
+      data (str): initial data to be processed by the parser.
+    """
+    super(Parser, self).__init__()
+    self.buffer = data
+    self.current_expression = self.expression_cls()
+    self.error = 0
+    self.filter_string = data
+    self.flags = 0
+    self.processed = 0
+    self.processed_buffer = ''
+    self.stack = []
+    self.state = self._INITIAL_STATE
+    self.state_stack = []
+    self.string = None
+
+  def _CombineContext(self):
+    """Combines context."""
+    # Context can merge from item 0
+    for i in range(len(self.stack)-1, 0, -1):
+      item = self.stack[i-1]
+      if (isinstance(item, ContextExpression) and
+          isinstance(self.stack[i], Expression)):
+        expression = self.stack[i]
+        self.stack[i-1].SetExpression(expression)
+        self.stack[i] = None
+
+    self.stack = list(filter(None, self.stack))
+
+  def _CombineBinaryExpressions(self, operator):
+    """Combines binary expressions.
+
+    Args:
+      operator (str): operator, such as "and" or "&&".
+    """
+    for i in range(1, len(self.stack)-1):
+      item = self.stack[i]
+      if (isinstance(item, BinaryExpression) and
+          item.operator.lower() == operator.lower() and
+          isinstance(self.stack[i-1], Expression) and
+          isinstance(self.stack[i+1], Expression)):
+        lhs = self.stack[i-1]
+        rhs = self.stack[i+1]
+
+        self.stack[i].AddOperands(lhs, rhs)
+        self.stack[i-1] = None
+        self.stack[i+1] = None
+
+    self.stack = list(filter(None, self.stack))
+
+  def _CombineParenthesis(self):
+    """Combines parenthesis."""
+    for i in range(len(self.stack)-2):
+      if (self.stack[i] == '(' and self.stack[i+2] == ')' and
+          isinstance(self.stack[i+1], Expression)):
+        self.stack[i] = None
+        self.stack[i+2] = None
+
+    self.stack = list(filter(None, self.stack))
+
+  def BinaryOperator(self, string=None, **unused_kwargs):
+    """Sets a binary operator.
+
+    Args:
+      string (str): operator, such as "and" or "&&".
+    """
+    expression = self.binary_expression_cls(operator=string)
+    self.stack.append(expression)
+
+  def BracketClose(self, **unused_kwargs):
+    """Defines a closing bracket."""
+    self.stack.append(')')
+
+  def BracketOpen(self, **unused_kwargs):
+    """Defines an open bracket."""
+    self.stack.append('(')
+
+  def Close(self):
+    """Forces parse the remaining data in the buffer."""
+    while self.NextToken():
+      if not self.buffer:
+        return
+
+  def ContextOperator(self, string='', **unused_kwargs):
+    """Sets a context operator.
+
+    Args:
+      string (str): operator.
+    """
+    self.stack.append(self.context_cls(string[1:]))
+
+  def Default(self, **kwarg):
+    """Default callback handler."""
+    logging.debug('Default handler: {0!s}'.format(kwarg))
+
+  def Empty(self):
+    """Checks if the buffer is empty.
+
+    Returns:
+      bool: True if the buffer is emtpy.
+    """
+    return not self.buffer
+
+  def Error(self, message=None, weight=1):  # pylint: disable=unused-argument
+    """Raises a parse error.
+
+    Args:
+      message (Optional[str]): error message.
+      weight (Optional[int]): error weight.
+
+    Raises:
+      ParseError: always raised.
+    """
+    # Note that none of the values necessarily are strings.
+    raise errors.ParseError(
+        '{0!s} in position {1!s}: {2!s} <----> {3!s} )'.format(
+            message, len(self.processed_buffer), self.processed_buffer,
+            self.buffer))
+
+  def Feed(self, data):
+    """Feeds the buffer with data.
+
+    Args:
+      data (str): data to be processed by the parser.
+    """
+    self.buffer = ''.join([self.buffer, data])
 
   def FlipAllowed(self):
     """Raise an error if the not keyword is used where it is not allowed."""
@@ -763,8 +1066,27 @@ class Parser(lexer.SearchParser):
       logging.warning(
           'Unable to perform a negative match, issuing a positive one.')
 
+  def HexEscape(self, string, match, **unused_kwargs):
+    """Converts a hex escaped string."""
+    logging.debug('HexEscape matched {0:s}.'.format(string))
+    hex_string = match.group(1)
+    try:
+      hex_string = binascii.unhexlify(hex_string)
+      hex_string = codecs.decode(hex_string, 'utf-8')
+      self.string += hex_string
+    except (TypeError, binascii.Error):
+      raise errors.ParseError('Invalid hex escape {0!s}.'.format(hex_string))
+
   def InsertArg(self, string='', **unused_kwargs):
-    """Insert an argument to the current expression."""
+    """Inserts an argument into the current expression.
+
+    Args:
+      string (Optional[str]): argument string.
+
+    Returns:
+      str: state or None if the argument could not be added to the current
+          expression.
+    """
     # Note that "string" is not necessarily of type string.
     logging.debug('Storing argument: {0!s}'.format(string))
 
@@ -777,10 +1099,20 @@ class Parser(lexer.SearchParser):
       self.current_expression = self.expression_cls()
       # We go to the BINARY state, to find if there's an AND or OR operator
       return 'BINARY'
+
     return None
 
   def InsertFloatArg(self, string='', **unused_kwargs):
-    """Inserts a Float argument."""
+    """Inserts a floating-point argument into the current expression.
+
+    Args:
+      string (Optional[str]): argument string that contains a floating-point
+          value.
+
+    Returns:
+      str: state or None if the argument could not be added to the current
+          expression.
+    """
     try:
       float_value = float(string)
     except (TypeError, ValueError):
@@ -788,7 +1120,16 @@ class Parser(lexer.SearchParser):
     return self.InsertArg(float_value)
 
   def InsertIntArg(self, string='', **unused_kwargs):
-    """Inserts an Integer argument."""
+    """Inserts a decimal integer argument into the current expression.
+
+    Args:
+      string (Optional[str]): argument string that contains an integer value
+          formatted in decimal.
+
+    Returns:
+      str: state or None if the argument could not be added to the current
+          expression.
+    """
     try:
       int_value = int(string)
     except (TypeError, ValueError):
@@ -796,7 +1137,16 @@ class Parser(lexer.SearchParser):
     return self.InsertArg(int_value)
 
   def InsertInt16Arg(self, string='', **unused_kwargs):
-    """Inserts an Integer in base16 argument."""
+    """Inserts a hexadecimal integer argument into the current expression.
+
+    Args:
+      string (Optional[str]): argument string that contains an integer value
+          formatted in hexadecimal.
+
+    Returns:
+      str: state or None if the argument could not be added to the current
+          expression.
+    """
     try:
       int_value = int(string, 16)
     except (TypeError, ValueError):
@@ -804,50 +1154,106 @@ class Parser(lexer.SearchParser):
           '{0:s} is not a valid base16 integer.'.format(string))
     return self.InsertArg(int_value)
 
-  def StringFinish(self, **unused_kwargs):
-    if self.state == 'ATTRIBUTE':
-      return self.StoreAttribute(string=self.string)
+  def NextToken(self):
+    """Fetches the next token by trying to match any of the regexes in order.
 
-    if self.state == 'ARG':
-      return self.InsertArg(string=self.string)
+    Returns:
+      str: token.
+    """
+    current_state = self.state
+    for token in self.tokens:
+      # Does the rule apply to us?
+      if not token.state_regex.match(current_state):
+        continue
 
-    return None
+      # Try to match the rule
+      m = token.regex.match(self.buffer)
+      if not m:
+        continue
 
-  def StringEscape(self, string, match, **unused_kwargs):
-    """Escape backslashes found inside a string quote.
+      # The match consumes the data off the buffer (the handler can put it back
+      # if it likes)
+      # TODO: using joins might be more efficient here.
+      self.processed_buffer += self.buffer[:m.end()]
+      self.buffer = self.buffer[m.end():]
+      self.processed += m.end()
 
-    Backslashes followed by anything other than [\'"rnbt.ws] will raise
-    an Error.
+      next_state = token.next_state
+      for action in token.actions:
+
+        # Is there a callback to handle this action?
+        callback = getattr(self, action, self.Default)
+
+        # Allow a callback to skip other callbacks.
+        try:
+          possible_next_state = callback(string=m.group(0), match=m)
+          if possible_next_state == self._CONTINUE_STATE:
+            continue
+          # Override the state from the Token
+          elif possible_next_state:
+            next_state = possible_next_state
+        except errors.ParseError as exception:
+          self.Error(exception)
+
+      # Update the next state
+      if next_state:
+        self.state = next_state
+
+      return token
+
+    # Check that we are making progress - if we are too full, we assume we are
+    # stuck.
+    self.Error('Expected {0:s}'.format(self.state))
+    self.processed_buffer += self.buffer[:1]
+    self.buffer = self.buffer[1:]
+    return self._ERROR_TOKEN
+
+  def Parse(self):
+    """Parses the data in the internal buffer.
+
+    Returns:
+      Expression: expression.
+    """
+    if not self.filter_string:
+      return IdentityExpression()
+
+    self.Close()
+    return self.Reduce()
+
+  def PopState(self, **unused_kwargs):
+    """Pops the previous state from the stack.
+
+    Returns:
+      str: parser state.
+    """
+    try:
+      self.state = self.state_stack.pop()
+      logging.debug('Returned state to {0:s}'.format(self.state))
+
+      return self.state
+    except IndexError:
+      self.Error('Tried to pop the state but failed - possible recursion error')
+
+  def PushBack(self, string='', **unused_kwargs):
+    """Pushes the match back on the stream.
 
     Args:
-      string: The string that matched.
-      match: the match object (instance of re.MatchObject).
-             Where match.group(1) contains the escaped code.
-
-    Raises:
-      ParseError: When the escaped string is not one of [\'"rnbt]
+      string (Optional[str]): expression string.
     """
-    if match.group(1) in '\\\'"rnbt\\.ws':
-      self.string += codecs.decode(string, 'unicode_escape')
-    else:
-      raise errors.ParseError('Invalid escape character {0:s}.'.format(string))
+    self.buffer = string + self.buffer
+    self.processed_buffer = self.processed_buffer[:-len(string)]
 
-  def HexEscape(self, string, match, **unused_kwargs):
-    """Converts a hex escaped string."""
-    logging.debug('HexEscape matched {0:s}.'.format(string))
-    hex_string = match.group(1)
-    try:
-      hex_string = binascii.unhexlify(hex_string)
-      hex_string = codecs.decode(hex_string, 'utf-8')
-      self.string += hex_string
-    except (TypeError, binascii.Error):
-      raise errors.ParseError('Invalid hex escape {0!s}.'.format(hex_string))
-
-  def ContextOperator(self, string='', **unused_kwargs):
-    self.stack.append(self.context_cls(string[1:]))
+  def PushState(self, **unused_kwargs):
+    """Pushes the current state on the state stack."""
+    logging.debug('Storing state {0:s}'.format(repr(self.state)))
+    self.state_stack.append(self.state)
 
   def Reduce(self):
-    """Reduce the token stack into an AST."""
+    """Reduce the token stack into an abstract syntax tree (AST).
+
+    Returns:
+      Expression: first expression in the AST.
+    """
     # Check for sanity
     if self.state != 'INITIAL' and self.state != 'BINARY':
       self.Error('Premature end of expression')
@@ -870,43 +1276,86 @@ class Parser(lexer.SearchParser):
 
     return self.stack[0]
 
-  def Error(self, message=None, _=None):
-    # Note that none of the values necessarily are strings.
-    raise errors.ParseError(
-        '{0!s} in position {1!s}: {2!s} <----> {3!s} )'.format(
-            message, len(self.processed_buffer), self.processed_buffer,
-            self.buffer))
+  def StringEscape(self, string, match, **unused_kwargs):
+    """Escapes backslashes found inside an expression string.
 
-  def _CombineBinaryExpressions(self, operator):
-    for i in range(1, len(self.stack)-1):
-      item = self.stack[i]
-      if (isinstance(item, lexer.BinaryExpression) and
-          item.operator.lower() == operator.lower() and
-          isinstance(self.stack[i-1], lexer.Expression) and
-          isinstance(self.stack[i+1], lexer.Expression)):
-        lhs = self.stack[i-1]
-        rhs = self.stack[i+1]
+    Backslashes followed by anything other than [\'"rnbt.ws] will raise
+    an Error.
 
-        self.stack[i].AddOperands(lhs, rhs)
-        self.stack[i-1] = None
-        self.stack[i+1] = None
+    Args:
+      string: The string that matched.
+      match: the match object (instance of re.MatchObject).
+             Where match.group(1) contains the escaped code.
 
-    self.stack = list(filter(None, self.stack))
+    Raises:
+      ParseError: When the escaped string is not one of [\'"rnbt]
+    """
+    if match.group(1) in '\\\'"rnbt\\.ws':
+      self.string += codecs.decode(string, 'unicode_escape')
+    else:
+      raise errors.ParseError('Invalid escape character {0:s}.'.format(string))
 
-  def _CombineContext(self):
-    # Context can merge from item 0
-    for i in range(len(self.stack)-1, 0, -1):
-      item = self.stack[i-1]
-      if (isinstance(item, ContextExpression) and
-          isinstance(self.stack[i], lexer.Expression)):
-        expression = self.stack[i]
-        self.stack[i-1].SetExpression(expression)
-        self.stack[i] = None
+  def StringFinish(self, **unused_kwargs):
+    """Finishes a string operation.
 
-    self.stack = list(filter(None, self.stack))
+    Returns:
+      str: token or None when the internal state is not "ATTRIBUTE" or
+          "ARG".
+    """
+    if self.state == 'ATTRIBUTE':
+      return self.StoreAttribute(string=self.string)
+
+    if self.state == 'ARG':
+      return self.InsertArg(string=self.string)
+
+    return None
+
+  def StringInsert(self, string='', **unused_kwargs):
+    """Adds the expression string to the internal string.
+
+    Args:
+      string (Optional[str]): expression string.
+    """
+    self.string += string
+
+  def StringStart(self, **unused_kwargs):
+    """Initializes the internal string."""
+    self.string = ''
+
+  def StoreAttribute(self, string='', **unused_kwargs):
+    """Store the attribute.
+
+    Args:
+      string (Optional[str]): expression string.
+
+    Returns:
+      str: token.
+    """
+    logging.debug('Storing attribute {0:s}'.format(repr(string)))
+
+    self.flipped = False
+
+    # TODO: Update the expected number_of_args
+    try:
+      self.current_expression.SetAttribute(string)
+    except AttributeError:
+      raise errors.ParseError('Invalid attribute \'{0:s}\''.format(string))
+
+    return 'OPERATOR'
+
+  def StoreOperator(self, string='', **unused_kwargs):
+    """Store the operator.
+
+    Args:
+      string (Optional[str]): expression string.
+    """
+    logging.debug('Storing operator {0:s}'.format(repr(string)))
+    self.current_expression.SetOperator(string)
 
 
-### FILTER IMPLEMENTATIONS
+# Filter implementations.
+
+
 class BaseFilterImplementation(object):
   """Defines the base implementation of an object filter by its attributes.
 
@@ -914,7 +1363,20 @@ class BaseFilterImplementation(object):
   the Compile method of a parsed string to obtain an executable filter.
   """
 
-  OPS = OP2FN
+  OPS = {
+      'equals': Equals,
+      'is': Equals,
+      '==': Equals,
+      '!=': NotEquals,
+      'contains': Contains,
+      '>': Greater,
+      '>=': GreaterEqual,
+      '<': Less,
+      '<=': LessEqual,
+      'inset': InSet,
+      'regexp': Regexp,
+      'iregexp': RegexpInsensitive}
+
   FILTERS = {
       'ValueExpander': AttributeValueExpander,
       'AndFilter': AndFilter,
