@@ -226,7 +226,6 @@ class PlasoAttributeFilterImplementation(objectfilter.BaseFilterImplementation):
   FILTERS = {}
   FILTERS.update(objectfilter.BaseFilterImplementation.FILTERS)
   FILTERS.update({'ValueExpander': PlasoValueExpander})
-  OPS = objectfilter.OP2FN
 
 
 class DateCompareObject(object):
