@@ -18,7 +18,10 @@ class EventDataTest(shared_test_lib.BaseTestCase):
     """Tests the GetAttributeNames function."""
     attribute_container = events.EventData()
 
-    expected_attribute_names = ['data_type', 'offset', 'query']
+    expected_attribute_names = [
+        'data_type',
+        'offset',
+        'query']
 
     attribute_names = sorted(attribute_container.GetAttributeNames())
 

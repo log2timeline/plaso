@@ -355,7 +355,6 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       return
 
     parser_or_plugin_name = getattr(event_data, 'parser', 'N/A')
-    parser_or_plugin_name = getattr(event_data, 'plugin', parser_or_plugin_name)
 
     for engine, url_expression, method_name in self._URL_FILTERS:
       callback_method = getattr(self, method_name, None)

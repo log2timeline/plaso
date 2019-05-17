@@ -64,12 +64,19 @@ class EventObject(interface.AttributeContainer):
     """Initializes an event attribute container."""
     super(EventObject, self).__init__()
     self._event_data_identifier = None
+    # TODO: move to event data
     self.data_type = self.DATA_TYPE
+    # TODO: move to event data
     self.display_name = None
+    # TODO: move to event data
     self.filename = None
+    # TODO: move to event data
     self.hostname = None
+    # TODO: move to event data
     self.inode = None
+    # TODO: move to event data
     self.offset = None
+    # TODO: move to event data
     self.pathspec = None
     self.tag = None
     self.timestamp = None
