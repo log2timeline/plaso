@@ -159,7 +159,7 @@ class DynamicFieldsHelper(object):
 
     Raises:
       NoFormatterFound: if no event formatter can be found to match the data
-          type in the event.
+          type in the event data.
     """
     message, _ = self._output_mediator.GetFormattedMessages(event_data)
     if message is None:
@@ -182,7 +182,7 @@ class DynamicFieldsHelper(object):
 
     Raises:
       NoFormatterFound: if no event formatter can be found to match the data
-          type in the event.
+          type in the event data.
     """
     _, message_short = self._output_mediator.GetFormattedMessages(event_data)
     if message_short is None:
@@ -205,7 +205,7 @@ class DynamicFieldsHelper(object):
 
     Raises:
       NoFormatterFound: if no event formatter can be found to match the data
-          type in the event.
+          type in the event data.
     """
     _, source = self._output_mediator.GetFormattedSources(event, event_data)
     if source is None:
@@ -228,7 +228,7 @@ class DynamicFieldsHelper(object):
 
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data
-          type in the event.
+          type in the event data.
     """
     source_short, _ = self._output_mediator.GetFormattedSources(
         event, event_data)

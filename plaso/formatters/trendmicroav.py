@@ -74,7 +74,7 @@ class OfficeScanVirusDetectionLogEventFormatter(
 
   # pylint: disable=unused-argument
   def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for an event.
+    """Determines the formatted message strings for the event data.
 
     If any event values have a matching formatting function in VALUE_FORMATTERS,
     they are run through that function; then the dictionary is passed to the
@@ -90,7 +90,7 @@ class OfficeScanVirusDetectionLogEventFormatter(
       tuple(str, str): formatted message string and short message string.
 
     Raises:
-      WrongFormatter: if the event cannot be formatted by the formatter.
+      WrongFormatter: if the event data cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_data.data_type:
       raise errors.WrongFormatter(

@@ -98,7 +98,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
 
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data
-          type in the event.
+          type in the event data.
     """
     if not hasattr(event, 'timestamp'):
       logger.error('Unable to output event without timestamp.')
@@ -230,7 +230,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
 
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data
-          type in the event object.
+          type in the event data.object.
     """
     output_values = self._GetOutputValues(event, event_data)
 

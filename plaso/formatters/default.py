@@ -16,7 +16,7 @@ class DefaultFormatter(interface.EventFormatter):
 
   # pylint: disable=unused-argument
   def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for an event.
+    """Determines the formatted message strings for the event data.
 
     Args:
       formatter_mediator (FormatterMediator): mediates the interactions

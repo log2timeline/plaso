@@ -34,6 +34,10 @@ class TLNBaseOutputModule(interface.LinearOutputModule):
 
     Returns:
       str: formatted description field.
+
+    Raises:
+      NoFormatterFound: If no event formatter can be found to match the data
+          type in the event data.
     """
     date_time_string = timelib.Timestamp.CopyToIsoFormat(
         event.timestamp, timezone=self._output_mediator.timezone)
@@ -71,6 +75,10 @@ class TLNBaseOutputModule(interface.LinearOutputModule):
 
      Returns:
        str: formatted source field.
+
+    Raises:
+      NoFormatterFound: If no event formatter can be found to match the data
+          type in the event data.
     """
     source_short, _ = self._output_mediator.GetFormattedSources(
         event, event_data)

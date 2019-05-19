@@ -17,7 +17,7 @@ class WinRegistryServiceFormatter(winreg.WinRegistryGenericFormatter):
   DATA_TYPE = 'windows:registry:service'
 
   def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for an event.
+    """Determines the formatted message strings for the event data.
 
     Args:
       formatter_mediator (FormatterMediator): mediates the interactions between
@@ -29,7 +29,7 @@ class WinRegistryServiceFormatter(winreg.WinRegistryGenericFormatter):
       tuple(str, str): formatted message string and short message string.
 
     Raises:
-      WrongFormatter: if the event cannot be formatted by the formatter.
+      WrongFormatter: if the event data cannot be formatted by the formatter.
     """
     regvalue = getattr(event_data, 'regvalue', {})
     # Loop over all the registry value names in the service key.

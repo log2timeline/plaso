@@ -21,7 +21,7 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
 
   # pylint: disable=unused-argument
   def GetMessages(self, formatter_mediator, event_data):
-    """Determines the formatted message strings for an event.
+    """Determines the formatted message strings for the event data.
 
     Args:
       formatter_mediator (FormatterMediator): mediates the interactions
@@ -33,7 +33,7 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
       tuple(str, str): formatted message string and short message string.
 
     Raises:
-      WrongFormatter: if the event cannot be formatted by the formatter.
+      WrongFormatter: if the event data cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_data.data_type:
       raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(
@@ -71,7 +71,7 @@ class WinRegistryGenericFormatter(interface.EventFormatter):
       tuple(str, str): short and long source string.
 
     Raises:
-      WrongFormatter: if the event cannot be formatted by the formatter.
+      WrongFormatter: if the event data cannot be formatted by the formatter.
     """
     if self.DATA_TYPE != event_data.data_type:
       raise errors.WrongFormatter('Unsupported data type: {0:s}.'.format(

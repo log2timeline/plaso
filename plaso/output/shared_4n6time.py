@@ -112,7 +112,7 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
 
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data
-          type in the event.
+          type in the event data.
     """
     data_type = getattr(event_data, 'data_type', 'UNKNOWN')
 
