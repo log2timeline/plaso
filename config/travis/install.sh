@@ -119,13 +119,16 @@ then
 	if test -n "${TOXENV}";
 	then
 		DPKG_PACKAGES="build-essential liblzma-dev python${TRAVIS_PYTHON_VERSION} python${TRAVIS_PYTHON_VERSION}-dev tox";
-
 	else
 		DPKG_PACKAGES="";
 
 		if test "${TARGET}" = "coverage";
 		then
 			DPKG_PACKAGES="${DPKG_PACKAGES} curl git";
+
+		elif test "${TARGET}" = "jenkins2" || test "${TARGET}" = "jenkins3";
+		then
+			DPKG_PACKAGES="${DPKG_PACKAGES} sudo";
 
 		elif test ${TARGET} = "pylint";
 		then
@@ -141,16 +144,4 @@ then
 	docker exec -e "DEBIAN_FRONTEND=noninteractive" ${CONTAINER_NAME} sh -c "apt-get install -y ${DPKG_PACKAGES}";
 
 	docker cp ../plaso ${CONTAINER_NAME}:/
-
-elif test ${TRAVIS_OS_NAME} = "linux" && test ${TARGET} != "jenkins2" && test ${TARGET} != "jenkins3";
-then
-	sudo add-apt-repository ppa:gift/dev -y;
-	sudo apt-get update -q;
-
-	if test ${TRAVIS_PYTHON_VERSION} = "2.7";
-	then
-		sudo apt-get install -y ${DPKG_PYTHON2_DEPENDENCIES} ${DPKG_PYTHON2_TEST_DEPENDENCIES};
-	else
-		sudo apt-get install -y ${DPKG_PYTHON3_DEPENDENCIES} ${DPKG_PYTHON3_TEST_DEPENDENCIES};
-	fi
 fi
