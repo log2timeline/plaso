@@ -390,41 +390,39 @@ class ParserMediator(object):
     """Removes the last added parser or parser plugin from the parser chain."""
     self._parser_chain_components.pop()
 
-  # Pylint is confused by the format of the event docstring.
-  # pylint: disable=missing-param-doc,missing-type-doc
-  def ProcessEvent(
-      self, event, parser_chain=None, file_entry=None, query=None):
-    """Processes an event before it written to the storage.
+  def ProcessEventData(
+      self, event_data, parser_chain=None, file_entry=None, query=None):
+    """Processes event data before it written to the storage.
 
     Args:
-      event (EventObject|EventData): event or event data.
+      event_data (EventData): event data.
       parser_chain (Optional[str]): parsing chain up to this point.
       file_entry (Optional[dfvfs.FileEntry]): file entry, where None will
           use the current file entry set in the mediator.
-      query (Optional[str]): query that was used to obtain the event.
+      query (Optional[str]): query that was used to obtain the event data.
 
     Raises:
       KeyError: if there's an attempt to add a duplicate attribute value to the
-          event.
+          event data.
     """
-    # TODO: rename this to event.parser_chain or equivalent.
-    if not getattr(event, 'parser', None) and parser_chain:
-      event.parser = parser_chain
+    # TODO: rename this to event_data.parser_chain or equivalent.
+    if not getattr(event_data, 'parser', None) and parser_chain:
+      event_data.parser = parser_chain
 
     # TODO: deprecate text_prepend in favor of an event tag.
-    if not getattr(event, 'text_prepend', None) and self._text_prepend:
-      event.text_prepend = self._text_prepend
+    if not getattr(event_data, 'text_prepend', None) and self._text_prepend:
+      event_data.text_prepend = self._text_prepend
 
     if file_entry is None:
       file_entry = self._file_entry
 
     display_name = None
     if file_entry:
-      event.pathspec = file_entry.path_spec
+      event_data.pathspec = file_entry.path_spec
 
-      if not getattr(event, 'filename', None):
+      if not getattr(event_data, 'filename', None):
         path_spec = getattr(file_entry, 'path_spec', None)
-        event.filename = path_helper.PathHelper.GetRelativePathForPathSpec(
+        event_data.filename = path_helper.PathHelper.GetRelativePathForPathSpec(
             path_spec, mount_path=self._mount_path)
 
       if not display_name:
@@ -434,32 +432,29 @@ class ParserMediator(object):
 
       stat_object = file_entry.GetStat()
       inode_value = getattr(stat_object, 'ino', None)
-      # TODO: refactor to ProcessEventData.
-      # Note that we use getattr here since event can be either EventObject
-      # or EventData.
-      if getattr(event, 'inode', None) is None and inode_value is not None:
-        event.inode = self._GetInode(inode_value)
+      if getattr(event_data, 'inode', None) is None and inode_value is not None:
+        event_data.inode = self._GetInode(inode_value)
 
-    if not getattr(event, 'display_name', None) and display_name:
-      event.display_name = display_name
+    if not getattr(event_data, 'display_name', None) and display_name:
+      event_data.display_name = display_name
 
-    if not getattr(event, 'hostname', None) and self.hostname:
-      event.hostname = self.hostname
+    if not getattr(event_data, 'hostname', None) and self.hostname:
+      event_data.hostname = self.hostname
 
-    if not getattr(event, 'username', None):
-      user_sid = getattr(event, 'user_sid', None)
+    if not getattr(event_data, 'username', None):
+      user_sid = getattr(event_data, 'user_sid', None)
       username = self._knowledge_base.GetUsernameByIdentifier(user_sid)
       if username:
-        event.username = username
+        event_data.username = username
 
-    if not getattr(event, 'query', None) and query:
-      event.query = query
+    if not getattr(event_data, 'query', None) and query:
+      event_data.query = query
 
     for attribute, value in iter(self._extra_event_attributes.items()):
-      if hasattr(event, attribute):
+      if hasattr(event_data, attribute):
         raise KeyError('Event already has a value for {0:s}'.format(attribute))
 
-      setattr(event, attribute, value)
+      setattr(event_data, attribute, value)
 
   def ProduceEventSource(self, event_source):
     """Produces an event source.
@@ -499,8 +494,7 @@ class ParserMediator(object):
       # Make a copy of the event data before adding additional values.
       event_data = copy.deepcopy(event_data)
 
-      # TODO: refactor to ProcessEventData.
-      self.ProcessEvent(
+      self.ProcessEventData(
           event_data, parser_chain=self.GetParserChain(),
           file_entry=self._file_entry)
 
