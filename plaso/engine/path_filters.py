@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Path filters.
 
-Path filter are specified in filter files and are used during collection
+Path filters are specified in filter files and are used during collection
 to include or exclude file system paths.
 """
 
@@ -113,9 +113,3 @@ class PathCollectionFiltersHelper(filters_helper.CollectionFiltersHelper):
 
         elif path_filter.filter_type == PathFilter.FILTER_TYPE_INCLUDE:
           self.included_file_system_find_specs.append(find_spec)
-
-      if path_filter.prefixes:
-        logger.warning('Path prefixes not yet supported.')
-
-      if path_filter.suffixes:
-        logger.warning('Path suffixes not yet supported.')
