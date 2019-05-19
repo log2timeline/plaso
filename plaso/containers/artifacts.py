@@ -155,7 +155,7 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
 
     if 'windows' in product_lower_case:
       segment_index = product_lower_case.index('windows') + 1
-      if product_lower_case[segment_index] in ('(r)', 'server'):
+      if product_lower_case[segment_index] in ('(r)', 'server', 'web'):
         segment_index += 1
 
       # Check if the version has a suffix.
