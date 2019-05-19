@@ -8,15 +8,7 @@
 # Exit on error.
 set -e;
 
-if test "${TARGET}" = "jenkins3";
-then
-	./config/jenkins/linux/run_end_to_end_tests_py3.sh "travis";
-
-elif  test "${TARGET}" = "jenkins2";
-then
-	./config/jenkins/linux/run_end_to_end_tests.sh "travis";
-
-elif test "${TRAVIS_OS_NAME}" = "osx";
+if test "${TRAVIS_OS_NAME}" = "osx";
 then
 	PYTHONPATH=/Library/Python/2.7/site-packages/ /usr/bin/python ./run_tests.py;
 
@@ -73,6 +65,14 @@ then
 		CONTAINER_OPTIONS="${CODECOV_ENV} ${CONTAINER_OPTIONS}";
 
 		TEST_COMMAND="./config/travis/run_coverage.sh";
+
+	elif test "${TARGET}" = "jenkins2";
+	then
+		TEST_COMMAND="./config/jenkins/linux/run_end_to_end_tests.sh travis";
+
+	elif test "${TARGET}" = "jenkins3";
+	then
+		TEST_COMMAND="./config/jenkins/linux/run_end_to_end_tests_py3.sh travis";
 
 	elif test "${TARGET}" = "pylint";
 	then

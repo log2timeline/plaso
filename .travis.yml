@@ -105,20 +105,26 @@ matrix:
     os: osx
     osx_image: xcode9.2
     language: generic
-  - env: TARGET="jenkins3"
+  - name: "Jenkins on Ubuntu Bionic (18.04) (Docker) with Python 2.7"
+    env: [TARGET="jenkins2", UBUNTU_VERSION="18.04"]
     os: linux
     dist: xenial
     sudo: required
     group: edge
-    python: 3.5
-  - env: TARGET="jenkins2"
-    os: linux
-    dist: xenial
-    sudo: required
-    group: edge
+    language: python
     python: 2.7
-  allow_failures:
-  - env: TARGET="jenkins3"
+    services:
+    - docker
+  - name: "Jenkins on Ubuntu Bionic (18.04) (Docker) with Python 3.6"
+    env: [TARGET="jenkins3", UBUNTU_VERSION="18.04"]
+    os: linux
+    dist: xenial
+    sudo: required
+    group: edge
+    language: python
+    python: 3.6
+    services:
+    - docker
 install:
 - ./config/travis/install.sh
 script:
