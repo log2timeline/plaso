@@ -90,6 +90,15 @@ class ApacheAccessUnitTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
+    # Test the extraction warning.
+    warnings = list(storage_writer.GetWarnings())
+    warning = warnings[0]
+
+    self.assertEqual(warning.message, (
+        'unable to parse log line: "46.118.127.106 - - [20/May/2015:12:05:17 '
+        '+0000] "GET /scripts/grok-py-test/co..." at offset: 1589'))
+    self.assertEqual(warning.parser_chain, 'apache_access')
+
 
 if __name__ == '__main__':
   unittest.main()

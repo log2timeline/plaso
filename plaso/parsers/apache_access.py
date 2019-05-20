@@ -56,14 +56,7 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
 
   MAX_LINE_LENGTH = 2048
 
-  _PYPARSING_COMPONENTS = {
-      'remote_name': (pyparsing.Word(pyparsing.alphanums) |
-                      pyparsing.Literal('-')).setResultsName('remote_name'),
-      'user_name': (pyparsing.Word(pyparsing.alphanums) |
-                    pyparsing.Literal('-')).setResultsName('user_name'),
-  }
-
-  # date format [18/Sep/2011:19:18:28 -0400]
+  # Date format [18/Sep/2011:19:18:28 -0400]
   _DATE_TIME = pyparsing.Group(
       pyparsing.Suppress('[') +
       text_parser.PyparsingConstants.TWO_DIGITS.setResultsName('day') +
@@ -88,6 +81,10 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.SkipTo('"').setResultsName('http_request') +
       pyparsing.Suppress('"'))
 
+  _REMOTE_NAME = (
+      pyparsing.Word(pyparsing.alphanums) |
+      pyparsing.Literal('-')).setResultsName('remote_name')
+
   _RESPONSE_BYTES = (
       pyparsing.Literal('-') |
       text_parser.PyparsingConstants.INTEGER).setResultsName('response_bytes')
@@ -102,12 +99,16 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.SkipTo('"').setResultsName('user_agent') +
       pyparsing.Suppress('"'))
 
+  _USER_NAME = (
+      pyparsing.Word(pyparsing.alphanums) |
+      pyparsing.Literal('-')).setResultsName('user_name')
+
   # Defined in https://httpd.apache.org/docs/2.4/logs.html
   # format: "%h %l %u %t \"%r\" %>s %b"
   _COMMON_LOG_FORMAT_LINE = (
       text_parser.PyparsingConstants.IP_ADDRESS.setResultsName('ip_address') +
-      _PYPARSING_COMPONENTS['remote_name'] +
-      _PYPARSING_COMPONENTS['user_name'] +
+      _REMOTE_NAME +
+      _USER_NAME +
       _DATE_TIME +
       _HTTP_REQUEST +
       text_parser.PyparsingConstants.INTEGER.setResultsName('response_code') +
@@ -118,8 +119,8 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
   # format: "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
   _COMBINED_LOG_FORMAT_LINE = (
       text_parser.PyparsingConstants.IP_ADDRESS.setResultsName('ip_address') +
-      _PYPARSING_COMPONENTS['remote_name'] +
-      _PYPARSING_COMPONENTS['user_name'] +
+      _REMOTE_NAME +
+      _USER_NAME +
       _DATE_TIME +
       _HTTP_REQUEST +
       text_parser.PyparsingConstants.INTEGER.setResultsName('response_code') +

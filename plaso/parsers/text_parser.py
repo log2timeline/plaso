@@ -433,8 +433,8 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
         if len(line) > 80:
           line = '{0:s}...'.format(line[:77])
         parser_mediator.ProduceExtractionWarning(
-            'unable to parse log line: {0:s} at offset: {1:d}'.format(
-                repr(line), self._current_offset))
+            'unable to parse log line: "{0:s}" at offset: {1:d}'.format(
+                line, self._current_offset))
         consecutive_line_failures += 1
         if (consecutive_line_failures >
             self.MAXIMUM_CONSECUTIVE_LINE_FAILURES):
