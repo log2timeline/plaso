@@ -304,55 +304,91 @@ class IdentityExpression(Expression):
     return filter_implementation.IdentityFilter()
 
 
-# pylint: disable=attribute-defined-outside-init
-# pylint: disable=missing-docstring,missing-param-doc
-# pylint: disable=missing-type-doc,missing-yield-type-doc
-
-
 class Filter(object):
-  """Base class for every filter."""
+  """Filter interface.
+
+  Attributes:
+    args (list[object]): arguments provided to the filter.
+    value_expander (ValueExpander): value expanded that is used to expand
+        arguments into comparable values.
+    value_expander_cls (type): value expander class.
+  """
 
   def __init__(self, arguments=None, value_expander=None):
-    """Constructor.
+    """Initializes a filter.
+
+    Implementations expanders are provided by subclassing ValueExpander.
 
     Args:
-      arguments: Arguments to the filter.
-      value_expander: A callable that will be used to expand values for the
-      objects passed to this filter. Implementations expanders are provided by
-      subclassing ValueExpander.
+      arguments (Optional[object]): arguments.
+      value_expander (Optional[type]): class that is used to expand arguments
+          into comparable values.
 
     Raises:
-      ValueError: If the given value_expander is not a subclass of ValueExpander
+      ValueError: If value expander is not a subclass of ValueExpander.
     """
+    logging.debug('Adding {0!s}'.format(arguments))
+
+    if value_expander:
+      if not issubclass(value_expander, ValueExpander):
+        raise ValueError('{0:s} is not of type ValueExpander'.format(
+            type(value_expander)))
+
+    super(Filter, self).__init__()
+    self.args = arguments or []
     self.value_expander = None
     self.value_expander_cls = value_expander
-    if self.value_expander_cls:
-      if not issubclass(self.value_expander_cls, ValueExpander):
-        raise ValueError('{0:s} is not a valid value expander'.format(
-            self.value_expander_cls))
-      self.value_expander = self.value_expander_cls()
-    self.args = arguments or []
-    logging.debug('Adding {0!s}'.format(arguments))
+
+    if value_expander:
+      self.value_expander = value_expander()
 
   @abc.abstractmethod
   def Matches(self, obj):
-    """Whether object obj matches this filter."""
+    """Determines if the object matches the filter.
+
+    Args:
+      obj (object): object to compare against the filter.
+
+    Returns:
+      bool: True if the object matches the filter, False otherwise.
+    """
 
   def Filter(self, objects):
-    """Returns a list of objects that pass the filter."""
+    """Retrieves objects that match the filter.
+
+    Args:
+      objects (list[object]): objects to filter.
+
+    Returns:
+      list[object]: objects that match the filter.
+    """
     return filter(self.Matches, objects)
 
   def __str__(self):
+    """Retrieve a string representation of the filter.
+
+    Returns:
+      str: a string representation of the filter.
+    """
     return '{0:s}({1:s})'.format(self.__class__.__name__, ', '.join([
         str(argument) for argument in self.args]))
 
 
 class AndFilter(Filter):
-  """Performs a boolean AND of the given Filter instances as arguments.
+  """A filter that performs a boolean AND on the arguments.
 
-    Note that if no conditions are passed, all objects will pass.
+  Note that if no conditions are passed, all objects will pass.
   """
+
   def Matches(self, obj):
+    """Determines if the object matches the filter.
+
+    Args:
+      obj (object): object to compare against the filter.
+
+    Returns:
+      bool: True if the object matches the filter, False otherwise.
+    """
     for child_filter in self.args:
       if not child_filter.Matches(obj):
         return False
@@ -360,11 +396,20 @@ class AndFilter(Filter):
 
 
 class OrFilter(Filter):
-  """Performs a boolean OR of the given Filter instances as arguments.
+  """A filter that performs a boolean OR on the arguments.
 
   Note that if no conditions are passed, all objects will pass.
   """
+
   def Matches(self, obj):
+    """Determines if the object matches the filter.
+
+    Args:
+      obj (object): object to compare against the filter.
+
+    Returns:
+      bool: True if the object matches the filter, False otherwise.
+    """
     if not self.args:
       return True
 
@@ -375,72 +420,150 @@ class OrFilter(Filter):
 
 
 class Operator(Filter):
-  """Base class for all operators."""
+  """Interface for filters that represent operators."""
 
   @abc.abstractmethod
   def Matches(self, obj):
-    """Whether object obj matches this filter."""
+    """Determines if the object matches the filter.
+
+    Args:
+      obj (object): object to compare against the filter.
+
+    Returns:
+      bool: True if the object matches the filter, False otherwise.
+    """
 
 
 class IdentityFilter(Operator):
-  def Matches(self, _):
+  """A filter which always evaluates to True."""
+
+  def Matches(self, obj):
+    """Determines if the object matches the filter.
+
+    Args:
+      obj (object): object to compare against the filter.
+
+    Returns:
+      bool: True to indicated the object matches the filter.
+    """
     return True
 
 
+# TODO: remove, class is not used.
 class UnaryOperator(Operator):
-  """Base class for unary operators."""
+  """Interface for filters that represent unary operators."""
 
   def __init__(self, operand, **kwargs):
-    """Constructor."""
+    """Initializes an unary operator.
+
+    Args:
+      operand (str): operand.
+
+    Raises:
+      InvalidNumberOfOperands: if the number of operands provided is not
+          supported.
+    """
+    if len(operand) != 1:
+      raise errors.InvalidNumberOfOperands((
+          '{0:s} only supports 1 operand, provided were {1:d} '
+          'operands.').format(self.__class__.__name__, len(operand)))
+
     super(UnaryOperator, self).__init__(arguments=[operand], **kwargs)
-    if len(self.args) != 1:
-      raise errors.InvalidNumberOfOperands(
-          'Only one operand is accepted by {0:s}. Received {1:d}.'.format(
-              self.__class__.__name__, len(self.args)))
 
   @abc.abstractmethod
   def Matches(self, obj):
-    """Whether object obj matches this filter."""
+    """Determines if the object matches the filter.
+
+    Args:
+      obj (object): object to compare against the filter.
+
+    Returns:
+      bool: True if the object matches the filter, False otherwise.
+    """
 
 
 class BinaryOperator(Operator):
-  """Base class for binary operators.
+  """Interface for binary operators.
 
-  The left operand is always a path into the object which will be expanded for
-  values. The right operand is a value defined at initialization and is stored
-  at self.right_operand.
+  Attributes:
+    left_operand (object): left hand operand.
+    right_operand (object): right hand operand.
   """
-  def __init__(self, arguments=None, **kwargs):
-    super(BinaryOperator, self).__init__(arguments=arguments, **kwargs)
-    if len(self.args) != 2:
-      raise errors.InvalidNumberOfOperands(
-          'Only two operands are accepted by {0:s}. Received {1:s}.'.format(
-              self.__class__.__name__, len(self.args)))
 
-    self.left_operand = self.args[0]
-    self.right_operand = self.args[1]
+  def __init__(self, arguments=None, **kwargs):
+    """Initializes a binary operator.
+
+    Args:
+      arguments (Optional[object]): operands of the filter.
+
+    Raises:
+      InvalidNumberOfOperands: if the number of operands provided is not
+          supported.
+    """
+    if len(arguments) != 2:
+      raise errors.InvalidNumberOfOperands((
+          '{0:s} only supports 2 operands, provided were {1:d} '
+          'operands.').format(self.__class__.__name__, len(arguments)))
+
+    super(BinaryOperator, self).__init__(arguments=arguments, **kwargs)
+    self.left_operand = arguments[0]
+    self.right_operand = arguments[1]
 
   @abc.abstractmethod
   def Matches(self, obj):
-    """Whether object obj matches this filter."""
+    """Determines if the object matches the filter.
+
+    Args:
+      obj (object): object to compare against the filter.
+
+    Returns:
+      bool: True if the object matches the filter, False otherwise.
+    """
 
 
 class GenericBinaryOperator(BinaryOperator):
-  """Allows easy implementations of operators."""
+  """Shared functionality for common binary operators.
 
-  def __init__(self, **kwargs):
-    super(GenericBinaryOperator, self).__init__(**kwargs)
+  Attribute:
+    bool_value (bool): boolean value that represents the result of
+        the operation.
+  """
+
+  def __init__(self, arguments=None, **kwargs):
+    """Initializes a generic binary operator.
+
+    Args:
+      arguments (Optional[object]): operands of the filter.
+    """
+    super(GenericBinaryOperator, self).__init__(arguments=arguments, **kwargs)
     self.bool_value = True
 
   def FlipBool(self):
+    """Negates the value of the bool_value attribute."""
     logging.debug('Negative matching.')
     self.bool_value = not self.bool_value
 
+  @abc.abstractmethod
   def Operation(self, x, y):
-    """Performs the operation between two values."""
+    """Compares two values with the operator.
+
+    Args:
+      x (object): first value.
+      y (object): second value.
+
+    Returns:
+      bool: True if the values match according to the operator, False otherwise.
+    """
 
   def Operate(self, values):
-    """Takes a list of values and if at least one matches, returns True."""
+    """Determines if one or more values match the filter.
+
+    Args:
+      values (list[object]): values to match against the filter.
+
+    Returns:
+      bool: True if one or more values match, False otherwise.
+    """
     for val in values:
       try:
         if self.Operation(val, self.right_operand):
@@ -451,6 +574,14 @@ class GenericBinaryOperator(BinaryOperator):
     return False
 
   def Matches(self, obj):
+    """Determines if the object matches the filter.
+
+    Args:
+      obj (object): object to compare against the filter.
+
+    Returns:
+      bool: True if the object matches the filter, False otherwise.
+    """
     key = self.left_operand
     values = self.value_expander.Expand(obj, key)
     values = list(values)
@@ -460,65 +591,142 @@ class GenericBinaryOperator(BinaryOperator):
 
 
 class Equals(GenericBinaryOperator):
-  """Matches objects when the right operand equals the expanded value."""
+  """Equals (==) operator."""
 
   def Operation(self, x, y):
+    """Compares if two values are equal.
+
+    Args:
+      x (object): first value.
+      y (object): second value.
+
+    Returns:
+      bool: True if the values are equal, False otherwise.
+    """
     return x == y
 
 
-class NotEquals(Equals):
-  """Matches when the right operand isn't equal to the expanded value."""
+class NotEquals(GenericBinaryOperator):
+  """Not equals (!=) operator."""
 
-  def __init__(self, **kwargs):
-    super(NotEquals, self).__init__(**kwargs)
-    self.bool_value = False
+  def Operation(self, x, y):
+    """Compares if two values are not equal.
+
+    Args:
+      x (object): first value.
+      y (object): second value.
+
+    Returns:
+      bool: True if the values are not equal, False otherwise.
+    """
+    return x != y
 
 
 class Less(GenericBinaryOperator):
-  """Whether the expanded value >= right_operand."""
+  """Less than (<) operator."""
 
   def Operation(self, x, y):
+    """Compares if the first value is less than the second.
+
+    Args:
+      x (object): first value.
+      y (object): second value.
+
+    Returns:
+      bool: True if the first value is less than the second, False otherwise.
+    """
     return x < y
 
 
 class LessEqual(GenericBinaryOperator):
-  """Whether the expanded value <= right_operand."""
+  """Less than or equals (<=) operator."""
 
   def Operation(self, x, y):
+    """Compares if the first value is less than or equals the second.
+
+    Args:
+      x (object): first value.
+      y (object): second value.
+
+    Returns:
+      bool: True if the first value is than or equals the second, False
+          otherwise.
+    """
     return x <= y
 
 
 class Greater(GenericBinaryOperator):
-  """Whether the expanded value > right_operand."""
+  """Greater than (>) operator."""
 
   def Operation(self, x, y):
+    """Compares if the first value is greater than the second.
+
+    Args:
+      x (object): first value.
+      y (object): second value.
+
+    Returns:
+      bool: True if the first value is greater than the second, False otherwise.
+    """
     return x > y
 
 
 class GreaterEqual(GenericBinaryOperator):
-  """Whether the expanded value >= right_operand."""
+  """Greater than or equals (>=) operator."""
 
   def Operation(self, x, y):
+    """Compares if the first value is greater than or equals the second.
+
+    Args:
+      x (object): first value.
+      y (object): second value.
+
+    Returns:
+      bool: True if the first value is greater than or equals the second, False
+          otherwise.
+    """
     return x >= y
 
 
 class Contains(GenericBinaryOperator):
-  """Whether the right operand is contained in the value."""
+  """Operator to determine if a value contains another value."""
 
   def Operation(self, x, y):
+    """Compares if the second value is part of the first.
+
+    Note that this method will do a case insensitive comparion if the first
+    value is a string.
+
+    Args:
+      x (object): first value.
+      y (object): second value.
+
+    Returns:
+      bool: True if the second value is part of the first, False otherwise.
+    """
     if isinstance(x, py2to3.STRING_TYPES):
       return y.lower() in x.lower()
 
     return y in x
 
 
+# TODO: Change to an N-ary Operator?
 class InSet(GenericBinaryOperator):
-  # TODO: Change to an N-ary Operator?
-
-  """Whether all values are contained within the right operand."""
+  """Operator to determine if a value is part of another value."""
 
   def Operation(self, x, y):
-    """Whether x is fully contained in y."""
+    """Compares if the first value is part of the second.
+
+    Note that this method will do a case insensitive string comparion if
+    the first value is a string.
+
+    Args:
+      x (object): first value.
+      y (object): second value.
+
+    Returns:
+      bool: True if the first value is part of the second, False otherwise.
+    """
     if x in y:
       return True
 
@@ -537,23 +745,54 @@ class InSet(GenericBinaryOperator):
       return False
 
 
+# TODO: is GenericBinaryOperator the most suitable super class here?
+# Would BinaryOperator be a better fit?
 class Regexp(GenericBinaryOperator):
-  """Whether the value matches the regexp in the right operand."""
+  """Operator to determine if a value matches a regular expression.
 
-  def __init__(self, *children, **kwargs):
-    super(Regexp, self).__init__(*children, **kwargs)
+  Attributes:
+    compiled_re (???): compiled regular expression.
+  """
+
+  def __init__(self, arguments=None, **kwargs):
+    """Initializes a regular expression operator.
+
+    This operator uses case senstive comparision.
+
+    Args:
+      arguments (Optional[object]): operands of the filter.
+
+    Raises:
+      ValueError: if the regular expression is malformed.
+    """
+    super(Regexp, self).__init__(arguments=arguments, **kwargs)
+
     # Note that right_operand is not necessarily a string.
     logging.debug('Compiled: {0!s}'.format(self.right_operand))
+
     try:
-      self.compiled_re = re.compile(
-          GetUnicodeString(self.right_operand), re.DOTALL)
+      expression = GetUnicodeString(self.right_operand)
+      compiled_re = re.compile(expression, re.DOTALL)
     except re.error:
       raise ValueError('Regular expression "{0!s}" is malformed.'.format(
           self.right_operand))
 
-  def Operation(self, x, unused_y):
+    self.compiled_re = compiled_re
+
+  def Operation(self, x, y):
+    """Compares if the first value matches a regular expression.
+
+    Args:
+      x (object): first value.
+      y (object): second value.
+
+    Returns:
+      bool: True if the first value matches the regular expression, False
+          otherwise.
+    """
     try:
-      if self.compiled_re.search(GetUnicodeString(x)):
+      string_value = GetUnicodeString(x)
+      if self.compiled_re.search(string_value):
         return True
     except TypeError:
       pass
@@ -562,18 +801,32 @@ class Regexp(GenericBinaryOperator):
 
 
 class RegexpInsensitive(Regexp):
-  """Whether the value matches the regexp in the right operand."""
+  """Operator to determine if a value matches a regular expression."""
 
-  def __init__(self, *children, **kwargs):
-    super(RegexpInsensitive, self).__init__(*children, **kwargs)
+  def __init__(self, arguments=None, **kwargs):
+    """Initializes a regular expression operator.
+
+    This operator uses case insenstive comparision.
+
+    Args:
+      arguments (Optional[object]): operands of the filter.
+
+    Raises:
+      ValueError: if the regular expression is malformed.
+    """
+    super(RegexpInsensitive, self).__init__(arguments=arguments, **kwargs)
+
     # Note that right_operand is not necessarily a string.
     logging.debug('Compiled: {0!s}'.format(self.right_operand))
+
     try:
-      self.compiled_re = re.compile(GetUnicodeString(self.right_operand),
-                                    re.I | re.DOTALL)
+      expression = GetUnicodeString(self.right_operand)
+      compiled_re = re.compile(expression, re.I | re.DOTALL)
     except re.error:
       raise ValueError('Regular expression "{0!s}" is malformed.'.format(
           self.right_operand))
+
+    self.compiled_re = compiled_re
 
 
 class Context(Operator):
@@ -585,14 +838,12 @@ class Context(Operator):
   imported functions name.
 
   Imagine that a malicious DLL is injected into processes and its indicators are
-  that it only imports one function and that it is RegQueryValueEx. Yo'd write
-  your indicator like this:
-
+  that it only imports one function and that it is RegQueryValueEx. You would
+  write your indicator like this:
 
   AndOperator(
     Equal("ImportedDLLs.ImpFunctions.Name", "RegQueryValueEx"),
-    Equal("ImportedDLLs.NumImpFunctions", "1")
-    )
+    Equal("ImportedDLLs.NumImpFunctions", "1"))
 
   Now imagine you have these two processes on a given system.
 
@@ -637,11 +888,11 @@ class Context(Operator):
   To write such an indicator you need to specify a context of ImportedDLLs for
   these two clauses. Such that you convert your indicator to::
 
-      Context("ImportedDLLs",
-              AndOperator(
-                Equal("ImpFunctions.Name", "RegQueryValueEx"),
-                Equal("NumImpFunctions", "1")
-              ))
+      Context(
+        "ImportedDLLs",
+        AndOperator(
+          Equal("ImpFunctions.Name", "RegQueryValueEx"),
+          Equal("NumImpFunctions", "1")))
 
   Context will execute the filter specified as the second parameter for each of
   the objects under "ImportedDLLs", thus applying the condition per DLL, not per
@@ -649,12 +900,32 @@ class Context(Operator):
   """
 
   def __init__(self, arguments=None, **kwargs):
+    """Initializes a context operator.
+
+    Args:
+      arguments (Optional[object]): operands of the filter.
+
+    Raises:
+      InvalidNumberOfOperands: if the number of operands provided is not
+          supported.
+    """
     if len(arguments) != 2:
-      raise errors.InvalidNumberOfOperands('Context accepts only 2 operands.')
+      raise errors.InvalidNumberOfOperands((
+          '{0:s} only supports 2 operands, provided were {1:d} '
+          'operands.').format(self.__class__.__name__, len(arguments)))
+
     super(Context, self).__init__(arguments=arguments, **kwargs)
     self.context, self.condition = self.args
 
   def Matches(self, obj):
+    """Determines if the object matches the filter.
+
+    Args:
+      obj (object): object to compare against the filter.
+
+    Returns:
+      bool: True if the object matches the filter, False otherwise.
+    """
     for object_list in self.value_expander.Expand(obj, self.context):
       for sub_object in object_list:
         if self.condition.Matches(sub_object):
@@ -663,28 +934,50 @@ class Context(Operator):
 
 
 class ValueExpander(object):
-  """Encapsulates the logic to expand values available in an object.
+  """Value expander interface.
 
-  Once instantiated and called, this class returns all the values that follow a
-  given field path.
+  The value expander contains the logic to expand values in an object.
   """
 
   FIELD_SEPARATOR = '.'
 
   def _GetAttributeName(self, path):
-    """Returns the attribute name to fetch given a path."""
+    """Retrieves the attribute name to fetch given a path.
+
+    Args:
+      path (list[str]): object path, that contains the attribute names.
+
+    Returns:
+      str: attribute name.
+    """
     return path[0]
 
-  def _GetValue(self, unused_obj, unused_attr_name):
-    """Returns the value of tha attribute attr_name."""
-    raise NotImplementedError()
+  @abc.abstractmethod
+  def _GetValue(self, obj, attr_name):
+    """Retrieves the value of a specific object attribute.
+
+    Args:
+      obj (object): object to retrieve the value from.
+      attr_name (str): name of the attribute to retrieve the value from.
+
+    Returns:
+      object: attribute value.
+    """
 
   def _AtLeaf(self, attr_value):
-    """Called when at a leaf value. Should yield a value."""
+    """Retrieves the attribute value of a leaf node.
+
+    Yields:
+      object: attribute value.
+    """
     yield attr_value
 
   def _AtNonLeaf(self, attr_value, path):
-    """Called when at a non-leaf value. Should recurse and yield values."""
+    """Retrieves the attribute value of a branch (non-leaf) node.
+
+    Yields:
+      object: attribute value.
+    """
     try:
       # Check first for iterables
       # If it's a dictionary, we yield it
@@ -700,7 +993,7 @@ class ValueExpander(object):
         yield value
 
   def Expand(self, obj, path):
-    """Returns a list of all the values for the given path in the object obj.
+    """Retrieves the attribute values from an object given an object path.
 
     Given a path such as ["sub1", "sub2"] it returns all the values available
     in obj.sub1.sub2 as a list. sub1 and sub2 must be data attributes or
@@ -711,11 +1004,12 @@ class ValueExpander(object):
     list of all the values under the given path for the input object.
 
     Args:
-      obj: An object that will be traversed for the given path
-      path: A list of strings
+      obj (object): object that will be traversed.
+      path (list[str]): object path to traverse, that contains the attribute
+          names.
 
     Yields:
-      The values once the object is traversed.
+      object: attribute value.
     """
     if isinstance(path, py2to3.STRING_TYPES):
       path = path.split(self.FIELD_SEPARATOR)
@@ -734,37 +1028,80 @@ class ValueExpander(object):
 
 
 class AttributeValueExpander(ValueExpander):
-  """An expander that gives values based on object attribute names."""
+  """Value expander that expands based on object attribute names."""
 
   def _GetValue(self, obj, attr_name):
+    """Retrieves the value of a specific object attribute.
+
+    Args:
+      obj (object): object to retrieve the value from.
+      attr_name (str): name of the attribute to retrieve the value from.
+
+    Returns:
+      object: attribute value or None if attribute is not available.
+    """
     return getattr(obj, attr_name, None)
 
 
 class LowercaseAttributeValueExpander(AttributeValueExpander):
-  """An expander that lowercases all attribute names before access."""
+  """Value expander that expands based on lower case object attribute names."""
 
   def _GetAttributeName(self, path):
+    """Retrieves the attribute name to fetch given a path.
+
+    Args:
+      path (list[str]): object path, that contains the attribute names.
+
+    Returns:
+      str: attribute name.
+    """
     return path[0].lower()
 
 
 class DictValueExpander(ValueExpander):
-  """An expander that gets values from dictionary access to the object."""
+  """Value expander that expands based on dictonary keys."""
 
   def _GetValue(self, obj, attr_name):
+    """Retrieves the value of a specific object attribute.
+
+    Args:
+      obj (object): object to retrieve the value from.
+      attr_name (str): name of the attribute to retrieve the value from.
+
+    Returns:
+      object: attribute value or None if attribute is not available.
+    """
     return obj.get(attr_name, None)
 
 
+# TODO: what is a "basic" expression?
 class BasicExpression(Expression):
-  """Basic Expression."""
+  """Basic expression.
+
+  Attribute:
+    bool_value (bool): boolean value that represents the result of
+        the operation.
+  """
 
   def __init__(self):
+    """Initializes a basic expression."""
     super(BasicExpression, self).__init__()
     self.bool_value = True
 
   def FlipBool(self):
+    """Negates the value of the bool_value attribute."""
     self.bool_value = not self.bool_value
 
   def Compile(self, filter_implementation):
+    """Given a filter implementation, compile this expression.
+
+    Args:
+      filter_implementation (type): class of the filter object, which should
+          be a subclass of objectfilter.BaseFilterImplementation.
+
+    Returns:
+      object: filter object of the binary expression.
+    """
     arguments = [self.attribute]
     op_str = self.operator.lower()
     operator = filter_implementation.OPS.get(op_str, None)
@@ -784,29 +1121,55 @@ class BasicExpression(Expression):
 
 
 class ContextExpression(Expression):
-  """Represents the context operator."""
+  """Context operator expression."""
 
-  def __init__(self, attribute="", part=None):
+  def __init__(self, attribute='', part=None):
+    """Initializes a context expression.
+
+    Args:
+      attribute (str): attribute.
+      part (str): expression part.
+    """
+    super(ContextExpression, self).__init__()
     self.attribute = attribute
     self.args = []
     if part:
       self.args.append(part)
-    super(ContextExpression, self).__init__()
 
   def __str__(self):
+    """Retrieve a string representation of the expression.
+
+    Returns:
+      str: a string representation of the expression.
+    """
     return 'Context({0:s} {1:s})'.format(
         self.attribute, [str(x) for x in self.args])
 
   def SetExpression(self, expression):
-    """Set the expression."""
-    if isinstance(expression, Expression):
-      self.args = [expression]
-    else:
-      raise errors.ParseError(
-          'Expected expression, got {0:s}.'.format(expression))
+    """Sets the expression.
+
+    Args:
+      expression (Expression): expression.
+
+    Raises:
+      ParseError: if expression is not of type Expression.
+    """
+    if not isinstance(expression, Expression):
+      raise errors.ParseError('Expected expression, got {0:s}.'.format(
+          type(expression)))
+
+    self.args = [expression]
 
   def Compile(self, filter_implementation):
-    """Compile the expression."""
+    """Given a filter implementation, compile this expression.
+
+    Args:
+      filter_implementation (type): class of the filter object, which should
+          be a subclass of objectfilter.BaseFilterImplementation.
+
+    Returns:
+      object: filter object of the binary expression.
+    """
     arguments = [self.attribute]
     for argument in self.args:
       arguments.append(argument.Compile(filter_implementation))
@@ -830,6 +1193,7 @@ class Parser(object):
     error (int): ???
     filter_string (str): ???
     flags (int): ???
+    flipped (bool): ???
     processed (int): ???
     processed_buffer (str): buffer that holds the part of the expression
         that has been processed.
@@ -907,6 +1271,7 @@ class Parser(object):
     self.error = 0
     self.filter_string = data
     self.flags = 0
+    self.flipped = None
     self.processed = 0
     self.processed_buffer = ''
     self.stack = []
@@ -915,7 +1280,7 @@ class Parser(object):
     self.string = None
 
   def _CombineContext(self):
-    """Combines context."""
+    """Combines a context expression."""
     # Context can merge from item 0
     for i in range(len(self.stack)-1, 0, -1):
       item = self.stack[i-1]
@@ -928,7 +1293,7 @@ class Parser(object):
     self.stack = list(filter(None, self.stack))
 
   def _CombineBinaryExpressions(self, operator):
-    """Combines binary expressions.
+    """Combines a binary expression.
 
     Args:
       operator (str): operator, such as "and" or "&&".
@@ -1283,17 +1648,17 @@ class Parser(object):
     an Error.
 
     Args:
-      string: The string that matched.
-      match: the match object (instance of re.MatchObject).
-             Where match.group(1) contains the escaped code.
+      string (str): string that matched.
+      match (re.MatchObject): the match object, where match.group(1) contains
+          the escaped code.
 
     Raises:
-      ParseError: When the escaped string is not one of [\'"rnbt]
+      ParseError: When the escaped string is not one of [\'"rnbt].
     """
-    if match.group(1) in '\\\'"rnbt\\.ws':
-      self.string += codecs.decode(string, 'unicode_escape')
-    else:
+    if match.group(1) not in '\\\'"rnbt\\.ws':
       raise errors.ParseError('Invalid escape character {0:s}.'.format(string))
+
+    self.string += codecs.decode(string, 'unicode_escape')
 
   def StringFinish(self, **unused_kwargs):
     """Finishes a string operation.
