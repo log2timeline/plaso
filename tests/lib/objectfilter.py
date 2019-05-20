@@ -292,8 +292,8 @@ class ObjectFilterTest(unittest.TestCase):
   def setUp(self):
     """Makes preparations before running an individual test."""
     self.file = DummyFile()
-    self.filter_imp = LowercaseAttributeFilterImplementation
-    self.value_expander = self.filter_imp.FILTERS['ValueExpander']
+    self.value_expander = (
+        LowercaseAttributeFilterImplementation.FILTERS['ValueExpander'])
 
   operator_tests = {
       objectfilter.Less: [
@@ -518,9 +518,10 @@ class ObjectFilterTest(unittest.TestCase):
         '  AND num_imported_functions == 1',
         ')'])
 
-    filter_ = objectfilter.Parser(query).Parse()
-    filter_ = filter_.Compile(self.filter_imp)
-    self.assertEqual(True, filter_.Matches(self.file))
+    parser = objectfilter.Parser(query)
+    expression = parser.Parse()
+    event_filter = expression.Compile(LowercaseAttributeFilterImplementation)
+    self.assertEqual(True, event_filter.Matches(self.file))
 
   def testRegexpRaises(self):
     with self.assertRaises(ValueError):
@@ -529,16 +530,19 @@ class ObjectFilterTest(unittest.TestCase):
           value_expander=self.value_expander)
 
   def testEscaping(self):
-    parser = objectfilter.Parser(r'a is "\n"').Parse()
-    self.assertEqual(parser.args[0], '\n')
+    parser = objectfilter.Parser(r'a is "\n"')
+    expression = parser.Parse()
+    self.assertEqual(expression.args[0], '\n')
+
     # Invalid escape sequence.
     parser = objectfilter.Parser(r'a is "\z"')
     with self.assertRaises(errors.ParseError):
       parser.Parse()
 
     # Can escape the backslash.
-    parser = objectfilter.Parser(r'a is "\\"').Parse()
-    self.assertEqual(parser.args[0], '\\')
+    parser = objectfilter.Parser(r'a is "\\"')
+    expression = parser.Parse()
+    self.assertEqual(expression.args[0], '\\')
 
     # Test hexadecimal escaping.
 
@@ -548,31 +552,54 @@ class ObjectFilterTest(unittest.TestCase):
       parser.Parse()
 
     # Instead, this is what one should write.
-    parser = objectfilter.Parser(r'a is "\\xJZ"').Parse()
-    self.assertEqual(parser.args[0], r'\xJZ')
+    parser = objectfilter.Parser(r'a is "\\xJZ"')
+    expression = parser.Parse()
+    self.assertEqual(expression.args[0], r'\xJZ')
+
     # Standard hex-escape.
-    parser = objectfilter.Parser('a is "\x41\x41\x41"').Parse()
-    self.assertEqual(parser.args[0], 'AAA')
+    parser = objectfilter.Parser('a is "\x41\x41\x41"')
+    expression = parser.Parse()
+    self.assertEqual(expression.args[0], 'AAA')
+
     # Hex-escape + a character.
-    parser = objectfilter.Parser('a is "\x414"').Parse()
-    self.assertEqual(parser.args[0], 'A4')
+    parser = objectfilter.Parser('a is "\x414"')
+    expression = parser.Parse()
+    self.assertEqual(expression.args[0], 'A4')
+
     # How to include r'\x41'.
-    parser = objectfilter.Parser('a is "\\x41"').Parse()
-    self.assertEqual(parser.args[0], '\x41')
+    parser = objectfilter.Parser('a is "\\x41"')
+    expression = parser.Parse()
+    self.assertEqual(expression.args[0], '\x41')
 
   def testParse(self):
     # Arguments are either int, float or quoted string.
-    objectfilter.Parser('attribute == 1').Parse()
-    objectfilter.Parser('attribute == 0x10').Parse()
+    parser = objectfilter.Parser('attribute == 1')
+    expression = parser.Parse()
+    self.assertIsNotNone(expression)
+
+    parser = objectfilter.Parser('attribute == 0x10')
+    expression = parser.Parse()
+    self.assertIsNotNone(expression)
+
     parser = objectfilter.Parser('attribute == 1a')
     with self.assertRaises(errors.ParseError):
       parser.Parse()
 
-    objectfilter.Parser('attribute == 1.2').Parse()
-    objectfilter.Parser('attribute == \'bla\'').Parse()
-    objectfilter.Parser('attribute == "bla"').Parse()
+    parser = objectfilter.Parser('attribute == 1.2')
+    expression = parser.Parse()
+    self.assertIsNotNone(expression)
+
+    parser = objectfilter.Parser('attribute == \'bla\'')
+    expression = parser.Parse()
+    self.assertIsNotNone(expression)
+
+    parser = objectfilter.Parser('attribute == "bla"')
+    expression = parser.Parse()
+    self.assertIsNotNone(expression)
+
     parser = objectfilter.Parser('something == red')
-    self.assertRaises(errors.ParseError, parser.Parse)
+    with self.assertRaises(errors.ParseError):
+      parser.Parse()
 
     # Can't start with AND.
     parser = objectfilter.Parser('and something is \'Blue\'')
@@ -597,12 +624,18 @@ class ObjectFilterTest(unittest.TestCase):
       parser.Parse()
 
     # Need to close braces.
-    objectfilter.Parser('(a is 3)').Parse()
+    parser = objectfilter.Parser('(a is 3)')
+    expression = parser.Parse()
+    self.assertIsNotNone(expression)
+
     parser = objectfilter.Parser('(a is 3')
-    self.assertRaises(errors.ParseError, parser.Parse)
+    with self.assertRaises(errors.ParseError):
+      parser.Parse()
+
     # Need to open braces to close them.
     parser = objectfilter.Parser('a is 3)')
-    self.assertRaises(errors.ParseError, parser.Parse)
+    with self.assertRaises(errors.ParseError):
+      parser.Parse()
 
     # Context Operator alone is not accepted.
     parser = objectfilter.Parser('@attributes')
@@ -610,7 +643,10 @@ class ObjectFilterTest(unittest.TestCase):
       parser.Parse()
 
     # Accepted only with braces.
-    objectfilter.Parser('@attributes( name is \'adrien\')').Parse()
+    parser = objectfilter.Parser('@attributes( name is \'adrien\')')
+    expression = parser.Parse()
+    self.assertIsNotNone(expression)
+
     # Not without them.
     parser = objectfilter.Parser('@attributes name is \'adrien\'')
     with self.assertRaises(errors.ParseError):
@@ -618,10 +654,16 @@ class ObjectFilterTest(unittest.TestCase):
 
     # Can nest context operators.
     query = '@imported_dlls( @imported_function( name is \'OpenFileA\'))'
-    objectfilter.Parser(query).Parse()
+    parser = objectfilter.Parser(query)
+    expression = parser.Parse()
+    self.assertIsNotNone(expression)
+
     # Can nest context operators and mix braces without it messing up.
     query = '@imported_dlls( @imported_function( name is \'OpenFileA\'))'
-    parser = objectfilter.Parser(query).Parse()
+    parser = objectfilter.Parser(query)
+    expression = parser.Parse()
+    self.assertIsNotNone(expression)
+
     query = '\n'.join([
         '@imported_dlls',
         '(',
@@ -631,7 +673,10 @@ class ObjectFilterTest(unittest.TestCase):
         '  )',
         ')'])
 
-    parser = objectfilter.Parser(query).Parse()
+    parser = objectfilter.Parser(query)
+    expression = parser.Parse()
+    self.assertIsNotNone(expression)
+
     # Mix context and binary operators.
     query = '\n'.join([
         '@imported_dlls',
@@ -642,7 +687,10 @@ class ObjectFilterTest(unittest.TestCase):
         '  ) AND num_functions == 2',
         ')'])
 
-    parser = objectfilter.Parser(query).Parse()
+    parser = objectfilter.Parser(query)
+    expression = parser.Parse()
+    self.assertIsNotNone(expression)
+
     # Also on the right.
     query = '\n'.join([
         '@imported_dlls',
@@ -654,41 +702,60 @@ class ObjectFilterTest(unittest.TestCase):
         '  )',
         ')'])
 
-  # Altogether.
-  # There's an imported dll that imports OpenFileA AND
-  # an imported DLL matching advapi32.dll that imports RegQueryValueExA AND
-  # and it exports a symbol called 'inject'.
-  query = '\n'.join([
-      '@imported_dlls( @imported_function ( name is "OpenFileA" ) )',
-      'AND',
-      '@imported_dlls (',
-      '  name regexp "(?i)advapi32.dll"',
-      '  AND @imported_function ( name is "RegQueryValueEx" )',
-      ')',
-      'AND @exported_symbols(name is "inject")'])
+    parser = objectfilter.Parser(query)
+    with self.assertRaises(errors.ParseError):
+      parser.Parse()
+
+    # Altogether.
+    # There's an imported dll that imports OpenFileA AND
+    # an imported DLL matching advapi32.dll that imports RegQueryValueExA AND
+    # and it exports a symbol called 'inject'.
+    query = '\n'.join([
+        '@imported_dlls( @imported_function ( name is "OpenFileA" ) )',
+        'AND',
+        '@imported_dlls (',
+        '  name regexp "(?i)advapi32.dll"',
+        '  AND @imported_function ( name is "RegQueryValueEx" )',
+        ')',
+        'AND @exported_symbols(name is "inject")'])
+
+    parser = objectfilter.Parser(query)
+    with self.assertRaises(errors.ParseError):
+      parser.Parse()
 
   def testCompile(self):
     obj = DummyObject('something', 'Blue')
-    parser = objectfilter.Parser('something == \'Blue\'').Parse()
-    filter_ = parser.Compile(self.filter_imp)
-    self.assertEqual(filter_.Matches(obj), True)
-    parser = objectfilter.Parser('something == \'Red\'').Parse()
-    filter_ = parser.Compile(self.filter_imp)
-    self.assertEqual(filter_.Matches(obj), False)
-    parser = objectfilter.Parser('something == "Red"').Parse()
-    filter_ = parser.Compile(self.filter_imp)
-    self.assertEqual(filter_.Matches(obj), False)
+    parser = objectfilter.Parser('something == \'Blue\'')
+    expression = parser.Parse()
+    event_filter = expression.Compile(LowercaseAttributeFilterImplementation)
+    self.assertEqual(event_filter.Matches(obj), True)
+
+    parser = objectfilter.Parser('something == \'Red\'')
+    expression = parser.Parse()
+    event_filter = expression.Compile(LowercaseAttributeFilterImplementation)
+    self.assertEqual(event_filter.Matches(obj), False)
+
+    parser = objectfilter.Parser('something == "Red"')
+    expression = parser.Parse()
+    event_filter = expression.Compile(LowercaseAttributeFilterImplementation)
+    self.assertEqual(event_filter.Matches(obj), False)
+
     obj = DummyObject('size', 4)
-    parser = objectfilter.Parser('size < 3').Parse()
-    filter_ = parser.Compile(self.filter_imp)
-    self.assertEqual(filter_.Matches(obj), False)
-    parser = objectfilter.Parser('size == 4').Parse()
-    filter_ = parser.Compile(self.filter_imp)
-    self.assertEqual(filter_.Matches(obj), True)
+    parser = objectfilter.Parser('size < 3')
+    expression = parser.Parse()
+    event_filter = expression.Compile(LowercaseAttributeFilterImplementation)
+    self.assertEqual(event_filter.Matches(obj), False)
+
+    parser = objectfilter.Parser('size == 4')
+    expression = parser.Parse()
+    event_filter = expression.Compile(LowercaseAttributeFilterImplementation)
+    self.assertEqual(event_filter.Matches(obj), True)
+
     query = 'something is \'Blue\' and size not contains 3'
-    parser = objectfilter.Parser(query).Parse()
-    filter_ = parser.Compile(self.filter_imp)
-    self.assertEqual(filter_.Matches(obj), False)
+    parser = objectfilter.Parser(query)
+    expression = parser.Parse()
+    event_filter = expression.Compile(LowercaseAttributeFilterImplementation)
+    self.assertEqual(event_filter.Matches(obj), False)
 
 
 if __name__ == '__main__':
