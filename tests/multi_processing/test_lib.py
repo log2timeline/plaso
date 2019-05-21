@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+from plaso.containers import events
 from plaso.engine import knowledge_base
 from plaso.parsers import mediator as parsers_mediator
 from plaso.storage.fake import writer as fake_writer
@@ -12,6 +13,35 @@ from tests import test_lib as shared_test_lib
 
 class MultiProcessingTestCase(shared_test_lib.BaseTestCase):
   """Multi-processing test case."""
+
+  def _CreateTestEvent(self, event_values):
+    """Create a test event and event data.
+
+    Args:
+      event_values (dict[str, str]): event values.
+
+    Returns:
+      tuple[EventObject, WindowsRegistryServiceEventData]: event and event
+          data for testing.
+    """
+    copy_of_event_values = dict(event_values)
+
+    timestamp = copy_of_event_values.get('timestamp', None)
+    if 'timestamp' in copy_of_event_values:
+      del copy_of_event_values['timestamp']
+
+    timestamp_desc = copy_of_event_values.get('timestamp_desc', None)
+    if 'timestamp_desc' in copy_of_event_values:
+      del copy_of_event_values['timestamp_desc']
+
+    event = events.EventObject()
+    event.timestamp = timestamp
+    event.timestamp_desc = timestamp_desc
+
+    event_data = events.EventData()
+    event_data.CopyFromDict(copy_of_event_values)
+
+    return event, event_data
 
   def _CreateKnowledgeBase(self, knowledge_base_values=None, timezone='UTC'):
     """Creates a knowledge base.
