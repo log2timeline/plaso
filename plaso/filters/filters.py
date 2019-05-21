@@ -18,38 +18,21 @@ class Filter(object):
 
   Attributes:
     args (list[object]): arguments provided to the filter.
-    value_expander (ValueExpander): value expanded that is used to expand
-        arguments into comparable values.
-    value_expander_cls (type): value expander class.
   """
 
-  def __init__(self, arguments=None, value_expander=None):
+  def __init__(self, arguments=None):
     """Initializes a filter.
 
     Implementations expanders are provided by subclassing ValueExpander.
 
     Args:
       arguments (Optional[object]): arguments.
-      value_expander (Optional[type]): class that is used to expand arguments
-          into comparable values.
-
-    Raises:
-      ValueError: If value expander is not a subclass of ValueExpander.
     """
     logging.debug('Adding {0!s}'.format(arguments))
 
-    if value_expander:
-      if not issubclass(value_expander, value_expanders.ValueExpander):
-        raise ValueError('{0:s} is not of type ValueExpander'.format(
-            type(value_expander)))
-
     super(Filter, self).__init__()
+    self._value_expander = value_expanders.EventValueExpander()
     self.args = arguments or []
-    self.value_expander = None
-    self.value_expander_cls = value_expander
-
-    if value_expander:
-      self.value_expander = value_expander()
 
   def __str__(self):
     """Retrieve a string representation of the filter.
@@ -292,7 +275,7 @@ class GenericBinaryOperator(BinaryOperator):
       bool: True if the object matches the filter, False otherwise.
     """
     key = self.left_operand
-    values = self.value_expander.Expand(obj, key)
+    values = self._value_expander.Expand(obj, key)
     values = list(values)
     if values and self.Operate(values):
       return self.bool_value
@@ -635,7 +618,7 @@ class Context(Operator):
     Returns:
       bool: True if the object matches the filter, False otherwise.
     """
-    for object_list in self.value_expander.Expand(obj, self.context):
+    for object_list in self._value_expander.Expand(obj, self.context):
       for sub_object in object_list:
         if self.condition.Matches(sub_object):
           return True

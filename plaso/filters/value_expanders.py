@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-import abc
 import logging
 
 from plaso.filters import helpers
@@ -12,161 +11,10 @@ from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import py2to3
 
 
-class ValueExpander(object):
-  """Value expander interface.
+class EventValueExpander(object):
+  """Value expander for event filters."""
 
-  The value expander contains the logic to expand values in an object.
-  """
-
-  FIELD_SEPARATOR = '.'
-
-  def _GetAttributeName(self, path):
-    """Retrieves the attribute name to fetch given a path.
-
-    Args:
-      path (list[str]): object path, that contains the attribute names.
-
-    Returns:
-      str: attribute name.
-    """
-    return path[0]
-
-  @abc.abstractmethod
-  def _GetValue(self, obj, attr_name):
-    """Retrieves the value of a specific object attribute.
-
-    Args:
-      obj (object): object to retrieve the value from.
-      attr_name (str): name of the attribute to retrieve the value from.
-
-    Returns:
-      object: attribute value.
-    """
-
-  def _AtLeaf(self, attr_value):
-    """Retrieves the attribute value of a leaf node.
-
-    Yields:
-      object: attribute value.
-    """
-    yield attr_value
-
-  def _AtNonLeaf(self, attr_value, path):
-    """Retrieves the attribute value of a branch (non-leaf) node.
-
-    Yields:
-      object: attribute value.
-    """
-    try:
-      # Check first for iterables
-      # If it's a dictionary, we yield it
-      if isinstance(attr_value, dict):
-        yield attr_value
-      else:
-        # If it's an iterable, we recurse on each value.
-        for sub_obj in attr_value:
-          for value in self.Expand(sub_obj, path[1:]):
-            yield value
-    except TypeError:  # This is then not iterable, we recurse with the value
-      for value in self.Expand(attr_value, path[1:]):
-        yield value
-
-  def Expand(self, obj, path):
-    """Retrieves the attribute values from an object given an object path.
-
-    Given a path such as ["sub1", "sub2"] it returns all the values available
-    in obj.sub1.sub2 as a list. sub1 and sub2 must be data attributes or
-    properties.
-
-    If sub1 returns a list of objects, or a generator, Expand aggregates the
-    values for the remaining path for each of the objects, thus returning a
-    list of all the values under the given path for the input object.
-
-    Args:
-      obj (object): object that will be traversed.
-      path (list[str]): object path to traverse, that contains the attribute
-          names.
-
-    Yields:
-      object: attribute value.
-    """
-    if isinstance(path, py2to3.STRING_TYPES):
-      path = path.split(self.FIELD_SEPARATOR)
-
-    attr_name = self._GetAttributeName(path)
-    attr_value = self._GetValue(obj, attr_name)
-    if attr_value is None:
-      return
-
-    if len(path) == 1:
-      for value in self._AtLeaf(attr_value):
-        yield value
-    else:
-      for value in self._AtNonLeaf(attr_value, path):
-        yield value
-
-
-class AttributeValueExpander(ValueExpander):
-  """Value expander that expands based on object attribute names."""
-
-  def _GetValue(self, obj, attr_name):
-    """Retrieves the value of a specific object attribute.
-
-    Args:
-      obj (object): object to retrieve the value from.
-      attr_name (str): name of the attribute to retrieve the value from.
-
-    Returns:
-      object: attribute value or None if attribute is not available.
-    """
-    return getattr(obj, attr_name, None)
-
-
-class LowercaseAttributeValueExpander(AttributeValueExpander):
-  """Value expander that expands based on lower case object attribute names."""
-
-  def _GetAttributeName(self, path):
-    """Retrieves the attribute name to fetch given a path.
-
-    Args:
-      path (list[str]): object path, that contains the attribute names.
-
-    Returns:
-      str: attribute name.
-    """
-    return path[0].lower()
-
-
-class DictValueExpander(ValueExpander):
-  """Value expander that expands based on dictonary keys."""
-
-  def _GetValue(self, obj, attr_name):
-    """Retrieves the value of a specific object attribute.
-
-    Args:
-      obj (object): object to retrieve the value from.
-      attr_name (str): name of the attribute to retrieve the value from.
-
-    Returns:
-      object: attribute value or None if attribute is not available.
-    """
-    return obj.get(attr_name, None)
-
-
-# TODO: rename class.
-class PlasoValueExpander(AttributeValueExpander):
-  """An expander that gives values based on object attribute names."""
-
-  def _GetAttributeName(self, path):
-    """Retrieves the attribute name to fetch given a path.
-
-    Args:
-      path (list[str]): object path, that contains the attribute names.
-
-    Returns:
-      str: attribute name.
-    """
-    return path[0].lower()
+  _FIELD_SEPARATOR = '.'
 
   def _GetMessage(self, event):
     """Retrieves a formatted message string.
@@ -247,3 +95,42 @@ class PlasoValueExpander(AttributeValueExpander):
       return source_long
 
     return None
+
+  def Expand(self, obj, path):  # pylint: disable=missing-type-doc
+    """Retrieves the attribute values from an object given an object path.
+
+    Given a path such as ["sub1", "sub2"] it returns all the values available
+    in obj.sub1.sub2 as a list. sub1 and sub2 must be data attributes or
+    properties.
+
+    If sub1 returns a list of objects, or a generator, Expand aggregates the
+    values for the remaining path for each of the objects, thus returning a
+    list of all the values under the given path for the input object.
+
+    Args:
+      obj (object): object that will be traversed.
+      path (str|list[str]): object path to traverse, that contains the attribute
+          names.
+
+    Yields:
+      object: attribute value.
+    """
+    if isinstance(path, py2to3.STRING_TYPES):
+      path = path.split(self._FIELD_SEPARATOR)
+
+    attr_name = path[0].lower()
+
+    attr_value = self._GetValue(obj, attr_name)
+    if attr_value is not None:
+      if len(path) == 1 or isinstance(attr_value, dict):
+        yield attr_value
+
+      else:
+        try:
+          for sub_obj in iter(attr_value):
+            for value in self.Expand(sub_obj, path[1:]):
+              yield value
+
+        except TypeError:
+          for value in self.Expand(attr_value, path[1:]):
+            yield value
