@@ -99,7 +99,6 @@ import re
 
 from plaso.filters import expressions
 from plaso.filters import filters
-from plaso.filters import value_expanders
 from plaso.lib import errors
 
 
@@ -707,5 +706,4 @@ class BaseFilterImplementation(object):
       'AndFilter': filters.AndFilter,
       'Context': filters.Context,
       'IdentityFilter': filters.IdentityFilter,
-      'OrFilter': filters.OrFilter,
-      'ValueExpander': value_expanders.PlasoValueExpander}
+      'OrFilter': filters.OrFilter}

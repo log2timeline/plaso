@@ -9,13 +9,13 @@ import unittest
 from plaso.containers import events
 from plaso.filters import expression_parser
 from plaso.filters import filters
-from plaso.filters import value_expanders
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
 from plaso.lib import timelib
 
 from tests import test_lib as shared_test_lib
+from tests.filters import test_lib
 
 
 class PfilterFakeFormatter(formatters_interface.EventFormatter):
@@ -134,95 +134,6 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
 # pylint: disable=missing-docstring
 
 
-class DummyObject(object):
-  def __init__(self, key, value):
-    setattr(self, key, value)
-
-
-class HashObject(object):
-  def __init__(self, hash_value=None):
-    self.value = hash_value
-
-  @property
-  def md5(self):
-    return self.value
-
-  def __eq__(self, y):
-    return self.value == y
-
-  def __lt__(self, y):
-    return self.value < y
-
-
-class Dll(object):
-  def __init__(self, name, imported_functions=None, exported_functions=None):
-    self.name = name
-    self._imported_functions = imported_functions or []
-    self.num_imported_functions = len(self._imported_functions)
-    self.exported_functions = exported_functions or []
-    self.num_exported_functions = len(self.exported_functions)
-
-  @property
-  def imported_functions(self):
-    for fn in self._imported_functions:
-      yield fn
-
-
-class DummyFile(object):
-  _FILENAME = 'boot.ini'
-
-  ATTR1 = 'Backup'
-  ATTR2 = 'Archive'
-  HASH1 = '123abc'
-  HASH2 = '456def'
-
-  non_callable_leaf = 'yoda'
-
-  def __init__(self):
-    self.non_callable = HashObject(self.HASH1)
-    self.non_callable_repeated = [
-        DummyObject('desmond', ['brotha', 'brotha']),
-        DummyObject('desmond', ['brotha', 'sista'])]
-    self.imported_dll1 = Dll('a.dll', ['FindWindow', 'CreateFileA'])
-    self.imported_dll2 = Dll('b.dll', ['RegQueryValueEx'])
-
-  @property
-  def name(self):
-    return self._FILENAME
-
-  @property
-  def attributes(self):
-    return [self.ATTR1, self.ATTR2]
-
-  @property
-  def hash(self):
-    return [HashObject(self.HASH1), HashObject(self.HASH2)]
-
-  @property
-  def size(self):
-    return 10
-
-  @property
-  def deferred_values(self):
-    for v in ['a', 'b']:
-      yield v
-
-  @property
-  def novalues(self):
-    return []
-
-  @property
-  def imported_dlls(self):
-    return [self.imported_dll1, self.imported_dll2]
-
-  def Callable(self):
-    raise RuntimeError('This can not be called.')
-
-  @property
-  def float(self):
-    return 123.9823
-
-
 class LowercaseAttributeFilterImplementation(
     expression_parser.BaseFilterImplementation):
   """Does field name access on the lowercase version of names.
@@ -233,17 +144,13 @@ class LowercaseAttributeFilterImplementation(
 
   FILTERS = {}
   FILTERS.update(expression_parser.BaseFilterImplementation.FILTERS)
-  FILTERS.update({
-      'ValueExpander': value_expanders.LowercaseAttributeValueExpander})
 
 
 class ObjectFilterTest(unittest.TestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self.file = DummyFile()
-    self.value_expander = (
-        LowercaseAttributeFilterImplementation.FILTERS['ValueExpander'])
+    self.file = test_lib.DummyFile()
 
   operator_tests = {
       filters.Less: [
@@ -316,73 +223,13 @@ class ObjectFilterTest(unittest.TestCase):
   def testBinaryOperators(self):
     for operator, test_data in self.operator_tests.items():
       for test_unit in test_data:
-        kwargs = {'arguments': test_unit[1],
-                  'value_expander': self.value_expander}
-        ops = operator(**kwargs)
+        ops = operator(arguments=test_unit[1])
         self.assertEqual(
             test_unit[0], ops.Matches(self.file),
             'test case {0!s} failed'.format(test_unit))
         if hasattr(ops, 'FlipBool'):
           ops.FlipBool()
           self.assertEqual(not test_unit[0], ops.Matches(self.file))
-
-  def testExpand(self):
-    # Case insensitivity.
-    values_lowercase = self.value_expander().Expand(self.file, 'size')
-    values_uppercase = self.value_expander().Expand(self.file, 'Size')
-    self.assertListEqual(list(values_lowercase), list(values_uppercase))
-
-    # Existing, non-repeated, leaf is a value.
-    values = self.value_expander().Expand(self.file, 'size')
-    self.assertListEqual(list(values), [10])
-
-    # Existing, non-repeated, leaf is iterable.
-    values = self.value_expander().Expand(self.file, 'attributes')
-    self.assertListEqual(list(values), [[DummyFile.ATTR1, DummyFile.ATTR2]])
-
-    # Existing, repeated, leaf is value.
-    values = self.value_expander().Expand(self.file, 'hash.md5')
-    self.assertListEqual(list(values), [DummyFile.HASH1, DummyFile.HASH2])
-
-    # Existing, repeated, leaf is iterable.
-    values = self.value_expander().Expand(
-        self.file, 'non_callable_repeated.desmond')
-    self.assertListEqual(
-        list(values), [['brotha', 'brotha'], ['brotha', 'sista']])
-
-    # Now with an iterator.
-    values = self.value_expander().Expand(self.file, 'deferred_values')
-    self.assertListEqual([list(value) for value in values], [['a', 'b']])
-
-    # Iterator > generator.
-    values = self.value_expander().Expand(
-        self.file, 'imported_dlls.imported_functions')
-    expected = [['FindWindow', 'CreateFileA'], ['RegQueryValueEx']]
-    self.assertListEqual([list(value) for value in values], expected)
-
-    # Non-existing first path.
-    values = self.value_expander().Expand(self.file, 'nonexistant')
-    self.assertListEqual(list(values), [])
-
-    # Non-existing in the middle.
-    values = self.value_expander().Expand(self.file, 'hash.mink.boo')
-    self.assertListEqual(list(values), [])
-
-    # Non-existing as a leaf.
-    values = self.value_expander().Expand(self.file, 'hash.mink')
-    self.assertListEqual(list(values), [])
-
-    # Non-callable leaf.
-    values = self.value_expander().Expand(self.file, 'non_callable_leaf')
-    self.assertListEqual(list(values), [DummyFile.non_callable_leaf])
-
-    # callable.
-    values = self.value_expander().Expand(self.file, 'Callable')
-    self.assertListEqual(list(values), [])
-
-    # leaf under a callable. Will return nothing.
-    values = self.value_expander().Expand(self.file, 'Callable.a')
-    self.assertListEqual(list(values), [])
 
   def testGenericBinaryOperator(self):
     class TestBinaryOperator(filters.GenericBinaryOperator):
@@ -392,60 +239,42 @@ class ObjectFilterTest(unittest.TestCase):
         return self.values.append(x)
 
     # Test a common binary operator.
-    tbo = TestBinaryOperator(
-        arguments=['whatever', 0], value_expander=self.value_expander)
+    tbo = TestBinaryOperator(arguments=['whatever', 0])
     self.assertEqual(tbo.right_operand, 0)
     self.assertEqual(tbo.args[0], 'whatever')
-    tbo.Matches(DummyObject('whatever', 'id'))
-    tbo.Matches(DummyObject('whatever', 'id2'))
-    tbo.Matches(DummyObject('whatever', 'bg'))
-    tbo.Matches(DummyObject('whatever', 'bg2'))
+    tbo.Matches(test_lib.DummyObject('whatever', 'id'))
+    tbo.Matches(test_lib.DummyObject('whatever', 'id2'))
+    tbo.Matches(test_lib.DummyObject('whatever', 'bg'))
+    tbo.Matches(test_lib.DummyObject('whatever', 'bg2'))
     self.assertListEqual(tbo.values, ['id', 'id2', 'bg', 'bg2'])
 
   def testContext(self):
     with self.assertRaises(errors.InvalidNumberOfOperands):
-      filters.Context(
-          arguments=['context'], value_expander=self.value_expander)
+      filters.Context(arguments=['context'])
 
     with self.assertRaises(errors.InvalidNumberOfOperands):
-      filters.Context(
-          arguments=[
-              'context', filters.Equals(
-                  arguments=['path', 'value'],
-                  value_expander=self.value_expander),
-              filters.Equals(
-                  arguments=['another_path', 'value'],
-                  value_expander=self.value_expander)],
-          value_expander=self.value_expander)
+      filters.Context(arguments=[
+          'context', filters.Equals(arguments=['path', 'value']),
+          filters.Equals(arguments=['another_path', 'value'])])
 
     # One imported_dll imports 2 functions AND one imported_dll imports
     # function RegQueryValueEx.
     arguments = [
-        filters.Equals(
-            arguments=['imported_dlls.num_imported_functions', 1],
-            value_expander=self.value_expander),
-        filters.Contains(
-            arguments=['imported_dlls.imported_functions',
-                       'RegQueryValueEx'],
-            value_expander=self.value_expander)]
+        filters.Equals(arguments=['imported_dlls.num_imported_functions', 1]),
+        filters.Contains(arguments=[
+            'imported_dlls.imported_functions', 'RegQueryValueEx'])]
     condition = filters.AndFilter(arguments=arguments)
 
     # Without context, it matches because both filters match separately.
     self.assertEqual(True, condition.Matches(self.file))
 
     arguments = [
-        filters.Equals(
-            arguments=['num_imported_functions', 2],
-            value_expander=self.value_expander),
-        filters.Contains(
-            arguments=['imported_functions', 'RegQueryValueEx'],
-            value_expander=self.value_expander)]
+        filters.Equals(arguments=['num_imported_functions', 2]),
+        filters.Contains(arguments=['imported_functions', 'RegQueryValueEx'])]
     condition = filters.AndFilter(arguments=arguments)
 
     # The same DLL imports 2 functions AND one of these is RegQueryValueEx.
-    context = filters.Context(
-        arguments=['imported_dlls', condition],
-        value_expander=self.value_expander)
+    context = filters.Context(arguments=['imported_dlls', condition])
 
     # With context, it doesn't match because both don't match in the same dll.
     self.assertEqual(False, context.Matches(self.file))
@@ -453,17 +282,11 @@ class ObjectFilterTest(unittest.TestCase):
     # One imported_dll imports only 1 function AND one imported_dll imports
     # function RegQueryValueEx.
     condition = filters.AndFilter(arguments=[
-        filters.Equals(
-            arguments=['num_imported_functions', 1],
-            value_expander=self.value_expander),
-        filters.Contains(
-            arguments=['imported_functions', 'RegQueryValueEx'],
-            value_expander=self.value_expander)])
+        filters.Equals(arguments=['num_imported_functions', 1]),
+        filters.Contains(arguments=['imported_functions', 'RegQueryValueEx'])])
 
     # The same DLL imports 1 function AND it's RegQueryValueEx.
-    context = filters.Context(
-        ['imported_dlls', condition],
-        value_expander=self.value_expander)
+    context = filters.Context(['imported_dlls', condition])
     self.assertEqual(True, context.Matches(self.file))
 
     # Now test the context with a straight query.
@@ -481,9 +304,7 @@ class ObjectFilterTest(unittest.TestCase):
 
   def testRegexpRaises(self):
     with self.assertRaises(ValueError):
-      filters.Regexp(
-          arguments=['name', 'I [dont compile'],
-          value_expander=self.value_expander)
+      filters.Regexp(arguments=['name', 'I [dont compile'])
 
   def testEscaping(self):
     parser = expression_parser.EventFilterExpressionParser(r'a is "\n"')
@@ -688,7 +509,7 @@ class ObjectFilterTest(unittest.TestCase):
       parser.Parse()
 
   def testCompile(self):
-    obj = DummyObject('something', 'Blue')
+    obj = test_lib.DummyObject('something', 'Blue')
     parser = expression_parser.EventFilterExpressionParser(
         'something == \'Blue\'')
     expression = parser.Parse()
@@ -707,7 +528,7 @@ class ObjectFilterTest(unittest.TestCase):
     event_filter = expression.Compile(LowercaseAttributeFilterImplementation)
     self.assertEqual(event_filter.Matches(obj), False)
 
-    obj = DummyObject('size', 4)
+    obj = test_lib.DummyObject('size', 4)
     parser = expression_parser.EventFilterExpressionParser('size < 3')
     expression = parser.Parse()
     event_filter = expression.Compile(LowercaseAttributeFilterImplementation)

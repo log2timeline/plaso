@@ -188,9 +188,8 @@ class ContextExpression(Expression):
       filter_object = argument.Compile(filter_implementation)
       arguments.append(filter_object)
 
-    expander = filter_implementation.FILTERS['ValueExpander']
     context_cls = filter_implementation.FILTERS['Context']
-    return context_cls(arguments=arguments, value_expander=expander)
+    return context_cls(arguments=arguments)
 
   def SetExpression(self, expression):
     """Sets the expression.
@@ -274,8 +273,7 @@ class EventExpression(Expression):
           helpers.TimeRangeCache.SetLowerTimestamp(argument.data)
 
     arguments.extend(self.args)
-    expander = filter_implementation.FILTERS['ValueExpander']
-    ops = operator(arguments=arguments, value_expander=expander)
+    ops = operator(arguments=arguments)
     if not self.bool_value:
       if hasattr(ops, 'FlipBool'):
         ops.FlipBool()
