@@ -36,13 +36,21 @@ class NativePythonFormatterHelper(object):
 
     pathspec = getattr(event_data, 'pathspec', None)
     if pathspec:
-      lines_of_text.append('[Pathspec]:')
-      attribute_string = pathspec.comparable.replace('\n', '\n  ')
-      attribute_string = '  {0:s}\n'.format(attribute_string)
-      lines_of_text.append(attribute_string)
+      lines_of_text.extend([
+          '',
+          '[Pathspec]:'])
+      lines_of_text.extend([
+          '  {0:s}'.format(line) for line in pathspec.comparable.split('\n')])
 
-    lines_of_text.append('[Reserved attributes]:')
-    out_additional = ['[Additional attributes]:']
+      # Remove additional empty line.
+      lines_of_text.pop()
+
+    reserved_attributes = [
+        '',
+        '[Reserved attributes]:']
+    additional_attributes = [
+        '',
+        '[Additional attributes]:']
 
     for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
       # TODO: some pyparsing based parsers can generate empty bytes values
@@ -57,23 +65,25 @@ class NativePythonFormatterHelper(object):
       if attribute_name not in definitions.RESERVED_VARIABLE_NAMES:
         attribute_string = '  {{{0!s}}} {1!s}'.format(
             attribute_name, attribute_value)
-        out_additional.append(attribute_string)
+        additional_attributes.append(attribute_string)
 
       elif attribute_name != 'pathspec':
         attribute_string = '  {{{0!s}}} {1!s}'.format(
             attribute_name, attribute_value)
-        lines_of_text.append(attribute_string)
+        reserved_attributes.append(attribute_string)
 
-    lines_of_text.append('')
-    out_additional.append('')
-
-    lines_of_text.extend(out_additional)
+    lines_of_text.extend(reserved_attributes)
+    lines_of_text.extend(additional_attributes)
 
     if event_tag:
-      lines_of_text.append('[Tag]:')
-      attribute_string = '  {{labels}} {0!s}'.format(event_tag.labels)
-      lines_of_text.append(attribute_string)
-      lines_of_text.append('')
+      labels = [
+          '\'{0:s}\''.format(label) for label in event_tag.labels]
+      lines_of_text.extend([
+          '',
+          '[Tag]:',
+          '  {{labels}} [{0:s}]'.format(', '.join(labels))])
+
+    lines_of_text.extend(['', ''])
 
     return '\n'.join(lines_of_text)
 
