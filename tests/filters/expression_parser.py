@@ -8,6 +8,8 @@ import unittest
 
 from plaso.containers import events
 from plaso.filters import expression_parser
+from plaso.filters import filters
+from plaso.filters import value_expanders
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import errors
@@ -30,13 +32,6 @@ class PfilterFakeFormatter(formatters_interface.EventFormatter):
 formatters_manager.FormattersManager.RegisterFormatter(PfilterFakeFormatter)
 
 
-class TestFilterImplementation(expression_parser.BaseFilterImplementation):
-  """Filter implementation for testing."""
-
-  AndFilter = expression_parser.AndFilter
-  IdentityFilter = expression_parser.IdentityFilter
-
-
 class TokenTest(shared_test_lib.BaseTestCase):
   """Tests the event filter parser token."""
 
@@ -46,71 +41,8 @@ class TokenTest(shared_test_lib.BaseTestCase):
     self.assertIsNotNone(token)
 
 
-class ExpressionTest(shared_test_lib.BaseTestCase):
-  """Tests the event filter parser expression."""
-
-  def testAddArg(self):
-    """Tests the AddArg function."""
-    expression = expression_parser.Expression()
-
-    expression.AddArg('argument1')
-
-    with self.assertRaises(errors.ParseError):
-      expression.AddArg('argument2')
-
-  def testSetAttribute(self):
-    """Tests the SetAttribute function."""
-    expression = expression_parser.Expression()
-
-    expression.SetAttribute('attribute')
-
-  def testSetOperator(self):
-    """Tests the SetOperator function."""
-    expression = expression_parser.Expression()
-
-    expression.SetOperator('=')
-
-
-class BinaryExpressionTest(shared_test_lib.BaseTestCase):
-  """Tests the event filter parser binary expression."""
-
-  def testAddOperands(self):
-    """Tests the AddOperands function."""
-    expression = expression_parser.BinaryExpression(operator='and')
-    left_hand_expression = expression_parser.Expression()
-    right_hand_expression = expression_parser.Expression()
-
-    expression.AddOperands(left_hand_expression, right_hand_expression)
-
-    with self.assertRaises(errors.ParseError):
-      expression.AddOperands(None, right_hand_expression)
-
-    with self.assertRaises(errors.ParseError):
-      expression.AddOperands(left_hand_expression, None)
-
-  def testCompile(self):
-    """Tests the Compile function."""
-    expression = expression_parser.BinaryExpression(operator='and')
-
-    expression.Compile(TestFilterImplementation)
-
-    expression = expression_parser.BinaryExpression()
-
-    with self.assertRaises(errors.ParseError):
-      expression.Compile(TestFilterImplementation)
-
-
-class IdentityExpressionTest(shared_test_lib.BaseTestCase):
-  """Tests the event filter parser identify expression."""
-
-  def testCompile(self):
-    """Tests the Compile function."""
-    expression = expression_parser.IdentityExpression()
-    expression.Compile(TestFilterImplementation)
-
-
-class ParserTest(shared_test_lib.BaseTestCase):
-  """Tests the expression_parser parser."""
+class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
+  """Tests the event filter expression parser."""
 
   # TODO: add tests for _CombineBinaryExpressions
   # TODO: add tests for _CombineParenthesis
@@ -302,7 +234,7 @@ class LowercaseAttributeFilterImplementation(
   FILTERS = {}
   FILTERS.update(expression_parser.BaseFilterImplementation.FILTERS)
   FILTERS.update({
-      'ValueExpander': expression_parser.LowercaseAttributeValueExpander})
+      'ValueExpander': value_expanders.LowercaseAttributeValueExpander})
 
 
 class ObjectFilterTest(unittest.TestCase):
@@ -314,28 +246,28 @@ class ObjectFilterTest(unittest.TestCase):
         LowercaseAttributeFilterImplementation.FILTERS['ValueExpander'])
 
   operator_tests = {
-      expression_parser.Less: [
+      filters.Less: [
           (True, ['size', 1000]),
           (True, ['size', 11]),
           (False, ['size', 10]),
           (False, ['size', 0]),
           (False, ['float', 1.0]),
           (True, ['float', 123.9824])],
-      expression_parser.LessEqual: [
+      filters.LessEqual: [
           (True, ['size', 1000]),
           (True, ['size', 11]),
           (True, ['size', 10]),
           (False, ['size', 9]),
           (False, ['float', 1.0]),
           (True, ['float', 123.9823])],
-      expression_parser.Greater: [
+      filters.Greater: [
           (True, ['size', 1]),
           (True, ['size', 9.23]),
           (False, ['size', 10]),
           (False, ['size', 1000]),
           (True, ['float', 122]),
           (True, ['float', 1.0])],
-      expression_parser.GreaterEqual: [
+      filters.GreaterEqual: [
           (False, ['size', 1000]),
           (False, ['size', 11]),
           (True, ['size', 10]),
@@ -345,7 +277,7 @@ class ObjectFilterTest(unittest.TestCase):
           (True, ['float', 123.9823]),
           # Comparisons works with strings, although it might be a bit silly.
           (True, ['name', 'aoot.ini'])],
-      expression_parser.Contains: [
+      filters.Contains: [
           # Contains works with strings.
           (True, ['name', 'boot.ini']),
           (True, ['name', 'boot']),
@@ -354,15 +286,15 @@ class ObjectFilterTest(unittest.TestCase):
           (True, ['imported_dlls.imported_functions', 'FindWindow']),
           # But not with numbers.
           (False, ['size', 12])],
-      expression_parser.Equals: [
+      filters.Equals: [
           (True, ['name', 'boot.ini']),
           (False, ['name', 'foobar']),
           (True, ['float', 123.9823])],
-      expression_parser.NotEquals: [
+      filters.NotEquals: [
           (False, ['name', 'boot.ini']),
           (True, ['name', 'foobar']),
           (True, ['float', 25])],
-      expression_parser.InSet: [
+      filters.InSet: [
           (True, ['name', ['boot.ini', 'autoexec.bat']]),
           (True, ['name', 'boot.ini']),
           (False, ['name', 'NOPE']),
@@ -370,7 +302,7 @@ class ObjectFilterTest(unittest.TestCase):
           (True, ['attributes', ['Archive', 'Backup', 'Nonexisting']]),
           # Not all values of attributes are within these.
           (False, ['attributes', ['Executable', 'Sparse']])],
-      expression_parser.Regexp: [
+      filters.Regexp: [
           (True, ['name', '^boot.ini$']),
           (True, ['name', 'boot.ini']),
           (False, ['name', '^$']),
@@ -453,7 +385,7 @@ class ObjectFilterTest(unittest.TestCase):
     self.assertListEqual(list(values), [])
 
   def testGenericBinaryOperator(self):
-    class TestBinaryOperator(expression_parser.GenericBinaryOperator):
+    class TestBinaryOperator(filters.GenericBinaryOperator):
       values = list()
 
       def Operation(self, x, _):
@@ -472,16 +404,16 @@ class ObjectFilterTest(unittest.TestCase):
 
   def testContext(self):
     with self.assertRaises(errors.InvalidNumberOfOperands):
-      expression_parser.Context(
+      filters.Context(
           arguments=['context'], value_expander=self.value_expander)
 
     with self.assertRaises(errors.InvalidNumberOfOperands):
-      expression_parser.Context(
+      filters.Context(
           arguments=[
-              'context', expression_parser.Equals(
+              'context', filters.Equals(
                   arguments=['path', 'value'],
                   value_expander=self.value_expander),
-              expression_parser.Equals(
+              filters.Equals(
                   arguments=['another_path', 'value'],
                   value_expander=self.value_expander)],
           value_expander=self.value_expander)
@@ -489,29 +421,29 @@ class ObjectFilterTest(unittest.TestCase):
     # One imported_dll imports 2 functions AND one imported_dll imports
     # function RegQueryValueEx.
     arguments = [
-        expression_parser.Equals(
+        filters.Equals(
             arguments=['imported_dlls.num_imported_functions', 1],
             value_expander=self.value_expander),
-        expression_parser.Contains(
+        filters.Contains(
             arguments=['imported_dlls.imported_functions',
                        'RegQueryValueEx'],
             value_expander=self.value_expander)]
-    condition = expression_parser.AndFilter(arguments=arguments)
+    condition = filters.AndFilter(arguments=arguments)
 
     # Without context, it matches because both filters match separately.
     self.assertEqual(True, condition.Matches(self.file))
 
     arguments = [
-        expression_parser.Equals(
+        filters.Equals(
             arguments=['num_imported_functions', 2],
             value_expander=self.value_expander),
-        expression_parser.Contains(
+        filters.Contains(
             arguments=['imported_functions', 'RegQueryValueEx'],
             value_expander=self.value_expander)]
-    condition = expression_parser.AndFilter(arguments=arguments)
+    condition = filters.AndFilter(arguments=arguments)
 
     # The same DLL imports 2 functions AND one of these is RegQueryValueEx.
-    context = expression_parser.Context(
+    context = filters.Context(
         arguments=['imported_dlls', condition],
         value_expander=self.value_expander)
 
@@ -520,16 +452,16 @@ class ObjectFilterTest(unittest.TestCase):
 
     # One imported_dll imports only 1 function AND one imported_dll imports
     # function RegQueryValueEx.
-    condition = expression_parser.AndFilter(arguments=[
-        expression_parser.Equals(
+    condition = filters.AndFilter(arguments=[
+        filters.Equals(
             arguments=['num_imported_functions', 1],
             value_expander=self.value_expander),
-        expression_parser.Contains(
+        filters.Contains(
             arguments=['imported_functions', 'RegQueryValueEx'],
             value_expander=self.value_expander)])
 
     # The same DLL imports 1 function AND it's RegQueryValueEx.
-    context = expression_parser.Context(
+    context = filters.Context(
         ['imported_dlls', condition],
         value_expander=self.value_expander)
     self.assertEqual(True, context.Matches(self.file))
@@ -549,7 +481,7 @@ class ObjectFilterTest(unittest.TestCase):
 
   def testRegexpRaises(self):
     with self.assertRaises(ValueError):
-      expression_parser.Regexp(
+      filters.Regexp(
           arguments=['name', 'I [dont compile'],
           value_expander=self.value_expander)
 
@@ -807,7 +739,7 @@ class PFilterTest(unittest.TestCase):
     parser = expression_parser.EventFilterExpressionParser(query)
     expression = parser.Parse()
     event_filter = expression.Compile(
-        expression_parser.PlasoAttributeFilterImplementation)
+        expression_parser.BaseFilterImplementation)
 
     self.assertEqual(
         expected_result, event_filter.Matches(event),
