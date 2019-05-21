@@ -184,7 +184,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     self.assertEqual(message_short, expected_short_message)
 
   def _TestGetSourceStrings(
-      self, event, expected_source, expected_source_short):
+      self, event, event_data, expected_source, expected_source_short):
     """Tests the formatting of the source strings.
 
     This function invokes the GetSourceStrings function of the event
@@ -193,13 +193,15 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
       expected_source (str): expected source string.
       expected_source_short (str): expected short source string.
     """
     # TODO: change this to return the long variant first so it is consistent
     # with GetMessageStrings.
     source_short, source = (
-        formatters_manager.FormattersManager.GetSourceStrings(event))
+        formatters_manager.FormattersManager.GetSourceStrings(
+            event, event_data))
     self.assertEqual(source, expected_source)
     self.assertEqual(source_short, expected_source_short)
 

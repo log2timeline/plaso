@@ -64,35 +64,36 @@ class FormattersManager(object):
     return cls._formatter_objects[data_type]
 
   @classmethod
-  def GetMessageStrings(cls, formatter_mediator, event):
-    """Retrieves the formatted message strings for a specific event object.
+  def GetMessageStrings(cls, formatter_mediator, event_data):
+    """Retrieves the formatted message strings for a specific event.
 
     Args:
       formatter_mediator (FormatterMediator): mediates the interactions between
           formatters and other components, such as storage and Windows EventLog
           resources.
-      event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       list[str, str]: long and short version of the message string.
     """
-    formatter_object = cls.GetFormatterObject(event.data_type)
-    return formatter_object.GetMessages(formatter_mediator, event)
+    formatter_object = cls.GetFormatterObject(event_data.data_type)
+    return formatter_object.GetMessages(formatter_mediator, event_data)
 
   @classmethod
-  def GetSourceStrings(cls, event):
-    """Retrieves the formatted source strings for a specific event object.
+  def GetSourceStrings(cls, event, event_data):
+    """Retrieves the formatted source strings for a specific event.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       list[str, str]: short and long version of the source of the event.
     """
     # TODO: change this to return the long variant first so it is consistent
     # with GetMessageStrings.
-    formatter_object = cls.GetFormatterObject(event.data_type)
-    return formatter_object.GetSources(event)
+    formatter_object = cls.GetFormatterObject(event_data.data_type)
+    return formatter_object.GetSources(event, event_data)
 
   @classmethod
   def RegisterFormatter(cls, formatter_class):
@@ -105,7 +106,7 @@ class FormattersManager(object):
 
     Raises:
       KeyError: if formatter class is already set for the corresponding
-                data type.
+          data type.
     """
     formatter_data_type = formatter_class.DATA_TYPE.lower()
     if formatter_data_type in cls._formatter_classes:
@@ -126,7 +127,7 @@ class FormattersManager(object):
 
     Raises:
       KeyError: if formatter class is already set for the corresponding
-                data type.
+          data type.
     """
     for formatter_class in formatter_classes:
       cls.RegisterFormatter(formatter_class)

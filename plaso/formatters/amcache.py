@@ -31,6 +31,7 @@ class AmcacheFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = 'Amcache Registry Entry'
   SOURCE_SHORT = 'AMCACHE'
 
+
 class AmcacheProgramsFormatter(interface.ConditionalEventFormatter):
   """Formatter for an Amcache Programs Windows Registry event."""
 
@@ -54,6 +55,7 @@ class AmcacheProgramsFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = 'Amcache Programs Registry Entry'
   SOURCE_SHORT = 'AMCACHEPROGRAM'
+
 
 manager.FormattersManager.RegisterFormatter(AmcacheFormatter)
 manager.FormattersManager.RegisterFormatter(AmcacheProgramsFormatter)

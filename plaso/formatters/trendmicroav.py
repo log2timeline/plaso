@@ -73,8 +73,8 @@ class OfficeScanVirusDetectionLogEventFormatter(
   }
 
   # pylint: disable=unused-argument
-  def GetMessages(self, formatter_mediator, event):
-    """Determines the formatted message strings for an event object.
+  def GetMessages(self, formatter_mediator, event_data):
+    """Determines the formatted message strings for the event data.
 
     If any event values have a matching formatting function in VALUE_FORMATTERS,
     they are run through that function; then the dictionary is passed to the
@@ -84,19 +84,19 @@ class OfficeScanVirusDetectionLogEventFormatter(
       formatter_mediator (FormatterMediator): mediates the interactions
           between formatters and other components, such as storage and Windows
           EventLog resources.
-      event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       tuple(str, str): formatted message string and short message string.
 
     Raises:
-      WrongFormatter: if the event object cannot be formatted by the formatter.
+      WrongFormatter: if the event data cannot be formatted by the formatter.
     """
-    if self.DATA_TYPE != event.data_type:
+    if self.DATA_TYPE != event_data.data_type:
       raise errors.WrongFormatter(
-          'Unsupported data type: {0:s}.'.format(event.data_type))
+          'Unsupported data type: {0:s}.'.format(event_data.data_type))
 
-    event_values = event.CopyToDict()
+    event_values = event_data.CopyToDict()
     for formattable_value_name, formatter in self.VALUE_FORMATTERS.items():
       if formattable_value_name in event_values:
         value = event_values[formattable_value_name]

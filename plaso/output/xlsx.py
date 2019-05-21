@@ -58,7 +58,7 @@ class XLSXOutputModule(interface.OutputModule):
 
   # Pylint has trouble parsing the return type.
   # pylint: disable=missing-return-type-doc
-  def _FormatDateTime(self, event):
+  def _FormatDateTime(self, event, event_data):
     """Formats the date to a datetime object without timezone information.
 
     Note: timezone information must be removed due to lack of support
@@ -66,6 +66,7 @@ class XLSXOutputModule(interface.OutputModule):
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       datetime.datetime|str: date and time value or a string containing
@@ -80,7 +81,7 @@ class XLSXOutputModule(interface.OutputModule):
       return datetime_object.replace(tzinfo=None)
 
     except (OverflowError, ValueError) as exception:
-      self._ReportEventError(event, (
+      self._ReportEventError(event, event_data, (
           'unable to copy timestamp: {0!s} to a human readable date and time '
           'with error: {1!s}. Defaulting to: "ERROR"').format(
               event.timestamp, exception))
@@ -155,18 +156,19 @@ class XLSXOutputModule(interface.OutputModule):
     """
     self._timestamp_format = timestamp_format
 
-  def WriteEventBody(self, event):
-    """Writes the body of an event object to the spreadsheet.
+  def WriteEventBody(self, event, event_data):
+    """Writes event values to the output.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
     """
     for field_name in self._fields:
       if field_name == 'datetime':
-        output_value = self._FormatDateTime(event)
+        output_value = self._FormatDateTime(event, event_data)
       else:
         output_value = self._dynamic_fields_helper.GetFormattedField(
-            event, field_name)
+            event, event_data, field_name)
 
       output_value = self._RemoveIllegalXMLCharacters(output_value)
 

@@ -1914,8 +1914,10 @@ class PlasoValueExpander(AttributeValueExpander):
       event_object: the event object (instance od EventObject).
     """
     try:
+      # TODO: refactor to pass event and event_data as separate arguments.
       source_short, source_long = (
-          formatters_manager.FormattersManager.GetSourceStrings(event_object))
+          formatters_manager.FormattersManager.GetSourceStrings(
+              event_object, event_object))
     except KeyError as exception:
       logging.warning(
           'Unable to correctly assemble event with error: {0!s}'.format(

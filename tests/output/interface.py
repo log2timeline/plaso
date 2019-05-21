@@ -6,66 +6,65 @@ from __future__ import unicode_literals
 
 import unittest
 
+from plaso.lib import definitions
+from plaso.lib import timelib
 from plaso.output import manager
 
 from tests.cli import test_lib as cli_test_lib
 from tests.output import test_lib
 
 
-class TestEvent(object):
-  """Test event object."""
-
-  def __init__(self, timestamp, entry):
-    """Initializes an event object."""
-    super(TestEvent, self).__init__()
-    self.date = '03/01/2012'
-    try:
-      self.timestamp = int(timestamp)
-    except ValueError:
-      self.timestamp = 0
-    self.entry = entry
-
-
 class LinearOutputModuleTest(test_lib.OutputModuleTestCase):
   """Tests the linear output module."""
 
+  _TEST_EVENTS = [
+      {'data_type': 'test:event',
+       'entry': 'My Event Is Now!',
+       'timestamp': timelib.Timestamp.CopyFromString('2012-06-27 18:17:01'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
+      {'data_type': 'test:event',
+       'entry': 'There is no tomorrow.',
+       'timestamp': timelib.Timestamp.CopyFromString('2012-06-27 18:18:23'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
+      {'data_type': 'test:event',
+       'entry': 'Tomorrow is now.',
+       'timestamp': timelib.Timestamp.CopyFromString('2012-06-27 19:11:54'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
+      {'data_type': 'test:event',
+       'entry': 'This is just some stuff to fill the line.',
+       'timestamp': timelib.Timestamp.CopyFromString('2012-06-27 19:12:03'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
+
   def testOutput(self):
     """Tests an implementation of output module."""
-    events = [
-        TestEvent(123456, 'My Event Is Now!'),
-        TestEvent(123458, 'There is no tomorrow.'),
-        TestEvent(123462, 'Tomorrow is now.'),
-        TestEvent(123489, 'This is just some stuff to fill the line.')]
-
     output_mediator = self._CreateOutputMediator()
     output_writer = cli_test_lib.TestOutputWriter()
     output_module = test_lib.TestOutputModule(output_mediator)
     output_module.SetOutputWriter(output_writer)
     output_module.WriteHeader()
-    for event in events:
-      output_module.WriteEvent(event)
+
+    for event_values in self._TEST_EVENTS:
+      event, event_data = self._CreateTestEvent(event_values)
+      output_module.WriteEvent(event, event_data)
+
     output_module.WriteFooter()
 
     expected_output = (
         '<EventFile>\n'
         '<Event>\n'
-        '\t<Date>03/01/2012</Date>\n'
-        '\t<Time>123456</Time>\n'
+        '\t<DateTime>2012-06-27T18:17:01+00:00</DateTime>\n'
         '\t<Entry>My Event Is Now!</Entry>\n'
         '</Event>\n'
         '<Event>\n'
-        '\t<Date>03/01/2012</Date>\n'
-        '\t<Time>123458</Time>\n'
+        '\t<DateTime>2012-06-27T18:18:23+00:00</DateTime>\n'
         '\t<Entry>There is no tomorrow.</Entry>\n'
         '</Event>\n'
         '<Event>\n'
-        '\t<Date>03/01/2012</Date>\n'
-        '\t<Time>123462</Time>\n'
+        '\t<DateTime>2012-06-27T19:11:54+00:00</DateTime>\n'
         '\t<Entry>Tomorrow is now.</Entry>\n'
         '</Event>\n'
         '<Event>\n'
-        '\t<Date>03/01/2012</Date>\n'
-        '\t<Time>123489</Time>\n'
+        '\t<DateTime>2012-06-27T19:12:03+00:00</DateTime>\n'
         '\t<Entry>This is just some stuff to fill the line.</Entry>\n'
         '</Event>\n'
         '</EventFile>\n')

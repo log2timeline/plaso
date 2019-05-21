@@ -62,24 +62,28 @@ class TestOutputModule(interface.LinearOutputModule):
   NAME = 'test_xml'
   DESCRIPTION = 'Test output that provides a simple mocked XML.'
 
-  def WriteEventBody(self, event):
-    """Writes the body of an event object to the output.
+  def WriteEventBody(self, event, event_data):
+    """Writes the body of an event to the output.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
     """
+    date_time = timelib.Timestamp.CopyToIsoFormat(
+        event.timestamp, timezone=self._output_mediator.timezone,
+        raise_error=False)
+
     output_text = (
-        '\t<Date>{0:s}</Date>\n\t<Time>{1:d}</Time>\n'
-        '\t<Entry>{2:s}</Entry>\n').format(
-            event.date, event.timestamp, event.entry)
+        '\t<DateTime>{0:s}</DateTime>\n'
+        '\t<Entry>{1:s}</Entry>\n').format(date_time, event_data.entry)
     self._output_writer.Write(output_text)
 
   def WriteEventEnd(self):
-    """Writes the end of an event object to the output."""
+    """Writes the end of an event to the output."""
     self._output_writer.Write('</Event>\n')
 
   def WriteEventStart(self):
-    """Writes the start of an event object to the output."""
+    """Writes the start of an event to the output."""
     self._output_writer.Write('<Event>\n')
 
   def WriteFooter(self):
@@ -113,3 +117,32 @@ class OutputModuleTestCase(shared_test_lib.BaseTestCase):
         knowledge_base_object, formatter_mediator)
 
     return output_mediator
+
+  def _CreateTestEvent(self, event_values):
+    """Create a test event and event data.
+
+    Args:
+      event_values (dict[str, str]): event values.
+
+    Returns:
+      tuple[EventObject, WindowsRegistryServiceEventData]: event and event
+          data for testing.
+    """
+    copy_of_event_values = dict(event_values)
+
+    timestamp = copy_of_event_values.get('timestamp', None)
+    if 'timestamp' in copy_of_event_values:
+      del copy_of_event_values['timestamp']
+
+    timestamp_desc = copy_of_event_values.get('timestamp_desc', None)
+    if 'timestamp_desc' in copy_of_event_values:
+      del copy_of_event_values['timestamp_desc']
+
+    event = events.EventObject()
+    event.timestamp = timestamp
+    event.timestamp_desc = timestamp_desc
+
+    event_data = events.EventData()
+    event_data.CopyFromDict(copy_of_event_values)
+
+    return event, event_data
