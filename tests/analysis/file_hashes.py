@@ -9,6 +9,8 @@ import unittest
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import file_hashes
+from plaso.lib import definitions
+from plaso.lib import timelib
 
 from tests.analysis import test_lib
 
@@ -17,32 +19,43 @@ class UniqueHashesTest(test_lib.AnalysisPluginTestCase):
   """Test for the unique hashes analysis plugin."""
 
   _TEST_EVENTS = [
-      {'pathspec': fake_path_spec.FakePathSpec(
-          location='/var/testing directory with space/file.txt'),
-       'test_hash': '4'},
-      {'pathspec': fake_path_spec.FakePathSpec(
-          location='C:\\Windows\\a.file.txt'),
-       'test_hash': '4'},
-      {'pathspec': fake_path_spec.FakePathSpec(
-          location='/opt/dfvfs'),
-       'test_hash': '4'},
-      {'pathspec': fake_path_spec.FakePathSpec(
-          location='/opt/2hash_file'),
+      {'data_type': 'test:event',
+       'pathspec': fake_path_spec.FakePathSpec(
+           location='/var/testing directory with space/file.txt'),
        'test_hash': '4',
-       'alternate_test_hash': '5'},
-      {'pathspec': fake_path_spec.FakePathSpec(
-          location='/opt/no_hash_file')}
-  ]
+       'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
+      {'data_type': 'test:event',
+       'pathspec': fake_path_spec.FakePathSpec(
+           location='C:\\Windows\\a.file.txt'),
+       'test_hash': '4',
+       'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:01'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
+      {'data_type': 'test:event',
+       'pathspec': fake_path_spec.FakePathSpec(location='/opt/dfvfs'),
+       'test_hash': '4',
+       'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:02'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
+      {'alternate_test_hash': '5',
+       'data_type': 'test:event',
+       'pathspec': fake_path_spec.FakePathSpec(location='/opt/2hash_file'),
+       'test_hash': '4',
+       'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:03'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
+      {'data_type': 'test:event',
+       'pathspec': fake_path_spec.FakePathSpec(location='/opt/no_hash_file'),
+       'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:04'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
 
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
-    events = []
-    for event_dictionary in self._TEST_EVENTS:
-      event = self._CreateTestEventObject(event_dictionary)
-      events.append(event)
+    test_events = []
+    for event_values in self._TEST_EVENTS:
+      event, event_data = self._CreateTestEvent(event_values)
+      test_events.append((event, event_data))
 
     plugin = file_hashes.FileHashesPlugin()
-    storage_writer = self._AnalyzeEvents(events, plugin)
+    storage_writer = self._AnalyzeEvents(test_events, plugin)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
 

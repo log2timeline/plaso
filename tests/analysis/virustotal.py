@@ -11,11 +11,9 @@ try:
 except ImportError:
   from unittest import mock
 
-from dfdatetime import posix_time as dfdatetime_posix_time
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import virustotal
-from plaso.containers import time_events
 from plaso.lib import definitions
 from plaso.lib import timelib
 
@@ -46,8 +44,13 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
   _FAKE_API_KEY = '4'
 
   _TEST_EVENTS = [{
+      'data_type': 'pe:compilation:compilation_time',
+      'pathspec': fake_path_spec.FakePathSpec(
+          location='C:\\WINDOWS\\system32\\evil.exe'),
+      'pe_type': 'Executable (EXE)',
+      'sha256_hash': _EVENT_1_HASH,
       'timestamp': timelib.Timestamp.CopyFromString('2015-01-01 17:00:00'),
-      'sha256_hash': _EVENT_1_HASH}]
+      'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
 
   def _MockGet(self, url, params):
     """Mock function to simulate a VirusTotal API request.
@@ -74,32 +77,6 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
     response['positives'] = 10
     return response
 
-  def _CreateTestEventObject(self, event_dictionary):
-    """Create a test event with a set of attributes.
-
-    Args:
-      event_dictionary (dict[str, str]): contains attributes of an event to add
-          to the queue.
-
-    Returns:
-      EventObject: event with the appropriate attributes for testing.
-    """
-    date_time = dfdatetime_posix_time.PosixTime(
-        timestamp=event_dictionary['timestamp'])
-    event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_CREATION)
-
-    event.data_type = 'pe:compilation:compilation_time'
-    event.pe_type = 'Executable (EXE)'
-
-    for attribute_name, attribute_value in event_dictionary.items():
-      if attribute_name == 'timestamp':
-        continue
-
-      setattr(event, attribute_name, attribute_value)
-
-    return event
-
   def setUp(self):
     """Makes preparations before running an individual test."""
     self.requests_patcher = mock.patch('requests.get', self._MockGet)
@@ -111,18 +88,15 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
 
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
-    events = []
-    for event_dictionary in self._TEST_EVENTS:
-      event_dictionary['pathspec'] = fake_path_spec.FakePathSpec(
-          location='C:\\WINDOWS\\system32\\evil.exe')
-
-      event = self._CreateTestEventObject(event_dictionary)
-      events.append(event)
+    test_events = []
+    for event_values in self._TEST_EVENTS:
+      event, event_data = self._CreateTestEvent(event_values)
+      test_events.append((event, event_data))
 
     plugin = virustotal.VirusTotalAnalysisPlugin()
     plugin.SetAPIKey(self._FAKE_API_KEY)
 
-    storage_writer = self._AnalyzeEvents(events, plugin)
+    storage_writer = self._AnalyzeEvents(test_events, plugin)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
     self.assertEqual(storage_writer.number_of_event_tags, 1)

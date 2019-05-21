@@ -105,13 +105,14 @@ class AnalysisPlugin(object):
     """
 
   @abc.abstractmethod
-  def ExamineEvent(self, mediator, event):
-    """Analyzes an event object.
+  def ExamineEvent(self, mediator, event, event_data):
+    """Analyzes an event.
 
     Args:
       mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event.
+      event_data (EventData): event data.
     """
 
 
@@ -198,29 +199,30 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
       self._analyzer.start()
       self._analyzer_started = True
 
-  def ExamineEvent(self, mediator, event):
+  def ExamineEvent(self, mediator, event, event_data):
     """Evaluates whether an event contains the right data for a hash lookup.
 
     Args:
       mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event.
+      event_data (EventData): event data.
     """
+    if (event_data.data_type not in self.DATA_TYPES or
+        not self._analyzer.lookup_hash):
+      return
+
     self._EnsureRequesterStarted()
 
-    path_spec = event.pathspec
-    event_identifiers = self._event_identifiers_by_pathspec[path_spec]
+    event_identifiers = self._event_identifiers_by_pathspec[event_data.pathspec]
 
     event_identifier = event.GetIdentifier()
     event_identifiers.append(event_identifier)
 
-    if event.data_type not in self.DATA_TYPES or not self._analyzer.lookup_hash:
-      return
-
     lookup_hash = '{0:s}_hash'.format(self._analyzer.lookup_hash)
-    lookup_hash = getattr(event, lookup_hash, None)
+    lookup_hash = getattr(event_data, lookup_hash, None)
     if not lookup_hash:
-      display_name = mediator.GetDisplayNameForPathSpec(path_spec)
+      display_name = mediator.GetDisplayNameForPathSpec(event_data.pathspec)
       logger.warning((
           'Lookup hash attribute: {0:s}_hash missing from event that '
           'originated from: {1:s}.').format(
@@ -228,7 +230,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
       return
 
     path_specs = self._hash_pathspecs[lookup_hash]
-    path_specs.append(path_spec)
+    path_specs.append(event_data.pathspec)
     # There may be multiple path specification that have the same hash. We only
     # want to look them up once.
     if len(path_specs) == 1:

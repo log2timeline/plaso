@@ -11,6 +11,7 @@ from dfvfs.path import fake_path_spec
 
 from plaso.analysis import windows_services
 from plaso.containers import time_events
+from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.parsers import winreg
 
@@ -23,47 +24,50 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
 
   _TEST_EVENTS = [
       {'key_path': '\\ControlSet001\\services\\TestbDriver',
-       'regvalue': {'ImagePath': 'C:\\Dell\\testdriver.sys', 'Type': 2,
-                    'Start': 2, 'ObjectName': ''},
-       'timestamp': 1346145829002031},
+       'pathspec': fake_path_spec.FakePathSpec(
+           location='C:\\WINDOWS\\system32\\SYSTEM'),
+       'regvalue': {
+           'ImagePath': 'C:\\Dell\\testdriver.sys', 'Type': 2, 'Start': 2,
+           'ObjectName': ''},
+       'timestamp': 1346145829002031,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
       # This is almost the same, but different timestamp and source, so that
       # we can test the service de-duplication.
       {'key_path': '\\ControlSet003\\services\\TestbDriver',
-       'regvalue': {'ImagePath': 'C:\\Dell\\testdriver.sys', 'Type': 2,
-                    'Start': 2, 'ObjectName': ''},
-       'timestamp': 1346145839002031},
-  ]
+       'pathspec': fake_path_spec.FakePathSpec(
+           location='C:\\WINDOWS\\system32\\SYSTEM'),
+       'regvalue': {
+           'ImagePath': 'C:\\Dell\\testdriver.sys', 'Type': 2, 'Start': 2,
+           'ObjectName': ''},
+       'timestamp': 1346145839002031,
+       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
 
-  def _CreateTestEventObject(self, event_dictionary):
-    """Create a test event with a set of attributes.
+  def _CreateTestEvent(self, event_values):
+    """Create a test event and event data.
 
     Args:
-      event_dictionary (dict[str, str]): contains attributes of an event to add
-          to the queue.
+      event_values (dict[str, str]): event values.
 
     Returns:
-      EventObject: event with the appropriate attributes for testing.
+      tuple[EventObject, WindowsRegistryServiceEventData]: event and event
+          data for testing.
     """
     date_time = dfdatetime_filetime.Filetime(
-        timestamp=event_dictionary['timestamp'])
+        timestamp=event_values['timestamp'])
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_WRITTEN)
-    event.data_type = 'windows:registry:service'
 
-    for attribute_name, attribute_value in event_dictionary.items():
-      setattr(event, attribute_name, attribute_value)
+    event_data = windows_events.WindowsRegistryServiceEventData()
+    for attribute_name, attribute_value in event_values.items():
+      setattr(event_data, attribute_name, attribute_value)
 
-    return event
+    return event, event_data
 
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
-    events = []
-    for event_dictionary in self._TEST_EVENTS:
-      event_dictionary['pathspec'] = fake_path_spec.FakePathSpec(
-          location='C:\\WINDOWS\\system32\\SYSTEM')
-
-      event = self._CreateTestEventObject(event_dictionary)
-      events.append(event)
+    events = [
+        self._CreateTestEvent(event_values)
+        for event_values in self._TEST_EVENTS]
 
     plugin = windows_services.WindowsServicesAnalysisPlugin()
     storage_writer = self._AnalyzeEvents(events, plugin)

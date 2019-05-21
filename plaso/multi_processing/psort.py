@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import collections
+import copy
 import heapq
 import os
 import time
@@ -46,13 +47,12 @@ class PsortEventHeap(object):
     """int: number of events on the heap."""
     return len(self._heap)
 
-  def _GetEventIdentifiers(self, event):
+  def _GetEventIdentifiers(self, event, event_data):
     """Retrieves different identifiers of the event.
 
-    Every event contains event data, which consists of attributes and values.
-    These attributes and values can be represented as a string and used for
-    sorting and uniquely identifying events. This function determines multiple
-    identifiers:
+    The event data attributes and values can be represented as a string and used
+    for sorting and uniquely identifying events. This function determines
+    multiple identifiers:
     * an identifier of the attributes and values without the timestamp
       description (or usage). This is referred to as the MACB group
       identifier.
@@ -67,6 +67,7 @@ class PsortEventHeap(object):
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       tuple: containing:
@@ -77,10 +78,10 @@ class PsortEventHeap(object):
     """
     attributes = []
 
-    attribute_string = 'data_type: {0:s}'.format(event.data_type)
+    attribute_string = 'data_type: {0:s}'.format(event_data.data_type)
     attributes.append(attribute_string)
 
-    for attribute_name, attribute_value in sorted(event.GetAttributes()):
+    for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
       if attribute_name in self._IDENTIFIER_EXCLUDED_ATTRIBUTES:
         continue
 
@@ -119,7 +120,12 @@ class PsortEventHeap(object):
     else:
       macb_group_identifier = None
 
-    attributes.insert(0, event.timestamp_desc)
+    timestamp_desc = event.timestamp_desc
+    if timestamp_desc is None:
+      logger.warning('Missing timestamp_desc attribute')
+      timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
+
+    attributes.insert(0, timestamp_desc)
     content_identifier = ', '.join(attributes)
 
     return macb_group_identifier, content_identifier
@@ -134,13 +140,14 @@ class PsortEventHeap(object):
             be grouped.
         str: identifier of the event content.
         EventObject: event.
+        EventData: event data.
     """
     try:
-      macb_group_identifier, content_identifier, event = heapq.heappop(
-          self._heap)
+      macb_group_identifier, content_identifier, event, event_data = (
+          heapq.heappop(self._heap))
       if macb_group_identifier == '':
         macb_group_identifier = None
-      return macb_group_identifier, content_identifier, event
+      return macb_group_identifier, content_identifier, event, event_data
 
     except IndexError:
       return None
@@ -149,24 +156,33 @@ class PsortEventHeap(object):
     """Pops events from the heap.
 
     Yields:
-      EventObject: event.
-    """
-    event = self.PopEvent()
-    while event:
-      yield event
-      event = self.PopEvent()
+      tuple: containing:
 
-  def PushEvent(self, event):
+        str: identifier of the event MACB group or None if the event cannot
+            be grouped.
+        str: identifier of the event content.
+        EventObject: event.
+        EventData: event data.
+    """
+    heap_values = self.PopEvent()
+    while heap_values:
+      yield heap_values
+      heap_values = self.PopEvent()
+
+  def PushEvent(self, event, event_data):
     """Pushes an event onto the heap.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
     """
-    macb_group_identifier, content_identifier = self._GetEventIdentifiers(event)
+    macb_group_identifier, content_identifier = self._GetEventIdentifiers(
+        event, event_data)
 
     # We can ignore the timestamp here because the psort engine only stores
     # events with the same timestamp in the event heap.
-    heap_values = (macb_group_identifier or '', content_identifier, event)
+    heap_values = (
+        macb_group_identifier or '', content_identifier, event, event_data)
     heapq.heappush(self._heap, heap_values)
 
 
@@ -252,20 +268,25 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     filter_limit = getattr(event_filter, 'limit', None)
 
     for event in storage_writer.GetSortedEvents():
+      event_data = None
       event_data_identifier = event.GetEventDataIdentifier()
       if event_data_identifier:
         event_data = storage_writer.GetEventDataByIdentifier(
             event_data_identifier)
-        if event_data:
-          for attribute_name, attribute_value in event_data.GetAttributes():
-            setattr(event, attribute_name, attribute_value)
-
-      event_identifier = event.GetIdentifier()
-      event.tag = self._event_tag_index.GetEventTagByIdentifier(
-          storage_writer, event_identifier)
 
       if event_filter:
-        filter_match = event_filter.Match(event)
+        # TODO: refactor to separately filter event and event data
+        copy_of_event = copy.deepcopy(event)
+        if event_data:
+          for attribute_name, attribute_value in event_data.GetAttributes():
+            setattr(copy_of_event, attribute_name, attribute_value)
+
+        event_identifier = event.GetIdentifier()
+        copy_of_event.tag = self._event_tag_index.GetEventTagByIdentifier(
+            storage_writer, event_identifier)
+      # TODO: end refactor
+
+        filter_match = event_filter.Match(copy_of_event)
       else:
         filter_match = None
 
@@ -276,7 +297,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
       for event_queue in self._event_queues.values():
         # TODO: Check for premature exit of analysis plugins.
-        event_queue.PushItem(event)
+        event_queue.PushItem((event, event_data))
 
       self._number_of_consumed_events += 1
 
@@ -421,21 +442,26 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
       self._TerminateProcessByPid(pid)
 
-  def _ExportEvent(self, output_module, event, deduplicate_events=True):
+  def _ExportEvent(
+      self, storage_reader, output_module, event, event_data,
+      deduplicate_events=True):
     """Exports an event using an output module.
 
     Args:
+      storage_reader (StorageReader): storage reader.
       output_module (OutputModule): output module.
       event (EventObject): event.
+      event_data (EventData): event data.
       deduplicate_events (Optional[bool]): True if events should be
           deduplicated.
     """
     if event.timestamp != self._export_event_timestamp:
       self._FlushExportBuffer(
-          output_module, deduplicate_events=deduplicate_events)
+          storage_reader, output_module,
+          deduplicate_events=deduplicate_events)
       self._export_event_timestamp = event.timestamp
 
-    self._export_event_heap.PushEvent(event)
+    self._export_event_heap.PushEvent(event, event_data)
 
   def _ExportEvents(
       self, storage_reader, output_module, deduplicate_events=True,
@@ -474,23 +500,28 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._events_status.number_of_events_from_time_slice = 0
 
     for event in storage_reader.GetSortedEvents(time_range=time_slice_range):
+      event_data = None
       event_data_identifier = event.GetEventDataIdentifier()
       if event_data_identifier:
         event_data = storage_reader.GetEventDataByIdentifier(
             event_data_identifier)
-        if event_data:
-          for attribute_name, attribute_value in event_data.GetAttributes():
-            setattr(event, attribute_name, attribute_value)
-
-      event_identifier = event.GetIdentifier()
-      event.tag = self._event_tag_index.GetEventTagByIdentifier(
-          storage_reader, event_identifier)
 
       if time_slice_range and event.timestamp != time_slice.event_timestamp:
         self._events_status.number_of_events_from_time_slice += 1
 
       if event_filter:
-        filter_match = event_filter.Match(event)
+        # TODO: refactor to separately filter event and event data
+        copy_of_event = copy.deepcopy(event)
+        if event_data:
+          for attribute_name, attribute_value in event_data.GetAttributes():
+            setattr(copy_of_event, attribute_name, attribute_value)
+
+        event_identifier = event.GetIdentifier()
+        copy_of_event.tag = self._event_tag_index.GetEventTagByIdentifier(
+            storage_reader, event_identifier)
+      # TODO: end refactor
+
+        filter_match = event_filter.Match(copy_of_event)
       else:
         filter_match = None
 
@@ -500,12 +531,13 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           self._events_status.number_of_filtered_events += 1
 
         elif forward_entries == 0:
-          time_slice_buffer.Append(event)
+          time_slice_buffer.Append((event, event_data))
           self._events_status.number_of_filtered_events += 1
 
         elif forward_entries <= time_slice_buffer.size:
           self._ExportEvent(
-              output_module, event, deduplicate_events=deduplicate_events)
+              storage_reader, output_module, event, event_data,
+              deduplicate_events=deduplicate_events)
           self._number_of_consumed_events += 1
           self._events_status.number_of_events_from_time_slice += 1
           forward_entries += 1
@@ -520,10 +552,11 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         # pylint: disable=singleton-comparison
         if filter_match == True and time_slice_buffer:
           # Empty the time slice buffer.
-          for event_in_buffer in time_slice_buffer.Flush():
+          for event_in_buffer, event_data_in_buffer in (
+              time_slice_buffer.Flush()):
             self._ExportEvent(
-                output_module, event_in_buffer,
-                deduplicate_events=deduplicate_events)
+                storage_reader, output_module, event_in_buffer,
+                event_data_in_buffer, deduplicate_events=deduplicate_events)
             self._number_of_consumed_events += 1
             self._events_status.number_of_filtered_events += 1
             self._events_status.number_of_events_from_time_slice += 1
@@ -531,7 +564,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           forward_entries = 1
 
         self._ExportEvent(
-            output_module, event, deduplicate_events=deduplicate_events)
+            storage_reader, output_module, event, event_data,
+            deduplicate_events=deduplicate_events)
         self._number_of_consumed_events += 1
 
         # pylint: disable=singleton-comparison
@@ -539,12 +573,14 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
             filter_limit == self._number_of_consumed_events):
           break
 
-    self._FlushExportBuffer(output_module)
+    self._FlushExportBuffer(storage_reader, output_module)
 
-  def _FlushExportBuffer(self, output_module, deduplicate_events=True):
+  def _FlushExportBuffer(
+      self, storage_reader, output_module, deduplicate_events=True):
     """Flushes buffered events and writes them to the output module.
 
     Args:
+      storage_reader (StorageReader): storage reader.
       output_module (OutputModule): output module.
       deduplicate_events (Optional[bool]): True if events should be
           deduplicated.
@@ -555,26 +591,38 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     generator = self._export_event_heap.PopEvents()
 
-    for macb_group_identifier, content_identifier, event in generator:
+    for macb_group_identifier, content_identifier, event, event_data in (
+        generator):
       if deduplicate_events and last_content_identifier == content_identifier:
         self._events_status.number_of_duplicate_events += 1
         continue
+
+      # TODO: refactor to separately output event and event data
+      copy_of_event = copy.deepcopy(event)
+      if event_data:
+        for attribute_name, attribute_value in event_data.GetAttributes():
+          setattr(copy_of_event, attribute_name, attribute_value)
+
+      event_identifier = event.GetIdentifier()
+      copy_of_event.tag = self._event_tag_index.GetEventTagByIdentifier(
+          storage_reader, event_identifier)
+      # TODO: end refactor
 
       if macb_group_identifier is None:
         if macb_group:
           output_module.WriteEventMACBGroup(macb_group)
           macb_group = []
 
-        output_module.WriteEvent(event)
+        output_module.WriteEvent(copy_of_event)
 
       else:
         if (last_macb_group_identifier == macb_group_identifier or
             not macb_group):
-          macb_group.append(event)
+          macb_group.append(copy_of_event)
 
         else:
           output_module.WriteEventMACBGroup(macb_group)
-          macb_group = [event]
+          macb_group = [copy_of_event]
 
         self._events_status.number_of_macb_grouped_events += 1
 

@@ -34,13 +34,14 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
     """
     return
 
-  def ExamineEvent(self, mediator, event):
+  def ExamineEvent(self, mediator, event, event_data):
     """Analyzes an event.
 
     Args:
       mediator (AnalysisMediator): mediates interactions between analysis
           plugins and other components, such as storage and dfvfs.
       event (EventObject): event.
+      event_data (EventData): event data.
     """
     return
 
