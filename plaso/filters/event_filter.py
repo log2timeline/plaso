@@ -31,8 +31,7 @@ class EventObjectFilter(interface.FilterObject):
     parser = expression_parser.EventFilterExpressionParser(filter_expression)
     expression = parser.Parse()
 
-    self._event_filter = expression.Compile(
-        expression_parser.BaseFilterImplementation)
+    self._event_filter = expression.Compile()
     self._filter_expression = filter_expression
 
   def Match(self, event):

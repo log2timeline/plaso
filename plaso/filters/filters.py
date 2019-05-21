@@ -34,15 +34,6 @@ class Filter(object):
     self._value_expander = value_expanders.EventValueExpander()
     self.args = arguments or []
 
-  def __str__(self):
-    """Retrieve a string representation of the filter.
-
-    Returns:
-      str: a string representation of the filter.
-    """
-    return '{0:s}({1:s})'.format(self.__class__.__name__, ', '.join([
-        str(argument) for argument in self.args]))
-
   def Filter(self, objects):
     """Retrieves objects that match the filter.
 
@@ -81,8 +72,8 @@ class AndFilter(Filter):
     Returns:
       bool: True if the object matches the filter, False otherwise.
     """
-    for child_filter in self.args:
-      if not child_filter.Matches(obj):
+    for sub_filter in self.args:
+      if not sub_filter.Matches(obj):
         return False
     return True
 
@@ -105,8 +96,8 @@ class OrFilter(Filter):
     if not self.args:
       return True
 
-    for child_filter in self.args:
-      if child_filter.Matches(obj):
+    for sub_filter in self.args:
+      if sub_filter.Matches(obj):
         return True
     return False
 
@@ -139,39 +130,6 @@ class IdentityFilter(Operator):
       bool: True to indicated the object matches the filter.
     """
     return True
-
-
-# TODO: remove, class is not used.
-class UnaryOperator(Operator):
-  """Interface for filters that represent unary operators."""
-
-  def __init__(self, operand, **kwargs):
-    """Initializes an unary operator.
-
-    Args:
-      operand (str): operand.
-
-    Raises:
-      InvalidNumberOfOperands: if the number of operands provided is not
-          supported.
-    """
-    if len(operand) != 1:
-      raise errors.InvalidNumberOfOperands((
-          '{0:s} only supports 1 operand, provided were {1:d} '
-          'operands.').format(self.__class__.__name__, len(operand)))
-
-    super(UnaryOperator, self).__init__(arguments=[operand], **kwargs)
-
-  @abc.abstractmethod
-  def Matches(self, obj):
-    """Determines if the object matches the filter.
-
-    Args:
-      obj (object): object to compare against the filter.
-
-    Returns:
-      bool: True if the object matches the filter, False otherwise.
-    """
 
 
 class BinaryOperator(Operator):
@@ -282,7 +240,7 @@ class GenericBinaryOperator(BinaryOperator):
     return not self.bool_value
 
 
-class Equals(GenericBinaryOperator):
+class EqualsOperator(GenericBinaryOperator):
   """Equals (==) operator."""
 
   def Operation(self, x, y):
@@ -298,7 +256,7 @@ class Equals(GenericBinaryOperator):
     return x == y
 
 
-class NotEquals(GenericBinaryOperator):
+class NotEqualsOperator(GenericBinaryOperator):
   """Not equals (!=) operator."""
 
   def Operation(self, x, y):
@@ -314,7 +272,7 @@ class NotEquals(GenericBinaryOperator):
     return x != y
 
 
-class Less(GenericBinaryOperator):
+class LessThanOperator(GenericBinaryOperator):
   """Less than (<) operator."""
 
   def Operation(self, x, y):
@@ -330,7 +288,7 @@ class Less(GenericBinaryOperator):
     return x < y
 
 
-class LessEqual(GenericBinaryOperator):
+class LessEqualOperator(GenericBinaryOperator):
   """Less than or equals (<=) operator."""
 
   def Operation(self, x, y):
@@ -347,7 +305,7 @@ class LessEqual(GenericBinaryOperator):
     return x <= y
 
 
-class Greater(GenericBinaryOperator):
+class GreaterThanOperator(GenericBinaryOperator):
   """Greater than (>) operator."""
 
   def Operation(self, x, y):
@@ -363,7 +321,7 @@ class Greater(GenericBinaryOperator):
     return x > y
 
 
-class GreaterEqual(GenericBinaryOperator):
+class GreaterEqualOperator(GenericBinaryOperator):
   """Greater than or equals (>=) operator."""
 
   def Operation(self, x, y):
@@ -521,7 +479,7 @@ class RegexpInsensitive(Regexp):
     self.compiled_re = compiled_re
 
 
-class Context(Operator):
+class ContextOperator(Operator):
   """Restricts the child operators to a specific context within the object.
 
   Solves the context problem. The context problem is the following:
@@ -580,7 +538,7 @@ class Context(Operator):
   To write such an indicator you need to specify a context of ImportedDLLs for
   these two clauses. Such that you convert your indicator to::
 
-      Context(
+      ContextOperator(
         "ImportedDLLs",
         AndOperator(
           Equal("ImpFunctions.Name", "RegQueryValueEx"),
@@ -606,7 +564,7 @@ class Context(Operator):
           '{0:s} only supports 2 operands, provided were {1:d} '
           'operands.').format(self.__class__.__name__, len(arguments)))
 
-    super(Context, self).__init__(arguments=arguments, **kwargs)
+    super(ContextOperator, self).__init__(arguments=arguments, **kwargs)
     self.context, self.condition = self.args
 
   def Matches(self, obj):

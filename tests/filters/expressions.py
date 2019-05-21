@@ -7,18 +7,9 @@ from __future__ import unicode_literals
 import unittest
 
 from plaso.filters import expressions
-from plaso.filters import expression_parser
-from plaso.filters import filters
 from plaso.lib import errors
 
 from tests import test_lib as shared_test_lib
-
-
-class TestFilterImplementation(expression_parser.BaseFilterImplementation):
-  """Filter implementation for testing."""
-
-  AndFilter = filters.AndFilter
-  IdentityFilter = filters.IdentityFilter
 
 
 class ExpressionTest(shared_test_lib.BaseTestCase):
@@ -67,12 +58,12 @@ class BinaryExpressionTest(shared_test_lib.BaseTestCase):
     """Tests the Compile function."""
     expression = expressions.BinaryExpression(operator='and')
 
-    expression.Compile(TestFilterImplementation)
+    expression.Compile()
 
     expression = expressions.BinaryExpression()
 
     with self.assertRaises(errors.ParseError):
-      expression.Compile(TestFilterImplementation)
+      expression.Compile()
 
 
 class IdentityExpressionTest(shared_test_lib.BaseTestCase):
@@ -81,7 +72,7 @@ class IdentityExpressionTest(shared_test_lib.BaseTestCase):
   def testCompile(self):
     """Tests the Compile function."""
     expression = expressions.IdentityExpression()
-    expression.Compile(TestFilterImplementation)
+    expression.Compile()
 
 
 class ContextExpressionTest(shared_test_lib.BaseTestCase):
@@ -94,7 +85,7 @@ class ContextExpressionTest(shared_test_lib.BaseTestCase):
     # Test missing arguments.
     expression = expressions.ContextExpression()
     with self.assertRaises(errors.InvalidNumberOfOperands):
-      expression.Compile(TestFilterImplementation)
+      expression.Compile()
 
   def testSetExpression(self):
     """Tests the SetExpression function."""
@@ -115,26 +106,26 @@ class EventExpressionTest(shared_test_lib.BaseTestCase):
     expression = expressions.EventExpression()
     expression.SetOperator('==')
     expression.AddArg('first')
-    expression.Compile(TestFilterImplementation)
+    expression.Compile()
 
     # Test missing operator.
     expression = expressions.EventExpression()
     expression.AddArg('first')
     with self.assertRaises(errors.ParseError):
-      expression.Compile(TestFilterImplementation)
+      expression.Compile()
 
     # Test unknown operator.
     expression = expressions.EventExpression()
     expression.SetOperator('bogus')
     expression.AddArg('first')
     with self.assertRaises(errors.ParseError):
-      expression.Compile(TestFilterImplementation)
+      expression.Compile()
 
     # Test missing arguments.
     expression = expressions.EventExpression()
     expression.SetOperator('==')
     with self.assertRaises(errors.InvalidNumberOfOperands):
-      expression.Compile(TestFilterImplementation)
+      expression.Compile()
 
   def testFlipBool(self):
     """Tests the FlipBool function."""
