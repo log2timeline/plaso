@@ -46,7 +46,7 @@ class Expression(object):
     if len(self.args) > self.number_of_args:
       raise errors.ParseError('Too many arguments for this expression.')
 
-    elif len(self.args) == self.number_of_args:
+    if len(self.args) == self.number_of_args:
       return True
 
     return False
@@ -116,6 +116,7 @@ class BinaryExpression(Expression):
 
     self.args = [lhs, rhs]
 
+  # pylint: disable=missing-raises-doc
   def Compile(self, filter_implementation):
     """Compiles the binary expression into a filter object.
 

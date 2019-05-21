@@ -391,6 +391,7 @@ class EventFilterExpressionParser(object):
       logging.warning(
           'Unable to perform a negative match, issuing a positive one.')
 
+  # pylint: disable=missing-raises-doc
   def HexEscape(self, string, match, **unused_kwargs):
     """Converts a hex escaped string."""
     logging.debug('HexEscape matched {0:s}.'.format(string))
@@ -444,6 +445,7 @@ class EventFilterExpressionParser(object):
       raise errors.ParseError('{0:s} is not a valid float.'.format(string))
     return self.InsertArg(float_value)
 
+  # pylint: disable=missing-raises-doc
   def InsertIntArg(self, string='', **unused_kwargs):
     """Inserts a decimal integer argument into the current expression.
 
@@ -461,6 +463,7 @@ class EventFilterExpressionParser(object):
       raise errors.ParseError('{0:s} is not a valid integer.'.format(string))
     return self.InsertArg(int_value)
 
+  # pylint: disable=missing-raises-doc
   def InsertInt16Arg(self, string='', **unused_kwargs):
     """Inserts a hexadecimal integer argument into the current expression.
 
@@ -647,6 +650,7 @@ class EventFilterExpressionParser(object):
     """Initializes the internal string."""
     self.string = ''
 
+  # pylint: disable=missing-raises-doc
   def StoreAttribute(self, string='', **unused_kwargs):
     """Store the attribute.
 
