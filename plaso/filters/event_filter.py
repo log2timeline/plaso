@@ -32,7 +32,7 @@ class EventObjectFilter(interface.FilterObject):
     expression = parser.Parse()
 
     self._event_filter = expression.Compile(
-        expression_parser.PlasoAttributeFilterImplementation)
+        expression_parser.BaseFilterImplementation)
     self._filter_expression = filter_expression
 
   def Match(self, event):
