@@ -124,7 +124,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._event_documents = []
     self._number_of_buffered_events = 0
 
-  def _GetSanitizedEventValues(self, event):
+  def _GetSanitizedEventValues(self, event, event_data):
     """Sanitizes the event for use in Elasticsearch.
 
     The event values need to be sanitized to prevent certain values from
@@ -134,16 +134,17 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
 
     Returns:
       dict[str, object]: sanitized event values.
 
     Raises:
       NoFormatterFound: if no event formatter can be found to match the data
-          type in the event.
+          type in the event data.
     """
     event_values = {}
-    for attribute_name, attribute_value in event.GetAttributes():
+    for attribute_name, attribute_value in event_data.GetAttributes():
       # Ignore the regvalue attribute as it cause issues when indexing.
       if attribute_name == 'regvalue':
         continue
@@ -169,9 +170,17 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
         attribute_value, timezone=self._output_mediator.timezone)
     event_values['datetime'] = attribute_value
 
-    message, _ = self._output_mediator.GetFormattedMessages(event)
+    event_values['timestamp'] = event.timestamp
+    event_values['timestamp_desc'] = event.timestamp_desc
+
+    # TODO: pass event_tag as a separate argument.
+    event_tag = getattr(event, 'tag', None)
+    if event_tag:
+      event_values['tag'] = event_tag
+
+    message, _ = self._output_mediator.GetFormattedMessages(event_data)
     if message is None:
-      data_type = getattr(event, 'data_type', 'UNKNOWN')
+      data_type = getattr(event_data, 'data_type', 'UNKNOWN')
       raise errors.NoFormatterFound(
           'Unable to find event formatter for: {0:s}.'.format(data_type))
 
@@ -180,13 +189,14 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     # Tags needs to be a list for Elasticsearch to index correctly.
     try:
       labels = list(event_values['tag'].labels)
-    except (KeyError, AttributeError):
+    except (AttributeError, KeyError):
       labels = []
     event_values['tag'] = labels
 
-    source_short, source = self._output_mediator.GetFormattedSources(event)
+    source_short, source = self._output_mediator.GetFormattedSources(
+        event, event_data)
     if source is None or source_short is None:
-      data_type = getattr(event, 'data_type', 'UNKNOWN')
+      data_type = getattr(event_data, 'data_type', 'UNKNOWN')
       raise errors.NoFormatterFound(
           'Unable to find event formatter for: {0:s}.'.format(data_type))
 
@@ -195,28 +205,25 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
     return event_values
 
-  def _InsertEvent(self, event, force_flush=False):
+  def _InsertEvent(self, event, event_data):
     """Inserts an event.
 
     Events are buffered in the form of documents and inserted to Elasticsearch
-    when either forced to flush or when the flush interval (threshold) has been
-    reached.
+    when the flush interval (threshold) has been reached.
 
     Args:
       event (EventObject): event.
-      force_flush (bool): True if buffered event documents should be inserted
-          into Elasticsearch.
+      event_data (EventData): event data.
     """
-    if event:
-      event_document = {'index': {
-          '_index': self._index_name, '_type': self._document_type}}
-      event_values = self._GetSanitizedEventValues(event)
+    event_document = {'index': {
+        '_index': self._index_name, '_type': self._document_type}}
+    event_values = self._GetSanitizedEventValues(event, event_data)
 
-      self._event_documents.append(event_document)
-      self._event_documents.append(event_values)
-      self._number_of_buffered_events += 1
+    self._event_documents.append(event_document)
+    self._event_documents.append(event_values)
+    self._number_of_buffered_events += 1
 
-    if force_flush or self._number_of_buffered_events > self._flush_interval:
+    if self._number_of_buffered_events > self._flush_interval:
       self._FlushEvents()
 
   def Close(self):
@@ -224,7 +231,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
     Inserts any remaining buffered event documents.
     """
-    self._InsertEvent(None, force_flush=True)
+    self._FlushEvents()
 
     self._client = None
 
@@ -324,11 +331,11 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._url_prefix = url_prefix
     logger.debug('Elasticsearch URL prefix: {0!s}')
 
-
-  def WriteEventBody(self, event):
-    """Writes an event to the output.
+  def WriteEventBody(self, event, event_data):
+    """Writes event values to the output.
 
     Args:
       event (EventObject): event.
+      event_data (EventData): event data.
     """
-    self._InsertEvent(event)
+    self._InsertEvent(event, event_data)

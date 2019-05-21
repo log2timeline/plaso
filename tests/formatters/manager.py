@@ -46,12 +46,11 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
     text_message = None
     text_message_short = None
 
-    test_events = containers_test_lib.CreateTestEvents()
-    for event in test_events:
+    for event, event_data in containers_test_lib.CreateTestEvents():
       message, message_short = manager.FormattersManager.GetMessageStrings(
-          formatter_mediator, event)
+          formatter_mediator, event_data)
       source_short, source_long = manager.FormattersManager.GetSourceStrings(
-          event)
+          event, event_data)
 
       if source_short == 'LOG' and not text_message:
         text_message = message
@@ -65,23 +64,23 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
         '1334961526929596,REG,UNKNOWN,[MY AutoRun key] '
         'Value: c:/Temp/evil.exe'), message_strings)
 
-    self.assertIn(
-        ('1334966206929596,REG,UNKNOWN,'
-         '[HKEY_CURRENT_USER\\Secret\\EvilEmpire\\Malicious_key] '
-         'Value: send all the exes to the other world'), message_strings)
-    self.assertIn(
-        ('1334940286000000,REG,UNKNOWN,'
-         '[HKEY_CURRENT_USER\\Windows\\Normal] '
-         'Value: run all the benign stuff'), message_strings)
-    self.assertIn(
-        ('1335781787929596,FILE,Weird Log File,This log line reads '
-         'ohh so much.'), message_strings)
-    self.assertIn(
-        ('1335781787929596,FILE,Weird Log File,Nothing of interest '
-         'here, move on.'), message_strings)
-    self.assertIn(
-        ('1335791207939596,FILE,Weird Log File,Mr. Evil just logged '
-         'into the machine and got root.'), message_strings)
+    self.assertIn((
+        '1334966206929596,REG,UNKNOWN,'
+        '[HKEY_CURRENT_USER\\Secret\\EvilEmpire\\Malicious_key] '
+        'Value: send all the exes to the other world'), message_strings)
+    self.assertIn((
+        '1334940286000000,REG,UNKNOWN,'
+        '[HKEY_CURRENT_USER\\Windows\\Normal] '
+        'Value: run all the benign stuff'), message_strings)
+    self.assertIn((
+        '1335781787929596,FILE,Weird Log File,This log line reads '
+        'ohh so much.'), message_strings)
+    self.assertIn((
+        '1335781787929596,FILE,Weird Log File,Nothing of interest '
+        'here, move on.'), message_strings)
+    self.assertIn((
+        '1335791207939596,FILE,Weird Log File,Mr. Evil just logged '
+        'into the machine and got root.'), message_strings)
 
     expected_text_message = (
         'This is a line by someone not reading the log line properly. And '

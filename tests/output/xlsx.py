@@ -10,7 +10,6 @@ import zipfile
 
 from xml.etree import ElementTree
 
-from plaso.containers import events
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import definitions
@@ -19,22 +18,6 @@ from plaso.output import xlsx
 
 from tests import test_lib as shared_test_lib
 from tests.output import test_lib
-
-
-class TestEvent(events.EventObject):
-  """Event object used for testing."""
-  DATA_TYPE = 'test:xlsx'
-
-  def __init__(self):
-    """Initializes an event object used for testing."""
-    super(TestEvent, self).__init__()
-    self.timestamp = timelib.Timestamp.CopyFromString('2012-06-27 18:17:01')
-    self.timestamp_desc = definitions.TIME_DESCRIPTION_CHANGE
-    self.hostname = 'ubuntu'
-    self.filename = 'log/syslog.1'
-    self.text = (
-        'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
-        'closed for user root) Invalid character -> \ud801')
 
 
 class TestEventFormatter(formatters_interface.EventFormatter):
@@ -59,6 +42,16 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
   _SHARED_STRING_TYPE = 's'
   _TYPE_ATTRIBUTE = 't'
   _VALUE_STRING_TAG = '}v'
+
+  _TEST_EVENTS = [
+      {'data_type': 'test:xlsx',
+       'hostname': 'ubuntu',
+       'filename': 'log/syslog.1',
+       'text': (
+           'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
+           'closed for user root) Invalid character -> \ud801'),
+       'timestamp': timelib.Timestamp.CopyFromString('2012-06-27 18:17:01'),
+       'timestamp_desc': definitions.TIME_DESCRIPTION_CHANGE}]
 
   def _GetSheetRows(self, filename):
     """Parses the contents of the first sheet of an XLSX document.
@@ -137,7 +130,10 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
 
       output_module.Open()
       output_module.WriteHeader()
-      output_module.WriteEvent(TestEvent())
+
+      event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+      output_module.WriteEvent(event, event_data)
+
       output_module.WriteFooter()
       output_module.Close()
 
