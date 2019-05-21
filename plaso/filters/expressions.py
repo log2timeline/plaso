@@ -202,7 +202,7 @@ class ContextExpression(Expression):
       ParseError: if expression is not of type Expression.
     """
     if not isinstance(expression, Expression):
-      raise errors.ParseError('Expected expression, got {0:s}.'.format(
+      raise errors.ParseError('Expected expression, got {0!s}.'.format(
           type(expression)))
 
     self.args = [expression]
