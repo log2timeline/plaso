@@ -14,6 +14,8 @@ class EventObjectFilter(interface.FilterObject):
     """Initializes an event filter."""
     super(EventObjectFilter, self).__init__()
     self._decision = None
+    self._event_filter = None
+    self._filter_expression = None
 
   def CompileFilter(self, filter_expression):
     """Compiles the filter expression.
@@ -26,11 +28,12 @@ class EventObjectFilter(interface.FilterObject):
     Raises:
       ParseError: if the filter expression cannot be parsed.
     """
-    filter_parser = pfilter.BaseParser(filter_expression).Parse()
-    matcher = filter_parser.Compile(pfilter.PlasoAttributeFilterImplementation)
+    expression_parser = pfilter.EventFilterExpressionParser(filter_expression)
+    expression = expression_parser.Parse()
 
+    self._event_filter = expression.Compile(
+        pfilter.PlasoAttributeFilterImplementation)
     self._filter_expression = filter_expression
-    self._matcher = matcher
 
   def Match(self, event):
     """Determines if an event matches the filter.
@@ -41,8 +44,8 @@ class EventObjectFilter(interface.FilterObject):
     Returns:
       bool: True if the event matches the filter.
     """
-    if not self._matcher:
+    if not self._event_filter:
       return True
 
-    self._decision = self._matcher.Matches(event)
+    self._decision = self._event_filter.Matches(event)
     return self._decision
