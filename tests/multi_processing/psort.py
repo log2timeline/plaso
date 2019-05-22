@@ -99,14 +99,15 @@ class TestOutputModule(output_interface.LinearOutputModule):
     self.events = []
     self.macb_groups = []
 
-  def WriteEventBody(self, event, event_data):
+  def WriteEventBody(self, event, event_data, event_tag):
     """Writes the body of an event object to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_tag (EventTag): event tag.
     """
-    self.events.append((event, event_data))
+    self.events.append((event, event_data, event_tag))
 
   def WriteHeader(self):
     """Writes the header to the output."""

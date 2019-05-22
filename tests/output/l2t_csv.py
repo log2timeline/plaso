@@ -95,12 +95,12 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         'my_number: 123; some_additional_foo: True']
 
     event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
-    output_values = self._formatter._GetOutputValues(event, event_data)
+    output_values = self._formatter._GetOutputValues(event, event_data, None)
     self.assertEqual(len(output_values), 17)
     self.assertEqual(output_values, expected_output_values)
 
     event.timestamp = -9223372036854775808
-    output_values = self._formatter._GetOutputValues(event, event_data)
+    output_values = self._formatter._GetOutputValues(event, event_data, None)
     self.assertEqual(len(output_values), 17)
     expected_output_values[0] = '00/00/0000'
     expected_output_values[1] = '--:--:--'
@@ -116,13 +116,12 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
     formatters_manager.FormattersManager.RegisterFormatter(
         L2TTestEventFormatter)
 
+    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
+
     event_tag = events.EventTag()
     event_tag.AddLabels(['Malware', 'Printed'])
 
-    event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
-    event.tag = event_tag
-
-    self._formatter.WriteEventBody(event, event_data)
+    self._formatter.WriteEventBody(event, event_data, event_tag)
 
     expected_event_body = (
         '06/27/2012,18:17:01,UTC,M...,LOG,Syslog,Content Modification Time,-,'

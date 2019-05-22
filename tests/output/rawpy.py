@@ -49,7 +49,7 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
     output_module.SetOutputWriter(output_writer)
 
     event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
-    output_module.WriteEventBody(event, event_data)
+    output_module.WriteEventBody(event, event_data, None)
 
     if sys.platform.startswith('win'):
       # The dict comparison is very picky on Windows hence we
@@ -65,10 +65,10 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
         '+-+-+-+-+-+-\n'
         '[Timestamp]:\n'
         '  2012-06-27T18:17:01+00:00\n'
+        '\n'
         '[Pathspec]:\n'
         '  type: OS, location: {0:s}\n'
         '  type: TSK, inode: 15, location: /var/log/syslog.1\n'
-        '  \n'
         '\n'
         '[Reserved attributes]:\n'
         '  {{data_type}} test:output\n'
@@ -80,7 +80,8 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
         '[Additional attributes]:\n'
         '  {{text}} Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
         'session\n'
-        ' closed for user root)\n').format(expected_os_location)
+        ' closed for user root)\n'
+        '\n').format(expected_os_location)
 
     event_body = output_writer.ReadOutput()
 

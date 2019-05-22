@@ -49,7 +49,7 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
     output_module.WriteHeader()
 
     event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
-    output_module.WriteEventBody(event, event_data)
+    output_module.WriteEventBody(event, event_data, None)
 
     output_module.WriteFooter()
 

@@ -205,16 +205,17 @@ class SQLite4n6TimeOutputModule(shared_4n6time.Shared4n6TimeOutputModule):
     """
     self._filename = filename
 
-  def WriteEventBody(self, event, event_data):
+  def WriteEventBody(self, event, event_data, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_tag (EventTag): event tag.
     """
     # sqlite seems to support milli seconds precision but that seems
     # not to be used by 4n6time
-    row = self._GetSanitizedEventValues(event, event_data)
+    row = self._GetSanitizedEventValues(event, event_data, event_tag)
 
     self._cursor.execute(self._INSERT_QUERY, row)
     self._count += 1

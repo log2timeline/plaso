@@ -35,7 +35,6 @@ class DynamicFieldsHelper(object):
       'source': '_FormatSourceShort',
       'sourcetype': '_FormatSource',
       'source_long': '_FormatSource',
-      'tag': '_FormatTag',
       'time': '_FormatTime',
       'timestamp_desc': '_FormatTimestampDescription',
       'timezone': '_FormatZone',
@@ -240,22 +239,19 @@ class DynamicFieldsHelper(object):
 
     return source_short
 
-  def _FormatTag(self, event, event_data):
+  def _FormatTag(self, event_tag):
     """Formats the event tag.
 
     Args:
-      event (EventObject): event.
-      event_data (EventData): event data.
+      event_tag (EventTag): event tag or None if not set.
 
     Returns:
-      str: event tag field.
+      str: event tag labels or "-" if event tag is not set.
     """
-    tag = getattr(event, 'tag', None)
-
-    if not tag:
+    if not event_tag:
       return '-'
 
-    return ' '.join(tag.labels)
+    return ' '.join(event_tag.labels)
 
   def _FormatTime(self, event, event_data):
     """Formats the time.
@@ -340,17 +336,21 @@ class DynamicFieldsHelper(object):
             parser_chain, error_message)
     logger.error(error_message)
 
-  def GetFormattedField(self, event, event_data, field_name):
+  def GetFormattedField(self, event, event_data, event_tag, field_name):
     """Formats the specified field.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_tag (EventTag): event tag.
       field_name (str): name of the field.
 
     Returns:
       str: value of the field.
     """
+    if field_name == 'tag':
+      return self._FormatTag(event_tag)
+
     callback_name = self._FIELD_FORMAT_CALLBACKS.get(field_name, None)
     callback_function = None
     if callback_name:
@@ -425,17 +425,18 @@ class DynamicOutputModule(interface.LinearOutputModule):
     """
     self._fields = fields
 
-  def WriteEventBody(self, event, event_data):
+  def WriteEventBody(self, event, event_data, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_tag (EventTag): event tag.
     """
     output_values = []
     for field_name in self._fields:
       output_value = self._dynamic_fields_helper.GetFormattedField(
-          event, event_data, field_name)
+          event, event_data, event_tag, field_name)
 
       output_value = self._SanitizeField(output_value)
       output_values.append(output_value)

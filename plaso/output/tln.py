@@ -136,12 +136,14 @@ class TLNOutputModule(TLNBaseOutputModule):
 
   _HEADER = 'Time|Source|Host|User|Description\n'
 
-  def WriteEventBody(self, event, event_data):
+  # pylint: disable=unused-argument
+  def WriteEventBody(self, event, event_data, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_tag (EventTag): event tag.
     """
     if not hasattr(event, 'timestamp'):
       return
@@ -218,12 +220,14 @@ class L2TTLNOutputModule(TLNBaseOutputModule):
       notes = 'File: {0:s} inode: {1!s}'.format(display_name, inode)
     return self._SanitizeField(notes)
 
-  def WriteEventBody(self, event, event_data):
+  # pylint: disable=unused-argument
+  def WriteEventBody(self, event, event_data, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_tag (EventTag): event tag.
     """
     if not hasattr(event, 'timestamp'):
       return

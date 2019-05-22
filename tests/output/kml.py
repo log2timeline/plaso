@@ -87,14 +87,14 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
     """Tests the WriteEventBody function."""
     # Test event without geo-location.
     event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
-    self._output_module.WriteEventBody(event, event_data)
+    self._output_module.WriteEventBody(event, event_data, None)
 
     event_body = self._output_writer.ReadOutput()
     self.assertEqual(event_body, '')
 
     # Test event with geo-location.
     event, event_data = self._CreateTestEvent(self._TEST_EVENTS[1])
-    self._output_module.WriteEventBody(event, event_data)
+    self._output_module.WriteEventBody(event, event_data, None)
 
     event_body = self._output_writer.ReadOutput()
 
@@ -116,10 +116,10 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
         '+-+-+-+-+-+-\n'
         '[Timestamp]:\n'
         '  2012-06-27T18:17:01+00:00\n'
+        '\n'
         '[Pathspec]:\n'
         '  type: OS, location: {1:s}\n'
         '  type: TSK, inode: 15, location: /var/log/syslog.1\n'
-        '  \n'
         '\n'
         '[Reserved attributes]:\n'
         '  {{data_type}} test:output\n'
@@ -134,6 +134,7 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
         '  {{text}} Reporter &lt;CRON&gt; PID: |8442| '
         '(pam_unix(cron:session): session\n'
         ' closed for user root)\n'
+        '\n'
         '</description>'
         '<Point><coordinates>-122.082203543,37.4222899014</coordinates>'
         '</Point></Placemark>').format(
