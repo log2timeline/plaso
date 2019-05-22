@@ -24,13 +24,15 @@ class TestEventExtractionWorker(worker.EventExtractionWorker):
   """Event extraction worker for testing."""
 
   # pylint: disable=unused-argument
-  def ProcessPathSpec(self, mediator, path_spec):
+  def ProcessPathSpec(self, mediator, path_spec, excluded_find_specs=None):
     """Processes a path specification.
 
     Args:
-      mediator (ParserMediator): mediates interactions between parsers and
-          other components, such as storage and dfvfs.
+      mediator (ParserMediator): mediates the interactions between
+          parsers and other components, such as storage and abort signals.
       path_spec (dfvfs.PathSpec): path specification.
+      excluded_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
+         that are excluded from processing.
     """
     return
 
@@ -39,13 +41,15 @@ class TestFailureEventExtractionWorker(worker.EventExtractionWorker):
   """Event extraction worker for testing failure."""
 
   # pylint: disable=unused-argument
-  def ProcessPathSpec(self, mediator, path_spec):
+  def ProcessPathSpec(self, mediator, path_spec, excluded_find_specs=None):
     """Processes a path specification.
 
     Args:
-      mediator (ParserMediator): mediates interactions between parsers and
-          other components, such as storage and dfvfs.
+      mediator (ParserMediator): mediates the interactions between
+          parsers and other components, such as storage and abort signals.
       path_spec (dfvfs.PathSpec): path specification.
+      excluded_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
+         that are excluded from processing.
 
     Raises:
       dfvfs_errors.CacheFullError: cache full error.
@@ -136,6 +140,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
     test_process = worker_process.WorkerProcess(
         None, storage_writer, None, knowledge_base, session.identifier,
         configuration, name='TestWorker')
+    test_process._extraction_worker = TestEventExtractionWorker()
     test_process._parser_mediator = self._CreateParserMediator(
         storage_writer, knowledge_base)
 

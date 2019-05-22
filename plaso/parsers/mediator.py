@@ -22,8 +22,8 @@ class ParserMediator(object):
   """Parser mediator.
 
   Attributes:
-    artifacts_filter_helper (ArtifactDefinitionsFilterHelper): artifacts
-        definitions filter helper.
+    collection_filters_helper (CollectionFiltersHelper): collection filters
+        helper.
     last_activity_timestamp (int): timestamp received that indicates the last
         time activity was observed. The last activity timestamp is updated
         when the mediator produces an attribute container, such as an event
@@ -36,7 +36,7 @@ class ParserMediator(object):
   _INT64_MAX = (1 << 63) - 1
 
   def __init__(
-      self, storage_writer, knowledge_base, artifacts_filter_helper=None,
+      self, storage_writer, knowledge_base, collection_filters_helper=None,
       preferred_year=None, resolver_context=None, temporary_directory=None):
     """Initializes a parser mediator.
 
@@ -44,8 +44,8 @@ class ParserMediator(object):
       storage_writer (StorageWriter): storage writer.
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for parsing.
-      artifacts_filter_helper (Optional[ArtifactDefinitionsFilterHelper]):
-          artifacts definitions filter helper.
+      collection_filters_helper (Optional[CollectionFiltersHelper]): collection
+          filters helper.
       preferred_year (Optional[int]): preferred year.
       resolver_context (Optional[dfvfs.Context]): resolver context.
       temporary_directory (Optional[str]): path of the directory for temporary
@@ -72,7 +72,7 @@ class ParserMediator(object):
     self._temporary_directory = temporary_directory
     self._text_prepend = None
 
-    self.artifacts_filter_helper = artifacts_filter_helper
+    self.collection_filters_helper = collection_filters_helper
     self.last_activity_timestamp = 0.0
 
   @property

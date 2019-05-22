@@ -334,6 +334,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           filters.
       skip_duplicates (Optional[bool]): True if files with duplicate content
           should be skipped.
+
+    Raises:
+      BadConfigOption: if an invalid collection filter was specified.
     """
     extraction_engine = engine.BaseEngine()
 
@@ -351,13 +354,20 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       output_writer.Write(
           'Extracting file entries from: {0:s}\n'.format(display_name))
 
-      filter_find_specs = extraction_engine.BuildFilterFindSpecs(
-          artifact_definitions_path, custom_artifacts_path,
-          extraction_engine.knowledge_base, artifact_filters, filter_file)
+      try:
+        extraction_engine.BuildCollectionFilters(
+            artifact_definitions_path, custom_artifacts_path,
+            extraction_engine.knowledge_base, artifact_filters, filter_file)
+      except errors.InvalidFilter as exception:
+        raise errors.BadConfigOption(
+            'Unable to build collection filters with error: {0!s}'.format(
+                exception))
 
       searcher = file_system_searcher.FileSystemSearcher(
           file_system, mount_point)
-      for path_spec in searcher.Find(find_specs=filter_find_specs):
+      filters_helper = extraction_engine.collection_filters_helper
+      for path_spec in searcher.Find(find_specs=(
+          filters_helper.included_file_system_find_specs)):
         self._ExtractFileEntry(
             path_spec, destination_path, output_writer,
             skip_duplicates=skip_duplicates)
