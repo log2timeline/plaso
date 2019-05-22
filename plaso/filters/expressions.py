@@ -142,48 +142,6 @@ class IdentityExpression(Expression):
     return filters.IdentityFilter()
 
 
-class ContextExpression(Expression):
-  """Context operator expression."""
-
-  def __init__(self, attribute=''):
-    """Initializes a context expression.
-
-    Args:
-      attribute (str): attribute.
-    """
-    super(ContextExpression, self).__init__()
-    self.attribute = attribute
-    self.args = []
-
-  def Compile(self):
-    """Compiles the expression into a filter.
-
-    Returns:
-      ContextOperator: context operator filter.
-    """
-    arguments = [self.attribute]
-    for argument in self.args:
-      filter_object = argument.Compile()
-      arguments.append(filter_object)
-
-    return filters.ContextOperator(arguments=arguments)
-
-  def SetExpression(self, expression):
-    """Sets the expression.
-
-    Args:
-      expression (Expression): expression.
-
-    Raises:
-      ParseError: if expression is not of type Expression.
-    """
-    if not isinstance(expression, Expression):
-      raise errors.ParseError('Expected expression, got {0!s}.'.format(
-          type(expression)))
-
-    self.args = [expression]
-
-
 class EventExpression(Expression):
   """Event expression."""
 
