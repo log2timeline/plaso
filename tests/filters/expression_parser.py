@@ -33,6 +33,36 @@ class PfilterFakeFormatter(formatters_interface.EventFormatter):
 formatters_manager.FormattersManager.RegisterFormatter(PfilterFakeFormatter)
 
 
+class TestBinaryOperator(filters.GenericBinaryOperator):
+  """Binary operator for testing.
+
+  Attributes:
+    values (list[str]): event values passed to the _CompareValue function.
+  """
+
+  def __init__(self, arguments=None, **kwargs):
+    """Initializes a binary operator.
+
+    Args:
+      arguments (Optional[object]): operands of the filter.
+    """
+    super(TestBinaryOperator, self).__init__(arguments=arguments, **kwargs)
+    self.values = []
+
+  def _CompareValue(self, event_value, filter_value):
+    """Compares if two values are not equal.
+
+    Args:
+      event_value (object): value retrieved from the event.
+      filter_value (object): value defined by the filter.
+
+    Returns:
+      bool: True if the values are not equal, False otherwise.
+    """
+    self.values.append(event_value)
+    return True
+
+
 class TokenTest(shared_test_lib.BaseTestCase):
   """Tests the event filter parser token."""
 
@@ -500,9 +530,8 @@ class ObjectFilterTest(unittest.TestCase):
           (True, ['name', 'boot.ini']),
           (True, ['name', 'boot']),
           (False, ['name', 'meh']),
-          # Works with generators.
-          (True, ['imported_dlls.imported_functions', 'FindWindow']),
           # But not with numbers.
+          (False, ['name', 12]),
           (False, ['size', 12])],
       filters.EqualsOperator: [
           (True, ['name', 'boot.ini']),
@@ -526,9 +555,7 @@ class ObjectFilterTest(unittest.TestCase):
           (False, ['name', '^$']),
           (True, ['attributes', 'Archive']),
           # One can regexp numbers if he's inclined to.
-          (True, ['size', 0]),
-          # But regexp doesn't work with lists or generators for the moment.
-          (False, ['imported_dlls.imported_functions', 'FindWindow'])],
+          (True, ['size', 0])],
       }
 
   def setUp(self):
@@ -547,12 +574,6 @@ class ObjectFilterTest(unittest.TestCase):
           self.assertEqual(not test_unit[0], ops.Matches(self.file))
 
   def testGenericBinaryOperator(self):
-    class TestBinaryOperator(filters.GenericBinaryOperator):
-      values = list()
-
-      def Operation(self, x, _):
-        return self.values.append(x)
-
     # Test a common binary operator.
     tbo = TestBinaryOperator(arguments=['whatever', 0])
     self.assertEqual(tbo.right_operand, 0)
