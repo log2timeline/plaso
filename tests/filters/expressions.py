@@ -75,29 +75,6 @@ class IdentityExpressionTest(shared_test_lib.BaseTestCase):
     expression.Compile()
 
 
-class ContextExpressionTest(shared_test_lib.BaseTestCase):
-  """Tests the context expression."""
-
-  def testCompile(self):
-    """Tests the Compile function."""
-    # TODO: add successful test.
-
-    # Test missing arguments.
-    expression = expressions.ContextExpression()
-    with self.assertRaises(errors.InvalidNumberOfOperands):
-      expression.Compile()
-
-  def testSetExpression(self):
-    """Tests the SetExpression function."""
-    expression = expressions.ContextExpression()
-
-    test_expression = expressions.Expression()
-    expression.SetExpression(test_expression)
-
-    with self.assertRaises(errors.ParseError):
-      expression.SetExpression('bogus')
-
-
 class EventExpressionTest(shared_test_lib.BaseTestCase):
   """Tests the event expression."""
 

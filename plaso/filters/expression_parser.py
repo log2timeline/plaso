@@ -74,39 +74,34 @@ class EventFilterExpressionParser(object):
 
   _TOKENS = [
       # Operators and related tokens
-      Token('INITIAL', r'\@[\w._0-9]+', 'ContextOperator,PushState',
-            'CONTEXTOPEN'),
-      Token('INITIAL', r'[^\s\(\)]', 'PushState,_PushBack', 'ATTRIBUTE'),
-      Token('INITIAL', r'\(', 'PushState,BracketOpen', None),
-      Token('INITIAL', r'\)', 'BracketClose', 'BINARY'),
-
-      # Context
-      Token('CONTEXTOPEN', r'\(', 'BracketOpen', 'INITIAL'),
+      Token('INITIAL', r'[^\s\(\)]', '_PushState,_PushBack', 'ATTRIBUTE'),
+      Token('INITIAL', r'\(', '_PushState,_AddBracketOpen', None),
+      Token('INITIAL', r'\)', '_AddBracketClose', 'BINARY'),
 
       # Double quoted string
-      Token('STRING', '"', 'PopState,StringFinish', None),
+      Token('STRING', '"', '_PopState,_StringFinish', None),
       Token('STRING', r'\\x(..)', 'HexEscape', None),
-      Token('STRING', r'\\(.)', 'StringEscape', None),
-      Token('STRING', r'[^\\"]+', 'StringInsert', None),
+      Token('STRING', r'\\(.)', '_StringEscape', None),
+      Token('STRING', r'[^\\"]+', '_StringInsert', None),
 
       # Single quoted string
-      Token('SQ_STRING', '\'', 'PopState,StringFinish', None),
+      Token('SQ_STRING', '\'', '_PopState,_StringFinish', None),
       Token('SQ_STRING', r'\\x(..)', 'HexEscape', None),
-      Token('SQ_STRING', r'\\(.)', 'StringEscape', None),
-      Token('SQ_STRING', r'[^\\\']+', 'StringInsert', None),
+      Token('SQ_STRING', r'\\(.)', '_StringEscape', None),
+      Token('SQ_STRING', r'[^\\\']+', '_StringInsert', None),
 
       # Basic expression
-      Token('ATTRIBUTE', r'[\w._0-9]+', 'StoreAttribute', 'OPERATOR'),
+      Token('ATTRIBUTE', r'[\w._0-9]+', '_SetAttribute', 'OPERATOR'),
       Token('OPERATOR', r'not ', '_NegateExpression', None),
-      Token('OPERATOR', r'(\w+|[<>!=]=?)', 'StoreOperator', 'CHECKNOT'),
+      Token('OPERATOR', r'(\w+|[<>!=]=?)', '_SetOperator', 'CHECKNOT'),
       Token('CHECKNOT', r'not', '_NegateExpression', 'ARG'),
       Token('CHECKNOT', r'\s+', None, None),
       Token('CHECKNOT', r'([^not])', '_PushBack', 'ARG'),
       Token('ARG', r'(\d+\.\d+)', 'InsertFloatArg', 'ARG'),
       Token('ARG', r'(0x\d+)', 'InsertInt16Arg', 'ARG'),
       Token('ARG', r'(\d+)', 'InsertIntArg', 'ARG'),
-      Token('ARG', '"', 'PushState,StringStart', 'STRING'),
-      Token('ARG', '\'', 'PushState,StringStart', 'SQ_STRING'),
+      Token('ARG', '"', '_PushState,_StringStart', 'STRING'),
+      Token('ARG', '\'', '_PushState,_StringStart', 'SQ_STRING'),
       # When the last parameter from arg_list has been pushed
 
       # State where binary operators are supported (AND, OR)
@@ -115,7 +110,7 @@ class EventFilterExpressionParser(object):
       # - We can also skip spaces
       Token('BINARY', r'\s+', None, None),
       # - But if it's not "and" or just spaces we have to go back
-      Token('BINARY', '.', '_PushBack,PopState', None),
+      Token('BINARY', '.', '_PushBack,_PopState', None),
 
       # Skip whitespace.
       Token(None, r'\s+', None, None)]
@@ -134,33 +129,51 @@ class EventFilterExpressionParser(object):
     self._state_stack = []
     self._string = None
 
+  # The parser token callback methods use a specific function interface.
+  # pylint: disable=redundant-returns-doc,useless-return
+
   def _AddBinaryOperator(self, string=None, **unused_kwargs):
     """Adds a binary operator to the stack.
 
+    Note that this function is used as a callback by _GetNextToken.
+
     Args:
       string (str): operator, such as "and", "or", "&&" or "||".
+
+    Returns:
+      str: next state, which is None.
     """
     expression = expressions.BinaryExpression(operator=string)
     self._stack.append(expression)
 
-  def _CombineContext(self):
-    """Combines a context expression."""
-    item_index = len(self._stack) - 1
-    while item_index >= 0:
-      item = self._stack[item_index]
-      previous_item = self._stack[item_index - 1]
+    return None
 
-      if (isinstance(previous_item, expressions.ContextExpression) and
-          isinstance(item, expressions.Expression)):
-        previous_item.SetExpression(item)
+  def _AddBracketClose(self, **unused_kwargs):
+    """Adds a closing bracket to the stack.
 
-        self._stack.pop(item_index)
-        item_index -= 1
+    Note that this function is used as a callback by _GetNextToken.
 
-      item_index -= 1
+    Returns:
+      str: next state, which is None.
+    """
+    self._stack.append(')')
+
+    return None
+
+  def _AddBracketOpen(self, **unused_kwargs):
+    """Adds an opening bracket to the stack.
+
+    Note that this function is used as a callback by _GetNextToken.
+
+    Returns:
+      str: next state, which is None.
+    """
+    self._stack.append('(')
+
+    return None
 
   def _CombineBinaryExpressions(self, operator):
-    """Combines binary expressions.
+    """Combines the binary expressions on the stack.
 
     Args:
       operator (str): operator, such as "and" or "or".
@@ -191,7 +204,7 @@ class EventFilterExpressionParser(object):
         item_index += 1
 
   def _CombineParenthesis(self):
-    """Combines parenthesis."""
+    """Combines parenthesis (braces) expressions on the stack."""
     item_index = 1
     number_of_items = len(self._stack) - 1
     while item_index < number_of_items:
@@ -290,14 +303,55 @@ class EventFilterExpressionParser(object):
     logging.debug('Negating expression')
     self._current_expression.Negate()
 
+  def _PopState(self, **unused_kwargs):
+    """Pops the previous state from the stack.
+
+    Returns:
+      str: next state, which is the previous state on the stack.
+
+    Raises:
+      ParseError: if the stack is empty.
+    """
+    try:
+      self._state = self._state_stack.pop()
+    except IndexError:
+      raise errors.ParseError((
+          'Tried to pop state from an empty stack - possible recursion error '
+          'at position {0!s}: {1!s} <----> {2!s} )').format(
+              len(self._processed_buffer), self._processed_buffer,
+              self._buffer))
+
+    logging.debug('Returned state to {0:s}'.format(self._state))
+    return self._state
+
   def _PushBack(self, string='', **unused_kwargs):
-    """Pushes the current expression back on the buffer.
+    """Pushes the string from processed buffer back onto the buffer.
+
+    Note that this function is used as a callback by _GetNextToken.
 
     Args:
-      string (Optional[str]): expression string.
+      string (Optional[str]): string.
+
+    Returns:
+      str: next state, which is None.
     """
     self._buffer = ''.join([string, self._buffer])
     self._processed_buffer = self._processed_buffer[:-len(string)]
+
+    return None
+
+  def _PushState(self, **unused_kwargs):
+    """Pushes the current state on the state stack.
+
+    Note that this function is used as a callback by _GetNextToken.
+
+    Returns:
+      str: next state, which is None.
+    """
+    logging.debug('Storing state {0:s}'.format(repr(self._state)))
+    self._state_stack.append(self._state)
+
+    return None
 
   def _Reduce(self):
     """Reduces the expression stack into a single expression.
@@ -322,7 +376,6 @@ class EventFilterExpressionParser(object):
       self._CombineParenthesis()
       self._CombineBinaryExpressions('and')
       self._CombineBinaryExpressions('or')
-      self._CombineContext()
 
       # No change
       if len(self._stack) == number_of_items:
@@ -352,22 +405,109 @@ class EventFilterExpressionParser(object):
     self._state_stack = []
     self._string = None
 
-  def BracketClose(self, **unused_kwargs):
-    """Defines a closing bracket."""
-    self._stack.append(')')
+  def _SetAttribute(self, string='', **unused_kwargs):
+    """Sets the attribute in the current expression.
 
-  def BracketOpen(self, **unused_kwargs):
-    """Defines an open bracket."""
-    self._stack.append('(')
-
-  def ContextOperator(self, string='', **unused_kwargs):
-    """Sets a context operator.
+    Note that this function is used as a callback by _GetNextToken.
 
     Args:
-      string (str): operator.
+      string (Optional[str]): attribute.
+
+    Returns:
+      str: next state, which is 'OPERATOR'.
     """
-    context_expression = expressions.ContextExpression(attribute=string[1:])
-    self._stack.append(context_expression)
+    logging.debug('Storing attribute {0:s}'.format(repr(string)))
+
+    self._current_expression.SetAttribute(string)
+
+    self._have_negate_keyword = False
+
+    return 'OPERATOR'
+
+  def _SetOperator(self, string='', **unused_kwargs):
+    """Sets the operator in the current expression.
+
+    Note that this function is used as a callback by _GetNextToken.
+
+    Args:
+      string (Optional[str]): operator.
+
+    Returns:
+      str: next state, which is None.
+    """
+    logging.debug('Storing operator {0:s}'.format(repr(string)))
+    self._current_expression.SetOperator(string)
+
+    return None
+
+  def _StringEscape(self, string='', match='', **unused_kwargs):
+    """Escapes backslashes found inside an expression string.
+
+    Backslashes followed by anything other than [\'"rnbt.ws] will raise
+    an Error.
+
+    Note that this function is used as a callback by _GetNextToken.
+
+    Args:
+      string (Optional[str]): expression string.
+      match (Optional[re.MatchObject]): the regular expression match object,
+          where match.group(1) contains the escaped code.
+
+    Returns:
+      str: next state, which is None.
+
+    Raises:
+      ParseError: when the escaped string is not one of [\'"rnbt].
+    """
+    if match.group(1) not in '\\\'"rnbt\\.ws':
+      raise errors.ParseError('Invalid escape character {0:s}.'.format(string))
+
+    decoded_string = codecs.decode(string, 'unicode_escape')
+    return self._StringInsert(string=decoded_string)
+
+  def _StringFinish(self, **unused_kwargs):
+    """Finishes a string operation.
+
+    Note that this function is used as a callback by _GetNextToken.
+
+    Returns:
+      str: next state, or None when the internal state is not "ATTRIBUTE"
+          or "ARG".
+    """
+    if self._state == 'ATTRIBUTE':
+      return self._SetAttribute(string=self._string)
+
+    if self._state == 'ARG':
+      return self.InsertArg(string=self._string)
+
+    return None
+
+  def _StringInsert(self, string='', **unused_kwargs):
+    """Adds the string to the internal string.
+
+    Note that this function is used as a callback by _GetNextToken.
+
+    Args:
+      string (Optional[str]): expression string.
+
+    Returns:
+      str: next state, which is None.
+    """
+    self._string = ''.join([self._string, string])
+
+    return None
+
+  def _StringStart(self, **unused_kwargs):
+    """Initializes the internal string.
+
+    Note that this function is used as a callback by _GetNextToken.
+
+    Returns:
+      str: next state, which is None.
+    """
+    self._string = ''
+
+    return None
 
   def Default(self, **kwarg):
     """Default callback handler."""
@@ -376,6 +516,11 @@ class EventFilterExpressionParser(object):
   # pylint: disable=missing-raises-doc
   def HexEscape(self, string, match, **unused_kwargs):
     """Converts a hex escaped string.
+
+    Note that this function is used as a callback by _GetNextToken.
+
+    Returns:
+      str: next state, which is None.
 
     Raises:
       ParseError: if the string is not hex escaped.
@@ -388,6 +533,8 @@ class EventFilterExpressionParser(object):
       self._string += hex_string
     except (TypeError, binascii.Error):
       raise errors.ParseError('Invalid hex escape {0!s}.'.format(hex_string))
+
+    return None
 
   def InsertArg(self, string='', **unused_kwargs):
     """Inserts an argument into the current expression.
@@ -503,109 +650,3 @@ class EventFilterExpressionParser(object):
       token = self._GetNextToken()
 
     return self._Reduce()
-
-  def PopState(self, **unused_kwargs):
-    """Pops the previous state from the stack.
-
-    Returns:
-      str: parser state.
-
-    Raises:
-      ParseError: if the stack is empty.
-    """
-    try:
-      self._state = self._state_stack.pop()
-    except IndexError:
-      raise errors.ParseError((
-          'Tried to pop state from an empty stack - possible recursion error '
-          'at position {0!s}: {1!s} <----> {2!s} )').format(
-              len(self._processed_buffer), self._processed_buffer,
-              self._buffer))
-
-    logging.debug('Returned state to {0:s}'.format(self._state))
-    return self._state
-
-  def PushState(self, **unused_kwargs):
-    """Pushes the current state on the state stack."""
-    logging.debug('Storing state {0:s}'.format(repr(self._state)))
-    self._state_stack.append(self._state)
-
-  def StringEscape(self, string='', match='', **unused_kwargs):
-    """Escapes backslashes found inside an expression string.
-
-    Backslashes followed by anything other than [\'"rnbt.ws] will raise
-    an Error.
-
-    Args:
-      string (Optional[str]): expression string.
-      match (Optional[re.MatchObject]): the regular expression match object,
-          where match.group(1) contains the escaped code.
-
-    Raises:
-      ParseError: When the escaped string is not one of [\'"rnbt].
-    """
-    if match.group(1) not in '\\\'"rnbt\\.ws':
-      raise errors.ParseError('Invalid escape character {0:s}.'.format(string))
-
-    self._string += codecs.decode(string, 'unicode_escape')
-
-  def StringFinish(self, **unused_kwargs):
-    """Finishes a string operation.
-
-    Returns:
-      str: token or None when the internal state is not "ATTRIBUTE" or
-          "ARG".
-    """
-    if self._state == 'ATTRIBUTE':
-      return self.StoreAttribute(string=self._string)
-
-    if self._state == 'ARG':
-      return self.InsertArg(string=self._string)
-
-    return None
-
-  def StringInsert(self, string='', **unused_kwargs):
-    """Adds the expression string to the internal string.
-
-    Args:
-      string (Optional[str]): expression string.
-    """
-    self._string += string
-
-  def StringStart(self, **unused_kwargs):
-    """Initializes the internal string."""
-    self._string = ''
-
-  # pylint: disable=missing-raises-doc
-  def StoreAttribute(self, string='', **unused_kwargs):
-    """Store the attribute.
-
-    Args:
-      string (Optional[str]): expression string.
-
-    Returns:
-      str: token.
-
-    Raises:
-      ParseError: TBD.
-    """
-    logging.debug('Storing attribute {0:s}'.format(repr(string)))
-
-    self._have_negate_keyword = False
-
-    # TODO: Update the expected number_of_args
-    try:
-      self._current_expression.SetAttribute(string)
-    except AttributeError:
-      raise errors.ParseError('Invalid attribute \'{0:s}\''.format(string))
-
-    return 'OPERATOR'
-
-  def StoreOperator(self, string='', **unused_kwargs):
-    """Store the operator.
-
-    Args:
-      string (Optional[str]): expression string.
-    """
-    logging.debug('Storing operator {0:s}'.format(repr(string)))
-    self._current_expression.SetOperator(string)
