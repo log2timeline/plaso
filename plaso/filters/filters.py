@@ -8,8 +8,6 @@ import logging
 import re
 
 from plaso.filters import helpers
-from plaso.formatters import manager as formatters_manager
-from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import errors
 from plaso.lib import py2to3
 

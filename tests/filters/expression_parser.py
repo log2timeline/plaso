@@ -436,8 +436,7 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
 
     query = (
         'timestamp_desc CONTAINS \'written\' AND date > \'2015-11-18\' AND '
-        'date < \'2015-11-25 12:56:21\' AND (source_short contains \'LOG\' or '
-        'source_short CONTAINS \'REG\')')
+        'date < \'2015-11-25 12:56:21\'')
     self._CheckFilterEvent(event, query, True)
 
     query = 'parser is not \'Made\''
@@ -464,27 +463,14 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
     query = 'mydict.notthere is 123'
     self._CheckFilterEvent(event, query, False)
 
-    query = 'source_long not contains \'Fake\''
-    self._CheckFilterEvent(event, query, False)
-
-    query = 'source is \'REG\''
-    self._CheckFilterEvent(event, query, True)
-
-    query = 'source is not \'FILE\''
-    self._CheckFilterEvent(event, query, True)
-
     query = 'tag contains \'browser_search\''
     self._CheckFilterEvent(event, query, True)
 
     # Multiple attributes.
-    query = (
-        'source_long is \'Fake Parsing Source\' AND description_long '
-        'regexp \'bad, bad thing [\\sa-zA-Z\\.]+ evil\'')
+    query = 'description_long regexp \'bad, bad thing [\\sa-zA-Z\\.]+ evil\''
     self._CheckFilterEvent(event, query, False)
 
-    query = (
-        'source_long is \'Fake Parsing Source\' AND text iregexp '
-        '\'bad, bad thing [\\sa-zA-Z\\.]+ evil\'')
+    query = 'text iregexp \'bad, bad thing [\\sa-zA-Z\\.]+ evil\''
     self._CheckFilterEvent(event, query, True)
 
 
