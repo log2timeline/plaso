@@ -219,8 +219,10 @@ class GenericBinaryOperator(BinaryOperator):
       tuple(str, str): short and long source string.
     """
     try:
+      # TODO: refactor to pass event and event_data as separate arguments.
       source_short, source_long = (
-          formatters_manager.FormattersManager.GetSourceStrings(event))
+          formatters_manager.FormattersManager.GetSourceStrings(
+              event, event))
     except KeyError as exception:
       logging.warning(
           'Unable to correctly assemble event with error: {0!s}'.format(
