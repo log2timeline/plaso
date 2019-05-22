@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Path filter.
+"""Path filters.
 
-Path filter are specified in filter files and are used during collection
+Path filters are specified in filter files and are used during collection
 to include or exclude file system paths.
 """
 
@@ -9,6 +9,7 @@ from __future__ import unicode_literals
 
 from dfvfs.helpers import file_system_searcher
 
+from plaso.engine import filters_helper
 from plaso.engine import logger
 from plaso.engine import path_helper
 
@@ -52,18 +53,8 @@ class PathFilter(object):
     self.paths = paths or []
 
 
-class PathFiltersHelper(object):
-  """Helper for path filters.
-
-  Attributes:
-    file_system_find_specs (list[dfvfs.FindSpec]): file system find
-        specifications.
-  """
-
-  def __init__(self):
-    """Initializes a path filter helper."""
-    super(PathFiltersHelper, self).__init__()
-    self.file_system_find_specs = []
+class PathCollectionFiltersHelper(filters_helper.CollectionFiltersHelper):
+  """Path collection filters helper."""
 
   def BuildFindSpecs(self, path_filters, environment_variables=None):
     """Builds find specifications from path filters.
@@ -74,10 +65,6 @@ class PathFiltersHelper(object):
           environment variables.
     """
     for path_filter in path_filters:
-      if path_filter.filter_type == PathFilter.FILTER_TYPE_EXCLUDE:
-        logger.warning('Exclude path filter not yet supported.')
-        continue
-
       for path in path_filter.paths:
         # Since paths are regular expression the path separator is escaped.
         if path_filter.path_separator == '\\':
@@ -120,4 +107,9 @@ class PathFiltersHelper(object):
 
         find_spec = file_system_searcher.FindSpec(
             location_regex=path_segments, case_sensitive=False)
-        self.file_system_find_specs.append(find_spec)
+
+        if path_filter.filter_type == PathFilter.FILTER_TYPE_EXCLUDE:
+          self.excluded_file_system_find_specs.append(find_spec)
+
+        elif path_filter.filter_type == PathFilter.FILTER_TYPE_INCLUDE:
+          self.included_file_system_find_specs.append(find_spec)

@@ -251,7 +251,8 @@ class PstealTool(
     constructor of this class.
 
     Raises:
-      BadConfigOption: if the storage format is not supported.
+      BadConfigOption: if the storage file path is invalid or the storage
+          format not supported or an invalid collection filter was specified.
       SourceScannerError: if the source scanner could not find a supported
           file system.
       UserAbort: if the user initiated an abort.
@@ -310,10 +311,15 @@ class PstealTool(
     self._SetExtractionParsersAndPlugins(configuration, session)
     self._SetExtractionPreferredTimeZone(extraction_engine.knowledge_base)
 
-    filter_find_specs = extraction_engine.BuildFilterFindSpecs(
-        self._artifact_definitions_path, self._custom_artifacts_path,
-        extraction_engine.knowledge_base, self._artifact_filters,
-        self._filter_file)
+    try:
+      extraction_engine.BuildCollectionFilters(
+          self._artifact_definitions_path, self._custom_artifacts_path,
+          extraction_engine.knowledge_base, self._artifact_filters,
+          self._filter_file)
+    except errors.InvalidFilter as exception:
+      raise errors.BadConfigOption(
+          'Unable to build collection filters with error: {0!s}'.format(
+              exception))
 
     processing_status = None
     if single_process_mode:
@@ -321,8 +327,7 @@ class PstealTool(
 
       processing_status = extraction_engine.ProcessSources(
           self._source_path_specs, storage_writer, self._resolver_context,
-          configuration, filter_find_specs=filter_find_specs,
-          status_update_callback=status_update_callback)
+          configuration, status_update_callback=status_update_callback)
 
     else:
       logger.debug('Starting extraction in multi process mode.')
@@ -331,7 +336,6 @@ class PstealTool(
           session.identifier, self._source_path_specs, storage_writer,
           configuration,
           enable_sigsegv_handler=self._enable_sigsegv_handler,
-          filter_find_specs=filter_find_specs,
           number_of_worker_processes=self._number_of_extraction_workers,
           status_update_callback=status_update_callback)
 

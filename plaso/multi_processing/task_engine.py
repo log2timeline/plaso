@@ -115,7 +115,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     """
     super(TaskMultiProcessEngine, self).__init__()
     self._enable_sigsegv_handler = False
-    self._filter_find_specs = None
     self._last_worker_number = 0
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._merge_task = None
@@ -296,16 +295,13 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._number_of_produced_warnings = storage_writer.number_of_warnings
 
   def _ProcessSources(
-      self, source_path_specs, storage_writer, filter_find_specs=None):
+      self, source_path_specs, storage_writer):
     """Processes the sources.
 
     Args:
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
-      filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
-          used in path specification extraction. If set, path specifications
-          that match the find specification will be processed.
     """
     if self._processing_profiler:
       self._processing_profiler.StartTiming('process_sources')
@@ -322,9 +318,14 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._number_of_produced_sources = 0
     self._number_of_produced_warnings = 0
 
+    find_specs = None
+    if self.collection_filters_helper:
+      find_specs = (
+          self.collection_filters_helper.included_file_system_find_specs)
+
     path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-        source_path_specs, find_specs=filter_find_specs,
-        recurse_file_system=False, resolver_context=self._resolver_context)
+        source_path_specs, find_specs=find_specs, recurse_file_system=False,
+        resolver_context=self._resolver_context)
 
     for path_spec in path_spec_generator:
       if self._abort:
@@ -503,7 +504,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       task_queue = self._task_queue
 
     process = worker_process.WorkerProcess(
-        task_queue, storage_writer, self._artifacts_filter_helper,
+        task_queue, storage_writer, self.collection_filters_helper,
         self.knowledge_base, self._session_identifier,
         self._processing_configuration,
         enable_sigsegv_handler=self._enable_sigsegv_handler, name=process_name)
@@ -707,8 +708,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   def ProcessSources(
       self, session_identifier, source_path_specs, storage_writer,
       processing_configuration, enable_sigsegv_handler=False,
-      filter_find_specs=None, number_of_worker_processes=0,
-      status_update_callback=None, worker_memory_limit=None):
+      number_of_worker_processes=0, status_update_callback=None,
+      worker_memory_limit=None):
     """Processes the sources and extract events.
 
     Args:
@@ -720,8 +721,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           configuration.
       enable_sigsegv_handler (Optional[bool]): True if the SIGSEGV handler
           should be enabled.
-      filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
-          used in path specification extraction.
       number_of_worker_processes (Optional[int]): number of worker processes.
       status_update_callback (Optional[function]): callback function for status
           updates.
@@ -769,7 +768,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._processing_configuration = processing_configuration
 
     self._debug_output = processing_configuration.debug_output
-    self._filter_find_specs = filter_find_specs
     self._log_filename = processing_configuration.log_filename
     self._session_identifier = session_identifier
     self._status_update_callback = status_update_callback
@@ -825,9 +823,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       try:
         storage_writer.WritePreprocessingInformation(self.knowledge_base)
 
-        self._ProcessSources(
-            source_path_specs, storage_writer,
-            filter_find_specs=filter_find_specs)
+        self._ProcessSources(source_path_specs, storage_writer)
 
       finally:
         storage_writer.WriteSessionCompletion(aborted=self._abort)
@@ -887,7 +883,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     self._processing_configuration = None
 
-    self._filter_find_specs = None
     self._session_identifier = None
     self._status_update_callback = None
     self._storage_writer = None
