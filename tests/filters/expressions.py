@@ -101,6 +101,8 @@ class ContextExpressionTest(shared_test_lib.BaseTestCase):
 class EventExpressionTest(shared_test_lib.BaseTestCase):
   """Tests the event expression."""
 
+  # pylint: disable=protected-access
+
   def testCompile(self):
     """Tests the Compile function."""
     expression = expressions.EventExpression()
@@ -127,13 +129,13 @@ class EventExpressionTest(shared_test_lib.BaseTestCase):
     with self.assertRaises(errors.InvalidNumberOfOperands):
       expression.Compile()
 
-  def testFlipBool(self):
-    """Tests the FlipBool function."""
+  def testNegate(self):
+    """Tests the Negate function."""
     expression = expressions.EventExpression()
-    self.assertTrue(expression.bool_value)
+    self.assertTrue(expression._bool_value)
 
-    expression.FlipBool()
-    self.assertFalse(expression.bool_value)
+    expression.Negate()
+    self.assertFalse(expression._bool_value)
 
 
 if __name__ == "__main__":

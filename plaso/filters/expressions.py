@@ -80,19 +80,15 @@ class Expression(object):
 class BinaryExpression(Expression):
   """An event filter parser expression which takes two other expressions."""
 
-  def __init__(self, operator='', part=None):
+  def __init__(self, operator=''):
     """Initializes an event filter parser binary expression.
 
     Args:
       operator (str): operator, such as "and" or "&&".
-      part (str): expression part.
     """
     super(BinaryExpression, self).__init__()
     self.args = []
     self.operator = operator
-
-    if part:
-      self.args.append(part)
 
   def AddOperands(self, lhs, rhs):
     """Adds an operand.
@@ -149,19 +145,15 @@ class IdentityExpression(Expression):
 class ContextExpression(Expression):
   """Context operator expression."""
 
-  # TODO: remove part, which is never used.
-  def __init__(self, attribute='', part=None):
+  def __init__(self, attribute=''):
     """Initializes a context expression.
 
     Args:
       attribute (str): attribute.
-      part (str): expression part.
     """
     super(ContextExpression, self).__init__()
     self.attribute = attribute
     self.args = []
-    if part:
-      self.args.append(part)
 
   def Compile(self):
     """Compiles the expression into a filter.
@@ -193,12 +185,7 @@ class ContextExpression(Expression):
 
 
 class EventExpression(Expression):
-  """Event expression.
-
-  Attribute:
-    bool_value (bool): boolean value that represents the result of
-        the operation.
-  """
+  """Event expression."""
 
   # TODO: add an IsOperator
   _OPERATORS = {
@@ -228,7 +215,7 @@ class EventExpression(Expression):
   def __init__(self):
     """Initializes an event expression."""
     super(EventExpression, self).__init__()
-    self.bool_value = True
+    self._bool_value = True
 
   def Compile(self):
     """Compiles the expression into a filter.
@@ -270,12 +257,12 @@ class EventExpression(Expression):
 
     arguments.extend(self.args)
     ops = operator(arguments=arguments)
-    if not self.bool_value:
+    if not self._bool_value:
       if hasattr(ops, 'FlipBool'):
         ops.FlipBool()
 
     return ops
 
-  def FlipBool(self):
-    """Negates the value of the bool_value attribute."""
-    self.bool_value = not self.bool_value
+  def Negate(self):
+    """Reverses the logic of (negates) the expression."""
+    self._bool_value = not self._bool_value
