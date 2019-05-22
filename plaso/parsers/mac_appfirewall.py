@@ -105,7 +105,9 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
         minutes (int): minutes.
         seconds (int): seconds.
     """
-    month, day, hours, minutes, seconds = structure.date_time
+    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
+    # TODO: what if time_elements_tuple is None.
+    month, day, hours, minutes, seconds = time_elements_tuple
 
     # Note that dfdatetime_time_elements.TimeElements will raise ValueError
     # for an invalid month.
@@ -134,7 +136,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
           time_elements_tuple=time_elements_tuple)
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(structure.date_time))
+          'invalid date time value: {0!s}'.format(time_elements_tuple))
       return
 
     self._last_month = time_elements_tuple[1]
@@ -147,13 +149,17 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       structure = self._previous_structure
 
     event_data = MacAppFirewallLogEventData()
-    event_data.action = structure.action
-    event_data.agent = structure.agent
-    event_data.computer_name = structure.computer_name
+    event_data.action = self._GetValueFromStructure(structure, 'action')
+    event_data.agent = self._GetValueFromStructure(structure, 'agent')
+    event_data.computer_name = self._GetValueFromStructure(
+        structure, 'computer_name')
+    event_data.status = self._GetValueFromStructure(structure, 'status')
+
     # Due to the use of CharsNotIn pyparsing structure contains whitespaces
     # that need to be removed.
-    event_data.process_name = structure.process_name.strip()
-    event_data.status = structure.status
+    process_name = self._GetValueFromStructure(structure, 'process_name')
+    if process_name:
+      event_data.process_name = process_name.strip()
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_ADDED)
@@ -200,16 +206,18 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
           '{0!s}').format(exception))
       return False
 
-    if structure.action != 'creating /var/log/appfirewall.log':
+    action = self._GetValueFromStructure(structure, 'action')
+    if action != 'creating /var/log/appfirewall.log':
       logger.debug(
           'Not a Mac AppFirewall log file, invalid action: {0!s}'.format(
-              structure.action))
+              action))
       return False
 
-    if structure.status != 'Error':
+    status = self._GetValueFromStructure(structure, 'status')
+    if status != 'Error':
       logger.debug(
           'Not a Mac AppFirewall log file, invalid status: {0!s}'.format(
-              structure.status))
+              status))
       return False
 
     time_elements_tuple = self._GetTimeElementsTuple(structure)
@@ -220,7 +228,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     except ValueError:
       logger.debug((
           'Not a Mac AppFirewall log file, invalid date and time: '
-          '{0!s}').format(structure.date_time))
+          '{0!s}').format(time_elements_tuple))
       return False
 
     self._last_month = time_elements_tuple[1]

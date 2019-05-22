@@ -114,7 +114,9 @@ class MacOSSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
         minutes (int): minutes.
         seconds (int): seconds.
     """
-    month, day, hours, minutes, seconds = structure.date_time
+    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
+    # TODO: what if time_elements_tuple is None.
+    month, day, hours, minutes, seconds = time_elements_tuple
 
     # Note that dfdatetime_time_elements.TimeElements will raise ValueError
     # for an invalid month.
@@ -143,30 +145,45 @@ class MacOSSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
           time_elements_tuple=time_elements_tuple)
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(structure.date_time))
+          'invalid date time value: {0!s}'.format(time_elements_tuple))
       return
 
     self._last_month = time_elements_tuple[1]
 
     if key == 'logline':
       self._previous_structure = structure
-      message = structure.message
+      message = self._GetValueFromStructure(structure, 'message')
     else:
+      repeat_count = self._GetValueFromStructure(structure, 'times')
+      previous_message = self._GetValueFromStructure(
+          self._previous_structure, 'message')
       message = 'Repeated {0:d} times: {1:s}'.format(
-          structure.times, self._previous_structure.message)
+          repeat_count, previous_message)
       structure = self._previous_structure
 
     # It uses CarsNotIn structure which leaves whitespaces
     # at the beginning of the sender and the caller.
+    caller = self._GetValueFromStructure(structure, 'caller')
+    if caller:
+      caller = caller.strip()
+
+    # TODO: move this to formatter.
+    if not caller:
+      caller = 'unknown'
+
+    sender = self._GetValueFromStructure(structure, 'sender')
+    if sender:
+      sender = sender.strip()
 
     event_data = MacOSSecuritydLogEventData()
-    event_data.caller = structure.caller.strip() or 'unknown'
-    event_data.facility = structure.facility
-    event_data.level = structure.level
+    event_data.caller = caller
+    event_data.facility = self._GetValueFromStructure(structure, 'facility')
+    event_data.level = self._GetValueFromStructure(structure, 'level')
     event_data.message = message
-    event_data.security_api = structure.security_api or 'unknown'
-    event_data.sender_pid = structure.sender_pid
-    event_data.sender = structure.sender.strip()
+    event_data.security_api = self._GetValueFromStructure(
+        structure, 'security_api', default_value='unknown')
+    event_data.sender_pid = self._GetValueFromStructure(structure, 'sender_pid')
+    event_data.sender = sender
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_ADDED)
@@ -219,7 +236,7 @@ class MacOSSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     except ValueError:
       logger.debug(
           'Not a MacOS securityd log file, invalid date and time: {0!s}'.format(
-              structure.date_time))
+              time_elements_tuple))
       return False
 
     self._last_month = time_elements_tuple[1]
