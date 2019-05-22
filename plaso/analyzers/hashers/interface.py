@@ -14,7 +14,11 @@ class BaseHasher(object):
 
   @classmethod
   def GetAttributeName(cls):
-    """Determines the attribute name for the hash result."""
+    """Determines the attribute name for the hash result.
+
+    Returns:
+      str: name of the attribute to set.
+    """
     return '{0:s}_hash'.format(cls.NAME)
 
   # pylint: disable=redundant-returns-doc

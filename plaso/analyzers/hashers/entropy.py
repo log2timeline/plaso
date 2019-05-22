@@ -25,7 +25,11 @@ class EntropyHasher(interface.BaseHasher):
 
   @classmethod
   def GetAttributeName(cls):
-    """The attribute name for the result."""
+    """The attribute name for the result.
+
+    Returns:
+      str: name of the attribute to set.
+    """
     return 'file_entropy'
 
   def GetStringDigest(self):
