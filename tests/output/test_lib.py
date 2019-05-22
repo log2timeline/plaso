@@ -62,12 +62,13 @@ class TestOutputModule(interface.LinearOutputModule):
   NAME = 'test_xml'
   DESCRIPTION = 'Test output that provides a simple mocked XML.'
 
-  def WriteEventBody(self, event, event_data):
+  def WriteEventBody(self, event, event_data, event_tag):
     """Writes the body of an event to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_tag (EventTag): event tag.
     """
     date_time = timelib.Timestamp.CopyToIsoFormat(
         event.timestamp, timezone=self._output_mediator.timezone,
@@ -77,6 +78,8 @@ class TestOutputModule(interface.LinearOutputModule):
         '\t<DateTime>{0:s}</DateTime>\n'
         '\t<Entry>{1:s}</Entry>\n').format(date_time, event_data.entry)
     self._output_writer.Write(output_text)
+
+    # TODO: add support for event tag.
 
   def WriteEventEnd(self):
     """Writes the end of an event to the output."""

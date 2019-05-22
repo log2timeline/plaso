@@ -70,7 +70,7 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
     event, event_data = self._CreateTestEvent(self._TEST_EVENTS[0])
-    self._output_module.WriteEventBody(event, event_data)
+    self._output_module.WriteEventBody(event, event_data, None)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         '2012-06-27 18:17:01')

@@ -17,12 +17,13 @@ class TestOutput(interface.OutputModule):
   DESCRIPTION = 'This is a test output module.'
 
   # pylint: disable=unused-argument
-  def WriteEventBody(self, event, event_data):
+  def WriteEventBody(self, event, event_data, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_tag (EventTag): event tag.
     """
     return
 

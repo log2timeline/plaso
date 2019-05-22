@@ -26,12 +26,13 @@ class JSONLineOutputModule(interface.LinearOutputModule):
 
   _JSON_SERIALIZER = json_serializer.JSONAttributeContainerSerializer
 
-  def WriteEventBody(self, event, event_data):
+  def WriteEventBody(self, event, event_data, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_tag (EventTag): event tag.
     """
     # TODO: since the internal serializer can change move functionality
     # to serialize into a shared json output module class.
@@ -39,6 +40,8 @@ class JSONLineOutputModule(interface.LinearOutputModule):
     copy_of_event = copy.deepcopy(event)
     for attribute_name, attribute_value in event_data.GetAttributes():
       setattr(copy_of_event, attribute_name, attribute_value)
+
+    copy_of_event.tag = event_tag
 
     inode = getattr(event_data, 'inode', None)
     if inode is None:

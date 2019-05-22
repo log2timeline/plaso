@@ -124,7 +124,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._event_documents = []
     self._number_of_buffered_events = 0
 
-  def _GetSanitizedEventValues(self, event, event_data):
+  def _GetSanitizedEventValues(self, event, event_data, event_tag):
     """Sanitizes the event for use in Elasticsearch.
 
     The event values need to be sanitized to prevent certain values from
@@ -135,6 +135,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_tag (EventTag): event tag.
 
     Returns:
       dict[str, object]: sanitized event values.
@@ -173,11 +174,6 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     event_values['timestamp'] = event.timestamp
     event_values['timestamp_desc'] = event.timestamp_desc
 
-    # TODO: pass event_tag as a separate argument.
-    event_tag = getattr(event, 'tag', None)
-    if event_tag:
-      event_values['tag'] = event_tag
-
     message, _ = self._output_mediator.GetFormattedMessages(event_data)
     if message is None:
       data_type = getattr(event_data, 'data_type', 'UNKNOWN')
@@ -187,10 +183,13 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     event_values['message'] = message
 
     # Tags needs to be a list for Elasticsearch to index correctly.
-    try:
-      labels = list(event_values['tag'].labels)
-    except (AttributeError, KeyError):
-      labels = []
+    labels = []
+    if event_tag:
+      try:
+        labels = list(event_tag.labels)
+      except (AttributeError, KeyError):
+        pass
+
     event_values['tag'] = labels
 
     source_short, source = self._output_mediator.GetFormattedSources(
@@ -205,7 +204,7 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
 
     return event_values
 
-  def _InsertEvent(self, event, event_data):
+  def _InsertEvent(self, event, event_data, event_tag):
     """Inserts an event.
 
     Events are buffered in the form of documents and inserted to Elasticsearch
@@ -214,10 +213,11 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_tag (EventTag): event tag.
     """
     event_document = {'index': {
         '_index': self._index_name, '_type': self._document_type}}
-    event_values = self._GetSanitizedEventValues(event, event_data)
+    event_values = self._GetSanitizedEventValues(event, event_data, event_tag)
 
     self._event_documents.append(event_document)
     self._event_documents.append(event_values)
@@ -331,11 +331,12 @@ class SharedElasticsearchOutputModule(interface.OutputModule):
     self._url_prefix = url_prefix
     logger.debug('Elasticsearch URL prefix: {0!s}')
 
-  def WriteEventBody(self, event, event_data):
+  def WriteEventBody(self, event, event_data, event_tag):
     """Writes event values to the output.
 
     Args:
       event (EventObject): event.
       event_data (EventData): event data.
+      event_tag (EventTag): event tag.
     """
-    self._InsertEvent(event, event_data)
+    self._InsertEvent(event, event_data, event_tag)
