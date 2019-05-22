@@ -12,7 +12,7 @@ from tests import test_lib as shared_test_lib
 from tests.analyzers.hashers import test_lib
 
 
-class EntropyTest(test_lib.HasherTestCase):
+class EntropyHasherTest(test_lib.HasherTestCase):
   """Tests the Entropy hasher."""
 
   @shared_test_lib.skipUnlessHasTestFile(['empty_file'])
