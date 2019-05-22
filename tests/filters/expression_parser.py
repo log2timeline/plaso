@@ -356,7 +356,8 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
 
     # TODO: refactor to event data
     event.data_type = 'Weirdo:Made up Source:Last Written'
-    event.display_name = 'unknown:{0:s}'.format(event.filename)
+    event.display_name = (
+        'unknown:/My Documents/goodfella/Documents/Hideout/myfile.txt')
     event.filename = '/My Documents/goodfella/Documents/Hideout/myfile.txt'
     event.hostname = 'Agrabah'
     event.inode = 1245
