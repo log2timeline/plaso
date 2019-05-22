@@ -28,8 +28,8 @@ class EventObjectFilter(interface.FilterObject):
     Raises:
       ParseError: if the filter expression cannot be parsed.
     """
-    parser = expression_parser.EventFilterExpressionParser(filter_expression)
-    expression = parser.Parse()
+    parser = expression_parser.EventFilterExpressionParser()
+    expression = parser.Parse(filter_expression)
 
     self._event_filter = expression.Compile()
     self._filter_expression = filter_expression
