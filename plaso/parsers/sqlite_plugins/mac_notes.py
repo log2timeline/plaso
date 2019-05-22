@@ -21,8 +21,8 @@ class MacNotesZhtmlstringEventData(events.EventData):
   """Mac Notes zhtmlstring event data.
 
   Attributes:
-    zhtmlstring (str): contains note data.
-    last_modified_date (str): last time note was modified.
+    zhtmlstring (str): note html string.
+    title (str): note title.
   """
 
   DATA_TYPE = 'mac:notes:zhtmlstring'
@@ -116,12 +116,8 @@ class MacNotesPlugin(interface.SQLitePlugin):
     # will raise "IndexError: Index must be int or string".
     query_hash = hash(query)
     event_data = MacNotesZhtmlstringEventData()
-    soup = BeautifulSoup(self._GetRowValue(query_hash, row, 'zhtmlstring'),
-                         'html.parser')
-    body = soup.body.prettify()
-    body = re.sub(r'(<\/?(div|body|span|b|table|tr|td|tbody|p).*>\n?)', '',
-                  body)
-    event_data.zhtmlstring = body
+
+    event_data.zhtmlstring = self._GetRowValue(query_hash, row, 'zhtmlstring')
     event_data.title = self._GetRowValue(query_hash, row, 'title')
     timestamp = self._GetRowValue(query_hash, row, 'timestamp')
 

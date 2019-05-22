@@ -22,7 +22,7 @@ class MacNotesTest(test_lib.SQLitePluginTestCase):
         ['NotesV7.storedata'], plugin_object)
 
     self.assertEqual(storage_writer.number_of_events, 6)
-    self.assertEqual(storage_writer.number_of_errors, 0)
+    self.assertEqual(storage_writer.number_of_warnings, 0)
 
     events = list(storage_writer.GetEvents())
 
@@ -41,7 +41,11 @@ class MacNotesTest(test_lib.SQLitePluginTestCase):
         '        3015555555: plumbing and heating\n'
         '    claim#123456\n'
         '        Small business\n            ')
+    expected_short_message = (
+        'title:building 4th brandy gibs')
     self.assertEqual(event.zhtmlstring, expected_message)
+
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 if __name__ == '__main__':
   unittest.main()
