@@ -143,18 +143,19 @@ class DpkgParser(text_parser.PyparsingSingleLineTextParser):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
+    time_elements_tuple = self._GetValueFromStructure(structure, 'date_time')
+
     try:
       date_time = dfdatetime_time_elements.TimeElements(
-          time_elements_tuple=structure.date_time)
+          time_elements_tuple=time_elements_tuple)
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(structure.date_time))
+          'invalid date time value: {0!s}'.format(time_elements_tuple))
       return
 
-    body_text = structure.body
+    body_text = self._GetValueFromStructure(structure, 'body')
     if not body_text:
-      parser_mediator.ProduceExtractionWarning(
-          'invalid body {0:s}'.format(structure.body))
+      parser_mediator.ProduceExtractionWarning('missing body text')
       return
 
     event_data = DpkgEventData()

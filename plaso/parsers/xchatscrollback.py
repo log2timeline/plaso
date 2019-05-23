@@ -127,8 +127,10 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
     """
     stripped = self.STRIPPER.transformString(text)
     structure = self.MSG_ENTRY.parseString(stripped)
-    text = structure.text.replace('\t', ' ')
-    return structure.nickname, text
+    nickname = self._GetValueFromStructure(structure, 'nickname')
+    text = self._GetValueFromStructure(structure, 'text', default_value='')
+    text = text.replace('\t', ' ')
+    return nickname, text
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure.
@@ -144,15 +146,16 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
           'Unable to parse record, unknown structure: {0:s}'.format(key))
       return
 
+    timestamp = self._GetValueFromStructure(structure, 'timestamp')
     try:
-      timestamp = int(structure.timestamp)
-    except ValueError:
-      logger.debug('Invalid timestamp string {0:s}, skipping record'.format(
-          structure.timestamp))
+      timestamp = int(timestamp, 10)
+    except (TypeError, ValueError):
+      logger.debug('Invalid timestamp {0!s}, skipping record'.format(timestamp))
       return
 
     try:
-      nickname, text = self._StripThenGetNicknameAndText(structure.text)
+      text = self._GetValueFromStructure(structure, 'text', default_value='')
+      nickname, text = self._StripThenGetNicknameAndText(text)
     except pyparsing.ParseException:
       logger.debug('Error parsing entry at offset {0:d}'.format(self._offset))
       return
@@ -178,18 +181,17 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
     Returns:
       bool: True if the line was successfully parsed.
     """
-    structure = self.LOG_LINE
-
     try:
-      parsed_structure = structure.parseString(line)
+      structure = self.LOG_LINE.parseString(line)
     except pyparsing.ParseException:
       logger.debug('Not a XChat scrollback log file')
       return False
 
+    timestamp = self._GetValueFromStructure(structure, 'timestamp')
     try:
-      int(parsed_structure.timestamp, 10)
-    except ValueError:
-      logger.debug('Not a XChat scrollback log file, invalid timestamp string')
+      int(timestamp, 10)
+    except (TypeError, ValueError):
+      logger.debug('Not a XChat scrollback log file, invalid timestamp.')
       return False
 
     return True

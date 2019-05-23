@@ -137,8 +137,15 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
     Raises:
       ValueError: if the structure cannot be converted into a date time string.
     """
-    time_offset = structure.time_offset
-    month = timelib.MONTH_DICT.get(structure.month.lower(), 0)
+    month = self._GetValueFromStructure(structure, 'month')
+
+    try:
+      month = timelib.MONTH_DICT.get(month.lower(), 0)
+    except AttributeError as exception:
+      raise ValueError('unable to parse month with error: {0!s}.'.format(
+          exception))
+
+    time_offset = self._GetValueFromStructure(structure, 'time_offset')
 
     try:
       time_offset_hours = int(time_offset[1:3], 10)
@@ -148,13 +155,18 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
           'unable to parse time zone offset with error: {0!s}.'.format(
               exception))
 
+    year = self._GetValueFromStructure(structure, 'year')
+    day_of_month = self._GetValueFromStructure(structure, 'day')
+    hours = self._GetValueFromStructure(structure, 'hours')
+    minutes = self._GetValueFromStructure(structure, 'minutes')
+    seconds = self._GetValueFromStructure(structure, 'seconds')
+
     try:
       date_time_string = (
           '{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02d}.000000'
           '{6:s}{7:02d}:{8:02d}').format(
-              structure.year, month, structure.day, structure.hours,
-              structure.minutes, structure.seconds, time_offset[0],
-              time_offset_hours, time_offset_minutes)
+              year, month, day_of_month, hours, minutes, seconds,
+              time_offset[0], time_offset_hours, time_offset_minutes)
     except ValueError as exception:
       raise ValueError(
           'unable to format date time string with error: {0!s}.'.format(
@@ -180,28 +192,36 @@ class ApacheAccessParser(text_parser.PyparsingSingleLineTextParser):
 
     date_time = dfdatetime_time_elements.TimeElements()
 
+    date_time_string = self._GetValueFromStructure(structure, 'date_time')
+
     try:
-      iso_date_time = self._GetISO8601String(structure.date_time)
+      iso_date_time = self._GetISO8601String(date_time_string)
       date_time.CopyFromStringISO8601(iso_date_time)
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'invalid date time value: {0!s}'.format(structure.date_time))
+          'invalid date time value: {0!s}'.format(date_time_string))
       return
 
     event = time_events.DateTimeValuesEvent(
         date_time, definitions.TIME_DESCRIPTION_RECORDED)
 
     event_data = ApacheAccessEventData()
-    event_data.ip_address = structure.ip_address
-    event_data.remote_name = structure.remote_name
-    event_data.user_name = structure.user_name
-    event_data.http_request = structure.http_request
-    event_data.http_response_code = structure.response_code
-    event_data.http_response_bytes = structure.response_bytes
+    event_data.ip_address = self._GetValueFromStructure(structure, 'ip_address')
+    event_data.remote_name = self._GetValueFromStructure(
+        structure, 'remote_name')
+    event_data.user_name = self._GetValueFromStructure(structure, 'user_name')
+    event_data.http_request = self._GetValueFromStructure(
+        structure, 'http_request')
+    event_data.http_response_code = self._GetValueFromStructure(
+        structure, 'response_code')
+    event_data.http_response_bytes = self._GetValueFromStructure(
+        structure, 'response_bytes')
 
     if key == 'combined_log_format':
-      event_data.http_request_referer = structure.referer
-      event_data.http_request_user_agent = structure.user_agent
+      event_data.http_request_referer = self._GetValueFromStructure(
+          structure, 'referer')
+      event_data.http_request_user_agent = self._GetValueFromStructure(
+          structure, 'user_agent')
 
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
